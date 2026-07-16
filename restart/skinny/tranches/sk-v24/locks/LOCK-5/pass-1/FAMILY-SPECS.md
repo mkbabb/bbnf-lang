@@ -337,12 +337,47 @@ Selected because they resolve the two axes that gate every downstream lock. Brie
 Axis 1 (5A vs 5B vs the 5A/5D spine) with a single census+oracle. Brief 2 fixes the BLOCKED-
 candidate verdict for 5C-2B and the GO for 5C-2A on one corpus.
 
-### Brief 1 — the ONE-HIR tax + parity oracle (`bbnf-worktree`)
-Decides the type-count axis: does merging regex into the grammar HIR tax grammar passes trivially
-(→ 5A/5D dominate, no functor) or leak regex into them (→ 5B's functor is justified)?
+### Brief 1 — the ONE-HIR match-arm tax + structural-nullability parity oracle (`bbnf-worktree`)
 
-### Brief 2 — 5C automata congruence-minimizer + derivative-saturator head-to-head (`pt-scratch`)
-Decides 5C: is 2A-congruence-minimization exact and faster than the incumbent, and does 2B
-under-minimize (ρ>1, confirming the BLOCKED-candidate) or not (ρ=1, a landmark)?
+**Question.** Does merging regex into the grammar HIR tax grammar passes *trivially* (→ 5A/5D
+dominate, no functor) or *leak regex* into them (→ 5B's functor is justified)? Decides Axis 1.
 
-(Full self-contained briefs delivered in the structured return.)
+**Tree/method.** `skinny/` is its own cargo workspace (14 members). Worktree off `master`.
+(A) *Tax census.* In `skinny/crates/ir/src/lib.rs:234` add two `ExprKind` variants — `Class {
+set: ByteSet256, negated: bool }` (promote `ByteSet256` from `skinny/crates/bbnf-regex/src/
+lib.rs:35`) and `Look { kind: LookKind }`. Run `cd skinny && cargo build --workspace 2>&1 | grep
+-E "non-exhaustive|not covered"`. Enumerate every broken match across `ir`+`passes`+`codegen`;
+grade each new arm TRIVIAL-TOTAL (structural one-liner, e.g. `Class => false` like `Literal`,
+`Look => true` like `Optional`) vs REGEX-LEAK (needs regex-specific dispatch — e.g. the type
+plane must give `Class` a scalar-byte type unlike any grammar leaf).
+(B) *Parity oracle.* In a `tests/` module, hand-build the three `json.bbnf` leaf patterns
+(`[ \t\n\r]*`, the quoted-string, the number) as `Class/Seq/Alt/Repeat/Optional` subtrees
+(translate via the real HIR parser at `/Users/mkbabb/Programming/parse-that/rust/regex/src/hir/`),
+run the extended `nullability`, and assert `nullable[ws]==true, nullable[string]==false,
+nullable[number]==false` — mirroring the extant oracle at `skinny/crates/ir/src/lib.rs:651`.
+
+**Pass/fail.** (A) COUNT of grammar-plane arms graded REGEX-LEAK: **0 ⇒ 5A/5D dominate (functor
+unneeded); ≥1 ⇒ 5B justified** — name the leaking pass. (B) **3/3 nullability parity**, or 5A
+breaks a green oracle (refutation).
+
+### Brief 2 — 5C automata head-to-head: non-restart minimizer + derivative-saturator (`pt-scratch`)
+
+**Question.** Is 2A congruence/worklist minimization *exact* and *faster* than the incumbent, and
+does 2B derivative-saturation under-minimize (`ρ>1`, confirming BLOCKED-candidate) or collapse
+determinize+minimize (`ρ=1`, a landmark)? Decides 5C.
+
+**Method.** Engine READ-ONLY at `/Users/mkbabb/Programming/parse-that/rust/regex`; scratch-copy
+per R3 §8: `rsync -a --exclude target …/regex/ $SCRATCH/regex/`, repoint patch-deps, isolated
+`CARGO_TARGET_DIR`, bench profile fat-LTO/cgu=1/O3. Corpus: `benches/regex_dfa_compile.rs` (50
+patterns — cyclic `[a-z]+`,`\w+`,`0x[0-9a-fA-F]+` AND acyclic `#[0-9a-fA-F]{3,6}` present).
+Incumbent: `automata/dfa.rs:291 hopcroft_minimize` (naive Moore + restart at `:358`, `O(n²·k)`).
+(2A) Add a non-restart worklist refinement minimizer sharing `crates/egraph` union-find, with a
+congruence-closure fast path taken **only** on acyclic DFAs; model `DEAD` as one absorbing block.
+(2B) Brzozowski-derivative determinization saturating the existing five rules
+(`egraph/rules/{flatten,union,superset,redundant,repetition}.rs`); per pattern measure
+`ρ = states(saturate-only)/states(true-minimal)`; named witness `(ab)*a ≡ a(ba)*`.
+
+**Pass/fail.** (2A) minimized state count **byte-identical to incumbent on 50/50** (correctness
+gate, cyclic included) AND cold-paired N≥200 wall ratio **<1.00** vs incumbent ⇒ 2A GO; report
+the acyclic fraction where congruence is exact-and-free. (2B) **ρ=1 corpus-wide ⇒ landmark**; any
+**ρ>1 ⇒ confirms 2B-as-minimizer BLOCKED-candidate** (theory-bounded), keep 2A as the closer.

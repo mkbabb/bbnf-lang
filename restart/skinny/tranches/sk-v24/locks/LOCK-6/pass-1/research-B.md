@@ -1,223 +1,291 @@
-# LOCK-6 pass-1 — family 6B: SPEC-GENERATED-SKELETON
+# LOCK-6 / Family 6B — SPEC-GENERATED-SKELETON (research, pass 1)
 
-## Thesis
+*Isomorphism by construction where it is declarative; idiomatic freedom where it is hot.
+A single machine-readable spec generates both languages' skeletons — layout constants, tape
+decoders, type interfaces, oracle tables — and hand code fills only the perf-critical bodies.
+Drift is not detected after the fact (6A's linter); it is made impossible for the generated
+surface. The line where generation stops and hand-idiom begins is the deliverable, measured,
+not asserted.*
 
-A single machine-readable, grammar-driven spec generates BOTH the Rust and the TypeScript
-skeletons — the surfaces that must never diverge (type declarations, tape-plane layout, the
-node classifier, oracle/conformance vectors) — while hand code fills the idiomatic bodies (the
-NEON skip kernels on the Rust side; the V8 monomorphic hot walk on the TS side). Where a
-surface is generated, cross-language drift is not merely detected but *unrepresentable*: a
-grammar edit regenerates both trees at once, and the regen fixpoint is the proof.
+---
 
-The family's central claim is that the isomorphism is enforced at the single choke point of
-generation rather than after the fact. A mirror-tree linter can only flag drift once someone
-has already hand-written the divergent line; a behavioral differential test catches drift only
-when a corpus happens to exercise the diverged path. Generation from one spec removes the
-drift class from the representable space for every surface it covers. The measured question the
-family answers is therefore quantitative: *what fraction of the cross-language surface is
-generated (drift-impossible) versus hand (drift-possible-but-idiomatic)*, and the boundary
-between them is the "reasonable point" the constitution asks LOCK-6 to locate by measurement.
+## 1. The thesis, stated precisely
 
-## The mechanism made concrete: the spec already exists
+The rust/ts isomorphism problem has a declarative half and an imperative half.
 
-The decisive move is that the "shared machine-readable spec" is not a new hand-authored IDL —
-authoring one would violate grammar totality (constitution i). The spec is the compiler's
-existing backend-agnostic middle IR, already `serde`-serializable, already grammar-derived:
+- **Declarative half (drift-prone, low value-per-line, high correctness stakes):** layout
+  constants (node-kind discriminants, flag-bit positions, offset stride/endianness, plane
+  names), the byte contract of the offset-tape, type interfaces (`ParserState`, `Span`, the
+  `Value` variant set), and conformance/oracle tables (the digest algorithm, the structural
+  counts). These are *duplicated by hand today* across three faces — Rust `runtime/tape/
+  record.rs`, the wasm-bindgen plane export, and the TS `tape.mjs` decoder — and every
+  duplication is a silent-divergence hazard.
+- **Imperative half (idiomatic, high value-per-line, V8/LLVM-law-bound):** the actual decode
+  walk, the SIMD skip engine on the Rust side, the monomorphic hidden-class hot loop on the TS
+  side. These *cannot* be generated without emitting non-idiomatic, deopt-prone code — the
+  PROVE-14 `TapeDoc` is a hand-tuned ctor-only monomorphic class; a naively generated decoder
+  would churn hidden classes and lose the 4.4× stop-early win.
 
-- **`BackendIr`** — `crates/ir/src/lib.rs:352` — `#[derive(Serialize, Deserialize)]`, carrying
-  `grammar_name`, `entry_rule`, `recognizers: Vec<Recognizer>`, `rules: Vec<BackendRule>`,
-  `shape_facts`. Its `BackendShape` (`:361`: `EagerTape | OffsetTape | EventTape | SinkOnly |
-  CollapsedStage`) names the value lane; its `BackendExpr` (`:376`) is the structural node set:
-  `TapeEmit { kind: TapeKind }`, `DirectBuild { shape, fields: Vec<DirectBuildField> }`,
-  `RegexProgram { pattern, span_kind }`, `SpanMark`, `Seq`, `Alt`, `RepeatLoop`,
-  `ValueProject { target, ty }`, `CallRule`. This is a total, serializable description of what
-  the parser builds — the exact object a TS emitter needs.
-- **`DirectSchemaSet`** — `crates/codegen/src/direct_schema.rs` — the grammar-derived type
-  spec (the HM core, PROVE-08's 221 LOC, validated in ~230µs, ZERO runtime cost). GN-3.W2/W3
-  make it authoritative and delete the hand schema `xtask/src/real_typed_schema.rs`. This is
-  the type half of the spec.
-- **The tape SoA layout facts** (PROVE-14 REPORT lines 53-99, VERIFY §parity): offsets are
-  `u32` LE byte-offsets, one per structural token; `flag_cursors` is a sorted `u32` side
-  channel, `flag_values` is `u8` with `STRING_NEEDS_DECODE = 0x01 = GRAMMAR_BIT0`; kind is
-  re-derived from `source[offsets[cursor]]` (no stored discriminator); separators `,`/`:`
-  never receive an offset (`consume_delimiter` advances without emit). PROVE-14 PROVED these
-  cross byte-exactly — node-for-node, 6 structural counts + codeUnits + 32-bit fingerprint
-  identical across 320 cold children (VERIFY: `fp 986912547`, partial `fp 3431570937`). The
-  layout is thus a language-neutral byte contract *by measurement*, not by assertion.
+6B's mechanism: **generate the declarative half from one spec; hand-write the imperative half;
+draw and measure the boundary.** The generated surface has zero drift by construction (both
+faces are outputs of the same generator run over the same spec); the hand surface is free to be
+maximally idiomatic per language. This is strictly stronger than 6A's mirror-tree-plus-linter
+on the declarative surface (impossible-vs-detected-after-the-fact) and strictly cheaper than
+6C's wasm-core on the imperative surface (native-per-language, no wasm boundary tax on the hot
+path). The null hypothesis 6B must defeat: that the declarative surface is too small for
+generation to pay for its machinery. Section 6 sizes it.
 
-The Rust emitter is already the first consumer of this spec: `codegen::emit(backend:
-&BackendIr) -> EmittedSource` (`crates/codegen/src/lib.rs:114`) walks `BackendIr` and writes
-Rust source strings into an `EmittedSource` file-map (`lib.rs:63`, `files: BTreeMap<String,
-String>`, `write_to_dir`). The concrete templates it drives: `runtime_generator.rs` (522 LOC),
-`json_templates/view.rs` (488), `json_typed_direct.rs` (1245). Family 6B introduces a *second*
-consumer of the identical `BackendIr` + `DirectSchemaSet`: a TS-skeleton emitter producing a
-parallel `EmittedSource` whose files are the drift-prone TS surface.
+---
 
-## The substrate: what generates, what is hand-filled
+## 2. The spec is the grammar — 6B is a completion, not a greenfield
 
-Generated (drift-impossible), from `BackendIr` + `DirectSchemaSet` + tape-layout facts:
+The constitution (clause i) requires everything grammar-driven; the standing feedback forbids a
+separate IR layer for TS ("AST IS the combinator") and mandates backend-agnostic types
+(`TypeDesc::Named`, each backend resolves natives). 6B honours both because **the spec already
+exists as `GrammarIR` + the shared driver's decisions — there is no new serialized artifact.**
 
-1. **TS type declarations** — `DirectSchemaSet` → `.d.ts`-style interfaces, the exact mirror of
-   the Rust `DirectBuild` structs. Numeric widths resolve per-backend (see R1): `u64/i64` →
-   `bigint`, `f64` → `number`, per the backend-agnostic-types law (types are abstract
-   `TypeDesc::Named`; each backend resolves natively).
-2. **The tape-decoder skeleton** — from the layout facts: the SoA plane struct (offsets/flag
-   planes and their element types), the node classifier as a *data table* (source-byte →
-   `JsonNodeKind`, emitted as an `Int8Array(256)` literal, not hand-transcribed control flow),
-   the sparse-flag binary-search over `flag_cursors`, and the `offset_at`/`nextSibling`/pointer
-   navigation shape over `offsets`.
-3. **The oracle / conformance tables** — the shared corpus digests and structural-count
-   expectations (PROVE-14's `objects/arrays/strings/numbers/bools/nulls/codeUnits/fp`), emitted
-   ONCE and consumed by both `crates/*/tests` and `ts/tape/test`. One source of truth for the
-   differential vectors both sides check against.
-4. **The wasm boundary signature** — the `#[wasm_bindgen]` `TapeExport { offsets: Uint32Array,
-   flag_cursors: Uint32Array, flag_values: Uint8Array, source: Uint8Array }` (GN-4.W4's
-   `crates/bbnf-wasm/`) is itself derivable from the four-plane layout facts, so the FFI glue
-   cannot drift from the layout it exports.
+bbnf-lang is *already a multi-backend generator built on exactly this shape*:
 
-Hand-filled (idiomatic, measured, drift-tolerable because it is per-language perf, not shared
-structure):
+- **The shared decision spine.** `crates/core/src/backend/emitter.rs:31` — the `Emitter` trait
+  (~60 `emit_*` methods, `type Output`, `type Ctx`). `crates/core/src/backend/driver/mod.rs:1`
+  — the target-agnostic driver that "walks `GrammarIR`, makes target-agnostic structural
+  decisions … and delegates target-specific code emission to the `Emitter` trait" (its own
+  doc-comment). Decisions are made *once*; `compile_*` decides, `emit_*` renders idiom.
+- **Three faces already ride it.** `backend/rust/`, `backend/wasm/`, `backend/ts/` — with
+  `CompileTarget::{Rust, Ts, Wasm}` at `crates/core/src/pipeline.rs:33-41` and
+  `compile_grammar_request(grammar, target)`. The TS emitter already emits `interface
+  ParserState { input; offset; … }` and `interface Span { start; end }` from the grammar
+  (`crates/core/tests/backend_ts.rs`).
+- **An isomorphism gate already exists.** `crates/core/tests/backend_ts_typecheck.rs` emits TS
+  for JSON/CSS-L4/Sheets/BBNF into a tempdir and runs `tsc --noEmit --strict` — the generated
+  TS is proven build-correct across four grammars from one generator run.
+- **A literal 6B instance already ships.** `crates/bbnf-path/` (Rust proc-macro) and
+  `crates/bbnf-path-ts/` (cdylib + wasm-bindgen, `ts/path.ts`) are a mirrored pair whose
+  "segment alphabet is isomorphic across Rust + TS frontends" *because both consume the same
+  `bbnf-ir` `StructRegistry`/`StructLayout` types and the same `bbnf-regex` `lex_path`/
+  `PathToken` lexer* (`crates/bbnf-path-ts/Cargo.toml` header). The isomorphism is by
+  construction, not by convention. This is the template 6B generalizes to the tape plane.
 
-- **Rust**: the NEON skip kernel (`skip_container`, `skip_tail`, the movemask-narrow block
-  emit) — the GN-4.W1/W2 hot loop over `scan.rs`.
-- **TS**: the monomorphic `TapeDoc` walk body — the byte-hash ASCII fast path that lifted
-  PROVE-14 from 0.66× to 0.98× full-walk, and the stop-early `nextSibling` descent that wins
-  4.4×. Per R4 §6 this body MUST keep its V8 discipline (four ctor-only fields = one hidden
-  class, `Int8Array(128)` dispatch, no post-ctor mutation); the generator supplies the classify
-  *table* it reads, never the class *shape* it lives in.
+So the family's real work is **extending the existing `Emitter`/driver to cover the three
+declarative faces it does not yet generate** — the tape-layout contract, the tape decoder
+skeleton, and the oracle table — and proving the generated output is idiomatic enough that the
+hand half shrinks to the measured minimum.
 
-The generated/hand boundary coincides exactly with the structural/performance boundary, which
-coincides with the isomorphism/idiom boundary — this is the family's elegance and its measured
-answer to "where does reasonable end." PROVE-14 is itself the proof such a boundary exists: the
-layout crosses byte-exactly (generate it), but the full-walk hot loop is where V8 laws diverge
-from LLVM laws (hand-write it; the TS full-walk stays a documented non-goal at ~0.9×).
+---
 
-### Consumer-less-substrate discharge (constitution viii / Y.13)
+## 3. The concrete mechanism (three generated faces, one hand face)
 
-The spec `BackendIr` already has a consumer (the Rust emitter), so it is not dangling
-substrate. The new TS-skeleton emitter's output is consumed IN the same wave: the generated
-oracle vectors are read by `ts/tape/test/tape-parity.test.ts`; the generated classify table and
-layout constants are read by the hand `TapeDoc` body; the generated wasm signature is read by
-the `bbnf-wasm` bindings. No generated artifact lands dark.
+### 3a. Face I — the layout contract (pure generation, zero hand code)
 
-## Integration seams (path:line; skinny is source-of-truth, ports to greenfield `crates/`)
+**The drift exemplar, live in-tree right now.** Two incompatible tape dialects coexist in the
+campaign:
 
-- Spec (the IR): `crates/ir/src/lib.rs:352` (`BackendIr`, serde), `:361` (`BackendShape`),
-  `:376` (`BackendExpr` incl. `TapeEmit`, `DirectBuild { shape, fields }`, `ValueProject { ty }`),
-  `Recognizer::SimdScan` (the SIMD-site facts, for lane annotation).
-- Rust emitter to mirror: `crates/codegen/src/lib.rs:114` (`emit(&BackendIr) -> EmittedSource`);
-  the file-map substrate `lib.rs:63` (`EmittedSource { files: BTreeMap<String,String> }`,
-  `write_to_dir`); templates `runtime_generator.rs` (522), `json_templates/view.rs` (488),
-  `json_typed_direct.rs` (1245). The TS emitter is a sibling module (`codegen/src/ts_skeleton/`,
-  directory-module per the colocation edict) emitting into a second `EmittedSource`.
-- Type spec: `crates/codegen/src/direct_schema.rs` (`DirectSchemaSet`), authoritative after
-  GN-3.W2/W3 (hand schema `xtask/src/real_typed_schema.rs` deleted; grep-gate `CLEAN`).
-- Tape layout / what crosses: `crates/runtime/src/tape/mod.rs:120-137`
-  (`source()/offsets()/flag_cursors()/flag_values()`, `offset_at`, `flags_at` binary-search);
-  plane semantics proven in PROVE-14 REPORT:53-99.
-- TS decoder origin (parts to reclassify): `bbnf-bench/ts-tape/{tape.mjs(364), load.mjs(34),
-  pointer.mjs(34), verify.mjs(55), bench.mjs(86)}` (PROVE-14, 703 LOC). `load.mjs` (layout),
-  the classify + sparse-flag search inside `tape.mjs`, and `verify.mjs` (oracle) move to the
-  generated fraction; the `tape.mjs` byte-hash fast path + `pointer.mjs` descent stay hand.
-- Wasm boundary: GN-4.W4 `crates/bbnf-wasm/src/tape_export.rs` (`TapeExport`) — its signature
-  generates from the four-plane facts.
-- Regen host & fixpoint: `xtask` (one regen host, GN-1). The TS-skeleton emit is a new regen
-  target under the same fixpoint gate as the Rust regen (LOCK-7 7A: regen∘regen byte-identical);
-  generated files are regen-only (clean-regen discipline), never hand-patched.
-- Downstream landing target: GN-4.W4's file plan (`ts/tape/src/{tape.ts, load.ts, pointer.ts}`,
-  `test/tape-parity.test.ts`) is where the generated skeleton + hand body compose; 6B recasts
-  W4's "adaptation: .mjs → typed .ts (hand port)" into "generate the layout/classify/oracle,
-  hand-fill the walk."
+- The greenfield/current `crates/core/src/runtime/tape/record.rs` is **AoS**: `TapeKind{Open=0,
+  Leaf=1}` (packed in `kind_meta` low nibble, `record.rs:4-24`), `LeafType{F64=0,I64=1,U64=2,
+  Bool=3,Str=4,Unit=5}` (`record.rs:31-59`), `STRING_BORROW_BIT=0x8000` (`:63`),
+  `FLAG_HAS_CHILDREN=1<<6`, `FLAG_META_IDX_HI=1<<7`, `FLAG_BRANCH_MASK=0x3F`, `TAPE_NONE=u32::
+  MAX` (`:19,66-91`).
+- The PROVE-14/skinny SoA **offset-tape** the GN-4.W4 seed decodes is a *different* alphabet:
+  `K_OBJ_OPEN=1 … K_NULL=10` (kind re-derived from `source[offset]`, no stored discriminator),
+  `STRING_NEEDS_DECODE=0x01 = OffsetFlags::GRAMMAR_BIT0`, `u32` LE offset stride, four planes
+  `offsets/flag_cursors/flag_values/source` (PROVE-14 REPORT §"The layout that crossed";
+  `tape.mjs:20-40`).
 
-## Prior art (citations)
+These constants are hand-authored in Rust *and* hand-transcribed into `tape.mjs` — the precise
+divergence hazard 6B abolishes. GN-1 must reconcile the two dialects when it ports the skinny
+tape; 6B makes that reconciliation *definitional*: one spec, N faces regenerated in lockstep.
 
-- **LLVM/MLIR TableGen** (`.td` → C++): the canonical one-spec-many-consumers generator — op
-  definitions, verifiers, docs, rewrite patterns all emitted from one record file; hand C++
-  fills custom bodies. The architectural north star for 6B: generate the drift-prone surface,
-  hand-fill the logic. 6B's variant replaces the hand `.td` with the grammar-derived `BackendIr`.
-- **serde-reflection / serde-generate** (Facebook): reflects Rust types into a
-  language-neutral registry, then generates TS/Python/C++/Java type definitions AND
-  (de)serializers. This is nearly exactly 6B's type half (`DirectSchemaSet` → TS interfaces);
-  the closest existing prior art and a proof the type-declaration generation is tractable.
-- **Cap'n Proto / FlatBuffers**: schema → generated multi-language accessors over a fixed
-  zero-copy wire layout; cross-language parity holds because the layout is the spec and the
-  accessors are generated. Directly analogous to the offset-tape crossing; the distinction is
-  that those hand-author an IDL, whereas 6B's layout spec is the compiler's own tape facts
-  (grammar-derived).
-- **tree-sitter**: grammar → generated C tables (`parser.c`) plus a stable `node-types.json`
-  consumed by every language binding; bindings stay thin, tables generated. The precise
-  analogue: grammar → generated node-kind spec + decode tables consumed by both Rust and TS.
-- **Kaitai Struct** (`.ksy` → parsers in ~11 languages): the purest one-spec-N-language binary
-  decoder generator. Direct prior art for the tape-decoder half; its limitation — declarative
-  only, no hot-path control — is exactly why 6B splits generate-structure from hand-perf.
-- **wasm-bindgen / ts-bindgen / cbindgen**: generate FFI/TS glue from Rust annotations;
-  GN-4.W4 already uses wasm-bindgen for the `TapeExport` boundary. 6B extends the same mechanism
-  past the FFI line to the decoder skeleton and oracle.
-- **regex-automata** serializable DFAs (`Automaton::to_bytes`/`from_bytes`): a compiled
-  automaton crosses as a byte spec decoded identically on the far side — the pattern of
-  "serialize the compiled artifact, decode it identically" that the tape embodies.
+**Generation.** The node-kind alphabet is *derivable from the grammar*, not a hand list: the
+kinds are the grammar's structural node kinds; `STRING_NEEDS_DECODE` is a grammar-derived fact
+(does this string rule admit escapes / non-ASCII), reachable from `bbnf-ir`'s materialization
+analysis (`crates/ir/src/passes/materialization.rs`, `MaterializationClass`, re-exported at
+`passes/mod.rs:49`; already a CSP variable, `csp_strategy/mod.rs:252-261`). The `Emitter` gains
+one method — `emit_tape_layout(&LayoutSpec, ctx)` — implemented per backend: Rust emits `const
+K_OBJ_OPEN: u8 = 1;` etc. into `runtime/tape/record.rs`; wasm emits the plane-export names +
+strides; TS emits the `const K_OBJ_OPEN = 1;` block at the head of `tape.ts`. Change one spec
+line, `xtask regen`, and all three faces move together. This face is **100% generated, 0 hand
+lines** — and it is where drift actually lives.
 
-## Named risks and counterexamples
+### 3b. Face II — the type interfaces (generation, already partly built)
 
-- **R1 — the spec is Rust-shaped, not neutral.** `DirectBuild { shape: String, fields }` and
-  `ValueProject { ty: Option<String> }` carry Rust type-name strings; `RegexProgram { pattern }`
-  is a Rust-side pattern. Counterexample: a `ty = Some("u64")` field generates TS `number`, but
-  values >2^53 silently lose precision — the generated TS type is lossy and the oracle passes on
-  small-int corpora. Mitigation: the type spec must carry ABSTRACT widths (backend-agnostic-types
-  law; the numeric-width facts already exist in the type plane, PROVE-08/GN-3), and the TS
-  backend resolves `u64/i64 → bigint`. Prototype must exercise a wide-int field and prove
-  `bigint`, not `number`.
-- **R2 — generated TS fights V8.** If the generator emits the `TapeDoc` *class* (getters,
-  method-assigned fields) it breaks the R4 §6 monomorphism (single hidden class, ctor-only
-  fields). Counterexample: a generated getter or a post-ctor field write forces a hidden-class
-  transition → deopt → the 4.4× stop-early win collapses to parity. Mitigation: the boundary is
-  strict — generate the classify TABLE (an `Int8Array` literal) and layout CONSTANTS as data;
-  hand-write the monomorphic class body. Prototype must re-measure stop-early ≥4× on the
-  generated-table + hand-body decoder, not merely prove parity.
-- **R3 — endianness / stride drift in the generated layout.** A zero-copy `Uint32Array` view
-  can mis-align (endianness, stride) and still "parse" ASCII-only leaves (named in GN-4.W4 R4).
-  Counterexample: native-endian read on a differing host, JSON-parity passes by coincidence.
-  Mitigation: the generated layout carries explicit LE + stride assertions; the generated oracle
-  asserts wasm planes byte-identical to a Rust `tape_dump` fixture (the born-RED cross-check),
-  not merely `JSON.parse` parity.
-- **R4 — the generated fraction is trivial; drift lives in the hand fraction.** If the classify
-  and walk stay hand (because perf-sensitive) and only type declarations generate, then the most
-  drift-prone surface — the classifier when a new node kind appears — is hand on both sides, and
-  6B degenerates into a linter with extra machinery. Counterexample: a new `JsonNodeKind` variant
-  is added to the grammar; Rust classify regenerates, TS classify is hand-edited → drift. This is
-  the family's decisive boundary: the node-kind enum and the classify table MUST be in the
-  generated fraction. Prototype must add a node kind and show zero hand edits on either side.
-- **R5 — bidirectional fixpoint staleness.** The regex grammar is bootstrapped (constitution i);
-  if the skeleton spec is itself grammar-generated, the fixpoint must span the TS emit too.
-  Counterexample: a grammar edit changes the Rust skeleton, but the TS regen target is not wired
-  into `xtask`, so TS silently lags one commit. Mitigation: the TS-skeleton emit is a first-class
-  `xtask` regen target under the same fixpoint gate (LOCK-7 7A); CI fails RED if TS regen is
-  dirty. regen∘regen must be byte-identical for BOTH output trees.
+The `Value` enum variant set (Object/Array/String/Number/Bool/Null, drawn from GN-3.W1
+`DirectTypeKind` sum types), the `ParserState`/`Span` interfaces, and the `TypedPath` shape are
+backend-agnostic `TypeDesc` today and already emitted for TS (`backend_ts.rs`, `bbnf-path-ts/
+src/schema.rs`). 6B's addition is the *tape-node* interface (`TapeDoc` field declarations,
+method signatures) emitted as a **skeleton** whose bodies are hand-filled (3d). Emitting the
+field decls in constructor-fixed order is the load-bearing detail — see the V8 risk in §5.
 
-## What a prototype must test to move this family
+### 3c. Face III — the oracle table (generation, the highest-leverage new face)
 
-1. **Two-consumer emit.** Extend `codegen` with a `ts_skeleton` emitter consuming the SAME
-   `BackendIr` + `DirectSchemaSet` the Rust emitter consumes, producing a second `EmittedSource`
-   with (a) TS interfaces, (b) the classify table + SoA layout constants, (c) the shared oracle
-   vectors. Prove the spec round-trips through serde `BackendIr` (it is genuinely the middle IR,
-   not a fork).
-2. **Drift-impossibility (the family-deciding experiment).** Add one JSON node kind (or one flag
-   bit) to the grammar; regen; show BOTH Rust and TS classify/type surfaces change with ZERO
-   hand edits and the oracle regenerates its expected vectors. Any surface needing a hand edit is
-   named as outside the drift-impossible boundary — that boundary IS the family's measured result.
-3. **V8 preservation.** Build `TapeDoc` as generated-table + hand-monomorphic-body; re-measure
-   PROVE-14 stop-early — must reproduce ≥4× (not parity), proving generation did not perturb the
-   hidden-class discipline. Full-walk stays the documented ~0.9× non-goal.
-4. **Width fidelity.** A grammar with a `u64`/`i64` field: prove generated TS resolves `bigint`,
-   Rust `u64`, and the oracle catches a lossy `number` regression (R1).
-5. **Cross-language fixpoint.** Wire the TS emit as an `xtask` regen target; prove regen∘regen is
-   byte-identical for both output trees (the LOCK-7 fixpoint extended across the language line).
+GN-4.W4/W5 need a *four-lane parity oracle* (`value_parity.rs` + the TS side) that computes the
+same digest — the FNV-1a walk (`strHash`, `tape.mjs`; `mix`, `pointer.mjs`) and the six
+structural counts + `codeUnits` + 32-bit fingerprint (PROVE-14 REPORT §"Byte-exact parity").
+Today that digest algorithm is hand-written twice (Rust walk ≡ `walkJs`). 6B generates the
+oracle from the spec into *both* a Rust `#[test]` fixture and a TS `test/tape-parity.test.ts`,
+so "the same value, node-for-node" is true *by construction of the comparator*, not by careful
+hand-mirroring. This directly de-risks GN-4.W5's named counterexample R5 ("oracle stubs itself
+— `get == get`") and CW's "real four-way check or a self-compare?": a generated comparator
+cannot accidentally compare a lane to itself because the four lane-entries are distinct
+generated call sites over one generated digest.
 
-### The measure the family must report
+### 3d. The hand face — the decode hot loop (never generated)
 
-The isomorphism "reasonable point" is quantitative: of PROVE-14's 703-LOC TS decoder, the
-generable fraction is `load.mjs` layout (34) + the classify/sparse-flag portion of `tape.mjs` +
-`verify.mjs` oracle (55) + generated type interfaces ≈ 120-160 LOC; the hand fraction is the
-`tape.mjs` byte-hash walk + `pointer.mjs` descent ≈ 200 LOC. That ratio — generated-structure
-over hand-perf — is the concrete, measured boundary this family exists to establish, and the
-prototype's job is to make it real and defend it against R2/R4.
+The imperative walk stays hand-written, idiomatic per language, riding the generated skeleton:
+Rust's NEON skip engine (`skip_container`, GN-4.W1) and TS's `TapeDoc.walk`/`getKey`/
+`indexArray`/`stringLeaf` monomorphic integer-cursor recursion (`tape.mjs`, ctor-only fields,
+allocation-free). The generator emits the *shape* it must satisfy (ctor field order, const
+block, method signatures, the `nextSibling` sparse-flag binary-search contract) and the human
+writes the body. **This is the "reasonable point": the boundary is drawn at the declarative /
+imperative seam, and §6 measures where it lands.**
+
+---
+
+## 4. Integration seams (path:line)
+
+- `crates/core/src/backend/emitter.rs:31` — the `Emitter` trait: add `emit_tape_layout`,
+  `emit_tape_decoder_skeleton`, `emit_oracle_table` alongside the ~60 extant `emit_*` methods.
+  Each backend (`rust/`, `wasm/`, `ts/`) implements them idiomatically.
+- `crates/core/src/backend/driver/mod.rs:1` — the shared driver: the `LayoutSpec` is a
+  driver-level decision (target-agnostic), computed once from `GrammarIR` +
+  `MaterializationClass`, then handed to every `emit_*`. Layout choices live here, never per
+  backend.
+- `crates/core/src/backend/ts/mod.rs`, `ts/emitter/grammar.rs:1` — the idiomatic-body home;
+  generated tape skeleton lands here; hand bodies fill it.
+- `crates/core/src/backend/wasm/` — the plane-export face (the wasm-bindgen boundary GN-4.W4's
+  `bbnf-wasm` cdylib needs: `TapeExport{offsets,flag_cursors,flag_values,source}`).
+- `crates/core/src/runtime/tape/record.rs:4-91` — the current AoS constants; these become
+  **generated output**, and the AoS↔SoA reconciliation with skinny's offset-tape becomes a
+  spec edit rather than a two-file hand-sync.
+- `crates/ir/src/passes/materialization.rs` (`MaterializationClass`) + `crates/ir/src/passes/
+  mod.rs:49` — the grammar-derived source of `STRING_NEEDS_DECODE`-class facts; the spec draws
+  its flag bits from here (satisfies constitution clause i — the layout is grammar-driven, not
+  a hand constant table).
+- `crates/bbnf-path/` + `crates/bbnf-path-ts/` — the **existing 6B proof**: a Rust+TS mirror
+  isomorphic-by-shared-IR. Generalize its pattern (shared `bbnf-ir` types + shared `bbnf-regex`
+  lexer ⇒ isomorphic frontends) from the path plane to the tape plane.
+- `crates/core/tests/backend_ts_typecheck.rs` — the extant isomorphism gate (`tsc --noEmit
+  --strict` over generated TS for four grammars); extend with the generated tape-parity oracle
+  and a V8 same-map probe (§5).
+- `crates/core/src/pipeline.rs:33` — `CompileTarget`; the new faces register as emission
+  outputs, not new targets.
+- PROVE-14 `crates/bbnf-bench/ts-tape/{tape,load,pointer}.mjs` — the hand decoder that 6B
+  splits into {generated consts + skeleton} ⊕ {hand hot bodies}, with the split line recorded.
+
+---
+
+## 5. Prior art (with citations to the SOTA)
+
+The "one spec → isomorphic per-language skeletons over a fixed byte layout, hand-write the
+logic" pattern is a settled discipline; 6B is its application to the tape plane.
+
+- **Cap'n Proto / FlatBuffers (Kenton Varda; Google FlatBuffers).** A `.capnp`/`.fbs` schema
+  compiles to *zero-copy accessors* in every target language over a **byte-exact wire layout** —
+  the canonical exemplar of layout-drift-impossible-by-construction across a language boundary.
+  FlatBuffers' generated accessors over a flat buffer are structurally isomorphic to PROVE-14's
+  typed-array views over the offset-tape planes. Directly transferable: the schema compiler
+  generates the offset/stride math; the human never re-derives it per language.
+- **Kaitai Struct (`.ksy`).** A declarative binary-format spec compiles to parsers in Rust, JS,
+  Python, C++, … — the single-spec binary-decoder generator, the closest analog to generating
+  the tape decoder skeleton in both Rust and TS from one layout description.
+- **LLVM TableGen (`.td`) + MLIR ODS.** Instruction/register tables and MLIR op classes +
+  verifiers + docs are *generated* from one declarative spec while the pass logic stays
+  hand-written C++ — precisely 6B's "generate the tables/skeleton, hand-write the logic," and
+  the source of the "reasonable point" discipline (TableGen deliberately does not generate the
+  imperative selection logic).
+- **serde derive (Rust).** `#[derive(Serialize, Deserialize)]` generates two isomorphic
+  skeletons from one struct — the in-language proof that generation eliminates the hand-mirror
+  entirely for the declarative surface; bbnf's `bbnf-path` macro is already this pattern.
+- **wit-bindgen / the WebAssembly Component Model (WIT).** One interface spec generates typed
+  bindings + marshalling into Rust *and* JS — the shared-interface-generates-both-faces pattern
+  at the exact rust↔ts/wasm boundary GN-4.W4 crosses. (6B uses it as a *skeleton* generator, not
+  as 6C's full wasm-core — the hot body stays TS-native.)
+- **tree-sitter `grammar.js` → `node-types.json`.** The grammar generates a *machine-readable
+  tree-shape spec* consumed by every language binding; bindings are thin and isomorphic by
+  construction. This is bbnf's own model — the grammar is the shared spec — and validates
+  clause (i): the spec need not be a new artifact, the grammar already is one.
+- **protobuf / gRPC.** `.proto` → per-language messages + the wire format is the industry-scale
+  proof that a schema compiler holds N languages in byte-exact agreement across decades of
+  drift pressure.
+
+---
+
+## 6. What a prototype must test to move family 6B
+
+The family advances only on measured artifacts (constitution vii). A prototype must:
+
+1. **Prove lockstep regen.** Author the `LayoutSpec` (node-kind alphabet + flag bits derived
+   from grammar `MaterializationClass`) and emit its three faces (Rust `record.rs` consts, wasm
+   plane export, TS `tape.ts` const block). Change ONE spec line (add a node kind / flip a flag
+   bit), `xtask regen`, and show all three faces move together while PROVE-14's byte-exact
+   parity (`verify.mjs`: 6 structural counts + `codeUnits` + fp 986912547) still passes.
+   **Falsifier:** a drift hand-injected into `tape.ts` fails a generated-const assertion in the
+   parity oracle.
+2. **Prove the generated oracle cannot self-stub.** Generate the FNV digest comparator + the
+   structural-count table into both a Rust `value_parity.rs` fixture and a TS
+   `tape-parity.test.ts`; show the four lane-entries are four distinct generated call sites over
+   one generated digest. **Falsifier:** GN-4.W5's R5 counterexample (`get == get`) becomes
+   *unwriteable* — the generator emits four distinct lane calls; a hand edit to collapse them
+   fails a generated-arity check.
+3. **MEASURE the boundary (the deliverable).** Emit the TS `TapeDoc` skeleton (ctor-only field
+   decls in fixed order, const block, method signatures) and hand-fill only the walk/decode
+   bodies. Gate on (a) `backend_ts_typecheck.rs` `tsc --noEmit --strict` GREEN, and (b) a V8
+   `%HaveSameMap` probe (per the PT-3.W4 shape-oracle method, `node --allow-natives-syntax`)
+   proving the generated skeleton is single-hidden-class shape-stable and the hand body keeps it
+   so. **Falsifier:** the generated skeleton churns a hidden class (breaking PROVE-14 VERIFY
+   attack 8's monomorphism invariant) or fails `tsc`.
+4. **Quantify "reasonable."** Report generated-LOC vs hand-LOC per face across JSON + one more
+   grammar (CSS-L4 or Sheets). The measured plateau — where generated coverage saturates and
+   hand-idiom dominates — IS the "reasonable point" the constitution (clause iii) demands be
+   measured, not asserted. Compare against 6A's linter cost (lines of drift-detection + false-
+   positive rate) to defeat or confirm the null hypothesis.
+
+---
+
+## 7. Named risks and counterexamples
+
+- **R1 — the generator produces V8-hostile TS.** The hot body demands a ctor-only monomorphic
+  class (R4 §6a-d: `ParserState` field churn, `mapState`'s `Object.create` deopt, the
+  megamorphic `.parser` IC). If the generated skeleton emits field-by-field init or post-ctor
+  mutation, it breaks the single-hidden-class invariant and loses the 4.4× stop-early win.
+  *Counterexample:* a generated `TapeDoc` with fields assigned outside the constructor →
+  `%HaveSameMap` FALSE. *Mitigation:* generate ONLY the declarative skeleton (fixed-order field
+  decls + const block + signatures); the imperative body is hand-written and shape-audited
+  (prototype test 3). The generator is V8-shape-aware for decls, nothing more — this is exactly
+  why the body is NOT generated (the boundary is principled, not a shortcut).
+- **R2 — over-engineering a separate spec artifact.** The "no-ts-ir / AST-IS-the-combinator"
+  law and parsimony forbid a heavyweight serialized `.spec`. *Counterexample:* a hand-authored
+  YAML/JSON tape-schema duplicating what `GrammarIR` already holds — a new god-artifact.
+  *Mitigation:* the spec IS `GrammarIR` + `MaterializationClass`; `LayoutSpec` is a *derived
+  view*, computed in the driver, never hand-written or serialized to disk. Face I is grammar-
+  derived (clause i), not a constant table.
+- **R3 — the declarative surface is too small to pay for the machinery (the null hypothesis).**
+  If only ~40 constants and two interfaces are generated, a 6A mirror-linter might be cheaper.
+  *Mitigation:* prototype test 4 sizes it; the oracle table (Face III) and the AoS↔SoA
+  reconciliation are the surfaces that tip the balance — the digest comparator + four-lane
+  entries + layout constants across Rust/wasm/TS is a non-trivial, correctness-critical, drift-
+  prone body. If the measurement shows it is small, 6B honestly reports the null hypothesis
+  wins for the tape plane and narrows to the oracle face alone.
+- **R4 — generated code fails idiom review even when `tsc`-clean.** `backend_ts_typecheck.rs`
+  proves build-correctness, not idiom or V8-shape. *Counterexample:* TS that typechecks but
+  allocates per node. *Mitigation:* the gate is extended with the `%HaveSameMap` shape probe
+  AND the paired cold bench (PROVE-14 `bench.mjs` method, N≥200 cold children) — generation is
+  accepted only if the generated-skeleton + hand-body composite reproduces the 4.4× stop-early.
+- **R5 — cross-repo placement law.** The TS decoder seed lands in bbnf-lang's greenfield
+  (GN-4.W4 `ts/tape/`), but the parse-that combinator backbone (PT-3) is READ-ONLY to the bbnf
+  campaign and landed only by the owner / a parse-that-side session. *Mitigation:* 6B's
+  generated faces target the *bbnf-side* GN-4.W4 seed and its wasm boundary; any parse-that-side
+  generation rides letter BBNF-PT-G, never a direct write. The two are complementary, non-
+  gating (GN-4 §2 interlock / PT-3 §2).
+- **R6 — AoS/SoA reconciliation lands wrong under generation.** Generating from a spec that
+  still encodes the AoS `TapeRec` dialect while the tape crossed is the SoA offset-tape yields a
+  byte-exact-but-wrong export (PROVE-14 R4: endianness/stride mis-align yet ASCII-only leaves
+  pass by coincidence). *Mitigation:* the born-RED cross-check (GN-4.W4 gate b) asserts the
+  generated wasm planes are byte-identical to the `tape_dump` fixture — a generated layout that
+  drifts from the measured layout fails before JSON-parity can mask it.
+
+---
+
+*6B — one spec, both skeletons, drift impossible where it is declarative. The generator bbnf
+already is grows three faces — layout contract, decoder skeleton, oracle table — over its
+existing `Emitter`/driver spine; the hot body stays hand-idiomatic and shape-audited. The line
+between the two is measured (§6.4), and that measurement is the family's verdict.*

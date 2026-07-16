@@ -81,14 +81,22 @@ sentence is the family's whole claim and it is checkable.
 
 ### 2. Regex text → `ExprKind` via the bootstrapped grammar
 
-`grammar/misc/regex.bbnf` already defines regex syntax in bbnf (expression/term/factor/
-sub_expression/char_class/range/anchor/lookahead/lookbehind). Under ONE-HIR this grammar's
-`->` projections target `ExprKind` constructors directly (the same way json.bbnf's leaves
-project to values): `expression -> Alt`, `term -> Seq`, `factor -> Repeat/Optional`,
-`char_class -> Class`, `range -> ByteClassSet::insert_range`, `anchor/lookahead -> Look`.
-The regex front-end becomes *a generated bbnf parser like any other* — constitution clause (i)
-satisfied by construction, no hand-written recursive-descent regex parser
-(`parse-that-regex/src/hir/parser/` retires).
+**Current reality (verified, and it strengthens the charter):** there is no `regex.bbnf` —
+the only skinny grammar file is `skinny/grammars/json.bbnf`. A regex literal is *not*
+structurally parsed on the skinny side at all: `grammar/src/lib.rs:1561 fn parse_regex`
+returns the raw pattern as an opaque `String`, and `:1166 fn skip_regex` merely scans to the
+closing delimiter. So the charter clause "regex parsing rides the bootstrapped grammar" is
+today **wholly unmet** — regex is a hand-scanned string, re-parsed downstream by the
+`analyze()` stub. This is a to-BUILD deliverable, not an extant asset.
+
+Under ONE-HIR a new bootstrapped `grammar/regex.bbnf` defines regex syntax in bbnf
+(expression/term/factor/sub_expression/char_class/range/anchor/lookahead/lookbehind) and its
+`->` projections target `ExprKind` constructors directly (the way json.bbnf leaves project to
+values): `expression -> Alt`, `term -> Seq`, `factor -> Repeat/Optional`, `char_class ->
+Class`, `range -> ByteClassSet::insert_range`, `anchor/lookahead -> Look`. The hand-rolled
+`parse_regex`/`skip_regex` (`grammar/src/lib.rs:1561/1166`) and the vendored recursive-descent
+`parse-that-regex/src/hir/parser/` both retire — constitution clause (i) satisfied by
+construction. **This makes 5A a hard dependent of LOCK-7 (7A staged bootstrap)** — see risk 4.
 
 ### 3. Classification becomes an IR analysis pass
 
@@ -111,6 +119,23 @@ the NFA). The backend leaf stops being `RegexProgram { pattern: String }` and be
 reference to a compiled automaton (or, for the prefilterable case, the PROVE-10 `Dfa::find`
 seam — LOCK-5's continuum feeds PT-1.W5 / GN-2.W1 the *structured* leaf, not a string).
 
+### 4b. The single home (resolving the primacy tension)
+
+The constitution homes LOCK-5 operationally with parse-that (primacy), yet ONE-HIR says the
+regex HIR *is* `ir::ExprKind` (bbnf-side, `skinny/crates/ir`). These reconcile without a
+functor: the HIR **type** lives in `ir`; the **engine** (nfa/dfa/prefilter/egraph) stays homed
+in parse-that, rewritten to *consume* `bbnf_ir::ExprKind`. This is physically feasible today —
+parse-that already path-depends on bbnf-ir (R3 §1 patch table: `bbnf-ir ->
+../../bbnf-lang/crates/ir`). parse-that/rust/regex deletes its own `hir::Hir`, does
+`use bbnf_ir::{ExprKind, GrammarIr, ExprId}`, and `from_hir → from_expr`. The shared type is
+`#![no-feature]` stable-clean (`ir/src/lib.rs` already is), so it crosses the
+nightly-2026-04-11 / greenfield toolchain boundary. The standalone parse-that regex API
+survives as a thin front (`parse(pattern)` builds a throwaway one-root `GrammarIr` and runs the
+engine) — 5D's clause satisfied *by* 5A. Of the vendored `Hir`'s 8 variants, **5 map onto
+existing `ExprKind` variants byte-for-byte** (Literal, Concat=Seq, Alternation=Alt,
+Repetition=Repeat, Group→transparent), Empty is trivial, and only Class+Look are new: the
+"single type" claim is a two-leaf extension, not a merge of two large enums.
+
 ### 5. One e-graph Language
 
 The `egraph`/`egraph-derive` crates and the `derive(Language)` seam
@@ -132,9 +157,9 @@ without a functor.
 | Codegen string re-parse to delete | `skinny/crates/codegen/src/general_descent/regex_first.rs`; `.../json_sink_direct/dispatch.rs:87,163` |
 | Degenerate classifier to DELETE | `skinny/crates/bbnf-regex/src/lib.rs:19` `RegexKind`, `:45` `analyze`, `:98` `classify` |
 | Structured HIR + automata to re-home | `skinny/crates/parse-that-regex/` — `Hir`(`hir/mod.rs:216`), `CharClass/ByteRange/CodepointRange`(`:45/:12/:27`), `Look`(`:172`), `automata/nfa.rs:71 from_hir`, `automata/dfa.rs`, `classify.rs`(1148 LOC), `egraph/`(1253) |
-| Bootstrapped regex grammar (the front) | `grammar/misc/regex.bbnf` |
+| Hand-rolled string scanner to RETIRE (no grammar today) | `skinny/crates/grammar/src/lib.rs:1561` `parse_regex` (returns `String`), `:1166` `skip_regex` — the bootstrapped `grammar/regex.bbnf` is to-BUILD, not extant |
 | `ByteSet256` to promote into `ir` | `skinny/crates/bbnf-regex/src/lib.rs:31` |
-| Shared e-graph engine | `skinny/crates/egraph`, `egraph-derive`; `passes/src/backend_egraph.rs` |
+| Shared e-graph engine (bbnf-lang root, NOT skinny/crates) | `crates/egraph`, `crates/egraph-derive`; `skinny/crates/passes/src/backend_egraph.rs` |
 
 ## Prior art (with citations)
 
@@ -209,10 +234,14 @@ without a functor.
    pattern `lib.rs:662`, the number pattern `:668`) through regex.bbnf into `ExprKind`, run the
    *extended* `ir::nullability`, and assert equality with the current `analyze()` answers
    (`lib.rs:652` oracle). Green = ONE-HIR preserves behavior; red = it breaks parity.
-3. **Automata from `ExprKind`.** Build a Thompson NFA directly from a `Class/Seq/Alt/Repeat`
-   subtree and show `Dfa::find` byte-identical results vs the vendored `Hir`→NFA path on the same
-   pattern (reuse `parse-that-regex/automata/dfa.rs` unchanged) — proving automata consume bbnf
-   IR with no separate HIR.
+3. **Automata from `ExprKind` — at the certified numbers.** Build a Thompson NFA directly from
+   a `Class/Seq/Alt/Repeat` subtree (`from_hir → from_expr`) and show `Dfa::find` byte-identical
+   match sets vs the vendored `Hir`→NFA path (reuse `parse-that-regex/automata/dfa.rs`
+   unchanged), THEN run PROVE-10's prefilter lane and reproduce its certified band —
+   **8.8–29.5×** on the four prefilterable patterns (`0x[0-9a-fA-F]+`, `#[0-9a-fA-F]{3,6}`,
+   `https?://…`, `(?:foo|bar)[a-z]*`) with **0.97–1.01×** controls. This proves the ONE type
+   hosts the *whole* engine at the frozen §0/PROVE-10 numbers, so ONE-HIR costs nothing the
+   two-HIR world has — the strongest positive result available to move the family.
 4. **UTF-8 placement decision.** Lower one codepoint class (`[α-ω]` or unicode `\d`) both ways
    (byte-only `Class` + build-time expansion vs codepoint-carrying `Class`); measure shared-tree
    node count and confirm no Unicode leaks into a grammar pass. (Resolves risk 2.)

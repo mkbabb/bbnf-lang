@@ -59,7 +59,19 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 3-verify | wf_a4c300b0-b54 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-verify-fleet-wf_a4c300b0-b54.js | DONE 12/12 (14 min, 1.06M tok) |
 
 | 5-codex | wf_6ae8f4f7-16c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-codex-authorship-wf_6ae8f4f7-16c.js | DONE 28/29 (32 min, 3.25M tok; GN-6 author died post-write — file complete on disk; 31 defects → all CRITICAL/MAJOR fixed; minors harmonization agent running; codex commit pending its return) |
-| 6-locks-p1-bbnf | wf_63419230-36d | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js (args: group bbnf, locks [1,2,3,7], pass 1) | RUNNING |
+| 6-locks-p1-bbnf | wf_63419230-36d | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js (args: group bbnf, locks [1,2,3,7], pass 1) | RESUMED (locks 1/3/7 FOLDED — registries on disk; LOCK-2 synth died at retry cap after writing FAMILY-SPECS; resume replays 1/3/7 cached, re-runs 2) |
+
+PASS-2 BINDING DIRECTIVES (from pass-1 agglomerators, orchestrator-ratified):
+- BASE-PIN RULE: every bbnf-worktree prototype must FIRST verify/fast-forward its tree to
+  the commit named in its brief (pass-1 protos ran d2b32f6e3, 51 commits stale — LOCK-3
+  flagged all convergence numbers as wrong-artifact until re-run on live).
+- Project.ty@204 is quadruple-homed across LOCK-3 families — single-owner born-RED gate.
+- LOCK-1 redirect: 2-way equality-engine fork (1A vs 1B); 1C banked-as-discipline; 1D
+  banked-as-LOCK-2-substrate; open the attribute-grammar cross-rule-seam research thread.
+- LOCK-4 keystone: ONE combinator front onto bbnf_ir::IrNode exercised as tree-walk AND
+  bytecode + ~200-LOC TS switch-loop decoder — collapses 4A/4C/4D grafts; produce the first
+  TS number (constitution-iii is 0% built).
+- LOCK-7: land the three bounded parser fixes (verified on disk) as pass-2 probe openers.
 | 6-locks-p1-pt | wf_50d1252c-5ea | same script (args: group pt, locks [4,5,6], pass 1) | RESUMED after partial completion (LOCK-4 folded — registry excellent; LOCK-5/6 synths died at StructuredOutput retry cap AFTER writing FAMILY-SPECS.md to disk; resume replays cached researchers, re-runs synth onward) |
 | 6-locks-p1-pt-ext | wf_0c50c1bb-81e | same script (args: group pt-ext, locks [8,9], pass 1) | RUNNING (locks 8/9 added per owner amendment: parse-that lock set + three-tier gestalt) |
 

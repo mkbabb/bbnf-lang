@@ -1,322 +1,292 @@
-# LOCK-6 — THE ISOMORPHISM PLANE (rust/ts split): PRIOR-ART RESEARCH (pass 1)
+# LOCK-6 — THE ISOMORPHISM PLANE (rust/ts split) — PRIOR-ART SWEEP (pass 1)
 
-*Researcher: prior-art, pass 1. No family allegiance — this sweep serves 6A/6B/6C/6D
-evenly. Registry withheld by protocol. Citations: web sources inline as markdown links;
-codebase as `path:line`; evidence base as SPEC §0 / PROVE-14 / constitution clauses.*
+Role: prior-art researcher, no family allegiance. Question: for the problem class "maintain
+a Rust core and a TypeScript face in true isomorphism *to a reasonable point*, in layout and
+in code," what exists in the wild, what won and lost, which constraints our own evidence base
+already fixes, and which traps comparable systems named. The four candidate families the
+Constitution frames (PORTFOLIO LOCK-6): **6A MIRROR-TREE** (hand-mirrored trees + isomorphism
+linter), **6B SPEC-GENERATED-SKELETON** (one machine-readable spec generates both), **6C
+WASM-CORE** (Rust→wasm is the one impl; TS = bindings + idiom layer; TS-native only where V8
+measurably wins), **6D ORACLE-ISOMORPHISM** (behavioral only; shared conformance corpus +
+differential tests; layout free per language — the stated null hypothesis).
 
----
-
-## 0. What LOCK-6 decides (the problem class, restated from the charter)
-
-Proper isomorphism **to a reasonable point**, in layout and in code — *measured, not
-asserted* (Constitution iii). The verdict must partition the rust/ts surface into: what is
-**mirrored** (module tree, names, oracle tables, tape layout, bench protocol) and what stays
-**idiomatic per-language** (V8 laws vs LLVM laws). Four candidate architectural centers:
-
-- **6A MIRROR-TREE** — hand-maintained mirrored trees + a CI isomorphism *linter*.
-- **6B SPEC-GENERATED-SKELETON** — one machine-readable (grammar-driven) spec generates both
-  skeletons; hand code fills idiomatic bodies; drift impossible where generated.
-- **6C WASM-CORE** — Rust→wasm is the one implementation; TS = bindings + idiom layer;
-  TS-native only where V8 measurably wins.
-- **6D ORACLE-ISOMORPHISM** — behavioral isomorphism only; shared conformance corpus +
-  differential tests; layout free per language. *Stated as the null hypothesis: it wins
-  unless DEFEATED by measured maintenance/drift cost.*
-
-This problem is **live and partially-solved in-tree already** (§1) and **heavily precedented
-in the wider ecosystem** (§3), and — critically — our own evidence base already fixes several
-of the answers as LAW (§2). The traps are named and measured elsewhere (§4).
+Citation style: `path:line` for in-repo; URL for web. Web accessed 2026-07-16.
 
 ---
 
-## 1. THE EXTANT STATE — the rust/ts split already exists, half-isomorphic (codebase truth)
+## §0 What our OWN evidence base already fixes (binding, before any web claim)
 
-parse-that already ships **both** a Rust core (`rust/parse_that/`) and a TS core
-(`typescript/src/parse/`), and its own docs *claim* isomorphism:
-`parse-that/typescript/src/parse/` is annotated "**Core parser modules (isomorphic layout)**"
-(root `CLAUDE.md:9`); the playground overview calls it "a parser combinator library with
-**isomorphic** TypeScript and Rust implementations" (`docs/playground/overview.md:9`). So
-LOCK-6 is *not* greenfield — it adjudicates an **existing, asserted-but-unverified**
-isomorphism. The measured correspondence today:
+These are not open questions for LOCK-6 to re-decide — they are measured facts the design
+must consume:
 
-| concern | Rust `parse_that/src/` | TS `src/parse/` | isomorphic? |
-|---|---|---|---|
-| core combinator type | `parse.rs` (`Parser<'a,O>`) | `parser.ts` (`Parser<T>`, 711 LOC) | names diverge (parse vs parser) |
-| parse state | `state.rs` | `state.ts` | yes (name-level) |
-| leaves | `leaf.rs` | `leaf.ts` | yes |
-| lazy | `lazy.rs` | `lazy.ts` | yes |
-| balanced split | `split.rs` | `split.ts` | yes |
-| debug | `debug.rs` | `debug.ts` | yes |
-| utils | `utils.rs` | `utils.ts` | yes (both are **god modules** — R4 §1.2) |
-| domain parsers | `parsers/` | `parsers/` | dir-module both sides |
-| **combinators** | `combinators/methods/{sequence,alternation,repetition,sep_by,minus,map,recover}.rs` | folded **inline into `parser.ts` methods** | **DIVERGENT** (Rust dir-module vs TS monolith) |
-| **packrat** | (no dedicated file) | `packrat.ts` (488 LOC, opt-in WDM) | **TS-only home** |
-| **arena** | `bump_slab.rs` | — | **Rust-only** (V8 has no arena analog) |
-| **span/enum-dispatch** | `span_parser/` (9 files, vtable-free) | — | **Rust-only** (LLVM monomorph idiom) |
-| **regex engine** | `rust/regex/` (bespoke HIR→NFA→DFA→egraph, 6742 LOC — R3) | **native JS `RegExp`** (`leaf.ts:317-369`) | **NO TS ENGINE** (R4 §3) |
+1. **The wasm/JS boundary is the cost center, not the Rust core — measured twice, ours and
+   the field's.** PROVE-14 (`prototypes/PROVE-14/REPORT.md:16-27`, `VERIFY.md` CONFIRMED)
+   measured the TS tape full-walk at **parity (~0.9-0.98×) with native `JSON.parse`**, *not*
+   the hoped 2×, precisely because a full materialization crosses every leaf. The verify fleet
+   reproduced this and named the abrogation LAW (SPEC §0 row 14; GN-4.W4 makes it a documented
+   non-goal, `GN-4.md:44-48,370-373`). The field agrees exactly: a real JSON-parser benchmark
+   found **TypeScript 25% faster than the equivalent Rust-WASM impl** because "every string
+   crossing requires encoding, copying, and allocation on both sides" and thousands of
+   crossings compound into a wall
+   ([kunalganglani.com](https://www.kunalganglani.com/blog/rust-wasm-vs-typescript-performance)).
+   **Consequence:** any 6C "wasm is the one impl" claim that routes per-leaf materialization
+   across the boundary is refuted before it is written. Our own PROVE-14 is the counterexample.
 
-**The measured lesson from our own tree:** isomorphism already holds cleanly at the
-*leaf/state/lazy/split/debug/parsers* layer and **breaks precisely where each language's
-performance idiom diverges** — Rust's arena (`bump_slab.rs`), enum-dispatch (`span_parser/`),
-and bespoke DFA regex have **no V8 analog**; TS's packrat has a dedicated home Rust folds
-elsewhere; TS uses native `RegExp` because a hand DFA cannot beat V8's JITed Irregexp on the
-combinator hot path. This is the empirical shape of "reasonable point": **the boundary is not
-arbitrary — it falls exactly at the V8-law/LLVM-law seam** (Constitution iii names this
-explicitly). Any LOCK-6 verdict that mandates 1:1 layout *through* these idiom-divergent zones
-fights the grain the codebase already discovered.
+2. **The win that DOES cross is stop-early / don't-touch-what-you-don't-read.** PROVE-14 got
+   **4.4× vs `JSON.parse`** on stop-early get, because the tape skips `statuses[1..99]` and
+   materializes 3 leaves (`REPORT.md:20-27`, `VERIFY.md:17-28`). This is the On-Demand thesis;
+   it is a *layout-crossing* win, not a *compute-crossing* win. LOCK-6's reasonable-point line
+   must be drawn here: cross the **layout** (offset planes as typed-array views), amortize the
+   one-time decode, never cross per-value.
 
----
+3. **The tape is already an Arrow/Cap'n-Proto-class zero-copy layout.** The four planes
+   (`offsets:u32`, `flag_cursors:u32`, `flag_values:u8`, `source`) decode **byte-exactly
+   node-for-node** in TS via typed arrays (`REPORT.md:53-99`, 320 cold children,
+   fingerprint-identical). SoA, no stored discriminator (kind re-derived from
+   `source[offsets[cursor]]`), sparse-flag side channel. This is the physical isomorphism
+   substrate; the seam is `crates/runtime/src/tape/mod.rs:121-137` (four public accessors) +
+   one wasm-bindgen export (`REPORT.md:128-134`).
 
-## 2. CONSTRAINTS OUR EVIDENCE BASE ALREADY IMPOSES (binding before any web citation)
+4. **The TS side runs V8 laws, not LLVM laws.** R4 (`research/R4-parse-that-ts.md:154-208`)
+   enumerates the V8-sensitive surfaces: hidden-class stability (`TapeDoc` 4 ctor-only fields =
+   single map, `PROVE-14 VERIFY §8`), megamorphic `.parser` IC, `Object.create` prototype-view
+   deopt risk, monomorphic arity-unrolling as a do-not-regress. **Consequence:** true
+   *code* isomorphism (same control flow line-for-line) is in tension with V8 idiom; the
+   Constitution's clause (iii) "reasonable point, measured not asserted" is the whole game.
 
-These are not open questions — they are certified/frozen and pre-decide parts of the lock:
+5. **The type plane costs zero at runtime, both sides (Constitution v).** TS inference (PT-E2,
+   `PT-3.md:305-357`) mirrors the Rust zero-runtime-cost law: emitted JS must be byte-identical
+   before/after tightening. Any 6B/6C scheme that adds a runtime cast or marshaling shim to
+   satisfy types is a defect.
 
-1. **The FFI/crossing cost is real and scales with payload (PROVE-14, CONFIRMED).** The
-   offset-tape **layout crosses byte-exactly** rust→ts (all 6 structural counts + codeUnits +
-   32-bit fingerprint identical across 320 cold children — REPORT §"Byte-exact parity",
-   VERIFY confirms). BUT: **full-walk crossing is at PARITY with native `JSON.parse`
-   (~0.91×), not 2×** — "cold native `JSON.parse` is a hand-optimized C++ parser; the TS lane
-   is cold-JIT JS" (REPORT §"Why full-walk is parity"). **Stop-early wins 4.4×** *because it
-   does not cross what it does not read.* This is the load-bearing constraint on **6C
-   WASM-CORE**: crossing a *whole* materialized structure across the boundary is bottlenecked;
-   the win exists **only in the amortized/partial-access regime.** SPEC §0 row 14 codifies
-   this: "full-walk ~0.91× (2× honestly unmet — native parse is near-optimal for full
-   materialization)."
-
-2. **Behavioral isomorphism is already the plan-of-record's close gate.** GN-4.W4 ships the
-   TS tape decoder whose **oracle is `JSON.parse`** (digest parity, `tape-parity.test.ts`);
-   GN-4.W5's four-lane `value_parity.rs` + `cross-lane.mjs` asserts **rust and ts lanes agree
-   node-for-node** (GN-4 §4 W5 gate). So the SPEC has *already committed to 6D-style
-   differential parity oracles* as the binding gate — 6D is not hypothetical, it is installed.
-
-3. **The type plane costs zero at runtime (Constitution v, SPEC row 08).** Any generated-
-   skeleton scheme (**6B**) that emits *runtime* glue on the hot path violates this; PT-3.W3
-   is explicit that TS inference tightening must be "compile-time only… emitted JS
-   byte-identical" (PT-3 §W3 zero-runtime-cost invariant). 6B must generate *types + decoder
-   tables + oracle fixtures*, never runtime dispatch.
-
-4. **Colocation grand edict + no god modules (Constitution vi).** Any mirror scheme inherits
-   the directory-module law on *both* sides. Note both `utils.ts` (R4 §1.2) and (by symmetry)
-   Rust's `utils.rs` are **already-flagged god modules** — a mirror linter (6A) would have to
-   encode "god-module-free" as an isomorphism invariant or it mirrors the rot.
-
-5. **The bench protocol is already a shared law (SPEC §4, PT-3 §1.2).** Cold, paired
-   interleaving, N≥200 (Rust) / N≥12 rounds × ≥300k ops (TS), warm benches forbidden,
-   packrat armed-vs-unarmed disclosed. **The bench protocol is the one artifact that is
-   *already* isomorphic across the split by decree** — the strongest existing evidence that
-   "mirror the protocol/oracle tables" (6A/6D) is the low-cost, high-value axis.
-
-6. **x86 dead / aarch64-only + NEON-only (Constitution iv, SPEC §0).** The Rust core's SIMD
-   idiom (NEON shufti/truffle) has **no portable analog** — the refuted row 09
-   (portable_simd→NEON shim, "parity-to-slower") proves you cannot shim your way to a shared
-   SIMD layer. **6C cannot claim the Rust NEON kernels cross to wasm as-is** (wasm SIMD ≠
-   NEON); the crossing is the *tape*, not the *kernel*.
-
-7. **One regex home (Constitution i/ii, LOCK-5).** The regex engine is Rust-bespoke; TS uses
-   native `RegExp`. LOCK-6 must not contradict LOCK-5's verdict — the regex *grammar* may be
-   shared/bootstrapped, but the *engine* is measured Rust-only vs V8-native, a settled
-   non-isomorphism (R4 §3: "any TS regex-engine work is greenfield… the bespoke engine lives
-   on the Rust side").
+6. **parse-that is READ-ONLY to bbnf; the letter is the only artifact across the seam**
+   (`PT-3.md:101-106`, SPEC §2b). So 6A/6B "shared repo, shared generator" schemes that assume
+   one writable tree are constrained: the two repos are *coordinated by letter*, not merged.
+   Any isomorphism mechanism must survive a repo boundary that no bbnf agent may cross.
 
 ---
 
-## 3. PRIOR ART — what won and lost elsewhere for THIS problem class
+## §1 6C WASM-CORE — "the Rust core is the one implementation"
 
-### 3A. Structural file-by-file port + conformance oracle (the 6A×6D combination) — WON at scale
+**The winning shape in the field is exactly the hybrid our PROVE-14 lands, not the maximal
+"one impl" claim.** The canonical modern examples ship a Rust/C core to wasm AND keep a native
+path AND accept TS-native code at the boundary:
 
-The strongest external precedent is **Microsoft's TypeScript→Go port ("Project Corsa" /
-tsc-go)**. They **"moved the existing structure file-by-file… deliberately preserving the
-same algorithms, the same data structures, and therefore the same type-checking semantics"** —
-a *port*, not a rewrite — and validated equivalence against **"its decade-old test suite and
-its internal fuzz-testing rigs,"** reporting **only 74 test-case discrepancies remaining**
-(all known/intentional) at the Dec-2025 checkpoint
-([Why a port not a rewrite](https://github.com/microsoft/typescript-go/discussions/410),
-[VS Magazine](https://visualstudiomagazine.com/articles/2025/03/11/microsoft-ports-typescript-to-go-for-10x-native-performance-gains.aspx)).
-Two lessons directly on-point: (i) **structural mirroring is a deliberate, sustainable
-strategy** when the two languages' idioms are close enough (they chose Go partly *because*
-"Go's syntax and style were more closely aligned to the existing… codebase"); (ii) **the
-conformance corpus, not layout inspection, is what proves parity** — 6A's mirror is the
-*maintenance* mechanism, 6D's oracle is the *correctness* mechanism. They are complementary,
-not competing. This is the single most important external data point for LOCK-6: the
-winning real-world play is **6A (mirror) + 6D (oracle) together**, not either alone.
+- **tree-sitter** is the closest structural analog: a grammar (authored in JS) generates **C**,
+  compiled to a native library; language bindings (Rust, Python, …) wrap the C API; and a
+  **wasm module** is *also* generated — "even the native Tree-sitter bindings can consume the
+  .wasm" because ".wasm files are self-contained and easy to use"
+  ([tree-sitter.github.io/using-parsers](https://tree-sitter.github.io/tree-sitter/using-parsers/)).
+  The lesson: wasm-as-portable-core is a *distribution* convenience, layered *under* idiomatic
+  per-language bindings — not a replacement for them. This is 6C tempered by 6A, and it is the
+  dominant production pattern (swc, oxc, biome all ship native-first with wasm as a secondary
+  target for the same core).
 
-### 3B. Schema-generated cross-language skeletons (6B) — WON for *data types*, LOSES for *logic*
+- **The boundary-pattern taxonomy is now codified.** The "16 Patterns for Crossing the
+  WebAssembly Boundary"
+  ([dev.to/rafacalderon](https://dev.to/rafacalderon/16-patterns-for-crossing-the-webassembly-boundary-and-the-one-that-wants-to-kill-them-all-5kb))
+  maps directly onto PROVE-14's design and names the traps:
+  - Pattern **#6 Typed Array Views** (zero-copy windows into linear memory) + **#8 Zero-Copy
+    Format-Aligned Layout (Arrow C Data Interface / FlatBuffers / Cap'n Proto)** — *this is
+    literally what PROVE-14 does* with the four planes. "Sharing becomes free at runtime; major
+    complexity in lifecycle management."
+  - Pattern **#9 String Passing**: "UTF-8↔UTF-16 transcoding is unavoidable for JS strings
+    today. **Defer decoding: keep as UTF-8 byte arrays until absolutely necessary.**" — exactly
+    PROVE-14's byte-hash fast path (fold ASCII bytes with zero JS-string alloc, decode only the
+    escaped minority via the flag channel, `REPORT.md:118-125`), which lifted full-walk
+    0.66×→0.98×.
+  - Pattern **#10 Batch/Coalesce**: "Per-call overhead (~100ns) multiplied by thousands
+    becomes the bottleneck. A naively written loop can pay 50,000× that cost per frame." — the
+    quantified statement of PROVE-14's full-walk refutation.
+  - **Named trap for us:** Pattern #6's fragility — "**Typed Array Views are invalidated if
+    WASM calls `memory.grow()`**." PROVE-14 dumps planes once and never grows; a live
+    `bbnf-wasm parse()` (GN-4.W4, `GN-4.md:319-336`) that grows linear memory mid-session will
+    silently detach the JS views. This is a concrete born-RED hazard the W4 wasm parity gate
+    must catch (`GN-4.md:540-544` R4 flags stride/endianness plane drift, but NOT grow-detach —
+    a gap LOCK-6 should name).
 
-protobuf / FlatBuffers / Cap'n Proto: "**all schema-driven** (you must define your message
-types in a special language upfront)"; the schema is the single source of truth and "code
-generation is always based on a single source of truth… rather than allowing manual
-implementations to diverge"
-([HN comparison](https://news.ycombinator.com/item?id=23589402), [FlatBuffers
-Wikipedia](https://en.wikipedia.org/wiki/FlatBuffers) — targets C++/Rust/TS/… from one .fbs).
-FlatBuffers is *especially* relevant: it is a **zero-copy** format (readers index into the
-buffer without parsing) — structurally the **same idea as our offset-tape** crossing to TS.
-For **Rust→TS type sharing** specifically, the ecosystem has converged on derive-macro
-generators: **ts-rs** ("generate TypeScript bindings… keep your types in one place"),
-**typeshare**, **specta** ([ts-rs](https://github.com/Aleph-Alpha/ts-rs),
-[specta](https://docs.rs/specta/latest/specta/)). **Named limits (the losses):** ts-rs
-"deals with types individually… not possible to export a type and all of the other types it
-depends on"; typeshare "statically analyzes… results in a **loss of information** and lack of
-compatibility with types from other crates" (specta docs). **Verdict for 6B:** schema-gen is
-proven for *tape layout, type shapes, decoder tables, oracle fixtures* — the **data plane** —
-and this maps cleanly onto our constitution (grammar IS the schema, so the generator already
-exists). It is **unproven for combinator *logic*/control flow**; nobody generates the parser
-body cross-language from a schema, they hand-write idiomatic bodies. 6B's honest scope =
-"generate the mirror-able data/oracle surface, hand-fill the idiomatic bodies" — which is
-*exactly* the charter's own framing of 6B.
+- **The Component Model / WIT is "the pattern that wants to kill them all"** — a
+  language-agnostic IDL (records, lists, strings) + Canonical ABI auto-generating the
+  serialization. Status: **production-ready server-side (Wasmtime), NOT yet in browser
+  engines** (same DEV source). **Consequence:** WIT is the theoretically-correct 6B/6C
+  unifier but is unavailable on the browser target the shopwindow needs (GN-6). Betting the
+  isomorphism plane on WIT today is premature; note it as the future convergence point, build
+  the manual typed-array-view seam now.
 
-### 3C. WASM-core + thin bindings (6C) — WON for correctness/reach, LOSES on the crossing tax
-
-The Rust-JS-tooling cohort (**oxc, swc, Biome**) is the definitive prior art. Raw core speed
-is enormous (oxc parser ≥3× swc, ≥5× Biome —
-[oxc benchmarks](https://oxc.rs/docs/guide/benchmarks)). **But the crossing is the tax that
-sinks the naive WASM-core play:** "**the serialization and deserialization costs increase
-linearly with the input size**"; "passing Rust data structures to JavaScript is complex and
-can significantly affect performance"; swc/oxc even resort to "**calling `JSON.parse` on
-strings returned from Rust**" as the *faster* path than returning structured data over FFI
-([Herrington Darkholme benchmark](https://dev.to/herrington_darkholme/benchmark-typescript-parsers-demystify-rust-tooling-performance-2go8),
-[NAPI-RS v3](https://napi.rs/blog/announce-v3)). **This is PROVE-14's exact finding
-independently reproduced at ecosystem scale:** crossing a full AST/structure is
-boundary-bound, and the win survives only when you *don't* cross the whole thing. wasm-bindgen
-further "**cannot use `std::thread`**" and third-party thread-dependent crates, needing
-"complex conditional compilation" (oxc guide). **Verdict for 6C:** the WASM-core wins for a
-browser playground / no-native-binary fallback (oxc's stated wasm use-cases) and for
-*stop-early / partial-access* lanes (our 4.4×), but **loses as the universal "one
-implementation" mechanism** for full-materialization TS work — the crossing tax makes a
-TS-native decoder competitive-to-better. The PROVE-14 full-walk lesson is a specific instance
-of the general oxc/swc law. 6C's honest scope = "wasm for the tape export + partial-access
-lanes + playground; TS-native where full walk / hot combinators live."
-
-### 3D. Differential testing / behavioral parity (6D) — the settled methodology for N impls
-
-Differential testing is the established discipline: "**two or more independent implementations
-of a specification are exercised on identical inputs, and discrepancies… automatically
-flagged**" — "highly effective for domains where writing a complete test oracle is infeasible"
-([Differential testing, Wikipedia](https://en.wikipedia.org/wiki/Differential_testing),
-[Emergent Mind overview](https://www.emergentmind.com/topics/differential-testing)). It is the
-literal method behind the tsc-go conformance validation (§3A). **Cross-language JSON parsers
-are a published differential-testing target** ([ACM AsiaCCS 2024, *Cross-Language Differential
-Testing of JSON Parsers*](https://dl.acm.org/doi/10.1145/3634737.3657003)) — i.e. our exact
-value-plane problem (rust tape vs TS decode vs `JSON.parse`) is a known-good differential
-oracle setup. **This is why the charter frames 6D as the null hypothesis:** behavioral parity
-via a shared corpus is the *cheapest* and *most robust* correctness guarantee, and the SPEC
-already installs it (GN-4.W5 four-lane oracle, PROVE-14 digest parity). 6D's honest scope =
-"the corpus + differential oracle is *mandatory infrastructure regardless of which family
-wins* — the open question is only whether layout is *also* mirrored (6A) or left free."
-
-### 3E. The drift problem — named, and IR-emitter is the ecosystem answer
-
-The generic "type drift across languages" pain is well-documented, and the converged solution
-is an **IR-with-per-language-emitters** architecture: "emitters only work with the IR, never
-with Rust's AST… TypeScript emitters handle TypeScript… Python emitters for Python"
-([Type Drift, Medium](https://aarambhdevhub.medium.com/i-got-tired-of-type-drift-so-i-built-a-rust-crate-to-end-it-7754643f7ad1)).
-**This is the precise shape of our multi-backend design already** (memory: `multi-backend` —
-shared decision driver + Emitter trait for Rust/TS/WASM). It corroborates 6B's mechanism *and*
-the standing no-TS-IR feedback (`no-ts-ir`: "AST IS the combinator") — the tension LOCK-6 must
-resolve is: **generate the shared IR-level skeleton (types/tapes/oracles) but do NOT interpose
-an IR between the TS combinators and their execution.**
+**Verdict on 6C:** the maximal reading ("Rust wasm is THE impl, TS is thin bindings") is
+**refuted by our own PROVE-14 full-walk** and the field's JSON-parser benchmark: for the
+value-materialization lane, cold V8's native `JSON.parse`/JS beats cold-JIT-over-wasm. 6C
+survives only in the tempered tree-sitter shape: **wasm core for the layout-crossing +
+stop-early lanes, TS-native idiom where V8 wins (full materialization, the `TapeDoc` walk).**
+The PROVE-14 full-walk non-goal is not a failure of 6C — it is the measured boundary that
+*proves such boundaries exist* (PORTFOLIO 6C's own framing, `PORTFOLIO.md:156-158`).
 
 ---
 
-## 4. TRAPS NAMED IN COMPARABLE SYSTEMS (what to refuse)
+## §2 6B SPEC-GENERATED-SKELETON — "one spec generates both skeletons"
 
-1. **The full-crossing trap (6C-killer).** Believing "compile the Rust core to wasm and TS is
-   free bindings" — the crossing cost is **linear in payload** (oxc/swc, PROVE-14). Refuse any
-   6C claim that a *full materialization* crosses cheaply. The win is *only* partial-access.
+The strongest prior art for LOCK-6 lives here, and it is directly transplantable to the tape
+decoder:
 
-2. **The shim-parity self-deception (SPEC row 09).** portable_simd→NEON shim "did not
-   reproduce… parity-to-slower." Any 6C/6B story that a shared SIMD/kernel layer crosses
-   languages at speed is refuted by our own fleet. NEON kernels do **not** cross; only the
-   *tape* crosses.
+- **Kaitai Struct is the existence proof for 6B applied to tape/binary layouts.** A declarative
+  YAML DSL (`.ksy`) describing "the structure of the data, not how you read it," compiled by
+  `ksc` into ready-to-use parser modules in **11 languages** (C++, C#, Go, Java, **JavaScript**,
+  Lua, Nim, Perl, PHP, Python, Ruby; **Rust** in the repo's language list)
+  ([kaitai.io](https://kaitai.io/),
+  [github.com/kaitai-io/kaitai_struct](https://github.com/kaitai-io/kaitai_struct)). 180+
+  format specs in the gallery. **This is exactly 6B's "shared machine-readable spec generates
+  types + tape decoders + oracle tables; hand code fills bodies."** The tape's four-plane SoA
+  layout (`REPORT.md:44-60`) is *more* regular than most Kaitai targets — a Kaitai-style spec
+  generating both the Rust `Tape` accessors and the TS `TapeDoc` decoder from one description is
+  well within demonstrated art. And it aligns with the Constitution's grammar-totality clause
+  (i): the decoder spec is *itself* a bbnf-defined grammar, not a second bespoke language.
 
-3. **The asserted-but-unverified isomorphism trap (in-tree already).** parse-that's docs
-   *say* "isomorphic layout" (`CLAUDE.md:9`) while the trees diverge at every idiom seam (§1).
-   A mirror claim without a **linter that actually fails CI** is decoration. 6A's whole value
-   is the *enforced* linter; a manual "we keep them in sync" is the documented failure mode.
+- **Rust→TS type generation is a solved, shipping category — with named limits.** `ts-rs`
+  (derive-macro `TS` trait, per-type export), `typeshare` (**static analysis** of Rust source,
+  Kotlin/Swift/TS), and `specta` (runtime trait + dependency-closure export, born from rspc's
+  need to "export a type and all the types it depends on" — a limit ts-rs hit)
+  ([docs.rs/ts-rs](https://docs.rs/ts-rs/latest/ts_rs/),
+  [docs.rs/specta](https://docs.rs/specta/latest/specta/),
+  [github.com/Aleph-Alpha/ts-rs](https://github.com/Aleph-Alpha/ts-rs)). **The named limitation
+  is load-bearing for us:** "TypeScript generics, conditional types, or advanced inference
+  **cannot be expressed via Rust struct derives; generated types are simpler than hand-written
+  equivalents.**" PT-E2 (`PT-3.md:305-357`) wants *precise* TS inference (`all(a,b)` →
+  `Parser<[A,B]>` via `infer V`, zero-cost) — a generated skeleton would flatten exactly the
+  conditional-type machinery PT-E2 is built to sharpen. **Consequence:** 6B fits the *data/tape*
+  plane (regular, layout-driven) but is a poor fit for the *combinator type algebra* (needs
+  hand-written conditional types). The reasonable-point line for 6B: generate the tape decoder
+  + oracle tables + value-enum shapes; hand-write the combinator inference.
 
-4. **The schema-loses-information trap (6B-limit).** typeshare "loses information"; ts-rs
-   "can't export dependent types." A grammar-driven generator must emit the *transitive
-   closure* (tape + all referenced type shapes + oracle fixtures), or it silently drops the
-   fields that matter — the "day-90 missing field" failure (Type Drift, Medium).
+- **Second named 6B cost:** the generated bindings become a CI orchestration burden — "if
+  frontend CI must verify bindings before deployment, the test-based export model requires
+  careful orchestration" (ts-rs docs). Across our *read-only repo boundary* (§0.6) this is
+  sharper: bbnf cannot run parse-that's generator, so a cross-repo 6B pipeline must ship the
+  generated artifact *inside the letter*, regenerated parse-that-side. 6B does not dissolve the
+  boundary; it moves the sync problem into the regen gate.
 
-5. **The god-module mirror trap.** Mirroring `utils.ts`↔`utils.rs` faithfully **mirrors the
-   god module** (R4 §1.2 flags `utils.ts`; PT-3.W2 splits it into `diagnostics/` + `scan.ts`).
-   A mirror linter must encode the colocation edict as an invariant, not freeze the current
-   (rot-carrying) tree.
-
-6. **The over-mirror-through-idiom-seam trap.** Forcing Rust's `span_parser/` enum-dispatch or
-   `bump_slab.rs` arena to have TS twins, or forcing TS's native-`RegExp` path to grow a
-   bespoke DFA to "match Rust." The V8-law/LLVM-law seam (Constitution iii) is *where mirroring
-   must stop* — the codebase already found this boundary empirically (§1).
-
-7. **The layout-mirror-without-behavior-oracle trap (and its inverse).** tsc-go proves you
-   need **both**: 6A alone (mirror, no oracle) can drift semantically while looking identical;
-   6D alone (oracle, free layout) passes tests while maintenance cost of two unrelated trees
-   compounds. The charter's 6D "null hypothesis must be DEFEATED by measured maintenance cost"
-   is answerable *only* with a real drift-cost measurement, which no pass-1 research can
-   assert — it must be **measured** (Constitution vii: concrete artifacts or SPEC-ONLY).
-
----
-
-## 5. SYNTHESIS FOR THE FAMILIES (where the evidence points, no allegiance)
-
-- **What the evidence base has ALREADY DECIDED:** (a) the **tape/oracle/bench-protocol layer
-  IS mirrored** — by SPEC decree and PROVE-14 byte-exact crossing; (b) **behavioral parity
-  oracles are mandatory infra** (GN-4.W5) regardless of the winning family — so **6D is a
-  floor, not a choice**; (c) the **idiom seam (V8 vs LLVM) is where isomorphism lawfully
-  ends** — arena, enum-dispatch, NEON, bespoke-DFA are Rust-only; packrat, native-RegExp are
-  TS-idiomatic; the codebase discovered this empirically (§1).
-
-- **6A (mirror-tree + linter):** externally validated by tsc-go's file-by-file port; the
-  linter must (i) fail CI, (ii) encode a *name map* not just tree shape (Rust `parse.rs` ↔ TS
-  `parser.ts` already diverge), (iii) carry the god-module/colocation invariant, (iv) **stop
-  at the idiom seam** (an allow-list of language-only modules).
-
-- **6B (spec-generated skeleton):** proven for the *data plane* (protobuf/flatbuffers/ts-rs
-  family; FlatBuffers zero-copy ≈ our tape), unproven for combinator logic; our grammar
-  already *is* the schema and multi-backend Emitter already exists — 6B's real content is
-  "generate types + tape decoders + oracle tables from the grammar; hand-fill idiomatic
-  bodies," constrained by zero-runtime-cost (Constitution v) and no-TS-IR (`no-ts-ir`).
-
-- **6C (wasm-core):** the oxc/swc/Biome cohort + PROVE-14 jointly bound its scope — WINS for
-  playground/fallback + partial-access (4.4×), LOSES the "one implementation" claim to the
-  linear crossing tax on full materialization; TS-native survives where V8 wins (the very
-  boundary GN-4.W4 already draws: full-walk = documented non-goal, TS-native decoder ships).
-
-- **6D (oracle-isomorphism):** the settled differential-testing methodology; cross-language
-  JSON-parser differential testing is published prior art matching our exact value plane; it
-  is **already installed** as the GN-4 close gate. As the null hypothesis it can only be
-  *defeated* by a **measured** two-tree maintenance/drift cost — which is a stage-2 prove
-  obligation, not a pass-1 assertion.
-
-**The convergent shape the prior art suggests (for synthesis, not a verdict):** the winning
-real-world pattern (tsc-go, FlatBuffers, oxc) is **not a single family** but a *layering* —
-6D as the mandatory behavioral floor, 6B generating the mirror-able data/oracle surface from
-the grammar, 6A's linter enforcing the hand-written-body correspondence *up to the idiom
-seam*, and 6C confined to the crossing/playground lanes where its measured win (partial
-access) actually lives. Whether that layering collapses to one dominant family or stays a
-composite is the measured question the later passes owe.
+**Verdict on 6B:** strong, demonstrated, and directly transplantable **for the tape/decoder/
+oracle-table plane** (Kaitai is the proof; the layout is regular). Weak for the combinator type
+algebra (type-gen tooling's own documented limit). It does not erase the cross-repo boundary —
+it relocates drift-prevention into a regen-diff gate (see §3).
 
 ---
 
-## 6. CITATIONS
+## §3 6A MIRROR-TREE & 6D ORACLE-ISOMORPHISM — hand-mirror + differential corpus
 
-**Codebase / evidence base:** SPEC §0 (rows 08/09/14 + refutation laws), SPEC §1/§2/§4;
-PORTFOLIO constitution i–ix + LOCK-6 charter 6A–6D; PROVE-14 REPORT + VERIFY (byte-exact
-crossing, full-walk parity, stop-early 4.4×); GN-4.md §4 W4/W5 (parity oracles installed);
-PT-3.md §W2/W3 (god-module split, zero-runtime-cost inference); R3 (parse-that Rust map),
-R4 (parse-that TS map, §1.2 god module, §3 no-TS-regex-engine, §6 V8 surfaces); parse-that
-`CLAUDE.md:9`, `docs/playground/overview.md:9` (asserted isomorphism); in-tree tree
-comparison (§1). Memory: `multi-backend`, `no-ts-ir`, `backend-agnostic-types`,
-`isomorphic-api`, `wasm-subcrate-pattern`, `directory-module-structure`.
+These two are the "human keeps them in sync" family and the "prove behavior matches, ignore
+layout" family; the field's evidence pairs them tightly.
 
-**Web:**
-- [microsoft/typescript-go — Why a port not a rewrite (#410)](https://github.com/microsoft/typescript-go/discussions/410)
-- [VS Magazine — Microsoft Ports TypeScript to Go](https://visualstudiomagazine.com/articles/2025/03/11/microsoft-ports-typescript-to-go-for-10x-native-performance-gains.aspx)
-- [oxc benchmarks](https://oxc.rs/docs/guide/benchmarks) · [oxc guide](https://oxc.rs/)
-- [Herrington Darkholme — Benchmark TypeScript Parsers (FFI serde cost linear in input)](https://dev.to/herrington_darkholme/benchmark-typescript-parsers-demystify-rust-tooling-performance-2go8)
-- [NAPI-RS v3 announcement](https://napi.rs/blog/announce-v3)
-- [FlatBuffers vs Cap'n Proto (HN)](https://news.ycombinator.com/item?id=23589402) · [FlatBuffers (Wikipedia)](https://en.wikipedia.org/wiki/FlatBuffers) · [Cap'n Proto (Wikipedia)](https://en.wikipedia.org/wiki/Cap%27n_Proto)
-- [ts-rs](https://github.com/Aleph-Alpha/ts-rs) · [specta](https://docs.rs/specta/latest/specta/)
-- [Cross-Language Differential Testing of JSON Parsers (ACM AsiaCCS 2024)](https://dl.acm.org/doi/10.1145/3634737.3657003) · [Differential testing (Wikipedia)](https://en.wikipedia.org/wiki/Differential_testing) · [Differential testing overview (Emergent Mind)](https://www.emergentmind.com/topics/differential-testing)
-- [Type Drift — IR-emitter architecture (Medium)](https://aarambhdevhub.medium.com/i-got-tired-of-type-drift-so-i-built-a-rust-crate-to-end-it-7754643f7ad1)
-</content>
-</invoke>
+- **The universal field lament is drift, and the universal cure is a generated fixture + a
+  CI drift gate.** "Every full-stack team hits the same invisible tax: keeping types in sync
+  across languages… fields get added to the Rust struct but forgotten elsewhere, so the
+  TypeScript interface is silently missing fields"
+  ([aarambhdevhub / Medium](https://aarambhdevhub.medium.com/i-got-tired-of-type-drift-so-i-built-a-rust-crate-to-end-it-7754643f7ad1)).
+  The named cure: "a **shared testvectors fixture set generated by a deterministic script**,
+  consumed in integration tests, with a **drift-detection CI job that regenerates fixtures on
+  every side change and fails the build if re-generated bytes differ.**" This is the operational
+  core of BOTH 6A (a fixture-diff *is* the isomorphism linter) and 6D (the shared corpus).
+  PROVE-14 already built the primitive: `verify.mjs` cross-checks the wasm/dump planes byte-for-
+  byte, and GN-4.W4's born-RED gate asserts "wasm planes byte-identical to the `tape_dump`
+  fixture" (`GN-4.md:362-367`) — that IS the drift gate, already specified.
+
+- **6D's "shared conformance corpus + differential tests" is the industry standard for parser
+  parity.** oxc/Rome run **Test262 + Babel + TypeScript conformance suites** as the parity
+  oracle for a Rust parser against the JS-defined spec
+  ([oxc-project.github.io/…/conformance](https://oxc-project.github.io/javascript-parser-in-rust/blog/conformance/)).
+  Cross-language differential testing of JSON parsers is a published, peer-reviewed method
+  (AsiaCCS'24: "Cross-Language Differential Testing of JSON Parsers," consensus-based
+  normalization across C/C++/Rust/Java/Python,
+  [dl.acm.org/10.1145/3634737.3657003](https://dl.acm.org/doi/10.1145/3634737.3657003)).
+  PROVE-14's node-for-node digest parity vs `JSON.parse` across 320 cold children
+  (`VERIFY.md:30-37`) is precisely this method, already discharged for the tape. The pre-built
+  corpus to inherit: `JSONTestSuite` (nst) for JSON, the CommonMark/WPT model generally.
+
+- **6A's hand-mirror + linter has a hard, documented failure mode: V8-vs-LLVM idiom divergence
+  makes line-for-line mirroring counterproductive.** R4 (`R4-parse-that-ts.md:178-208`) shows
+  the TS core is *deliberately* non-isomorphic to naive Rust: arity-unrolled `any`/`fuseAll`
+  (leaf.ts:39-57,183-251), `Int8Array(128)` dispatch table, sticky-`test()` zero-alloc regex,
+  `Object.create` view. These exist because V8 rewards them and would be absent from an
+  LLVM-idiomatic Rust mirror. A 6A linter enforcing structural correspondence would fight the
+  very monomorphizations PT-3.W4 exists to *protect* (`PT-3.md:360-401`). **Consequence:** a 6A
+  *tree/name* mirror (module layout, public API names, oracle-table names) is cheap and useful;
+  a 6A *code-shape* mirror is refuted by the measured V8 idiom. This is the Constitution's
+  clause (iii) "reasonable point" line for 6A.
+
+**Verdict on 6A/6D:** 6D is not really a competing family — it is the **substrate every family
+needs**: the differential corpus + byte-fixture drift gate is the isomorphism proof regardless
+of how the two sides are built. PROVE-14 already implements it. The Constitution frames 6D's
+null hypothesis as "must be DEFEATED by measured maintenance/drift cost, or it wins"
+(`PORTFOLIO.md:159-161`); the field evidence says a *pure* 6D (behavior only, layout totally
+free) under-delivers exactly where our tape needs byte-layout identity to be zero-copy — so 6D
+wins *as the verification layer* but does not win *as the whole answer* for the tape plane,
+which needs 6B/6C layout identity. 6A survives as tree/name/oracle-table mirroring under a
+linter; 6A-as-code-shape-mirror is defeated by R4's V8 idiom.
+
+---
+
+## §4 The synthesis the evidence points at (for downstream passes, not a verdict)
+
+The prior art does not select one family — it stratifies them by plane, and the strata are
+mutually consistent:
+
+| Plane | Winning prior art | Family it realizes |
+|---|---|---|
+| **Tape layout** (4 SoA planes) | Cap'n Proto / FlatBuffers / **Arrow C Data Interface** zero-copy; Kaitai spec-gen | 6B generates it, 6C crosses it zero-copy |
+| **Decoder / oracle tables** | Kaitai Struct multi-lang codegen | 6B (grammar-defined per Constitution i) |
+| **Value-materialization lane** | tree-sitter native-first; V8 `JSON.parse` beats wasm (ours + field) | 6C **tempered** — TS-native where V8 wins |
+| **Combinator type algebra** | ts-rs/typeshare/specta — *documented to flatten* conditional types | hand-written (PT-E2), NOT 6B-generated |
+| **Parity verification** | oxc/Test262, AsiaCCS'24 differential, testvector drift-CI | 6D + 6A-linter, the shared substrate |
+| **Module tree / names** | the cheap, universal mirror | 6A tree-mirror (NOT code-shape mirror) |
+
+The boundary line the whole lock turns on — the Constitution's "reasonable point" — is drawn
+by measurement in three places our evidence already fixes: **(a)** cross layout, never per-value
+(PROVE-14 4.4× vs 0.9×); **(b)** generate the regular data planes, hand-write the V8/conditional-
+type idiom (typeshare's limit + R4's monomorphizations); **(c)** the drift gate is a byte-
+fixture diff in CI (the field's universal cure, already specified in GN-4.W4).
+
+---
+
+## §5 Named traps carried into downstream passes
+
+1. **`memory.grow()` detaches typed-array views** (16-patterns #6) — a live `bbnf-wasm parse()`
+   that grows linear memory silently invalidates the JS plane views. PROVE-14 dumped once and
+   dodged this; the productionized W4 export must re-create views after any grow, or pre-size.
+   *This hazard is not yet in GN-4.md's R4 (which covers stride/endianness drift, not
+   grow-detach) — LOCK-6 should surface it.*
+2. **The full-walk 2× temptation** — refuted twice (ours PROVE-14, field's 25%-slower JSON
+   benchmark). Any pass proposing "wasm makes the TS full parse faster" is relitigating a
+   measured NO. Cross for *layout + stop-early*, never for full materialization.
+3. **Generated code flattens the type algebra** (typeshare/ts-rs documented limit) — do not
+   6B-generate the combinator inference; PT-E2's `infer V` precision cannot be derive-macro'd.
+4. **Code-shape mirroring fights V8** (R4 §6) — a 6A linter enforcing line-for-line Rust≡TS
+   would delete the arity-unrolls/dispatch-tables PT-3.W4 protects. Mirror tree + names +
+   oracle tables; do NOT mirror control-flow shape.
+5. **The cross-repo boundary is not dissolvable by tooling** (§0.6, `PT-3.md:101-106`) — no 6B
+   pipeline lets bbnf run parse-that's generator; the sync artifact ships *inside the letter*,
+   regenerated parse-that-side. Any "one shared generator repo" design violates the non-clobber
+   law.
+6. **WIT/Component Model is not browser-ready** (16-patterns) — the theoretically-correct IDL
+   unifier can't ship to the GN-6 playground target yet; note as future convergence, build the
+   manual typed-array seam now.
+7. **Warm/cross-run benches are disinformation** (SPEC §0; PROVE-11 §3.1 load-confound;
+   `PT-3.md:71-76`) — every cross-language ratio must be cold, paired, single-process
+   interleave; the naive `vitest bench` cross-run is refused as evidence.
+
+---
+
+## §6 Sources
+
+In-repo (READ): `restart/skinny/tranches/sk-v24/prototypes/PROVE-14/{REPORT.md,VERIFY.md}`;
+`restart/skinny/tranches/sk-v24/SPEC.md` §0/§1/§2b; `restart/skinny/tranches/sk-v24/research/R4-parse-that-ts.md`;
+`docs/tranches/sk-v24/GN-4.md` (W4); `docs/tranches/sk-v24/PT-3.md`; `crates/runtime/src/tape/mod.rs:121-137` (per REPORT seam).
+
+Web (accessed 2026-07-16):
+- Rust-WASM vs TS JSON-parser boundary benchmark — https://www.kunalganglani.com/blog/rust-wasm-vs-typescript-performance
+- 16 Patterns for Crossing the WebAssembly Boundary (+ Component Model/WIT) — https://dev.to/rafacalderon/16-patterns-for-crossing-the-webassembly-boundary-and-the-one-that-wants-to-kill-them-all-5kb
+- Kaitai Struct (declarative binary spec → 11-language parsers) — https://kaitai.io/ , https://github.com/kaitai-io/kaitai_struct
+- tree-sitter (grammar → C + native bindings + wasm consumed by native) — https://tree-sitter.github.io/tree-sitter/using-parsers/
+- ts-rs / specta / typeshare (Rust→TS type gen + documented flattening limit) — https://docs.rs/ts-rs/latest/ts_rs/ , https://docs.rs/specta/latest/specta/ , https://github.com/Aleph-Alpha/ts-rs
+- Cap'n Proto / FlatBuffers / Apache Arrow (zero-copy, same-bytes cross-language; Arrow uses FlatBuffers internally) — https://en.wikipedia.org/wiki/Cap%27n_Proto , https://en.wikipedia.org/wiki/FlatBuffers
+- oxc conformance (Test262 + Babel + TypeScript suites as parity oracle) — https://oxc-project.github.io/javascript-parser-in-rust/blog/conformance/
+- Cross-Language Differential Testing of JSON Parsers (AsiaCCS'24) — https://dl.acm.org/doi/10.1145/3634737.3657003
+- Type-drift cure: generated testvectors + CI drift gate — https://aarambhdevhub.medium.com/i-got-tired-of-type-drift-so-i-built-a-rust-crate-to-end-it-7754643f7ad1

@@ -60,7 +60,7 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 
 | 5-codex | wf_6ae8f4f7-16c | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-codex-authorship-wf_6ae8f4f7-16c.js | DONE 28/29 (32 min, 3.25M tok; GN-6 author died post-write — file complete on disk; 31 defects → all CRITICAL/MAJOR fixed; minors harmonization agent running; codex commit pending its return) |
 | 6-locks-p1-bbnf | wf_63419230-36d | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js (args: group bbnf, locks [1,2,3,7], pass 1) | RUNNING |
-| 6-locks-p1-pt | wf_50d1252c-5ea | same script (args: group pt, locks [4,5,6], pass 1) | RUNNING |
+| 6-locks-p1-pt | wf_50d1252c-5ea | same script (args: group pt, locks [4,5,6], pass 1) | RESUMED after partial completion (LOCK-4 folded — registry excellent; LOCK-5/6 synths died at StructuredOutput retry cap AFTER writing FAMILY-SPECS.md to disk; resume replays cached researchers, re-runs synth onward) |
 | 6-locks-p1-pt-ext | wf_0c50c1bb-81e | same script (args: group pt-ext, locks [8,9], pass 1) | RUNNING (locks 8/9 added per owner amendment: parse-that lock set + three-tier gestalt) |
 
 AMENDMENT (owner, 2026-07-16): nine locks now — parse-that gets its own set of befitting
@@ -115,3 +115,8 @@ green — no spam. If this session is gone, a fresh session executing task #55 I
   the script as a JSON STRING, not an object; pipeline(args.locks) threw. Cure: scripts
   normalize with typeof args === 'string' ? JSON.parse(args) : args. Relaunched as
   wf_63419230-36d (bbnf) + wf_50d1252c-5ea (pt). RULE for all future parameterized scripts.
+- 2026-07-16 stage 6: pt pass-1 partial — 6 StructuredOutput retry-cap deaths; LOCK-5/6
+  synth stages threw, dropping both pipeline items; LOCK-4 unaffected (folded). Files
+  survived on disk (FAMILY-SPECS.md both locks). Resumed wf_50d1252c-5ea from journal cache.
+  WATCH: the synth schema (proto_briefs exactly-2) may be brittle — if the resume dies on
+  the same agents, relax minItems/maxItems to 1-3 and accept the cache loss for lock 4.

@@ -1,0 +1,84 @@
+==================== _probe_baseline ====================
+_probe_baseline:
+0000000100000a6c	eor	x8, x0, x0, lsl #1
+0000000100000a70	eor	x8, x8, x8, lsl #2
+0000000100000a74	eor	x8, x8, x8, lsl #4
+0000000100000a78	eor	x8, x8, x8, lsl #8
+0000000100000a7c	eor	x8, x8, x8, lsl #16
+0000000100000a80	eor	x0, x8, x8, lsl #32
+0000000100000a84	ret
+==================== _probe_arm_a ====================
+_probe_arm_a:
+0000000100000a20	stp	x20, x19, [sp, #-0x20]!
+0000000100000a24	stp	x29, x30, [sp, #0x10]
+0000000100000a28	add	x29, sp, #0x10
+0000000100000a2c	mov	x19, x0
+0000000100000a30	adrp	x8, 68 ; 0x100044000
+0000000100000a34	add	x8, x8, #0x218
+0000000100000a38	ldapr	x8, [x8]
+0000000100000a3c	cbnz	x8, 0x100000a60
+0000000100000a40	adrp	x8, 68 ; 0x100044000
+0000000100000a44	ldr	x8, [x8, #0x228]
+0000000100000a48	mov	x0, x19
+0000000100000a4c	mov	w1, #0x0
+0000000100000a50	blr	x8
+0000000100000a54	ldp	x29, x30, [sp, #0x10]
+0000000100000a58	ldp	x20, x19, [sp], #0x20
+0000000100000a5c	ret
+0000000100000a60	bl	__RINvMNtNtCsicsVAbuKrnN_3std4sync9once_lockINtB3_8OnceLockNtNtCs2rqcPF2SCXe_9bbnf_simd8dispatch16PrimitiveKernelsE10initializeNCINvB2_11get_or_initNvBV_24select_primitive_kernelsE0zEBX_
+0000000100000a64	b	0x100000a40
+0000000100000a68	bl	__RNvNtCsiMP5swsg2Zt_4core9panicking19panic_cannot_unwind
+==================== _probe_arm_b ====================
+==================== _probe_loop_arm_a ====================
+_probe_loop_arm_a:
+0000000100000a88	stp	x24, x23, [sp, #-0x40]!
+0000000100000a8c	stp	x22, x21, [sp, #0x10]
+0000000100000a90	stp	x20, x19, [sp, #0x20]
+0000000100000a94	stp	x29, x30, [sp, #0x30]
+0000000100000a98	add	x29, sp, #0x30
+0000000100000a9c	cbz	x1, 0x100000aec
+0000000100000aa0	mov	x20, x0
+0000000100000aa4	mov	x19, #0x0
+0000000100000aa8	lsl	x21, x1, #3
+0000000100000aac	adrp	x22, 68 ; 0x100044000
+0000000100000ab0	adrp	x23, 68 ; 0x100044000
+0000000100000ab4	add	x23, x23, #0x218
+0000000100000ab8	ldr	x24, [x20], #0x8
+0000000100000abc	ldapr	x8, [x23]
+0000000100000ac0	cbnz	x8, 0x100000ae4
+0000000100000ac4	ldr	x8, [x22, #0x228]
+0000000100000ac8	eor	x0, x24, x19
+0000000100000acc	mov	w1, #0x0
+0000000100000ad0	blr	x8
+0000000100000ad4	eor	x19, x0, x19
+0000000100000ad8	subs	x21, x21, #0x8
+0000000100000adc	b.ne	0x100000ab8
+0000000100000ae0	b	0x100000af0
+0000000100000ae4	bl	__RINvMNtNtCsicsVAbuKrnN_3std4sync9once_lockINtB3_8OnceLockNtNtCs2rqcPF2SCXe_9bbnf_simd8dispatch16PrimitiveKernelsE10initializeNCINvB2_11get_or_initNvBV_24select_primitive_kernelsE0zEBX_
+0000000100000ae8	b	0x100000ac4
+0000000100000aec	mov	x19, #0x0
+0000000100000af0	mov	x0, x19
+0000000100000af4	ldp	x29, x30, [sp, #0x30]
+0000000100000af8	ldp	x20, x19, [sp, #0x20]
+0000000100000afc	ldp	x22, x21, [sp, #0x10]
+0000000100000b00	ldp	x24, x23, [sp], #0x40
+0000000100000b04	ret
+0000000100000b08	bl	__RNvNtCsiMP5swsg2Zt_4core9panicking19panic_cannot_unwind
+==================== _probe_loop_arm_b ====================
+_probe_loop_arm_b:
+0000000100000b0c	mov	x8, #0x0
+0000000100000b10	cbz	x1, 0x100000b44
+0000000100000b14	lsl	x9, x1, #3
+0000000100000b18	ldr	x10, [x0], #0x8
+0000000100000b1c	eor	x10, x10, x8
+0000000100000b20	eor	x10, x10, x10, lsl #1
+0000000100000b24	eor	x10, x10, x10, lsl #2
+0000000100000b28	eor	x10, x10, x10, lsl #4
+0000000100000b2c	eor	x10, x10, x10, lsl #8
+0000000100000b30	eor	x10, x10, x10, lsl #16
+0000000100000b34	eor	x8, x8, x10, lsl #32
+0000000100000b38	eor	x8, x8, x10
+0000000100000b3c	subs	x9, x9, #0x8
+0000000100000b40	b.ne	0x100000b18
+0000000100000b44	mov	x0, x8
+0000000100000b48	ret

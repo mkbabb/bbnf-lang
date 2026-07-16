@@ -25,8 +25,15 @@ resurrects the campaign from this file alone.
 | 0 | Setup: charter §1.5, ROUND-ZERO, state file, heartbeat cron, memory | DONE 2026-07-16 |
 | 1 | RECON: parallel cartography fleet (both repos, harnesses, reusable prototypes, SOTA sweep) → research/R1-R7 | DONE 2026-07-16 (wf_954e831e-a1c, 7/7, 731K tok) |
 | 2 | PROVING: the PROVE-01..14 implementation fleet (worktree/scratch isolated, measured, cp-out) → prototypes/PROVE-XX/ | DONE 2026-07-16 (wf_386900ed-462, 14/14: 6 GO / 7 PARTIAL / 1 NO_GO; artifacts committed f6004995a) |
-| 3 | VERIFY: adversarial re-measure of every claimed win; unproven dies | RUNNING wf_a4c300b0-b54 (12 verifiers; 02 NO_GO + 04 refutation accepted without re-litigation) |
-| 4 | SPEC: the frozen codex (tranches/waves both repos, colocation edict normative, archival last, letter + checkboxes re-cut) + final report | BLOCKED ON 3 |
+| 3 | VERIFY: adversarial re-measure of every claimed win; unproven dies | DONE 2026-07-16 (wf_a4c300b0-b54, 12/12: 7 CONFIRMED, 3 CONFIRMED_DELTA, 1 REFUTED [09 perf], 1 UNVERIFIABLE-perf [13, generality verified]) |
+| 4 | SPEC: the frozen codex + final report | DONE 2026-07-16 — SPEC.md FROZEN (GN-0..6 + PT-N1-3 + BBNF-PT-G letter + 3 re-cut checkboxes + forward prompt) |
+
+## CAMPAIGN CLOSED 2026-07-16
+
+The swath: 7 CONFIRMED + 3 CONFIRMED_DELTA performance-proven features; 3 measured
+refutations now law (02 latency inversion, 04 pipelining, 09 shim perf). The path: SPEC.md
+GN-0→GN-6 + PT-N1-3. Heartbeat cron retired at close. Next acts are user-owned: §3
+checkboxes + BBNF-PT-G placement (task #53), then execution dispatch (task #54, SPEC §5).
 
 ## Workflow ledger (append per launch; mark DONE/DEAD; keep scriptPaths exact)
 
@@ -45,7 +52,7 @@ prototype CODE is wiped — re-author from report inline diffs; PROVE-07 must be
 single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 
 | 2-proving | wf_386900ed-462 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-proving-fleet-wf_386900ed-462.js | DONE 14/14 (36 min, 2.84M tok); prover worktrees preserved at .claude/worktrees/wf_386900ed-462-N |
-| 3-verify | wf_a4c300b0-b54 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-verify-fleet-wf_a4c300b0-b54.js | RUNNING (launched 2026-07-16; 12 adversarial verifiers, 45-min caps) |
+| 3-verify | wf_a4c300b0-b54 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-verify-fleet-wf_a4c300b0-b54.js | DONE 12/12 (14 min, 1.06M tok) |
 
 Heartbeat cron live: job fc81e24f, hourly at :23, session-scoped.
 

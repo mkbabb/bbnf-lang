@@ -1,0 +1,593 @@
+diff --git a/skinny/crates/codegen/src/lib.rs b/skinny/crates/codegen/src/lib.rs
+index 0f2861cc8..6cec23aa8 100644
+--- a/skinny/crates/codegen/src/lib.rs
++++ b/skinny/crates/codegen/src/lib.rs
+@@ -5,6 +5,7 @@ mod json_sink_direct;
+ mod json_typed_direct;
+ pub(crate) mod lower;
+ pub(crate) mod runtime_generator;
++pub mod type_plane;
+ 
+ use direct_schema::DirectSchemaSet;
+ use ir::{
+diff --git a/skinny/crates/codegen/src/type_plane/derive.rs b/skinny/crates/codegen/src/type_plane/derive.rs
+new file mode 100644
+index 000000000..56e7bda20
+--- /dev/null
++++ b/skinny/crates/codegen/src/type_plane/derive.rs
+@@ -0,0 +1,211 @@
++//! Schema-from-grammar: turn a grammar's `->` projections into the honest,
++//! IR-expressible slice of a `DirectSchemaSet`, with every leaf field `type_ref`
++//! populated from Hindley–Milner inference instead of dropped as `None`.
++//!
++//! The `->` arrows are read from the *real* front-end facts
++//! (`grammar::parse_runtime_source_facts`), not re-parsed ad hoc: this is the
++//! same `RuntimeTypedProjection`/`RuntimeProjection` capture the compiler already
++//! computes and then discards. Each arrow is bound to its owning rule by source
++//! offset, unified by [`hm`], and lowered to a `DirectScalar` / `DirectBuildScalar`.
++
++use crate::direct_schema::{
++    DirectFieldSchema, DirectRootSchema, DirectScalar, DirectSchemaSet, DirectTypeKind,
++    DirectTypeRef, DirectTypeSchema, DuplicatePolicy, PresencePolicy, UnknownFieldPolicy,
++};
++use crate::type_plane::hm::{self, TyCon};
++use grammar::{parse_runtime_source_facts, RuntimeSource};
++use ir::{DirectBuildScalar, GrammarIr};
++
++#[derive(Debug)]
++pub enum DeriveError {
++    Grammar(grammar::GrammarError),
++    Unify(hm::UnifyError),
++    Validate(String),
++}
++
++/// The measured outputs of one derivation.
++pub struct DerivedTypePlane {
++    /// A validated `DirectSchemaSet` — the emitter's input, produced from grammar.
++    pub schema: DirectSchemaSet,
++    /// The per-rule leaf `type_ref`s the materialization plan drops as `None`
++    /// (`DirectBuildField.target`), here populated from the grammar `->` types.
++    pub leaf_type_refs: Vec<(String, DirectBuildScalar)>,
++    /// Inference census: arrows in, rules projected, unifications performed.
++    pub arrow_count: usize,
++    pub projected_rule_count: usize,
++    pub unify_events: usize,
++    /// Sorted `(rule, TyCon)` for reporting/diffing.
++    pub resolved: Vec<(String, TyCon)>,
++}
++
++/// Derive the type plane for `typed_source` (a grammar carrying `->` arrows).
++/// `grammar` is the structural IR of the same grammar (arrows stripped), used
++/// only to confirm the projected names are real rules.
++pub fn derive(grammar: &GrammarIr, typed_source: &str) -> Result<DerivedTypePlane, DeriveError> {
++    let facts = parse_runtime_source_facts(&[RuntimeSource::new("typed.bbnf", typed_source)])
++        .map_err(DeriveError::Grammar)?;
++
++    // Rule-definition offsets in the typed source: `<ident> =` at line start.
++    let defs = rule_defs(typed_source);
++    let owning = |offset: usize| -> Option<String> {
++        defs.iter()
++            .rev()
++            .find(|(start, _)| *start <= offset)
++            .map(|(_, name)| name.clone())
++    };
++
++    // Collect arrows as (rule, target_text, type_text) from the real facts.
++    let mut arrows: Vec<(String, String, Option<String>)> = Vec::new();
++    for p in &facts.frontend.projections {
++        if let Some(rule) = owning(p.offset) {
++            arrows.push((rule, p.target.trim().to_string(), None));
++        }
++    }
++    for p in &facts.frontend.typed_projections {
++        if let Some(rule) = owning(p.offset) {
++            arrows.push((
++                rule,
++                p.target.trim().to_string(),
++                Some(p.type_text.trim().to_string()),
++            ));
++        }
++    }
++    // Keep only arrows whose rule is a real rule in the structural grammar.
++    arrows.retain(|(rule, _, _)| grammar.rules.iter().any(|r| &r.name == rule));
++
++    let inf = hm::infer(&arrows).map_err(DeriveError::Unify)?;
++
++    let mut resolved: Vec<(String, TyCon)> = inf
++        .rule_types
++        .iter()
++        .map(|(k, v)| (k.clone(), *v))
++        .collect();
++    resolved.sort_by(|a, b| a.0.cmp(&b.0));
++
++    // Thread the resolved leaf types into the `DirectBuildScalar` slots that the
++    // materialization plan leaves as `None` — the exact wire R6 flags as dropped.
++    let leaf_type_refs: Vec<(String, DirectBuildScalar)> = resolved
++        .iter()
++        .map(|(rule, ty)| (rule.clone(), build_scalar(*ty)))
++        .collect();
++
++    // Emit the validating, grammar-derived schema slice: one struct gathering the
++    // leaf-projected rules as scalar fields, each field's `ty` bound by HM. Object
++    // maps and the recursive `value` sum are NOT emitted — the struct-only schema
++    // IR cannot express them (see REPORT §walls).
++    let prefix = pascal_case(&grammar.name);
++    let struct_id = format!("{prefix}Leaves");
++    let rust_type = format!("crate::{}::{struct_id}", grammar.name.to_lowercase());
++    let fields: Vec<DirectFieldSchema> = resolved
++        .iter()
++        .map(|(rule, ty)| DirectFieldSchema {
++            key_literal: rule.clone(),
++            rust_field: rule.clone(),
++            ty: DirectTypeRef::Scalar(schema_scalar(*ty)),
++            presence: PresencePolicy::Default,
++            duplicate: DuplicatePolicy::LastWins,
++        })
++        .collect();
++
++    let schema = DirectSchemaSet {
++        module_name: format!("generated_{}_type_plane", grammar.name.to_lowercase()),
++        schema_hash: facts.source_hash.clone(),
++        roots: vec![DirectRootSchema::struct_root(
++            format!("parse_{}", grammar.name.to_lowercase()),
++            rust_type.clone(),
++            struct_id.clone(),
++        )],
++        types: vec![DirectTypeSchema {
++            type_id: struct_id,
++            rust_type,
++            kind: DirectTypeKind::Struct {
++                fields,
++                ignored_fields: Vec::new(),
++                unknown_fields: UnknownFieldPolicy::Skip,
++            },
++        }],
++    };
++    schema.validate().map_err(DeriveError::Validate)?;
++
++    Ok(DerivedTypePlane {
++        schema,
++        leaf_type_refs,
++        arrow_count: inf.arrow_count,
++        projected_rule_count: inf.projected_rule_count,
++        unify_events: inf.unify_events,
++        resolved,
++    })
++}
++
++/// Map an HM leaf to the schema-layer scalar (`DirectScalar`).
++fn schema_scalar(ty: TyCon) -> DirectScalar {
++    match ty {
++        TyCon::Bool => DirectScalar::Bool,
++        TyCon::F64 => DirectScalar::F64,
++        TyCon::StringDecoded => DirectScalar::DecodedJsonString,
++        TyCon::StringSpan => DirectScalar::String,
++        // No U8 in the schema scalar set; the null tag is a u32-width discriminant.
++        TyCon::U8Tag => DirectScalar::U32,
++    }
++}
++
++/// Map an HM leaf to the IR build-scalar (`DirectBuildScalar`) — the `type_ref`
++/// slot the plan drops as `None`.
++fn build_scalar(ty: TyCon) -> DirectBuildScalar {
++    match ty {
++        TyCon::Bool => DirectBuildScalar::Bool,
++        TyCon::F64 => DirectBuildScalar::F64,
++        TyCon::StringDecoded | TyCon::StringSpan => DirectBuildScalar::String,
++        TyCon::U8Tag => DirectBuildScalar::Null,
++    }
++}
++
++/// Byte offsets of `<ident> =` rule definitions, in source order.
++fn rule_defs(source: &str) -> Vec<(usize, String)> {
++    let bytes = source.as_bytes();
++    let mut out = Vec::new();
++    let mut i = 0usize;
++    let mut at_line_start = true;
++    while i < bytes.len() {
++        if at_line_start {
++            // skip leading spaces/tabs
++            let mut j = i;
++            while j < bytes.len() && (bytes[j] == b' ' || bytes[j] == b'\t') {
++                j += 1;
++            }
++            let name_start = j;
++            while j < bytes.len() && (bytes[j].is_ascii_alphanumeric() || bytes[j] == b'_') {
++                j += 1;
++            }
++            if j > name_start {
++                // skip spaces then expect '='
++                let mut k = j;
++                while k < bytes.len() && (bytes[k] == b' ' || bytes[k] == b'\t') {
++                    k += 1;
++                }
++                if k < bytes.len() && bytes[k] == b'=' {
++                    out.push((name_start, source[name_start..j].to_string()));
++                }
++            }
++        }
++        at_line_start = bytes[i] == b'\n';
++        i += 1;
++    }
++    out
++}
++
++fn pascal_case(name: &str) -> String {
++    let mut out = String::new();
++    let mut upper = true;
++    for ch in name.chars() {
++        if ch == '_' || ch == '-' {
++            upper = true;
++        } else if upper {
++            out.extend(ch.to_uppercase());
++            upper = false;
++        } else {
++            out.push(ch);
++        }
++    }
++    out
++}
+diff --git a/skinny/crates/codegen/src/type_plane/hm.rs b/skinny/crates/codegen/src/type_plane/hm.rs
+new file mode 100644
+index 000000000..b36fc9176
+--- /dev/null
++++ b/skinny/crates/codegen/src/type_plane/hm.rs
+@@ -0,0 +1,221 @@
++//! A small Hindley–Milner unification core for the grammar type plane.
++//!
++//! Re-authored from the SK-V21 PROTO-P6 spike (189-LOC bidirectional synth/check
++//! + union-find). The job here is narrow and honest: the grammar's `->` arrows
++//! carry leaf projection texts (`true`, `false`, `f64`, `0u8`, `: String`); this
++//! core lexes each arrow to a monotype and *unifies* the arrows that land on the
++//! same rule. Unification is load-bearing, not decorative: `bool = "true" -> true
++//! | "false" -> false` yields TWO arrows on one rule that must reconcile to a
++//! single `Bool`; a rule whose arrows disagree is a type error the core rejects.
++//!
++//! `TyCon` is the closed leaf vocabulary a JSON-shaped grammar can name. Composite
++//! shapes (object/array/the `value` sum) live in the schema layer, not here — this
++//! core resolves *leaf* projections, the atoms the schema's field `type_ref`s bind.
++
++use std::collections::HashMap;
++
++/// A leaf type constructor — the closed vocabulary a `->` projection can name.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum TyCon {
++    Bool,
++    F64,
++    /// An unsigned tag (`0u8` in `null -> 0u8`); the u8 discriminant leaf.
++    U8Tag,
++    /// A decoded, arena-owned string (`-> decode_...(input) : String`).
++    StringDecoded,
++    /// A borrowed string span (`-> input : String` / bare string leaf).
++    StringSpan,
++}
++
++/// A monotype: either an unresolved variable or a resolved leaf constructor.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum Ty {
++    Var(u32),
++    Con(TyCon),
++}
++
++/// Union-find over type variables with a monotype binding per root.
++#[derive(Default)]
++pub struct Unifier {
++    parent: Vec<u32>,
++    /// Resolved constructor bound to a root variable, once known.
++    con: Vec<Option<TyCon>>,
++}
++
++/// A unification failure: two incompatible constructors met on one variable.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub struct UnifyError {
++    pub lhs: TyCon,
++    pub rhs: TyCon,
++}
++
++impl Unifier {
++    pub fn new() -> Self {
++        Self::default()
++    }
++
++    /// Mint a fresh, unbound type variable.
++    pub fn fresh(&mut self) -> Ty {
++        let id = self.parent.len() as u32;
++        self.parent.push(id);
++        self.con.push(None);
++        Ty::Var(id)
++    }
++
++    fn find(&mut self, mut v: u32) -> u32 {
++        while self.parent[v as usize] != v {
++            let g = self.parent[self.parent[v as usize] as usize];
++            self.parent[v as usize] = g; // path halving
++            v = g;
++        }
++        v
++    }
++
++    /// Unify two monotypes. Variables absorb constructors; two distinct
++    /// constructors that meet are a type error (the honest HM clash).
++    pub fn unify(&mut self, a: Ty, b: Ty) -> Result<(), UnifyError> {
++        match (a, b) {
++            (Ty::Con(x), Ty::Con(y)) => {
++                if x == y {
++                    Ok(())
++                } else {
++                    Err(UnifyError { lhs: x, rhs: y })
++                }
++            }
++            (Ty::Var(v), Ty::Con(c)) | (Ty::Con(c), Ty::Var(v)) => self.bind(v, c),
++            (Ty::Var(x), Ty::Var(y)) => {
++                let (rx, ry) = (self.find(x), self.find(y));
++                if rx == ry {
++                    return Ok(());
++                }
++                match (self.con[rx as usize], self.con[ry as usize]) {
++                    (Some(cx), Some(cy)) if cx != cy => Err(UnifyError { lhs: cx, rhs: cy }),
++                    (_, Some(cy)) => {
++                        self.parent[ry as usize] = rx;
++                        self.con[rx as usize] = Some(cy);
++                        Ok(())
++                    }
++                    (Some(cx), _) => {
++                        self.parent[rx as usize] = ry;
++                        self.con[ry as usize] = Some(cx);
++                        Ok(())
++                    }
++                    (None, None) => {
++                        self.parent[ry as usize] = rx;
++                        Ok(())
++                    }
++                }
++            }
++        }
++    }
++
++    fn bind(&mut self, v: u32, c: TyCon) -> Result<(), UnifyError> {
++        let r = self.find(v);
++        match self.con[r as usize] {
++            Some(existing) if existing != c => Err(UnifyError { lhs: existing, rhs: c }),
++            _ => {
++                self.con[r as usize] = Some(c);
++                Ok(())
++            }
++        }
++    }
++
++    /// Zonk: resolve a monotype to its constructor, if determined.
++    pub fn resolve(&mut self, t: Ty) -> Option<TyCon> {
++        match t {
++            Ty::Con(c) => Some(c),
++            Ty::Var(v) => {
++                let r = self.find(v);
++                self.con[r as usize]
++            }
++        }
++    }
++}
++
++/// Lex one `->` arrow RHS (target text + optional `: Type` ascription) into a
++/// leaf monotype. This is the bidirectional-check leaf: an ascription `: T`
++/// *checks against* the named type; a bare target *synthesizes* from its literal
++/// shape (`true`/`false` → Bool, digit-run with `u8` suffix → U8Tag, `f64` → F64).
++pub fn classify_arrow(target_text: &str, type_text: Option<&str>) -> TyCon {
++    if let Some(ascription) = type_text {
++        let named = ascription.trim();
++        if named.eq_ignore_ascii_case("string") {
++            // decode_*(...) : String owns into the arena; a bare span : String borrows.
++            return if target_text.contains("decode") {
++                TyCon::StringDecoded
++            } else {
++                TyCon::StringSpan
++            };
++        }
++        if named.eq_ignore_ascii_case("f64") || named.eq_ignore_ascii_case("f32") {
++            return TyCon::F64;
++        }
++        if named.eq_ignore_ascii_case("bool") {
++            return TyCon::Bool;
++        }
++    }
++    let t = target_text.trim();
++    if t == "true" || t == "false" {
++        return TyCon::Bool;
++    }
++    if t == "f64" || t == "f32" {
++        return TyCon::F64;
++    }
++    if let Some(stripped) = t.strip_suffix("u8") {
++        if stripped.bytes().all(|b| b.is_ascii_digit()) && !stripped.is_empty() {
++            return TyCon::U8Tag;
++        }
++    }
++    // Fallback: a bare identifier ascription-less target is treated as a span string.
++    TyCon::StringSpan
++}
++
++/// The whole-grammar inference result: one resolved leaf type per projected rule,
++/// plus the invariant counts the SK-V21 P6 spike certified (`arrows == projections`).
++pub struct Inference {
++    /// rule name -> resolved leaf constructor.
++    pub rule_types: HashMap<String, TyCon>,
++    /// total `->` arrows seen across the grammar.
++    pub arrow_count: usize,
++    /// distinct rules that carry at least one arrow (the projected rules).
++    pub projected_rule_count: usize,
++    /// arrows that reconciled with a sibling arrow on the same rule via unify.
++    pub unify_events: usize,
++}
++
++/// Run HM over `(rule, target_text, type_text)` arrows: one fresh var per rule,
++/// every arrow of a rule unified into that var, then zonked to a leaf. Returns the
++/// per-rule leaf types or the first clash. This is the pass that would replace the
++/// dropped `Project.ty` thread — arrows in, resolved leaves out.
++pub fn infer(arrows: &[(String, String, Option<String>)]) -> Result<Inference, UnifyError> {
++    let mut u = Unifier::new();
++    let mut vars: HashMap<String, Ty> = HashMap::new();
++    let mut unify_events = 0usize;
++    for (rule, target, ty) in arrows {
++        let leaf = Ty::Con(classify_arrow(target, ty.as_deref()));
++        match vars.get(rule).copied() {
++            Some(v) => {
++                u.unify(v, leaf)?;
++                unify_events += 1;
++            }
++            None => {
++                let v = u.fresh();
++                u.unify(v, leaf)?;
++                vars.insert(rule.clone(), v);
++            }
++        }
++    }
++    let projected_rule_count = vars.len();
++    let mut rule_types = HashMap::new();
++    for (rule, v) in &vars {
++        if let Some(c) = u.resolve(*v) {
++            rule_types.insert(rule.clone(), c);
++        }
++    }
++    Ok(Inference {
++        rule_types,
++        arrow_count: arrows.len(),
++        projected_rule_count,
++        unify_events,
++    })
++}
+diff --git a/skinny/crates/codegen/src/type_plane/mod.rs b/skinny/crates/codegen/src/type_plane/mod.rs
+new file mode 100644
+index 000000000..4305e0b2f
+--- /dev/null
++++ b/skinny/crates/codegen/src/type_plane/mod.rs
+@@ -0,0 +1,16 @@
++//! The type plane: derive a `DirectSchemaSet` from a grammar's `->` projections
++//! via Hindley–Milner unification, instead of hand-authoring the schema.
++//!
++//! Two pieces, colocated with their consumer (`direct_schema` / the typed
++//! direct-to-struct emitter):
++//!
++//! - [`hm`]: a compact HM unification core over the grammar's leaf projection
++//!   vocabulary (union-find type vars, per-rule arrow unification).
++//! - [`derive`]: reads the real front-end `->` facts, binds arrows to rules,
++//!   runs [`hm`], and threads the resolved leaf types into the schema's field
++//!   `type_ref`s — the slots the materialization plan otherwise drops as `None`.
++
++pub mod derive;
++pub mod hm;
++
++pub use derive::{derive, DeriveError, DerivedTypePlane};
+diff --git a/skinny/crates/codegen/tests/type_plane.rs b/skinny/crates/codegen/tests/type_plane.rs
+new file mode 100644
+index 000000000..206eacdc7
+--- /dev/null
++++ b/skinny/crates/codegen/tests/type_plane.rs
+@@ -0,0 +1,109 @@
++//! PROVE-08: schema-from-grammar via HM. Drives the type-plane derivation on a
++//! typed JSON grammar and asserts the measured census + leaf bindings, then
++//! prints the derived schema for the report (`-- --nocapture`).
++
++use codegen::direct_schema::{DirectScalar, DirectTypeKind, DirectTypeRef};
++use codegen::type_plane;
++use ir::DirectBuildScalar;
++use std::collections::HashMap;
++
++/// Typed variant of json.bbnf: the four leaf rules carry `->` projections.
++const TYPED: &str = r#"null   = "null" -> 0u8 ;
++bool   = "true" -> true | "false" -> false ;
++number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ -> f64 ;
++string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ -> decode_json_string_to_arena(input) : String ;
++ws     = /[ \t\n\r]*/ ;
++comma  = "," ws ;
++colon  = ":" ws ;
++value  = ws (object | array | string | number | bool | null) ws ;
++pair   = string ws colon value ;
++member = pair (comma pair)* ;
++members = member? ;
++elements = (value (comma value)*)? ;
++array  = "[" ws elements "]" ;
++object = "{" ws members "}" ;
++json   = ws value ws ;
++"#;
++
++/// Structural twin (arrows stripped) — the grammar the compiler parses today.
++const STRUCTURAL: &str = r#"null   = "null" ;
++bool   = "true" | "false" ;
++number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
++string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ;
++ws     = /[ \t\n\r]*/ ;
++comma  = "," ws ;
++colon  = ":" ws ;
++value  = ws (object | array | string | number | bool | null) ws ;
++pair   = string ws colon value ;
++member = pair (comma pair)* ;
++members = member? ;
++elements = (value (comma value)*)? ;
++array  = "[" ws elements "]" ;
++object = "{" ws members "}" ;
++json   = ws value ws ;
++"#;
++
++#[test]
++fn derives_schema_from_grammar_projections() {
++    let grammar = grammar::parse_grammar("json", STRUCTURAL).expect("structural grammar parses");
++
++    let t0 = std::time::Instant::now();
++    let plane = type_plane::derive(&grammar, TYPED).expect("type plane derives");
++    let elapsed = t0.elapsed();
++
++    // --- Census (the SK-V21 P6 invariant: arrows == projections resolved) ---
++    // Arrows: null(0u8), bool(true), bool(false), number(f64), string(String) = 5.
++    assert_eq!(plane.arrow_count, 5, "five `->` arrows across the grammar");
++    // Projected rules: null, bool, number, string = 4 (bool carries two arrows).
++    assert_eq!(plane.projected_rule_count, 4, "four projected rules");
++    // The two `bool` arrows reconcile via one unify event.
++    assert_eq!(plane.unify_events, 1, "bool's two arrows unify to one Bool");
++
++    // --- Resolved leaf types are grammar-derived, not hardcoded ---
++    let by_rule: HashMap<_, _> = plane
++        .leaf_type_refs
++        .iter()
++        .map(|(r, s)| (r.as_str(), *s))
++        .collect();
++    assert_eq!(by_rule["bool"], DirectBuildScalar::Bool);
++    assert_eq!(by_rule["number"], DirectBuildScalar::F64);
++    assert_eq!(by_rule["string"], DirectBuildScalar::String);
++    assert_eq!(by_rule["null"], DirectBuildScalar::Null);
++
++    // --- The derived schema validates and threads types into field `ty` ---
++    plane.schema.validate().expect("derived schema validates");
++    let leaves = &plane.schema.types[0];
++    let DirectTypeKind::Struct { fields, .. } = &leaves.kind;
++    let field_ty: HashMap<_, _> = fields
++        .iter()
++        .map(|f| (f.rust_field.as_str(), &f.ty))
++        .collect();
++    assert!(matches!(
++        field_ty["number"],
++        DirectTypeRef::Scalar(DirectScalar::F64)
++    ));
++    assert!(matches!(
++        field_ty["string"],
++        DirectTypeRef::Scalar(DirectScalar::DecodedJsonString)
++    ));
++    assert!(matches!(
++        field_ty["bool"],
++        DirectTypeRef::Scalar(DirectScalar::Bool)
++    ));
++
++    // --- Report artifact ---
++    println!("\n=== PROVE-08 derived type plane ===");
++    println!(
++        "arrows={} projected_rules={} unify_events={} derive_wall={:?}",
++        plane.arrow_count, plane.projected_rule_count, plane.unify_events, elapsed
++    );
++    println!("resolved leaf types (from grammar `->`):");
++    for (rule, ty) in &plane.resolved {
++        println!("  {rule:<8} -> {ty:?}");
++    }
++    println!("schema.type_ref (DirectBuild None-slot fill):");
++    for (rule, scalar) in &plane.leaf_type_refs {
++        println!("  {rule:<8} -> {scalar:?}");
++    }
++    println!("derived DirectSchemaSet:\n{:#?}", plane.schema);
++}

@@ -1,0 +1,337 @@
+diff --git a/rust/regex/Cargo.toml b/rust/regex/Cargo.toml
+index a52c938..4f297bb 100644
+--- a/rust/regex/Cargo.toml
++++ b/rust/regex/Cargo.toml
+@@ -16,6 +16,10 @@ serde = ["dep:serde"]
+ 
+ [dependencies]
+ smallvec = "1.13"
++# Start-state prefilter (automata/prefilter.rs): memchr/memchr2/memchr3 skip the
++# runs of bytes that cannot begin a match. aarch64 build selects memchr's NEON
++# backend; scalar elsewhere. Same tiering as the accel Memchr1/2/3 vocabulary.
++memchr = "2.5"
+ serde = { version = "1", optional = true, features = ["derive"] }
+ # AZ-IV.W2.3 — `path_lexer` exposes a custom HIR API for path-string
+ # literals. Tokens carry `proc_macro2::Span` so the consuming `path!`
+diff --git a/rust/regex/benches/regex_dfa_compile.rs b/rust/regex/benches/regex_dfa_compile.rs
+index bb0f0c3..35f6c1f 100644
+--- a/rust/regex/benches/regex_dfa_compile.rs
++++ b/rust/regex/benches/regex_dfa_compile.rs
+@@ -85,6 +85,102 @@ fn dfa_find_at(b: Bencher) {
+     });
+ }
+ 
++// ── Unanchored scan: prefilter vs byte-by-byte (Prefilter tier, PROVE-10) ──
++//
++// A skip-heavy corpus: sparse target tokens embedded in lowercase prose that
++// carries neither '#' nor digits, so a single-byte-prefix pattern's start byte
++// is rare and `memchr` skips whole filler runs. The `_scalar` arm is the
++// pristine caller loop (step `find_at` across every offset); the `_prefilter`
++// arm is `Dfa::find`. Both must yield identical matches — asserted at setup.
++
++const SCAN_PATTERNS: &[&str] = &[
++    r"#[0-9a-fA-F]{3,6}",          // Byte1('#')  — '#' absent from prose → big skip
++    r"0x[0-9a-fA-F]+",             // Byte1('0')  — digits absent from prose → big skip
++    r"https?://[a-zA-Z0-9./-]+",   // Byte1('h')  — 'h' present in prose → modest skip
++    r"(?:foo|bar)[a-z]*",          // Byte2('f','b') — memchr2 tier
++    r"\w+",                        // Prefilter::None — control, ratio ≈ 1.0
++    r"[a-z]+",                     // Prefilter::None — control, ratio ≈ 1.0
++];
++
++const LOREM: &str = "lorem ipsum dolor sit amet consectetur adipiscing elit sed \
++do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim \
++veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo \
++consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum ";
++
++/// Build a ~128 KB skip-heavy corpus: prose filler with a target token every
++/// few hundred bytes. Same corpus drives every pattern.
++fn build_corpus() -> Vec<u8> {
++    let tokens = [
++        "#ffaacc", "https://example.com/a/b", "0xDEADBEEF", "#1a2b3c", "foobar", "#aaa",
++    ];
++    let mut s = String::with_capacity(160 * 1024);
++    let mut ti = 0usize;
++    while s.len() < 128 * 1024 {
++        s.push_str(LOREM);
++        s.push_str(tokens[ti % tokens.len()]);
++        s.push(' ');
++        ti += 1;
++    }
++    s.into_bytes()
++}
++
++/// Pristine byte-by-byte unanchored scan (no prefilter) — the baseline lane.
++#[inline]
++fn find_scalar(dfa: &Dfa, bytes: &[u8], start: usize) -> Option<(usize, usize)> {
++    let mut pos = start;
++    while pos <= bytes.len() {
++        if let Some(end) = dfa.find_at(bytes, pos) {
++            if end > pos {
++                return Some((pos, end));
++            }
++        }
++        pos += 1;
++    }
++    None
++}
++
++/// Count all non-overlapping matches via the scalar lane.
++fn count_scalar(dfa: &Dfa, bytes: &[u8]) -> usize {
++    let (mut pos, mut n) = (0usize, 0usize);
++    while let Some((s, e)) = find_scalar(dfa, bytes, pos) {
++        n += 1;
++        pos = if e > s { e } else { s + 1 };
++    }
++    n
++}
++
++/// Count all non-overlapping matches via the prefilter lane.
++fn count_prefilter(dfa: &Dfa, bytes: &[u8]) -> usize {
++    let (mut pos, mut n) = (0usize, 0usize);
++    while let Some((s, e)) = dfa.find(bytes, pos) {
++        n += 1;
++        pos = if e > s { e } else { s + 1 };
++    }
++    n
++}
++
++#[divan::bench(args = SCAN_PATTERNS)]
++fn scan_scalar(b: Bencher, pattern: &str) {
++    let dfa = Dfa::compile(pattern).unwrap();
++    let corpus = build_corpus();
++    b.counter(divan::counter::BytesCount::new(corpus.len()))
++        .bench(|| black_box(count_scalar(&dfa, black_box(&corpus))));
++}
++
++#[divan::bench(args = SCAN_PATTERNS)]
++fn scan_prefilter(b: Bencher, pattern: &str) {
++    let dfa = Dfa::compile(pattern).unwrap();
++    let corpus = build_corpus();
++    // Correctness gate: the prefilter must not change the match set.
++    assert_eq!(
++        count_scalar(&dfa, &corpus),
++        count_prefilter(&dfa, &corpus),
++        "prefilter changed match count for /{pattern}/"
++    );
++    b.counter(divan::counter::BytesCount::new(corpus.len()))
++        .bench(|| black_box(count_prefilter(&dfa, black_box(&corpus))));
++}
++
+ fn main() {
+     divan::main();
+ }
+diff --git a/rust/regex/src/automata/dfa.rs b/rust/regex/src/automata/dfa.rs
+index 38f490e..fd2008c 100644
+--- a/rust/regex/src/automata/dfa.rs
++++ b/rust/regex/src/automata/dfa.rs
+@@ -7,6 +7,7 @@
+ use std::collections::{BTreeSet, HashMap};
+ 
+ use super::nfa::{DEAD, Nfa, StateId};
++use super::prefilter::Prefilter;
+ use crate::sets::equiv::compute_byte_classes;
+ 
+ /// A single DFA state.
+@@ -52,6 +53,8 @@ pub struct Dfa {
+     pub byte_classes: [u8; 256],
+     /// Number of equivalence classes.
+     pub num_classes: u16,
++    /// Start-state entry-byte prefilter for unanchored [`Dfa::find`].
++    pub prefilter: Prefilter,
+ }
+ 
+ impl Dfa {
+@@ -98,6 +101,9 @@ impl Dfa {
+         }
+         dfa.flat_transitions = flat;
+ 
++        // Step 6: Derive the start-state entry prefilter (cheap: O(256)).
++        dfa.prefilter = Prefilter::from_dfa(&dfa);
++
+         Some(dfa)
+     }
+ 
+@@ -168,6 +174,44 @@ impl Dfa {
+ 
+         None
+     }
++
++    /// Unanchored leftmost-longest search starting at `start`.
++    ///
++    /// Returns `(match_start, match_end)` of the first position ≥ `start` where
++    /// an anchored match begins, or `None`. When the start-state prefilter is
++    /// active it skips runs of bytes that cannot begin a match; when inactive
++    /// this steps [`Dfa::find_at`] across every offset — the branch on
++    /// `prefilter` is hoisted out of the loop so the inactive path carries zero
++    /// prefilter overhead (byte-identical work to a bare `find_at` scan).
++    #[inline]
++    pub fn find(&self, bytes: &[u8], start: usize) -> Option<(usize, usize)> {
++        match self.prefilter {
++            Prefilter::None => {
++                let mut pos = start;
++                while pos <= bytes.len() {
++                    if let Some(end) = self.find_at(bytes, pos)
++                        && end > pos
++                    {
++                        return Some((pos, end));
++                    }
++                    pos += 1;
++                }
++                None
++            }
++            active => {
++                let mut pos = start;
++                while let Some(cand) = active.next_candidate(bytes, pos) {
++                    if let Some(end) = self.find_at(bytes, cand)
++                        && end > cand
++                    {
++                        return Some((cand, end));
++                    }
++                    pos = cand + 1;
++                }
++                None
++            }
++        }
++    }
+ }
+ 
+ /// Compute one representative byte for each equivalence class.
+@@ -282,6 +326,7 @@ fn subset_construction(
+         flat_transitions: vec![], // built in from_nfa after minimization
+         byte_classes: *byte_classes,
+         num_classes,
++        prefilter: Prefilter::None, // derived in from_nfa after flattening
+     })
+ }
+ 
+@@ -434,5 +479,6 @@ fn hopcroft_minimize(dfa: &Dfa) -> Dfa {
+         flat_transitions: vec![], // rebuilt by caller
+         byte_classes: dfa.byte_classes,
+         num_classes: dfa.num_classes,
++        prefilter: Prefilter::None, // derived in from_nfa after flattening
+     }
+ }
+diff --git a/rust/regex/src/automata/mod.rs b/rust/regex/src/automata/mod.rs
+index 44c0362..15fb402 100644
+--- a/rust/regex/src/automata/mod.rs
++++ b/rust/regex/src/automata/mod.rs
+@@ -3,3 +3,4 @@
+ pub mod accel;
+ pub mod dfa;
+ pub mod nfa;
++pub mod prefilter;
+diff --git a/rust/regex/src/automata/prefilter.rs b/rust/regex/src/automata/prefilter.rs
+new file mode 100644
+index 0000000..b663a54
+--- /dev/null
++++ b/rust/regex/src/automata/prefilter.rs
+@@ -0,0 +1,97 @@
++//! Start-state prefilter — skip runs of bytes that cannot begin a match.
++//!
++//! A compiled DFA can only *begin* a match at a byte on which its start state
++//! has a non-dead transition. When that entry set has 1–3 members, an
++//! unanchored search skips the intervening bytes with `memchr`/`memchr2`/
++//! `memchr3` — which classify at memory bandwidth on aarch64 NEON — instead of
++//! stepping the transition table one byte at a time. This is the memchr /
++//! rare-byte tier of the meta-engine prefilter ladder, applied at match
++//! *entry* rather than at a self-loop state; it mirrors the Memchr1/2/3
++//! vocabulary of [`super::accel::AccelStrategy`].
++//!
++//! The prefilter is a pure accelerator: it decides *where* to attempt an
++//! anchored match, never *whether* one succeeds. The DFA is unchanged, so
++//! matches are byte-for-byte identical to a byte-by-byte scan.
++
++use smallvec::SmallVec;
++
++use super::dfa::Dfa;
++use super::nfa::DEAD;
++
++/// Strategy for locating the next byte that could start a match.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
++pub enum Prefilter {
++    /// Entry set is empty, universal, or larger than 3 bytes — no skipping.
++    #[default]
++    None,
++    /// One entry byte → `memchr::memchr`.
++    Byte1(u8),
++    /// Two entry bytes → `memchr::memchr2`.
++    Byte2(u8, u8),
++    /// Three entry bytes → `memchr::memchr3`.
++    Byte3(u8, u8, u8),
++}
++
++impl Prefilter {
++    /// Derive the entry-byte prefilter from a compiled DFA.
++    ///
++    /// The entry set is every byte whose equivalence class has a non-dead
++    /// transition out of the start state (state 0). If the start state already
++    /// accepts, the empty string matches at every position, so no prefilter is
++    /// possible.
++    pub fn from_dfa(dfa: &Dfa) -> Self {
++        if dfa.states.is_empty() || dfa.states[0].is_accept {
++            return Prefilter::None;
++        }
++        let num_cls = dfa.num_classes as usize;
++        // The start-state transition row is the first `num_cls` entries of the
++        // flat table. A byte can begin a match iff its class transitions live.
++        let row = &dfa.flat_transitions[..num_cls];
++        let mut bytes: SmallVec<[u8; 4]> = SmallVec::new();
++        for b in 0u16..256 {
++            let cls = dfa.byte_classes[b as usize] as usize;
++            if row[cls] != DEAD {
++                if bytes.len() == 3 {
++                    return Prefilter::None; // >3 entry bytes: not worth a scan
++                }
++                bytes.push(b as u8);
++            }
++        }
++        match bytes.as_slice() {
++            [a] => Prefilter::Byte1(*a),
++            [a, b] => Prefilter::Byte2(*a, *b),
++            [a, b, c] => Prefilter::Byte3(*a, *b, *c),
++            _ => Prefilter::None, // empty entry set (dead start) — no candidates
++        }
++    }
++
++    /// Whether this prefilter skips any bytes.
++    #[inline]
++    pub fn is_active(&self) -> bool {
++        !matches!(self, Prefilter::None)
++    }
++
++    /// Byte offset of the next candidate match start at or after `from`.
++    ///
++    /// Returns `None` only for an active prefilter that finds no further
++    /// candidate. [`Prefilter::None`] never skips: it yields `from` verbatim so
++    /// the caller steps one byte at a time (identical to the un-prefiltered
++    /// scan).
++    #[inline]
++    pub fn next_candidate(&self, bytes: &[u8], from: usize) -> Option<usize> {
++        if from >= bytes.len() {
++            return match self {
++                Prefilter::None => Some(from),
++                _ => None,
++            };
++        }
++        let hay = &bytes[from..];
++        let off = match *self {
++            Prefilter::None => return Some(from),
++            Prefilter::Byte1(a) => memchr::memchr(a, hay)?,
++            Prefilter::Byte2(a, b) => memchr::memchr2(a, b, hay)?,
++            Prefilter::Byte3(a, b, c) => memchr::memchr3(a, b, c, hay)?,
++        };
++        Some(from + off)
++    }
++}
+diff --git a/rust/regex/src/lib.rs b/rust/regex/src/lib.rs
+index 06c4911..783c08f 100644
+--- a/rust/regex/src/lib.rs
++++ b/rust/regex/src/lib.rs
+@@ -27,6 +27,7 @@ pub use crate::hir::parser::{parse, parse_with};
+ pub use automata::accel::{AccelStrategy, StateAccel, detect_accel};
+ pub use automata::dfa::{Dfa, DfaOptions, DfaState};
+ pub use automata::nfa::{DEAD, Nfa, StateId};
++pub use automata::prefilter::Prefilter;
+ pub use classify::{RegexClass, classify_regex, classify_regex_from_hir};
+ pub use first::{regex_first_chars, regex_first_chars_from_hir};
+ pub use hir::{

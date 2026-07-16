@@ -1,0 +1,973 @@
+diff --git a/skinny/crates/bbnf-bench/src/bin/prefilter_bench.rs b/skinny/crates/bbnf-bench/src/bin/prefilter_bench.rs
+new file mode 100644
+index 000000000..52f5d5ac3
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/src/bin/prefilter_bench.rs
+@@ -0,0 +1,314 @@
++//! PROVE-01 cold paired PMU microbench for the shufti/truffle prefilter.
++//!
++//! Lanes (both real scan consumers producing the identical structural-position
++//! count — parity-asserted before timing):
++//!   * `fused`  — `PrefilterSet::find_member` (fused GATE=16 shufti/truffle).
++//!   * `scalar` — `scalar::prefilter::find_member_scalar` (the oracle).
++//!
++//! Corpora:
++//!   * skip_heavy_shufti / skip_heavy_truffle — synthetic long non-member runs.
++//!   * twitter (dense JSON) / bootstrap (dense CSS) — the ≥0.95× neutrality gate.
++//!
++//! Metric of record: PMU cyc/byte (proc_pid_rusage V5), plus cold paired
++//! per-sample wall ns/byte with a 95% CI on the per-sample ratio. loadavg is
++//! stamped per run. Speedup reported = scalar / fused (>1 ⇒ prefilter faster).
++//!
++//! Usage: `prefilter_bench [N]` (default 200). `PREFILTER_PMU_ITERS` overrides
++//! the PMU inner-loop count (default 400).
++
++use std::hint::black_box;
++use std::time::Instant;
++
++use bbnf_simd::prim::PrefilterSet;
++use bbnf_simd::scalar::prefilter::{find_member_scalar, membership_table};
++
++// --- PMU via proc_pid_rusage V5 (mirrors css_canon_bench.rs) -----------------
++#[repr(C)]
++#[derive(Default, Clone, Copy)]
++struct RusageInfoV5 {
++    ri_uuid: [u8; 16],
++    ri_user_time: u64,
++    ri_system_time: u64,
++    ri_pkg_idle_wkups: u64,
++    ri_interrupt_wkups: u64,
++    ri_pageins: u64,
++    ri_wired_size: u64,
++    ri_resident_size: u64,
++    ri_phys_footprint: u64,
++    ri_proc_start_abstime: u64,
++    ri_proc_exit_abstime: u64,
++    ri_child_user_time: u64,
++    ri_child_system_time: u64,
++    ri_child_pkg_idle_wkups: u64,
++    ri_child_interrupt_wkups: u64,
++    ri_child_pageins: u64,
++    ri_child_elapsed_abstime: u64,
++    ri_diskio_bytesread: u64,
++    ri_diskio_byteswritten: u64,
++    ri_cpu_time_qos_default: u64,
++    ri_cpu_time_qos_maintenance: u64,
++    ri_cpu_time_qos_background: u64,
++    ri_cpu_time_qos_utility: u64,
++    ri_cpu_time_qos_legacy: u64,
++    ri_cpu_time_qos_user_initiated: u64,
++    ri_cpu_time_qos_user_interactive: u64,
++    ri_billed_system_time: u64,
++    ri_serviced_system_time: u64,
++    ri_logical_writes: u64,
++    ri_lifetime_max_phys_footprint: u64,
++    ri_instructions: u64,
++    ri_cycles: u64,
++    ri_billed_energy: u64,
++    ri_serviced_energy: u64,
++    ri_interval_max_phys_footprint: u64,
++    ri_runnable_time: u64,
++    ri_flags: u64,
++}
++const RUSAGE_INFO_V5: i32 = 5;
++extern "C" {
++    fn proc_pid_rusage(pid: libc::pid_t, flavor: i32, buffer: *mut u8) -> i32;
++}
++fn read_rusage_v5() -> RusageInfoV5 {
++    let mut ri = RusageInfoV5::default();
++    let rc = unsafe {
++        proc_pid_rusage(
++            libc::getpid(),
++            RUSAGE_INFO_V5,
++            (&mut ri) as *mut RusageInfoV5 as *mut u8,
++        )
++    };
++    if rc != 0 {
++        panic!("proc_pid_rusage failed rc={rc}");
++    }
++    ri
++}
++
++fn loadavg() -> String {
++    let out = std::process::Command::new("sysctl")
++        .args(["-n", "vm.loadavg"])
++        .output();
++    match out {
++        Ok(o) => String::from_utf8_lossy(&o.stdout).trim().to_string(),
++        Err(_) => "unavailable".to_string(),
++    }
++}
++
++// --- the two scan-all lanes (identical output; parity-checked) ---------------
++
++#[inline]
++fn scan_all_fused(pf: &PrefilterSet, input: &[u8]) -> u64 {
++    let mut count = 0u64;
++    let mut i = 0usize;
++    loop {
++        let p = pf.find_member(input, i);
++        if p >= input.len() {
++            break;
++        }
++        count += 1;
++        i = p + 1;
++    }
++    count
++}
++
++#[inline]
++fn scan_all_scalar(membership: &[bool; 256], input: &[u8]) -> u64 {
++    let mut count = 0u64;
++    let mut i = 0usize;
++    loop {
++        let p = find_member_scalar(input, i, membership);
++        if p >= input.len() {
++            break;
++        }
++        count += 1;
++        i = p + 1;
++    }
++    count
++}
++
++// --- corpora -----------------------------------------------------------------
++
++struct Corpus {
++    name: &'static str,
++    members: Vec<u8>,
++    bytes: Vec<u8>,
++}
++
++/// Long non-member runs with a member every `stride` bytes.
++fn skip_heavy(len: usize, stride: usize, members: &[u8]) -> Vec<u8> {
++    let mut v = vec![b'a'; len]; // 'a' is not in any structural set used here
++    let mut k = 0usize;
++    let mut idx = stride;
++    while idx < len {
++        v[idx] = members[k % members.len()];
++        k += 1;
++        idx += stride;
++    }
++    v
++}
++
++fn load_corpora() -> Vec<Corpus> {
++    let mut corpora = Vec::new();
++
++    // Skip-heavy (shufti — 7 JSON structural members).
++    corpora.push(Corpus {
++        name: "skip_heavy_shufti",
++        members: b"{}[],:\"".to_vec(),
++        bytes: skip_heavy(512 * 1024, 8192, b"{}[],:\""),
++    });
++    // Skip-heavy (truffle — 12 members, forces the wide backend).
++    let wide_members = b"{}[](),:;<>+".to_vec();
++    corpora.push(Corpus {
++        name: "skip_heavy_truffle",
++        bytes: skip_heavy(512 * 1024, 8192, &wide_members),
++        members: wide_members,
++    });
++
++    // Dense JSON — twitter (via test-fixtures).
++    match test_fixtures::load_available_bench_fixtures() {
++        Ok(fixtures) => {
++            if let Some(t) = fixtures.iter().find(|f| f.name == "twitter") {
++                corpora.push(Corpus {
++                    name: "twitter_dense",
++                    members: b"{}[],:\"".to_vec(),
++                    bytes: t.bytes.clone(),
++                });
++            } else {
++                eprintln!("prefilter_bench: twitter fixture missing; skipping dense JSON");
++            }
++        }
++        Err(e) => eprintln!("prefilter_bench: fixtures unavailable ({e:?}); skipping twitter"),
++    }
++
++    // Dense CSS — bootstrap (7 CSS structural members → shufti-capable, gated).
++    let bootstrap = concat!(
++        env!("CARGO_MANIFEST_DIR"),
++        "/../../corpora/css-l4-sk-v14/bootstrap-5.3.3.min.css"
++    );
++    match std::fs::read(bootstrap) {
++        Ok(bytes) => corpora.push(Corpus {
++            name: "bootstrap_dense",
++            members: b"{}();:,".to_vec(),
++            bytes,
++        }),
++        Err(e) => eprintln!("prefilter_bench: bootstrap.css unavailable ({e}); skipping dense CSS"),
++    }
++
++    corpora
++}
++
++// --- stats -------------------------------------------------------------------
++
++fn median(mut v: Vec<f64>) -> f64 {
++    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    let n = v.len();
++    if n == 0 {
++        return 0.0;
++    }
++    if n % 2 == 1 {
++        v[n / 2]
++    } else {
++        (v[n / 2 - 1] + v[n / 2]) / 2.0
++    }
++}
++
++/// mean ± 95% CI (normal approx, sample var n-1).
++fn mean_ci(v: &[f64]) -> (f64, f64) {
++    let n = v.len() as f64;
++    let mean = v.iter().sum::<f64>() / n;
++    let var = v.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n - 1.0);
++    (mean, 1.96 * (var / n).sqrt())
++}
++
++fn main() {
++    let args: Vec<String> = std::env::args().collect();
++    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(200);
++    assert!(n >= 50, "cold discipline requires N >= 50");
++    let pmu_iters: usize = std::env::var("PREFILTER_PMU_ITERS")
++        .ok()
++        .and_then(|s| s.parse().ok())
++        .unwrap_or(400);
++
++    let corpora = load_corpora();
++    println!("# PROVE-01 prefilter cold paired PMU microbench");
++    println!("# N={n}  pmu_iters={pmu_iters}  loadavg={}", loadavg());
++    println!(
++        "# lanes: fused=PrefilterSet::find_member (GATE=16 shufti/truffle), scalar=find_member_scalar"
++    );
++    println!("# speedup = scalar / fused  (>1 ⇒ prefilter faster)\n");
++
++    for c in &corpora {
++        let membership = membership_table(&c.members);
++        let pf = PrefilterSet::new(&c.members);
++        let bytes = c.bytes.len();
++
++        // Parity gate before timing.
++        let a = scan_all_fused(&pf, &c.bytes);
++        let b = scan_all_scalar(&membership, &c.bytes);
++        assert_eq!(a, b, "{}: lane output mismatch (fused {a} vs scalar {b})", c.name);
++
++        // Touch the corpus once out of band (page-in).
++        black_box(c.bytes.iter().fold(0u8, |x, &y| x ^ y));
++
++        // Cold paired per-sample wall timing.
++        let mut fused_ns = Vec::with_capacity(n);
++        let mut scalar_ns = Vec::with_capacity(n);
++        let mut ratios = Vec::with_capacity(n);
++        for _ in 0..n {
++            let t0 = Instant::now();
++            black_box(scan_all_fused(&pf, &c.bytes));
++            let f = t0.elapsed().as_nanos() as f64 / bytes as f64;
++            let t1 = Instant::now();
++            black_box(scan_all_scalar(&membership, &c.bytes));
++            let s = t1.elapsed().as_nanos() as f64 / bytes as f64;
++            fused_ns.push(f);
++            scalar_ns.push(s);
++            ratios.push(s / f); // speedup
++        }
++        let (ratio_mean, ratio_ci) = mean_ci(&ratios);
++
++        // PMU cyc/byte, per lane (tight iters loop).
++        let cyc_fused = {
++            let r0 = read_rusage_v5();
++            let mut acc = 0u64;
++            for _ in 0..pmu_iters {
++                acc ^= scan_all_fused(&pf, &c.bytes);
++            }
++            black_box(acc);
++            let r1 = read_rusage_v5();
++            (r1.ri_cycles - r0.ri_cycles) as f64 / (bytes as f64 * pmu_iters as f64)
++        };
++        let cyc_scalar = {
++            let r0 = read_rusage_v5();
++            let mut acc = 0u64;
++            for _ in 0..pmu_iters {
++                acc ^= scan_all_scalar(&membership, &c.bytes);
++            }
++            black_box(acc);
++            let r1 = read_rusage_v5();
++            (r1.ri_cycles - r0.ri_cycles) as f64 / (bytes as f64 * pmu_iters as f64)
++        };
++
++        println!(
++            "{:<18} bytes={:>8} members={:>2} backend={:?} structurals={}",
++            c.name,
++            bytes,
++            c.members.len(),
++            pf.backend(),
++            a
++        );
++        println!(
++            "  wall ns/B (median):  fused={:.4}  scalar={:.4}   paired speedup={:.3}× (±{:.3}, 95% CI, N={})",
++            median(fused_ns.clone()),
++            median(scalar_ns.clone()),
++            ratio_mean,
++            ratio_ci,
++            n
++        );
++        println!(
++            "  PMU cyc/B:           fused={:.4}  scalar={:.4}   cyc speedup={:.3}×\n",
++            cyc_fused,
++            cyc_scalar,
++            cyc_scalar / cyc_fused
++        );
++    }
++}
+diff --git a/skinny/crates/bbnf-simd/src/aarch64/mod.rs b/skinny/crates/bbnf-simd/src/aarch64/mod.rs
+index 2517d2da0..640deb568 100644
+--- a/skinny/crates/bbnf-simd/src/aarch64/mod.rs
++++ b/skinny/crates/bbnf-simd/src/aarch64/mod.rs
+@@ -27,6 +27,8 @@ pub mod match_tiny_plain_string;
+ #[cfg(target_arch = "aarch64")]
+ pub mod movemask;
+ #[cfg(target_arch = "aarch64")]
++pub mod prefilter;
++#[cfg(target_arch = "aarch64")]
+ pub mod quad_load;
+ #[cfg(target_arch = "aarch64")]
+ pub mod string_block;
+diff --git a/skinny/crates/bbnf-simd/src/aarch64/prefilter.rs b/skinny/crates/bbnf-simd/src/aarch64/prefilter.rs
+new file mode 100644
+index 000000000..f51c80322
+--- /dev/null
++++ b/skinny/crates/bbnf-simd/src/aarch64/prefilter.rs
+@@ -0,0 +1,126 @@
++//! NEON shufti (nibble) + truffle (wide) prefilter classify kernels.
++//!
++//! Ported from the legacy `crates/simd-scan/src/neon.rs`
++//! (`classify_chunk_nibble` / `classify_chunk_wide`). A 64-byte block is
++//! classified as four `uint8x16_t` stripes; per stripe two `vqtbl1q_u8`
++//! nibble lookups AND'd (shufti) — or four lookups OR'd across a paired
++//! table (truffle) — produce a per-byte match vector, packed to a 64-bit
++//! mask via the in-tree `movemask::movemask_u8x16` (`vshrn_n_u16 #4`).
++//!
++//! The scalar parity anchor is `scalar::prefilter::classify_block_scalar`;
++//! the LUTs are built by `scalar::prefilter::{NibbleLut,WideLut}::from_members`.
++//!
++//! SAFETY (all fns): the caller guarantees `ptr..ptr+64` is in bounds.
++
++use core::arch::aarch64::*;
++
++use super::movemask::movemask_u8x16;
++use crate::scalar::prefilter::{NibbleLut, WideLut};
++
++/// One 16-byte stripe → shufti match vector (`0xFF` where member).
++#[inline(always)]
++unsafe fn match_stripe_nibble(
++    ptr: *const u8,
++    lo_v: uint8x16_t,
++    hi_v: uint8x16_t,
++    lo_mask: uint8x16_t,
++) -> uint8x16_t {
++    let chunk = vld1q_u8(ptr);
++    let lo_n = vandq_u8(chunk, lo_mask);
++    let hi_n = vshrq_n_u8(chunk, 4);
++    let lo_r = vqtbl1q_u8(lo_v, lo_n);
++    let hi_r = vqtbl1q_u8(hi_v, hi_n);
++    let matched = vandq_u8(lo_r, hi_r);
++    vtstq_u8(matched, matched)
++}
++
++/// One 16-byte stripe → truffle match vector (`0xFF` where member).
++#[inline(always)]
++unsafe fn match_stripe_wide(
++    ptr: *const u8,
++    lo_lo: uint8x16_t,
++    hi_lo: uint8x16_t,
++    lo_hi: uint8x16_t,
++    hi_hi: uint8x16_t,
++    lo_mask: uint8x16_t,
++) -> uint8x16_t {
++    let chunk = vld1q_u8(ptr);
++    let lo_n = vandq_u8(chunk, lo_mask);
++    let hi_n = vshrq_n_u8(chunk, 4);
++    let matched_lo = vandq_u8(vqtbl1q_u8(lo_lo, lo_n), vqtbl1q_u8(hi_lo, hi_n));
++    let matched_hi = vandq_u8(vqtbl1q_u8(lo_hi, lo_n), vqtbl1q_u8(hi_hi, hi_n));
++    let matched = vorrq_u8(matched_lo, matched_hi);
++    vtstq_u8(matched, matched)
++}
++
++/// Cheap reject: does the 64-byte block at `ptr` contain ANY member? The four
++/// stripe match-vectors are OR-reduced and tested with a single `vmaxvq_u8` —
++/// no movemask on the all-miss skip path (the prefilter's hot loop; a full
++/// classify runs only on the block that carries a hit, to locate the byte).
++/// SAFETY: `ptr..ptr+64` in bounds.
++#[inline(always)]
++pub unsafe fn any_member_64_nibble(ptr: *const u8, lut: &NibbleLut) -> bool {
++    let lo_v = vld1q_u8(lut.lo.as_ptr());
++    let hi_v = vld1q_u8(lut.hi.as_ptr());
++    let lo_mask = vdupq_n_u8(0x0F);
++    let mut acc = match_stripe_nibble(ptr, lo_v, hi_v, lo_mask);
++    for k in 1..4 {
++        acc = vorrq_u8(acc, match_stripe_nibble(ptr.add(k * 16), lo_v, hi_v, lo_mask));
++    }
++    vmaxvq_u8(acc) != 0
++}
++
++/// Cheap 64-byte reject, truffle (wide) table. SAFETY: `ptr..ptr+64`.
++#[inline(always)]
++pub unsafe fn any_member_64_wide(ptr: *const u8, lut: &WideLut) -> bool {
++    let lo_lo = vld1q_u8(lut.lo_lo.as_ptr());
++    let hi_lo = vld1q_u8(lut.hi_lo.as_ptr());
++    let lo_hi = vld1q_u8(lut.lo_hi.as_ptr());
++    let hi_hi = vld1q_u8(lut.hi_hi.as_ptr());
++    let lo_mask = vdupq_n_u8(0x0F);
++    let mut acc = match_stripe_wide(ptr, lo_lo, hi_lo, lo_hi, hi_hi, lo_mask);
++    for k in 1..4 {
++        acc = vorrq_u8(
++            acc,
++            match_stripe_wide(ptr.add(k * 16), lo_lo, hi_lo, lo_hi, hi_hi, lo_mask),
++        );
++    }
++    vmaxvq_u8(acc) != 0
++}
++
++/// Classify 64 bytes at `ptr` via the shufti (nibble) table → 64-bit mask.
++#[inline(always)]
++pub unsafe fn classify_block_nibble(ptr: *const u8, lut: &NibbleLut) -> u64 {
++    let lo_v = vld1q_u8(lut.lo.as_ptr());
++    let hi_v = vld1q_u8(lut.hi.as_ptr());
++    let lo_mask = vdupq_n_u8(0x0F);
++    let mut mask = 0u64;
++    for k in 0..4 {
++        let m = movemask_u8x16(match_stripe_nibble(ptr.add(k * 16), lo_v, hi_v, lo_mask)) as u64;
++        mask |= m << (k * 16);
++    }
++    mask
++}
++
++/// Classify 64 bytes at `ptr` via the truffle (wide) table → 64-bit mask.
++#[inline(always)]
++pub unsafe fn classify_block_wide(ptr: *const u8, lut: &WideLut) -> u64 {
++    let lo_lo = vld1q_u8(lut.lo_lo.as_ptr());
++    let hi_lo = vld1q_u8(lut.hi_lo.as_ptr());
++    let lo_hi = vld1q_u8(lut.lo_hi.as_ptr());
++    let hi_hi = vld1q_u8(lut.hi_hi.as_ptr());
++    let lo_mask = vdupq_n_u8(0x0F);
++    let mut mask = 0u64;
++    for k in 0..4 {
++        let m = movemask_u8x16(match_stripe_wide(
++            ptr.add(k * 16),
++            lo_lo,
++            hi_lo,
++            lo_hi,
++            hi_hi,
++            lo_mask,
++        )) as u64;
++        mask |= m << (k * 16);
++    }
++    mask
++}
+diff --git a/skinny/crates/bbnf-simd/src/dispatch.rs b/skinny/crates/bbnf-simd/src/dispatch.rs
+index 0aae829cf..f51056416 100644
+--- a/skinny/crates/bbnf-simd/src/dispatch.rs
++++ b/skinny/crates/bbnf-simd/src/dispatch.rs
+@@ -97,6 +97,33 @@ fn select_backend(alphabet: &[u8; 64]) -> SelectedBackend {
+     SelectedBackend::Scalar
+ }
+ 
++/// Cost-driven kernel shape for the prefilter, selected from member
++/// cardinality — the sibling switch to [`SelectedBackend`]. Shufti (nibble
++/// LUT) admits ≤ 8 members; truffle (wide LUT) lifts the cap to ≤ 16; beyond
++/// that the shufti/truffle bit-encoding runs out of lanes and we fall to the
++/// scalar oracle. Mirrors the legacy `KernelShape::select`.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum PrefilterBackend {
++    Scalar,
++    #[cfg(target_arch = "aarch64")]
++    NeonNibble,
++    #[cfg(target_arch = "aarch64")]
++    NeonWide,
++}
++
++pub fn select_prefilter_backend(members: &[u8]) -> PrefilterBackend {
++    #[cfg(target_arch = "aarch64")]
++    {
++        match members.len() {
++            1..=8 => return PrefilterBackend::NeonNibble,
++            9..=16 => return PrefilterBackend::NeonWide,
++            _ => {}
++        }
++    }
++    let _ = members;
++    PrefilterBackend::Scalar
++}
++
+ #[cfg(target_arch = "aarch64")]
+ fn lo6_table_admissible(alphabet: &[u8; 64]) -> bool {
+     let mut seen = [false; 64];
+diff --git a/skinny/crates/bbnf-simd/src/lib.rs b/skinny/crates/bbnf-simd/src/lib.rs
+index 87612b855..d0874b008 100644
+--- a/skinny/crates/bbnf-simd/src/lib.rs
++++ b/skinny/crates/bbnf-simd/src/lib.rs
+@@ -251,6 +251,109 @@ pub mod prim {
+     pub use crate::scalar::comment_body_mask_64::CommentCarry;
+     pub use crate::scalar::eob_pad_clamp::EobBlock;
+ 
++    pub use crate::dispatch::{select_prefilter_backend, PrefilterBackend};
++    use crate::scalar::prefilter::{
++        find_member_scalar, membership_table, NibbleLut, WideLut,
++    };
++
++    /// Fused density gate (bytes). The scalar probe scans this many bytes
++    /// before engaging the SIMD block prefilter — dense inputs (a member
++    /// within `PREFILTER_GATE` bytes) never pay the vector setup, so the
++    /// prefilter is neutral on dense corpora; long non-member runs cross the
++    /// gate and skip 64 bytes per NEON block.
++    pub const PREFILTER_GATE: usize = 16;
++
++    /// Productionized shufti/truffle prefilter: a member set compiled to the
++    /// nibble/wide LUTs + the selected [`PrefilterBackend`]. Built once per
++    /// scan; `find_member` is the fused GATE=16 entry point.
++    #[derive(Clone)]
++    pub struct PrefilterSet {
++        membership: [bool; 256],
++        backend: PrefilterBackend,
++        nibble: NibbleLut,
++        wide: WideLut,
++    }
++
++    impl PrefilterSet {
++        /// Compile `members` (the bytes that terminate a scan run) into the
++        /// prefilter. Cost-driven backend from cardinality (see
++        /// [`select_prefilter_backend`]).
++        pub fn new(members: &[u8]) -> Self {
++            Self {
++                membership: membership_table(members),
++                backend: select_prefilter_backend(members),
++                nibble: NibbleLut::from_members(members),
++                wide: WideLut::from_members(members),
++            }
++        }
++
++        #[inline]
++        pub fn backend(&self) -> PrefilterBackend {
++            self.backend
++        }
++
++        /// First index `>= start` where a member occurs, else `input.len()`.
++        ///
++        /// Fused GATE=16: Phase 1 scalar-probes `PREFILTER_GATE` bytes (dense
++        /// fast path, no vector setup); Phase 2 — only reached when the probe
++        /// crosses a long non-member run — engages the NEON shufti/truffle
++        /// block kernel, skipping 64 bytes per iteration; Phase 3 handles the
++        /// sub-block scalar tail. Byte-identical to
++        /// `scalar::prefilter::find_member_scalar`.
++        #[inline]
++        pub fn find_member(&self, input: &[u8], start: usize) -> usize {
++            let n = input.len();
++            let mut i = start;
++
++            // Phase 1 — scalar density probe (fused GATE).
++            let probe_end = start.saturating_add(PREFILTER_GATE).min(n);
++            while i < probe_end {
++                if self.membership[input[i] as usize] {
++                    return i;
++                }
++                i += 1;
++            }
++
++            // Phase 2 — the run crossed the GATE: NEON block prefilter. Each
++            // 64-byte block is rejected with a cheap `vmaxvq` any-member test
++            // (no movemask on the all-miss skip path); a full block classify
++            // runs only on the block that carries a hit, to locate the byte.
++            // 64-byte granularity bounds the boundary cost at the end of a run,
++            // keeping dense corpora neutral, while long non-member runs skip a
++            // block per cheap reject.
++            #[cfg(target_arch = "aarch64")]
++            {
++                use crate::aarch64::prefilter as pf;
++                let base = input.as_ptr();
++                match self.backend {
++                    PrefilterBackend::NeonNibble => {
++                        while i + 64 <= n {
++                            if unsafe { pf::any_member_64_nibble(base.add(i), &self.nibble) } {
++                                let m =
++                                    unsafe { pf::classify_block_nibble(base.add(i), &self.nibble) };
++                                return i + m.trailing_zeros() as usize;
++                            }
++                            i += 64;
++                        }
++                    }
++                    PrefilterBackend::NeonWide => {
++                        while i + 64 <= n {
++                            if unsafe { pf::any_member_64_wide(base.add(i), &self.wide) } {
++                                let m = unsafe { pf::classify_block_wide(base.add(i), &self.wide) };
++                                return i + m.trailing_zeros() as usize;
++                            }
++                            i += 64;
++                        }
++                    }
++                    PrefilterBackend::Scalar => {}
++                }
++            }
++
++            // Phase 3 — scalar tail (< 64 remaining, or scalar backend).
++            find_member_scalar(input, i, &self.membership)
++        }
++    }
++
+     #[inline]
+     pub fn byte_class_from_table_64(src: &[u8; 64], table: &[u8; 256]) -> u64 {
+         (crate::dispatch::primitive_kernels().byte_class_from_table_64)(src, table)
+diff --git a/skinny/crates/bbnf-simd/src/scalar/mod.rs b/skinny/crates/bbnf-simd/src/scalar/mod.rs
+index 64cd2587d..e0ab09d77 100644
+--- a/skinny/crates/bbnf-simd/src/scalar/mod.rs
++++ b/skinny/crates/bbnf-simd/src/scalar/mod.rs
+@@ -6,6 +6,7 @@ pub mod byte_class_from_eq_set_64;
+ pub mod byte_class_from_table_64;
+ pub mod comment_body_mask_64;
+ pub mod eob_pad_clamp;
++pub mod prefilter;
+ pub mod swar_8byte;
+ 
+ pub use swar_8byte::classify_chunk;
+diff --git a/skinny/crates/bbnf-simd/src/scalar/prefilter.rs b/skinny/crates/bbnf-simd/src/scalar/prefilter.rs
+new file mode 100644
+index 000000000..88b1a680f
+--- /dev/null
++++ b/skinny/crates/bbnf-simd/src/scalar/prefilter.rs
+@@ -0,0 +1,109 @@
++//! Prefilter LUT data + scalar reference oracle — the executable specification.
++//!
++//! Ported from the legacy `crates/simd-scan/src/alphabet.rs`
++//! (`NibbleLut`/`WideLut::from_singletons`). The encoding is EXACT: each
++//! singleton `i` occupies its own bit `1 << (i & 7)`, so
++//! `lo[b & 0xf] & hi[b >> 4] != 0` holds iff some singleton equals `b` — no
++//! false positives, no confirm step. Nibble path admits ≤ 8 members (shufti),
++//! wide path lifts the cap to ≤ 16 by splitting into two table pairs (truffle).
++//!
++//! The scalar `find_member`/`classify_block` here are the parity anchors for
++//! the NEON bodies in `aarch64/prefilter.rs` (dav1d checkasm discipline).
++
++/// Shared nibble-LUT pair (lo, hi) for ≤ 8 members — the shufti table.
++#[derive(Debug, Clone, Copy)]
++pub struct NibbleLut {
++    pub lo: [u8; 16],
++    pub hi: [u8; 16],
++}
++
++impl NibbleLut {
++    /// Encode the first ≤ 8 `members` into `(lo, hi)`: `lo[low] |= 1 << i`,
++    /// `hi[high] |= 1 << i` for member `i`. Beyond 8 the shufti bit-encoding
++    /// runs out of lanes; `PrefilterSet` selects a wider backend there and
++    /// never consults this table, so the prefix build is exact when used.
++    pub fn from_members(members: &[u8]) -> Self {
++        let mut lo = [0u8; 16];
++        let mut hi = [0u8; 16];
++        for (i, &b) in members.iter().take(8).enumerate() {
++            let bit = 1u8 << (i & 7);
++            lo[(b & 0x0F) as usize] |= bit;
++            hi[(b >> 4) as usize] |= bit;
++        }
++        Self { lo, hi }
++    }
++}
++
++/// Wide-LUT for 9..=16 members — the truffle table (two paired lookups).
++#[derive(Debug, Clone, Copy)]
++pub struct WideLut {
++    pub lo_lo: [u8; 16],
++    pub hi_lo: [u8; 16],
++    pub lo_hi: [u8; 16],
++    pub hi_hi: [u8; 16],
++}
++
++impl WideLut {
++    /// Build the wide-LUT from the first ≤ 16 members; indices 0..8 land in
++    /// the `*_lo` pair, 8..16 in the `*_hi` pair. Beyond 16, `PrefilterSet`
++    /// falls to the scalar oracle and never consults this table.
++    pub fn from_members(members: &[u8]) -> Self {
++        let mut lo_lo = [0u8; 16];
++        let mut hi_lo = [0u8; 16];
++        let mut lo_hi = [0u8; 16];
++        let mut hi_hi = [0u8; 16];
++        for (i, &b) in members.iter().take(16).enumerate() {
++            let bit = 1u8 << (i & 7);
++            if i < 8 {
++                lo_lo[(b & 0x0F) as usize] |= bit;
++                hi_lo[(b >> 4) as usize] |= bit;
++            } else {
++                lo_hi[(b & 0x0F) as usize] |= bit;
++                hi_hi[(b >> 4) as usize] |= bit;
++            }
++        }
++        Self {
++            lo_lo,
++            hi_lo,
++            lo_hi,
++            hi_hi,
++        }
++    }
++}
++
++/// Build the 256-entry membership table for `members`.
++pub fn membership_table(members: &[u8]) -> [bool; 256] {
++    let mut table = [false; 256];
++    for &b in members {
++        table[b as usize] = true;
++    }
++    table
++}
++
++/// Scalar reference: 64-bit mask, bit `i` set iff `block[i]` is a member.
++/// The parity anchor for the NEON `classify_block_*` kernels.
++#[inline]
++pub fn classify_block_scalar(block: &[u8; 64], membership: &[bool; 256]) -> u64 {
++    let mut mask = 0u64;
++    for i in 0..64 {
++        if membership[block[i] as usize] {
++            mask |= 1u64 << i;
++        }
++    }
++    mask
++}
++
++/// Scalar reference: first index `>= start` where `input[i]` is a member,
++/// else `input.len()`. The executable spec for `PrefilterSet::find_member`.
++#[inline]
++pub fn find_member_scalar(input: &[u8], start: usize, membership: &[bool; 256]) -> usize {
++    let n = input.len();
++    let mut i = start;
++    while i < n {
++        if membership[input[i] as usize] {
++            return i;
++        }
++        i += 1;
++    }
++    n
++}
+diff --git a/skinny/crates/bbnf-simd/tests/prefilter_parity.rs b/skinny/crates/bbnf-simd/tests/prefilter_parity.rs
+new file mode 100644
+index 000000000..5dc5a9a39
+--- /dev/null
++++ b/skinny/crates/bbnf-simd/tests/prefilter_parity.rs
+@@ -0,0 +1,207 @@
++//! Differential parity for the shufti/truffle prefilter (PROVE-01).
++//!
++//! The scalar oracle `scalar::prefilter::{classify_block_scalar, find_member_scalar}`
++//! is the executable specification; the NEON shufti/truffle block kernels and
++//! the fused GATE=16 `PrefilterSet::find_member` must agree with it bit- and
++//! index-for-bit on every case swept here.
++
++use bbnf_simd::prim::PrefilterSet;
++use bbnf_simd::scalar::prefilter::{classify_block_scalar, find_member_scalar, membership_table};
++
++struct Xorshift64(u64);
++impl Xorshift64 {
++    fn new(seed: u64) -> Self {
++        Self(seed | 1)
++    }
++    fn next_u64(&mut self) -> u64 {
++        let mut s = self.0;
++        s ^= s << 13;
++        s ^= s >> 7;
++        s ^= s << 17;
++        self.0 = s;
++        s
++    }
++    fn fill(&mut self, buf: &mut [u8]) {
++        for b in buf.iter_mut() {
++            *b = (self.next_u64() & 0xFF) as u8;
++        }
++    }
++    fn draw_distinct_set(&mut self, count: usize) -> Vec<u8> {
++        let mut seen = [false; 256];
++        let mut set = Vec::with_capacity(count);
++        while set.len() < count {
++            let c = (self.next_u64() & 0xFF) as u8;
++            if !seen[c as usize] {
++                seen[c as usize] = true;
++                set.push(c);
++            }
++        }
++        set
++    }
++}
++
++const JSON_STRUCTURAL: &[u8] = b"{}[],:\"";
++const CSS_STRUCTURAL: &[u8] = b"{}();:,\"'#.>+~*=[]"; // 18 members → wide/multicmp
++
++/// Block-classify parity: NEON shufti/truffle mask == scalar mask, alignment
++/// swept over a 128-byte adversarial backing buffer, for a set sweep 1..=16.
++#[test]
++fn classify_block_alignment_and_set_sweep() {
++    let mut rng = Xorshift64::new(0xCAFE_F00D_BAAD_F00D);
++    let mut backing = [0u8; 128];
++    rng.fill(&mut backing);
++    // Sprinkle structural bytes so masks are non-trivial.
++    for (k, slot) in backing.iter_mut().enumerate() {
++        if k % 5 == 0 {
++            *slot = JSON_STRUCTURAL[k % JSON_STRUCTURAL.len()];
++        }
++    }
++
++    let mut failures = 0usize;
++    for set_size in 1..=16usize {
++        let set = if set_size <= JSON_STRUCTURAL.len() {
++            JSON_STRUCTURAL[..set_size].to_vec()
++        } else {
++            let mut s = JSON_STRUCTURAL.to_vec();
++            let mut r = Xorshift64::new(0x1234 + set_size as u64);
++            while s.len() < set_size {
++                let c = (r.next_u64() & 0xFF) as u8;
++                if !s.contains(&c) {
++                    s.push(c);
++                }
++            }
++            s
++        };
++        let membership = membership_table(&set);
++        let pf = PrefilterSet::new(&set);
++        for align in 0..64 {
++            let mut window = [0u8; 64];
++            window.copy_from_slice(&backing[align..align + 64]);
++            let reference = classify_block_scalar(&window, &membership);
++            // Direct NEON kernel parity: the shufti/truffle block classify
++            // must equal the scalar mask bit-for-bit.
++            #[cfg(target_arch = "aarch64")]
++            {
++                use bbnf_simd::aarch64::prefilter::{classify_block_nibble, classify_block_wide};
++                use bbnf_simd::scalar::prefilter::{NibbleLut, WideLut};
++                let neon_mask = if set_size <= 8 {
++                    unsafe { classify_block_nibble(window.as_ptr(), &NibbleLut::from_members(&set)) }
++                } else {
++                    unsafe { classify_block_wide(window.as_ptr(), &WideLut::from_members(&set)) }
++                };
++                if neon_mask != reference {
++                    failures += 1;
++                }
++            }
++            // find_member over exactly this window must equal the scalar
++            // first-set-bit derived from the reference mask.
++            let expect_first = if reference == 0 {
++                64
++            } else {
++                reference.trailing_zeros() as usize
++            };
++            let got_first = pf.find_member(&window, 0);
++            if got_first != expect_first {
++                failures += 1;
++            }
++        }
++    }
++    assert_eq!(failures, 0, "classify/find divergences: {failures}");
++}
++
++/// Fused finder parity vs the scalar oracle across random inputs, random start
++/// offsets, and both nibble + wide backends — including all-miss (skip-heavy),
++/// dense, and boundary-straddling cases.
++#[test]
++fn find_member_fused_matches_scalar_oracle() {
++    let mut rng = Xorshift64::new(0xDEAD_BEEF_1234_5678);
++    let mut failures = 0usize;
++
++    for &set in &[JSON_STRUCTURAL, CSS_STRUCTURAL] {
++        let membership = membership_table(set);
++        let pf = PrefilterSet::new(set);
++
++        for len in [0usize, 1, 15, 16, 17, 63, 64, 65, 127, 128, 200, 4096, 70_000] {
++            let mut input = vec![0u8; len];
++            rng.fill(&mut input);
++            // Regime A: dense (member every ~7 bytes).
++            let mut dense = input.clone();
++            for i in (0..len).step_by(7) {
++                dense[i] = set[i % set.len()];
++            }
++            // Regime B: skip-heavy — wipe all members to a non-member, then a
++            // single member near the end.
++            let mut sparse = vec![b'a'; len];
++            if len > 0 {
++                sparse[len - 1] = set[0];
++            }
++
++            for corpus in [&input, &dense, &sparse] {
++                for &start in &[0usize, 1, 8, 16, 33, 64, len.saturating_sub(1)] {
++                    let start = start.min(len);
++                    let want = find_member_scalar(corpus, start, &membership);
++                    let got = pf.find_member(corpus, start);
++                    if want != got {
++                        failures += 1;
++                    }
++                }
++            }
++        }
++    }
++    assert_eq!(failures, 0, "fused finder divergences: {failures}");
++}
++
++/// Corpus parity: sweep the fused finder end-to-end across twitter.json,
++/// collecting every structural position, and assert it equals the scalar
++/// oracle's positions exactly.
++#[test]
++fn corpus_parity_twitter_full_scan() {
++    let fixtures = match test_fixtures::load_available_bench_fixtures() {
++        Ok(f) => f,
++        Err(e) => {
++            eprintln!("prefilter corpus parity: fixtures unavailable ({e:?}); skipping");
++            return;
++        }
++    };
++    let twitter = match fixtures.iter().find(|f| f.name == "twitter") {
++        Some(f) => f,
++        None => {
++            eprintln!("prefilter corpus parity: twitter fixture missing; skipping");
++            return;
++        }
++    };
++    let bytes = &twitter.bytes;
++    let membership = membership_table(JSON_STRUCTURAL);
++    let pf = PrefilterSet::new(JSON_STRUCTURAL);
++
++    let mut want = Vec::new();
++    let mut i = 0;
++    loop {
++        let p = find_member_scalar(bytes, i, &membership);
++        if p >= bytes.len() {
++            break;
++        }
++        want.push(p);
++        i = p + 1;
++    }
++
++    let mut got = Vec::new();
++    let mut i = 0;
++    loop {
++        let p = pf.find_member(bytes, i);
++        if p >= bytes.len() {
++            break;
++        }
++        got.push(p);
++        i = p + 1;
++    }
++
++    assert_eq!(
++        want.len(),
++        got.len(),
++        "twitter structural count diverged: scalar {} vs fused {}",
++        want.len(),
++        got.len()
++    );
++    assert!(want == got, "twitter structural positions diverged");
++}
+diff --git a/skinny/crates/ir/src/lib.rs b/skinny/crates/ir/src/lib.rs
+index a604b0044..34538888d 100644
+--- a/skinny/crates/ir/src/lib.rs
++++ b/skinny/crates/ir/src/lib.rs
+@@ -400,7 +400,11 @@ pub enum Recognizer {
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+ pub enum SimdMode {
++    /// Emit every structural position (full block classify).
+     Exact,
++    /// Skip long non-member runs to the next structural, fused GATE=16
++    /// (shufti/truffle prefilter). Neutral on dense input, wins on skip-heavy.
++    Prefilter,
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

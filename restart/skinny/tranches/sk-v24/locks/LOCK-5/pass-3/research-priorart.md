@@ -1,176 +1,155 @@
-# LOCK-5 pass-3 — PRIOR-ART sweep: THE REGEX CONTINUUM (grammar-driven regex engine)
+# LOCK-5 — THE REGEX CONTINUUM · pass-3 PRIOR-ART RESEARCH
 
-Family-blind. Problem class: a regex engine reborn grammar-first — bootstrapped regex
-grammar, an HIR isomorphic to bbnf's HIR/IR, NFA→DFA→minimize→prefilter recast (where
-measured to win) as solver problems, PROVE-10's tiers folded, the 1148-LOC classify
-re-homed, the existing suite as parity floor. Below: what exists (in-tree + external), what
-won/lost elsewhere for THIS class, the constraints our evidence base imposes, the named
-traps. Citations are `path:line` (local, verified) or URL (external).
+Role: prior-art researcher, no family allegiance (CONSTITUTION). Maps the problem class, what
+won/lost for it elsewhere, the constraints our own evidence already imposes, and the traps
+named in comparable systems. Citations are external URLs or in-tree `path:line` verified this
+pass. No REGISTRY read; families withheld by protocol.
 
 ---
 
-## 1. What already exists IN-TREE (the settled substrate — not speculation)
+## 0. The problem class, restated (PORTFOLIO LOCK-5 + constitution i/ii)
 
-**The isomorphism seam is already built, and already lawful-functor shaped.**
-`parse-that/rust/regex/src/egraph/translate.rs:1-9` declares the exact pattern the
-constitution clause (ii) demands: `insert_hir` / `extract_hir` are *"the only place where
-the owning type and the e-node type touch. Every other consumer … works against `HirENode`
-exclusively; every consumer outside the e-graph pipeline (the parser, NFA/DFA compiler,
-classifier) works against `Hir` exclusively."* That is a two-representation design with a
-total functor each way, round-trippable — the LAWFUL-FUNCTOR shape, already embodied for the
-`Hir ↔ egraph` boundary. Any "one HIR / shared rewrite library" claim inherits this seam as
-prior art, not a greenfield.
+Not "build a regex engine." Four coupled obligations:
 
-**The e-graph rewrite library is ALREADY the shared part across both repos.** R3 §1: `bbnf-
-regex/Cargo.toml:35-37` path-patches `egraph` / `egraph-derive` / `csp-solver` to
-`../../bbnf-lang/crates/{egraph,egraph-derive}` and `csc411/.../csp-solver` — the *same*
-crates bbnf-lang consumes. So "the e-graph rewrite library is the shared part; each side
-keeps domain-fit representations" is not a proposal — it is the crate graph at HEAD. What is
-NOT shared is the *node type*: regex has `HirENode` (`egraph/node.rs`), bbnf has `ExprKind`
-(`skinny/crates/ir/src/lib.rs:234`; alongside `BackendShape:361`, `Recognizer:416`,
-`SimdMode:425`). One-HIR-as-single-type would collapse those; lawful-functor keeps both and
-shares only the saturation engine — the prior art (translate.rs + the field, §2) leans
-functor: the two node vocabularies are genuinely different alphabets.
-
-**classify already consumes HIR** — `classify.rs:177 classify_regex_from_hir(&Hir)` (the
-`classify_regex(pattern)` string entry at `:157` parses then delegates). "classify becomes an
-IR analysis pass" is *partially realized*: the 1148-LOC file is already an HIR consumer, not
-a string scanner. Open work is re-homing/re-deriving 1148 LOC, not inventing the posture.
-
-**HIR-rewrite egraph rules already exist** (R3 §3; `egraph/rules/{repetition,union,flatten,
-superset,redundant}.rs`, 1253 LOC total) — Kleene-algebra-style algebraic simplifications on
-HIR. This is the *winnable* half of "automata as extraction," already in-tree.
-
-**PROVE-10 landed** the memchr prefilter tier: `Prefilter{None,Byte1,Byte2,Byte3}` +
-`Dfa::find`, 8.8–29.5× on prefilterable / 0.97–1.01× controls / compile-neutral / 44/44,
-245-line additive patch (PROVE-10 REPORT §1-3; SPEC §0 row 10 CONFIRMED). Disasm shows
-memchr's own aarch64 NEON (`shrn.8b #4` movemask, PROVE-10 §2c) — speed from memchr's
-backend, NOT a portable_simd shim.
+1. **Grammar totality (clause i)** — the regex grammar is bbnf-defined and BOOTSTRAPPED; the
+   hand-written recursive-descent HIR parser becomes grammar-generated or a differential oracle.
+2. **True isomorphism (clause ii)** — the regex HIR has true isomorphism to bbnf's HIR/IR
+   (one type, or a lawful functor). This is the load-bearing, currently-UNMET requirement (§1).
+3. **Automata as solver problems** — NFA→DFA→Hopcroft→prefilter recast as CSP/e-graph *where
+   measured to win*; losses are named negative results (constitution vii).
+4. **PROVE-10's prefilter tier / Teddy / lazy DFA folded; classify (1148 LOC) re-derived or
+   re-homed; the existing engine's tests + consumers are the PARITY FLOOR.**
 
 ---
 
-## 2. What won / lost ELSEWHERE for this problem class
+## 1. What exists in-tree (the constraints reality imposes)
 
-**regex-automata (burntsushi) is the reference architecture; bbnf-regex mirrors it.**
-Pipeline `&str→Ast→Hir→NFA→{lazy/hybrid DFA, one-pass DFA, full DFA}`; HIR compiles to a
-*byte*-transition NFA (unicode classes → UTF-8 automaton), byte-equivalence classes cut the
-DFA alphabet. [burntsushi regex-internals](https://burntsushi.net/regex-internals/);
-[regex_automata::nfa::thompson](https://docs.rs/regex-automata/latest/regex_automata/nfa/thompson/).
-bbnf-regex is isomorphic: `hir/parser → automata/nfa.rs → dfa.rs (subset + Hopcroft) →
-byte_classes` (R3 §3). **What WON:** the layered Ast→Hir→NFA→DFA tower with byte-classes is
-settled SOTA — do not relitigate. **The LOCK-5 lesson:** regex-automata's HIR is regex's OWN,
-distinct from any host-grammar IR — nobody in the production regex world shares one HIR node
-type with a parser-generator's grammar IR. So "regex HIR is a sub-language of bbnf HIR (single
-type, single home)" is a claim BEYOND SOTA; must be earned by measurement, and both the
-in-tree translate.rs seam and the field's instinct are two-types-one-engine, not one-type.
-
-**Prefilter tiers — Hyperscan lineage + regex-automata meta-engine.** shufti (nibble-LUT
-`vqtbl` membership, ≤4 ops) / truffle (256-set, 2nd table) / Teddy (bucketed multi-literal,
-2–72 literals). Meta-engine ladder: literal/prefilter → lazy(hybrid) DFA → one-pass DFA →
-bounded backtracker → PikeVM, with a **quit-byte / cache-cap bail that is never a wrong
-answer** (falls back). [Hyperscan NSDI'19](https://www.usenix.org/system/files/nsdi19-wang-xiang.pdf);
-[Teddy ICPP21](https://oaciss.uoregon.edu/icpp21/views/includes/files/pap205s4-file2.pdf);
-R7 §3-4. **What won:** the tier ladder + bail-to-fallback discipline. PROVE-10 landed the
-bottom tier; PT-1 W2/W3 spec shufti/Teddy + lazy-DFA-with-state-cap (PT-1.md §4). Tier
-*selection* is a small discrete cost decision (≤3→memchr, 4..N→shufti, literal-prefix→Teddy,
-large→lazy) — a pluggable cost model, the one place a solver genuinely governs.
-
-**Regex optimization via rewriting is real, published prior art** — "Optimizing Regular
-Expressions via Rewrite-Guided Synthesis" [arXiv 2104.12039](https://arxiv.org/pdf/2104.12039):
-Kleene-algebra axioms as eqsat rules over an e-graph, extract the minimal equivalent regex.
-VALIDATES the in-tree `egraph/rules/` HIR-simplification layer. Does NOT validate saturating
-over automata states.
-
-**Bootstrapped grammar-defines-itself — CPython PEG (PEP 617).** The grammar parser is
-bootstrapped from a meta-grammar with grammar actions generating AST nodes; the generator eats
-its own meta-grammar. [PEP 617](https://peps.python.org/pep-0617/);
-[van Rossum meta-grammar](https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332).
-Direct prior art for constitution clause (i) "the regex grammar IS bootstrapped and
-bbnf-defined." **Derivatives lineage:** PEG-derivatives (Might/Adams) descend from Brzozowski
-*regex* derivatives — regex-as-grammar-fragment has deep theory backing.
-[Derivatives of PEGs, arXiv 1405.4841](https://arxiv.org/pdf/1405.4841).
+- **A regex grammar ALREADY exists in bbnf**: `grammar/misc/regex.bbnf` (36 lines) — `expression
+  = (term+, "|"?)+ ; term = factor - end ; char_class`, escapes, anchors, lookahead/lookbehind,
+  back-references, flags. Clause i's bootstrap seed is PRESENT as a spec artifact — but it is NOT
+  wired to the engine (§ below). It uses `->`-less EBNF (no projections yet) and embeds regex
+  leaves (`/d+/`, `/x[0-9a-fA-F]+/`) — a self-reference that IS the bootstrap circularity.
+- **The automata engine is `bbnf-regex` (`parse-that/rust/regex`, 6742 LOC, R3 §3), NOT the
+  vendored copy.** Hand-written recursive-descent HIR parser (7 files: `hir/parser/{mod,class,
+  escape,group,repetition,atom,cursor}.rs`); Thompson `Nfa` (449); subset construction +
+  **Hopcroft minimization** `automata/dfa.rs` (438); `classify.rs` (1148, the largest file);
+  and — critically — **`egraph/` (1253 LOC) already runs HIR equality-saturation** (rules:
+  repetition/union/flatten/superset/redundant) over external `egraph`/`egraph-derive`/
+  `csp-solver` path-deps. `pub enum Hir` at `hir/mod.rs:216`.
+- **The vendored `skinny/crates/parse-that-regex/` is a PARTIAL copy** — only `number/`
+  (Eisel–Lemire), `unicode/`, `integration/simd_scan_hook.rs`. It does NOT contain the automata
+  engine. This is a live **fragmentation hazard**: "one regex home" already risks becoming two
+  homes with different `Hir` surfaces.
+- **The coupling is real but one-directional**: bbnf's `ir` crate imports `bbnf_regex::analyze`
+  (`skinny/crates/ir/src/lib.rs:1`, used at `:331` for `ExprKind::Regex{pattern}` nullability).
+  bbnf's own grammar IR is `GrammarIr`/`Rule`/`Expr`/`ExprKind` (`ir/src/lib.rs`), **a distinct
+  representation from bbnf-regex's `Hir`.** No shared `Hir` type exists at HEAD — clause ii is
+  UNMET; there are two trees, coupled only through `analyze()`. That gap is LOCK-5's whole point.
 
 ---
 
-## 3. Constraints our evidence base already imposes (SPEC §0 laws + refutations)
+## 2. External SOTA — what won and lost for THIS class
 
-- **09 REFUTED — portable_simd→NEON shim perf did not reproduce** (SPEC §0). Binding on any
-  wide-entry SIMD tier: bbnf-regex is pure scalar + SmallVec, *no portable_simd* (R3 §3; PT-1
-  §REFUTATION GUARDS). A shufti tier MUST use real `vqtbl1q_u8`; W1's win is memchr's own NEON.
-  No number from a shim window asymmetry — paired interleaving mandatory even for "obvious" wins.
-- **02 NO_GO — no digit-scan SIMD; 04 refuted — no block-scheduling.** Orthogonal to
-  prefilter/lazy work; do not resurrect either lever in this lock.
-- **Warm benches are disinformation; x86 dead; PMU cyc/B where macOS allows, else paired
-  wall-clock ratio certified / absolutes directional** (PROVE-10 §5 — PMU unavailable; the
-  certified metric is the divan paired ratio). Cold, N≥200, paired same-binary lanes with a
-  correctness assert at setup (PROVE-10 §2).
-- **Consumer-less substrate forbidden (Y.13); parity floor = 44/44 bbnf-regex + the
-  parse_that `--test regex` bridge** (49 dfa / 22 parser / nfa / utf8 / accel / equiv / hir
-  subtests, currently **E0432-broken** — a `parse_that::regex::parser` re-export drift,
-  verified pre-existing, PROVE-10 §3, PT-1 W4). Any re-home of classify/HIR keeps this green.
-
----
-
-## 4. The named TRAPS (comparable-system failure modes — front and center)
-
-**TRAP A — "automata as e-graph saturation" runs the isomorphism BACKWARDS and pays NP-hard
-extraction to replace a polynomial pipeline.** Rosetta Stone: *e-graphs ARE tree automata*,
-and the direction that works is **automata-minimization → e-graph-reduction** (use Hopcroft to
-shrink an e-graph), NOT eqsat → automata-minimization.
-[E-Graphs, VSAs, and Tree Automata (Remy Wang)](https://remy.wang/reports/dfta.pdf). Classical
-Hopcroft is O(n log n), near-optimal; recasting it as "rewrite-to-normal-form" saturation is
-predicted to LOSE. Compounding: **e-graph DAG-extraction is NP-hard with no constant-factor
-approximation, and extraction dominates end-to-end eqsat time**
-([e-boost ICCAD'25](https://arxiv.org/pdf/2508.13020);
-[SmoothE ASPLOS'25](https://www.csl.cornell.edu/~yc2632/data/smoothe_asplos2025_final.pdf);
-[Fast&Optimal Extraction OOPSLA'24](https://cse.hkust.edu.hk/~parreaux/publication/oopsla24a/)).
-So "determinization + minimization + prefilter-selection as saturation + CSP extraction" risks
-trading a polynomial classical pipeline for an NP-hard one. **The honest split the prior art
-dictates:** HIR-level *algebraic* simplification (Kleene rewrites) is where e-graphs win and
-already live in-tree (`egraph/rules/`, 1253 LOC); *automata construction* stays classical
-(subset + Hopcroft); *prefilter-tier selection* is a small discrete pluggable cost decision,
-not saturation. On this evidence, "measured head-to-head" will NAME minimization-by-eqsat a
-negative result — the constitution's own disposition for it.
-
-**TRAP B — "one HIR" collapses two genuinely different alphabets and over-couples.** translate.rs
-and the entire production regex field keep the regex node type distinct and share only the
-engine. Forcing `Hir` = a sub-language of bbnf `ExprKind` risks a god-type fitting neither
-domain (regex needs byte-ranges/looks/UTF-8 automata; bbnf IR carries `BackendShape`/
-`Recognizer`/`SimdMode`). The "reasonable-point" isomorphism the constitution mandates already
-exists as the *functor*, not the *identity*.
-
-**TRAP C — shufti wide-tier loses to memchr's own internal vectorization.** memchr2/memchr3 are
-already NEON-vectorized; a naive shufti loop on a near-in-tier 4-byte set can lose (PT-1.md §8
-names the counterexample the challenge must build). Gate shufti on a *measured* crossover, not
-a fixed width.
-
-**TRAP D — lazy-DFA cache thrash erases the compile win, or the state-cap bail returns a wrong
-answer.** regex-automata's answer: LazyStateID reserves tag bits (unknown/dead/quit/start/match)
-and the bail returns `MatchError`→fallback, *never a partial match* (R7 §4). Any lazy tier must
-bind BOTH axes (≥5× compile AND 0.98–1.02× throughput) and prove the bail's fallback == eager
-result (PT-1 W3 gate + §8 race counterexample).
-
-**TRAP E — bench-only wiring / prototype residue.** PROVE-10 substituted an in-bench `assert_eq!`
-for the uncompilable `--test regex` subtests (PROVE-10 §3); leaving that un-promoted to `tests/`
-is the framing's named defect class. The re-home must promote to `tests/` (precept 16/54) and
-repair the E0432 bridge (PT-1 W4) so DFA correctness rests on the real 49-subtest oracle.
-
-**TRAP F — regex↔grammar double-emit at the generator seam.** A self-loop scan site that is also
-an unanchored regex leaf could get both `find_member` (bbnf-simd shufti) and `dfa.find`
-(bbnf-regex prefilter). Single decision point (recognizer dispatch), one lowering per site, grep
-the generated file (PT-1 W5 ⇄ GN-2.W1 interlock, PT-1.md §4).
+- **Derivative-based construction beats regex→NFA→DFA (Owens/Reppy/Turon, JFP 2009).** Brzozowski
+  derivatives build the DFA *directly* from the RE with no NFA intermediary; provably terminates
+  (finitely many derivatives up to ACI-equivalence); the authors show derivative lexer-generators
+  are "easier to write, more efficient, and more flexible" than classical NFA→DFA. WON for
+  lexer-generation. Strongest evidence that a **single algebraic representation can subsume the
+  NFA→DFA→minimize pipeline** — i.e. 5A/5C's thesis is not speculative. The catch: termination
+  REQUIRES quotienting by associativity/commutativity/idempotence (smart constructors /
+  canonicalization) — precisely what bbnf-regex's `egraph/` canonicalization already provides.
+  [re-deriv.pdf](https://www.ccs.neu.edu/home/turon/re-deriv.pdf)
+- **E-graph equality saturation FOR regex is proven prior art (ReGiS / McClurg et al., PACT
+  2022).** "Optimizing Regular Expressions via Rewrite-Guided Synthesis" builds an e-graph over
+  regexes, equality-saturates under rewrite rules, and extracts simplified/faster regexes (ReDoS
+  removal). WON for regex simplification; validates the existing bbnf-regex `egraph/` subsystem
+  and 5C's "canonicalization/minimization as saturation + cost extraction." Scope caveat: ReGiS
+  targets *simplification*, not *determinization* — using saturation to REPLACE Hopcroft is
+  beyond published art, so 5C's determinization-as-extraction is genuinely novel and must be
+  measured head-to-head, not assumed.
+  [arXiv 2104.12039](https://arxiv.org/abs/2104.12039)
+- **Regex embeds into PEG/grammar losslessly, WITH semantic care (Medeiros et al., "From Regexes
+  to Parsing Expression Grammars," arXiv 1210.4992).** A formal transformation regex→PEG matching
+  the same strings as a PCRE, accommodating possessive/lazy repetition and lookahead. The
+  theoretical license for 5A ("regex HIR is a sub-language of bbnf HIR"). The TRAP it names:
+  regex **leftmost-longest** vs PEG/grammar **leftmost-first ordered choice** differ — the
+  embedding must add backtracking/lookahead to preserve semantics. Isomorphism must be a LAWFUL
+  functor over match semantics, not a naive syntactic re-label.
+  [arXiv 1210.4992](https://arxiv.org/pdf/1210.4992)
+- **Bootstrap discipline is settled craft (rust-peg; CPython PEG, PEP 617).** rust-peg's grammar
+  is written in rust-peg itself, a precompiled stage-0 is checked in to break the circular
+  dependency, regenerated via `cargo xtask bootstrap`. CPython bootstraps its parser from a
+  meta-grammar. Exactly the committed-stage-0 + fixpoint-regen model clause i / LOCK-7 needs for
+  `regex.bbnf` — and it aligns with the standing **clean-regen** law (never hand-patch generated).
+  [rust-peg](https://github.com/kevinmehall/rust-peg) · [PEP 617](https://peps.python.org/pep-0617/)
+- **Prefilter/lazy-DFA ladder is SOTA-settled (burntsushi regex-automata; Hyperscan shufti/
+  truffle/teddy).** Meta-engine tiers literal→lazy(hybrid)DFA→one-pass→backtracker→PikeVM; lazy
+  DFA builds states during search under a memory budget and on quit-byte/exhaustion returns a
+  fallback — "never a wrong answer." This IS PROVE-10's design and PT-1 W2/W3's spec, transcribed
+  onto bbnf-regex's own DFA. (R7 §3–4: burntsushi.net/regex-internals; Teddy ICPP21; Hyperscan
+  NSDI'19.)
 
 ---
 
-## 5. Synthesis for the adjudicators (family-blind)
+## 3. Constraints our own evidence base imposes (binding)
 
-The class is *unusually well-instrumented*: the isomorphism seam is built (translate.rs), the
-shared engine is the crate graph (patched egraph), the bottom prefilter tier is landed and
-CONFIRMED (PROVE-10), classify already consumes HIR, the HIR-rewrite egraph rules exist. The
-genuinely open questions the prior art frames as decidable-by-measurement: (i) functor-vs-
-identity for the two HIRs — prior art (translate.rs + regex-automata) leans functor; (ii) which
-pipeline stages an e-graph legitimately governs — prior art draws a hard line at *HIR algebraic
-simplification only*, automata construction classical, tier-selection a pluggable cost model,
-because eqsat extraction is NP-hard and Hopcroft is near-optimal; (iii) the bootstrap of the
-regex grammar — PEG/PEP-617 is the executable precedent. Every acceleration lands with its
-consumer, its `tests/` oracle, and a cold paired bench, over the 44/44 + bridge parity floor.
+- **PROVE-10 is the PARITY FLOOR (SPEC §0 #10, CONFIRMED).** Start-state memchr prefilter in a new
+  `Dfa::find`: **8.8–29.5×** on prefilterable patterns, **0.97–1.01×** controls, **compile-
+  neutral**, **44/44 tests**, 245-line additive patch. Any re-homing / re-derivation of the engine
+  MUST preserve this measured win and the 44-test suite (PT-1 W1 born-verified non-regression).
+- **The classical pipeline WORKS today** (Thompson NFA + Hopcroft in `dfa.rs`). Constitution vii +
+  refutation culture: 5C's e-graph/CSP determinization must **beat it head-to-head or be filed as
+  a named negative result** — it does not displace a working pipeline on elegance alone.
+- **No shim perf claims (refutation 09, LAW).** bbnf-regex is pure scalar + `SmallVec` (no
+  `portable_simd`); PROVE-10's speed comes from the `memchr` crate's own aarch64 NEON backend.
+  Any SIMD prefilter (shufti/Teddy, PT-1 W2) uses real `vqtbl1q_u8`, measured paired — never a
+  `portable_simd`→NEON shim asymmetry.
+- **x86 dead; NEON-only; no SVE/SVE2/SME for byte work** (SPEC §0; R7 §0). Cost model locks to
+  128-bit NEON.
+- **Type plane costs zero at runtime** (constitution v); **macOS PMU restricted** → wall-clock
+  paired same-binary ratios are the certified metric, absolutes directional (PROVE-10 §5).
+- **Consumer-less substrate forbidden (Y.13, constitution viii).** A prefilter/lazy/e-graph tier
+  without a same-wave caller does not open (PT-1 names an in-wave consumer per wave).
+
+---
+
+## 4. Traps named in comparable systems (the failure-mode census)
+
+1. **Two-representation drift (the isomorphism trap).** bbnf `Expr`/`ExprKind` vs bbnf-regex
+   `Hir` are distinct trees today, coupled only by `analyze()`. A naive "true isomorphism" that
+   forces one type risks losing domain-fit (regex byte-classes, `Look`, `Repetition{min,max}` vs
+   grammar `->` projections). 5B's lawful-functor-with-round-trip-oracles is the hedge the
+   literature (1210.4992's semantic-preservation care) endorses.
+2. **The vendored PARTIAL copy.** `skinny/crates/parse-that-regex/` carries number/unicode/
+   integration but NOT automata — "one regex home" is already fracturing. Any port must re-home
+   the WHOLE engine or declare the split lawful, not silently maintain two `Hir`s.
+3. **Derivative/e-graph non-termination.** Brzozowski derivatives blow up without ACI
+   quotienting; regex e-graphs (ReGiS) need a bounded rule-set + cost model or saturation runs
+   unbounded — colliding with the **compile-neutral gate** (PROVE-10) and the generated-size
+   budget. Canonicalization is mandatory, not optional.
+4. **Regex-vs-grammar match semantics.** leftmost-longest (regex/POSIX) ≠ leftmost-first (PEG/
+   ordered choice). An embedding that drops this silently changes match sets — a HARD-RED parity
+   defect (PT-1 W2/W3 "correctness assert fires → HARD RED").
+5. **Lazy-DFA cache thrash + state-cap bail correctness.** A high-entropy corpus can erase the
+   lazy compile win (per-parse re-determinization); a bail that races a match on the cap-boundary
+   step can return a partial answer. burntsushi's discipline (bail = fallback, never a wrong
+   answer) + a cap-boundary oracle is the mitigation (PT-1 W3 risks §8).
+6. **Bootstrap circularity / hand-patched generated.** `regex.bbnf` embeds regex leaves and must
+   be parsed to parse itself; the only safe route is committed stage-0 + fixpoint gate
+   (regen∘regen byte-identical, LOCK-7A) with the clean-regen law enforced — never hand-edit the
+   generated parser.
+7. **Warm-bench self-deception (09's standing lesson).** Two-arm window asymmetry inflates
+   ratios; paired same-binary interleaving is mandatory even for "obvious" wins.
+
+---
+
+## 5. Net for the design (evidence-anchored, no family verdict)
+
+The literature CONFIRMS the continuum is buildable: derivatives (Owens et al.) prove one algebraic
+representation subsumes NFA→DFA; ReGiS proves e-graph saturation optimizes regexes; 1210.4992
+proves regex embeds into grammar with lawful care; rust-peg/CPython prove the bootstrap. The
+in-tree reality CONSTRAINS it: `regex.bbnf` exists but is unwired; two `Hir`/`Expr` trees coupled
+only by `analyze()`; PROVE-10's 8.8–29.5× + 44 tests are the immovable floor; a working Hopcroft
+pipeline that 5C must beat head-to-head or refute. The unpublished frontier (and thus the
+adjudication risk): determinization-as-extraction (beyond ReGiS's simplification scope) and a
+single shared `Hir` that keeps regex-domain fit — both must be MEASURED, not asserted.

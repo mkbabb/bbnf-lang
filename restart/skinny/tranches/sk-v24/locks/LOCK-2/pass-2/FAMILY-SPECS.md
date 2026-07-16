@@ -61,8 +61,14 @@ is **SPEC-ONLY straddling**. The confluence result is also narrow: it holds beca
 proven, "confluent in general" is not.
 
 ### 0.3 The substrate contradiction — the two-tree/three-tree split that no family scopes (the pass's load-bearing blocker)
-Verified on disk at base-pin `ce51c36fc` (CRIT-1 §0.2): **no single tree holds both the engine and
-the decision seams.**
+Verified on disk at base-pin `ce51c36fc` (CRIT-1 §0.2, **independently re-verified this synthesis
+pass**): **no single tree holds both the engine and the decision seams.** Synthesis-pass `ls`/`grep`
+confirms — `skinny/crates/ir/src/` = `{cost.rs, lib.rs}` only (no `egraph/`); the engine
+(`GrammarCostModel`, `egraph/{build_egraph,node,write_back}.rs`, `rules/`) exists only under
+top-level `crates/ir/src/egraph/` + `crates/egraph/`; `admits_sink_only` exists only in
+`skinny/crates/passes/src/lib.rs`; and **`bounded_sum.rs` is absent from BOTH base trees** — it
+lives only in the third divergent bank worktree, corroborating the three-tree finding as fact, not
+assertion.
 
 | | top-level `crates/` (XL-A: *legacy*) | `skinny/crates/` (XL-A: *substrate*) |
 |---|---|---|

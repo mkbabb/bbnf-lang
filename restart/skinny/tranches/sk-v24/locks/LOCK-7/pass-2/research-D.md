@@ -1,264 +1,257 @@
-# LOCK-7 · Family 7D — THE META-CIRCULAR-ORACLE (pass-2)
+# LOCK-7 pass-2 — Family 7D: THE META-CIRCULAR ORACLE
 
-Self-hosting as VERIFICATION first. The bbnf-defined bbnf/regex grammars are not (yet) the
-production parsers; they are DIFFERENTIAL ORACLES run beside the hand parsers, and promotion of
-any subsystem to production is gated on measured parity against a golden anchor plus measured
-performance. This family owns the equivalence relation, the divergence taxonomy, and the
-promotion ledger. It does not require the builder-augment to exist to begin producing value —
-the regex oracle already exists in embryo.
-
----
-
-## 1 · The relation-id (pin it before any parity% is quoted)
-
-A parity% is meaningless until the equivalence relation `≡` it measures is a named, frozen
-artifact. Two parsers can emit structurally different but semantically identical trees; without a
-fixed normal form the oracle reports false divergences and a "97% parity" number is noise. The
-relation is codified as three canonicalization laws over `ExprKind`
-(`skinny/crates/ir/src/lib.rs:234`), NOT invented — both extant parsers already obey them, so the
-relation DESCRIBES settled behaviour rather than imposing a new convention:
-
-- **L1 (empty = empty concat).** `ExprKind` has NO distinct `Empty`/`Epsilon` variant. The hand
-  parser's `parse_seq` (`skinny/crates/grammar/src/lib.rs:1393`) emits `ExprKind::Seq(Vec::new())`
-  for zero children — so the grammar-plane normal form is literally `Empty ≡ Seq([])`; the relation
-  is DEFINED at `Seq([])`, there is no other Empty to reconcile. The `Empty` at `ir/src/lib.rs:479`
-  is `DirectBuildSource::Empty`, a type-plane payload, NOT a grammar node — do not conflate; the
-  oracle never sees it.
-- **L2 (unit collapse).** `parse_seq` returns `children[0]` unwrapped for a single child
-  (`grammar/src/lib.rs:1395`); the regex host does the identical thing — `concat(items)` with
-  `items.len()==1` returns the child (`parse-that/rust/parse_that/src/regex/host.rs:52`), and
-  `alternation` with `rest.is_empty()` returns the single branch (host.rs:41). So `Seq([x]) ≡ x`
-  and `Alt([x]) ≡ x` are already the parsers' behaviour on BOTH planes. Bake it in or every
-  builder-emitted single-element wrapper reads as a divergence.
-- **L3 (separators/trivia are not nodes).** `parse_seq` treats `,` and `?w`/inline-trivia as
-  sequence structure, not AST children (`grammar/src/lib.rs:1381` comment "not an AST node";
-  `?w`→`Annotation{name:"ws"}` at :1371). A builder-side parser must normalize identically or the
-  relation must exclude trivia positions from the compared shape.
-
-**The shared-semantic-pass pivot.** `resolve_refs` (`ir/src/lib.rs:84`) MUTATES every
-`ExprKind::Ref{ target }` from `None` to `Some(RuleId)` (:103). A pre-resolve tree compared to a
-post-resolve tree differs on that field for every reference — a guaranteed false negative.
-`validate` (:110) is structurally inert (returns a `ValidationReport` of counts; :118) — it is a
-gate, not a normalizer. Therefore the relation-id states: **`resolve_refs` runs on BOTH sides or
-NEITHER**; the canonical choice is BOTH (post-resolve, targets bound), the state every downstream
-pass consumes. `validate` is asserted GREEN on both sides as an admission gate but is NOT part of
-the compared value.
-
-**Relation-id = `GRAMMAR-IR-EQ/v1 = {L1,L2,L3} over resolve_refs'd ExprKind trees; references
-compared by resolved rule NAME, not RuleId index}`.** RuleId indices are allocation-order
-artifacts (`add_expr`/`add_rule` push-order, `ir/src/lib.rs:51,57`); comparing by name lets two
-parsers that visit rules in different order still match. Pin this string in the ledger header; a
-parity% without it is void (Constitution vii: measured, named).
+Self-hosting recast as *verification first*. The bbnf-defined bbnf grammar and the
+bbnf-defined regex grammar do not begin life as production parsers; they begin as
+**differential oracles** run beside the hand parsers. Promotion to a production role is a
+per-subsystem event gated on a pinned equivalence relation, a golden-anchor parity number, a
+totality percentage, and a cold-per-parse performance ratio — never on the mere existence of
+a generated parser, never on majority vote. The family's whole discipline lives in one law:
+*pin the relation-id before quoting any parity%*.
 
 ---
 
-## 2 · The regex oracle already exists — correct the record
+## 1. The equivalence relation (pin it before any parity%)
 
-`parse_generated` (`parse-that/rust/parse_that/src/regex/mod.rs:34`) is a PUBLIC PRODUCER, not a
-recognizer: it runs the self-hosted generated combinator parser (`generated::RegexParser::regex`,
-:41) over the pattern, then `host::lower` (:57) folds the typed `RegexParserEnum` AST into a real
-`Hir` and RETURNS it (`Result<Hir, ParseError>`). Its own doc states the purpose — "available for
-benchmarking and verification against the primary `parse()`" (mod.rs:33). **The meta-circular
-regex oracle is therefore already wired in embryo**: `parse_generated(p)` vs the primary
-`bbnf_regex::parse(p)`, both yielding `Hir`. 7D's regex deliverable is not to build this oracle but
-to (a) pin its relation-id and (b) fix the divergence taxonomy below. The directives' correction
-stands: `parse_generated` produces, it does not recognize.
+An oracle compares two productions of one input. The comparison is meaningless until the
+relation it uses is fixed, versioned, and its quotient audited. Two facts of the substrate
+force this.
 
-**Regex relation-id.** The settled substrate (XL-C) gives the pivot free: `simplify_hir`
-(`parse-that/rust/regex/src/egraph/mod.rs:143`) is a cost-guided equality-saturation canonicalizer
-over `Hir` — the regex analog of `resolve_refs`+normal-form. It already carries the
-`Empty ≡ Concat([])` law: its comment (egraph/mod.rs:159) records it "only handled
-`Empty/Literal/Class/Look`" — `Hir::Empty` is a first-class node here and saturation folds
-`Concat([])`/`Alternation([x])` to canonical form. **Regex relation-id =
-`HIR-EQ/v1 = structural Hir equality after simplify_hir on BOTH sides`** — run it on both or
-neither, exactly as `resolve_refs` on the grammar plane. Same pivot law, two planes.
+**(a) There is no `Empty` node — the empty witness is `Seq([])`.** `ExprKind`
+(`ir/src/lib.rs:234`) enumerates `Seq / Alt / Repeat / Optional / Literal / Regex / Ref /
+Annotation / Project / Discard` — *no* `Empty` variant. The hand parser mints the empty
+sequence as `Seq(vec![])` (`grammar/src/lib.rs:1392-1396`) and already collapses the
+singleton `Seq([x]) → x` at parse time (`:1397`). So the constitution-level identity is
+concretely **`Empty ≡ Seq([])`**, and the relation must be closed under a named rewrite set:
 
-**Divergence taxonomy — engine-tier `host.rs` OBLIGATION vs ORACLE VERDICT.** Not every
-`parse_generated ≠ parse` is a parser-parity failure. `host::lower` (host.rs:19) performs a
-semantic fold — `lower_quantifier` (:174), `lower_escape` (:248), `lower_class_escape` (:303),
-`lower_char_class` (:357), `lower_class_atom_byte` (:415), unicode expansion under `ctx.unicode`.
-Split:
+- `Seq([]) ≡ Empty` (the identity element);
+- `Seq([x]) ≡ x`, `Alt{[x]} ≡ x` (singleton collapse — the hand parser does the Seq case at
+  build time, but a *builder projection* or an alternate construction path need not, so the
+  relation must, not the parser);
+- `Seq` associative-flatten (`Seq([a, Seq([b,c])]) ≡ Seq([a,b,c])`);
+- `Optional(x) ≡ Repeat{x, 0, 1}` — **conditionally**: only when the two carry the same
+  projection semantics; over-quotienting here hides a real divergence (see §6), so this rule is
+  *off by default* and enabled only for the acceptance-parity rung.
 
-- **ORACLE VERDICT (parser structural parity — a promotion blocker).** Divergences in
-  *grouping / precedence / quantifier attachment / concat-alt shape* — the tree the generated
-  combinator parser produces vs the hand parser's, BEFORE the fold. Genuine parser bugs; they gate
-  promotion.
-- **ENGINE-TIER `host.rs` OBLIGATION (not a parser verdict).** Divergences in *what a class/escape
-  expands to*, *case-folding*, *unicode property sets*, *`\d`/`\w` byte membership*. These live in
-  the host fold and are fixed IN `host.rs`; they never count against the generated parser's
-  parity%. A `\p{L}` expansion mismatch is a host obligation to reconcile, not evidence the
-  self-hosted parser is wrong. The ledger tags each divergence with its class; only VERDICT-class
-  divergences decrement the parity% that gates promotion.
+Name it **`OracleRel-bbnf-v1`** and enumerate exactly this rewrite set in the ledger. A parity
+number quoted without a relation-id is void, because two "equal" trees may differ only by
+Seq-arity or a target-resolution flag.
 
-Constitution clause (ii) — regex HIR isomorphic to bbnf HIR — makes this the seam LOCK-5 owns: the
-host-fold obligations are LOCK-5's engine tier; 7D consumes LOCK-5's verdict on the lawful `Hir`
-form and asserts parity over it, it does not relitigate the HIR shape.
+**(b) The shared-semantic-pass pivot: both sides or neither.** `resolve_refs`
+(`ir/src/lib.rs:84`) *mutates* `Ref.target` in place from `None` to `Some(rule_id)`;
+`validate` (`:110` → `validate_resolved_refs` `:300`) checks the resolved refs and rejects
+duplicate rules. If the hand side has run `resolve_refs` (every `Ref` carries `target:Some`)
+and the oracle side has not (`target:None`), **every `Ref` node diverges spuriously**. The
+relation is therefore defined over a *fixed shared prefix* of passes applied identically to
+both productions:
 
----
+```
+OracleRel-bbnf-v1(P_hand, P_oracle) :=
+    normalize( validate ∘ resolve_refs (P_hand) )  ≡_struct
+    normalize( validate ∘ resolve_refs (P_oracle) )
+```
 
-## 3 · The grammar oracle — the recognizer-vs-builder gap, and the tape route around it
+where `normalize` is the `OracleRel-bbnf-v1` rewrite set above and `≡_struct` is structural
+equality of the quotiented `GrammarIr`. Same passes, same order, on both sides — or neither.
 
-The regex plane has a builder (`host::lower` → `Hir`). The grammar plane does NOT: the general
-emitter emits `parse_<rule>` RECOGNIZERS with signature
-`fn parse_ident<'i>(bytes, cursor: &mut usize, tape: &mut TapeBuilder) -> Result<(), ParseError>`
-(`skinny/crates/codegen/src/general_descent/emit.rs:269`). `emit_expr` (:288) writes tape-node
-stamps and cursor advances — `Seq`/`Alt`/`RepeatLoop`/`ByteLiteral` arms (:301,:309,:361) — with NO
-`add_expr`/GrammarIr-builder arm. `bbnf.bbnf` shape-dispatches here because it has no `value` rule
-(`runtime_generator.rs:98 !has_rule("value")` → `emit_general_descent`:99). So a naive "bbnf-defined
-bbnf parser vs hand parser" oracle has a type mismatch: hand → `GrammarIr`, generated → offset TAPE.
-
-Two routes; 7D carries BOTH with a measured tie-break, presuming neither:
-
-- **Route T (tape-canonical, no builder augment) — LOW RISK.** Define `≡` over a canonical
-  serialization, reusing the EXISTING oracle idiom: `bbnf-bench/src/parity.rs:23 assert_parity`
-  already serializes a canonical token stream from a parsed root and asserts equality
-  (`serialize_canonical` :64, `token_stream_from_root` :68). Generalize it — decode the generated
-  parser's TAPE to the same canonical stream that the hand parser's `GrammarIr.pretty`
-  (`ir/src/lib.rs:124`) or a canonical walk yields, and compare under `GRAMMAR-IR-EQ/v1`. The
-  emitter stays a recognizer (its fast, measured product); the oracle burden is a cheap
-  tape→canonical decoder that never perturbs the hot path.
-- **Route B (builder augment) — the shared open question.** Author `-> Span`/`-> T` projections on
-  bbnf's structural rules so the emitted parser calls `add_expr`/`resolve_refs` and produces a
-  `GrammarIr` directly, then compare structurally. UNSEEDED — do not presume it round-trips from the
-  emitter's mere existence; it may cascade at `Discard`/`Repeat`/closure constructs. Host budget:
-  `add_expr` (append) + `resolve_refs` (link). Whether the augment avoids a borrow-checker escape is
-  what 7B/the shared question measures.
-
-7D's position: the oracle is deliverable via Route T TODAY (tape decode + canonical compare) with
-zero emitter change; Route B is a promotion accelerant the prototype must prove. Each parity% the
-ledger quotes names which route produced it.
+**Pluggable formulation (ties LOCK-2).** The regex side already implements its quotient as an
+**e-graph**: `simplify_hir(hir, &RegexExtractionCost)` at
+`parse-that/rust/regex/src/egraph/mod.rs:143`. The bbnf relation should mirror it — an e-graph
+over `ExprKind` seeded with the rewrite set above, parity defined as *both trees extract to the
+same e-class representative under a fixed cost*. This makes the quotient a pluggable rule-set
+(per the pluggable-components edict), not a hand-written comparator, and homes it in LOCK-2's
+e-graph rather than a bespoke subsystem.
 
 ---
 
-## 4 · The promotion ledger (schema)
+## 2. The regex oracle — a *producer*, structure-level from day one
 
-Promotion is per-subsystem, gated, audit-first. One row per (subsystem, plane):
+**Correct the record (directive item):** `parse-that/.../regex/mod.rs:34 parse_generated` is a
+**PUBLIC PRODUCER, not a recognizer**. It runs the generated regex parser then `host::lower`
+and returns a rich `Hir` (`mod.rs:34-58`). This is the decisive asymmetry of 7D: the regex
+subsystem can be diff-tested *at the structure level* — `Hir` against `Hir` — whereas the bbnf
+general-descent emitter yields only recognizers (§3). The regex subsystem is the
+**furthest-along and promotes first**.
 
-| column | meaning | source |
-|---|---|---|
-| `subsystem` | `regex/parser`, `bbnf/structural`, `bbnf/projection`, … | — |
-| `relation_id` | `HIR-EQ/v1` or `GRAMMAR-IR-EQ/v1` (frozen string) | §1/§2 |
-| `route` | `T` (tape-canonical) or `B` (builder) | §3 |
-| `corpus_id + N` | golden corpus hash + document count | committed fixture |
-| `parity_verdict%` | VERDICT-class agreement (host-obligation divergences EXCLUDED) | §2 taxonomy |
-| `totality%` | share of surface behind grammar, NOT host fns | **7C's counter (leaves×branches)** |
-| `perf_ratio` | generated cyc/B ÷ hand cyc/B, cold paired N≥200 | standing-law bench |
-| `falsification` | planted-mutation id the oracle CAUGHT | §5 |
-| `disposition` | ORACLE-ONLY / PROMOTION-CANDIDATE / PROMOTED | gate below |
+The regex oracle relation:
 
-**`totality%` is CONSUMED from 7C's counter, not recomputed here** — it is a promotion input: a
-subsystem mostly behind host functions (low totality%) is not a self-hosting win even at 100%
-parity, because the grammar isn't doing the work. **Promotion gate:** `disposition = PROMOTED` iff
-`parity_verdict% == 100 (over golden) AND perf_ratio ≤ 1.0× certified AND falsification caught AND
-totality% ≥ subsystem floor`. Anything less stays `ORACLE-ONLY` — it runs beside the hand parser as
-a differential test, never replaces it (born-RED per subsystem).
+```
+HirRel-v1(p) := simplify_hir( parse(p) )  ≡_struct  simplify_hir( parse_generated(p) )
+```
 
-**Golden anchor, NOT majority vote.** The reference is a COMMITTED golden — the hand parser's output
-frozen on a versioned corpus (the `check-json`/`check-sheets` byte-identical idiom,
-`xtask/src/main.rs:41,43`, generalized to a committed expected-tree fixture). Majority vote (three
-derived parsers agreeing) is REJECTED by construction: two parsers sharing one lowering bug (both
-consume the same `host::lower`, the same `simplify_hir`) out-vote the correct one — a shared-mode
-failure the vote cannot see. Agreement is measured against the golden, never against sibling parsers.
+over a conformance corpus. `simplify_hir` (egraph, `:143`) is the shared canonicalizer applied
+to both — the exact analogue of §1's shared-pass pivot.
 
-**Planted-mutation falsification (the oracle must be PROVEN able to fail).** Mirror GN-5.W3's
-name-gate falsification exactly (`GN-5.md` §W3, `name_gate_falsification.rs`): before the oracle is
-trusted to certify parity, plant a KNOWN divergence and assert the oracle reports it. Plants:
-(i) flip `<<`/`>>` keep-side in one bbnf rule (`ExprKind::Discard{keep_left}`, `ir/src/lib.rs:266`);
-(ii) drop an `Alt` branch; (iii) change one regex quantifier's greediness in the generated grammar.
-Assert each flips `parity_verdict%` below 100 and NAMES the divergent rule/path; then assert the
-un-mutated tree passes clean. An oracle that cannot fail is a defect (SPEC §0 failure-mode
-checklist) — this test is the proof it can, and it is the `falsification` column's content. A row
-with an empty `falsification` cannot exceed ORACLE-ONLY.
+**Which divergences are engine-tier `host.rs` obligations, which are oracle verdicts:**
 
----
+- **Host obligations (NOT parser bugs — expected, must be normalized away before comparison):**
+  `parse-that/.../regex/host.rs` (524 LOC) carries the semantic fold. `LowerCtx`
+  (`host.rs:11-15`, `lower` `:18`) tracks inline flag groups `(?si)` — dotall,
+  case-insensitive, unicode — across the walk; unicode property/class expansion; and the
+  `Empty ≡ Concat([])` collapse is *visible in host.rs* (`alternation` with empty `rest`
+  returns the single branch; a one-element concat lowers to its child). Flag-scope semantics,
+  unicode expansion depth, and `simplify_hir` canonicalization depth are **deliberate lowering
+  choices** — two `Hir`s equal *after* `simplify_hir` but different before are NOT divergences.
+  The oracle must compare after `simplify_hir`, else these read as false positives.
+- **Oracle verdicts (the true promotion blockers):** a construct the generated parser rejects
+  that hand `parse()` accepts (or vice-versa); or an `Hir` shape difference that *survives*
+  `simplify_hir`. These, and only these, drop `HirRel-v1` parity.
 
-## 5 · Staging & fixpoint facts 7D must CARRY (not re-derive)
-
-- **No bbnf self-regen exists in skinny.** `xtask/src/main.rs:40-52` dispatches
-  `regen-json`/`check-json`, `regen-sheets`/`check-sheets`, `regen-css`, `regen-real-typed`,
-  `check-conformance`, `lint-loc` — NO `regen-bbnf`, NO fixpoint gate, NO bbnf-in-bbnf target. A
-  repo-wide grep for `88s|0.5s|fixpoint|regen∘regen` in skinny finds nothing. **The ~88s→0.5s datum
-  and the regen∘regen fixpoint are legacy transplants, unseeded at skinny HEAD** — 7D quotes neither
-  as an existing property. The extant byte-identical gates are `check-json`/`check-sheets` (regen
-  output == committed `.rs`), the honest fixpoint SUBJECT candidate: *generated `.rs` bytes*, NOT
-  GrammarIr equivalence.
-- **Byte-determinism is non-vacuous only if the emit path is input-sensitive.** A fixed-const emit
-  arm stamps identical bytes for any grammar; triple-identical certifies nothing. `general_descent`
-  IS input-sensitive (it walks `SinkOnlyExpr` structure, emit.rs:288), but the fixpoint claim must
-  be paired with a MUTATION test: change the grammar, and the bytes must CHANGE — else determinism
-  is trivially true and certifies nothing.
+**Named perf caveat for the regex ledger row:** `parse_generated` runs on the parse-that
+combinator runtime (`generated::RegexParser`, `mod.rs:40-42`), so its cold-per-parse ratio vs
+hand `parse()` folds in combinator overhead, not just grammar overhead. The perf gate must
+isolate the parse stage from `host::lower`, or the regex parser will look slower than the
+grammar plane actually is.
 
 ---
 
-## 6 · Prior art (citations)
+## 3. The bbnf oracle — recognizer-level today, builder-level RED-unknown
 
-- **Differential parser testing as the gate** — CSmith→compiler and `sqllogictest`/SQLancer: a fixed
-  reference oracle + generated inputs, divergence = bug. 7D's golden-anchor-not-vote is the CSmith
-  discipline (a fixed reference, not a jury).
-- **rustc `-Zunpretty` AST round-trip / `rustfmt` idempotency** — parse→print→parse fixpoint as a
-  structural-equivalence oracle; the relation is over the AST modulo pretty-print, exactly L1–L3's
-  "modulo trivia/unit-collapse".
-- **GHC `-ddump-simpl` + Core lint** — a canonicalizing pass (`simplify_hir`'s analog) run on both
-  sides before comparison; a divergence in the fold (Core opt) is engine-tier, a divergence in parse
-  is a front-end verdict — the §2 taxonomy.
-- **tree-sitter's corpus `test` harness** — committed golden trees in S-expression normal form as
-  the anchor; a parser is promoted against the frozen corpus, never against a sibling grammar.
-  Route T's tape→canonical serialization is tree-sitter's S-expr idiom.
-- **egg / egglog equality saturation as canonicalizer** — `simplify_hir`
-  (`regex/src/egraph/mod.rs:143`) IS this; "equal after saturation" is the egg extraction-to-canon
-  contract, the settled substrate XL-C cites.
-- **Mutation testing (`cargo-mutants`, PIT)** — the "oracle must fail" proof; §4's planted-mutation
-  falsification is a mutation-adequacy test on the oracle itself, mirroring GN-5.W3.
+Routing `bbnf.bbnf` through the one generator lands in the **general-descent** path:
+`runtime_generator.rs:98 !sink_only.has_rule("value") → emit_general_descent`. That emitter
+(`general_descent/emit.rs render` → one `parse_<rule>` per rule) emits **recognizers** — they
+accept/reject and drive a lazy tape/view (`view.rs`); they do **not** build a `GrammarIr`. Its
+own module header states the leaf story is a delimiter-scan `Span` deferral
+(`general_descent/mod.rs:16-24`). So the bbnf oracle has two rungs, and they are not the same
+oracle:
 
----
+**Rung 1 — acceptance parity (achievable now).** Compare the hand bbnf parser's accept/reject
+verdict against the generated bbnf recognizer's verdict over the `grammar/` corpus (json, css
+modules, ebnf, bnf, math, sheets, bbnf.bbnf itself). This is a *weaker* relation
+(language-equality, not tree-equality) but it is honest and buildable once the **three bounded
+parser gaps** close — `?w`→`->` attachment in `parse_seq` (`grammar/src/lib.rs:1361`;
+standalone-`?w` at `:1366` and `:1449`), the `@{}` atom in `parse_atom` (`:1495`; the runtime
+side is `resolve_runtime_import_closure`, `@{` scanned at `:420`), and `|params|` closures.
+These gaps are what block the emitter's generated recognizer from reading bbnf's own surface.
 
-## 7 · Named risks & counterexamples
+**Rung 2 — structure parity (the RED-unknown, per the shared empirical question).** Authoring
+`-> Span` / `-> T` builder projections on bbnf's structural rules over the *recognizer*
+emitter, so it produces a tree comparable to `GrammarIr` under `OracleRel-bbnf-v1`. Whether the
+emitted builder reparses the corpus into `GrammarIr`-equivalent structure within the measured
+`add_expr`+`resolve_refs` host budget **while `regen∘regen` holds byte-identical** is
+**unseeded and must be reported RED-unknown** — do NOT presume round-trip from the legacy
+emitter or from the emitter's mere existence. Candidate cascade points to test first: the
+recursive `expression` self-reference resolved through `resolve_refs` (a builder that
+constructs `Ref{target:None}` before the shared pass runs), and the `@{}` host-capture atom
+(which the recognizer emitter has no projection for — `general_descent/mod.rs` names no host
+tier). The bbnf ledger row therefore carries a *recognizer* verdict until rung 2 is proven, and
+promoting a *producer* role on rung-1 acceptance parity alone would be unsound (acceptance
+parity ≠ structure parity).
 
-- **R1 — parity% quoted before the relation-id is pinned.** Any number without the frozen
-  `{HIR-EQ,GRAMMAR-IR-EQ}/v1` string and the resolve_refs/simplify_hir pivot is noise; L2 unit-
-  collapse alone can swing a naive comparator by every single-child wrapper. *Guard:* the ledger
-  header carries the relation string; a row without it is void.
-- **R2 — host-fold divergences miscounted as parser failures.** A `\d`/unicode-class mismatch in
-  `host.rs` decrements the parser's parity% and blocks a correct parser. *Counterexample:* plant a
-  `lower_class_escape` (host.rs:303) bug and confirm the ledger tags it ENGINE-TIER, not VERDICT —
-  the taxonomy is exercised, not asserted.
-- **R3 — vacuous byte-determinism.** A const-stamped emit arm passes regen∘regen trivially. *Guard:*
-  §5's mutation test — generated bytes MUST change under a grammar mutation or the fixpoint is
-  disqualified as evidence.
-- **R4 — Route B presumed from the emitter's existence.** The emitter emits recognizers
-  (emit.rs:269, no builder arm); assuming a `->`-projection augment round-trips into
-  GrammarIr-equivalent structure is the unseeded question — it may cascade at
-  `Discard`/`Repeat`/closure. *Guard:* the oracle ships via Route T independent of Route B; Route B
-  is a gated candidate.
-- **R5 — golden drift.** If the golden is regenerated from the hand parser at test time, a
-  hand-parser regression silently rebaselines the anchor and the oracle certifies the regression.
-  *Guard:* the golden is a COMMITTED fixture with a hash in the ledger (`corpus_id`), updated only by
-  an explicit reviewed regen — never auto-derived at test time.
-- **R6 — oracle that cannot fail.** *Guard:* §4 planted-mutation falsification is a hard gate; an
-  empty `falsification` column caps disposition at ORACLE-ONLY.
+**Fixpoint subject for the oracle.** The single-stage staleness gate already exists —
+`xtask/src/regen.rs:37 check_target` fails if committed generated bytes differ from a fresh
+regen (`main.rs:40-47` targets json/css/sheets/real-typed; **there is no `regen-bbnf` target**,
+so the oracle needs a new one). Note the hazard from a 7D seat: comparing generated `.rs`
+**bytes** is vacuous if the emit path is fixed-const (identical bytes for any input). The
+non-vacuous oracle subject is **`GrammarIr`/`Hir` equivalence under the pinned relation**, not
+bytes.
 
 ---
 
-## 8 · What the PROTOTYPE must test to move 7D
+## 4. The promotion ledger schema
 
-1. **Freeze both relation-ids as code.** Implement `GRAMMAR-IR-EQ/v1` (L1–L3 + resolve_refs pivot,
-   RuleId-by-name) as a comparator over two `GrammarIr` (or tape-canonical streams), and `HIR-EQ/v1`
-   (structural `Hir` eq after `simplify_hir` both-sides). Prove L1 `Seq([])` and L2 unit-collapse by
-   running one input through both extant parsers and asserting eq.
-2. **Regex oracle, live.** Run `parse_generated` (mod.rs:34) vs `bbnf_regex::parse` over a committed
-   regex corpus under `HIR-EQ/v1`; classify every divergence VERDICT vs ENGINE-TIER; emit the first
-   ledger rows with a real `parity_verdict%` and the host-obligation exclusions itemized.
-3. **Grammar oracle via Route T (no emitter change).** Decode the general-descent tape for `bbnf.bbnf`
-   (driven through `!has_rule("value")`→`emit_general_descent`, runtime_generator.rs:98 — NEVER
-   `json_sink_direct`) to the `parity.rs` canonical stream (parity.rs:64) and compare to the hand
-   parser's canonical walk under `GRAMMAR-IR-EQ/v1`; report where it diverges and whether it is
-   L1–L3 normalization or a genuine verdict.
-4. **Falsification.** Plant the three §4 mutations (Discard keep-side flip, dropped Alt branch, regex
-   greediness) and assert each is CAUGHT and named; assert clean passes clean — the gate that lets a
-   row exceed ORACLE-ONLY.
-5. **Non-vacuous determinism.** Mutate `bbnf.bbnf`, regen, assert the generated `.rs` bytes CHANGE
-   (disqualify const-stamp), then assert regen∘regen on the fixed input is byte-identical — the
-   honest fixpoint subject (generated bytes), distinct from GrammarIr equivalence.
-6. **Populate the ledger** with `totality%` consumed from 7C's counter (do not recompute) and
-   `perf_ratio` from a cold-paired N≥200 bench of `parse_generated`/general-descent vs the hand path
-   — so the first promotion candidacy is a measured row, not a claim.
+One row per subsystem, cut once the relation-id is pinned. Columns:
+
+| col | source / meaning |
+|-----|------------------|
+| subsystem | `regex-parser` \| `bbnf-parser` \| … |
+| relation-id | `HirRel-v1` / `OracleRel-bbnf-v1` — versioned, rewrite-set enumerated |
+| role | `recognizer` \| `producer` (what is being promoted; bbnf sits at `recognizer` until rung 2) |
+| corpus | differential fixture set + size (regex: `parse-that/rust/regex` tests + a conformance TOML mirroring `regex-automata`; bbnf: `grammar/` tree) |
+| parity% | fraction of corpus where oracle ≡ hand under the relation, measured against a **GOLDEN ANCHOR** (below), never majority vote |
+| totality% | **from 7C's leaves×branches counter** — fraction of surface behind grammars vs host fns; a subsystem promoting at low totality is more host than grammar and is flagged |
+| perf ratio | oracle vs hand parser, cold per-parse, PMU cyc/B (parse stage isolated from `host::lower`) |
+| verdict | `BLOCKED` / `SHADOW` (runs beside, not promoted) / `PROMOTED` |
+
+**Golden anchor, not majority vote.** With only two parsers (hand + oracle) a majority is
+undefined; and three parsers agreeing on a *wrong* answer certifies nothing. The anchor is a
+frozen, hand-audited expectation set — the direct analogue of tree-sitter's `test/corpus/*.txt`
+S-expression fixtures and `regex-automata`'s conformance TOML. The oracle must match the
+**anchor**, and for regex the anchor `Hir` must be audited *independently of* `simplify_hir`
+(else a `simplify_hir` bug makes both sides "agree" on the wrong shape).
+
+**Planted-mutation falsification (GN-5 §1 Precept 19; mirrors GN-5 W3's planted name-gate).**
+Before the parity column is trusted to *pass*, it must be proven able to *fail*: plant a
+mutation in the oracle grammar/parser — e.g. drop the `+` `Repeat{min:1}` branch
+(`grammar/src/lib.rs:1461`) or the regex `alternation` empty-rest collapse — and assert parity
+drops below 100% on the corpus that exercises that construct. If parity stays 100%, the
+**corpus is inadequate**, not the parser — this makes the corpus itself falsifiable and yields
+a coverage gate (every `ExprKind` variant and every host-fn exercised, or a promoted parser can
+hide an unexercised divergence: the vacuous-parity failure mode).
+
+---
+
+## 5. Prior art (citations)
+
+- **Differential testing / oracles:** McKeeman, *Differential Testing for Software* (1998);
+  Yang, Chen, Eide, Regehr, **CSmith** (PLDI 2011) — the canonical grammar-driven differential
+  oracle for a compiler front end; "two implementations, one relation" as the sound substrate.
+- **Metamorphic testing** (Chen et al.) — the equivalence-relation-as-oracle discipline; §1's
+  quotient (`Empty ≡ Seq([])`, associativity) is a metamorphic relation set.
+- **tree-sitter** — generates parsers from `grammar.js`; `tree-sitter test` diff-tests the
+  generated parser against golden `test/corpus/*.txt` S-expressions. Direct analogue: golden
+  anchor, not majority vote; the corpus IS the specification.
+- **rustc / GHC bootstrap** — stage1 (built by stage0) vs stage2 must be byte/behaviorally
+  identical; the classic `regen∘regen` fixpoint. 7D takes the *behavioral* (structure-equiv)
+  reading over the byte reading, because the byte reading is vacuous under a fixed-const emit.
+- **Coq/Lean kernel & the de Bruijn criterion** — a small trusted checker validates a larger
+  generated artifact. The hand parser is the trusted anchor; the grammar-generated parser is the
+  *checked* artifact until measured parity promotes it.
+- **egg / egglog** (Willsey et al., POPL 2021) — equivalence via e-graph congruence;
+  `simplify_hir` (`parse-that/rust/regex/src/egraph/mod.rs:143`) already uses this. §1 proposes
+  the bbnf relation adopt the same engine (LOCK-2 home).
+- **regex-automata** — its TOML conformance suite is the model for the regex oracle's
+  golden-anchor corpus.
+
+---
+
+## 6. Named risks and counterexamples
+
+1. **Vacuous parity / coverage hole.** Corpus doesn't exercise a construct → planted mutation
+   won't drop parity → false `PROMOTED`. Mitigation: the §4 coverage gate.
+2. **Relation over-/under-quotient.** Too aggressive (collapse `Optional`↔`Repeat{0,1}` when
+   projection semantics differ) hides a real divergence; too weak (no Seq-flatten) floods
+   spurious ones. The relation-id must be versioned and its rewrite set audited; `Optional↔Repeat`
+   is off by default.
+3. **Recognizer/builder gap (the central bbnf hazard).** Acceptance parity ≠ structure parity. A
+   generated recognizer can accept the same language while a hypothetical builder emits a
+   different tree. The ledger `role` column exists precisely to forbid promoting a `producer`
+   role on `recognizer` evidence.
+4. **Shared-canonicalizer bug.** Comparing after `simplify_hir`/`normalize` means a bug in the
+   canonicalizer makes both sides agree on a wrong answer. The anchor must be audited
+   independently of the canonicalizer.
+5. **Perf attribution.** `parse_generated` includes combinator-runtime and `host::lower` cost;
+   an un-isolated ratio slanders the grammar plane.
+
+---
+
+## 7. What a prototype must test (to move 7D)
+
+1. **Regex Hir oracle (do first — it's a producer today).** Implement `HirRel-v1` =
+   `simplify_hir(parse(p)) ≡ simplify_hir(parse_generated(p))` over the `parse-that/rust/regex`
+   tests + a small conformance TOML; report parity%. Plant a mutation in the generated regex
+   grammar; confirm parity drops. Isolate parse-stage cyc/B from `host::lower`.
+2. **Pin `OracleRel-bbnf-v1`.** Implement the §1 rewrite set as an e-graph normal-form (LOCK-2
+   engine) or a normal-form fn; prove confluence on the corpus (normalize twice → fixed point).
+3. **bbnf acceptance oracle (rung 1).** Close the three parser gaps (`?w`, `@{}`, `|params|`);
+   run hand parser vs generated recognizer over `grammar/`; report accept/reject agreement; plant
+   a `Repeat` drop and confirm a fall.
+4. **The RED-unknown (rung 2).** Author `-> Span` on ONE structural bbnf rule
+   (e.g. `rule = ident "=" expression ";"` → a `RuleNode`), regen, and check (a) does the emitted
+   builder reparse that rule into a `GrammarIr`-equivalent node under `OracleRel-bbnf-v1` within
+   the `add_expr`+`resolve_refs` budget, and (b) does `regen∘regen` stay byte-identical.
+   **Report the exact construct where it cascades** — first suspects: the recursive `expression`
+   self-ref through `resolve_refs`, and the `@{}` host-capture atom.
+5. **Totality% wiring.** Feed 7C's leaves×branches counter into the ledger's `totality%` column
+   for whichever subsystem promotes first; flag any promotion below a named floor.
+
+**Integration seams:** `ir/src/lib.rs:84` `resolve_refs`, `:110` `validate`, `:234` `ExprKind`
+(no `Empty`; `Seq([])` witness), `:300` `validate_resolved_refs`;
+`grammar/src/lib.rs:1361/1392-1397` (`parse_seq`, the `Seq([])`/singleton witnesses),
+`:1404/1481` (`parse_postfix`/`parse_projection`), `:1495` (`parse_atom`), `:420` (`@{`
+capture); `parse-that/.../regex/mod.rs:34` `parse_generated` (PRODUCER), `.../regex/host.rs:18`
+`lower` + `LowerCtx`, `.../regex/src/egraph/mod.rs:143` `simplify_hir`;
+`skinny/crates/codegen/src/runtime_generator.rs:98` (`!has_rule("value")` → general descent),
+`general_descent/emit.rs`/`view.rs` (recognizer + lazy view); `xtask/src/regen.rs:37`
+`check_target` (single-stage staleness; no `regen-bbnf` target yet), `main.rs:40-47`;
+`passes/src/lib.rs:338` `derive_recognizers` (7C counter home); GN-5 §1 Precept 19
+(planted-mutation falsification model).

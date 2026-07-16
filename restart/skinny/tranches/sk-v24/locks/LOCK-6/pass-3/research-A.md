@@ -128,6 +128,29 @@ that are isomorphic *by construction* and need **no** mirror check; (b) **hand-m
 the exemption budget + a name-map gate. The linter must know which class each name is in — and
 that knowledge is the grammar/IR's, not LOCK-6's (Q3).
 
+**Corroborating second witness — the parse-that combinator pair.** The single-source-vs-
+hand-mirror partition is not an artifact of `bbnf-path`; it reproduces on the independent
+parse-that pair (`/Users/mkbabb/Programming/parse-that`). There the *combinator* names are
+the archetypal hand-mirror class — `sep_by` (`rust/parse_that/src/span_parser/sep_by.rs`)
+⇄ `sepBy` (`typescript/src/parse/parser.ts:569`), `many` (`span_parser` `fn many`) ⇄
+`parser.ts:523`, likewise `then`/`opt`/`wrap`/`or` both sides — and the Constitution clause (i)
+*licenses* their double-authorship (combinators are grammar-totality-exempt). The
+grammar-derived tape constants are the single-source class: `GRAMMAR_BIT0`/`STRING_NEEDS_DECODE`
+descend from one grammar decode-class through codegen into both the Rust `flag_values.u8` plane
+and the TS `tape.mjs` `classify`, proven byte-exact (PROVE-14 `verify.mjs`, `fp 986912547`).
+Two independent pairs, the same axis — evidence the partition is structural, not local.
+
+**A granularity finding the file-tree clause must absorb.** On the parse-that pair, file-for-
+file tree mirroring is *refuted*: the Rust combinator core fans across `span_parser/` (10 files:
+`mod`, `methods`, `constructors`, `leaves`, `sep_by`, `wrap`, `scan`, `span_scanner`,
+`assertions`, `combinators`) + `combinators/` + `parse.rs` + `leaf.rs`, while TS collapses the
+same algebra into `parser.ts` (711 LOC) + `leaf.ts`. One TS file ↔ a dozen Rust files — Rust's
+directory-module colocation vs TS few-large-files is *itself* a per-language idiom. So "verify
+tree correspondence" (6A charter) must operate at the **exported-symbol** level with only a
+coarse *module-concept* correspondence (each side has a combinator home, a state home, a leaf
+home), never file-for-file. `legit(B)` (Q1) is already symbol-scoped — this finding confirms
+that is the *only* defensible granularity, and forbids any file-count mirror assertion.
+
 ---
 
 ## Q3 — ownership of the provenance / name-map linter (LOCK-3 vs LOCK-6)
@@ -186,6 +209,37 @@ never catch it; only a behavioral tier would. It marks the honest boundary of MI
 hypothesis), and the two are complementary, not substitutes.
 
 ---
+
+## Prior art (with citations)
+
+Each proposed mechanism has a proven precedent, and the citations sharpen the design:
+
+- **Kotlin Multiplatform `expect`/`actual`** (kotlinlang.org/docs/multiplatform-expect-actual)
+  — the compiler *enforces* that every `expect` declaration has a platform `actual`; the
+  canonical *one-name, N-platform-body* correspondence made a hard gate. This is the exemption
+  budget (Q1) made a compiler invariant: a spine name with no mirror is a compile error, exactly
+  the RED the linter must produce. It also motivates I3-style native-error idioms: Kotlin's
+  `actual` bodies are idiomatic per platform, names are not.
+- **Mozilla UniFFI / `wasm-bindgen`** (mozilla.github.io/uniffi-rs) — generate foreign bindings
+  from a Rust interface under a *declared* snake→camel name transform. Direct prior art for the
+  identity-mirror rule and for the single-source (grammar-derived) half — UniFFI's IDL is the
+  provenance source, its generated names cannot drift. Confirms LOCK-3-as-source, LOCK-6-as-gate.
+- **tree-sitter `node-types.json`** (tree-sitter.github.io) — a grammar emits a checked-in,
+  machine-readable *node-name manifest* every binding consumes. This is precisely the
+  `provenance.manifest` LOCK-3 should emit as a `regen` byproduct (Q3); tree-sitter proves the
+  side-artifact-alongside-code pattern works at scale.
+- **Protobuf / Cap'n Proto / FlatBuffers** — schema is the single name source for N-language
+  generated types; protobuf's **cross-language conformance suite** is the behavioral tier the
+  honest-state section calls for — the differential oracle that catches the `UnknownField` vs
+  `UnregisteredRule` divergence a name/layout gate cannot.
+- **Source maps** — the "provenance emitted as a side-artifact keyed back to origin" pattern the
+  LOCK-3 manifest mirrors for names.
+- **`cargo-semver-checks`** — API-surface diffing as a CI-lint precedent for the Rust/TS twin gate.
+
+The synthesis 6A adds beyond any single citation: a *relational* exemption budget (`r(t)` with a
+required pre-image, Q1) closing the suffix-gaming hole that a flat allowlist (semver-checks) or a
+pure generator (UniFFI, protobuf) does not face — because 6A must gate **hand-mirrored** names
+the Constitution forbids generating (combinators), which no schema-first tool covers.
 
 ## What a prototype must test to move 6A
 

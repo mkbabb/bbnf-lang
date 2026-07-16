@@ -1,290 +1,307 @@
-# LOCK-5 · pass-3 · research-D — FAMILY 5D: THE GRAMMAR-FRAGMENT
+# LOCK-5 pass-3 · family 5D — GRAMMAR-FRAGMENT
 
-**Charter.** Regex literals in grammars lower DIRECTLY into the grammar's own IR — no separate
-engine on the generator path; the standalone parse-that regex API survives as a thin front over the
-same machinery. This report makes the mechanism concrete, base-pinned to the substrate, and answers
-the family-tagged questions Q7–Q11 with run evidence, integration seams as `path:line`, prior art,
-and the exact prototype obligations that move the family.
+## Thesis at pass-3, sharpened by two findings
 
-Settled ground (XL-C, not re-opened): grammar tier keeps `Regex(StringId)` opaque; the engine tier
-keeps a rich `Hir` grown with `Class`/`Look`; a cheap `string`/`format!` bridge over `simplify_hir`
-joins them. 5D rides the generator path where the DIRECT lowering lives — it does NOT re-argue
-type-plane ownership.
+5D dissolves the regex leaf at the front: a `/pat/` in a grammar is grammar in terser notation
+(`Seq`/`Alt`/`Repeat`/`Optional`/`Literal`; the only atom regex adds is the character class), so
+one `regex_desugar` pass parses each leaf ONCE into native `ExprKind` nodes and every downstream
+walk — nullability, first/follow, typing, lowering, emission — runs through machinery the grammar
+already owns. The classical NFA→DFA survives only as ONE optional lowering target a scan-plan cost
+model selects for the minority that provably needs it.
 
----
+Pass-3 lands two load-bearing facts the earlier passes only asserted around. **First: the
+grammar-driven regex PARSE path already exists and already threads its AST — it is not a design,
+it is running code (Q9).** Second: the `->` projection is represented as an opaque *node barrier*,
+not a typed edge, which is measured, not argued (Q11), and it fixes exactly where the desugar must
+sit. Together they cleave 5D into a solved half (parsing) and the remaining battleground (the
+generator's emit side), and they hand 5D the very fold-template it needs.
 
-## THE MECHANISM MADE CONCRETE
+## Q9 — the grammar-driven regex path is ALREADY LIVE; only a bench wrapper still discards
 
-5D's generator path is a three-stage collapse of the classical `pattern → HIR → NFA → DFA → find_at`
-pipeline into grammar IR:
+The regex grammar is bootstrapped and self-hosting today. `parse-that/rust/bootstrap/regex.bbnf`
+(the full L4 spec: `literal`, `class_escape`, `class_item`, `char_class`, `escape`, `quantifier`,
+`group`, `atom`, recursive `alternation`) is the productive source. It generates
+`parse-that/rust/parse_that/src/regex/generated.rs` (`RegexParser`, 2293 LOC), whose entry
+`__regex` (`generated.rs:2276`) returns a full **typed** AST — `Option<RegexParserEnum<'a>>` — not
+a bool. The AST is threaded, not discarded: `parse-that/rust/parse_that/src/regex/mod.rs:34`
+`parse_generated(&str) -> Result<Hir, ParseError>` → `parse_generated_with` (`:39`) →
+`host::lower(&ast, pattern, opts)` (`parse-that/rust/parse_that/src/regex/host.rs:19`, 524 LOC).
+`host::lower` is the hybrid-grammar-host law made concrete: a semantic fold of the
+grammar-produced `RegexParserEnum` into the bespoke `Hir` — `RegexParserEnum::alternation`,
+`::concat`, `::quantified`, `::atom`, `::group_0` each map to `Hir` constructors, including
+`Hir::Class(CharClass::Bytes{…})` (`host.rs:131,140,152`) and `Hir::Look(Look::Start/End)`
+(`host.rs:103,104`). This satisfies constitution clause (i) for the regex parser: grammar
+expresses leaf structure via the bootstrapped grammar; typed host functions carry the
+context-dependent fold; the AST reaches `Hir` intact.
 
-1. **Class source.** A regex leaf `Regex { pattern }` is analyzed once at compile time into an
-   over-approximating byte class (its FIRST set) plus a give-back classification.
-   `bbnf_regex::analyze(pattern) -> RegexFacts { first: FirstSet, kind: RegexKind, hir, string }`
-   (`skinny/crates/bbnf-regex/src/lib.rs:45`) is the substrate surface; `RegexKind` today
-   distinguishes only `QuotedString` (`:18`) vs generic — the analysis crate is deliberately thin,
-   the rich 1148-LOC `classify` lives in the vendored `parse-that-regex`.
+**The single surviving discard is a diagnostic bench wrapper, not the real path.** Two
+`parse_generated` names exist: the productive one above, and `generated::parse_generated(&str) ->
+bool` (`generated.rs:2288`), which runs the parser and throws the AST away (`result.is_some() &&
+state.offset >= pattern.len()`) for the `regex_parse` bench; `bootstrap/src/lib.rs:22` re-exports
+THAT one. So "break-the-discard" is ~90% already done — the residue is a naming collision to
+resolve (rename the bool wrapper to `matches_generated`/`accepts`, or delete it and let the bench
+call `parse_generated(..).is_ok()`), a de-dup, not new machinery. Evidence to bank: the productive
+`mod.rs::parse_generated` returns `Hir`; the bool one is bench-only.
 
-2. **Lowering decision (the FOLLOW-guard).** If the leaf is FOLLOW-sound (its trailing loop-class is
-   disjoint from grammar FOLLOW at its position), it lowers to a **straight-line direct class-scan** —
-   a `Recognizer::ByteClass` membership scan over the tape, no automaton. If it is genuinely
-   give-back-prone it lowers to `Seq[Repeat, FOLLOW-guard]` or retreats to the DFA `Dfa::find`
-   fallback. This is exactly the Glushkov/McNaughton–Yamada position-automaton construction
-   (FIRST/LAST/FOLLOW over a marked expression) done as an IR lowering rather than an automaton build —
-   the direct path IS the ε-free position NFA, specialized when deterministic.
+**De-dup `grammar/misc/regex.bbnf` (Q9's third clause).** The bbnf-lang tree carries a stale,
+28-line legacy regex grammar (`grammar/misc/regex.bbnf`) that duplicates the productive spec — and
+buggily: `decimal = /d+/` (`:18`) drops its backslash (should be `\d+`), it mixes old `>>`/`<<`
+notation, and its `char_class`/`escape` rules diverge from the productive grammar. The canonical,
+tested, self-hosting grammar is `parse-that/rust/bootstrap/regex.bbnf`. De-dup = delete the misc
+copy (or make it an `@import` of the canonical) so there is ONE regex grammar, homed in parse-that
+(one-regex-home, per the settled XL-C ground). Grammar-totality picture: the regex grammar is
+bootstrapped and consumed today — 5D inherits a validated self-host, not a promise.
 
-3. **Tape emission.** The class-scan emits `BackendExpr::ByteClass { set }` reaching the offset tape;
-   a capture group `(…)` inside the leaf lowers to a grammar `Project` node byte-identical to a
-   hand-authored grammar capture. The DFA path (PROVE-10's `Dfa::find` prefilter tier, 8.8–29.5×)
-   survives ONLY as the narrow fallback for the genuine-give-back trio.
+**Consequence for 5D.** The parse half of the continuum is solved by grammar. What remains is the
+EMIT half: a regex leaf *inside a bbnf grammar* still travels to the tape as an opaque string
+(Q8), never as grammar IR. `host::lower` is the exact template for closing it — the same fold that
+turns `RegexParserEnum → Hir` re-targets to turn a grammar `Regex` leaf → grammar `ExprKind`
+(`ByteClass`). The machinery exists; it needs re-pointing from `Hir` to the grammar's own node
+arena. SPEC-ONLY(grammar-driven) rides on this until LOCK-7/7A.
 
-**The standalone API survives thin.** parse-that's public `regex::` surface re-exports
-`bbnf_regex::*` verbatim (`parse-that/rust/parse_that/src/regex/mod.rs:12`) and adds a front
-(`parse_generated`, `:34`). Under 5D that front stays; it front-ends the same `analyze` + IR lowering
-the generator uses. The engine is not duplicated on the generator path — it is *inherited*.
+## Q11 — the `->` is a MAP-BARRIER NODE, not a typed edge (measured); it fixes desugar placement
 
----
+The concrete representation of `->` is settled by measurement. Over a corpus of 33 `Alt`-of-regex
+patterns built in two topologies — bare `Alt([Regex,…])` versus projected `Alt([Map(Regex,Tag),…])`,
+the exact shape `(a -> A | b -> B)` lowers to — the grammar-tier regex e-graph
+(`crates/ir/src/egraph/rules/regex.rs`) applied **zero** rewrites on the projected form
+(`total_applied=0`, `final_nodes==initial_nodes`, no unions), against 3/11/19/30 fires per rule on
+the bare form. The reason is structural: each regex rule resolves a branch via `class_regex(child)`,
+which scans the child e-class for a bare `GrammarENode::Regex`; a `Map{inner, fn_id}` e-class holds
+no such node, so every rule returns `None`. **The `->` is an opaque node that inner-class analysis
+cannot see through.** This is binding on 5D's bridge projection soundness in a precise way:
 
-## Q7 — THE FOLLOW-SOUND ONE-PASS FRACTION (measured, both metrics fresh)
+- If the desugar runs AFTER projection wrapping, the `Map` barrier hides the inner `Regex` — the
+  desugar (and any FIRST/FOLLOW/e-graph reasoning about the class) never fires. So **`regex_desugar`
+  MUST run before projection lowering**, on the raw `Regex` leaf, OR the projection must be
+  re-expressed as a *typed edge* the class analysis can traverse. LOCK-1 owns which; the measured
+  fact is that TODAY it is a barrier, so desugar-first is the safe, no-new-machinery route.
+- The whole-leaf projection (`number = /…/ -> Number`, the common case) wraps the desugared subtree
+  root ONCE — the projection applies to the whole scanned span, trivially sound: desugar first, wrap
+  after. This is the majority shape and needs nothing from tagged automata.
+- A sub-pattern capture projection (a `->` on a capture group *inside* the leaf) is the genuinely
+  hard case — Ragel's leaving/transition action at a capture boundary, which one DFA would force
+  into Laurikari tagged-DFA submatch tracking. 5D DECLINES the TDFA: a capturing regex desugars its
+  captures into grammar `Seq`/`Project` nodes — the grammar's OWN native span capture — so the DFA
+  path carries only capture-free leaves (one DFA+prefilter, clean), and the capture boundary is an
+  ordinary grammar `Project` reaching the tape the way every grammar projection does. The `Map`
+  barrier is then not a problem but the mechanism: the capture IS a projection node.
 
-RAN on the live corpus: `skinny/grammars/json.bbnf` (15 rules) + `grammar/google-sheets/
-google-sheets.bbnf` (39 rules, skinny dialect) + an injected canonical counterexample
-`word = /[a-z]+/ ; sentence = word "and" word ;`. 16 `Regex` leaves. FOLLOW is a genuine Changed-flag
-fixed point (nullable → first → follow closures, LLVM-style `while changed`, per-`ExprId`, `Ref`
-sites bridge inter-rule), dual to the existing `first_bytes` at `skinny/crates/passes/src/lib.rs:911`;
-FOLLOW **converged** for all three grammars. Disjointness is `first(C) ∩ FOLLOW(leaf) = ∅` with
-`first(C)` from `bbnf_regex::analyze(pattern).first`.
+So Q11's ratified representation — a `Map`/`Project` node barrier — is not a hazard to route around;
+it is the resolution, provided `regex_desugar` precedes it. The one obligation on LOCK-1: confirm
+the `->` stays a node (Map barrier) and that whole-leaf projection composes as
+`Project(desugared_root)`, so inner-class rewrites operate pre-wrap and the projection wraps the
+result. If LOCK-1 instead makes `->` a typed edge, desugar could run either side — but the measured
+status quo is the barrier, and desugar-first is correct under both.
 
-| metric | value |
-|---|---|
-| brief-literal `first(C) ∩ FOLLOW = ∅` (straight-line lowering) | **3/16 = 18.8%** |
-| bounded — give-back impossible by construction (no top-level unbounded `*`/`+`) | **6/16** |
-| give-back-prone (trailing unbounded run) AND FOLLOW-sound | **3/10 = 30.0%** |
-| effectively one-pass under `Seq[Repeat,suffix]` + grammar FOLLOW (bounded ∪ prone-sound) | **≈ 12/16 = 75%** |
+## Q7 — the FOLLOW-sound fraction: raw 18.8%, effective ~75%; the DFA retreats to a narrow fallback
 
-**The 18.8% is a red herring, and the correct read INVERTS the Ragel trap.** The raw predicate is
-sound but not complete — it over-flags on the *leading* first-byte even where give-back is
-structurally impossible. Adjudicated per-leaf: 6/16 are bounded (fixed-length or delimiter-terminated:
-`/[tT][rR][uU][eE]/`, `/[lL][eE][tT]\(/`, `/=?/`, …) — one-pass by construction, DFA never needed;
-3/16 are conservative false-positives (`json::ws` `/[ \t\n\r]*/`, `cell_ref`, `range_end /\$?\d+/`)
-whose loop-class is actually FOLLOW-disjoint or re-consumed by a nullable follower; **only 3/16 are
-genuine give-back** — `counterexample::word` `/[a-z]+/` (follower `"and"` requires `'a'`, loop-class
-`∋ 'a'` — THE trap), `sheets::string` `/"([^"]|"")*"/` (doubled-quote escape ambiguity),
-`sheets::identifier` `/[A-Za-z_][A-Za-z0-9_.]*/` (trailing letter-class abuts a letter-led follower).
+The single number gating the generator-path architecture is measured. Over the live corpus — 15
+`json.bbnf` rules + 39 `google-sheets.bbnf` rules + an injected `word=/[a-z]+/; sentence = word
+"and" word;` counterexample, 16 `Regex` leaves — a per-`ExprId` FOLLOW fixed point (LLVM-style
+`while changed`, dual to `first_bytes` at `skinny/crates/passes/src/lib.rs:911`) with
+`first(C)∩FOLLOW(leaf)=∅`:
 
-**Verdict for the generator-path architecture (I-1).** ~12/16 leaves are one-pass-safe; only 3
-genuinely keep the DFA in play. **The direct class-scan is the DEFAULT generator path, gated by a
-FOLLOW-guard; the DFA retreats to a narrow fallback for the genuine-give-back trio.** This DEFEATS
-`check_one_pass_eligible` in the vendored `one_pass.rs`, whose `Repetition` arm recurses into `[a-z]`
-and returns one-pass=`true` — greenlighting a straight-line lowering that would reject `"a and b"`.
-The FOLLOW predicate refuses it (`overlap=[a]` asserted); the counterexample lands NON-disjoint, so
-the predicate is sound exactly where the incumbent is not.
+- **raw brief-literal sound = 3/16 (18.8%)** — the sound FLOOR of a *conservative* predicate that
+  over-flags on leading-first bytes.
+- Adjudicated: **6/16 bounded** (`{1,3}`, fixed strings, delimiter-terminated `\(`) — give-back
+  structurally impossible, one-pass by construction, DFA never needed. **3/16 genuine give-back**
+  (`word` vs following `"and"`; `sheets::string` doubled-quote `""` escape; `sheets::identifier`
+  trailing `[A-Za-z0-9_.]*` abutting letters) — these and ONLY these require `Seq[Repeat,
+  FOLLOW-guard]` or a DFA/backtracking fallback. **3/16 conservative false-positives** (`json::ws`,
+  `sheets::cell_ref`, `sheets::range_end`) — actually one-pass-safe (loop-class FOLLOW-disjoint, or
+  follower re-consumes the same nullable class). **3/16 truly sound**, **1/16 analyzer-opaque**
+  (`sheets::number`: `analyze().first=UNKNOWN`, over-approximated to all-bytes → forced
+  non-disjoint — an analyzer limitation, not a grammar property).
+- **Effective one-pass ≈ 12/16 (75%)**: only 3 of 16 leaves genuinely keep the DFA in play.
 
-**The one confinement caveat, binding on any production predicate.** `analyze().first`
-*under*-approximates alternations (for `/'…'!|[A-Za-z_]\w*!/` it returns `Exact {'\''}`, dropping the
-letter branch) and returns `UNKNOWN` for `sheets::number` (analyzer limitation, not a grammar
-property). A sound FOLLOW-sound verdict must draw `first(C)` from an **over**-approximation — the DFA
-start-state class set (which PROVE-10's prefilter already computes as its entry-byte set) or a fixed-up
-analyzer. The direct path's soundness rests on `first(C)` being an over-approximation; this is the
-family's sharpest correctness obligation.
+The counterexample lands correctly: `word=/[a-z]+/` before `"and"` is flagged NON-disjoint
+(`overlap=[a]`), exactly where the committed `check_one_pass_eligible`
+(`parse-that/rust/regex/src/info/one_pass.rs`) is UNSOUND — its `Repetition` arm recurses into
+`[a-z]` and returns one-pass=`true`, greenlighting a straight-line lowering that would reject
+`"a and b"`. The FOLLOW test refuses it. So I-1 resolves toward the survivor's policy: **the direct
+class-scan is the default generator path, gated by a FOLLOW-guard** (`desugar → Seq[Repeat,
+suffix]`, let the grammar's own FOLLOW / `AltMode::Dispatch` decide), with the DFA/backtracking
+retreating to a narrow fallback for the genuine-give-back trio. Read correctly, the number says the
+DFA retreats.
 
----
+**The one open soundness gap (pass-3's named residue).** `analyze().first` UNDER-approximates
+alternations — for `sheets::sheet_prefix` (`/'…'!|[A-Za-z_]\w*!/`) it returns `Exact{'\''}`,
+silently dropping the `[A-Za-z_]…` branch. A production FOLLOW-sound predicate MUST draw `first(C)`
+from an OVER-approximation — the DFA start-state class set (or a fixed-up analyzer). As-is, the
+"truly sound" verdicts (`sheet_prefix` in particular) are not reliably sound. This is the single
+prototype gate that hardens Q7 from "measured with a caveat" to "measured sound": re-run the
+fraction with `first(C)` sourced from `Dfa::from_hir(...)` start-state class, confirming the
+counterexample and give-back trio stay non-disjoint while the conservative trio moves into the sound
+set (target ≈12/16 sound, not merely effective).
 
-## Q8 — THE DIRECT-LOWERING PROTOTYPE (the substrate today, and what must be built)
+## Q8 — the emit side: RegexProgram is opaque today; the ByteClass→tape chain is the deliverable
 
-**The substrate has no direct class-scan and no `ByteClass` node.** The only recognizer
-`derive_recognizers` emits is `Recognizer::SimdScan { mode: SimdMode::Exact, alphabet:
-StructuralAlphabet { bytes }, site: PreEntry }` (`skinny/crates/passes/src/lib.rs:361`), and it fires
-ONLY when a literal is one of the structural bytes `{ } [ ] , : "` or a `Regex` leaf whose
-`analyze().hir.kind == RegexKind::QuotedString` (`passes/src/lib.rs:342-353`). A general `[a-z]` class
-contributes NOTHING — it is the **masked wildcard** the directive names: the derivation silently drops
-every non-structural, non-QuotedString class. The `Recognizer` enum is at `skinny/crates/ir/src/
-lib.rs:416` (`SimdScan` at `:417`); there is NO `ByteClass` variant and NO `BackendExpr::ByteClass`
-anywhere in `ir`, `codegen`, or `passes` (grep: zero hits). The emitted recognizer comment is visible
-in the generated artifacts (`codegen/src/json_templates/generated.rs:10`, `runtime/src/grammars/json/
-generated.rs:10`: `recognizer: SimdScan Exact PreEntry alphabet="{}[],:\""`).
+Today the regex leaf reaches the tape as `BackendExpr::RegexProgram{pattern:String, span_kind:
+SpanKind}` (`skinny/crates/ir/src/lib.rs:389`) — an OPAQUE String, matched at `codegen/src/lib.rs:1444`,
+`codegen/src/general_descent/emit.rs:365` (`SinkOnlyExpr::RegexProgram`), `json_sink_direct/first_set.rs:77`,
+`json_sink_direct/dispatch.rs:86`. There is NO `BackendExpr::ByteClass`, and the generator does NOT
+yet emit `dfa.find` (that is the PT-1.W5 consumption seam, interlocked with GN-2.W1 — the recognizer
+dispatch decides `find_member` vs `dfa.find` per site, no double-emit). The typed-materialization
+invariant (every `->` reaches the tape; no value-discard; no silent epsilon — LOCK-3-governed)
+obliges 5D to build and prove the full chain:
 
-**What the prototype must build (concrete seams):**
-- Add `Recognizer::ByteClass { set: ByteSet256, site }` at `ir/src/lib.rs:416`, fed from
-  `analyze(pattern).first` (OVER-approx per Q7's caveat), not the QuotedString gate.
-- Extend `derive_recognizers` (`passes/src/lib.rs:338`) to emit it for every FOLLOW-sound regex leaf —
-  the Q7 FOLLOW fixed point becomes the derivation's gate, replacing the `RegexKind::QuotedString`
-  test that masks non-structural classes.
-- Route `BackendExpr::ByteClass { set }` to the tape through the codegen lower spine
-  (`skinny/crates/codegen/src/lower/tape_plan.rs`, `sink_only.rs`) — a membership scan emitting a tape
-  span, cold-pairable against `Dfa::find`.
-- Capture-leaf → `Project`: a regex capture group lowers to the grammar's own `Project` node; the
-  oracle is byte-identity of emitted tape vs a hand-authored grammar capture of the same span.
+1. **`regex_desugar: GrammarIr → GrammarIr`** (new `passes` pass, sibling of nullability/resolve_refs
+   at `skinny/crates/passes/src/lib.rs`), front-ended by the SAME fold the grammar-driven path
+   already runs — `host::lower` re-targeted from `Hir` to `ExprKind`: `Concat→Seq`,
+   `Alternation→Alt{Dispatch if disjoint-FIRST else Speculative}`, `Repetition→Repeat`/`Optional`,
+   `Literal→Literal`, `Class(Bytes)→ByteClass{set:ByteSet256, negated}`, `Class(Unicode)→byte-expanded
+   Alt/Seq of ByteClass` (via `utf8.rs`), `Look→zero-width guard or Annotation`,
+   `Empty/Group→transparent`. Runs BEFORE projection wrapping (Q11).
+2. **Survivor invariant:** assert ZERO `ExprKind::Regex` survive post-pass; emitter catch-alls panic
+   on residue (no-silent-epsilon). Checkable over the three `json.bbnf` leaves + the Sheets ident
+   `\$?[A-Za-z]{1,3}\$?\d+`.
+3. **`ByteClass` reaches the tape:** add `ExprKind::ByteClass{set, negated}`
+   (`skinny/crates/ir/src/lib.rs:250`, replacing `Regex`; nullability arm today at `:331`,
+   `analyze(pattern).nullable`, becomes structural) and `BackendExpr::ByteClass{set, negated}`
+   (`:389`, replacing `RegexProgram`); the emit arm (`general_descent/emit.rs:365`,
+   `lower/sink_only.rs`, `lower/tape_plan.rs`) emits the shufti class scan
+   (`while set.contains(input[pos]) { pos+=1 }`, residualized to `crates/simd-scan/src/neon.rs`
+   `classify_chunk_nibble`, the `vqtbl1q_u8` nibble-LUT). Delete `RegexProgram` and its four
+   redundant re-scans (`general_descent/regex_first.rs`, `json_sink_direct/first_set.rs`, `passes`
+   `regex_first_bytes`/`regex_type`/`span_kind`).
+4. **The chooser must FIRE:** `skinny/crates/passes/src/lib.rs` `derive_recognizers` matches only two
+   shapes and drops the rest to `_ => {}` — a desugared `ByteClass` is silently swallowed, so the
+   SIMD fast-path is vacuous unless rewritten to recognize the *shape* (quoted-string =
+   `Seq[Literal("\""), Repeat(ByteClass{negated,∋'"','\\'}), Literal("\"")]`; digit-led numeric;
+   general single-`ByteClass` repetition → its `set` as a shufti alphabet). In the richer tree add a
+   `ByteClassRecognizer: RecognizerInfo` beside `LiteralRecognizer` (`crates/ir/src/recognizer/mod.rs`)
+   — `first_bytes()`=class∩ASCII, `scanable()`=the FOLLOW-corrected flag,
+   `feasible_engines()`=`SHUFTI|ONE_PASS`. Gate: build a `ByteClass` grammar, run the chooser, assert
+   a shufti recognizer is emitted (not `Vec::new()`).
 
-**The cold-pair the prototype must measure:** `ByteClassRecognizer` membership scan (direct, no
-automaton) vs prefiltered `Dfa::find` (PROVE-10's `Prefilter::from_dfa` + `memchr` skip, certified
-8.8–29.5× on prefilterable, 0.99× on controls) on the SAME leaf over the same skip-heavy corpus,
-paired same-binary N≥200 cold. The hypothesis 5D defends: for FOLLOW-sound leaves with a *rare*
-leading class the direct scan is parity-or-better than `Dfa::find` (both reduce to byte-membership
-skip), so the automaton is off the generator path; where the class is *dense* (`[a-z]+`) both are
-membership-bound and the direct path wins by eliding the DFA compile+dispatch. Tape-output equality is
-the correctness gate; the ratio decides whether `Dfa::find` is reachable on the generator path or only
-the give-back fallback.
+**The decisive unmeasured figure (Q8's head-to-head).** Cold-paired (N≥200, same-binary lanes,
+`count_scalar==count_prefilter`): straight-line `ByteClass` scan vs PROVE-10's prefiltered
+`Dfa::find` (start-state memchr over the DFA start-transition row; 8.8–29.5× on literal-prefix-led
+patterns; 0.97–1.01× on `[a-z]+`/`\w+` controls). The honest prior: the two **TIE on class-led
+repetitions** (both reduce to a class-membership scan; PROVE-10's own `[a-z]+` control at ~1.0× is
+direct evidence the prefilter buys nothing there, so the class scan cannot lose and can only win by
+dropping the transition-table indirection), and the **prefiltered DFA WINS on literal-prefix-led
+leaves** (`0x[0-9a-fA-F]+`, `https?://…`, `#…`) because memchr on a rare prefix byte skips faster
+than scanning a common class. A tie is a tie (R6): 5D wins the architecture axis (four parsers →
+one, no functor, no automaton on the class-led hot path) even at parity, but claims NO perf win
+absent a measured one. The result feeds a per-site scan-plan cost model: class-led → straight-line
+scan; literal-prefix-led → prefiltered DFA.
 
----
+**Capture-leaf → `Project`, no TDFA (Q8's last clause).** Exhibit a capturing regex leaf desugaring
+to `Seq[…, Project(sub), …]` and prove the projected sub-span reaches the tape byte-identically to a
+hand-authored grammar capture — the grammar's projection machinery IS the transition-action; the
+TDFA is never built.
 
-## Q9 — ONE GRAMMAR-DRIVEN REGEX PATH (break-the-discard; SPEC-ONLY, gated LOCK-7/7A)
+## The 1148-LOC classify: re-home under 5D, not re-argue
 
-**The discard is located.** The bootstrapped regex parser's entry is
-`parse-that/rust/parse_that/src/regex/generated.rs:2288` — `pub fn parse_generated(pattern: &str) ->
-bool`. It returns a success bit only; **the parsed AST is discarded.** Break-the-discard = make it
-return its `Hir` (or the grammar's own IR node), so the grammar-driven parse *threads through* rather
-than proving yes/no.
+`parse-that/rust/regex/src/classify.rs` (1148 LOC; `RegexClass` enum `:55`, `classify_regex` `:157`,
+`classify_regex_from_hir` `:177`, `canonical_pattern` `:132`) is a pattern-string oracle 5D largely
+DELETES on the generator path: once `regex_desugar` translates the leaf to `ExprKind::ByteClass`
+shapes, the structural recognizer reads the desugared *shape*, not a classified pattern string. The
+`analyze()`/`classify` 3-pattern oracle (the QuotedString keying in `derive_recognizers`) becomes
+dead code matching a variant that no longer exists. What survives is the thin `info/classify.rs`
+(153 LOC) feeding `RegexInfo` for the DFA fallback minority. A re-home that SHRINKS the
+generator-path surface, not a relocation — the class analysis moves into the IR passes the grammar
+already runs.
 
-**The break is already prototyped in a sibling scratch** (existence proof it is mechanical, not a
-rewrite): a parse-that scratch carries `regex/mod.rs:34` `pub fn parse_generated(pattern: &str) ->
-Result<Hir, ParseError>` + `parse_generated_with(:39)` — the discard replaced by a real AST return.
-The generated parser already builds the structure; only the return type discards it. Promotion is
-gated on LOCK-7/7A (bootstrap staging) and SPEC-ONLY until then.
+## Integration seams (path:line)
 
-**The de-dup is concrete: two regex grammars exist and must collapse to one.**
-- `grammar/misc/regex.bbnf` (27 LOC) — the OLD EBNF form: `,`-concatenation, no `>>`/`<<` cuts,
-  hand-shaped `expression = ( term + , "|"? ) +`. Legacy.
-- `bootstrap/regex.bbnf` (72 LOC) — the L4 self-hosting spec: naturally-recursive (alternation →
-  concat → quantified → atom → group → alternation), `>>`/`<<` directional cuts, full class-escape /
-  unicode-escape coverage, explicit "survives the IR optimizer" leaf-inlining note.
+- `regex_desugar` pass: `skinny/crates/passes/src/lib.rs` (sibling of nullability); front-end =
+  re-targeted `parse-that/rust/parse_that/src/regex/host.rs:19` `lower` fold (proven template).
+- New leaf `ExprKind::ByteClass{set:ByteSet256, negated}`: `skinny/crates/ir/src/lib.rs:250`
+  (replace `Regex`; salvage `ByteSet256` from the `bbnf-regex` demolition). Nullability arm at
+  `:331` → structural on `ByteClass`.
+- New backend leaf `BackendExpr::ByteClass{set, negated}`: `skinny/crates/ir/src/lib.rs:389`
+  (replace `RegexProgram`); tape arm at `codegen/src/general_descent/emit.rs:365`,
+  `codegen/src/lib.rs:1444`, `lower/sink_only.rs`, `lower/tape_plan.rs`.
+- Chooser: rewrite `skinny/crates/passes/src/lib.rs` `derive_recognizers` to structural arms; add
+  `ByteClassRecognizer: RecognizerInfo` at `crates/ir/src/recognizer/mod.rs` beside
+  `LiteralRecognizer:86`; `scanable()` reads the FOLLOW-corrected flag (`recognizer/mod.rs:72-74`).
+- FOLLOW soundness: source `first(C)` from the DFA start-state class set (over-approximation), not
+  `analyze().first` (under-approximates alternations); OR desugar first and let the grammar FOLLOW
+  machinery decide via `AltMode::Dispatch` — `one_pass_eligible` then reads a grammar fact.
+- Grammar-driven parse (Q9): productive path `parse-that/rust/parse_that/src/regex/mod.rs:34` +
+  `host.rs:19`; bench-only bool discard `generated.rs:2288` (rename/de-dup); delete legacy
+  `grammar/misc/regex.bbnf` in favor of `parse-that/rust/bootstrap/regex.bbnf`.
 
-De-dup = **retire `grammar/misc/regex.bbnf`, promote `bootstrap/regex.bbnf`** as the single
-bbnf-defined regex grammar, and point the now-AST-returning `parse_generated` at it. Grammar-totality
-picture: one bbnf-defined regex grammar feeding an AST-returning parse satisfies constitution clause
-(i) (the regex grammar IS bootstrapped and bbnf-defined) ON the generator path — the regex literal is
-parsed by the grammar's own machinery, lowered by the grammar's own IR, no separate hand engine on
-that path. The standalone `Dfa` survives as the give-back fallback and the public API's match backend
-(thin front), per charter.
+## Cross-lock interlocks (Constitution ix)
 
----
+- **LOCK-1** owns the real type of `ByteClass` (reuse `Literal`'s byte type, or a scalar-byte/UTF-8
+  concern that must NOT leak into the shared type — route via HM+row-poly+widths, not a stub
+  `BuiltinTy`) AND ratifies the `->` representation (Q11): the measured status quo is a `Map`
+  barrier node, which makes desugar-first correct; a typed edge would let desugar run either side.
+- **LOCK-3** governs the `ExprKind`/`BackendExpr` enum edits and binds the typed-materialization
+  invariant to the new leaf — `ByteClass` MUST reach the tape (Q8); LOCK-3-3C (grammar-homoiousia)
+  is contingent on this ONE-HIR choice.
+- **LOCK-7/7A** owns the grammar-totality gate: the regex grammar is bootstrapped and self-hosting
+  TODAY (Q9) — 5D's SPEC-ONLY(grammar-driven) rides on a validated self-host, and the de-dup
+  (`grammar/misc/regex.bbnf` retired) is a LOCK-7 housekeeping consequence.
+- **LOCK-9-9C** (scanner-as-DFA) double-homes the `ByteClass`-shape recognizer chooser; recommended
+  supersession: LOCK-5 owns the HIR→ByteClass→shufti substrate, 9C consumes or retires; the shufti
+  class kernel (`classify_chunk_nibble`) is the shared residual.
+- **PT-1.W5 ⇄ GN-2.W1**: the generator's regex-leaf lowering must pick ONE of `dfa.find`
+  (prefiltered DFA, literal-prefix-led) vs the shufti class scan (`ByteClass`, class-led) per site —
+  the recognizer dispatch is the single decision point; no double-emit.
+- **LOCK-6** (TS face): the merged `ByteClass` leaf + shufti scan crossing to TS (PROVE-14 tape) is
+  an open rust/ts isomorphism gap for the parse-that gestalt.
 
-## Q10 — THE GRAMMAR-TIER REGEX E-GRAPH FIRE CENSUS (measured; the projection barrier)
+## Prior art (cited)
 
-RAN over a 33-pattern `Alt`-of-regex corpus in the only tree where the grammar-tier regex e-graph
-physically exists (`crates/ir/src/egraph/rules/regex.rs`), via the production saturation path
-`build_and_saturate_reported`, tabulating `per_rule.work = node_delta + union_delta`. Two topologies,
-differing only in branch wrapping:
+- **Regex-as-grammar / derivatives.** Owens–Reppy–Turon, "Regular-expression derivatives
+  re-examined," JFP 19(2) 2009; Might–Darais–Spiewak, "Parsing with derivatives," ICFP 2011 — a
+  char-class derivative IS the `ByteClass` scan; one language, hence no functor.
+- **One-pass DFA / FIRST-FOLLOW.** `regex-automata` `dfa::onepass`; Aho–Sethi–Ullman
+  FOLLOW-disjointness — the exact criterion the committed `check_one_pass_eligible`
+  under-implements (its `Repetition` arm never checks the class against FOLLOW).
+- **Self-hosted parser + semantic fold.** The bootstrap grammar + `host::lower` fold is the
+  hybrid-grammar-host pattern — grammar for structure, typed host fns for the context-dependent fold
+  (cf. tree-sitter external scanners, `happy` semantic actions). Here it is already running (Q9), not
+  proposed.
+- **Tagged / submatch DFA.** Laurikari, "NFAs with tagged transitions" (2000); Ragel
+  entering/leaving/transition actions (Thurston) — the model 5D DECLINES for sub-captures, routing
+  them to grammar `Project` (Q8/Q11).
+- **Separate-lexer null hypothesis.** re2c / logos / flex / tree-sitter keep a separate generated
+  lexer DFA; 5D wins only where the FOLLOW-sound one-pass fraction is high enough (≈75% effective,
+  Q7) that the separate automaton is dead weight on the generator path.
+- **PROVE-10** — start-state memchr prefilter over an untouched DFA, 8.8–29.5×; its `[a-z]+` control
+  at ~1.0× is the tie evidence for the class-scan head-to-head (Q8).
+- **shufti/NEON class kernel.** Langdale (Hyperscan); `crates/simd-scan/src/neon.rs`
+  `classify_chunk_nibble` — the residual scan for a `ByteClass`.
 
-| rule | **bare** `Alt([Regex,…])` | **projected** `Alt([Map(Regex,Tag),…])` |
-|---|:---:|:---:|
-| `superset-absorb-alt` | 11 | **0** |
-| `union-merge-alt` | 19 | **0** |
-| `fuse-alt-regex-branches` | 30 | **0** |
-| `deduplicate-alt-branches` | 3 | **0** |
-| saturation | 2 iters, total_applied=63 | **1 iter, total_applied=0, no unions** |
+## Named risks + counterexamples
 
-**The Map barrier makes the grammar-tier regex e-graph exactly inert wherever `->` projections
-dominate.** The three regex-specific rules resolve a branch's regex via `class_regex(child)`, which
-scans the child's e-class for a bare `GrammarENode::Regex` node and returns `None` on a `Map { inner,
-fn_id }` child (a Map e-class holds no bare `Regex`); `FuseAltRegexBranches` sets `all_fusable=false`
-on a Map child. The projected e-graph reaches its fixed point in ONE iteration having applied ZERO
-rewrites — not "≤ noise", exactly zero. Real BBNF alternations almost always carry per-branch tags
-(`(a -> A | b -> B)`), so the Map-wrapped case is the common case.
+- **R1 (FOLLOW-unsound first-set source, the pass-3 primary).** `analyze().first`
+  under-approximates alternations (`sheet_prefix` drops its `[A-Za-z_]…` branch), so a "sound"
+  verdict can be unsound. Closed only when `first(C)` is drawn from the DFA start-state class
+  over-approximation; the prototype MUST re-run the fraction soundly and keep the give-back trio +
+  counterexample non-disjoint.
+- **R2 (desugar after projection wrapping).** If `regex_desugar` runs after the `Map` barrier is
+  placed, the inner `Regex`/class is invisible (Q11: proj e-graph work=0) — FOLLOW/e-graph/typing
+  never fire on the class. Gate: desugar-first ordering, asserted by a pass-order test.
+- **R3 (the chooser silently no-ops).** `derive_recognizers` `_ => {}` swallows `ByteClass`; the
+  SIMD fast-path is vacuous. Gate: assert a shufti recognizer is emitted for a `ByteClass` grammar.
+- **R4 (`ByteClass` inert at the tape).** The new `BackendExpr::ByteClass` could be as consumer-less
+  as `Look` if no emit arm produces a real scan. Gate: emit + differential-match vs `RegexProgram`
+  on the JSON corpus, THEN delete `RegexProgram`.
+- **R5 (perf tie mis-sold).** If the class scan ties the prefiltered DFA, 5D wins the architecture
+  axis but MUST report the tie as a tie — no inherited-band perf claim.
+- **R6 (Unicode leaves).** `\p{L}`/`[α-ω]*` byte-expand via `utf8.rs` to codepoint-range automata —
+  rare in generator leaves, routed to DFA; a named boundary, not a hot path; byte-expansion confined
+  to automata, never leaking into the shared type.
 
-**Consequence for 5D.** 5D's direct lowering does NOT route through the grammar-tier e-graph — it
-lowers the leaf straight to `ByteClass`/`Seq[Repeat,guard]`. The census confirms the grammar-tier
-e-graph has essentially no consumer on the projection-dominated generator path (Y.13: a consumer-less
-substrate is forbidden). This is *evidence FOR* the 5D thesis: the direct path needs no grammar-tier
-regex e-graph, and keeping one on the generator path would be an un-consumed substrate. (The
-engine-tier `Hir` e-graph — `simplify_hir` and the `crates/ir` `repetition`/`union`/`flatten`/
-`superset` rules — is a separate, live thing on the fallback DFA path; this census concerns only the
-*grammar*-tier copy.)
+## What a prototype must test to move 5D (pass-3's decisive four)
 
----
-
-## Q11 — THE `->` REPRESENTATION (binding on bridge projection soundness; confirm with LOCK-1)
-
-Q10 exposes the load-bearing dependency: **whether the regex tier can see through a projection is
-entirely determined by how LOCK-1 represents `->`.**
-- **If `->` is an inner-class `Map { inner, fn_id }` e-node** (current), the Map wraps the regex node
-  in a distinct e-class; `class_regex(child)` finds no bare `Regex` and the regex rules are inert
-  (measured 0/0/0). The direct 5D lowering must then unwrap the Map to reach the class — the
-  projection is a *barrier* the lowering steps through, and the capture-leaf → `Project` byte-identity
-  (Q8) is what preserves the projection across the unwrap.
-- **If `->` is a typed EDGE** (an annotation on the same e-class carrying the class node, not a
-  wrapping constructor), the regex node stays visible; the rules could fire *through* the projection
-  and the direct lowering reads the class without unwrapping.
-
-The ratified representation is binding on the bridge's projection soundness and on the `Project`
-byte-identity oracle. **This must be confirmed with LOCK-1** (its `->` / document-shape family) — it is
-a cross-lock fact 5D consumes, not one 5D decides. The 5D prototype's `Project` byte-identity gate (Q8)
-is only meaningful once the representation is fixed: it asserts the lowered projection is byte-identical
-to a hand-authored grammar capture *under that representation*.
-
----
-
-## PRIOR ART (with citations)
-
-- **Glushkov / McNaughton–Yamada position automaton; Berry–Sethi.** The ε-free NFA built directly from
-  FIRST/LAST/FOLLOW over a *marked* regex. 5D's direct lowering IS this construction as grammar IR —
-  the FOLLOW-guard (Q7) is the Glushkov FOLLOW relation, and a FOLLOW-sound leaf yields a
-  *deterministic* position automaton (no subset construction). Classical result: the position
-  automaton is deterministic iff the expression is "one-unambiguous" (Brüggemann-Klein & Wood, 1998,
-  *One-unambiguous regular languages*) — the exact property Q7 measures per-leaf against grammar
-  FOLLOW.
-- **regex-automata `dfa::onepass` (Cox).** The one-pass condition — at each state, per input byte at
-  most one non-dead transition — is the automaton-level statement of FIRST/FOLLOW disjointness;
-  regex-automata reserves it for capture-without-backtracking. 5D generalizes it to grammar FOLLOW
-  (the follower obligation Ragel ignores).
-- **Ragel** (state-machine compiler, action-embedded FSMs) — the give-back trap. Ragel `scanner`
-  machines use longest-match with backtracking; a naive embedded regex over a shared alphabet with its
-  follower is exactly `word "and" word`. 5D's FOLLOW-guard is the discipline Ragel's longest-match
-  semantics paper over.
-- **flex / alex / GHC lexers** — maximal-munch DFA lexers: the *classical DFA-central* answer 5D
-  displaces on the ≈75% one-pass-safe fraction, retreating the DFA to the give-back trio.
-- **Owens–Reppy–Turon (2009), *Regular-expression derivatives re-examined*; Brzozowski.** Derivative
-  construction builds a DFA directly from the expression with no explicit NFA — the archetype of "no
-  separate engine, lower the regex straight to the recognizer," a candidate substrate for the direct
-  class-scan when a leaf is deterministic.
-- **egg / egglog e-class analyses.** The Map-barrier (Q10) is the e-graph "opaque constructor blocks
-  structural rules" pattern: rules keyed on a bare node kind cannot see through a wrapping constructor
-  without an e-class analysis / conditional that looks inside — the mechanism behind the measured
-  0/0/0.
-
----
-
-## NAMED RISKS AND COUNTEREXAMPLES
-
-- **`first(C)` under-approximation silently unsoundens the FOLLOW-guard.** *Counterexample built:*
-  `/'…'!|[A-Za-z_]\w*!/` — `analyze().first` returns `Exact {'\''}`, dropping the letter branch; a
-  guard drawn from it greenlights a lowering that mis-handles the letter-led alternative. *Mitigation:*
-  draw `first(C)` from the DFA start-state class set (over-approx), which PROVE-10's prefilter already
-  computes. The family's sharpest correctness obligation.
-- **Analyzer-opaque leaves stall the fraction.** `sheets::number` returns `first=UNKNOWN`;
-  indeterminate, not a real give-back. *Mitigation:* over-approximate UNKNOWN to the full alphabet
-  (conservative — forces guard/fallback, never a wrong direct scan).
-- **The direct class-scan loses to `Dfa::find` on dense classes.** *Counterexample the prototype must
-  build:* a dense `[a-z]+` leaf where the compiled DFA's anchored scan matches the membership scan — if
-  the direct path shows no win, the DFA fallback is not "narrow" and the automaton stays on the
-  generator path. *Mitigation:* the Q8 cold-pair is the arbiter; a loss keeps `Dfa::find` reachable, a
-  win removes it from the generator path.
-- **The `Map` barrier forces an unwrap the direct lowering gets wrong.** *Counterexample:* a projected
-  capture leaf `(/[0-9]+/ -> Digits)` whose `Project` lowering drops the tag during the Map-unwrap.
-  *Mitigation:* the Q8 byte-identity oracle vs hand-authored capture, under LOCK-1's ratified `->`
-  representation (Q11).
-- **Break-the-discard is gated and cannot land unilaterally.** Promoting `parse_generated` to
-  AST-returning and retiring `grammar/misc/regex.bbnf` is SPEC-ONLY until LOCK-7/7A ratifies bootstrap
-  staging; landing it early forks the bootstrap fixpoint.
-
----
-
-## WHAT A PROTOTYPE MUST TEST TO MOVE THIS FAMILY
-
-1. **The over-approx FOLLOW-guard.** Re-run Q7's fraction with `first(C)` from the DFA start-state
-   class set (not `analyze().first`); confirm the genuine-give-back count stays 3/16 and no leaf flips
-   sound→unsound. Gate: `word "and" word` still NON-disjoint; the three conservative false-positives
-   (`ws`, `cell_ref`, `range_end`) now correctly sound.
-2. **The `ByteClass` direct path end-to-end.** `Recognizer::ByteClass` (`ir/src/lib.rs:416`) + its
-   emission in `derive_recognizers` (`passes/src/lib.rs:338`) + `BackendExpr::ByteClass` reaching the
-   tape (`codegen/src/lower/tape_plan.rs`) — a ByteClassRecognizer that *actually fires* on a
-   non-structural class (defeating the masked wildcard). Gate: the emitted tape for a FOLLOW-sound leaf.
-3. **The cold-pair.** Direct membership scan vs `Dfa::find` on the same leaf/corpus, paired
-   same-binary N≥200 cold, both a rare-class and a dense-class leaf. Gate: the ratio decides DFA
-   reachability on the generator path.
-4. **Capture → `Project` byte-identity**, under LOCK-1's ratified `->` representation (Q11). Gate:
-   emitted tape byte-identical to a hand-authored grammar capture.
-5. **Break-the-discard (SPEC-ONLY).** `parse_generated → Hir`/IR at
-   `parse_that/regex/generated.rs:2288`; `grammar/misc/regex.bbnf` retired in favor of
-   `bootstrap/regex.bbnf`; the AST threaded through one grammar-driven regex path. Gate: grammar-totality
-   picture with the AST consumed, not discarded — held behind LOCK-7/7A.
+1. **Re-run Q7 SOUND.** Source `first(C)` from the DFA start-state class over-approximation; report
+   the sound fraction (target ≈12/16), confirm the give-back trio (`word`/`sheets::string`/
+   `sheets::identifier`) + the `word`/`"and"` counterexample stay non-disjoint and the conservative
+   trio (`ws`/`cell_ref`/`range_end`) moves into the sound set.
+2. **Build `regex_desugar` + `ExprKind::ByteClass`** over the three `json.bbnf` leaves + the Sheets
+   ident, re-targeting the `host::lower` fold from `Hir` to `ExprKind`; assert ZERO `ExprKind::Regex`
+   survive (panic-on-residue) AND desugar runs before projection wrapping.
+3. **`BackendExpr::ByteClass` → tape**, chooser FIRES (shufti recognizer, not `Vec::new()`),
+   byte-identical match parity vs `RegexProgram` on the JSON corpus, then delete `RegexProgram`;
+   exhibit a capturing leaf desugaring to `Seq[…, Project(sub), …]` reaching the tape as a native
+   capture (no TDFA).
+4. **Cold-paired head-to-head:** straight-line `ByteClass` scan vs PROVE-10 prefiltered `Dfa::find`
+   (N≥200, paired, `count_a==count_b`); feed the per-site scan-plan cost model; tie is a tie.

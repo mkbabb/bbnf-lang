@@ -1,189 +1,199 @@
 # LOCK-6 pass-3 — PRIOR-ART: THE ISOMORPHISM PLANE (rust/ts split)
 
-**Role.** Prior-art researcher, no family allegiance. Registry withheld by protocol.
-**Problem class.** "Proper isomorphism to a reasonable point, in layout and in code" between a
-Rust generator/runtime and a TypeScript backbone — what is *mirrored* (module tree, names,
-oracle tables, tape layout, bench protocol), what stays *idiomatic per language*, and where
-V8 laws diverge from LLVM laws. The four candidate mechanisms (PORTFOLIO LOCK-6): 6A
-mirror-tree + isomorphism linter, 6B spec-generated skeleton, 6C wasm-core, 6D
-oracle-isomorphism (the stated null hypothesis).
+**Role.** Prior-art researcher, no family allegiance. Registry + favored-approach withheld by
+protocol. **Problem class.** "Proper isomorphism to a reasonable point, in layout and in code"
+between a Rust generator/runtime and a TypeScript backbone — what is *mirrored* (module tree,
+names, oracle tables, tape layout, bench protocol), what stays *idiomatic per language*, and
+where V8 laws diverge from LLVM laws. Candidate mechanisms (PORTFOLIO LOCK-6): 6A mirror-tree +
+isomorphism linter, 6B spec-generated skeleton, 6C wasm-core, 6D oracle-isomorphism (the stated
+null hypothesis).
 
-The industry has run this experiment many times. Below: what exists, who won and lost, the
-constraints our own evidence base already certifies, and the named traps.
-
----
-
-## 1. The delivery-vehicle question (bears on 6C) — the SWC/Biome split is the settled verdict
-
-The single most-cited data point for "one Rust core, consumed from TS" is **not** a binary
-wasm-vs-hand-port choice — it is a *two-vehicle* consensus:
-
-- **SWC** ships the Rust core to Node via **N-API / napi-rs** (native addon), explicitly for
-  "maximum performance" in build tools; wasm is the fallback for browsers only.
-  [deepwiki: swc node bindings](https://deepwiki.com/swc-project/swc/7.2-node.js-bindings)
-- **Biome** ships the Rust core as **WASM** (three env-specific builds + a TS `js-api`
-  wrapper) because its target includes the browser/portable surface.
-  [deepwiki: biome JS API and WASM](https://deepwiki.com/biomejs/biome/7.2-javascript-api-and-wasm)
-- Measured spread: native N-API ≈ **45–60% faster** than the same logic as WASM; WASM ≈ 45%
-  faster than JS but "not quite native," with pathological cases (Parcel) **10–20× slower** in
-  WASM than native.
-  [yieldcode: native rust vs wasm](https://yieldcode.blog/post/native-rust-wasm/),
-  [jetbrains: rust vs js/ts + wasm](https://blog.jetbrains.com/rust/2026/01/27/rust-vs-javascript-typescript/)
-
-**Prior-art verdict for 6C.** The winning shape is **one core, two bindings (napi for Node,
-wasm for browser)** — *not* "wasm is the one implementation." A literal single-wasm-core loses
-~45% on the Node/build-tool surface that is bbnf's actual consumer (the value.js / latex-paper /
-keyframes.js suites all run under Node/vitest — R4 §7). WASM-CORE-as-stated is a browser story;
-elevating it to "the one implementation" contradicts the measured native-binding win.
-
-## 2. The boundary tax (against a naive 6C, *for* PROVE-14's framing)
-
-The wasm↔JS boundary copies data. `wasm-bindgen` string handling copies UTF-16 across
-linear-memory via `TextDecoder`/`TextEncoder` — an unavoidable copy; the standing guidance is
-"minimize copying," use integer/fixed-size types, or hold a **`js_sys::JsString` handle** and
-never copy the bytes at all.
-[wasm-bindgen string guide](https://rustwasm.github.io/docs/wasm-bindgen/reference/types/string.html),
-[wasm-bindgen #2741 (minimize copying heap↔linear)](https://github.com/rustwasm/wasm-bindgen/issues/2741),
-[HN: breaking the WASM/JS comm barrier](https://news.ycombinator.com/item?id=44656516)
-
-This is **exactly** PROVE-14's measured result, independently arrived at: full-walk
-materialization across the boundary sits at *parity* (0.9–0.98×) because every leaf must cross,
-while stop-early "don't touch what you don't read" wins **4.4×** by crossing only offsets/handles.
-The wasm-bindgen `JsString`-handle discipline and PROVE-14's offset-tape are the same insight.
-**Constraint imposed:** the cross-language plane must be scoped to *offset/handle* traffic
-(the tape planes `offsets`/`flag_cursors`/`flag_values`/`source` as typed-array views), never
-full-value marshaling. GN-4.W4 already encodes this (full-walk = documented non-goal).
-
-## 3. The NEON-vs-wasm-SIMD wall (kills 6C for the hot path — reinforced by our own §0 law)
-
-bbnf's §0 differentiator is grammar-specialized **NEON** kernels: shufti/truffle prefilter
-(01), fused string scan **vshrn narrow** (03), CSS shufti (05), the movemask-narrow lever (04's
-finding). Compiling the Rust core to wasm **strips exactly these**:
-
-- WASM SIMD cleanly supports only 128-bit "q" NEON ops; non-`q` variants **scalarize**; many
-  NEON instructions are unavailable and emulated via slow multi-instruction or scalar paths —
-  "the WebAssembly SIMD specification does not expose access to all native x86/ARM SIMD
-  instructions."
-  [Emscripten: SIMD porting](https://emscripten.org/docs/porting/simd.html),
-  [V8: wasm SIMD](https://v8.dev/features/simd)
-
-Our own §0 already law-binds this from the other side: **"M-series is NEON-only … warm benches
-are disinformation," "x86 dead."** So the perf story cannot cross to wasm: napi keeps NEON (Node
-wins), wasm accepts the scalarized tax (browser loses the kernels). **6C cannot be "the one
-implementation" carrying the differentiator** — the differentiator is ISA-specific and dies at
-the wasm boundary. 6C survives only as the *structural/browser* delivery of the non-SIMD layer.
-
-## 4. 6B has the strongest, most-trodden prior art — FlatBuffers / Cap'n Proto / Kaitai
-
-The "one machine-readable spec generates typed accessors in both languages over **identical
-wire bytes**" pattern is a solved, industrial problem:
-
-- **FlatBuffers**: `flatc` compiles one schema to C++/Rust/**TypeScript**/… ; **zero-copy**
-  access (no deserialize step); all elements little-endian on every platform so bytes are
-  identical cross-language; "readable across languages and schema versions."
-  [FlatBuffers docs](https://flatbuffers.dev/), [flatc compiler](https://flatbuffers.dev/flatc/),
-  [FlatBuffers Rust](https://flatbuffers.dev/languages/rust/)
-- **Cap'n Proto**: same zero-copy promise, more complex encoding.
-  [FlatBuffers (Wikipedia, incl. Cap'n Proto compare)](https://en.wikipedia.org/wiki/FlatBuffers)
-- **Kaitai Struct**: a declarative `.ksy` (YAML) spec compiles to binary parsers in **Rust AND
-  JavaScript** (and 10+ more) from *one* description; "describe the structure, not how you read
-  it"; 200+ format library.
-  [kaitai.io](https://kaitai.io/), [kaitai_struct repo](https://github.com/kaitai-io/kaitai_struct)
-
-**Verdict for 6B.** This IS the proven route for the *layout/decoder* plane, and it is precisely
-what PROVE-14 already demonstrated by hand (byte-exact SoA tape decoded node-for-node in TS). A
-bbnf-grammar-driven tape-decoder skeleton generated into both Rust and TS is FlatBuffers/Kaitai
-applied to the offset-tape — well-founded, drift-proof-by-construction where generated.
-**Trap (named):** generated code is notoriously non-idiomatic (protobuf's reputation); the
-80%-generated / 20%-hand boundary must be a clean partial/extension seam, and the schema
-language's expressiveness ceiling bounds what can be generated vs hand-filled.
-
-## 5. 6C done *right* is tree-sitter — grammar→core→many bindings, not parallel hand-parsers
-
-The closest structural analog to bbnf's ambition (a grammar that yields a core consumed from
-many languages): **tree-sitter** keeps ONE C core + a parser-generator (grammar→C), then
-*binds* out — `binding_rust`, `binding_web` (emscripten→wasm, per-language `.wasm`), napi. It
-does **not** maintain hand-written parallel parsers.
-[tree-sitter using parsers](https://tree-sitter.github.io/tree-sitter/using-parsers/),
-[web-tree-sitter](https://www.npmjs.com/package/web-tree-sitter),
-[tree-sitter deepwiki](https://deepwiki.com/tree-sitter/tree-sitter)
-
-**Lesson.** The winning multi-language parser systems mirror by GENERATION or BINDING from a
-single source, never by hand-maintained twin implementations. **Trap:** the web path drags an
-emscripten/docker toolchain and ships heavier per-grammar `.wasm` — the browser story is not free.
-
-## 6. 6D is the industry default for *behavioral* isomorphism — and is insufficient alone
-
-Cross-implementation conformance via a shared corpus + differential tests is the standard:
-
-- **test262**: 50,000+ files, the ECMAScript conformance suite every JS engine differential-tests
-  against. [tc39/test262](https://github.com/tc39/test262)
-- **CommonMark**: 500+ embedded spec examples as `{markdown → expected HTML}` JSON — a portable
-  conformance corpus with reference impls in C *and* JS.
-  [commonmark-spec](https://github.com/commonmark/commonmark-spec)
-- Differential testing (COMFORT, etc.): "implementations should produce identical results";
-  divergence = bug.
-  [arxiv 2104.07460 (JS-engine conformance fuzzing)](https://arxiv.org/abs/2104.07460)
-
-**Verdict on the null hypothesis.** 6D *wins* on behavior — it is nearly free (bbnf already has
-per-corpus parity oracles; GN-4.W5 is a four-lane parity oracle) and maximally robust to
-idiomatic divergence. BUT a behavioral corpus proves *values*, not *layout* or *performance*:
-it would **not** have caught PROVE-14's full-walk regression (both lanes yield byte-identical
-values; they differ only in speed). So the maintenance/drift cost that "defeats" *pure* 6D is
-exactly the layout/perf divergence a value-only corpus is blind to. **The evidence forces
-6D-for-behavior PLUS 6B-for-layout, not 6D alone.**
-
-## 7. Why 6A (code-level mirror) is refuted at the hot path by our own recon
-
-R4 and PROVE-14 already draw the line the constitution demands ("measured, not asserted"):
-
-- **TS has NO bespoke regex engine** — it delegates to native `RegExp` (sticky-flag `test()`),
-  while the Rust side owns a bespoke HIR→NFA→DFA engine (R4 §3). Code-mirror of the regex plane
-  is *impossible*; the isomorphism there can only be behavioral (6D) or a functor (LOCK-5's
-  concern).
-- **V8 laws ≠ LLVM laws** (R4 §6): arity-unrolled combinators, the `Int8Array(128)` dispatch
-  table, the megamorphic `.parser` IC, hidden-class monomorphism, `Object.create` deopt risk —
-  none has an LLVM analog. A mirrored hot-path *shape* would fight both compilers.
-- **PROVE-14 full-walk parity** is the measured proof: cold-JIT JS cannot mirror NEON throughput
-  on full materialization; the two languages need *different* hot-path strategies.
-
-So 6A/mirror can bind only the **structural skeleton** (module tree, public API, names, oracle
-tables) — never the kernels. And the **isomorphism-linter** (CI verifying tree-correspondence +
-name-map) is largely *novel*: the industry analog is hand-maintained ports (Rust `simd-json` is a
-hand port of C++ `simdjson`, kept in parity manually), which are exactly the drift-prone
-maintenance burden 6B/6D exist to eliminate. A linter mitigates but does not remove that burden.
+The settled prior art (banked across pass-2/pass-3): the **SWC/Biome** split proves the winning
+delivery shape is *one core, two bindings* — napi for Node (≈45–60% faster than the same logic as
+WASM; the value.js/latex-paper/keyframes consumers all run under Node/vitest, R4 §7), wasm for
+browser only — never "wasm is the one implementation" [deepwiki swc, biome; yieldcode; jetbrains].
+**FlatBuffers/Cap'n Proto/Kaitai** are the trodden 6B path for a byte-identical layout decoder
+generated into both languages [flatbuffers.dev; kaitai.io]. **tree-sitter** proves multi-language
+parser systems mirror by *generation/binding from one source*, never hand-maintained twins
+[tree-sitter docs]. **test262/CommonMark** are the 6D behavioral standard [tc39/test262;
+commonmark-spec]. The wasm boundary strips NEON (WASM SIMD scalarizes non-`q` ops [emscripten;
+v8.dev]) — so 6C cannot carry §0's ISA-specific differentiator. **This pass advances that base
+with a running in-tree artifact neither prior sweep cited, plus three on-point external anchors.**
 
 ---
 
-## 8. Synthesis — where "reasonable" ends (what the evidence base certifies)
+## 1. THE HEADLINE: `crates/bbnf-path-ts` is a live, shipping hybrid of ALL FOUR families
 
-The measured line, drawn by our own §0 + R4 + PROVE-14 and corroborated by every comparable
-system above:
+The tree already contains a working answer to LOCK-6, unnoticed by pass-2 and the prior pass-3
+sweep: **`bbnf-path-ts`** (AZ-IV.W5.1), a `cdylib + rlib` wasm-bindgen binding that mirrors the
+Rust `path!` proc-macro at the TS surface. It is not a prototype in a worktree — it is a
+first-class crate with a fidelity test. It embodies each candidate family *simultaneously*,
+which is itself the strongest evidence that no single family is the whole answer:
 
-| Plane | Isomorphic? | Mechanism the prior art supports |
+- **6C (wasm-core) for the compute:** the cdylib exports `compile_path(path, grammar)` /
+  `execute_path(typed_path, doc)` via wasm-bindgen + **serde-wasm-bindgen 0.6**; release profile
+  `wasm-opt = ["-O3","--enable-simd"]` (binaryen ≥119) — the SIMD toggle exists in-tree, but the
+  path compiler is a cold, non-hot lane, so it does not test the §0 NEON-scalarization wall
+  (`crates/bbnf-path-ts/Cargo.toml`).
+- **6B (single-source) for the alphabet + types:** the **lexer is shared, not mirrored** —
+  `bbnf-regex::lex_path` + `PathToken` are the *identical* tokens the proc-macro uses, so "segment
+  alphabet is isomorphic across Rust + TS frontends" by construction; the error **taxonomy** is
+  shared through `bbnf::path::error::PathError`; wasm-bindgen `--typescript` emits the `.d.ts`
+  skeleton (`Cargo.toml` header; `ts/path.ts:20-58`).
+- **6A (hand-mirror) for the logic — forced, and named as the risk:** because "**`bbnf-path`
+  (proc-macro = true) cannot be a library dependency**, the macro's lex/lower/validate logic is
+  mirrored here at function scope" (`Cargo.toml` header). This is the drift-prone hand-twin the
+  industry (simd-json) warns of, present in-tree by a hard toolchain constraint (proc-macros are
+  not linkable libraries).
+- **6D (oracle) as the drift gate:** `tests/isomorphic_path_error.rs` asserts the TS-bridge
+  payload is *field-for-field* identical `(segment_index, segment_str, struct_name, alternatives,
+  reason)` to the canonical `bbnf::path::PathError`, and `reason_variants_are_isomorphic` is an
+  **exhaustive match** — "adding a new variant on either side without updating the other fails
+  this test" (`tests/isomorphic_path_error.rs:88-100,227-268`).
+
+**The measured divergence (the load-bearing lesson).** The test *pins only the surface where both
+checkers agree* and documents a real asymmetry it deliberately does not cross: for
+`$.statuses[0].nope`, the canonical offline checker leaves `TypeDesc::Named(_)` intact →
+`UnregisteredRule`, while the cdylib resolves `Named(_)` **eagerly** through its in-registry
+`layout(_)` → `UnknownField`. **Same input, different diagnostic**
+(`tests/isomorphic_path_error.rs:129-138`). This is a live, in-tree instance of exactly the 6A
+hand-mirror drift the prior art predicts — two independently authored resolution *policies*
+diverge under a *shared taxonomy*. 6D caught it; the fix is deferred to the proc-macro's
+IR-resolved path, not patched in the twin. **Verdict:** shared *taxonomy/alphabet* (6B) does not
+imply shared *behavior* — behavior still needs the 6D oracle, and even the oracle can only pin
+the agreed surface until the two logics are unified at one source. This is the null hypothesis
+(6D) *and* its limit, demonstrated by running code rather than argued.
+
+## 2. THE SMALL-PAYLOAD / LARGE-PAYLOAD BOUNDARY LAW (new constraint, from two in-tree artifacts)
+
+Placing `bbnf-path-ts` beside PROVE-14 draws a boundary neither prior sweep isolated:
+
+| Artifact | What crosses | Mechanism | Cost model |
+|---|---|---|---|
+| **bbnf-path-ts** | a small structured **diagnostic** (`PathErrorPayload`, a handful of fields) | full **serde-wasm-bindgen** marshal — `JsError` message = JSON-serialized payload; TS `JSON.parse(message)` round-trips it back to a typed `PathError` (`ts/path.ts:126-140`) | full marshal is *fine* — the payload is tiny; correctness/ergonomics dominate |
+| **PROVE-14** | a large **value tape** (631 KB source, 29,573 tokens) | **offset/handle** typed-array views (`offsets/flag_cursors/flag_values/source`), never full-value marshal | full marshal would eat the win — 4.4× stop-early holds *only* by crossing offsets, not values |
+
+**Constraint imposed:** the cross-language plane is *bimodal by payload size*. Small structured
+control-plane data (diagnostics, typed-path descriptors, error taxonomy) crosses by full
+serde-wasm-bindgen JSON and that is idiomatic and correct; large value-plane data (the tape, the
+document) crosses by offset/handle views and full marshal is forbidden (the wasm-bindgen
+"minimize copying / hold a `JsString` handle" discipline [wasm-bindgen string guide]). A LOCK-6
+verdict must not impose the offset-only tape discipline on the diagnostic plane (over-engineering
+a 5-field payload) nor permit serde marshal on the value plane (re-importing the full-walk tax).
+Two in-tree artifacts already sit on the correct sides of this line.
+
+## 3. ANTLR — the canonical "one grammar → many language runtimes," and the named target-lag trap
+
+The closest large-scale analog to bbnf's ambition (a grammar yielding parsers consumed across
+languages) is **ANTLR 4**: *one* Java tool generates lexer+parser for **10 targets** — C++, C#,
+Dart, Java, JavaScript, PHP, Python3, Swift, **TypeScript**, Go — from one grammar, with a
+per-target hand-written runtime library. "Ensuring consistency across these targets is a unique
+and highly valuable feature" [antlr4 targets.md; antlr-ng]. **The trap, stated by the project
+itself:** new features "generally appear in the Java target and then migrate to the other targets,
+[but] these other targets don't always get updated in the same overall timeframe" — feature
+parity **lags per target**, and every release re-versions all 10 runtimes in lockstep even when
+unchanged [antlr4 project-testing.md]. **Lesson for LOCK-6:** a two-target (rust/ts) mirror is the
+*minimal* instance of ANTLR's problem; the lag trap says the isomorphism gate must fire on the
+*derivative* (has TS fallen behind Rust?) — corroborating the pass-2 ratchet finding
+(monotone-non-increasing hand-idiom fraction, not an absolute constant). ANTLR's answer to lag is
+a single shared conformance harness run across all runtimes — i.e. 6D is load-bearing even where
+6B-generation is the primary mechanism.
+
+## 4. toml-test — an adoptable 6D corpus already sized to the GN-5.W2 TOML grammar
+
+GN-5.W2 authors a **new TOML grammar** ("no TOML exists anywhere" — SPEC §2/GN-5). The industry
+already ships the exact 6D artifact for it: **`toml-lang/toml-test`**, a language-agnostic
+conformance suite (valid/invalid corpora; decoders read TOML on stdin, emit a canonical **JSON**
+tagged-value form, or non-zero exit on invalid; compatible with TOML v1.0/v1.1). Go, Rust
+(`crates.io/toml-test`, `toml-test-data`), and JS parsers all run it [toml-lang/toml-test;
+crates.io]. **Lesson:** 6D is not merely "nearly free" in the abstract — for each new grammar
+there is often a *ready-made, adoptable* differential corpus, and TOML's is directly on-point.
+The bbnf TOML grammar can be conformance-gated against toml-test *from both the Rust and any TS
+face* with zero corpus authoring, making the rust/ts behavioral isomorphism for TOML a
+plug-in rather than a build. This is concrete evidence the 6D face scales per-grammar at near-zero
+marginal cost — the pass-2 estimate ("one differential corpus + one reference impl") is, for
+TOML, *already written by someone else*.
+
+## 5. tsify / wasm-bindgen `--typescript` — the type-face generation stack `bbnf-path-ts` instantiates
+
+The 6B *type* face (Rust data types → TS `.d.ts`) is a solved, documented stack, and
+`bbnf-path-ts` is a live instance of it: **`wasm-bindgen --typescript`** generates `.d.ts`
+definitions; **`tsify`** auto-emits `.d.ts` and wires **serde-wasm-bindgen** so complex serde
+types cross with generated TS types; **ts-bindgen** goes the other direction (TS decls → wasm-
+bindgen Rust) [lib.rs/tsify; ratchetdesigns/ts-bindgen; flinect; timryan.org]. `bbnf-path-ts`
+uses precisely `serde` + `serde-wasm-bindgen` + wasm-bindgen's TS emission (`Cargo.toml`), so its
+`TypedPath`/`PathErrorPayload` TS shapes (`ts/path.ts:20-58`) are the generated-skeleton pattern
+in production.
+
+**The bound (settled, re-confirmed):** this generates *data* types, not *inference* types. The
+ts-rs/typeshare/specta limit — "TypeScript generics, conditional types, or advanced type
+inference cannot be expressed via Rust struct derives; generated types will be simpler than
+hand-written" [dev.co ts-rs; Aleph-Alpha/ts-rs] — means **PT-E2's `ExtractValue` type-level
+inference and the typed combinator algebra (LOCK-8B) are NOT derivable from Rust** and stay
+hand-authored in TS (R4 §5: the `Parser<any>` leaks are a TS-inference problem). So 6B-generation
+covers the *layout ABI + data-type skeleton* (PROVE-14 tape planes, `bbnf-path-ts` payloads,
+FlatBuffers/Kaitai) but **cannot** cover the TS-native compile-time inference plane. Do not
+conflate "generate the layout/data types" (true, in-tree) with "generate the inference types"
+(ts-rs-false).
+
+---
+
+## 6. Synthesis — where "reasonable" ends (updated with in-tree corroboration)
+
+| Plane | Isomorphic? | Prior art + in-tree witness |
 |---|---|---|
-| Tape **layout** (offsets/flags/source) | YES — byte-exact | 6B spec-generated decoder (FlatBuffers/Kaitai/PROVE-14 proven) |
-| **Behavior** (values, conformance) | YES | 6D shared corpus + differential oracle (test262/CommonMark; GN-4.W5) |
-| Public **API surface / types / oracle tables** | YES (skeleton) | 6B generation or 6A mirror of the *structural* skeleton only |
-| **Hot-path kernels** (NEON vs V8-monomorphic JS) | NO — measured to diverge | per-language, idiomatic; full-walk parity + wasm-SIMD wall forbid a shared strategy |
-| **Regex engine** | NO (functor only) | Rust bespoke HIR vs TS native `RegExp` (R4 §3) — LOCK-5's functor, not code-mirror |
-| **Delivery** | split | napi for Node (keeps NEON), wasm for browser (accepts scalar tax) — the SWC/Biome consensus |
+| Tape/value **layout ABI** | YES — byte-exact | 6B generation (FlatBuffers/Kaitai; **PROVE-14** node-for-node, fp `986912547`) |
+| **Data-type skeleton / diagnostic payload** | YES (generated) | wasm-bindgen `--typescript`/tsify; **`bbnf-path-ts`** `TypedPath`/`PathErrorPayload` in production |
+| **Behavior** (values, accept/reject, error-*class*) | YES | 6D corpus (test262/CommonMark; **toml-test** for GN-5.W2; **`isomorphic_path_error.rs`** exhaustive-variant gate) |
+| **Resolution *policy* / logic** | NO by default — drift-prone | **`bbnf-path-ts`** measured divergence (`Named` eager vs left-intact) — hand-mirror diverges even under shared taxonomy; 6D pins the agreed surface |
+| **Hot-path kernels** (NEON vs V8-monomorphic) | NO — measured | per-language idiom; full-walk parity + wasm-SIMD scalarization forbid a shared strategy |
+| **Regex engine** | NO (functor only) | Rust bespoke HIR vs TS native `RegExp` (R4 §3) — LOCK-5's functor |
+| **Type *inference* plane** | NO | ts-rs conditional-type limit — PT-E2/LOCK-8B hand-authored in TS |
+| **Delivery** | split | napi (Node, keeps NEON) + wasm (browser, scalar tax) — SWC/Biome; **`bbnf-path-ts`** ships the wasm face |
 
-**The forced conclusion.** No single family is the whole answer. The evidence composes them:
-**6B(layout) + 6D(behavior)** as the isomorphism *spine*; a **native-core / two-binding** delivery
-(not a literal single-wasm-core, which loses ~45% on the Node consumer surface and strips the
-NEON differentiator); and an **explicit non-mirror** of the hot path and regex engine (R4's
-V8-vs-LLVM laws + PROVE-14's full-walk are the named counterexamples that make code-mirror a
-measured loss, not a stylistic choice). 6C survives narrowed to *browser delivery of the
-non-SIMD structural layer*; 6A survives narrowed to *skeleton correspondence with a linter*,
-its kernel-mirror ambition refuted.
+**Forced conclusion (unchanged in direction, now witnessed by running code).** No single family
+is the whole answer; the evidence composes **6B(layout+data-type skeleton) + 6D(behavior) as the
+spine**, a **native-core / two-binding** delivery (not a literal single-wasm-core — loses ~45% on
+the Node consumer surface and strips the NEON differentiator), an **explicit non-mirror** of the
+hot path, regex engine, and TS inference plane, and a **grudging, gated 6A hand-mirror only where
+a toolchain constraint forces it** (proc-macro-not-linkable → `bbnf-path-ts`), fenced by a 6D
+exhaustive oracle. `bbnf-path-ts` is that exact composite, shipping today.
 
-**Traps carried forward (named).** (1) single-wasm-core costs ~45% on Node — SWC's measured
-reason for napi; (2) wasm-bindgen full-value marshaling eats the win — cross only handles/offsets
-(PROVE-14); (3) wasm SIMD scalarizes non-`q` NEON — the differentiator dies at that boundary;
-(4) generated code is non-idiomatic (protobuf) — the generated/hand seam must be a clean
-partial/extension; (5) a behavioral corpus is blind to layout/perf drift — 6D alone
-under-constrains a performance product (PROVE-14 is the counterexample); (6) hand-maintained
-twin ports (simd-json) are the drift burden 6B/6D exist to kill — an isomorphism linter mitigates
-but never removes it; (7) two-arm window asymmetry (§0/09) — any cross-language bench is paired
-or it is disinformation.
+**Traps carried forward (named).** (1) single-wasm-core costs ~45% on Node — SWC's measured napi
+reason; (2) full-value marshal eats the win on the *value* plane — cross handles/offsets
+(PROVE-14) — but full serde marshal is correct on the *small diagnostic* plane (`bbnf-path-ts`) —
+**the boundary is payload-size-bimodal**; (3) wasm SIMD scalarizes non-`q` NEON — the
+differentiator dies at that boundary; (4) generated code covers *data types, not inference types*
+(ts-rs limit) — PT-E2/8B stay hand-authored; (5) hand-mirror logic drifts *even under a shared
+taxonomy* — the in-tree `Named` eager-vs-intact divergence is the proof; unify at one source or
+gate exhaustively; (6) ANTLR-class **target lag** — the isomorphism gate must fire on the
+derivative (has TS fallen behind?), i.e. the pass-2 ratchet, not an absolute constant; (7)
+proc-macros are **not linkable libraries** — any Rust logic that must also run in TS/wasm cannot
+be shared by linking and is forced into a mirror + oracle (`bbnf-path-ts` header); (8) two-arm
+window asymmetry (§0/09) — any cross-language bench is paired or it is disinformation.
+
+---
+
+## Sources
+
+- **In-tree (primary):** `crates/bbnf-path-ts/{Cargo.toml, src/lib.rs, ts/path.ts,
+  tests/isomorphic_path_error.rs}` — live wasm-bindgen `path!` mirror + exhaustive fidelity
+  oracle + measured `Named` divergence; PROVE-14 REPORT/VERIFY (tape planes, fp `986912547`,
+  4.4× stop-early / full-walk parity); SPEC §0 rows 06/09/11/14; GN-4.md W4; PT-3.md; R4 §3/§5/§7.
+- ANTLR multi-target: [antlr4 targets.md](https://github.com/antlr/antlr4/blob/master/doc/targets.md),
+  [antlr-project-testing.md (feature-lag)](https://github.com/antlr/antlr4/blob/dev/doc/antlr-project-testing.md),
+  [antlr-ng](https://www.antlr-ng.org/introduction.html).
+- toml-test 6D corpus: [toml-lang/toml-test](https://github.com/toml-lang/toml-test),
+  [crates.io/toml-test](https://crates.io/crates/toml-test), [toml-test-data](https://crates.io/crates/toml-test-data).
+- Rust→TS type-face generation: [tsify (lib.rs)](https://lib.rs/crates/tsify),
+  [ratchetdesigns/ts-bindgen](https://github.com/ratchetdesigns/ts-bindgen),
+  [flinect: rust+ts+serde](https://flinect.com/blog/rust-wasm-with-typescript-serde),
+  [timryan.org: serde→TS](https://timryan.org/2019/01/22/exporting-serde-types-to-typescript.html);
+  ts-rs conditional-type limit [dev.co ts-rs; github.com/Aleph-Alpha/ts-rs].
+- Banked base (pass-2/pass-3): SWC/Biome napi-vs-wasm [deepwiki swc, biome; yieldcode; jetbrains];
+  FlatBuffers/Cap'n Proto/Kaitai [flatbuffers.dev; kaitai.io]; tree-sitter [tree-sitter docs];
+  test262/CommonMark [tc39/test262; commonmark-spec]; wasm-SIMD scalarization [emscripten; v8.dev];
+  wasm-bindgen string-copy discipline [rustwasm docs]; IEEE-754/NaN fold hazard [rust-lang#107247;
+  RFC 8785].
+</content>
+</invoke>

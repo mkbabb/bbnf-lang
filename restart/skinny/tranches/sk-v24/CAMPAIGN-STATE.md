@@ -68,9 +68,32 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 | 6-locks-p2-bbnf (resume) | wf_fce2ec2b-53a (task wf4ls5wqq) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | DEAD 14:05 ET at the process-exit wall (44 journal results banked) |
 | 6-locks-p3-pt (resume) | wf_acfc23d2-04b (task w6d157m32) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | DEAD 14:05 ET at the process-exit wall (58 journal results banked) |
 | 6-locks-p2-bbnf (resume 2) | wf_fce2ec2b-53a (task w2ac3wlqt) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | DONE-PARTIAL 15:59 ET (39/43): LOCKS 1/3/7 FOLDED (L1: 1A 55/1B 54 carrier fork now iso-vs-build-cost axis, 1C/1D BANKED; L3: 3A 60/3B 55, 3C BLOCKED 32, 3D BANKED; L7 in registry); LOCK-2 chain dropped at synth StructuredOutput retry cap AFTER writing FAMILY-SPECS.md (40K, 15:05) — no CRIT-2, no registry fold (still pass-1). NOTE: TaskOutput keys on task ID, not runId. |
-| 6-locks-p2-bbnf (resume 3, LOCK-2 close) | wf_fce2ec2b-53a (task w1o347p2u) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | RUNNING 16:00 ET — only the L2 back half re-runs (synth→protos→crits→agg); if the L2 synth dies at the schema cap AGAIN, relax SS proto_briefs minItems/maxItems to 1–3 (accepting cache invalidation of the other synths) AFTER pt p3 finishes with the shared script |
+| 6-locks-p2-bbnf (resume 3, LOCK-2 close) | wf_fce2ec2b-53a (task w1o347p2u) | same script, resumeFromRunId wf_fce2ec2b-53a, args EXACTLY as ledgered | PAUSED-BY-OWNER 17:04 ET (was running clean; journal 90 results banked; LOCK-2 registry still pass-1 — its back half interrupted mid-flight). If the L2 synth dies at the schema cap AGAIN on resume, relax SS proto_briefs minItems/maxItems to 1–3 once both runs are idle (shared script) |
 | 6-locks-p3-pt (resume 2) | wf_acfc23d2-04b (task wtjdi7mfm) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | DONE-PARTIAL 18:11 ET (42/50): LOCKS 4/5/6 FOLDED (L4: 4A 68/4B 70, 4C BANKED 66, 4D BLOCKED — canada 1.56x is 4B's measured ceiling pending LOCK-9 9B; L5: 5D 55 direct-scan-default RATIFIED + 5C RUN-EARNED RETIRED (survivor ships as table), 5A 42 relabel-candidate, grammar-driven path ZERO artifacts after 3 passes = named floor for GESTALT-P; L6: 6B 70/6A 67/6D 66, 6C BANKED 68). LOCK-8/9 chains dropped at synth StructuredOutput cap AFTER writing FAMILY-SPECS (15:35/15:36) — no protos/crits/fold, registries still pass-2. |
-| 6-locks-p3-pt (resume 3, LOCK-8/9 close) | wf_acfc23d2-04b (task wz6s3127c) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | RUNNING 18:14 ET — only the L8/L9 back halves re-run. SCHEMA-CAP TALLY: L2, L8, L9 synths each died ONCE at the SS cap (L4/5/6 passed the same schema this run — stochastic); if any synth caps out a SECOND time, relax SS proto_briefs minItems/maxItems to 1–3 once BOTH runs are idle (shared script). |
+| 6-locks-p3-pt (resume 3, LOCK-8/9 close) | wf_acfc23d2-04b (task wz6s3127c) | same script, resumeFromRunId wf_acfc23d2-04b, args EXACTLY as ledgered | PAUSED-BY-OWNER 17:04 ET (was running clean; journal 106 results banked; LOCK-8/9 registries still pass-2 — back halves interrupted). SCHEMA-CAP TALLY: L2, L8, L9 synths each died ONCE at the SS cap (L4/5/6 passed the same schema — stochastic); if any synth caps out a SECOND time, relax SS proto_briefs minItems/maxItems to 1–3 once BOTH runs are idle. (Timestamp errata: resume-2 rows above that read 18:11/18:14 ET are actually ~16:34/16:40 ET.) |
+
+## THE PAUSE (owner order, 2026-07-16 17:04 ET) — resume hereupon
+
+Owner paused the campaign mid-stage-6. State at pause: 7 of 9 registries folded at their
+current pass (bbnf pass-2: LOCK-1/3/7 folded, LOCK-2 pending; pt pass-3: LOCK-4/5/6 folded,
+LOCK-8/9 pending). Heartbeat cron db26fdc3 DELETED by owner order. Both workflows
+TaskStop-ed cleanly; all completed agents are banked in the journal caches (90 + 106
+results) and replay FREE on resume.
+
+RESUME PROCEDURE (any session — this one or a cold successor):
+1. Re-arm the heartbeat cron FIRST (hourly :23; prompt text in the Heartbeat section).
+2. Resume BOTH runs (they replay cached and re-run only the unfinished back halves):
+   Workflow({scriptPath: '~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-locks-pass-wf_19b300e6-c0a.js',
+     resumeFromRunId: 'wf_fce2ec2b-53a', args: {"group":"bbnf","locks":[1,2,3,7],"pass":2,"baseCommit":"ce51c36fc"}})   // closes LOCK-2
+   Workflow({scriptPath: same, resumeFromRunId: 'wf_acfc23d2-04b', args: {"group":"pt","locks":[4,5,6,8,9],"pass":3,"baseCommit":"ce51c36fc"}})   // closes LOCK-8/9
+   (width-3 wall discipline is baked into the script; expand scriptPath ~ to /Users/mkbabb)
+3. On both DONE: cut new cross-lock adjudications into locks/CROSS-LOCK.md — pending from
+   pt pass-3: (a) 5C→LOCK-2 BINDING refutations (automata-minimization must NOT be an
+   e-graph island; tier-selection must NOT be a CSP); (b) VM value-plane ISA change routed
+   to LOCK-3 per XL-B; (c) LOCK-4 INCOMPAT-2 exported to LOCK-6 as evidence, not verdict;
+   (d) the GESTALT-P named floor: grammar-driven regex path has zero artifacts after 3
+   passes. Then execute the stage-6 pass-transition (bbnf pass-3 — convergence talk begins;
+   pt pass-4).
 
 PASS-2 BINDING DIRECTIVES (from pass-1 agglomerators, orchestrator-ratified):
 - BASE-PIN RULE: every bbnf-worktree prototype must FIRST verify/fast-forward its tree to
@@ -94,10 +117,10 @@ GESTALT-B (bbnf locks + GN codex) ∥ GESTALT-P (parse-that locks + PT codex + n
 set with DAG ordering). Pass-transition procedure applies to all three groups; from pass 2
 the groups are bbnf [1,2,3,7] and pt [4,5,6,8,9] (fold pt-ext into pt).
 
-Heartbeat cron live: job db26fdc3 (resurrect + pass-transition duty), hourly at :23,
-session-scoped, 7-day auto-expiry — re-arm as resurrection step one; a PROCESS EXIT wipes
-crons silently, so every resurrection MUST CronList first (prior jobs fc81e24f, 20e19341,
-2fd2e8d7 died with their processes). Current prompt text: reconcile ledger vs live tasks; resume dead
+Heartbeat cron: DISABLED at THE PAUSE (owner order 17:04 ET; job db26fdc3 deleted). On
+resume, re-arm FIRST: hourly at :23, session-scoped, 7-day auto-expiry, prompt text below.
+A PROCESS EXIT wipes crons silently, so every resurrection MUST CronList first (prior jobs
+fc81e24f, 20e19341, 2fd2e8d7 died with their processes). Current prompt text: reconcile ledger vs live tasks; resume dead
 runs via Workflow({scriptPath, resumeFromRunId, args-as-ledgered}) after TaskStop-ing
 zombies + walls-log entry; if both pass-K workflows DONE and pass-(K+1) unledgered, execute
 the stage-6 pass-transition procedure; never duplicate-launch; silent single-line green

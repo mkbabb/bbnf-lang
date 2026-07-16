@@ -1,360 +1,239 @@
-# LOCK-7 pass-2 — PRIOR-ART RESEARCH (grammar totality & bootstrap)
+# LOCK-7 — GRAMMAR TOTALITY & BOOTSTRAP — PRIOR-ART SWEEP (pass 2)
 
-Sweep of what exists here, what won/lost elsewhere for this problem class, the constraints our
-evidence base already imposes, and the traps named in comparable systems. Options and evidence,
-never conclusions. Every codebase claim is `path:line`; external claims are hyperlinked.
-
----
-
-## 0. The measurement substrate as it actually stands (codebase truth)
-
-> **Re-verified at skinny HEAD 2026-07-16 (XL-H):** every `path:line` in this section was re-grepped
-> this pass. `xtask` dispatch still carries only `regen-{json,sheets,css,real-typed}` (no
-> `regen-bbnf`, no `fixpoint`); `general_descent/emit.rs:1` still reads "recursive-descent
-> **recognizer** emitter" with the DirectBuild no-op at `:385` and the `cursor: &mut usize` alias
-> at `:448`; `resolve_refs`/`add_expr`/`validate` still at `ir/src/lib.rs:{84,51,110}`;
-> `!has_rule("value")` shape-dispatch still at `runtime_generator.rs:98`; `parse_generated` still a
-> PRODUCER at `parse-that/rust/parse_that/src/regex/mod.rs:34` (`host::lower` at `:57`, over the
-> `rust/bootstrap/` crate — the seed crate is `rust/bootstrap`, NOT `rust/regex-bootstrap`). **The
-> concrete self-host subject exists in-tree:** `grammar/bbnf/bbnf.bbnf` (+ `expressions.bbnf`,
-> `types.bbnf`) and `grammar/ebnf/ebnf.bbnf` are present — bbnf-in-bbnf is a real file to route
-> through the emitter, not a hypothetical. Note `@{…}` has *partial* handling already
-> (`grammar/src/lib.rs:420` `rest.starts_with("@{")` + tests at `:1737,:1985,:2024`), so the "three
-> parser gaps" are the DIRECTIVE-given floor, one of which (`@{}` atom) is only partly open.
-
-- **No `regen-bbnf`, no fixpoint gate exists in skinny.** The xtask dispatch
-  (`skinny/xtask/src/main.rs:39-52`) carries only `regen-{json,css,sheets,real-typed}`; a
-  grep for `fixpoint|regen-bbnf|byte_identical` over `skinny/xtask` returns *nothing* (only two
-  incidental `byte-identical` comments in `regen_css.rs:35,83` about the 7-replica CSS collapse).
-  The "~88s→0.5s" self-host datum and the `regen-bbnf` command are **legacy transplants** —
-  they live only in prior-tranche docs (sk-v14/15/20/21 research) and the legacy `runtime/bbnf/`
-  tree, never in skinny HEAD. **Confirms DIRECTIVE 7A: the datum must be re-derived on skinny or
-  demoted; do not carry it.**
-- **The legacy self-host was OVERFIT, and that is a settled adjudication.** The skinny-impl
-  overfit audit (`restart/audit/skinny-impl-overfit/V1/AGENT-3-pattern-h-runtime.md:201`) records
-  legacy `regen-bbnf` as "8 files → `regen-bbnf` + projection (89 LOC) + NEW `emit_typed_bbnf_*`
-  cohort (9 fns, 1026 LOC) | **NO — bespoke per-grammar emitter**". A re-authored bbnf bootstrap
-  that resurrects a bespoke emitter cohort **repeats a named refutation**; the only lawful route
-  is through the grammar-NEUTRAL general emitter (§2 below).
-- **Today's fixpoint SUBJECT is generated `.rs` bytes, via `check_dir`.** `regen.rs:37-49`
-  `check_target` calls `emitted.check_dir(...)` — a byte comparison of emitted output vs on-disk.
-  `validate_inputs` (`regen.rs:153-166`) blake3-hashes the *grammar inputs* and prints the digest;
-  it does NOT relate input structure to output. So the extant determinism evidence is
-  output-byte-identity under a *fixed* generator — exactly the **vacuous-fixpoint** the DIRECTIVE
-  flags: a fixed-const emit path stamps identical bytes for any input, so triple-identity
-  certifies nothing about self-application.
-- **The general emitter emits RECOGNIZERS, not GrammarIr builders.** `general_descent/emit.rs:1`
-  ("recursive-descent *recognizer* emitter"); each rule → `fn parse_<rule>(bytes, cursor, tape:
-  &mut TapeBuilder) -> Result<(), ParseError>` (`emit.rs:259,269`), leaves `mark(tape,...)`
-  (`emit.rs:251`) and Span-project. Line 385 discloses "A DirectBuild records ... Tape
-  bookkeeping / no-op for the recognizer." So whether a `-> Span`/`-> T` **builder** augment over
-  this recognizer round-trips into GrammarIr-equivalent structure is genuinely **OPEN/unseeded** —
-  it cannot be presumed from the legacy `emit_typed_bbnf_*` cohort (which is the refuted route).
-- **The host build-mechanism census is concrete and small.** `add_expr` is an arena append
-  (`ir/src/lib.rs:51`); `resolve_refs` (`ir/src/lib.rs:84-108`) is a pure name→rule_id link over a
-  `HashMap` — deterministic, no external context, no `&mut Ctx` beyond the grammar itself;
-  `validate` (`ir/src/lib.rs:110`) runs `validate_resolved_refs` + a nullable-repeat check. These
-  are **shared semantic passes** runnable on hand-parser output AND generated-parser output — the
-  natural 7D pivot.
-- **The regex self-host already exists and WORKS in parse-that.** `rust/bootstrap/` is the
-  `regex_bootstrap` crate (`Cargo.toml`, `regex.bbnf`, `src/lib.rs`, a `regex_parse` bench). Its
-  `regex.bbnf` is present. `parse_generated` (`parse_that/src/regex/mod.rs:34`) is a **PRODUCER**:
-  generated parser → typed AST → `host::lower` → `Hir`, "Available for benchmarking and
-  verification against the primary `parse()`." **Confirms DIRECTIVE 7D: `parse_generated` is a
-  producer, not a recognizer** — and the meta-circular oracle is not hypothetical, it is deployed.
+Prior-art researcher, no family allegiance. What exists in-tree, what won/lost elsewhere for
+this problem class (self-hosting parser generators, staged bootstrap, grammar-specified planes,
+typed host-fn escape hatches), the constraints our evidence base already imposes, and the traps
+named in comparable systems. Citations `path:line` (codebase) / URL (web).
 
 ---
 
-## 1. STAGED-BOOTSTRAP (7A) — prior art, constraints, traps
+## 0. The problem class, stated
 
-**What won elsewhere (the seed-and-fixpoint canon).** Every mature self-hoster gates on a
-**stage2 = stage3** byte/hash fixpoint, NOT stage1 = stage2:
-[rustc](https://rustc-dev-guide.rust-lang.org/building/bootstrapping/what-bootstrapping-does.html)
-(stage0 std → stage1 → stage2; stage1 differs because it is built with stage0 std — the *uplift*
-subtlety), [kefir](https://sr.ht/~jprotopopov/kefir/) (stage1/stage2 SHA256 of `kefir` +
-`libkefir.so` must match), [shecc](https://github.com/sysprog21/shecc) (stage1/stage2 byte-wise
-identical), and thagore (Stage2 reproduces an identical Stage2'). The recurring law: **the
-fixpoint is over the SELF-APPLIED transform, and only the second self-application certifies** —
-the first stage inherits the seed's toolchain and is expected to differ.
-
-**The on-the-nose precedent is a parser GENERATOR, not a compiler.** CPython's
-[pegen](https://we-like-parsers.github.io/pegen/) (PEP 617, the production parser generator) is
-exactly bbnf's problem class: a PEG meta-grammar `metagrammar.gram` with actions generates the
-grammar-file parser, "meaning there are no manually-written parsers"
-([van Rossum, A Meta-Grammar for PEG Parsers](https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332)).
-Its fixpoint is stated verbatim: the bootstrap meta-parser turns the meta-grammar into a new
-meta-parser; **the new meta-parser reparses the same meta-grammar and the emitted output is the
-same** — that identity is the correctness proof. This is (a) the *bytes-of-generated-parser*
-fixpoint subject (matches skinny's `check_dir`), and (b) a working demonstration that a
-seed-parser + actions is sufficient to bootstrap — the seed need not be a full hand parser. It is
-a closer analogue than rustc (a whole compiler) and its fixpoint subject is precisely the DIRECTIVE
-7A choice-(a).
-
-**Constraint our evidence imposes.** The extant `check_dir` byte-gate (§0) is the *right subject
-form* (generated `.rs` bytes) but is applied to a fixed generator, not to bbnf-generating-bbnf.
-For a non-vacuous 7A the fixpoint must be: `emit(bbnf.bbnf)` produces a parser P; P re-parses
-`bbnf.bbnf` into GrammarIr G'; `emit(G')` must equal `emit(bbnf.bbnf)` **byte-for-byte** — the
-loop must route grammar *content* through the generated parser, else it certifies nothing
-(the DIRECTIVE's exact caution).
-
-**Options for the fixpoint subject:**
-- (a) **generated `.rs` bytes** (matches the whole external canon and the extant `check_dir`
-  machinery; cheap; but only meaningful once the loop passes grammar content through P);
-- (b) **GrammarIr equivalence** (`G ≡ G'` under a named relation — see 7D §4) — stronger, immune
-  to cosmetic-emit drift, but needs the relation pinned first.
-  Evidence leans (a)-as-gate + (b)-as-oracle: bytes are the CI artifact, IR-equivalence is the
-  semantic witness that the bytes aren't vacuous.
-
-**Traps named in comparable systems.**
-- **Trusting-trust / committed-seed provenance.** [Ken Thompson's "Reflections on Trusting
-  Trust"](https://www.cs.cmu.edu/~rdriley/487/papers/Thompson_1984_ReflectionsonTrustingTrust.pdf)
-  and the [Bootstrappable Builds](https://bootstrappable.org/) / GNU Mes
-  [stage0](https://www.gnu.org/software/mes/manual/html_node/Stage0.html) program: a self-hoster
-  needs a **minimal, auditable, committed stage-0** — a large *building* seed inflates the trusted
-  surface toward the hand-parser's own LOC, dissolving the auditability the bootstrap is for. The
-  `seed_LOC` headline must be re-derived on skinny and traded against a total self-host: if the
-  seed grows to emit builders it approaches the 2142-LOC hand grammar frontend (`R1 §1`), and the
-  win evaporates. Concrete proof the byte-identical fixpoint is *achievable across divergent seed
-  toolchains*: at the 2023 Reproducible Builds Summit, GNU Guix, Nix, and Debian each built the
-  initial Mes compiler with a **different major GCC version** yet produced a bit-for-bit identical
-  Mes binary
-  ([reproducible-builds.org](https://reproducible-builds.org/news/2022/05/18/jan-nieuwenhuizen-on-bootrappable-builds-gnu-mes-and-gnu-guix/)) —
-  the [diverse double-compilation](https://reproducible-builds.org/news/2019/12/21/reproducible-bootstrap-of-mes-c-compiler/)
-  technique that operationalizes Thompson's trusting-trust countermeasure. The lesson for 7A: the
-  fixpoint's *value* is that it holds independent of the seed that produced the first stage — so the
-  gate must route grammar content through the generated parser (not a fixed emit path) for that
-  independence to mean anything.
-- **The uplift illusion.** Do not gate on stage1=stage2 (P built by the *hand* generator vs P
-  built by P) — rustc proves these legitimately differ; only stage2=stage3 is the fixpoint.
-- **Vacuous determinism.** §0's fixed-const trap: any triple-identical claim over an emit path
-  that ignores its input is disinformation (aligns with SPEC §0 "warm benches are disinformation"
-  discipline — the gate must be able to *fail*).
-- **Born-RED for the parser augment.** The three bounded parser gaps (`?w`→`->` attach in
-  `parse_seq`; `@{}` atom in `parse_atom`, seam at `grammar/src/lib.rs:1495`; `|params|` closures)
-  are what block routing `bbnf.bbnf` through the emitter at all — the born-RED gate is
-  "`bbnf.bbnf` parses + the augmented emitter reparses the corpus" before any fixpoint talk.
+Constitution clause (i): "everything is grammar-driven, here and there, save primitives and
+combinators — the regex grammar IS bootstrapped and bbnf-defined." LOCK-7 is that clause as a
+design problem: (a) bbnf-in-bbnf self-hosting depth, (b) the regex-grammar bootstrap (staging,
+fixpoint, committed stage-0), (c) grammar-specified planes (IR? emitter templates? oracle
+tables?), (d) typed host functions for context-dependence, (e) what "primitive" lawfully means,
+(f) xtask/regen as bootstrap engine. Standing law (PORTFOLIO §LOCK-7, and memory
+`no-workarounds-self-hosting`): **self-hosting uses language features — augment BBNF if features
+are missing, never work around.**
 
 ---
 
-## 2. TOTAL-SELF-HOST (7B) — prior art, constraints, traps
+## 1. WHAT EXISTS IN-TREE (the honest baseline)
 
-**What exists.** The one generator has THREE lowering paths (`json_sink_direct`,
-`css_scan_direct`, `general_descent`); the shape-dispatch to the general path is
-`!has_rule("value")` (`runtime_generator.rs:98`) — shape-based, not name-based, and `bbnf.bbnf`
-(no `value` rule) shape-dispatches there. The general path is grammar-NEUTRAL by construction
-(`general_descent/mod.rs:11-14`). This is the lawful spine a total self-host must ride — NOT a
-bespoke `emit_typed_bbnf_*` cohort (the refuted legacy, §0).
+### 1.1 bbnf self-description EXISTS; self-HOSTING does NOT
 
-**The recognizer-then-builder split has a validated architectural precedent: Ohm.**
-[Ohm](https://ohmjs.org/docs/syntax-reference) (successor to
-[OMeta](https://en.wikipedia.org/wiki/OMeta), Warth) *separates* the grammar — "purely about
-recognition, no semantic actions" — from the action layer bolted on afterward. This is exactly
-the general emitter's shape: a `parse_<rule>` **recognizer** (recognition-only, §0) that a `-> T`
-**builder** augment would decorate. Ohm demonstrates the two layers *can* be authored and evolved
-independently over one grammar — but it does NOT settle the skinny-specific open question (does the
-builder augment reparse the corpus into GrammarIr-equivalent structure while `regen∘regen` holds
-byte-identical?): Ohm builds an in-memory CST via generic semantics, whereas skinny's builder must
-emit `add_expr`/`resolve_refs` calls that reconstruct the *same arena IR* the hand parser builds.
-The precedent legitimizes the split as an architecture; the round-trip remains RED-unknown (§5).
+- `grammar/bbnf/{bbnf.bbnf (89), expressions.bbnf (37), types.bbnf (7)}` — 133 LOC, a complete
+  bbnf-in-bbnf grammar with `@import` modularity, `->` typed leaves (`identifier -> Span`,
+  `int_lit -> i64`), and directive rules for `@import/@recover/@pretty/@ws/@token/@debug/@host`
+  (`bbnf.bbnf:60-81`).
+- It is VERIFIED to parse ITSELF into the typed AST: `crates/core/tests/bbnf_parity.rs`
+  `bbnf_parses_its_own_grammar` — "The BBNF grammar must parse its own definition cleanly into
+  the canonical typed AST" (test header, cutover.D4 reach gate).
+- BUT the PRODUCTION front-end is HAND-WRITTEN Rust: `crates/grammar/` = 2142 hand LOC of
+  recursive descent → `GrammarIr` (R1 §1 table). `bbnf.bbnf` is consumed as a **fixture / reach
+  oracle**, not as the generator's own input. This is a self-DESCRIPTION (the grammar can be
+  parsed by the hand parser) — NOT self-HOSTING (the grammar is not compiled to the parser that
+  parses grammars). The gap between these two is the entire LOCK-7 7B↔7D axis.
 
-**Scope axis (the LOCK-3 join).** SPEC LOCK-3C ("GRAMMAR-HOMOIOUSIA: the IR is itself
-grammar-specified ... transpositions are grammar-to-grammar maps; the generator eats itself —
-bootstrap alignment with LOCK-7") is the declared meeting point. If LOCK-3 adopts it, an `ir.bbnf`
-becomes a same-wave deliverable whose consumer is the lowering tower (Y.13: consumer-less
-substrate forbidden); its node values must be `->`-expressible. If LOCK-3 does not, 7B's totality
-stops at the grammar+regex planes and the IR/emitter-templates remain hand code — name what
-remains rather than assert total self-host. **This is a scope question for synthesis, not a route
-to seed.**
+### 1.2 The regex grammar is NOT bootstrapped (and is stale)
 
-**Structure-scoping (the borrow-checker escape question).** Prior art on "the generator becomes
-mostly data": [PetitParser / meta-grammar](https://github.com/petitparser) and PEG bootstraps
-express *structure* (rule towers) as grammar data, but control-flow / tape-assembly / cursor
-mutation resist grammar-plane expression — they are the **kernel escape**. The measurable question
-(DIRECTIVE 7B): on ONE emitter blob (e.g. `general_descent/emit.rs` render_rule), the
-data-vs-escape ratio = {literal/first-set/dispatch tables derivable from grammar nodes} vs {the
-`&mut TapeBuilder` cursor plumbing, `mark()`, loop-progress guards}. **Named kernel-escape
-signature:** any construct requiring `&mut TapeBuilder`/`&mut usize cursor` aliasing or
-borrow-split (`emit.rs:161,251,448` "recognizers take `cursor: &mut usize`; here we bind a local
-alias") is escape — it cannot be grammar-plane data without a runtime interpreter, which SPEC §0
-forecloses (fold-over-cursor dead; interpretive automata is the *anti*-differentiator, §1). A
-research answer: report the ratio as a measured fact per blob, not a totality route.
+- `grammar/misc/regex.bbnf` (28 LOC) exists but uses SUPERSEDED syntax: `>>`, `-`, `{ }`
+  repetition, no `->` projections, no `?w` (`regex.bbnf:2-28`) — it predates the current
+  bbnf surface (`bbnf.bbnf` uses `?w`, modifiers, `->`). It parses nothing on the live path.
+- The PRODUCTION regex engine is hand-written HIR in parse-that: `rust/regex/src/classify.rs`
+  (1148 LOC — the "1148-LOC classify" the constitution names), `automata/nfa.rs` (449),
+  `automata/dfa.rs` (438), `first.rs` (158). Constitution clause (i) demands the regex grammar
+  be bbnf-defined AND bootstrapped; clause (ii) demands HIR true-isomorphism to bbnf HIR. Today
+  neither holds — the regex grammar is a dead 28-line file and the HIR is an independent
+  hand-rolled tree. This is the largest single totality gap and it is co-owned with LOCK-5.
 
-**Traps.** (i) Resurrecting a bespoke emitter to hit a totality % is the §0 refutation. (ii) A
-"grammar-as-data" control layer that becomes a runtime interpreter regresses the whole
-performance thesis (SPEC §1: "LR/PEG generators emit interpretive automata" is precisely what
-bbnf beats). (iii) LOC-budget: SPEC/`generated-size-budget` memory — a self-host that inflates
-generated LOC past budget blocks the wave.
+### 1.3 xtask/regen is a staleness checker, NOT a fixpoint engine
 
----
+- `skinny/xtask/src/main.rs` (104 KB) + `regen.rs` (6956 B) + `regen_css.rs`. Targets:
+  `regen-json/check-json`, `regen-css`, `regen-sheets`, `regen-real-typed` (R1 §5;
+  `main.rs:40-47`). Mechanics: `regen.rs:19 write_targets` → `codegen::emit_runtime_from_request`
+  → `write_to_dir`; `check_target` fails if stale (R1 §5).
+- **No `regen-bbnf` target. No `regen-regex` target. No fixpoint gate** (regen∘regen =
+  byte-identical). The check-* arms verify "generated matches source" (a staleness diff), NOT
+  "the generator reproduces itself" (a bootstrap fixpoint). Memory `clean-regen-discipline` +
+  `changed-flag-convergence` already bind here.
+- `xtask/src/real_typed_schema.rs` is a 40 KB **hand-written schema** (the crutch GN-3.W2 kills;
+  SPEC GN-3). Its existence is measurable counter-evidence to totality: a hand-authored artifact
+  standing in for a grammar-derived one. Any "totality percentage" (7C) must count it.
 
-## 3. HOST-FUNCTION-LATTICE (7C) — prior art, constraints, traps
+### 1.4 The typed host-fn interface has SYNTAX but no live consumer
 
-**The controlling theory is attribute grammars.** The lattice split maps exactly onto
-[S-attributed vs L-attributed grammars](https://en.wikipedia.org/wiki/Attribute_grammar)
-(Lewis–Rosenkrantz–Stearns 1974): **synthesized attributes** (leaf-up, one-pass) are what `->`
-projections already express (`grammar/src/lib.rs:1481` `parse_projection` → `ExprKind::Project`);
-**inherited attributes** (context passed *down/laterally* — scopes, table-paths, cross-references)
-are the context-dependent semantics that need a host function. Wirth's Pascal semantic phase and
-the [Silver/MELT](https://melt.cs.umn.edu/silver/tutorial/4_attribute_grammars/) and
-[Tahr](https://arxiv.org/html/2512.01872v1) frameworks are the prior art: they bound "how much is
-grammar" by exactly this synthesized/inherited frontier. **This gives 7C a principled floor: a
-semantic is grammar-expressible iff it is synthesized; inherited semantics are the lawful host
-surface** (aligns with the `hybrid-grammar-host` memory law).
+- `@host identifier : type_name` (`bbnf.bbnf:73`) — the declared-signature seam for
+  context-dependent semantics already exists in the grammar surface. Memory
+  `hybrid-grammar-host`: grammar expresses leaf semantics via `->`; host functions for
+  context-dependent/recursive; strong typing. Memory `grammar-authoritative-status`:
+  Phase 1+2 done, **Phase 3 (host fns) PENDING**. So 7C's substrate exists syntactically but is
+  not wired — consumer-less substrate is forbidden (Constitution viii / Y.13).
 
-**The frontier is a PERFORMANCE boundary, not an expressibility one — a load-bearing refinement.**
-The classical result (Knuth 1968; restated in the
-[attribute-grammar](https://en.wikipedia.org/wiki/Attribute_grammar) literature) is that
-**synthesized attributes are semantically complete: any inherited attribute can be re-expressed as
-a set of synthesized attributes reproducing the same information.** So the host-fn boundary at the
-inherited frontier is NOT a hard limit on totality — inherited context (table paths, scopes) can in
-principle be lifted into synthesized form, pushing totality % arbitrarily high. What forecloses the
-lift is COST: the standard construction pays *additional tree passes* (or thunked closures), which
-SPEC §0's single-pass, fold-over-cursor-dead, zero-runtime-cost discipline forbids on the hot path.
-This sharpens 7C's counter (§below): the denominator's "inherited" leaves are host-bound *by the
-performance law, not by expressibility* — and the totality floor-gate must be justified as "grammar
-+ synthesized-only within one left-to-right pass", the exact frontier tree-sitter's external
-scanner draws for the same reason (state beyond one pass ⇒ host C).
+### 1.5 A promotion/oracle gate pattern already exists (7D seed)
 
-**The deployed reference implementation of a host-fn boundary is tree-sitter's external
-scanner.** tree-sitter draws the totality line at *lexical* rules a regex cannot express —
-Python's indentation, heredocs, contextual keywords — and hands them to hand-written C via a
-declared 5-function contract:
-[`create`, `destroy`, `serialize`, `deserialize`, `scan`](https://tree-sitter.github.io/tree-sitter/creating-parsers/4-external-scanners.html),
-with the external token set named in the grammar's `externals` array (the typed signature at the
-grammar/host seam — the `@host` analogue). Two lessons bind 7C: (i) the boundary is drawn at
-*regex-inexpressibility*, matching the synthesized/inherited frontier — a leaf that needs state
-beyond one left-to-right pass crosses to a host fn; (ii) **the scanner's `serialize`/`deserialize`
-must capture its ENTIRE state** — tree-sitter's own warning — which is the concrete form of the
-CONTEXT-tier zero-cost/serialization trap: an inherited-context host fn (TOML `push_path`,
-GN-5.W2) carries mutable state whose cost and round-trip must be *measured*, not assumed
-zero (§0 "type plane costs zero at runtime" is a claim the CONTEXT tier must re-earn, not
-inherit).
-
-**Independence split (from the census).** LOCK-free items: kill the `passes/src/lib.rs`
-heuristic (`has_parse_time_host_decode` at `:798`, a `name.contains("host") &&
-value.contains("decode"|"parse")` string-sniff — a name-gate-shaped heuristic, GN-5.W3
-`check-name-gates` territory); lower `@{}` at the atom seam; `resolve_refs` is the reference
-example of a *pure* host mechanism (deterministic, context-free-of-external-state — §0). LOCK-1-
-bound items: a typed host-fn signature threaded into inference, and any tier keyed off `&mut Ctx`,
-wait on LOCK-1's inherited-attribute verdict.
-
-**Totality % counter (a GN-5 `check-name-gates` sibling).** Specify it as **leaves × branches**:
-denominator = every grammar leaf (terminal/regex) + every alternation branch reachable from entry;
-numerator = those whose semantics resolve to a `->` projection or a *synthesized*-only host fn (no
-inherited context). A per-subsystem **floor gate** (e.g. "≥X% of bbnf/regex leaves grammar-bound")
-sits beside `check-name-gates` in xtask. **Falsification (precept-19, must be able to fail):**
-plant a leaf that routes to an inherited-context host shim and assert the counter *drops* below
-the floor — a counter that cannot register a breach certifies nothing (the §0 discipline).
-
-**CONTEXT-tier zero-cost testability.** Before scheduling the inherited tier, confirm the
-zero-cost invariant is *measurable*: `resolve_refs` round-trip (grammar→IR→resolve→pretty→reparse
-is identity) and the TOML `push_path` inherited-context case (GN-5.W2 authors TOML; its table-path
-nesting is the canonical inherited-attribute test) must show zero runtime residue — SPEC §0 "type
-plane costs zero at runtime (verified invariant)".
-
-**Traps.** (i) A host fn that hard-codes grammar semantics (GN-5.W2 R2: a TOML-datetime host shim)
-is a **name-gate in disguise** — the counter/gate must audit host fns, or the datetime leaf stays
-grammar-expressed (`no-workarounds-self-hosting`). (ii) L-attributed evaluation assumes one-pass
-left-to-right; a semantic needing multi-pass/circular attributes exceeds the lattice and must be
-named, not silently shimmed.
+- `bbnf_parity.rs` (self-parse reach gate) + `primitive-checkasm` (the dav1d-style scalar↔NEON
+  parity gate, R1 §5, `main.rs:52`) are the two existing "differential parity as admission gate"
+  patterns. 7D META-CIRCULAR-ORACLE generalizes exactly this: the bbnf-defined parsers serve as
+  differential ORACLES against the hand parsers; promotion is gated on measured parity + perf.
 
 ---
 
-## 4. META-CIRCULAR-ORACLE (7D) — prior art, constraints, traps
+## 2. WHAT WON / LOST ELSEWHERE (external prior art)
 
-**What exists and works.** parse-that's `parse_generated` (§0) IS a deployed meta-circular oracle:
-the bbnf-defined `regex.bbnf` generates a parser whose output is `host::lower`ed to `Hir` and
-verified against the hand `parse()`. The record is corrected: it is a **producer**, and the
-regex-grammar self-host is not speculative.
+### 2.1 Meta-grammar self-hosting — the canonical modern win
 
-**Prior art on the oracle discipline.** The differential-testing literature
-([Grammar Mutation for Testing Input Parsers, TOSEM 2025](https://dl.acm.org/doi/10.1145/3708517);
-[AsFuzzer](https://www.researchgate.net/publication/383963161_AsFuzzer_Differential_Testing_of_Assemblers_with_Error-Driven_Grammar_Inference))
-teaches two load-bearing rules for a generated-vs-hand oracle: (1) **golden-anchor, not
-majority-vote** — when two implementations disagree, a third (the committed hand parser as the
-golden reference) breaks the tie; a majority vote among near-clones hides shared bugs; (2)
-**planted-mutation falsification** — inject a known divergence and confirm the oracle catches it,
-else the oracle's silence is meaningless (the SPEC §0 "gate must be able to fail" discipline,
-mirrored in GN-5.W3's falsification test).
+- **CPython PEG bootstrap (pegen), Guido van Rossum.** The reference blueprint for this exact
+  problem: a meta-grammar (grammar-for-grammars) parsed by a bootstrap meta-parser → generates a
+  new meta-parser → which parses ITSELF → verified by re-parsing the same meta-grammar and
+  checking the output is stable. Replaced the 30-year-old hand-rolled `pgen` in CPython 3.9. The
+  fixpoint check is the whole point.
+  <https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332>
+- **META II (Schorre, 1964)** — the ur-metacompiler, defined in its own language; **OMeta**
+  (Warth, PEG-based) — "a natural and convenient way to implement tokenizers, parsers, visitors,
+  tree-transformers", self-describing. The lesson that survived 60 years: a metacompiler is
+  bootstrapped from a minimal committed stage-0 written once in the host language, then rewritten
+  in itself. <https://en.wikipedia.org/wiki/OMeta>
+- **pest (Rust).** Grammar-as-documentation-AND-implementation, compile-time codegen; pest's own
+  `.pest` grammar is bootstrapped (meta-grammar in `pest`). This is the model bbnf-lang half-lives
+  today (compile-time codegen via xtask) but WITHOUT the self-host loop closed.
+  <https://github.com/pest-parser>
+- **ANTLR / tree-sitter** — both maintain a meta-grammar (ANTLR-in-ANTLR;
+  tree-sitter's `grammar.js` DSL). tree-sitter is the incremental-parsing SOTA the constitution
+  is conscious of.
+  <https://www.pistack.xyz/posts/2026-06-20-parser-generator-combinator-libraries-antlr-treesitter-nom-pest-nearley/>
 
-**The equivalence relation must be pinned before any parity %.** The DIRECTIVE names the
-canonical normalization pitfall: `Empty ≡ Concat([])` (a generated parser may emit a singleton
-`Seq` where the hand parser emits the bare node — structurally distinct, semantically equal). The
-relation must (i) normalize such trivial-wrapper forms, and (ii) run the **shared semantic passes
-on both sides or neither** — `resolve_refs` + `validate` (`ir/src/lib.rs:84,110`) applied to both
-generated-IR and hand-IR, so the comparison is post-canonicalization. **Pin a relation-id
-(e.g. `bbnf-ir-eq-v1`) and quote parity % only against it.**
+**Verdict for 7A/7B/7D:** the meta-grammar → bootstrap-meta-parser → self-parse → fixpoint
+pattern is proven, repeatedly, across META II / OMeta / pegen / pest. bbnf-lang has every
+ingredient (`bbnf.bbnf`, the hand parser as stage-0, xtask as regen host) but has NOT closed the
+loop: no `regen-bbnf`, no fixpoint gate, no promotion of the generated parser to production.
 
-**Regex divergences: host obligations vs oracle verdicts (settled substrate, XL-C).** On the
-settled two-type regex substrate (grammar-tier `Regex(StringId)` opaque, engine-tier rich `Hir`,
-bridged by `simplify_hir`), a divergence between `parse_generated` and `parse()` is an
-**engine-tier `host.rs` lowering obligation** (the `host::lower` fold, `regex/mod.rs:34`) when it
-is a lowering choice (e.g. class-set simplification order), and an **oracle verdict** (a real
-parser bug) only when the pre-lowering ASTs differ. The oracle must compare at the AST layer
-*before* `host::lower` to separate the two.
+### 2.2 Staged bootstrap with byte-identical fixpoint — the verification win
 
-**Promotion-ledger schema (draft).** A subsystem-by-subsystem table gating promotion of a
-generated parser to production:
+- **rustc / GCC 3-stage bootstrap.** stage0 (pre-existing/native compiler) → compiles source →
+  stage1 → rebuilds → stage2; **stage1 and stage2 producing byte-identical executables is the
+  correctness proof** ("if stage1 and stage2 produce identical executables, then they behave
+  identically"). GCC's 3-stage comparison is the same idea. This is 7A's "regen∘regen = regen,
+  byte-identical" verbatim — a settled, industrial pattern.
+  <https://rustc-dev-guide.rust-lang.org/building/bootstrapping/what-bootstrapping-does.html>
+- **Reproducible-builds / bootstrappable-builds movement** — bit-for-bit identical rebuild from
+  source is now a maintained discipline, not aspiration. Directly underwrites 7A's committed
+  stage-0 + fixpoint gate. <https://lwn.net/Articles/841797/>
 
-| subsystem | parity% (rel-id `bbnf-ir-eq-v1`) | totality% (7C counter) | perf vs hand (cyc/B, cold paired) | planted-mutation caught? | golden-anchor | disposition |
-|---|---|---|---|---|---|---|
-| regex | … | … | … | Y/N | hand `parse()` | oracle-only / promote |
-| bbnf  | … | … | … | Y/N | hand `parse_grammar` | oracle-only / promote |
+### 2.3 Typed host functions / external scanners — the escape hatch EVERY serious system keeps
 
-Promotion is gated on **measured parity + perf**, not on the self-host existing — SPEC §0's
-implementation-majority + the LOCK-7D charter ("promotion gated on measured parity + performance,
-subsystem by subsystem"). The totality% column sources 7C's counter (§3); the golden anchor is
-always the committed hand parser, never a vote.
-
-**Traps.** (i) Quoting parity % before pinning the relation-id (the `Empty ≡ Concat([])` family
-inflates false-divergence). (ii) Asymmetric semantic passes (running `resolve_refs` on one side
-only) manufactures spurious mismatches. (iii) Majority-vote oracles over near-clones (shared-bug
-blindness). (iv) Treating a `host::lower` normalization difference as a parser bug (mis-routing a
-host obligation to an oracle verdict).
-
----
-
-## 5. Cross-cutting constraints from the evidence base (carry, do not re-derive)
-
-- Regex substrate SETTLED (XL-C): two domain-fit types; the vendored parse-that-regex in skinny is
-  the measurement substrate; the top-level duplicate is legacy (GN-0 archive).
-- `parse_generated` is a producer (corrected here and in §0/§4).
-- The general emitter is recognizer-only; a builder augment is OPEN/unseeded — do not presume
-  round-trip from the legacy emitter or the emitter's mere existence (the shared open empirical
-  question, still RED-unknown).
-- x86 dead; no digit-scan SIMD; no block-scheduling; fold-over-cursor dead; warm benches are
-  disinformation; type plane costs zero at runtime (SPEC §0 laws — bind 7B's structure-scoping and
-  7C's zero-cost tier).
-- The legacy bespoke `emit_typed_bbnf_*` self-host is a NAMED refutation (overfit audit) — any
-  re-author routes through the grammar-neutral general emitter.
+- **tree-sitter external scanners.** "Any parser generator that sees use has a bail-out to a
+  hand-written stateful external lexer because context-sensitive grammars are equivalent to
+  linear-bounded automata." Used for indentation (Python), heredocs, raw strings, template
+  literals — tokens no regular/CFG grammar can express. State serialized across scans.
+  <https://tree-sitter.github.io/tree-sitter/creating-parsers/4-external-scanners.html>
+- **Verdict for 7C:** the host-fn lattice is NOT optional and NOT a failure of totality — it is
+  the *correct architecture*, present in every production grammar system. The design question the
+  constitution poses is the RIGHT one: totality as a **measured percentage behind grammars with a
+  named floor per subsystem** and a **TYPED, bounded** host interface (`@host name : type`),
+  never an untyped C-FFI escape. bbnf's `@host` with a type annotation is already stricter than
+  tree-sitter's opaque C scanner.
 
 ---
 
-## Sources
+## 3. CONSTRAINTS OUR EVIDENCE BASE ALREADY IMPOSES
 
-Codebase (`path:line`): `skinny/xtask/src/{main.rs,regen.rs,regen_css.rs}`;
-`skinny/crates/codegen/src/{runtime_generator.rs, general_descent/mod.rs, general_descent/emit.rs}`;
-`skinny/crates/ir/src/lib.rs`; `skinny/crates/grammar/src/lib.rs`;
-`parse-that/rust/bootstrap/{Cargo.toml,regex.bbnf,src/lib.rs}`;
-`parse-that/rust/parse_that/src/regex/mod.rs`;
-`restart/audit/skinny-impl-overfit/V1/AGENT-3-pattern-h-runtime.md`.
+- **`no-workarounds-self-hosting` (STANDING LAW, PORTFOLIO §LOCK-7):** if a leaf cannot be
+  grammar-expressed, augment BBNF — a host shim that hard-codes (e.g.) TOML-datetime parsing is
+  a name-gate in disguise (GN-5 §7 R2 names this exact trap). The host-fn is for genuine
+  context-dependence, not for dodging a missing grammar feature.
+- **Zero name-gates, CI-enforced (SPEC §1 differentiator; GN-5.W3 `check-name-gates`).** The AST
+  audit forbids grammar-name string literals in codegen. A bootstrapped-grammar plane must not
+  reintroduce name-gates in its emitter/host dispatch — GN-5 §7 R3 even names the enum-variant
+  circumvention (`GrammarId::Csv`) the gate must also catch. Any LOCK-7 host-dispatch design
+  inherits this.
+- **Generated files regen-only, LOC-budgeted (memory `clean-regen-discipline`,
+  `generated-size-budget`; SPEC §4).** A `regen-bbnf`/`regen-regex` target inherits the same
+  born-RED bit-for-bit gate every other target carries, plus a generated-LOC sub-budget.
+- **Consumer-in-wave / Y.13 (Constitution viii; memory `pluggable-components`).** A bootstrapped
+  bbnf/regex grammar with no runtime caller is dead substrate. 7D's answer — the grammar first
+  serves as a differential ORACLE (a consumer) before promotion — is the constitution-aligned
+  path (it has a consumer from day one).
+- **Type plane costs zero at runtime (Constitution v; SPEC §0 row 08).** Typed host-fn signatures
+  and grammar-derived schemas erase to zero runtime cost — the HM core (221 LOC, PROVE-08) is the
+  proven engine, `real_typed_schema.rs` the hand crutch it replaces (GN-3).
+- **True HIR isomorphism (Constitution ii; LOCK-5 owns the verdict).** The regex-grammar bootstrap
+  cannot be designed in isolation — its HIR must be the bbnf HIR (5A) or a lawful functor (5B).
+  LOCK-7's regex-bootstrap and LOCK-5's continuum are the same seam viewed from two locks.
+- **SPEC §0 refutation laws** are mostly perf (no digit-SIMD, no block-scheduling, no shim-perf,
+  fold-over-cursor dead, warm benches disinformation). They bind LOCK-7 only where a
+  grammar-derived scanner claims a number — the bootstrap itself is structural, but any perf
+  claim on a promoted grammar-derived parser (7D's promotion gate) must clear the cold-paired-PMU
+  standing law.
 
-Web: [rustc bootstrapping](https://rustc-dev-guide.rust-lang.org/building/bootstrapping/what-bootstrapping-does.html) ·
-[kefir](https://sr.ht/~jprotopopov/kefir/) ·
-[shecc](https://github.com/sysprog21/shecc) ·
-[pegen (PEP 617)](https://we-like-parsers.github.io/pegen/) ·
-[PEP 617 — New PEG parser for CPython](https://peps.python.org/pep-0617/) ·
-[van Rossum, A Meta-Grammar for PEG Parsers](https://medium.com/@gvanrossum_83706/a-meta-grammar-for-peg-parsers-3d3d502ea332) ·
-[GNU Mes stage0](https://www.gnu.org/software/mes/manual/html_node/Stage0.html) ·
-[Mes reproducible bootstrap / diverse double-compilation](https://reproducible-builds.org/news/2019/12/21/reproducible-bootstrap-of-mes-c-compiler/) ·
-[Nieuwenhuizen on bootstrappable builds (3-distro bit-identical Mes)](https://reproducible-builds.org/news/2022/05/18/jan-nieuwenhuizen-on-bootrappable-builds-gnu-mes-and-gnu-guix/) ·
-[Bootstrappable Builds](https://bootstrappable.org/) ·
-[Thompson, Reflections on Trusting Trust](https://www.cs.cmu.edu/~rdriley/487/papers/Thompson_1984_ReflectionsonTrustingTrust.pdf) ·
-[Ohm syntax reference](https://ohmjs.org/docs/syntax-reference) ·
-[OMeta (Wikipedia)](https://en.wikipedia.org/wiki/OMeta) ·
-[tree-sitter external scanners](https://tree-sitter.github.io/tree-sitter/creating-parsers/4-external-scanners.html) ·
-[Attribute grammar (Wikipedia)](https://en.wikipedia.org/wiki/Attribute_grammar) ·
-[Silver/MELT attribute grammars](https://melt.cs.umn.edu/silver/tutorial/4_attribute_grammars/) ·
-[Tahr generative attribute grammar](https://arxiv.org/html/2512.01872v1) ·
-[Grammar Mutation for Testing Input Parsers (TOSEM 2025)](https://dl.acm.org/doi/10.1145/3708517) ·
-[AsFuzzer differential testing](https://www.researchgate.net/publication/383963161_AsFuzzer_Differential_Testing_of_Assemblers_with_Error-Driven_Grammar_Inference).
+---
+
+## 4. TRAPS NAMED IN COMPARABLE SYSTEMS
+
+- **Trusting-trust (Ken Thompson, 1984).** A self-hosting toolchain can hide a payload in the
+  committed stage-0 that reproduces itself invisibly. Countermeasure: **committed stage-0 must be
+  minimal + auditable** (7A "minimal bootstrap surface, maximal auditability") and verified by
+  **Diverse Double-Compiling** (David A. Wheeler) — two independent paths producing bit-for-bit
+  identical output. 7D's differential-oracle IS the DDC pattern applied to grammars.
+  <https://dwheeler.com/trusting-trust/>
+- **Grammar/meta-parser drift.** When the hand parser and the generated parser both exist, they
+  silently diverge unless a differential oracle gates every commit (the mrustc-lags-rustc
+  pathology: the second implementation rots). Directly motivates 7D: the self-parse must be a
+  CI-enforced differential gate, not a one-shot test — today `bbnf_parity.rs` is a reach gate, not
+  a full differential oracle. <https://en.wikipedia.org/wiki/Bootstrapping_(compilers)>
+- **The external-scanner bug well.** tree-sitter's external scanners are the #1 source of grammar
+  non-determinism and serialization bugs — the escape hatch is where correctness goes to die if
+  untyped/unbounded. Validates the TYPED, floored host-fn interface (7C) over an open FFI.
+- **Left recursion in PEG self-hosting.** pegen/OMeta both had to solve left-recursion to
+  self-host; bbnf's `binary_factor`/`alternation` rules (`bbnf.bbnf:45-52`) are
+  right-associative-by-construction today, but a self-hosted grammar-of-grammars must either
+  handle left recursion or forbid it explicitly (a named language restriction, not a silent
+  failure). <https://arxiv.org/pdf/1207.0443>
+- **Self-host overfit / the hand-schema crutch.** `real_typed_schema.rs` (40 KB hand-written) and
+  the stale `regex.bbnf` are local evidence that "self-hosting" claims outrun the artifacts.
+  A totality metric (7C) that counts hand LOC-behind-grammar keeps the claim honest — matching the
+  campaign's "concrete artifacts or the SPEC-ONLY label" discipline (Constitution vii).
+- **Bootstrap chicken-and-egg cost.** Every bootstrap needs a pre-existing stage-0; the hand
+  `grammar` crate (2142 LOC) IS bbnf-lang's natural stage-0. The trap is deleting it too early
+  (mrustc shows the second impl must be *maintained* to stay trustworthy) — 7A keeps it committed
+  and auditable; 7D promotes subsystem-by-subsystem on measured parity, never big-bang.
+
+---
+
+## 5. SYNTHESIS — the design surface these facts define
+
+1. **7A STAGED-BOOTSTRAP is directly supported** by rustc/GCC 3-stage + reproducible-builds:
+   commit the hand `grammar` crate as stage-0, add `regen-bbnf` + a fixpoint gate
+   (regen∘regen byte-identical) to xtask. The missing piece is purely the fixpoint gate and the
+   loop closure — every ingredient exists.
+2. **7B TOTAL-SELF-HOST** has proven precedent (pegen/pest/META II) but the IN-TREE state is far
+   from it: regex grammar dead, IR hand-written (1020 LOC), emitter templates hand-written
+   (codegen 10201 LOC), `real_typed_schema.rs` hand-authored. Totality is a long road; measure it.
+3. **7C HOST-FUNCTION-LATTICE** is the *correct* architecture (tree-sitter proves every system
+   keeps the escape hatch); bbnf's typed `@host name : type` is already stricter than the
+   industry norm. Wire it (Phase 3 pending) and floor the totality percentage per subsystem.
+4. **7D META-CIRCULAR-ORACLE** is the safest promotion path and the trusting-trust/DDC-aligned
+   verification story; `bbnf_parity.rs` + `primitive-checkasm` are the existing seed patterns to
+   generalize into full differential oracles.
+5. The regex-grammar bootstrap is **not separable from LOCK-5** (HIR isomorphism, clause ii) —
+   any LOCK-7 verdict on regex staging must consume LOCK-5's HIR form.
+
+---
+
+### Citations index
+
+Codebase: `grammar/bbnf/{bbnf,expressions,types}.bbnf`; `grammar/misc/regex.bbnf`;
+`crates/core/tests/bbnf_parity.rs`; R1-skinny-cartography §1/§5/§6 (grammar 2142, ir 1020,
+codegen 10201, regen targets, path trap); `skinny/xtask/src/{main.rs,regen.rs,real_typed_schema.rs}`;
+`parse-that/rust/regex/src/{classify.rs:1148,automata/nfa.rs,dfa.rs,first.rs}`;
+PORTFOLIO §LOCK-7 (task + standing law) + Constitution i-ix; SPEC §0/§1/§4; GN-5 §7 (R2/R3 traps).
+Memory: no-workarounds-self-hosting, hybrid-grammar-host, grammar-authoritative-status,
+clean-regen-discipline, changed-flag-convergence, generated-size-budget, pluggable-components,
+no-silent-epsilon.
+
+Web: pegen meta-grammar (van Rossum); OMeta (Wikipedia); pest (github); ANTLR/tree-sitter/pest
+comparison (pistack); rustc bootstrap stages (rustc-dev-guide); bootstrappable builds (LWN);
+tree-sitter external scanners (tree-sitter.github.io); Diverse Double-Compiling (dwheeler.com);
+Bootstrapping-compilers (Wikipedia); Left recursion in PEG (arxiv 1207.0443).

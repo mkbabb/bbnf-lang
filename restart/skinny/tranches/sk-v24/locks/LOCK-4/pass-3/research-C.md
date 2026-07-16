@@ -1,8 +1,13 @@
 # LOCK-4 · Family 4C — THE PORTABLE-PROGRAM ISOMORPHISM VM (pass-3 research-C)
 
-*Measurement HEAD (XL-H): `c43126422423bf78e74e2b415ffd6ee16444f2c3`, a descendant of the
-pass-3 base-pin `ce51c36fc`. Every enumeration below is `rg`/`Read`-verified on this tree; no
-build ran. parse-that is READ-ONLY (R3 §8 / R4 scratch-copy law).*
+*Measurement HEAD (XL-H): `0bb33a77b5462159207470d390e0c29dd7e007bb`, a descendant of the
+pass-3 base-pin `ce51c36fc` (merge-base confirms). Every enumeration below is `rg`/`Read`-re-verified
+on this tree; no build ran. The VM subtree is byte-for-byte unchanged from the earlier survey point:
+`Op` still holds exactly 30 variants with no `ApplyFn`, `Value` still 4 arms at `value.rs:52`, the
+`Map`-drop persists at `compiler/node.rs:31`, `Interpreter::new` still allocates 8 sized `Vec`s +
+`Vec::new` + `FxHashMap` at `mod.rs:122-130`, and `FnDescriptor` carries no `HostClosure` on HEAD
+(PROTO-2's variant was a worktree probe, never landed — the central §0 correction still holds).
+parse-that is READ-ONLY (R3 §8 / R4 scratch-copy law).*
 
 4C's role is fixed by the pass architecture and by two prior measured refutations: the VM is
 **not** a fast terminal — it is (a) the **interpret terminal** serving the DAP/LSP/dynamic-grammar

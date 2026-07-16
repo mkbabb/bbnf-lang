@@ -24,7 +24,7 @@ resurrects the campaign from this file alone.
 |-------|------|--------|
 | 0 | Setup: charter §1.5, ROUND-ZERO, state file, heartbeat cron, memory | DONE 2026-07-16 |
 | 1 | RECON: parallel cartography fleet (both repos, harnesses, reusable prototypes, SOTA sweep) → research/R1-R7 | DONE 2026-07-16 (wf_954e831e-a1c, 7/7, 731K tok) |
-| 2 | PROVING: the PROVE-01..14 implementation fleet (worktree/scratch isolated, measured, cp-out) → prototypes/PROVE-XX/ | LAUNCH INTENT 2026-07-16 |
+| 2 | PROVING: the PROVE-01..14 implementation fleet (worktree/scratch isolated, measured, cp-out) → prototypes/PROVE-XX/ | RUNNING wf_386900ed-462 |
 | 3 | VERIFY: adversarial re-measure of every claimed win; unproven dies | BLOCKED ON 2 |
 | 4 | SPEC: the frozen codex (tranches/waves both repos, colocation edict normative, archival last, letter + checkboxes re-cut) + final report | BLOCKED ON 3 |
 
@@ -43,6 +43,8 @@ SVE/SVE2/SME for byte work); JSON grammar has ZERO -> projections (PROVE-08 adds
 direct-to-struct emitter exists but schema is hand-authored (PROVE-08 derives it); all prior
 prototype CODE is wiped — re-author from report inline diffs; PROVE-07 must be the fused
 single-pass sink (fold-over-cursor refuted 2.3-4.9x).
+
+| 2-proving | wf_386900ed-462 | ~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/workflows/scripts/sk-v24-proving-fleet-wf_386900ed-462.js | RUNNING (launched 2026-07-16; 14 provers: 11 worktree + 3 parse-that scratch; 90-min caps) |
 
 Heartbeat cron live: job fc81e24f, hourly at :23, session-scoped.
 

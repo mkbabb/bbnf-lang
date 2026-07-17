@@ -138,6 +138,16 @@ zombies + walls-log entry; if both pass-K workflows DONE and pass-(K+1) unledger
 the stage-6 pass-transition procedure; never duplicate-launch; silent single-line green
 otherwise.
 
+## PAUSE-ON-COMPLETION ORDER (owner, 2026-07-16 ~23:05 ET) — OVERRIDES the pass-transition
+
+When the in-flight runs (bbnf p2 task ws1yrepwk, pt p3 task wefinh05z) BOTH complete: do
+NOT launch pass K+1. Instead: (1) delete the heartbeat cron (b1933bf3); (2) ledger the
+pause per THE PAUSE template above (registry/journal state, exact resume args); (3) commit.
+If a run dies at a wall BEFORE completing, the heartbeat still resurrects it (duty 1 stands);
+only duty 2 (the transition) is suspended. This order lifts only on explicit owner resume;
+on resume, the pending cross-lock cuts + pass transition (bbnf p3 / pt p4, Fable edict live)
+execute per the procedure below.
+
 ## Stage-6 pass-transition procedure (durable — executable by a cold session or the heartbeat)
 
 When BOTH pass-K workflows (groups bbnf + pt) are DONE and no pass-(K+1) run is ledgered:

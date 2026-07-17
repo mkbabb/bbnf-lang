@@ -153,11 +153,18 @@ scanner tiers.
 
 ## 4. F3.3 — the `[u8;256] → SIMD classifier` emit pass, and why naive nibble misclassifies
 
-**The emit pass is the family's core new code and it does not exist yet.** `equiv.rs` produces the
-scalar `([u8;256], num_classes)`; the derivation to a NEON classifier —
-`byte_classes → {shufti lo×hi two-LUT ∨ vqtbl4 lo6-table ∨ vceqq equality fan}` — is the missing
-lowering, homed in LOCK-2's cost model / LOCK-5's emit. The emitted forms already exist as HAND
-kernels to match instruction-for-instruction:
+**The emit pass is the family's core new code and it exists only in embryo.** A `ScannerPlan`
+selector is ALREADY wired: `crates/core/src/generate/regex/emit/scanner_plan.rs:8` imports
+`parse_that::regex::classify::{ClassRangeInfo, RegexClass}` and emits either
+`ScannerPlan::Shared(SharedScanner)` (a hand `parse_that` helper) or `ScannerPlan::Kernel(TokenStream)`
+(an inline backend-kernel call) — the grammar→scanner routing seam is in place, keyed on the
+`RegexClass` taxonomy, and its sibling emit files `emit/dfa/{mod,accel}.rs`, `emit/simd.rs`,
+`byte_class.rs`, `last_byte_set.rs`, `phf.rs`, `cost_model.rs` carry the DFA-emit and selection
+machinery. What is MISSING is the last mile: `equiv.rs` produces the scalar `([u8;256], num_classes)`,
+but the derivation `byte_classes → {shufti lo×hi two-LUT ∨ vqtbl4 lo6-table ∨ vceqq equality fan}`
+is unwritten, and the family's landing is to collapse the `Shared` (hand-scanner) arm into the
+`Kernel` arm driven by that derived class table. The emitted forms already exist as HAND kernels
+to match instruction-for-instruction:
 - shufti / nibble two-LUT — `bbnf-simd/src/aarch64/structural_bitmap.rs` `classify_16` ancestor;
 - lo6 single-table — `bbnf-simd/src/aarch64/classify_tbl4.rs:22` `classify_chunk_from_table`
   (`vqtbl4q_u8(build_lo6_table, low6)` then `structural = (class==chunk) & (class>0)`,
@@ -166,7 +173,17 @@ kernels to match instruction-for-instruction:
 
 The separability selector chooses among these on the partition; the parity oracle is the movemask
 producer `bbnf-simd/src/aarch64/movemask.rs` `movemask_u8x16` (single vshrn-narrow per 16-lane,
-NEVER double-`vaddv` — the standing refutation law).
+NEVER double-`vaddv` — the standing refutation law). **Two live in-tree movemask hazards the emit
+must route around, verified this pass:** (a) `bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs:79-87`
+inlines its OWN `movemask_u8x16` using the **refuted** double-`vaddv_u8(vget_low)` + `vaddv_u8(vget_high)`
+idiom (the exact 2271-vs-509 `addv.8b` counterexample) — a DFA-lowered set-fan classifier must NOT
+call this inline; it must route the OR-reduced mask vectors through `movemask.rs`'s vshrn form; and
+(b) `movemask.rs` itself, while vshrn-based, still carries an 8-iteration scalar pack tail
+(`packed[pair*2]` loop) rather than the pure `vshrn→fmov→ands` the prefilter's certified disasm shows
+— a residual the emit should target, not inherit. (c) The `[u8;256]` table classifier
+`bbnf-simd/src/aarch64/byte_class_from_table_64.rs:2` is presently a **scalar delegate** (`:3` calls
+the scalar impl; the NEON body is unwritten) — the direct `byte_classes`→SIMD lowering has no NEON
+home yet and is the family's first authoring target.
 
 **A naive nibble/lo6-table emit DEMONSTRABLY misclassifies the CSS structural set — the collision
 is exact and airtight.** Take `;` = 0x3B and `{` = 0x7B, both structural:

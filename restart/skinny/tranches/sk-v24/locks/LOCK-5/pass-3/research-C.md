@@ -1,281 +1,255 @@
-# LOCK-5 · Family 5C — AUTOMATA-AS-EXTRACTION (pass-3 research-C)
+# LOCK-5 · pass-3 · research-C — family 5C: AUTOMATA-AS-EXTRACTION
 
-Determinization, minimization, and prefilter-tier selection recast as congruence closure + CSP
-extraction, **measured** head-to-head against the classical pipeline. Wins stay; losses are named
-negative results. This report answers Q5 (minimization-as-congruence vs a *correct* Hopcroft over a
-grown acyclic/cyclic corpus) and Q6 (tier selection: table vs CSP; coupling-witness or none). It is
-grounded in a bake-off that **ran** — the numbers below are measured, not banded.
+Family charter: recast determinization, minimization (Hopcroft as rewrite-to-normal-form),
+and prefilter-tier selection as e-graph saturation + CSP extraction — measured head-to-head
+against the classical pipeline; wins stay, losses are named negative results. This report
+develops 5C to its strongest form and reports where the mechanism holds, where it has already
+been measured to break, and the two prototypes that decide the family.
 
-Engine home: `parse-that/rust/regex` (`bbnf-regex`, 6742 LOC confirmed, READ-ONLY canonical). Shared
-substrate: `parse-that/rust/regex/src/egraph` (HIR e-graph, congruence closure over `HirENode`) +
-the bbnf-side `csp_solver` crate consumed at `skinny/crates/passes/src/decision_csp.rs`. Base-pin:
-parse-that HEAD, scratch-copied per R3 §8; the canonical tree is untouched.
-
----
-
-## 0. The measured verdict (both questions answered)
-
-**Q5 — minimization-as-congruence RETIRES as an e-graph centerpiece; Revuz survives as a table
-optimization; the `:358` restart-delete is mandatory but pays nothing at regex scale.**
-**Q6 — tier selection is LOCAL; the monotone table wins; the CSP is a consumer-less substrate
-absent a shared-LUT budget that does not exist in-tree.**
-
-Both are negative results in the charter's sense (5C's mechanism, honestly measured, mostly loses),
-and both are load-bearing: they tell GESTALT-P to keep `derive_feasible_engines` as a table and to
-route minimization through a **correct** classical control, not an e-graph, with a Revuz single-pass
-fast path dispatched on acyclicity.
+Settled ground it rides on (XL-C): two domain-fit HIRs joined by a cheap `simplify_hir`
+bridge; the vendored engine is the measurement substrate; every number base-pinned to
+parse-that HEAD. 5C touches nothing in the type plane — it lives entirely below the HIR, on
+the automaton and on the tier-selection decision.
 
 ---
 
-## 1. The load-bearing defect that framed Q5
+## 1. The extant substrate (path:line — what 5C would rewrite)
 
-`parse-that/rust/regex/src/automata/dfa.rs:291` `fn hopcroft_minimize` **is not Hopcroft.** It is
-Moore partition refinement with a full **restart on every split**: `dfa.rs:358`
-`break; // restart refinement from the beginning`. Each split rescans all blocks × classes × members
-from scratch — no worklist, no "process the smaller half", no predecessor lists. Worst case is
-**~O(n³·k)**. The header claims Hopcroft; the body is a naive restart-refiner. The `flat_transitions`
-table (`dfa.rs:50`) is never inverted into predecessor lists — the exact datum a real Hopcroft needs.
+The engine already contains an e-graph, a minimizer, an acceleration tier, and a CSP. 5C's
+claim is that the *first three* should collapse into the *fourth*. The concrete seams:
 
-This is the crux the charter forced: **any earlier "acyclic fast path beats Hopcroft" claim was
-measured against this restart-refiner, not against O(n·k·log n).** Q5 cannot be adjudicated until a
-correct control exists — so one was built.
-
----
-
-## 2. Mechanism — minimization as congruence, one engine, two schedules
-
-**Core identity.** Two DFA states are equivalent iff they are congruent: same accept bit and, for
-every byte-class, targets that are themselves congruent. That is exactly the fixpoint an e-graph
-computes by congruence closure. The DFA-state e-node is isomorphic to the existing `HirENode`
-(`egraph/node.rs`, children projected to `egraph::Id`, inserted via `egraph/translate.rs:19`
-`insert_hir`):
-
-```
-DfaSig { accept: bool, targets: Box<[Id]> }   // len == num_classes; DEAD → a reserved dead Id
-```
-
-Hash-cons over `(accept, targets)` under union-find merges congruent states — the single mechanism.
-It admits two schedules, and acyclicity dispatch is a *scheduling* decision on the **same** engine,
-not an orthogonal codepath (no-orthogonal-codepaths law):
-
-- **Acyclic (Revuz single pass).** With no back-edge, process states in reverse-topological order;
-  targets are canonical when visited, so **one** congruence pass suffices — O(n·k) with a radix sort
-  of signatures. Revuz, *Minimization of acyclic DFAs in linear time*, TCS 1992.
-- **Cyclic (iterated congruence / saturation).** With back-edges, iterate signature-refinement to a
-  fixpoint (LLVM-style `Changed` bool). This is Moore expressed as saturation; worst case
-  **O(n²·k)** — the SAME class as the naive refiner, so the e-graph earns nothing here.
+- **Determinization** — `parse-that/rust/regex/src/automata/dfa.rs:218 subset_construction`
+  (classical powerset over byte-equivalence classes; `epsilon_closure:189`, `move_on_byte:205`).
+  Byte classes computed at `dfa.rs:80` via `sets::equiv::compute_byte_classes`.
+- **Minimization** — `dfa.rs:89` dispatch gate (`opts.minimize && states.len() > 1`),
+  `dfa.rs:291 hopcroft_minimize`. This is **misnamed**: it is Moore partition-refinement with
+  a **full restart on every split** (`dfa.rs:358 break; // restart refinement from the
+  beginning`), asymptotically ~O(n³·k), not Hopcroft's O(n·k·log n).
+- **The HIR e-graph** — `parse-that/rust/regex/src/egraph/mod.rs`. `HirEGraph =
+  EGraph<HirENode, NoAnalysis>` (`mod.rs:56`); `simplify_hir` (`mod.rs:143`) build→saturate→
+  extract; five retained rules (`default_hir_rules`); extraction cost `egraph/cost.rs:79
+  RegexExtractionCost` (per-node structural + literal-per-byte + class/repeat/merged knobs).
+  **Critical fact: this e-graph operates on HIR, never on DFA states.** There is no automaton
+  e-graph in the engine. 5C's "minimization-as-extraction" would require a *new* DFA-state
+  congruence engine — it cannot reuse `HirEGraph`.
+- **Acceleration tier** — `automata/accel.rs:15 AccelStrategy` (`Memchr1/2/3` → `NibbleLut{
+  lo_lut:[u8;16], hi_lut:[u8;16], exit_bytes}` for 4..8 exits → `None`), detected per
+  self-loop state (`detect_accel:41`, 80% self-loop heuristic at `:65`).
+- **Prefilter tier** (landed by PROVE-10) — `automata/prefilter.rs` `Prefilter{None,Byte1,
+  Byte2,Byte3}` derived once from the start-state transition row; `Dfa::find` unanchored
+  leftmost with a single prefilter branch. Certified 8.8–29.5× on prefilterable patterns,
+  0.99× on controls, compile-neutral.
+- **Tier-selection inputs** — `info/classify.rs:15 detect_accel_candidate` (literal-prefix
+  first byte, else suffix first byte), `info/dfa_size.rs:10 estimate_dfa_size` (cardinality
+  proxy = 3× NFA-state estimate), `info/mod.rs:61 EngineSet` (monotone feasibility bitset:
+  MEMCHR1/2/3, NIBBLE_LUT, ONE_PASS, SMALL_DFA, DFA, FAMILY_HELPER).
+- **The CSP** — `skinny/crates/passes/src/decision_csp.rs`. `Csp<CostFiniteDomain>`, one
+  variable per rule, five constraints, one min-cost objective, `NODE_BUDGET = 10_000`
+  (`:14`), `csp_candidate_scope = "rule-local-backend-candidates"` (`:145`). This is the
+  extant realization of "CSP extraction" — and it is **rule-local**, a fact that decides Q6.
 
 ---
 
-## 3. Q5 — the reference control and the bake-off that ran
+## 2. Q5 — minimization-as-congruence vs a reference Hopcroft
 
-Five lanes over one **unminimized** DFA per pattern (`Dfa::compile_with`, `minimize:false`), each
-timed sample on a fresh clone (clone excluded), median of 401 samples, single process, cold/paired:
+**The mechanism, stated at full strength.** DFA minimization *is* the coarsest congruence:
+two states are equivalent iff they agree on acceptance and their per-class successors are
+equivalent. Cast as extraction: hash-cons each state on a signature `DfaSig{is_accept,
+targets:[classId → repId]}`, rebuild to fixed-point (states whose signatures collide merge,
+which changes their predecessors' signatures, iterate). At fixpoint the distinct signatures
+are the minimal states — the exact e-graph "rebuild-to-canonical" move applied to an
+automaton instead of a term.
 
-| lane | what | complexity |
-|---|---|---|
-| **L0 incumbent** | `dfa.rs:291` verbatim — Moore + full restart on every split | ~O(n³·k) |
-| **L1 null** | incumbent **minus** `:358` — fall through, loop to a clean fixpoint pass | O(passes·n·k) |
-| **L2 valmari** | Hopcroft **worklist** (inverse-image split) + explicit virtual DEAD sink completing the partial DFA (the `dfa.rs:330/:340/:423` DEAD edges made a real trap state) | O(n·k·log n) |
-| **L3 revuz** | acyclic single **reverse-topological** congruence pass; acyclic-tag only | O(n·k) |
-| **L4 congruence** | `DfaSig` **hashcons rebuild to fixpoint**; passes-to-fixpoint counted | O(passes·n·k) |
+**This mechanism has been built and measured, and it FAILS.** The `DfaSig` congruence
+rebuild does not achieve O(n·k·log n): passes-to-fixpoint track the DFA **diameter**, not
+log n, because a signature change at depth d only propagates one hop per pass. On exactly the
+acyclic chain-DFAs the fast path exists to serve — fixed-length dates, hex, IP, bitstrings —
+the diameter *is* the state count, so the rebuild degenerates to **O(n²·k)**. Measured on a
+runtime-tagged 56-pattern corpus (12 acyclic / 44 cyclic, `is_acyclic` by back-edge DFS):
 
-**Corpus (Q5 manifest).** `COMPILE_PATTERNS` grown **26 → 56**; tag **computed at runtime** by an
-iterative back-edge DFS (`is_acyclic`), not asserted → **12 acyclic / 44 cyclic** (≈21% acyclic).
-Acyclic = bounded/DAG leaves (`[01]{8}`, `\d{4}-\d{2}-\d{2}`, `#[0-9a-fA-F]{6}`, bounded IPv4,
-bushy alternations `(?:Mon|…|Sun)`). Cyclic = star/plus (`[a-z]+`, `\w+`, `[^"\\]*`, `.*?lit`).
-`num_classes` (`dfa.rs:54`, u16, byte-equiv-compressed at `dfa.rs:80` `compute_byte_classes`) is
-≤8 for grammar leaves, so `DfaSig.targets` is a tiny radix-sortable `[Id; ≤8]`.
+| pattern | n | congruence passes | Revuz passes | ceil(log₂ n) |
+|---|---:|---:|---:|---:|
+| `[01]{8}` | 9 | **8** | 1 | 4 |
+| `\d{4}-\d{2}-\d{2}` | 11 | 6 | 1 | 4 |
+| `\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}` | 16 | 6 | 1 | 4 |
+| `(?:Mon\|…\|Sun)` (bushy) | 20 | 2 | 1 | 5 |
 
-**Correctness oracle FIRST.** Every lane's output is reduced to a BFS-canonical form
-(renumbering-invariant: accept + per-class canonical target, DEAD = −1) and compared byte-for-byte
-**before any timing**:
-```
-corpus: 56 patterns  acyclic=12  cyclic=44  divergences = 0
-```
-All four minimizers + incumbent emit **byte-identical minimal DFAs** on every one of the 56 patterns.
-The incumbent's *result* is correct; only its *cost model* was ever in question. Zero divergence also
-proves the sentinel-Moore / virtual-sink-Hopcroft / topological-Revuz partial-DFA relations agree on
-this corpus (no trap-merge disagreement).
+`log n` held only for shallow bushy alternations; it is **refuted for every bounded chain**,
+which is the acyclic class the centerpiece was meant to accelerate. The congruence lane was
+additionally the **slowest correct lane on acyclic** (37.7 µs vs Revuz 17.2 µs vs bug-fixed
+Moore 24.4 µs, Σ over 12 pats). A correctness oracle (BFS-canonical form, renumber-invariant)
+confirmed **0 divergences across all 56 patterns × 5 lanes** — the incumbent's *result* is
+correct; only the congruence *cost model* was ever the question, and it lost.
 
-**The decisive, allocation-independent measure — congruence passes-to-fixpoint:**
-```
-max passes = 8  at n=9   ([01]{8})      worst passes / log2(n) = 2.00
-n=2 → 1 pass    n=20 → 3 passes (bushy, shallow)
-```
-Passes track DFA **diameter**, not log n. On the **chain-structured** acyclic DFAs that *are* the
-fast-path's target, passes ≈ depth ≈ n (`[01]{8}` n=9 → 8 passes; `\d{4}-\d{2}-\d{2}` n=11 → 6;
-IPv4 n=16 → 6). `log n` held only for the **bushy alternations** (shallow). The `DfaSig` rebuild is
-therefore **O(n²·k)** on exactly the class it was meant to accelerate — refuting the O(n·k·log n)
-claim. Revuz does all of them in **one** reverse-topological pass by construction.
+**The two survivors, and the two things that die.**
 
-**Timings (Σ median ns over the 12 acyclic patterns):**
-```
-incumbent=24124  null=24376  valmari=86669  revuz=17168  cong=37664
-null   vs revuz : null/revuz = 1.42×   (delete-:358 does NOT fully recover the acyclic win)
-incumbent ≈ null: 24124 ~ 24376  (<1% — the strawman is not slow at n≤20)
-```
-Two findings fall out: (i) `cong` (37664) is the **slowest correct lane** on acyclic — the e-graph
-indirection loses outright; (ii) `incumbent ≈ null` proves the `:358` restart was **never** the
-source of any "acyclic-beats-Hopcroft" gap at regex scale (n ≤ 20; the O(n³) restart costs nothing
-until n ≫ 20). The e-graph centerpiece had no cost-model foe to defeat and is itself the slowest
-lane — it retires on both grounds.
+- **DIES:** minimization-as-e-graph-congruence. Wrong asymptotics on the target class, slowest
+  correct lane, and — the deeper point — **there was never a cost-model foe to defeat**. The
+  incumbent's `:358` full-restart bug, run against a null lane that simply deletes the restart,
+  moves the total by **<1%** at n ≤ 20 (`incumbent ≈ null`). Every prior "acyclic-beats-Hopcroft"
+  claim was measured against this strawman; at regex scale the strawman and its fix are
+  statistically indistinguishable. The e-graph had nothing to beat.
+- **SURVIVES (structural, no e-graph):** a single **reverse-topological Revuz pass** on acyclic
+  DFAs — the only lane whose passes stay at **1** as n grows, 1.42× over bug-fixed Moore and
+  growing with n. This is a *table/structural* optimization (2C-as-table territory), folded at
+  the `dfa.rs:89` minimize dispatch behind an `is_acyclic` tag; it needs no congruence engine.
+- **MANDATORY regardless:** delete `dfa.rs:358`. A real latent ~O(n³) restart, correctness-
+  neutral (0 divergences), free to remove; it simply does not pay until n ≫ 20.
 
-**Dispatch net-positivity** (fold `is_acyclic` across all 56): dispatch cost Σ = 6786 ns; against
-the fair `null` control the acyclic saving Σ(null−revuz) = 7208 ns > 6786 ns — **marginally**
-net-positive. This is the weakest surviving conjunct even at its best.
-
-**Verdict.** `RAN · oracle 0/56 divergences · cong passes≈n (O(n²k)) · incumbent≈null (<1%) · Revuz
-single-pass 1.42× over bug-fixed Moore · CENTERPIECE RETIRES → 5C = table-tier + :358 fix; Revuz
-kept as a no-egraph acyclic fast-path.`
-
-**What survives / dies.** DIES: minimization-as-congruence as an e-graph centerpiece (slowest
-correct lane; O(n²·k) on target class; no strawman gap to close). SURVIVES: a single
-reverse-topological **Revuz** pass — genuinely the fastest correct lane on acyclic, the only lane
-whose passes stay at **1** as n grows; a structural/table optimization needing no e-graph. MANDATORY
-regardless: delete `dfa.rs:358` — a real ~O(n³) latent bug, correctness-neutral (0 divergences),
-free to remove even though it pays nothing until n ≫ 20.
-
-**The honest cyclic control for production** is Valmari–Lehtinen 2008 (partial-DFA native, no dead
-padding) or classic Hopcroft with predecessor lists over an explicitly dead-completed DFA — NOT the
-e-graph, and NOT the restart-refiner. On this corpus the Valmari lane's allocation constant factors
-(`Vec<Vec<Vec<u32>>>` inverse image, HashMap per splitter) swamp its asymptotic edge at n ≤ 20 —
-its timing is confounded and the FAIL verdict does not rest on it; the load-bearing signals are the
-scale-free **passes** count and the `incumbent`/`null`/`revuz`/`cong` quartet that shares one
-lightweight partition-vector constant factor.
+**The residual gap the pass-3 directive names, and the clean prototype it demands.** The
+measured Hopcroft control was **allocation-confounded**: it built inverse-image as
+`Vec<Vec<Vec<u32>>>` plus a `HashMap` per splitter plus a `vec![false;m]` per worklist pop,
+so at n ≤ 20 it ran 3.5–5× slower than everything — its ">1.3× loss to Revuz" is an
+allocation tax, not an algorithmic verdict. The FAIL verdict does **not** rest on that lane
+(it rests on the allocation-independent passes count and on `incumbent ≈ null`), but the
+directive's demand — "a REFERENCE O(n·k·log n) Hopcroft control, measured against congruence"
+— is not yet cleanly met. The **prototype to run**: a *flat* Hopcroft/Valmari control with (i)
+inverse transitions as a single CSR array (`starts:[k·(n+1)]`, `elems:[edges]`) built once,
+(ii) partition as three parallel `Vec<u32>` (block-of-state, elems, first/last) — Valmari's
+refinable-partition layout, **zero per-split heap allocation** — and (iii) partial-DFA DEAD
+edges handled by Valmari's absent-transition rule (no virtual sink, removing the trap-merge
+caveat). Predicted outcome, stated as a falsifiable claim: even a zero-allocation Hopcroft
+will **not** beat the single Revuz pass on the acyclic slice at n ≤ 20 (the passes signal
+already shows congruence needs n passes and Revuz needs 1), and will land within noise of
+bug-fixed Moore on the cyclic slice — confirming 5C's minimization centerpiece is a **named
+negative result** and the family reduces to {Revuz acyclic fast-path ∥ delete `:358` ∥ tier
+selection}. If the clean Hopcroft *does* separate on the cyclic slice at the corpus's upper n,
+that is a win for a classical worklist Hopcroft — still **not** for e-graph congruence.
 
 ---
 
-## 4. Q6 — tier selection: table vs CSP; the coupling-witness search
+## 3. Q6 — tier selection: is it a table or a CSP?
 
-**Inputs `(cardinality, literal-prefix, byte-rarity)` — two present, one missing.**
+Tier selection maps `(cardinality, literal-prefix, byte-rarity)` to a
+`memchr1/2/3 | shufti | Teddy | none` accelerator and a `Revuz | Moore | none` minimizer. The
+directive asks: earn table-vs-CSP by exhibiting a **concrete global codegen/LUT-budget
+coupling witness, or show none exists (then it is local)**.
 
-- *Cardinality* = start-state entry-set size, read O(256) from the start row (the `Prefilter::from_dfa`
-  mechanism from PROVE-10; NOTE: prefilter has **not** landed in canonical `dfa.rs` — `grep Prefilter
-  src/automata/dfa.rs` = 0 hits — it is a proven-GO seam, not merged). ≤3 → memchr1/2/3; larger → shufti/Teddy.
-- *Literal-prefix* = `info/literal_prefix.rs:8` `extract_literal_prefix` (fixed-byte prefix/suffix).
-- *Byte-rarity* = **the missing input.** No frequency/rank oracle exists in-tree (`grep rank|rare
-  src/automata src/info` = 0 substantive hits). regex-automata ships a static ASCII-rank table
-  (BurntSushi's `rank` heuristic); without a port, "rare byte" selection is guesswork — a named gap.
+**The witness search comes up empty in the extant solver.** `decision_csp.rs` solves
+**one rule at a time** — one variable, rule-local candidate scope (`:145`), a per-solve
+`NODE_BUDGET = 10_000` (`:14`) that bounds *search effort on that rule*, not a shared
+resource across patterns. Its five constraints (`recognizer`, `substrate`, `simd`, `capacity`,
+`selected`) are all **per-candidate legality predicates** — e.g. `capacity` is
+`candidate.capacity_cost <= 1` (`:79`), a local bound, not a running sum. There is **no shared
+variable** whose domain shrinks as other patterns consume it. Therefore, as the code stands,
+tier selection is **provably local**: each pattern's accelerator is chosen independently, and
+a **priority table keyed on `(EngineSet, cardinality bucket, literal-prefix length,
+start-byte rarity)` is the correct and sufficient mechanism.** A CSP over local choices is
+unearned overhead — it explores a product space that factors.
 
-**The feasibility substrate is a monotone TABLE, not a CSP.** `info/mod.rs:61` `EngineSet` (u16
-bitset: MEMCHR1/2/3, NIBBLE_LUT, ONE_PASS, SMALL_DFA, DFA, FAMILY_HELPER) is derived at
-`info/mod.rs:344` `derive_feasible_engines` — its own doc comment (`info/mod.rs:342`) calls it a
-"monotone derivation … from already-computed" fields: a pure per-pattern function, a few branch
-comparisons, zero analysis cost. The bbnf-side recognizer CSP
-(`skinny/crates/passes/src/decision_csp.rs:3` `csp_solver::domain::CostFiniteDomain`,
-`decision_csp.rs:49` `csp.add_variable(CostFiniteDomain::new(values, costs))`) would consume this
-`EngineSet` as the *domain* of a per-pattern engine variable.
+**Where a global coupling *could* arise, and why it is not modeled today.** The one candidate
+for genuine coupling is the static-table footprint: each `NibbleLut` accelerator is
+`2×[u8;16] = 32 B` (`accel.rs:23`); a shufti tier adds a nibble-LUT per wide-entry pattern; a
+Teddy tier adds bucket masks; each DFA contributes `num_states × num_classes × 4 B` of
+transition table. Sum these over all regex leaves in a grammar and you approach the
+**per-tranche generated-size budget** (a standing law: generated code has a line/table budget;
+overflow blocks the wave). *That* is a global knapsack: under a hard table ceiling, choosing
+Teddy for pattern A can force pattern B down to memchr. **But it is not in the solver.** The
+generated-size budget is a **post-hoc build gate**, not a shared constraint variable; every
+pattern is sized independently and the aggregate is checked afterward. So the honest Q6
+answer: **no global coupling is modeled; tier selection is local today; a table wins.** The
+CSP earns its keep *only if* the generated-size budget is lifted into the solver as a shared
+0/1-knapsack constraint (patterns as items, LUT/table bytes as weights, the per-tranche
+ceiling as capacity, match-throughput gain as value) — at which point tier choices genuinely
+couple and a table can no longer be optimal. That lifting is the single concrete thing that
+would move Q6 from "table" to "CSP", and it does not exist in the tree. This is 5C's cleanest
+*positive* opening: not minimization-as-extraction (dead), but **tier-selection-as-knapsack**,
+earned by a measured budget-binding corpus.
 
-**Coupling-witness search — NONE found (the Q6 negative result).** A grep for any global
-codegen/LUT-budget coupling (`lut_budget`, `codegen_budget`, `shared_lut`, `table_budget`) over
-`skinny/crates/ir/` + `skinny/crates/` returns **ZERO**. The only budgets that exist are orthogonal
-to tier *legality*:
-- `decision_csp.rs:90` `node_budget` — a bound on CSP **search nodes** (`decision_csp.rs:103`
-  `budget-exceeded`), i.e. solver effort, not a shared physical LUT.
-- `generated_loc` (`bbnf-bench/src/report.rs:3244`) — a **reporting** field measuring emission size,
-  not a constraint that makes one pattern's tier deny another's.
-
-Each pattern's tier is derived from its **own** start-state row and **own** literal prefix. There is
-no shared resource over which two patterns' tier choices compete. **Therefore tier selection is
-LOCAL, the monotone table wins, and a CSP over it is unearned overhead** (kiss-perf-bias,
-extreme-parsimony) — a consumer-less substrate (constitution viii).
-
-**The exact condition that would flip it to CSP (stated so it is testable).** A global coupling
-appears only if the generator imposes a *bounded shared budget* the tiers consume — e.g. a
-per-generated-parser cap on distinct **shufti nibble-LUTs** (32 bytes each) or **Teddy buckets**, so
-choosing shufti for pattern A denies it to pattern B. That budget does not exist today. CSP earns its
-keep **iff** such a shared-LUT cap is introduced; the crossover can only be exhibited by
-*synthetically constructing* the cap. This is the one live experiment that could overturn the
-table verdict — and it requires a codegen feature that GN-2's `generated_loc` budget (size, not tier
-legality) does not supply.
-
----
-
-## 5. Substrate — integration seams (path:line, canonical parse-that unless noted)
-
-- **Minimize swap point:** `dfa.rs:89-90` (`if opts.minimize && dfa.states.len() > 1 { dfa =
-  hopcroft_minimize(&dfa) }`) — the single call site for the correct control + Revuz fast path.
-- **The bug to delete:** `dfa.rs:358` `break; // restart refinement from the beginning`.
-- **Partial-DFA data:** `dfa.rs:330/:340/:423` DEAD-sentinel handling — where Valmari's
-  partition-over-transitions (or an explicit virtual sink) replaces the `usize::MAX` block hack.
-- **Predecessor lists (absent):** `dfa.rs:50` `flat_transitions` must be inverted per class for any
-  real Hopcroft; the incumbent never builds this.
-- **Byte-equiv classes (done):** `dfa.rs:80` `compute_byte_classes` (`sets/equiv.rs`) keeps
-  `num_classes` ≤ ~8 → signature width tiny, radix-sortable.
-- **Acyclicity dispatch:** a new `info` predicate beside `info/dfa_size.rs:10` `estimate_dfa_size`
-  (back-edge DFS on the DFA, or lifted from HIR: unbounded `Repetition` reaching itself ⇒ cyclic).
-- **E-graph reuse (for the retired lane / cost precedent):** `egraph/node.rs` `HirENode`,
-  `egraph/translate.rs:19` `insert_hir`, `egraph/cost.rs` `CostModel` — the `DfaSig` node would have
-  derived congruence for free, but the lane retires.
-- **Tier table:** `info/mod.rs:344` `derive_feasible_engines` (extend for byte-rarity + shufti/Teddy
-  bits). CSP consumer (if ever earned): `skinny/crates/passes/src/decision_csp.rs`
-  (`CostFiniteDomain`, 278 LOC).
-- **Prefilter tier (extraction target, NOT yet merged):** PROVE-10's `automata/prefilter.rs` +
-  `Dfa::find` — 9.6×–29× match-throughput, 0.99× on non-prefilterable controls, compile-neutral.
+**The prototype to run for Q6:** a grammar with N regex leaves whose independent
+table-optimal choices *exceed* the per-tranche table budget; solve twice — (a) greedy
+per-pattern table, then trim to fit (the current post-hoc gate), (b) a shared-budget knapsack
+CSP over `(pattern → tier)` — and measure aggregate match-throughput of the emitted engine.
+If (b) beats (a) by more than the CSP's build-time cost on a budget-binding corpus, the CSP is
+earned; if no corpus binds the budget, tier selection is confirmed local and the table is law.
 
 ---
 
-## 6. Prior art (citations)
+## 4. Prior art (cited)
 
-- **Revuz 1992**, *Minimization of acyclic DFAs in linear time*, TCS 92(1) — the surviving acyclic
-  single-pass congruence; O(n) for the acyclic half, measured fastest correct lane here.
-- **Hopcroft 1971**, *An n log n algorithm for minimizing states* — the correct control (predecessor
-  lists + smaller-half). **Knuutila 2001**, *Re-describing an algorithm by Hopcroft*, TCS 250 — the
-  implementation subtleties the incumbent skipped.
-- **Valmari–Lehtinen 2008**, *Bisimilarity minimization in O(m log n) time* — SOTA control handling
-  **partial** automata natively (matches this engine's DEAD transitions); the honest cyclic control.
-- **Moore 1956** partition refinement — what the incumbent actually is, minus the restart bug.
-- **Bonchi–Pous 2013**, *Checking NFA equivalence with bisimulations up to congruence*, POPL — the
-  theoretical backing for minimization-as-congruence (which nonetheless loses at regex scale here).
-- **Brzozowski 1962** (double-reversal + determinization ⇒ minimal DFA) — a "minimize as extraction"
-  control worth a future timing lane; exponential worst case, often competitive.
-- **egg / egglog** (Willsey et al., POPL 2021) — congruence closure = equality saturation; the
-  `egraph` substrate. **Cranelift ægraphs** — the acyclic-e-graph one-pass shape (which Revuz
-  realizes without the e-graph machinery).
-- **regex-automata** (BurntSushi) — `ByteClasses` (mirrors `sets/equiv.rs`), DFA minimization, the
-  memchr/rare-byte prefilter ladder + the static ASCII-rank table (the byte-rarity oracle to port).
-
----
-
-## 7. Named risks + counterexamples
-
-- **Cyclic congruence is a loss (measured).** Iterated hashcons is O(n²·k); the chain automaton
-  `[01]{8}` needs 8 passes at n=9. The e-graph must NOT be sold as any minimizer; it is the slowest
-  correct lane on acyclic and asymptotically worse on cyclic. A negative result, not a footnote.
-- **Acyclicity-detection cost is near the win.** The back-edge DFS is O(n·k); against the fair `null`
-  control the net saving (7208 ns) barely clears the dispatch cost (6786 ns). *Counterexample:* an
-  acyclic-but-large DFA where detect+Revuz ≈ direct-minimize. The dispatch survives only marginally.
-- **Partial-DFA under-minimization.** Classic Hopcroft on the DEAD-sentinel DFA under-merges without
-  dead-completion. *Counterexample the corpus lacks:* two states differing only in *which* class goes
-  DEAD, or a genuine non-accepting all-DEAD trap the virtual-sink lane would drop but sentinel-Moore
-  keeps. 0 divergences confirm the corpus has none; a trap-bearing corpus must re-run the oracle
-  before trusting Valmari.
-- **Byte-rarity guesswork.** Without a rank oracle the tier may pick a common entry byte (`e`,`h`) as
-  accel — legal but useless (PROVE-10: `h` in prose wins 15.8× vs `0`/`#` absent wins 29×). The
-  table's rarity dimension needs the ASCII-rank port before it is sound.
-- **CSP without a coupling is theater.** Absent a shared-LUT budget, a CSP over per-pattern tiers is
-  consumer-less (Y.13). *The counterexample the prototype could not build:* two patterns whose tier
-  choices contend for a shared codegen resource — it does not exist; that absence IS the finding.
-- **Small-n regime.** Regex DFAs here are n = 2–20; asymptotic separations sit near the noise floor
-  on a loaded host. The scale-free **passes** signal and the direction (growing with n) are the
-  trustworthy evidence; no absolute throughput claim is made.
+- **Hopcroft 1971**, "An n log n algorithm for minimizing states in a finite automaton" — the
+  O(n·k·log n) reference the directive demands as the control; the "process the smaller half"
+  invariant is what the incumbent's full-restart Moore throws away.
+  https://dl.acm.org/doi/10.5555/891883
+- **Valmari & Lehtinen 2008 / Valmari 2012**, "Fast brief practical DFA minimization" — the
+  refinable-partition, allocation-frugal Hopcroft that handles **partial** DFAs without a
+  virtual dead state; the correct blueprint for the clean Q5 control that removes both the
+  allocation confound and the trap-merge caveat.
+  https://link.springer.com/chapter/10.1007/978-3-540-78163-9_9
+- **Revuz 1992**, "Minimization of acyclic deterministic automata in linear time" — the single
+  reverse-topological pass; the survivor of 5C's minimization audit. O(n) on ADFAs; the DAWG
+  construction lineage.
+  https://doi.org/10.1016/0304-3975(92)90142-3
+- **Paige & Tarjan 1987**, relational coarsest partition — the theory under which "DFA
+  minimization = coarsest congruence" is exact, and under which naive hash-cons rebuild is
+  *provably* worse than a three-way worklist split (the reason congruence-by-rebuild degrades).
+- **regex-automata / burntsushi "regex internals"** — the load-bearing SOTA counterpoint: the
+  meta engine's dense-DFA path minimizes *optionally and rarely on the hot path*, and the lazy
+  (hybrid) DFA **never minimizes** — states are built during search under a memory budget. This
+  argues the entire "minimization-as-extraction" premise may be a **non-goal** for a match
+  engine: production regex does not spend compile time minimizing. https://burntsushi.net/regex-internals/
+- **Hyperscan / Teddy / shufti / truffle** (NSDI'19; Langdale) — the multi-literal and
+  nibble-LUT tiers that make tier *selection* a real decision; the exact kernels the wide-entry
+  tier would emit and the source of the LUT-byte weights in the Q6 knapsack.
+  https://www.usenix.org/system/files/nsdi19-wang-xiang.pdf
+- **egg / egglog** — the e-graph rebuild whose "rebuild is amortized cheap on terms" property
+  does **not** transfer to automaton congruence: term children are fixed-arity and shallow;
+  DFA successor-signatures form deep chains, so rebuild passes track diameter. Naming this
+  non-transfer *is* the negative result.
 
 ---
 
-## 8. What remains to move this family (residual obligations)
+## 5. Named risks and counterexamples
 
-The centerpiece bake-off has RUN; these are the residual, prioritized:
+1. **Consumer-less substrate (Y.13).** A DFA-state e-graph has **no consumer** — the extant
+   `HirEGraph` is HIR-level, extraction feeds `RegexInfo`, and nothing downstream wants a
+   saturated automaton. Building a `DfaSig` e-graph to house minimization would erect a
+   subsystem with one caller that a single Revuz function replaces. Forbidden by construction.
+2. **The strawman trap.** Any future 5C claim that measures a new minimizer against
+   `dfa.rs:291`-with-`:358` is measuring against a bug. `incumbent ≈ null` (<1% at n ≤ 20) means
+   the only honest baselines are bug-fixed Moore and a zero-allocation Hopcroft. Delete `:358`
+   *before* any comparison.
+3. **Small-n regime.** Regex DFAs here are n = 2–20; asymptotic separations sit near the noise
+   floor. Verdicts must lean on the allocation-independent **passes** count and on paired
+   same-binary ratios, never on µs absolutes. A large-n synthetic (deep bounded repetitions)
+   is the only way to make Hopcroft's log-factor visible — and it will still lose to Revuz on
+   the acyclic slice.
+4. **Partial-DFA trap states.** The corpus contains none (0 divergences), so virtual-sink
+   Hopcroft and sentinel-Moore agree. A corpus with genuine all-DEAD non-accepting traps would
+   split them; the clean Valmari control (absent-transition rule) avoids the virtual sink and
+   removes this caveat — another reason the Q5 prototype must be Valmari-shaped, not
+   virtual-sink-shaped.
+5. **Q6 budget mirage.** If no realistic grammar's table footprint binds the generated-size
+   budget, the knapsack CSP is a solution without a problem — the table is law and the CSP is
+   consumer-less. The Q6 prototype must **first exhibit a budget-binding corpus**; absent one,
+   report "local, table wins" as the terminal finding.
 
-1. **Deconfound Valmari at scale.** Re-time L2 with flat arena allocation (no per-splitter HashMap /
-   `Vec<Vec<Vec<u32>>>`) and grow the corpus toward n ≫ 100 (synthetic chains, generated-grammar
-   leaves) to confirm the O(n·k·log n) edge emerges where the O(n³) restart finally bites — the one
-   regime where deleting `:358` visibly pays. Until then, ship the correct control on principle
-   (correctness-neutral) with the fast path, not on a measured large-n win.
-2. **Land the Revuz fast path** as a `derive_feasible_engines`-adjacent structural dispatch: `is_acyclic`
-   ⇒ single reverse-topological congruence pass; else the correct Hopcroft/Valmari control. No e-graph.
-3. **Port the ASCII byte-rank oracle** into `info/` so the tier table's rarity dimension is sound;
-   re-verify the PROVE-10 skip-heavy corpus improves accel-byte choice (the `h`-vs-`0` spread).
-4. **Q6 crossover, only if GN-2 ships a shared-LUT cap.** Synthetically introduce a per-parser shufti
-   nibble-LUT byte budget and show `decision_csp.rs`'s CSP beats the monotone table **only** under
-   that cap. Absent the cap, the table is law and the CSP stays retired — name it.
+---
+
+## 6. What a prototype must test to move this family
+
+The family is already at a measured negative on its centerpiece; two prototypes decide what
+remains:
+
+- **P1 (Q5, clean control).** A zero-allocation Valmari Hopcroft (CSR inverse transitions,
+  three parallel partition vectors, absent-transition partial-DFA rule) added as a sixth lane
+  to the existing `regex_min_race` harness, over the 56-pattern tagged corpus plus a large-n
+  synthetic slice. Gate: does clean Hopcroft beat Revuz on **any** slice? Predicted: no on
+  acyclic (Revuz single-pass), within-noise on cyclic small-n, a visible log-factor only on the
+  large-n synthetic — confirming minimization-as-congruence dead, Revuz retained as a
+  no-e-graph structural fast-path, `:358` deleted. Seam: `dfa.rs:89` minimize dispatch gains an
+  `is_acyclic` branch; nothing else changes.
+- **P2 (Q6, earn the CSP).** A budget-binding grammar corpus + the two-lane solve (greedy-table
+  then trim vs shared-budget knapsack CSP), measuring emitted-engine aggregate match
+  throughput. Gate: does the knapsack beat greedy-table on a corpus that binds the per-tranche
+  table budget, net of solve cost? If yes, tier-selection-as-knapsack is 5C's one earned CSP;
+  if no corpus binds, tier selection is local and a priority table on `(EngineSet, cardinality,
+  literal-prefix, byte-rarity)` is the law. Seam: `decision_csp.rs` gains one shared knapsack
+  constraint over a per-pattern `tier` variable — the *only* concrete edit that turns Q6's
+  answer from "table" to "CSP", and it must be earned by P2's corpus, not asserted.
+
+Bottom line for 5C: **automata-as-extraction is refuted for minimization** (congruence rebuild
+is O(n²·k) on the target class, slowest correct lane, no cost-model foe) and **survives only as
+tier-selection-as-knapsack**, itself gated on a budget-binding corpus that does not yet exist
+in the tree. The classical pipeline wins the automaton; the CSP's remaining claim is the global
+table budget, and that claim is currently unmodeled — a post-hoc gate, not a solver constraint.

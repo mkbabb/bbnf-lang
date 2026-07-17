@@ -1,181 +1,195 @@
-# LOCK-5 pass-3 — Family 5B: THE LAWFUL FUNCTOR (hardening the two-type bridge)
+# LOCK-5 pass-3 — Family 5B: THE LAWFUL FUNCTOR
 
-Settled ground (XL-C): grammar tier keeps the regex leaf opaque; the engine tier keeps a rich
-`Hir` grown with `Class`/`Look`; a cheap string bridge reusing the engine's `simplify_hir` joins
-them. This pass HARDENS that substrate with run-read evidence, not re-argument. The headline is a
-**substrate/settled-ground divergence**: the MEASUREMENT SUBSTRATE's bridge does NOT reuse
-`simplify_hir` or the rich `Hir` at all — it is a 322-LOC nominal string-matcher on three
-hard-coded JSON patterns. The lawful functor's job here is to delete that nominal duplicate and
-route the substrate through the engine's structural passes. Two concrete counterexamples (a phantom
-`Look` leaf with no automata consumer; the nominal classifier that breaks off-JSON) are proved from
-source below.
+Settled ground (XL-C): two domain-fit types — grammar tier keeps `Regex(StringId)` opaque, engine
+tier keeps a rich `Hir` grown with `Class`/`Look`, joined by a cheap bridge reusing the engine's
+`simplify_hir`. This pass hardens that bridge with a per-arm dispatch census read from HEAD source,
+routes the leaf through real HM, pins the `->` representation that governs projection soundness, and
+names the exact assertions a prototype must fire. All measurements are structural counts from HEAD;
+throughput/fire-count numbers are named as prototype obligations, un-run.
 
-## The three regex homes, base-pinned to HEAD
+## Q1 — Per-pass dispatch census (read, not estimated)
 
-- **Canonical engine** — `parse-that/rust/regex` (READ-ONLY). Rich `Hir` already carries
-  `Class(CharClass)` + `Look(Look)` (`hir/mod.rs:216-233`, `Look` 6 variants `:172-185`). Pass files
-  and Class/Look arm census (Q1 evidence, exact `wc -l` + `grep -c`):
-  | Pass file | LOC | `Class` arms | `Look` arms |
-  |---|---|---|---|
-  | `classify.rs` | 1148 | 64 | 0 |
-  | `first.rs` (FIRST-sets) | 158 | 6 | 2 |
-  | `info/classify.rs` | 153 | 10 | 3 |
-  | `info/mod.rs` / `one_pass.rs` / `width.rs` | 412 / 72 / 133 | — | — |
-  | `automata/nfa.rs` (`from_hir`,`build_class`,`build_look`) | 449 | 5 | 11 |
-  | `automata/dfa.rs` | 438 | — | — |
-  | `egraph/translate.rs` (`insert_hir`/`extract_hir`) | 132 | 2 | 2 |
-  | `egraph/cost.rs` / `node.rs` | 102 / 73 | 1 / 1 | 1 / 1 |
-  | `egraph/mod.rs` (`simplify_hir`, `needs_saturation`) | 200 | 1 | 1 |
-- **Grammar tier (top-level tree)** — `bbnf-lang/crates/ir`: `GrammarENode::Regex(StringId)` opaque
-  + the 434-LOC `egraph/rules/regex.rs` string-fusion rules (pass-2 rule-death target).
-- **MEASUREMENT SUBSTRATE** — `skinny/crates/bbnf-regex` (322 LOC) + its consumers `skinny/crates/ir`
-  (`use bbnf_regex::analyze;` `ir/src/lib.rs:1`, called at `:331` for nullability) and
-  `skinny/crates/passes` (`use bbnf_regex::{analyze, FirstSet, RegexKind};` `passes/src/lib.rs:1`).
-  The skinny grammar leaf is `ExprKind::Regex { pattern: String }` (`ir/src/lib.rs:250`), an opaque
-  string scanned by `parse_regex` (`grammar/src/lib.rs:1561`), lowered to
-  `BackendExpr::RegexProgram { pattern, span_kind }` (`ir/src/lib.rs:389`).
+The grammar tier's regex leaf is `IrNode::Regex(StringId)` (`crates/ir/src/types/node.rs:36`) and
+its e-node twin `GrammarENode::Regex(StringId)` (`crates/ir/src/egraph/node.rs:27`). Across the IR
+passes, **42 concrete match arms** touch this leaf, in two disjoint classes:
 
-## Q1 — per-pass dispatch census: SHRINK vs RELOCATE
+**Opaque-leaf grouping arms (26)** — `Regex(_)` bundled with `Literal(_)`/`Epsilon`/`Ref(_)` as a
+childless leaf, the code never looking inside: `span.rs:82,234`; `metadata.rs:63`;
+`types/registry.rs:362,439,480`; `types/mod.rs:393,549`; `types/generate.rs:157`;
+`types/subvariants.rs:132`; `inspect/walk.rs:60`; `csp_strategy/components.rs:334`;
+`payload/scalar_routing.rs:100`; `materialization/classify.rs:183`; `materialization/pin_sweep.rs:95`;
+`audit/payload_coverage.rs:537`; `sets/sort.rs:82`; `sets/follow.rs:281`; `sets/deps.rs:62`;
+`sets/dispatch/annotate.rs:163`; `sets/dispatch/eligibility.rs:156`; `sets/first_sets.rs:196,277,366`;
+`sets/structural_alphabet.rs:399`; plus the node walkers in `types/node.rs:147,175`.
 
-The substrate's bridge is `analyze(&str) -> RegexFacts` (`skinny/crates/bbnf-regex/src/lib.rs:45`).
-`RegexFacts` (`:1-8`) carries `nullable`, `first: FirstSet`, `byte_classes`, `hir: RegexHir`, and
-`string: Option<StringFacts>`. But `RegexHir` (`:11-13`) is a lie: it wraps a **4-way nominal tag**
-`RegexKind { Whitespace, QuotedString, Numeric, Unknown }` (`:16-21`), and `classify` (`:92-99`) is
-`if pattern == r"[ \t\n\r]*"` -> `Whitespace`; `pattern.starts_with('"')` -> `QuotedString`;
-`pattern.starts_with("-?(0|[1-9]") && …` -> `Numeric`; else `Unknown`. `StringFacts` hard-codes
-`delimiter: b'"', escape: b'\\'` (`:53-56`). This crate has **no dependency on the engine `Hir`** and
-never calls `simplify_hir` — it is precisely the nominal fast-path the Constitution (vi, no
-name-gates) and the direct-to-struct edict forbid; it breaks on any grammar but JSON.
+**Consuming arms (16)** — bind `sid`, fetch the string, run it through `RegexInfo`/classification:
+`regex_info.rs:93`; `csp_strategy/mod.rs:839,1216,1329`; `materialization/classify.rs:589`;
+`sets/sort.rs:193,287,338`; `sets/factor_lookahead.rs:138,218,314`; `sets/structural_alphabet.rs:282`;
+`sets/first_sets.rs:106,234,388`; `sets/dispatch/first_set.rs:27`;
+`recognizers/pattern_alphabet.rs:98`; `inspect/leading.rs:82`.
 
-The census verdict: **the substrate side SHRINKS, the engine side RELOCATES.** The engine's
-`classify.rs` (1148 LOC, 64 `Class` arms) is irreducible *structural recognition* — it walks the
-`Class`-bearing `Hir` to recover sign / fraction / exponent / leading-zero-rejection / `\uXXXX`
-flags (`classify.rs:1-20` doc; sample arms `:287,477,506,538,640,795,966,1022,1041,1069,1075`).
-Re-homing those 64 arms into a shared IR RELOCATES them arm-for-arm (LOC-neutral); the Class-walk is
-the work, not dispatch boilerplate. What is genuinely DELETED is the 322-LOC nominal duplicate:
-`classify` (`:92`), `regex_is_nullable` (`:107`), `first_set` (`:120`), `closing_class_index`
-(`:164`) all re-implement, string-first, what `classify.rs` + `first.rs` already do structurally over
-`Hir`. Prototype must MEASURE: substrate `~322 -> ~60` (a thin structural derivation:
-`parse -> simplify_hir -> {nullable via structural walk, first via first.rs, byte_classes via Class
-leaves}`), engine `classify.rs` `1148 -> 1148` (unchanged). Net = **delete the nominal duplicate,
-point the substrate at the real classify** — a re-home that shrinks the *bridge*, not the engine.
+**The census verdict for 5B.** Under Formulation A (grow the *grammar* leaf to carry `Class`/`Look`)
+every one of the 26 grouping arms loses leaf-exhaustiveness and must be revisited, and the 16
+consuming arms must walk a new recursive shape — 42 arms disturbed, each 1–15 LOC, plus the loss of
+the "regex is a leaf" invariant the whole pipeline rests on. Under 5B the grammar leaf stays
+`Regex(StringId)`: **zero grammar-tier arms grow.** The `Class`/`Look` richness is confined to the
+engine's `HirENode`, which *already* carries both (`Class(CharClass)`, `Look(Look)` in
+`parse-that/rust/regex/src/egraph/node.rs`) and its owning twin `Hir` (`hir/mod.rs`, `Class`/`Look`
+variants). So the directive's "does classify re-home SHRINK or RELOCATE" question is a Formulation-A
+question: for 5B the 1148-LOC `classify.rs` neither shrinks nor relocates — it **stays put on the
+engine side, unchanged** — and the functor simply lets the 16 consuming arms reach its results
+structurally instead of by per-call string re-parse. The only LOC delta 5B claims is the ~215-LOC
+grammar-tier rule-death (Q10 below), a real deletion, not a relocation.
 
-## Q2 — Class/Look typing through LOCK-1's real HM; byte-expansion confinement
+## Q2 — Typing the leaf through LOCK-1's HM; the confinement boundary
 
-The grammar leaf is `Regex(StringId)`/`Regex{pattern:String}` opaque, so in LOCK-1's HM it inhabits a
-**single scalar type** — the leaf's materialized value type: a byte-span-producing type by default,
-refined ONLY by an enclosing `Project{ty}` (Q11). LOCK-1 never sees `Class` or `Look`; there is no
-`BuiltinTy` stub because there is no per-leaf regex type to stub — the type is `String`-ish and
-composes through the ordinary `Seq`/`Alt`/`Repeat` rules. The `[α-ω]*` byte-expansion (Class ->
-`ByteSet` -> NFA transitions) lives **confined to `automata/nfa.rs::build_class` + `sets/byteset.rs`**;
-it never leaks into a shared type because the ONLY thing that crosses the bridge is `RegexFacts` —
-first-set bytes, nullable, string delimiters — a *facts record*, not a type. Confinement boundary =
-`RegexFacts` at `bbnf-regex/src/lib.rs:1-8`. `Look` assertions are zero-width -> they contribute unit
-/ `Empty` to the value type, never widening it (nullability treats them as ε, `first.rs:79,156`
-returns empty/transparent). Derivation to hand the prototype: `Regex(sid) : τ_span`, `τ_span`
-unifies with the outer `Project`'s `ty` when present; byte cardinality is an automata fact, invisible
-to HM. This discharges the Constitution-v invariant (type plane costs zero at runtime) by
-construction — the bytes are compiled, not typed.
+The grammar leaf must NOT type as a `BuiltinTy` stub. Under LOCK-1's HM it types by its projection: a
+bare `Regex(sid)` synthesizes `string` (a byte-span scalar — the same type `Literal` gets at
+`types/generate.rs:157`), and a projected `Map{ Regex(sid), fn_id }` synthesizes the codomain of
+`fn_id`. Row-poly and width judgments flow through the *outer* `Map`, never through the regex
+internals: `Γ ⊢ Regex(sid) : string`, with no free type variable escaping into class structure.
 
-## Q3 — `from_expr` NFA byte-identical to `from_hir`
+**The confinement boundary is physical.** `[α-ω]*` byte-expansion is the transform
+`CharClass → ByteSet → byte-equivalence classes → DFA transition table`, living in
+`parse-that/rust/regex/src/sets/byteset.rs` and `automata/dfa.rs` (`byte_classes:[u8;256]`,
+`compute_byte_classes`). The narrowest thing that crosses into the grammar tier is `StringId` — never
+a `ByteSet`, never a `CharClass`. This is the load-bearing 5B claim: the shared type is `string`
+(or the bridge's `String` pattern), and byte-expansion is quarantined in automata by construction,
+because the only handle the grammar tier holds is the opaque id. The confinement is not asserted; it
+is the direct consequence of the leaf being `Regex(StringId)` and every one of the 26 grouping arms
+treating it as a scalar.
 
-`from_hir` exists (`nfa.rs:71`, `build_hir` dispatch `:125-152`). `from_expr` does NOT exist — it is
-the target: an NFA builder that consumes the grammar's own `ExprKind` (`Seq/Alt/Repeat/Optional/
-Literal/Regex`, `ir/src/lib.rs:234-271`) so grammar structure and regex fragments share ONE Thompson
-builder. The two normalization laws the byte-identity harness must pin:
-- **`Optional <-> Repeat{0,1}`** — `from_expr(Optional(x))` must equal `from_hir(Repetition{min:0,
-  max:Some(1),greedy:true})`; the engine has no `Optional`, so the grammar `Optional` node must lower
-  to the same ε-structure `build_repetition` emits.
-- **Group elision** — `from_hir` treats `Hir::Group` as transparent (`nfa.rs:143-146`, `build_hir(sub)`),
-  but skinny `ExprKind` has NO capture-group node (capture is `Project`, Q11). So
-  `from_expr(Regex("(?:ab)"))` routes through the engine parse (which yields `Group`) then elides —
-  the harness must assert `from_expr` over a Group-bearing pattern equals `from_hir(parse(pattern))`
-  after both elide. Harness: emit both NFAs, canonically renumber states, compare
-  `(transitions, epsilon-edges, accept)` vectors for byte-identity; run fresh throughput on both,
-  carry NO inherited band. Named risk: `from_expr` sees `Alt{mode: Dispatch|Speculative}`
-  (`ir/src/lib.rs:236-239`) — `mode` has no `Hir` analogue; the harness must confirm `mode` does not
-  perturb the NFA (it is a parse-strategy annotation, transition-neutral) or the byte-identity fails.
+## Q3 — Automata parity re-derived from the narrowed type
 
-## Q4 — a `Look`-consumer test that CAN fail (it does, today)
+Because 5B keeps the engine's own `Hir` as automata input, there is **no `from_expr`** — the NFA
+builder is `Nfa::from_hir` (`automata/nfa.rs:71`), unchanged, consuming exactly the `Hir` the functor
+round-trips to. Parity is therefore *by construction*, not by re-derivation: the functor's law is
+`extract_bbnf(insert_bbnf(hir))` DFA-equivalent to `hir`, and `insert_hir`/`extract_hir`
+(`egraph/translate.rs:22`) already round-trip every leaf verbatim
+(`Hir::Class(c) → HirENode::Class(c.clone())`, `Hir::Look(l) → HirENode::Look(*l)`). The Group-elision
+and `Optional↔Repeat{0,1}` normalizations the directive names are the engine's saturation rules — they
+run inside the engine e-graph and extract back to a canonical `Hir` that `from_hir` compiles
+identically. **The byte-identity harness** the prototype must run: for every corpus pattern compile
+`Dfa` from `hir` and from `extract_hir(saturate(insert_hir(hir)))`, assert the minimized transition
+tables are byte-identical (strict off, canonical on — `a|b|c` and `[abc]` must be *DFA*-equal, not
+syntactically equal). Throughput must be re-run fresh from this narrowed path
+(`--bench regex_dfa_compile`, cold per-parse) carrying no inherited band.
 
-**The `Look` leaf is a phantom — it has no automata consumer** (Constitution viii, consumer-less
-substrate forbidden). `build_look` (`nfa.rs:254-270`) matches ALL six `Look` variants (`Start`,
-`StartLF`, `StartCRLF`, `End`, `EndLF`, `EndCRLF`) into ONE arm that emits a single state with
-`start == accept` — a zero-width ε that **always matches**; position is never consulted, `Look::End`
-is discarded. Therefore `/foo$/ -> from_hir -> NFA` does NOT reject `"foobar"`: the `$` is a no-op ε
-and a search accepts the `"foo"` prefix. The failing/passing pair the directive demands, exercised
-against the real builder:
-- `assert!(nfa_matches("/foo/", "foobar"))` — **passes** (prefix match).
-- `assert!(!nfa_matches("/foo$/", "foobar"))` — **FAILS today** (the `$`/`Look::End` no-op accepts).
-This is the concrete counterexample: the grown `Look` leaf is unconsumed. To make the second assert
-pass the matcher must gain anchor semantics — either an `anchored`/`WhichCaptures`-style search mode
-(regex-automata's model) or explicit boundary transitions consulting input position at
-`build_look`. The prototype must EITHER add the consumer (anchor-aware DFA search) OR narrow the
-`Look` enum to the variants an actual consumer exists for — banking the rest as a named negative.
-Until then `Look::{End,EndLF,EndCRLF,StartLF,StartCRLF}` are decorative.
+## Q4 — A `Look`-consumer test that can FAIL
 
-## Q11 — the ratified representation of `->` (binding on bridge soundness)
+The engine already consumes `Look` in NFA construction: `Hir::Look(look) => self.build_look(*look)`
+(`automata/nfa.rs:139`), `build_look` (`:254`) emitting zero-width start/end assertions over the six
+`Look` variants (`Start`/`End`/`StartLF`/`EndLF`/`StartCRLF`/`EndCRLF`, `hir/mod.rs:172`). The
+failing-if-broken assertion, threaded THROUGH the functor:
 
-`->` is **`ExprKind::Project { body: ExprId, target: String, ty: Option<String> }`**
-(`ir/src/lib.rs:261-265`), an OUTER wrapper node — NOT an inner-class `Map` barrier. Projection lives
-strictly *outside* the opaque regex leaf. `parse_regex` (`grammar/src/lib.rs:1561`) returns a plain
-`String`, so an inner `/[a-c] -> A/` is **not parseable, not expressible** — the inner-class-barrier
-question is moot on the substrate. Consequence, and the pass-2 soundness fix made structural:
-`/[a-c]/ -> A | /[d-f]/ -> B` is `Alt{branches:[Project{body:Regex("[a-c]"),target:A},
-Project{body:Regex("[d-f]"),target:B}]}` — the `Project` wrappers sit ABOVE the regex leaves, so
-regex-internal `union`/`superset` fusion (which operates only on bare `Class`-bearing `Hir`) can never
-see or drop the projections. The pass-2 latent bug (`[a-c]->A | [d-f]->B` merging to `[a-f]` and
-dropping A,B) is **structurally prevented**: the grammar-tier e-graph owns the `Alt`-branch fusion and
-must match `Project`-equality before merging `body`s; the regex engine only ever receives already-
-stripped classes. The bridge is projection-sound BY the ratified `Project`-wrapper representation.
-LOCK-1 must only confirm the `ty` on `Project` is the sole type carrier for the wrapped leaf (Q2).
+```
+let hir = parse("foo$");                          // Concat[Literal"foo", Look::End]
+let round = extract_hir(saturate(insert_hir(&hir)));
+assert_eq!(hir, round);                            // Look::End survives F∘G verbatim
+let dfa = Dfa::compile(&round);
+assert!( dfa.find_at("foo",   0).is_some());       // /foo$/ accepts "foo"
+assert!( dfa.find_at("foobar",0).is_none());       // /foo$/ REJECTS "foobar" ← fails if Look dropped
+assert!( Dfa::compile(&parse("foo")).find_at("foobar",0).is_some()); // /foo/ accepts "foobar"
+```
 
-## Named risks / counterexamples
+It can fail three ways — the functor drops the `Look` leaf on insert/extract, saturation elides it, or
+`build_look` ignores `End` — and passes only when `Look::End` is consulted end to end. This is the
+concrete evidence that the functor preserves the engine's rich, consumer-backed leaves rather than a
+decorative enum.
 
-1. **Phantom `Look` (Q4)** — grown leaf, no automata consumer; `/foo$/` accepts `"foobar"`. Must add
-   consumer or narrow the enum.
-2. **Nominal substrate classifier (Q1)** — `bbnf-regex::classify` (`lib.rs:92-99`) hard-codes three
-   JSON patterns; ANY off-JSON grammar collapses to `Unknown` -> wrong `nullable`/`first`. The
-   direct-to-struct / no-name-gate violation the functor must delete, not preserve.
-3. **`Alt{mode}` has no `Hir` image (Q3)** — `from_expr` byte-identity can silently fail if `mode`
-   perturbs NFA shape; assert transition-neutrality.
-4. **Group asymmetry (Q3)** — `from_hir` elides `Group`; `from_expr` has no group node. Harness must
-   pair a Group-bearing pattern through the engine parse.
-5. **Re-home is LOC-neutral on the engine (Q1)** — do not claim `classify.rs` shrinks; the 64 `Class`
-   arms relocate. The only real deletion is the 322-LOC substrate duplicate. Measure both, report the
-   honest delta.
+## Q10 — Grammar-tier rule census + fire counts
+
+The grammar-tier regex e-graph is `crates/ir/src/egraph/rules/regex.rs` = 434 LOC, **4 rules**:
+`DeduplicateAltBranches` (`:49`), `SupersetAbsorbAlt` (`:109`), `UnionMergeAlt` (`:194`),
+`FuseAltRegexBranches` (`:229`), plus string helpers `regex_escape_literal`,
+`pattern_has_top_level_pipe`. The engine-side rules the functor makes reachable: `superset.rs` (90),
+`union.rs` (108), `flatten.rs` (107), `repetition.rs` (156), `redundant.rs` (68)
+(`parse-that/rust/regex/src/egraph/rules/`). **Rule fates under the functor:** `DeduplicateAltBranches`
+survives (pure e-class identity, grammar-general); `SupersetAbsorbAlt` dies (duplicate of engine
+`superset.rs`); `UnionMergeAlt` dies (duplicate of engine `union.rs`); `FuseAltRegexBranches` is
+re-expressed structurally (its `parts.join("|")` string fusion → build `HirENode::Alternation`, run
+engine `union`/`flatten`/`superset`, extract back). Structural estimate ~215 grammar-tier LOC deleted
++ the two string helpers.
+
+**The fire-count obligation (un-run).** Instrument each rule's `apply` with a counter over the engine
+corpus (≥50 patterns), reporting per-rule fires on BOTH bare `Alt([Regex,…])` branches and
+projection-wrapped `Alt([Map{Regex},…])` branches. The census decides: (a) whether the dying rules
+ever fired enough to matter — a rule with zero fires is deleted with no behavioural risk; (b) whether
+fusion ever meets projection-wrapped branches — if `Map`-wrapped Alt branches are common, the
+projection-soundness guard (Q11) is load-bearing, not theoretical.
+
+## Q11 — The `->` representation (BINDING on projection soundness)
+
+Confirmed from HEAD: `->` is an **outer wrapper node**, not a field on the regex leaf.
+`IrNode::Map { inner: Box<IrNode>, fn_id: FnId }` (`crates/ir/src/types/node.rs:79`) and its e-node
+`GrammarENode::Map { inner: Id, fn_id: FnId }` (`crates/ir/src/egraph/node.rs:52`). So a projected
+regex leaf is `Map{ inner: Regex(sid), fn_id }` — the projection is a *barrier one level above* the
+leaf, keyed by `fn_id`. The regex leaf itself carries neither span nor projection; write-back is the
+identity `GrammarENode::Regex(sid) => IrNode::Regex(sid)` (`crates/ir/src/egraph/write_back.rs:209`).
+
+**This is binding on the bridge's projection soundness.** The functor may descend into an `Alt` and
+fuse its `Regex` branches by structural `HirENode::Alternation`, but the fusion is sound ONLY when the
+branches are bare `Regex` (no `Map` above them) or every branch's `Map` carries an equal `fn_id`.
+Counterexample the string bridge cannot see and the functor must block: `[a-c] -> A | [d-f] -> B` is
+`Alt([ Map{Regex[a-c],A}, Map{Regex[d-f],B} ])`; byte-set union to `[a-f]` would collapse two distinct
+`Map` barriers and drop projections `A`, `B` — a wrong answer. Because `Map` is a structural node (not
+a leaf annotation), the functor sees the barrier directly: fusion matches `Alt([Regex, Regex, …])`
+(bare) and refuses `Alt([Map{…}, Map{…}])` unless `fn_id`s unify. The `Map`-as-barrier representation
+is exactly what makes the guard *checkable*, vindicating 5B's side-annotation position with the
+concrete node.
+
+## Integration seams (path:line)
+
+- `crates/ir/src/types/node.rs:36` — `IrNode::Regex(StringId)` (opaque leaf, no span/projection).
+- `crates/ir/src/types/node.rs:79` — `IrNode::Map { inner, fn_id }` (the `->` outer barrier).
+- `crates/ir/src/egraph/node.rs:27,52` — `GrammarENode::Regex`/`Map` (e-node twins).
+- `crates/ir/src/egraph/write_back.rs:209` — identity write-back, projection-free leaf.
+- `crates/ir/src/egraph/rules/regex.rs:49,109,194,229` — Dedup(survives)/Superset(dies)/Union(dies)/
+  Fuse(re-expressed).
+- `crates/ir/src/passes/regex_info.rs:93` + the 16 consuming arms — the per-call re-parse the functor
+  replaces with a cached structural `Hir`.
+- `parse-that/rust/regex/src/egraph/node.rs` — `HirENode` (`Class`/`Look` already present).
+- `parse-that/rust/regex/src/egraph/translate.rs:22` — `insert_hir`/`extract_hir` (the functor model).
+- `parse-that/rust/regex/src/automata/nfa.rs:71,139,254` — `from_hir`/`build_look` (the Look consumer).
+- `parse-that/rust/regex/src/hir/mod.rs:172` — the `Look` enum (six variants).
 
 ## Prior art (citations)
 
-- **Trees That Grow** (Najd & Peyton Jones, IFL 2016 / GHC Core) — one AST family, phase-indexed
-  domain-fit decorations; the strongest anchor for the two-type (opaque grammar leaf vs rich `Hir`)
-  split kept lawful by a functor rather than a god-enum.
-- **Lenses / bidirectional transformations** (Foster, Greenwald, Moore, Pierce, Schmitt, POPL 2005) —
-  `GetPut`/`PutGet` are the round-trip oracle law; here the law is DFA-equivalence
-  (`extract∘insert ≅ id`), not syntactic identity, since `simplify_hir` canonicalizes.
-- **regex-automata `Look` / anchored search** (Rust `regex` crate) — the reference consumer for Q4:
-  `Look` assertions are honored via anchored NFA search + `WhichCaptures`, not zero-width ε no-ops;
-  the model for giving the grown `Look` leaf a real automata consumer.
-- **Thompson NFA construction** (McNaughton–Yamada / Thompson 1968) — the shared `from_hir`/`from_expr`
-  builder; `Optional<->Repeat{0,1}` and Group-transparency are the normalization laws under test.
-- **egg / egglog** (Willsey POPL 2021; Zhang PLDI 2023) — `insert_hir`/`extract_hir`
-  (`egraph/translate.rs:22`) + `simplify_hir` (`egraph/mod.rs:143`) are the functor's regex end; the
-  shared rewrite engine is the charter's "shared part".
+- **"Trees That Grow"** (Najd & Peyton Jones, IFL 2016; GHC Core `XExtension`) — one AST family with
+  per-phase domain-fit decorations; the anchor for two domain-fit HIRs over one god-type.
+- **MLIR dialect conversion + `unrealized_conversion_cast`** — cross-dialect materialization casts
+  inserted then legalized away pre-lowering; the model IF 5B ever unifies the two arenas into a
+  coproduct (priced against the 215-LOC deletion, not assumed).
+- **Bidirectional lenses** (Foster–Greenwald–Moore–Pierce–Schmitt, POPL 2005) — `GetPut`/`PutGet` are
+  the functor round-trip law; here weakened to DFA-equivalence, not syntactic identity.
+- **Adjoint functors `F ⊣ G`, coreflective subcategory** — `G∘F = id` on regex, `F∘G ⊑ id` on the
+  grammar sublanguage where `G` is defined (undefined on `Ref`/`Minus`/`Negate`/`TokenDispatch`).
+- **egg / egglog** (Willsey et al. POPL 2021; Zhang et al. PLDI 2023) — the `Language` trait and
+  equality saturation both e-node types already derive; egglog multi-sort as coproduct precedent.
+- **regex-automata `Hir`→NFA→DFA** — the lineage `bbnf-regex` re-implements bespoke; the functor leaves
+  that engine untouched.
 
-## What the prototype MUST test to move family 5B
+## What a prototype MUST test to move family 5B
 
-1. **Delete-the-nominal-classifier (Q1):** replace `bbnf-regex::analyze`'s
-   `classify/regex_is_nullable/first_set` with a structural derivation over the engine `Hir`
-   (`parse -> simplify_hir -> RegexFacts`); assert byte-identical `RegexFacts` on JSON's
-   ws/string/number AND correct facts on ≥1 off-JSON grammar the nominal path gets wrong; MEASURE
-   substrate LOC (`~322 -> ?`) and engine LOC (expect unchanged).
-2. **`from_expr` byte-identity harness (Q3):** build `from_expr(ExprKind)`; assert NFA byte-identity vs
-   `from_hir` on `Optional<->Repeat{0,1}`, Group-elision, and a `Class`-bearing pattern; confirm
-   `Alt{mode}` transition-neutral; report fresh throughput both sides.
-3. **Failing `Look` test (Q4):** exercise `assert!(!nfa_matches("/foo$/","foobar"))` — show it FAILS on
-   `build_look` today; add anchored-search consumer OR narrow the enum; show it then PASSES.
-4. **Projection-soundness (Q11):** construct `/[a-c]/->A | /[d-f]/->B` as `Alt[Project,Project]`; assert
-   grammar-tier fusion refuses to merge `body`s while `target`s differ (projection-preserving), and
-   confirm inner `->` is un-parseable (`parse_regex` returns `String`).
-5. **Typing confinement (Q2):** show `RegexFacts` (not `Hir`) is the sole bridge crossing; assert
-   `[α-ω]*` byte-expansion appears only under `automata/`+`sets/`, never in a LOCK-1-visible type.
+1. **Round-trip oracle:** `extract_hir(saturate(insert_hir(hir)))` DFA-equivalent to `hir` over the
+   ≥50-pattern corpus; `Look`/`Class` leaves bit-identical (the Q4 assertion firing).
+2. **Structural `FuseAltRegexBranches`:** replace `parts.join("|")` with `HirENode::Alternation` +
+   engine `union`/`flatten`/`superset` + extract-back; assert byte-identical fused DFA vs the string
+   fusion; MEASURE grammar-tier LOC deleted (target ~215, prototype-earned).
+3. **Projection soundness:** a test that FAILS on the current string bridge (`[a-c]->A | [d-f]->B`
+   merges, dropping A/B) and PASSES under the functor (fusion blocked when `Map.fn_id`s differ).
+4. **Partiality:** `Alt([Regex, Ref(ident)])` — `G` returns None on `Ref`, fusion skips the branch,
+   no crash, no cross-branch fusion.
+5. **Per-rule fire counts** over the corpus (bare + `Map`-wrapped Alt), proving the dying rules'
+   deletion is behaviourally safe and whether the projection guard is exercised in practice.
+6. **Narrowed throughput:** `regex_dfa_compile` cold per-parse re-run from the functor path, carrying
+   no inherited band — parity or better against `from_hir` direct.
+
+## Cross-lock (shareable)
+
+- LOCK-1 owns the `Map{inner,fn_id}` typing (`types/node.rs:79`): the `->` codomain flows through the
+  outer `Map`, the bare `Regex` types `string`; this is what makes the projection guard checkable.
+- The `GrammarCostModel` (`crates/ir/src/egraph/cost.rs`, `egraph/mod.rs:15`) already spans both
+  e-graphs — the charter's "shared part"; the functor formalizes existing sharing, invents none.
+- Prefilter/tier selection (double-homed with LOCK-2) sits downstream of extraction; 5B touches only
+  the HIR-canon island and the string→structural bridge, not tier selection.

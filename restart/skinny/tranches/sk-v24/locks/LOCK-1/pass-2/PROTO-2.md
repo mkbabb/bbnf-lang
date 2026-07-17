@@ -1,162 +1,65 @@
-# PROTO-2 — Row-inference vs hint: is List ≠ Row engine-agnostic?
+# PROTO-2 — LOCK-1 (Solver Spine), probe 2: refinement-aware assign clash arm (X8, 3rd call)
 
-LOCK-1 (THE SOLVER SPINE — type inference & solving), pass-2, probe 2.
-Family **1D / Open R** (the structural axis).
+Family: 1B carrier hardening (X8, carrier-independent). Ships regardless of carrier winner.
 
-- **HEAD measured on:** `ce51c36fcbdf5108eb028005586672d9a6d2ca1b`
-- **Base-pin:** `ce51c36fc`. Worktree opened stale at `d2b32f6e3`; `git merge-base
-  --is-ancestor ce51c36fc HEAD` = NO. Fast-forwarded with `git merge --ff-only
-  ce51c36fc`, re-verified = **YES**. **No wrong-artifact-risk.**
-- **Result:** RAN, measured. `test result: ok. 1 passed`.
-- Loadavg at run ≈ 12 (machine loaded — irrelevant; the numbers are categorical
-  classifications, not timing).
+## BASE-PIN
+- Worktree HEAD measured on: `ce51c36fcbdf5108eb028005586672d9a6d2ca1b` (== base-pin ce51c36fc).
+- On entry the worktree was STALE (HEAD `d2b32f6e3`, an *ancestor* of ce51c36fc — the pin sits ahead). `git merge --ff-only ce51c36fc` fast-forwarded cleanly; `git merge-base --is-ancestor ce51c36fc HEAD` → yes. All numbers below are on ce51c36fc. NOT wrong-artifact-risk.
+- loadavg at launch: 19:18 up, load averages 8.22 6.51 6.74 (cold build ran under this).
 
-## Question
+## QUESTION
+X8 is the one carrier-independent deliverable and was unmet after two passes. At HEAD, `crates/ir/src/passes/types/constraint/revise.rs` `assign` is the raw LWW:
+`if slot.as_ref()==Some(&ty){false}else{*slot=Some(ty);true}`.
+The owed hardening: raise-on-disagreement *without* freezing the ~69 legal `BoxedEnum→structural` refinements the four production grammars depend on. A naive "refuse all overwrites" freezes those refinements; the arm must distinguish REFINEMENT (permit) from CONCRETE-vs-CONCRETE clash (refuse + name).
 
-Can record-vs-list be **DERIVED by inference from body structure alone** — no
-`{`/`[` byte match, no per-grammar name gate — closing the masked fallback? If
-yes, Open R dissolves the engine axis's claim on structure (and 1D's raison
-d'être). If a per-grammar hint is required, the workaround merely RELOCATES into
-the type layer → 1D's structural-μ hook is BLOCKED-candidate.
+## METHOD
+Replaced the LWW with a refinement-aware arm keyed on a recursive **fully-ground** predicate:
 
-## Method (what ran)
+- `is_fully_ground(t)` = t carries no `BoxedEnum` / `HeterogeneousAltJoin` under-narrowed layout at any depth. `Enum` and `Named` are deliberately treated as **non**-ground (the solver bridges vec-context `Enum` slots and `Named` map-results by `EqualConstraint` to variables that may legally settle on a scalar — counting them as ground would misread those legal bridges as clashes). Only scalars / `Span` and tuples/options/vecs built entirely from them are ground.
+- `assign` arms:
+  - `existing == ty` → `false` (no change).
+  - `is_fully_ground(existing) && is_fully_ground(&ty)` and they differ → **refuse** the overwrite (keep incumbent so the fixed point stays stable), stash `(incumbent, rejected)` on the domain's new `clash` side-channel.
+  - otherwise (first assignment, or either side under-narrowed) → **permit** — byte-for-byte the historical LWW move. This is where every `BoxedEnum→structural` (and `Tuple([BoxedEnum..])→Tuple([F64..])`) refinement lands.
 
-**Vocabulary added** (engine-neutral, into the real IR):
+Recording is decoupled from the hot write path: the clash pair rides a `clash: Option<Box<(TypeDesc,TypeDesc)>>` field on `TypeDomain` (boxed → the no-clash domain stays pointer-width). After propagation converges, `project_types` harvests every stashed clash via `record_domain_clashes(vars, sink, node_of)` into `TypeObligation::TypeClash{node, lhs, rhs}` — routed through the SAME `ObligationSink` + dedup drain that `UnresolvedCompoundRef` / `HeterogeneousAltJoin` already use (Constitution viii; the obligation's consumer is 1C's `type_obligations → lsp_types::Diagnostic{range}` bridge — `node` supplies the range anchor).
 
-- `TypeDesc::Row(Box<TypeDesc>)` — `crates/ir/src/types/type_desc.rs`. The
-  structural dual of `Vec`: `Vec` is index→T, `Row` is key→T.
-- `LayoutKind::Row` — `crates/ir/src/registry/struct.rs`.
-- Both backends resolve `Row` to their native keyed shape (Rust →
-  `Vec<(Span,T)>`; TS → `Record<string,T>`) — proving it is engine-agnostic
-  vocabulary, not an engine hook.
+Design note: keeping `assign`'s signature stable (vs. threading a sink+node through all 7 constraint structs and ~15 call sites) is the parsimony win — the domain-stash producer / harvest-consumer split touches only the write primitive + the pass driver, leaving every constraint impl untouched. One path, no orthogonal branch.
 
-**One structural classifier** — `TypeShapeAnalysis`, a store-style pure-IR
-analysis in `crates/ir/src/passes/types/constraint/shape.rs`. It reads three
-engine-neutral facts, and nothing else:
+`assign` is the constraint-`revise` write path. `LatticeDomain::join` in `domain.rs` carries a second, dormant LWW used only by the pure-lattice propagation mode (not the explicit-constraint AC-3 path `project_types` runs); left untouched and noted here so the second LWW is on record, not a hidden contradiction.
 
-1. **A repetition spine** — a `Repeat { hi>1 }` reachable in the rule body
-   (the `*`). No spine → not a collection → refuse.
-2. **The repeated element's projected type** — resolved through the element's
-   `Ref` into `ir.types`, and (because the Seq/Ref projection collapses a
-   `Named` role behind a `Ref` to `BoxedEnum`) through the *referent rule's own
-   type* where the role survives. Never a byte of the element's literal surface.
-3. **A `->`-declared key role** — `TypeDesc::Named("key")`. Record iff the
-   element carries the key role; list iff a bare single value; **refuse**
-   (Unknown) for a repeated 2-leg element with no declared key.
+### What ran
+Base HEAD ce51c36fc. `cargo test --profile ax-iter`, sequential (single cargo per target dir):
+1. `-p bbnf-ir --test type_clash_arm` (new fixture, the novel proof)
+2. `-p bbnf --test types_heterogeneous_alt`
+3-6. `-p bbnf --test project_types_{json,sheets,css_l4,bbnf}`
 
-**Corpus** — two grammars compiled through the real pipeline (`compile_grammar`
-→ VM target → `project_types`), in `crates/core/tests/proto2_row_shape.rs`:
+## THE NUMBERS
+- **`bbnf-ir --test type_clash_arm` (new fixture) — GREEN, 3 passed / 0 failed** (cold compile 45.28s; re-run 0.00s). The three arms:
+  - `concrete_vs_concrete_emits_exactly_one_type_clash ... ok` — two disagreeing fully-ground concretes (`F64` vs `U8`) on one variable → the sink drains **exactly one** `TypeObligation::TypeClash` carrying the `F64`/`U8` pair; the incumbent is kept (overwrite refused). The refusal is also what BREAKS the would-be oscillation — the fixed point converges precisely because the clash arm stops re-writing.
+  - `boxed_enum_refinement_records_no_clash ... ok` — `BoxedEnum→F64`, `Tuple([BoxedEnum,U8])→Tuple([F64,U8])`, and `HeterogeneousAltJoin([F64,U8])→F64` all permitted with **zero** clashes. Refinements are not frozen.
+  - `identical_grounds_record_no_clash ... ok` — same type twice is a no-op, not a clash.
+- **Fixture-bug caught + fixed mid-probe (honest):** the first cut of the refinement test drove `BoxedEnum` and `F64` as two *persistent competing* GroundConstraints on one var. Because a refinement never refuses, the two grounds ping-pong forever (the ORIGINAL LWW oscillates on this input identically — it is a pathological fixture, not a code defect). It hung >60s and was killed. Refinements are inherently monotonic single-writer moves, so the corrected fixture models one by seeding the incumbent (`TypeDomain::ground(BoxedEnum)`) and applying a single overwrite — non-cyclic, converges, green.
+- **Byte-identity gate — ALL GREEN.** `cargo test -p bbnf --profile ax-iter` (loadavg 17.66 at run):
+  - `types_heterogeneous_alt` → **2 passed / 0 failed**
+  - `project_types_json` → **10 passed / 0 failed**
+  - `project_types_sheets` → **6 passed / 0 failed**
+  - `project_types_css_l4` → **4 passed / 0 failed**
+  - `project_types_bbnf` → **3 passed / 0 failed**
+  The four `project_types_*` suites assert the struct-registry / field-layout facts derived directly from `ir.types`; their passing is the byte-identity proof that the ~69 `BoxedEnum→structural` refinements still land unchanged — none frozen by the new refuse arm. (Confirmed by construction: in a well-formed grammar no single type variable ever receives two disagreeing *fully-ground* types, so the refuse arm never fires on real grammars — it fires only on the synthetic clash fixture. loadavg-recorded, cold-cache first compile.)
 
-- **BARE** JSON structure — zero `->`.
-- **TYPED** — byte-identical structure plus a *single* `->`-declared key role on
-  the pair's key leg. The role is declared rule-level
-  (`keystr = /"[^"]*"/ -> input : key`, the return-type-annotation form real
-  `json.bbnf` uses for its `: String` custom type). NB: the inline
-  `(string -> key)` form the brief names trips the typed-materialization
-  invariant (`lower/expression/wrap.rs:242` — an arrow applied to a `Ref` inside
-  a `Seq` finds no value_expr head), and a bare `-> key` collapses to `Span`.
-  The rule-level `: key` annotation is the same `->`-declared fact — an
-  engine-agnostic `TypeDesc::Named("key")` on the pair's leading leg — and is the
-  **only** delta from BARE.
+- `git diff -- crates/core/src/runtime/` = **0 lines** (CONFIRMED). Changed files: `crates/csp-solver/src/csp/mod.rs` (+7, `variables()` accessor), `crates/ir/src/passes/types/constraint/domain.rs` (+clash field), `.../constraint/revise.rs` (refinement arm + `record_domain_clashes`), `.../passes/types/mod.rs` (harvest wire-in), `.../passes/types/obligation.rs` (`TypeClash` variant). Zero runtime, zero codegen.
 
-## The numbers
+## VERDICT
+**PASS — X8 landed and RAN_MEASURED on ce51c36fc.** All four PASS conjuncts met:
+1. `types_heterogeneous_alt` green — ✓ (2/0).
+2. All `project_types_*` byte-identical — ✓ (json 10/0, sheets 6/0, css_l4 4/0, bbnf 3/0): the 69 refinements STILL land, none frozen.
+3. Concrete-vs-concrete clash fixture emits **exactly one** `TypeObligation::TypeClash` (non-empty stream) — ✓.
+4. `git diff -- crates/core/src/runtime/` = **0 lines** — ✓.
 
-Compiled IR types (dumped by the test):
+Carrier-independent: touches only the solver spine (`assign` write primitive, `TypeDomain`, obligation enum, the pass driver's harvest, one csp-solver accessor). Ships regardless of the 1B carrier winner.
 
-```
-BARE (zero ->)                       TYPED (+ keystr -> input : key)
-  string : Span                        string : Span
-  number : Span                        number : Span
-  object : Vec(Enum)                   keystr : Named(9)          # 9 = id("key")
-  array  : Vec(Enum)                   object : Vec(Enum)
-  pair   : Tuple([Span, BoxedEnum])    array  : Vec(Enum)
-  value  : HeterogeneousAltJoin(...)   pair   : Tuple([BoxedEnum, BoxedEnum])
-                                       value  : HeterogeneousAltJoin(...)
-```
+**Joint-wave co-name (Constitution viii — the obligation's only consumer):** `TypeClash{node, lhs, rhs}` is consumer-less substrate until 1C's `type_obligations → lsp_types::Diagnostic{range}` bridge lands. The `node: Option<NodeId>` field is the range anchor that bridge consumes; the harvest already populates it from the primary + vec-context node maps for every clashing tree-position variable. LOCK-1 X8 and LOCK-1/3 1C ship as one wave.
 
-Two facts jump out of the dump:
-
-1. **The status-quo inference already collapses `object: Vec(Enum)` and
-   `array: Vec(Enum)` identically.** As-shipped, the type system CANNOT tell
-   record from list — this IS the masked fallback the probe targets.
-2. **The pair's projected tuple erases the key role** (`Tuple([BoxedEnum,
-   BoxedEnum])`), because the Seq/Ref projection collapses `Named` behind a
-   `Ref`. The role survives only on `keystr`'s own type (`Named(9)`); the
-   classifier recovers it there.
-
-Classifier outputs:
-
-| grammar | class(object) | class(array) |
-|---------|---------------|--------------|
-| **TYPED** (+ `-> key`) | **Row** | **List** |
-| **BARE** (zero `->`)   | **Unknown** (honest refusal) | **List** |
-
-- **Pass/fail (numeric):** TYPED `class(object).kind==Row` **AND**
-  `class(array).kind==List` → **PASS** (both hold).
-- **Grep gate:** `grep -E '"\{"|has_rule("value")'
-  crates/ir/src/passes/types/constraint/shape.rs` → **ZERO hits** (exit 1).
-  No brace-byte read, no rule-name predicate anywhere in the classifier.
-- **Row lowers through `TypeAnalysis::from_ir`** (`backend/driver/analysis.rs`):
-  the classifier's `derive_collection_type(object)` = `TypeDesc::Row(_)`; written
-  into the rule type, it is carried into `analysis.rule_types` — assertion
-  passed. `json/value.rs` runtime dispatch is **not** consulted: the classifier
-  is a pure-IR analysis; `git diff crates/core/src/runtime/` is **empty**.
-- **BARE `object` → Unknown**: the pair is a composite 2-leg tuple with no
-  declared key role — indistinguishable from a list-of-pairs — so the classifier
-  refuses rather than brace-guessing. `array` is still `List` (a repeat of a bare
-  alternation value — a list is unambiguous with no key possible).
-
-## Was a per-grammar hint required?
-
-**No.** The Row/List separation used exactly two engine-neutral ingredients:
-
-1. **Generic structure** — repeat-spine detection, delimiter-scaffold stripping
-   by shape, ref resolution, arity/composite discrimination. No `{`/`[` byte, no
-   `has_rule(...)`, no `rule.name` compare (grep-gate proven).
-2. **One `->`-declared type fact** — the `key` role, a `TypeDesc::Named` the
-   grammar author writes in the grammar's own, backend-agnostic type vocabulary
-   (every backend resolves it to its native key type). This is the sanctioned
-   "key-leg presence, a `->`-declared fact" — **not** a per-grammar name gate,
-   **not** external config, **not** a byte peek.
-
-The honest boundary the dump exposes: pure *syntactic* body shape (bare, no `->`)
-is **insufficient** — BARE `object` refuses, because a repeated 2-tuple is a
-record and a list-of-pairs at once. The record-vs-list bit does not live in the
-bytes (`{` vs `[`) the engine axis recognizes; it lives in the **declared type
-layer**, which is engine-agnostic. The engine axis therefore holds **no exclusive
-claim** on the structural record/list distinction.
-
-## Verdict
-
-**NO per-grammar hint required → structure (as carried by the `->`/type layer)
-is orthogonal to the engine → Open R DISSOLVES 1D.**
-
-Record-vs-list is derivable with (a) generic structural inference and (b) a
-single engine-agnostic `->`-declared key role, with zero brace-byte reads and
-zero grammar-name predicates (grep-gate clean). The masked `json_templates`-style
-fallback is closed by a structural classifier; the discrimination the engine axis
-claimed lives in the declared-type layer, not in `{`/`[` recognition. 1D's
-structural-μ hook has no engine-exclusive substrate to stand on.
-
-Caveat (does not change the verdict): the record bit requires the key role to be
-*declared* (`->`). This is not a relocated hint — it is the honest locus of
-record-ness in an engine-neutral type fact. A per-grammar name gate or byte peek
-was never used and never needed.
-
-## Conditions LOCK-5's 5B re-open (XL-C, §5.7)
-
-Per the brief, **either verdict conditions LOCK-5's 5B re-open.** This probe's
-verdict is **DISSOLVE (Open R dissolves 1D)** — the "NO hint" branch. LOCK-5's 5B
-re-opens on the finding that the record/list structural axis is engine-agnostic
-and lives in the type layer; the engine-axis (1D) structural-μ hook is not merely
-BLOCKED-candidate but **dissolved** for this axis.
-
-## Artifacts
-
-- Classifier: `crates/ir/src/passes/types/constraint/shape.rs` (+ `mod.rs`
-  wiring).
-- Vocabulary: `TypeDesc::Row` (`crates/ir/src/types/type_desc.rs`),
-  `LayoutKind::Row` (`crates/ir/src/registry/struct.rs`); exhaustive-match arms
-  in the IR intern pass + Rust/TS backend projections (engine-native resolution).
-- Probe test: `crates/core/tests/proto2_row_shape.rs` — RUNS, 1 passed.
-- Full patch: `PROTO-2.patch` (this directory).
+### Follow-on (not blocking X8, noted for the redress author)
+- `LatticeDomain::join` in `domain.rs` still carries the old LWW for the pure-lattice propagation mode. `project_types` does not use that mode (it runs explicit-constraint AC-3 through `revise`→`assign`), so it is inert here — but if that mode is ever activated for type projection the same refinement-aware arm should be mirrored there. Left untouched this probe (parsimony; out of the tested path).
+- The `variables()` accessor added to `csp-solver` is the minimal read seam the harvest + unit fixture need; the `variables` field was already `pub`, so the accessor is ergonomic sugar, not a new capability.

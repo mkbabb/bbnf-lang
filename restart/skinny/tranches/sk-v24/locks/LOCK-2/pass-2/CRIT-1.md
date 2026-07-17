@@ -1,370 +1,287 @@
-# LOCK-2 — THE GRAPH ENGINE — pass-2 · CRIT-1 (Adversarial critic 1 of 2, WITHIN-LOCK weight)
+# LOCK-2 — THE GRAPH ENGINE — pass-2 CRIT-1 (adversarial critic 1 of 2, within-lock weight)
 
-*Charter: harden/challenge/refine every family against the failure-mode checklist — vacuous
+*Charter: harden/challenge/refine every family against the failure-mode checklist (vacuous
 convergence, spec-cites-itself circularity, gates-that-cannot-fail, the elegant-reduction trap,
-legacy aliases, masked fallbacks, unverified gestalt, consumer-less substrate — plus constitution
-violations (grammar totality, isomorphism, refutation laws, zero-runtime-cost types, parsimony) and
-prototype-evidence misuse (SPEC_ONLY anchoring a perf claim). Critic 1 weights the WITHIN-LOCK view:
-internal soundness of each family spec and whether the two prototypes actually tested the sharpest
-uncertainty. Read this pass: PORTFOLIO (LOCK-2 + CONSTITUTION), FAMILY-SPECS (13:10), PROTO-1
-(13:25) + its patch, PROTO-2 (13:40) + its patch, research-{A,B}, pass-1 CRIT-1/CRIT-2, CROSS-LOCK,
-and — the load-bearing step — the actual on-disk layout of BOTH the top-level `crates/` workspace and
-the `skinny/crates/` workspace at base-pin `ce51c36fc`.*
+legacy aliases, masked fallbacks, unverified gestalt, consumer-less substrate, SPEC_ONLY anchoring a
+perf claim) + constitution violations + prototype-evidence misuse. Weight: internal soundness of each
+family spec and whether the prototypes tested the sharpest uncertainty. All disk claims re-verified
+this pass at HEAD `06e70053f` (base-pin `ce51c36fc` confirmed ancestor). This CRIT-1 supersedes the
+14:04 CRIT-1, which — like the FAMILY-SPECS — predates the two briefs that actually ran.*
 
 ---
 
-## 0. TWO GOVERNING WITHIN-LOCK FINDINGS — both decision-grade, neither folded into the spec
+## 0. THE HEADLINE DEFECT — the FAMILY-SPECS is stale against its own two decisive prototypes (self-supersession)
 
-### 0.1 The FAMILY-SPECS predates its own decisive prototypes and still speaks in the pre-resolution conditional
+The FAMILY-SPECS opens by mocking the 13:10 draft as "written BEFORE its own two decisive
+prototypes ran." **The current document (mtime 19:25) commits the identical sin.** Its §0 verdicts
+synthesize the *earlier* pass-2 prototype pair — the widening-rewrite master gate (`§0.2`,
+`LOCK-2-widen-confluent.patch` @13:25) and the B&B-vs-PBQP solver shape (`§0.1`, `PROTO-2.patch`
+@13:40) — and then emit Brief 1 + Brief 2 as "the two sharpest uncertainties for pass 3." **Those two
+briefs then RAN, at 19:46–19:47, and now occupy `PROTO-1.md` and `PROTO-2.md` on disk — and the
+synthesis was never updated to their results.** Verified by mtime and by content:
 
-Timestamps on disk: `FAMILY-SPECS.md` = 13:10; `PROTO-1.md` = 13:25; `PROTO-2.md` = 13:40. **The
-synthesis was written BEFORE the two experiments it turns on ran.** Its §0 states the governing
-conditional verbatim: *"until it fires, the honest LOCK-2 is 'canonicalization + the existing
-BackendShape driver,' with all extraction/CSP-extraction machinery recorded SPEC-ONLY."* Brief 1 has
-now fired — as PROTO-1 — and **returned the FAIL branch** (`picks identical` across the calibrated
-weight space). Per the FAMILY-SPECS' own pass/fail contract and PROTO-1's own verdict line: *"LOCK-2
-collapses to canonicalization + the `BackendShape` driver; extraction / CSP-extraction is
-SPEC_ONLY."*
+| file on disk | mtime | what it actually is | FAMILY-SPECS §0 calls it | stale? |
+|---|---|---|---|---|
+| `PROTO-1.md` | 19:46 | **PROVE-2-ALTCOST-CROSSOVER** (Brief 1) — RAN | "widening master gate FAIL / SPEC-ONLY straddling" | **YES** |
+| `PROTO-2.md` | 19:47 | **PROVE-2-SUBSTRATE-RECONCILE** (Brief 2) — RAN | "solver shape CLOSED (B&B v PBQP)" | **YES** |
 
-The consequence is not a nuance — it is the lock's shape. **The conditional has resolved to the
-collapse branch, and the spec's family verdicts are all written pre-resolution.** 2A is graded
-"ADVANCED — the lock's spine"; 2B "converging into 2A"; 2C "BANKED"; 2D "BLOCKED". Those grades were
-assigned before the master gate ran. They must be re-read as: *the spine (directed pipeline +
-canonicalization) survives; every distinctive extraction/CSP-extraction claim (2A-I2/I4 tree
-profiles, 2B-extraction-is-the-driver, 2C's non-degenerate objective, 2D's shape-lattice) is now
-SPEC-ONLY by the lock's own gate, not merely "gated pending an unrun brief."* The synthesis has not
-been updated to say this. That is a staleness defect at the document's load-bearing joint.
-
-### 0.2 The cross-tree provenance error CRIT-1 pass-1 flagged as "the pass's single most load-bearing defect" REPEATS in pass-2 — PROTO-1 ran the master gate on the wrong tree, and its context-rider grepped the wrong tree
-
-Verified on disk this pass. **Two separate cargo workspaces coexist at base-pin `ce51c36fc`:**
-
-| | top-level `crates/` | `skinny/crates/` |
-|---|---|---|
-| own `Cargo.toml`? | yes (root workspace) | yes (`skinny/Cargo.toml`, **not referenced by root** — count 0) |
-| `bbnf-ir` package | **here** (`crates/ir`, name `bbnf-ir`) | package name is `ir`, not `bbnf-ir` |
-| `egraph/` module (GrammarENode, `GrammarCostModel`, rules/) | **EXISTS** (`crates/ir/src/egraph/`) | **ABSENT** (skinny `ir` = cost.rs + lib.rs only) |
-| `passes/` crate (`backend_egraph.rs`, `decision_csp.rs`, `admits_sink_only`, `derive_recognizers`, `SimdMode`/`SimdSite`) | **ABSENT** (no `crates/passes` member) | **EXISTS** (`skinny/crates/passes/`) |
-| production-wired | yes (`crates/core/.../pipeline.rs`) | separate workspace |
-| XL-A label | **legacy** ("archives at GN-0") | **measurement substrate** ("only living implementation") |
-
-The engine LOCK-2 optimizes (`GrammarENode`/`GrammarCostModel`/the rewrite rules) lives **only in the
-top-level tree** — the tree XL-A labels *legacy*. The decision seams the FAMILY-SPECS wires (`passes/
-backend_egraph.rs`, `SimdMode`/`SimdSite`, `admits_sink_only`) live **only in skinny** — the tree
-XL-A labels *the substrate* — which has **no engine at all**. **No single tree has both.** Three
-concrete consequences, each decision-grade:
-
-1. **PROTO-1 ran the master gate against the top-level (XL-A-legacy) engine.** Its command is
-   `cargo test -p bbnf-ir --test egraph widen_confluent`; it added `crates/ir/src/egraph/rules/
-   widen.rs`; the `GrammarCostModel` whose Alt-arm it indicts exists **only** in top-level `crates/
-   ir`. Brief 1's method text explicitly required *"Skinny worktree … IN the skinny measurement
-   substrate (XL-A)."* The skinny `ir` package has no egraph module to extend, so PROTO-1 could not
-   have satisfied that clause — and did not disclose the substitution. **The FAMILY-SPECS §0 itself
-   listed pass-1 PROTO-1's defect (a) as "ran on the legacy tree" and named the fix as "in the skinny
-   substrate"; PROTO-1 pass-2 fixed (b) hand-union and (c) confluence/termination but left (a)
-   unfixed.** The sharpest uncertainty was tested, for the second consecutive pass, on the tree that
-   is missing half the seams the family cites.
-
-2. **PROTO-1's context-conflict rider is a wrong-tree artifact.** It reports *"`admits_sink_only` has
-   no implementation in the tree (`grep -rn admits_sink_only crates/` → 0 hits) … Rider result: 0
-   conflicts → context-free extraction confirmed."* But `admits_sink_only` **does** exist — in
-   `skinny/crates/passes/src/lib.rs`, the tree PROTO-1 was not grepping. So the rider that Brief 1
-   introduced *precisely to settle 2B's context-freedom* declared the predicate nonexistent because it
-   looked in the top-level tree, then substituted a "structural confirmation" from the top-level
-   `GrammarCostModel`. **2B's context-freedom is therefore UNSETTLED, not "confirmed"** — the caller-
-   conflict walk over the real `admits_sink_only` was never run.
-
-3. **The two-tree reconciliation — "adopt-and-prove / port the engine into skinny" — remains unscoped
-   by any family, exactly as CRIT-1 pass-1 named it.** To build Island B (or any of the lock's live
-   decision sites) end-to-end you need the engine (top-level) AND the decision seams (skinny) in one
-   tree. No family scopes that port. The FAMILY-SPECS §0 XL-A bullet asserts the reconciliation is
-   trivial ("prove the organ's behavior on the skinny substrate; design its home in greenfield
-   layout"), but the organ (the engine) does not exist in the substrate, so "prove it on skinny" is
-   not presently executable.
-
-**Challenge to route to GESTALT-B (per CROSS-LOCK protocol, with evidence):** XL-A declares "skinny@
-HEAD is the only living implementation; legacy top-level `crates/` archives at GN-0," yet on disk the
-top-level `crates/` workspace is the compiling, production-wired tree that owns the e-graph engine,
-while `skinny/crates/` is a separate workspace unreferenced by root. Either (a) PROTO-1/PROTO-2 ran on
-XL-A-legacy and their verdicts inherit the wrong-tree defect, or (b) XL-A's legacy/substrate labels
-are inverted relative to disk and the FAMILY-SPECS §0 framing rests on a mislabeled foundation. Both
-readings are damaging; both must be resolved before either prototype's verdict is "decision-grade."
-(Pass-1 CRIT-2 already recorded the portfolio-wide tree-of-record contradiction — LOCK-1 "skinny
-retires" vs LOCK-3/5/7 "skinny is the live tree of record"; this is that contradiction biting the
-prototypes.)
-
-### 0.3 What the master gate actually showed — subtler and LESS decisive than §0's "inert substrate" prediction
-
-Credit where due, because it sharpens the critique rather than blunting it. **PROTO-1's egraph limb
-PASSED** — the piece pass-1 left unbuilt is now built and green: a *registered* `ManufactureDispatchAlt`
-`Rewrite`, fired through `CspScheduler` (not hand-unioned), manufactures **≥2 semantically-distinct
-survivors at a child-bearing `Alt`** (`none_forms==1, some_forms==1`), stays **confluent** with the
-shipping all-narrowing set (`DeduplicateAltBranches` ran every iteration, did 0 work, did not collapse
-the dispatch twin — it keys on the branch set, blind to the dispatch table), and **terminates** with
-wide margin (`iters=2/64, nodes=20/100000`). This refutes §0's implicit claim that the substrate is
-*inert*. It is not inert; it manufactures confluent alternatives.
-
-The FAIL is located entirely at **extraction under calibration**, and its cause is **named and
-fixable**: `GrammarCostModel::cost`'s `Alt` arm is `base [+ dispatch_bonus if Some]`, where `base` is
-identical across the twin (same children, same N), so `cost(Some) − cost(None) ≡ dispatch_bonus` — a
-scalar **constant in N**. The model never reads `dispatch_table`/`dispatch_branch` for an `Alt`; there
-is no setup-vs-savings amortization, no branch-count crossover. Only the *sign* of one knob flips the
-pick; no interior of the calibrated space does. PROTO-1 §4 itself states the fix — *"extend the `Alt`
-arm to net `dispatch_table` against `N·dispatch_branch` vs `N·alt_per_branch` — a branch-count-
-dependent term … deliberately out of scope for a parsimonious probe."*
-
-**This makes the collapse verdict OVER-READ its evidence, in the elegant-reduction-trap sense.** The
-honest statement is *"today's cost model cannot discriminate the twin under calibration,"* not
-*"extraction is architecturally inert."* The load-bearing next step — a branch-count-dependent cost
-term, then re-measure — is cheap, named, and **untested**. The lock cannot claim the extraction thesis
-is *refuted* (it is not; the discriminating cost model was never built) nor *converged* (the
-discriminating cost model was never built). It is genuinely SPEC-ONLY, straddling. The confluence
-result is also narrow: it holds because `DeduplicateAltBranches` is blind to the dispatch dimension —
-a different narrowing rule that normalized on dispatch presence could collapse the twin, so
-"confluent with the current set" is proven, "confluent in general" is not.
+Both of the document's declared blocking uncertainties **have results sitting in the same directory
+that move the verdicts**, and the synthesis reads as if they are still open. Every per-family verdict
+below the fold ("SPEC-ONLY straddling," "context-freedom UNSETTLED," "the binding substrate
+contradiction," "challenge routed to GESTALT-B") is written against a knowledge state its own briefs
+have overtaken. **This is not a nit — it is the document failing the exact standard it sets.** A
+pass cannot be scored on a synthesis that predates its decisive evidence. The numbers below reflect
+disk truth as of 19:47, not the 19:25 text.
 
 ---
 
-## Family 2A — EGRAPH-ISLANDS — convergence 48%
+## 1. WHAT THE TWO BRIEFS ACTUALLY PROVED — and where each is softer than its own verdict line
 
-The directed-spine + local-islands architecture is coherent, evidence-aligned, and — post-XL-B — the
-lawful home of 2B's surviving mechanism. Gate (i) ("produce child-bearing nodes OR be genuinely
-constrained, else write it as a plain cost-ranked choice, do NOT island it") is a real gate that can
-go RED, and PROTO-1's egraph limb is a genuine advance over pass-1's hand-union. Credit all three. But
-the master gate that the family's *distinctive* value rides on has now FAILED, its provenance is
-cross-tree-broken (§0.2), and by the family's own predicate (1) its honest floor of genuine islands
-is **0, not 1**.
+### 1.1 PROTO-1 (altcost crossover) — the structural half is EARNED; the load-bearing half is the elegant-reduction trap
+Green, deterministic, honest: one fixed unmodified `CALIBRATED_WEIGHTS` vector yields
+2-branch→SEQUENTIAL, 8-branch→DISPATCH, crossing at `N*=3.0`, driven by the shipping coefficients and
+**not** the forbidden `dispatch_bonus` sign. The scalar-constant refutation is itself refuted. **Credit
+is real: the cost arm is now N-sensitive, which is exactly the structural precondition 2A/2B/2D were
+blocked on.** But three defects keep this from earning "extraction-as-decider":
 
-**Enumerated open gaps:**
-1. **[MASTER — now RESOLVED to the FAIL branch] I2/I4 tree-profile extraction is SPEC-ONLY, not
-   "gated."** PROTO-1 shows extraction does not discriminate a confluent child-bearing twin under any
-   calibrated vector. The tree profile is dead code until a branch-count-dependent cost term exists
-   (§0.3) — which is named and untested. The family's *distinctive* extraction value is presently
-   unearned.
-2. **[§0.2] The master gate ran on the top-level engine; Island B's seams are in skinny; the port is
-   unscoped.** `backend_egraph.rs`/`decision_csp.rs`/`SimdMode` (skinny) and `GrammarCostModel`/rules
-   (top-level) are in different workspaces. "Same-wave consumer that changes emitted code" cannot be
-   demonstrated until they are one tree, and no family scopes the unification.
-3. **I1 — the "honest floor" island — fails the family's OWN predicate (1).** `backend_egraph::select`
-   builds `EGraph<DecisionNode>` over 2–5 **childless** leaves, unions them, extracts `min` — which is
-   `argmin` over a candidate list with no congruence sharing (research-A §2 calls it "the family's own
-   refutation of predicate (1)"; the `decision_csp` step re-solves a 1-variable CSP that pins the
-   already-selected index). By gate (i) I1 should be **demoted to a plain cost-ranked pass**, not
-   counted as an island. The count of genuine child-bearing extraction islands with a live consumer in
-   the substrate is **0**.
-4. **[XL-C] I2 (regex-HIR canon) is a WITHHELD cross-lock contribution.** Homed in parse-that/LOCK-5;
-   the lawful `Hir` is LOCK-5's to render; the shared `rules/regex.rs` exemplar's keep/abrogate is
-   LOCK-5's verdict. Untested here and off this lock.
-5. **[XL-D, Brief 2] I3 (scan-plan) sites are IR-latent and consumer-BLOCKED two locks deep.** Skinny
-   IR models a single `SimdMode::Exact`/`SimdSite::PreEntry` (confirmed on skinny@HEAD by pass-1
-   CRIT-2); `Prefilter`/`SelfLoop` node shape is LOCK-3's to build; the derivation consumer is BLOCKED
-   through LOCK-9 9C / LOCK-5. Research-A's own §3/Q5 verdict is that scan selection is *a lowering
-   predicate, not an island* (multiplicity ≈ 1 per site) — i.e. gate (i) demotes I3 too, absent a
-   binding Exact-vs-Prefilter tie the fleet has not exhibited.
-6. **I4 (projection canon) is probably a canonicalization, not an island, and double-homes LOCK-1.**
-   PROVE-12 residualized it with monomorphization, not an e-graph (research-A §3, I3-of-that-report);
-   `map∘map`/dead-projection are always-apply → plain rewrites by gate (i); the LOCK-1 `Project`
-   double-home is a name-gate unless LOCK-1 ships an e-graph, which its disposition says it will not.
-7. **GN-2.W1 supersession (XL-F "wraps") is stated but its consumer is unbuilt** — a born-RED gate on
-   an unbuilt consumer cannot fail this wave; it must be marked GN/LOCK-9-owned, not LOCK-2-earned.
-8. **Ceremonial-deletion gate (v) unexercised** — the ~68-field provenance apparatus deletion is
-   asserted, not demonstrated; masked-fallback watch item until it lands.
+- **(a) The crossover is arithmetic, not evidence (gate-that-cannot-fail).** Two lines with slopes
+  `dispatch_branch=0.5 < alt_per_branch=1.5` and a positive intercept `dispatch_table=3.0` cross —
+  *necessarily*, at `N* = 3.0/(1.5−0.5) = 3.0`. The prototype proves the arm now *reads* N; it proves
+  nothing about whether `N*=3` is the **correct** boundary. The coefficients are hand-authored and
+  **never fitted** (2D never ran). So the model discriminates — possibly **wrongly**. "Extraction
+  discriminates" ≠ "extraction discriminates truthfully."
+- **(b) The PMU half is UNMEASURED and unmeasurable here (elegant-reduction trap).** Brief 1's PASS
+  condition bundles "the two lowerings' cyc/B 95% CI excludes 1.00× same-direction at value-starts."
+  PROTO-1 delivered only the arithmetic half; the runtime half is blocked by no `css_canon_bench`
+  target, no `perf`/`instruments` on darwin-ARM, loadavg 7–17, and **no synthetic-EGraph→runnable-parser
+  lowering path**. The document's own §454 gate — "moving a bench at value-starts" — is untouched. The
+  load-bearing step reads *"the cost model now discriminates on N (easy) — and then the hard part
+  (does that match reality?) is unmeasured."* Classic elegant-reduction.
+- **(c) Consumer-less in production (viii/Y.13).** PROTO-1 itself records that `ManufactureDispatchAlt`
+  "appears nowhere in `crates/*/src` outside its own definition file," so "production extraction has no
+  `None`/`Some` choice point." The rewire is **regen-neutral precisely because it has no live
+  consumer.** A cost term that discriminates a synthetic-only twin is a consumer-less substrate until a
+  production rewrite manufactures the choice. The synthesis must not read "structural crossover proven"
+  as "the lock has a live discriminating decision."
 
-## Family 2B — IR-IS-EGRAPH — convergence 32%
+**Honest label: structural precondition EARNED (green test); extraction-as-decider still SPEC-ONLY —
+its truth (crossover location) unfitted, its runtime (PMU) unmeasured, its consumer synthetic.** The
+FAMILY-SPECS' "SPEC-ONLY straddling" survives *upgraded*: no longer "the arm can't read N" but "the arm
+reads N, at an unvalidated point, with no live consumer, and the runtime claim is unmeasured."
 
-The maximal reading is cross-lock-refuted by XL-B (extraction cannot be the decision driver — that
-seat is LOCK-3's), and the pass-2 spec honestly concedes this, retreating to "the 2A island posture."
-The `Ref`-as-leaf / per-rule root-table insight (acyclic body e-graph, terminating greedy extraction)
-is genuinely sound — credit. But the family's distinctive thesis is now refuted by the master gate,
-and its key structural-soundness claim was mis-tested on the wrong tree.
+### 1.2 PROTO-2 (substrate reconcile) — context-freedom RATIFIED on structure; the "binding blocker" was a false premise; but the reconcile hides the real gap
+PROTO-2 is the stronger prototype and it corrects a genuine FAMILY-SPECS error. **Re-verified on disk
+this pass:**
+- `admits_sink_only(rule_ir, target)` (skinny `passes/src/lib.rs:954`) takes **no caller argument**;
+  `target` is one global `TargetFeatures::host()` threaded through the per-rule loop. Context-freedom
+  is **structurally** sound and does not depend on grammar count. The walk (0 conflicts) is
+  corroboration, not the proof. **2B context-freedom is legitimately RATIFIED on the structural
+  argument.** The FAMILY-SPECS "context-freedom UNSETTLED — the real walk was never run" is **stale**.
+- **The §0.3 "binding substrate contradiction / three-tree split / challenge routed to GESTALT-B" was
+  built on a false premise.** §0.3 asserts "the engine … exists **only** under top-level `crates/` …
+  ABSENT (skinny `ir` = `cost.rs`+`lib.rs`) … skinny has no engine at all." **Disk refutes this:**
+  `skinny/crates/passes/Cargo.toml` declares `egraph.workspace = true` + `csp-solver.workspace = true`;
+  `skinny/crates/passes/src/backend_egraph.rs` builds `EGraph::<DecisionNode>`, runs a rewrite via
+  `BackoffScheduler`, and **extracts** via `Extractor::best_node` at a wired seam `select()` called from
+  `lib.rs:505`. The generic engine crate **is in skinny and already extracts.** §0.3's "load-bearing
+  blocker" conflated "`GrammarENode` not in skinny `ir`" (true) with "no engine in skinny" (**false**).
+  PROTO-2's "no GESTALT-B escalation warranted" is correct on this narrow point.
 
-**Enumerated open gaps:**
-1. **[MASTER — RESOLVED to FAIL] "extraction emits `BackendShape` directly" is refuted for the
-   shipping cost model.** PROTO-1's extraction limb is precisely this claim's test, and it fails: the
-   e-graph is inert as a *decider* under calibration (though not as a *representer* — §0.3). Combined
-   with XL-B foreclosing the driver seat and the budget-boundary forcing termination in a solver
-   (research-B §6), 2B has no distinctive existence over 2A. "Converging into 2A" is the sound
-   disposition.
-2. **[§0.2] Context-freedom — the load-bearing structural-soundness claim — is UNSETTLED, not
-   "confirmed."** PROTO-1's rider grepped `crates/` (top-level), found `admits_sink_only` absent
-   (because it lives in skinny), and substituted a top-level structural confirmation. The caller-
-   conflict walk over the real predicate was never run. The spec's claim that context-freedom is
-   "structurally sound, confirmed by Brief 1's cheap CallRule rider" is not backed by what PROTO-1
-   ran. The NP-hard objection is *contingently* moot only if the walk actually returns 0 conflicts —
-   which is untested.
-3. **Whole-grammar organ within ~230 µs incl. teardown — UNTESTED (the spec's own "single most
-   important open measurement").** No proto stood the full-IR e-graph up over CSS-L4 (2875 states) and
-   timed build+saturate+extract+**teardown**; the 25.52% `drop_in_place` finding recurs on Alt-heavy
-   grammars; `CspScheduler` rebuilds a fresh `Csp` per iteration — the opposite of aegraph's no-rebuild
-   lesson. Pure assertion.
-4. **regen bit-identity through cost-guided extraction — UNTESTED at grammar scale.** `GrammarCostModel`
-   returns `f64` (PartialOrd) with Vec-insertion tie-break (research-A §4.3); the total-order/structural-
-   hash fix is a stated obligation with zero grammar-scale evidence. `DecisionCost`'s 6-tuple does it
-   right; `GrammarCostModel` does not — currently fragile.
-5. **AC-normal-form confluence + the extraction-crossover exhibit do not exist in-IR.** One-directional
-   `Seq`/`Alt` normal-forming is asserted confluent, untested; the "greedy busts the budget, solver
-   recovers" exhibit was built by PROTO-2 over *synthetic scan sites in csp-solver*, not the IR e-graph
-   2B posits.
-6. **Mis-scoped by the two-tree split (§0.2):** in skinny the grammar IR is not a `Language` (net-new);
-   in top-level it already is and is wired. 2B's real deliverable is *adopt-and-prove the port*, which
-   no family scopes and no proto exercised.
+**But PROTO-2's reconcile buries the sharpest within-lock finding, which its own facts + PROTO-1's
+together expose (I verified all four disk facts):**
 
-## Family 2C — CSP-CENTRAL — convergence 52%
+- Skinny's sole `impl Language` is `DecisionNode`, and `DecisionNode` has `children: [Id; 0]` — a
+  **zero-length array, childless by construction** (`backend_egraph.rs:157`; `children()` returns the
+  empty slice). This is exactly I1, the leaf-min the family's own gate (i) demotes to "not a genuine
+  island."
+- `GrammarENode` / `GrammarCostModel` — the **child-bearing** node (`Alt(children, dispatch)`) that
+  PROTO-1's crossover operates on — exist **only** in top-level `crates/ir/src/egraph/{node,cost}.rs`.
+  `grep -rn GrammarENode skinny/crates/` returns **nothing**.
+- PROTO-2 itself concludes "`GrammarENode` is welded to the top-level `ir` DAG and is **not** the
+  portable organ."
+- PROTO-1 ran its crossover on **top-level** `crates/ir/src/egraph/cost.rs` (it names the tree), i.e.
+  on the tree XL-A archives at GN-0 — **not** the skinny substrate its brief required.
 
-The pass's genuine positive result lives here. **PROTO-2 resolved Brief 2 / Q6 decisively**, and the
-`bounded_sum` propagator is now merged and tested (6/6). This is the strongest-earned family. But its
-entire *teeth* — a binding cross-site budget on real costs, over IR-modeled sites, read by a real
-consumer — remain SPEC-ONLY, and the solver-home verdict carries an untested escape hatch.
+**Synthesis of the two prototypes (which neither states):** the lock's *distinctive* mechanism —
+child-bearing extraction that discriminates on branch count — is demonstrable **only in the tree about
+to be archived**, and is **architecturally absent from the surviving substrate**, which carries only a
+childless leaf-min. PROTO-2's "DecisionNode suffices, no escalation" is a **masked fallback**: true that
+no engine *port* is needed, false that the substrate question is resolved — skinny cannot host the
+child-bearing island the lock's thesis requires without authoring a child-bearing node it does not have.
+**The binding blocker did not dissolve; it mutated** from "port the engine" (a false framing) to
+"skinny's only node is childless, so the master-gate island has no substrate home." No family scopes
+*that* either.
 
-**What is now EARNED (credit, folded into the grade):**
-- **Solver home resolved:** on the fleet's *actual* near-tree scan-plan graphs (JSON 3 sites; CSS-L4
-  12 sites, coherence a forest), PBQP fully reduces (**RN=0, zero fallbacks, ~1–5 µs**) but its
-  Lagrangian budget-dual carries an **irremovable integrality gap** (css-l4 slack: obj 39.003 vs the
-  true 21.011) and runs ~10⁴× slower; **B&B + `bounded_sum` is optimal on every instance in 3–35
-  nodes / <100 µs.** The near-tree premise is CONFIRMED (the "irreducibly dense" FAIL branch is
-  refuted). **Verdict: B&B-native-knapsack is the home; PBQP is ceremony.** This closes 2C's Q6 and
-  the GESTALT-B "one solver" coordination point.
-- `bounded_sum` merged into `crates/csp-solver/src/constraint/` via the `Custom` escape hatch; the
-  regression floor (`cargo test -p csp-solver --test bounded_sum` = 6/6) held.
-
-**Enumerated open gaps:**
-1. **[XL-D, Brief 2] Budget-binds-on-REAL-costs is unproven.** PROTO-2 used *synthetic* per-site costs
-   (admissible for the solver-*shape* question, and PROTO-2 flags this) — the budget-binding realism is
-   XL-D-blocked two locks deep. Whether a *real* static-size cost vector makes the budget bind over ≥2
-   real sites is untested.
-2. **The ≥2 IR-modeled competing scan sites do not exist in skinny IR** (`SimdMode`/`SimdSite` single-
-   valued — pass-1 CRIT-2 on skinny@HEAD). The `.bbnf` grammars with multiple shufti loops are not
-   under the skinny budget. Exposing the sites is GN-2.W1, unbuilt.
-3. **Consumer-less (viii/Y.13).** No codegen consumer reads the scan plan; `regen∘regen` byte-identity
-   holds only because the plan perturbs nothing wired (PROTO-2 did not even run `check-json` — "zero
-   grammar/generated files touched"). The parity/determinism gate is checked at a decision layer with
-   no downstream.
-4. **The B&B-wins verdict is contingent on HARD coherence — the soft-penalty escape hatch is untested
-   and unrepresentable in the base tree.** PROTO-2 §5: if coherence is a *finite preference* penalty,
-   that term is native to PBQP's pairwise matrix but has **no representation in the base B&B** (the
-   `ConstraintEnum` lacks the `Soft` variant the divergent bank carries). The one residual point in
-   PBQP's favor is deferred, not closed. So "B&B is the home" is proven *for hard coherence*, open for
-   soft.
-5. **Provenance sprawl — a THIRD divergent tree.** The `bounded_sum` bank was "cut against a divergent
-   tree carrying `soft.rs`/`cardinality.rs`/a `Soft` variant the base-pin tree does NOT." Alongside the
-   two workspaces of §0.2, this is a third tree state feeding the lock's evidence; the adaptation
-   (drop `backjumping`, add `cancel`) is undisclosed drift the gestalt must reconcile.
-6. **Degenerate without 2D.** Absent a fitted cost table the objective is `static_size_cost` — "a
-   CSP-shaped priority cascade with extra steps." 2D is SPEC-ONLY (below), so 2C's non-degeneracy leans
-   on an unrun family.
-
-## Family 2D — PROFILE-CLOSED-LOOP — convergence 30%
-
-SPEC-ONLY (vii): **no PROVE-2D prototype ran** — only Briefs 1 and 2 have PROTO files. The loop
-discipline is sound, the AutoFDO/BOLT precedent correct, and the load-bearing determinism invariant
-(the loop closes at *calibrate-time, not regen-time*, so `regen∘regen` survives and all load noise
-lives in `xtask fit-cost`) is right and non-negotiable. Credit both. But under vii a family carrying
-perf claims with zero running artifact is "status report," and its master-gate dependency has now
-resolved *adversely*.
-
-**Enumerated open gaps:**
-1. **[MASTER — BINDING, now confirmed adverse] There is no ≥2-survivor decision to fit.** PROTO-1
-   confirms that even with a widening rewrite manufacturing confluent survivors, the shipping cost
-   model cannot discriminate them under calibration → multiplicity-that-a-coefficient-can-flip ≈ 1.
-   2D is consumer-less until the cost-model extension (§0.3) manufactures a real front — doubly unbuilt
-   (cost-model change + fit). PROTO-1 hands 2D a *path* (fit `dispatch_table`/`dispatch_branch` at a
-   branch-count crossover) but does not walk it.
-2. **Zero executed fit (gate 1).** "A fitted coefficient FLIPS a decision AND beats the hardcoded lane
-   cold-paired" — unrun. PROTO-1's W1/W2 is a manual weight swap over a cost model that *cannot* flip,
-   not an OLS/ridge fit; it establishes weight-*insensitivity* at the interior, the opposite of what
-   2D needs.
-3. **Attribution underdetermination is named, not solved.** Whole-grammar cyc/B underdetermines per-
-   decision β; the A/B-differential (one lever per paired arm) is the proposed primitive but the fit
-   harness body does not exist; the identifiability ceiling (count of independently-toggleable levers
-   with a paired bench) is undisclosed.
-4. **The only *unblocked* plane touches knobs another lock owns** (`CSS_SHUFTI_MIN_SPAN`, `GATE=16`,
-   `select_backend` crossover — LOCK-9/GN-2). Fitting these supersedes hand-tuned GN literals — a
-   named supersession (ix) the spec must declare, not attach freely.
-5. **Falsifiable freshness (gate 4) unbuilt.** "Mutate a coefficient → gate goes RED,
-   `check-calibration` fails" is the anti-provenance-theater guard 2D promises; the current
-   `"pass"`/`0` stamps are the lie it removes. No prototype showed the gate can go RED — so the
-   anti-provenance-theater claim is *itself, presently, provenance theater*.
-6. **`from_env` grep-gate asserted, not demonstrated** — the two-cost-source masked-fallback fence
-   (`BBNF_COST_*` out of the regen path) is stated; no CI gate exists yet.
+- **Non-vacuity caveat on the walk:** the "fleet" is **one grammar**. `find skinny -name '*.bbnf'` = 1
+  (`json.bbnf`). PROTO-2's `conflicts=0` covers json alone (15 rules, 2 live witnesses). The structural
+  argument carries ratification; the *empirical* "over the fleet" is 1/N. The entire "fleet" vocabulary
+  in the FAMILY-SPECS and in the solver-shape prototype (JSON 3 sites, **CSS-L4 12 sites**) references
+  grammars that **do not exist as `.bbnf` in skinny** — a standing wrong-tree/provenance flag on every
+  "fleet" number in the lock.
 
 ---
 
-## Cross-cutting adversarial notes (checklist + constitution)
+## Family 2A — EGRAPH-ISLANDS — convergence **52%** (prior CRIT-1: 48%)
 
-- **Vacuous convergence:** the FAMILY-SPECS' "net pass-2 shape" (one frame — 2A spine — 2D beneath,
-  2C's Island B the scan seam) is actually the FAIL-branch of its own master gate, now realized. That
-  is not vacuous — the collapse is a real, decision-grade outcome — but the spec presents it as a
-  *converged architecture* rather than as *the negative result the gate returned*. Grade the lock as
-  "canonicalization + BackendShape driver EARNED; extraction/CSP-extraction SPEC-ONLY," not "2A
-  ADVANCED."
-- **Spec-cites-itself circularity:** NOT present in the family logic — §0 rests on independent
-  measurements (in-tree 54-config null + Cranelift 1.13/2-of-4M + the shipping all-narrowing set) and
-  PROTO-1/PROTO-2 are external-to-the-argument experiments. This discipline is the pass's genuine
-  strength; I do not fault it. The circularity risk is elsewhere: 2C non-degenerate ⇐ 2D fitted ⇐ a
-  ≥2-survivor front ⇐ the master gate 2C's own objective would have decided — a dependency cycle that
-  the master-gate FAIL breaks by removing the front entirely.
-- **Gates-that-cannot-fail:** PROTO-1's egraph-limb gates are honest and one (extraction) genuinely
-  failed. But (a) PROTO-1's "context-free confirmed" rider *could not have failed* — it grepped a tree
-  without the predicate (§0.2); a rider that verdicts on the absence of a file it looked for in the
-  wrong directory is a gate that cannot fail. (b) The GN-2.W1 born-RED gates (≥8× skip, ≥0.95× dense)
-  gate an *unbuilt* consumer — cannot fail this wave; mark GN/LOCK-9-owned.
-- **Elegant-reduction trap:** two live instances. (1) §0.3 — "extend `GrammarCostModel`'s Alt arm with
-  a branch-count term, then re-measure" is the load-bearing step between the FAIL and any PASS, and it
-  is unbuilt; the collapse verdict reads-and-then-the-hard-part. (2) 2B's "adopt-and-prove the port" —
-  the port between the two workspaces is the hard, unscoped middle of every 2B/Island-B claim.
-- **Consumer-less substrate (viii/Y.13):** PROTO-2's scan plan has no reader (2C-gap 3); the ~68-field
-  provenance apparatus (2A-gap 8) is dead until a plan-reading consumer exists. Both correctly slated
-  for deletion/wiring, neither executed.
-- **Concrete-or-SPEC-ONLY (vii):** 2D must carry SPEC-ONLY (no artifact). PROTO-2's synthetic-cost
-  budget-binding must carry SPEC-ONLY for the *binding* claim (PROTO-2 does flag it). PROTO-1's PMU
-  limb was correctly *not run* (moot after the extraction FAIL) — honest. But PROTO-1's confluence
-  result is real and should be credited as the pass's second earned artifact (after PROTO-2's solver
-  resolution).
-- **Prototype-evidence misuse:** PROTO-1 is anchored in the FAMILY-SPECS §0 as the pass's master
-  experiment "de-risks or refutes 2A-I2/I4, 2B-extraction, and 2D-lattice at once." It does — but (i)
-  on the top-level engine, not the skinny substrate Brief 1 required (§0.2); (ii) its context rider is
-  a wrong-tree artifact; (iii) its extraction FAIL is a cost-model-expressiveness gap the probe itself
-  names a fix for and declines to test (§0.3), so "refutes" over-reaches — "leaves SPEC-ONLY straddling"
-  is the honest label.
-- **Extant-codex supersession (ix):** GN-2.W1 "wraps" (XL-F) is named — good. The SHUFTI/GATE fits
-  (2D) are still "attach," not named supersessions.
-- **Parsimony/colocation (vi):** `bounded_sum` correctly homed in `csp-solver` — clean. The two-
-  workspace split and the third (bank) tree are the parsimony violation the gestalt must adjudicate:
-  the lock cannot claim a coherent substrate while its engine, its decision seams, and its banked
-  constraint live in three different tree states.
-- **Refutation laws (iv):** honored in form (ratios not absolutes, no warm benches, aarch64-only).
-  PROTO-1/PROTO-2 ran at loadavg ~5–10; PROTO-2's fine-λ-grid correction (the coarse pass's obj-120
-  was a grid artifact) is a model of honest self-correction — credit.
-- **Zero-runtime-cost types (v):** not stressed this pass; the provenance-apparatus deletion is the
-  only clause-v item and it is unexercised.
+Credit: PROTO-1 proved the structural crossover (green, deterministic, single fixed vector) — the
+master gate's easy half is now EARNED, up from "the discriminating cost model was never built." The
+canonicalization spine + the extant `BackendShape` driver (I1) remain the family's real floor.
 
-## Lock-level disposition (critic-1 recommendation)
+**Enumerated open gaps:**
+1. **[MASTER, elegant-reduction] Extraction-as-decider is still SPEC-ONLY.** The crossover is arithmetic
+   (guaranteed by coefficient signs, §1.1a); `N*=3` is unfitted (may discriminate wrongly); the PMU
+   clause (cyc/B CI excludes 1.00× at value-starts) is UNMEASURED and unmeasurable in this environment
+   (§1.1b). The green test proves the arm reads N, **not** that the pick is truthful or moves a bench.
+2. **[SUBSTRATE, load-bearing, NEW] The child-bearing island has no home in the surviving tree.** The
+   only skinny `impl Language` is childless `DecisionNode` (`children:[Id;0]`); the child-bearing
+   `GrammarENode` lives only in legacy top-level `crates/ir`, is non-portable (PROTO-2), and is where
+   XL-A sends the axe (GN-0). **The count of child-bearing islands with a live consumer in the substrate
+   is 0, and cannot become ≥1 without authoring a child-bearing skinny node no family scopes.** I1
+   remains the leaf-min the family's own gate (i) demotes.
+3. **[consumer-less, viii] The altcost rewire has no production consumer.** `ManufactureDispatchAlt` is
+   absent from all production `src`; the discrimination is synthetic-only (§1.1c).
+4. **[XL-C] I2 (regex-HIR canon) WITHHELD** pending LOCK-5 keep/abrogate of `rules/regex.rs`.
+5. **[XL-D, two-locks-deep] I3 (scan-plan) sites are IR-latent, consumer-BLOCKED** (`SimdMode`/`SimdSite`
+   single-valued; `SelfLoop`/`Prefilter` node shape is LOCK-3's; derivation consumer BLOCKED at LOCK-9
+   9C / LOCK-5).
+6. **[XL-F] I4 (projection canon)** is probably an always-apply canonicalization (PROVE-12 monomorphized,
+   no e-graph) double-homed with LOCK-1's `Project` — unresolved whether it is an island at all.
 
-The honest LOCK-2 after pass-2 is **2A's directed spine + aggressive canonicalization + the existing
-BackendShape driver**, plus **B&B + `bounded_sum` as the scan-plan solver home** (PROTO-2's earned
-result), with everything extraction-distinctive recorded SPEC-ONLY by the lock's own master gate:
+Verdict: **ADVANCED (spine + driver EARNED), master value still SPEC-ONLY** — upgraded in kind, not
+closed. The pass proved the arm can read N; it did not prove the reading is right, has a consumer, or
+has a substrate home.
 
-- *extraction/CSP-extraction as a DECIDER* — SPEC-ONLY, straddling: PROTO-1 built the confluent
-  widening rewrite (egraph limb green) but showed the shipping `GrammarCostModel` cannot discriminate
-  the twin under calibration; the fix (branch-count-dependent Alt cost) is named and untested. Neither
-  refuted nor converged.
-- *scan-plan CSP/budget* — mechanism proven (`bounded_sum` merged, 6/6; solver home resolved to B&B),
-  but binding-on-real-costs, IR-modeled sites, and a live consumer are SPEC-ONLY / two-locks-blocked;
-  the soft-coherence escape hatch is untested.
-- *2B* — does not survive as a distinct family (distinctive thesis master-gate-refuted, maximal reading
-  XL-B-foreclosed, context-freedom UNSETTLED on the wrong tree); "converging into 2A" is the sound
-  disposition, but the port that would realize it is unscoped.
-- *2D* — sound discipline, right determinism invariant, zero executed fit, master-gate dependency
-  confirmed adverse (no front to fit).
+---
 
-**The single highest-value pass-3 directive (within-lock):** reconcile the two workspaces FIRST —
-port/adopt the top-level `crates/ir/egraph` engine into the skinny substrate (or authoritatively
-declare which tree IS the substrate and delete the other's duplicate) so that engine + decision seams
-live in one tree — then, in that tree: (1) extend `GrammarCostModel`'s `Alt` arm with the branch-count
-term PROTO-1 named and re-fire the master gate (does a *single fixed calibrated vector* pick DISPATCH
-at large N and SEQUENTIAL at small N?); (2) run the real `admits_sink_only` caller-conflict walk (does
-the fleet have a context conflict, settling 2B's context-freedom for real); (3) build a codegen
-consumer that reads PROTO-2's scan plan so 2C is not consumer-less; (4) run ONE executed 2D fit
-against whatever front (1) manufactures. No family may speak of convergence before those four land —
-and none was tested this pass. Convergence percentages above are floored by §0.1 (verdicts predate the
-prototypes) and §0.2 (both prototypes carry wrong-tree provenance).
+## Family 2B — IR-IS-EGRAPH — convergence **46%** (prior CRIT-1: 32%)
+
+Credit: the largest move of the pass. **Context-freedom RATIFIED** on the sound structural argument
+(re-verified: `admits_sink_only` takes no caller arg; global `target`); the pass-1 NP-hard
+BLOCKED-candidate objection stays contingently lifted (repair = bounded sub-rule specialization, not
+optimal context-sensitive extraction). The §0.3 "engine absent from skinny" premise is **refuted by
+disk** — the engine crate is wired and extracting in skinny.
+
+**Enumerated open gaps:**
+1. **[distinct existence] 2B still earns nothing over 2A.** Multiplicity ≈ 1 across the fleet (triple-
+   confirmed); "IR IS an e-graph end-to-end" buys only hash-cons dedup today; the maximal reading stays
+   XL-B-refuted (LOCK-3's driver seat). Its lawful residual **is** the 2A island posture.
+2. **[NEW, load-bearing] The e-graph that would carry 2B's thesis is childless in the substrate.** 2B's
+   whole claim is a child-bearing node substrate across the tower; skinny's only `impl Language` is
+   `DecisionNode` (`children:[Id;0]`), and the child-bearing `GrammarENode` is non-portable (PROTO-2's
+   own finding). 2B-in-skinny is presently a childless bag — the thesis has no substrate.
+3. **[empirical thinness] Context-freedom's *walk* is 1 grammar (json).** Ratification rests on structure;
+   the "over the fleet" empirical is 1/N — fine as corroboration, mislabeled as fleet coverage.
+4. **[gate 4, unmeasured] Whole-grammar organ (build+saturate+extract+teardown) within ~230 µs on CSS-L4
+   (2875 states)** — the single most important 2B measurement — **never ran**; `CspScheduler` rebuilds a
+   fresh `Csp` per iteration (opposite of the aegraph no-rebuild lesson): a pure-assertion scaling risk.
+5. **[total-order] `regen∘regen` through cost-guided extraction at grammar scale** with the f64 +
+   content-hash tie-break is owed and untested at that scale (per-json byte-identity ≠ CSS-L4-scale).
+
+Verdict: **context-freedom RATIFIED, distinct existence still unearned, substrate childless.** The
+BLOCKED-candidate stays lifted; 2B converges into 2A but cannot yet stand in the surviving tree.
+
+---
+
+## Family 2C — CSP-CENTRAL — convergence **54%** (prior CRIT-1: 52%)
+
+The lock's strongest family and its genuine positive result: the solver-shape question is CLOSED
+(B&B + `bounded_sum` native-knapsack optimal on every instance 3–35 nodes/<100 µs; PBQP's Lagrangian
+budget-dual carries an irremovable integrality gap at ~10⁴× wall-clock). `bounded_sum` is
+MERGED-and-tested (`6/6`). Unaffected by the two new briefs; it stands.
+
+**Enumerated open gaps:**
+1. **[XL-D, consumer-blocked] The budget never binds on real IR-modeled sites.** Source says ≥2 competing
+   scan sites; the IR says single-valued (`SimdMode`/`SimdSite`); the `SelfLoop`/`Prefilter` bridge is
+   LOCK-3's, consumer BLOCKED two locks deep. **The teeth remain SPEC-ONLY.**
+2. **[provenance, NEW] The solver-shape prototype ran on graphs whose grammars aren't in the substrate.**
+   "CSS-L4 12 sites" — but css_l4 is not among skinny's `.bbnf` (json is the only one). The near-tree /
+   treewidth-≤2 evidence and the B&B-optimality numbers were taken on top-level or synthetic instances,
+   not the measurement substrate (XL-H wrong-artifact flag). The *verdict* (B&B over PBQP) is robust;
+   the *instance realism* is not substrate-anchored.
+3. **[escape-hatch] `bounded_sum` entered via `ConstraintEnum::Custom`, merged from a divergent bank tree**
+   carrying a `Soft` variant the base lacks. The soft/finite coherence-penalty residual (the one point
+   for PBQP) is unrepresentable in base B&B and **untested**.
+4. **[2D-degenerate] Without a fitted cost table the objective is `static_size_cost` — "a CSP-shaped
+   priority cascade with extra steps."** Non-degeneracy leans entirely on 2D, which has run zero fits.
+5. **[XL-G, one-solver-home] Unification with LOCK-1's csp-solver** is a GESTALT-B point; the divergent-
+   bank provenance of `bounded_sum` must reconcile first.
+
+Verdict: **EARNED-solver / BANKED-teeth** — solver home is the pass's real convergence; every tooth is
+consumer-blocked or 2D-dependent.
+
+---
+
+## Family 2D — PROFILE-CLOSED-LOOP — convergence **34%** (prior CRIT-1: 30%)
+
+Credit: Brief 1 reversed 2D's "resolved adversely" — a discriminable front now provably exists (the
+N-crossover). The determinism invariant (loop closes at calibrate-time, regen a pure function of
+`(grammar, committed-β)`) is correct; the substrate is ~70% present.
+
+**Enumerated open gaps:**
+1. **[concrete-or-SPEC-ONLY, vii] Zero executed fit.** No PROVE-2D ran; the fit-harness, freshness-check
+   bodies, and a committed `CALIBRATED_WEIGHTS` derived from PMU are all absent. 2D may not speak of
+   convergence until one fit lands (its own gate).
+2. **[NEW, sharp] The very crossover 2D exists to produce is currently hand-authored and unfitted.**
+   PROTO-1's `N*=3` comes from hand-set coefficients — exactly the authored magic 2D must replace. So 2D
+   is now *more* motivated and *no less* unbuilt: the front exists but at an unvalidated point that only
+   a fit can justify. "Front exists" is not "front is correctly placed."
+3. **[falsifiable freshness] The gate has never been shown to go RED.** Today's `"pass"`/`0` stamps are
+   the theater 2D removes; until a proto mutates a coefficient and the gate reddens, the anti-theater
+   claim is itself provenance theater.
+4. **[unblocked plane is cross-lock-owned] `select_backend` kernel crossover (LOCK-9), `CSS_SHUFTI_MIN_SPAN`/
+   `GATE=16` (GN-2)** — fitting these supersedes hand-tuned GN literals: a **named supersession (ix)** the
+   spec must declare, not attach freely.
+
+Verdict: **BLOCKED (SPEC-ONLY), composable not exclusive** — front un-blocked, fit still un-run.
+
+---
+
+## Failure-mode checklist — hits found
+
+- **Elegant-reduction trap — HIT (2A/2B/2D crux).** PROTO-1 delivered the arithmetic half of the master
+  gate and left "does the pick match reality? (PMU)" unmeasured. The load-bearing step reads
+  *and-then-the-hard-part*.
+- **Gate-that-cannot-fail — HIT.** The structural crossover is arithmetically guaranteed by coefficient
+  signs; the PMU clause cannot be run in this environment. The master gate as-executed neither can fail
+  (structural half) nor can complete (PMU half).
+- **Consumer-less substrate (viii/Y.13) — HIT ×3.** (a) PROTO-1's altcost rewire has no production
+  consumer (`ManufactureDispatchAlt` synthetic-only); (b) 2C's teeth consumer BLOCKED two locks deep
+  (XL-D); (c) 2D's fitted coefficients have no live decision to flip.
+- **SPEC_ONLY anchoring a perf claim — WATCH/near-HIT.** PROTO-1 correctly labels the runtime
+  superiority "well-established microarchitectural fact … not asserted here as measured." The synthesis
+  must not upgrade "structural crossover proven" into "extraction-as-decider EARNED" — that would anchor
+  the master perf claim on an unmeasured half.
+- **Masked fallback — HIT.** PROTO-2's "DecisionNode suffices, no GESTALT-B escalation" masks that
+  DecisionNode is childless and structurally cannot carry the master-gate island; the substrate blocker
+  mutated rather than dissolved.
+- **Spec-cites-itself circularity — SOFT HIT.** `N*=3` is "documented at `cost_weights.rs:87-88`"; the
+  prototype confirms the code matches the comment, but the comment/coefficients are hand-authored — the
+  crossover validates against itself, not against measured runtime.
+- **Stale synthesis (document-integrity) — HIT.** §0 (the load-bearing verdicts) predates the two briefs
+  it prescribed and that then ran (§0 above). The FAMILY-SPECS must be re-cut to disk-as-of-19:47 before
+  any convergence is scored.
+- **Unverified gestalt — N/A this pass** (XL-B WORKING, correctly deferred to GESTALT-B).
+
+---
+
+## Routing / what pass 3 must carry (within-lock)
+
+1. **Re-cut the FAMILY-SPECS §0 to the two briefs' actual results** (PROTO-1 = altcost crossover
+   structural-EARNED/PMU-UNMEASURED; PROTO-2 = substrate-reconcile PASS, context-freedom RATIFIED,
+   §0.3 "engine absent from skinny" retracted as disk-false). No score before this.
+2. **Scope the real substrate gap** (supersedes §0.3's false "port the engine"): author a **child-bearing
+   skinny node** or accept that the master-gate island lives only in the archived legacy tree. This is
+   the lock's true unscoped core and belongs to GESTALT-B **with the corrected premise** (engine crate
+   is in skinny; only the child-bearing node is not).
+3. **The PMU half of the master gate needs a real host** (perf/instruments, quiet machine, a
+   synthetic→runnable lowering) — until then extraction-as-decider stays SPEC-ONLY regardless of the
+   green structural test.
+4. **2C's teeth and 2D's first fit** remain the two consumer/evidence gates; neither moved this pass.
+
+**Net (disk-truth, 19:47):** the pass earned two genuine results — the B&B/`bounded_sum` solver home
+(2C, unchanged) and 2B context-freedom (structural, RATIFIED) — plus one honest structural
+half-result (PROTO-1's N-crossover). It did **not** earn extraction-as-decider (arithmetic + unfitted +
+unmeasured + consumer-less), and it **surfaced a harder substrate finding than the one it retired**:
+the child-bearing island the lock's thesis needs exists only in the tree XL-A archives, and the
+surviving substrate carries a childless leaf-min. The lock is a converging core with **four exact
+gaps** (master PMU, substrate child-node home, XL-D teeth, 2D first fit) — not a convergence.

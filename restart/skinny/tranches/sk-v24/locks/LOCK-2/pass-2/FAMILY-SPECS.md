@@ -55,8 +55,18 @@ space does. **The honest statement is "today's cost model cannot discriminate th
 "extraction is architecturally inert."** The load-bearing fix — net `dispatch_table` (fixed setup)
 against `N·dispatch_branch` vs `N·alt_per_branch` (a **branch-count-dependent** term) so a *single
 fixed* calibrated vector picks DISPATCH at large N and SEQUENTIAL at small N — is cheap, named by
-the probe itself, and **untested**. So extraction-as-decider is neither refuted nor converged: it
-is **SPEC-ONLY straddling**. The confluence result is also narrow: it holds because
+the probe itself, and **untested**. **Sharper still (verified on disk this synthesis pass):** the
+three coefficients the fix needs *already ship calibrated* — `cost_weights.rs:177-188`
+(`alt_per_branch=1.5, dispatch_branch=0.5, dispatch_table=3.0`) — and the intended crossover formula
+is *already documented* at `cost_weights.rs:87-88` ("compares `N·dispatch_branch` against
+`alt_per_branch·N + dispatch_table`"), predicting `N* = dispatch_table/(alt_per_branch−dispatch_branch)
+= 3.0`; but the `Alt` cost arm (`cost.rs:109`, confirmed: `base + dispatch_bonus if Some else base`)
+reads **only** the scalar `dispatch_bonus` and never those three. So the fix is a *rewire to
+already-shipping, already-calibrated coefficients whose crossover formula is written in the same
+file*, not a new cost term — and the fleet demonstrably straddles `N*=3` (JSON's 7-way value
+dispatch → DISPATCH; a binary sum, `N=2` → SEQUENTIAL). This materially de-risks the master gate: a
+crossover from a single fixed vector is a two-line rewire away, not a research problem. So
+extraction-as-decider is neither refuted nor converged: it is **SPEC-ONLY straddling**. The confluence result is also narrow: it holds because
 `DeduplicateAltBranches` is blind to the dispatch dimension; "confluent with the current set" is
 proven, "confluent in general" is not.
 
@@ -458,14 +468,18 @@ three-tree split, §0.3/§V)** that GESTALT-B must adjudicate.
 ## Prototype briefs (the two sharpest uncertainties for pass 3)
 
 ### Brief 1 — PROVE-2-ALTCOST-CROSSOVER (kind: bbnf-worktree)
-**Question.** Extend `GrammarCostModel::cost`'s `Alt` arm to net `dispatch_table` (fixed setup)
-against `N·dispatch_branch` vs `N·alt_per_branch` (a branch-count-dependent term). Does a **single
-fixed calibrated weight vector** then pick DISPATCH at large N and SEQUENTIAL at small N — the
-structural crossover PROTO-1 named and declined to build — such that `Extractor` picks *differently*
-under two calibrated vectors from *structure, not the forbidden `dispatch_bonus` sign-flip*, and the
-two lowerings move cyc/B at real value-start positions? This is the exact FAIL-cause PROTO-1 located;
-it resolves extraction-as-decider (refuted vs real) for 2A-I2/I4, 2B, and 2D at once — the whole
-lock's crux.
+**Question.** Rewire `GrammarCostModel::cost`'s `Alt` arm (`crates/ir/src/egraph/cost.rs:109`, today
+`base + dispatch_bonus if Some else base`) to consume the three coefficients that *already ship
+calibrated* — `dispatch_table=3.0`, `dispatch_branch=0.5`, `alt_per_branch=1.5`
+(`cost_weights.rs:177-188`), whose intended crossover formula is even *documented* at
+`cost_weights.rs:87-88` — netting `dispatch_table + N·dispatch_branch` (DISPATCH) against
+`N·alt_per_branch` (SEQUENTIAL). Does a **single fixed calibrated weight vector** then pick DISPATCH
+at large N and SEQUENTIAL at small N — the structural crossover PROTO-1 named and declined to build —
+crossing at `N* = dispatch_table/(alt_per_branch−dispatch_branch) = 3.0`, such that `Extractor` picks
+*differently* by branch-count *structure, not the forbidden `dispatch_bonus` sign-flip*, and the two
+lowerings move cyc/B at real value-start positions? This is the exact FAIL-cause PROTO-1 located; it
+resolves extraction-as-decider (refuted vs real) for 2A-I2/I4, 2B, and 2D at once — the whole lock's
+crux — and it is a two-line rewire to existing coefficients, not a new cost term.
 **Method.** Worktree base-pinned (`baseCommit`), HEAD named, `--profile ax-iter`. In the tree that
 holds `GrammarENode`/`GrammarCostModel` (top-level `crates/ir/src/egraph/`; note the §0.3
 substrate caveat and, if Brief 2 lands first, run in the reconciled skinny tree). Edit the `Alt` arm

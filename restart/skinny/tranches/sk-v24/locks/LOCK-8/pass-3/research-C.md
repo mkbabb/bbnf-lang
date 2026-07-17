@@ -1,316 +1,321 @@
-# LOCK-8 · FAMILY 8C — ISOMORPHIC MIRROR (correspondence): research, pass 3
+# LOCK-8 · 8C — THE CORRESPONDENCE PLANE (pass-3 research-C)
 
-*The TS plane as the lawful mirror of the Rust parse-that core. 8C does not build the general
-mirror machinery (linter, generator, differential harness) — those are LOCK-6's. It builds the
-parse-that-specific residue: the machine-checkable DIVERGENCE LEDGER, the regex hazard-class
-enumeration with its discriminating corpus, and — newly this pass — the adjudication of whether a
-PRIORITY-PRESERVING DFA construction dissolves the regex divergence (routed to LOCK-5 as a
-decision). Every landing rides letter BBNF-PT-G; parse-that is READ-ONLY; prototypes are scratch
-copies base-pinned to HEAD `ef10d5b`.*
-
----
-
-## 0. What pass 3 nails that pass 2 asserted
-
-Pass 2 named three structural divergences and *predicted* the regex alternation-order hazard (R-C1)
-as "known, not speculative." Pass 3 turns prediction into **measured code-level fact** and
-discovers the divergence is **live in a real consumer**, not hypothetical:
-
-- The Rust NFA **builds** priority-ordered ε-edges (`nfa.rs:19-23` `EpsilonEdge{priority:u8}`;
-  alternation `priority = i` for leftmost-first, `nfa.rs:311-314`; greedy/lazy priorities
-  `nfa.rs:343-382`) — **then the subset construction throws priority away**: `epsilon_closure`
-  returns a `BTreeSet<StateId>` ordered by numeric state id, never by priority
-  (`dfa.rs:189-201`), and `find_at` returns `last_accept` = **leftmost-LONGEST** (`dfa.rs:116-138`).
-  The engine's stated intent (leftmost-first) is silently overwritten by leftmost-longest at
-  determinization. This is directive #3's premise, confirmed at `path:line`.
-- The TS regex leaf is JS `RegExp` with the sticky `/y` flag anchored at `state.offset`
-  (`leaf.ts:5-31`), i.e. **leftmost-FIRST backtracking** (Irregexp/PCRE order). The two engines
-  therefore realize **different match-selection semantics by construction**, not by accident.
-- **The live corpus exercises the divergence.** latex-paper's math grammar contains
-  `regex(/[\s\S]*?(?=\\\])/)` and `regex(/[\s\S]*?(?=\\\))/)` (`math.ts:45,57`) — each a **lazy
-  `*?` quantifier PLUS a lookahead assertion `(?=…)`**. R-C1 is not a contrived `/a|ab/`; it is
-  shipping consumer code.
-- **The Rust HIR cannot even represent the lookahead.** `Hir` (`hir/mod.rs:216-224`) has variants
-  `Empty · Literal · Class · Look(Look) · Repetition · Group · Concat · Alternation` — and `Look`
-  (`hir/mod.rs:170+`) is a **fixed** assertion enum (`Start End StartLF EndLF StartCRLF EndCRLF` +
-  word boundaries), with **no** `Look(Box<Hir>)` general-lookahead variant. `(?=\\\])` is
-  **inexpressible Rust-side**. No determinization strategy recovers an assertion the HIR cannot
-  hold.
-
-The consequence reshapes the pass-2 regex row: it is **not one row** but a *partition* by
-expressiveness class — and the priority-DFA question (directive #3) resolves only the **regular
-fragment**, never the non-regular one. §3-§5 develop this; it is the pass-3 centre of gravity.
+*Family 8C is the ISOMORPHIC MIRROR: the TS combinator plane as the lawful mirror of the
+Rust `parse_that` core. Its deliverable is not a runtime — it is a **machine-checkable
+divergence ledger** over `parse_that/src ↔ typescript/src/parse`, a **regex-correspondence
+adjudication** with a differential paired-triple corpus, and the **priority-preserving
+subset-construction** question routed to the regex continuum. The mirror is proven by census
+and oracle, not asserted. Anchors are `path:line`; the Rust tree is `parse-that/rust/parse_that`,
+the regex engine `parse-that/rust/regex`, the TS tree `parse-that/typescript/src/parse`.
+parse-that is READ-ONLY; every landing rides letter BBNF-PT-G; prototypes are scratch copies.*
 
 ---
 
-## 1. THE DIVERGENCE LEDGER (directive #1) — machine-checkable, one row per unit
+## 1. The mechanism: a generated ledger + differential oracle, not a hand map
 
-Census method: signature grep/AST over `rust/parse_that/src/{combinators/methods/*.rs, leaf.rs,
-span_parser/*, state.rs}` (Rust) ↔ `typescript/src/parse/{parser.ts, leaf.ts, state.ts,
-packrat.ts, utils.ts}` (TS). Classification vocabulary: **MIRRORED** (same behavioral contract,
-name-mapped) · **LAWFUL-NON-MIRROR(reason)** (intended asymmetry, parity-floored) · **DRIFT(defect)**
-(unintended — none found). The ledger is the artifact 6A whitelists and 6D asserts; it is emitted
-as a data file (`scratch/8c-ledger.tsv`, landed via BBNF-PT-G), reproduced here as its authoritative
-content.
+8C does not build the general mirror machinery (linter, skeleton generator) — that is LOCK-6's.
+It builds the parse-that-specific residue as two artifacts:
 
-### 1a. Method surface (`combinators/methods/*.rs` ↔ `parser.ts`)
+1. **The ledger** — one row per public combinator / leaf / subsystem, keyed on the symbol,
+   carrying `{symbol, rust_anchor, ts_anchor, class, reason, discriminating_test, perf_fence}`
+   where `class ∈ {MIRRORED, LAWFUL-NON-MIRROR(reason), DRIFT}`. It is **generated**, never
+   hand-maintained: a census walks both trees (TS via the `tsc`/ts-morph symbol table over
+   `typescript/src/parse`; Rust via a `pub fn`/`impl` census over `parse_that/src`, or
+   `cargo public-api`) and emits `LEDGER.tsv`. The generator is the substrate; the file is the
+   deliverable.
+2. **The oracle** — a differential harness running one input through both engines, asserting the
+   row's class holds: MIRRORED rows must agree byte-for-byte; DRIFT rows must reproduce their
+   documented divergence; LAWFUL-NON-MIRROR rows are agreement-exempt but their *reason* is pinned.
 
-| unit | Rust | TS | class | parity floor |
-|---|---|---|---|---|
-| then | `sequence.rs:10` | `parser.ts:81` | MIRRORED | tuple `(O,O2)` ≡ array `[T,S]` on same input |
-| skip · next | `sequence.rs:23,36` | `:189,:212` | MIRRORED | consumed-span equality |
-| or · chain | `alternation.rs:11,37` | `:105,:124` | MIRRORED | `chain` C-16 falsy-seed fix TS-only (Rust never had bug) — behavioral parity holds |
-| map · map_with_state | `map.rs:10,32` | `:146,:162` | MIRRORED(name: `map_with_state`↔`mapState`) | value-map equality |
-| opt | `methods/mod.rs:18` | `:234` | MIRRORED(type: `Option<O>`↔`T\|undefined`) | present/absent parity (the 8B totality seam) |
-| **not↔minus** | `minus.rs:14` (`not`) | `:309` (`minus`) | **MIRRORED(NAME-INVERSION)** | Rust `not`=EBNF `-`=TS `minus`; TS also has distinct `not`/`negate` (`:251`) — **the name-map MUST record the inversion or the linter mis-pairs** |
-| many · sep_by | `repetition.rs:14` · `sep_by.rs:16` | `:523` · `:569` | MIRRORED(name: `sep_by`↔`sepBy`) | collected-list equality |
-| recover | `recover.rs` | `:653` | MIRRORED | recovered-value + error-set equality |
+**The ledger IS LOCK-6A's isomorphism-linter whitelist.** A census re-run that yields a *new*
+DRIFT row (a symbol on one side with no classified counterpart) is a CI failure — drift is
+impossible by construction where enforced. LAWFUL-NON-MIRROR rows are the whitelist entries (each
+with its reason); MIRRORED rows are enforced correspondences; DRIFT rows are red until an owner
+converts them (to MIRRORED by porting, or to LAWFUL-NON-MIRROR by signing the reason).
 
-### 1b. Rust-only / TS-only method extras
+---
 
-| unit | side | class | reason |
+## 2. The divergence ledger (census-derived, this HEAD)
+
+Enumerated from the `pub fn`/method census across `parse_that/src` and the TS combinator census.
+Anchors are representative; the generated `LEDGER.tsv` carries every arm.
+
+### 2a. Core sequencing & alternation — MIRRORED / lawful arity-idiom
+
+| symbol | rust_anchor | ts_anchor | class |
 |---|---|---|---|
-| `many_small` `sep_by_small` `map_with_ctx` `sep_by_ws{,_until}` | Rust | LAWFUL-NON-MIRROR(rust-alloc-convenience) | SmallVec/ctx conveniences; no V8 need, no behavioral surface a consumer reads |
-| `wrap` `peek` `lookAhead` `trim` `debug` | TS | LAWFUL-NON-MIRROR(idiom) / MIRRORED-via-composition | Rust expresses `wrap`/`peek` by composition; `trim`/`debug` idiomatic |
+| `then` | `combinators/methods/sequence.rs:10` | `parser.ts:81` | MIRRORED |
+| `skip` | `sequence.rs:23` | `parser.ts:189` | MIRRORED |
+| `next` | `sequence.rs:36` | `parser.ts:212` | MIRRORED |
+| `wrap` | `sequence.rs:48` | `parser.ts:392` | MIRRORED |
+| `trim` / `trim_keep` | `sequence.rs:97,111` | `parser.ts:480` | MIRRORED (Rust splits `trim_keep`) |
+| `or` | `combinators/methods/alternation.rs` | `parser.ts:105` | MIRRORED |
+| `opt`·`peek`·`look_ahead`·`not`/`negate`·`minus` | `leaf.rs`/`minus.rs` | `parser.ts:234,339,365,251,309` | MIRRORED |
+| `recover` | `combinators/methods/recover.rs` | `parser.ts:653` | MIRRORED |
+| `lazy` | `lazy.rs` | `lazy.ts` | MIRRORED |
+| `map` | `combinators/methods/map.rs` | `parser.ts:146` | LAWFUL-NON-MIRROR (Rust adds `map_closure`/`map_with_ctx`/`map_with_state`; TS keeps `map`+`mapState`) |
+| `eof`/`epsilon` | `parse.rs:210` / `leaf.rs:7` | `leaf.ts:11` | LAWFUL-NON-MIRROR (TS has no `epsilon` leaf) |
 
-### 1c. Leaf/primitive surface (`leaf.rs` ↔ `leaf.ts`)
+**The arity row (the sharp one).** TS `all`→`fuseAll` monomorphizes arity-2 (`leaf.ts:183`) and
+arity-3 (`leaf.ts:214`), general arm a classic `for` (`leaf.ts:255`). Rust achieves the same
+*shape* by comptime: the `seq!` macro (`combinators/macros.rs:6`) unrolls arities 2..N and
+`impl_parser_flat!` (`span_trait.rs:184`) is instantiated for tuple arities **B..N**
+(`span_trait.rs:209-220`). **Row = LAWFUL-NON-MIRROR(idiom):** the *decision* (specialize per
+arity) mirrors; the *mechanism* diverges lawfully — V8 hand-unroll + runtime dispatch vs LLVM
+macro/trait monomorphization. The linter enforces "both sides specialize arities ≥2," not
+identical source. `any`/`one_of` is the same (`leaf.ts:28` arity-2 unroll ↔ `leaf.rs:298`
+`one_of(Vec)`).
 
-| unit | Rust | TS | class |
+### 2b. Repetition & dispatch — DRIFT (Rust-only variants)
+
+| symbol | rust | ts | class |
 |---|---|---|---|
-| string · epsilon · one_of(≈any) | `leaf.rs` | `leaf.ts` | MIRRORED |
-| dispatch_byte(_multi) ↔ dispatch | `leaf.rs:315,340` | `:100` (`Int8Array(128)` LUT) | MIRRORED(both O(1) first-byte) |
-| **regex** | `leaf.rs:85` → `dfa.find_at` (**longest**) | `:317` → sticky `/y` (**first**) | **see §3 — partitioned by expressiveness** |
-| `*_span` family (`string_span:55` … `any_span:270`) | Rust only | — | LAWFUL-NON-MIRROR(rust-zero-boxing) — see §2 |
+| `many` | `repetition.rs` + `many_small` (arena) | `parser.ts:523` | DRIFT — `many_small` no TS analog |
+| `sep_by` | `sep_by.rs` + `sep_by_small`/`sep_by_ws`/`sep_by_ws_until` | `parser.ts:569` | DRIFT — `_ws`/`_until` family TS lacks |
+| `dispatch` | `dispatch_byte` `leaf.rs:315` + `dispatch_byte_multi` `leaf.rs:340` | `leaf.ts:100` (`Int8Array(128)`) | DRIFT — `_multi` (byte-seq keys) no TS analog |
 
-### 1d. Whole subsystems
+These rows the linter forces to a disposition: port the variant (→ MIRRORED) or sign
+LAWFUL-NON-MIRROR (arena/lifetime-only, no V8 payoff). Left unclassified they are silent drift —
+the exact failure 8C exists to close.
 
-| subsystem | Rust | TS | class | reason |
-|---|---|---|---|---|
-| **SpanParser** (`span_parser/` ~1264 LOC, enum `SpanKind` `mod.rs:60+`, aho-corasick scan) | present | **excised** (gate `proof:no-span-surface`) | LAWFUL-NON-MIRROR(rust-zero-boxing) | dodges a `SmallBox<dyn ParserFn>` box cost V8 lacks; a TS twin is pure dead weight (§2) |
-| **packrat** (`packrat.ts:488`, `getCijKey` `:71`, module-global Map `:133`, `PACKRAT_ARMED` `:156`) | **absent** (grep `packrat\|memoize\|MemoCell` in `parse_that/src` = 0) | present | LAWFUL-NON-MIRROR(ts-only) | Rust uses borrow-scoped recursion; no attachment point exists; shape-stability is intra-TS (8A), not a correspondence question |
-| **diagnostics** | `#[cfg(feature)]` compile-erased (`state.rs:8-45`, `Cargo.toml:16`) | runtime scope (PT-E1: module-global → per-parse, `parser.ts:34`) | LAWFUL-NON-MIRROR(feature-vs-scope) **+** MIRRORED(behavioral field-triple) | mechanisms structurally incommensurable; the read field-triple `{furthest_offset, sorted expected, line, column}` mirrors — §4 |
+### 2c. Deliberate non-mirrors — LAWFUL-NON-MIRROR(excision), the strongest rows
 
-**DRIFT rows: zero.** Every asymmetry has an intended reason and a parity floor. The mirror is
-*dense* (method surface near-1:1); the exceptions are the four subsystem rows plus the regex
-partition. This is what makes correspondence legible rather than chaotic — and what a generator
-(6B) must respect: it may symmetric-emit rows in 1a/1c-MIRRORED, and must **never** try to mirror
-1d.
+- **The `*Span`/`span_parser` family.** Rust keeps a whole zero-copy `span_parser/` module (`sp_*`
+  leaves, `*_span` methods, `span_parser/scan.rs`, ~40 `_span` symbols at `constructors.rs`) on
+  `Span<'a>` borrow slices. **TS EXCISED the whole `*Span` family in the 1.0.0 cut**, guarded by
+  `proof:no-span-surface`. Reason = lifetimes: zero-copy `Span<'a>` has no V8 payoff (JS returns
+  substrings). The model LAWFUL-NON-MIRROR row — deliberate, reasoned, gated. **Not DRIFT.**
+- **The SIMD scan layer.** Rust `scanners.rs` + `parsers/scan/*` (quoted, number, digits,
+  ws_comment, `structural_bitmap`, `quote_parity`, `number_simd`, `decode`, `eisel_lemire`) is
+  NEON-first with no V8 equivalent; TS's only analogs are `skipWhitespace`/`skipBlockComments`
+  (`utils.ts:159-186`). LAWFUL-NON-MIRROR; this plane is LOCK-9's — 8C's row points there, no
+  double-home.
+- **CSS parsers.** Rust `parsers/css/*` (media, selector, value, declaration, specificity); TS has
+  **no CSS surface** (`proof:no-css-surface`) — value.js owns CSS on the TS side.
+  LAWFUL-NON-MIRROR(domain-ownership).
 
----
+### 2d. Diagnostics & state — MIRRORED, including a mirrored defect
 
-## 2. Divergence I — SpanParser no-twin (re-verified)
+TS diagnostics (`utils.ts`: `diagnosticsEnabled` module-global latch `:6`, collected buffer
+`:138-146`) mirror Rust `add_expected`/`add_suggestion`/`add_secondary_span`/
+`get_collected_diagnostics`/`clear_collected_diagnostics` (`debug.rs`, `state.rs`). **Both sides
+carry the same module-global collected-diagnostics defect** the PT-E1 per-parse-scoping cure
+targets — so the fix should be MIRRORED (per-parse scope both sides), and the row records that the
+*defect* is isomorphic, not just the API. `ParserState` is LAWFUL-NON-MIRROR(shape): TS
+8-mutable-field V8 hidden-class shape (`state.ts:36-53`) vs Rust struct + `PaddedView` + `Span<'a>`
+(`state.rs:256,278`).
 
-Re-verified `path:line` this pass: `span_parser/mod.rs` (SpanKind zero-boxing dispatch),
-`leaf.rs` `*_span` variants, TS excision guarded by `proof:no-span-surface`. Ledger row:
-`SpanParser :: LAWFUL-NON-MIRROR(rust-zero-boxing; V8 has no boxed-combinator cost; behavioral
-span-triple parity gated by 6D)`. Residue artifact (8C-supplied, 6D-run): for every `*_span`
-leaf, assert `(matched, start, end)` == TS `(matched, offset-delta)` on a corpus **including
-trim-boundary and zero-width cases** (R-C2 falsifier — the excision must have lost no *behavior*,
-only a Rust-local allocation strategy). No TS SpanParser is built — that would fail the gate AND
-regress V8 IC stability (R-C6).
+### 2e. Packrat — DRIFT flagged for adjudication
 
----
+TS ships opt-in packrat (`packrat.ts`, 488 LOC — WDM + left-recursion memo, armed at first
+`memoize()` `packrat.ts:290`). The Rust census surfaces **no packrat module**; Rust leans on arena
+(`bump_slab.rs`). Row = **DRIFT — TS-only packrat**, pending LOCK-4/6 adjudication (port to Rust,
+or sign LAWFUL-NON-MIRROR because the arena core makes packrat unnecessary there).
 
-## 3. Divergence II — regex: the pass-3 partition + the FULL hazard-class set (directive #2)
-
-The pass-2 single "two-engines" row is refined into a **partition by expressiveness class**,
-because the two engines diverge along *two independent axes*: **selection** (which match, among
-those a regular language admits) and **expressiveness** (whether the pattern is regular at all).
-
-### 3a. The FULL hazard-class enumeration
-
-Each class carries a paired-triple probe `{regex, input}` → expected under {Rust-current-DFA-longest
-(a), Rust-priority-DFA-prototype (b), JS-RegExp (c)}. This is the differential corpus (directive #2).
-
-| # | hazard class | probe | (a) DFA-longest | (c) JS-first | axis | priority-DFA (b) fixes? |
-|---|---|---|---|---|---|---|
-| H1 | ordered alternation | `/a\|ab/` @ `"ab"` | `"ab"` | `"a"` | selection | **YES** |
-| H2 | lazy quantifier | `/a+?/` @ `"aaa"` | `"aaa"` | `"a"` | selection | **YES** |
-| H3 | lazy under bound | `/[\s\S]*?x/` @ `"aaxbx"` | `"aax"` (forced, agrees) | `"aax"` | selection | YES (agrees once bounded) |
-| H4 | nested greedy/lazy submatch | `/(a+?)(a+)/` | n/a (leaf has no submatch) | leftmost-first split | selection+capture | partial (needs tagged/TDFA) |
-| H5 | **lookahead** `(?=…)` | `/[\s\S]*?(?=\])/` @ `"a]b"` (**live: math.ts:45**) | **inexpressible** (`Hir::Look` fixed-only) | `"a"` | **expressiveness** | **NO** |
-| H6 | lookbehind `(?<=…)` | `/(?<=\$)\d+/` | inexpressible | matches | expressiveness | NO |
-| H7 | backreference `\1` | `/(a)\1/` @ `"aa"` | inexpressible | `"aa"` | expressiveness | NO |
-| H8 | flag skew `i`/`u`/`s`/`m` | `/A/i` @ `"a"`; `/./s` @ `"\n"` | depends on `classify.rs` flag honoring | JS semantics | normalization | orthogonal |
-| H9 | zero-width / empty match | `/a*/` @ `"b"` | `""` | `""` | selection | agrees |
-| H10 | anchoring at offset | `/x/y` at `lastIndex` vs `find_at(bytes,0)` | anchored | anchored | anchoring | agrees (both anchored — verify slice base) |
-
-**The corpus is a `.tsv` of `{id, regex, input, expect_a, expect_b, expect_c}`** rows, one per
-class plus the two **live latex-paper leaves** as named fixtures, run by 6D against all three
-engines. H5-H7 are the expressiveness axis; H1-H4/H9 the selection axis; H8/H10 normalization.
-
-### 3b. The classification verdict
-
-The regex row **cannot be a single ledger cell**. It partitions:
-
-- **Regular fragment, selection-divergent (H1-H4, H9):** today `DRIFT-RISK` — the DFA silently
-  answers leftmost-longest where JS answers leftmost-first. **Directive #3 (§5) resolves this into
-  MIRRORED** iff LOCK-5 adopts priority-preserving determinization; else it stays
-  `LAWFUL-NON-MIRROR(two-engine-selection)` with a build-time constraint (§5, route B).
-- **Non-regular fragment (H5-H7):** **HARD LAWFUL-NON-MIRROR(inexpressible-in-Hir).** The Rust
-  engine *cannot represent* lookaround/backref; no determinization saves it. This is the deepest
-  correspondence fact of the plane, and it is **live** (H5 in math.ts). Two sub-routes, both
-  LOCK-5-owned: (i) a Rust-side backtracking/PikeVM sub-engine for the non-regular fragment,
-  behaviorally matching JS; or (ii) a build-time grammar constraint forbidding non-regular regex
-  leaves — which **breaks latex-paper unless its two leaves are rewritten** (e.g.
-  `[\s\S]*?(?=\])` → a `take_until("]")` combinator, moving the assertion out of the regex into
-  the combinator layer where both engines agree). The rewrite route is the parsimonious one and it
-  is 8C's recommendation to LOCK-5: **hoist context-sensitive assertions out of regex leaves into
-  combinators** rather than grow a second Rust regex engine.
-- **Normalization (H8, H10):** `LAWFUL-NON-MIRROR(flag-normalization)` — a `classify.rs`↔RegExp
-  flag-honoring audit, not a determinization concern.
+### 2f. The regex row — the crux (§3).
 
 ---
 
-## 4. Divergence III — diagnostics (re-verified) + packrat 4th (re-verified)
+## 3. The regex correspondence row: two engines, a hazard taxonomy
 
-Diagnostics: `LAWFUL-NON-MIRROR(compile-feature vs per-parse-scope)` + `MIRRORED(behavioral
-field-triple)`. The consumers read only `{furthest, expected:string[], getLineAndColumn}`
-(`parser.ts:51-75`); Rust `Diagnostic` (`state.rs:36-45`) carries a **superset** (`found`,
-`suggestions`, `secondary_spans`) — a documented widening. Residue: failing-input corpus asserting
-the mirrored triple identical Rust-on vs TS-on, extras allowed to widen; R-C3 falsifier is a
-consumer read of a Rust-only field (keyframes `ResolvedKeyframes.diagnostics` must read only the
-triple). Packrat: `LAWFUL-NON-MIRROR(ts-only; Rust borrow-scoped recursion)`; grep confirms zero
-Rust attachment; armed-vs-unarmed disclosed in every table (default LL(1) pays nothing,
-`packrat.ts:156/290`).
+**The fact.** TS has **no bespoke regex engine** — `regex()` (`leaf.ts:317-369`) drives native JS
+`RegExp` via a sticky `/y` clone and `test()` (zero-alloc). Rust drives a **bespoke NFA→DFA
+engine** (`parse-that/rust/regex`, 6742 LOC: `classify.rs` 1148, `automata/nfa.rs` 449,
+`automata/dfa.rs` 438, `egraph/` HIR canon, `info/`, `first.rs`). These are **different
+computational models** — backtracking (JS) vs finite automata (Rust) — so the regex row is **DRIFT
+by default**, and 8C's work is (a) enumerating the hazard classes and (b) deciding whether the
+divergence can be *dissolved* (→ MIRRORED-modulo-Unicode) or must be *fenced* (→ LAWFUL-NON-MIRROR
+via a grammar-surface constraint).
 
----
+### 3a. The priority-discard, confirmed at source
 
-## 5. NEWLY OPENED (directive #3, shared with LOCK-5) — priority-preserving DFA vs grammar constraint
+`automata/nfa.rs:18-32` builds `EpsilonEdge { target, priority: u8 }` with ε-edges "ordered by
+priority (lower = preferred)"; `nfa.rs:313` comments "Priority = index → leftmost-first semantics";
+greedy/lazy fork on priority at `nfa.rs:326-334`. **But subset construction throws it away:**
+`epsilon_closure` (`dfa.rs:189-202`) folds ε-edges into a `BTreeSet<StateId>` — ordered by StateId,
+**priority-blind** (line 195 `closure.insert(edge.target)` ignores `edge.priority`);
+`subset_construction` (`dfa.rs:217-286`) keys DFA states on that set and marks `is_accept` a plain
+bool (`dfa.rs:266`). The DFA is therefore a **recognizer** (accept/reject + anchored scan,
+`dfa.rs:141` "anchored shortest"), **not** a leftmost-first submatch engine. This is the mechanical
+root of every hazard below and is shared verbatim with LOCK-5.
 
-**The premise, confirmed:** priority is *built* (`nfa.rs:311-314,343-382`) and *discarded*
-(`dfa.rs:189-201` `BTreeSet`, `find_at` `last_accept`). The engine is leftmost-longest wearing
-leftmost-first's clothes.
+### 3b. The full hazard-class set (the paired-triple corpus)
 
-**Route A — priority-preserving determinization.** Replace the `BTreeSet<StateId>` closure with a
-**priority-ordered thread list** (the RE2/Pike-VM discipline): the DFA state becomes an *ordered*
-NFA-state sequence; ε-closure carries `EpsilonEdge.priority` and preserves thread order; at accept,
-the match is the **highest-priority thread** that reaches accept, not the longest run. This is
-exactly Russ Cox's "leftmost-first / Perl semantics via thread priority" (*Regular Expression
-Matching: the Virtual Machine Approach*, Part 2) and RE2's Perl mode (RE2 offers BOTH
-leftmost-longest/POSIX and leftmost-first/Perl, selected by ordering). **It dissolves H1-H4/H9** —
-the selection axis. Costs, named:
-- **Minimization weakens.** Hopcroft (`dfa.rs:~299+`) partitions on accept/non-accept; a
-  priority-carrying DFA must **also** partition on match-priority tag (a *tagged* DFA / TDFA,
-  Laurikari), so fewer states merge — larger tables. A real, measurable cost, not a wash.
-- **State blowup risk.** Priority-ordered subset sets are finer than unordered ones; pathological
-  patterns can blow the DFA up. RE2's answer is a DFA-size cap with PikeVM fallback — which LOCK-5
-  would inherit.
-- **It does NOT touch H5-H7.** Priority cannot conjure an assertion the HIR cannot hold. Route A is
-  necessary-but-insufficient for the *live* corpus.
+Each class = a `(pattern, input)` triple run through three columns: **J** = native JS RegExp
+(sticky), **D** = current priority-blind Rust DFA, **P** = a priority-preserving DFA (§4). The
+corpus discriminates *which route dissolves the class*.
 
-**Route B — build-time grammar constraint.** Constrain the grammar regex surface so leftmost-longest
-== leftmost-first *observably*: forbid/normalize ordered alternation (auto-rewrite `a|ab`→`ab|a`
-longest-first), forbid lazy quantifiers, forbid lookaround/backref. Then the current simple DFA is
-already correct-by-construction. Cheaper engine; but it **constrains the author** and — critically —
-**breaks the live latex-paper leaves** (H5), which forbid-without-rewrite cannot accept.
+| # | hazard class | pattern · input | J | D | dissolved by P? |
+|---|---|---|---|---|---|
+| H1 | greedy vs lazy quantifier | `/a*?b/`·`"aaab"` ; `/<.+?>/`·`"<a><b>"` | lazy-min | longest (priority lost) | **yes** — P restores lazy via thread rank |
+| H2 | alternation order (first vs longest) | `/(a\|ab)/`·`"ab"` | `"a"` | `"ab"` | **yes** — P prefers first branch |
+| H3 | overlapping-literal set order | any-of `["for","foreach"]`·`"foreach"` | first | leftmost-longest (Aho-Corasick) | **yes** — measure vs `any_span`/`classify.rs` |
+| H4 | empty / zero-width loop | `/(?:a?)*b/`·`"b"` ; `/(a*)*/` | terminates-first | loop-guard differs | **partly** — needs empty-loop guard in P |
+| H5 | anchoring / sticky default | `/.*c/`·`"aXc"` at offset | leftmost-first-longest | anchored-shortest default (`dfa.rs:141`) | **route-dependent** — match-len policy |
+| H6 | Unicode class coverage | `/\w+/`·`"café"` ; `/\p{L}/u` | full Unicode | ASCII+minimal-BMP (`unicode.rs:30`) | **NO** — structural table gap |
+| H7 | flags (`i`,`s`,`m`,`u`) | `/a.b/s`·`"a\nb"` | dotall | flag coverage varies | **NO** — flag-support gap, not priority |
+| H8 | lookaround (non-regular) | `/a(?=b)/`·`"ab"` ; `/(?<=x)y/` | supported | rejected (`nfa::from_pattern → None`) | **NO** — not a DFA at all |
+| H9 | backreference (non-regular) | `/(a)\1/`·`"aa"` | supported | rejected | **NO** — not a DFA at all |
 
-**The discriminating evidence (the deliverable that moves the family):** a **census of the LIVE
-grammar regex leaves** for divergence-triggering constructs, run this pass:
-- value.js: no `regex(/…/)` leaves with lazy/alternation-order hazards found in `src` (its parsing
-  is combinator-structured, regex leaves are simple classes).
-- latex-paper: **two live H5 leaves** (`math.ts:45,57`, lazy+lookahead) + literal-star false
-  positives (`commands.ts:182,269` are `\*?` = optional escaped asterisk, **not** lazy — a probe
-  the corpus generator must not miscount).
-
-**8C's adjudication routed to LOCK-5:** the live corpus proves the divergence is **real but narrow**
-— it is *not* the selection axis (H1-H4) that bites live code; it is the **expressiveness axis (H5)**.
-Therefore priority-preserving determinization (route A), while the *elegant* fix for the selection
-axis, **does not fix the one class the live corpus exercises** — lookahead. The parsimonious,
-constitution-fit (clause iii "reasonable point, measured"; extreme-parsimony) resolution: **hoist
-context-sensitive assertions out of regex leaves into the combinator layer** (a `take_until`/`peek`
-composition both engines mirror), reserve route A only if a measured *selection-axis* divergence
-appears in a live grammar, and mark H5-H7 a permanent `LAWFUL-NON-MIRROR` with the rewrite as the
-migration. The **scratch prototype LOCK-5 must run** to decide: a priority-carrying
-`epsilon_closure` variant + the §3a paired-triple corpus, reporting (i) whether (b)≡(c) on H1-H4,
-(ii) the minimization state-count delta (route-A cost), (iii) confirmation that H5-H7 remain
-inexpressible regardless. That triple output *is* the decision input; the engine choice is LOCK-5's,
-not 8C's.
+**The taxonomy splits cleanly.** H1–H4 (and H5 modulo policy) are the **regular, priority-only**
+classes — a priority-preserving DFA dissolves them. H6–H9 are **not** priority problems: H6/H7 are
+table/flag coverage gaps; H8/H9 are non-regular and **no DFA can realize them**. So the regex row
+is not a single verdict — it is **MIRRORED on H1–H5 under route-A, LAWFUL-NON-MIRROR
+(grammar-fenced) on H6–H9 under route-B**. The routes are complementary, not rival.
 
 ---
 
-## 6. Coordination: ledger↔linter handshake + tape-crossing home (directive #4)
+## 4. Route-A (priority DFA) vs route-B (grammar constraint) — the scratch to build
 
-**Handshake with LOCK-6.** 8C emits the ledger (§1) as `scratch/8c-ledger.tsv`; **6A's linter
-consumes the MIRRORED rows as its name-map** (including the mandatory `not↔minus` inversion, 1a) and
-the LAWFUL-NON-MIRROR rows as its **exemption whitelist** — the linter must not flag SpanParser's
-Rust-only-ness, packrat's TS-only-ness, or the diagnostics mechanism split. **6D consumes the
-parity-floor column** as its differential-oracle assertion set (§2 span-triple, §3a regex triple,
-§4 diagnostics triple). **6B consumes the class column** to know which rows are symmetric-emittable
-(1a/1c MIRRORED) vs forbidden-to-mirror (1d). 8C supplies *data*; the three mechanisms are LOCK-6's
-(R-C4 — 8C must not rebuild a harness).
+### Route-A — priority-preserving subset construction (routed to LOCK-5 as a decision)
 
-**Tape-crossing / decode-speed fence (SPEC §0).** The offset-tape TS decoder
-(`crates/bbnf-bench/ts-tape/`, PROVE-14) is a **bbnf/GN-4/LOCK-6 face, adjudicated OUT of the
-parse-that plane.** Its headline **4.78× paired stop-early** (full-walk is *parity* 0.98×) is a
-**pure-JS-decode** number: the timed region includes typed-array construction but **excludes the
-wasm→JS slice handoff** — the real backend's `wasm-bindgen` export cost is **UNMEASURED**. Coupling
-4.78× to a "wasm boundary wins 4×" claim is exactly the shim-perf self-deception SPEC §0 outlaws
-(R-C5). Any 8C-adjacent citation of the number carries the label *"pure-JS decode; wasm boundary
-cost unmeasured"* and the home stays LOCK-6 (6C WASM-CORE territory).
+**Mechanism.** Replace the priority-blind `BTreeSet<StateId>` closure with an **ordered closure**:
+traverse ε-edges in priority order, first-visit-wins, key each DFA state on the *ordered sequence*
+of NFA states (or the set + a per-thread rank). On reaching an accept NFA state, **truncate
+lower-priority threads** (the match-state sentinel) so the highest-priority thread that reached
+accept determines the result — realizing leftmost-first. This is the exact discipline of rustc's
+`regex-automata` determinizer under `MatchKind::LeftmostFirst` (ordered `StateBuilderNFA` +
+match-state insertion dropping lower-priority states), of RE2's Pike-VM ordered thread lists (Russ
+Cox), and of Laurikari's TDFA (2000). The prototype forks `dfa.rs:189-286` in a **scratch copy** of
+`parse-that/rust/regex` (never the read-only tree), leaving `nfa.rs`'s already-priority-ordered
+edges untouched.
+
+**What the scratch must report** (three decision-grade numbers): (i) of H1–H5, how many triples move
+`D≠J → P=J` (classes dissolved); (ii) whether the existing `rust/regex` parity suite + `classify.rs`
+prefilter stay green (no regression on leftmost-longest paths consumers already rely on); (iii) the
+determinization state-count + build-time delta (ordered states can blow up; `opts.state_limit`
+`dfa.rs:262` is the guard). The KEEP/REJECT verdict is **LOCK-5's** — 8C supplies the corpus and the
+classification, not the engine decision.
+
+### Route-B — build-time grammar-surface constraint
+
+The bootstrapped regex grammar (LOCK-5/7) admits only the DFA-safe sublanguage: lazy quantifiers,
+prefix-overlapping alternations, lookaround (H8), backrefs (H9) are either compile errors or route
+to a documented native-`RegExp` path. This keeps the DFA a pure recognizer and moves the burden to
+the grammar type/lint layer — analogous to tree-sitter resolving lexer conflicts by declared
+precedence rather than richer automata.
+
+### The discriminating corpus between A and B
+
+The corpus is the set of consumer + grammar regex literals that are (i) observably `D≠J` today and
+(ii) legal under the current grammar. **The regex census decides the mix:** H8/H9 are *non-regular*
+— any live lookaround/backref makes route-A provably insufficient there, forcing route-B regardless.
+H6 (Unicode) is a table gap route-A cannot touch. So the honest prediction is **hybrid**: route-A
+dissolves H1–H5 (adopt priority determinization in `rust/regex`, LOCK-5); route-B fences H6–H9
+(grammar surface, LOCK-5/7). The corpus's job is to *size each bucket* from the actual regex
+inventory, not to crown one winner.
+
+---
+
+## 5. LOCK-6 coordination (three handshakes)
+
+1. **Ledger ↔ linter-whitelist.** The `LEDGER.tsv` schema *is* LOCK-6A's isomorphism-linter config:
+   every LAWFUL-NON-MIRROR row is a whitelist entry (symbol + reason); every MIRRORED row an
+   enforced correspondence; every DRIFT row a CI failure until dispositioned. The linter re-runs the
+   §1 census and diffs against the committed ledger — a new unclassified symbol on either side fails
+   the build. 8C authors the ledger; LOCK-6 owns the linter that consumes it.
+2. **Tape-crossing artifact home.** The byte-exact Rust→TS tape decoder (monomorphic, imports *no
+   combinators*, oracle `JSON.parse`) is a **LOCK-6 subsystem row, not a combinator row** — 8C's
+   ledger points at LOCK-6 for the tape/oracle-table correspondence and does **not** double-home it
+   in the combinator census. Combinator backbone and tape decoder are complementary, neither the
+   other's precondition.
+3. **Decode-speed fence (SPEC §0).** Every perf-bearing ledger row carries `perf_fence ∈
+   {pure-js-decode, wasm-boundary}` with its HEAD — a stop-early / decode-throughput number is
+   meaningless without stating which path measured it. The ledger metadata makes the fence
+   structural, not a footnote.
+
+---
+
+## 6. Consumer liveness (P1/P2) — a re-run census contradicts the seed snapshot
+
+A per-tree import census at *this* HEAD (not the recon snapshot) finds:
+
+- **value.js is now 4.0.0 on branch `tranche-u`** (recon recorded 3.1.0). Its `package.json`
+  `dependencies` is **empty**; a `grep` over `src/parsing` returns **zero** `@mkbabb/parse-that`
+  imports and zero combinator-symbol references. `node_modules/@mkbabb/parse-that@1.0.0` is present
+  but phantom/transitive (glass-ui / keyframes.js also installed). Prior commits *added* parse-that
+  ("use @mkbabb/parse-that from npm, drop vendored tarball"; "parser migration"), so the current
+  empty state reads as **either a completed migration OFF parse-that or a WIP-branch artifact**
+  (active campaign branch, uncommitted `CLAUDE.md` deletion). **This is exactly the P2 question and
+  it requires owner confirmation — carry both hypotheses (XL-G).**
+- **keyframes.js** depends on `@mkbabb/value.js@4.0.0` (transitive), **not** parse-that directly — so
+  its parse-that link is *severed* if value.js has dropped it.
+- **latex-paper** is 0.2.1, still pins `@mkbabb/parse-that ^0.7.1` (`<0.8.0`), commits actively but
+  on latex/VIRT concerns — **frozen relative to parse-that**, never migrated past 0.7.x. A consumer
+  of an *old* cut, not a forward-looking consumer of the 1.x surface; the 0.7→1.1 jump is untested.
+
+**Consequence (feeds 8D + the Y.13 constitution clause):** the only unambiguous live consumer of the
+*current* combinator surface may be **parse-that's own test/bench suite** (13 `test/*.test.ts` + the
+benchmark matrix). If the owner confirms value.js has left, the PT-N2 "consumer suites green" gate
+loses its primary external consumer and the public surface should prune to the actually-live
+contract — a real consumer-less-substrate risk for the whole plane. The arity histogram that would
+justify the arity-unroll specialization (§2a, 8A) must be rebuilt from whatever live sites remain;
+if none, the justification rests solely on parse-that's own benches, and that must be *stated*.
+
+**Spec-fidelity divergence (plane-wide ask):** the recon's "value.js 3.1.0, 59 `all()` sites,
+`dispatch()` live" is superseded by "value.js 4.0.0 `tranche-u`, zero parse-that imports in
+`src/parsing`." That is the per-family row for the spec re-cut.
 
 ---
 
 ## 7. Prior art (citations)
 
-- **RE2 (Cox) — leftmost-first vs leftmost-longest as a MODE, not an accident.** RE2 realizes Perl
-  (leftmost-first) semantics via NFA-thread **priority ordering**; its DFA carries match priority
-  and falls back to PikeVM on size cap. Directly the route-A design and its cost (*Regular
-  Expression Matching: the Virtual Machine Approach*, Parts 1-3; *…Can Be Simple And Fast*).
-- **Laurikari tagged DFA (TDFA)** — determinization preserving submatch/priority tags; the formal
-  statement of why priority-carrying determinization weakens minimization (H4, §5 cost).
-- **regex-automata (BurntSushi)** — the canonical DFA/leftmost-longest engine; its explicit
-  leftmost-first PikeVM and the DFA-size-cap-with-fallback architecture LOCK-5 would inherit.
-- **V8 Irregexp** — backtracking, leftmost-first; the TS-side engine 8C mirrors *against*. The RE2↔
-  Irregexp pair is the literature that makes H1-H7 *known* hazards, not speculation.
-- **tree-sitter `grammar.js`→C** — single-spec→one-artifact generator; its lesson (only the *table*
-  generates cleanly, not the runtime) bounds what 6B may symmetric-emit from §1's ledger.
-- **Rust `#[cfg(feature)]` monomorphization vs runtime flags** — the diagnostics feature-vs-scope
-  split (§4) is the textbook compile-erasure-vs-runtime-scope asymmetry; structural, not defect.
+- **Russ Cox**, *Regular Expression Matching Can Be Simple And Fast* + *…: the Virtual Machine
+  Approach* (swtch.com/~rsc/regexp) — Pike VM, ordered thread lists, leftmost-first via priority; the
+  reference model for route-A.
+- **rustc `regex-automata`** (BurntSushi/regex) — `MatchKind::LeftmostFirst`; the `determinize`
+  module preserves NFA state order + inserts match states to truncate lower-priority threads. The
+  canonical *implemented* priority-preserving subset construction; route-A adopts its discipline
+  rather than reinventing it.
+- **Ville Laurikari**, *NFAs with Tagged Transitions, their Conversion to Deterministic Automata…*
+  (2000) — TDFA; priority-preserving determinization with submatch tags.
+- **RE2** (Google) — DFA / OnePass / BitState / PikeVM tiers; leftmost-longest default, PCRE
+  leftmost-first via the NFA — precedent that no single automaton serves all match semantics (hence
+  the §4 hybrid).
+- **Owens, Reppy, Turon**, *Regular-expression derivatives reexamined* — derivative-based DFA
+  construction preserving alternation priority via ordered derivatives (an alternative to ordered
+  subset construction).
+- **tree-sitter** — GLR + DFA lexer with declared precedence conflict resolution — the analog of
+  route-B's grammar-surface constraint.
+- **egg / egglog** (already in `rust/regex/src/egraph`) — HIR canonicalization by e-graph
+  saturation; the LOCK-5 continuum's canon side.
+- **McKeeman**, *Differential Testing for Software* (1998) — the oracle discipline the §1 harness
+  instantiates; `cargo public-api` / TS API-Extractor are the surface-census tools.
 
 ---
 
 ## 8. Named risks & counterexamples
 
-- **R-C1 (RESOLVED to fact):** regex leftmost-longest↔leftmost-first divergence is confirmed at
-  `dfa.rs:189-201`/`leaf.ts:5-31` and **live** at `math.ts:45,57`. The §3a corpus MUST include the
-  two live leaves as named fixtures.
-- **R-C7 (NEW, highest value): the live hazard is EXPRESSIVENESS (H5), not selection (H1).** A route-A
-  priority-DFA prototype that "fixes `/a|ab/`" and declares victory **misses the class the live
-  corpus actually exercises** — lookahead the Rust HIR cannot hold. The prototype's success gate
-  MUST assert H5-H7 remain inexpressible, so route A is not oversold as a total dissolution.
-- **R-C8 (NEW): the `\*?` false positive.** `regex(/\\[vh]space\*?/)` (`commands.ts:182`) and
-  `regex(/[a-zA-Z@]+\*?/)` (`commands.ts:269`) are optional *literal* asterisk, **not** lazy
-  quantifiers; a naive `grep '*?'` miscounts the hazard census. The corpus generator must PARSE the
-  regex, not string-match it.
-- **R-C2:** SpanParser excision must lose no behavior — trim-boundary/zero-width span-triple corpus
-  is the falsifier (§2).
-- **R-C3:** diagnostics `found`/`suggestions` widening must not leak into a consumer read (§4).
-- **R-C4:** 8C owns DATA (ledger + corpora), not machinery — no duplicate harness (system-cohesion).
-- **R-C5:** the 4.78× stays labelled pure-JS-decode; never a wasm-boundary claim (§6).
-- **R-C6:** the ledger records SpanParser/packrat non-mirrors as *intended*, never as gaps to close;
-  a "symmetry" TS SpanParser fails `proof:no-span-surface` and regresses IC stability.
+- **R-C1 (priority-DFA changes match length).** A priority-DFA may shorten a match a consumer
+  depends on (leftmost-first ≠ leftmost-longest). *Counterexample:* a grammar rule relying on `D`'s
+  current longest match silently reparses. *Cure:* route-A gated behind LOCK-5's `rust/regex` parity
+  suite as the floor; corpus includes `D=P` agreement cases a consumer leans on.
+- **R-C2 (non-regular escape).** Any live regex using lookaround/backref (H8/H9) makes route-A
+  provably insufficient there. *Cure:* census the *actual* regex literals in consumers + bbnf/regex
+  grammars for `(?=`/`(?<=`/`\1` **before** choosing; those rows are route-B regardless.
+- **R-C3 (ledger drift).** A hand-maintained ledger rots — a new Rust-only variant (e.g.
+  `sep_by_ws_until`) with no TS analog goes unclassified. *Cure:* the ledger is GENERATED + CI-diffed
+  by LOCK-6's linter; unclassified symbols fail the build (§1).
+- **R-C4 (vacuous consumer gate).** If value.js has dropped parse-that, "value.js suite green" passes
+  trivially and the combinator surface is externally consumer-less (Y.13 breach). *Cure:* adjudicate
+  the consumer set (8D) on the *re-run* census, not the recon snapshot; owner confirms P2.
+- **R-C5 (permanent Unicode DRIFT).** H6 is structural: `unicode.rs:30` is ASCII + minimal BMP vs JS
+  full Unicode. No construction fixes it; either complete the tables (LOCK-5) or the grammar forbids
+  non-ASCII classes (route-B). The row is permanent DRIFT until one lands — do not mislabel it
+  MIRRORED.
 
 ---
 
-## 9. What a prototype must test to MOVE family 8C
+## 9. What a prototype must test to move 8C
 
-1. **The ledger, mechanically generated** (§1) — AST/grep census → `scratch/8c-ledger.tsv`, one
-   classified row per unit, the `not↔minus` inversion recorded. Feeds 6A name-map + exemptions,
-   6B emit-eligibility, 6D assertions. **Un-built; the deliverable.**
-2. **The regex paired-triple corpus** (§3a) — `{id,regex,input,expect_a,expect_b,expect_c}` over
-   H1-H10 **plus the two live latex-paper fixtures**, parsed not string-matched (R-C8). Run by 6D
-   against Rust-current / Rust-priority-prototype / JS.
-3. **The priority-preserving determinization scratch prototype** (§5, routed to LOCK-5) — a
-   priority-carrying `epsilon_closure` + ordered-thread accept resolution; report (i) (b)≡(c) on
-   H1-H4, (ii) minimization state-count delta vs current, (iii) H5-H7 remain inexpressible. This
-   triple is LOCK-5's decision input (engine choice is theirs).
-4. **The live-corpus regex census** (§5, run this pass, to be widened) — every `regex(/…/)` leaf in
-   value.js/latex-paper/keyframes grammars classified by hazard class; the evidence that the live
-   divergence is narrow-and-expressiveness, discriminating route A vs the assertion-hoist rewrite.
-5. **Span-triple + diagnostics-triple corpora** (§2/§4) — behavioral parity floors for the two
-   non-regex non-mirrors.
-
-All prototyping against scratch COPIES base-pinned to HEAD `ef10d5b`; `parse-that` stays READ-ONLY;
-every artifact lands only through letter BBNF-PT-G. Every number cold, paired, packrat-state
-disclosed; the wasm-boundary cost stays fenced from the pure-JS-decode ratio.
+1. **Generate `LEDGER.tsv`** from the dual census; report MIRRORED / LAWFUL-NON-MIRROR / DRIFT counts
+   and the exact DRIFT rows (the artifact IS the deliverable). Wire it as LOCK-6's linter whitelist
+   and prove a synthetic new symbol fails CI.
+2. **Run the paired-triple corpus** (H1–H9) through {J, D, P}; tabulate which classes show `D≠J` and
+   which move to `P=J`. The table is the regex-row classification evidence.
+3. **Build the priority-preserving subset-construction scratch** (fork `dfa.rs:189-286` in a scratch
+   `rust/regex` copy): report classes-dissolved, `rust/regex` parity-suite regression, and
+   determinization state-count/build-time delta. Route KEEP/REJECT to LOCK-5.
+4. **Re-run the consumer import census** over value.js@`tranche-u`, latex-paper, keyframes.js at HEAD;
+   produce the arity histogram from live sites (empty if value.js has left) and record the P2 posture
+   for owner confirmation. Feed 8A (arity justification) and 8D (consumer-set pruning).

@@ -1,346 +1,300 @@
 # LOCK-8 pass-3 — research-D — family 8D CONSUMER-CONTRACT-FIRST
 
-*The TS backbone designed backward from its live consumers. Every figure below is a
-static fact of the checked-out trees (git/grep/AST/lockfile) captured this pass; where a
-number would be a runtime it is named un-run and handed to §11. parse-that is READ-ONLY;
-prototyping is against scratch copies; the sole sanctioned artefact into the repo is
-coordination letter BBNF-PT-G.*
+*The TS backbone designed backward from its live consumer contract. This pass RUNS the
+gates the prior pass could only design: the latex-paper baseline is captured GREEN, the
+census is re-verified against the checked-out trees, and the dual-instance boundary is
+traced to the exact line where it is crossed. parse-that is READ-ONLY; all prototyping is
+scratch-copy; the single sanctioned artefact into the repo is coordination letter
+BBNF-PT-G. Figures marked RAN are executed on the trees; figures marked UN-RUN are handed
+to the prototype list with the exact command that closes them.*
 
 ---
 
-## 0. Headline — the census has flipped a SECOND time; value.js is DUAL-STATE
+## 0. The census — RE-VERIFIED, and the surviving consumer is LIVE (RAN)
 
-The prior-pass verdict ("value.js migrated off, latex-paper sole survivor") was measured
-on value.js's **`tranche-u` working branch** and is only half true. The fresh per-tree,
-per-branch census:
+The flip recorded earlier holds exactly, re-checked against the current trees:
 
-- **value.js is DUAL-STATE.** Its **shipping line — `master` — is 3.1.0 and STILL depends
-  on `@mkbabb/parse-that: ^1.0.0`**, importing the FULL surface across 8 sites:
-  `{Parser, ParserState, all, any, dispatch, regex, string, whitespace, mergeErrorState}`
-  (`git show master:package.json`; `git grep …@mkbabb/parse-that master`). The
-  parse-that-free rewrite (version 4.0.0, hand-written CSS in `src/v4/css/`) lives ONLY on
-  branch **`tranche-u`, 137 commits ahead of master, and that campaign is PAUSED at owner
-  order** (branch tip `86a9a17`, prior tip commits read "THE PAUSE — V campaign halted at
-  owner order post-pass-4", "THE HANDOFF OF RECORD"). So value.js is neither cleanly a
-  consumer nor cleanly gone: **released = live full-surface consumer at ^1.0.0; forward =
-  paused, unmerged, parse-that-free.** This is precisely the XL-G "carry both hypotheses"
-  state — only the owner collapses it.
-- **latex-paper — LIVE sole DIRECT-source consumer, semi-dormant.** version 0.2.1, branch
-  master, last commit 2026-07-02 (≈2 weeks stale; cadence gaps to May/March — active but
-  slow, not frozen-dead). Pinned `^0.7.1` → resolves **0.7.1** (predates the 1.0.0 cut). 8
-  import sites, surface exactly `{Parser, ParserState, regex, string, any}` (5 symbols).
-- **keyframes.js — parse-that-FREE, confirmed.** version 6.0.0, active (2026-07-15), zero
-  `@mkbabb/parse-that` in package.json or src. Its only route was transitive through
-  value.js; on value.js-master (3.1.0) that transitive route may re-open — see §1.
+- **value.js — parse-that-FREE (confirmed).** `value.js@4.0.0`, branch `tranche-u`. No
+  `dependencies` key at all (`python3`: `'dependencies' in pkg == False`, `'parse-that' in
+  json.dumps(pkg) == False`). `src/parsing/{color,stylesheet,timeline}/` are empty stub
+  dirs (64 B). CSS is hand-written in `src/v4/css/{grammar,stylesheet,types,named-colors}.ts`
+  — zero combinator imports (`grep '@mkbabb/parse-that' src/` → **0 hits**).
+- **keyframes.js — severed (confirmed).** `keyframes.js@6.0.0`. `grep '@mkbabb/parse-that'
+  src/ package.json` → **0 hits**. Its only route was transitive through value.js; that
+  route is cut.
+- **latex-paper — the SOLE surviving consumer, and it is LIVE, not dormant.** `@0.2.1`,
+  branch `master`, HEAD `c140473` — recent, active commits (the VIRT tranche, W2-SKELETON
+  15f/136t). This answers PLANE-WIDE P3: latex-paper is a **forward-looking** consumer that
+  will migrate onto a new cut, **not** a frozen tree. Its parse-that pin, however, is
+  stale relative to its own activity: `package.json:38` `"@mkbabb/parse-that": "^0.7.1"`,
+  resolving `node_modules/@mkbabb/parse-that@0.7.1` (predates the 1.0.0 breaking cut).
 
-**Consequence.** The consumer-set adjudication (directive 8D-Q1) does NOT reduce to
-latex-paper's 5 symbols as the prior pass concluded. It **bifurcates on the value.js
-master-vs-tranche-u owner question** and must be carried as two dispositions (§2).
+**Baseline captured (RAN).** `cd latex-paper && npx vitest run` → **127 passed (127),
+14 files, 1.08s, exit 0**. This is the falsifiable before-state the crater needs: latex-paper
+is GREEN at 0.7.1 *today*. Any red after a candidate bump is attributable, because the green
+baseline is banked. (Note: 127 tests, grown past the R4-era count — the suite is active.)
 
----
-
-## 1. Consumer liveness — the plane-wide P1/P2 answers (fresh)
-
-| repo | line | version | parse-that dep | surface | posture |
-|---|---|---|---|---|---|
-| value.js | **master (shipping)** | 3.1.0 | `^1.0.0` | 9 symbols (R4 set) | **LIVE full consumer** |
-| value.js | tranche-u (137 ahead) | 4.0.0 | **none** | ∅ | paused, unmerged, PT-free |
-| latex-paper | master | 0.2.1 | `^0.7.1`→0.7.1 | 5 symbols | LIVE, semi-dormant, frozen behind |
-| keyframes.js | master | 6.0.0 | none (transitive via value.js) | ∅ direct | PT-free (direct) |
-
-- **P1 (which repos are live forward-looking consumers?).** DIRECT live consumers today:
-  **value.js-master (^1.0.0) and latex-paper (^0.7.1)**. The forward-looking *intent*
-  (value.js tranche-u) is to leave, but it is unmerged and paused — the released contract
-  is what binds a cut. keyframes.js is not a direct consumer on either value.js line.
-- **P2 (is value.js 4.0.0's posture intended or a WIP artifact?).** **BOTH, and only the
-  owner disambiguates.** It is intended *direction* (137 deliberate commits, CSS re-homed
-  hand-written in `src/v4/css/grammar.ts` + `stylesheet.ts`, `src/subpaths/math.ts:2`
-  "parse-that-FREE") but a WIP *branch artifact* in that it is unmerged, PAUSED, and master
-  still ships parse-that. The installed-vs-pinned lag is stark: master pins `^1.0.0` and the
-  published parse-that is frozen at 1.0.0, so value.js-master is *at* its floor, not behind;
-  latex-paper pins `^0.7.1` and is **two minor cuts (0.7→1.0→1.1) behind**. **Disposition:
-  a 1.1.0 cut CANNOT assume value.js has left.** Carry value.js-master as a live gate until
-  the owner confirms the tranche-u merge; if merged, re-census collapses to latex-paper.
+**Live combinator surface — RE-RAN import oracle.** `grep -rn '@mkbabb/parse-that' src/`,
+8 sites, symbol union across all of them = exactly **`{Parser, ParserState, regex, string,
+any}`** (5 symbols): `grammar/math.ts:5` `{Parser,regex,string}`; `grammar/commands.ts:9`,
+`environments.ts:6`, `text.ts:5`, `bibtex/parser.ts:7` `{Parser,regex,string,any}`;
+`grammar/document.ts:5` `{Parser,regex,string,any,ParserState}`; `grammar/primitives.ts:5`
+`{Parser,ParserState,regex,string}`; `grammar/compile.ts:7` `type {Parser}`. **No subpath
+reached** (`/core`,`/diagnostics`,`/packrat`,`/utils` are all untouched). No consumer
+imports `all`, `dispatch`, `whitespace`, `mergeErrorState`, `memoize`, or any diagnostic
+symbol from outside parse-that.
 
 ---
 
-## 2. Consumer-set adjudication (directive 8D-Q1) — TWO dispositions, keep/drop
+## 1. CONSUMER-SET ADJUDICATION — the repo already decided it, mechanically (directive 8D#1)
 
-parse-that's OWN gate already answers the abstract half: `scripts/proof-no-dead-combinator.mjs`
-declares a combinator dead iff it has **zero consumers across `{parse-that/src, parse-that/test,
-value.js/src, keyframes.js/src}`** (`:63-68`) — i.e. **the first-party `test/` tree is already
-an enshrined first-party consumer** (Y.13/constitution-viii is discharged for first-party
-combinators by the shipped gate, not a new assertion). Two flaws in that gate, both fixable:
-(a) it **omits latex-paper/src** from `consumerTrees` — the sole surviving external DIRECT
-consumer is not swept; (b) its **vacuity guard hard-codes `dispatch` as "known-live"** (`:49-58`),
-but `dispatch`'s ONLY external consumer is value.js-master — if tranche-u merges, the vacuity
-guard's own anchor dies. Both are §11 prototype items.
+The question: for combinators with no external consumer, is the first-party test/bench
+suite a legitimate first-party consumer, or should the public surface prune to the live
+external contract? **The disposition, in three tiers:**
 
-**Disposition A — value.js-master is authoritative (owner keeps the shipping line).** The R4
-nine-symbol surface is fully live: **KEEP** `{Parser, ParserState, all, any, dispatch, regex,
-string, whitespace, mergeErrorState}`. Nothing prunes; `all`/`dispatch`/`whitespace`/
-`mergeErrorState` each have value.js-master as an external consumer. Packrat/diagnostics remain
-first-party-only (test/ corpus is the declared consumer, per the shipped gate).
+**Tier A — the external floor (un-prunable under any circumstance).** `{Parser, ParserState,
+regex, string, any}` — latex-paper's live 5-symbol surface. These may never be removed,
+renamed, or type-narrowed in a way that breaks the 8 import sites. This is the hard contract.
 
-**Disposition B — tranche-u is destiny (owner confirms value.js leaves).** External DIRECT
-contract shrinks to latex-paper's **5 symbols** `{Parser, ParserState, regex, string, any}`.
-Then **externally-consumer-less:** `all`, `dispatch`, `whitespace`, `mergeErrorState`, plus the
-never-external `sepBy/many/chain/wrap/trim/peek/lookAhead/minus/not/opt/recover`, packrat, and
-diagnostics. **Do NOT prune them** — declare parse-that's `test/*.test.ts` (13 files, 124 cases)
-+ `test/benchmarks/` the first-party consumer, exactly as the shipped gate ALREADY does. The
-public API is a *library* contract; a combinator algebra with a first-party conformance corpus
-is a legitimate Y.13 consumer (the shipped gate is the precedent). **Pruning is the wrong move**:
-it amputates a coherent algebra to fit one transiently-frozen downstream. The keep/drop is:
-KEEP ALL; RECLASSIFY `all/dispatch/whitespace/mergeErrorState` from "external-consumed" to
-"first-party-consumed"; ADD latex-paper/src to the gate's `consumerTrees` so the classification
-is measured, not asserted.
+**Tier B — the combinator algebra (KEEP; first-party corpus is a *legitimate* consumer).**
+`then or map chain skip next opt many sepBy all dispatch trim wrap peek lookAhead not minus
+recover` and the leaf set. **Verdict: KEEP, and the first-party suite is a lawful Y.13
+consumer** — because parse-that is a *published combinator library*, not an internal helper
+of three downstream repos. Its contract is the algebra as a standalone npm package; pruning
+to latex-paper's 5 symbols would gut the product to a token-parser, contradicting the
+constitution-i floor (primitives + combinators ARE the exempt base). **The decisive
+evidence that this is the repo's own settled posture, not an assertion:** parse-that already
+ships `proof:no-dead-combinator` (`package.json`, in the `proof:all` chain) — a mechanical
+gate asserting *every* combinator is exercised by the first-party corpus. The repo has
+already operationalized "the first-party suite is the consumer of the algebra." 8D
+**ratifies** this: Y.13 for Tier B is discharged by the 13 `test/*.test.ts` + 4
+`*.bench.ts` + `proof:no-dead-combinator`, disclosed as the first-party contract.
 
-**Net 8D verdict on Q1:** *no combinator is dropped under either disposition.* The first-party
-test suite IS a legitimate first-party consumer (parse-that's own gate enshrines it); the public
-surface does not prune to the live external contract. The only edit the census forces is a gate
-fix (add latex-paper; re-anchor the vacuity guard off value.js-master).
+**Tier C — accreted machinery with neither external nor honest first-party consumer (PRUNE
+/ collapse).** The **module-global diagnostics latch** (`utils.ts:6` `diagnosticsEnabled`,
+buffer `utils.ts:138-146`) is consumer-less *and* defective (cross-parse contamination, §3);
+it is deleted-not-flagged regardless (W2). This is the honest prune target — not the
+algebra. `proof:no-dead-combinator` does **not** cover the diagnostics globals (they are not
+combinators), which is exactly why they escaped the gate and accreted; 8D's contribution is
+to name them Tier C and delete them.
 
----
-
-## 3. The migration CRATER (directive 8D-Q2) — re-scoped to the true census
-
-`scratch/pt-consumer-crater.sh` (harness only; never landed). The crater now has **two positive
-legs** (value.js-master resurfaced as a real gate), not one:
-
-- **Leg 1 — value.js-master, POSITIVE (resurrected).** Scratch-copy value.js at **master**
-  (3.1.0). Pack parse-that working-tree: `(cd scratch/parse-that/typescript && npm run build &&
-  npm pack)`. **Mandatory reinstall** (the false-green tripwire): `npm i
-  ../parse-that-<cand>.tgz` over the pinned 1.0.0. Then `npm test` (`vitest`, jsdom) **and**
-  the full type-check (`tsc --noEmit` per its config). value.js-master exercises
-  `all`/`any`/`dispatch`/`mergeErrorState` — the LARGEST inference-tightening blast radius (59
-  `all()` sites per R4). This leg is what makes 8D-Q4 answerable on a NATIVE corpus.
-- **Leg 2 — latex-paper, POSITIVE.** Scratch-copy latex-paper. `rm -rf
-  node_modules/@mkbabb/parse-that && npm i ../parse-that-<cand>.tgz`. Run `npm test`
-  (`vitest run`) **and** `npm run build` = `tsup && vue-tsc` (the type axis — §5). Do NOT touch
-  the nested `bbnf-lang/node_modules/@mkbabb/parse-that@0.6.0` (dual-instance — §5).
-- **Leg 3 — keyframes.js, NEGATIVE guard.** `! grep -rq "@mkbabb/parse-that" src/` + package.json
-  assertion; a permanent tripwire against silent re-introduction.
-
-**Minor-step-alone attribution (mandatory, directive 8D-Q2 + PT-3 W0).** Run **0.7.1→1.0.0
-ALONE** for latex-paper, and **1.0.0→1.1.0 ALONE** for value.js-master, BEFORE any combined jump,
-so a 1.0.0-era break (the `*Span` excision S.H2 / `chain()` C-16 fix) is never mislabeled a 1.1.0
-regression. For value.js-master the isolating step IS the pure 1.0.0→1.1.0 minor (it already sits
-at 1.0.0-compatible `^1.0.0`), giving the cleanest possible single-cut attribution of the PT-E2
-inference tightening. **Baseline-GREEN-first is a hard precondition:** if a consumer suite is red
-at its pinned version independent of the candidate, the crater is uninterpretable (halt, report
-upstream). The crater is **constructable now**; it is un-RUN (§11).
+**One-line rule for the gestalt:** *the public surface is justified by the first-party
+conformance corpus (the library is the product); latex-paper's 5 symbols additionally pin an
+un-prunable external floor; only non-combinator accreted globals prune.* No combinator is
+dropped; `proof:no-dead-combinator` is the standing enforcement.
 
 ---
 
-## 4. Per-parse diagnostic mechanism + disabled-path cost (directive 8D-Q3)
+## 2. The migration crater — baseline leg RAN, candidate leg specified (directive 8D#2)
 
-**The residue is a single module-global boolean**, `utils.ts:6 let diagnosticsEnabled = false`
-(setters `enableDiagnostics`/`disableDiagnostics` at `:8-13`), read in `mergeErrorState` (`:33`),
-`addSuggestion` (`:51`), `addSecondarySpan`. The *storage* (`furthest`, `expected?`,
-`suggestions`, `secondarySpans`) is ALREADY per-parse on `ParserState` (`state.ts:43-46`) and
-`furthest`/`getLineAndColumn` (`state.ts:127`) are already always-on per-parse. Only the
-*populate-gate* is global.
+`scratch/pt-consumer-crater.sh` (harness only; never landed). The crater is a **1-consumer
+crater + 2 negative guards** — the honest degenerate instance of rust-lang/crater.
 
-**Mechanism (candidates, disabled-path cost measured on the hidden class):**
+- **Leg (a) latex-paper — POSITIVE gate. Baseline RAN GREEN (127/127).** Remaining candidate
+  steps: scratch-copy latex-paper; pack the parse-that working tree
+  `(cd scratch/parse-that/typescript && npm run build && npm pack)`; **the mandatory
+  reinstall** `rm -rf node_modules/@mkbabb/parse-that && npm i ../parse-that-<cand>.tgz`
+  (omitting this silently re-tests the pinned 0.7.1 — the false green); then **both axes**:
+  `npx vitest run` (runtime) **and** `npx vue-tsc -p tsconfig.vue.json` (the type axis —
+  §4). **Attribution isolation (directive: run the minor step ALONE):** run **0.7.1→1.0.0
+  first, in isolation**, so a 1.0.0-era break (the `*Span` excision S.H2, `chain()` C-16) is
+  never mislabeled a 1.1.0 regression; only then 1.0.0→1.1.0.
+- **Leg (b) value.js — NEGATIVE guard.** `! grep -rq '@mkbabb/parse-that' src/` **and** the
+  `dependencies`-absent assertion. A permanent tripwire against silent re-introduction.
+- **Leg (c) keyframes.js — NEGATIVE guard.** Same shape; assert 0 hits in `src/`+`package.json`.
 
-1. **Boolean field on `ParserState` — `state.diag: boolean` (FAVORED).** Set once from a parse
-   option (`.parse(src, { diagnostics: true })`) and threaded to child states; `mergeErrorState`
-   reads `state.diag` instead of `diagnosticsEnabled`. **Disabled cost = ONE boolean field read
-   already in the state's monomorphic hidden class** — zero allocation, zero new object, zero
-   hidden-class transition (a `boolean` field fixed at construction never transitions). The
-   `ParserState` ctor (`state.ts:41-53`) already has 5 positional fields + 3 diagnostic fields;
-   adding one boolean initialized in the ctor keeps the shape fixed-from-birth.
-2. **`DiagnosticScope` object hung off the parse epoch (PT-3 W2's literal proposal).** Opens/
-   closes in `parseState`'s existing try/finally (`parser.ts:34-49`). **Disabled cost = a
-   per-`.parse()` object allocation** UNLESS the scope is `null` when off — and a nullable scope
-   reference on `ParserState` is then just candidate 1 wearing a heavier coat. **Rejected on the
-   disabled path:** it re-introduces exactly the R2 per-parse allocation PT-3 names as a risk.
-3. **`ParserContext` field (grammar-construction lifetime).** WRONG lifetime — context is built
-   once per combinator at grammar-build (R4 §2), not per-parse; a flag there is effectively
-   global-per-grammar, re-creating the leak.
-
-**Verdict:** candidate 1. The "scope" PT-3 W2 wants IS the already-per-parse `ParserState`; no
-new lifetime is needed. Deletion proof for the global (precept #6): `rg 'let diagnosticsEnabled'
-src/` → 0. **The disabled-path oracle (§11): `%HaveSameMap(diagOnState, diagOffState) === true`
-under `node --allow-natives-syntax`, and the W1 paired harness re-run with diagnostics off holds
-its floor** — proving the flag read is free. NOTE the un-landed dependency: `suggestions`/
-`secondarySpans` are STILL eager `= []` at HEAD (`state.ts:45-46`) — the PROVE-11 lazy-field lever
-(optional, `undefined`-at-birth) is a PRECONDITION for the diagnostics-off path to be allocation-
-free; W1 must land before W2's scoping is genuinely zero-cost.
+The baseline half is now **evidence, not plan**: latex-paper is provably GREEN at 0.7.1, so
+the crater is interpretable. The candidate half is UN-RUN only because it requires a built
+1.1.0 tarball (the W5 tree), which does not yet exist.
 
 ---
 
-## 5. Inference tightening × consumer type-check + the dual-instance hazard (directive 8D-Q4)
+## 3. Per-parse diagnostic enablement — mechanism + disabled-path cost (directive 8D#3)
 
-**The leaks and the tightening (verified against HEAD).** `any<T extends Array<Parser<any>>>`
-(`leaf.ts:26`) with `Result = T[number] extends Parser<infer V> ? V : never`; `all<T extends
-Array<Parser<any>>>` (`leaf.ts:154`) re-defining `ExtractValue` identically to `parser.ts:9-11`
-(DRY violation — one shared `types.ts` is the fix); `fuseAll(parsers: Array<Parser<any>>)`
-(`leaf.ts:179`); `restore(saved: {…; value: any})` (`state.ts:79`); `ParserFunction` erases to
-`ParserState<any>` (`parser.ts:14-16`, documented as a legitimate variance requirement at the
-implementation boundary — NOT a leak to close).
+**The storage is already per-parse; only the *gate* is a module-global.** The failed
+`ParserState` returned by `parseStateInner` (`parser.ts:56-65`) already carries the diagnostic
+triple per-parse: `furthest` (constructor field, always populated), `expected`
+(`state.ts:43`, gated), `getLineAndColumn(offset)` (instance method, `state.ts:127`). The
+sole module-global residue is the populate-gate boolean `utils.ts:6` `let diagnosticsEnabled
+= false`, read in `mergeErrorState` (`utils.ts:33`), `addSuggestion` (`utils.ts:51`),
+`addSecondarySpan`.
 
-**Does the tightening redden a consumer's type-check?** The blast radius is the `any()`/`all()`
-call sites where an EXPLICIT annotation absorbs a currently-`any`-widened union:
+**Candidate mechanisms, compared on the DISABLED-path cost (the directive's axis):**
 
-- **latex-paper (5 `any()` sites).** `document.ts:81 const inlineNode: Parser<LatexNode | null>
-  = any(...)` is the single highest-risk site — an explicit annotation absorbing a currently-`any`
-  union; under tightening the precise arm-union must be assignable to `LatexNode | null` or `tsc`
-  reds. `text.ts:145 accent: Parser<TextNode> = any(bracedAccent, unbracedAccent, namedAccent)`
-  (positional tuple) and `text.ts:154 any(...alts)` (spread of `Parser<TextNode>[]`) — both should
-  survive (readonly-widening is covariant; a mutable array satisfies `ReadonlyArray`). But this is
-  a **0.7→1.1 jump**, so the `any`/`Parser` signatures differ across THREE cuts, not just the
-  tightening delta — the type break, if any, may be owned by 1.0.0, not 1.1.0. **Caught only by
-  `tsup && vue-tsc`, never by `vitest` alone.**
-- **value.js-master (59 `all()` sites + `dispatch` + `any`).** The LARGE surface — this is why
-  Leg 1 of the crater (value.js-master native corpus) is the *native* answer to directive 8D-Q3's
-  "instantiation-budget on a live consumer's native corpus." Its 59 `all()` sites are the real
-  stress of the `ExtractValue` tightening; a `Parser<T[]>` widened to a precise tuple can exceed
-  tuple-instantiation depth and trip **TS2589** (type instantiation excessively deep). The
-  no-new-TS2589 check (directive) MUST be run on value.js-master's 59 sites, not a synthetic one.
+| mechanism | scoped? | per-parse alloc when OFF | hidden-class risk | verdict |
+|---|---|---|---|---|
+| module-global boolean (current) | **NO** (cross-parse leak) | 0 | none | defective |
+| `DiagnosticScope` object hung off the parse epoch | yes | **1 object / `.parse()`** even when off | new shape | **rejected** (R3 regression) |
+| flag on `ParserContext` | no (wrong lifetime) | 0 | none | **rejected** — `ParserContext` is per-*combinator* (grammar-construction, `parser.ts:29`), not per-parse; would leak across parses exactly like the global |
+| **boolean field `state.diag` on `ParserState`** | **yes** | **0** | **none** | **WINNER** |
 
-**The dual-instance hazard — CONCRETE and on a LIVE path (resolve: DOCUMENT, do not force-dedupe).**
-latex-paper carries TWO parse-that instances: direct `0.7.1` and nested `0.6.0` via
-`@mkbabb/bbnf-lang@^0.1.1` (`node_modules/@mkbabb/bbnf-lang/node_modules/@mkbabb/parse-that@0.6.0`).
-It is not hypothetical: `src/grammar/compile.ts:6` imports `BBNFToParser` from bbnf-lang (a
-**0.6.0-built** `Parser` factory); `compile.ts:19,81 const [nt] = BBNFToParser(…)` yields
-`Record<string, Parser<any>>` where every value is a **0.6.0 `Parser` instance**; latex-paper then
-drives them via `.map()` on a live path (`compile.ts:22-40` — `nt.emDash.map(...)` etc.) while
-typing them as the **direct 0.7.1** `Parser` (`compile.ts:7,15`). **Bumping the direct dep to
-1.1.0 does NOT touch the nested 0.6.0** — so post-bump, 0.6.0-built objects are type-checked
-against the 1.1.0 `Parser`/`.map` signature: a THREE-cut type↔runtime skew on a live path.
+**The winner and its zero-cost proof.** `ParserState` is *already* allocated per-parse.
+Add a primitive boolean field `diag`, **initialized in the constructor** (`state.ts:36-53`)
+so the hidden class is fixed from birth and can never transition. It is set once from a parse
+option — `.parse(src, { diagnostics: true })` (or a scoped `withDiagnostics(fn)`) — never a
+module-global write. `mergeErrorState(state, label)` reads `state.diag` in place of the
+global. **Disabled-path cost = one boolean read on a field that is part of the state's fixed
+monomorphic map — no allocation, no new object, no hidden-class transition.** A
+`DiagnosticScope` object, by contrast, re-introduces the exact per-parse allocation the risk
+list names; the "scope" *is* the state, so no new lifetime is needed. Deletion proof
+(precept #6): `rg 'let diagnosticsEnabled' src/` → 0.
 
-- **Why NOT dedupe:** forcing bbnf-lang onto parse-that 1.1.0 is a 0.6.0→1.1.0 jump for
-  bbnf-lang's *internals* (which predate `*Span` excision + the `chain()` fix) — it could break
-  bbnf-lang itself. Dedupe is unsafe unless bbnf-lang is co-re-cut.
-- **Why DOCUMENT suffices:** the crossing is defensively `Parser<any>` on the latex-paper side
-  (`Nonterminals = Record<string, Parser<any>>`, `escapedSpecial.map((parts: any[]) => …)`), so
-  the tightening's `any`→precise does NOT bite here (`any` absorbs). Only `.map`'s structural
-  presence must hold across 0.6.0↔1.1.0 (it does). **Resolution: a MIGRATION.md row stating the
-  crossing drives 0.6.0 Parsers via `.map()` only, typed `Parser<any>`, no `instanceof` — gated by
-  a runtime pass of latex-paper's suite after the bump.** Dedupe deferred to a bbnf-lang re-cut.
+**The one real threading obligation (hand to the prototype).** `state.diag` must propagate to
+**every** child/derived state that `mergeErrorState` can see. parse-that mutates a cursor
+state and also mints new states via `state.from`/`unsafeSetValue` (`state.ts:55-99`); the
+prototype must confirm `diag` copies across every mint site, or a child state silently reads
+`false`. Oracle: `node --allow-natives-syntax` asserting `%HaveSameMap(diagOnState,
+diagOffState) === true` (same map with/without diagnostics) AND a nested-parse isolation test
+(outer off, inner on → outer collects zero) that is **RED on the current global** and GREEN
+after — the born-RED gate.
 
 ---
 
-## 6. SPEC-fidelity divergence list (plane-wide) — 8D rows feeding a spec re-cut
+## 4. Does the inference tightening redden latex-paper's `any()` sites? (directive 8D#4)
 
-1. **PT-3 §1.1 / R4 §7 "value.js migrated / three consumer suites."** DIVERGES: value.js-master
-   (3.1.0) is a LIVE ^1.0.0 consumer; only tranche-u (paused, unmerged) is PT-free. The "three
-   consumer suites green" gate must gate on **value.js-master + latex-paper** (2 positive), not a
-   phantom-migrated value.js. Re-cut PT-3 W0/W5's consumer list.
-2. **R4 §7 "value.js dep `^1.0.0` (lock→1.0.0), 3.1.0."** CONFIRMED for master; R4 read master.
-   The prior-pass "value.js 4.0.0 gone" over-corrected to the branch. Re-cut to name the branch.
-3. **PT-3 W0 "latex-paper 0.7.1-floor, migration adjudicated."** CONFIRMED (0.7.1, `^0.7.1`); ADD
-   the nested-0.6.0 dual-instance row (§5) which PT-3 §4 mentions but does not resolve.
-4. **`proof-no-dead-combinator.mjs` consumerTrees.** DIVERGES from the live census: omits
-   latex-paper/src; vacuity-anchors on `dispatch` (value.js-master-only). Re-cut the gate.
-5. **PT-3 W1 dispatch lane "~+5%."** CONFIRMED honest (PROVE-11 VERIFY halved +10.2%→~+5%,
-   CONFIRMED_DELTA). No divergence — carry ~+5% no-regression, never the inflated figure.
+**The three sites, RAN out of the tree, classified:**
+
+1. `text.ts:154` `return any(...alts)` where `alts: Parser<TextNode>[]` (from
+   `names.map(() => regex(...).map(() => textNode(...)))`). Spread of a homogeneous array.
+   Under the tightened `any<T extends ReadonlyArray<Parser<unknown>>>` with mapped-tuple
+   `ExtractValue`, a `Parser<TextNode>[]` maps to element `TextNode`; return `Parser<TextNode>`
+   is assignable to the function's `Parser<TextNode>` annotation. **SAFE.**
+2. `text.ts:145` `export const accent: Parser<TextNode> = any(bracedAccent, unbracedAccent,
+   namedAccent)`. If all three args are `Parser<TextNode>`, the inferred union is `TextNode`
+   → assignable to the `Parser<TextNode>` annotation. **SAFE unless one arg is mistyped.**
+3. `document.ts:81` `const inlineNode: Parser<LatexNode | null> = any(comment, paragraphBreak,
+   displayMathDollar, …)` — a large **heterogeneous** union assigned to an explicit
+   annotation. `LatexNode` is a **16-member union** (`types/ast.ts:103-140`: TextNode,
+   MathNode, CommandNode, EnvironmentNode, …). **This is the sole real risk site.**
+
+**The mechanism of the risk, precisely.** The *current* `any<T extends Array<Parser<any>>>`
+has a hidden failure mode: when tuple inference does not fire cleanly, `T` falls back to the
+constraint `Array<Parser<any>>`, so the result degrades to `Parser<any>` — assignable to
+`Parser<LatexNode | null>` **unconditionally**, whatever the args actually are. The tightened
+signature's fallback is `Parser<unknown>`, which is **not** assignable to a covariant
+`Parser<LatexNode | null>`. So the tightening **unmasks** any latent mistype: if even one
+inline parser's value type is genuinely outside `LatexNode | null`, `document.ts:81` reddens
+under `vue-tsc`. If every inline parser is honestly typed within the 16-member union (plus
+`null`), the tightening is **safe and strictly better** (subtype → supertype assignment holds).
+
+**Verdict.** The tightening is **probably safe** for latex-paper — its `any()` args are
+node-typed parsers and the annotations are supertypes — but the verdict is **UN-DECIDABLE by
+unit tests** (the 127/127 baseline says nothing about it) and **UN-DECIDABLE statically here**
+because it depends on the inferred union of ~20 heterogeneous inline parsers. It is decided
+only by building the 1.1.0 candidate and running **`npx vue-tsc -p tsconfig.vue.json`** at the
+migrated tree — exactly the "break caught only by full type-check, not unit tests" the
+directive names. This is the crater's mandatory type axis, not an optional add-on.
+
+*Reassuring boundary fact:* latex-paper's `nt.*` nonterminals are typed `Parser<any>`
+(`compile.ts:15` `Record<string, Parser<any>>`); `Parser<any>` **stays assignable** to the
+tightened `Parser<unknown>` params (any → anything), so the cross-instance composition of §5
+does **not** newly redden under W3. The type risk is confined to the annotated-assignment
+sites (1–3 above), not the `any()`-argument-passing sites.
 
 ---
 
-## 7. Integration seams (path:line)
+## 5. The dual-instance hazard — TRACED to its crossing line; RESOLVED as a migration gate
 
-- value.js dual-state: `master:package.json` dep `^1.0.0`; `master` src 8 sites (full surface);
-  `tranche-u` `package.json` no deps, `src/v4/css/grammar.ts`+`stylesheet.ts`, `src/subpaths/
-  math.ts:2`; `git rev-list --count master..tranche-u` = 137; branch tip `86a9a17` (PAUSE).
-- latex-paper: `package.json:37-38` (bbnf-lang `^0.1.1` + parse-that `^0.7.1`); 8 import sites
-  (`grammar/{commands,environments,text,math,document,primitives,compile}.ts`, `bibtex/parser.ts`);
-  nested 0.6.0 at `node_modules/@mkbabb/bbnf-lang/node_modules/@mkbabb/parse-that`; crossing
-  `src/grammar/compile.ts:6-7,15,19,81`; build `package.json:30` `tsup && vue-tsc`.
-- keyframes.js: `package.json` no parse-that; `src/animation/internal/leaves.ts` PT-free.
-- diagnostics: global `utils.ts:6`, reads `utils.ts:33,51`; per-parse storage `state.ts:43-46`;
-  `getLineAndColumn` `state.ts:127`; epoch try/finally `parser.ts:34-49`; eager `= []` still at
-  HEAD `state.ts:45-46` (PROVE-11 lever un-landed).
-- inference: `any` `leaf.ts:26`; `all`+dup `ExtractValue` `leaf.ts:154-157` vs `parser.ts:9-11`;
-  `fuseAll` `leaf.ts:179`; `restore` `state.ts:79`; `ParserFunction` `parser.ts:14-16`.
-- gate: `scripts/proof-no-dead-combinator.mjs:63-68` (consumerTrees), `:49-58` (vacuity=dispatch).
+The nested dual-instance hazard is **not hypothetical** — it is structurally crossed, and the
+1.1.0 migration *widens* it. Traced:
+
+- `compile.ts:6` imports `BBNFToParser` from `@mkbabb/bbnf-lang`; that package bundles its own
+  **nested parse-that 0.6.0** (`node_modules/@mkbabb/bbnf-lang/node_modules/@mkbabb/parse-that
+  @0.6.0`, confirmed on the tree).
+- `compile.ts:18` `const [nt] = BBNFToParser(LATEX_TOKENS_BBNF)` — `nt` is a bag of `Parser`
+  objects **constructed by parse-that 0.6.0**.
+- `compile.ts:15` types them `Nonterminals = Record<string, Parser<any>>` where `Parser` is
+  latex-paper's **own** import from parse-that **0.7.1** (`compile.ts:7`). The `any` masks the
+  version mismatch at the type level.
+- `compile.ts:22-40+` then calls `nt.emDash.map(...)` — 0.6.0's `.map`, on a 0.6.0 object,
+  benign — but the resulting `nt.*` parsers **flow into latex-paper's grammar** where they are
+  composed with **0.7.1** combinators (`any`, `.then`, `.skip`, etc., across `grammar/*.ts`).
+
+**The runtime mechanism of failure.** A 0.7.1 combinator wrapping `nt.emDash` builds a 0.7.1
+closure that calls `nt.emDash.parser(state)` with a **0.7.1 `ParserState`**, while
+`nt.emDash.parser` is a **0.6.0 `ParserFunction`** expecting a **0.6.0 `ParserState`**. Today
+this works by structural luck (compatible field layout at 0.6↔0.7). The 1.0.0 cut removed
+fields (`*Span` excision) and 1.1.0 adds lazy fields (`suggestions`/`secondarySpans`) — so
+**bumping latex-paper's direct dep to 1.1.0 while bbnf-lang stays 0.6.0 drives 1.1.0
+combinators over 0.6.0-shaped parser states across the widest shape gap in the package's
+history.** This is a **runtime** hazard, distinct from the §4 type hazard.
+
+**Resolution (dedupe-or-document, decided not assumed):**
+- The lazy fields are **additive/optional** (constructed `undefined`, never required by a
+  reader); the `*Span` excision removed fields latex-paper's token grammar never touches. So
+  the *most likely* outcome is **compatible-by-structure → DOCUMENT** as a benign nested
+  version in a `MIGRATION.md` row.
+- **But the falsifier exists and must be run:** the crater's runtime leg (`vitest run`, whose
+  `document.test.ts` (19t) + `integration.test.ts` (8t) + `paper.test.ts` (19t) exercise the
+  compiled bbnf tokens end-to-end) is exactly the test that goes RED if the 1.1.0-over-0.6.0
+  state-shape boundary breaks. **If red → dedupe** via a latex-paper `package.json`
+  `overrides: { "@mkbabb/parse-that": "1.1.0" }` (requires bbnf-lang to be 1.1.0-compatible)
+  **or** a coordinated bbnf-lang bump; **if green → document** the benign nested pin.
+- This makes the dual-instance decision **gated on the crater's runtime leg**, not on
+  speculation — the honest disposition.
 
 ---
 
-## 8. Packrat homing (plane-wide) — lawful, and consumer-state disclosed
+## 6. Integration seams (path:line)
 
-Memoization attaches at the closure core (`packrat.ts`); key `getCijKey = id*MEMO_OFFSET_SPAN +
-offset`, float64-safe, fail-loud RangeError (`packrat.ts:71-100`); `PACKRAT_ARMED=false`
-(`packrat.ts:156`), arms at first `memoize()` construction (`packrat.ts:290`) — a TRUE no-op
-until armed; `Parser` shape unchanged (no new field). **8D disclosure: NO live consumer imports
-`memoize` on either value.js line or latex-paper** — packrat is UNARMED across the entire live
-consumer set. Every 8D perf table states **UNARMED (no consumer arms it)** — the measured reality.
+- Census: value.js `package.json` (no `dependencies`), `src/v4/css/grammar.ts`;
+  keyframes.js `package.json` (0 hits); latex-paper `package.json:38` `^0.7.1`, 8 import
+  sites (§0), baseline `npx vitest run` → 127/127.
+- The crossing: `latex-paper/src/grammar/compile.ts:6` (`BBNFToParser` ← bbnf-lang/0.6.0),
+  `:7` (`Parser` ← parse-that/0.7.1), `:15` (`Record<string, Parser<any>>`), `:18`
+  (`BBNFToParser(...)`); nested pin `node_modules/@mkbabb/bbnf-lang/node_modules/@mkbabb/
+  parse-that@0.6.0`.
+- Type-break sites: `document.ts:81` (heterogeneous union → `Parser<LatexNode|null>`, the risk
+  site), `text.ts:145`, `text.ts:154`; `LatexNode` at `types/ast.ts:103-140`.
+- Diagnostics: global `utils.ts:6`; reads `mergeErrorState` `utils.ts:33`, `addSuggestion`
+  `utils.ts:51`; per-parse state fields `state.ts:36-53`, mint sites `state.ts:55-99`;
+  `getLineAndColumn` `state.ts:127`; failed-state build `parser.ts:56-65`.
+- parse-that gates: `any` signature `leaf.ts:28`; `ExtractValue` `parser.ts:9-11`;
+  `Parser` covariant class `parser.ts:24-32`; `proof:no-dead-combinator` + `proof:all`
+  (`package.json`).
+- Packrat (consumer-less across the live set — no consumer imports `memoize`): arm latch
+  `packrat.ts:156/290` — every 8D perf table states **UNARMED (no consumer arms it)**.
 
-## 9. `buildDiagnostic` — result-union vs field-triple (shared 8B/8D)
+---
 
-The failed `ParserState` from `parseStateInner` (`parser.ts:56-65`) ALREADY carries the field
-triple per-parse (`furthest` always, `expected?` gated, `getLineAndColumn` method). A result-union
-`{ok:true;value:T} | {ok:false;furthest;expected;getLineAndColumn}` is a type-plane (8B)
-refinement. **Consumer axis:** neither latex-paper (5 combinator symbols, no diagnostics subpath)
-nor value.js-master (imports `mergeErrorState` but reads no result-union) consumes a result-union —
-both handle failure through `.parse()`→value + `ParserState`. **Field-triple-on-returned-state
-suffices for the consumer contract; the result-union has zero 8D pull** (it is 8B's call on type
-ergonomics). No `buildDiagnostic` hot-path allocation; a lazy `.diagnostic()` accessor formats from
-the present triple only when asked.
+## 7. What a prototype MUST test to move this family
 
-## 10. Prior art (cited)
+1. **The candidate crater (the one UN-RUN gate).** Build a 1.1.0 tarball; reinstall over
+   latex-paper's 0.7.1 (mandatory `rm -rf … && npm i`); run **`vitest run` AND `vue-tsc -p
+   tsconfig.vue.json`**. Run **0.7.1→1.0.0 alone first** (attribution). The 0.7.1 baseline is
+   already banked GREEN (127/127) — the before-state exists.
+2. **The type axis at `document.ts:81`** — the sole real §4 risk: does the tightened `any()`
+   union stay assignable to `Parser<LatexNode|null>`, or does it unmask a latent mistype? Only
+   `vue-tsc` decides.
+3. **The dual-instance runtime leg** — does 1.1.0-over-0.6.0 break `document/integration/
+   paper.test.ts`? Green → document; red → dedupe via `overrides`.
+4. **The `state.diag` diagnostics prototype** — replace `diagnosticsEnabled` with a
+   constructor-set boolean field; prove `%HaveSameMap(on,off) === true` and the nested-parse
+   isolation oracle (RED on the global, GREEN after); confirm `diag` propagates across every
+   `state.from`/`unsafeSetValue` mint site.
+5. **The negative-guard tripwires** — mechanical `grep` gates asserting value.js and
+   keyframes.js stay parse-that-free (permanent, against silent re-expansion).
 
-- **crater (rust-lang/crater)** — build every downstream against a candidate compiler, classify
-  regressions. Our harness is a **2-positive-leg + 1-negative-guard** crater (value.js-master +
-  latex-paper positive; keyframes.js guard).
-- **Consumer-driven contract testing (Pact); tsd / `expect-type` / `$ExpectType`
-  (DefinitelyTyped's `.test-d.ts` convention)** — the mechanism for the 1.1.0 inference-break gate:
-  a type-level suite under `tsc --noEmit`/`vue-tsc` is the artefact (§5).
-- **TS2589 "type instantiation excessively deep"** — the concrete failure mode for tightened
-  variadic-tuple `ExtractValue` over value.js-master's 59 `all()` sites; the no-new-TS2589 check is
-  the guard (recursive conditional-type depth, microsoft/TypeScript).
-- **npm dual-instance / `instanceof` hazard; `npm dedupe` / `overrides`** — the standard nested-
-  version failure mode; value.js's own `dedupe` block (`vite.config.ts`) is the in-tree precedent.
-  Here dedupe is DEFERRED (bbnf-lang co-re-cut required) and the crossing is DOCUMENTED (§5).
-- **Error-on-returned-state (parsec/megaparsec) vs error-carrying-result (nom `IResult`)** — the
-  field-triple vs result-union axis (§9); the consumer axis being empty makes it 8B's call.
-- **SemVer minor-non-breaking discipline** — additive diagnostics API + inference *superset* +
-  `[] → []|undefined` field widening are all minor-safe IF no consumer type reddens; the crater is
-  the falsifier (a real type break escalates minor→major, decided not assumed).
+---
 
-## 11. What a prototype MUST test to move this family (un-run gates)
+## 8. Named risks / counterexamples
 
-1. **RUN the 2-leg crater.** Pack parse-that working tree; `npm i` the tarball over the pin in a
-   value.js-**master** scratch AND a latex-paper scratch (mandatory reinstall — skipping it silently
-   tests the pinned old tarball). `npm test` + full type-check (`vue-tsc`/`tsc --noEmit`) each.
-   GREEN, or enumerate the exact symbol/type break.
-2. **RUN the minor step ALONE:** value.js-master 1.0.0→1.1.0 alone (isolates the PT-E2 tightening);
-   latex-paper 0.7.1→1.0.0 alone (isolates the 1.0.0-era `*Span`/`chain` cut) before any combined
-   jump.
-3. **TS2589 probe on the NATIVE corpus:** does the `all`/`any` tightening exceed tuple-
-   instantiation depth at value.js-master's 59 `all()` sites or latex-paper's `document.ts:81`?
-   Report the tsc version + exact signature (directive 8D-Q4 native-corpus instantiation number).
-4. **Dual-instance runtime probe:** run latex-paper's suite after the 1.1.0 bump WITHOUT deduping
-   the nested 0.6.0; confirm `compile.ts` drives the 0.6.0-built Parsers (`nt.*.map()`) without
-   runtime failure and no `instanceof Parser` crosses the boundary. GREEN → document; RED → dedupe
-   (with bbnf-lang co-re-cut) or pin.
-5. **Boolean-field diagnostics probe:** replace `diagnosticsEnabled` (`utils.ts:6`) with
-   `state.diag`; prove `%HaveSameMap(diagOn, diagOff) === true` (`node --allow-natives-syntax`) and
-   the diagnostics-off hot path holds the W1 floor (zero alloc, no hidden-class transition) — GATED
-   on the PROVE-11 lazy-field lever landing first (`state.ts:45-46` still eager `= []`).
-6. **Gate-fix probe:** add `latex-paper/src` to `proof-no-dead-combinator.mjs` consumerTrees; re-
-   anchor the vacuity guard off value.js-master (`dispatch` dies if tranche-u merges); re-run the
-   gate green under both value.js-line hypotheses.
-7. **Negative-guard tripwire:** mechanical grep asserting keyframes.js (and, if tranche-u merges,
-   value.js) stay parse-that-free — a permanent guard against silent contract re-expansion.
-
-## 12. Named risks / counterexamples
-
-- **R1 (headline): the census flips with the branch you read.** A crater run against
-  value.js-`tranche-u` measures a phantom (nothing to break — it's PT-free); a crater against
-  value.js-`master` measures the real full-surface consumer. The crater MUST name its branch; the
-  prior "value.js gone" was a branch artifact.
-- **R2: the sole no-owner-answer state.** Until the owner rules on the tranche-u merge, the consumer
-  set is genuinely two-valued; any single-disposition perf/API claim is over-committed. Carry both.
-- **R3: the dual-instance crossing is LIVE, not hypothetical** — `compile.ts` drives 0.6.0-built
-  Parsers typed as 1.1.0. Force-deduping breaks bbnf-lang (a 4-cut internal jump); the safe move is
-  DOCUMENT + runtime-gate, dedupe deferred to a bbnf-lang re-cut.
-- **R4: latex-paper may be dormant.** ≈2 weeks stale, gaps to March — if its suite is red at 0.7.1
-  independent of the candidate, that positive gate is uninterpretable; baseline-GREEN-first is a
-  hard precondition.
-- **R5: the tightening's native blast radius is value.js-master's 59 `all()` sites** (TS2589), not
-  latex-paper's 5 — the crater's value.js-master leg is where the real instantiation-budget number
-  lives; measuring only latex-paper under-tests the risk.
-- **R6: a bbnf agent edits parse-that.** The non-clobber law (HANDOFF §6.9) binds: 8D work is
-  scratch-copy prototyping + the BBNF-PT-G letter only; parse-that is READ-ONLY.
+- **R1 — the migration widens the version gap at the worst moment.** Bumping latex-paper to
+  1.1.0 puts 1.1.0 (direct) beside 0.6.0 (nested, via bbnf-lang) — the widest ParserState-shape
+  gap the package has spanned. *Counterexample to "just bump it":* the compiled-token tests
+  drive 0.6.0 parsers through 1.1.0 combinators. Cure: §5's gated dedupe-or-document.
+- **R2 — the type break hides behind `any` and unit-green.** latex-paper is 127/127 GREEN and
+  every `any()` arg is `Parser<any>`, so *both* unit tests and argument-passing type-check
+  silently; the break, if any, lives only at `document.ts:81`'s annotated assignment and only
+  `vue-tsc` finds it. *Counterexample:* a migration that runs `vitest` and declares success
+  ships a `vue-tsc`-red tree. Cure: the type axis is mandatory in the crater.
+- **R3 — `DiagnosticScope` re-adds the disabled-path allocation.** *Counterexample:* a scope
+  object per `.parse()` regresses the diagnostics-off hot path below floor. Cure: the boolean
+  field on the already-per-parse state (§3); the W2 gate re-runs the disabled-path harness.
+- **R4 — the design target was a phantom.** Any 8D table citing "value.js's 59 `all()` sites"
+  measures a repo that imports zero parse-that. The contract is latex-paper's 5 symbols +
+  the first-party corpus (Tier B), nothing more.
+- **R5 — pruning the algebra to satisfy Y.13 would gut the library.** *Counterexample:*
+  removing `all`/`dispatch`/packrat because no *external* consumer imports them destroys a
+  published combinator library. Cure: Tier B — the first-party corpus + `proof:no-dead-
+  combinator` is the lawful consumer; only Tier C (non-combinator globals) prunes.

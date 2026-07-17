@@ -1,226 +1,264 @@
-# LOCK-4 — THE COMBINATOR CORE · PASS-3 · CRIT-1 (adversarial critic 1 of 2, within-lock weighting)
+# LOCK-4 — THE COMBINATOR CORE · PASS-3 · CRIT-1 (adversarial critic 1 of 2, within-lock weighting) — RE-CUT
 
-*Read: PORTFOLIO/CONSTITUTION, CROSS-LOCK (XL-A..H), FAMILY-SPECS.md (15:22), research-{A,B,C,D,priorart},
-PROTO-1.md, PROTO-1-numeric-leaf.md, PROTO-2.md, PROTO-2-vmvalue.md. Tree-of-record spot-checks run on the
-main repo HEAD `c43126422` (the correction's cited tree). Critic-1 weights internal soundness of each family
-spec and whether the prototypes tested the sharpest uncertainty.*
-
----
-
-## THE FINDING THAT REORGANIZES THIS CRITIQUE — the FAMILY-SPECS is STALE against its own two follow-on probes
-
-FAMILY-SPECS.md was frozen at **15:22**. It closes with "PROTOTYPE BRIEFS FOR THE NEXT PASS" — BRIEF 1
-(numeric-leaf election lever, 4B) and BRIEF 2 (4C value plane + live dual iso-oracle). **Both briefs were
-then executed THIS pass**, after the spec froze:
-
-- **PROTO-1-numeric-leaf.md (15:38)** ran BRIEF 1 → **FAIL.** Canada stays 1.56× (gate ≤1.05×); the lever
-  "did NOT fire."
-- **PROTO-2-vmvalue.md (15:54)** ran BRIEF 2 → **BUILT + 8/8 GREEN** (in a worktree).
-
-So the FAMILY-SPECS's net disposition is stale in **both** directions: 4B's election lever, named "the
-single lever between mixed and elect," **failed**; 4C's "central UNBUILT claim" **got built**. Neither is
-folded into any family's convergence framing. This is the load-bearing correction CRIT-1 owes the pass —
-every family % below is computed against the probes, not against the frozen spec.
-
-The correction the spec *did* fold (4C value plane UNBUILT on HEAD) is **verified accurate**: on
-`c43126422`, `Op`=30 variants (no `ApplyFn`), `Value`=4 shapes (`Span/Tagged/Array/Nil`),
-`IrNode::Map{inner,..}=>compile_node(inner)` at `compiler/node.rs:31` (fn_id dropped), vm=1772 LOC,
-`rg ApplyFn crates/ir/src`=0. The spec's honesty on this is real and creditable.
+*Read: PORTFOLIO/CONSTITUTION, CROSS-LOCK (XL-A..H binding), FAMILY-SPECS.md (18:43 re-synthesis),
+research-{A,B,C,D,priorart}, PROTO-1.md, PROTO-1-numeric-leaf.md, PROTO-2.md, PROTO-2-vmvalue.md, and — decisively —
+the TWO probes that postdate the FAMILY-SPECS: **PROTO-1-4A-GA1-combinator-graph.md (19:40)** and
+**PROTO-2-live-differential.md (19:43)**. Tree-of-record spot-checks run on HEAD `06e70053f`
+(descendant of base-pin `ce51c36fc`). Critic-1 weights internal soundness of each family spec and whether the
+prototypes tested the SHARPEST uncertainty. This re-cut supersedes the 16:03 CRIT-1, which was written against the
+15:22 draft and cannot have seen the 18:43 re-synthesis, the 19:40 probe, or the 19:43 probe.*
 
 ---
 
-## 4A — CLOSURE-TO-GRAPH · **70%**
+## THE GOVERNING WITHIN-LOCK FINDING — THE SYNTHESIS FROZE BEFORE ITS OWN BRIEFS RAN, **AGAIN**
 
-**Sound.** Role correctly demoted to runtime-front reifier + pre-codegen pass host (NOT a terminal; RF-1
-refutes the terminal reading, and open-Q3 folds pass-2 PROTO-1's −22% switch-VM refutation onto 4A-TS). The
-substrate is real and consuming (IrNode 14-variant, GrammarDag hash-cons, passes/{transform,sets,lr}).
+The 16:03 CRIT-1's headline was that the 15:22 FAMILY-SPECS was stale against its own two follow-on briefs
+(numeric-leaf FAIL, vmvalue BUILT). The 18:43 re-synthesis folded that correction — and **then committed the
+identical error**. It closes with "PROTOTYPE BRIEFS FOR THE NEXT PASS": **BRIEF A** (4A's `fuse(Graph)→Graph`
+byte-identity) and **BRIEF B** (4C's G-C0 REAL gate + one non-stub HostClosure). **Both briefs then ran THIS
+pass, after the spec froze:**
 
-**The elegant-reduction trap, unresolved for a FOURTH pass.** 4A's ONE novel claim — G-A1: `fuse(Graph)→Graph`
-on a *combinator-constructed* graph byte-identical to a hand-fused arena — has **zero running evidence across
-four passes**, and the spec says so plainly. "The passes exist for the generator's IrNode; pointing them at a
-combinator front and proving byte-identity is the unbuilt claim" is a load-bearing step that reads *and-then-
-the-hard-part*. The reduction ("the passes already exist") is true for the grammar-text front and **unbuilt**
-for the combinator front — the exact thing 4A is chartered to prove. This keeps 4A from converging regardless
-of how settled the role is.
+- **PROTO-1-4A-GA1 (19:40)** ran BRIEF A → **PASS.** 0/10 pre-fuse divergences, 0/10 post-fuse, DAG 37==37
+  identical, parse parity on twitter (631514), timing 0.9981.
+- **PROTO-2-live-differential (19:43)** ran BRIEF B → **PASS.** VM `Op::ApplyFn` byte-identical to parse-that's
+  **LIVE** `.map`, 12/12 census pairs 0 divergences; one non-stub `HostClosure` (HostFold Lerp/ChannelScale)
+  **evaluated**, not forwarded.
+
+So the 18:43 spec's convergence framing is stale in the **favorable** direction this time: it carries 4A's
+G-A1 as "**0% built for a FOURTH pass … zero running evidence, four passes**" (now false — built + PASS), and
+carries 4C's G-C0 as "the REAL gate, **UNTESTED** … the family's central untested-of-record claim" (now
+discharged for the Rust-side semantic gate). **This is a recurring PROCESS failure**, not a one-off: the
+synthesis keeps closing before its sharpest levers fire, so every "next-pass brief" is executed same-pass and
+never folded. Two consecutive clean passes (the convergence bar) is unreachable while the artifact of record
+is always one probe behind its own evidence. **Every family % below is computed against the 19:40/19:43 probes,
+not the 18:43 spec.** The mandatory next-pass act is a re-synthesis that folds these two PASSes and STOPS
+emitting briefs it will then execute itself.
+
+**Tree-of-record accuracy (creditable, verified on `06e70053f`):** `rg ApplyFn crates/ir/src`=0,
+`rg HostClosure crates/core crates/ir`=0, `bytecode.rs:184/238` `parse_that::regex::Dfa` dependency live,
+`FnDescriptor` still 6 variants (no HostClosure), `Expr` the sole user-facing arm. **Both 19:40/19:43 builds are
+WORKTREE-ONLY; nothing landed of record.** The spec's "worktree-built ≠ on record" discipline holds and is
+correct — the uplift is buildability + correctness-under-differential, not convergence-of-record.
+
+---
+
+## 4A — CLOSURE-TO-GRAPH · **80%** (was 68/70 — the four-passes gate is DISCHARGED, with three real narrowings)
+
+**The load-bearing change.** G-A1 — 4A's single novel claim, SPEC-ONLY for four passes — **ran and PASSED**
+(PROTO-1-4A-GA1). A combinator-style smart-constructor builder emitting `IrNode` for the json grammar flows
+through `fuse_single_use` + `fuse_token_dispatch` to a graph **byte-identical** to the grammar-text reference,
+pre- AND post-fuse (0/10 each), with an identical 37-node interned DAG sequence and twitter-parity. The
+elegant-reduction trap the 16:03 CRIT-1 flagged as 4A's "whole risk" **does not bite on this test.** This is a
+genuine advance and it retires the spec's gap #1 as written.
+
+**But the probe tested a NARROWER claim than 4A's sharpest uncertainty — three narrowings, all within-lock:**
+
+1. **The "combinator front" is a bbnf-side 85-LOC IrNode builder, NOT parse-that's real combinator API.** The
+   probe proved the fuse passes are **provenance-agnostic** — that a faithful `IrNode` producer inherits them
+   byte-identically. That was the *lower-risk* half: the passes key on the `IrNode` enum discriminant, so
+   provenance-agnosticism was near-certain a priori. The *sharpest* uncertainty — bridging parse-that's actual
+   runtime `SmallBox<dyn ParserFn>` surface (`parse.rs:74`) to emit `IrNode` across the `parse_that↔bbnf_ir`
+   crate seam, the exact bit the RF-1 category-error discussion calls hard — was **not exercised.** 4A's real
+   claim ("parse-that's API reifies to this graph") is one wiring step short of proven.
+2. **Mild circularity in the oracle.** The builder was authored to match the lowering's conventions (`?w`→
+   `OptionalWhitespace`, `<<`/`>>`→`Skip`/`Next` left-nesting, `,` looser than `>>`) and the probe's own text
+   says these "matched on the **first build**." The test confirms an author *can* transcribe the grammar into a
+   builder that lands on the identical graph — strong evidence, but it is "faithful transcription reproduces the
+   lowering," not "combinator semantics *necessarily* land there." The pre-fuse=0 result is the substantive
+   guard, honestly framed; the residual is that the conventions were matched by hand, not derived.
+3. **Coverage holes vs the brief.** BRIEF A asked "JSON/CSS cold-paired ≥0.98×." **CSS was not run.**
+   `fuse_token_dispatch` is a **no-op on json** (no `@token` rules) — only `fuse_single_use` actually fired, so
+   the token-dispatch and `Map{fn_id}`/`@pretty` inheritance is proven *trivially* (identical early-return), not
+   substantively. Timing (0.9981) was on a ~70-byte doc because the interpreter bars N≥200 on twitter, and — by
+   the probe's own admission — is "a confirmation, not the crux" (byte-identical IR ⇒ identical bytecode ⇒ the
+   ratio *cannot* meaningfully deviate). The ≥0.98× timing arm is therefore **near-vacuous** once byte-identity
+   holds; it is not an independent gate.
 
 **Open gaps (enumerated):**
-1. **G-A1 unbuilt (4th pass):** `fuse(Graph)→Graph` on a combinator-constructed graph byte-identical to a
-   hand-fused arena — no prototype, no number, four passes. The single novel 4A claim.
-2. **Reify→serialize→same-emitter equivalence unbuilt.** PROTO-1 proved grammar-TEXT→emitter generalizes;
-   the *runtime-graph → serialize → same emitter → graph-of-record parity* path (open-Q2) is untested. 4A-as-
-   source-front is coherent only if this round-trips, and it never ran.
-3. **The "analyzable graph" thesis is a repo aggregate, not an invariant.** PROTO-2 PART 1: 1.857% opaque
-   nodes repo-wide (K=13.78, 7.7% cushion) but **4.84% math-only (FAIL)**. In closure-dense sub-grammars 4A
-   reads as "skeleton with opaque leaves," weakening its own central claim exactly where projection lives.
+1. **Real-API reification unbuilt.** parse-that's shipped combinator surface → `IrNode` across the crate seam
+   was NOT wired; the probe used a bbnf-side builder. The sharpest 4A uncertainty is softened, not closed.
+2. **CSS arm of G-A1 unrun; `@token`/`Map{fn_id}`/`@pretty` inheritance proven only trivially** (json has none;
+   `fuse_token_dispatch` early-returned). The load-bearing pass here was `fuse_single_use` alone.
+3. **Reify→serialize→SAME-emitter→graph-of-record parity (open-Q2) unrun** — a **LOCK-3 tower-parity obligation
+   (XL-B)**, not self-dischargeable; correctly exported, still zero evidence.
+4. **Node-ratio thesis is a repo aggregate, not an invariant** (1.857% repo / **4.84% math FAIL**, PROTO-2 PART
+   1) — 4A reads as "skeleton with opaque leaves" exactly on value.js, LOCK-8's flagship consumer.
 
 ---
 
-## 4B — COMPTIME-FUSION · **75%** (strongest family; election is further off than the spec frames)
+## 4B — COMPTIME-FUSION · **72%** (unchanged in substance — NO new probe this round touched 4B; the gate-that-cannot-fail persists)
 
-**Sound + built.** G-B0 PASS (recursive JSON, 0 SmallBox/dyn/fn-ptr, value recursion → direct byte-dispatched
-`fn` calls). G-B3 PASS (arbitrary host closure fused as 1 named call-out, bbnf-ir compile-proven). G-B1
-measured (mixed). Architecturally this is the only family with a running fast face on both languages.
+**Neither 19:40/19:43 probe addressed 4B.** Its disposition is exactly the 16:03 reading, and it is internally
+sound and honest: G-B0 PASS (recursive JSON, 0 box/dyn/fn-ptr), G-B3 PASS (host closure fused as 1 named
+call-out), G-B1 MEASURED-MIXED (data/twitter WIN, citm TIE, **canada 1.50–1.60× REGRESS**). The election lever
+FAILED (PROTO-1-numeric-leaf; canada 1.56× unchanged), and the residual ceiling is **EXOGENOUS** — LOCK-9's
+`number_simd` (9B) + a LOCK-6/8 padded-input `parse()` contract. The spec's correction from "single lever" to
+"three-lock-away, cross-lock-unstable baseline" is correct and creditable.
 
-**But the election lever the spec bets on FAILED — and the spec does not know it.** FAMILY-SPECS 4B open-Q1
-and INCOMPAT-3 both name the numeric-leaf fast-path as "the single lever between 'mixed' and 'elect 4B as the
-Rust fast face'" and "the concrete open number." **PROTO-1-numeric-leaf RAN it and it did not fire**: the
-SWAR 8-digit fold + integer fast-path is *inert on canada* (its floats have short digit runs that straddle
-the delimiter, so the guarded 8-byte probe always falls to the scalar tail). Canada stays **1.56×,
-unchanged**. So:
-- The "single lever" framing is **refuted by 4B's own follow-on probe.** The election gate ("beats SOTA
-  everywhere") stays uncleared; 4B is electable "for everything EXCEPT number-dominated workloads."
-- The residual ceiling is now *named but unbuilt and unmeasured*: the 16-byte SIMD digit stripe +
-  `get_unchecked` indexing, both gated on giving the emitted parser a **padded input buffer** — "a larger
-  architectural move than a leaf swap... the next probe, not this one." **This is SPEC_ONLY**: the claim that
-  padding closes canada is a diagnosis of where the gap lives, not a measured result. 4B's path to election
-  runs through an un-prototyped `parse()` input-contract re-architecture.
-
-**The gate-that-cannot-fail, unset for THREE passes (checklist hit).** G-B4 (firing budget: fuse-arity,
-dispatch-fanout, boxing-depth, `.rlib`/`dist` + incremental-compile) has anchors (fuse-arity 8, `try_factor_alt`
-fires at 4, one box per SCC back-edge) but **no measured number**. The spec labels it "the gate-that-cannot-
-fail, still UNSET across THREE passes." A firing budget with no number does not gate the monomorphization-
-blowup risk it exists to bound — and that risk is the whole reason 4B needs a budget (constitution vi,
-generated-size). Owed on CSS **and** value.js, three passes running.
+**The gate-that-cannot-fail is now on its FOURTH pass unset.** G-B4 (firing budget: fuse-arity 8,
+`try_factor_alt` at 4, one box per SCC back-edge, `.rlib`/`dist` + incremental-compile) still has **no measured
+number**. A firing budget with no number does not gate the monomorphization-blowup risk it exists to bound
+(constitution vi, generated-size). Owed on CSS **and** value.js since pass 1. This is the checklist's canonical
+gate-that-cannot-fail, and no probe has ever produced its curve.
 
 **Open gaps (enumerated):**
-1. **Election lever FAILED (unfolded):** canada 1.56× after the numeric-leaf probe; 4B is workload-
-   conditional, NOT a uniform Rust fast face. Not reflected in the frozen spec.
-2. **Canada ceiling is SPEC_ONLY:** the padded-input re-architecture (SIMD stripe + `get_unchecked`) that
-   would close canada is unbuilt and unmeasured — a hypothesis, not a result.
-3. **G-B4 firing budget: no number, three passes.** The gate cannot fail as written.
-4. **G-B0 alloc sub-claim un-instrumented:** construction allocs <6 / per-parse =1 are source-census only,
-   not dhat-isolated.
-5. **Even discounting canada, the win is narrow:** data/twitter WIN, citm is a **TIE not a win**; "beyond-
-   SOTA" (charter) is met only on string/structure/small. G-B3's core emission arms (`driver/map.rs` +
-   `emit_host_closure` default) are "patch-plausible, NOT cold-built" — the PASS rides partly on an
-   uncompiled patch (constitution vii, concrete-artifact honesty; disclosed but load-bearing).
-6. XL-E supersession has no PT-tranche home named.
+1. **Election is exogenous** (LOCK-9 9B kernel + LOCK-6/8 padded-input re-arch) — 4B cannot elect inside LOCK-4
+   even in principle; canada 1.56× is its measured ceiling until 9B lands.
+2. **Canada-via-padding is SPEC_ONLY** — the SIMD stripe + `get_unchecked` + `PaddedView` re-architecture is an
+   unbuilt hypothesis presented as the known ceiling; no artifact.
+3. **G-B4 firing budget: no number, fourth pass.** Gate cannot fail as written.
+4. **G-B3 rides an unattributed LOCK-1-TypeDesc pre-seed** (`rg HostClosure`=0 on record); core emission arms
+   (`driver/map.rs` + `emit_host_closure` default) are "patch-plausible, NOT cold-built" — the PASS partly rides
+   an uncompiled patch (constitution vii; disclosed but load-bearing).
+5. **"Beyond-SOTA" met only on string/structure/small** — citm is a TIE, not a win.
+6. **XL-E supersession has no PT-tranche home** (constitution-ix debt → GESTALT-P).
 
 ---
 
-## 4C — VM-CORE / PORTABLE-PROGRAM ISOMORPHISM · **70%**
+## 4C — VM-CORE / PORTABLE-PROGRAM ISOMORPHISM · **80%** (was 66/70 — G-C0's REAL gate is DISCHARGED; the probe hit the sharpest uncertainty squarely)
 
-**The value plane got BUILT (uplift over the spec's "0% built") — but the probe tested self-consistency, not
-the sharpest uncertainty.** PROTO-2-vmvalue landed the 4 edits in a worktree (Op 30→31 with `ApplyFn`, Value
-4→8, Map fn_id emitted, `fns` side table), 8/8 tests, Oracle A byte-identical, Oracle B crossing GREEN. Credit
-where due: this discharges the *mechanism-buildability* of G-C0 and is honest that it is a worktree probe
-(`rg ApplyFn` on the main HEAD is still 0 — **not landed on record**).
+**The strongest single advance in the lock this pass, and correctly aimed.** PROTO-2-live-differential ran the
+exact McKeeman gate the 16:03 CRIT-1 named as 4C's sharpest untested uncertainty, and ran it *right*: because
+`parse_that = "0.4"` is a first-class dependency of `crates/ir`, parse-that's SHIPPED closure `.map`/`.many`
+runs **in the same Rust test binary** as `parse_with_ir`, so the oracle is parse-that's **actual live return
+value**, not an author golden. **12/12 census pairs, 0 divergences.** The faked-golden trap is genuinely
+retired for the closed-descriptor surface. And the pass-through stub is retired: `HostFold::{Lerp,ChannelScale}`
+is **evaluated** inside `exec_apply_fn` (proven by the `F64`/`U32` discriminant a forward would violate),
+matching both the closure core and live `.map` including the `600→255` clamp branch. This is precisely the
+right probe for the family's sharpest uncertainty — full credit for aim.
 
-**But G-C0's actual gate was not tested — the oracle-self-forgery trap the research explicitly warned of.**
-FAMILY-SPECS G-C0's gate is: "the VM produces value-projected output **byte-identical to the closure core's
-`.map`** on a projection-dense grammar (differential oracle vs parse-that's closure parse)." PROTO-2-vmvalue's
-Oracle A asserts identity against **"an independently specified golden"** — an author-written expected value,
-**not** parse-that's live `.map`. Oracle B asserts Rust-VM ≡ TS-decoder (crossing self-consistency), **not**
-VM ≡ closure core. So the semantic-correctness gate — *does the VM compute the SAME values the shipped
-combinator does?* — **never ran.** research-C §4/§10-R3 and priorart §7.11 cite McKeeman/Csmith precisely on
-this: "a fabricated golden hides exactly the divergences the oracle exists to catch." Oracle A's golden is
-that fabricated golden for the semantic ground truth. The value plane is built + self-consistent + crossing-
-identical; it is **not** proven byte-identical to the incumbent `.map`, which is the gate as written.
+**But three within-lock qualifications sit on exactly what drove the rise:**
 
-**Worse, the hardest value case is a pass-through stub.** PROTO-2-vmvalue states its `apply_fn.rs` "handles
-`HostClosure` as a pass-through — its body is opaque." So for arbitrary-closure `->` sites the VM carries the
-value structurally and evaluates **nothing** — G-C0's "byte-identical to `.map`" is not merely untested for
-HostClosure, it is *un-testable* by construction there. The value plane computes the closed descriptors
-(Number/Hex/Enum/MapExpr); the open one it forwards.
+1. **The corpus is HAND-SELECTED projection kinds, not a real compiled grammar.** The probe explicitly does NOT
+   compile `css/pretty.bbnf` / `google-sheets.bbnf` through the front-end (rationale: hand-mirroring them in
+   parse-that combinators would "smuggle an author transcription back in" — a defensible call). Instead it
+   reproduces "the projection *kinds* those grammars are dense in." So G-C0 is discharged against **12
+   author-chosen projection kinds**, not a real projection-dense grammar's full value tree. The oracle is now
+   live (the McKeeman fix is real), but the *corpus* is author-selected — a milder residue of the same
+   selection concern. A real grammar compiled through the actual lowering, crossed full-tree, is unrun.
+2. **`HostFold` is a CLOSED set of two numeric folds — NOT the arbitrary opaque closure.** The probe is explicit:
+   "it is not (nor claims to be) the general arbitrary-closure evaluator." The genuinely irreducible residue —
+   value.js's **3 easing closures that RETURN a host function** (`easing.ts:124/142/153`, `EasingFunction =
+   (progress)=>number`, per research-D Q2) — is still **unevaluated**. A numeric fold is arguably
+   MapExpr-adjacent, not the `Opaque(HostFnId)` + `Value::Host` inhabitant the hard case demands. So "non-stub
+   HostClosure" is discharged for a numeric fold; the sharpest opaque case (closure-returning parse) remains
+   stubbed at the arbitrary level.
+3. **G-C1 (the canada TS crossing) is STILL UNRUN, and G-C4 is STILL UNFIRED.** The differential runs
+   **in-process in Rust** against parse-that's `.map` — it is NOT a TS re-decode. So the cross-language
+   behavioral-iso over the six R3 corpora **incl. canada** (the mandatory adversarial member; PROTO-1 shows the
+   f64 leaf is where routes diverge) never ran — still DAG-blocked on porting `parse_that::regex::Dfa` to TS
+   (`bytecode.rs:184/238`, tree-confirmed). G-C4 wire-contract idempotence still fired only on `serde_json`, not
+   `rmp_serde::to_vec_named`; the born-RED externally-tagged-reorder guard has never fired on its shipping bus.
+   And the whole build is **worktree-only** (`rg ApplyFn`=0 on `06e70053f`).
 
-**G-C1's mandatory adversarial member was not crossed.** FAMILY-SPECS G-C1 requires the dual oracle "over the
-six R3 corpora + one projection-dense grammar," with "**canada the mandatory adversarial member**" (PROTO-1's
-f64 leaf is where routes diverge). PROTO-2-vmvalue's own BOUNDARY: the six JSON corpora were **NOT** executed
-by an independent TS interpreter — blocked on porting `parse_that::regex::Dfa` to TS. So the recognizer-plane
-Value-tree crossing over the corpus — the half that includes canada — is **unrun**, and it carries an unowned
-regex-divergence risk (bespoke Dfa vs V8 `RegExp`, research-C R5) the moment the TS port lands.
+**Net for 4C:** G-C0 (Rust-side semantic correctness) is **discharged** — a real +uplift and the right probe.
+G-C1 (canada cross-language), G-C4 (rmp idempotence), the arbitrary opaque closure, and a real-grammar full-tree
+differential are **open**, and none is on record. Convergence-of-record is not reached; correctness-under-live-
+differential is.
 
 **Open gaps (enumerated):**
-1. **G-C0's real gate untested:** VM output vs parse-that's live closure `.map` never differentially checked;
-   the probe substituted an author-specified golden (the McKeeman trap). Semantic correctness of record open.
-2. **HostClosure value case is a pass-through stub** — the VM evaluates no arbitrary closure; byte-identity
-   there is un-testable by construction.
-3. **G-C1 canada / full-corpus crossing unrun**, blocked on a TS `Dfa` port (bounded engineering + latent
-   Dfa-vs-RegExp divergence risk).
-4. **G-C4 msgpack idempotence unexercised:** the probe used `serde_json`, not `rmp_serde::to_vec_named`; the
-   born-RED guard against MessagePack externally-tagged-variant reorder (research-C R4) was never fired on the
-   bus it ships on.
-5. Value-plane home double-home (LOCK-3 internal-descriptor vs LOCK-7 host-closure) un-adjudicated → correctly
-   exported to GESTALT-Ω.
+1. **Corpus is hand-selected projection kinds** — no real projection-dense grammar (`css/pretty.bbnf`) compiled
+   through the front-end and crossed full-value-tree.
+2. **Arbitrary opaque closure unevaluated** — `HostFold` is a closed 2-fold set; value.js's 3 closure-RETURNING
+   easing parses (the true `Opaque`/`Value::Host` residue) are still not evaluated.
+3. **G-C1 canada / full-corpus TS crossing UNRUN** — DAG-blocked on the `Dfa` TS port; latent Dfa-vs-`RegExp`
+   divergence risk (research-C R5) unowned.
+4. **G-C4 msgpack idempotence unfired** on `rmp_serde::to_vec_named` (the actual bus); the born-RED reorder
+   guard never fired where it ships.
+5. **Value plane worktree-only** (`rg ApplyFn`=0); ISA home is **LOCK-3's (XL-B)**, un-ratified; internal-
+   descriptor (→LOCK-3) vs host-closure (→LOCK-7) split correctly exported to GESTALT-Ω.
 
 ---
 
-## 4D — GRAMMAR-SUGAR / SHARED-IR OWNERSHIP · **68%** (honestly BLOCKED/split; bounded by predecessor DAG)
+## 4D — GRAMMAR-SUGAR / SHARED-IR OWNERSHIP · **70%** (honestly BLOCKED/split; DAG-bounded, not internally unsound)
 
-**Sound disposition.** 4D is correctly dispositioned: terminal role refuted three horns over (horn i = full
-grammar-engine TS port is a primitive of equal-or-greater difficulty → BLOCKED-candidate *and* XL-D retires
-the need; horn ii = PROVE-14 wasm full-walk 0.91× loss on exactly the value-producing workload; horn iii =
-shared decoder −22% on V8). Gate-0 (Cargo cycle) severed mechanically; GAP-1 (HostClosure type-plane)
-discharged compile-proven (PROTO-2 PART 2). research-D's split-the-barrier finding (47% of latex-paper's
-non-projection sites recoverable as analyzable `Record`/`Array`/`Select` data; single-digit true-opaque
-residue) is a genuine sharpening, and the spec correctly self-guards against "4D dominates on parsimony ⇒
-elect it" (dominance is conditional on LOCK-5 ruling 5A, and 4D's Rust runtime is a measured loss).
+**Sound disposition, unchanged in kind.** Terminal role refuted three horns (i = full TS grammar-engine port =
+primitive of equal-or-greater difficulty → BLOCKED-candidate AND XL-D retires the need; ii = PROVE-14 wasm
+full-walk 0.91× LOSS on exactly the value-producing workload; iii = shared decoder −22% on V8). Gate-0's regex
+arm severed mechanically; **the VM `Dfa` arm remains LOCK-5-gated** (`bytecode.rs:184/238`, tree-confirmed) —
+research-D's honest correction over the 15:22 "not LOCK-5-gated," correctly carried. G-D-GAP1 (HostClosure
+type-plane) discharged compile-proven but on the same unattributed LOCK-1-TypeDesc pre-seed as 4B
+(`rg HostClosure`=0). research-D's split-the-barrier finding (44/84 ~52% of latex-paper non-projection sites
+recoverable as `Record`/`Array`/`Select` data; opaque residue = exactly 3 value.js easing closures) is a genuine
+sharpening and the spec correctly self-guards against "4D dominates on parsimony ⇒ elect."
 
-**Residual soundness note (not a defect, a watch-item).** The spec's open-Q1 keeps the 5A-vs-5B
-shared-substrate-semantics question live and DAG-blocking on LOCK-5. XL-C retired the regex **functor** (5B for
-the *regex* axis) — but the 4D ownership question (is parse-that's runtime IR literally `bbnf_ir`?) is a
-distinct axis, correctly still-open. The export is clean; the risk is only that a reader conflates XL-C's
-regex-functor retirement with the grammar-IR-ownership question. The spec keeps them separate — good.
+**Within-lock scrutiny — the tier-2 residue 4D's own thesis rests on is STILL unbuilt.** PROTO-2-live-differential
+evaluated `HostFold` numeric folds — but 4D's *irreducible* value-plane residue is the **`FnDescriptor::Opaque(HostFnId)`
++ `Value::Host(HostHandle)`** inhabitant that lets a parse *carry* a closure it cannot introspect (research-D Q2
+tier-2). That inhabitant is **not built and not evaluated** — the 3 easing closures remain the exact case no
+probe has executed. So 4D's "split the barrier, `Opaque` carries only the residue" is proven for tier-1 (the
+`Record`/`Array`/`Select` census, compile-plausible) and for the *numeric* slice of tier-2 (HostFold), but the
+**closure-returning** slice — the whole reason `Value::Host` is needed — is untested. This is not a defect in
+4D's reasoning; it is the family's sharpest remaining within-lock uncertainty, and it is co-owned with LOCK-7.
 
 **Open gaps (all predecessor-owned / report-only per Q8):**
-1. **INCOMPAT-1 (Q-ownership) → LOCK-5:** 5A shared type vs 5B lawful functor for the grammar IR; DAG-blocking,
-   un-resolvable inside LOCK-4.
-2. **HostClosure lattice → LOCK-7:** typed shape + per-subsystem floor (value.js's ~5 Pratt folds; the tier-1
-   Record/Array/Select boundary).
-3. **Node-ratio thin (1.857% repo / 4.84% math):** is fusion-inheritance safe on closure-dense sub-grammars,
-   or only in aggregate? Open (shared with 4A gap 3).
-4. **Value-plane home split → GESTALT-Ω** (recommended, not settled).
+1. **INCOMPAT-1 (Q-ownership) → LOCK-5:** 5A shared type vs 5B lawful functor for the grammar IR; DAG-blocking.
+   Gate-0's VM `Dfa` arm is a LOCK-5 extraction.
+2. **HostClosure/`Value::Host` lattice → LOCK-7:** typed shape + per-subsystem floor; the closure-RETURNING
+   residue (value.js's 3 easing closures) is un-built and un-evaluated (shared with 4C gap 2).
+3. **Node-ratio thin AND FAILS on value.js** (1.857% repo / 4.84% math) — fusion-inheritance safe in aggregate,
+   fragile on LOCK-8's consumer (shared with 4A gap 4).
+4. **Value-plane ISA home → LOCK-3 (XL-B) FIRST, then GESTALT-Ω** (internal-descriptor vs host-closure split);
+   correctly routed, un-ratified.
+5. **`FnDescriptor::HostClosure` type-plane pre-seed unattributed + un-homed** (LOCK-1 TypeDesc);
+   constitution-v zero-runtime-cost untested for it (shared with 4B gap 4).
 
 ---
 
 ## CROSS-CUTTING FAILURE-MODE AUDIT
 
-- **Elegant-reduction trap — TWO hits.** (i) 4A's G-A1 ("the passes already exist") is true for the
-  grammar-text front and unbuilt for the combinator front — four passes. (ii) 4B's "single lever" reduction
-  read *and-then-the-numeric-leaf*, and the numeric leaf turned out unconverged: the follow-on probe failed
-  and the real ceiling (padded-input re-architecture) is unbuilt.
-- **Gate-that-cannot-fail — TWO hits.** (i) G-B4 firing budget: no number, three passes. (ii) G-C0's gate as
-  *tested* was weakened from "byte-identical to the closure core" to "byte-identical to an author-specified
-  golden" — a gate that cannot catch a VM-vs-incumbent divergence.
-- **Oracle self-forgery / faked golden — ONE hit.** 4C Oracle A's "independently specified golden" is exactly
-  the hand-authored semantic ground truth the McKeeman/Csmith discipline (cited in research-C §4 and priorart
-  §7.11) forbids. Oracle B's live golden proves only Rust↔TS crossing consistency, not correctness of record.
-- **SPEC_ONLY anchoring a claim — TWO hits.** (i) 4B's canada-parity-via-padding is an unmeasured hypothesis
-  presented as the known ceiling. (ii) G-B3's core emission arms are "patch-plausible, not cold-built" — the
-  PASS rides partly on an uncompiled patch (disclosed).
-- **Stale-evidence / unfolded follow-on probes — the governing hit.** FAMILY-SPECS predates and folds
-  neither PROTO-1-numeric-leaf (FAIL) nor PROTO-2-vmvalue (BUILD). Its "next-pass" briefs were run *this* pass.
-- **Consumer-less substrate (constitution viii / Y.13) — CLEAN.** The VM has live consumers (DAP adapter, JSON
-  bench); the `ApplyFn` completion's consumer is the iso-oracle + interpret/LSP lane. No violation.
-- **Isomorphism clause (constitution iii) — honestly handled but half-tested.** INCOMPAT-2 (Rust
-  monomorphization ≠ TS emission ⇒ no shared isomorphic terminal ⇒ 6C/6D, away from 6A/6B) is a genuine
-  refutation of source-level rust/ts iso, correctly exported to LOCK-6/LOCK-8. 4C's competing "iso by
-  construction (parser crosses as data)" is proven for the value-plane descriptors (9 crossed GREEN) and
-  **unproven for the recognizer plane over the corpus** (canada unrun). The lock's strongest iso claim is
-  half-tested.
-- **Base-law (XL-H) — CLEAN but note the split-tree honesty burden.** Protos base-pin `ce51c36fc`; the
-  correction is tree-verified on `c43126422`. The PROTO-2-vmvalue "build" is worktree-local (not on the main
-  HEAD — verified `rg ApplyFn`=0). "8/8 tests pass" must read as *provably buildable + self-consistent in a
-  scratch worktree*, NOT *landed + validated-against-incumbent*. The spec's "0% built" for the record is
-  correct; the probe's discharge is buildability, not convergence.
-- **Minor accuracy flag.** FAMILY-SPECS says "Pass-3 built it: grammar/json/json.bbnf ... emitted." PROTO-1
-  states json.bbnf + json.rs were "already realized in-tree at base-pin"; pass-3 *measured* a pre-existing
-  artifact. Evidence is valid either way; the "built this pass" diction overstates.
+- **Stale-evidence / unfolded follow-on probes — THE GOVERNING HIT, RECURRING.** The 18:43 re-synthesis froze
+  before PROTO-1-4A-GA1 (19:40) and PROTO-2-live-differential (19:43) — its own BRIEF A and BRIEF B — ran. This
+  is the SECOND consecutive pass with this exact pattern (15:22 draft vs 15:38/15:54 probes was the first). The
+  spec undersells 4A (G-A1 carried "0% built, four passes" — now PASS) and 4C (G-C0 carried "UNTESTED" — now
+  discharged). Structural, not incidental: the two-consecutive-clean-pass bar is unreachable while synthesis is
+  always one probe behind its evidence.
+- **Elegant-reduction trap — 4A hit DOWNGRADED, not cleared.** G-A1 ran and PASSED, so "the passes already
+  exist" is no longer *zero* evidence. But the probe used a bbnf-side builder, not parse-that's real API — the
+  genuinely hard step (real-API → `IrNode` across the crate seam) is still unbuilt. The reduction now contains a
+  *smaller* unbuilt step, not none.
+- **Gate-that-cannot-fail — TWO hits.** (i) G-B4 firing budget: no number, fourth pass — the canonical one,
+  untouched by either probe. (ii) PROTO-1-4A-GA1's ≥0.98× timing gate is **near-vacuous**: byte-identical IR ⇒
+  identical bytecode ⇒ the ratio cannot meaningfully deviate; the probe itself calls it "a confirmation, not the
+  crux." It is not an independent gate (honestly labeled, so a soft hit).
+- **Oracle self-forgery / faked golden — RETIRED for 4C's closed surface.** PROTO-2-live-differential replaced
+  the author golden with parse-that's live in-process `.map`. The McKeeman trap the 16:03 CRIT-1 flagged is
+  genuinely fixed — for the closed-descriptor + 2-fold surface. Residue: the *corpus* is author-selected
+  projection kinds, not a real compiled grammar (a milder selection concern, not a faked golden).
+- **SPEC_ONLY anchoring a claim — TWO hits, both surviving.** (i) 4B's canada-via-padded-input is unbuilt/
+  unmeasured, presented as the known ceiling. (ii) G-B3's core emission arms "patch-plausible, not cold-built."
+- **Sharpest-uncertainty aim — SPLIT.** PROTO-2-live-differential hit 4C's sharpest uncertainty squarely
+  (VM vs live `.map`) — model probe design. PROTO-1-4A-GA1 hit *a* sharp uncertainty (fuse provenance-
+  agnosticism) but sidestepped THE sharpest (real-API reification) — a good probe aimed one ring inside the
+  bullseye.
+- **Consumer-less substrate (constitution viii / Y.13) — CLEAN.** VM has live consumers (DAP adapter, JSON
+  bench); the value plane's consumer is the iso-oracle + interpret/LSP lane.
+- **Isomorphism clause (constitution iii) — half-tested still.** 4C's "iso by construction (parser crosses as
+  data)" is now proven for the value-plane semantics **in-process in Rust** (12/12) but the **cross-language**
+  half (TS re-decode over canada) is still unrun — G-C1 DAG-blocked on the `Dfa` port. The lock's strongest iso
+  claim advanced on the Rust side, unmoved on the crossing.
+- **Base-law (XL-H) — CLEAN.** Both new probes base-pin `ce51c36fc`, fast-forwarded and ancestry-verified;
+  builds worktree-only (`rg ApplyFn`/`rg HostClosure`=0 on `06e70053f`). "PASS" reads as *correct-under-live-
+  differential / byte-identical-fuse in a scratch worktree*, NOT *landed of record*.
 
 ---
 
 ## NEXT-PASS DIRECTIVES (within-lock)
 
-1. **Refold the disposition against the two follow-on probes.** 4B is workload-conditional (election lever
-   FAILED); 4C's value plane is buildable-in-worktree but its correctness-vs-incumbent gate is untested.
-   Update every family % and the net disposition; the "single lever" and "0% built" framings are both dead.
-2. **4C — run G-C0's REAL gate.** Differential oracle: VM `ApplyFn` output vs parse-that's live closure `.map`
-   on a projection-dense grammar. An author-specified golden does not discharge it. Land at least one
-   HostClosure evaluation (not a pass-through) so the hard value case is testable.
-3. **4C — cross canada.** Port the TS `Dfa` (or restrict to LOCK-5's certified grammar-lowerable regex class)
-   and run G-C1 over the six corpora incl. canada; fire G-C4 on `rmp_serde::to_vec_named`, not `serde_json`.
-4. **4B — the padded-input probe or the named ceiling.** Either prototype the padded `parse()` input contract
-   (SIMD stripe + `get_unchecked`) and re-measure canada, or record canada 1.56× as 4B's measured ceiling and
-   stop calling it "a single lever." Produce G-B4's number on CSS + value.js.
-5. **4A — build G-A1 once.** `fuse(Graph)→Graph` on a combinator-constructed graph, byte-identical to a
-   hand-fused arena, over one grammar. Four passes without it is the family's whole risk.
+1. **Re-synthesize folding the 19:40/19:43 PASSes, and STOP emitting briefs the same pass will execute.** 4A's
+   G-A1 is built (json/fuse_single_use, bbnf-side builder); 4C's G-C0 is discharged (live differential). Update
+   every % and the net disposition; the "four passes unbuilt" (4A) and "REAL gate untested" (4C) framings are
+   dead. Break the freeze-before-briefs-run cycle or two clean passes never arrive.
+2. **4A — close the two narrowings.** (a) Wire parse-that's REAL combinator API (not a bbnf-side builder) to
+   emit `IrNode` across the crate seam and re-run byte-identity. (b) Run the CSS arm and a grammar with
+   `@token`/`Map{fn_id}` so `fuse_token_dispatch` fires substantively, not as a no-op.
+3. **4C — cross canada and evaluate a true opaque closure.** Port the TS `Dfa` (or restrict to LOCK-5's
+   certified grammar-lowerable class) and run G-C1 over six corpora incl. canada; fire G-C4 on
+   `rmp_serde::to_vec_named`. Evaluate at least one **closure-returning** `Opaque(HostFnId)` (value.js easing),
+   not a numeric HostFold — the numeric fold is not the irreducible residue.
+4. **4C/4D — differential on a REAL compiled grammar.** Compile `css/pretty.bbnf` through the actual front-end
+   and cross its full value tree vs live `.map`, replacing the 12 hand-selected projection kinds.
+5. **4B — G-B4's number or the named ceiling.** Produce the firing-budget curve (`.rlib`/`dist` +
+   incremental-compile vs fuse-arity) on CSS + value.js, or record it as un-gateable and carry canada 1.56× as
+   the measured exogenous ceiling. Attribute + home the `FnDescriptor::HostClosure` pre-seed (LOCK-1) and verify
+   constitution v.

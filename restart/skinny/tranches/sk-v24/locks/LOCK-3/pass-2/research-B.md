@@ -1,263 +1,143 @@
-# LOCK-3 · Family 3B — SINGLE-IR-MULTIPASS (pass-2 research)
+# LOCK-3 · Family 3B — SINGLE-IR-MULTIPASS (the LLVM shape)
 
-One rich IR, refined in place by annotating passes; `BackendShape` and the materialization
-plan become *attributes hung on that one IR*, not fresh tiers; the emitter is one fold that
-*reads* those attributes. The LLVM shape. This report develops that formulation alone,
-concrete, against the sole living tree.
+**Live pin.** One repo, HEAD `06e70053f` (the directive's stated base `b3cb8c16b` is
+an earlier lock-minting ancestor; the crate sources cited below are byte-identical
+between them). Two IR trees coexist under this HEAD and the whole family turns on
+their difference:
 
-**Live pin.** `skinny@061c79fa7` (`master` HEAD at read time; the directive's `b3cb8c16b` is
-an ancestor in the same lineage — every line number below is re-verified against `061c79fa7`,
-the checked-out working tree). Outer-repo witness code is `bbnf-lang@061c79fa7` `crates/core`.
-All figures herein are structural/LOC facts read off live; the one dynamic delta
-(residualization) is PROVE-12's measured result, cited, not re-run.
+- **skinny** (`skinny/crates/{ir,passes,codegen,runtime}`) — the SIMD/measurement
+  substrate (PROVE-01/03/07/12 landed here). It carries a **second IR**:
+  `GrammarIr`(`ExprKind`) → `BackendIr`(`BackendExpr`) via `lower_expr` +
+  `materialize_rule`. Types are a monotone structural fold; `->` is dropped.
+- **root** (`crates/core`, `crates/ir` = `bbnf_ir`) — the mature type-plane tree.
+  **It is already a single-IR-multipass in the LLVM shape.**
 
----
+## The family already exists — in the root tree, live and compiling
 
-## 0. The mechanism made concrete
+`crates/core/src/backend/driver/analysis.rs:79` `prepare_grammar(mut ir, …)` is the
+canonical realization of 3B: **one `GrammarIR`, refined in place by a pass sequence,
+BackendShape carried as attributes.** `analyze_grammar` (`:132`) runs
+`compute_sp_method_rules` → `project_types` (`:136`) → `run_path_check` (`:146`) →
+`compute_payload_layouts_with_resolver` (`:163`) → `compute_push_fingerprint`
+(`:172`) → `mine_dedup_eligible_rules` (`:181`), each writing a side-table onto the
+same `ir`: `ir.types`, `ir.type_map`, `ir.materialization`, `ir.payload_layouts`,
+`ir.dedup_eligible_rules`, `ir.delim_scan_configs`, `ir.key_dispatch_configs`,
+`ir.node_facts`, `ir.eclass_facts`. `BackendPreparation` (`analysis.rs:52-69`) then
+**clones the authoritative decisions straight off the IR** (`:89-90`:
+`ir.delim_scan_configs.clone()`), keyed by `NodeId`. There is no second AST, no
+splice, no re-lowering. This is precisely "BackendShape as attributes; the fewest
+transpositions that suffice."
 
-Today skinny runs *three* transpositions with data invented at each seam:
+Skinny is the anti-pattern the family retires. Its `materialize_rule`
+(`passes/src/lib.rs:1362`) **materializes** an intermediate —
+`Seq[SpanMark(Start), body, SpanMark(End), TapeEmit{kind}, DirectBuild{shape,fields},
+Return]` (`ir/src/lib.rs:396-412`) — whose every field is a member of `descriptor`,
+a pure function of `RuleId` via the plan. The root tree proves this need not be a
+node at all: it is `ir.materialization: HashMap<NodeId, MaterializationClass>`
+(`crates/ir/src/passes/materialization/classify.rs:88`, written at `:151`), an
+attribute the emitter reads.
 
-1. `GrammarIr` (`ir/src/lib.rs:34-39`: `name, source_hash, rules, exprs` — **no attribute
-   slot of any kind**) → `BackendIr` via `lower_expr` (`passes/src/lib.rs:1318-1360`) +
-   `materialize_rule` (`:1362-1389`).
-2. A parallel, name-gated *plan* — `derive_materialization_roles` (`:1403-1491`) heuristically
-   re-invents the JSON value taxonomy from byte-literals/regex-kinds; `derive_materialization_plan`
-   (`:1139`) turns roles into `MaterializationDescriptor{kind,label,shape,fields}`
-   (`:1132-1137`), keyed `HashMap<RuleId, …>` (`:1128`).
-3. Emission — `runtime_generator::render` matches `LoweredArtifact` (`runtime_generator.rs:76-88`),
-   then `emit_sink_only` splits JSON-templates vs general-descent on the **name gate**
-   `sink_only.has_rule("value")` (`runtime_generator.rs:98`; def `lower/sink_only.rs:31-33`).
+## Answering the one-fold formulation on live
 
-3B collapses (2) into (1) and turns (3) into one attribute-reading fold. The single IR is
-`GrammarIr` extended with **attribute side-tables keyed by `RuleId`/`ExprId`** — exactly the
-shape the *outer* mature tree already runs (§2). Passes *annotate* (write the tables); the
-emitter *folds* (reads the tables). No second node type is minted for backend facts; no
-heuristic re-derivation; no name gate.
+**materialize_rule is pure derivation, recomputable in the fold, byte-identically.**
+Its output carries no datum absent from `GrammarIr` + `MaterializationPlan`
+(`passes/src/lib.rs:1139`). The `BackendExpr::{SpanMark,TapeEmit,DirectBuild,Return}`
+arms are eliminable; the emit-order template inlines at the fold site. Evidence
+that this is safe: the root tree emits from `PreparedGrammar{ir, prep}` with **no**
+such nodes, under the standing byte-identical-regen invariant.
 
----
+**`emit(&GrammarIr,&Attributes)` as one fold.** Re-express `single_plan`
+(`passes/src/lib.rs:1283`, which builds `BackendIr` via `lower_expr`+`materialize_rule`)
+as a fold over `grammar.rules` consulting `Attributes{ materialization, types,
+recognizers, shape_facts }`. "One fold" unifies **emitter selection**, not the three
+emitter bodies — `json_sink_direct::render` (`runtime_generator.rs:103`),
+`emit_general_descent` (`:147`), `css_scan_direct::render` (`:228`) are genuinely
+distinct backends and stay. All six outputs (regen/check × json/css/sheets) must
+come out byte-identical; that is the gate, not a claim.
 
-## 1. The single fold: `emit(&GrammarIr, &Attributes)` — byte-identical over the six?
+**has_rule("value")@98 and derive_materialization_roles@1403.**
+`sink_only.has_rule("value")` (`runtime_generator.rs:98`) is an emitter-selection
+**name-gate** — it must be **RETIRED**, replaced by a shape predicate over
+`ir.materialization` (the root tree selects by shape fact, never rule name; the
+zero-grammar-name-predicate grep-gate demands it). `derive_materialization_roles`
+(`passes/src/lib.rs:1403`) **RELOCATES**: its structural role assignment becomes a
+`classify_materialization`-shaped annotating pass writing `GrammarIr.materialization`.
+But its byte-literal / ≥4-value-ref heuristics (`:1419-1463`) only fully retire where
+the grammar declares types via `->` — and `json.bbnf` has **zero** `->`, so on the
+shipped JSON grammar the structural classifier survives as a lawful shape pass, not a
+name-gate. Retirement of the *gate*, relocation of the *classification*.
 
-**Where the fold already half-exists.** `render` (`runtime_generator.rs:76-88`) is *already*
-one grammar-agnostic entry that matches a computed `LoweredArtifact` variant and reads its
-output-shape *from the artifact* ("reads NO `target.*`/`contract.*` selection field — the
-firewall", `:69-75`). And `lower_for_runtime` (`:40-73`) *already* selects Scan(CSS) vs SinkOnly
-**purely by shape** — the CSS harvest `lower::css_scan::derive_program` succeeds ⇒ `Scan`, else
-`SinkOnly` (`:57-66`; "no grammar NAME, no config field", `:50-51`). Two of the three dispatch
-decisions are already fold-clean and attribute-derived.
+**Per-RuleId vs per-ExprId — settled empirically on live: BOTH, and both required.**
+Per-RuleId suffices for the type/value plane: `ir.types: Vec<(RuleId, TypeDesc)>`
+(`analysis.rs:17`), skinny's `MaterializationPlan: HashMap<RuleId, _>`. Per-**NodeId**
+(≈ExprId) is **mandatory** for the scan/recognizer/strategy plane —
+`ir.materialization`, `ir.delim_scan_configs`, `ir.key_dispatch_configs`,
+`alt_strategies` are all `HashMap<NodeId, _>` because one rule body holds many nodes,
+each with its own scan/Alt decision (CSS `find_component_delim`'s five distinct
+delimiter masks; PROVE-12). skinny's per-RuleId `materialize_rule` is sufficient only
+because JSON's value taxonomy happens to be rule-granular. **Net-LOC:** delete
+`BackendExpr` (37-line enum), `BackendIr`, `lower_expr` (~45), `materialize_rule`
+(~30), the `single_plan` build; add the fold + a `classify_materialization` pass +
+`project_types`. Emission-extensibility 5→2: `BackendShape`'s five variants
+(`ir/src/lib.rs:361`: EagerTape/OffsetTape/EventTape/SinkOnly/CollapsedStage) collapse
+toward attribute-driven {tape-emit, sink-emit} dispatch.
 
-**The one surviving fork inside the fold** is `emit_sink_only`'s `has_rule("value")` (`:98`) →
-static `include_str!("json_templates/*")` splice (`:101-133`) vs `emit_general_descent` (`:147`).
-Under 3B this becomes: the fold reads a per-`RuleId` materialization descriptor and emits
-tape-op + build-op from it uniformly. JSON's lazy `value/view/visitor` surfaces (the 3 templated
-files) are *not* recomputed by the fold — they are the **fixed runtime library** the fold's tape
-references, so they stay `include_str!` verbatim and remain byte-identical by construction. What
-the fold *generates* (the recursive-descent `parse_*_direct` in `json_sink_direct::render`; the
-general-descent `emit`/`view`) becomes one walk over `BackendExpr` reading
-`TapeEmit{kind}`/`DirectBuild{…}` nodes that `materialize_rule` already splices.
+## The shared `->` type value, consumed not re-derived
 
-**Byte-identity claim, honestly bounded.** The six outputs are regen/check × {json, css, sheets}.
-CSS routes through `Scan`, untouched (byte-identical trivially). JSON and Sheets both lower to
-`SinkOnly` (`:59-66`); the only risk to byte-identity is the *order* of the spliced
-`Seq[SpanMark,body,SpanMark,TapeEmit,DirectBuild,Return]` (`:1370-1388`) and the `shape`/`label`
-strings — all a function of the descriptor (§3). A fold reading the same descriptor emits the
-same bytes. **This is the prototype's first gate** (§8): regen under the fold, `git diff` the
-three generated dirs → empty. Mapped ≠ executed; the claim is falsifiable and cheap.
+The consumption contract already runs in the root tree and is what 3B threads:
+`project_types` (`crates/ir/src/passes/types/mod.rs`) populates `ir.types`;
+`TypeAnalysis::from_ir` (`analysis.rs:22`) **reads** it (`ir.types.clone()`, `:24`) —
+no independent re-derivation. `TypeDesc` (`crates/ir/src/types/type_desc.rs:13`) is a
+real lattice (`Option`, `Vec`, `Tuple`, `Scalar`, `Named(StringId)@:47`), and it is a
+**stage-0 residual**: erased to zero runtime bytes, consumed only at codegen —
+Constitution (v) as a corollary of the single fold.
 
----
+In skinny the identical chain is **missing its `project_types`**. Infer drops `ty`:
+`passes/src/lib.rs:204` `ExprKind::Project { body, .. } => self.infer_expr(*body)?`.
+`ty` is carried verbatim into `BackendExpr::ValueProject` (`:1349`) but is a no-op on
+JSON and folded to a 4-way enum on sheets. The rich schema slot that *would* consume
+it — `DirectBuildTarget{type_ref,…}` (`ir/src/lib.rs:483`) — is `target: None` at
+**every** descriptor (`passes/src/lib.rs:1157,1177,1206,1228…`): a **consumer-less
+substrate today (Y.13 flag).** The end-to-end thread for 3B: (1) a `project_types`-shaped
+pass writes `GrammarIr.types` from the `:204` node-type; (2) `derive_materialization_plan`
+reads `ir.types[rule]` into `DirectBuildTarget.type_ref` instead of `None`; (3) the
+already-built `json_typed_direct` renderer (the real consumer, fed today by the
+hand-authored `xtask/.../real_typed_schema.rs`) reads it. The consumer is
+`TypeAnalysis::from_ir`-shaped: a struct reading `ir.types`, which becomes the single
+fold's `Attributes.rule_types`. `direct_schema.rs:52` `DirectTypeKind` is **Struct-only**
+today — sums stay a born-RED gate (a `Sum`/`Named` arm) owned by the type plane, not
+by 3B.
 
-## 2. The substrate — one IR + attribute tables (the outer tree is the existence proof)
+## Named risks / counterexamples
 
-3B's substrate is not speculative: the *mature* bbnf-lang core already runs it. `TypeAnalysis`
-(`crates/core/src/backend/driver/analysis.rs:16-19`) is
-`{rule_types: Vec<(RuleId, TypeDesc)>, scratch_types: Vec<TypeDesc>}`, and `from_ir` (`:22-31`)
-is a **pure clone of `ir.types` + `ir.type_map.scratch_types()`** — zero re-derivation. That
-`GrammarIR` carries `types` and `type_map` as **annotations hung on the one IR**;
-`BackendPreparation` (`:52-69`) likewise hangs `alt_strategies`, `delim_scan_configs`,
-`key_dispatch_configs` as `HashMap<NodeId, …>` side-tables "cloned directly from `ir.*`
-(populated upstream by `bbnf_ir::passes::recognizers::*::collect`)" (`:59-68`). That is the
-LLVM shape verbatim: one IR, many keyed attribute tables, consumers that *read* them.
+1. **The two-tree schism (load-bearing).** The single IR that *has* the type plane
+   (root `bbnf_ir`) is **not** the one that *has* the SIMD wins (skinny). 3B's "it
+   already exists" is true of root, but PROVE-01/03/07/12 were measured on skinny.
+   The real work is a migration — port skinny's emit organs onto root's
+   pass-annotation spine, or port `project_types`/`classify_materialization` onto
+   skinny's `GrammarIr`. Neither tree is complete; the family must pick a home and
+   name it, not assume convergence.
+2. **json.bbnf has no `->`** — the role classifier cannot be *fully* deleted without
+   authoring JSON types; structural classification is retained (relocated), gate
+   retired.
+3. **Byte-identical regen across six outputs** is an unforgiving gate; any
+   reordering of the inlined SpanMark/TapeEmit template breaks parity.
+4. **PROVE-12 base is stale** (`d2b32f6e3`, raw-string `CSS_GENERATED_RS`); on live
+   the const-mask residual already homes in the structured `css_scan_direct` emitter
+   / root `ir.delim_scan_configs` — a per-NodeId stage-0 attribute, i.e. 3B's
+   "BackendShape as attributes" already delivering the F3 win.
 
-Skinny lacks this: `GrammarIr` (`ir/src/lib.rs:34-39`) has no table, and there is no `TypeDesc`
-in skinny at all (R6 §5). 3B's substrate move is therefore precise and small: extend `GrammarIr`
-(or a sibling `Attributes` bundle threaded beside it) with `materialization: HashMap<RuleId,
-MaterializationDescriptor>` and `node_types: HashMap<ExprId, TypeDesc>` — reusing the outer
-tree's proven layout. `MaterializationPlan` (`passes/src/lib.rs:1127-1130`) is *already* exactly
-this table; today it is a transient argument threaded into `materialize_rule` rather than a
-durable IR annotation. The 3B change is to promote it from a threaded transient to an IR
-attribute and delete the second tier.
+## What a prototype must test to move the family
 
----
-
-## 3. `materialize_rule`'s emit-order: pure derivation, recomputable inside the fold
-
-**Verdict: pure derivation; carries no datum absent from the descriptor.** `materialize_rule`
-(`passes/src/lib.rs:1362-1389`) is `descriptors.get(&rule_id)` (`:1367`) → a fixed splice
-`Seq[SpanMark(Start,label), body, SpanMark(End,label), TapeEmit{kind}, DirectBuild{shape,
-fields}, Return]` (`:1370-1388`). Every field — `label`, `kind`, `shape`, `fields` — comes from
-the `MaterializationDescriptor` (`:1132-1137`); the *order* is a constant template. There is
-**no input** to `materialize_rule` beyond `(rule_id, body, plan)`. Data-flow trace: `plan` ←
-`derive_materialization_plan(&normalized)` (`:37`) ← `derive_materialization_roles(grammar)`
-(`:1403`) ← the `GrammarIr` alone. The whole splice is thus a function of `GrammarIr`, and a
-fold carrying the descriptor table recomputes the identical `BackendExpr` in place. The
-emit-order framing is not a tier; it is a `match` arm.
-
-Corollary for §1: because the splice is deterministic in the descriptor, the only way the fold
-diverges is if the *descriptor* differs — reducing byte-identity to "does the fold build the
-same descriptor table?" (§4).
-
----
-
-## 4. Retirement (not relocation) of the name-gate and the heuristic classifier
-
-The directive's hard test: are `has_rule("value")` (`runtime_generator.rs:98`) and
-`derive_materialization_roles` (`passes/src/lib.rs:1403`) **retired**, or merely moved inside
-the fold?
-
-- **`has_rule("value")` — retired.** Under 3B the JSON-vs-general split is not a rule-name test;
-  it is "does this `RuleId` carry a materialization descriptor rooted at `TapeKind::Container`?"
-  — a *shape* fact `derive_materialization_plan` already computes. The gate disappears because
-  the fold branches on the descriptor's `kind` (`ir/src/lib.rs:453`, `TapeKind`), never on the
-  string `"value"`. This extends the already-clean `lower_for_runtime` Scan/SinkOnly firewall
-  (`:50-51`) one level down.
-
-- **`derive_materialization_roles` — retired *iff* the descriptor is sourced from the grammar's
-  own `->`, not re-invented.** This is where 3B *consumes the threaded `:204 ty`* rather than
-  re-deriving. Today roles are byte-literal heuristics (`{`+`}`→container `:1433-1440`; regex
-  `SpanKind::String`→string `:1404-1408`; `≥4 value-refs`→`value` `:1454-1465`). They exist
-  *only because* json.bbnf carries zero `->` (R6 §0) and the type never reaches emission. If the
-  descriptor's `shape`/`fields`/`kind` are instead read from the projection annotations the
-  grammar declares — `ExprKind::Project{target, ty}` (`ir/src/lib.rs:261-265`) — the classifier
-  has nothing left to compute and is deleted, not relocated. **Honest caveat:** json.bbnf has no
-  `->`, so *for JSON specifically* retirement needs either (a) Sheets/typed grammars as the
-  driver of the descriptor-from-`->` path while JSON keeps a minimal structural recovery, or (b)
-  json.bbnf gaining projections (a grammar edit — a LOCK-7 grammar-totality dependency). 3B's
-  disposition: retire the classifier on any grammar that declares its shapes; carry JSON's
-  structural recovery as a **born-RED edge owned by LOCK-7** until json.bbnf projects.
-  Relocation-not-retirement is the failure mode this names and refuses.
-
----
-
-## 5. Per-`RuleId` vs per-`ExprId`; LOC delta; the 5→2 count
-
-**Key granularity.** The live materialization table is *already* per-`RuleId` (`HashMap<RuleId,
-MaterializationDescriptor>`, `:1128`; lookup `:1367`) and it suffices for JSON and Sheets: each
-value taxon is a distinct *rule* (`string`, `number`, `object`, `array`, `pair`, `value`). The
-counterexample forcing per-`ExprId` is a **single rule whose body carries two differently-typed
-projection sites inline**. Sheets projects at rule granularity (R6 §0), so per-`RuleId` holds for
-the current fleet. **But the *type* attribute must be per-`ExprId`**: `ExprKind::Project` is an
-expression node and `classify_projection` folds per projection site (general_descent, R6 §5b).
-So 3B's substrate is **materialization per-`RuleId`, node-types per-`ExprId`** — matching the
-outer tree's own split (`rule_types: Vec<(RuleId,TypeDesc)>` *and* `scratch_types: Vec<TypeDesc>`,
-`analysis.rs:17-18`). A single key would be wrong for one of the two facts.
-
-**LOC delta (structural estimate; prototype confirms via `lint-loc`).** Deletions: the
-`derive_materialization_roles` heuristic (`:1403-1491`, ~88 LOC) and the `shape_for` fallback
-ladder (`:270-283`, ~14 LOC) once shapes come from annotations. Additions: an `Attributes`
-struct + two `HashMap` fields on/beside `GrammarIr` (~15 LOC) and one annotate-pass writing `ty`
-(§6, ~20 LOC). Net is **negative** on the classifier axis, small-positive on substrate —
-consistent with extreme-parsimony.
-
-**Extensibility 5→2.** `BackendShape` has five variants (`ir/src/lib.rs:361-367`:
-EagerTape/OffsetTape/EventTape/SinkOnly/CollapsedStage) and emission has three generators (Scan /
-json-templates / general-descent); adding a family today can touch all of them. Under one fold a
-new family adds **two** things — a `TapeKind` (or reuses one) and a `DirectBuild` field-source —
-both *data* in the descriptor table, read by the existing fold, zero new emit surface. Prototype
-measures it by adding CSV (grammar exists, `grammar/misc/csv.bbnf`, no generated output — R1 §6)
-and counting touched emit sites: target ≤2.
-
----
-
-## 6. Threading `:204 ty` — the consumption contract (not re-derivation)
-
-The shared question, answered *for this formulation*. `infer_expr`'s `ExprKind::Project{body,..}
-=> self.infer_expr(*body)?` (`passes/src/lib.rs:204`) discards `ty` from the type lattice (`:203`
-`Annotation`→`Unit` is legitimate, untouched). 3B does **not** re-derive the projection type
-downstream; it threads *one* node-type from here to a single consumer.
-
-**End-to-end thread on live:**
-1. At infer, resolve `ExprKind::Project.ty: Option<String>` (`ir/src/lib.rs:264`) into a
-   `TypeDesc` and **write it into the per-`ExprId` `node_types` table** (the new attribute, §2) —
-   the pass *annotates*; it does not return a richer `Type`.
-2. `lower_expr` already carries `ty` verbatim into `BackendExpr::ValueProject{body,target,ty}`
-   (`passes/src/lib.rs:1349-1353`) — the string survives to the backend today; 3B replaces the
-   string with a table lookup so the *resolved* type, not the raw lexeme, flows.
-3. The single consumer is the descriptor builder: `DirectBuildField.target` (`ir/src/lib.rs:466`;
-   `DirectBuildSource` `:474`) — **currently `None` on the offset path for every field** (R6 §5c)
-   — is populated by *reading* `node_types[expr_id]`. The fold then emits the typed field with no
-   second classification.
-
-The consumption contract is exactly the outer tree's: `TypeAnalysis::from_ir` clones `ir.types`
-(`analysis.rs:24`). Skinny gains the same one-line consumer — `node_types.get(&expr_id)` — and
-`classify_projection`'s 4-way fold (R6 §5b) is *the thing retired*, because the fold now reads a
-resolved `TypeDesc` instead of re-string-matching `"f64"/"Span"/…`. A node with no threaded type
-reports **unverified** (zero-witness), never silently defaulting (`no-silent-epsilon`). Evidence
-the prototype must produce: the RED→GREEN of a `verify` predicate over `Project`@204 (RED on HEAD
-— `node_types` empty; GREEN after the annotate-pass), with regen byte-identical when the
-predicate toggles (zero emit footprint — the type plane costs zero at runtime, Constitution v).
-
----
-
-## 7. Prior art (citations)
-
-- **LLVM** — one `Module`/`Function` IR mutated in place by passes; analyses (`DominatorTree`,
-  `LoopInfo`, `AAResults`) are *attributes* cached on the IR via `AnalysisManager`, invalidated
-  by a `PreservedAnalyses` set. 3B's exact shape; the outer tree's `BackendPreparation`
-  side-tables (`analysis.rs:52-69`) are a direct transcription.
-- **MLIR** — operations carry a discardable **attribute dictionary**; passes attach/read named
-  attributes on the *same* op rather than lowering to a new type. Descriptor-as-attribute on
-  `RuleId` is MLIR's discardable-attribute pattern.
-- **rustc** — `TyCtxt` query system: `ty::TypeckResults` is a per-body table consumers *query*,
-  never re-derive; `node_types: HashMap<ExprId, TypeDesc>` (§6) is `TypeckResults.node_types` in
-  miniature.
-- **GHC Core** — a single small typed IR (`CoreExpr`) refined by many passes in place; the
-  "fewest transpositions that suffice" doctrine — argues against a per-level tier tower (3A) and
-  for one annotated IR.
-- **egg/egglog** — `Analysis::Data` attached per e-class, maintained by passes: the
-  annotate-in-place discipline. (Model only; 3B needs no e-graph — that is LOCK-2's engine, kept
-  distinct per the boundary clause.)
-
----
-
-## 8. Risks, counterexamples, and exactly what the prototype must test
-
-**Risks / counterexamples.**
-- **json.bbnf has no `->`** (R6 §0): full retirement of `derive_materialization_roles` cannot be
-  shown on JSON alone; retirement is *conditional* on grammars declaring shapes (LOCK-7
-  dependency). If the prototype cannot source JSON's descriptor from annotations without editing
-  json.bbnf, 3B carries that as a named born-RED edge, not a retirement claim. **Sharpest
-  over-claim guard.**
-- **Per-`ExprId` inline mixed projections** would break the per-`RuleId` materialization key; the
-  current fleet doesn't exercise it, but CSV/typed grammars might — test before asserting
-  per-`RuleId` sufficiency.
-- **Attribute invalidation** (LLVM's hardest problem): skinny's linear pipeline (`compile`,
-  `passes/src/lib.rs:37`) makes invalidation trivial *today*, but promoting `MaterializationPlan`
-  to a durable table introduces a write-after-normalize ordering constraint
-  (`derive_materialization_plan(&normalized)`, `:37`): the annotate-pass must run after
-  normalization or it emits wrong shapes.
-- **Byte-identity of `include_str!` surfaces**: the 3 JSON template files must stay verbatim
-  (runtime library, not fold output). If the fold over-eagerly regenerates `view.rs`/`visitor.rs`,
-  parity breaks. The fold's boundary is exactly the recursive descent, not the lazy view.
-
-**What the prototype must test (ranked).**
-1. **Fold byte-identity gate.** Replace `materialize_rule` + `emit_sink_only`'s name-gate with
-   one attribute-reading fold; `cargo xtask regen-{json,css,sheets}` then `git diff` the three
-   generated dirs → **empty**. Load-bearing, cheap, falsifiable (§1, §3).
-2. **`verify(Project@204)` RED→GREEN** with zero emit footprint: predicate reads
-   `node_types[expr_id]`, RED on HEAD, GREEN after the annotate-pass; regen byte-identical with
-   predicate on/off (§6). Proves the type thread is real and runtime-free.
-3. **Classifier retirement delta**: delete `derive_materialization_roles` (`:1403-1491`) on a
-   grammar that declares its shapes (Sheets, or json.bbnf+`->`); descriptor sourced from
-   `node_types`; existing XOR-checksum + `json_parity` digests unchanged. Reports
-   retired-vs-relocated honestly (§4).
-4. **5→2 extensibility count**: add CSV (`grammar/misc/csv.bbnf`), count touched emit sites;
-   target ≤2 (one `TapeKind`, one `DirectBuild` source), no new `BackendShape` arm (§5).
-5. **`lint-loc` net delta**: confirm the classifier deletion outweighs the substrate addition.
-
-**Dependency declarations (do not re-author).** The grammar-derived STOP-set residualization
-already ships in the CSS emit spine — `find_component_delim` const-generic `u128` mask, +18
-generated LOC, byte-identical, measured 0.81–0.98× cyc/B (PROVE-12 REPORT §2-4); the single fold
-*consumes* that residual pattern, it does not re-invent it. The `ScanAlphabet`-derived SIMD scan
-(`css_scan_direct`) is likewise a declared dependency, not a 3B deliverable. The driver's *seat*
-(where the fact contract sits at the L1→L2 edge) is LOCK-3's; the *engine* that fills the
-descriptor from a cost model is LOCK-2's — 3B reads the descriptor, it does not choose it.
+In **skinny**: delete `BackendExpr::{SpanMark,TapeEmit,DirectBuild,Return}` +
+`materialize_rule`; add a `classify_materialization`-shaped pass writing
+`GrammarIr.materialization` (relocated roles) and a `project_types`-shaped pass
+writing `GrammarIr.types` (threaded `:204` `ty`); re-express `single_plan` as one
+`emit(&GrammarIr,&Attributes)` fold that inlines the emit-order template. Prove: (a)
+all six regen/check outputs (json/css/sheets) byte-identical, reproducing the
+XOR-checksum + json_parity track1/track2 digests; (b) `DirectBuildTarget.type_ref`
+now populated from `ir.types` and reaching `json_typed_direct` (a real consumer, Y.13
+cleared); (c) `has_rule("value")` and the ≥4-ref heuristic gone from codegen
+(grep-gate green); (d) regen byte-identical with the type attribute on/off = type
+plane is stage-0-erased, zero runtime footprint; (e) net-LOC delta and
+emission-extensibility count reported.

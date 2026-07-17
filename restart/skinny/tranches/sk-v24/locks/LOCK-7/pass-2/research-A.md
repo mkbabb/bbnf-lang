@@ -1,245 +1,246 @@
-# LOCK-7 pass-2 — research-A — STAGED-BOOTSTRAP (7A)
+# LOCK-7 · Family 7A — STAGED-BOOTSTRAP (pass 2)
 
-The classic two-stage bootstrap made concrete on the skinny substrate: a committed
-stage-0 artifact, a fixpoint gate, minimal surface, maximal auditability. This report
-re-derives the seed budget on skinny@HEAD, verifies the provenance of the `88s→0.5s`
-datum, chooses the fixpoint SUBJECT and proves its non-vacuity, and costs the legacy
-gate as rescue-and-port versus re-author with a named born-RED gate.
+The classic two-stage formulation carried to its strongest form on the greenfield skinny tree:
+a small committed stage-0 artifact, a fixpoint gate on a chosen equivalence subject, minimal
+bootstrap surface, maximal auditability. This report makes the mechanism concrete, re-derives
+the headline numbers on the measurement substrate, chooses the fixpoint subject and defends its
+non-vacuity, costs the legacy gate as rescue-vs-re-author, and names the born-RED gate and the
+prototype that moves the family.
 
-## 1. Substrate census (skinny@HEAD — the measurement floor XL-A)
+---
 
-Skinny does **not self-host bbnf today.** The skinny xtask dispatch
-(`skinny/xtask/src/main.rs:39-52`) exposes exactly four regen targets — `regen-json`,
-`regen-sheets`, `regen-css`, `regen-real-typed` — and their `check-*` twins. There is
-**no `regen-bbnf` target, no `bbnf.bbnf` regen source wired, no fixpoint gate.** The
-grammar source exists as unconsumed data: `grammar/bbnf/bbnf.bbnf` (89 LOC) +
-`grammar/bbnf/expressions.bbnf` (37) + `grammar/bbnf/types.bbnf` (7) = **133 LOC** of
-bbnf-in-bbnf, plus `grammar/misc/regex.bbnf` (27 LOC) for the regex sub-grammar. This
-source has no consumer in skinny — a Y.13 violation the moment 7A proposes to keep it.
+## 1. The mechanism made concrete
 
-The bbnf front-end is a **hand recursive-descent parser**, one file,
-`skinny/crates/grammar/src/lib.rs` (2142 LOC). It builds `GrammarIr` directly:
-`add_expr(ExprKind::…, SourceSpan)` at `:1351,1371,1393,1400,1423,1439,1456,1463,1485`
-(node construction) and `resolve_refs()` at `:33` (cross-rule link, the TreeFold). This
-2142-LOC hand parser is the surface a self-host would replace, and the LOC anchor every
-seed trade measures against.
+A staged bootstrap has three physical parts on skinny HEAD:
 
-The one general, grammar-NEUTRAL emitter is `skinny/crates/codegen/src/general_descent/`
-(mod 93, emit 452, view 431, regex_first 230 = ~1206 LOC). It is reached by shape
-dispatch: `runtime_generator.rs:98 if !sink_only.has_rule("value")` →
-`emit_general_descent`. `bbnf.bbnf` has no `value` rule, so a bbnf regen would route
-here. **What it emits is a RECOGNIZER, not a GrammarIr builder** — this is the crux of
-7A and is documented in the emitter itself: `general_descent/emit.rs:1` "The
-recursive-descent **recognizer** emitter"; the emitted entry `parse_into_tape`
-(`emit.rs:105`) writes an **offset tape** (`TapeBuilder`, `tape.push_offset(start,
-OffsetFlags(kind))` at `emit.rs:218`) and returns a lazy `{Prefix}Document` view
-(`emit.rs:114`), never an `add_expr`/`resolve_refs` GrammarIr. Regex leaves degrade to a
-Span delimiter-scan (`mod.rs` docstring; `bbnf-regex` HIR exposes only a coarse 4-variant
-classifier, no walkable AST).
+1. **The seed grammar** — `grammar/bbnf/bbnf.bbnf` (90 lines). It is already self-describing:
+   rules `identifier`/`literal`/`regex`/`term`/`factor`/`mapped_factor`/`binary_factor`/
+   `concatenation`/`alternation`/`closure`/`rhs`/`rule`/the seven `@`-directives/`grammar`
+   (bbnf.bbnf:9-85). Leaf semantics are already `-> Span` projections (`identifier`,`literal`,
+   `regex`,`big_comment`,`comment`), and `mapped_factor` names `value_expr : type` for the `->`
+   map plane (bbnf.bbnf:9-42). It `@import`s `expressions`/`types` modules (bbnf.bbnf:4-5) —
+   so the seed is not one file but a small `@import` closure.
 
-## 2. The seed_LOC headline, re-derived — and the "building seed" inflation
+2. **The generator** — the ONE shape-dispatched descent emitter, entered at
+   `codegen/src/lib.rs:101 emit_from_source` → `runtime_generator.rs:98` `!has_rule("value")` →
+   `general_descent::render` (mod.rs:38). Because `bbnf.bbnf` has no `value` rule it lands on the
+   general branch by shape, not by name. That branch emits one `parse_<rule>` **recognizer** per
+   rule, signature `fn parse_{ident}<'i>(bytes,&mut cursor,&mut TapeBuilder) -> Result<(),
+   ParseError>` (emit.rs:269), plus a `parse_into_tape` entry returning a lazy `{Prefix}Document`
+   over the source (emit.rs:105). ~1206 hand LOC total (`mod.rs` 93 + `emit.rs` 452 + `view.rs`
+   431 + `regex_first.rs` 230).
 
-Two seeds must be distinguished, because the directive's inflation question turns on it:
+3. **The committed stage-0** — a generated `crates/runtime/src/grammars/bbnf/{generated,parser,
+   view,config,mod}.rs`, produced by a `regen-bbnf` xtask target (**does not exist yet** — see
+   §3) mirroring the three live `regen-{json,css,sheets}` arms (`xtask/src/main.rs:39-52`).
+   `write_targets` emits it; `check_target` (`xtask/src/regen.rs:36`) diffs it against the tree.
 
-- **Recognizer seed (cheap, weak).** Route `bbnf.bbnf` through `!has_rule("value")` →
-  general_descent as-is. Output is ~5 files sized like the sheets seed
-  (`skinny/crates/runtime/src/grammars/sheets/` = generated.rs 1591 + view.rs 279 +
-  parser 25 + mod 9 + config 4 = **1908 gen LOC** for a 39-branch tower). bbnf's ~20
-  rules would emit a **comparable ~1.2–1.6k gen LOC recognizer**. This seed *recognizes*
-  bbnf and materializes an offset tape + lazy view. It does **not** produce `GrammarIr`,
-  so it cannot replace `grammar/src/lib.rs` on the compile path — it is a recognizer, not
-  a front-end. Committing it as stage-0 buys auditability of *emission determinism* only.
+The staged trade against 7B (total self-host): the seed here **recognizes** bbnf and tape-marks
+its structure — it does not yet **build** a `GrammarIr`. A staged bootstrap can therefore ship
+with the hand parser (`grammar/src/lib.rs`, a single 2142-LOC file) remaining the production
+front-end and the generated bbnf parser serving only as a differential oracle (the 7D pivot).
+Total self-host requires the generated parser to *replace* those 2142 LOC — which requires
+builder projections over the recognizers, the open question of §6.
 
-- **Building seed (the real self-host, expensive).** To replace the hand parser, the
-  emitted parser must yield GrammarIr-equivalent structure. On the recognizer emitter
-  that means authoring `-> Span`/`-> T` **builder projections** on every structural rule
-  of `bbnf.bbnf` (term/factor/mapped_factor/concatenation/alternation/rule/directive)
-  such that the tape (or a projection over it) reconstructs `add_expr` node identities +
-  `resolve_refs` links. **This is precisely the inflation the directive names:** the
-  construction census is host-bound — `add_expr` (append) and `resolve_refs` (cross-rule
-  TreeFold) are host semantics, not `->` values (LOCK-1 inherited-attribute verdict is
-  the floor). Encoding them as grammar `->` projections re-expresses, construct by
-  construct, what the 2142-LOC hand parser does imperatively. The building seed's *source
-  delta* is small (add `->` to 133 LOC of grammar) but its *semantic obligation* inflates
-  toward the hand-parser's 2142 LOC of build logic, relocated from Rust into `->` +
-  host-fn signatures. **The trade is honest only if stated as: recognizer seed is small
-  and provable but consumer-less as a front-end; building seed is a front-end but its
-  host floor is the LOCK-1/7C verdict, not a codegen line-count.**
+---
 
-Headline to carry (skinny@HEAD, XL-H = skinny master): **grammar source 133 LOC; hand
-parser 2142 LOC; recognizer seed ~1.9k gen LOC (sheets proxy); building-seed host floor
-UNMEASURED (RED, LOCK-1-bound).**
+## 2. The `seed_LOC` headline, re-derived on skinny
 
-## 3. The 88s→0.5s datum — VERIFIED a legacy transplant, and mis-scoped as parse cost
+The honest seed is not "90 lines of grammar." A *staged* seed is the committed stage-0 **bytes**
+plus the grammar plus the irreducible hand kernels the generated parser calls (`TapeBuilder`,
+`skip_ws`, `is_text_byte`, the `LEAF_STOP` delimiter scan — emit.rs:100-259). The 90-line
+grammar is the authored surface; the committed stage-0 `.rs` is what an auditor must trust
+(Thompson's trusting-trust surface; cf. the Bootstrappable-Builds / GNU Mes principle that the
+seed you *commit* is the seed you *audit*, not the source you *wrote*).
 
-`grep 'fixpoint|regen-bbnf'` over `skinny/` returns **nothing** in code. The datum lives
-only in the **legacy tree** at `crates/bootstrap/src/lib.rs` (a 28-LOC thin re-export
-whose doc-comment records the B6.W0 optimization). The exact provenance:
-`cargo xtask regen` "skips the on-disk write when the IR pipeline's emitted bytes match
-the existing file's bytes … cold-wall regen drops from ~88 s to ~0.5 s when the regen
-produces identical output, which is the steady-state condition." The same comment
-states plainly: **"W0 made the build wrapping it cheap, not the parse itself."** The
-mechanism (legacy `xtask/src/regen.rs:~455`, "Tranche B6.W0 — content-equality skip") is
-a **cargo-fingerprint/mtime-preservation trick**: the 1.6 MB generated `bbnf` source is
-`include!`d, so an unconditional write advanced mtime and forced an ~85 s release rebuild
-of the `bbnf` crate on every regen — a self-invalidation cycle. Skipping the write when
-bytes are unchanged preserves mtime and lets cargo reuse cached rmeta.
+**The inflation risk is real and directional.** A *recognizer* seed is cheap — it emits ~1206
+LOC of generator against a 90-line grammar and the committed stage-0 is a lazy-tape shell. A
+*building* seed (one that reconstructs `GrammarIr`) must emit, per rule, the `add_expr` calls
+that the hand parser writes by hand (`ir/src/lib.rs:51`), the `Ref{name,target}` construction
+(`grammar/src/lib.rs:1524`), and the projection scan (`parse_projection`:1481). That generated
+builder body plausibly approaches the hand parser's own LOC — i.e. a building seed inflates
+*toward* the 2142-LOC hand parser it means to retire, because it is emitting the same
+construction logic as data-driven code. **This is the number a prototype must produce** (§7):
+`generated_builder_LOC / hand_parser_LOC`. If that ratio is ≥ ~0.8 the staged win is only
+auditability, not code reduction; if it is ≤ ~0.4 the building seed is a genuine shrink.
 
-**Therefore: the 88s→0.5s is a BUILD-CACHE datum, not a parse-speed or fixpoint datum,
-and it lives in the crate that archives at GN-0 (XL-A).** Quoting it as evidence for a
-staged bootstrap in skinny would be a double error — it measures cargo's rebuild
-avoidance of a monolithic `include!`, and skinny's generated grammars are per-file
-directory-modules (`runtime/src/grammars/<g>/*.rs`), a different build shape where the
-1.6 MB monolith does not exist. The datum is retired; skinny must re-derive any regen-cost
-number on its own substrate if 7A wants one.
+**Prior-art anchor for the staged shape:** rustc's `stage0` (a committed/downloaded prior
+compiler) → `stage1` → `stage2`, with the compiler's *own* bit-identical-stage check as the
+fixpoint; tree-sitter's `grammar.js` → committed `src/parser.c` (the exact "grammar authored,
+generated parser committed, regenerated in CI" model this family instantiates); GHC's staged
+bootstrap. All three keep a committed generated artifact and gate on re-derivation — none claim
+the *authored* grammar is the whole seed.
 
-## 4. The fixpoint SUBJECT — and proving the byte-determinism non-vacuous
+---
 
-Skinny's existing `check-*` gates (`regen.rs:36 check_target`) assert **regen(source) ==
-committed bytes** — a *staleness* check, ONE emitter application, not a fixpoint. A true
-fixpoint gate asserts `regen∘regen = regen`. Two candidate SUBJECTS:
+## 3. The `~88s → 0.5s` datum — VERIFIED a legacy transplant
 
-**(a) Generated `.rs` bytes.** Cheap: run the emitter twice (legacy did exactly this via
-the `--output <tempdir>` flag feeding the `bbnf_bootstrap_reproducibility` CI gate that
-"capture[s] two successive regen outputs into a tempdir", `xtask/src/main.rs:56-60`) and
-`diff`. **The directive's non-vacuity trap applies here in full force.** The
-general_descent emitter's *scaffolding* is a **fixed const emit path**: `render_prelude`
-(`emit.rs:82` "The fixed recognizer scaffolding"), the header (`emit.rs:37`), the
-`ParseError`/`is_text_byte` boilerplate — these stamp identical bytes **regardless of the
-input grammar.** A triple-identical byte diff over an output dominated by fixed
-scaffolding certifies the emitter is *deterministic*, which it trivially is (it is a pure
-function of the program AST). It certifies **nothing** about the self-host claim. To make
-byte-determinism non-vacuous you must (i) show the emitted bytes are a genuine function
-of `bbnf.bbnf`'s content — the emitter IS input-dependent for the rule bodies
-(`emit.rs:249 render node boundary`, one `parse_<rule>` per rule, first-sets derived from
-the program's own `ByteLiteral`s per `mod.rs`), so mutate a rule and assert the bytes
-move; and (ii) close the **loop**: parse `bbnf.bbnf` *with the stage-0 generated parser*,
-re-emit, and assert byte-identity — not parse it with the hand parser both times. Only
-(ii) is a fixpoint; (i)+(single-emit diff) is a determinism check masquerading as one.
+`grep -riE "regen-bbnf|fixpoint|88|regen.regen|self.?host"` over `skinny/xtask/src` and
+`skinny/crates/codegen/src` returns **nothing** on the bootstrap axis (only incidental
+`byte-identical` comments at `runtime_generator.rs:48`, `lib.rs:334`, `json_sink_direct/
+mod.rs:207`). There is **no `regen-bbnf` target, no fixpoint loop, and no 88s/0.5s datum on
+skinny HEAD.** The concept lives only in the legacy outer tree (`crates/core/src/runtime/bbnf/`
+— a full builder front-end with `arena.rs`/`builder.rs`/`document.rs`, GN-0 archive material).
+The datum must be treated as **legacy provenance, not a skinny measurement**; any doc quoting it
+against the greenfield tree is a supersession violation (Constitution ix). It may only be
+re-earned by building the `regen-bbnf` target and timing it on skinny@HEAD under the honest
+profile.
 
-**(b) GrammarIr equivalence.** The strong subject: the stage-0 parser, run over
-`bbnf.bbnf`, produces a `GrammarIr` that is `Empty ≡ Concat([])`-normalized equal to the
-hand parser's `GrammarIr` for the same source (the 7D equivalence relation). This is the
-subject that actually certifies self-host — but it is **only reachable with the building
-seed (§2b), not the recognizer seed**, because the recognizer produces a tape/Document,
-not a `GrammarIr`. **Recommendation: the fixpoint subject is GrammarIr equivalence;
-byte-determinism is a supplementary artifact (precept 19), non-vacuous only under the
-mutation test + closed loop above.**
+---
 
-## 5. Rescue-and-port vs re-author; the born-RED gate
+## 4. The fixpoint SUBJECT — choose GrammarIr equivalence, not `.rs` bytes
 
-The legacy carried the whole mechanism: `RegenBbnf` target (legacy `xtask/src/main.rs`,
-`regen_simple_runtime.rs:376 "bbnf" => "regen-bbnf"`), a byte-equivalent header for
-meaningful diffing (`regen.rs:432`), the retired `scripts/bootstrap-bbnf.sh`
-(`regen.rs:548`), and the `bbnf_bootstrap_reproducibility` two-capture gate. **All of it
-archives at GN-0.** Cost trade:
+Two candidate subjects for the gate `stage2 ≡ stage1`:
 
-- **Rescue-and-port** the legacy `RegenBbnf` + reproducibility gate: the porting surface
-  is the target roster (mirror `SHEETS_TARGET` at `main.rs:200`, +~15 LOC for a
-  `BBNF_TARGET` + `regen-bbnf`/`check-bbnf` arms), a `--output tempdir` double-capture
-  option, and the diff assertion. **But the ported gate certifies the WRONG subject** —
-  legacy's gate diffed generated *bytes* of a monolithic `include!` file (§3/§4a), the
-  vacuous subject. Porting it gives a green gate that proves emitter determinism, not
-  self-host. Rescue-and-port is cheap (~50 LOC) and honestly labeled BANKABLE-but-weak.
-- **Re-author** for GrammarIr equivalence (§4b): requires the building seed (§2b) — the
-  three parser-augment gaps below AND the `->`-builder projections AND the host floor
-  (LOCK-1/7C). This is the real self-host and is UNSEEDED.
+- **(a) generated `.rs` bytes** — `regen∘regen` byte-identical.
+- **(b) GrammarIr equivalence** — the generated parser, run on `bbnf.bbnf`, yields a `GrammarIr`
+  equal (mod the §5 relation) to the hand parser's.
 
-**The born-RED gate for the parser-augment.** Before any seed can route through the
-emitter, three bounded hand-parser gaps block routing `bbnf.bbnf` (the emitter parses via
-`skinny/crates/grammar/src/lib.rs`, which must first accept the meta-grammar's own
-syntax). Located at skinny@HEAD:
-1. **`?w`→`->` attachment** — `parse_seq` (`grammar/src/lib.rs:1361`, `?w` handled at
-   `:1366`) and `parse_postfix` (`:1404`, `?w` at `:1449`) must let a `?w`-suffixed factor
-   still attach a `->` projection (`parse_projection:1481`). bbnf.bbnf exercises this at
-   `big_comment/comment` (lines 17-18: `?w -> Span`).
-2. **`@{}` atom** — `parse_atom` (`:1495`); `@{` is scanned at `:420` but the atom form
-   `"@{" , rhs , "}"` (bbnf.bbnf:33) must lower. LOCK-7C names `grammar/src/lib.rs:222` as
-   the `@{}` lowering site.
-3. **`|params|` closures** — the rule-level `closure = "|" identifier … "|" rhs`
-   (bbnf.bbnf:51-52) has no parse path.
+**Subject (a) is largely vacuous on this generator, and the report must say so.** The skinny
+`check_target` is a **single-shot** gate: `emit_runtime_from_request` then `check_dir` diffs
+against the committed tree (`regen.rs:36-52`) — it certifies `committed == emit(source)`, i.e.
+the determinism of ONE emit, not the two-stage self-application. Worse, the emit path is
+**template-dominated**: the JSON family splices a fixed `include_str!("json_templates/
+generated.rs")` (`runtime_generator.rs:101`), and CSS splices the constant `CSS_GENERATED_RS`.
+A fixed-const emit path stamps identical bytes for *any* structurally-admissible input, so
+"regen∘regen is byte-identical" and even "triple-identical" **certify nothing about the parser's
+behaviour** — they certify the template is a constant. Byte-determinism is necessary hygiene
+(P53, clean-regen), not a self-hosting proof.
 
-Gate: **`check-bbnf-parse` is born-RED** — it asserts the hand parser round-trips
-`bbnf.bbnf` (all three constructs) into `GrammarIr` before any emitter routing is
-attempted; RED until the three augments land, and it is the precondition for §6's
-prototype. This gate is real (it parses the actual meta-grammar), not a byte diff.
+**Choose subject (b), with (a) demoted to a hygiene sub-gate.** GrammarIr equivalence is the
+non-vacuous fixpoint: it exercises the generated parser *as a parser* over the seed and compares
+the *structure it builds* to the hand parser's structure. Its precondition is that the generated
+parser can build a `GrammarIr` at all — which returns us to §6 (recognizer-vs-builder). Until
+that holds, the strongest *available* staged gate is the 7D differential oracle: generated
+recognizer *acceptance* over a corpus vs hand-parser acceptance (a weaker relation — accept/reject
+parity, not structural equality — but non-vacuous because the two parsers are independent code).
 
-## 6. What a prototype must test (the unseeded empirical question)
+Non-vacuity test to bank: **plant a divergence** — feed a construct the generated parser handles
+differently (e.g. `?w`→`->` attachment, §6) and confirm the gate goes RED. A gate that stays
+green under a planted structural divergence is vacuous and must be widened.
 
-Author `-> Span`/`-> T` builder projections on `bbnf.bbnf`'s structural rules, drive the
-`!has_rule("value")` general_descent branch (**never `json_sink_direct`**), and measure:
-**does the emitted parser reparse the bbnf corpus into GrammarIr-equivalent structure —
-within the measured `add_expr` + `resolve_refs` host budget — while `regen∘regen` holds
-byte-identical, or does it cascade, and at which construct?** Concretely: (1) land the §5
-born-RED parser augment; (2) add a `regen-bbnf` target; (3) emit the recognizer seed; (4)
-attempt the building-seed projection and record the FIRST construct where the tape cannot
-reconstruct a GrammarIr node identity or a `resolve_refs` link (predicted cascade points:
-`resolve_refs` cross-rule linkage has no tape analog; `@{}` and `|params|` closures are
-host-bound not `->`-expressible); (5) run the §4 mutation test + closed-loop fixpoint. **Do
-not seed the verdict from the legacy emitter's existence** — legacy emitted a monolithic
-`include!` builder via a retired proc-macro path (`crates/bootstrap` doc), architecturally
-unlike skinny's tape-recognizer, so its round-trip tells you nothing about skinny's.
+---
 
-## 7. Prior art (citations)
+## 5. The equivalence relation (pin before quoting parity)
 
-- **rustc / rustc_parse**: the canonical hand-written front-end kept *alongside* a grammar
-  spec (the reference grammar is documentation, not the parser) — the pattern where the
-  recognizer and the "self-description" are deliberately NOT unified because build
-  semantics (spans, recovery, `resolve_refs`-analogs) resist grammar expression. Validates
-  the §2 "building seed inflates toward the hand parser" thesis.
-- **GHC bootstrapping / Guile's reduced bootstrap seed (Bootstrappable Builds)**: the
-  minimal committed seed + fixpoint discipline; the seed is measured in bytes and audited,
-  exactly the §4 subject question. Guile's seed-minimization is the discipline 7A imitates;
-  its lesson is that a *recognizer* seed and a *self-compiling* seed are different artifacts
-  with different trust.
-- **tree-sitter** (`grammar.js` → generated C parser): a grammar-driven **recognizer**
-  emitter producing a parse tree (CST), NOT a typed IR — the exact shape of skinny's
-  general_descent output. tree-sitter never claims to replace a compiler front-end's
-  semantic build; it stops at the CST. Strongest external evidence that the recognizer seed
-  is real but consumer-limited (Y.13).
-- **Lisp/Scheme meta-circular evaluators & PyPy's RPython bootstrap**: the
-  `regen∘regen = regen` fixpoint as certification of self-application; PyPy's "translate the
-  translator" is the closed-loop of §4(ii), and its literature is explicit that
-  byte-stability of the *first* emission is necessary-not-sufficient — precisely the
-  non-vacuity trap.
-- **`prettyplease` / `syn`** (in the legacy regen, `regen.rs:422`): the normalizer that
-  makes byte-diffing meaningful; any skinny fixpoint gate over `.rs` bytes must route
-  through an equivalent canonical unparse or byte-diff noise swamps the signal.
+Equality of two `GrammarIr`s cannot be raw struct equality: `ExprId`/`RuleId` are positional
+indices (`ir/src/lib.rs:51-66`) and node emission order differs between a hand parser and a
+generated one. The relation must be **structural up to**: (i) `ExprId` renumbering (compare the
+`ExprKind` tree reachable from each rule body, not the flat `exprs` Vec); (ii) `Ref` resolution
+(compare `name` before `resolve_refs`, `target` after — run `resolve_refs` on *both* sides or
+neither, `ir/src/lib.rs:84`); (iii) the codex identity `Empty ≡ Seq([])` (the hand parser
+already collapses an empty child list to `Seq(Vec::new())` at `grammar/src/lib.rs:1393`, so this
+normalization is load-bearing, not cosmetic). Pin this relation-id **before** any parity% is
+quoted (the 7D obligation; 7A consumes the same relation for its GrammarIr fixpoint subject).
 
-## 8. Named risks / counterexamples
+---
 
-- **R1 — vacuous fixpoint.** A byte-diff over general_descent output is dominated by fixed
-  scaffolding (`emit.rs:82 render_prelude`); a green triple-diff certifies determinism,
-  not self-host. *Guard:* the §4 mutation test (perturb a rule body, assert bytes move) +
-  closed-loop (§4ii) are mandatory before any parity% is quoted.
-- **R2 — recognizer seed is consumer-less as a front-end.** It produces a tape/Document,
-  not `GrammarIr` (`emit.rs:114`), so it cannot replace `grammar/src/lib.rs`. Committing it
-  as "the bbnf self-host" is a Y.13 breach (consumer-less substrate). *Guard:* the seed must
-  be labeled recognizer-only, or the building-seed projection (§6) must succeed.
-- **R3 — building-seed cascade at `resolve_refs`.** Cross-rule linkage (`:33`) is a
-  post-parse TreeFold with no offset-tape analog; `@{}` and `|params|` are host-bound. The
-  projection likely cascades here. *Guard:* the prototype records the first cascade construct
-  as a named negative result, not a silent fallback.
-- **R4 — porting the legacy gate imports the wrong subject.** Legacy's reproducibility gate
-  diffed a monolithic `include!` file's bytes; ported verbatim it green-lights the vacuous
-  subject. *Guard:* re-author the gate on GrammarIr equivalence, port only the
-  `--output tempdir` double-capture mechanism.
-- **R5 — the 88s→0.5s number leaks into a skinny claim.** It is a legacy cargo-rebuild
-  datum (§3), archives at GN-0, and does not exist on skinny's per-file directory-module
-  build shape. *Guard:* any regen-cost figure is re-derived on skinny@HEAD or omitted.
+## 6. The shared open question — builder projections over the recognizer emitter
 
-## 9. Integration seams (path:line)
+This is 7A's pivotal unknown and it is genuinely **RED-unknown** — do not seed it from the
+legacy builder or from the emitter's existence.
 
-- Route point: `skinny/crates/codegen/src/runtime_generator.rs:98` (`!has_rule("value")`).
-- Emitter: `skinny/crates/codegen/src/general_descent/{mod.rs:37 render, emit.rs:105
-  parse_into_tape, emit.rs:218 push_offset, emit.rs:249 node boundary}`.
-- Hand parser gaps: `skinny/crates/grammar/src/lib.rs:1361 parse_seq`, `:1404
-  parse_postfix`, `:1481 parse_projection`, `:1495 parse_atom`, `:420 @{ scan`, `:222`
-  (@{} lowering, per 7C); build sites `:1351-1485 add_expr`, `:33 resolve_refs`.
-- Regen wiring to mirror: `skinny/xtask/src/main.rs:200 SHEETS_TARGET`, `:42-43
-  regen/check-sheets`; `skinny/xtask/src/regen.rs:19 write_targets`, `:36 check_target`.
-- Legacy (archives GN-0, XL-A): `crates/bootstrap/src/lib.rs` (88s→0.5s, B6.W0),
-  `xtask/src/main.rs:56 bbnf_bootstrap_reproducibility`, `regen.rs:432 byte-equiv header`,
-  `regen_simple_runtime.rs:376 regen-bbnf`.
-- Consumer-less source awaiting a plan: `grammar/bbnf/{bbnf,expressions,types}.bbnf` (133
-  LOC), `grammar/misc/regex.bbnf` (27 LOC).
+The general-descent emitter today emits recognizers whose bodies **discard the value**
+(`parse_{rule}` returns `Result<(),…>`, emit.rs:269) while writing an *offset tape* keyed to the
+grammar's structural bytes. `bbnf.bbnf` routed through it would yield a `BbnfDocument` lazy tape
+over the grammar text — **not** a `GrammarIr`. To make the generated parser a *builder* (the
+7B/total-self-host precondition, and the non-vacuous fixpoint subject of §4b), the `-> Span`/
+`-> T` projections on bbnf's structural rules must reach the tape emitter and reconstruct
+`ExprKind`/`Rule` nodes. Three concrete, bounded parser-augment gaps block even *parsing*
+`bbnf.bbnf` through the hand front-end, and each is a construct the generated emitter must also
+learn:
+
+- **`?w` → `->` attachment.** `parse_postfix` explicitly bails on `?w` and returns the atom
+  intact (`grammar/src/lib.rs:1449-1454`), leaving `?w` for `parse_seq`. But `big_comment`/
+  `comment` in the seed are `( … ) ?w -> Span` (bbnf.bbnf:17-18) — the `->` must attach across
+  the standalone `?w`. Today's `parse_postfix` loop checks `->` first (:1409) then `?w` (:1449),
+  so a `) ?w -> Span` sequence needs the projection to bind past the whitespace marker.
+- **`@{` atom.** `parse_atom` (`grammar/src/lib.rs:1495-1531`) handles `"`,`/`,`(`, ident-ref —
+  **no `@{`** arm. `term` in the seed uses `"@{" , rhs ?w , "}"` (bbnf.bbnf:33) for host-splice
+  atoms. The lowering seam for `@{}` is named at `grammar/src/lib.rs:222` (7C's charter).
+- **`|params|` closures.** No closure arm in `parse_atom`/`parse_rhs`; `closure = "|" ,
+  identifier , … , "|" ?w , rhs` and `rhs = closure | alternation` (bbnf.bbnf:51-52) are
+  first-class grammar-function syntax the front-end does not yet admit.
+
+The census the directive carries is confirmed in code: node values are pure `->`; the *build
+mechanisms* are host-bound — `add_expr` is a pure append (`ir/src/lib.rs:51`), `resolve_refs` is
+a name→RuleId map then a `Ref.target` patch over `exprs` (a bounded TreeFold, `ir/src/lib.rs:84-
+108`). So the host floor for a *building* bbnf seed is exactly {`add_expr`, `resolve_refs`} —
+small, and `resolve_refs`'s zero-runtime-cost round-trip is independently testable (the 7C/
+CONTEXT-tier hook). The open question: authoring those `-> ExprKind`/`-> Rule` projections, does
+the emitted parser reparse the seed corpus into GrammarIr-equivalent structure (within the
+`add_expr`+`resolve_refs` budget) while the byte-hygiene sub-gate holds — **or does it cascade,
+and at which construct** (the `@{}` atom and closure `rhs`-recursion are the prime cascade
+suspects, since both re-enter `rhs`)? Drive the `!has_rule("value")` branch only; never
+`json_sink_direct`.
+
+---
+
+## 7. Legacy fixpoint-gate: rescue-and-port vs re-author
+
+The legacy builder front-end (`crates/core/src/runtime/bbnf/{arena,builder,document,view,
+parse_with,serialize}.rs`, plus tests `bbnf_ast_parity.rs`/`shape_dict_bbnf.rs`) archives at
+GN-0. Two routes for its fixpoint discipline:
+
+- **Rescue-and-port.** Lift the legacy parity/fixpoint *test harness* (`bbnf_ast_parity.rs`) into
+  a skinny `bbnf-oracle` submodule (the GN-5 fleet crate is the natural home), retargeted at the
+  §5 relation. Cost: the harness is test code, not product; the port is a re-home + relation
+  swap, not a rewrite. **Risk:** the legacy relation may bake legacy `Arena`/`Document` shapes
+  that do not exist on skinny (`GrammarIr` is flat-Vec, not arena) — a silent relation mismatch.
+- **Re-author.** Write the fixpoint gate fresh against the §5 relation and the skinny `GrammarIr`.
+  Cost: ~1 new xtask subcommand (`check-bbnf-fixpoint`) + the relation impl. Cleaner, no legacy
+  shape leakage, and the relation is authored once and shared with 7D.
+
+**Recommendation to test, not to conclude:** re-author the gate (small, shape-correct), rescue
+only the legacy *corpus* of adversarial bbnf inputs as fixtures. The legacy 2142-LOC-equivalent
+builder itself is NOT rescued — it is superseded by the generated builder if §6 closes, or the
+hand parser stays production and the generated parser is oracle-only (7D) if it does not.
+
+**The born-RED gate for the parser-augment:** `regen-bbnf` produces `crates/runtime/src/grammars/
+bbnf/` and `check-bbnf` is bit-for-bit (the byte-hygiene sub-gate, §4a); AND
+`check-bbnf-fixpoint` asserts the generated parser's GrammarIr over the seed corpus is §5-equal
+to the hand parser's (the non-vacuous gate, §4b). Both RED until the three §6 parser gaps close
+and the projections build nodes. The gate is proven able-to-fail by the planted-divergence test
+(§4).
+
+---
+
+## 8. Named risks & counterexamples
+
+- **R1 — vacuous byte-gate marketed as self-hosting.** The template-splice emit path makes `.rs`
+  byte-identity a constant-stamp, not a proof (§4). *Counterexample to guard:* a byte-identical
+  `regen∘regen` on a grammar whose emit is a fixed template certifies the template, not the
+  parser — the fixpoint MUST be GrammarIr equivalence.
+- **R2 — building-seed LOC inflation.** A generated builder may approach the 2142-LOC hand parser
+  (§2). *Counterexample:* if `generated_builder_LOC/hand_LOC ≥ 0.8`, the staged route's only win
+  is auditability; the LOC-reduction claim is refuted and must be dropped.
+- **R3 — cascade at `@{}`/closure recursion.** The `rhs`-recursive `@{}` atom and `|params|`
+  closure (bbnf.bbnf:33,51-52) re-enter `rhs`; the recognizer's delimiter-scan leaf (emit.rs
+  `LEAF_STOP`, "cannot cross a grammar delimiter") may not survive nested braces. *Counterexample:*
+  a bbnf construct with a brace-nested host splice that the generated parser mis-scans while the
+  hand parser accepts — the exact "at which construct" the prototype hunts.
+- **R4 — legacy datum contamination.** Quoting 88s→0.5s against skinny (§3) is a Constitution-ix
+  supersession breach. *Counterexample:* the number is absent from skinny HEAD; any doc citing it
+  is transplanting legacy provenance.
+- **R5 — relation under-specification.** Parity% quoted before the §5 relation-id is pinned is
+  meaningless (positional `ExprId` renumbering, `Empty≡Seq([])`). *Counterexample:* two
+  structurally-equal grammars comparing unequal because of `exprs`-Vec ordering.
+
+---
+
+## 9. What a prototype must test (to move 7A)
+
+1. **Build `regen-bbnf`** (one `BBNF_TARGET` const + regen/check arms, `xtask/src/main.rs:39-52`
+   pattern) and time it on skinny@HEAD — re-earn or retire the 88s→0.5s legacy datum (§3).
+2. **Close the three §6 parser gaps** in `grammar/src/lib.rs` (`?w`→`->`, `@{}` atom, `|params|`
+   closure) so `bbnf.bbnf` parses through the hand front-end — the precondition for any oracle.
+3. **Author `-> ExprKind`/`-> Rule` builder projections** on bbnf's structural rules and drive
+   the `!has_rule("value")` branch; measure whether the emitted parser reparses the seed corpus
+   into §5-equivalent `GrammarIr` within the {`add_expr`,`resolve_refs`} budget, or names the
+   cascade construct (§6, §8-R3).
+4. **Emit the two ratios:** `generated_builder_LOC/hand_parser_LOC` (§2 inflation test) and the
+   GrammarIr-parity% over the corpus (§4b), each with its relation-id (§5).
+5. **Prove the fixpoint gate can fail:** plant a structural divergence and confirm RED (§4).
+
+The family advances when (1)-(2) land green and (3) returns either a parity% with the cascade
+absent, or the named construct where the builder-over-recognizer route breaks.

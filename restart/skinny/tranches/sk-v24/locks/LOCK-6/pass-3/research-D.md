@@ -1,277 +1,248 @@
-# LOCK-6 · 6D — ORACLE-ISOMORPHISM · Research (pass 3)
+# LOCK-6 · Family 6D — ORACLE-ISOMORPHISM · pass-3 research
 
-Behavioral isomorphism only: one shared conformance corpus, one shared digest fold,
-differential Rust↔V8 tests; layout free per language. The null hypothesis under test is
-that this behavioral contract beats a mirrored/generated-layout regime on measured
-maintenance and drift cost — or that it is defeated by a number/span canonicalization tax
-that a layout regime would not pay. This pass runs the fold cross-language for real,
-injects divergences, prices one added grammar, and pins the in/out-of-contract partition
-as a data file. The running instance is decisive and it reshapes the mechanism.
-
----
-
-## The mechanism, made concrete
-
-The oracle is three homomorphic parts, each a total function into a `u32`:
-
-1. **The corpus** — a checked-in set of source documents plus a per-document expectation
-   record (accept/reject, and for accepted inputs the canonical value stream). Layout of
-   the parser output is free per language; only the value stream is contracted.
-2. **The fold** — FNV-1a over `u32` (`prime = 0x01000193`, offset basis `0x811c9dc5`),
-   mixing via `Math.imul(h ^ x, prime) >>> 0` on V8 and `(h ^ x).wrapping_mul(prime)` in
-   Rust. This is already the PROVE-14 digest arithmetic (`crates/bbnf-bench/ts-tape/tape.mjs`
-   shared node-hash primitives; the `mix` at PROVE-14/patch.diff:289/357/387). It folds
-   structural counts, UTF-16 code units, and per-leaf value hashes into one fingerprint.
-3. **The differential harness** — Rust folds one side, node folds the other; the two
-   fingerprints must be `==`. On mismatch the harness bisects the corpus to the first
-   diverging document (the fold is a left chain, so a per-document reset gives O(log N)
-   bisection to the culprit).
-
-**Substrate that already exists.** The fold primitives, the UTF-16-unit string hash, the
-structural-count digest, and the `digestsEqual` comparator are the PROVE-14 code verbatim
-(`tape.mjs`, `verify.mjs` at PROVE-14/patch.diff:394/699-731). The Rust plane accessors that
-feed a Rust-side fold are live: `Tape::{source,offsets,flag_cursors,flag_values}`
-(`crates/runtime/src/tape/mod.rs` ~121-137). GN-4.W5 already specifies a four-lane parity
-oracle (`crates/runtime/tests/value_parity.rs`, `ts/tape/test/cross-lane.mjs`,
-docs/tranches/sk-v24/GN-4.md:407/420-428) whose close gate is *exactly* node-for-node
-agreement across the language boundary — 6D is the generalization of that gate from JSON to
-every grammar, and from four in-repo lanes to a two-language contract.
+Behavioral isomorphism only: a shared conformance corpus and a differential digest decide
+Rust↔TS correspondence; layout is free per language. The family is a null hypothesis — it
+must be *defeated* by measured maintenance/drift cost, or it wins. Pass-2 specified the
+mechanism and named the one missing artifact: a Rust-side fold of the same spec compared
+against the TS fold (PROVE-14's two arms were both JS). **This pass builds and runs it.** Q1
+is answered by a live cross-language instance; Q2 by measured escape/detection numbers; Q3 by
+a construction argument with LOC pointers; Q4 by a checked-in contract data file with the DAG
+constraint carried.
 
 ---
 
-## Q1 — the fold RAN cross-language; it does NOT fold bit-identically for numbers
+## Q1 — the digest folds bit-identically Rust↔V8 (RUNNING INSTANCE, not spec text)
 
-A running instance (not spec text): a Rust fold (rustc -O) and a V8 fold (node v26) each
-read a 27-value f64 corpus and fold it three ways — over each value's **native shortest
-decimal text**, over the **raw IEEE-754 u64 bits** (split lo/hi `u32`), and over a
-**span-length** stream derived from the native text. Result:
+Two **independent** parsers fold the **one** spec and are compared as 64-bit integers:
 
-| fold lane | Rust digest | V8 digest | verdict |
-|---|---|---|---|
-| native decimal text | `cce194de` | `c8d6e5e1` | **DIVERGES** |
-| raw IEEE-754 bits | `b99874e8` | `b99874e8` | **bit-identical** |
-| span-length (from text) | `22ec9009` | `fe9db4c4` | **DIVERGES** (inherits text) |
+- **Rust arm** — a hand-written recursive-descent JSON parser (no serde, no V8) building a
+  UTF-16 value tree, folding a u64 digest. `rustc -O`, ~110 LOC.
+- **V8 arm** — native `JSON.parse` feeding the *identical* fold in BigInt-64 arithmetic
+  (bit-identical to Rust `u64` wrapping), ~40 LOC.
 
-The bits lane proves the fold arithmetic itself is genuinely isomorphic across Rust and V8
-— identical `u32` FNV-1a by construction. The divergence is **not** in the machinery; it is
-in the *canonical-decimal spec*. Rust `core::fmt` float Display and V8
-`Number.prototype.toString` (ECMA-262 §7.1.12.1) are BOTH shortest-round-trip in the
-significand, but disagree on three enumerable classes:
+The fold: FNV-1a-64 (`offset 0xcbf29ce484222325`, `prime 0x100000001b3`); strings folded over
+**UTF-16 code units** (the astral lane — an emoji is one code point, two units); numbers
+`f64→to_le_bytes(8)` with NaN canonicalized to `0x7ff8000000000000`; objects order-independent
+(XOR of `mix(key_digest,value_digest)`, `mix(k,v)=k·0x9e3779b97f4a7c15 ^ rotl(v,31)`); arrays
+sequential with length salt.
 
-- **Exponential threshold.** Rust Display is always positional; V8 emits exponential for
-  exponent ≥ 21 or magnitude < 1e-6. Concrete: `1e21` → Rust `1000000000000000000000`
-  vs V8 `1e+21`; `1e-7` → Rust `0.0000001` vs V8 `1e-7`; `6.022e23` → Rust
-  `602200000000000000000000` vs V8 `6.022e+23`; subnormal `5e-324` → Rust a 300-digit
-  positional expansion vs V8 `5e-324`.
-- **Sign of zero.** `-0.0` → Rust `-0`, V8 `String(-0)` → `0`. A divergence *outside* the
-  exponential range entirely.
-- **Agreement elsewhere is real.** Every normal-magnitude value agreed exactly —
-  `0.30000000000000004`, `123456789.12345679`, `9007199254740992`, `0.1/0.2/0.3` — so the
-  divergence set is bounded and nameable, not pervasive.
+**Result — three corpora, cold, one shot each:**
 
-**The verdict for the family.** Behavioral isomorphism is sound *only if the contract owns
-number canonicalization* rather than inheriting either language's native formatter. Two
-lawful canonical forms exist and both fold bit-identically: (a) fold the **IEEE-754 bits**
-(proven above — zero implementation cost, but loses "did the two parsers agree on the same
-DECIMAL" and cannot catch a formatter bug); (b) a **contract-defined normalized decimal**
-(shortest round-trip, fixed exponential rule, `+0` for zero) implemented once per language
-and cross-checked. The native-text fold is a **latent false-RED generator** and must be
-forbidden in the corpus spec. This is the pass-3 discriminator: 6D's maintenance cost is
-dominated by whichever canonicalizers the contract must carry, not by module mirroring.
+| corpus | Rust digest | V8 digest | strings | numbers | objects | UTF-16 units | match |
+|---|---|---|--:|--:|--:|--:|:--:|
+| twitter.json | `38fcfcbfd51a8a55` | `38fcfcbfd51a8a55` | 4754 | 2109 | 1264 | 137128 | **=** |
+| canada.json | `ac209fa467f81721` | `ac209fa467f81721` | 4 | 111126 | 4 | 37 | **=** |
+| citm_catalog.json | `816a417082450dce` | `816a417082450dce` | 735 | 14392 | 10937 | 16243 | **=** |
 
-Reproduce: a Rust `fold.rs` + a node `fold.mjs` over a boundary-vector `corpus.txt`
-(`rustc -O fold.rs -o fold_rs && ./fold_rs < corpus.txt` vs `node fold.mjs corpus.txt`) —
-built and run this pass; digests above are the live output.
+Bit-identical on every corpus. This exercises the three drift-prone lanes concretely:
+twitter's **astral / Japanese `\n`-laden strings** (137 128 UTF-16 units folded identically),
+canada's **111 126 f64 numbers** (the correctly-rounded-parse guarantee, realized: Rust
+`str::parse::<f64>` (Eisel–Lemire) and V8 `StringToDouble` return bit-identical f64 for every
+finite decimal, so the 8-byte LE fold agrees by construction), and citm's **10 937 nested
+objects** (order-independent XOR fold). Two *independent* parsers agreeing bit-for-bit is the
+N-version property PROVE-14 lacked — it proves the fold certifies **semantic materialization**,
+not layout. Artifacts: `oracle/fold.rs`, `oracle/fold.mjs` (scratchpad); reproduce with
+`rustc -O fold.rs -o fold && ./fold X.json` vs `node fold.mjs X.json`.
+
+**Endianness / residue (settled).** LE on both sides (aarch64-native; Rust `to_le_bytes`);
+a naive `to_be_bytes()` Rust mirror would itself be the drift bug. The un-exercisable residue
+is exactly the non-JSON-expressible float set (NaN, signed-zero) — closed by **spec rule**
+(NaN→sentinel is in the fold and fires on a golden vector even though no JSON emits NaN;
+signed-zero policy = *distinguish*, stated in the contract), not by test.
 
 ---
 
-## Q2 — divergence injection: static corpus vs coverage-guided fuzzer
+## Q2 — injected divergences: static corpus vs coverage-guided fuzzer (BOTH numbers)
 
-Two numbers, measured and reasoned on the running fold:
+Five divergence classes seeded into the V8 arm (one lane each), compared against the clean
+digest. **Static-corpus catch (per corpus):**
 
-- **Static corpus, hand-picked (27 values):** already surfaces **3 distinct divergence
-  classes** (exp-high ≥1e21, exp-low <1e-6, sign-of-zero) with zero fuzzing — because the
-  vectors were chosen to straddle the ECMA-262 thresholds. A static corpus catches exactly
-  the classes its authors foresaw; its blind spot is the class nobody thought to encode
-  (e.g. the `1e-6`/`1e-7` boundary is easy to miss by one exponent).
-- **Cycles-to-detection, once a divergent value is in the fold: 1.** A single injected
-  last-ULP delta (`0.3` → `0.3 + 1 ULP` via bit increment) flipped the bits digest
-  `69b08416` → `a9ae2539` (run this pass). Because the fold is a left chain, ANY single-value
-  divergence changes the terminal fingerprint deterministically; detection at fold-end is
-  guaranteed and bisection localizes it in O(log N). The injected classes and their catchers:
+| class (injection) | twitter | canada | citm | reachability |
+|---|:--:|:--:|:--:|---|
+| `escape` (`\n`→`n`, off-by-one escape decode) | CAUGHT | escaped | escaped | needs escaped string in corpus |
+| `drop` (skip `array[0]`, dropped token class) | CAUGHT | CAUGHT | CAUGHT | any array-bearing corpus |
+| `ulp` (last-ULP number delta) | CAUGHT | CAUGHT | CAUGHT | any number-bearing corpus* |
+| `astral` (high-surrogate→`U+FFFD`) | CAUGHT | escaped | escaped | needs astral text in corpus |
+| `errclass` (bool sense flip) | CAUGHT | escaped | escaped | needs a bool in corpus |
 
-  | injected divergence | native lane | bits lane | who catches it |
-  |---|---|---|---|
-  | last-ULP number delta | catches (text differs) | **catches** (bits differ) | both; bits is canonicalization-proof |
-  | off-by-one escape decode | catches (UTF-16 units differ) | n/a (string) | string-unit fold |
-  | dropped token class | catches (structural count differs) | n/a | count digest |
-  | astral-string mishandle | catches (`a😀b` = 4 UTF-16 units) | n/a | UTF-16-unit fold (NOT scalar fold) |
-  | error-class flip (accept↔reject) | catches (accept/reject field) | n/a | expectation record |
+`*` My `ulp` injection is a *blanket* multiply (fires on every number) → caught at once. A
+**genuine last-ULP rounding bug** (mis-round only at a decimal that straddles the round-to-even
+tie) is fuzzer-reachable **only if the generator targets the mantissa boundary** — a curated
+corpus of "nice" decimals misses it. This is the honest refinement of the "ulp caught 3/3" row.
 
-  The astral case is a **design constraint, not a free win**: the fold MUST iterate UTF-16
-  code units (`charCodeAt` / `encode_utf16`), never Unicode scalars, or a surrogate-pair
-  mishandle folds identically and escapes. Probed this pass: `a\u{1F600}b` has UTF-16 length
-  4 in V8; the digest counts *codeUnits*, matching V8's `String.length` and Rust's
-  `.encode_utf16().count()`.
+**The measured law:** structural classes (`drop`) are caught by any corpus with the shape;
+**feature-gated classes (`escape`, `astral`, `errclass`) are caught only by a corpus that
+exercises the feature.** A twitter-only static suite catches 5/5; a canada-only suite catches
+**2/5** (`drop`, blanket-`ulp`) and *silently passes a broken engine* on escapes/astral/bools.
+Curation cannot guarantee alphabet span; grammar-driven generation can.
 
-- **The coverage-guided fuzzer's marginal value** is precisely the *unforeseen* class: it
-  would have discovered the `-0` and the `1e-6` boundary without an author encoding them.
-  Recommendation: a small hand-corpus for the named classes (fast CI gate, deterministic)
-  PLUS a periodic coverage-guided fuzzer seeded from the corpus that mutates numbers toward
-  formatter thresholds and strings toward surrogate/escape boundaries — the fuzzer's finds
-  get *promoted into* the static corpus as regression vectors. Prior art:
-  `cargo-fuzz`/libFuzzer differential targets (the pattern rustc uses against Miri, simdjson
-  against RapidJSON); the "fold two impls, assert equal, minimize on mismatch" shape is
-  exactly a libFuzzer differential target.
+**Coverage-guided fuzzer — inputs-to-first-divergence** (100 000 grammar-generated values,
+generator emits `\n`, tab, emoji, astral by construction):
+
+| class | drop | errclass | ulp | astral | escape |
+|---|--:|--:|--:|--:|--:|
+| inputs-to-first-divergence | 1 | 1 | 2 | 5 | 16 |
+
+All five caught within **16 inputs** — *because the generator spans the alphabet*. Cycles-to-
+detection ∝ 1/feature-density (astral rarest at 5, `\n`-escape at 16; structural at 1). The
+number that decides Q2: **static single-corpus catch = 2/5 (feature-poor) to 5/5 (feature-rich,
+un-guaranteeable); coverage-guided catch = 5/5 in ≤16 inputs.** The fuzzer's whole value is
+guaranteeing every alphabet feature (escape variants, both surrogate planes, bool, tie-case
+number) is emitted — plus the named mantissa-boundary obligation for the subtle rounding class.
 
 ---
 
-## Q3 — marginal maintenance cost for one ADDED grammar
+## Q3 — marginal maintenance cost of one *added* grammar (this mechanism alone)
 
-Under this mechanism *alone*, adding a grammar not yet in-tree (say TOML — GN-5.W2 notes no
-TOML exists anywhere, R1) costs, in order:
+Measured by construction against the running fold. The fold matches on the **6-variant value
+alphabet** (Object/Array/String/Number/Bool/Null). For any grammar whose values are that
+alphabet — TOML, CSV-as-arrays, Google Sheets, NDJSON — the marginal fold cost is **0 LOC**:
+the same six constructors fold it, and the corpus is simply pointed at both arms. (My
+`fold.rs`/`fold.mjs` fold *any* JSON-alphabet grammar today with zero edits.)
 
-1. **Corpus documents + expectation records** — N source files plus their canonical value
-   streams. This is the irreducible cost and it is **grammar-authored, language-neutral,
-   written once**. It is NOT duplicated per language.
-2. **One canonical-value emitter per language** — but only for value *classes the grammar
-   introduces that are not already contracted*. TOML introduces datetimes (RFC 3339) and
-   integers with widths; strings/numbers/bools reuse the existing canonicalizers. So the
-   marginal per-language code is a datetime canonicalizer (one function each side) — and
-   Q1 proves it must be contract-defined (Rust `chrono` Display vs JS `Date.toISOString`
-   would diverge on fractional-second trailing zeros exactly as f64 text did).
-3. **Zero new fold code, zero new harness code** — the FNV-1a fold and the differential
-   comparator are grammar-agnostic. This is the mechanism's central economy and the core of
-   its case against 6B (spec-generated skeleton): the differential *harness* does not grow
-   per grammar; only the *value contract* does, and that contract is data + a bounded
-   canonicalizer set shared across all grammars.
-
-**Net marginal cost per added grammar ≈ (corpus authoring) + (0..K new canonicalizer pairs,
-where K = value classes not already in the shared set).** For grammars over the existing
-value universe (CSV, sheets — strings/numbers only) K = 0: pure corpus authoring, no code.
-This is the number that must beat the mirror/skeleton regimes' per-grammar layout-spec +
-generator cost. The differential harness's fixed cost amortizes to zero across the fleet;
-the layout-generation regimes re-pay per grammar. **This is 6D's affirmative case.**
+A grammar introducing a **genuinely new value variant** (CSS dimension `10px`, a date scalar)
+costs exactly **one node-hash constructor + one tag byte per side** — `~3 LOC × 2` — because
+the alphabet *is* the grammar-derived Value ADT (`DirectTypeKind`,
+`skinny/crates/codegen/src/direct_schema.rs:52`; the tape token alphabet `JsonNodeKind`,
+`skinny/crates/runtime/src/grammars/json/value.rs:12`). New variant = new alphabet symbol =
+one fold arm; **the transport (the fold machinery) never changes.** Contrast the generator
+siblings: PROTO-2 (pass-2) measured the **schema face scaling ~1 line per rule** (json 9 /
+sheets 37 / css_l4 184) — a *per-grammar, rule-shaped* correspondence surface to generate or
+lint on **both** sides. 6D's per-grammar marginal is O(new variants), not O(rules); for an
+existing-alphabet grammar it is literally **zero**. That gap **is** the null-hypothesis
+defeat/win datum: the differential oracle amortizes across grammars where the mirror/skeleton
+families re-pay per grammar.
 
 ---
 
 ## Q4 — the in/out-of-contract partition, as a checked-in data file
 
-The partition is a committed `oracle-contract.toml` (grammar-agnostic; each grammar
-references it). Drawn from the running evidence:
+Authored and checked in at `oracle/isomorphism-contract.yaml` (scratchpad; homes with the
+LOCK-1 alphabet in the tree). The binding shape:
 
-```toml
-# oracle-contract.toml — the behavioral-isomorphism contract (checked in)
-# DAG: this file freezes strictly AFTER LOCK-1 (alphabet) and LOCK-7 (tie-breaker).
-[contract.in]
-values      = true    # every accepted leaf's canonical value MUST fold identically
-accept      = true    # accept/reject decision IS the contract
-reject      = true
+- **IN-CONTRACT (gated, RED on mismatch):** the folded value digest; the structural counts (an
+  *independent* coarse channel — a divergence must collide in *both* to escape); the
+  accept/reject verdict; and the **error class** — a small grammar-derived enum
+  `{UnexpectedChar, UnterminatedString, TrailingData, DepthLimit, InvalidEscape, InvalidNumber}`.
+- **OUT-OF-CONTRACT (free per language):** error **message wording** and error **span byte
+  offset** (V8 and Rust never phrase identically; a scanner may report the block boundary vs
+  the exact byte — that is layout); tape layout; allocation/shape.
+- **MAY-EITHER (recorded, not gated):** duplicate-key resolution order; number canonical
+  text-form (the folded *value* is identical; the text is free).
 
-[contract.out]
-wording     = true    # diagnostic MESSAGE text is free per language (V8 vs Rust phrasing)
-span        = true    # byte/char span of a node is layout — free per language
-layout      = true    # AoS/SoA, tape vs tree, field order — free per language
+**The error-class toggle, decided:** gate the *class*, not the message and not the span. This
+is a **named supersession** of `css_scan_differential.rs:1-24`, which gates "same STOP hit,
+same `None` at EOF, **and same error offset + message**" — that is correct *within one
+language* (one message table, one scanner) but must **relax to error-class-only across
+languages**. The intra-Rust differential stays strict; the cross-language contract relaxes.
 
-[contract.error_class]
-# the ONE toggle: is the error CLASS (not its wording/span) in-contract?
-in_contract = true    # e.g. "trailing-comma" vs "unexpected-eof" must agree; text need not
+**DAG constraint carried.** The alphabet the fold enumerates **is** LOCK-1's grammar-derived
+Value ADT — the fold cannot be specified until the variant set is frozen (a new sum variant is
+a new fold arm). The reference-of-last-resort **is** LOCK-7's meta-circular oracle — a two-way
+differential detects disagreement but cannot adjudicate which side is *correct*; 7D's
+bbnf-in-bbnf reference is the tie-breaker (the N+1-th version, JEST model). Therefore this lock
+**freezes strictly after LOCK-1 (alphabet) and LOCK-7 (tie-breaker)**: `LOCK-1 → LOCK-6`,
+`LOCK-7 → LOCK-6`. The contract file records `freeze_after: [LOCK-1, LOCK-7]`.
 
-[canonical.number]
-form        = "contract-normalized"   # NOT native f64 Display / Number.toString (Q1: DIVERGE)
-significand = "shortest-round-trip"    # both langs agree here (proven)
-exponent    = "never"                  # positional always; forbids V8's >=1e21 / <1e-6 switch
-zero_sign   = "positive"               # -0 folds as +0  (Q1: Rust "-0" vs V8 "0")
-alt_lane    = "ieee754-bits"           # bit fold; identical by construction; formatter-blind
+The contract file (verbatim shape):
 
-[canonical.string]
-units       = "utf16"                  # fold code units, not scalars (Q2 astral guard)
-normalize   = "none"                   # NFC/NFD is a grammar decision, not the oracle's
-
-[canonical.datetime]                    # example added-grammar class (Q3)
-form        = "rfc3339-utc"
-frac_zeros  = "trimmed"                 # contract-defined; native Displays diverge
+```yaml
+fold_spec: {hash: fnv1a-64, offset: 0xcbf29ce484222325, prime: 0x100000001b3,
+  string: {units: utf16-code-units}, number: {repr: f64, nan: canonicalize},
+  signed_zero: distinguish, object: {order: independent}, array: {order: sequential}}
+in_contract:  [folded_value_digest, structural_counts, accept_reject_verdict, error_class]
+out_of_contract: [error_message_wording, error_span_byte_offset, tape_layout, allocation_and_shape]
+may_either:   [duplicate_key_resolution_order, number_canonical_textform]
+freeze_after: [LOCK-1, LOCK-7]
+tie_breaker:  LOCK-7-meta-circular-oracle
 ```
-
-The single genuinely open knob is `[canonical.number].zero_sign`: `JSON.parse("-0")` yields
-`-0` with `Object.is(-0,0) === false` (probed, running) — so `-0` is *observable* in V8.
-The contract chooses to fold it as `+0` (values-agree over bit-identity) UNLESS a downstream
-consumer distinguishes them; that election is a LOCK-1 alphabet / LOCK-7 tie-breaker input,
-which is why the DAG places this freeze strictly after both. The `error_class in_contract`
-toggle is the second election: turning it on adds an accept/reject-plus-class column to every
-expectation record (cheap, data-only) and is what lets the oracle catch a "dropped token
-class" that still rejects for the wrong reason.
 
 ---
 
-## Prior art (citations)
+## Substrate & integration seams (path:line where extant code serves)
 
-- **ECMA-262 §7.1.12.1 `Number::toString`** vs **Rust `core::fmt::float` (Grisu/Ryū
-  positional)** — the exact source of the Q1 exponential/zero-sign divergence; both are
-  shortest-round-trip (Steele & White / Ryū, Ulf Adams PLDI 2018) yet textually disagree.
-- **Differential fuzzing**: libFuzzer/`cargo-fuzz` differential targets; simdjson vs
-  RapidJSON conformance; rustc-vs-Miri; the "fold both, assert equal, minimize" shape.
-- **JSONTestSuite (Nicolas Seriot)** — the canonical accept/reject corpus model; its
-  `y_`/`n_`/`i_` (must-accept / must-reject / implementation-defined) partition maps directly
-  onto `[contract]` accept/reject/error_class here.
-- **WASM/Wasmtime spec-test `.wast` model** and **WPT (web-platform-tests)** — the
-  checked-in-corpus-as-contract precedent; behavior contracted, implementation free.
-- **PROVE-14** (in-tree) — the FNV-1a `u32` fold that already crosses Rust↔V8 byte-exactly
-  on the JSON tape (320 cold children), proving the fold arithmetic is isomorphic; 6D lifts
-  it from one grammar to a fleet contract.
+- **The fold, generalized from PROVE-14.** `crates/bbnf-bench/ts-tape/tape.mjs:34-68`
+  (`numHash/strHash/memberMix/arrayStep/finalizeDigest`) is the TS prototype; this pass lifts
+  it to a **u64** spec (the u32 `fp` has a ~77k-input birthday-collision floor a fuzzer will
+  hit) and adds the missing Rust mirror. The structural counters (`tape.mjs:70-83`) stay as the
+  independent coarse channel.
+- **The cross-language export shape already exists.** The Rust tape exposes the four planes as
+  public slices — `Tape::{source, offsets, flag_cursors, flag_values}`
+  (`skinny/crates/runtime/src/tape/mod.rs:120-132`); a real TS backend needs one wasm-bindgen
+  export handing those slices to JS (PROVE-14's `tape_dump.rs` proves the shape). The fold rides
+  the decoded value, so it is transport-agnostic: it works over the tape view **or** over
+  `JSON.parse` output — proven here by folding V8's native tree.
+- **The differential harness pattern is in-tree, intra-Rust.**
+  `skinny/crates/bbnf-simd/tests/checkasm_parity.rs` is FFmpeg's checkasm verbatim —
+  bit-identical dual run, misalignment sweep, and a **deliberate-bug-injection knob**
+  (`BBNF_SIMD_INJECT_BUG`) that proves oracle sensitivity, plus a strict/non-strict split
+  (`BBNF_SIMD_STRICT`) that is exactly the must-match / may-either partition. 6D's Q2 injection
+  knob and Q4 gate/record split model on it directly.
+  `skinny/crates/runtime/tests/css_scan_differential.rs:1-24` is the clean-room-reference
+  pattern (independent scalar recognizer vs production kernel) — the intra-Rust ancestor whose
+  "offset + message" gate Q4 relaxes across languages.
+- **The alphabet home.** `DirectTypeKind` (`skinny/crates/codegen/src/direct_schema.rs:52`) +
+  `JsonNodeKind` (`skinny/crates/runtime/src/grammars/json/value.rs:12`) are the grammar-derived
+  variant set the fold enumerates — Q3's "new variant = one fold arm" seam.
 
 ---
 
 ## Named risks & counterexamples
 
-- **R1 — canonicalization tax defeats the null hypothesis.** If most fleet grammars each
-  introduce ≥1 new value class needing a contract-defined canonicalizer per language, Q3's
-  K>0 per grammar and the "harness cost amortizes to zero" case weakens toward the
-  skeleton-generation regimes. Counterexample to watch: a grammar whose value class is a
-  bignum or a decimal-with-precision where Rust and JS have *no* common native type —
-  forcing a bespoke canonicalizer pair. Mitigation: the `alt_lane = ieee754-bits` fold is
-  the escape hatch for any IEEE-754 number; only non-float classes cost real code.
-- **R2 — native-formatter regression re-enters silently.** A future author folds
-  `format!("{}", x)` / `String(x)` for convenience; CI is green on the normal-range corpus
-  and RED only when a ≥1e21 vector lands. Mitigation: the corpus MUST carry the boundary
-  vectors (this pass's `corpus.txt` is the seed) so a false-formatter fails on day one;
-  a grep-gate forbidding native float Display in oracle code is cheap.
-- **R3 — astral/surrogate escape.** A scalar-iterating fold folds a surrogate-pair
-  mishandle identically to correct handling. Counterexample: mishandled `😀` collapsing to
-  a replacement char still yields the same *scalar count*. Mitigation: contract fixes
-  `units = utf16` (proven catcher above).
-- **R4 — order-sensitivity hides compensating errors only if resets are omitted.** The
-  left-chain fold catches any single divergence; two divergences could theoretically cancel
-  in a commutative hash. FNV-1a is non-commutative (order-dependent), so this is guarded —
-  but the per-document reset for bisection must be preserved or localization degrades to O(N).
-- **R5 — DAG inversion.** Freezing the number/zero-sign election before LOCK-1/LOCK-7 decide
-  the alphabet/tie-breaker would bake a wrong `zero_sign`. The contract file header states
-  the ordering; the freeze gate must assert LOCK-1 and LOCK-7 closed first.
+- **R1 — collision hides a real divergence.** Two trees differing in one leaf fold equal.
+  Mitigation: u64 fold (birthday ≈ 5·10⁹ inputs) **plus** the independent structural-count
+  channel — a divergence must collide in both. (u32 alone fails at ~77k inputs; not optional.)
+- **R2 — the oracle proves agreement, not correctness.** Two engines identically wrong (both
+  mishandle a surrogate pair) match. Intrinsic N-version limit. Mitigation: LOCK-7's
+  grammar-defined reference as the N+1-th version (why the DAG puts LOCK-7 before LOCK-6).
+- **R3 — subtle rounding never fires.** Blanket-`ulp` is caught at input 2, but a real
+  round-to-even tie bug is fuzzer-only *and* only if the generator targets the mantissa
+  boundary (emit `d.ddde±e` straddling the tie). Named fuzzer obligation, not an assumption.
+- **R4 — a residue rule is omitted from the spec.** The Rust mirror folds raw NaN bits; JSON
+  never emits NaN so CI is green forever, then a computed/non-JSON grammar lands and diverges in
+  production. Mitigation: NaN-canonicalize is a *compile-time* rule in the fold + a golden vector
+  carrying a NaN sentinel — exercised though no grammar emits one.
+- **R5 — code-unit counting drift.** UTF-16 units vs UTF-8 bytes vs code points differ for
+  non-BMP text. The contract pins **UTF-16 code units** on both sides; the Rust arm converts via
+  `encode_utf16`-equivalent (proven by twitter's 137 128-unit match). A Rust fold counting code
+  *points* would silently diverge on every emoji.
 
 ---
 
-## What a prototype must test to MOVE this family
+## What a prototype must still test (to close the family)
 
-1. **Contract-normalized decimal, both languages, folded equal.** Implement the
-   `[canonical.number]` rule (shortest round-trip, positional-always, `+0`) in Rust and TS;
-   fold the boundary corpus and assert the *native* lanes now AGREE — closing the Q1
-   divergence by contract rather than by bit-fold. This is the one experiment that converts
-   the negative Q1 result into a shipped mechanism.
-2. **Fleet economy proof.** Wire the differential harness over TWO grammars (JSON in-tree +
-   one added — CSV, K=0) and show the harness/fold code is byte-identical between them —
-   the Q3 "zero marginal harness" claim made concrete.
-3. **Fuzzer-promotes-to-corpus loop.** A `cargo-fuzz` differential target that mutates
-   numbers toward the ECMA thresholds and strings toward surrogate boundaries, with the
-   minimizer output auto-appended to the static corpus — measuring how many novel divergence
-   classes a fuzzer finds beyond the hand corpus in a fixed budget (the Q2 second number,
-   made empirical rather than reasoned).
-4. **The `error_class` toggle, priced.** Add the accept/reject/class column to one grammar's
-   expectation records and inject a "rejects for the wrong reason" mutant; confirm the
-   class-on oracle catches it and the class-off oracle does not — pricing the toggle's
-   real defect-catch delta against its data cost.
+1. **Fold over the production tape view, not just `JSON.parse`.** This pass folded V8's native
+   tree; wire the Rust fold to `Tape::{offsets,flag_cursors,flag_values,source}` and the TS fold
+   to the wasm-exported planes, and re-confirm the three-corpus bit-identity end-to-end through
+   the real transport. **Gate: digests unchanged from the Q1 table.**
+2. **Prove the N+1 tie-breaker (R2).** Wire LOCK-7's grammar-defined reference as a third fold;
+   seed a both-production-engines-wrong case; confirm the reference flags the divergence the two
+   hide. **Gate: reference RED, both engines green.**
+3. **The subtle-rounding fuzzer obligation (R3).** A mantissa-boundary decimal generator; measure
+   inputs-to-first-divergence for a *real* last-ULP parser bug (not the blanket multiply).
+4. **u64 collision headroom.** Confirm no collision across the full coverage-fuzzer run at u64;
+   record the coarse-channel independence as the second line of defense.
 
-The running fold already settles the load-bearing question: **the fold is isomorphic, the
-canonicalizers are not free, and the contract — not the native formatter — must own value
-normalization.** That is 6D's strongest form: a grammar-agnostic differential harness whose
-fixed cost amortizes to zero across the fleet, gated by a small checked-in canonicalizer set
-whose sole hard case is IEEE-754 number text, for which a bit-fold escape hatch exists.
+---
+
+### Prior art (citations)
+
+- **N-version / differential testing** — multiple implementations as cross-referencing oracles,
+  no hand-built golden output; divergence is a candidate bug. (Differential testing — Wikipedia.)
+- **N+1-version differential (reference as tie-breaker)** — JEST tests JS engines *and* the spec
+  together, spec as the extra version; the model for LOCK-7 as the R2 adjudicator. (Park et al.,
+  *JEST: N+1-version Differential Testing of JS Engines*, arXiv 2102.07498.)
+- **checkasm** — FFmpeg `tests/checkasm/`: bit-identical dual run, misalignment sweep, deliberate
+  bug injection to prove sensitivity — the in-tree `checkasm_parity.rs` ancestor of the Q2 knob.
+- **Correctly-rounded float parse** — Rust `str::parse::<f64>` (Eisel–Lemire + slow fallback,
+  round-to-nearest-ties-even) and V8 `StringToDouble` are both correctly rounded ⟹ bit-identical
+  f64 for every finite decimal — realized here over canada's 111 126 numbers. (Nigel Tao,
+  *Eisel–Lemire ParseNumberF64*; rust-lang/rust #62231.)
+- **Coverage-guided grammar fuzzing** — coverage guidance for behavioral diversity + differential
+  comparison for semantic inconsistency. (JITfuzz, ICSE 2023.)
+
+Sources: [Differential testing — Wikipedia](https://en.wikipedia.org/wiki/Differential_testing) ·
+[JEST N+1 Differential Testing](https://arxiv.org/pdf/2102.07498) ·
+[Eisel–Lemire — Nigel Tao](https://nigeltao.github.io/blog/2020/eisel-lemire.html) ·
+[rust-lang/rust #62231](https://github.com/rust-lang/rust/issues/62231) ·
+[JITfuzz (ICSE 2023)](https://lingming.cs.illinois.edu/publications/icse2023e.pdf)

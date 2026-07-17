@@ -1,270 +1,320 @@
 # LOCK-3 — THE IR TRANSPOSITION SPINE · pass-2 · CRIT-2 (Adversarial Critic 2 of 2)
 
-*CROSS-LOCK-weighted adversarial critique. Every family hardened against the failure-mode
-checklist (vacuous convergence, spec-cites-self, gates-that-cannot-fail, the elegant-reduction
-trap, legacy aliases, masked fallbacks, unverified gestalt, consumer-less substrate) plus the
-Constitution (grammar totality, isomorphism, refutation laws, zero-runtime types, parsimony,
-Y.13) and prototype-evidence misuse. Live claims re-verified by hand on `skinny@c43126422`
-(= `git rev-parse HEAD`, confirmed). Where this lock contradicts or double-homes against the
-GN/PT codex or a sibling lock, named for routing to the gestalts with evidence.*
+*CROSS-LOCK-weighted adversarial critique. CRIT-1 carries the within-lock soundness audit; this critic
+weights the CROSS-LOCK view (portfolio charter): where LOCK-3 **contradicts** or **double-homes** work
+against the extant GN/PT codex and the other eight locks, where the CROSS-LOCK ledger's binding
+adjudications are **inconsistent with the live substrate**, and where the "convergent spine" (§6)
+silently **presumes** a sister lock's verdict. Every live anchor re-greped by hand on the working tree
+this pass; CROSS-LOCK ledger entries treated as binding facts, challenges named for routing to
+GESTALT-B with evidence per Constitution ix. The failure-mode checklist + Constitution + refutation
+laws + prototype-evidence misuse are applied, but through the cross-lock lens.*
 
 ---
 
-## 0. RECONCILIATION — two live facts the synthesis needs and one it is missing
+## 0. BASELINE — re-verified live (independent of CRIT-1)
 
-**0.1 Base-drift is a NON-issue for code (I closed it, in the synthesis's favour).** FAMILY-SPECS
-§0 asserts anchor *byte-stability* across the prototype ancestors but stops there. I ran the
-stronger check: `git diff --stat c93fc43143..c43126422 -- skinny/crates` and
-`git diff --stat ce51c36fc..c43126422 -- skinny/crates` are **both empty** — the 10 intervening
-commits touched only `restart/.../tranches/` (the research corpus), never `skinny/crates`. So the
-*code tree* the prototypes measured is byte-identical to the FAMILY-SPECS pin. The PROTO-1/PROTO-2
-byte-identity floors and the PROTO-1-t1 3/3 GREEN transfer to HEAD verbatim; XL-H
-wrong-artifact-risk is discharged for every LOCK-3 prototype. **This should be stated in the
-registry as a positive reconciliation, not left as an unproven assertion.**
-
-**0.2 THE SYNTHESIS IS STALE — it was cut before its own two sharpest prototypes ran.** File
-mtimes: `FAMILY-SPECS.md` **15:10**; `PROTO-1-t1.md` **15:34**; `PROTO-2-3A.md` **15:38**. The
-synthesis §0 census names only "the two prototypes that RAN (PROTO-1, PROTO-2)"; it issues PROTO
-BRIEF 1 (execute the fold) and PROTO BRIEF 2 (execute the 3A oracle) as pass-3 directives — and
-both briefs were then **executed 24–28 minutes later** and delivered into this same directory. The
-SPINE table (FAMILY-SPECS L286-295) therefore mislabels two load-bearing rows:
-
-- Row "**3A refinement oracle … UNRUN — the organ that earns 3A**" — **RAN** (PROTO-2-3A,
-  `RAN_MEASURED`, 4/4 tests, `EXIT_CODE=0`, localizes injected single-arm faults, E2↔E3
-  separation).
-- Row "**3B-G1 … execute the fold … UNRUN**" — a byte-identical *slice* of it **RAN**
-  (PROTO-1-t1, `check-{json,sheets,real-typed}` 3/3 byte-identical) and, more consequentially,
-  **PROTO-2's named discriminator was REFUTED by execution** (`dispatch_alt_count == 0` turned
-  `check-sheets` RED; the working discriminator is the ≥4-value-category census).
-
-**Consequence for the critique.** The families are *more* converged than FAMILY-SPECS states on
-the "did the organ run" axis — but the newer prototypes ran the **easy half** of each gate and
-left the **load-bearing half** exactly where it was. The synthesis, by treating the organs as
-wholly UNRUN, mis-locates the residual uncertainty. My per-family gaps below re-home it to where
-it actually lives (3A: E1-infer non-vacuity, not "no oracle"; 3B: whole-fold + single-home wiring,
-not "seam unretired"). **This is the pass-2→3 hand-off's most important correction and it must be
-folded into the registry before pass-3 is briefed against a stale map.**
+- **HEAD = `06e70053f`** (`git rev-parse HEAD`), FAMILY-SPECS §0 pin CORRECT; `ce51c36fc` (PROTO-2,
+  PROTO-2-3A) and `c93fc4314` (PROTO-1, PROTO-1-t1) both ancestors, `git diff --stat …HEAD --
+  skinny/crates` empty. XL-H discharged for all four prototypes.
+- **Anchors re-greped by hand (all CONFIRMED on live):** `passes:204`
+  `ExprKind::Project { body, .. } => self.infer_expr(*body)?` (ty dropped) ✓; `direct_schema.rs:52`
+  `DirectTypeKind` has **one** variant `Struct`, **no `Sum`** ✓; `runtime_generator.rs:98`
+  `if !sink_only.has_rule("value")` — **STILL LIVE, a rule-name query**, with a comment that reads
+  *"Shape-based, never a grammar name"* (the comment **denies** what the code does) ✓;
+  `admits_collapsed_stage`@`passes:959` = `target.avx512bw && matches!(…Entry(_))` — **dead on
+  aarch64** ✓.
+- **`.target` dead-field — VERIFIED independently.** `grep "target: Some"` in passes/codegen/ir → 4
+  hits, **all four `ExprKind::Ref { target: Some(rule) }`** (`passes:913,1104,1552,1599`) — the
+  resolved-Ref rule id, a *different field* from `DirectBuildField.target: Option<DirectBuildTarget>`
+  (`ir:470`). `DirectBuildField.target` is `Some` **nowhere** and **read nowhere** (`grep "\.target"`
+  in `codegen/src/lower` returns zero non-Ref hits). The field is genuinely dead. **Load-bearing for
+  my headline cross-lock finding (§1).**
+- **`from_ir`/`TypeAnalysis` — VERIFIED absent from live skinny.** `grep -rn "from_ir\|TypeAnalysis"
+  skinny/crates` = **0 hits**; present only in legacy `crates/core` (`backend/driver/analysis.rs`,
+  `grammar/schema/*`, …) which archives at GN-0 (XL-A). **Load-bearing for §1.**
 
 ---
 
-## 1. CROSS-LOCK contradictions & double-homes (critic-2 weighted — route to gestalts with evidence)
+## 1. HEADLINE CROSS-LOCK FINDING — THE `:204`-THREAD PROGRAM IS CONSUMER-LESS ON THE MEASUREMENT SUBSTRATE, AND THE CROSS-LOCK LEDGER MASKS IT
 
-**XL-1 — CROSS-LOCK LEDGER XL-F(1) is contradicted by every LOCK-3 researcher; the synthesis
-silently re-homes the consumer without naming the supersession.** XL-F(1) settles as binding fact:
-*"TypeAnalysis::from_ir at backend/driver/analysis.rs is the real type consumer."* But research-A
-§0, research-C §5 (cross-tree caveat), and research-D §3 **each independently verified** that
-`TypeAnalysis`/`from_ir`/`analysis.rs` **does not exist on the live skinny tree** — it lives only
-in the legacy `crates/core/src/backend/driver/analysis.rs`, over a *different* type (`GrammarIR`,
-not skinny `ir::GrammarIr`), taking a reference-resolved grammar, not a typed IR with
-`node_types`. FAMILY-SPECS re-homes the consumer to the `DirectSchemaSet` seam /
-`derive_materialization_plan` **silently**, never naming that it is diverging from a binding
-ledger entry. Per Constitution ix and the CROSS-LOCK challenge protocol, this is a **challenge to
-route to GESTALT-B with evidence**: either XL-F(1) speaks of the greenfield tree-of-record
-(reconcilable under XL-A: skinny is the measurement substrate, designs target greenfield) — in
-which case it must be *labelled* as such — or it is a stale pointer for the live spine and XL-F(1)
-needs amendment. The synthesis owes an explicit named-supersession line, not a quiet substitution.
-**This is the single most important CROSS-LOCK finding of the lock and the registry currently
-omits it.**
+This is the finding CRIT-1 (within-lock) cannot reach, because it is a contradiction *between* the
+binding CROSS-LOCK ledger and the living tree — precisely critic-2's charter.
 
-**XL-2 — the cessions to LOCK-2 rest on XL-B, which is WORKING, not final.** FAMILY-SPECS
-incompatibility-map #2 (3C-C2 ⊥ lock "via XL-B") and #6 (driver-seat ⊥ LOCK-2 merge) treat XL-B
-as binding. XL-B's own text: *"WORKING for pass 3+; final at GESTALT-B … overturnable only at
-GESTALT-B with evidence."* So 3C-C2-ceded-to-LOCK-2 and 3D-per-site-staging-solved-by-LOCK-2 are
-**provisional dispositions on an unfinalized adjudication**, not settled incompatibilities. The
-synthesis over-firms them. Minor, but the registry should carry "(provisional on XL-B)" on both.
+**The construction.** The entire LOCK-3 convergent spine is organised around one shared obligation:
+thread the declared `Project.ty` at `passes:204` (single-owner, `no-value-discard`), then **the other
+three families CONSUME it** — 3A *verifies* consistency, 3B *threads* it as `attrs.node_type`, 3C
+*declares* it, 3D *erases* it as S0 (FAMILY-SPECS §7 directive 2, §6 table, §5). Every family's
+distinctive content hangs off a live consumer of that threaded type existing.
 
-**XL-3 — the seam is single-fundable and PROTO-1-t1 now hardens 3B's claim to it (affirmed, with
-new evidence).** `has_rule("value")`@`runtime_generator.rs:98` + `derive_materialization_roles`
-are the same live hardcodes 3B retires-via-fold and 3C dissolves-via-grammar (incompatibility #3).
-PROTO-1-t1 **executed** 3B's retirement of this exact seam byte-identically — so the funded route
-(3B) now has running evidence and 3C's grammar-dissolution alternative is further deprecated. I
-affirm the single-fund and add: the executed evidence tilts the gestalt decision decisively toward
-3B. No double-home if respected.
+**The contradiction.** Under **XL-A** (binding): *"skinny@HEAD is the MEASUREMENT SUBSTRATE — the only
+living implementation … the legacy top-level crates/ archives at GN-0."* On that sole living substrate,
+the threaded type has **exactly one candidate consuming edge** — the `DirectSchemaSet` seam
+(`derive_materialization_plan → json_typed_direct::render`, FAMILY-SPECS §7.1 itself names it "the live
+consuming edge"). But:
 
-**XL-4 — the GN-3.W1 `DirectTypeKind::Sum` dependency is triply-shared but correctly single-homed.**
-3B-G2 (retire the byte-literal classifier), 3C-C1 (express `ExprKind` as a sum), and the whole
-type-plane all wait on `DirectTypeKind::Sum` (verified Struct-only, `direct_schema.rs:52`, no
-recursive sum). This is one born-RED edge owned by GN-3.W1, consumed three ways — correctly *not*
-triple-funded. Consistent with the extant codex. Affirmed.
+1. The consuming FIELD on that seam — `DirectBuildField.target` — is **DEAD** (verified §0: `Some`
+   nowhere, read nowhere; sole `DirectSchemaSet` producer is the hand file
+   `xtask/src/real_typed_schema.rs`). The seam that would consume the threaded type **does not read
+   it**.
+2. **XL-F(1)** (binding) asserts: *"TypeAnalysis::from_ir at backend/driver/analysis.rs is the real
+   type consumer."* Verified §0: `from_ir`/`TypeAnalysis` are **absent from live skinny** and exist
+   only in legacy `crates/core`, **which archives at GN-0**.
 
-**XL-5 — the `:204` single-owner thread is well-disciplined but crosses the XL-1 consumer
-question.** Four families claim the same two lines (`ExprKind::Project { body, .. } =>
-self.infer_expr(*body)?`, verified live at `:204`); incompatibility #4 assigns exactly one owner
-(a GN-3 wave), the other three CONSUME. Sound. But *what* consumes the threaded value is precisely
-the XL-1 dispute (from_ir vs DirectSchemaSet) — so the single-owner discipline cannot be closed
-until XL-1 is adjudicated. The two are entangled; the registry treats them as independent.
+**Therefore, on the measurement substrate, the `:204`-thread type output is CONSUMER-LESS** (Constitution
+viii / Y.13, forbidden) until GN-3.W1 (`DirectTypeKind::Sum`) + GN-3.W2 (thread `.target`) land a live
+reader. And the CROSS-LOCK ledger **actively masks** this: XL-F(1) points at a consumer that does not
+exist on the substrate and archives at GN-0.
+
+FAMILY-SPECS §7.1 **does surface XL-1** as a named-supersession challenge (reading (a) "greenfield
+consumer" vs (b) "stale pointer") — credit noted; it corrects the silent re-home the prior CRIT-2
+flagged. **But it stops one inference short.** It routes the *pointer* correction; it does **not** draw
+the *program-level* consequence: until a live consumer lands, **PROTO-1's `:204`-thread "DISCHARGED for
+the fact plane" (FAMILY-SPECS §0) is discharged into a fact plane with no downstream reader on the
+substrate** — a threaded value verified by 3A, consumed by no one. The thread is `no-value-discard`
+compliant *in isolation*; the *program* is Y.13-suspect *in aggregate*. This must be a first-class
+cross-lock edge, not a footnote: **the `:204`-thread cannot be called "converged" for any family until a
+live GN-3 consumer of the threaded type exists on skinny@HEAD.** Route to GESTALT-B as: *XL-F(1) is a
+greenfield-consumer pointer (reading a), MUST be relabelled, and the substrate consumer is born-RED
+GN-3.W1+W2 — every 3A/3B/3C/3D "consumes the thread" claim inherits that born-RED edge.*
 
 ---
 
-## 2. PER-FAMILY HARDENING
+## 2. THE SYNTHESIS IS STALE AGAINST ITS OWN TWO COMMISSIONED BRIEFS (confirmed; cross-lock consequence added)
 
-### FAMILY 3A — CONTRACT-TOWER · convergence **63%** (synthesis said 62%; I hold, with a re-cut gap set)
+CRIT-1 §1 documents this within-lock in full and I concur on every point (mtimes verified independently:
+FAMILY-SPECS **19:32**, PROTO-1.md **19:49**, PROTO-2.md **19:52** — the two §8 briefs landed 17–20 min
+*after* the synthesis cut, overwriting `PROTO-1.md`/`PROTO-2.md` whose *old* content the synthesis still
+cites at §0/§6). I add only the cross-lock consequences the within-lock frame does not surface:
 
-**What is genuinely earned.** (a) The verify predicate over `Project@204` — RED→GREEN, zero emit
-footprint (PROTO-1). (b) The refinement oracle now **RAN** (PROTO-2-3A): `differential(edge,corpus)`
-localizes a 5-fault injected matrix to its arm with **zero false-positive witnesses**, catches a
-*same-discriminant* payload corruption a tag-only check would miss, and separates an E2 input fault
-(O2 RED, localized) from E3 (stays GREEN) — "names the edge, never merely a failure." The
-witness-census discipline (G-3A-b: zero-witness arm ⇒ `unverified`, live `json` witnesses only
-where present, `ValueProject` Sheets-only) is proven. This is a real uplift the synthesis does not
-credit.
+- **Brief α → PROTO-1.md (FAIL/DEMOTE 3B):** the whole-fold byte-identity gate is **unsatisfiable for
+  sheets** (the `emit.rs:300-305` per-Seq-child `skip_ws` coupling) without a prior sheets re-baseline.
+  Cross-lock weight: the re-baseline is a **generated-file mutation** — admissible under
+  `clean-regen-discipline` only as *fresh regen output*, never a hand-patch — so the gate as written
+  (*"delete plane + byte-identical to committed"*) is not merely unrun, it is **mis-specified against a
+  standing law**: "byte-identical to committed" and "delete the plane" are mutually exclusive for sheets
+  *by construction*. The honest gate is "byte-identical after a **declared** sheets separator
+  re-baseline," a *weaker* convergence claim than the synthesis banks.
+- **Brief β → PROTO-2.md (PASS-in-principle, but REFUTES the spec's own predicate):** non-vacuous
+  (24/28) — but *only over `Project{ty:None}` target-only projections*. Scoped to `Project{ty:Some}`
+  **exactly as FAMILY-SPECS §1 mechanism-2 and G-3A-a write `verify_project_types`**, all 4 `:ty`
+  projections are `-> input : Span` over regex bodies, so `infer_expr(body)==Span==resolved(ty)` —
+  **presence-only, the vacuity feared.** The spec's literal predicate is the gate-that-cannot-fail; the
+  *correct* predicate (value-category / `ProjectionKind`) fires TODAY with no LOCK-1 name→Type
+  resolution. **G-3A-a's disposition "gate-cannot-fail until LOCK-1" is refuted for the value-category
+  scoping.**
 
-**The elegant-reduction trap, unhardened.** The oracle ran on the **free edge**. PROTO-2-3A's own
-scope-limit (1): *"E1/E2 here are grounded as reference digests + one E2 structural oracle; a full
-E1(infer)/E2(materialize) injected-fault matrix … is the natural next widening."* E3 is a *1:1
-renaming* (verified: `sink_only.rs:228` copies `ValueProject{body,target,ty}` through unchanged) —
-correspondence there is definitionally trivial; that is *why* it is a "free oracle." The
-load-bearing edge is **E1-infer**, where the `ty`-contract's *meaning* lives — and E1 got **no
-injected-fault localization at all**, only a reference digest. So the organ is proven where it is
-easy and unproven where it matters.
+**Structural cross-lock consequence (beyond CRIT-1's "freeze the prototype set"):** the recurring
+stale-synthesis error means the §8 StructuredOutput briefs are returned to the gestalt as
+open-uncertainties that are **already discharged** (one FAIL, one PASS-with-spec-correction). A gestalt
+that ingests §8 verbatim re-commissions two settled prototypes and, worse, carries 3B forward at 55%
+when its own demotion trigger has **fired**. The registry MUST fold α/β into the dispositions before any
+gestalt ingest.
 
-**The vacuity gate is untouched.** Open question (iii) — is the `ty`-contract non-vacuous, i.e. ≥1
-Sheets projection where declared `ty` constrains *beyond* `infer_expr(body)`? — is exactly the E1
-question, and neither PROTO-1 nor PROTO-2-3A exercised it. Research-A §6.1 flags it as the primary
-risk (JSON has 0 `->`, so the contract is exercised only by Sheets; if Sheets projections are
-trivially body-equal the RED branch never fires — *sound but untested*, the gates-that-cannot-fail
-mode). The contract also degrades to bare string-equality until LOCK-1 delivers a name→Type
-language (G-3A-a, born-RED, verified: `ty:Option<String>` vs structural `passes::Type`). **3A's
-convergence is capped by LOCK-1's delivery on the one edge its oracle did not run.**
+---
 
-**Enumerated open gaps (3A):**
-1. E1-infer injected-fault localization — mutate `infer`/`materialize`, show E3 stays GREEN while
-   E1/E2 localize (PROTO-2-3A only digest-grounded E1; the load-bearing widening).
-2. `ty`-contract non-vacuity (open q iii) — exhibit ≥1 Sheets projection where declared `ty`
-   constrains beyond `infer_expr(body)`, else report the contract `unverified`. Untouched.
-3. E4-as-pure-projection (open q ii) — prove `render`@`runtime_generator.rs:78` is a pure
-   projection of L2, else "three levels" fails and an E4 oracle is owed. Unrun.
-4. CSS two-rooted tower (open q iv) — the `Err⇒SinkOnly / Ok⇒Scan` fork (`runtime_generator.rs:40-71`)
-   forces either a first-class edge oracle or a declared two-root tower. Undecided.
-5. G-3A-a name→Type resolution (born-RED, LOCK-1) — without it the E1 oracle is string-equality;
-   3A consumes, never authors.
-6. Promotion of the PROTO-2-3A runner from a probe test to a shipping `differential(edge,corpus)`
-   CI contract (the stated 3A deliverable) — currently a `+607`-LOC test file, not a contract.
+## 3. CROSS-LOCK CONTRADICTIONS & DOUBLE-HOMES (the distinctive critic-2 section)
 
-### FAMILY 3B — SINGLE-IR-MULTIPASS · convergence **63%** (synthesis said 60%; modest uplift for the executed slice, killer gate still open)
+**X-2 (HARD, unnamed by the synthesis) · 3B-single-rich-IR ⊥ LOCK-2·2B (IR-IS-EGRAPH).** LOCK-2's 2B
+(portfolio): *"the middle IR is an e-graph end to end; passes are rewrite groups; equality saturation
+under a schedule; extraction emits BackendShape directly."* LOCK-3's 3B (the convergent substrate):
+*"one rich `GrammarIr` refined in place by annotating passes (the LLVM shape); BackendShape as
+attributes."* Verified live: the middle IR is `GrammarIr` + `node_types: HashMap<ExprId,Type>`
+(`passes:93`), **not** an e-graph. **These are two different middle-IR substrates and cannot both be the
+tower's shape.** FAMILY-SPECS §6 invokes *"the same LOCK-2 solver seam"* for scheduling the attribute
+plane but **never names this contradiction**. Under **XL-B** (LOCK-3 owns the tower's shape; LOCK-2
+operates WITHIN it at named decision points = **islands**), 3B is compatible with LOCK-2's **2A**
+(EGRAPH-ISLANDS) and **incompatible** with LOCK-2's **2B**. **The LOCK-3 convergent spine therefore
+silently presumes LOCK-2 converges to 2A, not 2B.** If LOCK-2 lands 2B, the 3B substrate premise breaks.
+An un-declared cross-lock convergence dependency; must be a named GESTALT-B edge: *3B's single-rich-IR
+presumes LOCK-2·2A; 2B is a named incompatibility, adjudicated by XL-B in 3B's favour only if LOCK-2 does
+not overturn XL-B at GESTALT-B.*
 
-**What is genuinely earned.** Fact-layer purity is PROVEN by trace (PROTO-2: the four
-`SinkOnlyFacts` read only `GrammarIr + backend_shape + descriptor`). The emit-dispatch fork
-retirement is now **EXECUTED byte-identical** (PROTO-1-t1, 3/3), and PROTO-2's named discriminator
-(`dispatch_alt_count`) is **refuted by execution** — the honest discriminator is the ≥4-of-6
-value-category census (`roles.value`). This is a real slice of the fold path, green.
+**X-3 (entanglement folded as settled) · the type-plane schedule is TRIPLE-HOMED.** FAMILY-SPECS §6:
+*"the type level is a schedulable attribute plane, and its schedule … is the same LOCK-2 solver seam."*
+But (a) LOCK-1 owns type inference/solving; (b) LOCK-1·1D says *"the type lattice lives in an e-graph …
+Shares the engine with LOCK-2"*; (c) LOCK-3·3B carries the type as an attribute on its tower. Three locks
+claim the schedule of one plane. Not *obviously* wrong (1D explicitly shares LOCK-2's engine; XL-B seats
+LOCK-2 within LOCK-3's tower), but the synthesis presents a three-lock seam as a settled one-liner. Route
+as a named dependency: *type-attribute-plane scheduling = {LOCK-1·1D lattice} ∘ {LOCK-2 engine} ∘
+{LOCK-3·3B attribute carriage}; ownership boundary cut at GESTALT-B, not assumed.*
 
-**The green slice is architecturally provisional — a masked-fallback smell the synthesis does not
-surface.** PROTO-1-t1's own caveat (Home/DRY): the executed slice **ports
-`derive_materialization_roles.value` into codegen**, duplicating passes-side logic — *"a DRY /
-system-cohesion smell."* The production home (thread the passes-computed `roles.value.is_some()`
-onto the attribute bundle) is **unrun**. So the byte-identical GREEN was obtained with a form the
-Constitution forbids as production (no-orthogonal-codepaths / system-cohesion / no-god-modules).
-It proves *executability*, not the *converged architecture*. The registry must carry the green
-slice as "executable, single-home wiring deferred," not as a discharged sub-gate.
+**X-4 (double-home) · 3C-C1 ⊥ LOCK-7·7B both author the "IR grammar."** FAMILY-SPECS G-3C-2 assigns
+C1's *consumer* to LOCK-7·7B (*"TOTAL-SELF-HOST literally enumerates 'IR grammar'"*). But 7B (portfolio)
+*"bbnf grammar, regex grammar, **IR grammar**, emitter templates — all grammar-specified"* also claims to
+**author** it. FAMILY-SPECS resolves by split (3C authors the `Alt→Sum` data-model map; 7B is the
+bootstrap-fixpoint consumer) — clean *if honoured*, but asserted, not adjudicated, and both registries
+will present "IR grammar" as theirs at GESTALT-B. Name it: *the IR-grammar data-model map is single-homed
+in 3C-C1 (author) with LOCK-7·7B as sole consumer (bootstrap fixpoint); LOCK-7 must NOT re-author it — a
+`no-orthogonal-codepaths` / double-home edge for GESTALT-B dedup.*
 
-**The killer gate is still UNRUN and it is the one that earns the substrate.** G-3B-1 — execute the
-*whole* `emit(&GrammarIr,&Attributes)` fold and re-run regen×check byte-identical — remains unrun
-(PROTO-1-t1: "beyond a 50-min probe; this probe lands one slice"). Per the synthesis's own
-disposition, 3B is "structurally-motivated, unproven" until this runs. The slice does not convert
-the hypothesis into a proof; it de-risks one arm.
+**X-5 (convergence ceiling) · LOCK-3 cannot reach 100% before GESTALT-B, by XL-B chaining.** Two
+dispositions — 3C-C2 (grammar-to-grammar transposition) and 3D-staging-form — are **ceded to LOCK-2
+"(provisional on XL-B, WORKING not final)"** (§3 G-3C-4, §5 I-4, §7.3). XL-B is *WORKING, final at
+GESTALT-B*. Therefore these cessions **cannot finalize until GESTALT-B**, so LOCK-3's convergence is
+**structurally capped below 100% (zero open gaps) until the gestalt runs** — even the "convergent spine"
+inherits the ceiling. FAMILY-SPECS half-acknowledges the provisionals but does not frame the ceiling as
+*hard*. State it plainly: *LOCK-3 returns as a rigorously-converged core with named gaps; 100% is
+XL-B-gated and belongs to GESTALT-B.*
 
-**CONSUME confirmed dead-as-stated (I verified the mechanism).** All descriptor sites carry
-`target: None` (verified: `passes/src/lib.rs:1157,1177,1201,1208,1228,…`). `.target` is never
-populated, never read; the typed render clones the hand `DirectSchemaSet`. The "`target=Some(ty)`
-one-liner" is correctly refuted; true CONSUME sits behind three walls inside the fold. The net-LOC
-parsimony win (−100 local / −220 gestalt) is honestly **gestalt-deferred** — the LOCK-3-local
-figure is modest and the −220 requires sibling shape-derivation + tape backends to co-excise
-`BackendExpr` (a GESTALT-B move, not this lock's to claim).
+**X-6 (Ω reconciliation, latent) · `no-ts-ir` (LOCK-3) vs LOCK-4·4C / LOCK-8·8C shared-instruction-IR.**
+FAMILY-SPECS §7.4 + I-5: *"the backend-agnostic middle is tape + schema (PROVE-14), not a shared
+instruction IR; no-ts-ir holds."* **Consistent** with XL-D (fast TS face = build-time emitter; runtime
+decoders refuted) — credit. **But** LOCK-4·4C (VM-CORE, *"one instruction set shared by rust and ts"*)
+and LOCK-8·8C (*"shared graph/instruction shape"*) posit a shared instruction IR across rust/ts for the
+**combinator** plane. Different planes (bbnf generator backend vs parse-that combinator runtime), so no
+live contradiction — but "is there a shared cross-language instruction IR?" is answered NO by LOCK-3 and
+YES by LOCK-4/8; GESTALT-Ω must reconcile into one coherent story, not ship both unexamined. A one-line Ω
+edge, flagged not adjudicated.
 
-**Enumerated open gaps (3B):**
-1. G-3B-1 — execute the whole fold; regen×check × {json,css,sheets,real-typed} byte-identical. THE
-   killer gate. Unrun.
-2. Single-home wiring of the value-role discriminator — thread passes-computed `roles.value` onto
-   the attribute bundle, retire the codegen-side duplicate PROTO-1-t1 introduced. Unrun.
-3. css_scan fourth-level (open q ii) — confirm no emission state absent from `GrammarIr` (grammar
-   prefixes, entry-rule threading) hides inside `lower/css_scan.rs`. Untraced.
-4. Byte-identity incidental-vs-semantic attribution (open q i) — header comments, `BTreeMap` key
-   order, roster order must be shown incidental on the executed fold, not the mapped one.
-5. Per-`RuleId` vs per-`ExprId` key (open q iii / G-3B-3) — fleet check (json/css/sheets/csv):
-   does any single rule need two distinct descriptors → per-ExprId forced? A partial migration is
-   the no-orthogonal-codepaths defect. Undecided.
-6. G-3B-2 true RETIREMENT (vs relocation) is born-RED on `DirectTypeKind::Sum` (GN-3.W1) — carried,
-   never asserted retired absent the node.
+**X-7 (live Constitution-vi violation with a denying comment) · the `has_rule("value")` name-gate.**
+`runtime_generator.rs:98` is a **live rule-name gate** (Constitution vi: *"no name-gates"*) carrying a
+comment *"Shape-based, never a grammar name"* that **contradicts the code**. PROTO-1-t1 retired it in a
+worktree (byte-identical GREEN) — but that **never landed** (verified: the name-gate is still on HEAD)
+and the slice obtained its green by **porting `derive_materialization_roles.value` into codegen**, a DRY
+/ `system-cohesion` / `no-orthogonal-codepaths` violation its own text flags. So: a live constitution
+violation, a misleading comment masking it, and a retirement *unproven in production* (proven only via a
+Constitution-forbidden duplicate home). Carry as an **open live-tree defect**, not a discharged sub-gate;
+correct the denying comment the moment the gate lands.
 
-### FAMILY 3C — GRAMMAR-HOMOIOUSIA · convergence **32%** (synthesis said 34%; I lower it slightly)
+---
 
-**Correctly held BLOCKED; the number over-reads an un-fundable family.** The C1/C2 split
-(research-C's move) is the honest cut: C1 (data model grammar-specified) is BLOCKED on
-`DirectTypeKind::Sum` (GN-3.W1, verified Struct-only) *and* a LOCK-7 7B consumer that does not
-exist on live (only `json.bbnf` ships, no `ir.bbnf`); C2 (grammar-to-grammar transposition) is
-refuted on live (bbnf maps bytes→tape; `lower_expr`/`materialize_rule` are tree→tree) and ceded to
-LOCK-2. **3C's entire distinctive content is born-RED or externally-owned; its one live win (the
-`:204` thread) is the shared single-owner thread, not distinctively 3C.** A family with *zero
-independently-fundable content* whose sole substrate reader is an unlanded LOCK-7 wave has, as a
-matter of Y.13, converged to "correctly characterized as blocked" — a valid design outcome, but
-34% over-reads it as partial implementability. I put it at **32%** and the gaps are all cessions:
+## 4. PER-FAMILY — convergence % (cross-lock-weighted) + enumerated open gaps
 
-**Enumerated open gaps (3C):**
-1. `DirectTypeKind::Sum` — born-RED, GN-3.W1 (+420 LOC). Product-only subset excludes every `Alt`
-   = excludes `ExprKind`/`BackendExpr` themselves. Do not treat the subset as the formulation.
-2. Named in-wave consumer for C1 — LOCK-7 7B (TOTAL-SELF-HOST); no live reader (Y.13). Admissible
-   only as a born-RED edge under GESTALT-B.
-3. Fixpoint `regen∘regen = regen` byte-identical over a grammar-generated `ir/src/lib.rs` carrying
-   derives/doc-comments/impls (LOCK-7 7A) — likely forces per-derive grammar annotations.
-4. C2 cession to LOCK-2 confirmation — provisional on XL-B (WORKING, not final; see XL-2).
+### FAMILY 3A — CONTRACT-TOWER · **54%** (FAMILY-SPECS 60%; CRIT-1 62%)
 
-### FAMILY 3D — STAGED-RESIDUAL · convergence **40%** (synthesis said 42%; I lower it slightly)
+Earned: the refinement-oracle DISCIPLINE RAN (PROTO-2-3A — localizes a 5-fault matrix to its arm, 0
+false positives, catches a same-discriminant payload corruption, separates E2 from E3); non-vacuity
+proven-in-principle (Brief β). I weight **below** CRIT-1 for two cross-lock reasons: (a) the contract's
+*subject* — the type plane it validates — is **consumer-less on the substrate** (§1), so 3A verifies a
+value nothing downstream reads on skinny@HEAD; (b) the meaning-bearing edge (E1-infer injected-fault) is
+only digest-grounded — the organ is proven on the **free** 1:1 E3 rename (elegant-reduction trap intact
+on the load-bearing edge).
 
-**The strongest live evidence is evidence of a PROBLEM, not of the solution.** I verified the RED
-gate directly: `admits_collapsed_stage`@`passes/src/lib.rs:960` = `target.avx512bw &&
-matches!(rule_ir.expr, BackendExpr::Entry(_))`, and `avx512bw`@`:380` =
-`cfg!(all(target_arch="x86_64", target_feature="avx512bw"))` — **permanently false on aarch64**.
-`CollapsedStage` is a **dead shape** on live (`CollapsedStageNotViable` fires whenever declared) —
-a genuine Y.13 consumer-less-substrate on the living tree. This is real and well-evidenced, but it
-demonstrates the *stage plane is dead*, not that 3D's *unification* works.
+Open gaps:
+1. **Re-cut mechanism-2 / G-3A-a to the value-category (`ProjectionKind`) surface** — the `:ty`-only
+   predicate is refuted vacuous by Brief β. NEW (surfaced by the newest prototype), UNFOLDED by the
+   synthesis.
+2. **E1-infer injected-fault localization** — mutate `infer`, show E3 stays GREEN while E1 localizes.
+   PROTO-2-3A digest-grounded E1 only. The load-bearing widening. Unrun.
+3. **Substrate consumer for the verified type** (§1) — until GN-3.W1+W2 land a live reader, 3A verifies
+   a consumer-less value; carry as a born-RED cross-lock edge, not a discharged thread.
+4. **G-3A-a name→Type resolution** (born-RED, owner LOCK-1) — needed only for the nominal `:ty` arm; the
+   value-category arm is independent. Carry, do not gate the family.
+5. **Open-q (ii/iii/iv)** — `render`@`runtime_generator.rs:78` pure projection of L2 (E4 oracle owed?);
+   the CSS `Err⇒SinkOnly / Ok⇒Scan` fork as edge-oracle-or-two-root-tower; the lossy-arm honest-oracle
+   property. Undecided/unrun.
+6. **Promote the +607-LOC PROTO-2-3A probe to a shipping `differential(edge,corpus)` CI contract** — the
+   stated 3A deliverable is a contract, not a probe. Unrun.
 
-**The distinctive thesis is spec-cites-itself.** "Type-plane erasure = stage-0 erasure on the type
-sub-plane" derives its warrant from Constitution v ("the type plane costs zero at runtime") ⟺ "the
-type plane is entirely Stage0" — a *definitional restatement*, not an independent result. Both the
-distinctive organs (`binding_times` on the real CSS IR; the `admits_collapsed_stage` re-home) are
-**UNRUN**. The family's content over "3B + a const table" is (i) `Stage` as a typed IR fact and
-(ii) the unification statement — both SPEC-only.
+### FAMILY 3B — SINGLE-IR-MULTIPASS · **48%** (FAMILY-SPECS 55%; CRIT-1 54%)
 
-**Prototype-evidence hygiene: the perf anchor is a stale-base number the family itself flags needs
-re-running.** PROVE-12 is CONFIRMED, but on base `d2b32f6e3`; research-D §4 states plainly *"the
-prototype must re-run css_canon_bench PMU to confirm the number holds on the current tree (the base
-moved d2b32f6e3→c43126422)."* It was not re-run. And the type-plane JSON PMU delta — the
-directive's specific ask — is **UNMEASURED**. G-3D-2: JSON has no scan-side Stage0, so absent a
-measured type-plane delta the JSON claim collapses to "typed façade, same speed" (acceptable only
-if declared as such; XL-E / PROVE-09 law — no perf claim without a cold-paired number). BANKED at
-42% slightly over-credits an unproven thesis resting on a not-re-confirmed perf anchor.
+Earned: fold fact-layer purity proven by trace; emit-dispatch fork retirement executed byte-identical
+(PROTO-1-t1, 3/3); `dispatch_alt_count` discriminator refuted-by-execution. I weight **below** CRIT-1
+because the cross-lock defects §3 land on 3B's substrate claim: the killer gate **RAN and FAILED-as-
+written** (Brief α; demotion trigger fired), the substrate premise **silently presumes LOCK-2·2A over
+2B** (X-2), and the value it substrates is **consumer-less on the tree** (X-1). The architecture survives
+(semantically deletable, `strict_product` invariant); the byte-identity proof does not, and its
+cross-lock premises are unnamed.
 
-**Enumerated open gaps (3D):**
-1. `binding_times(CssScanProgram)` on the REAL CSS IR — compute the Stage0/Stage1 partition; prove
-   it *equals* the set PROVE-12 hand-residualized (oracle: parity byte-identical iff correct).
+Open gaps:
+1. **Re-specify G-3B-1** as a *declared-sheets-re-baseline-then-delete* gate (the as-written
+   byte-identity gate is refuted for sheets by PROTO-1.md and mis-specified against clean-regen), then
+   execute the *whole* `emit(&GrammarIr,&Attributes)` fold. THE killer gate. Unrun/refuted-as-written.
+2. **G-3B-1a re-walk re-base** — `json_sink_direct/dispatch.rs` (318) + `general_descent/view.rs` (431)
+   onto `GrammarIr`, byte-identical. general_descent shown byte-**fragile**; the −100 net-LOC reward
+   rests entirely here. The elegant-reduction "and-then-the-hard-part." Unrun.
+3. **X-2 — declare 3B's LOCK-2·2A presumption** as a named cross-lock edge; 2B is the named
+   incompatibility. Unfolded.
+4. **Single-home wiring** of the value-role discriminator — retire the codegen duplicate PROTO-1-t1
+   introduced (Constitution-forbidden as production); land it, and correct the denying comment (X-7).
    Unrun.
-2. Re-home `admits_collapsed_stage` off `avx512bw` onto a grammar-derived binding-time predicate;
-   RED→GREEN on `CollapsedStageNotViable` via `decision_csp`, no stub, no x86 smuggled back. Unrun.
-3. Type-plane JSON first-byte-dispatch cold paired-PMU — real ins/B or a named negative
-   (PROVE-09). UNMEASURED.
-4. Re-confirm PROVE-12 on `c43126422` — the perf anchor's base moved; XL-H hygiene owed.
-5. The unification thesis (type-erasure ≡ stage-0 erasure) proven concretely, not restated from
-   Constitution v.
+5. **Substrate consumer** for the threaded `attrs.node_type` (§1). Born-RED GN-3.
+6. **Per-`RuleId` vs per-`ExprId` key** (G-3B-3) — fleet check; a partial migration is a
+   `no-orthogonal-codepaths` defect. Undecided.
+7. **True RETIREMENT vs relocation** of the byte-literal classifier — born-RED on `DirectTypeKind::Sum`
+   (GN-3.W1). Never asserted retired absent the node.
+
+### FAMILY 3C — GRAMMAR-HOMOIOUSIA · **30%** (FAMILY-SPECS 32%; CRIT-1 32%)
+
+Concur BLOCKED (C1) / BLOCKED-candidate (C2); the C1/C2 cleave (research-C) is the family's honesty.
+Distinctive content **0% convergence-eligible**, SPEC-ONLY (Constitution vii). I weight marginally below
+for the X-4 double-home (a new open gap) and the C2 refutation being genuinely load-bearing: bbnf maps
+bytes→tape, the live transpositions are tree→tree, **no bbnf grammar IS the map** — a missing primitive
+of difficulty equal to the original problem, correctly BLOCKED-candidate and ceded to LOCK-2 (provisional
+on XL-B).
+
+Open gaps:
+1. `DirectTypeKind::Sum` — born-RED, GN-3.W1 (`direct_schema.rs:52` Struct-only verified; +420 LOC).
+   Product-only subset excludes every `Alt` = excludes `ExprKind`/`BackendExpr`; must not stand for the
+   formulation.
+2. Named in-wave consumer for C1 — LOCK-7·7B; no live reader (Y.13). Admissible only as a born-RED
+   GESTALT-B edge.
+3. **X-4 — IR-grammar double-home** with LOCK-7·7B (author-vs-consumer split asserted, not adjudicated).
+   NEW cross-lock gap.
+4. Fixpoint `regen∘regen = regen` byte-identical over a grammar-generated `ir/src/lib.rs`
+   (derives/doc-comments/impls). LOCK-7·7A.
+5. C2 cession to LOCK-2 — provisional on XL-B (WORKING). Chains the X-5 ceiling.
+6. The E6 `Alt→Sum` byte-identity prototype (research-C §7.2) — the cheapest concrete C1 proof, the one
+   run that could move C1 off 0%-eligible before its external gates. UNRUN this pass.
+
+### FAMILY 3D — STAGED-RESIDUAL · **35%** (FAMILY-SPECS 38%; CRIT-1 37%)
+
+Concur BANKED into 3B's attribute store. Nothing 3D-distinctive ran. The unification thesis
+("type-plane erasure = stage-0 erasure") **spec-cites-itself** (warrant = Constitution v, a definitional
+restatement). `binding_times` on real IR UNRUN; the PROVE-12 anchor not re-run on `06e70053f`; the JSON
+type-plane PMU delta UNMEASURED (PROVE-09 law). Cross-lock weight down for the live-tree x86 defect: the
+dead `CollapsedStage` gate is a **live violation of the SPEC §0 refutation law "x86 dead"** on the tree
+(a gate gated on `avx512bw`), which 3D must fix — evidence of the problem, not the solution.
+
+Open gaps:
+1. `binding_times(CssScanProgram)` on REAL CSS IR — prove the S0/S1 partition *equals* PROVE-12's
+   hand-residualized set (parity byte-identical iff correct). Unrun.
+2. Re-home `admits_collapsed_stage` off `avx512bw` onto a grammar-derived binding-time predicate
+   (RED→GREEN, no x86 smuggled back). A live "x86 dead"-law fix owned by LOCK-3; confirm no double-home
+   with LOCK-9's x86 purge (parse-that-side). Unrun.
+3. Type-plane JSON first-byte cold paired-PMU — real ins/B or a named negative. UNMEASURED.
+4. Re-confirm PROVE-12 on `06e70053f` (XL-H hygiene; base moved). Unrun.
+5. The unification thesis proven concretely, not restated from Constitution v.
 
 ---
 
-## 3. SPINE VERDICT
+## 5. VERDICT (cross-lock)
 
 The convergent spine (3B substrate + 3A discipline + 3D attribute; 3C banked) is **architecturally
-sound and the family composition holds** — the four do not compete once read as one-IR + per-pass
-contracts + one attribute slot. The two newer prototypes advance it: the 3A oracle *runs and
-localizes* (PROTO-2-3A), one fold slice is *green byte-identical* (PROTO-1-t1). But both ran the
-**easy half** and the load-bearing halves are untouched:
+sound and the family composition holds** — I concur with the synthesis and CRIT-1 on the *shape*. But
+weighted across the ledger and the sister locks, three cross-lock facts the synthesis leaves unnamed
+**lower the numbers and add born-RED edges**:
 
-- **3B rests on G-3B-1 — the whole-fold regen×check — still UNRUN.** One slice ≠ the fold; and the
-  slice used a duplicated home the Constitution forbids as production.
-- **3A rests on the E1-infer non-vacuity — the `ty`-contract's meaning — still UNRUN.** The oracle
-  is proven on the 1:1 free edge (E3), not on the edge that could be vacuous.
+1. **X-1 — the `:204`-thread program is consumer-less on the measurement substrate** (dead `.target`;
+   `from_ir` archives at GN-0); the CROSS-LOCK ledger XL-F(1) masks it by naming a legacy-only consumer.
+   Every "consumes the thread" claim (3A/3B/3C/3D) inherits a born-RED GN-3.W1+W2 substrate-consumer edge.
+2. **X-2 — 3B silently presumes LOCK-2·2A over 2B**; the two middle-IR substrates are incompatible and
+   the presumption is unstated. A named GESTALT-B edge.
+3. **X-5 — LOCK-3's convergence is XL-B-gated**: 3C-C2 and 3D-staging cessions cannot finalize until
+   GESTALT-B, so LOCK-3 returns as a rigorously-converged *core with named gaps*, not 100%.
 
-**Two corrections the registry must fold before pass-3 is briefed:** (1) the SPINE table's "3A
-oracle UNRUN" / "3B-G1 UNRUN" rows are stale — re-cut them to "oracle ran on E3; E1 non-vacuity
-open" and "seam slice green; whole fold + single-home unrun." (2) The XL-F(1) consumer
-contradiction (XL-1) must be surfaced as an explicit named-supersession challenge routed to
-GESTALT-B, not left as a silent re-home. No family is convergence-eligible (each ≥1 UNRUN
-load-bearing gate; pass 2 of ≥3). 3C stays BLOCKED, 3D stays BANKED — correctly.
+Plus the two commissioned briefs both landed *after* the synthesis and **change the map** (§2): 3A's
+contract has proven meaning but its *specified* predicate is the vacuous one; 3B's killer gate RAN and
+FAILED-as-written (demotion trigger fired). And a **live Constitution-vi name-gate with a denying
+comment** (X-7) still sits on HEAD.
+
+**No family is convergence-eligible** (pass 2 of ≥3; each carries ≥1 unrun/failed load-bearing gate;
+each carries ≥1 born-RED cross-lock edge; two consecutive clean passes + fresh non-author audit
+outstanding for all four). Numbers: **3A 54% · 3B 48% · 3C 30% · 3D 35%.**
+
+**Three cross-lock corrections the registry MUST fold before any gestalt ingest:**
+1. **Relabel XL-F(1) and draw its consequence** — it is a greenfield-consumer pointer (reading a), MUST
+   be labelled as such, and the substrate consumer is born-RED GN-3.W1+W2; the `:204`-thread is not
+   "converged" for any family until a live consumer exists on skinny@HEAD (§1).
+2. **Name the LOCK-2·2A presumption and the XL-B convergence ceiling** as explicit GESTALT-B edges (X-2,
+   X-5) — the spine's substrate premise and its 100%-ceiling both depend on unfinalized cross-lock
+   adjudications.
+3. **Fold Briefs α (FAIL) and β (PASS-with-spec-correction) into the dispositions and the §6 table**,
+   and freeze the prototype set before the next synthesis cut — the §8 StructuredOutput briefs are
+   already discharged, not open uncertainties for the gestalt to re-commission (§2).
+
+*(Credit where due: FAMILY-SPECS §7.1 correctly surfaces the XL-F(1) contradiction as a routed challenge
+rather than a silent re-home — the prior CRIT-2 defect is fixed. §7.4's `no-ts-ir`/PROVE-14 tape+schema
+middle is cross-lock-consistent with XL-D and LOCK-6. The C1/C2 cleave and the C2 refutation are the
+most honest costing in the lock. The failures above are of *completeness against the ledger*, not of
+architectural judgement.)*

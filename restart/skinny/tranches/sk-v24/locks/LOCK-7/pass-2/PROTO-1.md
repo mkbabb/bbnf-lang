@@ -1,142 +1,85 @@
-# PROTO-1 — OPEN-1′: the builder-augment cascade on `general_descent`
+# LOCK-7 pass-2 · PROTO-1 (probe UF-2) — the 7C TOTALITY% COUNTER, RAN over the BUILT GrammarIr
 
-LOCK-7 (Grammar Totality & Bootstrap), pass-2, probe 1. Family 7A/7B/7C/7D (shared make-or-break).
-
-- **Measured HEAD:** `c93fc43143743ffaf54855c526f6aeab79227352`
-- **BASE-PIN:** worktree fast-forwarded (`--ff-only c93fc4314`) from `d2b32f6e3`, which was an *ancestor* of the pin (behind, not divergent). Post-ff `git merge-base --is-ancestor ce51c36fc HEAD` = **OK**; `c93fc4314` = HEAD. No wrong-artifact-risk.
-- **Verdict:** **FAIL (informative) — the cascade is real, RAN_MEASURED.** Named construct below.
-- **loadavg at measurement:** 4.97 / 7.46 / 8.87 (leaf probe); build ran at 10→5.
+**Family:** 7C HOST-FUNCTION-LATTICE (feeds 7D's promotion-ledger `totality_pct` column, XP-1)
+**Base-pin:** HEAD `c93fc43143743ffaf54855c526f6aeab79227352` — `git merge-base --is-ancestor ce51c36fc HEAD` ⇒ **ANCESTOR-OK** (descends from the pinned base; numbers are NOT wrong-artifact-risk).
+**Loadavg at probe:** 6.02 (18 cores). Probe is functional, not perf; wall 0.00s.
+**Verdict line:** **PASS — RAN_MEASURED.** The counter runs purely build-side; it is NOT blocked behind the leaf evaluator.
 
 ---
 
-## QUESTION (RED-unknown)
+## QUESTION
 
-Does authoring `-> Span`/`-> T` builder projections on bbnf's structural rules **over the
-`general_descent` recognizer emitter** reparse the `grammar/**/*.bbnf` corpus into
-`ORACLE_REL_V1`-equivalent `GrammarIr` (within +1 SOFT `add_expr` / +1 HARD `resolve_refs` host
-budget), regen∘regen byte-identical — or does it cascade, and at which construct?
+Both critics capped 7C's flagship `totality%` counter as *"cross-repo blocked behind the leaf evaluator."* That is a **build-vs-emit conflation.** Does the counter actually **RUN TODAY** over the **BUILT `GrammarIr`** — no leaf evaluator, no `@{}`, no self-emit — and yield sensible per-subsystem numbers?
 
-## METHOD (what actually ran)
+## METHOD
 
-Two runnable probes, both on verbatim in-tree code paths — no SPEC-only reasoning:
+New test `skinny/crates/grammar/tests/totality_counter_probe.rs`. It builds a real `GrammarIr` via `grammar::parse_grammar` for three subsystems, walks `grammar.exprs` (the `ExprKind` arena at `ir/src/lib.rs:234`), and classifies every expression into a host-function tier:
 
-1. **Stage-1 precondition census (RAN).** `skinny/crates/grammar/tests/oracle_selfparse_probe.rs`
-   calls the hand-written ORACLE `grammar::parse_grammar` on one file per corpus family
-   (bbnf / json / sheets / css-l4). `cargo test -p grammar --test oracle_selfparse_probe`.
-2. **Stage-2 leaf cascade (RAN).** `scratchpad/leaf_probe.rs` lifts the **verbatim**
-   `general_descent` leaf logic — `regex_first::{first_bytes,is_nullable}` (whole module) plus
-   `emit.rs::{match_leaf, consume_quoted, is_text_byte}` — and exercises it against the *real*
-   bbnf corpus leaf patterns and tokens. `rustc --edition 2021 -O` (std-only, zero target-dir
-   contention). The recognizer's own byte offsets are the numbers.
+- **Tier-0** — pure `->` / `Literal` / `Regex` / `Seq` / `Alt` (plus the structural wrappers `Optional`/`Repeat`/`Discard`/`Project` and the `?w` whitespace `Annotation`). Threads no context.
+- **Tier-1** — `Ref` (needs `resolve_refs` to bind a target).
+- **Tier-2** — a host function threading `&mut Ctx`. **The IR has NO `ExprKind::Host` variant today**, so NO real grammar can reach Tier-2.
 
-The experiment never advanced to authoring the host `add_expr`/`resolve_refs` walk, planting the
-Alt-reorder mutation, or running regen∘regen — because both preconditions fail upstream, below.
+`LEAVES = { Literal, Regex, Project targets }`; `BRANCHES = { each Alt arm, each Optional, each Repeat }`.
+`totality% = 1 − Σ(Tier-2) / Σ(all exprs)`, per subsystem.
 
----
+**Counter kernel dependency surface:** the probe imports **only** `grammar::parse_grammar` + the `ir` arena. It is a pure walk over `grammar.exprs`. **No emitter, no leaf evaluator, no `@{}`, no self-emit are referenced or linked.** (Forbidden-token grep over the probe: `emit_general_descent=0  json_sink_direct=0  match_at=0`.)
 
-## THE NUMBERS
+**Non-vacuity:** clone the json arena, overwrite one plain leaf with a synthetic Tier-2 host — modeled as an `@host`-named `Annotation` sentinel, because family 7C *is* the host-function lattice and no `ExprKind::Host` node exists yet — then re-run; totality% must drop below 1.0.
 
-### Stage 1 — the ORACLE precondition is UNMET at HEAD
+**Command:** `CARGO_TARGET_DIR=/tmp/uf2 cargo test -p grammar --test totality_counter_probe -- --nocapture` (isolated target dir per the single-cargo-per-target law; run against the `skinny/` workspace via `--manifest-path`, since `skinny/` is its own cargo workspace).
+
+## WHAT RAN
+
+`grammar::parse_grammar` built all three subsystems (`resolve_refs` + `validate` clean):
 
 ```
-ORACLE CORPUS CENSUS (grammar::parse_grammar):
-  grammar/bbnf/bbnf.bbnf            ERR  "unexpected token `-`" @ 662
-  grammar/json/json.bbnf           ERR  "unexpected token `<`" @ 319
-  grammar/google-sheets/…          Ok   (39 rules)
-  grammar/css/l4/stylesheet.bbnf   ERR  "unexpected token `<`" @ 715
+[BUILD] json 15 rules | sheets 39 rules | bbnf-closure 53 rules
 ```
 
-Source at each offset:
+- **json** = `skinny/grammars/json.bbnf` (single file).
+- **sheets** = `grammar/google-sheets/google-sheets.bbnf` (single file).
+- **bbnf import-closure** = `grammar/bbnf/{bbnf,expressions,types}.bbnf` concatenated into one arena so imported refs (`value_expr`, `type_annotation`, `type_name`) resolve — **53 rules**, matching PROTO-3's `Ok/53 resolve_refs-clean`.
 
-| file | offset | bytes | construct |
-|---|---|---|---|
-| bbnf.bbnf | 662 | `… "*/" ) ?w -> Span ;` | `->` after `?w` (big_comment, line 17) |
-| json.bbnf | 319 | `… ) *)?w << "]" ;` | `<<` after `?w` |
-| css l4 | 715 | `… ?w << "}" ;` | `<<` after `?w` |
+### The frontend precondition (a correction to the record)
 
-**All three failures are one bug:** `parse_seq` (lib.rs:1361) consumes a standalone `?w` and
-`continue`s, so a following postfix `->` or binary `<<`/`>>` is met at the head of the next atom and
-rejected. This is precisely the brief's **Stage-1 fix #2** ("attach `?w` across `->`"), generalized to
-`<<`/`>>`. It fires at line 17 of bbnf.bbnf — **before** the `term` rule (line 33+), so the anticipated
-`parse_atom` `@{`/`[`/`{` gap (fix #1) is never even reached. Sheets is the lone `Ok` because it uses no
-`?w`-then-operator sequence. **The three bounded Stage-1 fixes are genuinely un-landed at `c93fc4314`.**
-
-### Stage 2 — the builder-augment path cascades at construct #1: the regex/quoted **leaf lexer**
-
-`general_descent` defers typed leaves to a Sheets/JSON-tuned Span **delimiter-scan** (its own
-docstring: *"typed leaves deferred to `Span`"*). Run against bbnf's actual leaves:
+On the **pristine** base tree, `parse_grammar` builds **json + sheets** with zero code change — the counter already runs on 2/3 subsystems untouched. But the **bbnf closure fails to BUILD** at:
 
 ```
-regex_first::first_bytes on bbnf structural leaf patterns
-  identifier   /[_a-zA-Z][_a-zA-Z0-9-]*/     first={53 bytes}  nullable=false
-  literal "    /(\.|[^"\\])*/                 first={'.'}       nullable=true
-  regex body   /(\.|[^\/])+/                  first={'.'}       nullable=false
-  big_comment  /[^\*]*/                       first={} EMPTY    nullable=true
-  comment      /.*/                           first={} EMPTY    nullable=true
-
-The cascade (match_leaf on real corpus spans):
-  A) `regex` body leaf on "[_a-zA-Z][_a-zA-Z0-9-]*"
-       => Err("head 0x5b '[' NOT in first set -> REJECT")   (oracle: consume all 23 bytes)
-  B) `literal` body leaf on `a\"b`
-       first={'.'} nullable=true => Ok(0) consumes 0 bytes   (oracle: 4)  -> closing-quote desync
-  C) consume_quoted on source token "a\"b" (backslash escape)
-       => end 4   (oracle backslash-aware end = 6)           MIS-TERMINATED
-  D) identifier leaf on "foo-bar" (bbnf class has '-')
-       => Ok(3)   (oracle: 7)   is_text_byte('-')=false      truncates at the hyphen
+Parse { code: "BBNF-PARSE", message: "unexpected token `-`", offset: 662 }
 ```
 
-Root causes, with E-code:
+Offset 662 is inside `bbnf.bbnf` itself: `big_comment = ( "/*" , /[^\*]*/ , "*/" ) ?w -> Span ;`. The committed `parse_seq` consumes `?w` as a *standalone* sequence element and orphans the trailing `-> Span`, so `parse_postfix` rejects the `-` (an operator with no left operand). **This is a parser-FRONTEND wall (`?w`-before-`->`), distinct from and orthogonal to the leaf evaluator, `@{}`, or any emitter.** PROTO-3's reported `Ok/53` was measured *under an uncommitted `?w->` fix* — it does **not** hold on pristine `c93fc4314`.
 
-- **`regex_first::head_bytes`/`split_top_level_alternation`** (regex_first.rs:81,90,120) never descend
-  into a **nested** `(a|b)` group: `split_top_level_alternation` splits only at paren-depth 0, and
-  `head_bytes` on a leading `(` reads only its *first* token. So bbnf's `regex` body `(\.|[^\/])+`
-  collapses to first = `{'.'}`, non-nullable → the head-gate in `match_leaf` (emit.rs:175) **hard-rejects**
-  every real `/.../ ` literal (head `[`, `.`, `\d`, letters…). This is the *first* regex literal in
-  bbnf.bbnf (line 9) — a hard `ParseError`.
-- The same collapse makes `literal`'s `(\.|[^"\\])*` first = `{'.'}` but **nullable**, so the head-gate
-  passes vacuously (Ok, 0 bytes) and the *closing* `"` ByteLiteral desyncs one node later.
-- **`consume_quoted`** (emit.rs:233) honors **doubled-quote** escapes (Sheets/CSV `""`), not bbnf's
-  **backslash** escapes — `"a\"b"` closes at the escaped quote.
-- **`is_text_byte`** (emit.rs:226) `[A-Za-z0-9_.$]` **excludes `-`** (bbnf identifier class) and
-  **includes `.`/`$`** (not in it) — both over- and under-run bbnf identifiers.
+Applying PROTO-3's minimal, parser-only `?w->` fix (a `parse_postfix_ops(expr, start)` refactor shared by `parse_postfix` and the `?w` handler; included in the patch) unblocks the closure build → **53 rules clean** and the counter yields the numbers below. The counter kernel is byte-identical in both runs; the fix affects only whether the closure *parses*, never the counter.
 
----
+### The numbers (HEAD `c93fc4314` + PROTO-3 `?w->` frontend fix)
 
-## THE VERDICT LINE
+| subsystem      | rules | leaves | branches | T0  | T1 | T2 | total | totality% |
+|----------------|------:|-------:|---------:|----:|---:|---:|------:|----------:|
+| json           |    15 |     12 |       12 |  29 | 28 |  0 |    57 | **1.0000** |
+| sheets         |    39 |     76 |       57 | 158 | 59 |  0 |   217 | **1.0000** |
+| bbnf-closure   |    53 |    136 |      129 | 319 | 92 |  0 |   411 | **1.0000** |
+| json + host (injected Tier-2) | 15 | 11 | 12 | 28 | 28 | **1** | 57 | **0.9825** |
 
-**FAIL — it CASCADES. The construct is the `general_descent` regex/quoted-string LEAF LEXER**
-(`regex_first::first_bytes` + `emit.rs::{match_leaf, consume_quoted, is_text_byte}`), which recognizes
-only the Sheets/JSON leaf alphabet and cannot tokenize bbnf's `regex` / `literal` / `identifier` /
-comment leaves. This is **upstream of the entire builder-projection question**: no `-> Span`/`-> T`
-projection can materialize because the recognizer never produces correct leaf spans. **None** of the
-brief's downstream candidate cascades is reached — not nested-Alt-inside-Seq offset underdetermination,
-not the deferred `resolve_refs` seam, not `@{` atom recursion, not closure self-reference. The failure
-is at the **lexical floor**, at the first regex literal.
+Real grammars have **no host node ⇒ Tier-2 = 0 ⇒ totality% = 1.0000 exactly** — the sensible "no host functions promoted yet" reading, not a stuck counter. The synthetic injection puts exactly one Tier-2 over a plain leaf: **json 1.0000 → 0.9825 (< 1.0)**, proving the counter is live and non-vacuous.
 
-Consequences for the PASS/FAIL rubric (all **moot / not reached**):
-- host-builder LOC ≤ ½·2142 (≤ 1071): **not authored** — no point building over a recognizer that
-  cannot tokenize the corpus.
-- regen∘regen byte-identical: **not run**.
-- planted Alt-reorder mutation trips: **not planted**.
+`test result: ok. 1 passed`.
 
-Independently, **Stage 1 is un-landed**: the ORACLE itself rejects 3/4 corpus families on the
-`?w`-across-operator bug (fix #2), which masks the `@{`/`[`/`{` atom gap (fix #1).
+### Pre-existing failure (NOT introduced by this patch)
 
-### What this says for LOCK-7
+The full `-p grammar` suite reports `19 passed; 1 failed`. The one failure — `w5b_frontend_public_ws_remains_retired` (`lib.rs:1878`) — asserts `@ws` is *rejected*, but the committed `parse_directive` (`lib.rs:1323`, `"import"|"token"|"pretty"|"ws" => Ok(())`) *accepts* it. I reverted my `lib.rs` to pristine and re-ran that test in isolation: **it fails identically** (same panic, `0 passed; 1 failed`). It is a stale test on the pristine base, untouched by this diff (which edits only `parse_postfix`/`parse_seq`).
 
-The builder-augment-over-`general_descent` route (OPEN-1′) is **refuted as posed**. `general_descent`'s
-leaf layer is a grammar-family-specific Span approximation; bootstrapping bbnf through it requires a
-**real regex leaf matcher** (the very thing the emitter's docstring defers), not builder projections
-bolted onto the existing recognizer. Any bbnf self-host must first give `general_descent` a
-grammar-neutral leaf evaluator that honors nested-alternation first-sets, backslash escapes,
-`/`-delimited regex literals, and the bbnf identifier class — *then* the `-> Span`/`-> T` /
-`add_expr` / `resolve_refs` question can even be posed. Absent that, the answer to the RED-unknown is
-a clean **no, at the leaf**.
+## VERDICT
 
----
+**PASS — RAN_MEASURED.** Every PASS gate is met, with the labeled frontend precondition for the bbnf closure:
 
-## Artifacts (code that ran)
+- ✅ `(leaves, branches, tier-histogram, totality%)` emitted for **all 3 subsystems**, each with `leaves > 0` AND `branches > 0` AND `totality% ∈ [0,1]`.
+- ✅ injected-Tier-2 variant drops below 1.0 (`1.0000 → 0.9825`).
+- ✅ probe source contains **zero** `emit_general_descent` / `json_sink_direct` / `match_at` (grep = 0).
+- ✅ no subsystem yields empty/None `GrammarIr`; the counter **never requires the emitter**.
 
-- `skinny/crates/grammar/tests/oracle_selfparse_probe.rs` — Stage-1 ORACLE census (throwaway probe).
-- `scratchpad/leaf_probe.rs` — verbatim `general_descent` leaf logic exercised on the bbnf corpus
-  (delivered alongside this report as `leaf_probe.rs`).
+The critics' cap is a build-vs-emit conflation: 7C's defining metric converts from **"blocked"** to a **RAN number**. Its only real-world gate on the third subsystem is a parser-frontend `?w->` parse gap — a bounded, sibling-authored fix — **not** the leaf evaluator, `@{}`, or self-emit.
+
+## DELIVERED FILES
+- `PROTO-1.md` (this file)
+- `UF-2-totality-counter.patch` — `skinny/crates/grammar/tests/totality_counter_probe.rs` (new, 259 lines) + the minimal `?w->` frontend fix to `skinny/crates/grammar/src/lib.rs` (+15/−3).

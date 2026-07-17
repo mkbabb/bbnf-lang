@@ -88,6 +88,39 @@ Not "build a regex engine." Four coupled obligations:
   fallback — "never a wrong answer." This IS PROVE-10's design and PT-1 W2/W3's spec, transcribed
   onto bbnf-regex's own DFA. (R7 §3–4: burntsushi.net/regex-internals; Teddy ICPP21; Hyperscan
   NSDI'19.)
+- **flap — fused derivative-lexer + typed combinator parser, ONE representation (ICFP'23).** The
+  lexer (derivatives of regexes) and the context-free layer (typed combinators) share a single
+  representation and lower together — the canonical "regex is a sub-language of the grammar, no
+  separate engine on the parse path" precedent (5A/5D). WON for the fused-lowering thesis; the
+  license for 5D's "regex leaves lower DIRECTLY into the grammar's own IR."
+  [flap arXiv 2304.05276](https://arxiv.org/pdf/2304.05276)
+- **Capture-leaf → `Project` has a won design: RE2C's tagged DFA (TDFA(1), Trofimovich).** Submatch
+  is carried by s-tags/m-tags in a **one-pass, constant-memory** DFA (Laurikari + one-symbol
+  lookahead), compiled to code with NO runtime engine; Ragel's alternative (embedded actions on
+  transitions) is the messier loser (no compositional tags). Q3/Q8's "capture-leaf → `Project`
+  byte-identical to a hand-authored grammar capture" should be judged against TDFA semantics, not
+  re-invented. [re2c TDFA(1)](https://www.sciencedirect.com/science/article/pii/S266596382030018X) ·
+  [Trofimovich arXiv 1907.08837](https://arxiv.org/pdf/1907.08837)
+- **The FOLLOW-sound one-pass fraction is a MEASURED fraction with a fallback (regex-automata
+  `dfa::onepass`).** One-pass applies only when preference-order and longest-match cannot disagree —
+  "rarer for them to disagree… if they did, the regex typically isn't one-pass" — else the engine
+  falls back. So Q7's one-pass/FOLLOW-sound coverage is a *number + fallback*, never 100%; the SPEC-
+  ONLY sound-predicate + grammar-FOLLOW check is exactly this shape.
+  [onepass Config](https://openrr.github.io/openrr/regex_automata/dfa/onepass/struct.Config.html)
+- **Symbolic automata parametrize over an alphabet Boolean algebra (D'Antoni–Veanes, POPL'14).**
+  Minimization is defined *over the algebra*, not the concrete alphabet — the theory answer to Q2's
+  "where does `[α-ω]*` byte-expansion live": confine it to the automata layer as an alphabet
+  parameter, keep it OUT of the shared type. Symbolic minimization wins only when the alphabet is
+  large/symbolic — NOT the 256-byte case, which bears on 5C (below).
+  [SFA minimization POPL'14](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/sfaMinimizationPOPL14.pdf)
+- **Determinization/minimization-as-e-graph has ZERO published prior art (targeted sweep).**
+  Equality-saturation graph rewriting is proven for tensor superopt and relational query rewrite
+  ([2101.01332](https://arxiv.org/pdf/2101.01332), [2407.12794](https://arxiv.org/pdf/2407.12794)),
+  and ReGiS proves it for regex *simplification* — but no source frames **DFA minimization** as
+  e-graph saturation. On a 256-byte concrete alphabet, Hopcroft's O(n log n) partition refinement is
+  *already* congruence-closure by another name, so the e-graph frame most plausibly RELOCATES the
+  work at added cost. This makes 5C's minimization/determinization-as-extraction the likeliest
+  **named negative result** — Q5's reference-Hopcroft head-to-head is how to earn it.
 
 ---
 
@@ -140,6 +173,16 @@ Not "build a regex engine." Four coupled obligations:
    generated parser.
 7. **Warm-bench self-deception (09's standing lesson).** Two-arm window asymmetry inflates
    ratios; paired same-binary interleaving is mandatory even for "obvious" wins.
+8. **Wide-entry shufti can LOSE to memchr's internal vectorization** on near-in-tier (4-byte)
+   sets — `memchr3`-of-3 + a one-byte fallback can beat a naive `vqtbl1q_u8` LUT loop. The W2 cost
+   model must gate shufti on a *measured crossover*, not a fixed width (PT-1 §8 counterexample).
+9. **Verification-tax trap (Coqlex).** Formally-verified/correctness-first automata paths run
+   slower; keep verification at the HIR/oracle layer (differential oracles, LOCK-7D-style), never
+   as an in-the-hot-DFA-path cost that regresses PROVE-10's floor.
+   [Coqlex arXiv 2306.12411](https://arxiv.org/pdf/2306.12411)
+10. **Double-emit at the W5 ⇄ GN-2.W1 seam.** A self-loop scan site that is also an unanchored
+    regex leaf must receive exactly ONE lowering (`find_member` XOR `dfa.find`) from a single
+    recognizer-dispatch decision point — grep-gated on the generated file (PT-1 W5 risk).
 
 ---
 

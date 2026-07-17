@@ -1,338 +1,264 @@
 # LOCK-1 · pass-2 · CRIT-2 (ADVERSARIAL CRITIC 2 of 2 — the CROSS-LOCK view)
 
-*Charge: harden/challenge/refine every family against the failure-mode checklist (vacuous
-convergence, spec-cites-itself, gates-that-cannot-fail, the elegant-reduction trap, legacy aliases,
-masked fallbacks, unverified gestalt, consumer-less substrate) + constitution violations +
-prototype-evidence misuse — and, as critic 2, WEIGHT THE CROSS-LOCK VIEW: where this lock
-contradicts, double-homes against, or defers to the GN/PT codex, CROSS-LOCK adjudications, and the
-other locks. Read against the HARDENED re-fold FAMILY-SPECS (15:03), PROTO-1 (15:16, the workspace
-divorce — authored AFTER the re-fold), PROTO-2 (13:40), PROTO-2-iso (15:23 — also after the re-fold),
-CRIT-1 (15:33), the five research reports, CROSS-LOCK, and the live tree. Every load-bearing fact
-re-verified at HEAD `c43126422` — I did not take the probes, the re-fold's reconciliation of them, or
-CRIT-1 on their word; I ran the tree.*
+*Weighting per charter: where this lock CONTRADICTS or DOUBLE-HOMES against the extant GN/PT codex
+and the sibling locks; the constitution clauses (grammar totality, isomorphism, refutation laws,
+zero-runtime, parsimony, consumer-less-substrate viii, extant-tranche-consciousness ix);
+prototype-evidence misuse (SPEC_ONLY anchoring a live claim). Read against the current FAMILY-SPECS
+(18:46), the two NEWEST probes PROTO-1.md (19:27, Brief α) + PROTO-2.md (19:37, Brief β),
+PROTO-2-iso.md, the five research reports, PORTFOLIO + CONSTITUTION, and CROSS-LOCK XL-A…XL-H. Every
+load-bearing fact re-run at live HEAD **`06e70053f`** — I took neither the synthesis nor the probes
+on their word.*
 
-**Verdict in one line.** The hardened re-fold is an honest advance — it downgrades both headlines to
-LEAN/UNPROVEN and banks HM(X) as the floor. But it was written BEFORE its own two sharpest probes
-(PROTO-1 workspace-divorce, PROTO-2-iso) and so carries four cross-lock defects it could not have
-seen: **(1)** the structural axis is not "vocabulary + who-declares-key" — it is blocked behind
-**GN-1 codepath unification (the loom)**, a LOCK-7⊕LOCK-3 totality build, and the mask it targets
-lives on the **retiring** substrate (XL-A) — so **Brief 1 tests the wrong artifact and repeats the
-plan PROTO-1 refuted**; **(2)** the pass's banked "durable output" — HM(X) with let-generalization —
-**is itself unbuilt**: the running CSP (leading carrier 1B) carries **zero** let-gen (verified), so
-§5.1's "one architecture" collapse is vacuous at the polymorphism layer and the floor the whole lock
-rests on is SPEC_ONLY; **(3)** the residue solver (Open X) and the iso-carrier argument (PROTO-2-iso)
-**double-home** against LOCK-2's csp-solver and LOCK-6's TS plane respectively — neither is LOCK-1's
-to seat alone; **(4)** both pass-2 probes are **SPEC_ONLY** (verified unlanded) and X8 is **unmet
-after two passes**. Floors hold within ±2; no family is convergence-eligible.
+**Verdict in one line.** The FAMILY-SPECS is a genuine, honest fold — it routes three of the four
+carrier-deciding axes OUT of the lock (single-store→GESTALT-B, iso-seat→LOCK-6, residue→GESTALT-B),
+correctly banks HM(X) as direction, and marks both probes' worktree claims SPEC_ONLY-adjacent. But it
+is now **stale in its own §3**: the two "sharpest OPEN briefs" (α, β) it forwards to pass-3 were both
+RUN by probes authored AFTER it (PROTO-1 19:27, PROTO-2 19:37), and **neither probe closes its gap
+the way it claims** — Brief α is answered "the floor is INAPPLICABLE because polymorphism is broken"
+(the elegant-reduction trap, contingent on a `#[ignore]`d panicking closure path), and Brief β is
+answered "X8 landed" on a **worktree** the lock's own base-law reduces to SPEC_ONLY (verified: HEAD
+revise.rs is still the raw LWW). The deeper cross-lock finding: **LOCK-1's headline deliverable — WHICH
+family is the carrier — is not adjudicable inside LOCK-1.** Every dispositive axis is homed at LOCK-6
+or GESTALT-B. The lock can bank 1B as the leading *candidate*; it cannot *seat* the carrier. No family
+is convergence-eligible (pass 2 of ≥3; no clean streak).
 
 ---
 
-## 0. WHAT I VERIFIED AT SOURCE (HEAD `c43126422`) — the load-bearing facts
+## 0. LIVE-TREE RE-VERIFICATION (HEAD `06e70053f`) — independently run, not taken on word
 
-Every claim below is a command I ran, not a report I trusted.
+The FAMILY-SPECS pins to `06e70053f`; current HEAD **is** `06e70053f` (confirmed). Probes pin to
+`ce51c36fc` (confirmed ancestor). All facts below re-run this pass:
 
-- **[CONFIRMED — both probes SPEC_ONLY; X8 unmet TWICE].** `assign` (`constraint/revise.rs:27`) at
-  HEAD is the raw 3-line last-writer-wins (`if slot==Some(&ty){false}else{*slot=Some(ty);true}`),
-  **NOT** the refinement-aware `match` PROTO-1(old)/§1B-B1 claim delivered. `TypeDesc::Row` grep in
-  `type_desc.rs` = **0**; `constraint/shape.rs` **absent**; `LayoutKind` = `{Struct, TaggedEnum,
-  UntaggedEnum, NewtypeWrapper}` — **no Row**. `carrier_iso_ts.rs` / `proto2_row_shape.rs` are patch
-  artifacts, not tree files. By XL-H every pass-2 "MEASURED/byte-identical/N passed" is a worktree
-  claim → **SPEC_ONLY**. X8 (pass-1: "land the additive `assign` hardening regardless of carrier")
-  is unmet after **two** passes — the single carrier-INDEPENDENT deliverable is still absent.
-- **[CONFIRMED — the doubly-dead defect, the pass's one genuine advance].** `grep '\.join('
-  crates/ir/src/passes/types/` = empty; `TypeDomain::join` (`domain.rs:66`) has zero call sites. The
-  live carrier is `assign` (LWW). PROTO-1(old)'s premise-demolition (1A's "running CSP unsound" lever
-  is void) is sound and verified. It tilts the carrier toward 1B — but see §1B.
-- **[CONFIRMED — the WORKSPACE DIVORCE is real and dispositive (PROTO-1, §1 below)].**
-  `skinny/Cargo.toml` declares its OWN `[workspace]`; the main `Cargo.toml` does not list skinny.
-  `skinny/crates/ir` is package **`ir`**; `crates/ir` is package **`bbnf-ir`** — two divorced trees.
-  `grep -rn "TypeDesc|StructRegistry|LayoutKind|struct_registry" skinny/crates/` = **0 hits**. The
-  mask (`skinny/crates/codegen/src/runtime_generator.rs:98 has_rule("value")`) is **present**; Open
-  R's lowering sink `TypeAnalysis::from_ir` lives in `crates/core` (bbnf-ir side). **Open R's
-  classification physically cannot reach the skinny mask.**
-- **[CONFIRMED — the running CSP has NO let-generalization].** `grep -rniE
-  "generali|instantiat|polymorph|scheme" crates/ir/src/passes/types/` = **1 hit, a module
-  doc-comment** ("the *generalized* csp-solver crate" — the crate's name, not let-gen). `project_types`
-  is a monotone `csp.propagate()` sweep with `RefConstraint` suspension — not `generalize`/`instantiate`.
-- **[CONFIRMED — the iso path is a REAL shipping consumer, not a stub].** `HeterogeneousAltJoin(Vec
-  <TypeDesc>)` present (`type_desc.rs:63`). `type_desc_to_ts` (`ts/projection.rs:11`) is the sole
-  `TypeDesc→TS` sink and is consumed by the **build-time TS emitter** (`ts/emitter/grammar.rs:55,121`)
-  — i.e. it sits on the FAST TS face XL-D blessed, not a refuted runtime decoder. A fused monotype (1A)
-  and a `TypeENode` (1D) are not `TypeDesc` values → **no `type_desc_to_ts` path**.
-- **[CONFIRMED — the structural axis is void on the REAL grammar].** `grammar/json/json.bbnf`:
-  `pair = string, colon >> value` (no `key` role), `object = "{" >> ((pair << comma?)*)?w << "}"`. On
-  this body PROTO-2's own BARE case measured `class(object) = Unknown`. The `json_templates` mask
-  stays uncovered on the exact grammar it exists for.
-- **[CONFIRMED — X3 single-store = LOCK-1⊕LOCK-2 merge].** `csp_strategy/constraints/{dispatch,
-  layout}.rs` install into `Csp<StrategyDomain>`; `passes/types/constraint` installs into
-  `Csp<TypeDomain>`; both over the same `csp-solver = "0.1"` (`crates/ir/Cargo.toml:18`). Two federated
-  stores, one engine.
+- **X8 NOT LANDED AT HEAD — PROTO-2.md's "landed" is a worktree claim (SPEC_ONLY by XL-H).**
+  `crates/ir/src/passes/types/constraint/revise.rs:27-32` `assign` is verbatim the raw 3-line LWW
+  (`if slot.as_ref()==Some(&ty){false} else {*slot=Some(ty);true}`); `grep -cE
+  "is_fully_ground|clash|record_domain_clashes"` over revise.rs = **0**. The refinement-aware arm
+  exists only as `x8-clash-arm.patch` in the delivery dir. PROTO-2.md's verdict line *"X8 landed and
+  RAN_MEASURED"* is precisely the worktree over-claim the FAMILY-SPECS's own X8/G-1B-1 forbids
+  ("every 'byte-identical / N passed' is a worktree claim → SPEC_ONLY … Land it or the family has
+  shipped nothing"). **After two passes and a third probe, the one carrier-independent deliverable is
+  STILL not at HEAD.**
+- **TypeDesc::Row NOT LANDED — the 1D residue X4 the synthesis retains for LOCK-1 is SPEC_ONLY.**
+  `grep -rcE "Row" crates/ir/src/types/type_desc.rs` = **0**; `shape.rs`/`TypeShapeAnalysis`
+  **absent**. §1D banks "LOCK-1's residue from 1D is exactly the engine-agnostic vocabulary
+  `TypeDesc::Row`/`LayoutKind::Row` (X4) — which any carrier populates." Nothing populates it; the
+  classifier that would (`TypeShapeAnalysis`) does not exist at HEAD. The retained residue is a
+  promise, not a landed fact.
+- **The closure path is BROKEN and `#[ignore]`d — PROTO-1's load-bearing caveat is real.**
+  `crates/core/tests/pipeline.rs:704-754` — five `#[ignore = "AV.0.11 Category A: lower::expression
+  closure-body lowering gap"]` tests; the path panics `"closure: missing body child"` at
+  `lower/expression.rs:155`. `IrNode` has **no** `Call`/`Closure`/parametric variant (only
+  `Ref(RuleId)`, verified `dag/node.rs:77`). PROTO-1's "monomorphic by construction" is HEAD-real —
+  *because the one polymorphic surface does not function.*
+- **Ref bridge unidirectional (PROTO-1 structural claim holds).** `rule_vars: HashMap<RuleId,
+  TypeVarId>` (generate.rs:29 — one rule → one var); `RefConstraint::revise` (reference.rs:98-131)
+  reads `vars[rule_var].domain.solved` and suspends via `UnresolvedCompoundRef`, never writes the
+  rule var. Confirmed.
+- **The doubly-dead displacement lever (G-1A-2) holds.** `TypeDomain::join` (`domain.rs:66`) has no
+  call site in `passes/types/`; the live path is `assign`. 1A's "the running CSP is overwrite-unsound"
+  tilt stays dead code.
+- **The two `from_ir` sinks (XL-F) confirmed** — `driver/analysis.rs:22` + `rust/view/named_types.rs:100`.
+- **The double-home (X3/X11a) is real** — `csp-solver = "0.1"` in **both** `crates/ir/Cargo.toml:18`
+  and `crates/core/Cargo.toml:20`; `csp_strategy/` (LOCK-2's 2C driver) and `types/` (LOCK-1) both
+  build `Csp<_>` over that one vendored crate, both inside `crates/ir`.
 
 ---
 
-## 1. THE FOUR CROSS-LOCK CROSS-CUTTING FINDINGS (critic-2's lens)
+## 1. THE STALE-SYNTHESIS FINDING (cross-cutting, binds §3 of the FAMILY-SPECS)
 
-### 1.1 [XL-A + Constitution ix] The structural axis is a GN-1 LOOM obligation — Brief 1 tests the RETIRING artifact
+The FAMILY-SPECS §3 forwards Brief α (let-gen additive graft) and Brief β (X8 clash arm) as *the two
+uncertainties whose resolution most advances the next pass* — i.e. **open**. Both were RUN by probes
+timestamped AFTER the synthesis (PROTO-1 19:27 = α; PROTO-2 19:37 = β). A synthesis whose headline
+open items are already answered by newer on-disk evidence is not converged — and the answers do NOT
+land where the briefs aimed:
 
-The re-fold frames `List ≠ Row` closure as "(a) land `TypeDesc::Row`, (b) LOCK-7 who-declares-key,
-(c) GN-3.W3, (d) delete `has_rule("value")`" (§5.4) and hands it to **Brief 1** — "land Row in
-`bbnf-ir` … then DELETE `has_rule("value")` (`skinny/crates/codegen/…`) … regen and diff." PROTO-1
-(authored after the re-fold) proves this is **physically incoherent**: Row lands in `bbnf-ir`; the
-mask lives in package `ir` (skinny), a divorced workspace that references **no** `TypeDesc` (§0). A
-perfectly-landed, perfectly-annotated Row derivation **cannot cross the workspace boundary** to inform
-`has_rule("value")`; and PROTO-1 §5 shows deleting the mask **regresses** (routes JSON to
-`emit_general_descent`, which has no Row/List classifier). So Brief 1's pass-condition ("mask deletes
-AND regen byte-identical") is **pre-set to fail on the retiring substrate** — a gate-that-cannot-pass,
-the mirror of a gate-that-cannot-fail.
+- **Brief α → "INAPPLICABLE," not "additive."** PROTO-1's verdict is neither graft nor re-seed: false
+  fusion is *unreachable* because the IR is monomorphic by construction. This is honest, but it
+  **redefines the banked floor rather than instantiating it.** §0/§5 bank HM(X) = "equality trunk +
+  bounded residue + **let-generalization**" as the settled *direction* both carriers share; PROTO-1
+  concedes "1A and 1B are one architecture holds only in *outcome*, not in *mechanism*." So 1B ships
+  **structural monomorphization, not HM(X)-with-let-gen.** The banked floor is not met — it is
+  declared not-applicable. **The elegant-reduction trap, textbook form:** the load-bearing step
+  "polymorphic reuse stays structural (beta-reduced before types)" reads *"…and the hard part —
+  making grammar-closures actually work AND provably keeping them pre-IR-monomorphic — is a
+  `#[ignore]`d panic."* PROTO-1's own caveat concedes it: *"If a future tranche wires a live
+  parametric rule that survives into the IR … THEN the false-fusion floor becomes reachable."*
+  Grammar-closures is a **documented live design line** (project memory: "First-class closures,
+  GrammarCall, @host directive, compile-time beta-reduction"; constitution i grammar-totality). So
+  the floor is not dead — it is *deferred behind a broken feature the codex intends to fix.* Banking
+  "floor delivered zero-diff" is banking against a feature that panics today.
 
-**The cross-lock weight CRIT-1 under-states:** this is not merely "the blocker is bigger." Per **XL-A**,
-skinny@HEAD is the MEASUREMENT SUBSTRATE ONLY — it RETIRES; **GN-1 (the loom) is the
-tree-of-record-to-be**, seeded by unifying skinny's sink-only/general-descent codegen with bbnf-ir's
-`StructRegistry`/`TypeDesc` classifier. The mask closure Brief 1 chases is **exactly the GN-1
-codepath-unification work** (Task #54: GN-1 loom) — a LOCK-7⊕LOCK-3 totality build, **not a LOCK-1
-pass-3 gate and not even a pass-3 question.** Running Brief 1 against skinny@HEAD tests-the-wrong-
-artifact (XL-H wrong-artifact-risk) and re-litigates a codepath divorce that GN-1 exists to dissolve.
-**Directive:** re-pose the structural axis as a NAMED GN-1 obligation routed to GESTALT-B, not a
-LOCK-1 brief; the LOCK-1 residue is only the engine-agnostic vocabulary widening (`TypeDesc::Row`),
-which is a LOCK-3 record-expressiveness fix (X4) any carrier consumes.
+- **Brief α's fixture is a gate that cannot fail.** PROTO-1's fixture (`pair=k v; a=pair pair;
+  b=pair pair`) is monomorphic — `k`,`v` are fixed leaf types — so both `pair` uses resolve to the
+  *same* `Tuple([BoxedEnum,BoxedEnum])`, which PROTO-1 states outright ("the uses do not diverge …
+  nothing polymorphic to monomorphize"). A false-fusion test on an IR with no polymorphism cannot
+  fail. Recording it as "1B ships the floor for free" over-reads a vacuous pass.
 
-### 1.2 [Vacuous-convergence] The banked "durable output" — HM(X) with let-generalization — is ITSELF unbuilt
+- **Brief β → "landed" on a worktree the base-law calls SPEC_ONLY** (verified §0). Worse, PROTO-2's
+  own text makes X8 **producer-inert on the real corpus** (below) — a *new, sharper* consumer-less
+  finding the FAMILY-SPECS has not absorbed.
 
-§5.1 banks "HM(X) = equality trunk + bounded residue + **let-generalization**" as "the pass's real,
-durable output … NOT re-litigated," and §1A calls 1A "the **ONLY** family that carries polymorphism."
-These contradict, and the tree adjudicates against the floor: the running CSP (leading carrier **1B**)
-has **zero** let-generalization (§0, verified — 1 doc-comment hit). Consequences the convergence
-percentages hide:
-
-- **The floor both families "share" is shipped by neither.** 1A (which would carry let-gen) is
-  SPEC_ONLY, unbuilt; 1B (running) omits it. So "1A and 1B collapsed onto one architecture" (§5.1) is
-  **false at the polymorphism layer** — the exact layer let-gen exists to guarantee (false-fusion
-  soundness). The pass's "durable output" is a target, not an artifact.
-- **No 1B gate checks false fusion.** G3 ("generalization prevents false fusion") is 1A-only; 1B's
-  G1–G5 are hardening/census/width/convergence. Whether `RefConstraint` suspension is observationally
-  equivalent to instantiate-fresh-per-`Ref` is **asserted, never shown** — a spec-cites-itself at the
-  soundness core.
-- **"1B = cheapest net-0 additive diff" overstates.** Reaching the banked HM(X) from 1B requires
-  **growing let-generalization into the monotone CSP** — unbuilt, unmeasured, emphatically not "change
-  nothing that fires." The carrier lean's own cost premise omits this graft.
-
-This is the deepest failure-mode hit in the pass: the convergence floors (43–56%) are computed against
-an architecture **no family is shown to instantiate**. Pass 3 must either build a false-fusion fixture
-for 1B and cost the let-gen graft, or stop banking the 1A/1B collapse as "one architecture" and re-open
-§5.1.
-
-### 1.3 [Double-home] The residue solver (Open X) is LOCK-2's engine, not a private LOCK-1 seam
-
-Open X routes widths/overloads/decode-class to "a bounded post-solve … the same seam whichever carrier
-wins" over `decision_csp.rs`'s two-mode `csp-solver`. But that IS the vendored `csp-solver = "0.1"` that
-LOCK-2's `csp_strategy/` (2C CSP-CENTRAL — "the decision driver IS a CSP") already claims as its
-decision-driver engine (§0, X3 verified: two federated `Csp<_>` stores, one crate). So the
-width-defaulting lattice is **double-homed**: is it LOCK-1's Open X residue seam or LOCK-2's
-decision-driver CSP? The re-fold flags X3 for the *literal single store* but does not name that **Open
-X and 2C are the same engine** — a GESTALT-B consolidation. Compounding it: the census that claims "the
-residue ≈ 0 everywhere" (justifying "route only the residue through CSP") **read its own coarse output**
-over a corpus with zero overload code (X4) — spec-cites-itself. If the residue is truly 0, then 1B's
-CSP-store distinctiveness AND 1D's cost-extraction AND the whole HM(X)-vs-pure-HM stratification are
-**near-vacuous**; if it is not 0, the census must run on a modeling instrument. Either way "defaulting
-dominates" is unrun on this pass's instrument (Open X UNRUN two passes running).
-
-### 1.4 [Double-home] The carrier-on-iso argument is a LOCK-6 input, not LOCK-1's to seat
-
-PROTO-2-iso's HEAD-real negative — only `TypeDesc` crosses `type_desc_to_ts`; a monotype (1A) and a
-`TypeENode` (1D) categorically have **no** TS path (§0) — is genuine and decisive, and I bank the
-**Sum half** (`HeterogeneousAltJoin → type_desc_to_ts`) as HEAD-real. But two cross-lock qualifiers the
-re-fold (predating the probe) and even CRIT-1 under-weight:
-
-- The **Row half** rides Brief-1's uncommitted vocabulary → **SPEC_ONLY**. Honest split: *Sum-crossing
-  HEAD-real; Row-crossing SPEC_ONLY; the monotype/`TypeENode`-have-no-`*_to_ts` negative HEAD-real and
-  decisive.*
-- Constitution iii is **LOCK-6's verdict to render** ("LOCK-6 decides where reasonable ends; measured,
-  not asserted"). The carrier-on-iso seat is a **LOCK-6 input**, conveyed — LOCK-1 may bank the negative
-  as a fact but cannot *seat the carrier on iso alone*. It reframes the carrier fork (CRIT-1's G-XL-3):
-  if 1A/1B ship the same architecture (disputed by §1.2) the deciding axis is iso, and 1A-as-carrier is
-  **pre-eliminated on iso** — building Option A then measures a race whose loser is already out. Pass 3
-  must state which axis is dispositive (build-cost → run Option A; iso → nearly closed FOR 1B by the
-  HEAD-real negative, modulo landing Row), and route the seat to LOCK-6/GESTALT-B for ratification.
+The synthesis is not wrong to forward α/β; it is stale in presenting them as unresolved when the
+resolutions (with these caveats) already sit on disk one directory over. Pass-3 inherits *interpreted*
+probe results, not open briefs.
 
 ---
 
-## 2. FAMILY 1A — UNIFICATION-FIRST · convergence **55%** (held at floor)
+## 2. PER-FAMILY — convergence % + enumerated open gaps (cross-lock-weighted)
 
-The HM(X) architecture is banked consensus (but §1.2: unbuilt). As a distinct *carrier*, 1A is
-**categorically last on iso** by a HEAD-real fact (a monotype is not a `TypeDesc` → no
-`type_desc_to_ts`; §0/§1.4) — sharper than the re-fold's "no differential produced." Its sole
-displacement justification (running CSP unsound) is doubly-dead (§0). Architecture intact; Option A
-unbuilt blocks a larger cut. Held, not cut, only because §1.2's let-gen finding is the one place 1A is
-*distinctively* right (it alone would carry polymorphism).
+### §1A — UNIFICATION-FIRST · carrier candidate #1 (LEAN-against) · **53%** (−2 vs floor 55)
 
-**Enumerated open gaps:**
-1. **[carrier, UNRUN] Option A (union-find re-seed) never built — G1–G7 all asserted.** 1A must delete
-   ~101 LOC + rewire ~91 sites + re-invent the `BoxedEnum`→structural refinement lattice inside
-   union-find, for zero measured gain. Its make-or-break parity race is SPEC_ONLY.
-2. **[cross-lock iii, categorical] no TS mirror — and no path to one.** A fused monotype requires
-   authoring a brand-new `*_to_ts` sink from scratch (§1.4). Ranks 1A LAST on iso, HEAD-real, not a
-   parity-margin loss.
-3. **[cross-lock] LOCK-3 sink named, lowering unshown.** No artifact shows a fused monotype lowering
-   through `TypeAnalysis::from_ir` (the incumbent `TypeDesc` does).
-4. **[row unmeasurable] zero row-shaped `->` in the real corpus (verified: json's arrows are all scalar
-   leaf projections).** Leijen vs Gaster–Jones (Wand's trap) cannot be exercised; behind GN-3.W3.
-5. **[research-A §4 unproven] the `HeterogeneousAltJoin`-retires-under-unification claim is unshown** —
-   no probe shows the Sum obligation retiring rather than coexisting with union-find's structural arm.
-6. **numeric-width residue UNMEASURED** on this pass's instrument (Open X, §1.3).
+Architecture banked; not re-litigated. Two cross-lock/evidence marks *lower* it this pass:
 
-## 3. FAMILY 1B — ONE-CONSTRAINT-STORE · convergence **54%** (−2 from floor 56) · single-store BLOCKED-candidate
+1. **[NEW — 1A's sole distinctive advantage is now MOOT]** 1A's one distinctive rightness (§1A: "the
+   family that, alone, *would carry polymorphism*") is an advantage over a surface that **does not
+   exist** at HEAD (closures broken/`#[ignore]`d; `IrNode` has no parametric node — §0). PROTO-1
+   removes 1A's unique selling point: there is no polymorphism to carry, so let-generalization
+   distinguishes 1A from 1B *only in a future where closures survive into the IR un-reduced* — which
+   is a LOCK-7/GN-codex decision (grammar-totality staging), not a LOCK-1 carrier fact. 1A's
+   distinctiveness is contingent on a cross-lock feature decision not yet made.
+2. **[iso categorically last — HEAD-real, stands]** PROTO-2-iso's negative (`grep 'TypeENode|monotype'
+   crates/core/src/backend/` = 0; sole `TypeDesc→TS` sink is `type_desc_to_ts`) means a fused
+   monotype has **no** TS path — authoring a brand-new `*_to_ts` sink from scratch. If LOCK-6 rules
+   iso is layout-dispositive, 1A is pre-eliminated; if LOCK-6 rules iso is *behavioral* (6D oracle),
+   the pre-elimination weakens. **1A's carrier fate is a LOCK-6 verdict, not a LOCK-1 one** (X11b).
+3. **[Option A never built]** G1 (terminate + parity + ≤ wall-time) SPEC_ONLY; the `BoxedEnum→structural`
+   refinement lattice must be re-invented inside union-find for zero measured gain (G-1A-1).
+4. **[research-A §4 unproven]** No probe shows `HeterogeneousAltJoin` *retiring* under unification vs
+   *coexisting* with a union-find structural arm (G-1A-4).
+5. **[row discipline unmeasurable]** Zero row-shaped `->` in the real corpus (Leijen vs Gaster-Jones /
+   Wand's trap unexercised); behind GN-3.W3 (G-1A-5/6).
 
-The leading carrier candidate and iso-safe (Sum-crossing HEAD-real; §1.4). But three compounding
-cross-lock debits pull it **below** CRIT-1's 55 and the stale-CRIT-2's 56: **X8 unmet TWICE** (a real
-stagnation signal — the one "ships-regardless" deliverable absent across two passes), **it does not
-ship the banked HM(X)** (no let-gen, §1.2), and **its clash obligation is consumer-less** (§viii). The
-HEAD-real Sum-iso advance offsets only partially. Its residual distinctiveness ("cheapest diff") is
-itself contingent on an unbuilt let-gen graft.
+### §1B — ONE-CONSTRAINT-STORE · carrier candidate #2 (LEADING candidate) · **53%** (−1 vs floor 54)
 
-**Enumerated open gaps:**
-1. **[FATAL, X8 unmet ×2] the additive `assign` hardening is STILL NOT LANDED (§0, verified LWW).** The
-   one carrier-INDEPENDENT deliverable is absent at HEAD after two passes; G1's byte-identity was
-   measured on a worktree — SPEC_ONLY by XL-H. Land it or the family has shipped nothing.
-2. **[NEW, §1.2] 1B does NOT ship the banked HM(X) — no let-generalization (verified).** So §5.1's "one
-   architecture" collapse is unsound at the polymorphism layer; no 1B gate tests false fusion; "net-0
-   cheapest diff" omits the unbuilt let-gen graft. The leading carrier's polymorphic soundness is
-   untested.
-3. **[consumer-less substrate, viii] B1's `TypeClash` obligation is parity-inert** — codegen reads
-   `ir.types` + `struct_registry`, never `type_obligations`. Its only consumer is 1C's LSP bridge,
-   **also unbuilt**. "Ships regardless of carrier" and "consumer-less until 1C lands" cannot both hold
-   unscheduled — the joint wave is unnamed.
-4. **[cross-lock, X3 double-home] single-store thesis = LOCK-1⊕LOCK-2 merge (verified).** The literal
-   one-heterogeneous-store is a GESTALT-B consolidation; the residue solver double-homes with LOCK-2's
-   csp-solver (§1.3). BLOCKED-candidate; bank the literal thesis, ship the federation (= HM(X) = 1A's).
-5. **[spec-cites-itself, uncured ×2] the residue census (G2) + B4 store-shape (G3) never re-run/built.**
-   "Residue ≈ 0 / decidable-core dominates" still reads the pass-1 census's own coarse output over a
-   corpus with zero overload code. B4 (decode-class-depends-on-sum-variant: flat unsound cell vs
-   per-variant `Sum` cells) — the family's sharpest store-shape decision — is on paper across two passes.
-6. **[distinctiveness near-vacuous] once single-store is BLOCKED-candidate, 1B ships IS HM(X) = 1A's;**
-   its residual identity ("cheapest diff") is contingent (gap 2).
+Still the leading candidate, iso-safe on the Sum half (HEAD-real), cheapest diff. PROTO-1 genuinely
+*strengthens* the "cheapest diff" (the let-gen floor costs 0 on the current IR). But three
+cross-lock/soundness debits offset it:
 
-## 4. FAMILY 1C — BIDIRECTIONAL-LOCAL · convergence **40%** (held) · BANKED (reactivation-gated)
+1. **[FATAL, X8 STILL not at HEAD after two passes + a third probe]** revise.rs is the raw LWW at
+   HEAD (§0). PROTO-2.md's "landed" is a worktree patch; SPEC_ONLY by the lock's own XL-H base-law.
+   The one carrier-*independent* deliverable — owed regardless of who wins — has shipped nothing to
+   the tree. (G-1B-1.)
+2. **[NEW, SHARPER viii — X8 is PRODUCER-INERT, not merely consumer-less]** PROTO-2.md's own text:
+   *"in a well-formed grammar no single type variable ever receives two disagreeing fully-ground
+   types, so the refuse arm never fires on real grammars — it fires only on the synthetic clash
+   fixture."* So the four `project_types_*` "byte-identical" passes are a **gate that cannot fail**
+   (the arm structurally never fires on those inputs → identity), and the `TypeClash` obligation
+   stream is **empty on the entire real corpus**. Combined with the FAMILY-SPECS's own G-1B-3
+   (no consumer until 1C's unbuilt LSP bridge), X8 lands a mechanism that on real grammars **neither
+   fires nor is read.** "Ships regardless of carrier" ships a no-op on production input. The joint
+   wave (X8 producer + 1C consumer) is not merely unnamed — it must *also* carry a real-grammar
+   fixture that makes the arm fire, or it is doubly-inert substrate (viii).
+3. **[1B ships a DIFFERENT architecture than the banked floor — §5.1 collapse is outcome-only]**
+   Per PROTO-1, 1B = structural monomorphization, HM(X)-with-let-gen = 1A. "One architecture" holds
+   only in outcome. So 1B's soundness *depends on the codex keeping closures pre-IR-reduced* — a
+   cross-lock (LOCK-7/grammar-totality) commitment the FAMILY-SPECS neither states nor obtains. If
+   GN-codex closures land as live parametric IR, 1B's monomorphic-by-construction soundness breaks
+   and the let-gen graft (or per-call specialization) re-enters — re-opening INC-1 on build-cost.
+   **This contingency is a cross-lock obligation, not the closed axis PROTO-1 declares.**
+4. **[single-store thesis BLOCKED-candidate — cross-lock, correctly routed]** The literal one-store =
+   LOCK-1⊕LOCK-2 merge over the shared `csp-solver` (§0 verified: two `Csp<_>` in `crates/ir`).
+   GESTALT-B. Once banked, 1B's residual identity is "cheapest diff," itself contingent on (3).
+5. **[residue census / B4 store-shape on paper — spec-cites-itself, stands]** "Residue ≈ 0" reads its
+   own coarse output over a corpus with **zero overload code** (G-1B-5/6). Unrun across two passes.
 
-Correctly banked as the winner's diagnostics/locality discipline. No pass-2 evidence moved it; PROTO-2
-*reconfirms* the substrate wall rather than lifting it.
+### §1C — BIDIRECTIONAL-LOCAL · BANKED (reactivation-gated) · **40%** (held)
 
-**Enumerated open gaps:**
-1. **[structurally unrunnable, stands] make-or-break (R-C2/G1) has no input.** A declared/synthesized-
-   *mismatch* `->` fixture must be hand-authored; the greenfield json's arrows are all scalar leaf
-   projections. 1C's distinct identity is unfalsifiable until GN-3.W3 or that fixture lands.
-2. **[reconfirmed §0b] the `->` front-end thread is broken.** The natural inline `(string -> key)` trips
-   the typed-materialization-invariant (`lower/expression/wrap.rs:242`) — direct evidence GN-3.W3 is
-   unbuilt. 1C's 40% is a ceiling until that wall falls.
-3. **[consumer-less substrate, viii] the LSP bridge is unbuilt.** `type_obligations →
-   lsp_types::Diagnostic{range}` = zero hits. Enriching obligations without a consumer fails the bar —
-   and this is the same bridge 1B's B1 clash arm depends on (§3.3): **name the joint wave.**
-4. **[LOCK-3 field] sub-span ceiling.** `Project.ty` is one whole-expr `String` span; a wrong ascription
-   cannot underline the `T`. Bank the `PassDiagnostic.span` add + LSP bridge regardless of carrier — the
-   re-fold says "name the wave"; **the wave is still unnamed** (falls between carrier-selection and
-   GESTALT-B).
+Correctly banked as the winner's diagnostics/locality overlay. No pass-2 evidence moved it; the newest
+probes *reconfirm* its walls and *worsen* its consumer story.
 
-## 5. FAMILY 1D — TYPES-AS-ECLASSES · convergence **43%** (held) · structural-μ UNPROVEN (not "dissolved")
+1. **[make-or-break has no input]** R-C2 needs a declared/synthesized-*mismatch* `->` fixture; the
+   greenfield json's 4 arrows are all scalar leaf projections. Unfalsifiable until GN-3.W3 or a hand
+   fixture (G-1C-1).
+2. **[GN-3.W3 wall reconfirmed]** inline `(string -> key)` trips the typed-materialization invariant
+   (`wrap.rs:242`); caps 1C's addressable surface (G-1C-2).
+3. **[consumer worsened by X8's inertness]** 1C's LSP bridge is the shared consumer for both its span
+   obligation and X8's `TypeClash`. But per §2.2 the `TypeClash` stream is *empty on real grammars* —
+   so even once the bridge lands, 1C consumes an empty stream on production input until a mismatch
+   fixture is authored. The joint wave must carry the fixture, not just the bridge (G-1C-3, sharpened).
+4. **[sub-span ceiling, a LOCK-3 field]** `Project.ty` is one whole-expr `String` span; a wrong
+   ascription cannot underline the offending sub-term (G-1C-4).
 
-recursion-keep + "zero new engine" + cost-extraction correctly RETIRED. The one surviving hook
-(structural `List ≠ Row`) is **UNPROVEN**, and — the finding CRIT-1 sizes right and the re-fold sizes
-too small — blocked behind **GN-1 codepath unification** (§1.1), strictly larger than "vocabulary +
-who-declares-key." PROTO-2 ("DISSOLVES 1D") and PROTO-1 ("BLOCKED") are **flatly contradictory verdicts
-on the same question**; the tree adjudicates for PROTO-1 (§0).
+### §1D — TYPES-AS-ECLASSES · BANKED (structural-μ UNPROVEN) · **42%** (−1 vs floor 43)
 
-**Enumerated open gaps:**
-1. **[the divorce refutes "dissolve"] Open R physically cannot close the mask (§0/§1.1, verified).** The
-   Row classifier lands in `bbnf-ir`; the mask is in package `ir` (skinny), which references no
-   `TypeDesc`. PROTO-2's own `git diff skinny/` = empty — it never touched, never *could* touch, the
-   mask. 1D is stuck, not superseded — and its structural axis is a **GN-1 loom / LOCK-7⊕LOCK-3** build.
-2. **[make-or-break UNBUILT] Row-inference from an un-annotated body.** On the real json `object` body
-   the classifier returns `Unknown` (§0). 1D's `TypeENode` deriving `Row` without the `key` role is
-   unshown; 1D faces the identical missing ingredient as every engine (extraction ≠ inference).
-3. **[cross-lock] "zero new engine" FALSIFIED — 3-lock blast radius, unmeasured.** The `union`
-   scheduling amendment fires on LOCK-2 grammar-tier + LOCK-5 regex-tier (`egraph/rules/regex.rs`); a
-   GESTALT-B call, cannot be settled in LOCK-1. Must not silently re-enter via 1D's saturation claims.
-4. **[cross-lock vi/iii] name-collision + no TS path.** Net-new `TypeAnalysis` collides with the live
-   `backend/driver/analysis.rs` driver struct; `TypeENode` has no `type_desc_to_ts` mirror. Ranks last
-   on iso (§1.4).
-5. **[elegant-reduction, uncured] AC-sum + positional injectivity coexistence UNBUILT** — injectivity is
-   unsound for AC `Sum`; every probe stayed sound via separate e-graphs (tested *around*, never *through*).
-6. **recursion-keep RETIRED (verified), cost-extraction IDLE (residue 0, §1.3).** Named negatives stand.
+Three legs correctly RETIRED. The one surviving hook (structural `List ≠ Row`) is UNPROVEN and
+re-homed to GN-1 (X9) — correct. Lowered −1 because the residue the synthesis *keeps* for LOCK-1 is
+itself unlanded:
+
+1. **[the retained residue X4 is SPEC_ONLY at HEAD]** §1D/§2 INC-2 bank "1D's residue = `TypeDesc::Row`,
+   which any carrier populates" as the *compatible* leftover. Verified §0: `TypeDesc::Row` = 0 hits,
+   `shape.rs` absent. LOCK-1's sole retained artifact from 1D does not exist in the tree — it is a
+   promise contingent on the GN-1 loom.
+2. **[name-collision, vi]** A net-new `TypeAnalysis` collides with the live `driver/analysis.rs:22`
+   struct (XL-F confirmed).
+3. **[no TS mirror, iii]** `TypeENode` is not a `TypeDesc` → no `type_desc_to_ts` path (ranks last on
+   iso with 1A, PROTO-2-iso negative).
+4. **[3-lock blast radius, cross-lock]** the `union`-scheduling amendment fires on LOCK-2 grammar-tier
+   + LOCK-5 regex-tier — a GESTALT-B/LOCK-2/LOCK-5 saturation-perf call, never a free LOCK-1 hook.
+   Must not silently re-enter via saturation claims.
+5. **[structural-μ = original-difficulty, engine-agnostic]** Deriving record-ness from an un-annotated
+   body is as hard as the source problem and needs a `->`-declared `key` role *any* engine reads;
+   1D's e-graph supplies no free advantage. Reactivate only if GN-1 proves the hook NEEDED **and**
+   e-graph-specific (D1 UNBUILT — measured `Unknown` on the real body).
 
 ---
 
-## 6. CONSTITUTION & PROTOTYPE-EVIDENCE AUDIT (cross-lock weighting)
+## 3. CROSS-LOCK — where LOCK-1 contradicts / double-homes the codex and siblings
 
-- **vii (concrete artifacts or SPEC_ONLY) — VIOLATED at the probe level (§0).** All three pass-2 probes
-  are patch-only. PROTO-1's own verdict is BLOCKED (not a positive landing); PROTO-2's DISSOLVE and
-  PROTO-2-iso's Row-PASS both ride unlanded vocabulary. Only PROTO-2-iso's **Sum-half** negative is
-  HEAD-real. Every "byte-identical / 1 passed / 4 passed" is a worktree claim — SPEC_ONLY by XL-H.
-- **i (grammar totality) + no-workarounds + typed-materialization-invariant — masked fallback NOT closed
-  (§0/§1.1).** `json_templates/value.rs` + `has_rule("value")` present; on the real grammar the
-  classifier returns `Unknown`. The natural annotation that would close it trips `wrap.rs:242` — a second
-  clause-i hazard. Owned jointly with LOCK-7, dischargeable only at GN-1.
-- **v (zero runtime) — asserted by all, exercised by none on a LANDED change.** PROTO-1/PROTO-2-iso's
-  "empty runtime diff" is trivially empty (they land nothing that touches runtime) and worktree-only.
-- **iii (rust/ts isomorphism) — decides the carrier but is LOCK-6's verdict, conveyed (§1.4).** LOCK-1
-  banks the HEAD-real negative (only `TypeDesc` crosses; monotype/`TypeENode` cannot) as a fact; it
-  cannot seat the carrier on iso alone. The Row-crossing positive is SPEC_ONLY.
-- **vi (parsimony / no name-gate) — 1D `TypeAnalysis` name-collision stands (verified).**
-- **viii (consumer-less substrate) — TWO live breaches:** 1B's `TypeClash` obligation is parity-inert
-  (codegen never reads `type_obligations`); 1C's LSP bridge is unbuilt (zero hits). They are the SAME
-  unbuilt consumer — an unnamed joint wave.
-- **ix (extant-tranche consciousness) — TWO owed:** (a) the GN-3 §1.5 supersession is recorded WORKING
-  in XL-F(1) but still owed as a formal LOCK-7-signed entry, not the inline "factually void" the specs
-  use; (b) **Brief 1 silently contradicts XL-A** by testing structural closure against the retiring
-  skinny substrate rather than naming the GN-1 loom obligation — a supersession masquerading as a gate.
-- **Gate-that-cannot-fail / cannot-pass — TWO stand:** PROTO-2's grep-gate forbids two hint shapes and is
-  silent on the third (a `->`-declared `: key` annotation), so it cannot detect the goalpost-shift from
-  "derive from body structure alone" (which measured `Unknown`); Brief 1's "mask deletes AND regen
-  byte-identical" is pre-set to fail on the divorced/retiring substrate (§1.1).
-- **Elegant-reduction trap — §5.4 in the flesh:** "and then structure is derived engine-agnostically
-  (Open R)" reads *and-then-the-hard-part*; the hard part (real-grammar derivation) measured `Unknown`
-  and is blocked behind GN-1.
+**XL-1 [THE STRUCTURAL FINDING] — LOCK-1's headline deliverable is not adjudicable inside LOCK-1.**
+The lock's task is "the full type system … inferred, solved, erased" — operationally, *which family
+seats the carrier.* The FAMILY-SPECS routes **every dispositive axis out of the lock**: single-store →
+GESTALT-B (X3); iso-carrier-seat → LOCK-6 (X11b, constitution iii "measured, not asserted"); residue
+defaulting-lattice → GESTALT-B (X11a). What remains intra-lock is (a) build-cost, and (b) let-gen
+additivity — and PROTO-1 dissolved (b) into a LOCK-7 closure-staging question. So LOCK-1 can bank 1B as
+the leading *candidate* but **cannot seat the carrier**; the seat is a LOCK-6 ∥ GESTALT-B call. The
+FAMILY-SPECS should say this plainly and cap its own convergence at "carrier candidate ranked, seat
+deferred" — not present "1B LEADING carrier" as a lock-internal resolution. This is the honest ceiling
+on the whole lock: ~55% is the roof until the gestalt renders the axes LOCK-1 has (correctly) exported.
 
-## 7. PASS-3 CROSS-LOCK DIRECTIVES
+**XL-2 [UNADDRESSED cross-lock obligation to LOCK-5] — the Map-barrier posture is never stated.**
+XL-C (RATIFIED): 5B's functor is RETIRED, "conditional re-open **only if LOCK-1 abandons Map-barrier
+typing**." The FAMILY-SPECS's carrier mechanisms *touch* Map typing (1A: "runtime-span keys → open
+`Row`/Map"; the widened product-lattice over `TypeDesc`), yet **nowhere states whether the winning
+carrier keeps or abandons the Map barrier.** LOCK-5 is holding a re-open condition on a LOCK-1 decision
+LOCK-1 has not made. Named gap: the carrier spec must declare its Map-barrier posture, or LOCK-5's 5B
+retirement rests on an unstated assumption (constitution ix — a silent contradiction risk).
 
-1. **LAND the additive `assign` clash arm in-tree (X8, third call).** Until it is HEAD-reproducible with
-   `types_heterogeneous_alt` green, no carrier verdict is MEASURED and 1B has shipped nothing.
-   Co-schedule its consumer (the 1C LSP bridge) — name the joint wave, or B1 enriches a stream nothing
-   reads (viii).
-2. **Decide the carrier axis, then build the ONE decisive artifact.** If build-cost is dispositive:
-   build Option A (union-find re-seed) and run the parity race — the seat is LEAN-1B, not CLOSED. If iso
-   is dispositive (§1.4): it is nearly closed FOR 1B by the HEAD-real negative — land `TypeDesc::Row` so
-   the Row-crossing joins the HEAD-real Sum-crossing, then route the seat to **LOCK-6/GESTALT-B** for
-   ratification. State which axis governs; do not demand both briefs without a dispositive one.
-3. **Build a false-fusion fixture for 1B and cost the let-gen graft (§1.2), or re-open §5.1.** The banked
-   HM(X) is unbuilt at the polymorphism layer; the "one architecture" collapse cannot be banked while no
-   family instantiates it.
-4. **[GN-1 / GESTALT-B, NOT a LOCK-1 brief] Re-home the structural axis (§1.1).** The `List ≠ Row`
-   closure is GN-1 codepath unification (LOCK-7⊕LOCK-3) against the tree-of-record, not a mask deletion
-   on retiring skinny. LOCK-1's residue is only the engine-agnostic `TypeDesc::Row` vocabulary widening
-   (a LOCK-3 fix). Withdraw Brief 1 as written; route it to GESTALT-B as "blocked pending GN-1 loom."
-5. **[GESTALT-B] Adjudicate the Open X ⊕ LOCK-2 csp-solver double-home (§1.3)** and run the residue
-   census on a modeling instrument (overload/legality/decode-class) before "defaulting dominates" is
-   banked; build B4 both ways.
-6. **[LOCK-7 / ix] Formalize the GN-3 §1.5 supersession with LOCK-7 sign-off; correct Brief 1's silent
-   XL-A contradiction into a named supersession.**
+**XL-3 [double-home, correctly named but gate mis-homed]** Open X (residue) + 1B's single-store both
+route to GESTALT-B over the shared `csp-solver` (X11a — verified). *But* the 1B gate list still carries
+G4 ("Open X two-mode seam on the width micro-fixture, decided independently of the carrier") as a
+LOCK-1 gate. A gate whose seat is at GESTALT-B cannot be *closed* in LOCK-1 — it can only be *staged*.
+The FAMILY-SPECS should demote G4 to "staged for GESTALT-B," else it is a gate-that-cannot-pass-here.
 
-## 8. CONVERGENCE SUMMARY (CRIT-2, cross-lock)
+**XL-4 [XL-F absorbed — good]** The GN-3 §1.5 supersession (real sink is `TypeAnalysis::from_ir`, not
+the GN-3-framed consumer) is correctly carried as a named supersession (constitution ix). No contradiction.
 
-| Family | Disposition | CRIT-2 % | Δ vs floor | Dominant cross-lock open gap |
+**XL-5 [zero-runtime invariant, v — exercised only on worktrees]** All three probes show `git diff
+crates/core/src/runtime/ = 0`, but on *worktree* changes (X8, Row) that are **not at HEAD**. The
+invariant has never been exercised on a LANDED change (the FAMILY-SPECS names this for all four —
+correct). Until X8 or Row commits, the zero-runtime claim is worktree-only.
+
+---
+
+## 4. CONVERGENCE SUMMARY (cross-lock, CRIT-2 pass-2)
+
+| family | disposition | CRIT-2 % | Δ vs floor | binding cross-lock reason |
 |---|---|---:|---:|---|
-| **1A** UNIFICATION-FIRST | ADVANCED (carrier cand. #1) | **55** | 0 | iso CATEGORICALLY last (monotype has no `type_desc_to_ts`, HEAD-real); Option A unbuilt; row unmeasurable; distinctively right only where §1.2's let-gen holds |
-| **1B** ONE-CONSTRAINT-STORE | ADVANCED (carrier cand. #2, leading) | **54** | −2 | X8 unmet ×2 (ships-regardless deliverable absent); does NOT ship banked HM(X) (no let-gen); clash obligation consumer-less; single-store = LOCK-1⊕LOCK-2 merge; census self-cites. Offset by HEAD-real Sum-iso advance |
-| **1C** BIDIRECTIONAL-LOCAL | BANKED (reactivation-gated) | **40** | 0 | make-or-break has no input; GN-3.W3 wall reconfirmed broken; LSP bridge unbuilt (viii); banked wave unnamed |
-| **1D** TYPES-AS-ECLASSES | BANKED (structural-μ UNPROVEN) | **43** | 0 | workspace divorce → structural axis is a GN-1 loom build (LOCK-7⊕LOCK-3), not annotation; PROTO-2 contradicts PROTO-1, tree adjudicates BLOCKED; Row/TS SPEC_ONLY; 3-lock/name-collision stand |
+| 1A UNIFICATION-FIRST | ADVANCED (carrier cand. #1) | **53** | −2 | sole distinctiveness (polymorphism) MOOT — no polymorphic surface at HEAD (closures broken); iso categorically last but seat is a LOCK-6 call; Option A unbuilt |
+| 1B ONE-CONSTRAINT-STORE | ADVANCED (leading candidate) | **53** | −1 | X8 STILL not at HEAD (PROTO-2 "landed" = worktree/SPEC_ONLY); X8 producer-inert on real corpus (new viii); ships structural-mono not HM(X)-let-gen (contingent on LOCK-7 closure staging); single-store→GESTALT-B |
+| 1C BIDIRECTIONAL-LOCAL | BANKED (reactivation-gated) | **40** | 0 | make-or-break has no input; GN-3.W3 wall; consumer worsened — X8's `TypeClash` stream empty on real grammars; joint wave must carry a fixture, not just the bridge |
+| 1D TYPES-AS-ECLASSES | BANKED (structural-μ UNPROVEN) | **42** | −1 | retained residue `TypeDesc::Row` is SPEC_ONLY at HEAD (0 hits); name-collision (vi); no TS mirror (iii); 3-lock blast radius; re-homed to GN-1 |
 
-**Lock-wide (cross-lock).** The pass-2 architecture — HM(X) trunk + defaulting residue + 1C folded +
-structure via engine-agnostic widening — is prior-art-consonant and probably right *as a target*. The
-hardened re-fold honestly downgraded both headlines. But it was authored before its two sharpest probes,
-and the tree adjudicates four cross-lock defects it could not see: **(1)** the structural axis is a
-**GN-1 loom obligation** (XL-A), so Brief 1 tests the retiring artifact and repeats the plan PROTO-1
-refuted; **(2)** the banked "durable output" HM(X)-with-let-gen is **itself unbuilt** — the running
-carrier omits let-generalization, so the convergence floors measure against an architecture no family
-instantiates (vacuous-convergence); **(3)** the residue solver and the iso-carrier seat **double-home**
-against LOCK-2's csp-solver and LOCK-6's TS plane — neither is LOCK-1's to settle; **(4)** all three
-probes are SPEC_ONLY and X8 is unmet after two passes. The carrier seat is **LEAN-1B, not CLOSED**; the
-structural axis is **UNSOLVED by every family and re-homed to GN-1**; the banked HM(X) is a target, not
-an artifact. No family is convergence-eligible (pass 2 of ≥3; no clean-pass streak). Floors hold within
-±2; the one cut (1B −2) reflects two-pass stagnation + the let-gen soundness hole, not architecture change.
+**Lock-wide.** The fold is honest and well-routed, but pass-2 does not converge the lock, and the two
+newest probes *sharpen* rather than settle it. **(1)** The synthesis is stale in §3: Briefs α/β were run
+by later probes, and both "resolutions" are softer than claimed — α is "floor inapplicable because
+polymorphism is broken" (elegant-reduction trap, contingent on the LOCK-7/GN closure line), β is "X8
+landed" on a worktree the lock's own base-law calls SPEC_ONLY (verified: HEAD is still the raw LWW).
+**(2)** X8 is not just consumer-less — it is **producer-inert on the real corpus** (PROTO-2's own
+admission), so its byte-identity gate cannot fail and its obligation stream is empty on production
+input; the joint wave with 1C must carry a firing fixture. **(3)** The decisive cross-lock finding:
+**LOCK-1 cannot seat its own carrier** — single-store, iso-seat, and residue all route to GESTALT-B /
+LOCK-6; the lock's roof is "1B ranked leading candidate, seat exported," not "carrier chosen." **(4)**
+An unstated cross-lock obligation to LOCK-5 (XL-C Map-barrier posture) must be declared or 5B's
+retirement rests on an assumption LOCK-1 never made. No family is convergence-eligible (pass 2 of ≥3;
+no clean-pass streak); floors hold modulo the four marks above.

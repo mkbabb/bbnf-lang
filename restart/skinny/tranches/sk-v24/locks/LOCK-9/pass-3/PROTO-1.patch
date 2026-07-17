@@ -1,0 +1,207 @@
+diff --git a/Cargo.toml b/Cargo.toml
+new file mode 100644
+index 0000000..4022cf6
+--- /dev/null
++++ b/Cargo.toml
+@@ -0,0 +1,10 @@
++[workspace]
++members = ["kernel", "consumer"]
++resolver = "2"
++
++# The production seam Brief 1 gate (3)/(4) demands: fat-LTO, one codegen unit.
++[profile.release]
++lto = "fat"
++codegen-units = 1
++panic = "abort"
++opt-level = 3
+diff --git a/kernel/Cargo.toml b/kernel/Cargo.toml
+new file mode 100644
+index 0000000..c32c69f
+--- /dev/null
++++ b/kernel/Cargo.toml
+@@ -0,0 +1,7 @@
++[package]
++name = "kernel"
++version = "0.0.0"
++edition = "2021"
++
++[lib]
++crate-type = ["rlib"]
+diff --git a/kernel/src/lib.rs b/kernel/src/lib.rs
+new file mode 100644
+index 0000000..0bde719
+--- /dev/null
++++ b/kernel/src/lib.rs
+@@ -0,0 +1,39 @@
++//! Minimal stand-in for a shared bbnf-simd kernel home (9A). The producer is
++//! `#[inline]` and lives in a SEPARATE rlib from its consumer — the exact
++//! parse-that <-> bbnf-simd rlib seam Brief 1 gate (3)/(4) interrogates.
++//! Pure `core::arch::aarch64`, no nightly features, no OnceLock.
++use core::arch::aarch64::*;
++
++/// LEAN canonical producer: nibble `vshrn_n_u16::<4>` movemask.
++/// One `shrn.8b`, no reduction op. First-set-position form.
++#[inline]
++pub fn movemask_lean(cmp: uint8x16_t) -> u64 {
++    unsafe {
++        let narrowed = vshrn_n_u16::<4>(vreinterpretq_u16_u8(cmp));
++        vget_lane_u64::<0>(vreinterpret_u64_u8(narrowed))
++    }
++}
++
++/// Classify a 16-byte chunk against a broadcast needle, returning the LEAN mask.
++/// Consumer calls THIS across the rlib boundary in its hot loop.
++#[inline]
++pub fn classify_chunk(chunk: uint8x16_t, needle: uint8x16_t) -> u64 {
++    unsafe { movemask_lean(vceqq_u8(chunk, needle)) }
++}
++
++/// REFUTED idiom, kept as a disasm counterexample: double `vaddvq_u8` reduction.
++/// Present only to contrast reduction-op counts; not on the consumer hot path.
++#[inline]
++pub fn movemask_double_vaddv(cmp: uint8x16_t) -> u64 {
++    unsafe {
++        let bits = vandq_u8(
++            cmp,
++            vld1q_u8(
++                [1u8, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128].as_ptr(),
++            ),
++        );
++        let lo = vaddv_u8(vget_low_u8(bits)) as u64;
++        let hi = vaddv_u8(vget_high_u8(bits)) as u64;
++        (hi << 8) | lo
++    }
++}
+diff --git a/consumer/Cargo.toml b/consumer/Cargo.toml
+new file mode 100644
+index 0000000..2bc49f6
+--- /dev/null
++++ b/consumer/Cargo.toml
+@@ -0,0 +1,7 @@
++[package]
++name = "consumer"
++version = "0.0.0"
++edition = "2021"
++
++[dependencies]
++kernel = { path = "../kernel" }
+diff --git a/consumer/src/main.rs b/consumer/src/main.rs
+new file mode 100644
+index 0000000..386c487
+--- /dev/null
++++ b/consumer/src/main.rs
+@@ -0,0 +1,114 @@
++//! Consumer bin = stand-in for parse-that's scan sites. It calls the kernel's
++//! `#[inline]` producer ACROSS the rlib seam. Under fat-LTO cgu=1 the question
++//! Brief 1 gate (3)/(4) asks: does the producer inline (zero in-loop `bl`/`blr`
++//! to the kernel), or does a cross-crate indirect survive?
++use core::arch::aarch64::*;
++use std::hint::black_box;
++use std::sync::OnceLock;
++use std::time::Instant;
++
++/// PRIMARY PROBE — the cross-crate inline seam. `#[no_mangle]`/`inline(never)`
++/// only so otool can find THIS frame; it does not affect whether the kernel
++/// producer inlines INTO it.
++#[no_mangle]
++#[inline(never)]
++pub fn scan_inline_seam(buf: &[u8], needle: u8) -> u64 {
++    unsafe {
++        let n = vdupq_n_u8(needle);
++        let mut acc: u64 = 0;
++        let mut i = 0usize;
++        while i + 16 <= buf.len() {
++            let chunk = vld1q_u8(buf.as_ptr().add(i));
++            // <-- cross-crate call into kernel::classify_chunk (#[inline])
++            acc ^= kernel::classify_chunk(chunk, n);
++            i += 16;
++        }
++        acc
++    }
++}
++
++/// SECONDARY PROBE — reconciliation 2: an intentional OnceLock runtime-dispatch
++/// pointer. Does LLVM devirtualise it at cgu=1 (byte-free of the indirect), or
++/// does the `blr` survive?
++type ScanFn = unsafe fn(uint8x16_t, uint8x16_t) -> u64;
++static DISPATCH: OnceLock<ScanFn> = OnceLock::new();
++fn resolve() -> ScanFn {
++    *DISPATCH.get_or_init(|| kernel::classify_chunk as ScanFn)
++}
++
++#[no_mangle]
++#[inline(never)]
++pub fn scan_via_oncelock(buf: &[u8], needle: u8) -> u64 {
++    unsafe {
++        let f = resolve();
++        let n = vdupq_n_u8(needle);
++        let mut acc: u64 = 0;
++        let mut i = 0usize;
++        while i + 16 <= buf.len() {
++            let chunk = vld1q_u8(buf.as_ptr().add(i));
++            acc ^= f(chunk, n);
++            i += 16;
++        }
++        acc
++    }
++}
++
++/// Local double-`vaddv` scan for the paired timing counterexample only.
++#[no_mangle]
++#[inline(never)]
++pub fn scan_double_vaddv(buf: &[u8], needle: u8) -> u64 {
++    unsafe {
++        let n = vdupq_n_u8(needle);
++        let mut acc: u64 = 0;
++        let mut i = 0usize;
++        while i + 16 <= buf.len() {
++            let chunk = vld1q_u8(buf.as_ptr().add(i));
++            acc ^= kernel::movemask_double_vaddv(vceqq_u8(chunk, n));
++            i += 16;
++        }
++        acc
++    }
++}
++
++fn time_scan(f: fn(&[u8], u8) -> u64, buf: &[u8], iters: u32) -> (u64, f64) {
++    let mut acc = 0u64;
++    let t = Instant::now();
++    for _ in 0..iters {
++        acc ^= f(black_box(buf), black_box(b'{'));
++    }
++    let ns = t.elapsed().as_nanos() as f64 / iters as f64;
++    (acc, ns)
++}
++
++fn main() {
++    let args: Vec<String> = std::env::args().collect();
++    let buf = black_box(vec![b'x'; 1 << 16]);
++
++    // Keep every probed frame reachable so LTO cannot drop it before disasm.
++    let r0 = scan_inline_seam(black_box(&buf), black_box(b'{'));
++    let r1 = scan_via_oncelock(black_box(&buf), black_box(b'{'));
++    let r2 = scan_double_vaddv(black_box(&buf), black_box(b'{'));
++    black_box((r0, r1, r2));
++
++    if args.get(1).map(|s| s.as_str()) == Some("bench") {
++        // Paired cold-ish timing. Arm order alternates per window (opposite order).
++        let iters: u32 = 4000;
++        let window: u32 = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(1);
++        let (la, lna, lb, lnb);
++        if window % 2 == 1 {
++            let a = time_scan(scan_inline_seam, &buf, iters);
++            let b = time_scan(scan_double_vaddv, &buf, iters);
++            la = a.0; lna = a.1; lb = b.0; lnb = b.1;
++        } else {
++            let b = time_scan(scan_double_vaddv, &buf, iters);
++            let a = time_scan(scan_inline_seam, &buf, iters);
++            lb = b.0; lnb = b.1; la = a.0; lna = a.1;
++        }
++        println!(
++            "window={} LEAN_inline={:.1}ns/scan double_vaddv={:.1}ns/scan ratio_lean_over_vaddv={:.4} (guard {} {})",
++            window, lna, lnb, lna / lnb, la ^ lb, buf.len()
++        );
++    } else {
++        println!("guard {}", r0 ^ r1 ^ r2);
++    }
++}

@@ -75,7 +75,8 @@ single-pass sink (fold-over-cursor refuted 2.3-4.9x).
 ## THE PAUSE (owner order, 2026-07-16 17:04 ET) — RESUMED BY OWNER same day ("Mark me"):
 cron re-armed as job b1933bf3; bbnf p2 resumed as task wwev9d1ov, pt p3 as task wkz55y1bp
 (same runIds, args exactly as ledgered). The procedure below remains the template for any
-future pause.
+future pause. THIRD-WALL RESUME 21:44 ET: bbnf p2 now task ws1yrepwk, pt p3 now task
+wefinh05z (same runIds; closes L2 + L8/9 folds and the wall-lost crits/aggs).
 
 Owner paused the campaign mid-stage-6. State at pause: 7 of 9 registries folded at their
 current pass (bbnf pass-2: LOCK-1/3/7 folded, LOCK-2 pending; pt pass-3: LOCK-4/5/6 folded,
@@ -185,6 +186,15 @@ green — no spam. If this session is gone, a fresh session executing task #55 I
   cached replays pass through free; prompts byte-identical so the journal cache holds. This
   WIDTH discipline is standing law for all future pass launches. If another wall lands
   despite width 3, next resume goes SEQUENTIAL (bbnf first, pt queued on its completion).
+- 2026-07-16 ~20:30 ET — THIRD SESSION-LIMIT WALL (reset 9:10pm ET): post-resume runs died
+  at the judgment tail — bbnf lost all 4 agglomerators (every proto RAN first: G-3B-1
+  byte-identity REFUTED→demote 3B; 2B context-freedom RATIFIED; X8 assign clash arm PASS;
+  UF-1/UF-2 L7 oracles sound); pt lost 17 (L8 protos, L5/6/8/9 crits+aggs; L5's titular
+  grammar-driven regex FIRST ARTIFACT measured-feasible; 4A G-A1 byte-identical PASS; 9C
+  SIMD emit-pass feasible). Registries for L1/3/4/5/6/7 stand from earlier folds; L2/8/9
+  still unfolded. Resumed BOTH at 21:44 per protocol (args exactly as ledgered). The
+  interleaving lesson held: resumes re-ran already-folded locks' back halves — refinement,
+  not waste.
 - 2026-07-16 ~14:05 ET — PROCESS-EXIT WALL: the Claude Code process exited (not a rate
   limit); both width-3 resumes killed mid-flight (bbnf p2 at 44 journal results, pt p3 at
   58 — strong progress, all cached) AND the session-scoped heartbeat cron was wiped with it.

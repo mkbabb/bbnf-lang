@@ -1,254 +1,184 @@
-# LOCK-3 · PASS-2 · Family 3A — THE CONTRACT TOWER
+# LOCK-3 · PASS-2 · Family 3A — CONTRACT-TOWER
 
-*A small fixed tower, each lowering a total function with a checkable contract; round-trip /
-parity oracles per level, CI-enforced.*
+Base pin: `skinny@06e70053f` (14 commits past the frozen amendment base `b3cb8c16b`; `b3cb8c16b`
+verified `git merge-base --is-ancestor` of HEAD). Every `path:line` re-opened on this tree; the
+seed line counts (ir 1020 LOC / passes 2750 LOC) are stale — live is `ir/src/lib.rs` 678 LOC,
+`passes/src/lib.rs` 2096 LOC. Every claim below is the live artifact, not the seed's.
 
-Pinned to live `skinny@061c79fa7` (the observed workspace HEAD; the directive named
-`b3cb8c16b`, absent from this tree — every pointer below re-verified at 061c79fa7). Designs
-target greenfield (GN-1 tree); ports scope organ-level.
+## 0. The family thesis, made concrete
 
----
+3A is a **fixed tower of total lowerings, each guarded by a per-edge contract that is a value-parity
+oracle** — the a-posteriori, corpus-bounded analogue of CompCert's per-pass simulation proof
+(Leroy, *Formal verification of a realistic compiler*, CACM 2009) and the Nanopass discipline
+(Sarkar/Waddell/Dybvig, ICFP 2004; Keep & Dybvig, ICFP 2013), where a compiler is many tiny total
+passes each with a machine-checkable input/output-language predicate. 3A supplies what the live
+spine lacks: the spine already *is* a sequence of total lowerings, but **no edge carries a checkable
+contract, and one rung is entirely untyped** — the `->` value dies at the first edge.
 
-## 0. The live spine, enumerated as an edge-DAG (the directive's first evidence demand)
+The mechanism is three artifacts, all buildable on live:
+1. a threaded node-type at the infer edge (the shared question), consumed by
+2. a per-edge `verify` predicate (RED on HEAD → GREEN when threaded), enforced by
+3. a `differential(edge, corpus)` runner that generalizes the two parity digests already shipping.
 
-Walking `codegen::emit_from_source` (`codegen/src/lib.rs:101`) end to end, the transposition
-spine is **six labeled edges over four distinct value levels** — not three, and the gap between
-"four observed" and "three fixed" is precisely what this family must adjudicate.
+## 1. The live spine — the enumerated edge-DAG (answers contract-question 3)
 
-| Edge | Transform | Site | Value produced |
+`passes::compile` (`passes/src/lib.rs:32-68`) is the spine. Its transposition edges:
+
+| Edge | Site | Function | Value level crossed |
 |---|---|---|---|
-| **E1** parse | `grammar::parse_grammar` | `codegen/src/lib.rs:102` | `GrammarIr` (`ExprKind` 10-arm sum, `ir/src/lib.rs`) |
-| **E2** infer | `passes::Infer::infer_expr` | `passes/src/lib.rs:170-213` | `Type` (7-arm) stored per-`ExprId` in `facts.node_types` (`:212`) |
-| **E3** lower | `lower_expr` | `passes/src/lib.rs:1349` (`Project→ValueProject`) | `BackendExpr` (13-arm, `ir/src/lib.rs:388-413`) |
-| **E4** materialize | `materialize_rule` | `passes/src/lib.rs:1362` | *same* `BackendExpr`, splicing `SpanMark(Start)·body·SpanMark(End)·TapeEmit{kind}·DirectBuild{shape,fields}·Return` |
-| **E5** sink-lower | `lower::sink_only` | `codegen/src/lower/sink_only.rs` | `SinkOnlyProgram` (`SinkOnlyExpr` mirrors E4's `SpanMark/TapeEmit/DirectBuild`) |
-| **E6** emit | `runtime_generator::emit_sink_only` | `runtime_generator.rs:89-160` | `EmittedSource` (Rust text) via 3 routes |
+| **E0** normalize | `passes:33` `normalize` | GrammarIr → GrammarIr | none (canonicalize) |
+| **E1** infer | `passes:35` `layout::types::infer` → `infer_expr` (`:183-213`) | ExprKind → `Type` (7-arm: Var/Builtin/Seq/Alt/List/Option/Rule, `:234-243`) | **structural type** |
+| **E2** lower | `single_plan`→`lower_expr` (`:1349` `Project→ValueProject`) | ExprKind → BackendExpr (13-arm) | **value ops** |
+| **E3** materialize | `materialize_rule` (`:1362-1389`) | BackendExpr → `Seq[SpanMark(Start), body, SpanMark(End), TapeEmit{kind}, DirectBuild{shape,fields}, Return]` | **emit-order splice** |
+| **E4** sink-project | `lower/sink_only.rs:126` `lower_program` | BackendIr → `SinkOnlyProgram` (`:19-28`: entry, rules, `direct_shapes`, `span_kinds`, `literals`, dispatch count, policy) | **backend roster** |
+| **E5** emit | `runtime_generator.rs:98` gate → `json_sink_direct` / `json_templates` / `general_descent` | SinkOnlyProgram → Rust source | **byte-exact text** |
 
-**The four levels are L0 `GrammarIr`+`node_types`, L1 `BackendExpr`, L2 `SinkOnlyProgram`, L3
-emitted Rust.** The `SpanMark/TapeEmit/DirectBuild/Return` framing the directive asks to
-reconcile is **not a level** — E4 is a *rewrite within L1* (`materialize_rule` returns
-`BackendExpr`, `:1366`), keyed by `MaterializationPlan.descriptors.get(&rule_id)` (`:1367`).
-`SinkOnlyProgram` (L2) then **re-encodes those same three node kinds** near-isomorphically
-(`SinkOnlyExpr::{SpanMark,TapeEmit,DirectBuild}`, `general_descent/view.rs:77-79`). So L2 is a
-*redundant transposition* of the materialized L1 — it carries no value L1 lacks; it exists only
-to strip `ValueProject`/`Ref`-target detail the emitter does not read. **This is the tower's
-central design fact: the live spine has one honest structural level (L0→L1) and one
-serialization re-encoding (L1→L2) that a three-level contract tower should either collapse or
-justify by a checkable difference.** The disciplined three-level tower is therefore **L0 typed
-HIR → L1 materialized mid-IR (BackendShape as attributes) → L3 emission**, with L2 collapsed
-into L1's serialize step unless a contract distinguishes them.
+**Reconciliation of SpanMark/TapeEmit/DirectBuild/Return + `SinkOnlyProgram`:** these are NOT four
+levels — they are four *arms of the single BackendExpr sum*, all produced by one edge (E3);
+`SinkOnlyProgram` (E4) then flattens them into rosters (`direct_shapes`, `span_kinds`, `literals`).
+So the spine has **≥5 labeled edges but only ~4 distinct value levels** (structural-type,
+backend-value-op, backend-roster, emitted-text). The grammar `->` *type value enters none of them* —
+dropped at E1 (`:204`), carried verbatim-but-unread through E2's `ValueProject.ty`. That untyped
+rung is 3A's target. A "small fixed tower (three levels)" is therefore a **design collapse claim,
+not a live fact**: E3 is a pure derivation (see §6.2), collapsible into E2/E4; E0 is idempotent
+canon. The honest tower is L0 GrammarIr → L1 (BackendIr + `LayoutFacts`) → L2 SinkOnlyProgram.
 
-**Distinct value planes crossing these edges:** the *structural* plane (`Type` 7-arm, always
-present), the *materialization* plane (`TapeKind` 9-arm + `DirectBuild` shape/fields), and the
-*type* plane (`DirectBuildTarget.type_ref`, `ir/src/lib.rs:485` — **the honest full type IR,
-`target: Option<_>` at `:470`, populated as `None` on every live descriptor**,
-`passes/src/lib.rs:1149-1287`). The type plane is the one the `->` value never reaches (§2).
+## 2. The shared question — threading the `:204` `ty`, end-to-end on live
 
----
+The live fact the seeds obscure: **`LayoutFacts` already stores `node_types: HashMap<ExprId, Type>`**
+(`passes:93`), populated at `self.facts.node_types.insert(expr_id, ty.clone())` (`:212`) and carried
+in `PipelineOutput.layout_facts` (`:85`). So `:204` is **not a missing store — it is a *replacement***:
+at `Project`, the body's structural type is inserted for the Project node and the declared
+`ty: Option<String>` (`ExprKind::Project{body,target,ty}`, `ir/src/lib.rs`) is discarded by the `..`.
+Threading is surgical, not architectural — three touch-points:
+- `:204` — when `ty = Some(name)`, resolve `name` to a `Type` and insert *that* into
+  `node_types[ProjectExprId]`, while still recursing the body (the body ExprId keeps its structural
+  type). Carrier: a new `Type::Named(String)` arm (`:234`) — KISS, and `->` targets are abstract per
+  the backend-agnostic-types law; each backend resolves the name. (`Type::Rule` reuse only when the
+  `ty` names an existing rule.)
+- `:1349` — `ValueProject.ty` already carried verbatim into BackendExpr; no change.
+- **Consumption (load-bearing clause):** the threaded `node_types[ProjectExprId]` is consumed by the
+  §3 `verify` predicate and by a schema-derivation pass (R6 §8b `derive_direct_schema`), **not**
+  re-derived. The directive-named `TypeAnalysis::from_ir` lives in the LEGACY outer tree
+  (`crates/core/src/backend/driver/analysis.rs:22`) and consumes `ir.types: Vec<(RuleId, TypeDesc)>`
+  + `ir.type_map.scratch_types()` — a `TypeDesc` shape **skinny does not possess** (`rg TypeDesc` in
+  skinny → 0). So 3A's honest consumption contract: the *live* consumer is the level contract
+  (verify + differential digest); `TypeAnalysis::from_ir` is the **greenfield L1 consumer** the
+  tower grows, carried as a **born-RED edge** owned by the schema-derivation pass, keyed off the same
+  ExprId → `node_types[ExprId]` fed into a `TypeDesc` builder. 3A never re-derives the node-type at
+  the consumer.
 
-## 1. The mechanism: contracts as total functions with per-level oracles
+## 3. The `verify` predicate over `Project`@204 (answers contract-question 1)
 
-A **contract** is a decidable predicate `C_k(in_k, out_k)` attached to each lowering edge,
-run at regen and in CI. Three contracts, each with an executable oracle already resident in the
-tree:
+`fn verify_project_types(g:&GrammarIr, f:&LayoutFacts) -> bool`: for every `ExprId` whose kind is
+`Project{ ty:Some(_), .. }`, assert `f.node_types[id]` is the *resolved declared type* — **not**
+structurally equal to `f.node_types[body_id]`. On HEAD this is **RED for every projected node** (both
+entries are the body's structural `Type`; `:204` copies it). Post-thread it is **GREEN**. This is
+exactly rustc `-Zvalidate-mir` / the MIR `Validator`, LLVM `-verify-each`, and MLIR per-op verifiers
+(predicates run at every pass boundary) — but *stronger*: those check well-formedness (invariants);
+the 3A per-edge contract checks **refinement/parity** (translation validation, Pnueli/Siegel/
+Singerman, TACAS 1998; Necula, TVOC).
 
-- **`C_{L0→L1}` (structural + type totality).** Every `ExprId` that inference visited has a
-  `node_types` entry (`facts.node_types`, `:212`); every rule the role classifier admits
-  (`derive_materialization_roles`, `:1403`) maps to exactly one `MaterializationDescriptor`, and
-  every `->` node's threaded type equals the `DirectBuildTarget.type_ref` its rule emits
-  (§2's identity). Oracle: a walk asserting (a) no `node_types` gap, (b) no unclassified rule
-  reaching `materialize_rule` (the `descriptors.get` `None`-fallthrough at `:1367-1369` is the
-  *un-contracted partial function today* — it silently returns `body` for any rule the heuristic
-  missed; the contract makes that RED).
-- **`C_{L1→L2}` (serialize faithfulness).** `SinkOnlyExpr` preserves the `SpanMark/TapeEmit/
-  DirectBuild` sequence and their labels/kinds. Oracle: structural equality of the two node
-  streams (cheap; this is the contract that *justifies or condemns* L2 as a level).
-- **`C_{L2→L3}` (emission determinism/parity).** Oracle **already shipped**:
-  `xtask::regen::check_target` (`xtask/src/regen.rs:37`) — regen byte-identity per grammar
-  (`check-json`/`check-css-l4-declaration-values`/`check-sheets`), plus the semantic parity
-  digests (§3). This is the CONTRACT-TOWER's strongest existing leg.
+**Zero-emit-footprint witness (the delicate part):** JSON's grammar has **zero `->`**
+(`grammars/json.bbnf`, 18 lines pure EBNF, R6 §0), so on the JSON corpus the predicate is **vacuously
+GREEN — never RED** (no Project nodes). The RED→GREEN transition is witnessable **only on Sheets**,
+the sole fleet grammar with projections (`grammar/google-sheets/google-sheets.bbnf:6,12,17-18,34-42,97`),
+or a synthetic projection corpus. On Sheets the emit path *does* read `Project.ty` — via
+`general_descent/view.rs` `classify_projection(target, ty)` → `ProjectionKind{Float,Bool,Tag,Span}`.
+So byte-identical regen (the zero-footprint requirement) holds **iff the thread writes a *parallel*
+`node_types` fact and leaves `classify_projection` reading `Project.ty` directly** — the new type is
+a new consumer's input, not a replacement of the emit input. Evidence a prototype owes: regen/check
+× {json,css,sheets} all six byte-identical with the predicate wired on vs off.
 
-The tower is **CI-enforced** by wiring `--verify-each` into the `xtask` regen dispatch
-(`xtask/src/main.rs:39-52`): after each edge, run `C_k`; a violation fails the wave. This is the
-MLIR `mlir-opt --verify-each` / GHC `-dcore-lint` / rustc `-Zvalidate-mir` discipline (§4).
+## 4. `differential(edge, corpus)` — generalizing the two live digests (answers question 2)
 
----
+Two parity digests already ship and must be *reproduced*, not re-authored:
+- **`parity::assert_parity`** (`bbnf-bench/src/parity.rs:23-62`): track1(generated) vs track2(handcoded)
+  on `offsets()` ∧ `flag_cursors()` ∧ `flag_values()` ∧ payload counters (writes = allocs = 0, the
+  lazy-tape invariant) ∧ `to_canonical_string()` (key-sorted, `ParityError::Serialization` reports
+  the divergent pair).
+- **`direct_struct`** track1/track2 `strict_product` (checksum) + `digest`
+  (`bbnf-bench/benches/json_parity.rs:198-266`) — the typed-path digest.
 
-## 2. The `->` type value at the infer edge — the shared question, answered for a contract
+A unifying `differential(edge, corpus)` runner: for each labeled edge E of §1, define a per-edge
+digest `d_E(grammar, input)` — E1: a sorted `(ExprId → Type)` fingerprint of `node_types`; E3: the
+`(SpanMark, TapeEmit.kind, DirectBuild.shape)` splice sequence per rule; E4: the `SinkOnlyProgram`
+roster hash; E5: the two shipping digests (offset-stream + canonical + strict_product). Parity = all
+`d_E` agree between a **committed golden per edge** and the live lowering.
+- **(a) reproduces the digests:** E5's `d_E` *is* `assert_parity`'s conjunction + `strict_product`
+  by construction — the golden E5 digest = today's track2. The runner subsumes both.
+- **(b) localizes an INJECTED mis-lowering:** inject a fault at E_k (swap a `TapeEmit{kind}`, drop a
+  `SpanMark(End)`, mis-resolve a `ty`), run the corpus; the **first edge whose `d_E` diverges from
+  its golden localizes the injection**. TapeEmit swap → d_E3 diverges while d_E1/d_E2 stay equal
+  (E3-localized); `ty` mis-resolution → d_E1 diverges first (E1-localized). This is Alive2-style
+  bounded translation validation (Lopes/Menendez/Nagarakatte/Regehr, PLDI 2021) specialized to fixed
+  edges instead of SMT-checked peepholes, and EMI/Csmith differential testing (Le/Afshari/Su, PLDI
+  2014; Yang et al., PLDI 2011) with the pipeline edge as the differential axis.
 
-`ExprKind::Project { body, .. }` at `passes/src/lib.rs:204` returns `self.infer_expr(*body)?`,
-dropping `target: String` and `ty: Option<String>` (verified: the `..` binds both). Threading it
-end-to-end on live requires exactly three edits, and **the contract's job is to consume the one
-threaded node-type, never re-derive it**:
+**Coverage metric & zero-witness reporting:** edge E is **COVERED** iff ≥1 corpus input drives a node
+reaching E with a non-degenerate value (E3-`TapeEmit::NullValue` is covered only if the corpus
+contains `null`). Uncovered edges are reported **UNVERIFIED (sound-by-vacuity ≠ sound)** — the EMI
+equivalence-modulo-inputs completeness gap named explicitly: a mis-lowering on a zero-witness edge
+survives. This is why the §3 `->` predicate is UNVERIFIED on JSON and must run on Sheets. Coverage
+bound = per-edge witness count over `data/json/*`, `corpora/css-l4-sk-v14/*`, `data/sheets/*`.
 
-1. **Produce (E2).** Replace the `:204` arm with one that resolves `ty` (a bare name) — and
-   `target` when `ty` is `None` — to a `Type`, storing it at `facts.node_types[project_expr_id]`
-   (`:212`) while still inferring `body` for its structural children (no silent epsilon: an
-   unresolvable name is an explicit `PassError`, not a fallthrough). Resolution is the same
-   name→leaf map `regex_type` already models (`:224-230`).
-2. **Carry (E4).** `derive_materialization_plan` (`:1136-1287`) reads
-   `facts.node_types[project_expr_id]` and fills `DirectBuildField.target =
-   Some(DirectBuildTarget { type_ref, … })` (was hardcoded `None`, `:1149-1287`).
-3. **Consume (contract oracle).** The `C_{L0→L1}` predicate asserts the **identity**
-   `node_types[project_expr_id] ≡ DirectBuildTarget.type_ref` for that rule — producer equals
-   consumer. It reads the threaded node-type *once* and checks equality; it does not
-   independently re-derive the projection type. That single equality **is** the family's
-   consumption contract.
+## 5. Prior art (citations)
 
-**Crucial correction for the directive's XL-F pointer.** `TypeAnalysis::from_ir` /
-`backend/driver/analysis.rs` **do not exist in live skinny** — they survive only in the
-*pre-restart outer tree* `crates/core/src/backend/driver/analysis.rs:22`, where the shape is
-`rule_types: Vec<(RuleId, TypeDesc)>` (a **per-`RuleId`** type table). That relic is the *design
-template for the contract's type-level key*, not a live consumer. On live, the sole consumer of a
-threaded `->` type is the `DirectBuildTarget.type_ref` population feeding
-`json_typed_direct::render` (`codegen/src/json_typed_direct.rs`, the working direct-to-struct
-emitter, 1245 LOC). So the type-level contract is **born-RED with a named owner: GN-3.W2** —
-which is precisely the edit above (`docs/tranches/sk-v24/GN-3.md §W2`). Family 3A supplies the
-*checkable contract* that GN-3.W2's thread must satisfy; it does not itself land the thread.
+- **Nanopass** (Sarkar/Waddell/Dybvig ICFP'04; Keep/Dybvig ICFP'13) — the canonical 3A ancestor: a
+  compiler as many total passes, each with a `define-language` grammar and an auto-generated boundary
+  checker. 3A = Nanopass conformance predicate **+ value-parity differential** (Nanopass checks
+  output-language membership; 3A additionally checks refinement).
+- **CompCert** (Leroy, CACM'09) — per-pass forward-simulation *proofs*; 3A is the *validated*
+  (per-run, corpus-bounded) analogue — a deliberate, weaker, cheaper contract.
+- **Translation validation** (Pnueli/Siegel/Singerman TACAS'98; Necula PLDI'00 TVOC) — validate the
+  run, not the compiler: the per-edge contract's philosophy.
+- **Alive/Alive2** (Lopes et al. PLDI'21) — bounded translation validation for LLVM; the SMT sibling
+  of the corpus-bounded `differential(edge,·)`.
+- **LLVM `-verify-each` / MLIR op-verifiers / rustc `-Zvalidate-mir`** — inter-pass invariant
+  predicates; the engineering template for the `verify` predicate, strengthened here to parity.
+- **EMI / Csmith** (Le/Afshari/Su PLDI'14; Yang et al. PLDI'11) — differential compiler testing and
+  the equivalence-modulo-inputs completeness gap naming the zero-witness UNVERIFIED problem.
 
-**Producer key vs consumer key (the directive's per-`RuleId`/per-`ExprId` question).** The type
-is *produced* per-`ExprId` (`node_types.insert(expr_id, …)`, `:212`) and *consumed* per-`RuleId`
-(the materialization descriptor and `TypeAnalysis::from_ir`'s `Vec<(RuleId, TypeDesc)>` are both
-rule-keyed; `materialize_rule` keys on `rule_id`, `:1367`). The contract therefore lives at the
-**rule boundary**: it collapses the per-`ExprId` type of a rule's root projection into the
-per-`RuleId` `DirectBuildTarget`. A per-`RuleId` key **suffices for the whole fleet**
-(json/css/sheets each project at rule roots); no fleet grammar needs a per-`ExprId` *consumer*
-key — the per-`ExprId` map is producer-internal.
+## 6. Named risks & counterexamples
 
----
+1. **Vacuous RED on JSON** — the `->` predicate has no Project node to fail on JSON; the RED→GREEN
+   witness *requires Sheets or a synthetic projection corpus*. A prototype proving RED→GREEN only on
+   JSON proves nothing (Constitution vii: concrete-or-SPEC-ONLY).
+2. **The three-level count is contestable** — the live spine has ≥5 edges; collapsing to 3 rests on
+   E3 being a pure derivation. It is: `derive_materialization_plan(grammar)` (`passes:1139`) takes
+   **only** `grammar` (no layout/cost input — verified at call site `:37-38`), so `materialize_rule`'s
+   splice is a pure function of GrammarIr, recomputable inside E4. No external data on E3 → the
+   collapse is sound. But then *the contract must attach per-edge, not per-level*, or it cannot
+   localize (§4).
+3. **per-RuleId vs per-ExprId key** — `materialize_rule` keys by `RuleId` (`:1367`); `node_types` and
+   `Project` are per-`ExprId` (`:93`). Counterexample: a grammar where two rules project the *same*
+   referenced sub-rule to *different* target types → a per-RuleId descriptor cannot carry both
+   node-types; the tower needs per-ExprId carriage for `ty`. JSON/CSS never hit this (no `->`);
+   Sheets is single-projection-per-target today, so the collision is **latent, not live** — a
+   prototype must construct the two-rule case to prove the key must be ExprId.
+4. **The named consumer is legacy** — `TypeAnalysis::from_ir` (outer `crates/core`) consumes a
+   `TypeDesc`/`ir.types` shape skinny lacks. 3A cannot "thread to that consumer on live" without
+   *introducing* `TypeDesc` into skinny. Honest disposition: the live consumer is the level contract;
+   `TypeAnalysis::from_ir` is a born-RED greenfield edge. Any claim the thread reaches an *existing*
+   skinny type consumer is false — there is none (R6 §5: no TypeDesc).
+5. **Golden drift** — the differential runner needs a committed golden per edge; goldens are regen
+   output, so the clean-regen law binds them (never hand-patched). A stale golden reads as a spurious
+   localization.
 
-## 3. The `verify` predicate and the `differential(edge, corpus)` runner (the two hard evidences)
+## 7. What a prototype must test to move 3A
 
-**The Project@204 verify predicate — RED→GREEN, zero emit footprint.** Wire `C_{L0→L1}` as a
-`debug_assert`-grade predicate over the `Project` node: on HEAD it reads **RED** because
-`node_types[project]` holds the *body* type (not the projected `ty`) and every
-`DirectBuildField.target` is `None` — the producer≡consumer identity is false (LHS = body type,
-RHS = absent). Once §2's thread lands it reads **GREEN**. The predicate touches no emitter, so
-its footprint is provably zero: `check-json`/`check-css`/`check-sheets` regen **byte-identical
-with the predicate on or off** (it reads `facts`, writes nothing). This is the executed
-RED→GREEN transition the directive wants, and its zero-footprint proof is the standing
-regen-byte-diff gate (`xtask/src/regen.rs:37`). Caveat: JSON is a **zero-witness corpus** for
-this predicate — `json.bbnf` has no `->` (R6), so the *only* live witnesses are sheets (4
-projections) and GN-3.W3's typed grammars; the predicate is **UNVERIFIED (vacuously green)** on
-JSON and must report so, never claim soundness there.
-
-**The `differential(edge, corpus)` runner — generalizing the shipped digests.** The substrate
-exists: `bbnf-bench/src/direct_struct.rs` carries four parallel tracks over one corpus —
-`track1_digest` (tape path, `:421`), `track2_digest` (typed DirectBuild path, `:428`),
-`serde_digest` (`:432`), `sonic_digest` (`:436`) — reconciled by `parity_digests` via
-`same_shape_as` (`:445`) and folded by `typed_checksum` (`:464`). Generalize to
-`differential(edge, corpus)`:
-
-- **(a) Reproduce.** Specialize `edge = E5/E6` (materialization→emission), `corpus = json` →
-  the runner *is* `parity_digests`; the four digests are four crossings of the same edge
-  (internal track1/track2 + external serde/sonic oracles). The XOR-fold checksum
-  (`typed_checksum`, `:464`) and the strict product (`track2_strict_product`, `:467`) reproduce
-  bit-for-bit.
-- **(b) Localize an injected mis-lowering.** Inject at a *named* edge — e.g. flip a `TapeKind` in
-  `materialize_rule` (`:1380`, `TapeKind::Container`→`Sequence`) or drop the `DirectBuild` splice
-  (`:1383`). Because each edge has its own digest crossing, the injected fault flips exactly the
-  digest(s) whose path traverses the mutated edge while upstream-edge digests still match — the
-  disagreement set **localizes to the injected edge**. (This is *translation validation* à la
-  Necula/Pnueli: validate each run, not the pass once.)
-- **Corpus-coverage metric.** Bound the runner by **per-arm witness count**: instrument the walk
-  to tally which `ExprKind`/`BackendExpr`/`TapeKind` arms the corpus exercises. Coverage =
-  arms-with-≥1-witness / total-arms. **Zero-witness arms are reported UNVERIFIED, not sound** —
-  the tower distinguishes *"checked and passed"* from *"never exercised"* (the vacuous-truth
-  trap). This mirrors rustc's ui-test corpus discipline and Csmith/EMI differential coverage.
-
----
-
-## 4. Prior art (the CONTRACT-TOWER lineage, with citations)
-
-- **Nanopass framework** — Sarkar, Waddell, Dybvig, *"A Nanopass Infrastructure for Compiler
-  Education"* (ICFP 2004) and Keep & Dybvig (ICFP 2013). Many small IRs, each pass a *total
-  function between two precisely-defined languages*; `define-language` grammars auto-generate the
-  input/output conformance check. This is the CONTRACT-TOWER's exact ancestor — the contract is
-  the language definition, checked by construction. The lesson for 3A: keep levels **few and
-  precise**, and let the level *definition* generate the verifier (argues against L2 as a
-  hand-maintained redundant level).
-- **CompCert** — Leroy, *"Formal verification of a realistic compiler"* (CACM 2009). Per-pass
-  *forward-simulation* refinement relations between IR levels (Cminor→RTL→LTL→…), each a proved
-  semantics-preservation theorem. 3A's lightweight analog: the per-level *parity oracle* stands
-  in for the machine-checked simulation — differential testing where CompCert proves.
-- **Translation validation** — Pnueli, Siegel, Singerman (TACAS 1998); Necula, *"Translation
-  validation for an optimizing compiler"* (PLDI 2000). Validate each *run* of a pass with an
-  a-posteriori checker rather than proving the pass. This is exactly `differential(edge, corpus)`
-  — a per-run, per-edge validator.
-- **MLIR verifier discipline** — every op/dialect carries a `verify()` invariant; `mlir-opt
-  --verify-each` runs it after every pass; `ConversionTarget` legality (legal/illegal ops)
-  encodes *"this lowering must eliminate construct X"* — the totality contract made
-  machine-checkable. Direct blueprint for wiring `C_k` into `xtask --verify-each`.
-- **GHC Core Lint** (`-dcore-lint`) — re-typechecks Core after each Core-to-Core pass, catching
-  any pass that produced ill-typed Core. The precise analog of 3A's *type-level* contract: after
-  threading `->`, Lint-check that `DirectBuildTarget.type_ref` is well-formed and consistent with
-  `node_types`. rustc's `-Zvalidate-mir` / `MirPass` pre/post validation is the same idea.
-- **Differential/metamorphic compiler testing** — Yang et al., *Csmith* (PLDI 2011); Le,
-  Afshari, Su, *"Compiler validation via equivalence modulo inputs"* (PLDI 2014). The corpus-
-  coverage + injected-fault-localization methodology for §3's runner.
-
----
-
-## 5. Named risks and counterexamples
-
-- **R1 — "three levels" is a designer's assertion, not a live fact.** The spine has four value
-  levels (§0); forcing three either **collapses L2 into L1's serialize** (correct, but must prove
-  `C_{L1→L2}` is an identity, else information is lost) or **splits a phantom level**. *Counter:*
-  if `SinkOnlyProgram` drops any `ValueProject.ty` the emitter later needs (it does not read `ty`
-  today, R6 §5b — but GN-3 will), L2 becomes a *lossy* re-encoding and the collapse is illegal.
-  The prototype must measure the L1→L2 information delta before fixing the level count.
-- **R2 — the type-level contract has no live consumer.** `TypeAnalysis::from_ir` is a
-  pre-restart relic (§2); on live the `->` type dies at `:204` and `DirectBuildTarget` is unfed.
-  So `C_{L0→L1}`'s type conjunct is **born-RED, owner GN-3.W2** — 3A must ship it as a declared
-  dependency edge, not claim a passing contract on HEAD.
-- **R3 — the un-contracted partial function at E4.** `materialize_rule`'s
-  `descriptors.get(&rule_id)` else-return-`body` (`:1367-1369`) and the byte-literal role
-  classifier (`derive_materialization_roles`, `:1403`; the `>= 4` value-ref heuristic, `:1463`)
-  are a **heuristic, silently-partial** function — a rule the classifier misses lowers with *no*
-  materialization and *no* error. A "total function with a checkable contract" cannot rest on it.
-  *Counter:* the CSV/TOML fleet (GN-5) or a re-ordered value alternation defeats the `{`+`}` /
-  `>= 4`-ref heuristics → a container silently un-materialized. The contract must make role
-  assignment **total** (every rule → a role or explicit `NoRole`), turning the name-gate at
-  `runtime_generator.rs:98` (`has_rule("value")`) and the byte-literal gates into contract
-  violations, not routing.
-- **R4 — zero-witness vacuity.** JSON exercises zero `->` (§3); a contract that reports green on
-  JSON's type edge is *vacuously* green. Conflating "unverified" with "sound" is the exact defect
-  the constitution's clause vii forbids (running prototypes, not vague optimism).
-- **R5 — regen byte-identity is necessary, not sufficient.** `C_{L2→L3}` (byte-diff) catches
-  emission drift but is **blind to a mis-typed-but-identically-emitted** DirectBuild (the type
-  plane costs zero at runtime, so a wrong `type_ref` that renders the same Rust passes the
-  byte-diff). The semantic digests (§3) are the required complement — a contract tower that leans
-  only on regen byte-identity misses type-plane faults.
-
----
-
-## 6. Exactly what a prototype must test to move family 3A
-
-1. **Mechanically enumerate the edge-DAG.** A pass that walks `GrammarIr → BackendExpr →
-   SinkOnlyProgram`, emits the six edges + per-edge value-type, and **measures the L1→L2
-   information delta** (does `SinkOnlyExpr` drop anything L1 carries?). *Moves:* resolves R1 —
-   whether the fixed tower is three levels or four, by evidence not assertion.
-2. **Wire the Project@204 `verify` predicate and drive it RED→GREEN.** Land the §2 thread on a
-   worktree; show `C_{L0→L1}`'s producer≡consumer identity flips RED→GREEN; prove **zero emit
-   footprint** by byte-identical `check-json`/`check-css`/`check-sheets` with the predicate on and
-   off. *Moves:* proves the type-level contract is checkable and cost-free; discharges R2's
-   born-RED edge against GN-3.W2.
-3. **Build `differential(edge, corpus)` over the shipped digests.** (a) Reproduce
-   `parity_digests`/`typed_checksum` on the JSON corpus; (b) inject a `TapeKind` flip at
-   `materialize_rule:1380` and a dropped `DirectBuild` splice, and show the runner **localizes
-   each to its edge**; (c) emit **per-arm witness counts** and flag every zero-witness arm
-   UNVERIFIED. *Moves:* proves faults localize per-edge and the coverage metric distinguishes
-   sound from unexercised (R3, R4).
-4. **Make role assignment total.** Prototype a `derive_materialization_roles` that returns a
-   role or explicit `NoRole` for *every* rule, and a `C_{L0→L1}` conjunct that fails on any
-   `NoRole` reaching `materialize_rule`. Test it against a re-ordered JSON value alternation and
-   the CSV grammar (`grammar/misc/csv.bbnf`). *Moves:* converts the E4 partial function into the
-   total, contracted function the family's charter names — the sharpest gap between the live
-   spine and 3A's thesis.
-
-**Substrate (KISS, no new god module):** a `Contract` trait per edge
-(`check(&In, &Out) -> Result<(), ContractViolation>`), the existing `check_target`
-byte-diff (`xtask/src/regen.rs:37`) as `C_{L2→L3}`, the generalized `direct_struct` digests
-(`bbnf-bench/src/direct_struct.rs:421-482`) as the differential runner, and an `xtask
---verify-each` flag that runs the contracts at regen — the MLIR/GHC-Lint pattern, resident in
-the tree the tranche already ships.
+1. **Thread + predicate + zero-footprint** — add `Type::Named` (`passes:234`); thread `ty` at `:204`
+   into `node_types` as a parallel fact; add `verify_project_types`; execute on Sheets: record RED
+   (HEAD) → GREEN (threaded); assert all six regen/check outputs byte-identical with predicate on/off.
+   Deliverable: the executed transition + the six digests.
+2. **`differential(edge, corpus)`** — implement per-edge `d_E`; prove (a) d_E5 reproduces
+   `assert_parity` + `strict_product` on `data/json/{twitter,canada,citm_catalog}`; (b) inject a
+   `TapeEmit{kind}` swap → *only* d_E3 diverges (localization); inject an `ExprKind::Project.ty`
+   mis-resolution → d_E1 diverges first. Report per-edge coverage; flag every zero-witness edge
+   UNVERIFIED. Deliverable: the divergence table + coverage census on the live corpus.
+3. **Edge-collapse / key-width** — trace `derive_materialization_plan`'s inputs to confirm E3 is
+   pure-over-grammar (collapsible), and construct the two-rule same-sub-rule/different-`ty`
+   counterexample to fix whether the `ty` carrier keys on ExprId (yes) vs RuleId. Measure net-LOC of
+   thread + predicate + runner (parsimony budget) and the emission-extensibility count (does the
+   contract shrink the 5-shape emit fan?). Deliverable: the pure-derivation trace + key-width verdict
+   + LOC/extensibility numbers.

@@ -195,5 +195,10 @@ window asymmetry (§0/09) — any cross-language bench is paired or it is disinf
   test262/CommonMark [tc39/test262; commonmark-spec]; wasm-SIMD scalarization [emscripten; v8.dev];
   wasm-bindgen string-copy discipline [rustwasm docs]; IEEE-754/NaN fold hazard [rust-lang#107247;
   RFC 8785].
-</content>
-</invoke>
+- **SWC napi-vs-wasm magnitude (re-confirmed this pass):** native Node modules measure
+  **~1.75–2.5× faster than the same logic as WASM** across independent benchmarks — i.e. the
+  single-wasm-core delivery would surrender ~43–60% on the Node consumer surface (value.js/
+  latex-paper/keyframes all run under Node/vitest, R4 §7). [deepwiki swc node bindings
+  (https://deepwiki.com/swc-project/swc/7.2-node.js-bindings); nickb.dev wasm-vs-native
+  (https://nickb.dev/blog/wasm-and-native-node-module-performance-comparison/); yieldcode
+  (https://yieldcode.blog/post/native-rust-wasm/)].

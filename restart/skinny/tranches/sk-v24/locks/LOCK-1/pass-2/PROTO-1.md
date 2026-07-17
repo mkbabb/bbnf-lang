@@ -1,163 +1,146 @@
-# PROTO-1 — LOCK-1 pass-2, probe 1 (family 1D / Open R, the structural axis)
+# PROTO-1 — LOCK-1 (Solver Spine), pass-2, probe 1
 
-**Question.** Does the engine-agnostic record widening (**Open R** = `TypeDesc::Row`
-+ `LayoutKind::Row` + a pure-IR structural classifier) actually **close the masked
-List≠Row fallback** on the SHIPPING grammar `grammar/json/json.bbnf` — or is it
-**blocked** behind a LOCK-7 totality decision + the GN-3.W3 wrap gate?
+**Question.** Does let-generalization graft *additively* into the running CSP
+(project_types), or does it force the union-find re-seed? I.e. is the banked
+HM(X) floor (per-rule let-generalization, for false-fusion soundness) a
+cheapest-additive-diff for the running carrier 1B, or does adopting it
+re-inflate 1B's build-cost to 1A's (re-opening INC-1)?
 
-**Verdict — BLOCKED (1D BLOCKED-candidate → routes to GESTALT-B).**
-The structural axis is a **LOCK-7 ⊕ LOCK-3 blocker.** Open R lands in `crates/ir`
-(`bbnf-ir`); the mask lives in a **separate cargo workspace** (`skinny/`) whose
-codegen never consumes `bbnf-ir`'s type projection. The classifier cannot reach
-the mask without first unifying the two divorced codepaths — a totality decision.
-The GN-3.W3 wrap gate, notably, is **NOT** the blocker (see §4).
-
-- **BASE-PIN.** HEAD `ce51c36fcbdf5108eb028005586672d9a6d2ca1b` — exactly the pin
-  `ce51c36fc`. `git merge-base --is-ancestor ce51c36fc HEAD` ⇒ true. Not stale.
-  No wrong-artifact-risk. loadavg at launch 3.89; XL-H single-cargo discipline held.
-- **Numbers are RAN_MEASURED** on that HEAD (main-path type projection), except
-  the full Open-R landing, which was deliberately **not** attempted — see §5 (parsimony).
+**Base-pin (XL-H).** Worktree HEAD was stale (`d2b32f6e3`); fast-forwarded
+`--ff-only` to the pin. **Measured on `HEAD = ce51c36fcbdf5108eb028005586672d9a6d2ca1b`**
+(`git merge-base --is-ancestor ce51c36fc HEAD` → OK). No wrong-artifact-risk.
 
 ---
 
-## 1. The decisive structural fact: two divorced `ir` crates, two workspaces
+## Method
 
-| | package | home of | consumed by the mask? |
-|---|---|---|---|
-| `crates/ir` | **`bbnf-ir`** | `TypeDesc`, `LayoutKind`, `StructRegistry`, the type-projection CSP, `passes/types/constraint/` (Open R's target + where `shape.rs` would live) | **no** |
-| `skinny/crates/ir` | **`ir`** | `BackendIr`, `BackendExpr`, `BackendShape`, `SinkOnlyProgram` (the mask's substrate) | yes |
-
-Measured facts (HEAD ce51c36fc):
-
-- `skinny/Cargo.toml` declares its **own** `[workspace]`; the main `Cargo.toml`
-  `members` list does **not** include `skinny`. Two independent workspaces.
-- `skinny/crates/codegen` depends on `ir.workspace = true`, which resolves to
-  `skinny/crates/ir` (package `ir`), **not** `bbnf-ir`.
-- `grep -rn "TypeDesc\|StructRegistry\|LayoutKind\|struct_registry" skinny/crates/`
-  ⇒ **zero hits.** The skinny codegen references none of Open R's types.
-- The mask is a plain **rule-NAME predicate**: `runtime_generator.rs:98`
-  `if !sink_only.has_rule("value")` where `has_rule` (sink_only.rs:31) is
-  `self.rules.iter().any(|rule| rule.name == name)` — a `String` compare on
-  `BackendRule.name`. It reads no projected type, no layout, no key role.
-- `crates/runtime/` **does not exist** (the DISSOLVE clause's `git diff crates/runtime/`
-  targets a path absent at this base); the runtime lives at `skinny/crates/runtime`.
-
-**Consequence.** Even a perfectly-landed `TypeDesc::Row` + `LayoutKind::Row` +
-`shape.rs` in `bbnf-ir`, yielding `class(object)==Row ∧ class(array)==List`, would
-be produced in a crate the skinny mask never links against. The classification
-**cannot cross the workspace boundary** to inform `has_rule("value")`. Closing the
-mask therefore requires first **unifying skinny's sink-only lowering with bbnf-ir's
-type-projection classifier** (or teaching `emit_general_descent` to consume a
-Row/List classification) — a LOCK-7 totality decision, entangled with LOCK-3
-(the codegen-path unification). This is exactly the BLOCKED disposition.
+1. Read the running carrier `crates/ir/src/passes/types/` end-to-end: the
+   constraint generator (`generate.rs`), the Ref bridge (`constraint/reference.rs`),
+   the lattice domain (`constraint/domain.rs`), the revise primitives
+   (`constraint/revise.rs`), and the solve driver (`mod.rs`).
+2. Authored a false-fusion fixture and RAN it through the real
+   `project_types` via `compile_grammar(...)` (VM target), printing
+   `ir.types` keyed by rule name. Fixture:
+   `crates/core/tests/proto1_false_fusion.rs`.
+3. Searched for the polymorphic surface the floor would govern (parametric
+   rules / grammar closures) and its lowering status.
 
 ---
 
-## 2. The refusal, reproduced (class(object) vs class(array))
+## What ran (measured)
 
-On the **unchanged** shipping grammar the type projection already runs
-(`crates/core/tests/project_types_json.rs`, `compile_paths_request(Vm)` →
-`project_types` → `ir.struct_registry`). Its recorded invariants:
-
-- `array = "[" >> (( value << comma ? ) *)?w << "]"` → layout carries a
-  **`FieldSource::RepeatElement`** field ⇒ **List-shaped** (`Vec<value>`).
-- `object = "{" >> (( pair << comma ? ) *)?w << "}"` → structurally **also a
-  `Repeat`** (`Vec<pair>`); `pair` → `LayoutKind::Struct` (key + value).
-
-The registry's discriminator alphabet is `{Struct, TaggedEnum, UntaggedEnum,
-NewtypeWrapper}` — **there is no `Row`.** So `object` and `array` both collapse to
-the same repeat/list shape; `object` is **indistinguishable** from a List. That is
-the **clause-i defect** / "masked List≠Row fallback": the projection has no category
-in which a repeat-of-key-value-pairs is a *record*. `class(object) ≈ Unknown`
-(no Row category; masquerades as List), `class(array) = List`. **Refusal reproduced.**
-
----
-
-## 3. Where the List/Row distinction is actually *baked* (the hand-authored mask)
-
-Because bbnf-ir cannot name a Row, JSON is special-cased in skinny: the
-`has_rule("value")` branch routes the JSON family to a **hand-authored template**
-(`json_templates/value.rs`) whose `enum JsonValue { Object(..), Array(..), .. }`
-hard-codes the Object(Row)/Array(List) split. A grammar *without* a `value` rule
-(Sheets) falls to `emit_general_descent`, which has **no Object/Array (Row/List)
-notion at all** (`grep Row\|List\|is_object\|is_array` over `general_descent/*.rs`
-⇒ nothing structural). So the List≠Row knowledge lives *only* in the hand-written
-JSON template — the mask — and nowhere in a derived classifier.
-
----
-
-## 4. GN-3.W3 wrap gate — CLEARED (not the blocker) — RAN_MEASURED
-
-The brief's honest key-role form was authored on the real grammar and driven
-through the **main** lowering path (where `wrap.rs:242` fires):
-
-```diff
- string = /".../"  -> decode_json_string_to_arena(input) : String ;
-+keystr = /"[^"]*"/ -> input : key ;
- array  = ... ;
--pair = string, colon >> value ;
-+pair = keystr, colon >> value ;
-```
-
-`cargo test -p bbnf --profile ax-iter --test project_types_json` (loadavg 3.89):
+`cargo test -p bbnf --profile ax-iter --test proto1_false_fusion` →
+`test result: ok. 1 passed`. Fixture
+(`top=a b; a=pair pair; b=pair pair; pair=k v; k=/.../ ->f64; v=/.../ ->u8`),
+`structural: true` to preserve rule identity:
 
 ```
-test result: ok. 10 passed; 0 failed; 0 ignored; finished in 0.01s   (exit 0)
+ir.types (rule -> TypeDesc):
+  a     -> Tuple([BoxedEnum, BoxedEnum])
+  b     -> Tuple([BoxedEnum, BoxedEnum])
+  k     -> F64
+  pair  -> Tuple([F64, U8])
+  top   -> Tuple([BoxedEnum, BoxedEnum])
+  v     -> U8
+pair entry count in ir.types = 1
 ```
 
-The annotation `-> input : key` **lowered cleanly** — `wrap.rs:242`
-(`mapped_factor: … contains a -> arrow but structural detection found no value_expr
-head — typed-materialization invariant violated`) did **not** fire, and the full
-registry-closure gate (all 10 assertions incl. audit `Mapped`, zero Pending/Missing)
-still held with `pair` rebuilt on `keystr`. Static reading agrees: `input` surfaces
-as the `value_expr_head` (identical detection to the shipping `decode_json_string_to_arena(input)`),
-so `value_expr_head.is_none()` is false and the panic guard is skipped.
+- `k -> F64`, `v -> U8`: distinct scalar leaves keep distinct primitives.
+- `pair -> Tuple([F64, U8])`: the shared helper has **exactly one** entry in
+  `ir.types` — one `RuleId` → one `TypeDesc`. `RefConstraint` scalar-projection
+  composes k/v correctly.
+- `a` and `b` reference `pair` at two distinct sites and **both** resolve to
+  the identical `Tuple([BoxedEnum, BoxedEnum])`. The uses do not diverge, and
+  there is no "monomorphize-to-first-use" contest because there is nothing
+  polymorphic to monomorphize.
 
-**⇒ The second BLOCKED clause via GN-3.W3 does NOT hold. The annotation is
-admissible.** This narrows the blocker to the workspace divorce alone (§1) and
-discharges CRIT-2 directive 3 (the pass's largest blind spot) with a real run:
-the wrap trap is not what stops Open R.
+## The numbers / the structural facts
+
+- **One rule → one type var.** `generate.rs:89` inserts exactly one
+  `TypeVarId` per `RuleId` into `rule_vars`; every `IrNode::Ref(rule_id)`
+  bridges to that **single shared** rule var (`generate.rs:176`). There is no
+  per-call-site type variable.
+- **The Ref bridge is unidirectional.** `RefConstraint::revise`
+  (`constraint/reference.rs:98-131`) reads `vars[rule_var].solved` and writes
+  `vars[var]` (the ref). It never writes back to the rule var. Use sites impose
+  **zero** back-pressure on a rule's type. False fusion — two uses competing
+  for one polymorphic binding's monotype, first-writer-wins — is therefore
+  structurally impossible: uses never write the binding.
+- **`TypeDesc` is a ground lattice with no type-variable variant** (`Span, F64,
+  U8, …, Tuple, Vec, Option, Named, BoxedEnum, Enum, HeterogeneousAltJoin`).
+  There are no free type variables in any rule's projected type — hence nothing
+  to *generalize* and nothing to *fresh-instantiate*. `grep -rniE
+  'generali|instantiat|polymorph|scheme'` over the carrier = 1 doc-comment hit,
+  as briefed.
+- **The only polymorphic surface (grammar closures) is beta-reduced pre-IR and
+  is currently non-functional.** The pipeline partitions closures
+  (`pipeline.rs:51`) and expands them inline during lowering (`pipeline.rs:77-78`,
+  "Closures are first-class grammar functions expanded inline during
+  lowering"). `IrNode` has **no** `Call`/`Closure`/parametric variant — the only
+  cross-rule edge is `Ref(RuleId)`. Moreover the closure-lowering tests
+  (`crates/core/tests/pipeline.rs:708-739`, `parens = |x| "(" x ")" ; value =
+  parens("hello") ;`) are `#[ignore]`d: `lower::expression` panics "closure:
+  missing body child" (AV.0.11 Category A, forward-ticketed). So the surface
+  HM(X) let-generalization would govern is (a) *designed* to monomorphize by
+  beta-reduction, and (b) not even wired in the running carrier.
+
+## Graft assessment (LOC / monotone / runtime diff)
+
+- **LOC added for a functional graft: N/A — inauthorable.** A generalize-at-
+  rule-solve + fresh-instantiate-at-RefConstraint graft has no substrate: no
+  `TypeDesc` type-variable to close over, no parametric IR node to instantiate
+  at, and a unidirectional Ref bridge with no fusion to prevent. Fresh
+  instantiation of a ground monotype is the identity; generalization of a type
+  with no free vars is the identity.
+- **Monotone:** the graft question ("stays monotone, no oscillation") does not
+  arise — there is no generalization step to add to the `Changed`-bool sweep.
+- **`git diff crates/core/src/runtime/` = 0 lines** (verified). The only file
+  added is the probe test `crates/core/tests/proto1_false_fusion.rs`; **zero
+  lines** were added to any type-projection pass, so `ir.types` for
+  json/sheets/css_l4 is byte-identical to base *by construction* (no code path
+  in the solver spine changed).
 
 ---
 
-## 5. Why the mask cannot delete without regressing (the operative BLOCKED clause)
+## Verdict
 
-Deleting `has_rule("value")` routes JSON to `emit_general_descent`, which emits a
-**different 5-file roster** (general recursive descent + lazy tape view) in place of
-the 8-file hand-authored JSON template — a **regression** (JSON loses its
-Object/Array template and its specialized `value.rs`/`view.rs`/`visitor.rs`), and
-the general path has **no Row/List classifier to substitute**. Open R cannot supply
-the missing classification because it lives across the workspace boundary (§1).
-So: *the mask cannot delete without regressing* — the operative BLOCKED condition —
-**and** Open R cannot repair the regression from where it sits. Not attempted
-destructively; deletion's outcome is determined by structure, not worth a wrong-tree regen.
+**NEITHER additive-graft NOR re-seed — the floor is INAPPLICABLE to 1B, and 1B
+therefore ships false-fusion soundness for FREE (zero-diff), not via a graft.**
 
-**Parsimony note (why Open R was not fully landed).** `TypeDesc::` appears across
-**102 files** and `LayoutKind::` across ~30 source files + generated grammars + tests;
-adding a variant to each exhaustive match, then `cargo xtask regen` over all 9
-corpora, is a multi-hour landing. Crucially it would **not change the verdict**: the
-classification it produces lands in `bbnf-ir`, unreachable by the skinny mask. The
-smallest probe that answers the question is the divorce proof (§1) + the GN-3.W3
-run (§4). SPEC_ONLY was avoided — the dispositive claim (§1) and the gate (§4) both RAN.
+The dichotomy's premise — "the banked HM(X) floor requires per-rule
+let-generalization for false-fusion soundness" — does not bind the running
+carrier. 1B is monomorphic **by construction**: closures are beta-reduced /
+inline-expanded before the IR exists, the IR has no parametric node, every rule
+carries exactly one CSP type var, and the Ref→rule bridge is unidirectional.
+False fusion is unreachable, so let-generalization is dead code against this IR
+(measured: a shared helper `pair` gets exactly one type; two use sites resolve
+identically and correctly).
+
+**Consequence for the 1A ⊥ 1B carrier fork (§0 X10):**
+- 1B's cheapest-additive-diff claim **SURVIVES** — strengthened: the diff for
+  this floor is **0**, not "cheap-additive". Build-cost stays **LEAN-1B**.
+- **INC-1 does NOT re-open on build-cost** from this axis: no union-find
+  re-seed is forced, because no generalization machinery is imported.
+- "1A and 1B are one architecture" holds only in *outcome* (both deliver
+  false-fusion soundness), not in *mechanism*: 1A via HM(X) generalize/
+  instantiate over a union-find; 1B via structural monomorphization
+  (pre-IR beta-reduction + one-rule-one-type monomorphic CSP). On this axis
+  1B needs none of 1A's machinery.
+
+**Caveat / scope of claim.** Soundness here is contingent on BBNF keeping
+polymorphic reuse *structural* (beta-reduction + inlining before types). If a
+future tranche wires a **live parametric rule that survives into the IR as an
+un-reduced call** (i.e. reintroduces polymorphism at the CSP layer rather than
+monomorphizing it away), THEN — and only then — the false-fusion floor becomes
+reachable and a generalize/instantiate mechanism (or per-call-site
+specialization) becomes required. The present carrier does not do this; the
+closure path is beta-reduced and currently non-functional. The floor is a
+requirement for a polymorphism 1B does not have.
 
 ---
 
-## 6. Verdict line
+## Verdict line
 
-**BLOCKED — 1D BLOCKED-candidate → GESTALT-B.** Open R does **not** close the masked
-List≠Row fallback on the shipping grammar by itself. It is blocked behind a **LOCK-7
-totality decision** (unify skinny's sink-only/general-descent codegen — package `ir`,
-its own workspace — with bbnf-ir's `StructRegistry`/`TypeDesc` classifier), entangled
-with **LOCK-3** (codegen-path unification). The GN-3.W3 wrap gate is **cleared**, not
-the blocker: the honest `-> input : key` key role is admissible and closes projection
-on the real grammar. The structural axis moves decisively to a LOCK-7⊕LOCK-3 blocker.
-
-## Appendix — artifacts / cleanliness
-
-- Intentional change: `grammar/json/json.bbnf` (+`keystr`, `pair` rewired) — patch: `PROTO-1.patch`.
-- `git diff` also lists `crates/core/src/grammar/generated/{bnf,css_l4,google_sheets}.rs`
-  + `crates/ir/src/passes/types/constraint/revise.rs` — **pre-existing worktree
-  churn / build-manifest side-effects, NOT this probe** (no Row/json-annotation
-  content; revise.rs is `TypeObligation::TypeClash` comment churn).
-- `git diff skinny/` ⇒ **empty.** The mask path is pristine — a bbnf-ir-side
-  annotation touched nothing in the runtime, corroborating the divorce.
+`RAN_MEASURED — HEAD ce51c36fc — false fusion UNREACHABLE in 1B (monomorphic by
+construction); let-generalization graft inauthorable/dead-code; floor delivered
+zero-diff; runtime diff = 0; build-cost LEAN-1B; INC-1 stays closed on this axis.`

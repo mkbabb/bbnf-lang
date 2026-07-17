@@ -1,81 +1,156 @@
-# PROTO-1 — LOCK-6 pass-3, probe 1: family 6C WASM-CORE
+# PROTO-1 — LOCK-6 pass-3, probe 1 (t1): family 6C WASM-CORE — the RESIDENT-BYTES lane
 
-**wasm-SIMD128 (v128) structural-byte scanner vs TS-native scalar Uint8Array loop — browser, cold-paired**
+**wasm-SIMD128 (v128) structural scanner over bytes ALREADY RESIDENT in linear memory
+vs TS-native scalar emit loop — Node/V8 (server face), cold-paired.**
 
-- **Verdict line:** `RAN_MEASURED` — parity holds on every doc (kernel correct); **wasm-core-home FALSIFIED -> TS-native-home** in the marshalling-bound regime, with one decisive caveat: the SIMD *kernel* is 4.7-7.3x faster than TS; the loss is entirely the JS-string -> linear-memory marshalling boundary.
+- **Verdict line:** `RAN_MEASURED` — the ONE surviving 6C win (FAMILY-SPECS §3 gate [1],
+  "wasm-resident bytes ⇒ wasm-core, PREDICTED win, unmeasured") is now **MEASURED and
+  CONFIRMED**: with source bytes resident in wasm linear memory (no `TextEncoder` transcode),
+  the v128 scanner beats a fair TS scalar emit loop **2.9–5.8× on the real JSON corpus and
+  at EVERY size 64 B→64 KB** — the regime the browser JS-string lane (prior PROTO-1) lost.
+  The win is governed by **structural density, not size**: it holds ≤~10% density (all real
+  JSON) and only inverts past ~40–50% density (no realistic source).
+
+> **Companion.** The browser / JS-string lane of this same question was measured in the prior
+> PROTO-1 pass (Chrome 150, v128 vs TS scalar) and is preserved verbatim alongside this file as
+> `PROTO-1-browser-jsstring.md`. That pass FALSIFIED wasm-core-home *for JS-string sources*
+> (`TextEncoder` UTF-16→UTF-8 marshalling = 72–90% of `wasmFull`, swamps the win below ~2 MB).
+> This pass measures the complementary **resident / server** lane it named but left unmeasured.
+> Together they resolve the 6B⊗6C spine to a single rule: **where do the bytes live?**
 
 ---
 
+## BASE-PIN
+
+- Worktree HEAD measured **`ce51c36fcbdf5108eb028005586672d9a6d2ca1b`** — HEAD **equals** the
+  pin `ce51c36fc`. `git merge-base --is-ancestor ce51c36fc HEAD` = OK. **No wrong-artifact-risk.**
+  (Worktree arrived stale at `d2b32f6e3`, an ancestor of the pin; fast-forwarded `--ff-only` to
+  the pin before any measurement. Clean tree, no local edits to source.)
+- The wasm kernel measured is `PROTO-2/scan.wasm` (1439 B), built at the pin by the prior 6C
+  pass from `PROTO-2/wasm-scan/src/lib.rs` (checked in, unchanged). SIMD confirmed: 96 `0xFD`
+  (v128 prefix) opcodes in the binary. Exports: `memory, input_ptr, output_ptr, input_cap, scan`.
+
 ## QUESTION
 
-In one browser engine, does a v128 wasm structural-byte scanner beat a TS-native scalar `Uint8Array` loop for the bbnf batch parser, and where is the size crossover? Decides the tape-crossing stratum's spine (the 6B(x)6C graft) and the bbnf-side wasm-core home.
+The prior pass proved the v128 *kernel* wins big (`scanOnly` 4.7–7.3× in Chrome) but that a JS
+**string** source cannot pay off its `TextEncoder`+copy marshalling tax below ~2 MB → *TS-native
+home for JS strings*. It left the sole surviving win unmeasured: **when the source bytes are
+already resident in wasm linear memory (server/batch face — read as a `Buffer`, produced/owned in
+wasm, no per-call transcode), does the v128 scanner actually net-win, and does the win hold at
+small sizes where the browser lane lost?** This is the datum that redraws the §5 spine.
 
-## METHOD
+## METHOD (Node/V8, server face — off `ce51c36fc`)
 
-- **BASE-PIN:** worktree HEAD `ce51c36fc` — `git merge-base --is-ancestor ce51c36fc HEAD` = OK (HEAD **equals** the pin). Numbers are on-base; no wrong-artifact-risk. (PROTO-2 artifacts themselves are committed in a descendant commit; they were copied out and built at the pinned base.)
-- **Engine:** Google **Chrome 150.0.7871.115** (UA reports `Chrome/150.0.0.0`), macOS arm64, `hardwareConcurrency=18`.
-- **Build:** `RUSTFLAGS="-C target-feature=+simd128" cargo build --release --target wasm32-unknown-unknown` -> `wasm-opt -O3 --enable-simd` -> `scan.wasm` (1439 B; 97 v128/i8x16/swizzle ops present, SIMD confirmed).
-- **Kernel:** `#![no_std]` v128 nibble-LUT `classify16` over `{ } [ ] : ,` (6 targets, unique-bit LUT -> exact classify, no false positives — verified by hand and by runtime parity). 64-byte stripes, raw C ABI, marshalling (`TextEncoder.encode` + copy into linear memory) driven from JS and **counted inside the wasm lane**.
-- **Harness:** monomorphic TS scalar loop (`Uint8Array` + 256-entry LUT) vs `wasmFull`; byte-budgeted timed regions (~24 MB processed/region), medians, per-byte ns; 64 B->64 KB synthetic ASCII sweep + 3 real docs; parity assert on every doc; cold single-shot captured for real docs.
-- **Real docs:** twitter 631,514 B; citm(_catalog) 1,727,204 B; canada 2,251,051 B (drop `citm_catalog.json` **as** `citm.json`).
-- **Load (paired, interleaved):** loadavg 4.32 at launch -> 6.79 mid/post-run (concurrent agents). Both lanes run interleaved under identical load and are reduced by median, so *ratios and crossover direction are robust*; *absolute* ns/B carries machine noise.
+- **Engine:** Node **v26.0.0** (V8), macOS arm64. Node is the correct venue: FAMILY-SPECS §3
+  names the resident lane "meaningful only for the batch/**server** face," and on that face
+  source arrives as bytes (a `Buffer`/`Uint8Array` from disk/socket) — there is **no JS string,
+  hence no `TextEncoder` transcode**. That transcode was the entire browser-lane tax.
+- **Resident ABI:** raw C ABI (no wasm-bindgen). Bytes are copied into the persistent `input_ptr()`
+  buffer **once** (outside the timed loop); `scan(len)` then scans in place, materializing every
+  structural offset into `OUTPUT` — **no re-marshal per call**. This *is* the resident regime.
+- **Fair TS lane:** monomorphic 256-entry `Uint8Array` LUT scalar loop that **EMITS each offset**
+  into a persistent `Int32Array` (apples-to-apples with the kernel's `OUTPUT[n]=pos`; a count-only
+  TS lane would understate TS work). Structural set identical on both sides: `{ } [ ] : ,`.
+- **`marshal` column (reference):** the per-call `heap.set(bytes, ptr)` copy — a plain **memcpy**
+  (bytes already decoded), i.e. what the resident lane avoids and what the *browser* lane paid as a
+  ~100× more expensive `TextEncoder` transcode instead.
+- **Timing:** `process.hrtime.bigint()`; byte-budgeted regions (~24 MB processed/region), median of
+  9 reps, ns/byte; DCE defeated by accumulating the returned count. 5 warm-up iters before hot
+  numbers; **cold single-shot** = fresh module instance + one resident copy + first `scan`.
+- **Corpus (byte-identical to prior pass):** twitter 631,514 B; citm(_catalog) 1,727,204 B;
+  canada 2,251,051 B. Plus two synthetic sweeps 64 B→64 KB: **realistic ~9.5% structural**
+  (isolates the size axis at real-JSON density) and **dense ~50% structural** (stresses the
+  per-hit emit loop). Parity asserted (wasm count == TS count) on every doc — HALT gate.
+- **Load (paired, interleaved):** canonical run loadavg **9.10 → 8.69** (1-min); concurrent agents.
+  Both lanes run interleaved under identical load, reduced by median → **ratios and win-direction
+  are robust**; *absolute* ns/B carries machine noise. Four full runs taken; run-to-run below.
 
 ## PASS/FAIL GATES
 
-- **(a) Parity == true on EVERY doc:** **PASS** — all 9 synthetic + 3 real docs: wasm scan count == TS scan count. Kernel is correct; no HALT.
-- **(b) wasm-core-home PASSES iff `wasmFull < ts` on canada AND crossover < batch median doc size.**
+- **(a) Parity == true on EVERY doc:** **PASS** — all 18 synthetic + 3 real docs, all 4 runs:
+  wasm scan count == TS emit count. Kernel correct; no HALT.
+- **(b) Resident-lane win PASSES iff `wasmScan < ts` on the real corpus AND the win holds down to
+  small sizes at realistic (~5–10%) structural density.**
 
-## THE NUMBERS (ns/byte; lower = faster; WIN = wasmFull < ts)
+## THE NUMBERS (ns/byte, resident; lower = faster; WIN = wasmScan < ts) — canonical run
 
-Synthetic ASCII sweep (structural-rich; per-call marshalling included in wasmFull):
+**Real docs (byte-budgeted median; cold = fresh-instance single-shot):**
 
-| doc B | ts | wasmFull | marshal | scanOnly | WIN |
-|------:|----:|---------:|--------:|---------:|:---:|
-| 56    | 0.671 | 9.260 | 8.385 | 0.875 | TS |
-| 113   | 0.650 | 6.090 | 5.665 | 0.425 | TS |
-| 254   | 0.649 | 2.423 | 1.965 | 0.458 | TS |
-| 517   | 0.651 | 1.689 | 1.268 | 0.421 | TS |
-| 1019  | 0.619 | 1.256 | 0.794 | 0.461 | TS |
-| 2051  | 0.603 | 1.058 | 0.612 | 0.446 | TS |
-| 4093  | 1.089 | 1.056 | 0.567 | 0.489 | **WASM** (noisy; ts spike) |
-| 16378 | 0.657 | 1.318 | 0.804 | 0.514 | TS |
-| 65536 | 0.668 | 1.200 | 0.742 | 0.458 | TS |
+| doc | B | struct% | ts | wasmScan | marshal(memcpy) | speedup | WIN | cold_ts | cold_wasm |
+|-----|---:|--------:|----:|---------:|----------------:|--------:|:---:|--------:|----------:|
+| twitter | 631,514   | 5.1% | 0.743 | 0.128 | 0.012 | **5.80×** | WASM | 0.657 | 0.218 |
+| citm    | 1,727,204 | 5.4% | 0.643 | 0.128 | 0.012 | **5.03×** | WASM | 0.606 | 0.157 |
+| canada  | 2,251,051 | 9.9% | 0.577 | 0.196 | 0.014 | **2.95×** | WASM | 0.563 | 0.211 |
 
-Real docs (cold single-shot in last two columns):
+**Synthetic sweep — REALISTIC ~9.5% density (size axis isolated):** wasm wins at every size.
 
-| doc | B | ts | wasmFull | marshal | scanOnly | WIN | cold_ts | cold_wasmFull |
-|-----|---:|----:|---------:|--------:|---------:|:---:|--------:|--------------:|
-| twitter | 631,514   | 1.129 | 1.308 | 1.146 | 0.163 | TS   | 0.950 | 1.425 |
-| citm    | 1,727,204 | 1.084 | 1.489 | 1.340 | 0.149 | TS   | 0.695 | 1.447 |
-| canada  | 2,251,051 | 1.074 | 0.820 | 0.590 | 0.230 | **WASM** | 0.666 | 0.888 |
+| B | 64 | 128 | 256 | 512 | 1024 | 2048 | 4096 | 16384 | 65536 |
+|---|---:|----:|----:|----:|-----:|-----:|-----:|------:|------:|
+| ts | 0.441 | 0.622 | 0.600 | 0.586 | 0.594 | 0.578 | 0.582 | 0.576 | 0.609 |
+| wasmScan | 0.159 | 0.188 | 0.171 | 0.167 | 0.170 | 0.185 | 0.170 | 0.168 | 0.170 |
+| speedup | 2.77× | 3.31× | 3.51× | 3.50× | 3.50× | 3.12× | 3.43× | 3.43× | 3.58× |
+
+**Synthetic sweep — DENSE ~50% density (emit-loop stress):** wasm loses at every size, flat ~0.7–0.8×
+(ts 0.57–0.68 vs wasmScan 0.81–0.89). Not noise — the flat 0.69–0.84× band is the density boundary.
+
+**Run-to-run stability (real-doc speedup, 4 runs; run 1 used a count-only TS lane, runs 2–4 the
+fair emit lane):** twitter 5.31 / 6.26 / 5.65 / 5.80 · citm 4.39 / 4.86 / 5.11 / 5.03 ·
+canada 2.99 / 2.85 / 3.01 / 2.95. Win-direction and magnitude are stable; wasm won even under the
+*unfair* count-only TS lane (run 1), so the result is robust to the fairness choice.
 
 ## FINDINGS
 
-1. **Kernel wins big; nobody disputes it.** `scanOnly` (v128 scan, marshalling excluded) beats the TS scalar loop everywhere: **6.9x (twitter), 7.3x (citm), 4.7x (canada)**, and ~1.3-1.5x on the synthetic ASCII sizes. A branchless SIMD classify16 is unambiguously the faster scanner.
+1. **The surviving win is real and MEASURED.** Resident v128 `scanOnly` beats the fair TS scalar
+   emit loop **2.9–5.8× on real JSON** and **at every size 64 B→64 KB** at realistic density. Gate
+   [1] moves PREDICTED → MEASURED. The browser-lane loss was *never the kernel* — it was the
+   `TextEncoder` boundary, and that boundary does not exist on the server face.
 
-2. **Marshalling is the whole story.** `TextEncoder.encode` + copy into linear memory is **72-90% of `wasmFull`** on the real docs (twitter 88%, citm 90%, canada 72%) and swamps the entire TS lane at small sizes (marshal = 8.4 ns/B at 56 B — per-call overhead amortized over too few bytes). Net wasm win requires the marshalling per-byte to fall below `ts - scanOnly` (~0.85-0.9 ns/B), which only happens for large, cheap-to-encode inputs.
+2. **The governing axis is structural DENSITY, not size.** Speedup falls monotonically as structural
+   density rises: twitter 5.1% → 5.8×, citm 5.4% → 5.0×, canada 9.9% → 3.0×, realistic-synth 9.5% →
+   ~3.4×, dense-synth ~50% → ~0.7× (TS wins). All real JSON and all bbnf grammar sources sit ≤~10%;
+   the crossover to TS-favor lives at ~40–50% density, which no realistic source reaches. The prior
+   pass's apparent "~2 MB size crossover" was a *browser-marshal* artifact; in the resident lane
+   **there is no size crossover** — the win is flat across three orders of magnitude of size.
 
-3. **No clean size crossover exists.** Across the pure-ASCII synthetic sweep 64 B->64 KB, `wasmFull > ts` at **every** size except a single noisy 4 KB point (a `ts` spike, not a real win). The net win first appears only at multi-MB scale — and even there it is **content-, not size-, dependent**: canada wins because it is one-byte-backed ASCII (fast encode -> marshal 0.59) *and* has a branch-unpredictable structural distribution (long numeric runs) that slows the TS scalar loop's `if(LUT[b])` to 1.07, while the branchless SIMD kernel is immune. twitter/citm carry non-ASCII (UTF-16-backed strings -> slower encode, marshal 1.15/1.34) and lose. The apparent "crossover" sits between citm (1.7 MB, TS) and canada (2.25 MB, WASM) ~= **~2 MB**, but it is a content artifact, not a size law.
+3. **On the server face, marshalling is a cheap memcpy, not a transcode.** `heap.set(bytes,ptr)` =
+   0.012–0.014 ns/B on the real docs — ~**100× cheaper** than the browser lane's `TextEncoder`
+   (1.15–1.34 ns/B, prior pass). Consequence: even a **non-resident** server call
+   (`wasmScan + memcpy` ≈ 0.14–0.21 ns/B) still beats `ts` (0.58–0.74) by 3–5×. The resident win
+   is a strict superset; the load-bearing distinction is server(bytes) vs browser(JS-string), and
+   *within* the server face resident vs copy-per-call is a second-order refinement.
 
-4. **Cold single-shot agrees:** on canada, cold wasmFull 0.888 ~= cold ts 0.666 (TS still ahead cold, because the first scan pays JIT warmup + first marshal); on twitter/citm cold wasmFull loses by ~1.5-2x. Cold does not rescue wasm.
+4. **Cold does not rescue TS here (opposite of the browser lane).** Cold wasm (fresh instance +
+   one resident copy + first scan) 0.157–0.218 **beats** cold ts 0.563–0.657 on all three docs —
+   because the copy is amortized as one-time setup, not paid per scan. In the browser JS-string
+   lane, cold wasm *lost* 1.5–2× because it re-paid the transcode every call.
 
 ## GATE (b) ADJUDICATION
 
-- `wasmFull < ts` on canada (2.25 MB): **TRUE** (0.820 < 1.074, wasm 1.31x). PASS
-- crossover < batch median doc size: **FALSE.** The net-win crossover is ~2 MB. The bbnf batch parser's docs are grammar files (KB-scale); even taken over the real JSON corpus the median is citm (1.7 MB) and the crossover (>1.7 MB) still exceeds it. FAIL
+- `wasmScan < ts` on the real corpus: **TRUE** on all three (5.80× / 5.03× / 2.95×). PASS
+- Win holds down to small sizes at realistic density: **TRUE** — 2.77× at 64 B, flat to 3.58× at
+  64 KB (realistic 9.5% synth). PASS
 
-Both conditions are required; the second fails. **wasm-core-home does NOT pass.**
+Both required conditions hold. **The resident-lane win PASSES.** Falsifier ("wasm loses on the real
+corpus, OR the win evaporates at small sizes") **does not fire** at realistic density; it fires only
+under the ~50%-density synthetic, which is outside any realistic source distribution.
 
-**Falsifier check:** "wasm loses on canada, OR crossover exceeds realistic batch doc size." Wasm *wins* on canada, but the crossover (~2 MB) **exceeds any realistic bbnf batch doc size** (KB-scale grammars) -> **falsifier's second clause fires.**
+## VERDICT — the 6B⊗6C spine, resolved by "where do the bytes live?"
 
-**TS-native-home test:** TS wins at/below canada — TS wins twitter (631 KB) and citm (1.7 MB), i.e. at every realistic-and-below size. **TS-native-home holds.**
+- **JS-string source (browser fetch / editor buffer):** `TextEncoder` transcode dominates → **TS-native
+  home**. (Prior PROTO-1, Chrome; preserved as `PROTO-1-browser-jsstring.md`. Unchanged.)
+- **Resident / server bytes (batch/server face, `Buffer` source, wasm-owned bytes):** the `scanOnly`
+  column governs → **wasm-core home, 2.9–5.8× at real-JSON density, no size crossover.** (This pass.)
 
-## VERDICT
-
-**TS-native scalar is the bbnf-side wasm-core home** for the tape-crossing stratum (6B(x)6C graft), *given a JS-string source*. The v128 scanner cannot pay off its JS -> linear-memory marshalling tax at bbnf batch doc sizes; it only nets ahead on multi-megabyte ASCII-heavy inputs with branch-hostile structure.
-
-**Decisive architectural caveat (the real spine decision):** the loss is *not* the kernel — it is the marshalling boundary. If the tape-crossing stratum can deliver source bytes to wasm **already resident in linear memory** (bytes produced/owned in wasm, no per-call `TextEncoder`+copy), the `scanOnly` column governs and the v128 core wins **4.7-7.3x** at every size. So the 6B(x)6C graft should be decided by *where the bytes live*: JS strings -> TS-native; wasm-linear-memory-resident bytes -> wasm-core. A wasm-core that must import each doc from a JS string is a net loss below ~2 MB and is falsified here.
+The 6B⊗6C graft is therefore **not** "wasm-core vs TS-native" globally — it is a **byte-provenance
+switch**: the generated byte contract (6B) is crossed zero-copy by a v128 kernel (6C) **on the
+server/resident face where it decisively wins**, and by a TS scalar loop on the browser JS-string
+face where the transcode tax makes the kernel a net loss. Both halves are now MEASURED. The kernel's
+only real enemy is pathological structural density (>~40%), absent from JSON and bbnf grammar sources.
 
 ## CODE / PATCH
 
-No source changes to the artifacts — `wasm-scan/src/lib.rs` and `harness.html` built and ran as authored (kernel parity-clean, 4 harmless `static_mut_refs` warnings only). Build product `scan.wasm` (1439 B, SIMD-verified) added to `PROTO-2/` for reproducibility. Operational note: `citm_catalog.json` must be dropped **as** `citm.json` (harness fetches the short name). No diff to attach.
+No changes to any parse-that or `simd-scan` source (parse-that READ-ONLY; kernel reused as built at
+the pin). The probe is a single self-contained Node harness driving the raw-C-ABI wasm in the
+resident regime, delivered alongside this report as **`PROTO-1-resident-harness.mjs`** (run:
+`node PROTO-1-resident-harness.mjs` with `scan.wasm` + the three JSON docs beside it). No diff to
+attach; the kernel binary under test is `PROTO-2/scan.wasm`.

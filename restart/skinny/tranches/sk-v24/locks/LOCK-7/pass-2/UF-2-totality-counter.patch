@@ -1,0 +1,306 @@
+diff --git a/skinny/crates/grammar/src/lib.rs b/skinny/crates/grammar/src/lib.rs
+index e1d0f806a..8dcf95dc0 100644
+--- a/skinny/crates/grammar/src/lib.rs
++++ b/skinny/crates/grammar/src/lib.rs
+@@ -1368,13 +1368,18 @@ impl<'a> Parser<'a> {
+                 let ws_start = self.cursor;
+                 self.bump_char();
+                 self.bump_char();
+-                children.push(self.grammar.add_expr(
++                let ws = self.grammar.add_expr(
+                     ExprKind::Annotation {
+                         name: "ws".into(),
+                         value: None,
+                     },
+                     SourceSpan::new(ws_start, self.cursor),
+-                ));
++                );
++                // A trailing postfix `->` / binary `<<` / `>>` binds to the `?w`
++                // element rather than orphaning at the head of the next atom
++                // (parse_postfix rejects an operator with no left operand).
++                let ws = self.parse_postfix_ops(ws, ws_start)?;
++                children.push(ws);
+                 continue;
+             }
+             match self.peek_char() {
+@@ -1403,7 +1408,14 @@ impl<'a> Parser<'a> {
+ 
+     fn parse_postfix(&mut self) -> Result<ExprId, GrammarError> {
+         let start = self.cursor;
+-        let mut expr = self.parse_atom()?;
++        let expr = self.parse_atom()?;
++        self.parse_postfix_ops(expr, start)
++    }
++
++    /// Apply the trailing postfix / binary operators (`->`, `<<`, `>>`, `*`,
++    /// `?`, `+`) to an already-parsed left operand. Shared by `parse_postfix`
++    /// (over an atom) and `parse_seq`'s `?w` handler (over the ws annotation).
++    fn parse_postfix_ops(&mut self, mut expr: ExprId, start: usize) -> Result<ExprId, GrammarError> {
+         loop {
+             self.skip_inline_trivia();
+             if self.source[self.cursor..].starts_with("->") {
+diff --git a/skinny/crates/grammar/tests/totality_counter_probe.rs b/skinny/crates/grammar/tests/totality_counter_probe.rs
+new file mode 100644
+index 000000000..f0aba822b
+--- /dev/null
++++ b/skinny/crates/grammar/tests/totality_counter_probe.rs
+@@ -0,0 +1,259 @@
++//! LOCK-7 pass-2 probe UF-2 — the 7C TOTALITY% COUNTER over the BUILT GrammarIr.
++//!
++//! QUESTION. Both critics capped 7C's flagship totality% counter as "cross-repo
++//! blocked behind the leaf evaluator." That is a build-vs-emit conflation. Does
++//! the counter actually RUN TODAY over the BUILT `GrammarIr` — no leaf evaluator,
++//! no `@{}`, no self-emit — and yield sensible per-subsystem numbers?
++//!
++//! METHOD. Build a real `GrammarIr` via `grammar::parse_grammar` for three
++//! subsystems (json, sheets, and the bbnf import-closure), walk `grammar.exprs`
++//! (the `ExprKind` arena at ir/src/lib.rs), and classify every expression into a
++//! host-function tier:
++//!   * Tier-0 — pure `->` / Literal / Regex / Seq / Alt (and the structural
++//!     wrappers Optional/Repeat/Discard/Project and the `?w` whitespace
++//!     annotation). Nothing threads a context.
++//!   * Tier-1 — `Ref` (requires `resolve_refs` to bind a target).
++//!   * Tier-2 — a host function threading `&mut Ctx`. The IR has NO `ExprKind::Host`
++//!     variant today, so NO real grammar can reach Tier-2. Family 7C is the
++//!     HOST-FUNCTION-LATTICE: `@host` is exactly that construct, so the synthetic
++//!     injection models the not-yet-existing host node as an `@host`-named
++//!     `Annotation` sentinel over a plain leaf.
++//!
++//! totality% = 1 - sum(Tier-2) / sum(all exprs), per subsystem. Non-vacuity: a
++//! cloned json arena with one synthetic Tier-2 host injected must drop below 1.0.
++//!
++//! This probe requires ONLY `grammar::parse_grammar` + the `ir` arena — no leaf
++//! evaluator, no emitter. It proves the counter is a build-side metric.
++
++use grammar::parse_grammar;
++use ir::{Expr, ExprId, ExprKind, GrammarIr, SourceSpan};
++use std::path::PathBuf;
++
++/// Sentinel name for the synthetic Tier-2 host node. Real grammars never emit an
++/// `Annotation` with this name (`?w` emits name `"ws"`; `@host` appears only as a
++/// string literal inside bbnf.bbnf's own rule definitions, never as an expr).
++const HOST_SENTINEL: &str = "host";
++
++/// Repo root, derived from this crate's manifest dir (skinny/crates/grammar).
++fn root() -> PathBuf {
++    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
++        .join("..")
++        .join("..")
++        .join("..")
++}
++
++fn read(rel: &str) -> String {
++    let path = root().join(rel);
++    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
++}
++
++#[derive(Clone, Copy, PartialEq, Eq)]
++enum Tier {
++    Zero,
++    One,
++    Two,
++}
++
++/// Classify a single expression into its host-function tier. Pure function over
++/// `ExprKind` — this is the whole counter kernel.
++fn classify(kind: &ExprKind) -> Tier {
++    match kind {
++        // Tier-2 — a host node threading `&mut Ctx`. There is NO `ExprKind::Host`
++        // in the arena today, so the only reachable Tier-2 is the synthetic
++        // `@host`-named annotation sentinel injected by the non-vacuity test.
++        ExprKind::Annotation { name, .. } if name == HOST_SENTINEL => Tier::Two,
++        // Tier-1 — reference resolution.
++        ExprKind::Ref { .. } => Tier::One,
++        // Tier-0 — pure structural / leaf constructs, incl. the `?w` (`ws`)
++        // whitespace annotation, which threads no context.
++        _ => Tier::Zero,
++    }
++}
++
++struct Census {
++    leaves: usize,
++    branches: usize,
++    t0: usize,
++    t1: usize,
++    t2: usize,
++    total: usize,
++}
++
++impl Census {
++    /// totality% = 1 - Tier-2 / all.
++    fn totality(&self) -> f64 {
++        if self.total == 0 {
++            return 1.0;
++        }
++        1.0 - (self.t2 as f64) / (self.total as f64)
++    }
++}
++
++/// Walk every expression in the built arena and tally leaves, branches, and the
++/// tier histogram. No emitter, no evaluator — just the `ExprKind` arena.
++fn census(ir: &GrammarIr) -> Census {
++    let mut c = Census {
++        leaves: 0,
++        branches: 0,
++        t0: 0,
++        t1: 0,
++        t2: 0,
++        total: 0,
++    };
++    for expr in &ir.exprs {
++        c.total += 1;
++        match classify(&expr.kind) {
++            Tier::Zero => c.t0 += 1,
++            Tier::One => c.t1 += 1,
++            Tier::Two => c.t2 += 1,
++        }
++        // LEAVES = { Literal, Regex, Project targets }.
++        match &expr.kind {
++            ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Project { .. } => {
++                c.leaves += 1
++            }
++            _ => {}
++        }
++        // BRANCHES = { each Alt arm, each Optional, each Repeat }.
++        match &expr.kind {
++            ExprKind::Alt { branches, .. } => c.branches += branches.len(),
++            ExprKind::Optional(_) | ExprKind::Repeat { .. } => c.branches += 1,
++            _ => {}
++        }
++    }
++    c
++}
++
++fn print_census(name: &str, c: &Census) {
++    println!(
++        "  {name:14} leaves={:>3} branches={:>3}  tiers[T0={:>3} T1={:>3} T2={:>2}] \
++         total={:>3}  totality%={:.4}",
++        c.leaves,
++        c.branches,
++        c.t0,
++        c.t1,
++        c.t2,
++        c.total,
++        c.totality()
++    );
++}
++
++fn assert_sensible(name: &str, c: &Census) {
++    assert!(c.total > 0, "{name}: empty GrammarIr (no exprs)");
++    assert!(c.leaves > 0, "{name}: leaves must be > 0");
++    assert!(c.branches > 0, "{name}: branches must be > 0");
++    let t = c.totality();
++    assert!((0.0..=1.0).contains(&t), "{name}: totality% {t} out of [0,1]");
++}
++
++#[test]
++fn totality_counter_probe() {
++    println!("\n============== LOCK-7 pass-2 UF-2: 7C TOTALITY% COUNTER ==============");
++    println!("(runs over the BUILT GrammarIr — no leaf evaluator, no @{{}}, no self-emit)\n");
++
++    // --- Build the three subsystems via grammar::parse_grammar ---
++
++    // json — single file.
++    let json_ir = parse_grammar("json", &read("skinny/grammars/json.bbnf"))
++        .expect("json must build a GrammarIr");
++
++    // sheets — single file.
++    let sheets_ir = parse_grammar(
++        "sheets",
++        &read("grammar/google-sheets/google-sheets.bbnf"),
++    )
++    .expect("sheets must build a GrammarIr");
++
++    // bbnf IMPORT-CLOSURE — bbnf + expressions + types concatenated so imported
++    // refs (`value_expr`, `type_annotation`, `type_name`) resolve in ONE arena
++    // (PROTO-3 measured this Ok/53-rule resolve_refs-clean).
++    let bbnf_closure = format!(
++        "{}\n{}\n{}",
++        read("grammar/bbnf/bbnf.bbnf"),
++        read("grammar/bbnf/expressions.bbnf"),
++        read("grammar/bbnf/types.bbnf"),
++    );
++    let bbnf_ir =
++        parse_grammar("bbnf-closure", &bbnf_closure).expect("bbnf import-closure must build");
++
++    println!(
++        "[BUILD] json {} rules | sheets {} rules | bbnf-closure {} rules (resolve_refs+validate clean)",
++        json_ir.rules.len(),
++        sheets_ir.rules.len(),
++        bbnf_ir.rules.len()
++    );
++
++    // --- Run the counter over each subsystem ---
++    println!("\n[COUNTER] per-subsystem census over grammar.exprs:");
++    let json_c = census(&json_ir);
++    let sheets_c = census(&sheets_ir);
++    let bbnf_c = census(&bbnf_ir);
++    print_census("json", &json_c);
++    print_census("sheets", &sheets_c);
++    print_census("bbnf-closure", &bbnf_c);
++
++    for (name, c) in [
++        ("json", &json_c),
++        ("sheets", &sheets_c),
++        ("bbnf-closure", &bbnf_c),
++    ] {
++        assert_sensible(name, c);
++    }
++
++    // Real grammars have NO host node → Tier-2 == 0 → totality% == 1.0 exactly.
++    // This is the sensible "no host functions yet" reading, not a stuck counter.
++    for (name, c) in [
++        ("json", &json_c),
++        ("sheets", &sheets_c),
++        ("bbnf-closure", &bbnf_c),
++    ] {
++        assert_eq!(c.t2, 0, "{name}: no ExprKind::Host exists — Tier-2 must be 0");
++        assert_eq!(c.totality(), 1.0, "{name}: totality% must be exactly 1.0");
++    }
++
++    // --- Non-vacuity: inject one synthetic Tier-2 host over a plain leaf ---
++    println!("\n[NON-VACUITY] clone json arena, inject one synthetic Tier-2 @host over a leaf:");
++    let mut injected = json_ir.clone();
++
++    // Find the first plain leaf (Literal or Regex) and overwrite it with the
++    // synthetic host sentinel — a host node threading `&mut Ctx`, modeled as an
++    // `@host`-named Annotation because no `ExprKind::Host` variant exists yet.
++    let leaf_id: ExprId = injected
++        .exprs
++        .iter()
++        .find(|e| matches!(e.kind, ExprKind::Literal { .. } | ExprKind::Regex { .. }))
++        .map(|e| e.id)
++        .expect("json must have a plain leaf to host-ify");
++    let leaf_span: SourceSpan = injected.expr(leaf_id).span;
++    injected.exprs[leaf_id.0] = Expr {
++        id: leaf_id,
++        kind: ExprKind::Annotation {
++            name: HOST_SENTINEL.to_string(),
++            value: Some("ctx".to_string()),
++        },
++        span: leaf_span,
++    };
++
++    let injected_c = census(&injected);
++    print_census("json+host", &injected_c);
++    assert_eq!(injected_c.t2, 1, "injected arena must report exactly 1 Tier-2");
++    assert!(
++        injected_c.totality() < 1.0,
++        "injected Tier-2 must drop totality% below 1.0 (got {})",
++        injected_c.totality()
++    );
++    println!(
++        "  json totality% {:.4} -> json+host totality% {:.4}  (< 1.0 confirms non-vacuity)",
++        json_c.totality(),
++        injected_c.totality()
++    );
++
++    // --- Verdict inputs ---
++    println!("\n[VERDICT INPUTS]");
++    println!("  counter RAN over BUILT GrammarIr for 3/3 subsystems (no emitter, no evaluator)");
++    println!("  json          leaves>0 branches>0 totality% in [0,1] .. PASS");
++    println!("  sheets        leaves>0 branches>0 totality% in [0,1] .. PASS");
++    println!("  bbnf-closure  leaves>0 branches>0 totality% in [0,1] .. PASS");
++    println!("  injected Tier-2 drops totality% below 1.0 ............. PASS");
++    println!("=====================================================================\n");
++}

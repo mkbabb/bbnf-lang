@@ -1,0 +1,289 @@
+//! UF-1 — the structural-only (leaf-blind) bbnf oracle probe.
+//!
+//! QUESTION. PROTO-1/PROTO-3 stopped at "leaf spans wrong -> no projection."
+//! Nobody asked whether the sink-only lowering's BRANCH skeleton matches the
+//! oracle GrammarIr's when leaves are treated as opaque. Is the INC-5 cross-repo
+//! block PURELY at the leaf level (bbnf is structurally Tier-R; only match_at is
+//! missing) or does the leaf floor poison the branch skeleton too?
+//!
+//! METHOD (static; the recognizer is NOT run).
+//!  (1) ORACLE   = hand parser's bbnf import-closure GrammarIr
+//!                 (bbnf + expressions + types), Ok/53 rules.
+//!  (2) CANDIDATE = lower that SAME GrammarIr through the `!has_rule("value")`
+//!                 path: GrammarIr -> BackendIr (passes::compile) ->
+//!                 codegen::lower::sink_only::lower_program -> SinkOnlyProgram.
+//!  (3) Per rule, compare LEAF-BLIND: identical nesting/arity of
+//!                 Seq/Alt/Optional/Repeat/CallRule, collapsing every leaf
+//!                 (Literal/Regex/Project/ByteLiteral/Annotation/...) to one
+//!                 opaque token. Count rules structurally isomorphic.
+//!
+//! COMMAND. CARGO_TARGET_DIR=/tmp/uf1 cargo test -p codegen --test structural_oracle_probe -- --nocapture
+
+use codegen::lower::sink_only::{self, SinkOnlyExpr, SinkOnlyProgram};
+use codegen::lower::LowerCtx;
+use ir::{BackendExpr, ExprKind, GrammarIr};
+
+const GRAMMAR_DIR: &str = "/Users/mkbabb/Programming/bbnf-lang/grammar/bbnf";
+
+/// The common leaf-blind skeleton algebra. Branch-bearing kinds
+/// (Seq/Alt/Opt/Rep/Call) are kept with their nesting/arity; every leaf
+/// collapses to `Leaf` (one opaque token).
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum Skel {
+    Seq(Vec<Skel>),
+    Alt(Vec<Skel>),
+    Opt(Box<Skel>),
+    Rep(Box<Skel>),
+    Call,
+    Leaf,
+}
+
+/// `charitable = true` treats an empty `Seq([])` as an epsilon leaf (so the
+/// lowering's `Annotation(?w) -> Seq([])` rewrite is leaf-blind-invisible).
+/// `charitable = false` keeps `Seq([])` as a 0-arity Seq branch node (strict:
+/// an `?w` leaf on the oracle side must face a leaf on the candidate side).
+fn norm_grammar(g: &GrammarIr, id: ir::ExprId, charitable: bool) -> Skel {
+    match &g.expr(id).kind {
+        ExprKind::Seq(xs) => {
+            let v: Vec<Skel> = xs.iter().map(|c| norm_grammar(g, *c, charitable)).collect();
+            if charitable && v.is_empty() {
+                Skel::Leaf
+            } else {
+                Skel::Seq(v)
+            }
+        }
+        ExprKind::Alt { branches, .. } => {
+            Skel::Alt(branches.iter().map(|b| norm_grammar(g, *b, charitable)).collect())
+        }
+        ExprKind::Repeat { body, .. } => Skel::Rep(Box::new(norm_grammar(g, *body, charitable))),
+        ExprKind::Optional(b) => Skel::Opt(Box::new(norm_grammar(g, *b, charitable))),
+        ExprKind::Ref { .. } => Skel::Call,
+        // leaves collapse to one opaque token
+        ExprKind::Literal { .. }
+        | ExprKind::Regex { .. }
+        | ExprKind::Project { .. }
+        | ExprKind::Annotation { .. }
+        | ExprKind::Discard { .. } => Skel::Leaf,
+    }
+}
+
+fn norm_sink(e: &SinkOnlyExpr, charitable: bool) -> Skel {
+    match e {
+        SinkOnlyExpr::Entry(inner) => norm_sink(inner, charitable), // unwrap entry marker
+        SinkOnlyExpr::Seq(xs) => {
+            let v: Vec<Skel> = xs.iter().map(|c| norm_sink(c, charitable)).collect();
+            if charitable && v.is_empty() {
+                Skel::Leaf
+            } else {
+                Skel::Seq(v)
+            }
+        }
+        SinkOnlyExpr::Alt { branches, .. } => {
+            Skel::Alt(branches.iter().map(|b| norm_sink(b, charitable)).collect())
+        }
+        SinkOnlyExpr::RepeatLoop { body, .. } => Skel::Rep(Box::new(norm_sink(body, charitable))),
+        SinkOnlyExpr::OptionalBranch(inner) => Skel::Opt(Box::new(norm_sink(inner, charitable))),
+        SinkOnlyExpr::CallRule { .. } => Skel::Call,
+        SinkOnlyExpr::ByteLiteral(_)
+        | SinkOnlyExpr::RegexProgram { .. }
+        | SinkOnlyExpr::ValueProject { .. }
+        | SinkOnlyExpr::SpanMark { .. }
+        | SinkOnlyExpr::TapeEmit
+        | SinkOnlyExpr::DirectBuild(_)
+        | SinkOnlyExpr::Return => Skel::Leaf,
+    }
+}
+
+/// Faithful mirror of `norm_sink` over `BackendExpr`, used when
+/// `lower_program` returns `None` (no DirectBuild materialization). The
+/// SinkOnly step is a 1:1 structural map of BackendExpr, so the skeletons
+/// coincide.
+fn norm_backend(e: &BackendExpr, charitable: bool) -> Skel {
+    match e {
+        BackendExpr::Entry(inner) => norm_backend(inner, charitable),
+        BackendExpr::Seq(xs) => {
+            let v: Vec<Skel> = xs.iter().map(|c| norm_backend(c, charitable)).collect();
+            if charitable && v.is_empty() {
+                Skel::Leaf
+            } else {
+                Skel::Seq(v)
+            }
+        }
+        BackendExpr::Alt { branches, .. } => {
+            Skel::Alt(branches.iter().map(|b| norm_backend(b, charitable)).collect())
+        }
+        BackendExpr::RepeatLoop { body, .. } => Skel::Rep(Box::new(norm_backend(body, charitable))),
+        BackendExpr::OptionalBranch(inner) => Skel::Opt(Box::new(norm_backend(inner, charitable))),
+        BackendExpr::CallRule { .. } => Skel::Call,
+        BackendExpr::ByteLiteral(_)
+        | BackendExpr::RegexProgram { .. }
+        | BackendExpr::ValueProject { .. }
+        | BackendExpr::SpanMark { .. }
+        | BackendExpr::TapeEmit { .. }
+        | BackendExpr::DirectBuild { .. }
+        | BackendExpr::Return => Skel::Leaf,
+    }
+}
+
+fn read(name: &str) -> String {
+    std::fs::read_to_string(format!("{GRAMMAR_DIR}/{name}"))
+        .unwrap_or_else(|e| panic!("read {name}: {e}"))
+}
+
+#[test]
+fn structural_oracle_probe() {
+    // (1) Build the import-closure source. @import lines are skipped by the
+    // hand parser's `parse_directive`; ordering types -> expressions -> bbnf
+    // makes `grammar` the last (entry) rule and keeps type_name/value_expr
+    // definitions ahead of their references.
+    let raw = format!(
+        "{}\n{}\n{}\n",
+        read("types.bbnf"),
+        read("expressions.bbnf"),
+        read("bbnf.bbnf"),
+    );
+
+    println!("\n================ UF-1 STRUCTURAL ORACLE PROBE ================\n");
+
+    // Attempt the RAW closure first, verbatim.
+    let raw_result = grammar::parse_grammar("bbnf", &raw);
+    match &raw_result {
+        Ok(g) => println!("RAW closure parse: Ok / {} rules", g.rules.len()),
+        Err(e) => println!("RAW closure parse: Err -> {e}"),
+    }
+
+    // The in-tree hand parser rejects `?w`-then-`->` (parse_seq consumes the
+    // standalone `?w` annotation, then `->` is met at the head of parse_atom).
+    // This is a LEAF-level token adjacency (`?w` = whitespace annotation leaf,
+    // `->` = projection leaf), both invisible under the leaf-blind comparison.
+    // Elide the two `?w ` tokens that immediately precede `->` so the parser
+    // yields the 53-rule GrammarIr; the elided nodes are leaves that collapse
+    // to opaque tokens on BOTH sides, so the BRANCH skeleton is unaffected.
+    let normalized = raw.replace("?w -> ", "-> ");
+    let elided = raw.matches("?w -> ").count();
+    println!("leaf-elision (`?w ` before `->`): {elided} site(s) normalized");
+
+    let grammar_ir = match grammar::parse_grammar("bbnf", &normalized) {
+        Ok(g) => g,
+        Err(e) => {
+            println!("NORMALIZED closure parse: Err -> {e}");
+            panic!("could not build the 53-rule oracle GrammarIr even after leaf-elision");
+        }
+    };
+    println!(
+        "NORMALIZED closure parse: Ok / {} rules (exprs={})",
+        grammar_ir.rules.len(),
+        grammar_ir.exprs.len()
+    );
+    assert_eq!(grammar_ir.rules.len(), 53, "expected the 53-rule closure");
+
+    // (2) Lower the SAME GrammarIr: GrammarIr -> BackendIr -> SinkOnlyProgram.
+    let output = passes::compile(&grammar_ir).expect("passes::compile");
+    let backend = &output.backend_ir;
+
+    let ctx = LowerCtx {
+        backend_shape: &output.layout_facts.backend_shape,
+        cost_facts: &output.layout_facts.cost_facts,
+        per_grammar_policy: &output.layout_facts.per_grammar_policy,
+        same_substrate_union: &output.layout_facts.same_substrate_union,
+        diagnostics: &output.diagnostics,
+    };
+
+    let program: Option<SinkOnlyProgram> = sink_only::lower_program(backend, &ctx);
+    match &program {
+        Some(p) => println!(
+            "sink_only::lower_program: Some / {} rules, direct_shapes={:?}, has_rule(\"value\")={}",
+            p.rules.len(),
+            p.direct_shapes,
+            p.has_rule("value"),
+        ),
+        None => println!(
+            "sink_only::lower_program: None (no DirectBuild materialization); \
+             falling back to BackendExpr skeleton (faithful 1:1 mirror)"
+        ),
+    }
+
+    assert_eq!(
+        backend.rules.len(),
+        grammar_ir.rules.len(),
+        "backend rule count must match grammar rule count"
+    );
+
+    // (3) Per-rule leaf-blind comparison, under BOTH readings.
+    let mut matched_strict = 0usize;
+    let mut matched_charitable = 0usize;
+    let mut first_div_strict: Option<(String, Skel, Skel)> = None;
+    let mut first_div_charitable: Option<(String, Skel, Skel)> = None;
+    let mut mismatches_charitable: Vec<String> = Vec::new();
+
+    for (i, rule) in grammar_ir.rules.iter().enumerate() {
+        for &charitable in &[false, true] {
+            let oracle = norm_grammar(&grammar_ir, rule.body, charitable);
+            let candidate = match &program {
+                Some(p) => norm_sink(&p.rules[i].expr, charitable),
+                None => norm_backend(&backend.rules[i].expr, charitable),
+            };
+            let ok = oracle == candidate;
+            if charitable {
+                if ok {
+                    matched_charitable += 1;
+                } else {
+                    mismatches_charitable.push(rule.name.clone());
+                    if first_div_charitable.is_none() {
+                        first_div_charitable =
+                            Some((rule.name.clone(), oracle.clone(), candidate.clone()));
+                    }
+                }
+            } else if ok {
+                matched_strict += 1;
+            } else if first_div_strict.is_none() {
+                first_div_strict = Some((rule.name.clone(), oracle.clone(), candidate.clone()));
+            }
+        }
+    }
+
+    let total = grammar_ir.rules.len();
+    println!("\n---------------- RESULT ----------------");
+    println!("STRICT     (Seq([]) is a branch node): matched {matched_strict}/{total}");
+    if let Some((name, o, c)) = &first_div_strict {
+        println!("  first divergent rule (strict): `{name}`");
+        println!("    oracle    = {o:?}");
+        println!("    candidate = {c:?}");
+    }
+    println!("CHARITABLE (Seq([]) == epsilon leaf):  matched {matched_charitable}/{total}");
+    if let Some((name, o, c)) = &first_div_charitable {
+        println!("  first divergent rule (charitable): `{name}`");
+        println!("    oracle    = {o:?}");
+        println!("    candidate = {c:?}");
+    }
+    if !mismatches_charitable.is_empty() {
+        println!(
+            "  charitable mismatches ({}): {}",
+            mismatches_charitable.len(),
+            mismatches_charitable.join(", ")
+        );
+    }
+
+    // Report which rules got materialization descriptors (their body is wrapped
+    // in Seq[SpanMark, body, SpanMark, TapeEmit, DirectBuild, Return]).
+    if let Some(p) = &program {
+        let materialized: Vec<&str> = p
+            .rules
+            .iter()
+            .filter(|r| r.direct_shape.is_some())
+            .map(|r| r.name.as_str())
+            .collect();
+        println!("  materialized (DirectBuild) rules: {materialized:?}");
+    }
+
+    println!("\nVERDICT: matched(charitable)={matched_charitable}/{total}, matched(strict)={matched_strict}/{total}");
+    println!(
+        "PASS-signal (bbnf structurally Tier-R) iff matched = {total}/{total}. \
+         FAIL-signal (leaf floor / lowering poisons the skeleton) iff matched < {total}."
+    );
+    println!("=============================================================\n");
+
+    // Do not fail the test harness on a FAIL-signal — the number IS the result.
+    // Only assert the probe itself executed against the full closure.
+    assert_eq!(total, 53);
+}

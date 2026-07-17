@@ -122,11 +122,27 @@ source, the strongest form. Its segment output flows into `bbnf_ir::PathSegment`
 `StructRegistry` (`isomorphic_path_error.rs:19-21`), also single-source.
 
 **The lesson.** The clean spine partitions by provenance: (a) **single-source** names
-(`lex_path`, `PathSegment`, the `StructRegistry` field/rule names projected from `TypeDesc`)
-that are isomorphic *by construction* and need **no** mirror check; (b) **hand-mirror** names
-(`PathErrorReason`, `OwnedPathSegment` variants, `PathError` fields) replicated 2-3× that need
-the exemption budget + a name-map gate. The linter must know which class each name is in — and
-that knowledge is the grammar/IR's, not LOCK-6's (Q3).
+(`lex_path`, `PathSegment`) that are isomorphic *by construction* and need **no** mirror
+check; (b) **hand-mirror** names (`PathErrorReason`, `OwnedPathSegment` variants, `PathError`
+fields) replicated 2-3× that need the exemption budget + a name-map gate. The linter must know
+which class each name is in — and that knowledge is the grammar/IR's, not LOCK-6's (Q3).
+
+**Name C — `"statuses"` (a grammar field name): single-source *by design*, hand-forked *in
+fact* — a live provenance defect.** The registry field/rule names (`"statuses"`, `"id"`,
+`"text"`, `Document`/`Status`) are *supposed* to be single-source, projected by
+`project_types` → `cargo xtask regen` → `crates/core/src/grammar/generated/json.registry.json`.
+The Rust proc-macro honors that: `bbnf-path/src/registry.rs:143` reads the sidecar via
+`std::fs` (its header `:1-40` records the T4 swap off the old hand fixture). **The cdylib does
+not.** `compile.rs:45` resolves the registry through `fixture_for_marker`, and
+`fixture.rs:53-90` **hand-builds** `StructRegistry::new()` with literal
+`StructField { name: "statuses"… }` — its own header (`fixture.rs:1-17`) concedes the sidecar
+swap "when T4 lands" *has not happened*. So a name that should be single-source has **two live
+origins** at HEAD (sidecar on the macro path, hand copy on the cdylib path), and the
+isomorphism test hand-authors a third (`isomorphic_path_error.rs:51`). This is exactly the
+fork the provenance gate exists to kill, and it is present and unguarded now — the LOCK-3
+provenance pass (Q3) REDs it on `fixture.rs` day one, forcing the promised swap. It corrects
+any assumption that grammar-projected names are drift-immune "by construction": they are so
+only where the consumer *binds to the emitted artifact*, not where it re-hand-authors it.
 
 **Corroborating second witness — the parse-that combinator pair.** The single-source-vs-
 hand-mirror partition is not an artifact of `bbnf-path`; it reproduces on the independent
@@ -194,10 +210,25 @@ comparing `(segment_index, segment_str, struct_name, alternatives, reason)` fiel
 **But this is exactly the intra-Rust comparison the directive warns against.** The entry it
 drives, `compile_path_native` (`lib.rs:69`), is a *Rust* function — the cdylib's native shim
 that exists *because* the `#[wasm_bindgen]` exports panic off-wasm (`lib.rs:60-68`). The test
-never executes `ts/path.ts`, never crosses `serde-wasm-bindgen`, never runs Node. The
-third limb — the hand TS interfaces and `PathError.format`/`reasonText` — is behaviorally
-**un-driven**. The claimed "W5.2 TS Node Execution Proof" (`lib.rs:117`) is undelivered:
+never executes `ts/path.ts`, never crosses `serde-wasm-bindgen`, never runs Node. The claimed
+"W5.2 TS Node Execution Proof" (`lib.rs:117`) is undelivered:
 `rg 'spawn|Command::new."node"' crates/bbnf-path-ts` returns nothing.
+
+**So I drove the TS limb directly (measured, not deferred).** `PathError.format`/`reasonText`
+(`path.ts:81-101`) need no wasm — they are pure — so I imported the real `ts/path.ts` under
+`node` v26 (type-stripping) and ran `PathError.format` against the canonical Rust `Display`
+contract (`error.rs:66-140`) over 13 inputs: all 8 reasons (empty alternatives) + rendering
+cases. **Result 11/13 PASS, 2 FAIL.** All 8 reason texts and the
+`path[i] \`seg\` on \`struct\`: <text>` head match byte-for-byte; the two failures are the
+**alternatives-escaping divergence** — Rust renders `; valid: {:?}` (`error.rs:137`, `Debug`
+of `Vec<&str>`, which escapes), TS renders raw `alternatives.map(s => \`"${s}"\`)`
+(`path.ts:83-87`). For an alternative `a"b`: Rust `["a\"b"]`, TS `["a"b"]`; for `a\b`: Rust
+`["a\\b"]`, TS `["a\b"]`; non-ASCII (`café`) agrees. This is a **name-map-green,
+behavior-red** divergence on the live pair — the eight reason *names* correspond perfectly,
+yet the render *logic* forked. It is latent under grammar-legal field names (identifiers never
+carry `"`/`\`), so only an *adversarial-corpus* oracle catches it — never a name-map, and not
+even a fixed corpus of real grammar names. That precisely delimits 6A: it must be GREEN here
+and *declare* the render seam out-of-contract, routed to the companion oracle.
 
 **A live counterexample the pair already documents.** On `$.statuses[0].nope` the two
 surfaces *disagree*: the canonical offline checker leaves `TypeDesc::Named(_)` intact and
@@ -243,19 +274,23 @@ the Constitution forbids generating (combinators), which no schema-first tool co
 
 ## What a prototype must test to move 6A
 
-1. **Reach the TS limb.** Build `bbnf-path-ts` to `wasm32-unknown-unknown`, load in Node,
-   run `makePathTag(compile_path,"Json")` over `path\`$.statuses[0].text\`` and the four
-   failure paths, and compare — through the *actual* `ts/path.ts` + `serde-wasm-bindgen`
-   transport — against canonical `bbnf::path` over the shared fixture. This is the real
-   behavioral drive; today's native-shim test is a stand-in.
+1. **Reach the TS limb (renderer half DONE, transport half owed).** The pure renderer is
+   already driven (Evidence §: `PathError.format` vs Rust `Display`, node v26, 11/13, 2 FAIL
+   on alternatives escaping) — carry that as a regression fixture. The remaining half: build
+   `bbnf-path-ts` to `wasm32-unknown-unknown`, load in Node, run
+   `makePathTag(compile_path,"Json")` over `path\`$.statuses[0].text\`` and the four failure
+   paths, and compare — through the *actual* `ts/path.ts` + `serde-wasm-bindgen` transport —
+   against canonical `bbnf::path`. Today's native-shim test is only a stand-in.
 2. **Run `legit(B)` over `ts/path.ts`.** Implement the name-map linter as a `ts-morph`/AST
    pass that extracts TS type/interface/class names, joins them against T (from the Rust
    spine) and the closed `I` registry, and REDs any unbudgeted name. Prove: it reproduces
    the live count, REDs an injected `FooView`, REDs `BogusPayload`.
-3. **Wire the LOCK-3 manifest seam.** Have `cargo xtask regen` emit `provenance.manifest`;
-   have the 6A linter skip single-source names (`lex_path`, `PathSegment`) and gate only
-   `authored` ones. Prove the linter goes GREEN on `lex_path` drift-immunity and RED on a
-   dropped `PathErrorReason` variant in *any* of the three limbs.
+3. **Wire the LOCK-3 manifest seam + fire on the live fork.** Have `cargo xtask regen` emit
+   `provenance.manifest`; have the 6A linter skip single-source names (`lex_path`,
+   `PathSegment`) and gate only `authored` ones. Prove the provenance pass REDs the live
+   `fixture.rs:53-90` hand-registry (a `StructRegistry::new()` shadowing the emitted const),
+   goes GREEN once the cdylib is swapped to the sidecar, is GREEN on `lex_path` drift-immunity,
+   and REDs a dropped `PathErrorReason` variant in *any* of the three limbs.
 4. **Confirm class closure.** Attempt to file a sixth idiom class; show it either collapses
    into I1-I5 or names a genuinely new divergence axis requiring registry review — evidence
    that `I = 5` is defended, not merely observed.

@@ -1,254 +1,294 @@
-# LOCK-8 pass-3 — family 8A: THE SHAPE-STABLE V8 RUNTIME CORE
+# LOCK-8 · Family 8A — THE V8 RUNTIME PLANE (shape-stable core, arity-N specializer)
 
-The V8-first formulation of the parse-that TS combinator core: every `ParserState` and
-combinator object shape-stable and monomorphic by construction, an allocation-zero hot path,
-diagnostics and packrat as shape-preserving optional planes — proven by inline-cache / maglev
-probes and paired cold harnesses, never asserted. This family owns the *runtime execution face*
-of the backbone (the V8 JIT), which is never conflated with the TS *checker* face (8B) nor with
-the build-time emitter face (XL-D / 4B-TS). Every measurement names its HEAD: parse-that
-`typescript/` @ published tag `v1.0.0` (pristine `60a7ba8`, upstream `ef10d5b`), dist built at
-that cut; probes on **Node v26.0.0 / V8** (verified this pass), Apple Silicon, against
-`typescript/dist/parse.js`. Consumer HEADs named where cited.
+*Research report. parse-that/typescript is READ-ONLY; measurements below are censuses over
+committed trees, prototypes are scratch-only. Two engines never conflated: the V8 JIT is the
+subject here, not the TS checker (8B). Every consumer claim NAMES the tree HEAD it was taken
+from.*
 
 ---
 
-## 1. The mechanism made concrete — three shape-stable pillars
+## 0. The family in one line
 
-**(P1) Fixed-from-birth hidden class — the landed substrate.** `ParserState<T>` (`state.ts:36-53`)
-declares its fields in constructor order (`src, value, offset, isError, furthest`) plus the three
-diagnostic fields. The governing V8 surface (R4 §6a) is that `value:T` holds
-string|array|object|undefined across every parse through one write choke point `unsafeSetValue`
-(`state.ts:87-89`) — the sole megamorphic-write site by design; `ok/err/from` all funnel through
-it (`state.ts:55-73`). PROVE-11 (GO / CONFIRMED_DELTA) made `suggestions`/`secondarySpans`
-**symmetric with the pre-existing lazy `expected?`** (`state.ts:43`): declared native fields,
-`undefined` at construction so the map is fixed from birth and never transitions, populated only
-under `diagnosticsEnabled` via `(x ??= []).push`. Emitted-JS eager `= []` alloc census (prover
-and adversary, exact): **6 → 0**; fused alloc **1.84 → 0.73 B/op (−60.1%)** under `--expose-gc`.
-This is the alloc-zero-hot-path pillar, landed-grade (PT-3.W1 productionizes it verbatim).
-
-**(P2) The megamorphic dispatch spine is irreducible — plan around it, do not wish it away.**
-Every combinator threads through the `.parser` function-pointer field: `this.parser(state)` /
-`p.parser(state)` (parser.ts:53,82,88,131,137; leaf.ts:44,49,62,140). This is THE megamorphic IC
-of the engine (R4 §6c) — V8 sees many distinct closure shapes flow through one indirect call.
-8A's design center is to keep every *object* monomorphic so the only polymorphism V8 confronts is
-this deliberate function-pointer indirection, then to reduce what rides across it (allocation,
-tuple materialization), rather than pretend the indirection itself can be monomorphized.
-
-**(P3) Construction-time specialization, never per-parse.** Combinator closures allocate once per
-`new Parser(...)` at grammar build (R4 §6e); `createLazyCached` uses a closure-local cache to
-avoid function-object-mutation IC pollution (lazy.ts:19-25). The arity unrolls run their arity
-branch **once at construction**: `all()` dispatches `parsers.length === 1 ? parsers[0].parser :
-fuseAll(parsers)` (leaf.ts:161), and `fuseAll` selects `if (n === 2)` (leaf.ts:183), `if (n === 3)`
-(leaf.ts:215), else the general pre-sized for-arm (leaf.ts:253-267, indexed write cursor `out[w++]`).
-Each call site therefore yields one closure of one arity with constant-folded `p0/p1/p2` bindings
-and no array-index load in the hot loop. `dispatch` builds its `Int8Array(128)` LUT once
-(leaf.ts:100-151); `string` len-1 charCode (leaf.ts:282-294) and `regex` sticky-`test()` zero-alloc
-(leaf.ts:344-358) are the same construction-time-branch discipline.
+8A is the V8-first formulation of the parse-that TS backbone: every `ParserState` and combinator
+object shape-stable and monomorphic **by construction**, an allocation-zero hot path, diagnostics
+and packrat as shape-preserving optional planes — with the **arity-N build-time specializer**
+(the arity-2/arity-3 unrolls of `any`/`all`/`fuseAll`) as its most contested mechanism. This
+report develops that mechanism to its strongest **honest** form and reports the one finding that
+governs it: **the live external corpus that justified the arity unrolls no longer exists.**
 
 ---
 
-## 2. The three 8A directive questions — answered with trace + census evidence
+## 1. The mechanism made concrete — the arity-N specializer
 
-### 2A. Does the arity-N specializer INLINE at each arity? — **structural NO; temporal YES; carried SEPARATELY.**
+The specializer is a **runtime, grammar-construction-time** branch, not compile-time codegen. When
+a grammar author calls `all(p0, p1)`, `all(p0, p1, p2)`, or `any(...)`, a dispatch on
+`parsers.length` selects a pre-built closure once per combinator instance:
 
-`--trace-maglev-inlining` on `dist/parse.js`, one hot arity per process (Node v26 default
-production tier, base-pinned scratch), naming each fused closure by its bytecode size:
+- `any` — arity-2 fully unrolled at `parse-that/typescript/src/parse/leaf.ts:39-57`; general
+  indexed `for` at `leaf.ts:58-73`; arity-1 degenerates to `parsers[0].parser` (`leaf.ts:76`).
+- `all` → `fuseAll` — arity-2 unrolled at `leaf.ts:183-212`, arity-3 unrolled at `leaf.ts:214-251`,
+  general pre-sized `for` at `leaf.ts:255-272`; arity-1 degenerates (`leaf.ts:161`).
 
-| target | bytecode size | maglev verdict (default budget) |
-|---|--:|---|
-| `fuseAll` arity-2 unroll | **169** | `cannot inline … size (169) >= max-size (100)` |
-| `fuseAll` arity-3 unroll | **234** | `cannot inline … size (234) >= max-size (100)` |
-| general for-arm (arity ≥ 4) | larger | not inlined |
-| `parseStateInner` (the driver) | **162** | `cannot inline … size (162) >= max-size (100)` — at EVERY arity |
+Each unrolled arm hoists the element parsers into **named captured constants** (`const p0 =
+parsers[0]; const p1 = parsers[1];`, `leaf.ts:40-41,184-185,216-218`) and issues N **positional**
+indirect calls `p0.parser(state)` / `p1.parser(state)` (`leaf.ts:44,49,193,201,224,232,240`). The
+general arm instead loads `parsers[i].parser` through a loop-variable index (`leaf.ts:62,261`).
 
-**Structural leg (refuted):** the arity-unrolled `fuseAll` bodies are **not inlined into the parse
-driver at any arity** — they overflow maglev's default ~100-bytecode inline budget (the per-arm
-error/backtrack/`out[w++]` blocks bloat the body). The driver `parseStateInner` (162) is likewise
-never inlined into `parse`. So the arity unroll buys **no** call-site inlining. What it *does* buy
-— the true, defensible rationale — is (a) closure-body monomorphism (constant-folded positional
-bindings, no array load) and (b) elimination of the intermediate 2-tuple cascade that unfused
-`a.then(b).then(c)` allocates (N−1 nested tuples collapse to one flat pre-sized array; leaf.ts:171
-comment). The *leaves* do inline (`stringParser`, `unsafeSetValue`, `ok`, the `ParserState` ctor
-are all small/`== Inlining`), so the leaf/state layer is inline-clean; the **sequencing layer is an
-inline boundary by construction**.
+**What the unroll actually buys, precisely two things (keep them separate — see §3):**
+1. **Structural (cold, tier-independent):** the array-index load (`parsers[i]`) and the loop
+   induction/bounds-check vanish; each `.parser` call becomes a distinct **monomorphic** call site
+   fed by one captured target, rather than one loop-carried site that observes p0 then p1 then p2
+   in succession (polymorphic-over-iterations at a single bytecode offset). The result array is one
+   flat pre-sized allocation (`out = [undefined, undefined]`, `leaf.ts:191,222,257`) trimmed by
+   `out.length = w` (`leaf.ts:209,248,270`) — never N−1 nested 2-tuples.
+2. **Temporal (warm, tier-dependent):** because each site is monomorphic with a constant closure
+   target, Maglev/Turbofan **may** inline `p0.parser` bodily into the arm. This is a steady-state
+   phenomenon that only manifests after tier-up.
 
-**Temporal leg (confirmed, adversarially):** despite the non-inlining, the cold-paired win is real
-and reproduces — fused `all(a,b,c)` **+10.1%** (prover) / **+15.6%** (VERIFY), unfused then-chain
-**+13.2 / +13.6%**, alloc **−60.1%** exact — because the lever is *allocation elimination*, not
-inlining. The two legs MUST be carried apart: the proposition "arity unroll → inlining" is FALSE;
-"arity unroll → monomorphic, alloc-free sequencing → measured cold win" is TRUE. Any PT-3.W4 claim
-attributing the speed to inlining is the exact §0/09 self-deception (as VERIFY halved the dispatch
-lane +10.2% → ~+5% for the same reason: a wide per-round band, min 0.695 / max 1.420, misread at
-its top). The honest mechanism is the alloc census; the honest carry for dispatch is ~+5% no-regress.
+These two legs are the whole subtlety of the family and the reason pass-3 demands they be reported
+apart (§3.1).
 
-### 2B. Arity histogram from the ACTUAL live corpus — **the arity-2/3 `all()` unroll has ZERO live external consumers.**
+---
 
-Fresh per-tree census, this pass, HEADs named (2026-07-16):
+## 2. The governing finding — the live corpus that justified the unroll is GONE
 
-| consumer | version / HEAD | parse-that dep | combinator usage on tree |
+The unrolls were authored against a single named justification: *"the value.js hot shapes — 59
+`all()` sites"* and *"the hottest value.js shape (calc/rgb/hsl triples)"* (`leaf.ts:176,214`
+comments; the same rationale carried in the extant PT-3 baseline). A fresh per-tree import census
+refutes that justification at HEAD:
+
+**value.js — HEAD `86a9a17`, version `4.0.0`, branch `tranche-u` (migration also on `master`).**
+- `package.json` carries **no `@mkbabb/parse-that` dependency** (grep of the manifest: zero hits
+  outside `@typescript-eslint/parser` / `vue-eslint-parser`).
+- The only two `parse-that` tokens in `src/` are **negative-space comments**:
+  `src/subpaths/math.ts:2` ("parse-that-FREE") and `src/subpaths/transform.ts:4` ("zero parse-that").
+- Parsing has moved to a **hand-written, split-based** grammar: `src/v4/css/grammar.ts` (658 LOC),
+  built from `splitTopLevel`/`splitValueTokens`/`numberToken`/`channelToken` string routines
+  (`grammar.ts:68,94,133,139`), `parseFunctionalColor` (`grammar.ts:180`), `parseCssColor`
+  (`grammar.ts:262`). **Zero** `all`/`any`/`dispatch`/`Parser`/`ParserState` imports anywhere in
+  `src/`. Not even a char-cursor (`charCodeAt` count = 0 in grammar.ts) — it is `String.split`-driven.
+- The migration is **not a WIP artifact**: commit `470818c` ("parser migration") removed the
+  `@mkbabb/parse-that` dependency from `package.json`, is dated **2026-02-25**, and is contained in
+  `master` plus every active tranche branch (`tranche-o/p/q/t/u`, `tranche-f-handoff`). value.js
+  has been combinator-free on its mainline for ~5 months.
+- **Answer to P1/P2:** value.js's parse-that-free posture is **intended and settled**, not
+  mid-migration. value.js is **no longer a live consumer of the combinator surface.** (parse-that
+  `1.0.0` still resolves in value.js's `node_modules` transitively, never imported by `src`.)
+
+**latex-paper — HEAD `c140473`, version `0.2.1`, dep pinned `^0.7.1` (`<0.8.0`), installed
+`0.7.1`.**
+- The **only** live external combinator consumer. It imports `Parser regex string any ParserState`
+  (grep of `src/grammar/*`, `src/bibtex/parser.ts`). It uses **no `all()`** at all (the three
+  `.all()` hits at `src/transform/{sections,labels}.ts` are a `Map#all()` method, not the
+  combinator).
+- Its `any` sites: `src/grammar/text.ts:145` arity-3 (`any(bracedAccent, unbracedAccent,
+  namedAccent)`); `src/grammar/text.ts:154` **dynamic spread** `any(...alts)` (arity =
+  `names.length`, unknown at build); `src/grammar/document.ts:81` `inlineNode` **arity ≥ 15**
+  (comment/paragraphBreak/4 math variants/emDash/…). None of these hits the arity-2 `any` unroll
+  (`leaf.ts:39-57`).
+- The pin `^0.7.1` **predates the arity unrolls entirely** — the PT-B3 fusion arms shipped in the
+  1.0.0 line. latex-paper's last code change is 2026-07-02; the parse-that pin has not moved off
+  `<0.8.0`. It is effectively **frozen** against a pre-unroll engine and would need a 0.7→1.1
+  migration to ever exercise the specializer.
+
+**keyframes.js — v6.0.0.** No direct combinator dependency; transitive via value.js — and value.js
+now imports nothing, so this transitive path to the combinator surface is dead.
+
+### The arity histogram from the ACTUAL live corpus
+
+| arity of `all` | live external sites | arity of `any` | live external sites |
 |---|---|---|---|
-| **value.js** | **4.0.0**, branch `tranche-u` @ `86a9a17` | **`dependencies:{}` — 0 lockfile hits** | **NONE** — `all/any/dispatch/sepBy/many/chain` = 0; two comments declaring modules "parse-that-FREE" (`src/subpaths/math.ts:2`, `src/subpaths/transform.ts:4`) |
-| **keyframes.js** | 6.0.0 | none | NONE — self-declares "parse-that-FREE, 0 parse-that modules" (`src/animation/internal/leaves.ts:9-10`); its `Promise.all` hits are native |
-| **latex-paper** | 0.2.1, pins **`^0.7.1`** (installed 0.7.1, pre-1.0.0) | `^0.7.1` | **the ONLY live external combinator consumer**: `any()` at arity-3 (`src/grammar/text.ts`) + variadic `any(...alts)` + a multiline `any(` (`document.ts`); imports `Parser regex string any ParserState` across 5 grammar files (`commands.ts:9 text.ts:5 environments.ts:6 document.ts:5 bibtex/parser.ts:7`); **`all()` = 0**, 6 `any/all` call-sites total |
+| 2 (unrolled) | **0** | 2 (unrolled) | **0** |
+| 3 (unrolled) | **0** | 3 (unrolled) | 1 (latex, pinned pre-unroll) |
+| ≥4 / dynamic (general) | 0 | ≥4 / dynamic (general) | 2 (latex: ≥15, spread) |
 
-**This overturns R4's premise and, transitively, PT-3.W1's gate text.** R4 §7 recorded value.js @
-**3.1.0** with **59 `all()` sites** and "hot 3-tuples" — the exact justification stamped into the
-source (leaf.ts:214-ff, "the hottest value.js shape / calc·rgb·hsl triples"). That corpus **no
-longer exists on tree**: value.js divorced parse-that entirely across 3.1.0 → 4.0.0 (`deps:{}`, not
-a version bump). The **live external arity histogram** is therefore: `any` arity-3 + variadic (both
-hit the general for-arm, NOT the arity-2 unroll), `all` empty. Under Constitution viii
-(consumer-less substrate forbidden, Y.13), the arity-2/arity-3 `fuseAll` unroll is presently
-justified ONLY by the first-party floor `test/benchmarks/pt-b3-fusion.bench.ts` (R4 §4) — a
-legitimate first-party-consumer disposition (an 8D adjudication) — OR it must be re-anchored to
-latex-paper's real `any()` shapes. It cannot be re-justified on value.js's dead 59-tuple corpus.
-Note further that latex-paper pins 0.7.1 (pre-1.0.0), so it does not even *see* today's `fuseAll`
-unroll: the arity-2/3 `all()` unroll currently runs against **no external code at all**. The
-specialization decision is thus a keep-as-first-party-bench-consumer vs collapse-to-`any()`-arm
-question, not a value.js-driven one.
-
-### 2C. Relationship to the build-time TS emitter (XL-D / 4B-TS) — **distinct mechanisms; a combinator→JS emitter is constructible, NEW, and the only route past the inline ceiling.**
-
-XL-D is RATIFIED (LOCK-4 pass-2, measured): the runtime decoders (4C/4D switch-loops, the 4A
-graph-interpreter) are REFUTED as the fast TS face (~−22%, ties naive); the fast face is the
-**build-time emitter (4B-TS)**. Cross-lock read of the emitter's state (PT-3.md §2 interlock): the
-GN-4.W4 tape decoder seeding the TS backend is a **monomorphic tape decoder that imports no
-combinators** (oracle `JSON.parse`) — grammar/tape → JS straight-line code, a *code generator*. The
-arity-N `fuseAll` selector, by contrast, is a **runtime closure picker** (a construction-time `if`
-choosing among hand-written closures) — it emits no code. **They are different mechanisms.**
-Scratch-construction verdict: a build-time combinator→JS fuser (LOCK-4B-TS's "build-time fuser emits
-specialized chains") IS constructible on the TS side — discover static-arity `all(...)` / `any(...)`
-call sites and emit each as straight-line offset-threading with shared early-returns — and it is the
-**only** route that can push a fused sequence body under the ~100-bytecode maglev budget (minimal
-per-site straight-line code, not one 234-byte general closure), converting §2A's non-inlining
-boundary into an inlined one. But it is a NEW subsystem gated on: (i) a static-arity call-site
-discovery pass, (ii) the same build tooling XL-D's emitter uses, (iii) proof that the emitted
-per-site bodies actually land < 100 bytecode and inline. Absent that construction, the existing
-runtime unroll's non-inlining ceiling is structural and permanent — no maglev flag bump "fixes" it,
-because the lever was never inlining.
+The arity-2 and arity-3 `all()` unrolls — the exact code the specializer exists for — have **zero**
+live external callers. The only external `any` traffic is arity ≥ 3 and dynamic, on a pin that
+cannot even reach the unrolled code. This is the family's central, uncomfortable result and it
+must drive the disposition (§6). It ties directly to 8D's consumer-set adjudication: the
+specializer is now a **first-party-only** optimization, justified — if at all — solely by
+parse-that's own `test/benchmarks/pt-b3-fusion.bench.ts` + `src/parse/parsers/json.ts`, not by any
+external contract.
 
 ---
 
-## 3. Plane-wide (answered early)
+## 3. The three pass-3 8A questions, answered
 
-**CONSUMER LIVENESS.** The live forward-looking consumer of the combinator surface is **latex-paper
-alone**, and it is effectively **frozen** at `^0.7.1` — a pre-1.0.0 pin that never saw the 1.0.0
-`*Span` excision or `chain()` C-16 cut, so a 1.1.0 bump is an untested 0.7→1.1 jump (PT-3.W0 owns
-the migration dry-run). value.js's **on-tree** posture at 4.0.0 (`tranche-u` @ 86a9a17) is a
-**total divorce** (`deps:{}`, zero parse-that imports, only "parse-that-FREE" comments) — this is
-XL-G P1 surfaced independently. Whether that divorce is *intended* or a `tranche-u` WIP-branch
-artifact is the standing owner question (carry BOTH hypotheses per XL-G, non-blocking); but on the
-tree of record value.js is **not** a combinator consumer, and the design must not lean on its dead
-59-tuple corpus. keyframes.js is parse-that-FREE and consumes nothing (not even transitively at
-6.0.0). Net: the external combinator contract is a **single frozen `any()`-shaped consumer**.
+### 3.1 Does the arity-N specializer actually inline at each arity under Node's default tier?
 
-**SPEC FIDELITY.** PT-3.md diverges from the measured outcome at three points feeding a spec re-cut:
-(i) **W1's gate lane text** carries the R4 "value.js 59 `all()` sites / hot 3-tuples" premise as
-live justification — **stale**; the re-cut must state the value.js divorce and re-anchor the
-non-regression floor to latex-paper `any()` + the first-party bench. (ii) **W4's monomorph floor**
-(pt-monomorph.paired.mjs, arity-2/3 unrolled arms ≥ general arm) is correct as a *first-party*
-invariant but must NOT be captioned as protecting a value.js shape — the caption is the drift.
-(iii) The **inlining rationale**: nowhere in PT-3.md is the arity unroll claimed to inline, which is
-correct — but W4's "preserve the deliberate monomorphizations" language must explicitly disclaim
-inlining and cite the §2A structural leg (169/234 > 100), or a later author will re-introduce the
-fallacy. All three are documentation re-cuts, not mechanism changes.
+**Structural leg (cold, the honest number).** Node ≥22 ships **Maglev on by default** (Node 22.0.0;
+`nodejs/node#50690`); the default production tier ladder is Ignition → Sparkplug → Maglev →
+Turbofan. Independent of any tier, the unroll's structural win holds **from birth**: the captured
+`p0`/`p1`/`p2` give V8 monomorphic call sites (one target each) and eliminate the `parsers[i]`
+keyed load and loop bounds-check. A monomorphic property access lowers to a map-check + constant
+offset load in both Maglev and Turbofan; that is a cold, deterministic saving and is the leg the
+family may claim under the cold-per-parse / no-warm-benches law.
+
+**Temporal leg (warm, must NOT be laundered).** Whether Maglev **inlines** `p0.parser` into the arm
+is a distinct, tier-dependent event. Maglev performs **limited** inlining (small, hot callees, in
+the name of compile time); aggressive inlining is Turbofan's job and only after the closure tiers
+up. An "inlines at each arity" claim measured at Turbofan steady state is a **warm** claim —
+disinformation under the standing law. The pass-3 demand to report the two legs *separately* exists
+precisely to stop a warm inlining win from being reported as a cold structural one.
+
+**What the prototype must show (scratch, HEAD-named):** on a scratch parse-that copy at a named
+HEAD, run per arity (2, 3, general-4) under
+`node --allow-natives-syntax --trace-maglev-inlining --trace-turbo-inlining` a harness that (a)
+prints `%GetOptimizationStatus` of each arm to prove which tier it reached, and (b) reports the
+**cold per-op** structural delta (unroll vs general at matched arity) *separately* from the
+**warm/steady** delta after forced tier-up (`%OptimizeFunctionOnNextCall`). The honest table has
+two columns; the temporal column is disclosed, never summed into the cold one. Anticipated result:
+the structural leg is a small positive at every arity; the inlining leg fires for arity-2/3 under
+Turbofan and is warm-only.
+
+### 3.2 What arity distribution does the live corpus exhibit, and does it justify specialization?
+
+Answered in full at §2: the external distribution is **empty at the unrolled arities.** The
+specializer is **not justified by the live external corpus.** It survives only as a first-party
+optimization whose sole surviving justification is parse-that's own bench/JSON grammar — which
+routes this to 8D (prune vs keep) and to 8C (is the first-party suite a legitimate consumer, Y.13).
+The disposition (§6): keep the general indexed-`for` arm (it is the correct, allocation-lean core
+and serves latex's real arity ≥3 / dynamic traffic); **demote the arity-2/3 unrolls to a
+first-party-bench-gated micro-optimization**, not one defended on a consumer contract that no longer
+exists.
+
+### 3.3 Relationship to the build-time TS emitter face (XL-D). One mechanism? Constructible on TS side?
+
+**They are NOT one mechanism today.** The arity specializer is a *hand-written runtime branch*
+inside the parse-that library (`leaf.ts` `if (n===2/3)`), selecting a closure per combinator
+instance at grammar-construction time. The fast TS execution face — the build-time TS **emitter** —
+is a bbnf-side code generator whose current, measured TS output is a **standalone monomorphic tape
+decoder that imports no combinators** (its oracle is `JSON.parse`). The emitter emits tape decode;
+the specializer specializes combinator sequencing; they share neither code nor codepath.
+
+**Constructible on the TS side — yes, but only as a different family's build.** The unification
+route is a build-time **fuser** that emits the specialized arity-N sequencing chains *as generated
+TS* (`const p0=…; return state => { …p0.parser(state)… }`), one emitted body per grammar rule — the
+arity unroll generalized to a generator product with no runtime `if (n===...)` at all. That collapses
+the leaf.ts branch into emitter output and makes the two ONE mechanism. It does **not** exist today
+and is properly the province of the combinator-compilation family (a build-time fuser), not of 8A's
+runtime shape discipline. 8A's own scope ends at: the runtime specializer is a *separate* mechanism
+from the emitter; it is subsumable by a build-time fuser if one is built; and the §2 histogram says
+the payoff of building that fuser for the unrolled arities is presently near-zero on live traffic.
 
 ---
 
-## 4. Substrate — integration seams (path:line)
+## 4. The substrate — the shape-stable core beyond the arity question
 
-- Shape core: `state.ts:36-53` (fields), `state.ts:87-89` (`unsafeSetValue` write choke),
-  `state.ts:55-73` (`ok/err/from` funnel), `state.ts:44-45` (PROVE-11 lazy fields — landed lever).
-- Dispatch spine: `parser.ts:24-32` (`Parser` shape: `id, state, flags, parser, context`),
-  `parser.ts:34-49` / `:51-75` (`parseState` / `parseStateInner` — the 162-byte non-inlinable
-  driver), `parser.ts:53,82,88` (the megamorphic `.parser` IC).
-- Arity specializers: `leaf.ts:28-79` (`any` arity-2 unroll + general), `leaf.ts:154-273`
-  (`all` → `fuseAll`: dispatch `:161`, arity-2 `:183`, arity-3 `:215`, general for-arm `:253-267`),
-  `leaf.ts:100-151` (`dispatch` `Int8Array(128)` LUT).
-- Heterogeneity proxy (for a build-time selector): every `Parser` carries `context.name` set by
-  `createParserContext` (`state.ts:173-189`, registry `parserNames` `state.ts:141-171`) — a faithful
-  SharedFunctionInfo proxy (same factory ⇒ same code object ⇒ one call-IC), so
-  `new Set(parsers.map(p => p.context.name)).size` computes SFI-distinctness with no AST.
-- Deopt watch: `mapState` builds `Object.create(state)` per invocation (parser.ts:177-180) — the one
-  prototype-chain object in the core, and (grep of all three consumers + core) it has **zero
-  callers** — W4's shape oracle must confirm it is the only prototype-chain object and that a
-  fixed-shape struct-view replacement (`{src, value, offset, isError, furthest}` under a shared
-  `ReadonlyState<T>` interface, no `Object.create`, no `as unknown as` cast) leaves the map stable.
-- Optional planes (must stay shape-preserving): diagnostics global latch `utils.ts:6` (PT-E1 makes
-  it per-parse-scoped); packrat `PACKRAT_ARMED` (packrat.ts:156) is a TRUE no-op until first
-  `memoize()` (packrat.ts:290); the sole packrat shape divergence is `MemoCell.ans` (`Answer` vs
-  `LR`, packrat.ts:125-129), quarantined behind arming — never on the default LL(1) path.
-- Certified method: single-build-per-process cold paired interleaving (PROVE-11 `run-paired.sh` +
-  `measure-prove11.mjs`), N≥12 rounds, min AND median, loadavg per round — **not** `vitest bench`
-  (warm, throughput-amortized, cross-run; load-confounded, PT-3 §1.3 refuses it as evidence).
+The specializer is one plane of 8A; the durable substrate is the shape discipline that must be
+*proven*, not asserted:
+
+- **`ParserState` hidden-class stability** (`state.ts:36-53`): 8 fields; `value:T` holds
+  string|array|object|undefined across every parse; `expected?`, and — after the lazy-alloc lever —
+  `suggestions?`/`secondarySpans?` are declared native fields (`undefined` at birth) so the map is
+  fixed from construction and never transitions. The eager-alloc census (6 `= []` sites → 0) is the
+  proof the lever removed per-parse and per-backtrack array allocations; the fused alloc drop
+  (−60.1% B/op, exact) corroborates. This is the allocation-zero hot path made concrete and is the
+  substrate the arity unrolls sit on.
+- **The megamorphic choke point** (`state.ts:87-99` `unsafeSetValue`/`unsafeCall`/`unsafeCallRaw`;
+  every combinator's `this.parser(state)` / `p.parser(state)` indirect call — `parser.ts:53,82,88,
+  131,137`, `leaf.ts:44,49,62,140`). This is THE megamorphic IC of the engine: many closure shapes
+  flow through one indirect call. The arity unroll is one *local* de-megamorphization (it splits a
+  loop-carried site into N monomorphic sites); the family's stronger substrate question is whether
+  the global `.parser` indirection can be shape-narrowed at all without a graph/VM reformulation
+  (that reformulation is a sibling family's concern; 8A's contribution is to *measure* the IC state,
+  not to rebuild the engine).
+- **The one deopt-risk object** (`parser.ts:177-180`): `mapState` builds `Object.create(state)` per
+  invocation — a prototype-chain view whose property access is slower and can deopt callers. 8A's
+  shape oracle must assert this is the **only** prototype-chain object on the hot path.
 
 ---
 
-## 5. Prior art (citations)
+## 5. Prior art (cited)
 
-- **V8 maglev inline budget.** The observed `max-size (100)` bytecode ceiling and `max_inline_depth`
-  are maglev heuristics (`v8/src/maglev/maglev-inlining.*`; the `--max-maglev-inlined-bytecode-size*`
-  flags). Confirms inlining is **size-gated, not shape-gated** — the direct basis of §2A: a body
-  monomorphic and alloc-free can still sit above the inline boundary.
-- **Hidden classes / IC monomorphism.** V8 "maps" / transition trees; declaring every field at
-  construction (fixed-from-birth) is the canonical shape-stability idiom (V8 team "Fast properties in
-  V8"; mrale.ph "What's up with monomorphism?"). PROVE-11's `%HaveSameMap` probe (PT-3.W4) under
-  `node --allow-natives-syntax` is the direct oracle; the `mono → poly(≤4) → mega` IC-degree model
-  underlies the SFI-heterogeneity selector.
-- **Combinator fusion by staged code-gen.** The 4B-TS build-time route mirrors staged / partial-
-  evaluation parser generators — Jonnalagedda, Rompf, Odersky, "Staged Parser Combinators for
-  Efficient Data Processing" (OOPSLA'14); it is the TS analogue of Rust's comptime monomorphization
-  (`nom` / `combine` monomorphized-closure models; XL-E). The runtime arity unroll is a manual
-  `#[specialize]`; a build-time emitter is the true staged form.
-- **Packrat / arena.** Ford's packrat + the Warth–Douglass–Millstein left-recursion algorithm
-  (`Answer`/`LR`/`Head` + `getCijKey` float64 key, packrat.ts:79-127); the alloc-zero-hot-path goal
-  parallels tree-sitter's reusable-node reuse and regex-automata's `Cache` amortization.
+- **V8 tiering & Maglev default-on:** Node 22 ships Maglev by default; ladder Ignition → Sparkplug →
+  Maglev → Turbofan. Maglev is a mid-tier SSA-lite compiler that consumes the FeedbackVector and
+  does **limited** inlining for compile-time economy, deferring aggressive inlining to Turbofan.
+  ([nodejs/node#50690](https://github.com/nodejs/node/issues/50690);
+  [V8 features in Node 22](https://medium.com/@backendbyeli/leveraging-v8s-hidden-gems-in-node-js-2746810d84d9);
+  [thenodebook V8 tiers/shapes/deopt](https://www.thenodebook.com/node-arch/v8-engine-intro))
+- **Monomorphic call & IC lowering:** monomorphic calls are recorded during unoptimized execution
+  then inlined in optimized code; a property access with monomorphic feedback becomes a map-check +
+  constant-offset load — the exact structural win the captured `p0`/`p1`/`p2` unlock.
+  ([V8 engine architecture](https://sujeet.pro/articles/browser-runtime-internals/js-runtime-internals/v8-engine-architecture))
+- **Inlining heuristics (why arity/size gates the temporal leg):** inliners bound by callee size and
+  call-site hotness; a survey of the heuristics that decide whether a small monomorphic callee is
+  folded. ([Max Bernstein, inlining heuristics](https://bernsteinbear.com/blog/inlining-heuristics/))
+- **Speculative inlining + deopt as the temporal-leg cost model** (the same speculate-then-deopt
+  discipline the arity sites live under):
+  ([V8 wasm speculative optimizations](https://v8.dev/blog/wasm-speculative-optimizations))
+- **`--allow-natives-syntax` / `%HaveSameMap` / `%GetOptimizationStatus`** are the standard V8
+  intrinsics for a hidden-class + tier oracle; historical baselines and the natives-syntax method
+  in [davidmarkclements/v8-perf](https://github.com/davidmarkclements/v8-perf).
 
 ---
 
 ## 6. Named risks & counterexamples
 
-- **R-A1 — the inlining fallacy.** *Counterexample:* a W4 author reads fused +15% and writes "the
-  arity unroll lets V8 inline the sequence." §2A refutes this at every arity (169/234/162 > 100). If
-  re-attributed to inlining, a maglev-budget flag bump becomes the phantom "fix" and does nothing —
-  the lever is alloc elimination. Structural (no-inline) and temporal (alloc-win) legs stay separate
-  or the family reasons on a false model.
-- **R-A2 — dead-corpus specialization (Constitution viii).** *Counterexample:* PT-3.W4 preserves the
-  arity-2/3 unroll citing "value.js's 59 `all()` sites." Those sites are gone (value.js 4.0.0
-  `deps:{}`, this-pass census). Keeping the unroll is defensible only as a first-party-bench consumer
-  (8D) or re-anchored to latex-paper's `any()` arity-3 + variadic — never on the stale corpus.
-- **R-A3 — the `mapState` prototype view deopts callers.** *Counterexample:* `Object.create(state)`
-  (parser.ts:177-180) is a slow prototype-chain object; a hot grammar routing through `mapState`
-  could deopt the caller. It has zero live callers today, so the fixed-shape-view fix is zero-risk —
-  but W4 must probe callers under `%GetOptimizationStatus`, not the object alone.
-- **R-A4 — measuring the wrong face.** *Counterexample:* benchmarking the 4C/4D runtime switch-loop
-  as "the TS core." XL-D refuted it (~−22%); it survives only as an isomorphism oracle. 8A measures
-  the closure runtime; XL-D / 8C own the emitter.
-- **R-A5 — load-confounded win.** *Counterexample:* the naive `pt-b3` cross-run (PROVE-11 §3.1:
-  pristine loadavg 12, modified loadavg 27) fabricates or erases the delta and halved the dispatch
-  claim. Only single-process paired interleaving certifies; every table states armed/unarmed packrat
-  (shipping path is unarmed).
+- **R-A1 (the family's live wire): the arity unroll is a no-consumer perf seam.** *Counterexample:*
+  value.js — the sole source of the "59 `all()` sites" justification — left the combinator surface
+  on its mainline (commit `470818c`, 2026-02-25); the arity-2/3 unrolls have **zero** live external
+  callers. Shipping/defending them on a consumer contract is exactly the no-consumer-perf-seam
+  pattern the earlier `dispatch` subTable retraction (`leaf.ts:89-98`) was killed for. Disposition:
+  keep the general arm; demote the unrolls to a first-party bench-gated micro-opt, or prune (8D).
+- **R-A2: laundering the temporal inlining leg as a cold win.** *Counterexample:* a landing session
+  measures the arity-2 arm at Turbofan steady state, reads a large delta, and reports it as the
+  cold per-parse number. That is a warm claim under the standing law. Cure: the two-column oracle of
+  §3.1 — structural (cold) and temporal (warm) reported apart, HEAD named.
+- **R-A3: the R4 consumer table is stale and load-bearing downstream.** *Counterexample:* the extant
+  PT-3 W0/W5 gates assume value.js consumes parse-that (3.1.0, `^1.0.0`, 59 `all()` sites) and that
+  keyframes.js reaches it transitively through value.js. At HEAD value.js is 4.0.0, imports nothing,
+  and the transitive keyframes path is therefore dead. A 1.1.0 "value.js consumer suite green" gate
+  is measuring a consumer that no longer links the code under test. **Spec re-cut owed:** the only
+  live combinator gate is latex-paper (pinned pre-unroll), and it needs a 0.7→1.1 migration to be a
+  gate at all. (Spec-fidelity divergence per the plane-wide directive.)
+- **R-A4: dynamic/large arity is the real external shape.** *Counterexample:* latex's `any(...alts)`
+  and arity-≥15 `inlineNode` are the actual external `any` traffic; a specializer that only unrolls
+  arity-2/3 does nothing for them and the general indexed-`for` arm is what they exercise. The
+  correct optimization target for the live corpus is the general arm's steady-state (a
+  first-char-dispatch or prefilter routing), not more unrolled arities.
+- **R-A5: over-reading `%HaveSameMap` as proof of no churn.** *Counterexample:* same-map TRUE for a
+  diagnostics-off vs diagnostics-populated `ParserState` proves the *lazy field* claim, but the
+  `mapState` `Object.create` view (`parser.ts:177-180`) is a separate prototype-chain object the
+  same-map probe won't catch; the oracle must assert it is the *only* such object, not merely that
+  the base state is stable.
 
 ---
 
-## 7. What a prototype must test to move family 8A
+## 7. Exactly what a prototype must test to move 8A
 
-1. **Per-arity inline verdict, base-pinned (XL-H).** Re-run `--trace-maglev-inlining` at arities 1..6
-   on a fresh `v1.0.0` scratch build, HEAD named; confirm the 169/234-byte non-inline boundary, the
-   162-byte driver boundary, and record the arity at which the general arm crosses. Structural leg;
-   report separately from any ns.
-2. **The build-time-emitter counterfactual (the decisive experiment).** Emit straight-line
-   `all(a,b,c)` per static-arity call site (scratch, 4B-TS shape), measure the emitted-body bytecode
-   size, re-trace: does the per-site body land < 100 and INLINE where the runtime unroll cannot?
-   Cold-paired emitted-vs-runtime-unroll closure. The one experiment that dissolves §2A's ceiling —
-   and the one that decides whether the runtime unroll should exist at all.
-3. **The re-anchored arity histogram → floor.** Rebuild the specialization's non-regression floor on
-   latex-paper's actual `any()` shapes (arity-3 + variadic, both on the general for-arm) plus the
-   first-party bench, since value.js's `all()` corpus is dead. Decide keep-vs-collapse the arity-2/3
-   `fuseAll` unroll and feed the disposition to 8D.
-4. **Shape oracle (`%HaveSameMap`).** Two `ParserState`s — one diagnostics-off, one `suggestions`-
-   populated — same map TRUE (fixed-from-birth); assert `mapState`'s `Object.create` is the only
-   prototype-chain object, its (zero) callers un-deopted, and that the fixed-shape struct-view
-   replacement holds the map. Under `node --allow-natives-syntax`.
-5. **Alloc-zero certification, default path.** `--expose-gc` heapUsed-delta B/op on fused/dispatch
-   with packrat unarmed and diagnostics off; confirm the −60.1% alloc holds and no per-parse
-   allocation slips in (the true source of the temporal win, per §2A).
+1. **The two-leg arity oracle (the decisive test).** Scratch parse-that at a NAMED HEAD, Node ≥22
+   default tier. For arity ∈ {2, 3, 4-general}: (a) `--trace-maglev-inlining --trace-turbo-inlining`
+   + `%GetOptimizationStatus` to record which tier each arm reaches and whether `p_i.parser` inlines;
+   (b) **cold** per-op paired median (unroll arm vs general arm, matched arity, single build per
+   process, interleaved A,B,A,B…, N≥12, loadavg per round) as the **structural** column; (c)
+   **warm/steady** per-op after `%OptimizeFunctionOnNextCall` as the disclosed **temporal** column.
+   Interpretation: report the two columns apart; the family's claimable number is the structural
+   one. This test decides whether the unroll survives on its own cold merit absent any consumer.
+2. **The shape oracle.** `node --allow-natives-syntax`: `%HaveSameMap` TRUE for diagnostics-off vs
+   diagnostics-populated `ParserState`; assert `mapState`'s `Object.create` view is the ONLY
+   prototype-chain object on the hot path; assert no unrolled arm introduces a new hidden class.
+3. **The live-corpus re-census as a committed artifact.** The §2 histogram, machine-generated (grep
+   census over value.js@`86a9a17`, latex-paper@`c140473`, keyframes.js@6.0.0), checked in so the
+   spec re-cut (R-A3) has a falsifiable before-state — and re-run if the owner confirms a value.js
+   or latex-paper migration is forthcoming (P1/P2 owner-gated, non-blocking).
+4. **The general-arm target test (the real external shape).** Prototype a first-char/dispatch routing
+   over latex's arity-≥15 `inlineNode` `any` and measure cold per-op vs the sequential general arm —
+   this is where the *live* corpus's optimization headroom actually sits, not in more unrolled arities.
+
+---
+
+## 8. Disposition summary (for the registry, 8A alone)
+
+- The shape-stable core (lazy `ParserState` fields, fixed-from-birth hidden class, allocation-zero
+  default path) is **sound and measured** — the durable substrate; keep and pin with the shape
+  oracle.
+- The arity-N specializer's **structural** leg is a legitimate cold win; its **temporal** (inlining)
+  leg is warm-only and must be reported apart under the standing law.
+- The specializer's **consumer justification has evaporated**: value.js migrated off combinators on
+  its mainline (2026-02-25), latex-paper is pinned pre-unroll and uses only arity-≥3/dynamic `any`.
+  The unrolled arity-2/3 arms are a **first-party-only** micro-optimization; the honest disposition
+  is bench-gate-or-prune (routed to 8D), keep the general indexed-`for` arm as the real core.
+- The specializer is **not** one mechanism with the build-time TS emitter today; it is subsumable by
+  a build-time fuser (a sibling family's build), whose payoff for the unrolled arities is near-zero
+  on live traffic per the §2 histogram.

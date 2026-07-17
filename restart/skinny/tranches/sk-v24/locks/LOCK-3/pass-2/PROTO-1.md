@@ -1,171 +1,131 @@
-# PROTO-1 — LOCK-3 pass-2 probe 1: the single-owner `:204` thread + CONSUME/parity gate
+# PROTO-1 — LOCK-3 pass-2, probe G-3B-1 (family 3B: the IR transposition spine)
 
-**Family:** 3A (CONTRACT-TOWER, the CONSUME contract) + 3B (SINGLE-IR, the `Project.ty@204`
-quadruple-home discharge), unified to one owner.
-**Unifies:** research-A T3 = research-B step3 = research-C P2 = research-D step3.
-**HEAD measured on:** `c93fc43143743ffaf54855c526f6aeab79227352` (+ dirty working tree: the probe patch).
-**Base pin:** `ce51c36fc` — verified ancestor of HEAD after `git merge --ff-only c93fc4314`
-(HEAD was stale at `d2b32f6e3`, an ancestor of the pin; fast-forwarded cleanly; c93fc4314 itself
-descends from ce51c36fc). **No wrong-artifact-risk.**
-**loadavg during runs:** ~10.6–11.8 (1-min), machine up 3 days; other agents concurrent.
+**Probe:** execute the whole `(GrammarIr, Attributes)` fold — regen check byte-identical.
+**Run:** PROTO-2, pass-2. Prior state: UNRUN after two passes (trace PROTO-2 + one slice
+PROTO-1-t1, no fold). This is the spine's single load-bearing gate.
 
----
+## BASE-PIN
+
+- HEAD measured on: `c93fc43143743ffaf54855c526f6aeab79227352`
+- `git merge-base --is-ancestor ce51c36fc HEAD` → **ce51c36fc IS ancestor** (base-pin PASS, no
+  fast-forward needed).
+- loadavg at start: `7.90 10.29 8.91`; at E1 regen: `8.02 10.56 9.65` (cold paired, recorded).
+- **Wrong-artifact caveat (not base-pin):** the worktree carried *uncommitted drift I did not
+  author* — `codegen/src/lower/sink_only.rs` (+101), `codegen/src/runtime_generator.rs`,
+  and a new `grammar/tests/oracle_selfparse_probe.rs`. The committed generated `.rs` were
+  self-consistent with this drift (baseline `check-*` all exit 0), so byte-identity is measured
+  against a coherent baseline; but the source tree is NOT the clean `ce51c36fc` snapshot. All E1
+  numbers below are the *delta of my single source edit* against that baseline, isolated by
+  `git checkout HEAD -- <my 2 files>` re-measurement.
 
 ## QUESTION
 
-Does threading the dropped `->` type at `passes/src/lib.rs:204` into `node_types` and populating
-`DirectBuildField.target` from it let the **DERIVED** typed schema reproduce the hand
-`xtask/src/real_typed_schema.rs` baseline **byte-identically** (CONSUME, not re-derive) — and does a
-per-pass predicate read **RED on HEAD / GREEN after**?
+Can the `BackendExpr` materialization plane be deleted and re-expressed as ONE
+`emit(&GrammarIr, &Attributes)` fold with all four regen checks byte-identical — and do the two
+structural tree-walkers (`json_sink_direct/dispatch.rs`, `general_descent/view.rs`) re-base onto
+`GrammarIr` without breaking identity?
 
-Two separable claims live inside that one sentence:
+## METHOD
 
-- **(A) The `:204` thread + parity gate** — thread `Project.ty` into `node_types`; a
-  `verify_project_types` predicate reads RED before / GREEN after; zero emit footprint.
-- **(B) The CONSUME reproduction** — populate `DirectBuildField.target` from the threaded type and
-  have that make the DERIVED typed-direct schema reproduce the hand `real_typed_schema.rs`
-  byte-for-byte, as the **SOLE** producer on the typed path (Q-3A-2: no vacuous relocation).
+The materialization plane is 4 `BackendExpr` variants — `SpanMark`, `TapeEmit`, `DirectBuild`,
+`Return` — injected by `materialize_rule` (passes/src/lib.rs:1362) as a fixed 6-element
+`Seq([SpanMark(Start), body, SpanMark(End), TapeEmit, DirectBuild, Return])` emit-order template.
 
----
+Static read of every downstream consumer established the *output-relevance map* of the four:
 
-## METHOD (what ran)
+| variant     | passes (shape select)                 | json_sink_direct (dispatch.rs) | general_descent (emit.rs / view.rs) |
+|-------------|---------------------------------------|--------------------------------|-------------------------------------|
+| SpanMark    | none                                  | no-op (empty FirstBytes)       | no-op body — **but occupies a Seq slot** |
+| Return      | none                                  | no-op                          | no-op body — **but occupies a Seq slot** |
+| TapeEmit    | `contains_tape_kind` (passes:677,727) | no-op                          | no-op body — **but occupies a Seq slot** |
+| DirectBuild | `contains_direct_build` (passes:955)  | gates `direct_shapes` (mod.rs:133), feeds count in comment (mod.rs:186) | emits `mark(tape,…)` (emit.rs:388) |
 
-Smallest probe that answers the question, executed on the real tree:
+Key structural fact (emit.rs:301–304): the general_descent recognizer emits one
+`*cursor = skip_ws(bytes, *cursor);` **separator before every `Seq` child at index > 0**. The
+marker variants emit no code of their own, but each is a `Seq` child — so each manufactures one
+`skip_ws` separator line in the generated recognizer.
 
-1. Added `Type::Declared(String)` to `passes::Type` (the one variant that can *carry* a declared
-   `->` type verbatim; no external exhaustive match on `passes::Type` exists in the workspace, so the
-   addition is closed).
-2. Added `pub fn verify_project_types(grammar, facts) -> Result<(), Vec<SourceSpan>>` in
-   `passes::layout::types`: for every `Project` with `ty == Some(declared)`, `Err` unless
-   `node_types[project] == Type::Declared(declared)` **and** `node_types[project] != node_types[body]`.
-3. Added `crates/passes/tests/verify_project_types_probe.rs` — parses the **sole `->` witness**
-   (`grammar/google-sheets/google-sheets.bbnf`), runs `infer`, prints the RED/GREEN verdict + offending
-   spans; asserts `json.bbnf` (zero arrows) is vacuously GREEN.
-4. **RED measurement:** ran the probe with `:204` UNCHANGED (`Project { body, .. } => infer_expr(body)`).
-5. **STEP-1 thread:** changed `:204` to consume `ty` — `Some(declared) => Type::Declared(declared)`,
-   `None => body_ty` (body still inferred so its own `node_types` entry is populated).
-6. **GREEN measurement:** re-ran the probe.
-7. **Zero-footprint:** ran `check-real-typed`, `check-json`, `check-sheets` on the HEAD baseline
-   (predicate-out) and again with the thread in place (predicate-in).
-8. Traced the real-typed emit path end-to-end to test claim (B).
+**Probe E1 (the smallest deletion that isolates the byte-coupling):** drop the two *zero-consumer*
+decoration variants (`SpanMark` start/end) plus `Return` from the emit-order template — keeping
+`TapeEmit` + `DirectBuild` (the shape-channel the plane truly homes). Then run the full contract:
+`regen-{json,sheets,css,real-typed}` → `git diff --stat` on generated `.rs` → `check-*` ×4 →
+`bbnf-bench` parity/strict_product.
 
-`cargo` ran inside the isolated worktree's own target dir (no shared-target contention). parse-that
-untouched (READ-ONLY, not needed).
+## WHAT RAN (measured, not spec)
 
----
+1. **Baseline** (committed tree): `check-json`, `check-sheets`,
+   `check-css-l4-declaration-values`, `check-real-typed` — **all exit 0** (generated `.rs`
+   byte-identical to committed). `strict_product` witness test `ok`.
+2. **E1** applied to `materialize_rule`; all four `regen-*` ran; `git diff --stat` captured;
+   all four `check-*` ran; `bbnf-bench` full suite ran; then my 2 files reverted to HEAD and the
+   suite re-run for attribution.
 
 ## THE NUMBERS
 
-### (A) — RED→GREEN, EXECUTED
+E1 `git diff` on generated `.rs` (baseline → E1):
 
-| stage | `:204` | `verify_project_types` on Sheets |
-|---|---|---|
-| HEAD baseline | drops `ty` (`.. => infer_expr(body)`) | **RED** — `Err`, 4 of 4 declared projections drop their type; spans `[628..658, 2388..2435, 3039..3079, 4278..4319]` |
-| after thread | consumes `ty` | **GREEN** — `Ok(())`, all 4 declared projections carry their type |
+| target                          | generated delta          |
+|---------------------------------|--------------------------|
+| json/generated.rs               | **0** (byte-identical)   |
+| css_l4_declaration_values       | **0** (byte-identical)   |
+| real_typed (DirectBuild module) | **0** (byte-identical)   |
+| **sheets/generated.rs**         | **−3 lines** (diverged)  |
 
-The 4 spans are exactly the `-> input : Span` projections (`string`, `sheet_prefix`, `cell_ref`,
-`identifier`). `json.bbnf` has **zero** declared projections → vacuously GREEN (asserted). This is
-**G-3A-1 EXECUTED** (Sheets witness), not merely specified.
+The three diverging bytes are all one token — `*cursor = skip_ws(bytes, *cursor);` — removed from
+`parse_string` (Seq-child separators for the 3 deleted marker slots). `mark()`, `match_leaf`,
+and every semantic statement are UNCHANGED.
 
-### (A) — zero emit footprint, EXECUTED (G-3A-2)
-
-| command | HEAD (predicate-out) | after thread (predicate-in) |
-|---|---|---|
-| `check-real-typed` | EXIT 0 | EXIT 0 |
-| `check-json` | EXIT 0 | EXIT 0 |
-| `check-sheets` | EXIT 0 | EXIT 0 |
-
-All three byte-identical with and without the thread. Threading `ty` into `node_types` changes the
-attribute table only; the emitter output is untouched. `git diff --stat` code footprint: **51 net
-lines in `passes/src/lib.rs`** + a 61-line probe test; **0 generated files touched.**
-
-### derive-path arrow-lex: 0 (satisfied)
-
-`grep -c classify_projection crates/passes/src/**` = **0**. `classify_projection` lives only in
-`crates/codegen/src/general_descent/view.rs` (the Sheets *codegen* path), never the passes *derive*
-path. No arrow re-lex on the derive path — already clean.
-
-### (B) — CONSUME reproduction: **REFUTED (measured)**
-
-`DirectBuildField.target` is `Option<DirectBuildTarget>` and is **`None` at all 11 construction
-sites** in `derive_materialization_plan`; **`Some(..)` appears nowhere** in the workspace;
-`DirectBuildTarget { .. }` is **never constructed** outside its definition. The field is dead.
-
-The real-typed emit path proves the field is not merely unpopulated but **unread**:
-
-```
-emit_typed_from_source(json, source, schema:&DirectSchemaSet)
-  -> passes::compile(grammar)                 // produces backend_ir w/ DirectBuildField.target = None
-  -> emit_typed_with_layout(backend_ir, ..., schema)
-       -> lower::schema_direct::lower_program(sink_only, schema)
-            = TypedDirectProgram { schema: schema.clone(),           // <- HAND schema, cloned whole
-                                   direct_shape_roster: <shape NAMES only> }
-       -> json_typed_direct::render(&typed)
-            reads schema.roots (:50), schema.types (:70);            // <- ALL types from HAND schema
-            direct_shape_roster used once, as a COMMENT (:19)        // <- derived side = one comment
-```
-
-So the DERIVED side contributes exactly **one comment line** (a comma-joined shape-name roster); every
-byte of typed structure comes from the cloned hand `DirectSchemaSet`. `check-real-typed` is GREEN
-**because the hand schema still drives everything** — its GREEN is evidence *against* CONSUME, not for
-it (this is precisely Q-3A-2's *vacuous CONSUME*, in its strongest form: not relocation-via-fallback
-but a field that is never on the wire).
-
-Three independent walls make (B) unreachable by "set `target = Some(threaded_ty)`":
-1. **Type wall.** threaded `ty` is a `String`; `DirectBuildField.target` is
-   `Option<DirectBuildTarget>` — a 6-field struct (`rust_field`, `type_ref`, `presence`,
-   `cardinality`, `representation`, `decode`). `Some(threaded_ty)` does not typecheck.
-2. **Wiring wall.** even a fully-populated `target` is never read by `json_typed_direct::render`;
-   the render consumes the `schema` parameter, so `target` cannot be the SOLE producer until
-   `emit_typed_from_source`'s hand-`schema` parameter is *deleted* and `lower_program` is taught to
-   *synthesize* `DirectSchemaSet` from `sink_only` — the 3B substrate fold (G-3B-1), a
-   crate-spanning retirement, not this probe.
-3. **Corpus wall.** the real-typed corpus is `json.bbnf`, which has **zero arrows** and none of the
-   hand schema's per-benchmark detail (root struct names `TwitterSearch`/`CitmCatalog`/…, capacities
-   `1_264`/`30`/`10_001`, string-enum variant tables). A bare-grammar derive cannot reproduce the
-   1014-line hand schema byte-for-byte for the STRUCT subset regardless of `target`; the information
-   is not in the grammar.
-
----
+- **Attribution:** classified **incidental**. `skip_ws` is idempotent; the removed separators sat
+  between markers that consume no input, so consecutive `skip_ws` calls were functionally dead.
+  No semantic byte changed.
+- **Parity:** `direct_strict_product_reuses_generated_products_without_digest_plane` → **ok in
+  BOTH baseline and E1** (strict_product digest unchanged). 7 other `bbnf-bench` tests
+  (`report::tests::*`, `css_l4_w8`, `json_w9`) fail **identically with my edit reverted** → they
+  are pre-existing worktree/environment failures, **not** caused by E1.
+- **net-LOC:** the full transposition (delete all 4 variants + re-express `single_plan` as an
+  `emit(&GrammarIr,&Attributes)` fold + re-base the two 318/431-LOC walkers) was **not carried to
+  completion** — E1 is the parsimonious probe that isolates the gate. PASS bar (net-LOC ≤ −80,
+  dispatch.rs/view.rs re-based) is therefore **not met**.
 
 ## VERDICT
 
-**RAN_MEASURED.** The unified single-owner `:204` thread + parity gate — the 3A organ that pass-1
-discharged in *none* — is now **DISCHARGED and EXECUTED**: `verify_project_types` reads RED (4 spans)
-on HEAD and GREEN after the thread, with byte-identical `check-json`/`check-sheets`/`check-real-typed`
-predicate-in vs predicate-out (zero footprint) and 0 `classify_projection` on the derive path.
+**FAIL / DEMOTE 3B to "structurally-motivated, unproven"** under the strict byte-identity gate.
 
-The CONSUME half of the question — that populating `DirectBuildField.target` from the threaded type
-makes the DERIVED schema reproduce the hand `real_typed_schema.rs` byte-identically — is **REFUTED as
-stated**. `DirectBuildField.target` is a dead field on the typed path (never populated, never read;
-the render clones the hand `DirectSchemaSet` wholesale), and three walls (type / wiring / corpus)
-place true CONSUME behind the 3B substrate fold (G-3B-1, delete `emit_typed_from_source`'s schema
-param + synthesize `DirectSchemaSet` from `sink_only` + resolve JSON's zero-arrow corpus), which this
-parsimonious probe deliberately did not attempt. **The gate is real and green; the quadruple-home
-`target` discharge is not reachable by a one-line `target = Some(ty)` and must be carried to LOCK-3
-pass-3 / the 3B fold.**
+The plane's marker variants are **not byte-inert**. Deleting even the two zero-consumer decoration
+variants perturbs the general_descent (sheets) recognizer by 3 `skip_ws` separator lines, because
+`emit.rs:302` manufactures one separator per `Seq` child regardless of whether the child emits
+code — so the committed `sheets/generated.rs` has *frozen incidental separators that the plane
+manufactures as Seq-slot fillers*. A deletion-based transposition therefore cannot reproduce the
+committed sheets bytes; the gate as written ("delete + four byte-identical regens") is
+**unsatisfiable without first re-baselining sheets** to the cleaner (fewer-`skip_ws`) form.
 
-The JSON sum subset (needs `DirectTypeKind::Sum`) was out of scope, carried born-RED on GN-3.W1 — not
-touched.
+**Nuance that keeps 3B alive as a structure (not a byte-identity claim):**
+- The **spine-critical path is byte-robust.** JSON (`json_sink_direct/dispatch.rs`, the 91.5% hot
+  leaf), CSS, and real-typed are **byte-identical** under marker deletion — dispatch.rs already
+  treats the plane as no-ops, so it re-bases onto `GrammarIr` cleanly (CLAIM B holds for the JSON
+  walker). Only `general_descent` (view.rs's sibling emit.rs) is byte-fragile, and only via the
+  incidental Seq-separator rule.
+- The plane is a **denormalized copy of descriptor data**: `TapeEmit.kind` and `DirectBuild.shape`
+  are already single-homed in `MaterializationPlan.descriptors` (the Attributes bundle). The
+  transposition is semantically sound — nothing is lost, `strict_product` is invariant.
 
----
+**What the gate actually requires to flip to PASS** (route, unrun here):
+1. Make general_descent emit `skip_ws` on *semantic* need (between input-consuming children),
+   not per-Seq-child — this is itself a generated-byte change to sheets, so it must land as a
+   deliberate sheets re-baseline commit, after which deletion becomes byte-neutral.
+2. Re-home `contains_tape_kind`/`contains_direct_build` onto `Attributes` (descriptor lookups)
+   so shape selection stops sniffing injected markers.
+3. Then delete the 4 variants + fold `single_plan` + re-base the two walkers.
 
-## PATCH
+Because step 1 mutates a committed generated file, **"byte-identical to committed" and "delete the
+plane" are mutually exclusive for sheets in this baseline.** That is the load-bearing finding: the
+spine is convergent and semantically deletable, but its byte-identity contract is refuted by an
+incidental artifact the plane itself manufactures. 3B stands as *structurally-motivated*; it is
+*not* byte-proven.
 
-`crates/passes/src/lib.rs` (+51/−1) and `crates/passes/tests/verify_project_types_probe.rs` (+61).
-Full diff in `PROTO-1.patch` (co-delivered). Core change at `:204`:
+## ARTIFACTS
 
-```rust
-ExprKind::Project { body, ty, .. } => {
-    // CONSUME the declared `->` type. Body still inferred so its own
-    // node_types entry is populated, but the projected node's type is the
-    // author's declaration when present — the arrow is threaded, not dropped.
-    let body_ty = self.infer_expr(*body)?;
-    match ty {
-        Some(declared) => Type::Declared(declared.clone()),
-        None => body_ty,
-    }
-}
-```
-
-plus `Type::Declared(String)` and `verify_project_types` (the parity predicate).
+- Patch: `G-3B-1-E1.patch` (my source edit + the isolated sheets delta; excludes pre-existing
+  worktree drift).
+- Coupling site of record: `codegen/src/general_descent/emit.rs:301-304` (Seq-child `skip_ws`
+  separator) — the exact byte-coupling that blocks the gate.

@@ -1,262 +1,253 @@
-# LOCK-2 — THE GRAPH ENGINE — pass-2 PRIOR-ART
+# LOCK-2 — THE GRAPH ENGINE — PRIOR-ART (pass 2)
 
-Researcher: prior-art (no family allegiance). Scope: e-graph + CSP optimization governing the
-generator pipeline — HIR canon, IR rewriting, kernel/backend selection, capacity/schedule
-decisions, profile-fed cost models, deterministic regen. This sweep answers: what exists here,
-what won/lost elsewhere for THIS problem class, which constraints our evidence base imposes, and
-the traps named in comparable systems.
-
----
-
-## 0. What already exists IN-TREE (the seed the families extend, not invent)
-
-The graph engine is not greenfield — it is an egg-shaped substrate already wired to the compiler:
-
-- **`crates/egraph/`** (1885 LOC, edition 2024) — a domain-agnostic equality-saturation library.
-  `Language` trait (derivable via `egraph-derive`) is the only consumer obligation; BOTH grammar
-  IR nodes and regex HIR nodes implement it, so **both pipelines share one e-graph infrastructure**
-  (`lib.rs:1-30`) — this is constitution-clause-ii isomorphism already realized in code.
-  - Extraction (`extract.rs`) is the **egg greedy bottom-up** algorithm, explicitly documented as
-    "not optimal for cost models that depend on sharing" (`extract.rs:6-11`). A `Lattice`/`Scalar`
-    marker (`extract.rs:AA.3`) is present so multi-objective Pareto extraction can land WITHOUT
-    churning `CostModel` — the seam for a richer objective is already cut but unused.
-  - Two schedulers: `BackoffScheduler` (egg's rule back-off) and **`CspScheduler`** (`csp_scheduler.rs`,
-    368 LOC) — models "which e-classes need re-probing" as a CSP over monotone `DirtyDomain` lattices
-    with `ParentDirtyProp` constraints; one `csp.propagate()` computes the transitive dirty closure.
-    This is an **LLVM-style Changed-bool convergence** (memory: changed-flag-convergence), NOT a
-    structural-hash fixpoint — already the disciplined form.
-  - `cost_weights.rs` — `CALIBRATED_WEIGHTS` / `CostWeights` is a single-source-of-truth knob struct
-    (`structural`, `alt_per_branch`, `dispatch_bonus`) embedded by `GrammarCostModel` and
-    `RegexExtractionCost`; domain knobs layer on top (pluggable-components law honored).
-- **`crates/csp-solver/`** (vendored from csc411, sync-gated) — AC-3, GAC all-different (Régin 1994),
-  forward checking, **lattice domains for monotonic fixed-point propagation**, and `solver/optimize.rs`
-  (`OptimizationMode` — COP, not just CSP). This is the engine LOCK-1B/2C would drive.
-- **`passes/` pipeline** (R1 §2): `infer → shape → CSP → egraph`; `derive_backend_shape`
-  (`passes/src/lib.rs:398`) reads `BackendShapePlan.cost_facts`. `ir/src/cost.rs` already carries
-  `ActiveCostFacts` with **egraph/CSP selection provenance** (`selected_shape`, cost-freshness,
-  rewrite counts), `DecisionCspFacts`, and an 8-step `PriorityStep` ladder — the decision driver's
-  bookkeeping exists; the families dispute how much of the pipeline it should govern.
-- **PROVE-12 (GO/CONFIRMED)** — emit-spine residualization: the generator const-folds + beta-reduces
-  the CSS delimiter test **at generation time** (const-generic `u128` mask + monomorphization),
-  disasm-verified, regen bit-for-bit, +18 gen LOC. This IS "residualization depth" as a concrete
-  lowering choice — the exact per-site variable 2C proposes to solve.
-
-**Read:** we have egg + a CSP/COP solver + a cost-facts spine + a proven residualization lowering.
-The prior-art question is which discipline (2A/2B/2C/2D) these should compose into.
+Prior art for *where and how graph optimization governs the generator pipeline*: e-graph
+islands vs. whole-IR saturation, CSP/ILP for per-site lowering choice, profile-fitted cost
+models, and deterministic regen. Adjudicated against the SK-V24 evidence base (SPEC §0
+certified numbers + refutation laws, GN-2 spec, R1 cartography) and the in-tree seeds. No
+family allegiance; this is what the world has already settled for THIS problem class.
 
 ---
 
-## 1. Equality saturation for compiler optimization — the field, and where it won/lost
+## 0. What already exists in-tree (the seed reality)
 
-**egg (Willsey et al., POPL 2021)** is the reference — fast, extensible equality saturation; e-graphs
-represent many equivalent programs compactly; rewrites are **additive, never destructive** (the initial
-term survives), and a separate cost-guided **extraction** picks the result [egg]. Our crate is an
-egg-shape. The field's headline claim is **phase-ordering avoidance**: EqSat encodes all optimizations
-in the e-graph so no rule-application order need be chosen [egg; Tensat].
+The lock is NOT greenfield. `crates/egraph/` (1885 LOC) already ships the machinery the four
+families argue over:
 
-Where equality saturation LOST / must be bounded:
-- **Termination is NOT guaranteed** — rules can introduce opportunities indefinitely; the practical fix
-  is **timeout + a back-off scheduler** [Sketch-Guided EqSat, arXiv 2111.13040; egg]. A timeout-driven
-  optimizer is a **determinism hazard** for a compiler that must regen bit-for-bit (our clean-regen +
-  reproducible-regen law). Any saturation-loop family (2B especially) must pin a **deterministic
-  saturation budget**, not a wall-clock timeout.
-- **Blowup** — "millions of e-nodes and e-classes"; richer rule sets "exhaust memory faster" [Guided
-  Equality Saturation, ACM 3632900]. Grammar/regex e-graphs are small today, but 2B ("IR IS an
-  e-graph end to end") inherits this risk at scale.
+- **Greedy bottom-up extraction** (`extract.rs`): "the Egg greedy bottom-up algorithm … not
+  optimal for all cost models (e.g., cost models that depend on sharing require a more
+  sophisticated extractor)." The header *already names the deep trap* (§4). A `Lattice`/`Scalar`
+  cost trait anticipates Pareto/multi-objective without churn (`extract.rs:36-60`).
+- **A CSP-backed rewrite scheduler** (`csp_scheduler.rs`, 368 LOC): each e-class is a CSP
+  variable with a monotone `DirtyDomain` lattice, each parent edge a `ParentDirtyProp`
+  constraint; one `csp.propagate()` computes the transitive dirty closure — the in-tree answer
+  to e-graph blowup / scheduling, "isomorphic to the grammar tier's `csp-solver` usage in
+  `passes/csp_domains.rs`."
+- **`csp-solver/`** (6987 LOC): GAC solver (`solver/gac/`), Kuhn–Munkres assignment
+  (`builder/kuhn_munkres.rs`, 265 LOC), `CostFinite`/lattice domains (`domain/cost_finite.rs`,
+  `domain/lattice.rs`) — i.e. an *assignment-with-cost* engine already exists, which is exactly
+  the PBQP/CSP substrate 2C needs (§3).
+- **The cost seam** (R1 §8.3): `ir/src/cost.rs` `ActiveCostFacts` already records egraph/CSP
+  selection provenance (`selected_shape`, rewrite counts, cost-freshness); `DecisionCspFacts`,
+  `PriorityStep` (8-step). `BackendShape` (5 variants) is the extraction target. **The engine is
+  wired but under-consumed** — the Y.13 pathology (substrate without consumer) is the standing
+  risk, not absence of substrate.
 
-**The production counter-datapoint — Cranelift's ægraph (Fallin, EGRAPHS 2023; RFC-27 accepted).** A
-shipping compiler (Wasmtime, compiles SpiderMonkey.wasm) rearchitected its mid-end to an **ACYCLIC
-e-graph**: rewrites (ISLE DSL rules) apply **eagerly and immediately during a single forward
-construction pass** — acyclicity means "no need to revisit a node" — then **one cost-based extraction**
-during a domtree-preorder placement pass (also doing LICM + remat). This **solved the pass-ordering
-problem in production** WITHOUT an unbounded saturation loop, and is deterministic and scalable
-[Fallin, aegraph slides + blog cfallin.org/blog/2026/04/09/aegraph]. **This is the strongest signal
-for LOCK-2**: the family that mirrors ægraph (bounded eager rewrite + single extraction, island-scoped)
-inherits determinism and production-proven scaling; the family that pursues unbounded saturation
-(2B literal) inherits the termination/blowup traps and must defeat them with measured budgets.
-
----
-
-## 2. Extraction — the NP-hardness cliff (binds 2B and 2C directly)
-
-The single most-cited trap in this problem class: **optimal extraction from an e-graph is NP-hard in
-general** [Cornell CS6120 tech-mapping notes; e-boost, arXiv 2508.13020]. Greedy bottom-up (our
-`extract.rs`) is correct ONLY for **local / monotone** cost functions — cost of a class = min over its
-nodes of (node cost + Σ child-class costs), extractable by a Knuth/Dijkstra-style traversal [egg;
-juliasymbolics Metatheory]. The moment cost depends on **sharing** (a subexpression reused by two
-parents counted once) or on a **global budget**, greedy is silently suboptimal and can even extract a
-**cyclic** selection.
-
-Who paid the price and how:
-- **Tensat (MLSys 2021)** — tensor-graph superoptimization; uses **ILP for extraction** to guarantee an
-  acyclic valid graph at lowest cost, but this "**restricts its application to smaller e-graphs**"
-  [Tensat, arXiv 2101.01332]. ILP extraction is optimal and does not scale.
-- **ROVER** — RTL datapath optimization; ILP extraction guarantees acyclic + minimal, achieving up to
-  **63% area** savings [cited in CS6120 notes]. Same optimal-but-bounded story.
-- **e-boost (2025)** — the modern answer: **adaptive heuristics + exact solving** hybrid — heuristic
-  prune, exact-solve the residual [arXiv 2508.13020]. This is the shape 2C should adopt if it insists
-  on a global objective: e-graph GENERATES candidates, a bounded exact CSP/ILP SELECTS over the
-  extracted frontier — not exact-solve the whole graph.
-
-**Direct consequence for our families.** 2A/2D can live on the existing greedy extractor **iff** every
-island's cost stays local/monotone (`dispatch_bonus` per-node is fine; a **generated-size budget**
-across the whole emit is NOT local — it is exactly the global constraint that makes extraction
-NP-hard). 2C names "the generated-size budget" as a CSP constraint (correctly a global constraint) and
-"e-graphs only generate candidates" (correctly the e-boost split) — that is the prior-art-sanctioned
-architecture. The `Lattice`/`Scalar` seam in `extract.rs` is the hook for Pareto/multi-objective, but
-**greedy Pareto extraction is still only heuristic under sharing** — this must be stated, not assumed.
+PROVE-12 is the one *landed, measured* graph-engine win: generation-time const-fold +
+beta-reduction of the CSS delimiter test (`css_canon_bench` 0.81–0.98× cyc/B, +18 gen LOC,
+byte-identical). It is residualization-as-monomorphization, not saturation — a data point that
+**cheap, directed, generation-time rewrites already pay; the open question is whether a heavier
+engine pays MORE.**
 
 ---
 
-## 3. CSP / combinatorial optimization for code generation (binds 2C)
+## 1. The dominant production analog — Cranelift's acyclic e-graph (bears on 2A vs 2B)
 
-The "the decision driver IS a CSP" family (2C) has heavyweight precedent AND a scaling ceiling:
+Chris Fallin, *The acyclic e-graph: Cranelift's mid-end optimizer* (2026-04-09) and *ægraphs*
+(EGRAPHS 2023). The single most relevant settled system: a **production compiler that chose
+bounded e-graph islands over full equality saturation**, and measured why.
 
-- **Unison (Lozano, Carlsson, Blindell, Schulte; TOPLAS 2019, arXiv 1804.02452)** — integrated
-  **register allocation + instruction scheduling as one constraint program**. Captures the full
-  transformation set (coalescing, spilling, live-range splitting, rematerialization, packing);
-  **optimal up to ~946–1000 instructions** (nearly an order of magnitude past prior CP approaches);
-  mean speedup 1.1–10%, integrated with LLVM. Lesson: CP over code-gen decisions is **potent but
-  medium-scale** — it is a *bounded* solver, not a whole-program one. 2C over "per-site lowering
-  choices" is Unison-shaped; keep the variable count bounded (per grammar, per island) or it hits the
-  same wall.
-- **PBQP (Partitioned Boolean Quadratic Problem; Scholz/Eckstein)** — instruction selection over SSA
-  graphs and register allocation modeled as a QAP: **node cost-vectors** (the options, exactly one
-  chosen) + **edge cost-matrices** (interdependencies). NP-complete, but a **linear-time heuristic
-  solver is near-optimal for sparse graphs, optimal for trees**, and beats tree-pattern matchers by up
-  to 82% [complang.tuwien PBQP; SCOPES'03; used in LLVM]. **PBQP is the precise formal model for 2C's
-  "per-site choice with legality edges + a cost lattice"** — and its sparse/near-optimal solver is the
-  scaling escape Unison lacks. If 2C is built, PBQP (not full ILP) is the prior-art-blessed encoding.
-- Reinforcement of the **candidate/selection split**: PBQP and e-boost both separate structural
-  generation from a bounded selection solve — matching 2C's "e-graphs only generate candidates" and
-  LOCK-1B's "local propagators + global search," and LOCK-1A's "CSP only where unification is
-  undecidable, as a bounded post-solve." The whole lock family converges on **bounded post-solve**, not
-  a monolithic global CSP.
+- **Motivation = the pass-ordering disease** e-graphs cure: GVN, LICM, rematerialization fall
+  out "for free" during translation to/from the e-graph; no separate machine-independent passes.
+- **Eager rewrites at construction ("cascades", à la database query optimizers)**: a rule's RHS
+  is itself rewritten before its uses are established — single-pass, exploiting SSA
+  def-before-use. No batched rebuild loop, acyclic by construction.
+- **Extraction = DP bottom-up in topological order, ignoring shared substructure** — the same
+  tree-cost simplification our `extract.rs` uses, chosen precisely to dodge NP-hardness (§4).
+- **The load-bearing measurement**: average e-class size **1.13 nodes**; multi-representation
+  "may not (yet?) be pulling its weight." Whole-graph saturation buys **~0.1% runtime** at
+  **~7–8% compile-time**. Suboptimal eager-elaboration events: "approximately twice across
+  millions of nodes."
+- **Ruleset discipline**: *deliberately excludes* associativity/commutativity identities "that
+  do not simplify" — directional rewrites only, to keep the graph from exploding.
 
-Our `csp-solver` already has the machinery (AC-3, GAC, lattice domains, `OptimizationMode`); what it
-lacks vs Unison/PBQP is an **edge-cost (binary-constraint) COP encoding** — the QAP shape. That is a
-named gap, not a missing engine.
+**Verdict for LOCK-2**: for a *generation-time* engine under a generated-LOC budget, Cranelift is
+direct evidence that **2A (directed pipeline, small e-graph islands, eager directional rewrites,
+cost-model extraction at named decision points) is the proven shape, and 2B (whole IR as a
+saturating e-graph) must clear a Cranelift-style measurement bar or it is over-investment.** Cite:
+cfallin.org/blog/2026/04/09/aegraph/; pldi23 ægraphs.
 
 ---
 
-## 4. Profile-fed / learned cost models (binds 2D — and collides with our determinism law)
+## 2. Whole-IR saturation — egg / egglog (bears on 2B)
 
-2D ("optimization as measured feedback; cost coefficients fitted from PMU, committed as fact tables;
-solver re-runs at regen") has direct precedent and a sharp reproducibility trap:
-
-- **MLGO (Trofin et al., Google/LLVM, arXiv 2101.04808)** — first full ML integration in a production
-  compiler pass (inlining-for-size, then regalloc), RL-trained policies beating decades-tuned heuristics
-  by up to 7% size. Critically for us: **MLGO ships FROZEN released models precisely so builds stay
-  deterministic and reproducible** — the model is a committed artifact, retrained offline. This is
-  exactly our "committed as fact tables (determinism preserved)" clause validated by the largest
-  production instance. 2D is prior-art-sound **only if the fit is offline and the committed table is the
-  regen input** — never fit-at-regen.
-- **Cost-model accuracy is itself unreliable**: Ithemal (PMLR v97, 2019; arXiv 1808.07412) shows LLVM's
-  analytical **llvm-mca is off by 2×+ the error** of a learned model on some patterns because it doesn't
-  model certain microarch effects; uiCA (arXiv 2107.14210) and AnICA further document analyzer
-  inconsistency. Lesson for 2D: **a mis-fit cost model will "select" a refuted lever back into life.**
-  Our SPEC §0 is a graveyard of levers a naive throughput model WOULD pick (NEON digit-scan: −37/−48%
-  instructions but CPI inverts 0.13→0.30; block-scheduling: fewer-cycles illusion). An
-  instruction-count objective is actively dangerous here.
+- **egg** (Willsey et al., POPL 2021, arXiv 2004.03082): the *rebuilding* technique —
+  amortized invariant restoration exploiting saturation's batch workload, asymptotic speedups.
+  Our `csp_scheduler.rs` dirty-closure is a CSP re-cast of egg's `BackoffScheduler`.
+- **egglog** ("Better Together: Unifying Datalog and Equality Saturation", Zhang et al., PLDI
+  2023): e-graph = Datalog with congruence; **semi-naïve evaluation** gives determinism +
+  incrementality; lattice-based analyses cooperate. Explores a larger space than egg at less
+  time. This is the strongest 2B-shaped substrate, and it *already matches our lattice idiom*
+  (the csp-solver `LatticeDomain` shape).
+- **Counterweight**: Cranelift (§1) is a production refutation of "saturate everything." 2B is
+  defensible ONLY where cross-island equalities genuinely interact and the compile-budget is
+  paid — which the SPEC's generated-size budget (precept 53) + regen-determinism gate makes an
+  *empirical* question, not an architectural default.
 
 ---
 
-## 5. Constraints OUR evidence base imposes (the negative space the families must fit)
+## 3. CSP / ILP as the decision driver (bears on 2C — the strongest external match)
 
-These are not soft preferences — they are certified numbers and refutation LAWS (constitution iv,
-SPEC §0) that a graph-engine design violates at rejection:
+The lowering-choice problem 2C names — "variables are per-site lowering choices (kernel,
+capacity, prefilter tier, residualization depth), constraints are legality + the generated-size
+budget, objective a cost lattice fed by PMU facts" — is **literally the optimal instruction-
+selection problem**, which the compiler world has settled:
 
-1. **The cost objective may NOT be instruction-count.** SPEC §0 refutation 02 (digit-scan SIMD NO_GO)
-   and 04 (block-scheduling refuted) both show **fewer instructions that REGRESS the product lane**
-   (CPI/latency inversion; OoO already pipelines). A cost model whose objective is ins/B would
-   re-select both. The lawful objective is **paired cold cyc/B**, with **ins/B only as the
-   load-invariant CHECK** (PROVE-12 §4; GN-2 §1.2 precept 43–49). 2D's fit MUST target cyc/B-under-load
-   or paired ratios, never warm/ins-only.
-2. **Warm benches are disinformation** (SPEC §0; constitution iv). Any 2D coefficient fitted from warm
-   or cached measurement voids the design — cold per-parse only (memory: no-warm-benches).
-3. **Determinism / reproducible regen is a hard invariant** (clean-regen-discipline;
-   changed-flag-convergence). This forbids: wall-clock-timeout saturation (§1), fit-at-regen ML (§4),
-   and any nondeterministic tie-break in extraction. The Cranelift-ægraph bounded-eager shape (§1) and
-   MLGO's frozen-table shape (§4) are the two production patterns that satisfy it.
-4. **Consumer-less substrate is forbidden (Y.13, constitution viii).** Every e-graph "island" must have
-   a **same-wave consumer + a cost model** — 2A states this as its own law, and GN-2 §1.2 (precepts
-   8/37/40; the master pathology "substrate-without-consumer, 14/18 dead") makes it the governing rule
-   of the kernel plane. An e-graph inserted "for future use" is a rejected design, not a deferred one
-   (no-deferrals).
-5. **Generated-size budget is a real global constraint** (memory: generated-size-budget; PROVE-12 +18
-   LOC, GN-2 per-wave budgets). This is the one constraint that is genuinely non-local → it is exactly
-   what pushes 2C toward a bounded post-solve rather than greedy extraction (§2).
-6. **PROVE-12 residualization is a proven, GO lowering** — const-fold at GENERATION time via
-   const-generics + monomorphization, "generalizes to any grammar-derived delimiter/STOP-set scan." The
-   graph engine's job w.r.t. residualization is to DECIDE per-site depth (a candidate/selection
-   problem), not to invent the mechanism. LOCK-3D ("staged-residual; PROVE-12 becomes a corollary")
-   and 2C ("residualization depth" as a CSP variable) are the two homes; the graph engine supplies the
-   selection.
+- **Instruction selection on DAGs is NP-complete** (tree covering is linear-time DP; DAGs and
+  full graphs are NP-complete) — Wikipedia *Instruction selection*; Koes & Goldstein, *Near-
+  Optimal Instruction Selection on DAGs* (CGO 2008).
+- **PBQP is the proven engine** for exactly 2C's shape: Eckstein/Scholz/Ebner, *Generalized
+  Instruction Selection using SSA-Graphs* (LCTES 2008) and *Code Instruction Selection based on
+  SSA-Graphs* (SCOPES 2003) reduce optimal covering under legality + cost to **Partitioned
+  Boolean Quadratic Programming** — a linear-time solver yields provably optimal solutions for
+  "almost all" SSA-graph nodes, heuristic fallback for a negligible remainder. This is the
+  template: per-site choice variables, pairwise legality/cost matrices, near-optimal in practice.
+- **Combinatorial register allocation + instruction scheduling** (Castañeda Lozano & Schulte,
+  ACM CSUR 2018): full constraint-programming formulation of joint back-end decisions — evidence
+  that CP scales to real back-ends.
+- **In-tree fit**: `csp-solver`'s Kuhn–Munkres (`builder/kuhn_munkres.rs`) + `CostFinite`
+  domains are already an assignment-with-cost engine; 2C's PBQP-shaped driver is a *specialization
+  of machinery that exists*, not new infrastructure. The `generated_loc_budget` is already a hard
+  constraint in the SPEC (GN-2 ledger) — it *is* a CSP constraint, not a metaphor.
+
+**Verdict**: 2C has the deepest external precedent and the readiest in-tree substrate. Its sharp
+claim — "e-graphs only generate candidates; the CSP decides" — is the PBQP posture, and it
+**dissolves the extraction NP-hardness (§4) by making DAG-cost the CSP objective rather than a
+separate greedy pass.**
 
 ---
 
-## 6. Traps named in comparable systems (checklist for pass-3 synthesis)
+## 4. THE deep trap — extraction under shared substructure (cross-cutting, binds every family)
 
-- **T1 — Global cost + greedy extraction = silent suboptimality / cycles.** If any island's objective is
-  non-local (sharing, generated-size budget), the existing greedy `Extractor` is wrong. Fix per prior
-  art: keep island costs local (greedy stays valid) OR adopt the e-boost/Tensat/ROVER split — e-graph
-  generates, a **bounded** exact solve (PBQP-sparse, not full ILP) selects. Do NOT extend greedy to a
-  global objective and call it optimal.
-- **T2 — Unbounded saturation breaks determinism + blows up.** egg's termination is not guaranteed;
-  timeouts are nondeterministic. Prefer ægraph-style bounded eager rewrite / a fixed deterministic
-  saturation budget. This is the primary risk of the literal 2B ("IR is an e-graph end to end").
-- **T3 — CSP scaling wall.** Unison is optimal only to ~1000 vars; a monolithic whole-program CSP (naive
-  2C) will not scale. Encode as sparse PBQP (per-site cost-vectors + legality edge-matrices) and bound
-  the variable count per island; use the solver as a **bounded post-solve** (converges with LOCK-1A/1B).
-- **T4 — Cost-model mis-fit re-selects refuted levers.** llvm-mca/analytical inaccuracy is documented;
-  our §0 refutations are precisely the levers a throughput model would wrongly pick. 2D's objective must
-  be the certified metric (paired cold cyc/B), the fit offline, the table committed — MLGO-shaped.
-- **T5 — Consumer-less island.** Y.13 / no-deferrals: an e-graph decision point with no same-wave
-  consumer and cost model is dead substrate. Every family must name the consumer.
-- **T6 — Two cost-model homes drift.** `cost_weights.rs` already centralizes shared knobs to defeat this
-  (memory: system-cohesion; the doc-comment explicitly forbids splitting weights across domains). Any
-  new cost dimension (kernel selection, capacity plan) lands in the ONE `CostWeights` struct, not a
-  parallel table — else the grammar tier and regex tier diverge silently.
-- **T7 — E-graph/CSP as orthogonal subsystems.** Memory laws (no-orthogonal-codepaths, system-cohesion,
-  general-infra-crates) + the in-tree `CspScheduler` (e-graph saturation DRIVEN by the CSP solver)
-  already fuse the two. The trap is a design that runs e-graph and CSP as separate passes; the
-  prior-art-and-in-tree answer is one substrate — CSP schedules saturation, CSP/PBQP selects over
-  extracted candidates, one `CostWeights` feeds both.
+The universally-reported pitfall, and the one our own `extract.rs` header confesses:
 
----
+- **Greedy bottom-up (tree cost) double-counts shared subexpressions.** "The presence of common
+  subexpressions breaks the assumption that the best plan for any expression contains the best
+  plan for its subexpressions." DAG cost (count each subexpr once) is the correct model but
+  **DAG-optimal extraction is NP-hard and inapproximable within any constant ratio.**
+- **The settled solution menu** (choose per island by sparsity/budget):
+  - **ILP** — optimal, scales poorly (the baseline everyone beats).
+  - **Fast & Optimal Extraction for Sparse Equality Graphs** (Sun/Parreaux et al., OOPSLA 2024):
+    parameterized by **treewidth ≤ 10**, optimally extracts in a fraction of ILP time — the
+    "our e-graphs are sparse/tree-like" escape hatch.
+  - **e-boost** (Cornell, ICCAD 2025): adaptive heuristics + exact solving hybrid.
+  - **SmoothE** (Cornell, ASPLOS 2025): differentiable relaxation of extraction.
+  - **ASP for E-graph DAG extraction** (Zucker): answer-set-programming encoding.
+- **The Cranelift escape (§1)**: keep e-classes tiny (1.13 avg) so sharing rarely bites, and
+  accept the ~2-in-millions suboptimality. Valid ONLY when islands are small and directional.
 
-## 7. Verdict for the families (prior-art lens only)
-
-- **2A (EGRAPH-ISLANDS)** — best supported by production prior art (Cranelift ægraph is islands-in-a-CFG
-  with per-node extraction) AND by the in-tree seed (islands already at regex-HIR-canon, backend-shape).
-  Lowest determinism/blowup risk. Its stated same-wave-consumer + cost-model law is the Y.13 discipline.
-- **2B (IR-IS-EGRAPH)** — the ambitious literal; inherits T2 (termination/blowup) and must defeat them
-  with a deterministic budget. Only sound in the bounded-eager (ægraph) reading, not the unbounded-egg
-  reading.
-- **2C (CSP-CENTRAL)** — well-founded IF encoded as sparse **PBQP + bounded post-solve** (Unison/e-boost
-  precedent), with e-graphs as candidate generators and the generated-size budget as the global
-  constraint. Full-graph ILP (Tensat/ROVER) does not scale; avoid.
-- **2D (PROFILE-CLOSED-LOOP)** — MLGO-validated ONLY as offline-fit + committed-fact-table + regen-input,
-  objective = paired cold cyc/B. Fit-at-regen or ins-count objective is refuted by §0 before it starts.
-
-The four families are not exclusive: prior art points at a **composite** — ægraph-style bounded islands
-(2A) that generate candidates, a sparse PBQP/COP bounded post-solve (2C) over a global generated-size
-budget, fed by an MLGO-shaped offline-fitted committed cost table (2D), with 2B's "one substrate" as the
-cohesion constraint (T7) rather than a literal whole-IR saturation. This mirrors LOCK-1's own convergence
-(unification-first + CSP-only-where-undecidable + bounded post-solve).
+**Binding on LOCK-2**: `extract.rs`'s greedy pass is **correct only for monotone tree-cost
+islands** (regex/grammar canon, where the header claims it "works"). For any island where sharing
+is load-bearing — residualization depth reused across sites (PROVE-12 monomorph sharing), a
+kernel selected at many scan sites (GN-2.W1 `find_member`) — greedy tree-cost **will mis-pick**.
+Two lawful answers: (a) prove the island sparse/small (Cranelift or treewidth-≤10 route), or
+(b) fold extraction INTO the CSP (2C), where DAG cost = the assignment objective. **This is the
+central 2A/2B-vs-2C adjudication and it is decidable by measurement.**
 
 ---
 
-## Sources
+## 5. Profile-fed cost models + determinism (bears on 2D)
 
-- egg: Fast and Extensible Equality Saturation — arXiv 2004.03082 / CACM 3434304.
-- Equality Saturation for Tensor Graph Superoptimization (Tensat) — arXiv 2101.01332 / MLSys 2021; uwplse/tensat.
-- e-boost: Boosted E-Graph Extraction with Adaptive Heuristics and Exact Solving — arXiv 2508.13020.
-- Cornell CS6120 2025sp — Technology Mapping with Egraphs (extraction NP-hardness; ROVER ILP 63% area).
-- Chris Fallin — ægraphs: Acyclic E-graphs for Efficient Optimization in a Production Compiler, EGRAPHS 2023 (cfallin.org/pubs/egraphs2023_aegraphs_slides.pdf); blog cfallin.org/blog/2026/04/09/aegraph; bytecodealliance/rfcs #27 (accepted/cranelift-egraph.md).
-- Sketch-Guided / Guided Equality Saturation — arXiv 2111.13040; ACM 3632900 (termination, blowup).
-- Combinatorial Register Allocation and Instruction Scheduling (Unison) — Lozano et al., arXiv 1804.02452 / TOPLAS 3332373; unison-code.github.io.
-- Partitioned Boolean Quadratic Problem (PBQP) — complang.tuwien.ac.at/scholz/pbqp; SCOPES'03 SSA-graph instruction selection; SSA-based register allocation with PBQP.
-- MLGO: a Machine Learning Guided Compiler Optimizations Framework — Trofin et al., arXiv 2101.04808; llvm.org/docs/MLGO.html.
-- Ithemal: Accurate, Portable and Fast Basic Block Throughput Estimation — Mendis et al., arXiv 1808.07412 / PMLR v97; uiCA arXiv 2107.14210 (cost-model inaccuracy).
-- In-tree: `crates/egraph/{extract,csp_scheduler,cost_weights,scheduler}.rs`, `crates/csp-solver/src/solver/optimize.rs`, `ir/src/cost.rs`, PROVE-12 REPORT.md, R1 cartography §2/§8, SPEC §0 refutation laws, GN-2 §1.2–1.4.
+- **MLGO** (Trofin et al., 2021, arXiv 2101.04808): ML cost models integrated into production
+  LLVM (inlining). The load-bearing lesson for us is **determinism**: "users care about
+  compilation determinism"; random perturbation exists **only in dev/training**, the *deployed*
+  model is frozen and deterministic. **ML-driven Hardware Cost Model for MLIR** (arXiv
+  2302.11405) confirms the fit-offline / deploy-frozen split.
+- **Direct mapping to 2D + SPEC law**: 2D's "cost coefficients fitted from canon-bench PMU
+  captures, committed as fact tables (determinism preserved); solver re-runs at regen" is exactly
+  MLGO's deploy-frozen posture. The GN-1 gate "full regen bit-for-bit" is a *hard* constraint: an
+  online/adaptive cost model is illegal; coefficients must be **offline-fit, committed, and the
+  regen must be idempotent** (precept 53, PROVE-12 proved regen bit-for-bit is achievable). 2D is
+  well-precedented but its whole value is gated on the fitted table not perturbing determinism.
+
+---
+
+## 6. Constraints our own evidence base already imposes (the guardrails)
+
+The cost model is not free to select whatever it likes — SPEC §0 pre-prunes the candidate space:
+
+- **Refuted levers cannot be candidates.** No digit-scan SIMD (02 NO_GO, latency-bound), no
+  block-scheduling pursuit (04, 1.05–1.06× only — the OoO core already pipelines), no shim perf
+  claims (09 — 2× the movemask reduces, did not reproduce), fold-over-cursor dead, x86 dead. The
+  *candidate generators* (e-graph rewrites) must not emit these — the cost model must never be in
+  a position to "discover" a refuted lever. Cost inputs are **PMU cyc/B, paired, cold N≥200,
+  multi-window** (precepts 43–49); **warm benches are disinformation** (voids any coefficient).
+- **Determinism / regen bit-for-bit** (GN-1 gate) forbids nondeterministic saturation order or
+  floating coefficients — mandates a fixed schedule (our `csp_scheduler` gives one) and committed
+  fact tables (§5).
+- **`generated_loc_budget`** (precept 53) is a *first-class CSP constraint* (2C names it), with
+  teeth: overflow blocks the wave until traced to an O(N) generator regression.
+- **Y.13 (consumer-less substrate forbidden)** = 2A's own law ("every island has a same-wave
+  consumer and a cost model"). The seed reality (§0) shows the engine is *already* under-consumed
+  — the risk is not building more graph engine, it is wiring what exists to a real decision.
+- **The engine runs at GENERATION time** (type plane costs zero at runtime, verified invariant):
+  the budget being optimized against is compile/generation time — reinforcing Cranelift's
+  small-island verdict (§1) over unbounded saturation.
+
+---
+
+## 7. Named traps carried from comparable systems (checklist for every family)
+
+1. **Blowup / scheduling** — full saturation explodes without a schedule (egg backoff; our
+   `csp_scheduler` dirty-closure). 2B inherits this; 2A/2C bound it structurally.
+2. **Greedy extraction mis-picks under sharing** (§4) — the deep one; already confessed in
+   `extract.rs`. Non-monotone cost models silently break bottom-up.
+3. **Saturation buys little in production** (Cranelift 0.1% at 7–8% compile) — over-investment
+   risk for 2B; demand a Cranelift-style measurement bar.
+4. **Cost-model non-determinism** (MLGO) — online/adaptive fitting breaks regen; must be
+   offline-fit + committed (2D / §5).
+5. **Phase ordering only cured where islands interact** — isolated 2A islands do NOT cure
+   *cross-island* ordering; if two decisions are coupled (prefilter tier ⇄ kernel choice ⇄
+   residualization depth) they must share one graph/CSP, not sit in separate islands (the
+   GN-2.W1 ⇄ PT-1.W5 single-dispatch interlock is exactly this).
+6. **Candidate space must exclude refuted levers** (§6) — a cost model that *can* pick a NO_GO
+   lever is a defect, not a feature.
+
+---
+
+## 8. Synthesis for the design loop (inputs, not a verdict)
+
+- **2A is the proven default shape** for a generation-time, budget-bound engine (Cranelift is
+  the production proof); its risk is Y.13 under-consumption, which the seed reality confirms is
+  the *actual* standing bug.
+- **2C has the deepest external precedent** (PBQP instruction selection) and the readiest in-tree
+  substrate (Kuhn–Munkres + CostFinite), and it *dissolves* the §4 extraction NP-hardness by
+  making DAG-cost the CSP objective. 2A and 2C are likely **complementary, not rival**: e-graph
+  islands generate candidates, one CSP decides across coupled sites (the ægraph "extraction as
+  optimization" posture, made explicit).
+- **2B must clear a Cranelift bar** — whole-IR saturation is defensible only where measured to
+  pay past the compile-budget + determinism cost.
+- **2D is well-precedented (MLGO) but conditional** — its entire value rests on the fitted table
+  being offline-fit, committed, and regen-idempotent (PROVE-12 proves that is achievable).
+
+**Proto proposal**: model one live coupled decision site — residualization depth (PROVE-12
+sharing) OR prefilter-tier/kernel selection at N scan sites (GN-2.W1) — as a PBQP/CSP over the
+in-tree `csp-solver` with a **DAG-cost** objective, benched head-to-head against `extract.rs`
+greedy tree-cost extraction on the *same* egraph island. Measure whether greedy mis-picks under
+shared kernel reuse and whether the CSP recovers the optimum within the generation-time budget.
+This decides 2A/2B-vs-2C on a real seam with running code, per constitution clause vii.
+
+---
+
+## Citations
+
+- Fallin, *The acyclic e-graph: Cranelift's mid-end optimizer*, cfallin.org/blog/2026/04/09/aegraph/;
+  *ægraphs* (EGRAPHS 2023, pldi23.sigplan.org); *Cranelift ISLE*, cfallin.org/blog/2023/01/20/cranelift-isle/.
+- Willsey et al., *egg: Fast and Extensible Equality Saturation*, POPL 2021 (arXiv 2004.03082).
+- Zhang et al., *Better Together: Unifying Datalog and Equality Saturation* (egglog), PLDI 2023
+  (doi 10.1145/3591239).
+- Sun/Parreaux et al., *Fast and Optimal Extraction for Sparse Equality Graphs*, OOPSLA 2024
+  (cse.hkust.edu.hk/~parreaux/publication/oopsla24a/).
+- *e-boost: Boosted E-Graph Extraction*, ICCAD 2025 (csl.cornell.edu/~zhiruz/pdfs/eboost-iccad2025.pdf);
+  *SmoothE: Differentiable E-Graph Extraction*, ASPLOS 2025.
+- Zucker, *Answer Set Programming for E-Graph DAG Extraction*, philipzucker.com/asp-for-egraph-extraction/.
+- Eckstein/Scholz/Ebner, *Generalized Instruction Selection using SSA-Graphs*, LCTES 2008;
+  *Code Instruction Selection based on SSA-Graphs*, SCOPES 2003 (PBQP).
+- Koes & Goldstein, *Near-Optimal Instruction Selection on DAGs*, CGO 2008; Wikipedia,
+  *Instruction selection* (DAG covering NP-completeness).
+- Castañeda Lozano & Schulte, *Survey on Combinatorial Register Allocation and Instruction
+  Scheduling*, ACM CSUR 2018.
+- Trofin et al., *MLGO: a Machine Learning Guided Compiler Optimizations Framework*, 2021
+  (arXiv 2101.04808); *ML-driven Hardware Cost Model for MLIR* (arXiv 2302.11405).
+- In-tree: `crates/egraph/src/{extract.rs,csp_scheduler.rs,cost_config.rs,cost_weights.rs}`,
+  `crates/csp-solver/src/{builder/kuhn_munkres.rs,domain/cost_finite.rs,solver/gac/}`,
+  SPEC §0 (PROVE-12 GO; refutations 02/04/09 as law), GN-2.md, R1 §8 (cost/BackendShape seam).

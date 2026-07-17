@@ -1,0 +1,49 @@
+/* LaTeX Tokens Grammar
+ * Atomic structural tokens for LaTeX parsing.
+ * Context-sensitive constructs (environments, command dispatch) stay hand-written.
+ */
+
+/* ── Whitespace & Comments ────────────────────────────────────────── */
+comment = "%" , /[^\n]*/ ;
+blankLine = /\n[ \t]*\n/ ;
+singleNewline = /\n/ ;
+
+/* ── Escape sequences ─────────────────────────────────────────────── */
+escapedSpecial = "\\" , /[#$%&_{}~^\\]/ ;
+escapedSpace = "\\" , " " ;
+lineBreak = "\\\\" , /\s*/ ;
+
+/* ── Spacing / punctuation commands ───────────────────────────────── */
+spacingCmd = "\\" , /[,;:!]/ ;
+quadCmd = "\\" , ( "qquad" | "quad" ) ;
+thinSpace = "\\thinspace" ;
+
+/* ── Balanced brace group ─────────────────────────────────────────── */
+braceInner = /[^{}]+/ | "{" , braceInner * , "}" ;
+braceGroup = "{" , braceInner * , "}" ;
+
+/* ── Balanced bracket group ───────────────────────────────────────── */
+bracketInner = /[^\[\]{}]+/ | braceGroup | "[" , bracketInner * , "]" ;
+bracketGroup = "[" , bracketInner * , "]" ;
+
+/* ── Command names ────────────────────────────────────────────────── */
+commandNameWord = "\\" , /[a-zA-Z@]+\*?/ ;
+
+/* ── Special characters ──────────────────────────────────────────── */
+emDash = "---" ;
+enDash = "--" ;
+leftDoubleQuote = "``" ;
+rightDoubleQuote = "''" ;
+tilde = "~" ;
+
+/* ── Accents ──────────────────────────────────────────────────────── */
+accentCmd = /['"` ^~]/ ;
+namedAccentCmd = /[Hcuv]/ ;
+
+bracedAccent = "\\" , accentCmd , braceGroup ;
+unbracedAccent = "\\" , accentCmd , /[a-zA-Z]/ ;
+namedAccent = "\\" , namedAccentCmd , braceGroup ;
+
+/* ── Plain text ───────────────────────────────────────────────────── */
+plainText = /[^\\{}$%~\[\]\n-]+/ ;
+singleHyphen = "-" ;

@@ -1,256 +1,254 @@
 # LOCK-3 — THE IR TRANSPOSITION SPINE · pass-2 · CRIT-1 (Adversarial Critic 1 of 2)
 
 *WITHIN-LOCK-weighted adversarial critique — internal soundness of each family spec, and whether
-the pass-2 prototypes actually tested the sharpest uncertainty. Every family run against the
-failure-mode checklist (vacuous convergence, spec-cites-self, gates-that-cannot-fail, the
-elegant-reduction trap, legacy aliases, masked fallbacks, unverified gestalt, consumer-less
-substrate) + the Constitution (grammar totality, isomorphism, refutation laws, zero-runtime types,
-parsimony, Y.13) + prototype-evidence misuse. All live claims re-verified by hand on the actual
-working tree this pass. Cross-lock ledger entries treated as binding facts; challenges named for
-routing to GESTALT-B with evidence.*
+the pass-2 prototypes tested the sharpest uncertainty. Every family run against the failure-mode
+checklist (vacuous convergence, spec-cites-self, gate-that-cannot-fail, elegant-reduction trap,
+legacy aliases, masked fallback, unverified gestalt, consumer-less substrate) + the Constitution
+(grammar totality, isomorphism, refutation laws, zero-runtime types, parsimony, Y.13) +
+prototype-evidence misuse (SPEC_ONLY / UNMEASURED anchoring a claim). Live claims re-greped by hand
+on the working tree this pass. CROSS-LOCK entries treated as binding; challenges named for GESTALT-B
+routing, never re-litigated here.*
 
 ---
 
-## 0. BASELINE — verified live this pass (every anchor re-greped by hand)
+## 0. BASELINE — verified live this pass (every sharp anchor re-greped by hand)
 
-- **HEAD = `06e70053f`** (`git rev-parse HEAD` confirmed). FAMILY-SPECS §0's pin is CORRECT.
-  `c93fc4314` (PROTO-1.md, PROTO-1-t1.md) and `ce51c36fc` (PROTO-2.md, PROTO-2-3A.md) are **both
-  ancestors of HEAD**, and `git diff --stat {c93fc4314,ce51c36fc}..HEAD -- skinny/crates` is
-  **empty** — every LOCK-3 prototype measured a `skinny/crates` tree **byte-identical to HEAD**.
-  XL-H wrong-artifact-risk is **discharged** for all four. (The session-start git log showed
-  `c93fc4314` as tip; HEAD has since advanced to `06e70053f`, a `restart/`-only resume commit — no
-  code drift.)
-- **Anchors re-verified live:** `:204` `Project{body,..} => infer_expr(*body)` (ty dropped) ✓;
-  `:203` `Annotation => Builtin(Unit)` (legit) ✓; `direct_schema.rs:52` `DirectTypeKind` Struct-only,
-  no `Sum` ✓; `admits_collapsed_stage`@`passes:959` reads `avx512bw`@`:380` =
-  `cfg!(target_arch="x86_64" … avx512bw)` — **permanently false on aarch64** (DEAD gate) ✓;
-  `runtime_generator.rs:98` **`if !sink_only.has_rule("value")` is STILL LIVE on the tree** — the
-  comment reads "Shape-based, never a grammar name" but the predicate is a **rule-name query**
-  (PROTO-1-t1's retirement lived only in a worktree, never landed) ✓.
-- **`.target` dead-field claim — VERIFIED (I disambiguated a false hit).** `grep "target: Some"`
-  in passes/codegen/ir returns 4 hits, **all four are `ExprKind::Ref { target: Some(rule) }`**
-  (`passes:913,1104,1552,1599`) — a *different* `target` (the resolved-Ref rule id), **not**
-  `DirectBuildField.target: Option<DirectBuildTarget>` (`ir:470`), which is `Some` **nowhere**. The
-  field is genuinely dead; the "sole `DirectSchemaSet` producer is the hand file" claim holds.
-- **PROTO-1's byte-coupling site — VERIFIED.** `general_descent/emit.rs:300-305`: `Seq(children)`
-  emits `*cursor = skip_ws(bytes, *cursor);` for **every child at index>0**, unconditional on
-  whether the child emits code. This is the real reason deleting no-op marker `Seq`-slots perturbs
-  sheets bytes. **The finding is sound, not an artifact of the probe.**
-- **Walker line counts — VERIFIED live:** `json_sink_direct/dispatch.rs` **318**,
-  `general_descent/view.rs` **431**. FAMILY-SPECS's G-3B-1a figures are exact.
+- **outer HEAD = `90db093bf`** (`git rev-parse HEAD`). Source tree lives at top-level `skinny/crates/`
+  (CONFIRMED present in this worktree; FAMILY-SPECS §0's "NOT restart/skinny, docs only" is correct).
+- **FAMILY-SPECS §0 anchor table — all six CONFIRMED on live `skinny/crates`:**
+  - `passes/src/lib.rs:204` `ExprKind::Project { body, .. } => self.infer_expr(*body)?` — `ty` dropped ✓
+  - `codegen/src/runtime_generator.rs:98` `if !sink_only.has_rule("value")` — **STILL LIVE** (PROTO-1-t1's
+    retirement lived only in a worktree, never landed) ✓
+  - `codegen/src/direct_schema.rs:52` `enum DirectTypeKind { Struct { … } }` — **single variant, zero `Sum`** ✓
+  - `admits_collapsed_stage`@`passes:959-960` = `target.avx512bw && matches!(…Entry…)`; `avx512bw`@`:380` =
+    `cfg!(all(target_arch="x86_64", target_feature="avx512bw"))` — **permanently false on aarch64 → DEAD gate** ✓
+  - `codegen/src/general_descent/emit.rs:303` per-Seq-child `skip_ws` (index>0) + `:272` rule-entry `skip_ws`
+    — PROTO-1's byte-coupling site AND PROTO-1-a's idempotency anchor, both real ✓
+  - `.target` dead field — `grep 'DirectBuildTarget::' + 'target: Some(DirectBuildTarget'` over
+    codegen/passes/ir = **zero hits**: the field is constructed `Some` **nowhere** → CONSUME-as-stated
+    is genuinely refuted, not a probe artifact ✓
+- **XL-H wrong-artifact-risk discharged** for the four *cited* prototypes (all base-pinned to ancestors of
+  live over `skinny/crates`). But see §1: the two prototypes that actually move the map this pass are
+  **not the four the synthesis cites.**
 
 ---
 
-## 1. THE HEADLINE WITHIN-LOCK FINDING — THE SYNTHESIS IS STALE FOR A SECOND TIME, AND ITS PROTO CITATION CHAIN IS BROKEN
+## 1. HEADLINE WITHIN-LOCK DEFECT — THE SYNTHESIS IS STALE FOR A **THIRD** TIME, EXACTLY AS PRIOR-CRIT PREDICTED
 
-This is the single most important internal-soundness defect of the lock, and it must be folded
-before pass-3 is briefed. **File mtimes (verified `ls`):** `FAMILY-SPECS.md` **19:32**;
-`PROTO-1.md` **19:49**; `PROTO-2.md` **19:52**. The synthesis was cut **17–20 minutes before its
-own two sharpest prototypes finished** — and those prototypes were written by **overwriting** the
-files `PROTO-1.md` / `PROTO-2.md` that the synthesis cites for *entirely different* results.
+The prior CRIT-1 (20:15) closed with: *"the stale-synthesis error has now recurred twice at the same
+structural cause (prototypes landing inside the authoring window) … Pass-3 must gate the synthesis cut
+on a frozen prototype set, or this recurs a third time."* **It recurred a third time.** Verified mtimes:
 
-**1a — The two "UNRUN load-bearing halves" (§6/§8) both RAN, with material verdicts the synthesis
-does not reflect.** FAMILY-SPECS §8 issues Brief α (whole-fold G-3B-1) and Brief β (3A E1-infer
-non-vacuity) as the two sharpest uncertainties "returned via StructuredOutput" for pass-3. **Both
-are already discharged in this directory:**
+| artifact | mtime | content |
+|---|---|---|
+| **FAMILY-SPECS.md** | **22:28** | the current synthesis |
+| PROTO-1-a.md | **22:58** | 3B T_semskip — the G-3B-1 *rescue* route |
+| PROTO-2-3A-c.md | **23:01** | 3A contract-oracle — **G-3A-α REFUTED-as-stated** |
 
-- **Brief α → PROTO-1.md (19:49): `FAIL / DEMOTE 3B`.** Executing the minimal deletion (drop the two
-  zero-consumer `SpanMark` markers + `Return`) perturbs `sheets/generated.rs` by **−3 `skip_ws`
-  lines** (via the `emit.rs:300-305` per-Seq-child rule I verified above). The gate as the synthesis
-  wrote it — *"delete the plane + four byte-identical regens"* — is **UNSATISFIABLE for sheets
-  without a prior deliberate sheets re-baseline commit**; "byte-identical to committed" and "delete
-  the plane" are **mutually exclusive** for sheets on this baseline. **This is worse than UNRUN: the
-  killer gate is now shown unsatisfiable-as-specified.** The whole fold + the two 318/431 walker
-  re-bases (G-3B-1a) were **not carried** — the net-LOC PASS bar is explicitly *not met*.
+The 22:28 synthesis was cut **30–33 minutes before its two newest prototypes finished**, and those two
+are the ones that materially change 3A and 3B. Two consequences, both internal-soundness defects:
 
-- **Brief β → PROTO-2.md (19:52): `PASS` — but it REFUTES the synthesis's own verify predicate.**
-  24/28 Sheets projections carry a declared target NOT recoverable from `infer_expr(body)` (three
-  regex bodies all infer `Span` yet declare Float/Span/Bool) — so the contract is **non-vacuous in
-  principle**, answering §1 open-q (i) YES. **BUT the load-bearing caveat inverts the mechanism
-  spec:** scoped to `Project{ty:Some}` — *exactly* how FAMILY-SPECS §1 mechanism-2 and G-3A-a write
-  `verify_project_types` — only 4 projections carry `:ty`, all four are `-> input : Span` over regex
-  bodies, so `infer_expr(body)==Span==resolved(ty)` for every one → **presence-only, the vacuity
-  feared**. Non-vacuity is earned solely by the target-only `Project{ty:None}` cases (24/28), so the
-  predicate MUST assert over the declared **value category** (`classify_projection`'s
-  `ProjectionKind`), NOT the `:ty` nominal wrapper. **Consequence: G-3A-a's disposition — "gate-that-
-  cannot-fail until LOCK-1" — is REFUTED for the value-category scoping: the contract FIRES TODAY**
-  (number's Float, boolean's Bool, every literal's Tag all differ from the structural body type),
-  with no name→Type resolution needed.
+**1a — G-3A-α is asserted in the spec in the exact form the newest prototype refutes.** FAMILY-SPECS §1
+G-3A-α reads: *"the contract is a GATE-THAT-CANNOT-FAIL until LOCK-1 … vacuously true whenever `ty=Some`
+… True non-vacuity is born-RED on LOCK-1."* **PROTO-2-3A-c (23:01) executed the refutation:** a total,
+**LOCK-1-free** `parse_builtin: str→BuiltinTy` resolves the 4 live `: Span` declares and compares them to
+`infer_expr(body)` TODAY; injecting `string: Span → : F64` flags `BuiltinViolation` **at exactly the
+`string` rule and only there**, while a `ty`-blind check stays GREEN. The spec's §1 open-question (i)
+(*"can the contract EVER be non-vacuous, or is it structurally doomed until LOCK-1?"*) is **answered YES /
+NOT-doomed** — but the spec still carries the DOOMED framing as a live gate and still lists it "UNRUN +
+gate-cannot-fail until LOCK-1" in the §5 table. **This is a gate-that-cannot-fail written into the spec,
+after it was proven able to fail.** Must be re-cut before pass-3 consumes the map.
 
-**1b — The PROTO citation chain is broken (an artifact-hygiene defect on internal soundness).**
-FAMILY-SPECS §0 enumerates "the four pass-2 prototypes (PROTO-1, PROTO-2, …)" and cites **PROTO-1**
-for *"the `:204` thread … RED [4 spans] → GREEN, zero emit footprint, four regen checks byte-
-identical"* and **PROTO-2** for *"cleared the fact-layer purity precondition by trace."* Neither file
-now contains that content — `PROTO-1.md` is the whole-fold FAIL, `PROTO-2.md` is the 3A non-vacuity
-PASS. (PROTO-1-t1.md and PROTO-2-3A.md both self-document dodging *"the existing PROTO-1.md (the
-:204-thread probe) and PROTO-2.md (the fold fact-purity trace)"* — proving those were the *earlier*
-occupants of those filenames, since overwritten.) So the §6 convergence rows *"`:204` thread … PROVEN
-(PROTO-1)"* and *"Fold fact-layer purity … PROVEN by trace (PROTO-2)"* are **dangling citations** — a
-reader who follows them lands on different probes. Two of the lock's four claimed proofs no longer
-have a resident artifact (they survive only in git history / the prose). **The agglomerator owes a
-reconciliation:** re-home the overwritten :204-thread and fold-purity-trace results under stable
-names, and re-point every §0/§6 citation, before pass-3 consumes this map.
+**1b — the killer gate is listed "UNRUN" when it RAN (FAIL) and was then advanced (unmeasured).**
+FAMILY-SPECS §2 G-3B-1 and the §5 table both say **"UNRUN — the spine's load-bearing gate,"** citing only
+*"Trace (PROTO-2) + one slice (PROTO-1-t1)."* This is wrong in two directions:
+  - **PROTO-1.md (19:49) RAN it → FAIL/DEMOTE.** The minimal marker deletion perturbs `sheets/generated.rs`
+    by −3 `skip_ws` lines via the `emit.rs:303` per-Seq-child rule (verified live). The gate as written
+    ("delete + four byte-identical regens") is **unsatisfiable for sheets without a prior re-baseline**.
+  - **PROTO-1-a.md (22:58) advanced it → RAN_UNMEASURED.** T_semskip localizes the entire obstruction to
+    ONE bounded artifact (`emit.rs:303` per-child → semantic `skip_ws`) and *predicts* the deletion then
+    goes byte-neutral — **but the ax-iter build did not complete inside the cap, so the byte-neutrality is
+    DERIVED, "a falsifiable prediction, not a confirmed run."**
 
-**1c — This is the SAME error CRIT-2 caught one recurrence earlier.** The prior CRIT-2 (§0.2) flagged
-the 15:10 synthesis as stale vs the 15:34/15:38 prototypes. The 19:32 re-cut folded *those*
-(PROTO-1-t1, PROTO-2-3A are cited correctly) — and then immediately went stale again against the
-19:49/19:52 pair. **The pattern is structural, not incidental: prototypes are landing inside the
-synthesis's own authoring window.** Pass-3 must gate the synthesis cut on a frozen prototype set, or
-this recurs a third time.
+  So the honest state of G-3B-1 is **"RAN FAIL-as-written; rescue route implemented as compilable code but
+  its byte-neutrality UNMEASURED"** — materially different from the spec's flat "UNRUN."
+
+**1c — the PROTO citation chain is broken (artifact-hygiene defect, unfixed from prior pass).** §0 header
+cites *"PROTO-1 `:204`-thread"* and *"PROTO-2 fold-fact-purity trace"*; the §5 table rows *"`:204` thread …
+**PROVEN** (PROTO-1)"* and *"Fold fact-layer purity … **PROVEN by trace** (PROTO-2)."* **Neither file now
+holds that content** — the resident `PROTO-1.md` is the whole-fold FAIL, `PROTO-2.md` is the 3A
+non-vacuity PASS. Two of the lock's four claimed proofs point at overwritten filenames; a reader who
+follows the citation lands on a *different* probe. The overwritten `:204`-thread and fold-purity results
+survive only in git history / the prose. **The agglomerator owes: re-home under stable names, re-point
+every §0/§5 citation.** This is the SAME defect the prior CRIT-1 §1b flagged; it was not repaired.
 
 ---
 
-## 2. PER-FAMILY HARDENING (convergence % + enumerated open gaps)
+## 2. PER-FAMILY HARDENING — convergence % + enumerated open gaps
 
-### FAMILY 3A — CONTRACT-TOWER · **62%** (FAMILY-SPECS said 60%; net-flat: a real β-PASS uplift, offset by a mechanism-spec defect the PASS exposes)
+### FAMILY 3A — CONTRACT-TOWER · **60%** (spec: 60 — hold; a real β/oracle uplift, cancelled by a stale gate + an unrun load-bearing edge)
 
-**Genuinely earned.** (a) The refinement oracle RAN (PROTO-2-3A): `differential(edge,corpus)`
-localizes a 5-fault matrix to its arm with zero false positives, catches a *same-discriminant*
-payload corruption a tag-only walk misses, and separates an E2 input fault (O2 RED) from E3 (GREEN)
-— "names the edge, never merely a failure," with the G-3A-b zero-witness⇒`unverified` discipline
-proven. (b) The contract's **non-vacuity is now PROVEN in principle** (PROTO-2.md/Brief β): §1
-open-q (i) resolves YES. This is the sharpest 3A uncertainty and it is discharged — a real uplift the
-synthesis's own text (which still lists it "UNRUN + gate-cannot-fail until LOCK-1") does not credit.
+**Genuinely earned this pass.** (a) PROTO-2-3A ran the refinement oracle: `differential(edge,corpus)`
+localizes a 5-fault matrix to its arm with **zero false positives**, catches a *same-discriminant* payload
+corruption a tag-only walk misses, separates an E2 input fault (O2 RED) from E3 (GREEN) — "names the edge,
+never merely a failure," with the G-3A-b zero-witness⇒`unverified` discipline proven on a 13/13-arm census
++ live json (15 rules/100 nodes). (b) PROTO-2-3A-c proved the contract **fires TODAY, LOCK-1-free** (§1a).
 
-**But two internal-soundness defects cap the uplift:**
-- **The elegant-reduction trap is intact on the load-bearing edge.** The oracle ran on E3, a
-  *definitionally 1:1 rename* (that is *why* it is a "free oracle"); the injected-fault localization
-  on **E1-infer** — where the contract's meaning lives — is **only digest-grounded, never fault-
-  injected** (PROTO-2-3A scope-limit 1). "3A's organ runs and localizes" is proven where it is easy.
-- **The spec's own `verify` predicate is written in the vacuous form** (mechanism-2, G-3A-a: scoped
-  to `ty:Some`). Brief β shows that scoping is presence-only on the live fleet. Until §1 is re-cut to
-  the value-category surface, the *specified* organ verifies threading-presence, not consistency —
-  a gate-that-cannot-fail **written into the spec**, even though the *correct* predicate fires today.
+**Internal-soundness caps (why no uplift is banked despite two green probes):**
+- **The load-bearing edge is still tested only where it is free.** The oracle's GREEN + localization ran on
+  **E3 — a definitionally 1:1 `BackendExpr↦SinkOnlyExpr` rename** (that is *why* it is a "free oracle").
+  The **E1-infer injected-fault matrix — mutating `infer`/`materialize` themselves — is UNRUN.**
+  PROTO-2-3A-c injects at the *grammar-source* layer (a `: Span → : F64` string edit), which is the honest
+  LOCK-1-free falsification, **but it is not the in-pass organ mutation** the contract's meaning lives on.
+  The elegant-reduction tell survives on the sharpest edge: "3A's organ runs and localizes" is proven where
+  it is cheap, asserted where it is dear.
+- **The spec's own `verify` predicate is written in the vacuous form** (mechanism-2 / G-3A-α scoped to
+  `ty:Some`), which PROTO-2-3A-c narrows further: the builtin resolver works, but the **coarse-inference
+  ceiling** means `regex_type` types *every* non-ws regex `Span`, so the contract can distinguish `Span`
+  from a wrong builtin yet would **mis-PASS `number … -> f64 : F64`** (numeric regex also infers `Span`).
+  The full-fidelity contract is **bounded above by inference precision** — a gate that *under*-fires on the
+  numeric case today, distinct from LOCK-1 naming. Not credited in the spec's gate list.
+- **Consumer discipline:** the shipping deliverable is `differential(edge,corpus)` as a **CI contract**; what
+  exists are `+607` (t2) and `+252` (c) *probe tests*. Promotion unrun — do not let the probe stand for the
+  contract (Constitution vii).
 
 **Enumerated open gaps (3A):**
-1. **Re-cut mechanism-2 / G-3A-a to the value-category (`ProjectionKind`) surface** — the `:ty`-only
-   predicate is refuted vacuous by Brief β; the spec must adopt the full-`->`-target form the
-   prototype proved fires. (New gap, surfaced by the newest prototype.)
-2. **E1-infer injected-fault localization** — mutate `infer`, show E3 stays GREEN while E1 localizes.
-   PROTO-2-3A only digest-grounded E1; this is the load-bearing widening. Unrun.
-3. **G-3A-a name→Type resolution** (born-RED, owner LOCK-1) — required only for the *nominal* `:ty`
-   consistency arm; the value-category arm is independent of it. Carry, do not gate the whole family.
-4. **Open-q (ii)** — prove `render`@`runtime_generator.rs:78` is a pure projection of L2, else an E4
-   oracle is owed. Unrun.
-5. **Open-q (iii/iv)** — the CSS `Err⇒SinkOnly / Ok⇒Scan` fork (`runtime_generator.rs:40-71`):
-   first-class edge oracle or declared two-root tower. Undecided.
-6. **Promote the +607-LOC PROTO-2-3A test to a shipping `differential(edge,corpus)` CI contract** —
-   the stated 3A deliverable is a contract, not a probe test. Unrun.
+1. **Re-cut G-3A-α / mechanism-2 to the value-category (`ProjectionKind`) surface + record the
+   PROTO-2-3A-c refutation** — the spec still asserts "cannot-fail until LOCK-1"; it CAN fail today. (Spec-text defect.)
+2. **E1-infer injected-fault matrix** — mutate `infer`/`materialize`, show E3 stays GREEN while E1/E2
+   localize. The load-bearing widening; only digest-grounded + source-mutation-grounded so far. UNRUN.
+3. **Coarse-inference ceiling** — richer `regex_type` (numeric-regex ⇒ F64) so the builtin contract gains
+   fine-grained fidelity; today it mis-passes numeric declares. Born-RED, distinct from LOCK-1 naming. UNRUN.
+4. **G-3A-a name→Type resolution** (born-RED, owner LOCK-1) — needed only for the *nominal/aggregate* residue
+   (the two commented Sheets `: String` / `: CellRef` TODOs). Carry; does NOT gate the builtin arm.
+5. **Open-q (ii)** — prove `render`@`runtime_generator.rs:78` is a pure projection of L2, else an E4 oracle is owed. UNRUN.
+6. **Open-q (iii)** — CSS `Err⇒SinkOnly / Ok⇒Scan` two-root fork (`runtime_generator.rs:40-71`): first-class
+   edge oracle or declared two-root tower. Undecided.
+7. **Promote `differential(edge,corpus)` to a shipping CI contract** (the stated 3A deliverable, not a probe test). UNRUN.
 
-### FAMILY 3B — SINGLE-IR-MULTIPASS · **54%** (FAMILY-SPECS said 55%; hold-to-slightly-down: the killer gate ran and FAILED-as-written)
+### FAMILY 3B — SINGLE-IR-MULTIPASS · **53%** (spec: 55 — DOWN: the killer gate RAN FAIL-as-written; its rescue is UNMEASURED; the −100-LOC hard part is untouched)
 
-**Genuinely earned.** Fact-layer purity PROVEN by trace (the old PROTO-2, per §1b now a dangling
-citation); the emit-dispatch fork retirement EXECUTED byte-identical (PROTO-1-t1, 3/3), and PROTO-2's
-named discriminator (`dispatch_alt_count`) **refuted by execution** — the honest discriminator is the
-≥4-of-6 value-category census (`roles.value`). One real slice of the fold path is green.
+**Genuinely earned.** Fact-layer purity PROVEN by trace (the overwritten PROTO-2); the `has_rule("value")`
+emit-dispatch fork EXECUTED byte-identical (PROTO-1-t1, 3/3), with PROTO-2's `dispatch_alt_count`
+discriminator **refuted by execution** (Sheets carries dispatch Alts; the honest surface is the ≥4-of-6
+value-category census). One real green slice on the fold path.
 
-**But the substrate's convergence did NOT rise this pass — it took a hit:**
-- **The killer gate G-3B-1 RAN and returned FAIL (PROTO-1.md/Brief α).** Per FAMILY-SPECS §2's own
-  demotion rule — *"run it next pass (Brief α) or demote 3B to structurally-motivated, unproven"* —
-  the trigger is now **met and fired**. The byte-identity gate is not merely unrun; it is
-  **unsatisfiable-as-specified for sheets** (the `emit.rs:300-305` incidental-separator coupling,
-  verified live). The architecture survives (the plane is a denormalized copy of `descriptors`,
-  semantically deletable, `strict_product` invariant), but the **byte-identity proof is refuted** and
-  the gate needs re-specification (a sheets re-baseline commit *before* deletion). That is a NEW,
-  unenumerated gap the pass added — convergence should not rise on a FAIL.
-- **G-3B-1a — the elegant-reduction tell — is STILL UNRUN.** PROTO-1.md ran only the minimal marker
-  deletion; the −100 net-LOC reward hangs on re-basing `dispatch.rs` (318) + `view.rs` (431) onto
-  `GrammarIr` byte-identically. `view.rs`/`general_descent` is shown **byte-fragile**; the walker
-  re-base is exactly the "and-then-the-hard-part." Report CONTINGENT, not banked.
-- **G-3B-2's green slice is a masked-fallback smell.** PROTO-1-t1 obtained its byte-identical GREEN by
-  **porting `derive_materialization_roles.value` into codegen** — a DRY / system-cohesion /
-  no-orthogonal-codepaths violation its own text flags. It proves *executability*, not the
-  *converged architecture*; the single-home wiring (thread `roles.value` onto the attribute bundle)
-  is unrun. Registry must carry it "executable, single-home deferred," not "sub-gate discharged."
+**Internal-soundness hits — the substrate's number should NOT rise on this pass:**
+- **G-3B-1 RAN and FAILED-as-written (PROTO-1.md).** Per FAMILY-SPECS §2's own demotion rule, the trigger is
+  **met and fired**: the byte-identity gate is *unsatisfiable for sheets* absent a re-baseline (`emit.rs:303`
+  incidental-separator coupling, verified live). The architecture survives (the plane is a denormalized copy
+  of `descriptors`, semantically deletable, `strict_product` invariant) — the **byte-identity PROOF does
+  not.** The spec calling this "UNRUN" understates a fired demotion trigger (§1b).
+- **The rescue (PROTO-1-a) is RAN_UNMEASURED — prototype-evidence-misuse risk.** T_semskip is *compilable*
+  and its byte-neutrality is *plausible* (skip_ws idempotency + rule-entry `skip_ws`@`:272`), but the build
+  did not complete; the "G-3B-1 is byte-satisfiable after one bounded re-baseline" conclusion rests on a
+  **DERIVED prediction, not a run.** Admissible only labelled UNMEASURED; it must NOT be banked as
+  "G-3B-1 obstruction resolved." The one-line confirmation command PROTO-1-a supplies is pass-3's job.
+- **G-3B-1a — the elegant-reduction "and-then-the-hard-part" — is ENTIRELY UNRUN.** The −100 net-LOC reward
+  hangs on re-basing `json_sink_direct/dispatch.rs` (318, verified) + `general_descent/view.rs` (431,
+  verified) onto `GrammarIr` **byte-identically**. `view.rs`/`general_descent` is shown byte-fragile
+  (PROTO-1). Deleting `SinkOnlyExpr` adds back a comparable re-walk; a reordered/differently-keyed walk
+  breaks identity. The whole net-LOC claim is CONTINGENT on this unrun re-base — report CONTINGENT, not banked.
+- **G-3B-2's green slice is a masked-fallback / DRY smell** its own text flags: PROTO-1-t1 ported
+  `derive_materialization_roles.value` **into codegen** (a `system-cohesion`/`no-orthogonal-codepaths`
+  breach) to prove *executability*. The single-home wiring (thread `roles.value` onto the attribute bundle)
+  is UNRUN. Registry must read "executable, single-home deferred," not "sub-gate discharged."
 
 **Enumerated open gaps (3B):**
-1. **Re-specify G-3B-1** as a sheets-re-baseline-then-delete gate (the as-written byte-identity gate
-   is refuted by PROTO-1.md); then execute the *whole* `emit(&GrammarIr,&Attributes)` fold. THE
-   killer gate, now shown unsatisfiable in its old form. Unrun.
-2. **G-3B-1a re-walk re-base** — dispatch.rs (318) + view.rs (431) onto `GrammarIr`, byte-identical.
-   view.rs shown fragile. The net-LOC reward rests entirely here. Unrun.
-3. **Single-home wiring** of the value-role discriminator — retire the codegen-side duplicate
-   PROTO-1-t1 introduced. Unrun (Constitution-forbidden as production).
-4. **css_scan fourth-level** (open-q ii) — confirm no emission state (grammar prefixes, entry-rule
-   threading) hides outside `GrammarIr` in `lower/css_scan.rs`. Untraced.
-5. **Per-`RuleId` vs per-`ExprId` key** (G-3B-3) — fleet check; a partial migration is the
-   no-orthogonal-codepaths defect. Undecided.
+1. **Confirm PROTO-1-a's T_semskip byte-neutrality by a completed run** (the exact command it lists), then
+   re-specify G-3B-1 as *sheets-re-baseline-then-delete*; only then execute the *whole*
+   `emit(&GrammarIr,&Attributes)` fold across {json,css,sheets,real-typed}. THE killer gate. UNRUN/UNMEASURED.
+2. **G-3B-1a re-walk re-base** — dispatch.rs(318) + view.rs(431) onto `GrammarIr`, byte-identical; view.rs
+   shown fragile. The entire −100-LOC reward rests here. UNRUN.
+3. **Single-home wiring** of the value-role discriminator — retire the codegen duplicate PROTO-1-t1
+   introduced. UNRUN (Constitution-forbidden as production).
+4. **css_scan fourth-level** (open-q ii) — confirm no emission state (grammar prefixes, entry-rule threading)
+   hides outside `GrammarIr` in `lower/css_scan.rs`. Untraced.
+5. **Per-`RuleId` vs per-`ExprId` key** (G-3B-3) — fleet check (CSS L4 inline alternatives the live
+   candidate); a partial migration is the `no-orthogonal-codepaths` defect. Undecided.
 6. **True RETIREMENT (vs relocation)** of the byte-literal classifier — born-RED on `DirectTypeKind::Sum`
-   (GN-3.W1); never asserted retired absent the node.
+   (GN-3.W1, verified Struct-only); never asserted retired absent the node.
 
-### FAMILY 3C — GRAMMAR-HOMOIOUSIA · **32%** (concur with FAMILY-SPECS and CRIT-2)
+### FAMILY 3C — GRAMMAR-HOMOIOUSIA · **32%** (concur with FAMILY-SPECS)
 
-Correctly held BLOCKED (C1) / BLOCKED-candidate (C2). The C1/C2 split is the honest cut. No new
-prototype this pass — 3C is the one family whose sharpest uncertainty was **not** tested. Its cheapest
-concrete proof (research-C §7.2: the `ExprKind::Alt → DirectTypeKind::Sum` E6 map emitting byte-
-identical to `derive_shape_facts`'s hardcoded 6-variant list, `passes:285-294`) remains **SPEC-ONLY**
-— and it is the *only* run that could move C1 off 0%-convergence-eligible before its external gates
-land. Distinctive content is 0% convergence-eligible; the one live win (the `:204` thread) is the
-shared single-owner thread, not distinctively 3C. Constitution vii: **SPEC-ONLY this pass.** No
-convergence uplift is available without the Sum node (GN-3.W1) or a LOCK-7·7B consumer.
+Correctly held BLOCKED (C1) / BLOCKED-candidate (C2); the C1/C2 split is the honest cut and the family's
+real analytic progress. **3C is the one family whose sharpest uncertainty was NOT tested this pass** — no
+3C prototype ran. Its cheapest concrete proof — the `ExprKind::Alt → DirectTypeKind::Sum` E6 map emitting
+byte-identical to `derive_shape_facts`'s hardcoded variant list (research-C §7.2) — remains **SPEC-ONLY**,
+and is the *only* run that could move C1 off 0%-convergence-eligible before its external gates land.
+Constitution-vii verdict: **distinctive 3C content is 0% convergence-eligible, SPEC-ONLY this pass.** The
+one live win (the `:204` thread) is the shared single-owner thread, not distinctively 3C (3C consumes it).
+Y.13 correctly cited: C1's sole reader is an unlanded LOCK-7·7B wave (consumer-less substrate on the living
+tree); C2 stalls at a missing term-rewriting primitive of difficulty equal to the original problem (ceded
+to LOCK-2, provisional on XL-B WORKING — not final).
 
 **Enumerated open gaps (3C):**
-1. `DirectTypeKind::Sum` — born-RED, GN-3.W1 (+420 LOC, Struct-only verified). Product-only subset
-   excludes every `Alt` = excludes `ExprKind`/`BackendExpr`; must not stand for the formulation.
-2. Named in-wave consumer for C1 — LOCK-7·7B; no live reader (Y.13). Admissible only as a born-RED
-   GESTALT-B edge.
-3. Fixpoint `regen∘regen = regen` byte-identical over a grammar-generated `ir/src/lib.rs`
-   (derives/doc-comments/impls) — likely forces per-derive annotations. LOCK-7·7A.
+1. `DirectTypeKind::Sum` — born-RED, GN-3.W1 (verified Struct-only). Product-only subset excludes every
+   `Alt` = excludes `ExprKind`/`BackendExpr` themselves; **must not be treated as standing for the formulation.**
+2. Named in-wave LOCK-7·7B consumer for C1 — no live reader (Y.13). Admissible only as a born-RED GESTALT-B edge.
+3. Fixpoint `regen∘regen = regen` byte-identical over a grammar-generated `ir/src/lib.rs` carrying
+   derives/doc-comments/impls (LOCK-7·7A). UNRUN.
 4. C2 cession to LOCK-2 — provisional on XL-B (WORKING, not final).
-5. The E6 sum-edge byte-identity prototype (research-C §7.2) — the cheapest concrete C1 proof, UNRUN.
+5. The E6 sum-edge byte-identity prototype (research-C §7.2) — cheapest concrete C1 proof. UNRUN.
 
-### FAMILY 3D — STAGED-RESIDUAL · **37%** (FAMILY-SPECS said 38%; hold, no new evidence)
+### FAMILY 3D — STAGED-RESIDUAL · **37%** (spec: 38 — hold/down; no new evidence, spec-cites-self intact)
 
-BANKED into 3B's attribute store, correctly. Nothing 3D-distinctive ran this pass. The distinctive
-thesis "type-plane erasure = stage-0 erasure" **spec-cites-itself** — its warrant is Constitution v
-(a definitional restatement, not an independent result). `binding_times` on real IR is UNRUN;
-`CollapsedStage` is a **verified-DEAD gate** (`admits_collapsed_stage`@959 → `avx512bw` → false on
-aarch64) — a genuine Y.13 consumer-less-substrate *on the living tree*, evidence of the problem, not
-the solution. The PROVE-12 perf anchor was **not re-run on `06e70053f`** (base still `d2b32f6e3`), and
-the type-plane JSON PMU delta the directive asks for is **UNMEASURED** (PROVE-09 law: absent a cold-
-paired number the JSON claim collapses to "typed façade, same speed," acceptable only if so declared).
+Correctly BANKED into 3B's attribute store (`Stage` = one column). **Nothing 3D-distinctive ran this pass.**
+Internal-soundness hits:
+- **spec-cites-itself.** The distinctive thesis *"type-plane erasure = stage-0 erasure"* has as its warrant
+  Constitution v (zero-runtime-cost types) restated — a definitional identity, not an independent result.
+- **consumer-less substrate on the LIVING tree (Y.13).** `admits_collapsed_stage`@`959` → `avx512bw` → false
+  on aarch64 (verified) makes `CollapsedStage` a **DEAD shape** that fires `CollapsedStageNotViable` whenever
+  declared. This is evidence of the *problem*, correctly, not a bank.
+- **prototype-evidence:** `binding_times` on real IR UNRUN; the PROVE-12 perf anchor **not re-run** on live
+  (target `find_component_delim` retired; PMU stale); the type-plane JSON PMU delta the directive demands is
+  **UNMEASURED** (PROVE-09 law: absent a cold-paired number the JSON claim collapses to "typed façade, same
+  speed," acceptable only if so declared). `ScanAlphabet` is already-shipped, not 3D-authored.
 
 **Enumerated open gaps (3D):**
 1. `binding_times(CssScanProgram)` on REAL CSS IR — prove the S0/S1 partition *equals* PROVE-12's
-   hand-residualized set (parity byte-identical iff correct). Unrun.
-2. Re-home `admits_collapsed_stage` off `avx512bw` onto a grammar-derived binding-time predicate;
-   RED→GREEN with no x86 smuggled back. Unrun.
+   hand-residualized set (checksum parity oracle). UNRUN.
+2. Re-home `admits_collapsed_stage` off `avx512bw` onto a grammar-derived binding-time predicate (via
+   `decision_csp`, no x86 smuggled back); RED→GREEN on `CollapsedStageNotViable`. UNRUN.
 3. Type-plane JSON first-byte cold paired-PMU — real ins/B or a named negative. UNMEASURED.
-4. Re-confirm PROVE-12 on `06e70053f` (XL-H hygiene; base moved). Unrun.
+4. Re-confirm PROVE-12 on live `90db093bf` (XL-H hygiene; base moved, target retired). UNRUN.
 5. The unification thesis proven concretely, not restated from Constitution v.
 
 ---
 
-## 3. SPINE VERDICT
+## 3. SPINE VERDICT (within-lock)
 
-The convergent spine (3B substrate + 3A discipline + 3D attribute; 3C banked) is **architecturally
-sound and the family composition holds**. But this pass's two newest prototypes — the ones FAMILY-SPECS
-declared the two sharpest uncertainties — landed *after* the synthesis cut and **change the map**:
+The convergent spine (3B substrate + 3A discipline + 3D attribute; 3C banked) is **architecturally sound and
+the family composition holds** — §6's incompatibility map is correct and the `:204`-thread one-author /
+three-consumer resolution is clean. But the internal soundness of the **spec document** has degraded against
+its own newest evidence for the third consecutive pass, and two of the three families that could have
+converged carry a fired-or-unmeasured load-bearing gate:
 
-- **3A's contract now has PROVEN meaning (β-PASS) — but the spec's own predicate is written in the
-  vacuous form the PASS refutes.** Net: a real uplift and a spec-correction obligation, roughly
-  cancelling on the number; the load-bearing E1 *injected-fault* arm and the shipping-contract
-  promotion remain unrun. **62%.**
-- **3B's killer gate RAN and FAILED-as-written (α-FAIL) — the byte-identity gate is unsatisfiable for
-  sheets without a re-baseline, and the walker re-base (the true hard part) is still unrun.** Per the
-  synthesis's own rule, the demotion trigger fired. Architecture survives; the byte-proof does not.
-  **54%.**
-- **3C stays BLOCKED / SPEC-ONLY (32%); 3D stays BANKED (37%)** — neither had its sharpest uncertainty
-  tested (3C's cheapest E6-sum proof and 3D's `binding_times`-on-real-IR both UNRUN).
+- **3A — 60%.** Contract proven non-vacuous & LOCK-1-free (PROTO-2-3A-c) and the oracle localizes
+  (PROTO-2-3A) — a real double uplift — but the **spec still asserts G-3A-α in the refuted "cannot-fail"
+  form**, the **E1-infer organ-mutation matrix is unrun** (elegant-reduction on the sharp edge), and the
+  **coarse-inference ceiling under-fires the numeric case**. Uplift and spec-correction-debt cancel.
+- **3B — 53%.** Killer gate G-3B-1 **RAN FAIL-as-written**; the PROTO-1-a rescue is **RAN_UNMEASURED**; the
+  −100-LOC-bearing walker re-base (G-3B-1a, 318+431 LOC) is **entirely unrun** and view.rs is fragile; the
+  green slice is a **DRY masked-fallback**. Down from the spec's 55 — convergence must not rise on a fired demotion.
+- **3C — 32%.** BLOCKED / SPEC-ONLY; sharpest uncertainty (E6 sum-edge) untested. Concur.
+- **3D — 37%.** BANKED; spec-cites-self; `CollapsedStage` DEAD gate on the living tree; PROVE-12 stale. Concur/down.
 
-**No family is convergence-eligible** (pass 2 of ≥3; each carries ≥1 unrun/failed load-bearing gate;
-two consecutive clean passes + fresh non-author audit outstanding for all four).
+**No family is convergence-eligible** (pass 2 of ≥3; each carries ≥1 unrun/failed/unmeasured load-bearing
+gate; two consecutive clean passes + fresh non-author audit outstanding for all four).
 
-**Three corrections the registry MUST fold before pass-3 (in priority order):**
-1. **Re-fold PROTO-1.md (α, FAIL) and PROTO-2.md (β, PASS-with-correction) into the family
-   dispositions and the §6 table** — the synthesis is stale for a second time against its own
-   sharpest prototypes; the §8 briefs are already discharged, not pass-3 directives.
-2. **Reconcile the broken PROTO citation chain (§1b)** — re-home the overwritten :204-thread and
-   fold-purity-trace results under stable names; re-point every §0/§6 citation. Two claimed proofs
-   currently have no resident artifact.
-3. **Freeze the prototype set before the next synthesis cut** — the stale-synthesis error has now
-   recurred twice at the same structural cause (prototypes landing inside the authoring window).
+**Corrections the registry MUST fold before pass-3 (priority order):**
+1. **Re-fold PROTO-1-a (22:58) and PROTO-2-3A-c (23:01) into the family dispositions, the §5 table, and
+   G-3A-α/G-3B-1** — the synthesis is stale for a THIRD time against its own sharpest prototypes; the newest
+   pair are already-discharged results, not pass-3 directives.
+2. **Reconcile the broken PROTO citation chain (§1c)** — re-home the overwritten `:204`-thread and
+   fold-purity-trace results under stable names; re-point every §0/§5 citation. Two claimed proofs currently
+   have no resident artifact. (Unfixed from prior pass.)
+3. **Freeze the prototype set before the next synthesis cut** — the stale-synthesis defect has now recurred
+   at the same structural cause three times; pass-3 must gate the cut on a frozen set or it recurs a fourth.
+4. **Correct the two mislabelled gate states** — G-3A-α is REFUTED-as-stated (fires today, LOCK-1-free);
+   G-3B-1 is RAN-FAIL-as-written + rescue-UNMEASURED — neither is "UNRUN."
 
-*(Well-handled this pass, credit noted: FAMILY-SPECS §7.1 now surfaces the XL-F(1) `TypeAnalysis::from_ir`
-consumer contradiction as an explicit named-supersession challenge routed to GESTALT-B — the silent
-re-home the prior CRIT-2 flagged is corrected. That cross-lock finding is properly disposed.)*
+*(Credit, well-handled: §7.1 correctly surfaces the XL-F(1) `TypeAnalysis::from_ir` contradiction — verified
+absent from live `skinny/crates` — as a named-supersession challenge routed to GESTALT-B rather than a silent
+re-home. The `DirectSchemaSet` live-consuming-edge finding is sound and properly disposed.)*

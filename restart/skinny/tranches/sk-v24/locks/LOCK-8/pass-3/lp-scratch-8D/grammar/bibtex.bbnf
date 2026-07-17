@@ -1,0 +1,48 @@
+/* BibTeX Grammar
+ * Complete context-free grammar for .bib files.
+ * Post-processing (accent cleaning, short author) in TypeScript .map().
+ */
+
+ws = /[\s\t\n\r]*/ ;
+
+/* Brace-balanced value: { ... { nested } ... } */
+braceInner = /[^{}]+/ | "{" , braceInner * , "}" ;
+bracedValue = "{" , braceInner * , "}" ;
+
+/* Quoted value: "..." (no nested braces needed) */
+quotedValue = "\"" , /[^"]*/ , "\"" ;
+
+/* Bare number */
+bareValue = /[0-9]+/ ;
+
+/* Field value: concatenation with # */
+fieldValuePart = bracedValue | quotedValue | bareValue ;
+fieldValue = fieldValuePart , ( /\s*#\s*/ , fieldValuePart ) * ;
+
+/* Field: name = value */
+fieldName = /[a-zA-Z_][a-zA-Z0-9_-]*/ ;
+field = fieldName ?w , "=" ?w , fieldValue ;
+
+/* Comma-separated field list */
+fieldSep = /\s*,\s*/ ;
+fieldList = field , ( fieldSep , field ) * , fieldSep ? ;
+
+/* Entry key */
+entryKey = /[^\s,{}]+/ ;
+
+/* Entry type */
+entryType = /[a-zA-Z]+/ ;
+
+/* Full entry: @type{ key, fields } */
+entry = "@" , entryType ?w , "{" ?w , entryKey ?w , fieldSep , fieldList ?w , "}" ;
+
+/* String definition: @string{ name = value } */
+stringDef = /@string/i ?w , "{" ?w , field ?w , "}" ;
+
+/* Comment and preamble (skip) */
+commentEntry = /@comment/i ?w , bracedValue ;
+preambleEntry = /@preamble/i ?w , bracedValue ;
+
+/* Top-level: entries separated by whitespace */
+bibItem = entry | stringDef | commentEntry | preambleEntry ;
+bibFile = ( ws , bibItem ) * , ws ;

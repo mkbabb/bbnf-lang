@@ -163,6 +163,22 @@ table/flag coverage gaps; H8/H9 are non-regular and **no DFA can realize them**.
 is not a single verdict — it is **MIRRORED on H1–H5 under route-A, LAWFUL-NON-MIRROR
 (grammar-fenced) on H6–H9 under route-B**. The routes are complementary, not rival.
 
+### 3c. The recognizer-only fact — decisive for sizing the used-pattern-set
+
+A measured constraint collapses the hazard surface for parse-that's *actual* usage. `regex()`
+returns the **matched slice**, not capture values, on both sides: `leaf.rs:85` yields `&'a str`
+(the span), `leaf.ts:317` drives sticky `test()`/`exec()` and returns the matched substring — the
+combinator layer, not the regex, captures structure. A grep for capture-group *consumption*
+(`.exec(`, `$1`, `.groups`, numbered backrefs) over value.js `src/parsing` returns **zero**. So
+H4 (value-bearing captures), H8 (lookaround), and H9 (backref) are **outside the used-pattern-set**
+— parse-that uses `regex()` purely as a recognizer that reports *extent*. The classes that actually
+discriminate parse-that's row are therefore the *extent-affecting* ones: **H1, H2, H3, H5, H10**
+(match length under leftmost-first vs longest), plus the coverage gap **H6** on non-ASCII. This is
+the decisive input §4's corpus needs: the route-A bucket (priority determinization) covers the
+*entire live extent-divergence set*, and route-B's non-regular fence (H8/H9) is needed only if a
+grammar literal — not a consumer — introduces lookaround/backref. The census of grammar literals,
+not consumer patterns, is thus the true route-B sizer.
+
 ---
 
 ## 4. Route-A (priority DFA) vs route-B (grammar constraint) — the scratch to build

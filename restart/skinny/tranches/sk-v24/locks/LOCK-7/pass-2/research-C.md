@@ -1,241 +1,276 @@
-# LOCK-7 pass-2 · research-C — family 7C: THE HOST-FUNCTION LATTICE
+# LOCK-7 pass-2 — Family 7C: THE HOST-FUNCTION LATTICE
 
-Grammar totality is not "everything is a `->`". It is a **three-tier lattice**: a pure leaf floor
-that is already total, a comptime CONTEXT tier that resolves cross-rule and cross-document
-structure at zero runtime cost, and a stateful RECURSIVE tier that lives behind *declared, typed*
-host signatures. Totality is then a measured percentage — the fraction of grammar surface (leaves ×
-branches) that never crosses into the top tier — with a per-subsystem floor enforced by a
-falsifiable gate. This family makes the lattice concrete, splits its independent work from its
-LOCK-1-bound work, specifies the counter and its gate, and pins the zero-cost invariant of the
-middle tier so it can be scheduled honestly.
+*Totality bounded by a TYPED host-fn interface. Context-dependent and recursive semantics
+live behind declared signatures; totality is a measured percentage of surface behind
+grammars, with a named floor per subsystem.*
 
 ---
 
-## 1. The lattice made concrete — three tiers, one classifier
+## §0 The three-tier lattice (the family's shape)
 
-**Tier 0 — PURE LEAF (grammar-expressed, already total).** A production whose value is a `->`
-projection over `Literal`/`Regex`/class-run scan. The hand builder already parses `->`
-(`grammar/src/lib.rs:1404 parse_postfix` → `parse_projection:1481`, boundary scan
-`parse_runtime_projection` at `grammar/src/lib.rs:~838`), lowering to `ExprKind::Project { body,
-target, ty }` (`ir/src/lib.rs:234` enum). No host. Zero runtime beyond the recognizer. Every
-structural grammar in the fleet (json/css/csv/sheets/toml) is Tier-0-dominant.
+Host is not a monolith; it is a lattice of three tiers, each with a distinct cost and a
+distinct dependency on the solver spine:
 
-**Tier 1 — CONTEXT (comptime, zero runtime cost).** Cross-rule and cross-document *structure*
-resolved before any byte is parsed at runtime. The canonical mechanism is **`resolve_refs`**
-(`ir/src/lib.rs:84`): it builds a `name → RuleId` map over `self.rules` and mutates every
-`ExprKind::Ref { name, target }` to fill `target: Some(rule_id)` (`ir/src/lib.rs:95-105`). It is a
-pure build-time TreeFold over `self.exprs`; its *only* output is an `Option<RuleId>` link — an
-`ExprId`-space edge, never emitted code. `validate` (`ir/src/lib.rs:110`) is its sibling verifier.
-The document-path analogue is TOML's `[table]`/`[[array]]` **`push_path`** (GN-5.W2, `toml.bbnf`):
-section nesting is a *path context* resolvable at parse-structure time, not a runtime host state
-machine. Tier 1 is where the grammar-homoiousia route (LOCK-3C) and self-host meet: the node-value
-census is pure `->`, and the *build* mechanisms — `add_expr` append (`grammar/src/lib.rs:1351…1501`)
-and `resolve_refs` cross-rule link — are Tier-1 comptime host, not Tier-2.
+- **PURE tier** — leaf semantics expressed entirely on the grammar plane: `-> value_expr`
+  projections (`Span`, T-constructors, arithmetic over captured spans). Zero host, zero
+  runtime cost, grammar-neutral. This is the majority surface and the numerator of totality%.
+- **STRUCTURAL tier** — the *build* mechanisms, host-bound but **grammar-neutral and
+  comptime-only**: node append (`add_expr`, `ir/src/lib.rs:51`) and cross-rule link
+  (`resolve_refs`, `ir/src/lib.rs:84`). These carry no grammar name and cost zero at runtime
+  (they run at regen). This is the "host floor" the construction census bottoms out at.
+- **CONTEXT tier** — the typed escape hatch: `@host fn : T`, for context-dependent and
+  recursive semantics a first-set/shape dispatch cannot express (TOML table nesting, a
+  recursive operator tower's precedence climb). Threaded via a declared `&mut Ctx` signature.
+  Its existence is gated on a LOCK-1 inherited-attribute verdict and on a proven zero-cost
+  invariant for the grammars that do NOT use it.
 
-**Tier 2 — RECURSIVE / STATEFUL (LOCK-1-bound, typed signature).** Context-*dependent* semantics
-that cannot be discharged at structure time: they need a mutable parse context `&mut Ctx`
-(position-sensitive tokens, recursive re-entry, host decode). This is exactly the `@{ … }`
-host-capture atom. The tier boundary is: **does the declared signature take `&mut Ctx`?** If no, it
-demotes to Tier 1 (pure, zero-cost). If yes, it is Tier 2 and its *type* must flow into LOCK-1's
-solver. XL-3.
-
-The classifier that assigns a node its tier is one predicate over the IR, not a name test: Tier-0
-if the subtree is `Project`/`Literal`/`Regex`/`Seq`/`Alt` of same; Tier-1 if it is a `Ref` or a
-declared *pure* host; Tier-2 iff it is a host with a `&mut Ctx` signature. This is the pluggable
-decision point (memory: `pluggable-components`) that the totality counter (§3) reads.
+7C's deliverable is: (a) make the tier boundary **typed and enforced** rather than
+substring-sniffed, (b) **count** the percentage of behavior behind grammars with a
+falsifiable gate, (c) prove the CONTEXT tier is zero-cost for non-users before it is scheduled.
 
 ---
 
-## 2. Split independence — what moves lock-free vs what waits on LOCK-1
+## §1 The concrete substrate — what exists at HEAD
 
-### 2a. Lock-free (no LOCK-1 verdict needed)
+The typed host surface is **already latent in the self-hosted grammar** but rejected by the
+skinny hand-parser:
 
-**(i) KILL the substring heuristic at `passes/src/lib.rs:794-816`.** `has_parse_time_host_decode`
-decides `requires_eager_tape` (consumer live at `passes/src/lib.rs:516`, mapped over every rule)
-by sniffing annotation *text*: `name.contains("host") && (value.contains("decode") ||
-value.contains("parse"))` (`:798`). This is a name-gate in spirit — a string-substring predicate
-standing in for a type fact. Replace it with a **structural** signal: a lowered
-`ExprKind::Host { sig }` node whose `sig` carries an explicit `eager_tape: bool` (or a
-`ParseTimeDecode` capability) resolved from the host-fn declaration. The eager-tape decision becomes
-a property read, not a substring match. Falsification floor: byte-identical regen of
-json/css/sheets after the swap (no shipped grammar's eager-tape choice may change) —
-`grep -rn '@{' grammar/` shows `@{}` appears only in `grammar/bbnf/bbnf.bbnf`,
-`grammar/bbnf/types.bbnf`, `grammar/css/l4/{color,values}.bbnf`, none of which route through
-skinny's declared-json emitter today, so the swap is measurably inert on the shipped corpus.
+- **`@host name : type` — the typed declaration.** `grammar/bbnf/bbnf.bbnf:76`:
+  `host_directive = "@host" ?w , identifier ?w , ( ":" ?w , type_name ?w ) ? , ( ";" | "." ) ?`.
+  This is precisely the declared-signature surface the family needs. The skinny parser
+  **rejects it**: `crates/grammar/src/lib.rs:1327` emits `BBNF-DIRECTIVE-NOT-IN-SKINNY` for
+  every directive save `import|token|pretty|ws` (`:1324`). `@host`/`@recover`/`@debug` are
+  born-RED parser gaps.
+- **`@{ ... }` — the anonymous host-capture atom.** `bbnf.bbnf:33`: the `term` alternation
+  arm `"@{" , rhs ?w , "}"`. The skinny parser scans it as a **runtime FACT** only —
+  `parse_runtime_host_capture` (`crates/grammar/src/lib.rs:799`) records a `RuntimeHostCapture`
+  into the frontend closure — then maps it **UNSUPPORTED**: `crates/grammar/src/lib.rs:222`,
+  `RuntimeConstructKind::HostCapture => "BBNF-UNSUPPORTED-HOST-CAPTURE"`. It **never enters
+  `GrammarIr`**: `parse_atom` (`grammar/src/lib.rs:~1503`) has no `@{` arm. This is the
+  lower-`@{}` seam the directives name.
+- **`|params|` closures — grammar functions.** `bbnf.bbnf:52`:
+  `closure = "|" , identifier , ( "," ?w , identifier ) * , "|" ?w , rhs`. No skinny parser
+  support; the third bounded gap.
+- **The build floor.** `resolve_refs` (`ir/src/lib.rs:84`) is the one cross-rule link: a
+  `HashMap<name → RuleId>` pass mutating each `ExprKind::Ref { target }` from `None` to
+  `Some(RuleId)` in place (`:96`), TreeFold-shaped, comptime-only. `add_expr` (`:51`) is pure
+  append. Together they are the entire STRUCTURAL tier — node values are pure `->`, build
+  mechanisms are these two.
+- **The heuristic to kill.** `crates/passes/src/lib.rs` `has_parse_time_host_decode` (in the
+  `requires_eager_tape` cluster, ~line 794) detects "host decode" by **substring match**:
+  `name.contains("host") && (value.contains("decode") || value.contains("parse"))` over an
+  `ExprKind::Annotation`. A stringly-typed proxy for the host tier — a name-gate in spirit,
+  gating eager-tape selection on a substring rather than a typed node field.
 
-**(ii) LOWER `@{}` — retire the reject at `grammar/src/lib.rs:222`.** Today `@{ … }` is
-*recognized then rejected*: the runtime scanner sees `@{` (`grammar/src/lib.rs:420`), calls
-`parse_runtime_host_capture` (`grammar/src/lib.rs:~800`) which balanced-skips to `}` and captures
-`body: String` (struct `RuntimeHostCapture`, `:170`), then `RuntimeConstructKind::HostCapture` maps
-to the error code `BBNF-UNSUPPORTED-HOST-CAPTURE` (`:222`). Critically the **hand builder** has no
-`@{` arm at all: `parse_atom` (`grammar/src/lib.rs:1495`) handles `"`, `/`, `(`, ident — never `@`.
-Lowering is three edits: add `ExprKind::Host { body: String, sig: HostSig }` to the IR enum
-(`ir/src/lib.rs:234`); add an `@` arm to `parse_atom` reusing `runtime_skip_balanced`; bind `body`
-to a declared signature at `resolve_refs` time (a `name → HostSig` table alongside the existing
-`name → RuleId` map at `ir/src/lib.rs:85`). The scan layer already yields `body` offsets — the
-builder just keeps them instead of discarding to an error.
-
-**(iii) NAME `resolve_refs` as the Tier-1 reference mechanism** (`ir/src/lib.rs:84`) — it is
-already the cross-rule link; the family's job is only to *label* it Tier-1 and assert its zero-cost
-property (§4). No code motion.
-
-### 2b. LOCK-1-bound (waits on the solver spine)
-
-- **Typed signature into inference.** The `HostSig` of a `@{}` capture — its argument types and
-  result type — is a *type*, and Tier-2 host results must unify with the enclosing rule's inferred
-  projection type. This is a LOCK-1 obligation (HM/CSP over `->` shapes, 1A/1B); the host-fn
-  declaration is a leaf in LOCK-1's type lattice, not a bbnf-side concern.
-- **Tier selection off `&mut Ctx`.** Whether a host fn is Tier-1 (pure) or Tier-2 (stateful) is the
-  **inherited-attribute verdict** the construction census defers to LOCK-1. Attribute grammars
-  (Knuth 1968): `resolve_refs`/synthesized attributes are Tier-1; a `&mut Ctx` recursive host is an
-  inherited attribute threaded top-down — precisely what a bidirectional/constraint solver must
-  schedule. XL-3.
-
-**Deliverable dependency (stated, not hidden):** the census / totality% number (§3) requires
-`bbnf.bbnf` to **parse *and* build** through the emitter's `!has_rule("value")` branch
-(`codegen/src/runtime_generator.rs:98` → `emit_general_descent`). Until `@{}` is lowered (2a-ii),
-bbnf.bbnf cannot build, so the counter runs only on the host-free fleet and reports bbnf's tier mix
-as RED-unknown. The counter is *specifiable* now; its bbnf row is gated on 2a-ii landing.
+`ExprKind` (`ir/src/lib.rs:234`) has **no host node** today: `Seq | Alt | Repeat | Optional |
+Literal | Regex | Ref | Annotation | Project | Discard`. The closest carrier is
+`Annotation { name, value }` — exactly why the eager-tape probe is forced into substring
+sniffing. Lowering `@{}` introduces the missing typed node.
 
 ---
 
-## 3. The totality% counter (leaves × branches) and its floor-gate
+## §2 The split-independence answer (directive Q1)
 
-**Definition.** Over a grammar's `GrammarIr`, count two structural populations:
-- **leaves** = terminal-producing nodes: `Literal`, `Regex`, and each `Project` target (the value
-  sites).
-- **branches** = dispatch points: each `Alt` arm (`ir/src/lib.rs` `ExprKind::Alt.branches`) and each
-  `Optional`/`Repeat` decision.
+Two clean strata; the census counter sits astride them.
 
-Classify each by its tier (the §1 classifier). Then
+### LOCK-FREE (no solver-spine dependency; movable now)
+
+1. **Kill `passes/src/lib.rs` `has_parse_time_host_decode`.** Once `@{}` lowers to a typed
+   `ExprKind::Host { name, args, body, eager }` node, the "does this need an eager tape"
+   question reads a **declared boolean field**, not a name/value substring. Eagerness is a
+   *structural* fact — does the host fn read cross-token context? — declared in the `@host`
+   signature, independent of any inferred type. `requires_eager_tape` becomes a typed predicate
+   `matches!(kind, ExprKind::Host { eager: true, .. })`, DRY with the three sibling structural
+   probes in that cluster (`has_recovery_annotation`, `has_dispatch_overlap`, `has_layout_policy`).
+2. **Lower `@{}` at `grammar/src/lib.rs:222`.** Promote `HostCapture` from an UNSUPPORTED
+   runtime-fact to a first-class `parse_atom` arm emitting `ExprKind::Host`. Bounded parser
+   augment; grammar-neutral; touches the parser + the `ExprKind` enum + the `pretty`/lower arms;
+   no inference. One of the three named parser gaps (`@{}` atom, `|params|` closures, `?w`→`->`
+   attachment in `parse_seq`).
+3. **Name `resolve_refs` (`ir/src/lib.rs:84`) as the STRUCTURAL-tier host floor.** It is the
+   sole cross-rule link, grammar-neutral, the point the construction census bottoms out at. No
+   LOCK-1 verdict needed — it links names, it does not type them.
+
+### LOCK-1-BOUND (needs the solver spine's verdict)
+
+4. **The `@host fn : T` signature flowing into inference.** The declared type must enter
+   LOCK-1's HM core as the type of the calling projection — a **checked-against** obligation
+   (the host body is opaque; its signature is a principal type the caller is checked against,
+   GHC-`foreign import` discipline). Until LOCK-1 fixes whether host signatures are principal
+   or bidirectionally checked, this cannot land.
+5. **The CONTEXT tier off `&mut Ctx`.** Whether a host fn takes `&mut Ctx` (context threaded
+   *down*, e.g. TOML `push_path`) versus a pure `&[u8] -> T` is the **inherited-attribute
+   verdict (XL-3)**. An inherited attribute IS a `&mut Ctx` down-thread; a synthesized attribute
+   IS the `-> T` up-value. If LOCK-1 admits inherited attributes, the CONTEXT tier gets a typed
+   `&mut Ctx` signature; if not, context-dependence stays hand-coded and totality% carries a
+   **named CONTEXT floor** per subsystem.
+
+### Prerequisite note
+
+The census/totality% deliverable (§3) **cannot be computed until bbnf parses+builds** — you
+cannot count leaves×branches behind grammars until `bbnf.bbnf` routes through the emitter and
+materializes a `GrammarIr`. Lock-free item (2) is thus a **hard prerequisite** for the counter;
+the counter is not itself LOCK-1-bound, but it is `@{}`-lowering-bound.
+
+---
+
+## §3 The totality% counter and its floor-gate (directive Q2)
+
+### The counter (leaves × branches)
+
+Walk the built `GrammarIr` over the whole grammar corpus:
+
+- **LEAVES = every `-> value_expr` projection target** (`ExprKind::Project`, `ir/src/lib.rs:261`).
+  Grammar-expressed if `target`/`ty` resolve to a pure `value_expr` (Span, T-constructor, span
+  arithmetic) with **no `@host` call**; host-bound if the target names an `@host` fn.
+- **BRANCHES = every `Alt` arm** (`ExprKind::Alt`, `ir/src/lib.rs:236`). Grammar-expressed if
+  selection is first-set / shape driven (the extant grammar-neutral dispatch,
+  `first_bytes`/`branches_overlap` in `passes/src/lib.rs`); host-bound if it needs a host
+  predicate (context-dependent lookahead).
+- **totality% = grammar-expressed / (grammar-expressed + host-bound)**, summed over leaves and
+  branches, reported **per-subsystem** (per grammar, per crate).
+
+### The per-subsystem floor
+
+Each subsystem **declares its named host floor** — the irreducible host surface below which
+totality cannot lawfully fall: *regex NFA construction = 0% grammar (kernel primitive)*; *TOML
+table nesting = CONTEXT tier, exactly 1 host fn (`push_path`)*; *sheets operator tower = N
+host-bound branches (precedence climb)*. Every host fn **above** the floor is a **defect** —
+grammar-expressible surface regressed to hand code (standing law: augment BBNF, never work
+around).
+
+### The gate — a `check-name-gates` sibling
+
+GN-5 W3 installs `cargo xtask check-name-gates`: a `syn` AST walk over `crates/codegen/src/`
+that fails on grammar-name string literals, paired with `name_gate_falsification.rs` planting
+three breaches and asserting the gate trips. **`check-totality` is its structural sibling** —
+colocated in `xtask/src/main.rs` alongside the `check-*` arms (`xtask/src/main.rs:40-52`):
 
 ```
-totality% = 1 − (Σ Tier-2 leaves+branches) / (Σ all leaves+branches)
+cargo xtask check-totality      # census GrammarIr Project/Alt; fail below any declared floor
 ```
 
-Tier-0 and Tier-1 count as *behind grammar* (comptime, zero runtime host); only Tier-2 (`&mut Ctx`
-host) subtracts. This is the crucial anti-gaming property: **hiding leaf semantics in a host fn
-LOWERS totality%, it cannot hide behind it** — the exact counter to GN-5.W2 R2 (a host fn that
-hard-codes TOML datetime parsing is a name-gate in disguise, `GN-5.md:519-524`). A per-subsystem
-**floor** is declared (e.g. `json ≥ 100%`, `css ≥ 100%`, `sheets ≥ 100%`, `toml ≥ 98%` if datetimes
-go host, `bbnf ≥ X%` with `@{}` recursion accounted). The floor is a fact, not a slogan.
+Fails if (i) any subsystem's totality% drops below its declared floor, OR (ii) any `@{}`
+capture lacks a matching `@host` typed declaration (an **untyped** host is a breach — the point
+is a TYPED interface).
 
-**The gate — a GN-5 `check-name-gates` sibling.** GN-5.W3 introduces `cargo xtask check-name-gates`
-(AST audit, `syn` walk, `GN-5.md:301-316`); skinny's xtask has neither it nor this sibling yet
-(`skinny/xtask/src/main.rs:40-52` roster: regen/check-json, sheets, css, real-typed, conformance,
-lint-loc — no gate). Add **`cargo xtask check-totality`** colocated in the same `match` arm: for
-each fleet grammar, load its `GrammarIr`, run the §1 classifier, compute totality%, and `bail!` if
-any grammar falls below its declared floor. The floors live in `[workspace.metadata.bbnf]` beside
-`host_registry` (`skinny/Cargo.toml:58`, today `host_registry = "skinny-none"` — an *empty*
-registry, so the fleet reads 100% today and the gate is trivially green: **non-vacuity requires
-bbnf.bbnf wired**, §5/R-C3).
+### Planted-breach falsification
 
-**Planted-breach falsification (precept 19 — a gate must be proven able to fail).**
-`skinny/xtask/tests/totality_falsification.rs`: (a) inject a synthetic `ExprKind::Host { &mut Ctx }`
-into a grammar whose floor is 100% and assert `check-totality` trips; (b) lower a grammar's declared
-floor above its measured value and assert it trips; (c) assert the real fleet passes clean. A gate
-that cannot fail is a defect (Constitution vii).
+Mirroring GN-5 W3, an `xtask/tests/totality_falsification.rs` plants three forms into an
+in-memory grammar and asserts a violation for each:
+
+- (i) an `@{}` capture with **no matching `@host` declaration** (untyped host — must trip);
+- (ii) a `Project` target calling an **undeclared** host fn (must trip);
+- (iii) a host fn that **hard-codes a grammar-specific constant** (a name-gate in host disguise
+  — the exact GN-5 R2 risk that a host shim smuggles a `datetime`/grammar constant in);
+
+then asserts the **real corpus passes clean**. A gate that cannot fail is a defect (the
+constitution's concrete-artifacts clause; the SPEC failure-mode law). Proves it can fail before
+it is trusted to pass.
 
 ---
 
-## 4. The CONTEXT-tier zero-cost invariant — testable before it is scheduled
+## §4 The CONTEXT-tier zero-cost invariant (directive Q3)
 
-Tier 1 may only be scheduled if its zero-runtime-cost claim (Constitution v) is *proven testable*,
-not asserted. Two concrete tests, both runnable on skinny HEAD:
+The constitution's clause v — *the type plane costs zero at runtime* — must hold for the
+CONTEXT tier's `&mut Ctx` thread **before that tier is scheduled**. Two testable predicates:
 
-- **`resolve_refs` round-trip.** `parse_grammar(src)` → `resolve_refs` → `pretty()`
-  (`ir/src/lib.rs:124`) must equal `parse_grammar(src)` → `pretty()`: `resolve_refs` mutates only
-  `target: Option<RuleId>` (`ir/src/lib.rs:103`), a comptime link `pretty` does not render, so the
-  surface is provably unchanged. The stronger emit-nothing proof: `grep` the generated `.rs` for any
-  construct derived from a `Ref.target` value — it is zero, because the emitter dispatches on rule
-  *identity*, not on the resolved link carrying runtime weight.
-- **TOML `push_path` round-trip (GN-5.W2 consumer).** A `[a.b]`/`[[a.b]]` document's canonical
-  key-path map is identical whether the path is threaded as a Tier-1 comptime structure or a Tier-2
-  runtime host state — if the two agree byte-for-byte across the ≥40-doc corpus
-  (`crates/test-fixtures/corpus/toml/`), `push_path` is provably Tier-1 and costs zero at runtime.
+- **`resolve_refs` round-trip.** `resolve_refs` mutates `Ref.target` `None→Some(RuleId)` at
+  build time (`ir/src/lib.rs:96`) and is erased before emission. Testable invariant: after
+  `resolve_refs`, a PURE-tier rule (no `@host` call) emits **byte-identical** recognizer output
+  whether or not a `Ctx` type exists in the build. Round-trip: `parse → resolve_refs → emit`,
+  diff against a `Ctx`-free build; PURE rules must be byte-identical.
+- **TOML `push_path` as the CONTEXT witness.** TOML table nesting (`[a.b.c]`) is the canonical
+  inherited attribute — the path flows *down*. If the CONTEXT tier lands, `push_path` is a host
+  fn `fn(&mut Ctx, key)`. Zero-cost test: a grammar with **no** context-dependent rule (JSON,
+  CSS) must emit **zero** `Ctx` parameter — the `&mut Ctx` appears in a signature **only** when
+  a rule actually calls a CONTEXT-tier host fn. Test: regen JSON with the CONTEXT tier compiled
+  in, assert **byte-identical** to pre-CONTEXT JSON (the `Ctx` thread absent because no JSON rule
+  uses it).
 
-Only after both pass does the CONTEXT tier earn a schedule slot. This is the honest gate on
-`resolve_refs` and `push_path` the family requires before that tier is scheduled.
-
----
-
-## 5. The shared open empirical question — RED-unknown, and how to drive it
-
-*Do `-> Span`/`-> T` builder projections authored on bbnf's structural rules, over the recognizer
-emitter, reparse the corpus into GrammarIr-equivalent structure — within the measured
-`add_expr` + `resolve_refs` host budget — while `regen∘regen` holds byte-identical?*
-
-Report **RED-unknown; unseeded.** The route: author `->` projections on `bbnf.bbnf`'s rules, drive
-`emit_sink_only`'s `!has_rule("value")` branch (`codegen/src/runtime_generator.rs:98`) — **never**
-`json_sink_direct` (`:101`) — regen `bbnf/*`, and diff the reparsed `GrammarIr` against the hand
-builder's. Do not seed the verdict from the legacy emitter or from the emitter's mere existence: the
-general-descent emitter emits *recognizers*, one `parse_<rule>` per rule (`general_descent/`
-~1206 LOC); whether a *builder* augment over it round-trips is genuinely open. The prototype must
-localize the first construct where it cascades — candidates: `@{}` capture, `|params|` closures,
-`?w`→`->` attachment at `parse_seq` — or certify equivalence.
+The **born-RED schedule gate**: `check-totality` + a `ctx_zero_cost` regen-parity test showing
+PURE-tier grammars are `Ctx`-free at the byte level. Until that test is green, the CONTEXT tier
+is **BLOCKED** — the direct answer to Q3: the invariant is testable via regen-parity, and the
+tier is scheduled only behind it.
 
 ---
 
-## 6. Prior art (cited)
+## §5 Prior art with citations
 
-- **tree-sitter external scanners** — the canonical host-function lattice: grammar expresses the
-  bulk; a typed C API (`scan(void *payload, TSLexer *, const bool *valid_symbols)`) handles
-  context-dependent tokens (indentation, heredocs, raw strings). `TSLexer *` IS the typed
-  `&mut Ctx`; `valid_symbols` is the tier boundary. `@{}` is bbnf's external scanner; the lesson is
-  that the interface is *typed and narrow* and the grammar declares which symbols it may produce.
-- **Knuth attribute grammars (1968)** — synthesized vs inherited attributes is exactly Tier-1 vs
-  Tier-2. `resolve_refs` = synthesized (bottom-up, pure); `&mut Ctx` recursion = inherited
-  (top-down, scheduled). The LOCK-1 inherited-attribute verdict rests on 57 years of theory.
-- **GHC typed primops / `foreign import`** — the host boundary carries a *declared type*; primops
-  are total functions the compiler trusts by signature, not by name. The `HostSig` model.
-- **yacc/bison/ANTLR semantic actions (`{ … }`)** — `@{}` is the action block; ANTLR's typed rule
-  return values and `@members` are the typed-signature discipline bbnf must adopt (untyped actions
-  are the anti-pattern the lattice forbids).
-- **rustc lang-items / MLIR external dialect ops** — a fixed, typed set of "known to the compiler"
-  operations distinguished structurally (a registry), never by string name — the model for a real
-  `host_registry` replacing `"skinny-none"`.
-
----
-
-## 7. Named risks and counterexamples
-
-- **R-C1 — the substring-heuristic swap changes an eager-tape decision.** If a shipped grammar's
-  eager-tape selection secretly depends on `@host decode` annotation text, the structural swap
-  (2a-i) flips it. *Guard:* byte-identical json/css/sheets regen is the born-RED gate; `grep`
-  confirms `@{}`/`@host` are absent from the shipped-through-skinny corpus, so the swap is
-  measurably inert. A divergence means the annotation was load-bearing and its type fact must be
-  modeled explicitly first.
-- **R-C2 — `@{}` lowering needs `&mut Ctx` → borrow-checker escape.** A Tier-2 host body that
-  mutates parse context is the named kernel-escape (7B territory). *Guard:* the `HostSig` declares
-  `&mut Ctx` explicitly; a capture that declares purity but touches context fails a signature check.
-  The escape is *declared*, never silently inferred.
-- **R-C3 — the totality counter is vacuous.** With `host_registry = "skinny-none"`
-  (`skinny/Cargo.toml:58`) every fleet grammar reads 100% Tier-0/1 and the gate never exercises the
-  `<floor` branch. *Guard:* non-vacuity requires at least one grammar that genuinely needs a Tier-2
-  host — bbnf.bbnf's `@{}` recursion or TOML datetime — wired through before the gate is trusted;
-  until then the counter is *specified but unproven* and must be labeled so (Constitution vii, no
-  vague optimism).
-- **R-C4 — consumer-less host lattice (Y.13).** A `host_registry` with declared signatures but no
-  runtime caller is forbidden substrate. *Guard:* the first host-fn declaration lands in the same
-  wave as its bbnf.bbnf or TOML consumer; the registry grows by need, never speculatively.
-- **R-C5 — tier misclassification hides logic.** A leaf routed to a Tier-2 host to "look clean"
-  actually *lowers* totality% by construction (§3) — the incentive inverts correctly, but only if
-  the classifier counts host leaves as Tier-2, not Tier-1. *Guard:* the §3c falsification plants
-  exactly this and asserts the number drops.
+- **Tree-sitter external scanners** — the canonical typed host-fn interface for
+  context-sensitive tokens (Python indentation, heredocs, raw strings, template literals) no CFG
+  can express. Five typed C functions (`create/destroy/serialize/deserialize/scan`), state
+  persisted through the engine's serialization protocol. Exactly the CONTEXT tier: a bounded,
+  typed escape hatch **below the CFG floor** with an explicit state contract. bbnf's
+  `@host fn : &mut Ctx -> T` is the isomorphic surface; `Ctx` is the analogue of the scanner's
+  persisted state — skinny needs no incremental reparse, so serialize/deserialize collapses to a
+  plain `&mut Ctx` thread.
+  (tree-sitter.github.io/tree-sitter/creating-parsers/4-external-scanners.html)
+- **Silver extensible attribute grammars + forwarding** — the totality model: extension
+  constructs receive implicit semantics by *forwarding* to a host construct; inherited and
+  synthesized attributes are the typed context threading. The `&mut Ctx` down-thread is an
+  **inherited attribute**; `-> T` is a **synthesized attribute**. Grounds Q1's LOCK-1
+  inherited-attribute verdict (XL-3): the CONTEXT tier is exactly "does this grammar admit
+  inherited attributes." (Van Wyk et al., *Silver: an Extensible Attribute Grammar System*.)
+- **Semantic actions (ANTLR / yacc / Marpa)** — host expressions embedded in productions,
+  invoked at reduce. bbnf's `-> value_expr` **is** a typed semantic action; the difference is
+  bbnf **types** it (LOCK-1) and keeps the majority PURE on the grammar plane, reserving host
+  code for the declared CONTEXT floor — versus yacc's untyped C blocks scattered everywhere. The
+  lattice (typed pure action, majority → typed host action, minority, declared) is the
+  discipline yacc lacks.
+- **GHC `foreign import` / MLIR op interfaces** — the declared-signature discipline: an external
+  operation carries a typed signature the compiler **checks against**, never infers from the
+  body. `@host fn : T` follows this; why §2 item (4) is checked-against, not principal-inferred.
 
 ---
 
-## 8. What a prototype must test to move this family
+## §6 Named risks and counterexamples
 
-1. **P1 (2a-ii):** add `ExprKind::Host` + `parse_atom` `@` arm + `resolve_refs` sig-binding; author
-   a one-`@{}` toy grammar; assert it parses, builds (`add_expr` + `resolve_refs` succeed), and
-   lowers through `!has_rule("value")`. Measures the add_expr+resolve_refs host budget.
-2. **P2 (2a-i):** replace `passes/src/lib.rs:798` substring test with an `ExprKind::Host` structural
-   read; assert json/css/sheets regen byte-identical (`cargo xtask check-{json,sheets}` + check-css).
-3. **P3 (§3):** implement `cargo xtask check-totality` over the fleet; land the three-form
-   falsification test; confirm trip-on-breach + clean-on-HEAD.
-4. **P4 (§4):** the `resolve_refs` round-trip + emit-nothing grep, and the TOML `push_path`
-   Tier-1/Tier-2 agreement test — the zero-cost invariant proof that unlocks scheduling the CONTEXT
-   tier.
-5. **P5 (§5):** the RED-unknown driver — `-> Span`/`-> T` on bbnf.bbnf over the recognizer emitter,
-   regen∘regen byte-check, GrammarIr-equivalence diff, first-cascade localization.
+- **R-A — `@{}` lowering cascades (the shared open empirical question).** `bbnf.bbnf:33`'s
+  capture is `"@{" , rhs ?w , "}"` — its body is `rhs`, the **whole grammar**, so the host
+  node's body is unbounded and self-referential. If lowering `@{}` to `ExprKind::Host` breaks
+  the recognizer round-trip (`regen∘regen` not byte-identical) it is not free. **Guard:** drive
+  the `!has_rule("value")` general-descent branch on `bbnf.bbnf` (no `value` rule), **never**
+  `json_sink_direct`; watch the `term` alternation (`bbnf.bbnf:29-36`) as the first cascade
+  point. Do not seed the verdict from the emitter's mere existence.
+- **R-B — untyped `@{}` versus typed `@host` incoherence.** `bbnf.bbnf` carries **both**
+  `@{...}` (anonymous atom, `:33`) and `@host fn : type` (named declaration, `:76`). Two
+  mechanisms make the lattice incoherent. **Resolution:** `@{}` must lower to a *reference* to
+  an `@host`-declared fn (the capture body names the host fn), so there is ONE typed surface; an
+  `@{}` with no matching `@host` is the §3 planted-breach (i).
+- **R-C — the heuristic-kill regresses eager-tape selection.** `has_parse_time_host_decode`
+  gates eager tape; a typed replacement that *infers* eagerness could mis-classify a cross-token
+  host fn as lazy and read garbage. **Guard:** eagerness is **declared** in the `@host`
+  signature, not inferred — trading a name substring for a wrong inference is the failure mode;
+  ties eagerness to the §2 typed-node field, not to LOCK-1.
+- **R-D — totality% is gameable.** A subsystem could inflate its % by declaring one giant host
+  fn as "a single leaf." **Guard:** the counter weights by leaves×**branches of behavior** — a
+  host fn's *internal* dispatch points count as host-bound branches, not one; the floor-gate
+  audits host-fn LOC against the generated-size budget (extreme-parsimony law), so a fat host fn
+  shows as many host branches and fails its floor.
+
+---
+
+## §7 What a prototype must test (to move this family)
+
+1. **Parser augment.** Add a `@{` arm to `parse_atom` (`grammar/src/lib.rs:~1503`) emitting
+   `ExprKind::Host { name, args, body, eager }`; add `|params|` closures to the `rhs` parse;
+   attach `?w`→`->` in `parse_seq`. Route `bbnf.bbnf` through `!has_rule("value")`
+   general-descent and assert `regen∘regen` **byte-identical** — the shared open empirical
+   question, RED-unknown.
+2. **Totality counter, non-vacuous.** Walk `GrammarIr` `Project`/`Alt`, classify pure-vs-host,
+   emit per-subsystem %. On the extant corpus (json/css/csv/sheets) report the **actual**
+   numbers — expect ~100% for json/css (pure `-> Span`/T leaves), a named CONTEXT floor for
+   sheets (39-branch operator tower) and TOML (table paths). Triple-identical proves nothing (a
+   fixed-const emit path stamps identical bytes for any input); the census must be over *real*
+   Project/Alt content.
+3. **Floor-gate falsification.** `check-totality` trips on the three planted breaches (untyped
+   `@{}`, undeclared host call, grammar-const-in-host), passes clean on HEAD.
+4. **Ctx zero-cost.** Compile the CONTEXT tier in, regen JSON, assert byte-identical to
+   pre-CONTEXT JSON (PURE grammars `Ctx`-free). **BLOCK** the CONTEXT tier until green.
+
+**Substrate confirmed absent:** skinny xtask has **no** `regen-bbnf`, **no** fixpoint arm, and
+**no** `check-name-gates` yet (`xtask/src/main.rs:40-52` lists `regen-json|check-json|
+regen-sheets|regen-css|…`); the `~88s→0.5s` fixpoint datum is a **legacy transplant**, not a
+skinny measurement — a `grep fixpoint|regen-bbnf` over `skinny/xtask` returns empty. Any
+totality gate is thus a **net-new** born-RED sibling, not a modification of an existing gate.

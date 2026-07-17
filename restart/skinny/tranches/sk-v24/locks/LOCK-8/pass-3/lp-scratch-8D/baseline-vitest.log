@@ -1,0 +1,25 @@
+### BASELINE 0.7.1 — npx vitest run ###
+
+ RUN  v3.2.4 /Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/lp-scratch-8D
+
+ ✓ tests/compiled-metadata.test.ts (3 tests) 3ms
+ ✓ tests/labels.test.ts (4 tests) 2ms
+ ✓ tests/virtualSectionLayout.test.ts (2 tests) 2ms
+ ✓ tests/flattenPaperSections.test.ts (2 tests) 2ms
+ ✓ tests/grammar/math.test.ts (4 tests) 3ms
+ ✓ tests/grammar/text.test.ts (11 tests) 3ms
+ ✓ tests/bibtex.test.ts (12 tests) 4ms
+ ✓ tests/grammar/commands.test.ts (11 tests) 4ms
+ ✓ tests/grammar/environments.test.ts (10 tests) 6ms
+ ✓ tests/grammar/document.test.ts (19 tests) 6ms
+ ✓ tests/paper.test.ts (19 tests | 9 skipped) 5ms
+ ✓ tests/integration.test.ts (8 tests) 15ms
+ ✓ tests/transformer.test.ts (20 tests) 17ms
+ ✓ tests/vite-pages.test.ts (2 tests) 10ms
+
+ Test Files  14 passed (14)
+      Tests  118 passed | 9 skipped (127)
+   Start at  23:07:48
+   Duration  412ms (transform 405ms, setup 0ms, collect 1.24s, tests 82ms, environment 1ms, prepare 724ms)
+
+VITEST_EXIT=0

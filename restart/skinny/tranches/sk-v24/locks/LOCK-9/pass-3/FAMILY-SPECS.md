@@ -228,10 +228,16 @@ codegen tier, not a source file — for the membership/prefix/structural leaves 
 - **Tier S (small multistate) — MEASURED NEGATIVE:** `state[i]=tbl(T,class[i],state[i-1])` is a
   loop-carried serial `vqtbl1q` chain (~2–4 cyc/byte unhidable), loses to scalar `find_at` on the short
   runs these DFAs see (`ws_comment` 84–100% of WS runs ≤4 bytes). Sheng earns no leaf.
-- **Tier X (explosion) — NO-GO:** `\p{L}`/wide-unicode over UTF-8 explodes to 30–60+ byte-classes +
-  hundreds of states (`dfa.rs:262` returns `None`); stays on the vendored scalar Höhrmann DFA
-  (`unicode/utf8_hoehrmann.rs`). A correctness floor, excluded — but the census must still report Tier-X
-  denominators so coverage is a measured %, not a fit-chosen sample.
+- **Tier X (over-SIMD-ceiling) — NO-GO:** `\p{L}`/wide-unicode over UTF-8. **Mechanism corrected by
+  PROTO-2 (RAN — MEASURED against the real engine):** `\p{L}` compiles CLEANLY to **41 byte-classes / 21
+  states** — it does **NOT** saturate the class map or return `None` (the pass-2/early-pass-3 prediction of
+  `dfa.rs:262 → None` was wrong and is corrected here by measurement). It is Tier-X-excluded because **41
+  byte-classes exceed the SIMD membership/nibble tier's practical ceiling** — `vqtbl4q` lo6 carries a
+  *binary* membership mask, not 41-way classification — not because the DFA explodes. The wider `\p{...}`
+  set in *unicode* mode (not byte-mode) is the genuine >255-class saturator; either way the leaf stays on
+  the vendored scalar Höhrmann DFA (`unicode/utf8_hoehrmann.rs`). A correctness floor, excluded — but the
+  census must still report Tier-X denominators (class-count over the tier ceiling) so coverage is a
+  measured %, not a fit-chosen sample.
 
 **The separability crux — already half-built.** `bbnf_simd::dispatch::lo6_table_admissible`
 (`dispatch.rs:101`) ALREADY implements the partition/separability predicate for the single-table tier
@@ -442,8 +448,11 @@ or the `structural_classify_64` `vceqq`-fan. (3) Assert **bit-identical scan out
 over black_box xorshift + an alignment sweep 0..63; an INJECT_BUG (flip one class entry) MUST break parity.
 (4) Gate 4 (load-bearing): a naive lo6/nibble-only emit MUST **misclassify** the `;`+`{` set
 (lo6(0x3B)=lo6(0x7B)=0x3B → drops one member), and the separability gate must route it OFF `vqtbl4q`. (5)
-Record real `num_classes`/state counts vs the 255-class/4096-state ceilings incl. `\p{L}`→`None`.
-**PASS/FAIL:** all three leaves emit a bit-identical classifier via the correct tier; the colliding set is
-provably rejected off the nibble tier with NO silent drop; INJECT_BUG bites ≥90%. FAIL if the emit cannot
-reproduce the hand classifier, or the naive form passes the colliding set silently. Proves the emit pass
-buildable against the real DFA output — decoupling 9C's largest internal gap from the un-executed vendoring.
+Record real `num_classes`/state counts vs the 255-class/4096-state ceilings incl. `\p{L}` (PROTO-2
+measured 41 classes / 21 states — it does NOT return `None`; Tier-X exclusion is by class-count over the
+SIMD membership-tier ceiling, not DFA explosion — the harness must report the class-count denominator, not
+assert a `None`). **PASS/FAIL:** all three leaves emit a bit-identical classifier via the correct tier; the
+colliding set is provably rejected off the nibble tier with NO silent drop; INJECT_BUG bites ≥90%. FAIL if
+the emit cannot reproduce the hand classifier, or the naive form passes the colliding set silently. Proves
+the emit pass buildable against the real DFA output — decoupling 9C's largest internal gap from the
+un-executed vendoring.

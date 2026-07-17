@@ -22,5 +22,6 @@ help: Check that the patched package version and available features are compatib
    Compiling grammar v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/grammar)
    Compiling passes v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/passes)
    Compiling codegen v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/codegen)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.23s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.54s
 EXIT=0
+22:48  up  8:42, 1 user, load averages: 4.64 7.03 7.21

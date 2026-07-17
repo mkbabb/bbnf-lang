@@ -18,8 +18,7 @@ help: Check that the patched package version and available features are compatib
       with the dependency requirements. If the patch has a different version from
       what is locked in the Cargo.lock file, run `cargo update` to use the new
       version. This may also occur with an optional dependency that is not enabled.
-   Compiling codegen v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/codegen)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.75s
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
      Running tests/byteclass_lower.rs (target/debug/deps/byteclass_lower-34ac4c9c1d95893c)
 
 running 1 test

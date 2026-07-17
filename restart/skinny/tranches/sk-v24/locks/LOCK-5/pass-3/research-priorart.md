@@ -59,6 +59,17 @@ Not "build a regex engine." Four coupled obligations:
   REQUIRES quotienting by associativity/commutativity/idempotence (smart constructors /
   canonicalization) — precisely what bbnf-regex's `egraph/` canonicalization already provides.
   [re-deriv.pdf](https://www.ccs.neu.edu/home/turon/re-deriv.pdf)
+- **The derivative is ONE operator across regex AND grammar (Might/Darais/Spiewak, "Parsing with
+  Derivatives," ICFP'11).** `d/dc` on a context-free grammar yields another grammar; regular
+  languages are precisely the sublanguage where the derivative needs no laziness/fixpoint. This is
+  the deepest theoretical charter for 5A's "regex HIR ⊂ bbnf HIR" — the two are literally one
+  algebra differing only by recursion, so a single `Hir` is theory-sanctioned, not a shim.
+  **The trap that gates it:** the naïve pearl was catastrophically slow; **Adams/Hollenbeck/Might
+  (PLDI'16)** proved PwD is cubic and usable ONLY with aggressive memoisation + graph compaction.
+  Verdict: derivatives are the elegant unifier, but a naïve derivative engine on the *generator hot
+  path* is a KNOWN loss — derivatives belong to compile-time construction, never per-parse.
+  [PwD pearl](http://david.darais.com/assets/papers/parsing-with-derivatives/pwd.pdf) ·
+  [Adams PLDI'16](https://dl.acm.org/doi/10.1145/3360553)
 - **E-graph equality saturation FOR regex is proven prior art (ReGiS / McClurg et al., PACT
   2022).** "Optimizing Regular Expressions via Rewrite-Guided Synthesis" builds an e-graph over
   regexes, equality-saturates under rewrite rules, and extracts simplified/faster regexes (ReDoS
@@ -82,6 +93,14 @@ Not "build a regex engine." Four coupled obligations:
   meta-grammar. Exactly the committed-stage-0 + fixpoint-regen model clause i / LOCK-7 needs for
   `regex.bbnf` — and it aligns with the standing **clean-regen** law (never hand-patch generated).
   [rust-peg](https://github.com/kevinmehall/rust-peg) · [PEP 617](https://peps.python.org/pep-0617/)
+- **A bootstrapped derivative lexer CAN be total + verified (Verbatim / Verbatim++, Egolf/Lasser
+  et al., CSF'21 / CPP'22).** A lexer generator implemented and *proved correct in Coq* on
+  Brzozowski derivatives — Verbatim derivates on the fly, Verbatim++ pre-builds a DFA for speed.
+  The strongest exemplar that a bbnf-defined, self-describing regex engine can be a total artifact
+  with a machine-checkable oracle (LOCK-7D-style differential promotion) — and that derivatives,
+  not Thompson+subset, are the natural fit for a self-hosting, verifiable core.
+  [Verbatim (IEEE)](https://ieeexplore.ieee.org/document/9474322/) ·
+  [Verbatim++ (ACM)](https://dl.acm.org/doi/pdf/10.1145/3497775.3503694)
 - **Prefilter/lazy-DFA ladder is SOTA-settled (burntsushi regex-automata; Hyperscan shufti/
   truffle/teddy).** Meta-engine tiers literal→lazy(hybrid)DFA→one-pass→backtracker→PikeVM; lazy
   DFA builds states during search under a memory budget and on quit-byte/exhaustion returns a
@@ -120,7 +139,12 @@ Not "build a regex engine." Four coupled obligations:
   e-graph saturation. On a 256-byte concrete alphabet, Hopcroft's O(n log n) partition refinement is
   *already* congruence-closure by another name, so the e-graph frame most plausibly RELOCATES the
   work at added cost. This makes 5C's minimization/determinization-as-extraction the likeliest
-  **named negative result** — Q5's reference-Hopcroft head-to-head is how to earn it.
+  **named negative result** — Q5's reference-Hopcroft head-to-head is how to earn it. And the
+  *elegant algebraic alternative* to both Hopcroft and an e-graph, fitting the derivative posture:
+  **Brzozowski double-reversal minimization** (reverse→determinize→reverse→determinize yields the
+  minimal DFA) — if the engine goes derivative-first, near-minimality is inherited from
+  smart-constructor canonicalization (§2 Owens) and reversal is the fallback; neither route needs
+  a saturation engine to reach the minimal automaton. [Brzozowski/DFA-min](https://grokipedia.com/page/DFA_minimization)
 
 ---
 

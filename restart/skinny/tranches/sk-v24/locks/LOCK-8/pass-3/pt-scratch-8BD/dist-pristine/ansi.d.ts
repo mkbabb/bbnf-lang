@@ -1,0 +1,11 @@
+export declare const bold: (s: string) => string;
+export declare const dim: (s: string) => string;
+export declare const italic: (s: string) => string;
+export declare const red: (s: string) => string;
+export declare const green: (s: string) => string;
+export declare const yellow: (s: string) => string;
+export declare const cyan: (s: string) => string;
+export declare const gray: (s: string) => string;
+export declare const bgRed: (s: string) => string;
+export declare const bgGreen: (s: string) => string;
+//# sourceMappingURL=ansi.d.ts.map

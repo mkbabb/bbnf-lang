@@ -4,9 +4,11 @@
 correspondence, 8D API. parse-that/typescript is READ-ONLY to the bbnf campaign; every landing
 rides letter BBNF-PT-G (owner or a parse-that-side session); prototypes run on scratch copies
 base-pinned to HEAD (`ef10d5b`). Two engines govern and are never conflated: the V8 JIT (8A) and
-the TS checker (8B). This doc supersedes the pass-2 FAMILY-SPECS AND the stale intermediate 15:35
-pass-3 draft; it folds the current (19:xx) research-{A,B,C,D,priorart} + PROTO-1 + PROTO-2. This
-pass RAN two prototypes on real trees and RE-RAN the consumer census three ways.*
+the TS checker (8B). This is the pass-3 SYNTHESIS OF RECORD: it supersedes the pass-2 FAMILY-SPECS, the
+stale 15:35 pass-3 draft, and the 19:xx intermediate draft, folding the final
+research-{A,B,C,D,priorart} + PROTO-1 + PROTO-2 — including research-D's FALSE-GREEN crater correction
+(F6) the 19:xx draft omitted. This pass RAN two prototypes on real trees and RE-RAN the consumer census
+three ways.*
 
 ---
 
@@ -60,6 +62,24 @@ validated shelf artifact. **Consequence: the pass-2 `8C-guard ⟂ LOCK-5-fix` in
 `proof:no-dead-combinator` in its `proof:all` chain — a mechanical gate asserting every combinator is
 exercised by the first-party corpus. The repo has already operationalized "the first-party suite is the
 consumer of the algebra." Three tiers settle it (§8D).
+
+**F6 — the consumer's OWN type gate is a FALSE GREEN; the crater's type leg must FORCE-SCOPE
+(research-D §2/§5, RAN — the pass-3 headline correction the 19:xx draft omitted).** latex-paper's build
+type gate is `vue-tsc -p tsconfig.vue.json` (`package.json:30`); run verbatim it reports **0 errors**.
+But `tsconfig.vue.json`'s `include` is `["src/vue*","src/types*"]` and **excludes `src/grammar/**` +
+`src/bibtex/**`** — every file that imports parse-that — and the base `tsconfig.json` sets
+`skipLibCheck:true`. **The project's green type gate is green because it never type-checks the combinator
+consumers.** Forcing a full-scope `vue-tsc --noEmit` over `src/grammar/** + src/bibtex/**` with
+`skipLibCheck:false` reddens with the dual-instance **TS2322** (`compile.ts:76`: bbnf-lang's nested
+parse-that **0.6.0** `Parser` — lacking `flags/minus/call/recover` — vs latex's direct **0.7.1**
+`Parser`; the two instances' `Parser` types do not unify). Three consequences bind 8D: **(a)** the
+crater's type leg MUST force-scope those files under `skipLibCheck:false`, or it measures nothing on the
+type axis (a crater trusting `vue-tsc -p tsconfig.vue.json` is a FALSE GREEN); **(b)** the dual-instance
+red is a PRE-EXISTING baseline (PT-3-independent) — any post-1.1.0 red attributes against it, never the
+tightening; **(c)** the inference-tightening's effect at latex's 3 `any()` sites (`text.ts:145,154`,
+`document.ts:81`) is INVISIBLE to latex's own gate and observable ONLY under the force-scope check.
+The runtime axis is unaffected — `vitest` is GREEN 127/127 because latex consumes `Nonterminals`
+structurally (`.parse()`), never `instanceof`-crossing the boundary.
 
 ---
 
@@ -274,7 +294,11 @@ copy across every `state.from`/`unsafeSetValue` mint site or a child silently re
 - Crater = 1 positive (latex, baseline GREEN 127/127) + 2 negative guards (value.js/keyframes grep-0
   tripwires). Candidate leg (UN-RUN): pack the working tree → `rm -rf node_modules/@mkbabb/parse-that &&
   npm i ../parse-that-<cand>.tgz` (MANDATORY reinstall — omitting it silently re-tests 0.7.1) →
-  `vitest run` AND `vue-tsc`. Run 0.7→1.0 ALONE first (attribution isolation).
+  `vitest run` AND the **force-scope type leg**. Run 0.7→1.0 ALONE first (attribution isolation).
+- **The type leg is NOT `vue-tsc -p tsconfig.vue.json` — that gate is a FALSE GREEN (F6).** It excludes
+  every parse-that-importing file; the crater MUST run `vue-tsc --noEmit` over `src/grammar/** +
+  src/bibtex/**` with `skipLibCheck:false`, baseline the dual-instance TS2322 at 0.7.1, and attribute
+  every post-candidate red against that baseline. Otherwise the type axis is a null measurement.
 - **The sole real type-break risk = `document.ts:81`** (`inlineNode: Parser<LatexNode|null> = any(…)`, a
   16-member heterogeneous union). Current `any<T extends Array<Parser<any>>>` degrades to `Parser<any>` on
   inference-fallback (assignable to anything); the tightened `Parser<unknown>` fallback is NOT — so the
@@ -293,16 +317,19 @@ copy across every `state.from`/`unsafeSetValue` mint site or a child silently re
 global → `state.diag`); `state.ts:36-53` (field), `:55-99` (mint sites); `parser.ts:56-65`; `compile.ts:
 6,7,15,18` (the crossing); `document.ts:81`/`text.ts:145,154`; `types/ast.ts:103-140` (`LatexNode`).
 
-**Gates.** (1) Candidate crater — build 1.1.0, reinstall, `vitest`+`vue-tsc`, 0.7→1.0 alone first —
-**UN-RUN (make-or-break) → Brief 1**. (2) `vue-tsc` at `document.ts:81`. (3) dual-instance runtime leg
+**Gates.** (1) Candidate crater — build the tightened tarball, reinstall, `vitest` + **force-scope
+`vue-tsc --noEmit` over `src/grammar/**`+`src/bibtex/**`, `skipLibCheck:false`** (NOT the false-green
+`-p tsconfig.vue.json`, F6), 0.7→1.0 alone first — **UN-RUN (make-or-break) → Brief 1**. (2) force-scope
+`vue-tsc` at `document.ts:81` (the tightening probe, invisible to latex's own gate). (3) dual-instance runtime leg
 (`document/integration/paper.test.ts`). (4) `state.diag` prototype: `%HaveSameMap(on,off)==TRUE` +
 nested-parse isolation (RED on the global, GREEN after) + propagation across mint sites. (5) negative-
 guard grep tripwires.
 
 **Exact open questions.**
-- **8D-Q1 (make-or-break):** the candidate crater is UN-RUN — it requires a built 1.1.0 tarball not yet
-  existing. It closes the type axis (`document.ts:81`), the runtime dual-instance axis, AND 8B's native
-  budget in one construction. (→ Brief 1.)
+- **8D-Q1 (make-or-break):** the candidate crater is UN-RUN. Its type leg is the FORCE-SCOPE `vue-tsc`
+  over `src/grammar/**`+`src/bibtex/**` at `skipLibCheck:false` (F6) — latex's own `-p tsconfig.vue.json`
+  gate is a FALSE GREEN. It closes the type axis (`document.ts:81` tightening), the runtime dual-instance
+  axis, AND 8B's native budget in one construction over a tightened scratch tarball. (→ Brief 1.)
 - **8D-Q2:** P2 — latex-live-forward is research-D's read but the pin has not moved off 0.7.1; if latex
   never migrates, the crater's positive gate tests a migration no one runs, and the contract rests on Tier
   B first-party corpus alone (a posture the constitution tolerates but does not favor).
@@ -364,9 +391,12 @@ live payoff is ~0.
   at the shipping tier (Maglev size-cap). PROTO-2 built AND retired the priority-DFA (latent-only),
   resolving 8C's regex row and dissolving the pass-2 LOCK-5 incompatibility. 8B ran its TS-side compaction
   differential (pass-2). 8D captured the latex baseline GREEN (RAN) but its make-or-break crater is UN-RUN.
-- **The three remaining UN-RUN gates all ride the same missing artifact — the built 1.1.0 tightened
-  tree:** 8B's emit-identity step-(ii), 8B's native budget, and 8D's candidate crater (type + runtime
-  axes). Brief 1 constructs it once and fires all three.
+- **The three remaining UN-RUN gates all ride the same missing artifact — a built tightened parse-that
+  tree, packed and installed:** 8B's byte-empty-`dist` step-(ii), 8B's native-shape instantiation budget,
+  and 8D's crater type leg (the FORCE-SCOPE `vue-tsc` over `src/grammar/**`+`src/bibtex/**`,
+  `skipLibCheck:false` — NOT latex's false-green project gate, F6). Brief 1 constructs the tightened
+  scratch once and fires all three; it needs no official 1.1.0 release — the tightened scratch IS the
+  candidate.
 - **The single cheapest cross-family uncertainty** is whether the 8B undefined-compaction is a
   cross-language DRIFT row (Rust fixed-arity vs TS compacted) — it decides 8B's route-1 caveat status and
   8C's ledger completeness. Brief 2.

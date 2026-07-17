@@ -192,6 +192,24 @@ This literature is where PROVE-12 *lives*, and the strongest formal backing for 
   approach *ships* (SQL generation, GPU DSLs, ML) and that 3D is compatible with our
   **type-plane-costs-zero-at-runtime** invariant (constitution v) — stage-0 erasure *is* the
   zero-runtime-cost proof, mechanized.
+- **Staged parser combinators — LMS applied to OUR exact problem class** ([Jonnalagedda,
+  Coppey, Stucki, Rompf, Odersky, OOPSLA'14](https://dl.acm.org/doi/10.1145/2714064.2660241);
+  [author note](http://manojo.github.io/2015/09/02/staged-parser-combinators);
+  [Willis & Wu, *Staged Selective Parser Combinators*, ICFP'20](https://dl.acm.org/doi/10.1145/3409002)):
+  the single most on-point external precedent — LMS staging applied not to SQL/GPU but to *parsers*.
+  Its founding move is **"dissociate input parsing from parser composition, eliminating the
+  intermediate data structures and computations of composition at staging time"** — i.e. the
+  composition scaffolding is stage-0 and evaporates, leaving a residual parser specialized to the
+  grammar. This is 3D + PROVE-12 stated for the parser-generator domain: the grammar is the known
+  input, the generated recognizer is the residual, staging is the erasure mechanism. It is the
+  existence proof that type-staged parser *generation* ships at OOPSLA calibre — and it directly
+  animates GN-5.W4 (const-mask generalized to every grammar-derived stop-set) as a staging, not a
+  hand-fold, discipline. **The TRAP it names (binding on 3D + the 4A weave):** staging only pays
+  when the parser's *structure* is statically knowable — the ICFP'20 sequel needs **selective**
+  (not fully **monadic**) combinators precisely because a monadic `>>=` hides downstream structure
+  behind a runtime function, defeating stage-0 analysis. Constraint on LOCK-3: the residualizable
+  IR must expose grammar structure *statically* (the 4A closure-to-graph shape, an analyzable
+  term/graph — not opaque closures); a monadic/opaque mid-IR is un-stageable and forfeits 3D.
 - **Truffle / GraalVM — the second-Futamura nuance that vindicates PROVE-12's stance**
   ([Practical second Futamura projection, SPLASH'19](https://dl.acm.org/doi/10.1145/3359061.3361077);
   [GraalVM host optimization](https://www.graalvm.org/latest/graalvm-as-a-platform/language-implementation-framework/HostOptimization/)):
@@ -233,6 +251,13 @@ is **strategic term rewriting** — Stratego, in the Spoofax language workbench
   (parser + analyzer + transformations) from declarative specs, i.e. a *grammar-homoiousia* stack
   in production. It is the reference for "the generator eats itself" (3C, LOCK-7 bootstrap
   alignment) beyond the Scheme world of nanopass.
+- **The classical root (3C is 40+ years deep, not novel)**: Paulson's *A Semantics-Directed
+  Compiler Generator* ([POPL'82](https://www.cl.cam.ac.uk/~lp15/papers/Reports/popl82.pdf))
+  already generated a compiler from a grammar decorated with semantics — the direct ancestor of
+  "transpositions are grammar-to-grammar maps" and the proof the idea has a long, settled record.
+  The lesson carried forward is the *cost* one: semantics-directed generators historically emit
+  slow code unless a staging/residualization layer (§5) sits underneath — which is exactly why 3C
+  is only lawful *composed with* 3D here, never alone.
 - **The TRAP (shared with nanopass)**: Stratego's idiom is *cascading transformations* — many
   small independent rewrites applied throughout the tree. Same proliferation risk as nanopass §2:
   unbounded small rewrites blow the build-time and generated-size budgets, and an unconstrained
@@ -311,6 +336,7 @@ From SPEC §0 (the certified swath + refutation laws) and MEMORY:
 | **Attribute circularity / unschedulable inherited attrs** | Knuth AG (§3) | 3A, 3C, type level | attribute-dependency schedule (solver seam); not a hand-ordered fold |
 | **Dropped synthesized attribute** (`->` never reaches root) | AG well-formedness (§3); R6 §5a | all | typed-materialization-invariant = AG completeness check |
 | **Silent mis-staging** (stage-0 value leaks into stage-1) | MetaOCaml/Terra vs LMS (§5) | 3D | stage carried in *types* (LMS); crossable boundary = no-silent-epsilon violation |
+| **Un-stageable opaque IR** (monadic `>>=` hides structure → staging can't erase composition) | staged selective combinators ICFP'20 (§5) | 3D, 4A weave | residualizable IR exposes grammar structure statically (analyzable graph, not closures) |
 | **Chasing the self-applying partial evaluator** | Truffle/Graal PE not self-applicable (§5) | 3D | generator emits the residual (PROVE-12 stance), no online 2nd projection |
 | **Type-plane speed claim** | SPEC §0 refutation 09; GN-3 §1.4 | 3D, all | `git diff` over runtime empty; win is erasure, not speed |
 | **Backend pinning via leaked host semantics** (yacc C actions) | ANTLR/SableCC record (§7) | 3B multi-backend | abstract `TypeDesc::Named`; host-fn signatures agnostic, bodies native |
@@ -381,6 +407,14 @@ weave earns its keep.
 - **Truffle / GraalVM (2nd Futamura, practical)** —
   https://dl.acm.org/doi/10.1145/3359061.3361077 ·
   https://www.graalvm.org/latest/graalvm-as-a-platform/language-implementation-framework/HostOptimization/
+- **Staged parser combinators (LMS on parsers)** — Jonnalagedda, Coppey, Stucki, Rompf, Odersky,
+  *Staged Parser Combinators for Efficient Data Processing* (OOPSLA'14)
+  https://dl.acm.org/doi/10.1145/2714064.2660241 ·
+  http://manojo.github.io/2015/09/02/staged-parser-combinators ·
+  Willis & Wu, *Staged Selective Parser Combinators* (ICFP'20) https://dl.acm.org/doi/10.1145/3409002
+- **Semantics-directed compiler generation (classical 3C root)** — Paulson,
+  *A Semantics-Directed Compiler Generator* (POPL'82)
+  https://www.cl.cam.ac.uk/~lp15/papers/Reports/popl82.pdf
 - **Stratego / Spoofax** — https://spoofax.dev/background/stratego/ ·
   https://spoofax.dev/background/stratego/strategic-rewriting/strategic-rewriting/
 - **ANTLR / retargetable codegen** — https://github.com/antlr/antlr4 ·

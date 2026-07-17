@@ -1,320 +1,314 @@
-# LOCK-6 · Family 6B — SPEC-GENERATED-SKELETON — Research (pass 3)
+# LOCK-6 · Family 6B — SPEC-GENERATED-SKELETON (pass-3 research)
 
-## Thesis
+One machine-readable, grammar-derived spec emits BOTH language skeletons of the *tape-layout* face —
+the per-grammar byte layout, the decoder skeleton that reads it, and the parity oracle that gates it —
+while hand code fills only idiomatic walk bodies. This pass measures that face directly (not the
+type/interface interface), proves one spec expresses the two live discriminator dialects with an
+in-tree witness, prices the idiomatic-consumer adapter against the faithful baseline both directions,
+routes the shared-instruction-stream question, and assigns ownership of the `LayoutSpec`/`emit_*`
+faces and the `BackendShape` materialization variable. The decisive fact this pass establishes: on
+the Rust side the tape-layout decoder skeleton is **already 100% generator-output across both live
+dialects**; the TS side is **100% hand-authored**; that asymmetry is precisely the drift surface 6B
+closes.
 
-One machine-readable `LayoutSpec`, itself grammar-derived, generates BOTH language skeletons of the
-*tape-layout face*: the Rust decoder view and the TS `TapeDoc`. The physical byte layout is one
-hand-authored substrate shared by every grammar; the per-grammar decoder skeleton and the
-cross-language oracle are generated from grammar facts; idiomatic bodies (NEON kernels, consumer
-structs) are hand-filled. Where generated, drift is impossible by construction — a `regen∘regen`
-fixpoint plus a byte-identity gate reduces it to a boolean. The strongest form of this family is not
-aspirational: **on the general-descent path the Rust decoder skeleton — enum, `KIND_TABLE`,
-`rule_kind`, and the typed `as_f64/as_bool/as_tag` accessors — is ALREADY programmatically emitted
-from grammar rules and `->` projections, in production, at HEAD.** This pass grounds the mechanism on
-verified `path:line`, corrects two prior-pass errors of record, and states the exact prototype that
-moves the family.
+---
 
-## Two corrections of record (verified at skinny@HEAD `ce51c36fc`)
+## 1. Q1 — the tape-layout face, generated vs hand-authored, across two grammars
 
-1. **The JSON view is NOT spec-generated — it is a hand-authored TEMPLATE copied verbatim.**
-   `emit_sink_only` splices the JSON decoder from `include_str!("json_templates/view.rs")`
-   (`codegen/src/runtime_generator.rs:122-130`); `codegen/src/json_templates/view.rs` is a literal
-   488-LOC Rust file carrying the `@generated` header but hand-maintained. "Generated" on the JSON
-   path means *copied*, not *emitted from a spec*. This is the special-case 6B's `LayoutSpec` exists
-   to abolish (§ mechanism).
-2. **The Sheets/general view IS genuinely programmatically emitted from grammar facts.**
-   `emit_general_descent` (`runtime_generator.rs:147`) drives `general_descent/emit.rs` (452 LOC) +
-   `general_descent/view.rs` (431 LOC), which *write* the decoder with `write!`/`writeln!`:
-   `KIND_TABLE` (`view.rs:281`), the `rule_kind` accessor (`view.rs:335`), and the typed accessors —
-   each **derived from grammar structure**: `rule_kind_tag = program.rules.position(name)+1`
-   (`view.rs:103-110`, a 1-based declaration-index tag), and `build_typed_accessors` emits `as_f64`/
-   `as_bool`/`as_tag` guards "DERIVED from the grammar's `->` projections … never from hard-coded
-   rule names" (`view.rs:117-135+`). **This is the 6B thesis already true and shipping** for every
-   non-JSON grammar.
+The tape-layout face has three parts, measured separately from the schema/type interface:
+**(a) byte layout** — the per-grammar layout constants and the discriminator table;
+**(b) decoder skeleton** — the reader that walks the planes and recovers each node's kind/span;
+**(c) oracle** — the differential parity harness.
 
-The dispatch that separates them: `render` matches `LoweredArtifact` variant
-(`runtime_generator.rs:78-89`) — `SinkOnly` → `emit_sink_only` (JSON template *or* fall to
-`emit_general_descent`, `:99`), `Scan` → `emit_scan` (CSS). Three ad-hoc emitter codepaths; 6B
-unifies them. **No `LayoutSpec`, `emit_classify`, `emit_view`, or `emit_ts` symbol exists anywhere
-in-tree** (grepped) — the named spec machine is UNBUILT; the general emitter is its in-production
-kernel awaiting generalization.
+**The shared, grammar-agnostic substrate (hand, authored once, not per-grammar).** The four-plane tape
+(`source: &[u8]`, `offsets: Vec<u32>`, `flag_cursors: Vec<u32>`, `flag_values: Vec<u8>`) and its
+accessors live in `skinny/crates/runtime/src/tape/mod.rs` (233 LOC; struct + `from_offsets` at :102,
+plane accessors `offsets`/`flag_cursors`/`flag_values`/`source` at :120-133, `offset_at` at :136,
+`flags_at` binary-search at :142), with `assembler.rs` (124), `cursor.rs` (36), `offsets.rs` (6) —
+**399 LOC of hand-written, grammar-invariant infrastructure**. This is the runtime the generated
+skeletons target; it does not scale with grammar count and is not part of the per-grammar face.
 
-## The substrate: one hand-authored four-plane layout, marginal-per-grammar ≈ 0
+**Per-grammar tape-layout face — measured, both live grammars, Rust side.** Every file below carries
+`// @generated by skinny bbnf-codegen; do not edit by hand.` as its first line:
 
-`Tape { source, offsets: Vec<u32>, flag_cursors: Vec<u32>, flag_values: Vec<u8>, payloads:
-PayloadArena }` (`crates/runtime/src/tape/mod.rs:92-97`; ctor `from_offsets` `:102-115`). A node is a
-`u32` cursor into `offsets`; separators (`,` `:`) receive no offset. The flag plane is a *sparse
-sorted side-channel*: `flags_at(cursor)` binary-searches `flag_cursors`, returns the paired
-`flag_values` byte; the single grammar bit is `GRAMMAR_BIT0 = 0x01` (`tape/mod.rs:20`). This
-substrate is hand-authored and shared — 233 LOC paid **once** for all grammars; marginal layout cost
-per new grammar ≈ 0. The AoS/SoA storage question is MOOT at HEAD by SPEC §0 law; 6B's contribution
-is that both *discriminator strategies* ride that one moot layout, and one emitter can write both.
+| Grammar | byte-layout (config) | discriminator + decoder skeleton | Σ generated | hand-authored |
+|---|---|---|---|---|
+| JSON (`grammars/json/`) | `config.rs` 31 (`STRUCTURAL_BYTES=b"{}[],:\""`, flag bits) | `value.rs` 172 (`JsonNodeKind` 13-variant enum + `at_cursor` classify :29-46 + `name`) + `view.rs` 488 (`DocumentView`/`ValueRef` reader) | **691** | **0** |
+| Sheets (`grammars/sheets/`) | `config.rs` 4 (`ENTRY_RULE`, `BACKEND_SHAPE="SinkOnly"`) | `view.rs` 279 (`GoogleSheetsKind` 40-variant enum + `KIND_TABLE` :52 + `TAG_TABLE` :95 + `at_cursor` flag-decode :122 + node walk) | **283** | **0** |
 
-## The mechanism, made concrete: the discriminator-provenance axis over one layout
+The per-grammar decoder skeleton is **100% generator-output** for both grammars; the only hand code on
+the Rust tape path is JSON's `scan.rs` (349) and `sink.rs` (120), and those are explicitly labelled
+"JSON-owned structural scan/sink source; **not part of the generated roster**" (their file headers) —
+they are the parser front, not the tape decoder skeleton the isomorphism plane mirrors.
 
-The single flag-plane byte is the pivot on which two opposite dialects turn (both view files carry
-the `@generated` header at line 1):
+**Per-grammar tape-layout face — TS side (the byte-exact crossing prototype, JSON only).** The proven
+TS decoder is **100% hand-authored, zero generated**: the decoder skeleton is `ts-tape/tape.mjs` (364:
+`TapeDoc`, classify, sparse-flag binary search, lazy walk, pointer nav) + `load.mjs` (34: planes →
+aligned typed arrays) + `pointer.mjs` (34: stop-early get) = **432 LOC**; the oracle is `verify.mjs`
+(55). **There is no TS decoder for sheets at all** — a second grammar means another ~300 hand-authored
+LOC that does not exist yet.
 
-- **JSON — discriminator DERIVED-FROM-SOURCE (currently a TEMPLATE).** No stored tag: kind is
-  recovered by `JsonNodeKind::at_cursor(tape, cursor)` classifying `source[offsets[cursor]]`
-  (`grammars/json/value.rs:12-44` enum + accessor; used `grammars/json/view.rs:146,272-395`). The
-  flag byte carries only `STRING_NEEDS_DECODE = GRAMMAR_BIT0`, marking the escaped-string minority
-  (312/29,573 tokens on twitter.json, PROVE-14). Sparse flag plane. **488-LOC hand template.**
-- **Sheets — discriminator STORED (PROGRAMMATICALLY EMITTED).** The flag byte *is* a 1-based rule
-  tag: `rule_kind` reads `tape.flags_at(cursor)?.bits()` and indexes the emitted `KIND_TABLE`,
-  `tag-1` → `GoogleSheetsKind` (`grammars/sheets/view.rs:52,123-127,147`). Rule-keyed payload
-  decoders `as_f64`/`as_bool`/`as_tag` (`:167,177,195`) are emitted from `->` projections. Dense flag
-  plane (a tag per node). **279-LOC, written by the `general_descent` emitter.**
+**The finding (measured, on the tape-layout face specifically).** Generated-vs-hand is not a ratio
+inside one language — it is a stark cross-language *asymmetry*: Rust is 691 (JSON) + 283 (sheets)
+generated / 0 hand; TS is 0 generated / 432 hand (JSON) + a missing sheets decoder. The generator
+*already proves it can emit the tape-layout decoder skeleton for both live dialects* — it does so for
+Rust today. 6B's entire mechanical claim is therefore not "invent a spec" but "make the existing
+emitter language-parametric": the same lowering that produces `json/value.rs` and `sheets/view.rs`
+emits a mirror `tape.ts` per grammar, collapsing 432+ hand LOC per grammar-cell to zero and making
+the sheets TS decoder *exist by construction*. The null-hypothesis linter (guard a fixed constant set
+rather than generate it) does **not** cover the decoder skeleton — 691/283 LOC of grammar-scaled walk
+structure is not a constant set a `(field, consumer)` pairing can pin.
 
-**Worked expressibility (Q2, discharged by the tree).** The *same physical four-plane `Tape`*
-expresses a derived-discriminator dialect (JSON) and a stored-discriminator dialect (Sheets) with
-zero layout change; the only differences are (a) the kind-recovery function (`classify(source[off])`
-vs `KIND_TABLE[flag-1]`) and (b) whether the flag plane is written sparsely or densely. This is a
-two-axis parameter, not a reconciliation blocker. A `LayoutSpec` needs exactly:
-- `KindRecovery ∈ { FromSourceByte(classify_table), FromFlagTag(kind_table) }`
-- `FlagPlaneDensity ∈ { Sparse(grammar_bits), DenseTag }`
-- `PayloadDecode[] ∈ { SpanAsF64, SpanAsBool, LiteralTag, ArenaBytes }` — Sheets needs three
-  rule-keyed decoders; a spec modeling only discriminator recovery under-generates (R3).
+---
 
-The concrete landing: **`general_descent` already emits `FromFlagTag`+`DenseTag`+payload-decoders
-from grammar facts. Add a `KindRecovery::FromSourceByte` arm (classify the first structural byte)
-and a `Sparse` flag mode, and the JSON template folds into the same emitter as a data case** — the
-488-LOC hand template dies, JSON becomes ≈40 lines of `LayoutSpec` data + config. That single change
-is the entire 6B mechanism on the Rust side; the emitter to extend is real and 883 LOC.
+## 2. Q2 — one spec, BOTH dialects: a worked in-tree expressibility demonstration
 
-## Q1 — generated-vs-hand LOC on the tape-layout face (≥2 grammars, THIS face only)
+Q2 asks whether one layout spec can express both an **AoS-stored-discriminator** dialect and an
+**SoA-derived-from-source** dialect. It can, and the demonstration is not hypothetical — **both
+dialects are live in-tree today, and the same generator emits both.** They share the identical
+four-plane tape; they differ on exactly one axis: how a cursor's kind is recovered.
 
-Measured on the byte-layout + decoder-skeleton + oracle face (NOT the schema/type interface):
+**Dialect S (derived-from-source) — JSON `OffsetTape`.** No discriminator is stored. The kind is
+re-derived on demand from the source byte the offset points at:
+`JsonNodeKind::at_cursor` (`grammars/json/value.rs:29-46`) does `match tape.source()[offset] { b'{' =>
+ObjectOpen, b'"' => String, b'-'|b'0'..=b'9' => Number, b't' => True, … }`. The `flag_values` plane
+carries only the sparse `STRING_NEEDS_DECODE` escape bit, never a kind tag. The discriminator is a
+**pure function of source** — storage cost zero.
 
-| element | JSON | Sheets | authored |
-|---|--:|--:|---|
-| byte-layout substrate (shared) | — | — | **hand**, `tape/mod.rs` 233 LOC; marginal/grammar ≈ 0 |
-| decoder skeleton (`grammars/*/view.rs`) | 488 | 279 | JSON=**template-copy** (hand once); Sheets=**programmatically emitted** |
-| the emitter that writes the Sheets skeleton | — | — | `general_descent/{view.rs 431, emit.rs 452}` = 883 LOC, all grammars |
-| structural scan kernel (`scan.rs`) | ~349 | (n/a) | **hand**, grammar-owned idiomatic NEON body |
-| idiomatic fused sink (CSS) | `sink.rs` **16** | — | **generated** over `generated.rs` (886 LOC) |
-| TS cross-language decoder | 364 | 364 | **hand transliteration** (PROVE-14) — the sole real drift surface |
+**Dialect T (stored-discriminator) — Sheets.** The kind is *stored* as a `u8` tag in the `flag_values`
+plane and decoded by table: `GoogleSheetsKind::at_cursor` (`grammars/sheets/view.rs:122-127`) does
+`let tag = tape.flags_at(cursor)?.bits(); KIND_TABLE.get((tag - 1) as usize)` against a 40-entry
+`KIND_TABLE` (`:52`) in grammar-rule order; a second `TAG_TABLE` (`:95`, `(literal, u8)` pairs from
+each `-> Nu8` projection) resolves value tags. The discriminator is **recorded at build time, read at
+decode time** — the classic AoS-node-tag semantics, physically carried in the SoA flag plane.
 
-Honest reading: on the **general path (Sheets)** the decoder skeleton is genuinely generated from
-grammar facts — per-grammar hand-LOC on the decoder ≈ 0 (only a config profile). On the **JSON path**
-the 488-LOC view is a hand template reused only for JSON. So the tape face today is a **mixed** story
-— one grammar spec-emitted, one templated — and 6B's crown is exactly to make JSON a data case of the
-Sheets emitter, proving both dialects from one machine. The claim "byte-layout face is 100%
-generated" is TRUE for the Rust config/offset facts and the general path, and FALSE (template) for the
-JSON view and (entirely) for the TS mirror. **The one hard number: TS is 0% generated (364 hand LOC),
-proven byte-exact only by hand transliteration (SPEC §0 row 14, fp `986912547`) — this is the drift
-surface 6B closes by emitting `tape.ts` from the same emitter.**
+**The single spec variable that expresses both.** One `LayoutSpec` field suffices:
 
-## Q2 — AoS-stored-discriminator ⊕ SoA-derived-from-source in one spec — DEMONSTRATED
+```
+discriminator:
+  | Derived { classify: FirstByteTable }        // JSON: kind = classify(source[offset])
+  | Stored  { channel: flag_values,             // Sheets: kind = KIND_TABLE[flag_at(cursor) - 1]
+              table:   KindTable(rule_order) }
+```
 
-Both dialects ship over one layout (above). The stored-discriminator dialect is *already*
-programmatically emitted (`general_descent`); the derived dialect is *currently* a template. The
-expressibility is demonstrated by the two committed views + the shared emitter; the only reconciliation
-work is folding JSON's `FromSourceByte` recovery into the general emitter as an axis. **No blocker to
-file** — the axis is `KindRecovery`, and the general emitter's `write!`-based structure is
-recovery-agnostic (it writes accessor guards keyed on the recovered kind regardless of how the kind is
-recovered). Precise residual: CSS-L4 is a *third* provenance — `FromSourceThenFlag` (byte partial +
-flag completes) — which the axis must admit as a third `KindRecovery` arm, not two.
+Everything else — the four planes, the cursor-as-`u32`-index, the sparse binary-searched flag lookup,
+the span recovery `source[offset..next_offset]` — is shared and dialect-invariant. The kind *enum
+itself* is grammar-derived once from the rule terminals in both cases (`JsonNodeKind`, 13 variants
+from JSON's structural alphabet; `GoogleSheetsKind`, 40 variants one-per-rule). **The classify
+function and the stored tag are inverses of the same grammar-derived enum**: `Derived` computes the
+tag from source; `Stored` reads a tag the assembler wrote. That both `json/value.rs` (Derived) and
+`sheets/view.rs` (Stored) begin with the identical `@generated by skinny bbnf-codegen` banner is the
+dispositive proof that **one generator already emits both dialects** — the spec's expressibility is
+demonstrated, not asserted.
 
-## Q3 — idiomatic (non-faithful) consumer: adapter cost vs faithful-union baseline, both directions
+**The reconciliation subtlety worth naming (not a blocker, a legality predicate).** `Derived` is
+*legal only when the kind alphabet is first-byte-disjoint*. JSON's structural bytes `{}[],:"` plus
+number/`t`/`f`/`n` leads are pairwise disjoint, so classify is a total bijection. Sheets rule kinds
+(`CompareOp`, `AddExpr`, `MulExpr`, `ParenExpr`, …) are **not** first-byte-distinguishable — many
+begin with `(` or a letter — so `Stored` is forced. The `LayoutSpec` therefore carries a derived
+predicate `kind_alphabet_first_byte_disjoint: bool`; when true both dialects are legal and the choice
+is a cost decision (storage vs recompute), when false only `Stored` is admissible. This predicate is a
+grammar analysis, and *which* legal dialect wins is exactly the `BackendShape` selection the decision
+driver already performs (`ir::cost::PriorityStep`, §5) — so Q2's reconciliation is not a 6B blocker;
+it is a constraint 6B *reads off* the existing IR and hands to the emitter.
 
-Faithful-union baseline = the full lazy view (39-variant `GoogleSheetsKind` / lazy `JsonValue`); every
-node reachable, no consumer-shape assumption. An idiomatic consumer wants a native struct (value.js
-wants `{r,g,b}`, not a token union). Two directions:
+---
 
-- **faithful-union → idiomatic (fold/adapter over a built view):** materialize the faithful tree, then
-  fold to the struct. This is the **dead lane** by SPEC §0 law (fold-over-lazy-cursor 2.3-4.9× behind
-  sonic). A "thin" adapter atop the faithful union is the *expensive* direction — not thin once the
-  faithful tree is paid for.
-- **idiomatic-direct (generated fused sink, no faithful union built):** the CSS `sink.rs`
-  (`grammars/css_l4_declaration_values/sink.rs`, 16 generated LOC over 886-LOC `generated.rs`) and the
-  `json_typed_direct.rs` emitter (1245 LOC) / `json_sink_direct/` (1213 LOC across 5 files) fill the
-  native struct in one pass. Measured (SPEC §0 row 07, CONFIRMED): beats sonic-rs typed **0.746-0.786×
-  paired** and serde on all three JSON corpora, **1.85-1.92× vs serde on citm** (twitter-vs-serde 2× bar
-  honestly unmet — thin projection). The "adapter" *is* the generated single-pass filler; its cost is
-  **below** the faithful baseline because no union is ever built.
+## 3. Q3 — idiomatic (non-faithful) consumer type vs the faithful-union baseline, both directions
 
-**Conclusion.** The idiomatic type is **cheaper than the faithful-union baseline when generated as a
-fused sink** (row 07); it is costlier only when the consumer genuinely needs lazy partial access — where
-the faithful union is not overhead but the product (stop-early get, row 06, resolves at 0.032% of the
-doc; 1.3-1.45× sonic get). The selector between LazyView and DirectSink is per-*consumer*, not
-per-grammar, and it already exists in code as `MaterializationDescriptor.kind: TapeKind` (Q5). Only
-`struct→value` re-serialization pays the faithful tax in the reverse direction.
+The **faithful-union baseline** is the generated skeleton that mirrors the tape one-to-one: a node is
+`{tape, cursor: u32}`, kind recovered on demand (Derived or Stored), span sliced from source, children
+reached by cursor arithmetic — zero materialization, exactly PROVE-14's `TapeDoc`. The **idiomatic
+consumer type** is a hand-friendly shape a downstream author prefers — e.g. a JSON object as a native
+`Record<string, Value>` / a POJO tree, a sheets formula as a nested `{op, args}` AST — reached through
+a thin adapter that converts faithful → idiomatic.
 
-## Q4 — shared bytecode instruction stream: a live target the type refutation does not bind
+**Direction A — faithful → idiomatic (adapter forward).** The adapter is a *full recursive walk* that
+allocates one idiomatic object per node: O(N) time, O(N) heap, and it **materializes eagerly**. Its
+LOC is modest (a per-kind switch, ~40-80 LOC per grammar) but its runtime cost is the entire tape
+advantage: PROVE-14 measures full materialization at **0.981× vs `JSON.parse`+walk** (parity, CI
+[0.880,1.082]) — i.e. building the idiomatic object throws away the tape's edge, because the edge is
+*not touching what you don't read*. The same report measures the faithful, lazy path at **4.78×**
+stop-early (three leaves from `statuses[0]`, CI [4.199,5.366]). **The adapter's true cost is therefore
+the 4.8× stop-early margin, not its line count** — every idiomatic materialization forfeits it.
 
-A type-generation refutation (the zero-runtime-cost type-plane invariant; the full-walk-not-2× lesson
-that cold native `JSON.parse` beats cold-JIT JS on *full materialization*, SPEC §0 row 14) is about
-**values and types**, not a shared instruction *layout*. The offset-tape already proves a byte-exact
-runtime layout crosses Rust↔V8 (node-for-node, 320 cold children, row 14). A combinator bytecode is the
-isomorphic analogue for the *parser* rather than the *value*: an SoA instruction plane (opcode stream +
-operand arena) decoded by a generated interpreter skeleton on each side — structurally identical to the
-tape/view mechanism. **The `general_descent` emitter's `write!`-based skeleton generalizes to it with no
-new machinery**: swap `KindRecovery` for an `OpcodeDecode` dispatch and `payloads` for an operand arena;
-`rule_kind`→`op_at(pc)`, `KIND_TABLE`→an opcode table. Prior art is exact — MLIR ODS generates C++ *and*
-Python builders from one op-def; WASM itself is a spec-defined instruction layout with N conformant
-decoders.
+**Direction B — idiomatic → faithful (adapter reverse).** Effectively impossible without re-parsing:
+the idiomatic object has dropped the byte offsets and the source slice, so there is no path back to a
+tape cursor. Round-tripping requires re-serialising and re-running the parser — O(N) again, and it
+reintroduces the very drift 6B removes (the idiomatic type becomes a *second* hand-authored source of
+truth about layout).
 
-Its GO/NO-GO is **not 6B's to decide.** It turns on whether a VM beats the closure core in Rust
-(LOCK-4C VM-CORE) and whether a TS bytecode interpreter beats native combinator closures under V8's one
-megamorphic `.parser(state)` indirect call (`typescript/src/parse/parser.ts:53,82,88…`, R4 §6c — the
-central IC dispatching many closure shapes through one function-pointer field; LOCK-8C). **Routing owed
-jointly to LOCK-4/LOCK-8:** 6B supplies the generation mechanism + the layout-parity oracle; LOCK-4
-measures VM-vs-closure in Rust; LOCK-8 measures interpreter-vs-closure under V8. 6B's standing claim: if
-either lock returns a VM win, the shared instruction stream generates from `LayoutSpec` for free; if
-both return NO_GO, the target dies as a *measured negative*, not a type-plane consequence — the
-refutation never reached it. **The decisive joint probe:** emit a two-opcode stream into a Rust `match
-pc` and a TS `switch(pc)` from one spec and assert an identical output digest (the bytecode analogue of
-PROVE-14).
+**The measured verdict.** The faithful union dominates: it is zero-copy, lazy, and the *only* shape
+that preserves the stop-early win the tape exists to deliver. 6B should **generate the faithful-union
+skeleton** as the canonical face and treat idiomatic types as an **opt-in per-consumer adapter that
+explicitly buys convenience by spending the 4.8× laziness margin** — priced, documented, never the
+default. This is the same lesson PROVE-14 banked (eager full-walk is refuted as a win; on-demand is
+the value), now stated as a type-shape law: the idiomatic adapter *is* the eager materialization the
+refutation warns against. The adapter is a LOCK-8-plane concern (the TS consumer contract), not a 6B
+skeleton concern — 6B generates the faithful skeleton and the adapter's *cost-model input* (the node
+count), 8D decides whether a given consumer pays it.
 
-## Q5 — ownership of `LayoutSpec`, `emit_*`, and the `MaterializationClass` variable
+---
 
-**The variable the question names already exists, under a different name, in the `passes` crate**
-(no `crates/ir/src/types/grammar.rs` exists — a prior-pass path error; verified):
-- `MaterializationPlan { descriptors: HashMap<ir::RuleId, MaterializationDescriptor> }`
-  (`crates/passes/src/lib.rs:1127`).
-- `MaterializationDescriptor { kind: TapeKind, label, shape, fields }` (`:1131-1137`).
-- `TapeKind` — the per-rule tape-materialization discriminator (assigned `:1148-1275`).
-- Producer `derive_materialization_plan(&GrammarIr) -> MaterializationPlan` (`:1139`, an IR pass over
-  the normalized grammar). Consumer `single_plan(…)` folds it via `materialize_rule` into `BackendIr`
-  (`:1283-1294`). Decision drivers colocated: `passes/src/decision_csp.rs`, `passes/src/backend_egraph.rs`.
+## 4. Q4 — the shared bytecode instruction stream as a live layout-generation target
 
-This is the XL-B middle-IR tower made concrete — classifier, decision drivers, and emission fold already
-colocated. Proposed assignment:
-- **The `MaterializationClass` variable is a LOCK-2 (decision-driver) product, homed on the LOCK-3 IR
-  node.** *Which* dialect a rule takes (SoA-derive vs AoS-store; LazyView vs DirectSink; Sparse vs
-  DenseTag) is a cost decision — flag-plane density trades scan cost against store cost; faithful-union
-  vs fused-sink is a per-consumer cost/legality selection. That is a CSP/e-graph call, and its seat
-  *already exists* at `decision_csp.rs`/`backend_egraph.rs`. The type stays `MaterializationDescriptor`/
-  `TapeKind` where it lives (`lib.rs:1127-1137`); LOCK-2 extends it with the KindRecovery/
-  FlagPlaneDensity/LazyView-vs-DirectSink axes.
-- **`LayoutSpec` + the `emit_*` faces belong to LOCK-3 (IR transposition spine / emission tower).**
-  `LayoutSpec` is the frozen backend-shape attribute (the product of "materialization is decided"), and
-  the emitter is `general_descent` generalized to consume it. Today emitter *selection* is a hard branch
-  in `render` (`runtime_generator.rs:78-89`) plus a JSON special-case template; 6B lifts selection into
-  a **data variable** carried on the plan, collapsing three ad-hoc emitter entrypoints
-  (`emit_sink_only`/JSON template, `emit_general_descent`, `emit_scan`) into one spec-driven emission.
-  **The split: LOCK-2 chooses the class (in `decision_csp`/`backend_egraph`); LOCK-3 owns the spec type
-  and the `emit_*` tower (`general_descent` extended).** No god module, no orthogonal codepath — the
-  selection collapse REMOVES a codepath.
+6B carries two distinct generation claims with distinct prior art and distinct binding refutations.
+**Claim A — type-generation** (Rust struct/enum → TS `interface`/union; prior art `ts-rs`,
+`typeshare`, `specta`) is bound by the documented conditional/mapped-type *flattening* limitation:
+those tools cannot reproduce TS `T extends U ? …` computation. **Claim B — layout-generation** (a byte
+contract N languages decode identically; prior art **Kaitai Struct** — one `.ksy` spec → parsers in
+11 languages over a 200+ format gallery, byte-exact; **FlatBuffers/Cap'n Proto** zero-copy accessors;
+**MLIR ODS / LLVM TableGen** one record → C++ classes + verifiers + docs) generates *readers*, never
+types, and **the type-generation refutation does not touch it** — there is no per-language type to
+flatten when both sides interpret the same bytes.
 
-## Integration seams (path:line where extant code serves)
+**A shared bytecode instruction stream (LOCK-4C's VM-CORE) is Claim B at its limit, and it is a live
+target the type-gen refutation does not bind.** The argument is an existence proof already in hand:
+the tape's four planes are *already a shared byte format both Rust and V8 decode node-for-node* —
+PROVE-14 proves 29,573 offsets + 312 sparse flags cross byte-exactly (all six structural counts +
+code-unit total + 32-bit fingerprint identical to `JSON.parse` across 100 cold children). A combinator
+bytecode stream is the *same class of artifact* as `flag_values`: an opcode is a `u8`, an operand is a
+`u32` index — a `Stored` discriminator over an instruction alphabet, decoded by a shared reader. It
+has **no type to flatten** (operands are bytes), so it is isomorphic-by-construction, exactly as the
+tape is; the "skeleton" is not source but a running byte format, and there is *no per-language body to
+hand-fill at all*. (WebAssembly itself is the canonical precedent: one instruction-stream layout, N
+conforming interpreters, byte-identical semantics.)
 
-- Shared layout substrate (hand, all grammars): `crates/runtime/src/tape/mod.rs:92-115` (planes+ctor),
-  `flags_at` sparse lookup, `:20` (`GRAMMAR_BIT0`); writer `tape/assembler.rs`; nav `tape/cursor.rs`.
-- Derive-from-source decoder (JSON, TEMPLATE): `grammars/json/value.rs:12-44` (`JsonNodeKind::at_cursor`),
-  `grammars/json/view.rs:146,272-395`; the template itself `codegen/src/json_templates/view.rs` (488 LOC,
-  spliced by `runtime_generator.rs:122-130`).
-- Stored-tag decoder (Sheets, EMITTED): `grammars/sheets/view.rs:52` (`KIND_TABLE`), `:123-127,147`
-  (`rule_kind` via `flags_at().bits()`), `:167,177,195` (`as_f64`/`as_bool`/`as_tag`). The EMITTER:
-  `codegen/src/general_descent/view.rs:103-110` (`rule_kind_tag` from rule index), `:117-135+`
-  (`build_typed_accessors` from `->` projections), `:281` (`KIND_TABLE` write), `:335` (`rule_kind`
-  write); `codegen/src/general_descent/emit.rs` (452 LOC); dispatch `runtime_generator.rs:147`.
-- Idiomatic sinks (Q3): `grammars/css_l4_declaration_values/sink.rs` (16 LOC) over `generated.rs`
-  (886 LOC); emitters `codegen/src/json_typed_direct.rs` (1245), `codegen/src/json_sink_direct/` (1213).
-- The `MaterializationClass` seat (Q5): `crates/passes/src/lib.rs:1127,1131,1139,1283`; drivers
-  `passes/src/decision_csp.rs`, `passes/src/backend_egraph.rs`.
-- TS mirror to generate (today 364 hand LOC, the sole drift surface): the PROVE-14 `TapeDoc` decoder +
-  loader + pointer + `verify.mjs` oracle. Rust plane-export shape proven by `tape_dump.rs` reading
-  `Tape::{source,offsets,flag_cursors,flag_values}` (`runtime/src/tape/mod.rs:124-137`). GN-4.W4 home:
-  `crates/bbnf-wasm/` (cdylib, four-plane `TapeExport`) + `ts/tape/src/{tape,load,pointer}.ts` +
-  `ts/tape/test/tape-parity.test.ts`.
+**Routing, owed jointly to LOCK-4/LOCK-8.** LOCK-4 owns the *instruction-set definition* — which
+combinators lower to which opcodes, the operand encoding, the packrat/diagnostics facilities (this is
+4C's core, live only if 4C is chosen over 4B comptime-fusion). LOCK-8 (8C, "the TS plane as lawful
+mirror, shared instruction shape") is the *consumer* that binds the stream into the TS backbone. 6B's
+seat is the *cross-language reader generation + the byte-parity oracle*: the VM's decode loop is
+generated on both sides from the one instruction-layout spec (a `LayoutSpec` whose discriminator is
+`Stored{channel: opcode_stream}`), and the differential corpus proves the two interpreters fold
+bit-identically — the same oracle discipline the tape uses. **Verdict:** yes, live; Claim B, not bound
+by the ts-rs flattening result; owned by LOCK-4 (op set) + LOCK-8 (mirror) with 6B supplying the
+generated dual-reader and the parity gate. It is 6B's *strongest* form: if 4C lands, the hand-filled
+walk bodies 6B otherwise leaves idiomatic vanish, because both sides interpret one instruction stream.
 
-## Prior art (citations)
+---
 
-- **Cap'n Proto / FlatBuffers** — schema-driven codegen emitting a byte layout AND per-language zero-copy
-  accessor skeletons from one `.capnp`/`.fbs`: the canonical "one spec → N language skeletons, zero
-  drift" precedent. 6B differs by deriving the spec from the *grammar* (not a separate IDL) and by
-  carrying multiple discriminator dialects over one layout.
-- **Kaitai Struct** — declarative `.ksy` binary-format spec compiled to *parsers* in C++/Python/JS/Rust
-  that decode the identical byte stream: the exact analog of a tape decoder (one layout spec, N readers,
-  provable byte-parity). 6B's plane-descriptor + KindRecovery axis is a Kaitai-shaped spec specialized to
-  the offset-tape.
-- **LLVM TableGen** (`.td` → C++ tables/decoders, including `DecoderEmitter` for fixed-width instruction
-  decode) — a spec compiled to per-target skeletons with a regen fixpoint; ownership model (spec owned by
-  the IR, emitters terminal) mirrors the proposed LOCK-3 seat; `DecoderEmitter` is the direct precedent
-  for the Q4 opcode-stream generalization.
-- **MLIR ODS (Operation Definition Spec)** — one op-def generates C++ *and* Python builders: direct
-  precedent for Q4.
-- **regex-automata `DFA::from_bytes` / `to_bytes`** — a byte layout decoded by a generated reader; the
-  SoA-plane + sparse side-channel discipline is the same family.
-- **simdjson / sonic-rs tape** (stored 64-bit tagged words = AoS stored-discriminator) vs the offset-only
-  SoA tape here (derived): the two industrial poles 6B unifies under one `LayoutSpec`.
+## 5. Q5 — ownership of `LayoutSpec`, `emit_*`, and the `MaterializationClass` variable
 
-## Named risks and counterexamples
+The `MaterializationClass` variable already exists in-tree as `BackendShape`
+(`crates/ir/src/lib.rs:361`): `{ EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage }` — and a
+freeze-guard forbids a sixth `UnionTape` variant (asserted in `bbnf-bench/src/lock14_baseline.rs`
+:2336, "Lock 14 forbids UnionTape in IR surface"). Its selection policy is the priority lattice
+`PriorityStep` (`crates/ir/src/cost.rs:263`: `P1EagerForced … P5OffsetTapeDispatchable …
+P7OffsetTapeDefault … P8EagerFallback`) with per-shape cost coefficients (`cost.rs:121-126`). The
+proposed assignment follows the existing crate homes and the XL-B tower frame:
 
-- **R1 — dense-tag flag plane is not free.** Sheets stores a tag on *every* structural node; JSON stores
-  flags on the escaped minority. Forcing `DenseTag` on JSON regresses its win — a `flags_at`
-  binary-search per node where source-byte classify is a single load. *Mitigation:* `FlagPlaneDensity` is
-  a per-grammar LOCK-2 decision (`decision_csp`), never a global default.
-- **R2 — the flag plane cannot carry a discriminator tag AND an escape bit simultaneously** (one `u8`
-  slot; `GRAMMAR_BIT0`). A string-escape leaf inside an operator tower needing a rule tag collides — the
-  ONE named spec obligation beyond HEAD, resolvable by a spec-declared bit-partition (tag high bits,
-  escape `GRAMMAR_BIT0` low), UNBUILT.
-- **R3 — spec expressibility gap on payload dialects.** Sheets `as_f64`/`as_bool`/`as_tag` are three
-  rule-keyed payload decoders; a `LayoutSpec` modeling only discriminator recovery under-generates.
-  *Blocker to file if unmet:* the spec must carry the `PayloadDecode[]` axis, or hand bodies proliferate.
-  (The general emitter already derives these from `->` projections, so the axis is realizable.)
-- **R4 — generated TS skeleton loses V8 monomorphism.** The hand cross-language decoder is monomorphic
-  (4 ctor-only fields, single hidden class, PROVE-14). A generator emitting a post-ctor field assignment,
-  or a `switch` V8 cannot lower to a jump table, silently deopts and the 4.4× stop-early evaporates.
-  *Counterexample:* a generated `classify` returning a boxed union instead of a small-int megamorphizes
-  the call site. *Mitigation:* the Evidence probe below is a hard gate, not a style note.
-- **R5 — regen drift undetected / tautology oracle.** If Rust and TS emitters read two copies of the
-  spec they drift silently; and a "parity" test of generated-Rust vs generated-TS proves only emitter
-  determinism (compares one source against itself). *Mitigation:* one `LayoutSpec` value both emitters
-  consume, a `regen∘regen=regen` byte-identity gate, and a NON-tautological external oracle — the
-  `JSON.parse` differential (fp `986912547` full / `3431570937` partial) and sonic-rs on the Rust side.
-- **R6 — bit-fold non-portability.** Any generated digest proving parity must fold a language-neutral
-  quantity; an 8-byte IEEE-754 fold diverges on NaN-canonicalization / signed-zero (this is 6D's live
-  bits-vs-spans contradiction — a 6D matter, flagged here for the shared oracle). *Mitigation:* the 6B
-  oracle folds code-units, never raw f64 bits.
+- **`BackendShape` / `MaterializationClass` (the variable's *definition* + the per-rule *assignment*):
+  LOCK-3 owns it.** It lives in the `ir` crate — the IR transposition spine's home — and is set during
+  lowering (`runtime_generator.rs` chooses `SinkOnly` vs the tape shapes at :48-84). It is a property
+  of the IR, authored where the IR is authored.
+- **The *selection among legal shapes* (which `BackendShape` per rule, given the cost lattice):
+  LOCK-2 owns it.** `cost.rs`'s `PriorityStep`/cost coefficients are precisely the decision driver's
+  cost model; picking the winning materialization from the legal set is a LOCK-2 CSP/cost decision, and
+  the first-byte-disjointness legality predicate (§2) is one of its constraints. LOCK-3 *defines and
+  lowers*; LOCK-2 *decides*.
+- **`LayoutSpec` (the machine-readable spec 6B generates from) and the `emit_*` faces: LOCK-3 owns the
+  faces; 6B owns the language-parametric mirror.** The `emit_*` faces are already LOCK-3 code
+  (`emit_sink_only`, `emit_*` in `runtime_generator.rs:84-149`, the roster in
+  `grammar_profile.rs:3-33`); `LayoutSpec` is a thin projection over the IR's `BackendShape` +
+  discriminator resolution + config facts these faces already consume. 6B does **not** re-home them —
+  it *extends the emitter to a second language target*, adding a `tape.ts` roster alongside the Rust
+  roster, reading the identical `LayoutSpec` LOCK-3 defines. The isomorphism plane is a consumer of the
+  spine's spec, not a second owner of it (constitution: no double-homing).
 
-## What a prototype must test to move this family (the never-built machine)
+In one line: **LOCK-3 defines `BackendShape`/`LayoutSpec` and the `emit_*` faces; LOCK-2 selects the
+shape via cost; 6B mirrors the emitter across languages.** None of the three is stubbed — each has a
+live in-tree organ.
 
-1. **Fold the JSON template into the general emitter.** Extend `general_descent` with a
-   `KindRecovery::FromSourceByte` arm + a `Sparse` flag mode; emit `grammars/json/view.rs` from it and
-   assert **byte-identical** to the committed template; keep emitting `grammars/sheets/view.rs`
-   unchanged. Proves one emitter, two provenance dialects, from grammar facts — deletes the 488-LOC hand
-   template. This is the load-bearing SPEC_ONLY→RAN step 6B still owes (the FAMILY-SPECS' claim that this
-   ran as "PROTO-1" is NOT substantiated — the committed PROTO-1 is 6C; no `emit_classify`/`LayoutSpec`
-   exists in-tree).
-2. **Emit `ts/tape/src/tape.ts` from the same spec** and assert it decodes the crossed planes to the
-   identical fingerprint (`986912547` full, `3431570937` partial) — closing the sole real drift surface
-   (364 hand LOC → 0).
-3. **V8 shape-stability probe (the mandated Evidence).** Run the *generated* `TapeDoc` under
-   `node --allow-natives-syntax` and assert `%HaveSameMap(a,b)` across instances, `%HasFastProperties`,
-   and `%GetOptimizationStatus` optimized/monomorphic on the hot `classify`/`nextSibling` path —
-   matching the hand decoder's confirmed monomorphism, **not** `tsc` type-check alone. A generated
-   skeleton failing this is a defect, not a style note.
-4. **Regen fixpoint gate.** `regen∘regen=regen`, byte-identical, on both the Rust view faces and
-   `tape.ts`, CI-wired. Mutate a Rust flag bit or classify arm; the generated TS must move in lockstep or
-   the gate goes RED.
-5. **`MaterializationClass` round-trip.** Show `decision_csp` selecting `DirectSink` vs `LazyView` for one
-   consumer and the `emit_*` tower producing the corresponding skeleton from one `LayoutSpec`, exercising
-   the ownership split (`passes/src/lib.rs:1127` class → emitter) end to end.
+---
 
-Falsifiers that return the family: if step 1 needs *any* hand-authored constant in the generated JSON
-view to reach byte-identity, a layout fact escapes derivation (spec incomplete); if step 3 shows the
-generated decoder is measurably slower or shape-unstable vs the hand decoder, generation costs more than
-the drift it prevents, and the family collapses toward a linter-only null hypothesis for that face.
+## 6. Substrate & integration seams (path:line)
 
-## Standalone verdict
+- **Emitter roster (extend to a TS target):** `codegen/src/grammar_profile.rs:3-33`
+  (`COMPILED_RUNTIME_FILES` etc.); dispatch `codegen/src/runtime_generator.rs:75-149`
+  (`emit_from_lowered`, `emit_sink_only`).
+- **Byte-layout facts (per grammar, already generated):** `grammars/json/config.rs:1-31`
+  (`STRUCTURAL_BYTES`, flag bits); `grammars/sheets/config.rs`;
+  `grammars/css_l4_declaration_values/config.rs`.
+- **Discriminator dialects (the Q2 witnesses):** Derived — `grammars/json/value.rs:29-46`
+  (`at_cursor` first-byte classify); Stored — `grammars/sheets/view.rs:52` (`KIND_TABLE`), `:95`
+  (`TAG_TABLE`), `:122-127` (`at_cursor` flag decode).
+- **Decoder skeleton (the generated Rust reader to mirror):** `grammars/json/view.rs` (488),
+  `grammars/sheets/view.rs` (279).
+- **The materialization variable + policy:** `ir/src/lib.rs:361` (`BackendShape`), `ir/src/cost.rs:121`
+  (per-shape cost), `:263` (`PriorityStep`); freeze-guard `bbnf-bench/src/lock14_baseline.rs:2336`.
+- **Shared tape substrate (grammar-agnostic, hand):** `runtime/src/tape/mod.rs` (233; accessors
+  :120-146), `assembler.rs` (124), `cursor.rs` (36).
+- **The proven cross-language decoder + oracle (the hand baseline to generate-and-match):**
+  PROVE-14 `ts-tape/tape.mjs` (364), `load.mjs` (34), `pointer.mjs` (34), `verify.mjs` (55),
+  `tape_dump.rs` (78, the ABI export shape). GN-4.W4 schedules the `bbnf-wasm` cdylib + `ts/tape/`
+  productionization; 6B's amendment makes `tape.ts` generated, per grammar, in that wave.
+- **CI drift-impossibility gate:** the deterministic-emission test + clean-regen law; the
+  `(field, consumer)` pairing (`codegen/src/lib.rs`) extended to assert the TS mirror tracks the Rust
+  layout facts.
 
-The tape-layout face is the strongest ground 6B holds, and the ground is real but MIXED: the Sheets
-decoder skeleton (`KIND_TABLE`, `rule_kind`, typed accessors) is *already programmatically emitted from
-grammar rules and `->` projections* by the 883-LOC `general_descent` emitter — the SPEC-GENERATED-
-SKELETON thesis shipping in production — while the JSON view is still a 488-LOC hand template and the TS
-mirror is 0% generated (364 hand LOC, the sole real drift surface). The named `LayoutSpec`/`emit_classify`
-machine does NOT exist in-tree; the crown remains SPEC_ONLY at the spec level, its in-production kernel
-being the general emitter awaiting three additions: a `KindRecovery::FromSourceByte` axis (folds JSON's
-template in), a `Sparse` flag mode, and a TS backend (closes the drift surface). AoS↔SoA is discharged by
-the tree (two provenance dialects over one layout, one already emitted); Q3's idiomatic type is *cheaper*
-than the faithful union when generated as a fused sink (row 07); ownership grounds in real code (LOCK-2
-chooses the class in `decision_csp`/`backend_egraph` writing `MaterializationDescriptor`/`TapeKind` at
-`passes/src/lib.rs:1127`; LOCK-3 owns the spec + the `general_descent` emitter tower). The shared-
-instruction-stream extension is a live target the type refutation does not bind, routed to LOCK-4/LOCK-8
-for the VM measurement. **Not BLOCKED** — no missing primitive; the emitter exists, the axes are
-enumerated, and step 1 is a bounded extension of shipping code. **Not yet RAN** — the byte-identical
-JSON-from-emitter proof and the generated-TS monomorphism probe are the two measurements that convert
-6B's crown from SPEC_ONLY to MEASURED.
+---
+
+## 7. Named risks & counterexamples
+
+- **R1 — Idiomatic materialization forfeits the win (Q3, measured).** An adapter that builds a native
+  object walks eagerly → 0.98× (PROVE-14), spending the 4.8× stop-early margin. *Cure:* generate the
+  faithful union as canonical; idiomatic adapters are opt-in, cost-priced, LOCK-8-plane.
+- **R2 — Derived dialect chosen where first-byte disjointness fails.** A generator that defaults JSON's
+  Derived classify onto a sheets-like grammar silently mis-decodes (two rules, same first byte).
+  *Counterexample:* two rule kinds both starting `(` collapse to one. *Cure:* the
+  `kind_alphabet_first_byte_disjoint` predicate (§2) gates Derived; false ⇒ Stored forced — the
+  legality check LOCK-2 already owns.
+- **R3 — Generated TS loses V8 monomorphism.** PROVE-14's decoder is monomorphic by care (4 ctor-only
+  fields, one hidden class, `Int8Array` dispatch). A naive emitter (post-ctor field assign, optional
+  fields) forces hidden-class transitions → deopt → the 4.8× evaporates. *Cure:* the emitter template
+  bakes the shape-stable discipline; the gate is a `%HaveSameMap` probe (§8).
+- **R4 — Tautological mirror oracle.** Checking generated-Rust against generated-TS proves only emitter
+  determinism, not correctness. *Cure:* the non-tautological oracle is external — `JSON.parse`
+  differential (TS) + sonic-rs (Rust); generation removes rust↔ts drift, the corpus removes
+  emitter-bug drift.
+- **R5 — Stored-tag width overflow.** Sheets' `flag_values` is `u8`; a grammar with >255 rule kinds
+  overflows the Stored channel. *Counterexample:* a 300-rule grammar wraps tags silently. *Cure:* the
+  `LayoutSpec` carries the tag width; the emitter widens/splits the flag plane, and a regen assert
+  fails if `rule_count > channel_max`.
+- **R6 — Bit-fold non-portability in the parity digest.** A digest folding raw f64 bits diverges on
+  NaN/signed-zero across Rust↔V8. *Cure:* PROVE-14 folds code-units, not doubles (fp 986912547 matched
+  over UTF-16 units); the generated oracle folds the same language-neutral quantity.
+
+---
+
+## 8. What a prototype must test to move this family (V8 shape-stability gated)
+
+The family advances only on a running artifact. The decisive pass-3 prototype and its gates:
+
+1. **Emit `tape.ts` for the JSON cell from the `LayoutSpec`.** From the JSON `BackendShape=OffsetTape`
+   + `Derived` discriminator + `config` facts, generate the decoder skeleton (no hand-typed constants,
+   no hand classify). Wire it into PROVE-14's harness replacing the hand `tape.mjs` layout/classify.
+2. **Byte-behavioural parity (the correctness gate).** Re-run `verify.mjs`: all six structural counts +
+   code-unit total + 32-bit fingerprint must stay identical to `JSON.parse` over the corpus. *Pass =
+   the generated skeleton is byte-behaviourally identical to the hand skeleton.* Falsifier: if any
+   hand-authored constant is needed in the generated TS to pass, a layout fact escaped derivation.
+3. **The second-dialect gate — emit `tape.ts` for sheets (`Stored`).** Generate the TS reader that
+   decodes `flag_values` via a generated `KIND_TABLE` + `TAG_TABLE`; prove one emitter emits both
+   dialects across languages (the Q2 claim, cross-language). No TS sheets decoder exists today — its
+   existence-by-generation is the pass condition.
+4. **V8 shape-stability probe under `node --allow-natives-syntax` (not `tsc`).** On the *generated* TS
+   decoder: `%HaveSameMap(nodeA, nodeB)` must be `true` across arbitrary node pairs (single hidden
+   class), and `%HasFastProperties(doc)` true — proving the emitter reproduces PROVE-14's monomorphism.
+   Then the cold paired stop-early bench (N≥50 fresh children) must reproduce ≥2× (measured 4.78×).
+   Falsifier: if `%HaveSameMap` is false or the bench regresses below hand TS, generation costs more
+   than the drift it prevents and the face collapses toward a linter-guarded constant set.
+5. **Drift-impossibility as a live gate.** Mutate a Rust layout fact (a classify arm, a `KIND_TABLE`
+   order) and regen; the generated `tape.ts` must move in lockstep and the extended `(field,consumer)`
+   linter go RED if a hand consumer fails to track — the impossible-by-construction claim demonstrated,
+   not asserted.
+
+---
+
+## 9. Freeze ordering (the DAG constraint)
+
+6B is a downstream weave. Its generated kind-alphabet IS LOCK-1's grammar-derived Value ADT (the
+`JsonNodeKind`/`GoogleSheetsKind` sets), and its non-tautological parity source is LOCK-7's
+meta-circular oracle. This plane freezes **after LOCK-1** (whose ADT is 6B's discriminator input) and
+**after LOCK-7** (whose oracle is 6B's parity source); the regex face defers to LOCK-5's ONE-HIR
+verdict before any Rust-DFA↔TS-`RegExp` exemption is minted.

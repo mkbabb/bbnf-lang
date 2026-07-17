@@ -1,255 +1,247 @@
-# LOCK-6 · Family 6C — WASM-CORE · Pass-3 Research (research-C)
+# LOCK-6 · Family 6C — WASM-CORE · pass-3 research
 
-The Rust core compiled to wasm is the one implementation; TypeScript is bindings plus an
-idiom layer; TS-native code exists only where V8 measurably wins. This report answers the
-three 6C directives with concrete mechanism, in-tree substrate, integration seams, prior art,
-named risks, and the exact prototype that moves the family. Every claim names its byte or its
-citation.
+**Thesis (charter).** The Rust core compiled to wasm is the one implementation; TypeScript is
+bindings plus an idiom layer; TS-native code exists only where V8 measurably wins. The proof
+that such a boundary exists is already banked: the offset-tape crosses to TypeScript
+byte-exactly (node-for-node across 320 cold children), the stop-early get clears 2× at 4.4×
+against `JSON.parse`, and the full-walk lane sits at ~0.91× parity — cold native `JSON.parse`
+is a hand-tuned C++ parser V8 ships, and cold-JIT JS cannot beat it on full materialization.
+That last fact is the family's compass: the browser win is *not touching what you don't read*,
+not out-parsing the native lane.
 
----
-
-## The substrate already exists (the physical core)
-
-WASM-CORE is not a greenfield gamble; the two organs it needs are already in-tree and proven.
-
-- **A real wasm-SIMD128 structural scanner.** `crates/simd-scan/src/wasm.rs` (433 LOC) is a
-  working SIMD128 kernel: `pub fn scan(input, alphabet) -> StructuralIndex`
-  (`wasm.rs:49`), nibble-LUT swizzle classification `classify_chunk_nibble` (`wasm.rs:238`,
-  `u8x16_swizzle`/`v128_and`/`u8x16_ne`/`u8x16_bitmask`), 64-byte stripes (4 × `v128` per
-  stripe, matching NEON), and a dedicated quote/escape structural scan (`wasm.rs:302`). It
-  is the byte-for-byte functional mirror of `neon.rs` in the same directory-module
-  (`alphabet.rs`, `neon.rs`, `wasm.rs`, `scalar.rs`, `avx2.rs`, `avx512.rs`, `parity.rs`,
-  `index.rs`, `compaction.rs`). The x86 arms (`avx2.rs`/`avx512.rs`) are dead by refutation
-  law iv; the live browser-deployable arm is **`wasm.rs`**, its native sibling `neon.rs`, and
-  the scalar oracle `scalar.rs`. This one directory-module *is* LOCK-9's one-kernel-library
-  thesis realized: one classifier, three emit backends, one scalar parity floor (`parity.rs`).
-- **A cdylib home.** `wasm/Cargo.toml`: crate `bbnf-wasm`, `crate-type = ["cdylib","rlib"]`,
-  `wasm-bindgen = "0.2"`, `serde-wasm-bindgen = "0.6"`; entry `wasm/src/lib.rs`. The cdylib
-  boundary already compiles.
-- **A byte-exact tape crossing.** PROVE-14 (CONFIRMED) proved the four SoA planes
-  `Tape::{source, offsets, flag_cursors, flag_values}` (`crates/runtime/src/tape/mod.rs`
-  ~121-137) decode node-for-node identically in TS over typed arrays, and stop-early get
-  clears 2× at **4.4×** (full-walk honestly at ~0.9× parity, abrogated). GN-4.W4 is the
-  productionization plan: `crates/bbnf-wasm/src/tape_export.rs` exports the four planes as
-  `Uint32Array`/`Uint8Array`; `ts/tape/src/tape.ts` is the monomorphic `TapeDoc` decoder (4
-  ctor-only fields, single hidden class, byte-hash fast path).
-
-Caveat of record: top-level `crates/` and `wasm/` are archival per the constitution; GN-1
-ports these organs into the greenfield workspace. The point stands — the wasm-SIMD128 kernel
-and the cdylib are *proven*, not hypothesized, and 6C re-homes rather than invents them. This
-is the concrete shape of "the Rust core is the one implementation": the browser runs `bbnf-wasm`
-= {`simd-scan::wasm::scan` structural index} → {tape build} → {four-plane export}; TS holds
-only `TapeDoc` + the pointer/stop-early idiom.
+The one-implementation seam is concrete, not aspirational. `crates/runtime/src/tape/mod.rs`
+(~121–137) exposes the four planes `Tape::{source, offsets, flag_cursors, flag_values}` as
+public slices; the export shape was proven by `tape_dump.rs:78`; the TS decoder that consumes
+them lives at `crates/bbnf-bench/ts-tape/{tape,load,pointer,verify,bench}.mjs` (703 LOC). The
+production seam is GN-4.W4: a new `crates/bbnf-wasm` cdylib (`wasm-bindgen`, `crate-type =
+["cdylib"]`, target `wasm32-unknown-unknown`) exporting those four planes, and the `ts/tape/`
+package holding the `TapeDoc` monomorphic decoder (four ctor-only fields → single V8 hidden
+class; classify switches on the raw source byte, no name gate — R4 §6). This report develops
+the family against the three pass-3 questions.
 
 ---
 
-## Q1 — wasm-SIMD128 kernel vs TS-native scalar structural scan
+## Q1 — wasm-SIMD128 kernel vs TS-native scalar scan for the browser structural scan
 
-**The two options, both browser-deployable.**
-- **Option A (wasm-SIMD128).** `simd-scan::wasm::scan` compiled into `bbnf-wasm`, invoked
-  once per document (or once per batch buffer). Classifies structural/quote/escape bytes via
-  the nibble-LUT swizzle at 16 B/instruction, 64 B/stripe. Costs: one-time module
-  instantiate (amortized across the batch), a source copy-in across the ABI boundary
-  (`Uint8Array` → wasm linear memory), then near-memory-bandwidth classification.
-- **Option B (TS-native scalar).** A `scan.ts` byte loop (the V8-side mirror of `scalar.rs`)
-  building the same `StructuralIndex`. Costs: zero instantiate, zero boundary copy, but
-  cold-JIT ~1 byte/iteration with branch-per-byte.
+**The scan in question.** The browser-deployable structural scan is the classify pass that
+finds `{ } [ ] " : ,` and builds the `offsets` plane (29,573 u32 for twitter, 118,292 B).
+Natively this is the fused NEON scan (SPEC §0 feature 03, `vshrn` narrow, CONFIRMED
+0.898–0.931× cyc/B). In the browser there are exactly two candidates, and both must be
+measured cold, paired, base-pinned to the PROVE-14 HEAD `d2b32f6e3`, with `JSON.parse` as the
+neutral referee.
 
-**Prior art sets the throughput ceiling.** simdjson's WASM-SIMD128 path (Langdale & Lemire,
-the "fallback→v128" port) runs the same movemask-narrow classification this kernel uses and
-reaches ~1 GB/s in-browser, against V8 `JSON.parse` at 200–400 MB/s for ASCII-key objects and
-native NEON simdjson at 1–2 GB/s ([jsonic.io JSON-performance guide]; simdjson project). WASM
-SIMD128 is **128-bit only** — no AVX2/512 width in the browser — so the ceiling is set by
-issuing 4 × `v128` per 64-byte stripe (exactly what `wasm.rs` does), yielding a real ~4–8×
-over the scalar loop but never the 32–64 B/cycle of a native AVX host. The medium/dev.to
-"JS vs wasm-bindgen vs raw-wasm+SIMD" measurements corroborate: raw wasm-SIMD beats scalar JS
-on data-parallel scans once the payload clears the boundary-crossing fixed cost.
+**Option A — wasm-SIMD128 kernel.** The Rust classify core compiled to wasm32 with the
+`simd128` feature: `i8x16.eq` of each 16-byte block against the structural bytes, `v128.or`
+the class lanes, `i8x16.bitmask` → 16-bit mask, then scalar compaction of set bits into
+offsets. This is the simdjson structural-scan shape. It is portable across Chrome/Firefox/
+Safari on one code path (SIMD128 shipped everywhere by 2023).
 
-**But PROVE-14's law binds the cold-small case.** Cold V8 is a hand-optimized C++ near-optimum
-on small inputs; on a single 2 KB CSS value parsed once, wasm's instantiate + copy-in dwarfs
-the scan and **the scalar TS lane wins**. Asserting the wasm win for that regime is the
-refutation-law-iv "stable-port perf claim" trap. The discriminator is exactly the family's
-deployment context — **"the bbnf *batch* parser"**: a batch amortizes one instantiate across N
-documents and keeps the corpus resident in linear memory, so the wasm-SIMD128 lane wins in the
-regime it is built for. The answer is therefore a **crossover, not a verdict**: scalar wins
-cold-single-small; wasm-SIMD128 wins batched/large; the prototype must locate the crossover
-(doc-size × batch-count) and report both numbers, per the directive. Refutation guard: the
-kernel classifies **structural bytes** (quote/escape/bracket via the alphabet LUT), never
-numeric fields — no digit-scan SIMD (row 02); `wasm.rs` already honors this.
+**The named penalty — the M-series bitmask tax.** `i8x16.bitmask` has *no* single-instruction
+NEON lowering. On AArch64 it lowers to a **6-instruction scalar sequence** (mask each lane's
+high bit, multiply by the bit-gather magic constant `0x2040810204081`, `lsr`/`bfxil` to
+stitch) or an **8–10-instruction** vector variant (ARM community blog, *Implementing the
+WebAssembly bitmask operations on AArch64*). x86 SSE does this in one `pmovmskb`; the M-series
+— the certified target, "M-series is NEON-only" (SPEC §0) — does not have it. This is the
+*exact* movemask bit-stitch that SPEC §0 refutation **04** names as the ALU-bound classify
+floor, and refutation **09** names as the sink of the `portable_simd→NEON` shim perf claim
+("the shim emits 2× the movemask reduces… parity-to-slower"). A browser wasm-SIMD128 scan on
+Apple Silicon (Safari/JSC, or any wasm runtime lowering through the same NEON path) re-incurs a
+penalty this campaign already measured and *refuted as a lever*. A wasm-SIMD win observed only
+on Chrome/node (x86 dev boxes, or V8's own lowering) is the classic two-arm window asymmetry
+SPEC §0/09 warns against — and x86 is abrogated by edict, so that arm is inadmissible as the
+deciding evidence.
 
-**What the prototype must test (base-pinned, cold, paired).** On the `bbnf-wasm` cdylib in
-node-wasm and a real browser: (a) instantiate once, feed a shared corpus = {twitter.json 631 KB}
-∪ {a batch of N small CSS/JSON docs}; time `structural_index` build for `wasm::scan` vs
-`scan.ts`, *including* instantiate+copy-in in the wasm lane's timed region (as PROVE-14 counted
-the plane copy against the tape); (b) sweep doc-size and batch-count to find the crossover; (c)
-deliver both lanes' ms/MB and the crossover point. This is the first thing that moves 6C from
-"kernel exists" to "kernel is the right browser choice, measured."
+**Option B — TS-native scalar scan.** V8 JITs a monomorphic byte loop over `Uint8Array` with
+a 256-entry `Int8Array` classify LUT (the `dispatch` idiom, R4 §6d, leaf.ts:100–151). V8
+compiles scalar loops well but cannot auto-vectorize; PROVE-14 measured a cold-JIT JS full
+walk at 0.91–0.98× native `JSON.parse` — i.e. V8 scalar already sits *at* the native
+full-parse lane without any SIMD. The scalar scan reads the JS string directly (no copy-in).
 
----
+**The decisive frame — the scan choice is load-bearing only for a non-goal.** PROVE-14 settled
+that full tape-build in the browser loses to native `JSON.parse` on *both* candidate kernels
+(neither cold-JIT JS nor cold wasm out-parses a hand-tuned C++ parser on full materialization).
+The lane that *wins* — stop-early get, 4.4× — does almost **no** structural scanning of skipped
+subtrees: it skips by bracket-depth counting to the target, materializing three leaves out of
+631 KB (0.032% of the document). Therefore the wasm-SIMD-vs-TS-scalar contest governs only the
+full-build lane, which is already a documented browser non-goal (GN-4 §Refutation guards). On
+the winning lane the kernel choice is largely moot. wasm-SIMD additionally pays two taxes the
+scalar lane escapes: the M-series bitmask lowering, and **copy-in** — the source must be
+encoded into wasm linear memory (`TextEncoder`/copy loop) before the kernel can touch it,
+~631 KB per twitter parse, a cost the scalar lane (indexing the JS string) never pays.
 
-## Q2 — `memory.grow()` and view invalidation on the two-parses-through-one-instance path
+**Provisional verdict for the family:** TS-native scalar wins the browser structural scan on
+the merits that matter — no bitmask tax, no copy-in, already at native parity — while
+wasm-SIMD128's only structural advantage (vectorized classify) buys speed on a lane that loses
+to native regardless. The wasm core's value is the *tape it hands across* (built natively on
+the server/build side, or by the wasm module when the caller wants the crossed tape), not a
+browser-side SIMD classify. This does **not** retreat from WASM-CORE: it sharpens where the
+wasm boundary earns its keep (the crossed tape + stop-early navigation) versus where TS-native
+is the measured winner (the scalar scan), which is exactly the constitution's clause iii —
+"TS-native only where V8 measurably wins."
 
-**The hazard is spec-level and certain.** `WebAssembly.Memory.prototype.grow()` detaches the
-backing `ArrayBuffer`; *every* typed-array view over it becomes detached (`byteLength → 0`),
-**even `grow(0)`** ([MDN Memory.grow]; [WebAssembly/spec#646]; [awesome.red-badger detached
-ArrayBuffer]). Reads on a detached view throw `TypeError: ... detached ArrayBuffer`. This lands
-squarely on the two-parses-through-one-instance path — the exact batch regime Q1 wants. Parse
-#1 hands JS a `TapeDoc` holding `Uint32Array`/`Uint8Array` views over the four planes in wasm
-memory; parse #2 allocates its own source+tape, linear memory grows to fit, and parse #1's
-views (and the `TapeDoc` built on them) **silently detach**. The 4.4× stop-early lane is
-worthless if the tape it navigates is a detached buffer.
-
-**Three mechanisms, priced against the stop-early margin.**
-1. **Copy-out (JS owns the planes).** After each parse, `.slice()` the four planes out of wasm
-   memory into JS-owned `ArrayBuffer`s; `TapeDoc` holds detach-immune copies. Cost = memcpy of
-   the tape planes only — for twitter.json the tape is **119,852 B (18.98% of source)**,
-   dominated by `offsets.u32` (118,292 B); the source plane need not be copied if leaves are
-   materialized eagerly, or is copied lazily on demand. A ~119 KB copy is cheap against a full
-   631 KB `JSON.parse`, so the **stop-early ≥2× margin survives** (the copy is a fraction of the
-   parse it replaces); but for the *full-walk* lane already at ~0.9× parity, the copy pushes it
-   further under 1.0 — consistent with GN-4's abrogation of full-walk as a goal.
-2. **Pre-reserve / never-grow.** Instantiate `WebAssembly.Memory` with a `maximum` sized to the
-   largest batch document, so `grow()` never fires mid-batch and views stay valid. Trades peak
-   memory for zero copy-out. Feasible precisely because the tape is **offset-only** — PROVE-14
-   proved the payload arena empty — so arena size is predictable (source + ≤~19% offsets).
-3. **Re-materialize views per call** (`instance.exports.memory.buffer` re-read, the
-   wasm-bindgen idiom, cf. wasm-bindgen#4395 / emscripten `HEAPU8` re-slice). Necessary for the
-   *caller* after any grow, but **insufficient alone** for a long-lived `TapeDoc` captured
-   across a second parse — a captured view cannot be retroactively re-based. So mechanism 3 is a
-   correctness-hygiene rule, not a two-parses solution; the two-parses path needs 1 or 2.
-
-**The corruption counterexample (why this is mandatory, not optional).** If a `TapeDoc` naïvely
-re-fetches `.buffer` after grow, it reads **parse #2's bytes at parse #1's offsets** — a false
-parity PASS on ASCII-only leaves and silent corruption on the rest. This is the same class as
-GN-4 risk R4 (wasm-plane drift passing JSON-parity by ASCII coincidence). Copy-out or
-pre-reserve is a correctness precondition of the batch face.
-
-**What the prototype must test.** Drive two parses through one `bbnf-wasm` instance where parse
-#2 forces `grow()`; assert parse #1's `TapeDoc` reads throw/corrupt **without** mitigation; then
-measure (i) copy-out cost (plane memcpy ns) and confirm stop-early holds ≥2×, and (ii) the
-pre-reserved-max variant's peak-memory cost with zero copy. Report copy-out ns against the
-stop-early ns budget — the directive's exact ask.
+**What a prototype MUST test.** Build the same twitter `offsets` plane two ways in-browser:
+(A) a `bbnf-wasm` `simd128` classify kernel; (B) a TS-native `Uint8Array` + LUT scalar
+classify. Cold, paired, N≥200 fresh child/page contexts, on **both** a V8 host (node/Chrome)
+**and** a JSC host (Safari/`jsc`) — the M-series bitmask penalty is runtime-specific and
+invisible on V8 alone. `JSON.parse` (parse the tree, no walk) as referee. Report wasm-SIMD's
+copy-in cost on a separate line, ns/B directional (in-browser has no PMU). The gate is not
+"which is faster" in the abstract but "does wasm-SIMD beat TS-scalar *on JSC/M-series after
+copy-in* by a margin the crossed-tape lane cannot already deliver for free."
 
 ---
 
-## Q3 — the confinement datum, re-confirmed in-tree, and cdylib vs two instances
+## Q2 — memory.grow() mid-batch and outstanding typed-array views
 
-**In-tree re-confirmation: the confinement datum is SUPERSEDED — the divorce has landed.**
-value.js is now **4.0.0** in the working tree (`value.js/package.json:3`) and has **divorced
-parse-that entirely**: zero `@mkbabb/parse-that` imports under `value.js/src` (the only hits are
-comments boasting "parse-that-FREE"), and its parsing is its own hand-written surface — 9 public
-synchronous entries `parseStylesheet`/`parseCssColor`/`parseCssScalar`/`parseCssValue`/
-`parseCssValues`/`parseKeyframeSelector`/`parseTimingFunction`/`parseAnimationTimeline`/
-`parseAnimationRange` in `value.js/src/v4/css/{grammar,stylesheet}.ts`. The XL-G "open
-value.js-4.0.0 divorce" is **realized at HEAD**: value.js no longer confines parse-that at all.
-keyframes.js@6.0.0 now depends only on `@mkbabb/value.js@4.0.0` (`keyframes.js/package.json:69`)
-— no parse-that, direct or transitive — so it too is fully detached.
+**Definitive answer: YES, and even `grow(0)` detaches.** `WebAssembly.Memory.prototype.grow()`
+throws away the backing `ArrayBuffer` and allocates a new one; *every* view over the old buffer
+(`Uint8Array`, `Uint32Array`, …) is detached — `byteLength → 0`, subsequent access reads
+zero/throws. This holds for `grow(0)` too (MDN `Memory/grow`; the WebKit #182327 / Gecko
+detach bugs; the red-badger *Memory Growth and the Detached ArrayBuffer Problem* write-up).
+`wasm-bindgen` lives with this via the `cachedUint8Memory`/re-fetch pattern and has an open
+sharp edge where `TypedArray::view` can even observe a detached buffer *during* view creation
+if a grow races (wasm-bindgen issue #4395).
 
-The R4-era census (value.js consuming `all()`/`dispatch()` across dozens of sites) is
-**obsolete**. The **only** remaining live parse-that consumer in-tree is **latex-paper**
-(`@mkbabb/parse-that ^0.7.1`, 8 grammar files import combinators: `src/grammar/{primitives,
-commands,math,text,compile,document,environments}.ts` + `src/bibtex/parser.ts`), and it exposes
-**zero `.parse()` sync sites** in `src` — its parse entry is a grammar-compile step behind
-`compile.ts`, not scattered synchronous call sites. Note the version skew: latex-paper is pinned
-pre-1.0.0 (`^0.7.1`), so it does not even track the current parse-that.
+**The two-parses-through-one-instance hazard.** Parse doc A in a `bbnf-wasm` instance → hand JS
+views over A's tape planes → parse doc B in the *same* instance. If B is larger, or the parse
+arena grows, B's parse triggers `memory.grow`, and A's outstanding `Uint32Array` offsets view
+is **silently detached**. This is a *correctness* landmine, not merely a thrown error: a
+stop-early get against A's tape after B's parse can index a zero-length or re-based buffer and
+fold plausible-but-wrong values — the ASCII-coincidence failure class GN-4 R4 already flags for
+wasm-plane drift.
 
-**Consequence for wasm-core.** The historical objection to a wasm-core — "wasm instantiate is
-async, but parse-that's `.parse()` is synchronous, so every sync call site needs a ready
-instance" — has **largely evaporated**. value.js's dozens of sync sites are gone (it divorced);
-keyframes is detached; the residual sync-confinement surface is latex-paper's single
-grammar-compile entry plus any direct parse-that CLI/tests. A wasm-core parse-that faces a
-top-level-await/bootstrap boundary at essentially **one** consumer entry, not a census. **FLAG
-(F6/owner-bound):** this collapse rests on value.js@4.0.0 HEAD; an owner could re-marry a future
-value.js to parse-that, restoring confinement — revalidate at the gestalt. As of HEAD, confined
-sync surface ≈ latex-paper alone.
+**The mitigation is already the proven shape — copy-out is free against the margin.** PROVE-14's
+`load.mjs` does *not* hand live wasm views to `TapeDoc`; it reads the four planes into *fresh,
+JS-owned* typed arrays, and the timed tape lane **includes** that 118 KB offset-plane copy —
+and still won stop-early at 4.4× (VERIFY: 4.44×, 320 cold children). So the detachment-safe
+architecture (TapeDoc consumes copied planes, never live views) is the one already measured and
+certified. The per-doc copy-out is `offsets` (118,292 B) + `flag_cursors` (1,248 B) +
+`flag_values` (312 B) ≈ **120 KB** memcpy; `source` needs no copy (JS already owns the string
+it passed in). That ~120 KB sits inside the 4.4× stop-early margin by construction — it is
+already the numerator of the certified tape/JSON.parse ratio. Full-walk is a non-goal, so the
+copy is irrelevant there.
 
-**Price: one consolidated cdylib vs two cold instances.**
-- **Two cold instances** (`bbnf-wasm` + a separate `parse-that-wasm`): each carries its own
-  linear memory, its own module compile+instantiate — and module compile is the **dominant cold
-  cost** (a nontrivial module is hundreds of KB → several ms to compile+instantiate) — and
-  **double the source copy-in** when both parse the same buffer. Note parse-that's Rust port has
-  **no cdylib today** (`parse-that/rust/Cargo.toml` declares no `crate-type`/wasm-bindgen), so
-  the second instance is itself greenfield.
-- **One consolidated cdylib** (bbnf tape core + parse-that combinator core in one `bbnf-wasm`):
-  single instantiate, single linear memory the corpus lives in *once*, and a **shared structural
-  scanner** — `crates/simd-scan` is already the one kernel both faces consume, so consolidation
-  is the physical form of LOCK-9's one-kernel-library and the constitution's "Rust core is the
-  one implementation." Strictly cheaper on cold instantiate and on memory. Cost: it couples the
-  two release cadences into one artifact and bloats the smallest consumer's download
-  (latex-paper would pull the whole bbnf core for a LaTeX grammar — its bundle could triple).
-  Mitigation: the consolidated cdylib serves the batch/server face; thin per-consumer builds via
-  feature-gated cdylib + wasm tree-shaking serve leaf consumers.
+Two alternatives are inferior for this family: (b) re-fetch views after every wasm call
+(wasm-bindgen's pattern) forbids `TapeDoc` from holding views as ctor fields across a second
+parse — it fights the monomorphic single-hidden-class shape R4 §6 requires; and (c) a fresh
+instance per doc is priced under Q3 and pays instantiate cost per parse. Copy-out (a) both
+isolates and is already banked.
 
-**What the prototype must test.** Build both variants — (a) one `bbnf-wasm` exporting both the
-bbnf-tape parse and a parse-that combinator parse; (b) two separate cdylibs each cold-instantiated
-— and measure cold `instantiate + first-parse` ms and peak memory for each on a shared corpus.
-Report both, per the directive.
+**What a prototype MUST test.** Two parses through one `bbnf-wasm` instance where doc B is
+sized to force `memory.grow`. Assert doc A's stop-early get is byte-exact **after** B's parse
+under (a) copied-out planes (must pass) and (b) live views held across the grow (must fail —
+proving the detachment is real, not theoretical). Price the ~120 KB copy-out in ns against the
+stop-early margin, and confirm the 4.4× survives the copy (it already did in PROVE-14; the
+grow-forcing corpus is the new stressor).
 
 ---
 
-## Integration seams (path:line — where extant code serves)
+## Q3 — the confinement datum + consolidated cdylib vs two cold instances
 
-- **wasm-SIMD128 kernel**: `crates/simd-scan/src/wasm.rs:49` (`scan`), `:238`
-  (`classify_chunk_nibble`), `:302` (quote/escape scan); native mirror `neon.rs`; scalar oracle
-  `scalar.rs`; parity floor `parity.rs`; alphabet `alphabet.rs`. (GN-1 ports `simd-scan` to the
-  greenfield.)
-- **cdylib home**: `wasm/Cargo.toml` (crate `bbnf-wasm`, `crate-type=["cdylib","rlib"]`,
-  wasm-bindgen 0.2, serde-wasm-bindgen 0.6); entry `wasm/src/lib.rs`.
-- **Four-plane export**: `crates/runtime/src/tape/mod.rs` ~121-137 (`Tape::{source,offsets,
-  flag_cursors,flag_values}`); GN-4.W4 target `crates/bbnf-wasm/src/tape_export.rs`.
-- **TS idiom layer (bindings only)**: PROVE-14 `crates/bbnf-bench/ts-tape/tape.mjs` (364) →
-  GN-4.W4 `ts/tape/src/tape.ts` (`TapeDoc`, 4 ctor-only fields, single hidden class);
-  `pointer.ts` (the 4.4× stop-early lane); `load.ts` (`decodeTape` typed-array construction).
-- **parse-that wasm-core (greenfield)**: no cdylib today (`parse-that/rust/Cargo.toml`); the
-  consolidated-cdylib route homes the combinator core inside `bbnf-wasm` beside `simd-scan`.
-- **Live parse-that consumer of record**: `latex-paper` `src/grammar/*` (8 files, `^0.7.1`); the
-  divorced non-consumers are `value.js@4.0.0` (`src/v4/css/*`, its own 9 sync entries) and
-  `keyframes.js@6.0.0` (value.js-only).
+**The confinement datum re-confirmed in-tree — and it has moved.** value.js is now **4.0.0**
+with **zero dependencies** (`package.json`: `dependencies {}`, `peerDependencies {}`) and **no
+`@mkbabb/parse-that` import anywhere in `src`** (grep: 0 importing files, 0 synchronous
+`.parse(` combinator sites). It carries its own parser under `src/v4/{color,css,easing,value}
+.ts`. This is the **value.js-4.0.0 divorce** (XL-G) made concrete: the heavy synchronous
+consumer R4 recorded — 3.1.0 on parse-that `^1.0.0`, "59 `all()` sites + `dispatch`" across
+`src/parsing/**` — is **stale**. The historical sync-site count belongs to value.js ≤3.1.0; in
+the divorced 4.0.0 tree the count against parse-that is **0**. keyframes.js, which consumed
+parse-that only transitively *through* value.js (R4 §7), is severed by the same divorce. The
+live external consumer set is now effectively **latex-paper alone** (pinned `^0.7.1`, pre-1.0,
+unmigrated — R4 §7 SKEW).
 
----
+**Why this strengthens WASM-CORE materially.** The standing objection to a wasm core was
+"value.js drives parse-that through dozens of *synchronous* combinator call-sites; a wasm
+boundary needs `WebAssembly.instantiate` (async) and would break them." With the divorce that
+objection is **void**: no entangled sync consumer remains to migrate. A wasm-core parse-that
+becomes a *new-adopter* surface, not a re-plumbing of an interlocked dependent. FLAG
+(F6/owner-bound): whether value.js ever *re-adopts* a wasm-core parse-that is an owner decision,
+not a technical constraint this family can resolve; the divorce means the family need not design
+around value.js's former sync surface at all. This is a named supersession of R4's consumer
+table (§7), not a silent contradiction.
 
-## Named risks / counterexamples
+**Consolidated cdylib vs two cold instances — the pricing.**
 
-- **R1 (Q2, aliasing corruption).** Re-fetching `.buffer` after `grow()` reads the next parse's
-  bytes at the same offsets → false parity on ASCII-only leaves, corruption elsewhere (GN-4 R4
-  class). Copy-out or pre-reserve is a correctness precondition, not an optimization.
-- **R2 (Q1, cold-single-doc loss).** PROVE-14 law: cold V8 is near-optimal; wasm-SIMD128 loses
-  on a single small doc because instantiate+copy-in dwarfs the scan. Counterexample: a 2 KB CSS
-  value parsed once → scalar TS wins. The wasm claim is batch/throughput-scoped; universalizing
-  it trips refutation law iv.
-- **R3 (Q1, SIMD128 narrowness).** WASM SIMD128 is 128-bit only; the 64-byte-stripe kernel
-  issues 4 × `v128` to compensate. The win over scalar is real (~4–8×) but never native AVX
-  width — do not quote 32–64 B/cycle for the browser lane.
-- **R4 (Q3, divorce reversal).** The confinement collapse rests on value.js@4.0.0 HEAD; an owner
-  could re-adopt parse-that. F6/owner-bound; revalidate at gestalt.
-- **R5 (Q3, consolidated-cdylib coupling).** One artifact couples release cadences and bloats the
-  smallest consumer's download (latex-paper bundle triples). Mitigation: feature-gated cdylib +
-  wasm tree-shaking for leaf consumers; the consolidated build serves the batch/server face.
+- **One consolidated cdylib** (bbnf tape/scan core + parse-that regex/combinator core in a
+  single wasm32 module): one `WebAssembly.instantiate`, one linear memory, one module compile
+  amortized across every lane. Cost side: the shared linear memory *couples* the two subsystems
+  under Q2 — a regex parse that grows memory detaches an outstanding tape view; the module is
+  larger to compile once (cold instantiate ≈ compile(bytes) + memory reservation).
+- **Two cold instances** (`bbnf-wasm` + a separate `parse-that-wasm`): isolation (separate
+  linear memories — a regex grow cannot detach a tape view), but **2× fixed instantiate
+  overhead**, 2× baseline memory reservation, and any cross-subsystem data must be copied
+  *across* two memories (no shared buffer). On a cold browser page load the doubled instantiate
+  is the real tax.
 
----
+For the SK-V24 shape the browser deliverable is the **bbnf tape core** (GN-4.W4); parse-that's
+regex is consumed *by the generator on the build side*, not independently in-browser — and its
+one former standalone in-browser consumer (value.js) has divorced. So the **consolidated cdylib
+is favored**: single cold instantiate, and the Q2 coupling is managed by the copy-out that is
+already the proven shape (planes leave wasm memory immediately; nothing outstanding to detach).
+Two instances win *only* if some consumer needs parse-that combinators standalone in-browser
+without the bbnf core — a surface with **no live consumer** post-divorce.
 
-## The one prototype that moves 6C
-
-A single node+browser harness on the `bbnf-wasm` cdylib that, cold and base-pinned:
-1. times `simd-scan::wasm::scan` vs a scalar `scan.ts` on a shared corpus across doc-size ×
-   batch-count, both numbers, locating the crossover (Q1);
-2. drives two parses through one instance, forces `grow()`, proves `TapeDoc` detachment, then
-   measures copy-out (plane memcpy) vs pre-reserved-max, re-checking the ≥2× stop-early margin
-   survives (Q2);
-3. builds consolidated-cdylib vs two-cold-instances and reports `instantiate + first-parse` ms
-   and peak memory for each (Q3).
-
-The kernel, the cdylib, and the byte-exact tape crossing already exist; this harness converts
-"the substrate is present" into "the wasm core is the measured right boundary, and its two
-correctness hazards are priced."
+**What a prototype MUST test.** Cold `WebAssembly.instantiate` + first-parse latency for (i) one
+consolidated cdylib exporting both `parse_tape` and `regex_find`, vs (ii) two separate cdylibs,
+across N≥30 *fresh page contexts* (cold-load reality, not a warmed instance), with gzipped
+`.wasm` byte-size as a co-metric. The consolidated module must also carry the Q2 stressor (a
+regex grow must not corrupt an outstanding tape read) to prove copy-out isolation holds under
+one shared memory.
 
 ---
 
-### Sources
-- MDN, *WebAssembly.Memory.prototype.grow()* — grow detaches the backing ArrayBuffer and all views.
-- WebAssembly/spec issue #646 — JS API for grow-memory and detaching array buffers.
-- awesome.red-badger (Chris Whealy), *WebAssembly Memory Growth and the Detached ArrayBuffer Problem*.
-- wasm-bindgen issue #4395 — `TypedArray::view` over a detached ArrayBuffer; re-slice mitigation.
-- jsonic.io, *JSON Parse Performance JavaScript: V8 Fast-Path, simdjson & Streaming* — V8 200–400 MB/s, simdjson NEON 1–2 GB/s.
-- medium/@oemaxwell & dev.to (Bence R.), *Rust + WebAssembly Performance: JavaScript vs wasm-bindgen vs raw WASM (with SIMD)*.
-- PROVE-14 REPORT+VERIFY (in-tree) — byte-exact tape crossing, 4.4× stop-early, full-walk ~0.9× non-goal.
+## Prior art (citations)
+
+- **wasm-SIMD128 / `i8x16.bitmask`**: WebAssembly SIMD spec (v128; the four `*.bitmask` ops
+  return a 32-bit lane-high-bit mask); ARM community blog *Implementing the WebAssembly bitmask
+  operations on AArch64* — the 6-instruction scalar / 8–10-instruction vector lowering, no
+  `pmovmskb` equivalent on NEON. Ties directly to SPEC §0 refutations 04 (movemask-stitch is
+  the ALU floor) and 09 (the NEON-shim double-movemask perf claim refuted).
+- **memory.grow detachment**: MDN `WebAssembly.Memory.prototype.grow` (detaches even `grow(0)`);
+  wasm-bindgen issue #4395 (`TypedArray::view` over a detaching buffer); red-badger *Memory
+  Growth and the Detached ArrayBuffer Problem* (the redefine-over-new-buffer pattern); WebKit
+  bug #182327; the Resizable/Growable ArrayBuffer proposal (the forward fix, not yet a baseline
+  to rely on).
+- **The On-Demand thesis** ("not touching what you don't read"): simdjson On-Demand / sonic-rs
+  get; PROVE-14 REPORT+VERIFY (the 4.4× stop-early, the ~0.91× full-walk non-goal, byte-exact
+  plane parity).
+- **V8 monomorphism discipline**: R4 §6 (single-hidden-class shapes, `Int8Array` dispatch table,
+  the megamorphic `.parser` call site) — the governing constraint on any TS-native lane this
+  family keeps.
+
+## Named risks & counterexamples
+
+- **R-C1 (SIMD asymmetry).** A wasm-SIMD128 classify that "wins" measured only on Chrome/node
+  (V8/x86) while tying or losing on Safari/M-series (the 6–10-instruction `i8x16.bitmask` tax)
+  — the two-arm asymmetry SPEC §0/09 names as the classic self-deception. Counterexample:
+  wasm-SIMD beats TS-scalar 1.3× on V8, 0.95× on JSC after copy-in.
+- **R-C2 (non-goal lane).** The scan-kernel contest governs only full tape-build, which loses to
+  native `JSON.parse` on both kernels (PROVE-14). A wasm-SIMD "win" on a lane that is still 0.9×
+  native is pyrrhic. Counterexample: wasm-SIMD full-build 1.2× TS-scalar but 0.88× JSON.parse.
+- **R-C3 (silent detachment).** A view held across a second parse that grows memory reads
+  wrong-but-plausible offsets and passes ASCII parity by coincidence (GN-4 R4's drift class).
+  Correctness bug, not a crash. Copy-out is the guard.
+- **R-C4 (copy-in).** wasm-SIMD requires the source in linear memory; ~631 KB `TextEncoder`/copy
+  per twitter parse that the TS-scalar lane never pays. Counterexample: wasm-SIMD scan faster but
+  net loses after copy-in on small/medium docs.
+- **R-C5 (shared-memory coupling).** One consolidated cdylib couples regex-grow to tape-view
+  detachment; only safe because copy-out evacuates planes immediately. A future lane that holds a
+  live view across a regex call reopens the hazard.
+
+## What moves the family (the prototype battery, base-pinned `d2b32f6e3`)
+
+1. Two-way structural-scan build (wasm-SIMD128 vs TS-scalar-LUT) of the twitter `offsets` plane,
+   cold paired N≥200, **on both V8 and JSC hosts**, `JSON.parse` referee, copy-in priced
+   separately. Decides Q1 without the x86-only self-deception.
+2. Two-parses-through-one-instance with doc B forcing `memory.grow`; assert doc A byte-exact
+   under copy-out (pass) and live-view (fail); price ~120 KB copy-out against the 4.4× margin.
+   Decides Q2.
+3. Cold `WebAssembly.instantiate` + first-parse for one consolidated cdylib vs two instances,
+   N≥30 fresh page contexts, gzipped `.wasm` size co-metric, with the regex-grow-vs-tape-view
+   isolation check on the consolidated module. Decides Q3.
+
+The seam these ride is already built (`crates/bbnf-wasm` + `ts/tape`, GN-4.W4); the four public
+plane accessors (`crates/runtime/src/tape/mod.rs:121-137`) are the ABI; `TapeDoc` consuming
+copied planes is the memory.grow-safe shape PROVE-14 already certified. The family's sharpened
+claim: the wasm core is the one *tape-producing* implementation and the crossed-tape stop-early
+navigator; the TS-native scalar scan is the measured winner for in-browser classify; and the
+value.js divorce removes the last obstacle to letting the wasm boundary be async at instantiate.

@@ -10,454 +10,458 @@ Constitution binds: consumer-less substrate forbidden (viii/Y.13); type plane co
 absolutes directional (iv); deterministic regen (`regen∘regen = regen` byte-identical); extant
 GN/PT codex is the baseline, divergences are NAMED supersessions (ix).
 
+**All XL-letters in this pass-2 body are the ORCHESTRATOR ledger's (`CROSS-LOCK.md`, A..H), which is
+the binding authority. Pass-1 used a private A..G lettering that collided with it; §3 carries the
+reconciliation and every pass-1 citation is re-anchored here.**
+
 ---
 
-## Current disposition (as of pass 1)
+## Current disposition (as of pass 2)
 
 | Family | Status | Conv. | One-line |
 |---|---|--:|---|
-| **2A EGRAPH-ISLANDS** | **ADVANCED** | **50%** | The defensible core: LLVM directed canonicalization spine + local islands. The lock's spine, but all three candidate islands are cross-lock-contested (A owned+possibly-abrogated by LOCK-5, B's derivation BLOCKED two locks deep, C double-homed with LOCK-1), and the middle-IR it operates on is LOCK-3's. Honest floor: 0 fully-instantiated in-tree islands this wave. |
-| **2B IR-IS-EGRAPH** | **BLOCKED** | **32%** | Net-new in skinny (both critics concur), de-risked by a working, wired legacy exemplar — but its distinctive extraction value is triple-refuted inert, its signature "extraction emits BackendShape" claim rests on an NP-hard context-sensitive repair, and its real fork is LOCK-2⊗LOCK-3 (tower ownership), not intra-lock 2A⊗2B. |
-| **2C CSP-CENTRAL** | **BANKED** | **30%** | As-primacy RETIRED (Unison ceiling; collapses to 2A Island B — both critics concur). The `bounded_sum` knapsack propagator is a tested, RAN, purely-additive **banked asset** folded into Island B. Teeth are source-real (≥2 shufti sites in CSS/BBNF/CSV source) but IR-latent, un-budgeted, consumer-less; the consumer is BLOCKED two locks deep. |
-| **2D PROFILE-CLOSED-LOOP** | **BLOCKED** | **30%** | Sound discipline (calibrate-time closure preserves the regen fixpoint), correct precedent (AutoFDO/BOLT/Ansor), but SPEC-ONLY: zero PROVE-2D artifact ran. Its only unblocked plane (threshold/kernel/capacity knobs) sits inside LOCK-9/GN territory; the plane LOCK-2 owns (shape lattice) is §0-BLOCKED. |
+| **2A EGRAPH-ISLANDS** | **ADVANCED** | **56%** | The surviving frame. Two decision-grade probe advances this pass: the pick's DIRECTION tracks measured cyc/B (dispatch faster at N=8, sequential at N=2, 7/7 CIs both directions) and a child-bearing tree-profile e-node is authorable *directly over skinny's flat `GrammarIr`* in-budget (19.7 µs). But the binding hole is UNCHANGED: **0 child-bearing islands whose extraction pick MOVES emitted code** — both probes discard their pick (`let _organ`, `let _ = best_node`). Gate (i) can go RED and its structural half is exercised; the live-consumer half is not. |
+| **2B IR-IS-EGRAPH** | **BANKED** | **44%** | BLOCKED-candidate LIFTED (the pass-1 NP-hard context-sensitive-DAG objection is refuted — context-freedom RATIFIED on the structural argument: `admits_sink_only` takes no caller arg, one global `target`, real walk 0 conflicts) — but it **earns no distinct existence over 2A** (both critics concur). The ≥2 survivors the child-node probe showed are MANUFACTURED by the widening rewrite, at a discarded consumer; the surviving node IS 2A's island node. Its three assets — context-freedom, child-node-over-flat-arena buildability, `Ref`-as-leaf/per-rule-root-table — bank into 2A. |
+| **2C CSP-CENTRAL** | **BANKED** | **50%** | As-primacy stays RETIRED (pass-1, Unison ceiling). NEW this pass: the solver-shape DESIGN question is CLOSED — **B&B + `bounded_sum` over the near-tree scan-plan graph is the home; PBQP is ceremony** (it cannot encode Σcost≤B as a pairwise cost; its Lagrangian budget-dual carries an irremovable integrality gap, css-l4 slack obj 39.003 vs true 21.011, at ~10⁴× wall-clock). But **`bounded_sum` is VERIFIED ABSENT from the tracked tree at HEAD** (agglomerator re-checked): the propagator + 6/6 live in a divergent bank worktree. EARNED-in-a-worktree, not on the substrate. Teeth BANKED (source-real, IR-latent, consumer-blocked). |
+| **2D PROFILE-CLOSED-LOOP** | **BLOCKED** | **32%** | SPEC-ONLY; **zero executed fit** (clause vii). Sound discipline, correct precedent (AutoFDO/BOLT/PGO), right determinism invariant (loop closes at calibrate-time, not regen-time). The dispatch-cycb probe hands it its first MEASURED front (the N=2/8 direction reversal) — a real target to fit — but no coefficient has been fitted from PMU and no decision flipped by a fitted value. And what must be fitted is DISTRIBUTION, not N (§0.4). Composable, not exclusive. |
 
-**The lock returns as a converged CORE — 2A's directed canonicalization spine + the existing
-BackendShape driver, anchored by the running legacy grammar e-graph — but it is a core LOCK-2 cannot
-ratify alone.** Every one of its four families reaches across a lock boundary the intra-lock
-incompatibility map does not draw: the middle IR is LOCK-3's (XL-B), the scan sites are
-LOCK-5/LOCK-9's (XL-D/E), the projections are LOCK-1's (XL-F), PROVE-12 is LOCK-3's (XL-C), the
-solver home is shared with LOCK-1 (XL-G), and the tree it ports into is portfolio-contested (XL-A).
-Extraction / CSP-extraction is recorded SPEC-ONLY pending a **fired**, confluent, non-sign-flipped
-manufacturing rewrite on a **representative** workload **in the skinny tree**; the scan-plan
-CSP/budget machinery is recorded SPEC-ONLY pending an **IR-modeled** `SelfLoop`/`Prefilter` site +
-a **live consumer no single lock currently owns**.
-
----
-
-## 0. The pass-1 governing corrections — census AGREED; two NEW findings replace the prior "dispute"
-
-The prior draft of this registry treated the substrate census as a *disputed judgment call between
-the two critics* and spent its §0 "settling" it. **That framing is stale.** The two on-disk critiques
-(the FINAL CRIT-1, which supersedes its 05:07 draft, and the FINAL CRIT-2, re-anchored to skinny HEAD
-`fe160a91a`) **AGREE on the census** — CRIT-2 explicitly re-anchored on disk "to avoid the wrong-tree
-trap the prior CRIT-2 fell into" and states "the within-lock substrate census (§0, CRIT-1,
-research-A/B) is correct **for the skinny tree**, and I do not re-litigate it." There is no census
-dispute to adjudicate. What the FINAL critiques deliver instead are **two new governing findings**,
-neither of which the prior draft carried, plus one decisive datum that survives.
-
-### The census (settled, not disputed — both critics + on-disk verification)
-- **The skinny tree (`skinny/crates/`) is LOCK-2's subject.** `skinny/crates/ir/src/` is **only
-  `cost.rs` + `lib.rs`** — no `egraph/`, no `GrammarENode`, no `build_and_saturate`. The **sole
-  `impl Language` is `DecisionNode`** (`backend_egraph.rs`), a childless-bag union + `best_node`;
-  the 1-var `decision_csp.rs` re-selects its input; `perf_cost: 0` (×5). `SimdSite = {PreEntry}`,
-  `SimdMode = {Exact}` — single-valued (`ir/src/lib.rs:401-409`, verified on disk this pass). **2B
-  is genuinely net-new here; the substrate is ceremonial here.** research-A/B/priorart, CRIT-1,
-  CRIT-2, and FAMILY-SPECS §0 are all correct for this tree.
-- **The legacy tree (`crates/`, where `bbnf-ir` actually lives) has a working, WIRED grammar
-  e-graph** (`crates/ir/src/egraph/`: `GrammarENode: Language`, `write_back.rs`, `rules/regex.rs`,
-  `analysis/`, per-rule root table, cycle guard), called on the production compile path at
-  `crates/core/.../pipeline.rs:218-222`. This is a **de-risking asset** — an in-project reference
-  implementation of the 2A/2B architecture that ships and is deterministic on a real compile path.
-
-### NEW FINDING 1 (CRIT-1's governing within-lock finding): the sharpest uncertainty was tested on the WRONG tree
-PROTO-1 (`prove2_branch`) is built `-p bbnf-ir` and imports `crates/ir/src/egraph/cost.rs` /
-`types/node.rs` — **`bbnf-ir = crates/ir = the LEGACY tree.**` `GrammarENode`/`GrammarCostModel`
-exist **nowhere in skinny.** So PROTO-1 proves a divergent cost-guided pick **on the legacy engine —
-machinery that must be *ported into skinny* before any of it is true there.** The port (legacy
-`crates/ir/egraph` → skinny, replacing the childless-bag `backend_egraph`) is **the actual unbuilt
-core, and NO family scopes it**: 2B thinks it must *build* the Language (it already exists in legacy),
-the prior CRIT-2 thought it must *delete* dead code (it's live in legacy), and the prior registry
-presented PROTO-1 as the lock's own production machinery (it's another tree's). 2B's honest skinny
-deliverable is neither "build" nor "delete" but **adopt-and-prove** — port/re-derive the legacy
-engine, prove it stays in budget, regen-byte-identical, and changes ≥1 output for the measurable
-better. All three are UNTESTED and the port is unscoped.
-
-### NEW FINDING 2 (CRIT-2's governing cross-lock finding): LOCK-2 mislocates its own primary fork
-The FAMILY-SPECS names **2A⊗2B** as the "primary architectural fork." That is the **wrong fork**,
-because *the middle IR is not LOCK-2's to shape.* **LOCK-3's charter owns "the IR tower and its
-transpositions … the decision driver's seat"**; its REGISTRY says "the tower is 3B-shaped today …
-LOCK-3 either hardens (3A/3B) or re-founds (3C/3D)." Both 2A ("the middle IR is an annotated tree,
-e-graphs are local tactics") and 2B ("the middle IR *is* one e-graph container; `derive_backend_shape`
-is deleted; extraction *is* the lowering") are **verdicts on what LOCK-3's tower IS** — 2B is a fifth
-option imposed on LOCK-3's spine that LOCK-3's own family set does not enumerate. **The genuine
-primary fork is LOCK-2 ⊗ LOCK-3: does graph-optimization govern the middle IR's SHAPE, or operate as
-a tactic WITHIN a tower LOCK-3 owns?** The intra-lock 2A⊗2B fork is a *sub-question* of a boundary
-LOCK-2 has not earned the right to answer alone — an undeclared supersession of LOCK-3 (clause ix)
-that lowers every family touching the middle IR.
-
-### The decisive §0 datum that survives both findings (canon-suffices, triple-confirmed)
-The legacy wired rule set (`default_rules()`, `rules/mod.rs:87-96`) is **all-narrowing** —
-`DeduplicateAltBranches`, `SupersetAbsorbAlt`, `UnionMergeAlt`, `FuseAltRegexBranches`,
-`CommonSuffixFactor`, `AltOfSingle`, `RepeatOfSingle`, `WrapOfEpsilonScalar`, `ConcatLiterals`. **No
-widening/manufacturing rule exists even in the project's own shipping grammar e-graph.** So §0 is
-**triple-confirmed** (in-tree R-1 54-config null + external Cranelift aegraph avg-class-1.13 /
-2-of-4M + the project's own wired all-narrowing set): *canonicalization is the value; extraction is
-inert absent a manufacturing rewrite that no one has built or shown confluent.* This survives the
-PROTO-1 re-run — which confirmed the payoff exists but built the alternative by hand-`union`, never a
-fired rewrite (§1).
+**One surviving frame — 2A's directed-spine-with-islands** — into which 2B's lawful mechanism banks,
+of which 2C's Island B (solver home = B&B + `bounded_sum`, landing owed) is the scan-plan seam, and
+beneath which 2D is the composable coefficient layer. The lock earned **four genuine results** this
+pass — the deciding DIRECTION (synthetic, clean paired PMU), substrate BUILDABILITY (observational),
+2B context-freedom (structural), and the solver-shape DESIGN verdict (worktree-only primitive). It did
+**not** earn extraction-as-decider *in production*: both probes' consumers are synthetic/observational
+and discard their picks, so the honest floor — **0 genuine child-bearing island whose pick changes
+emitted code** — is exactly where pass-1 left it. The single binding pass-3 obligation is the
+**REPLACING-not-observing consumer** neither probe supplied.
 
 ---
 
-## 1. The two master-gate prototypes — RAN_MEASURED, and how much they actually lifted
+## 0. The pass-2 governing findings
 
-Both prototypes RAN this pass and reproduced within noise. Both critics independently converge (and
-this pass verifies) that the two verdicts are **softer than the binary label**; the agglomerator
-adopts the critics' floor with named reasons.
+### 0.1 The synthesis was STALE against its own two decisive probes — for the SECOND time (both critics, headline)
+`FAMILY-SPECS.md` (22:27) predates `PROTO-2-CHILD-NODE-IN-SEAM.md` (22:44) and
+`PROTO-2-DISPATCH-CYCB.md` (22:48). Its §0.2b verdict ("the deciding PMU half UNMEASURED") and its
+§0.3/§V verdict ("the substrate gap NOT dissolved … the unbuilt core, unscoped by any family, routed
+to GESTALT-B as the binding blocker") were both written **before** the two probes that answer exactly
+those questions and both PASS on disk. This is the **identical defect the synthesis charges its own
+19:25 predecessor with, recurring within the same pass.** The agglomerator therefore scores against
+disk truth as of 22:48 (the probes' actual results), not the 22:27 text — and the pass-3 directive
+"re-cut the synthesis to the probes' results" is a REPEAT, not a first-time, obligation. This is a
+process defect, not a family-soundness fault; it does not move a family number by itself, but no
+number may be premised on a §0 verdict the synthesis had not reconciled with the probes.
 
-### PROTO-1 (PROVE-2-BRANCH, §0 master gate) — RAN_MEASURED · earns *machinery-not-broken (on legacy)*, NOT *extraction-decision-real (in skinny)*
-- **RAN_MEASURED, reproduced.** Part A: e-class held **2 distinct Alt forms (no collapse)**; W1
-  (`dispatch_bonus=−2.0`) picked dispatch-table (best_cost 13.0); W2 (`+2.0`) picked sequential-trial
-  (15.0); picks diverged. Part B (cold-paired, PMU cyc/B, N=200-240, 3 windows): dispatch table
-  strictly cheaper — twitter 3.344× [3.320, 3.368], citm 2.910× [2.897, 2.922], canada 2.268×
-  [2.255, 2.281]; all three 95% CIs exclude 1.00× same-direction; prior-artifact agreement within
-  noise (3.342/2.868/2.281× prior). The **machinery is not broken**: a cost model + Extractor respond
-  to weights and the pick moves silicon.
-- **But it ran on the LEGACY tree (NEW FINDING 1).** `-p bbnf-ir` = `crates/ir` = legacy. The result
-  is on the legacy `GrammarENode`/`GrammarCostModel` — un-ported to skinny.
-- **The rewrite was never fired** (PROTO-1's own candor, limits §2): the 2-candidate e-class was
-  built by direct `union`, not a registered `Rewrite` through `CspScheduler`. The load-bearing step —
-  a *widening* `ManufactureDispatchAlt` that (a) detects disjoint FIRST sets + proves the two forms
-  equal, (b) is **confluent with the all-narrowing set** (does `DeduplicateAltBranches` collapse the
-  twin right back?), (c) **terminates** — is declared "trivial next step" and left unbuilt. Both
-  critics flag the elegant-reduction trap; the legacy all-narrowing exemplar (§0) proves it is *not*
-  trivial (nothing in-project manufactures a branch).
-- **W2 is a synthetic sign-flip** (`+2.0` = negation of calibrated `−2.0`) — proves weight-sensitivity,
-  not a real Pareto front where *calibrated* weights ever pick sequential. And the dispatch table
-  dominating **2.27×-3.34× on every corpus** is a **canonicalization** signal (always rewrite
-  Alt→table), which needs no extractor.
-- **Part B's cyc/B is the wrong byte distribution** (twitter 81% NOMATCH; a real parser never fires
-  the value Alt on interior/ws bytes). Certified for a contrast the parser does not run; "direction
-  not sensitive" is asserted, not measured at value-starts.
-- **De-risking over-reach:** the artifact is a grammar-`Alt` dispatch decision (Island-B-flavored).
-  Islands A (regex-HIR canon) and C (projection canon) — the two islands whose entire justification
-  is "child-bearing nodes → real extraction" — received **zero evidence**.
+### 0.2 The two probes RAN_MEASURED — what each PROVED, and where each PASS is softer than its verdict line
+- **PROVE-2-DISPATCH-CYCB (the deciding half, §0.2b) — the strongest result of the pass.** On a
+  runnable hand-authored lowering (`dispatch_canon_bench.rs`, `libc`-only, no e-graph), cold paired
+  `ri_cycles`/`proc_pid_rusage`: at **N=8** dispatch/sequential cyc/B `hi95 < 1.0` in **7/7 CIs**
+  (across 5 runs, both match + 256-entry-LUT shapes); at **N=2** the direction **reverses**,
+  `lo95 > 1.0` in **7/7**; load-immune ins/B corroborates the direction at both N (dispatch does FEWER
+  ins at N=8: 4.67 vs 6.32; MORE at N=2: 4.67 vs 4.25). **The N-crossover tracks real runtime cost;
+  the direction question genuinely CLOSES; PROTO-1's "no PMU on darwin-ARM" excuse is refuted** (the
+  counter was always `proc_pid_rusage`). *Residual softnesses (both critics):* (a) the crossover is
+  **bracketed 2 < N* ≤ 8, not fitted** — the model fires at N*=3, but the true integer boundary was
+  not swept, so the model may discriminate wrongly in the N=3..5 band real grammars populate; (b) the
+  corpus is **round-robin uniform over `0..N`**, giving sequential its arithmetic best case `(N+1)/2`
+  — the shipping cost arm reads **N alone, blind to hit distribution**; a grammar whose first alt
+  matches 95% of value-starts favors SEQUENTIAL even at N=20 (CRIT-1 F2, new sharp uncertainty); (c)
+  the consumer is a hand-written microbench, **not a pipeline-generated parser** (§0.2c conceded open);
+  the closest real anchor (json `value`) is N=6, past any crossover.
+- **PROVE-2-CHILD-NODE-IN-SEAM (the substrate gap, §0.3/§V) — buildability PROVEN; "0→1 live consumer"
+  overstated.** A child-bearing `BbnfNode` (`Seq(Vec<Id>)`, `Alt{branches,dispatch}`) authored **purely
+  over skinny's flat `GrammarIr`** — dragging **none** of the top-level DAG (`DagNode`/`StringId`/
+  `FnId`/`AltDispatch`) — compiles in the production crate, saturates to **≥2 survivors at the real
+  6-branch json `value` Alt** (pairwise-disjoint FIRST bytes), runs in median **19.7 µs** cold, picks
+  dispatch (N=6 > N*=3), check-json byte-identical ×2. **This resolves the organ-SEPARABILITY horn:
+  the flat arena CAN host a child-bearing tree-profile e-node in-budget — no port from legacy, no XL-A
+  inversion, no GESTALT-B escalation on buildability.** *But its headline "the honest floor moves 0→1,
+  a live consumer" is a masked fallback (both critics, agglomerator concurs on the patch):* the seam
+  wiring is `let _organ = probe_child_bearing(…)` (discarded) and inside, `let _ = extractor.best_node(root)`
+  (the pick itself is discarded) — **regen-neutral *because* consumer-less** (viii/Y.13). The node runs
+  ALONGSIDE `DecisionNode` observationally; it never changes emitted code. And the ≥2 survivors are
+  **MANUFACTURED** by `ManufactureDispatchAlt` unioning in the twin — without it multiplicity is 1, the
+  triple-confirmed finding intact. The honest floor is **0→1 for "a child-bearing node that runs
+  observationally in the seam" and 0→0 for "a child-bearing island whose pick changes emitted code"** —
+  and gate (i) demands the latter.
 
-### PROTO-2 (PROVE-2-BUDGET, budget gate) — RAN_MEASURED · earns *the propagator works + regen holds*, NOT *teeth on the corpus*
-- **Real, tested, RAN net-new asset:** `bounded_sum` knapsack propagator (`crates/csp-solver/src/
-  constraint/bounded_sum.rs`, +345 LOC purely additive / 0 deletions, wired via the existing `Custom`
-  seam with no dispatch edit; `cargo test -p csp-solver --test bounded_sum` = **6 passed / 0 failed**).
-  BANKED, correctly homed in csp-solver (general-infra edict, parsimony vi — clean).
-- **The MECHANISM binds.** Slack budget 1000/700 → plan `{Prefilter,Prefilter}`, 0 forced Exact
-  (parity floor with the per-rule greedy pick). Tight 550/500 → `{Prefilter,Exact}`, exactly 1 site
-  forced to Exact (**budget BINDS, plan changes from greedy**). Budget 150 (< 2×Exact) → domain
-  wipeout → `Unsatisfiable`. The rigged 1-var CSP (`value == selected_index`) structurally cannot make
-  this cross-site trade.
-- **Regen byte-identity RAN** (new vs prior draft): `env -C skinny cargo run -p xtask -- check-json` =
-  **exit 0** — skinny `passes` recompiled against the modified csp-solver still regens byte-identical
-  (`check_dir` fails closed on any diff). BUT CRIT-1 correctly discounts: byte-identity holds *because
-  the additive propagator perturbs nothing that is wired* (the plan has no reader) — determinism shown
-  at the CSP-decision layer only.
-- **The ≥2 competing sites are source-real but IR-latent** (the whole finding). Skinny IR models **1**
-  grammar (json), **1** `SimdScan{Exact,PreEntry}`, **0** `SelfLoop`; `SimdSite`/`SimdMode` are
-  single-valued. The whole-repo grammar SOURCE audit found abundant shufti self-loops
-  (`css/pretty.bbnf=15`, `css/l4/*≥10`, `bbnf.bbnf=2`, `csv.bbnf=2`, `json` string-interior=1) — so
-  **the Brief-2 cheap falsifier did NOT fire: the fleet has the structure in source.** 2C is refuted
-  **only for the skinny corpus as modeled today**, not in-source. The blocker is precisely
-  "IR-unmodeled + un-budgeted + consumer-less," not "the fleet lacks it."
-- **The costs are invented** (Prefilter=300/40 LOC, Exact=100/8 LOC, synthetic cyc/B). Whether the
-  budget binds is a pure function of author-chosen constants; wf30's own candor: "if real Prefilter
-  lowering is ~12 LOC, the budget may never bind." Real costs are 2D's territory (itself SPEC-ONLY) —
-  a binding demonstration SPEC-ONLY resting on SPEC-ONLY.
-- **No consumer reads the plan** (viii/Y.13). The consumer is GN-2.W1's unbuilt SelfLoop/`find_member`
-  lowering — and cross-lock, it is BLOCKED **two locks deep** (XL-D). The honest verdict (adopted
-  verbatim from wf30, over wf28's flatter PASS): *2A Island B mechanism PROVEN; 2C teeth LATENT —
-  source-real, IR-unmodeled, un-budgeted, consumer-less.*
+**Net:** DIRECTION (synthetic) and BUILDABILITY (observational) advanced from SPEC-ONLY to green. What
+did NOT close: the crossover FIT (§0.2a), the PRODUCTION consumer (§0.2c), gate (i)'s live-consumer
+clause (pick discarded), and the CSS-L4-scale organ (2B gate 4). The master gate is **substantially
+de-risked but not PASSED**; "extraction-as-decider EARNED" (the dispatch probe's verdict line)
+**overreads** by conflating "the direction is real" with "extraction in the pipeline emits the faster
+shape." **Base-pin note (XL-H):** the two probes are NOT co-based — dispatch on `ce51c36fc`, child-node
+on `c93fc4314` (a descendant, agglomerator-verified); "both PASS ⇒ gate closed" composes two verdicts
+across a base boundary. Each descent is individually clean; the composition is the XL-H nuance.
+
+### 0.3 `bounded_sum` is VERIFIED ABSENT from HEAD (agglomerator re-check — 2C's load-bearing primitive is worktree-only)
+At HEAD `90db093bf`, `crates/csp-solver/src/constraint/` = `{all_different, all_different_except,
+dispatch, implication, lambda, not_equal, scratch, traits, mod}` — **no `bounded_sum.rs`, no `Soft`**;
+`git grep bounded_sum|BoundedSum` over the tracked tree returns **empty**. Both critics flagged this
+(CRIT-1 F4, CRIT-2 CL-4); the agglomerator confirmed it on disk. The pass-1 registry recorded the
+propagator as "tested, RAN, +345 additive, 6/6" — that measurement was on a **divergent bank
+worktree** carrying `soft.rs`/`cardinality.rs`/a `Soft` variant the base lacks, entered via
+`ConstraintEnum::Custom`. **Landing + provenance reconciliation is a 2C convergence PREREQUISITE, not a
+footnote.** The solver-shape DESIGN verdict (B&B beats PBQP) stands — it is a sound *design* result —
+but the mechanism it selects does not exist on the measurement substrate (XL-A: skinny@HEAD is the only
+living implementation).
+
+### 0.4 What must be FITTED is DISTRIBUTION, not N (the pass's new sharp uncertainty, CRIT-1 F2)
+The shipping cost arm is `dispatch_table + N·dispatch_branch` vs `N·alt_per_branch` — a function of **N
+alone**. Real cyc/B is **distribution-dependent**: the dispatch probe's win at N=8 is *arithmetically
+guaranteed* by its uniform corpus (sequential's mean trial depth `(N+1)/2`). A fit that only recovers
+N*=3.0 from a uniform corpus fits the arithmetic, not the cost. This is the genuinely underexplored
+middle no probe touched, and it is precisely 2D's real content — the hit-distribution dependence, not
+the branch count. Opened as the pass-3 de-crowding question (§4), replacing the now-refuted PBQP
+formulation.
 
 ---
 
-## 2. Per-family ledger
+## 1. Per-family ledger
 
-### 2A — EGRAPH-ISLANDS · ADVANCED · 50%
-*Convergence: on-disk critics' floor (CRIT-1 50, CRIT-2 50). The prior draft's 55 cited stale critic
-numbers (55/58) from superseded drafts; corrected to the final on-disk 50/50. No named reason to
-exceed the floor — the PROTO-1 re-run confirmed machinery-not-broken but touched none of the island
-gaps, and CRIT-2's cross-lock island contests are additional, not priced-in.*
+### 2A — EGRAPH-ISLANDS · ADVANCED · 56%
+*Convergence: both critics' floor (CRIT-1 56, CRIT-2 56), up from pass-1's 50. The +6 is two
+decision-grade probe advances (DIRECTION measured, child-node BUILDABLE), both metabolized by the
+critics' 22:48 scoring. No named reason to exceed or drop below the floor: the binding live-consumer
+clause did not move, and distribution-blindness is priced additional, not into, the number.*
 
-Strongest-aligned; the directed-shell architecture (LLVM canonicalization spine + local islands at
-named chokepoints) is coherent, and its gate (i) — "child-bearing nodes OR genuinely constrained,
-else write it as a plain cost-ranked choice, do NOT island it" — genuinely can go RED (both critics
-credit this; it is not a gate-that-cannot-fail). The legacy tree's wired grammar e-graph is running
-proof the *canonicalization spine* ships.
+The lock's spine. The directed-shell architecture (LLVM canonicalization spine + local islands at named
+decision points *within* LOCK-3's tower, XL-B) is coherent, and gate (i) — "child-bearing survivors that
+CHANGE THE PICK under a fixed vector AND move cyc/B, else demote to a plain cost-ranked pass" — can
+genuinely go RED (both critics credit this). The dispatch probe measured the second conjunct (cyc/B);
+the child-node probe proved a child-bearing organ fits the flat arena. Both real.
 
 **Open gaps:**
-1. **Middle-IR ownership vs LOCK-3 unadjudicated (XL-B, NEW).** 2A's "directed spine, IR is an
-   annotated tree between islands" is itself a verdict on LOCK-3's tower. Speculative annexation of
-   LOCK-3 territory until GESTALT-B rules. Lowers the family.
-2. **Island A (regex-HIR canon) — un-evidenced AND doubly cross-lock-blocked (XL-E).** No proto
-   touched a regex leaf; open-Q(1) unanswered. LOCK-5 owns the lawful HIR (unrendered) AND its P1 lists
-   "fold into it **or abrogate**" the shared `rules/regex.rs` exemplar 2A wants to port; LOCK-5 P2:
-   grammar-driven regex SPEC-ONLY lock-wide. 2A's only child-bearing island depends on a verdict + a
-   substrate another lock has neither rendered nor decided to keep.
-3. **Island B (scan-plan) — sites absent from the IR; deriving substrate BLOCKED two locks deep
-   (XL-D).** `SimdSite::SelfLoop`/`SimdMode::Prefilter` do not exist (disk-confirmed). The
-   recognizer-derivation is not one dependency ("GN-2.W1 unbuilt") but blocked through LOCK-9 9C
-   (BLOCKED — "scanner-as-DFA") and LOCK-5 (grammar→DFA source-of-truth, SPEC-ONLY). "Same-wave
-   consumer that changes emitted code" is not present and not near-term.
-4. **Island C (projection canon) — double-homed with LOCK-1, and probably not an island (XL-F).**
-   `Project`@`passes/src/lib.rs:204` is LOCK-1's; PROTO-1's table-always-wins implies `map∘map` /
-   dead-projection are always-apply canonicalizations → by gate (i) they are plain rewrites, NOT
-   islands. The prior "LOCK-1's 1D is BANKED-vacuous → nothing to share" is a wrong-tree read: LOCK-1's
-   REGISTRY says its live 1B/1D substrate is "the shipped `crates/egraph`" running on root. Contested,
-   not vacated.
-5. **Island count unresolved; honest floor is 0 fully-instantiated in-tree islands this wave** (A
-   cross-lock+possibly-abrogated, B substrate-BLOCKED, C canonicalization). The family survives as a
-   *design* whose first instantiation is entirely downstream/cross-lock work.
-6. **The manufacturing rewrite's confluence with the all-narrowing set is untested** — the actual
-   R-1-null-breaking artifact, shown (§0) non-trivial in the project's own code; PROTO-1 hand-`union`ed.
-7. **GN-2.W1 supersession undeclared (clause ix)** — wf30 says Island B is "gated *behind*" GN-2.W1;
-   LOCK-9:176 places its four-tier lowering on Island B's plan predicate, so Island B is on LOCK-9's
-   critical path. The supersession must be NAMED (replacement / wrapper / waits-on), not "subsumes."
-8. **Clause-vi name-gate live in the file 2A restructures.** `has_rule("value")` at
-   `codegen/src/runtime_generator.rs:98` is a forbidden name-gate LOCK-3 flags; LOCK-2 is silent.
+1. **[MASTER — gate (i) live consumer, NOT closed] 0 child-bearing islands whose pick MOVES emitted
+   code.** Both probes left the floor at 0: I1 is a leaf-min; the child node discards `let _organ` /
+   `let _ = best_node`; regen-neutral *because* consumer-less (viii/Y.13). Needed: a production rewrite
+   that manufactures a real ≥2-survivor choice at the seam skinny calls, USES the pick, changes emitted
+   code, and proves parity to `DecisionNode` on every shipping rule. Until then the distinctive
+   extraction value (I2/I4 tree profiles) is SPEC-ONLY.
+2. **[MASTER — §0.2a, DISTRIBUTION not N] The crossover LOCATION is unfitted and the model is
+   distribution-blind (§0.4).** `dispatch_table + N·dispatch_branch` reads N alone; the deciding probe
+   used dispatch's best-case uniform corpus; N*=3.0 is an arithmetic artifact of two slopes, never
+   validated against a skewed corpus. The gate that fires on uniform hits cannot fail on its own test
+   corpus.
+3. **[SUBSTRATE — reframed] Buildability ANSWERED; the surviving question is PROMOTION** (CRIT-2 CL-2):
+   does skinny promote the child-bearing node to the shape decider — with a parity proof that its pick
+   equals `DecisionNode`'s on every shipping rule — or does it stay observational forever? The child
+   node has a substrate home but no throne. The pass-1 "adopt-and-prove port from legacy" is
+   **SUPERSEDED**: the node is authored fresh over the flat arena (`backend_egraph_bbnf.rs`), no legacy
+   DAG dragged.
+4. **[double-home, XL-F item 2 — pass-3 obligation the ledger SET and pass-2 SKIPPED] The Alt-lowering
+   decision double-homes with GN-2.W1's lowering predicate.** BOTH probes exercise an Alt-lowering pick;
+   the relation (**replaces / wraps / waits-on**) is still unnamed. research-B argues WRAPS with
+   evidence (the predicate's structural test survives as the rewrite's `search`; its verdict survives as
+   a candidate; the graph+cost owns the decision). Name it pass-3.
+5. **[XL-C] I2 regex-HIR canon WITHHELD** — lives at the ENGINE tier (parse-that), which XL-C ratifies
+   as the canonical home; awaits LOCK-5's lawful `Hir` rendering + keep/abrogate of `rules/regex.rs`.
+6. **[scan sites — see §3] I3 scan-plan: ≥2 IR-modeled competing sites** absent from the IR
+   (`SimdMode`/`SimdSite` single-valued, disk-confirmed); the derivation consumer is blocked in LOCK-9
+   9C / LOCK-5 territory; none of the source-real self-loop grammars (css/pretty=15, css/l4≥10) exist as
+   skinny `.bbnf` (json is the sole one). Consumer-blocked; NOT an authoritative XL-D matter (§3).
+7. **[XL-F, LOCK-1] I4 projection canon — probably an always-apply canonicalization, not an island.**
+   PROVE-12 monomorphized (const-fold, no e-graph) implies `map∘map`/dead-projection are always-apply →
+   by gate (i) a plain rewrite; double-homed with LOCK-1's `Project`@`passes/src/lib.rs:204`.
+8. **Confluence is per-rewrite × per-narrowing-set, not general.** `ManufactureDispatchAlt` is confluent
+   with the shipping all-narrowing set (`DeduplicateAltBranches` did 0 work — keys on branch-set, blind
+   to the dispatch dimension); a future narrowing rewrite could break it. No general guarantee.
 9. **`regen∘regen` byte-identity for a *plan-reading* consumer untested; ceremonial ~68-field
-   provenance deletion (gate v) unexercised.**
+   provenance deletion (gate v) unexercised** — no reader exists.
 
-**Pass-2 directives:** advance the canonicalization spine (anchored by the legacy exemplar); resolve
-the island count to a concrete N with a live consumer *only after* the XL-B tower fork is adjudicated;
-carry Islands A/C/B as WITHHELD pending cross-lock cession (§5). Do not island a decision that is a
-plain always-apply canonicalization.
+**Pass-3 directives:** build the REPLACING-not-observing consumer (gap 1 — the top mover); fit the
+crossover against a SKEWED corpus, not just sweep the integer boundary (gap 2/§0.4); name the GN-2.W1
+relation (gap 4, XL-F item 2); carry I2/I3/I4 WITHHELD pending the cross-lock cessions.
 
-### 2B — IR-IS-EGRAPH · BLOCKED · 32%
-*Convergence: on-disk critics' floor (CRIT-1 34, CRIT-2 32) → 32. The prior draft's 40 cited stale
-numbers (38/42) and reasoned upward from correcting a wrong-tree CRIT-2 that the FINAL CRIT-2 already
-corrected itself. No named reason to exceed the floor: feasibility is de-risked by the legacy exemplar,
-but distinctive value is triple-refuted and the primacy conflict is with LOCK-3, not 2A.*
+### 2B — IR-IS-EGRAPH · BANKED · 44%
+*Convergence: both critics' floor (CRIT-1 44, CRIT-2 44), up from pass-1's 32 — the jump is the
+BLOCKED-candidate LIFT (NP-hard objection refuted) + substrate buildability. Status changed BLOCKED →
+**BANKED**: both critics show it "converging into 2A"; per the crowding rule the redundant family banks,
+its assets folded into 2A, its distinctive thesis retired.*
 
-Blocked on the real fork (LOCK-2⊗LOCK-3 tower ownership, XL-B) and on genuinely untested skinny gates.
-The `Ref`-as-leaf / per-rule root-table insight is sound — and *already realized* in the legacy
-`write_back.rs` — raising this from "novel structural risk" to "adopt-and-prove a proven design."
+The BLOCKED-candidate condition is LIFTED. Context-freedom is RATIFIED on the STRUCTURAL argument —
+`admits_sink_only` (`passes/src/lib.rs:958`) takes **no caller argument**, `target` is one global
+`TargetFeatures::host()`, and the real conflict walk over the skinny fleet returned **0 conflicts,
+non-vacuously** (15 rules, 28 CallRule edges, 5 multi-caller rules, `pair`/`string` live sink-only
+witnesses). Any repair, if ever needed, is bounded sub-rule specialization — not optimal
+context-sensitive DAG extraction — and there is no conflict to repair. This is 2B's one genuine lift and
+it survives the fleet-thinness caveat (structure, not empirics: json is the sole skinny `.bbnf`).
 
-**Open gaps:**
-1. **The real fork is LOCK-2 ⊗ LOCK-3, not 2A ⊗ 2B (XL-B, NEW governing finding).** 2B deletes
-   `derive_backend_shape` and makes extraction the driver — seizing the seat LOCK-3's charter owns. A
-   GESTALT boundary call, mis-scoped as intra-lock.
-2. **The distinctive thesis is triple-refuted as inert.** "The IR *becomes* the e-graph; extraction
-   *is* the lowering" buys value over 2A's local canonicalization only if extraction chooses among >1
-   candidates. The legacy wired rule set is all-narrowing (§0); avg class ≈ aegraph's 1.13 is the
-   predicted reality. Absent a manufacturing rewrite, 2B reduces to "GVN/hash-consing for free," which
-   2A inherits from the shared engine. aegraph twin predicts residual ~0.1%.
-3. **Signature claim rests on an NP-hard repair (research-B risk 1).** "Extraction emits `BackendShape`
-   directly" presumes context-free per-class shape, but `admits_sink_only` (`passes/src/lib.rs:954`)
-   keys shape legality on the *caller's* target — a sub-rule under a `SinkOnly` caller and an
-   `OffsetTape` caller cannot extract one shape for both. Greedy per-class extraction is context-free.
-   The only identity-preserving repair — optimal context-sensitive DAG extraction — is **NP-hard,
-   inapproximable within any constant ratio** (prior-art [6][7]): a missing primitive of *equal
-   difficulty to the original problem*, the BLOCKED-candidate condition. LOCK-3's `DirectTypeKind` is
-   Struct-only / sum-node un-emittable — the algebra 2B depends on is itself incomplete. Whether the
-   fleet has any caller-conflict is a prototype-answerable `admits_sink_only` audit — **not run**.
-4. **Adopt-and-prove is unscoped, and the port DIRECTION is portfolio-contested (XL-A).** The legacy
-   exemplar sits in the tree LOCK-1 calls the *retiring base* and LOCK-5 may *abrogate* — so
-   PROVE-2B-PORT cannot even name its source of truth until the tree-of-record contradiction is
-   resolved.
-5. **Skinny compile-budget incl. teardown — untested** against ~230 µs; `CspScheduler` rebuilds a
-   fresh `Csp` each iteration (opposite of aegraph's no-rebuild lesson) — a pure-assertion scaling risk.
-6. **Skinny regen byte-identity through cost-guided extraction — untested** (total-order tie-break
-   obligation; `HashMap` iteration inadmissible). The extraction-crossover exhibit does not exist
-   in-IR. AC confluence of one-directional Seq/Alt normal-forming asserted, untested.
-7. **PROVE-12-as-rewrite anchored on a RETIRED target + double-homed (XL-C).** `find_component_delim`
-   is gone from skinny `codegen/` (disk-confirmed); PROVE-12 generalization is LOCK-3's charter + 3D's
-   family. Claimed without naming LOCK-3.
+**Why BANKED, not a standalone family:**
+1. **No distinct existence over 2A.** The ≥2 survivors the child-node probe showed are **manufactured**
+   by the widening rewrite (multiplicity 1 without it — triple-confirmed); the surviving node **is** 2A's
+   island node (same `BbnfNode`, same crossover arm); the maximal "extraction IS the decision driver"
+   reading is XL-B-refuted (LOCK-3's seat, CRIT-2 CL-6 confirms LOCK-2 kept this posture clean). The
+   lawful residual IS the 2A island posture. 2B is a **mechanism-span choice inside 2A** —
+   persistent-in-place substrate vs discrete build-teardown islands — not a family.
+2. **The mechanism-span question is UNMEASURED at scale (gate 4).** The whole-grammar organ
+   (build+saturate+extract+**teardown**) at CSS-L4 scale (2875 DTA states) within ~230 µs — "the single
+   most important open 2B measurement" — never ran, and CANNOT run on skinny (json only). The 19.7 µs is
+   one 6-branch json Alt; `CspScheduler` still rebuilds a fresh `Csp` per iteration (opposite the aegraph
+   no-rebuild lesson) — a pure-assertion scaling risk at the exact scale the substrate cannot exercise.
+3. **`regen∘regen` through COST-GUIDED extraction unproven at grammar scale.** `GrammarCostModel` returns
+   `f64` with a Vec tie-break; the total-order fix is owed. The child-node probe's check-json ×2 proves
+   regen neutrality of a *discarded* organ (byte-identical *because* it changes nothing), NOT determinism
+   of a cost-guided extraction that changes output.
 
-**Pass-2 directives:** the fork is LOCK-2⊗LOCK-3 (GESTALT-B), and the port direction is gated on XL-A
-— **resolve both before scoping PROVE-2B-PORT.** Then measure the legacy engine ported into skinny
-against budget + regen. Do NOT reopen "make the IR a Language" as greenfield — mine the legacy exemplar.
+**Banked assets folded into 2A:** context-freedom ratification; the child-node-over-flat-arena
+buildability proof (`backend_egraph_bbnf.rs`); the `Ref`-as-leaf / per-rule-root-table acyclicity insight.
 
-### 2C — CSP-CENTRAL · BANKED · 30%
-*Convergence: on-disk critics' floor (CRIT-1 42, CRIT-2 30) → 30. Banked, not scored on the 42 (which
-credited the propagator, now the surviving banked asset); the family-as-primacy takes CRIT-2's 30
-floor — as-primacy is Unison-refuted and the honest CONDITIONAL proto + the two-locks-deep consumer
-pull it there.*
+**Pass-3 directives:** do NOT reopen 2B as a standalone architecture or "make the IR a Language"
+greenfield. Its surviving question — persistent substrate vs build-teardown — is answered by the
+CSS-L4-scale organ measurement (2A gap; requires the fleet grammars as skinny `.bbnf` or a scaled
+synthetic). The buildability question is CLOSED; do not re-open it.
 
-**Redirect / crowding resolution (both critics concur):** 2C-as-primacy collapses to 2A Island B —
-the Unison ceiling (CSS-L4 2875 DTA states ≫ ~946-1000 proven-optimal/function) forbids the monolithic
-"one global COP per grammar," and the surviving "bounded post-solve over a small coupled sub-CSP" is
-operationally indistinguishable from Island B. **2C-as-primacy is RETIRED; its `bounded_sum`
-propagator (tested, RAN, +345 additive) survives as a banked asset folded into Island B.**
+### 2C — CSP-CENTRAL · BANKED · 50%
+*Convergence: CRIT-2 floor 50 (CRIT-1 52). Banked. The solver-shape DESIGN verdict is genuinely closed
+and decision-grade; the 50 (not higher) is the VERIFIED landing debt (§0.3) + the teeth remaining
+consumer-blocked/2D-dependent. No new 2C evidence ran this pass — both probes concern extraction/
+substrate, not the solver — so the number rides a prior design probe whose primitive I confirmed absent.*
 
-**Open gaps (inherited by Island B):**
-1. **Budget-binds-on-REAL-costs unproven** — shown only under synthetic Prefilter=300/Exact=100; the
-   sites' *real* static-size cost is 2D's territory (SPEC-ONLY). SPEC-ONLY resting on SPEC-ONLY.
-2. **Sites source-real but IR-latent + un-budgeted.** Abundant in source (css/pretty=15, css/l4≥10,
-   bbnf=2, csv=2) but `SelfLoop`/`Prefilter` absent from the IR and those grammars are not under the
-   skinny `generated_loc_budget` (only json is). Modeling them = GN-2.W1.
-3. **Consumer BLOCKED two locks deep (XL-D)** — not "GN-2.W1 unbuilt." 2C's teeth await a grammar→DFA
-   scan-derivation LOCK-5 owns unbuilt and LOCK-9 9C is BLOCKED on. End-to-end `regen∘regen` through a
-   plan-reader is therefore untested (check-json exit-0 proves only the plan changes nothing wired).
-4. **Degenerate without 2D** — without a fitted cost table the objective is `static_size_cost`, "a
-   CSP-shaped priority cascade with extra steps"; and 2D is SPEC-ONLY.
-5. **P1–P8 `PriorityStep` retirement is an unproven masked-fallback** — no selection-equivalence check
-   that the constraint form subsumes rather than preserves the cascade.
-6. **One-solver-home coordination with LOCK-1 1B unnamed (XL-G).** `bounded_sum` extends the same
-   csp-solver LOCK-1's constraint store centralizes; a GESTALT unification point neither map names.
+As-primacy stays RETIRED (pass-1, Unison ceiling: CP proven-optimal only to ~946–1000 instr/function;
+CSS-L4 = 2875 DTA states is off the cliff). What survives:
 
-**Underexplored formulation to OPEN (de-crowd):** **PBQP** (research-C prior art — LLVM `RegAllocPBQP`,
-Scholz & Eckstein 2002; per-node discrete choice with pairwise coupling cost matrices; "Instruction
-Selection Based on SSA-Graphs" companion). The scan-plan/backend-shape decision graph is *near-tree*
-(sites independent save the budget + a few coherence edges); PBQP is optimal-on-trees, linear on
-sparse graphs, and may be the correct solver shape for the coupled sub-CSP — sidestepping both
-generic-B&B cost and the Unison monolith. Nobody prototyped it; everyone reached for e-graph
-extraction or generic CSP. Opened as the underexplored middle.
-
-### 2D — PROFILE-CLOSED-LOOP · BLOCKED · 30%
-*Convergence: on-disk critics' floor (CRIT-1 30, CRIT-2 33) → 30. SPEC-ONLY, zero executed artifact,
-clause vii.*
-
-The loop discipline is sound and correctly precedented (AutoFDO/BOLT/Ansor); the load-bearing
-determinism invariant (loop closes at calibrate-time, not regen-time → `regen∘regen` survives) is
-non-negotiably right. But every empirical claim is untested.
+**The solver-shape DESIGN question is CLOSED (a real, earned design convergence).** On the fleet's
+scan-plan decision graphs (near-tree, treewidth ≤ 2), **B&B + `bounded_sum` wins outright**: it carries
+the global size budget natively as knapsack bound-consistency, optimal on every instance (3–35 nodes,
+<100 µs, matches brute force). **PBQP is ceremony**: it fully reduces (R0/R1/R2) but **cannot encode
+Σcost ≤ B as a pairwise cost**; its Lagrangian budget-dual carries an irremovable integrality gap
+(css-l4 slack obj 39.003 vs true 21.011) at ~10⁴× wall-clock; the only alternative — a degree-n
+budget-pressure node — destroys R0/R1/R2 reducibility. **This closes the pass-1 "open PBQP" question in
+the negative:** PBQP is REFUSED as the decider, surviving only as (a) the recognition that coherence +
+budget ARE the edges, (b) a possible home for a *soft/finite* coherence penalty IF one turns real (needs
+the absent `Soft` extension — untested, load-bearing only if finite coherence preferences exist).
 
 **Open gaps:**
-1. **Zero executed prototype** — PROVE-2D-A (fitted coefficient flips a decision AND wins cold-paired)
-   and PROVE-2D-B (freshness goes RED on mutation) never ran. PROTO-1's sign-flip is a *manual weight
-   swap*, NOT a fit from measured cyc/B. Under clause vii, 2D cannot anchor a perf claim until one runs.
-2. **Attribution underdetermination unresolved** — whole-grammar cyc/B, ~15 equations, dozens of
-   features → β unidentifiable. The A/B-differential primitive is *proposed*, chooses neither (the
-   elegant-reduction trap: the hard part is punted to "the prototype must choose").
-3. **The unblocked plane is cross-lock-owned (XL, NEW sharpening).** 2D's *entire* unblocked plane —
-   `select_backend`/`build_lo6_table` kernel crossover (LOCK-9 kernel territory), `CSS_SHUFTI_MIN_SPAN`
-   / `GATE=16` (GN-2 scanner knobs) — sits inside LOCK-9/GN land; the plane LOCK-2 owns (shape lattice)
-   is §0-BLOCKED. Applicability is exactly where the LOCK-2 generators don't need it AND another lock
-   owns the knob. Fitting these knobs supersedes hand-tuned GN literals — a named supersession (ix) the
-   spec treats as free attachment.
-4. **`from_env` masked-fallback not fenced off the regen path** — dual cost source; if regen reads env
-   when the table is absent, `regen∘regen` breaks. Fence env out of regen.
-5. **Freshness-gate teeth (gate 4) unbuilt** — "mutate a coefficient → `report.rs:1750` RED,
-   `check-calibration` fails" is the anti-provenance-theater guard 2D promises; no proto showed the
-   gate can go RED, so the anti-theater claim is itself presently provenance theater.
+1. **[LANDING — §0.3, VERIFIED] `bounded_sum` absent from `crates/csp-solver/src/constraint/` at HEAD.**
+   The propagator + 6/6 live in a divergent bank worktree (`soft.rs`/`cardinality.rs`/`Soft`), via
+   `ConstraintEnum::Custom`. Landing + provenance reconciliation is a convergence PREREQUISITE.
+2. **[teeth, consumer-blocked — see §3] ≥2 IR-modeled competing scan sites with REAL binding costs.**
+   Source says yes (css/pretty=15, css/l4≥10, bbnf=2, csv=2); the IR says no (`SimdMode`/`SimdSite`
+   single-valued); the `SelfLoop`/`Prefilter` node shape is LOCK-3's; **and none of those grammars are
+   skinny `.bbnf`.** Teeth are SPEC-ONLY on the substrate.
+3. **Degenerate without 2D.** Absent a fitted table the objective is `static_size_cost` — "a CSP-shaped
+   priority cascade with extra steps." Non-degeneracy leans entirely on 2D (zero fits run).
+4. **Soft/finite coherence penalty untested** — the one residual point PBQP's pairwise matrix could win;
+   unrepresentable in base B&B without the absent `Soft` extension; load-bearing only if finite coherence
+   preferences are real (unknown).
+5. **[one solver home — see §3] `bounded_sum` extends the same csp-solver LOCK-1 1B centralizes** — a
+   GESTALT-B unification point, contingent on gap 1's provenance reconciliation. This is **NOT an
+   authoritative XL-G matter** (XL-G = owner confirmations); it is a portfolio GESTALT-B point (§3).
 
-**Pass-2 directives:** 2D is a **composable layer under whichever generator wins** (not exclusive with
-any) — but it must ship ONE executed fit before it may speak of convergence, and it must name the
-LOCK-9/GN knob supersessions its only applicable plane touches. Prerequisite: a candidate generator
-with real per-site alternatives (Island B's real costs).
+**Pass-3 directives:** LAND `bounded_sum` from the bank tree and reconcile provenance BEFORE any
+"one-solver-home with LOCK-1" claim; keep PBQP RETIRED as decider (do not re-open); the teeth stay
+SPEC-ONLY pending the IR-modeled sites + a real consumer (a joint LOCK-3/LOCK-5/LOCK-9 obligation, §3).
+
+### 2D — PROFILE-CLOSED-LOOP · BLOCKED · 32%
+*Convergence: CRIT-1 floor 32 (CRIT-2 33). SPEC-ONLY, zero executed artifact (clause vii). The
+dispatch-cycb front is a hair of forward motion; the −2 from pass-1's 30 baseline is net of the F1
+evidence-staleness and the confirmation that the consumer 2D must co-land against does not yet exist.*
+
+The loop discipline is sound and correctly precedented (AutoFDO/BOLT/PGO; LLVM `getFunctionHash` →
+drop-on-mismatch is the direct freshness-gate precedent); the load-bearing determinism invariant — the
+loop closes at *calibrate-time, not regen-time*, so `regen∘regen` survives — is non-negotiably right.
+~70% of the substrate is present-but-inert. But every empirical claim is untested.
+
+**Open gaps:**
+1. **[MASTER, BINDING] Zero executed fit.** No coefficient fitted from PMU; no decision flipped by a
+   fitted value. The dispatch probe hands 2D a MEASURED front (the N=2/8 direction) but on hand-authored
+   lowerings, not an extraction pick; the child-node probe's real-seam front DISCARDS its pick. 2D still
+   has no live ≥2-survivor decision with a consuming reader to fit against — it must co-land with the
+   REPLACING-not-observing consumer (2A gap 1).
+2. **[§0.4] What must be fitted is DISTRIBUTION, not N.** A fit that recovers N*=3.0 from a uniform
+   corpus fits the arithmetic, not the cost. The fit's real content is the hit-distribution dependence no
+   probe has surfaced. This is the sharper form of the master-gate dependency after the dispatch probe.
+3. **Falsifiable freshness unexercised** — today's `check-calibration` `"pass"`/`0` stamps are theater
+   until a proto reddens the gate (mutate a coefficient → RED). The anti-theater claim is itself
+   provenance theater until then.
+4. **The only UNBLOCKED plane is cross-lock-owned** — `select_backend` kernel crossover (LOCK-9),
+   `CSS_SHUFTI_MIN_SPAN`/`GATE=16` (GN-2 scanner knobs). Fitting these supersedes hand-tuned GN literals
+   — a **named supersession (ix)** the spec must DECLARE, not attach freely. The plane LOCK-2 owns (shape
+   lattice) is master-gate-BLOCKED.
+5. **`from_env` masked-fallback** must stay fenced off the regen path (a CI grep-gate); attribution
+   ceiling = count of independently-toggleable levers with a paired bench — undisclosed, must be stated.
+
+**Pass-3 directives:** ship ONE executed fit — a fitted value FLIPS a real decision AND wins cold-paired
+AND drives freshness RED on mutation — before 2D may speak of convergence. Prerequisite: the live
+≥2-survivor decision at the real seam (2A gap 1). Fit DISTRIBUTION, not N. Name the LOCK-9/GN knob
+supersession.
 
 ---
 
-## 3. Cross-lock contradiction / double-home ledger (CRIT-2's core — the prior draft carried none of this)
+## 2. The two probes — RAN_MEASURED ledger
 
-The intra-lock incompatibility map (2A⊗2B, 2B⊗2C, 2A~2C) is entirely within LOCK-2. The load-bearing
-forks are **cross-lock**, and each lowers the family that touches it. These are the pass's
-highest-value new material and become GESTALT-B obligations (§5).
+| Probe | HEAD | Verdict | Earns | Does NOT earn |
+|---|---|---|---|---|
+| **PROVE-2-DISPATCH-CYCB** | `ce51c36fc` | PASS | The pick's DIRECTION tracks measured cyc/B (N=8 dispatch faster, N=2 sequential, 7/7 CIs both ways, ins/B corroborates) — §0.2b closed | The crossover FIT (§0.2a bracketed 2<N*≤8), the DISTRIBUTION dependence (uniform corpus = dispatch's best case), the PRODUCTION consumer (synthetic microbench) |
+| **PROVE-2-CHILD-NODE-IN-SEAM** | `c93fc4314` (descendant of the above) | PASS | A child-bearing tree-profile e-node is authorable over skinny's FLAT `GrammarIr` in-budget (19.7 µs), ≥2 survivors at real json `value`, regen-neutral — organ-SEPARABILITY, no XL-A inversion | The LIVE consumer (pick discarded, `let _organ`/`let _ = best_node`), the intrinsic multiplicity (≥2 is MANUFACTURED), the CSS-L4-scale organ (one small rule) |
 
-| # | Seam | Contradiction / double-home | Status |
+Both individually clean base descents; the composition crosses a base boundary (XL-H). Neither closes
+the binding hole: **0 child-bearing island whose pick MOVES emitted code.**
+
+---
+
+## 3. Cross-lock reconciliation (CRIT-2's distinctive finding — the pass-1 private lettering is SUPERSEDED)
+
+The pass-1 registry and the pass-2 FAMILY-SPECS cite a private XL-lettering (A..G) that **collides with
+the orchestrator's binding `CROSS-LOCK.md` (A..H)**. The ledger is the authority ("treat them as
+binding"); a citation by a letter that now names a *different* adjudication is an unverified cross-lock
+anchor. Verified against `CROSS-LOCK.md` this pass:
+
+| Substance (what LOCK-2 means) | pass-1/FAMILY-SPECS said | AUTHORITATIVE ledger letter | note |
 |---|---|---|---|
-| **XL-A** | **Tree-of-record** | **LOCK-1** REGISTRY: "Root is the greenfield base; **skinny retires**." **LOCK-3/5/7**: skinny is the live tree of record; legacy `crates/` is **archived by GN-0**. Contradictory across the portfolio. LOCK-2's whole port-INTO-skinny plan (§4 graft 3, PROVE-2B-PORT) assumes skinny is the destination; if LOCK-1's reading holds, the port direction **inverts** and legacy is the base. | **Gates PROVE-2B-PORT's very direction.** Unnamed by LOCK-2 until this pass. |
-| **XL-B** | **Middle-IR / decision-driver ownership** | LOCK-3 charter owns "the IR tower … the decision driver's seat." 2A/2B both re-shape it; 2B deletes `derive_backend_shape` and makes extraction the driver. | **The genuine primary fork** (NEW FINDING 2). Framed intra-lock; never adjudicated. |
-| **XL-C** | **PROVE-12 residualization** | Double/triple-homed: LOCK-2 (2B residual ruleset / 2A Island C), LOCK-3 charter ("PROVE-12 generalized"), LOCK-3 3D STAGED-RESIDUAL. research-B's `ConstFoldDelimMask` anchors on `find_component_delim` — **RETIRED from skinny codegen** (disk-confirmed). | LOCK-2 claims it without naming LOCK-3 co-owner; anchors on a dead site. |
-| **XL-D** | **Scan-derivation substrate** | Triple-homed: LOCK-2 Island B / 2C (`SelfLoop`/`Prefilter` derivation), LOCK-9 9C SCANNER-AS-DFA (**BLOCKED** — enabling substrate owned by LOCK-5, unbuilt), LOCK-5 continuum (grammar→DFA, SPEC-ONLY). | LOCK-2 treats the consumer as one near-term dependency; it is **BLOCKED two locks deep**. Unnamed. |
-| **XL-E** | **Regex-canon exemplar** | LOCK-2 Island A wants to *port* legacy `rules/regex.rs` (434 LOC). LOCK-5 P1: skinny "needs no grammar-tier regex e-graph … fold into it **or abrogate**"; LOCK-5 P2 SPEC-ONLY lock-wide. | LOCK-2 treats it as a port asset, not a possible LOCK-5 abrogation target. Half-named. |
-| **XL-F** | **Projection canon** | LOCK-2 Island C ("shared engine with LOCK-1") vs LOCK-1 1D + LOCK-1-owned `Project`@204. LOCK-2's "1D vacuous → nothing to share" is a wrong-tree read: LOCK-1's live 1B/1D substrate = "the shipped `crates/egraph`" on root. | Double-homed; resolved only by an unverified tree-read. |
-| **XL-G** | **One solver home** | LOCK-2 2C + LOCK-1 1B ONE-CONSTRAINT-STORE ("the csp-solver crate is the engine"). Portfolio GESTALT asks "one solver home?". | `bounded_sum` correctly homed (parsimony credit), but the net-new extension is uncoordinated with LOCK-1's store. Lesser, positive-adjacent. |
+| Tree of record | XL-A | **XL-A — TREE OF RECORD** ✓ | correct. skinny@HEAD = MEASUREMENT SUBSTRATE; ports scope organ-level. |
+| Middle-IR / decision-driver ownership | XL-B | **XL-B — TOWER OWNERSHIP** ✓ | correct (WORKING, final at GESTALT-B). CRIT-2 CL-6: LOCK-2 kept this clean. |
+| Regex-canon exemplar (I2) | "XL-E" (private) | **XL-C — THE REGEX AXIS** | re-anchor. XL-C ratifies engine-tier `Hir` at parse-that; I2 WITHHELD there. |
+| Scan-derivation / `SelfLoop`/`Prefilter` consumer | "XL-D" (private) | **XL-F — NAMED SUPERSESSIONS, item (2)** + LOCK-9 9C / LOCK-5 registries | re-anchor. Authoritative XL-D = TS EXECUTION FACE (unrelated). The GN-2.W1 predicate supersession lives under XL-F(2); the consumer-blocked substance is a portfolio fact, not an XL-lettered adjudication. |
+| GN-2.W1 lowering-predicate relation | (unnamed) | **XL-F item (2)** — "replaces/wraps/waits-on to be confirmed pass-3" | the ledger SET this obligation; pass-2 SKIPPED it (CRIT-2 CL-3). Name it pass-3 (research-B: WRAPS). |
+| Projection canon (I4) double-home | "XL-F" (private) | LOCK-1 1D + LOCK-1-owned `Project`@204 | re-anchor. Authoritative XL-F = named supersessions (unrelated to projection). A portfolio double-home, not an XL letter. |
+| One solver home with LOCK-1 1B | "XL-G" (private) | (no ledger letter) — GESTALT-B portfolio point | re-anchor. Authoritative XL-G = OWNER CONFIRMATIONS (unrelated). "one solver home" is a GESTALT-B unification point, contingent on `bounded_sum` landing (§0.3). |
+| Base law (measurements name HEAD) | XL-H | **XL-H — BASE LAW** ✓ | correct. The two probes' cross-base composition is the live XL-H nuance (§2). |
+
+**Consequence:** every load-bearing "consumer BLOCKED (XL-D)" and "one-solver-home (XL-G)" claim in the
+prior body inherited the mis-anchor. The SUBSTANCE holds (scan sites genuinely un-IR-modeled; the solver
+genuinely should unify with LOCK-1), but the letters are corrected here and the pass-3 synthesis must
+carry only authoritative letters. This is a cross-lock discipline defect the within-lock critic could not
+see — binding, and folded.
 
 ---
 
-## 4. Crowding, cross-pollination, and the forks
+## 4. Crowding, cross-pollination, and the fork
 
-**RETIRED for crowding:** 2C-as-primacy → folded into 2A Island B (both critics concur; Unison-refuted
-monolith). The `bounded_sum` propagator survives as the banked mechanism.
+**RETIRED / BANKED for crowding:**
+- **2C-as-primacy** — RETIRED pass-1 (Unison). Stays retired.
+- **2B-as-a-family** — BANKED into 2A this pass (both critics: "converges into 2A"). Its distinctive
+  "extraction IS the decision driver" thesis is XL-B-refuted; its multiplicity>1 claim is
+  manufactured-not-intrinsic; its lawful residual IS 2A's island posture. Assets folded (§1/2B).
+- **PBQP-as-decider** — CLOSED (refused) this pass by the solver-shape verdict. The pass-1 "opened PBQP
+  as the underexplored near-tree solver" question is ANSWERED in the negative (§1/2C).
 
-**OPENED to de-crowd:** PBQP as the near-tree solver formulation for the coupled scan-plan sub-CSP
-(§2C) — the underexplored middle between e-graph extraction and generic B&B.
+**OPENED to de-crowd (replacing the closed PBQP question):** the **distribution-aware cost model**
+(§0.4). The cost arm reads N alone; real cyc/B depends on alt-hit distribution; the uniform corpus is
+dispatch's arithmetic best case. Does a first-set-frequency-weighted / distribution-aware Alt cost arm
+change the pick on a skewed corpus, and can 2D fit the hit-distribution dependence? This is the genuinely
+underexplored middle no model or probe addressed, and it is 2D's real content.
 
 **Cross-pollination grafts (both families developed enough; named + justified):**
-1. **2C `bounded_sum` → 2A Island B solver.** PROTO-2's tested, RAN propagator *is* Island B's budget
-   knapsack. The primary graft; the seam both families always touched. **Coordinate with LOCK-1 1B
-   (XL-G) — one solver home.**
-2. **2D fitted per-site costs → Island B objective.** Replaces PROTO-2's synthetic Prefilter=300/
-   Exact=100 with fitted cyc/B. Gated on 2D running one fit; the fit touches LOCK-9/GN knobs (name the
-   supersession).
-3. **Legacy `crates/ir/src/egraph/` → 2A/2B skinny port.** A *working, wired, in-project* exemplar of
-   `GrammarENode: Language` / `write_back` / `rules/regex.rs` / `analysis/`. **CONDITIONAL on XL-A** —
-   the port direction is portfolio-contested; if LOCK-1's tree-of-record reading holds, this graft
-   inverts. Its all-narrowing rule set is also the decisive §0 datum (canon-suffices).
+1. **2C `bounded_sum` → 2A Island B solver** — the primary graft, the seam both families always touched.
+   **Now gated on the VERIFIED landing debt (§0.3):** the propagator must LAND from the divergent bank
+   before the graft is real. Coordinate with LOCK-1 1B (one solver home, a GESTALT-B point — NOT XL-G).
+2. **2D fitted per-site costs → Island B objective** — replaces the synthetic Prefilter=300/Exact=100
+   with fitted cyc/B. Sharpened by the dispatch probe (the direction reversal is 2D's first real
+   cost-fact) AND by §0.4 (the fit's real content is distribution, not N). Gated on 2D running one fit.
+3. **Child-node organ (`BbnfNode` over flat arena) + measured direction → the PROMOTION mover.** The two
+   probes together de-risk the master gate; the graft is to PROMOTE `BbnfNode` to the shape decider (or a
+   co-decider at the Alt-lowering point), fed by 2D's distribution-aware fit, selected via 2C's B&B +
+   `bounded_sum` where the budget couples. **This SUPERSEDES pass-1's "port the legacy `crates/ir/egraph`
+   into skinny" graft** — the child node is authored fresh over the flat arena, no legacy DAG dragged, no
+   XL-A inversion (a named supersession of pass-1 graft 3, driven by PROVE-2-CHILD-NODE).
 
-**Primary fork — RE-LOCATED (NEW FINDING 2):** the fork is **LOCK-2 ⊗ LOCK-3** (does graph-opt govern
-the middle IR's SHAPE, or operate as a tactic within a LOCK-3-owned tower?), **not** the intra-lock
-2A⊗2B the prior draft named. 2A⊗2B is a sub-question decided only after the tower's owner is set. This
-is a GESTALT-B call, not a LOCK-2 pass.
+**The primary fork — RE-STATED, NARROWED.** It remains **LOCK-2 ⊗ LOCK-3** (XL-B tower ownership,
+WORKING, final at GESTALT-B), and CRIT-2 CL-6 confirms LOCK-2 held the posture clean (no encroachment on
+LOCK-3's seat). But the child-node probe NARROWS it: the buildability horn is answered (a child-bearing
+node IS authorable in skinny), so the surviving GESTALT-B question is **PROMOTION** — does skinny promote
+the child-bearing node to the shape decider (with a parity proof vs `DecisionNode`), or does it stay
+observational forever? The intra-lock 2A⊗2B fork is DISSOLVED (2B BANKED into 2A).
 
 ---
 
-## 5. Pass-2 briefs (what to prototype · what research must answer · what stays withheld)
+## 5. Pass-3 briefs (what to prototype · what research must answer · what stays withheld)
 
-**CROSS-LOCK ADJUDICATION FIRST (blocks the movers below until GESTALT rules):**
-- **XL-A tree-of-record — the top gate.** Resolve LOCK-1 ("skinny retires") vs LOCK-3/5/7 ("skinny is
-  the tree of record; legacy archived by GN-0"). PROVE-2B-PORT's direction and graft 3 both invert on
-  the answer. Cannot scope the port until this lands.
-- **XL-B LOCK-2/LOCK-3 middle-IR ownership** — the genuine primary fork. Does graph-opt own the tower's
-  shape or operate within it? Promote to GESTALT-B.
-- **XL-D LOCK-2/LOCK-5/LOCK-9 scan-derivation home** — Island B's consumer is BLOCKED two locks deep;
-  name the owner.
-- **XL-E Island A** — LOCK-5 cession vs abrogation of `rules/regex.rs`. **XL-F Island C** — LOCK-1's
-  `Project` + live root egraph. **XL-G** — one solver home with LOCK-1 1B.
-- **GN-2.W1 supersession must be NAMED (clause ix)** before Island B lands (replacement/wrapper/waits-on).
-
-**PROTOTYPE (the movers, gated on the adjudications above):**
-- **PROVE-2-BRANCH-v2 — the real, non-synthetic §0 test, IN SKINNY.** (a) MEASURE the legacy wired
-  grammar e-graph's *actual* average e-class size after saturation on the fleet grammars (it runs at
-  `crates/core/.../pipeline.rs:218`) — if ≈1.13, canon-suffices is the honest §0 answer; if
-  meaningfully >1, extraction is live. (b) Author a REAL registered `ManufactureDispatchAlt` rewrite
-  fired through `CspScheduler` and PROVE it **confluent with the all-narrowing set + terminating** —
-  the step both PROTOs and both critics flag as the unbuilt load-bearing core. (c) Re-measure Part B
-  cyc/B at REAL value-start positions only (post ws-skip). (d) Do it **in skinny**, not legacy — the
-  prior PROTO-1 ran on `bbnf-ir = crates/ir = legacy`.
-- **PROVE-2B-PORT — 2B's mover, gated on XL-A.** Port the legacy `crates/ir/src/egraph/` into skinny;
-  measure build+saturate+extract+**teardown** against ~230 µs and `regen∘regen` byte-identity through
-  cost-guided extraction. Also run the `admits_sink_only` caller-conflict audit (does the fleet even
-  have one — if not, the NP-hard objection is moot).
-- **PROVE-2C-REALCOST — Island B / 2C teeth on real costs.** Build the `SelfLoop`/`Prefilter` IR
-  extension (XL-D-owner-permitting) so sites are IR-modeled; feed the `bounded_sum` CSP GN-2.W1-lowered
-  (or 2D-fitted) real static-size + cyc/B; does the budget STILL bind? End-to-end `regen∘regen` through
-  a real consumer. Compare B&B vs a **PBQP** formulation on solve cost.
-- **PROVE-2D-A/B — 2D's first executed artifact.** Pick `select_backend` kernel crossover
-  (`dispatch.rs:89`) or `CSS_SHUFTI_MIN_SPAN`; A/B-differential fit; prove a fitted value flips a
-  decision AND wins cold-paired AND drives `report.rs:1750` freshness RED on mutation. Name the LOCK-9/
-  GN knob supersession.
+**PROTOTYPE (the movers):**
+- **PROVE-2-PROMOTE — the REPLACING-not-observing consumer (THE top mover, both critics' bottom line).**
+  A production rewrite that manufactures a real ≥2-survivor choice at the seam skinny calls, USES the
+  extraction pick (not `let _ = best_node`), CHANGES emitted code, and proves parity to `DecisionNode` on
+  every shipping rule (so regen stays byte-identical where the shape is unchanged, and DIVERGES exactly
+  and only where the measured pick is genuinely better). This is the one artifact both probes stepped
+  around; it converts gate (i)'s live-consumer clause from 0 to 1 and is the sole route to
+  "extraction-as-decider EARNED in production."
+- **PROVE-2-DIST — the distribution-aware crossover FIT (§0.2a/§0.4).** Re-run the cyc/B measurement on a
+  SKEWED corpus (first alt matches 95% of value-starts) and sweep the integer boundary; show whether the
+  N-only model mis-decides in the N=3..5 band, and whether a first-set-frequency-weighted cost arm fixes
+  it. This is simultaneously 2D's first fit target.
+- **PROVE-2-ORGAN-SCALE — the CSS-L4-scale organ (2B gate 4, never run).** build+saturate+extract+
+  **teardown** at ~2875 DTA states within ~230 µs, on a fleet grammar authored as skinny `.bbnf` or a
+  scaled synthetic; settles persistent-substrate vs build-teardown and the `CspScheduler`-rebuild scaling
+  risk.
+- **PROVE-2D-FIT — 2D's first executed fit.** Fit a coefficient from A/B-differential PMU; prove it FLIPS
+  a real decision, wins cold-paired, drives `check-calibration` RED on mutation. Prerequisite: PROVE-2-
+  PROMOTE's live ≥2-survivor decision. Name the LOCK-9/GN knob supersession.
+- **LAND `bounded_sum`** from the divergent bank into `crates/csp-solver/src/constraint/` and reconcile
+  provenance; re-run the 6/6 on the substrate. Prerequisite to any "one solver home" claim.
 
 **RESEARCH MUST ANSWER:**
-- Does the legacy-exemplar port stay in the skinny compile budget + regen fixpoint — and in which
-  direction (XL-A)?
-- Does any fleet grammar present ≥2 *IR-modeled* competing scan sites with *real* binding costs (source
-  says yes; IR says no; who builds the bridge, XL-D)?
-- Is PBQP the right solver shape for the near-tree coupled sub-CSP (vs generic B&B / e-graph extraction)?
-- Does the fleet have any `admits_sink_only` caller-conflict (moots or activates 2B's NP-hard objection)?
+- Does a distribution-aware (first-set-frequency-weighted) cost arm change the pick where the N-only model
+  does not — and does the N-only model mis-decide on any real fleet grammar in the N=3..5 band?
+- What is the CSS-L4-scale organ's build+saturate+extract+teardown cost against ~230 µs, and does the
+  per-iteration `Csp` rebuild scale?
+- The GN-2.W1 relation (XL-F item 2): replaces / wraps / waits-on — with evidence (research-B: WRAPS).
+- Does the fleet ever present ≥2 *IR-modeled* competing scan sites with *real binding* costs — who owns
+  building the `SelfLoop`/`Prefilter` node shape (LOCK-3) and the derivation (LOCK-5/LOCK-9)?
 
 **WITHHELD FROM RESEARCHERS (do not re-open):**
-- 2C-as-primacy (RETIRED; Unison-refuted). Researchers receive only the `bounded_sum`-as-Island-B
-  solver framing + the PBQP alternative.
-- The census: settled (§0) — **both final critics AGREE** skinny has no grammar e-graph; legacy
-  `crates/` has a wired one. Do NOT re-audit; do NOT re-litigate as a critic dispute (the prior draft's
-  framing was against superseded critic drafts; the on-disk critiques concur).
-- Islands A/B/C active prototyping — withheld pending cross-lock cession (§5 adjudications).
-- 2A⊗2B as the "primary fork" — it is a sub-question of XL-B; do not treat as the top fork.
+- **PBQP-as-decider** — CLOSED/refused this pass (budget not encodable as pairwise cost; Lagrangian gap;
+  degree-n node destroys reducibility). Researchers receive only B&B + `bounded_sum` as the solver home,
+  and the SOFT-coherence-penalty residual as the *only* surviving PBQP-shaped question (IF finite
+  coherence preferences turn real).
+- **2C-as-primacy** — RETIRED (Unison). Stays retired.
+- **Buildability of a child-bearing node in skinny** — ANSWERED (child-node probe). The surviving
+  question is PROMOTION; do not re-open "is it buildable" or "port from legacy" (superseded).
+- **The census** — settled: skinny has no grammar e-graph; the child-bearing node is authored fresh over
+  the flat arena, NOT ported from legacy. Do not re-audit; do not frame as a legacy port.
+- **2A⊗2B as a "primary fork"** — dissolved (2B BANKED into 2A). The fork is LOCK-2⊗LOCK-3 (XL-B),
+  narrowed to PROMOTION.
+- **The private XL-lettering** — superseded by the authoritative ledger (§3). Cite only `CROSS-LOCK.md`
+  letters A..H going forward.
 
 ---
 
 ## Pass history
 
+### Pass 2 (agglomerated from research-{A,B,C,D,priorart}, FAMILY-SPECS [22:27, stale ×2], PROTO-2-CHILD-NODE-IN-SEAM + PROTO-2-DISPATCH-CYCB [both RAN_MEASURED PASS], the on-disk CRIT-1/CRIT-2, CROSS-LOCK.md A..H)
+- **Two probes RAN_MEASURED, both PASS, both softer than their verdict lines.** Dispatch-cycb: the
+  pick's DIRECTION tracks measured cyc/B (7/7 CIs both ways) — §0.2b closed; residual = the crossover
+  FIT unfitted, corpus uniform (distribution-blind), consumer synthetic. Child-node: a child-bearing
+  e-node is BUILDABLE over skinny's flat arena in-budget — but its pick is DISCARDED (consumer-less,
+  regen-neutral *because* consumer-less) and its ≥2 is MANUFACTURED. **The binding hole — 0
+  child-bearing island whose pick MOVES emitted code — is UNCHANGED.**
+- **`bounded_sum` VERIFIED ABSENT from HEAD** (`90db093bf`, agglomerator re-check): 2C's solver-shape
+  DESIGN verdict (B&B beats PBQP) stands, but its load-bearing primitive is worktree-only — EARNED-in-a-
+  worktree, not on the substrate. Landing is a convergence prerequisite.
+- **Cross-lock lettering RECONCILED** (CRIT-2's distinctive finding): the pass-1 private A..G collides
+  with the authoritative `CROSS-LOCK.md` A..H; §3 re-anchors every citation (regex→XL-C, GN-2.W1→XL-F(2),
+  one-solver-home→GESTALT-B-not-XL-G, scan-derivation→XL-F(2)+LOCK-9/5 not XL-D).
+- **Dispositions:** 2A ADVANCED 56 (spine; two probe advances; binding live-consumer hole unmoved);
+  2B **BANKED** 44 (BLOCKED-candidate LIFTED via context-freedom RATIFIED, converges into 2A, assets
+  folded); 2C **BANKED** 50 (solver-shape DESIGN closed, `bounded_sum` verified-absent, teeth latent);
+  2D BLOCKED 32 (SPEC-ONLY, zero fit; dispatch front is a target but distribution, not N, is the content).
+- **Crowding:** 2B banked into 2A; PBQP CLOSED (refused, not just opened); OPENED the distribution-aware
+  cost model as the new underexplored middle. Primary fork re-stated LOCK-2⊗LOCK-3 (XL-B), NARROWED to
+  PROMOTION (buildability answered). Pass-1 "legacy port" graft SUPERSEDED by the flat-arena child node.
+- **Top pass-3 mover:** the REPLACING-not-observing consumer (PROVE-2-PROMOTE) — the one artifact both
+  probes stepped around.
+
 ### Pass 1 (agglomerated from research-{A,B,C,D,priorart}, FAMILY-SPECS, PROTO-1/2 [RAN_MEASURED], the FINAL on-disk CRIT-1/CRIT-2)
-- **Correction of the prior draft:** the earlier registry draft was agglomerated from *superseded*
-  critic drafts — it cited convergence numbers (2A 55/58, 2B 38/42, 2C 32/50, 2D 40/33) that do NOT
-  match the on-disk final critiques (2A 50/50, 2B 34/32, 2C 42/30, 2D 30/33), and framed §0 as a
-  two-tree "census dispute" that the FINAL critiques do not have (CRIT-2 re-anchored on disk and
-  concurs with CRIT-1). Numbers corrected to the on-disk floor: **2A 50, 2B 32, 2C 30, 2D 30.**
-- **Two NEW governing findings folded in** (absent from the prior draft): (1) CRIT-1 — PROTO-1 ran on
-  the LEGACY tree (`bbnf-ir = crates/ir`), so the sharpest uncertainty was tested on the wrong
-  codebase; the legacy→skinny port is the unbuilt core no family scopes ("adopt-and-prove," not
-  "build"/"delete"). (2) CRIT-2 — LOCK-2 mislocates its primary fork: the real fork is **LOCK-2⊗LOCK-3**
-  (middle-IR / decision-driver ownership), not intra-lock 2A⊗2B; plus a full cross-lock ledger
-  (XL-A..XL-G) the prior draft carried none of.
+- **Correction of the prior draft:** the earlier registry draft cited superseded critic numbers (2A
+  55/58, 2B 38/42, 2C 32/50, 2D 40/33) and framed §0 as a two-tree "census dispute" the FINAL critiques
+  do not have (CRIT-2 re-anchored on disk, concurs). Corrected to the on-disk floor: 2A 50, 2B 32, 2C 30,
+  2D 30.
+- **Two NEW governing findings folded in:** (1) PROTO-1 ran on the LEGACY tree (`bbnf-ir = crates/ir`) —
+  the sharpest uncertainty tested on the wrong codebase; the legacy→skinny port was the unbuilt core no
+  family scoped ("adopt-and-prove", not "build"/"delete"). *[Pass-2 SUPERSEDES: the child-node probe
+  authored the node fresh over the flat arena — no legacy port needed.]* (2) LOCK-2 mislocated its primary
+  fork: the real fork is LOCK-2⊗LOCK-3 (middle-IR / decision-driver ownership), not intra-lock 2A⊗2B;
+  plus the cross-lock ledger.
 - **Decisive §0 datum retained:** the legacy tree's own wired rule set is all-narrowing → §0
   triple-confirmed (R-1 null + aegraph 1.13 + in-project all-narrowing set). Canonicalization is the
-  value; extraction is inert absent an unbuilt, unproven-confluent manufacturing rewrite.
-- **Prototypes RAN_MEASURED:** PROTO-1 → machinery-not-broken (on legacy), NOT extraction-decision-real
-  (in skinny); confirmed within noise; the fired/confluent rewrite is still unbuilt. PROTO-2 →
-  propagator works + regen byte-identical (of a plan nothing reads), teeth source-real but IR-latent /
-  un-budgeted / consumer-less; budget binds only on synthetic costs. Both verdicts softened to the
-  critics' floor.
-- **Dispositions:** 2A ADVANCED 50 (core spine, cross-lock-contested islands); 2B BLOCKED 32 (net-new
-  in skinny, de-risked by legacy exemplar, distinctive value refuted, real fork is XL-B); 2C BANKED 30
-  (as-primacy RETIRED → Island B; propagator banked; teeth source-real IR-latent); 2D BLOCKED 30
-  (SPEC-ONLY, zero fits, unblocked plane is LOCK-9/GN-owned).
-- **Crowding:** retired 2C-as-primacy into Island B; opened PBQP as the underexplored near-tree solver
-  formulation. **Primary fork re-located to LOCK-2⊗LOCK-3 (XL-B).** Tree-of-record (XL-A) gates the
-  port direction — promoted to the top GESTALT-B obligation.
+  value; extraction is inert absent a manufacturing rewrite. *[Pass-2: the manufacturing rewrite
+  (`ManufactureDispatchAlt`) fires confluent + terminating, so extraction is ALIVE — but its pick is
+  discarded, so the consumer floor holds.]*
+- **Prototypes RAN_MEASURED:** PROTO-1 → machinery-not-broken (on legacy), not extraction-decision-real
+  (in skinny). PROTO-2 → propagator works + regen byte-identical (of a plan nothing reads), teeth
+  source-real but IR-latent. *[Pass-2: PROTO-2's `bounded_sum` verified NOT at HEAD — worktree-only.]*
+- **Dispositions:** 2A ADVANCED 50; 2B BLOCKED 32; 2C BANKED 30 (as-primacy RETIRED → Island B);
+  2D BLOCKED 30. **Crowding:** retired 2C-as-primacy into Island B; opened PBQP as the underexplored
+  near-tree solver. Primary fork re-located to LOCK-2⊗LOCK-3 (XL-B). Tree-of-record gated the port
+  direction. *[Pass-2: PBQP CLOSED/refused; port direction MOOT (flat-arena node).]*
+</content>
+</invoke>

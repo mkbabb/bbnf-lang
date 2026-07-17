@@ -191,99 +191,6 @@ index 60dabb151..1f027dde8 100644
          BackendExpr::CallRule { callee } => {
              ops.push(format!("{}_call_rule({callee})", flavor.prefix()));
          }
-diff --git a/skinny/crates/ir/src/lib.rs b/skinny/crates/ir/src/lib.rs
-index d7efca4e5..66eed2f8b 100644
---- a/skinny/crates/ir/src/lib.rs
-+++ b/skinny/crates/ir/src/lib.rs
-@@ -409,6 +409,19 @@ pub enum BackendExpr {
-         target: String,
-         ty: Option<String>,
-     },
-+    /// A direct byte-class scan (the RATIFIED direct-scan-default lowering of a
-+    /// FOLLOW-sound / bounded-give-back regex leaf). `set` is the 256-bit member
-+    /// class as four little-endian words; `min`/`max` are the repeat bounds (`+`
-+    /// → min 1, `*` → min 0); `follow` is the FOLLOW-guard literal the scan halts
-+    /// BEFORE (empty when the leaf is genuinely disjoint and needs no guard) —
-+    /// this is the `Seq[Repeat, FOLLOW-guard]` fusion collapsed into one node.
-+    ByteClass {
-+        set: [u64; 4],
-+        min: u32,
-+        max: Option<u32>,
-+        follow: Vec<u8>,
-+        span_kind: SpanKind,
-+    },
-     Return,
- }
- 
-@@ -419,11 +432,40 @@ pub enum Recognizer {
-         alphabet: StructuralAlphabet,
-         site: SimdSite,
-     },
-+    /// A direct byte-class recognizer emitted for a leaf whose first-set is NOT
-+    /// disjoint from its FOLLOW (the masked-wildcard `match_leaf` over-consumes
-+    /// there): `set` is the member class, `follow` the FOLLOW-guard literal the
-+    /// scan halts before, `site` where it runs.
-+    ByteClass {
-+        set: [u64; 4],
-+        follow: Vec<u8>,
-+        site: SimdSite,
-+    },
- }
- 
- #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
- pub enum SimdMode {
-     Exact,
-+    /// Membership scan over a 256-bit byte class (four little-endian words).
-+    ByteClass([u64; 4]),
-+}
-+
-+/// Build a 256-bit byte-class bitset (four little-endian words) from inclusive
-+/// byte ranges — the representation `SimdMode::ByteClass` / `BackendExpr::ByteClass`
-+/// carry. `byteset_contains` is the membership test the emitted scan compiles to.
-+pub fn byteset_from_ranges(ranges: &[(u8, u8)]) -> [u64; 4] {
-+    let mut set = [0u64; 4];
-+    for &(lo, hi) in ranges {
-+        for b in lo..=hi {
-+            set[(b >> 6) as usize] |= 1u64 << (b & 63);
-+        }
-+    }
-+    set
-+}
-+
-+/// Membership test for a 256-bit byte-class bitset.
-+pub fn byteset_contains(set: &[u64; 4], byte: u8) -> bool {
-+    (set[(byte >> 6) as usize] >> (byte & 63)) & 1 == 1
- }
- 
- #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
-index 0133bcc64..12051e531 100644
---- a/skinny/crates/passes/src/lib.rs
-+++ b/skinny/crates/passes/src/lib.rs
-@@ -977,6 +977,7 @@ pub mod recognizers {
-             } => children.iter().any(contains_direct_build),
-             BackendExpr::ByteLiteral(_)
-             | BackendExpr::RegexProgram { .. }
-+            | BackendExpr::ByteClass { .. }
-             | BackendExpr::CallRule { .. }
-             | BackendExpr::SpanMark { .. }
-             | BackendExpr::TapeEmit { .. }
-@@ -999,6 +1000,7 @@ pub mod recognizers {
-                 .any(|child| contains_tape_kind(child, needle)),
-             BackendExpr::ByteLiteral(_)
-             | BackendExpr::RegexProgram { .. }
-+            | BackendExpr::ByteClass { .. }
-             | BackendExpr::CallRule { .. }
-             | BackendExpr::SpanMark { .. }
-             | BackendExpr::DirectBuild { .. }
-@@ -1016,6 +1018,7 @@ pub mod recognizers {
-             BackendExpr::Seq(children) => children.iter().map(alt_branch_count).max().unwrap_or(0),
-             BackendExpr::ByteLiteral(_)
-             | BackendExpr::RegexProgram { .. }
-+            | BackendExpr::ByteClass { .. }
-             | BackendExpr::CallRule { .. }
-             | BackendExpr::SpanMark { .. }
-             | BackendExpr::TapeEmit { .. }
 diff --git a/skinny/crates/codegen/tests/byteclass_lower.rs b/skinny/crates/codegen/tests/byteclass_lower.rs
 new file mode 100644
 index 000000000..3a71d6ecf
@@ -570,3 +477,96 @@ index 000000000..3a71d6ecf
 +        CORPUS.len()
 +    );
 +}
+diff --git a/skinny/crates/ir/src/lib.rs b/skinny/crates/ir/src/lib.rs
+index d7efca4e5..66eed2f8b 100644
+--- a/skinny/crates/ir/src/lib.rs
++++ b/skinny/crates/ir/src/lib.rs
+@@ -409,6 +409,19 @@ pub enum BackendExpr {
+         target: String,
+         ty: Option<String>,
+     },
++    /// A direct byte-class scan (the RATIFIED direct-scan-default lowering of a
++    /// FOLLOW-sound / bounded-give-back regex leaf). `set` is the 256-bit member
++    /// class as four little-endian words; `min`/`max` are the repeat bounds (`+`
++    /// → min 1, `*` → min 0); `follow` is the FOLLOW-guard literal the scan halts
++    /// BEFORE (empty when the leaf is genuinely disjoint and needs no guard) —
++    /// this is the `Seq[Repeat, FOLLOW-guard]` fusion collapsed into one node.
++    ByteClass {
++        set: [u64; 4],
++        min: u32,
++        max: Option<u32>,
++        follow: Vec<u8>,
++        span_kind: SpanKind,
++    },
+     Return,
+ }
+ 
+@@ -419,11 +432,40 @@ pub enum Recognizer {
+         alphabet: StructuralAlphabet,
+         site: SimdSite,
+     },
++    /// A direct byte-class recognizer emitted for a leaf whose first-set is NOT
++    /// disjoint from its FOLLOW (the masked-wildcard `match_leaf` over-consumes
++    /// there): `set` is the member class, `follow` the FOLLOW-guard literal the
++    /// scan halts before, `site` where it runs.
++    ByteClass {
++        set: [u64; 4],
++        follow: Vec<u8>,
++        site: SimdSite,
++    },
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+ pub enum SimdMode {
+     Exact,
++    /// Membership scan over a 256-bit byte class (four little-endian words).
++    ByteClass([u64; 4]),
++}
++
++/// Build a 256-bit byte-class bitset (four little-endian words) from inclusive
++/// byte ranges — the representation `SimdMode::ByteClass` / `BackendExpr::ByteClass`
++/// carry. `byteset_contains` is the membership test the emitted scan compiles to.
++pub fn byteset_from_ranges(ranges: &[(u8, u8)]) -> [u64; 4] {
++    let mut set = [0u64; 4];
++    for &(lo, hi) in ranges {
++        for b in lo..=hi {
++            set[(b >> 6) as usize] |= 1u64 << (b & 63);
++        }
++    }
++    set
++}
++
++/// Membership test for a 256-bit byte-class bitset.
++pub fn byteset_contains(set: &[u64; 4], byte: u8) -> bool {
++    (set[(byte >> 6) as usize] >> (byte & 63)) & 1 == 1
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 0133bcc64..12051e531 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -977,6 +977,7 @@ pub mod recognizers {
+             } => children.iter().any(contains_direct_build),
+             BackendExpr::ByteLiteral(_)
+             | BackendExpr::RegexProgram { .. }
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+             | BackendExpr::TapeEmit { .. }
+@@ -999,6 +1000,7 @@ pub mod recognizers {
+                 .any(|child| contains_tape_kind(child, needle)),
+             BackendExpr::ByteLiteral(_)
+             | BackendExpr::RegexProgram { .. }
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+             | BackendExpr::DirectBuild { .. }
+@@ -1016,6 +1018,7 @@ pub mod recognizers {
+             BackendExpr::Seq(children) => children.iter().map(alt_branch_count).max().unwrap_or(0),
+             BackendExpr::ByteLiteral(_)
+             | BackendExpr::RegexProgram { .. }
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+             | BackendExpr::TapeEmit { .. }

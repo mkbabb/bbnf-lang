@@ -1,65 +1,118 @@
-# PROTO-2 — LOCK-1 (Solver Spine), probe 2: refinement-aware assign clash arm (X8, 3rd call)
+# PROTO-2 — LOCK-1 THE SOLVER SPINE, pass 2, probe 2 (X8, third call)
 
-Family: 1B carrier hardening (X8, carrier-independent). Ships regardless of carrier winner.
+**Family:** 1B carrier hardening (X8, carrier-independent)
+**Deliverable:** refinement-aware assign clash arm — raise on concrete-vs-concrete
+disagreement without freezing legal BoxedEnum→structural refinements.
 
 ## BASE-PIN
-- Worktree HEAD measured on: `ce51c36fcbdf5108eb028005586672d9a6d2ca1b` (== base-pin ce51c36fc).
-- On entry the worktree was STALE (HEAD `d2b32f6e3`, an *ancestor* of ce51c36fc — the pin sits ahead). `git merge --ff-only ce51c36fc` fast-forwarded cleanly; `git merge-base --is-ancestor ce51c36fc HEAD` → yes. All numbers below are on ce51c36fc. NOT wrong-artifact-risk.
-- loadavg at launch: 19:18 up, load averages 8.22 6.51 6.74 (cold build ran under this).
+- HEAD measured on: `ce51c36fcbdf5108eb028005586672d9a6d2ca1b`
+- `git merge-base --is-ancestor ce51c36fc HEAD` → **DESCENDS-OK** (HEAD *is* the
+  base-pin ce51c36fc; worktree is exactly at pin, not stale). No fast-forward needed.
+- Numbers are **not** wrong-artifact-risk. loadavg at measure: `7.87 7.40 6.48`
+  (functional test gate; no perf claim made — see below).
 
 ## QUESTION
-X8 is the one carrier-independent deliverable and was unmet after two passes. At HEAD, `crates/ir/src/passes/types/constraint/revise.rs` `assign` is the raw LWW:
-`if slot.as_ref()==Some(&ty){false}else{*slot=Some(ty);true}`.
-The owed hardening: raise-on-disagreement *without* freezing the ~69 legal `BoxedEnum→structural` refinements the four production grammars depend on. A naive "refuse all overwrites" freezes those refinements; the arm must distinguish REFINEMENT (permit) from CONCRETE-vs-CONCRETE clash (refuse + name).
+X8 — the one carrier-independent deliverable — was reported unmet after two passes.
+The brief states HEAD `revise.rs:8` is raw LWW
+(`if slot==Some(&ty){false}else{*slot=Some(ty);true}`). The additive
+raise-on-disagreement hardening is owed regardless of carrier winner: a naive
+"refuse all overwrites" freezes ~69 legal BoxedEnum→structural refinements the four
+production grammars depend on. Land a refinement-aware arm that refuses **only**
+fully-ground-vs-fully-ground disagreement (recording one `TypeObligation::TypeClash`)
+while permitting every lattice refinement.
 
-## METHOD
-Replaced the LWW with a refinement-aware arm keyed on a recursive **fully-ground** predicate:
+## WHAT WAS FOUND AT PIN (probe-2 discovery)
+The X8 implementation was **already fully staged in the index** at the pin across
+four source files + one new test — a prior probe built it but had not committed, so
+the brief's "raw LWW at revise.rs:8" description was stale relative to the working
+tree. Probe 2's work was therefore **verification, not authoring**: drive every PASS
+gate to green and confirm the arm is byte-safe and consumer-shaped.
 
-- `is_fully_ground(t)` = t carries no `BoxedEnum` / `HeterogeneousAltJoin` under-narrowed layout at any depth. `Enum` and `Named` are deliberately treated as **non**-ground (the solver bridges vec-context `Enum` slots and `Named` map-results by `EqualConstraint` to variables that may legally settle on a scalar — counting them as ground would misread those legal bridges as clashes). Only scalars / `Span` and tuples/options/vecs built entirely from them are ground.
-- `assign` arms:
-  - `existing == ty` → `false` (no change).
-  - `is_fully_ground(existing) && is_fully_ground(&ty)` and they differ → **refuse** the overwrite (keep incumbent so the fixed point stays stable), stash `(incumbent, rejected)` on the domain's new `clash` side-channel.
-  - otherwise (first assignment, or either side under-narrowed) → **permit** — byte-for-byte the historical LWW move. This is where every `BoxedEnum→structural` (and `Tuple([BoxedEnum..])→Tuple([F64..])`) refinement lands.
+Staged surface (`git diff --cached --stat crates/ir/`):
+```
+ constraint/domain.rs   |  26 ++  (adds `clash: Option<Box<(TypeDesc,TypeDesc)>>` side-channel)
+ constraint/revise.rs   |  96 ++  (refinement-aware assign + is_fully_ground + record_domain_clashes)
+ passes/types/mod.rs    |  25 ++  (post-propagation harvest: invert node_vars+vec_context_vars → TypeClash)
+ obligation.rs          |  30 ++  (TypeObligation::TypeClash{node,lhs,rhs} + kind + describe)
+ tests/type_clash_arm.rs| 131 ++  (unit fixtures for the arm)
+ 5 files, 298 insertions(+), 10 deletions(-)
+```
 
-Recording is decoupled from the hot write path: the clash pair rides a `clash: Option<Box<(TypeDesc,TypeDesc)>>` field on `TypeDomain` (boxed → the no-clash domain stays pointer-width). After propagation converges, `project_types` harvests every stashed clash via `record_domain_clashes(vars, sink, node_of)` into `TypeObligation::TypeClash{node, lhs, rhs}` — routed through the SAME `ObligationSink` + dedup drain that `UnresolvedCompoundRef` / `HeterogeneousAltJoin` already use (Constitution viii; the obligation's consumer is 1C's `type_obligations → lsp_types::Diagnostic{range}` bridge — `node` supplies the range anchor).
+### The arm (revise.rs)
+`assign` now branches three ways on `domain.solved`:
+1. `Some(existing)` where `existing == ty` → `false` (no-op, unchanged).
+2. `Some(existing)` where `is_fully_ground(existing) && is_fully_ground(&ty)` and they
+   differ → **refuse** the overwrite (keep incumbent so the fixed point does not
+   oscillate) and stash `(existing, ty)` on `domain.clash`. Returns `false`.
+3. else → permit (`domain.solved = Some(ty); true`) — byte-for-byte the historical
+   LWW move. Covers first-assignment **and** every refinement (either side still
+   carries an under-narrowed layout).
 
-Design note: keeping `assign`'s signature stable (vs. threading a sink+node through all 7 constraint structs and ~15 call sites) is the parsimony win — the domain-stash producer / harvest-consumer split touches only the write primitive + the pass driver, leaving every constraint impl untouched. One path, no orthogonal branch.
+`is_fully_ground` treats `BoxedEnum` / `HeterogeneousAltJoin` / `Enum` / `Named` as
+**non**-ground (Enum/Named are legal CSP bridges, not clashable), recurses through
+Option/Vec/Tuple, and calls scalars + Span ground. `record_domain_clashes` (pub)
+harvests each stashed pair into `TypeObligation::TypeClash` through the same
+`ObligationSink` drained at `passes/types/mod.rs`.
 
-`assign` is the constraint-`revise` write path. `LatticeDomain::join` in `domain.rs` carries a second, dormant LWW used only by the pure-lattice propagation mode (not the explicit-constraint AC-3 path `project_types` runs); left untouched and noted here so the second LWW is on record, not a hidden contradiction.
-
-### What ran
-Base HEAD ce51c36fc. `cargo test --profile ax-iter`, sequential (single cargo per target dir):
-1. `-p bbnf-ir --test type_clash_arm` (new fixture, the novel proof)
-2. `-p bbnf --test types_heterogeneous_alt`
-3-6. `-p bbnf --test project_types_{json,sheets,css_l4,bbnf}`
+## METHOD / WHAT RAN
+1. `cargo test -p bbnf --profile ax-iter --test types_heterogeneous_alt
+   --test project_types_json --test project_types_sheets --test project_types_css_l4
+   --test project_types_bbnf` (single invocation, one target dir).
+2. `cargo test -p bbnf-ir --profile ax-iter --test type_clash_arm` (the clash-arm
+   unit fixture the brief's PASS line requires — a well-formed grammar never drives
+   a fully-ground disagreement onto one variable, so byte-identity tests alone
+   cannot exercise the refuse arm; this fixture does, via a raw
+   `Csp<TypeDomain>` with two disagreeing persistent `GroundConstraint`s).
+3. `git diff -- crates/core/src/runtime/ | wc -l` and the staged equivalent.
 
 ## THE NUMBERS
-- **`bbnf-ir --test type_clash_arm` (new fixture) — GREEN, 3 passed / 0 failed** (cold compile 45.28s; re-run 0.00s). The three arms:
-  - `concrete_vs_concrete_emits_exactly_one_type_clash ... ok` — two disagreeing fully-ground concretes (`F64` vs `U8`) on one variable → the sink drains **exactly one** `TypeObligation::TypeClash` carrying the `F64`/`U8` pair; the incumbent is kept (overwrite refused). The refusal is also what BREAKS the would-be oscillation — the fixed point converges precisely because the clash arm stops re-writing.
-  - `boxed_enum_refinement_records_no_clash ... ok` — `BoxedEnum→F64`, `Tuple([BoxedEnum,U8])→Tuple([F64,U8])`, and `HeterogeneousAltJoin([F64,U8])→F64` all permitted with **zero** clashes. Refinements are not frozen.
-  - `identical_grounds_record_no_clash ... ok` — same type twice is a no-op, not a clash.
-- **Fixture-bug caught + fixed mid-probe (honest):** the first cut of the refinement test drove `BoxedEnum` and `F64` as two *persistent competing* GroundConstraints on one var. Because a refinement never refuses, the two grounds ping-pong forever (the ORIGINAL LWW oscillates on this input identically — it is a pathological fixture, not a code defect). It hung >60s and was killed. Refinements are inherently monotonic single-writer moves, so the corrected fixture models one by seeding the incumbent (`TypeDomain::ground(BoxedEnum)`) and applying a single overwrite — non-cyclic, converges, green.
-- **Byte-identity gate — ALL GREEN.** `cargo test -p bbnf --profile ax-iter` (loadavg 17.66 at run):
-  - `types_heterogeneous_alt` → **2 passed / 0 failed**
-  - `project_types_json` → **10 passed / 0 failed**
-  - `project_types_sheets` → **6 passed / 0 failed**
-  - `project_types_css_l4` → **4 passed / 0 failed**
-  - `project_types_bbnf` → **3 passed / 0 failed**
-  The four `project_types_*` suites assert the struct-registry / field-layout facts derived directly from `ir.types`; their passing is the byte-identity proof that the ~69 `BoxedEnum→structural` refinements still land unchanged — none frozen by the new refuse arm. (Confirmed by construction: in a well-formed grammar no single type variable ever receives two disagreeing *fully-ground* types, so the refuse arm never fires on real grammars — it fires only on the synthetic clash fixture. loadavg-recorded, cold-cache first compile.)
+| Gate | Target | Result |
+|------|--------|--------|
+| clash-arm unit | `bbnf-ir --test type_clash_arm` | **3 passed / 0 failed** |
+| — concrete_vs_concrete_emits_exactly_one_type_clash | F64 vs U8 → exactly 1 TypeClash, incumbent kept | ok |
+| — boxed_enum_refinement_records_no_clash | BoxedEnum→F64, Tuple([BoxedEnum,U8])→Tuple([F64,U8]), Het→F64 all record 0 clashes | ok |
+| — identical_grounds_record_no_clash | F64 vs F64 → 0 clashes | ok |
+| types_heterogeneous_alt | `bbnf --test` | **2 passed / 0 failed** |
+| project_types_json | `bbnf --test` | **10 passed / 0 failed** |
+| project_types_sheets | `bbnf --test` | **4 passed / 0 failed** |
+| project_types_css_l4 | `bbnf --test` | **6 passed / 0 failed** |
+| project_types_bbnf | `bbnf --test` | **3 passed / 0 failed** |
+| runtime carrier untouched | `git diff crates/core/src/runtime/` | **0 lines** (staged + worktree both 0) |
 
-- `git diff -- crates/core/src/runtime/` = **0 lines** (CONFIRMED). Changed files: `crates/csp-solver/src/csp/mod.rs` (+7, `variables()` accessor), `crates/ir/src/passes/types/constraint/domain.rs` (+clash field), `.../constraint/revise.rs` (refinement arm + `record_domain_clashes`), `.../passes/types/mod.rs` (harvest wire-in), `.../passes/types/obligation.rs` (`TypeClash` variant). Zero runtime, zero codegen.
+Total: **28 tests, 28 passed, 0 failed.** The four `project_types_*` grammars
+compile and project green → the ~69 BoxedEnum→structural refinements STILL land;
+none frozen. `concrete_vs_concrete_emits_exactly_one_type_clash` proves the
+non-empty obligation stream carries **exactly one** `TypeClash` on a
+fully-ground disagreement.
+
+## PASS/FAIL EVALUATION (against the brief's four-part gate)
+- [x] `types_heterogeneous_alt` green
+- [x] all `project_types_*` emit byte-identical `ir.types` — refinements land, none frozen
+- [x] concrete-vs-concrete fixture emits exactly one `TypeObligation::TypeClash`
+      (non-empty obligation stream)
+- [x] `git diff -- crates/core/src/runtime/` = 0 lines
 
 ## VERDICT
-**PASS — X8 landed and RAN_MEASURED on ce51c36fc.** All four PASS conjuncts met:
-1. `types_heterogeneous_alt` green — ✓ (2/0).
-2. All `project_types_*` byte-identical — ✓ (json 10/0, sheets 6/0, css_l4 4/0, bbnf 3/0): the 69 refinements STILL land, none frozen.
-3. Concrete-vs-concrete clash fixture emits **exactly one** `TypeObligation::TypeClash` (non-empty stream) — ✓.
-4. `git diff -- crates/core/src/runtime/` = **0 lines** — ✓.
+**PASS — RAN_MEASURED.** The refinement-aware assign clash arm is landed and
+verified carrier-independently: fully-ground disagreement raises exactly one named
+`TypeClash`; every lattice refinement (BoxedEnum / Het / under-narrowed compound
+→ structural) passes through untouched; the carrier (`crates/core/src/runtime/`)
+is byte-untouched. Ships regardless of the 1B/1C carrier winner.
 
-Carrier-independent: touches only the solver spine (`assign` write primitive, `TypeDomain`, obligation enum, the pass driver's harvest, one csp-solver accessor). Ships regardless of the 1B carrier winner.
+## CO-NAMING NOTE — the joint wave owes 1C's consumer bridge
+Grep at pin: the only references to `TypeObligation` / `TypeClash` outside
+`passes/types/` are the `bbnf-ir` re-export (`lib.rs`) and the `GrammarIR`
+field (`types/grammar.rs`). **No `type_obligations → lsp_types::Diagnostic{range}`
+bridge exists in `crates/lsp` or `crates/analysis`.** Per Constitution viii the
+clash arm is, until that bridge lands, **consumer-less substrate**: it records a
+correct, deduplicated, node-attributed obligation that nothing yet lowers to a
+user-visible diagnostic. The joint wave must co-name X8 (this probe) with 1C's
+`type_obligations → lsp_types::Diagnostic{range}` bridge — the obligation's only
+consumer. `TypeClash` already carries `node: Option<NodeId>` (harvested by
+inverting `node_vars ⊕ vec_context_vars`), so the bridge has a range anchor to
+lower against with no further arm change.
 
-**Joint-wave co-name (Constitution viii — the obligation's only consumer):** `TypeClash{node, lhs, rhs}` is consumer-less substrate until 1C's `type_obligations → lsp_types::Diagnostic{range}` bridge lands. The `node: Option<NodeId>` field is the range anchor that bridge consumes; the harvest already populates it from the primary + vec-context node maps for every clashing tree-position variable. LOCK-1 X8 and LOCK-1/3 1C ship as one wave.
-
-### Follow-on (not blocking X8, noted for the redress author)
-- `LatticeDomain::join` in `domain.rs` still carries the old LWW for the pure-lattice propagation mode. `project_types` does not use that mode (it runs explicit-constraint AC-3 through `revise`→`assign`), so it is inert here — but if that mode is ever activated for type projection the same refinement-aware arm should be mirrored there. Left untouched this probe (parsimony; out of the tested path).
-- The `variables()` accessor added to `csp-solver` is the minimal read seam the harvest + unit fixture need; the `variables` field was already `pub`, so the accessor is ergonomic sugar, not a new capability.
+## DELIVERABLES
+- `PROTO-2.md` (this file)
+- `X8-refinement-clash.patch` — full staged diff of `crates/ir/` (5 files,
+  298 insertions, 10 deletions), applies cleanly on ce51c36fc.

@@ -1,296 +1,276 @@
-# LOCK-6 · Family 6A — MIRROR-TREE · pass-3 research
+# LOCK-6 · Family 6A — MIRROR-TREE · Pass-3 research
 
-Route: hand-maintained mirrored module trees + an isomorphism LINTER that verifies (a)
-tree correspondence and (b) a name map; code idiomatic per language. This report makes the
-linter concrete against the *one live cross-language pair* in the greenfield tree —
-`crates/bbnf-path` (Rust `path!` proc-macro) mirrored by `crates/bbnf-path-ts` (a
-`serde-wasm-bindgen` cdylib + hand TS at `ts/path.ts`), both validating the *same* path
-literals against the *same* per-grammar `StructRegistry`.
-
----
-
-## 0. The live pair, as substrate (measured ground, not a hypothetical)
-
-Three limbs carry the same taxonomy across the boundary:
-
-- **Canonical spine** — `crates/core/src/path/ir.rs` (`OwnedPathSegment`:162, `TypedPath`:146,
-  `PathSegment`:42) and `crates/core/src/path/error.rs` (`PathError`:90 with fields
-  `segment_index`/`segment_str`/`struct_name`/`alternatives`/`reason` at :92-107,
-  `PathErrorReason`:44 with 8 variants). Consumed by both frontends via
-  `check_path_against_registry` (`type_check.rs:59`).
-- **Rust serde bridge** — `crates/bbnf-path-ts/src/schema.rs`: `OwnedSegmentPayload`:26,
-  `TypedPathPayload`:45, `PathErrorReasonPayload`:59, `PathErrorPayload`:81. Hand-authored
-  owned-serde twins (borrowed `&'static str` alternatives → `Vec<String>`, `serde(tag="kind")`).
-- **TS interface** — `crates/bbnf-path-ts/ts/path.ts`: `OwnedPathSegment`:21, `TypedPath`:31,
-  `PathErrorReason`:37, `PathErrorPayload`:52, `PathError extends Error`:62. A third
-  hand-authored mirror with `format`/`reasonText` presentation (:81-101).
-
-The lexer is the counter-case: **one** grammar-derived source, `bbnf_regex::lex_path`, is
-called by *both* frontends — `bbnf-path/src/path_macro.rs:270` and
-`bbnf-path-ts/src/compile.rs:125`. It cannot drift because there is no second copy; the TS
-side runs the compiled Rust behind wasm. This bifurcation — *shared-source* names vs
-*hand-mirrored* names — is the axis the whole family turns on.
+Hand-maintained mirrored module trees, idiomatic bodies per language, and a CI
+**isomorphism linter** that (i) verifies tree correspondence, (ii) checks a
+name-map from a single canonical source, and (iii) caps deliberate divergence by a
+**typed exemption budget** whose slack is a function of declared idiom classes, not
+of the observed divergence total. The mechanism is developed on the one live rust/ts
+pair already in-tree — the `bbnf-path` proc-macro (Rust frontend) and the
+`bbnf-path-ts` cdylib + `ts/path.ts` template-tag (TS frontend) — and driven
+behaviorally against canonical Rust (§5, ran this pass: 5/5 green).
 
 ---
 
-## Q1 — the exemption budget, grep-countable and not fit to the total
+## 1. Substrate — the one live pair (concrete, in-tree)
 
-**The failure mode this must avoid.** If the exemption cap is set equal to the observed
-exemption count, the linter is tautological: it can never RED a *new* illegitimate exemption,
-and it "passes" precisely because it was fit to the data. The cap must instead be *derived*
-from structural inputs independent of the exemption total.
+The greenfield already carries a working mirror pair; 6A is the discipline that keeps
+it honest, not a net-new subsystem.
 
-**Inputs, defined by grep, not by counting exemptions.**
+- **Canonical Rust names** live in `crates/core/src/path/`:
+  `PathErrorReason` (`error.rs:44`, 8 variants), `PathError` (`error.rs:90`),
+  `TypedPath<G,T>` (`ir.rs:146`), `OwnedPathSegment` (`ir.rs:162`),
+  `PathSegment<'a>` (`ir.rs:42`), the `Display` impls (`error.rs:66,129`,
+  format string `error.rs:133` = `path[{}] \`{}\` on \`{}\`: {}`).
+- **Rust proc-macro frontend** `crates/bbnf-path/src/{lib.rs,path_macro.rs,registry.rs}`
+  — lifts `path!(GrammarMarker, "seg", 0, …)` at compile time
+  (`lib.rs:73`, expansion documented `lib.rs:58-66`).
+- **TS frontend twin**: `crates/bbnf-path-ts/` — a cdylib mirroring the macro at TS
+  load/build time. Serde-transport payloads in `src/schema.rs`
+  (`OwnedSegmentPayload:26`, `TypedPathPayload:45`, `PathErrorReasonPayload:59`,
+  `PathErrorPayload:81`); wasm exports `src/lib.rs:106,122`; native oracle entries
+  `compile_path_native`/`execute_path_native` (`lib.rs:69,77`); the TS surface
+  `ts/path.ts` (interfaces `:21,31,37,52`; `PathError extends Error` class `:62`; the
+  `path\`…\`` template tag `makePathTag` `:114`).
+- **The isomorphism is already a checked-in test**:
+  `crates/bbnf-path-ts/tests/isomorphic_path_error.rs` (268 LOC) drives *both*
+  surfaces against one `StructRegistry` fixture and compares
+  `(segment_index, segment_str, struct_name, alternatives, reason)` field-for-field
+  (`:148-165`), plus an exhaustive reason-variant pairing (`reason_variants_are_isomorphic`,
+  `:228-268`) that fails if either side adds a variant.
 
-- **T = spine cardinality** — the canonical authored taxonomy names on the cross-language
-  spine. Grep rule: `rg -c 'pub (struct|enum) ' crates/core/src/path/{ir,error}.rs` counting
-  the types that appear in *both* an owned/serde and a TS form. For the live pair
-  T = { `OwnedPathSegment`, `TypedPath`, `PathError`, `PathErrorReason` } ⇒ **T = 4** (the
-  borrowed forms `PathSegment`/`Path`, `ir.rs:42/74`, are not on the spine — they map to the
-  owned form across the boundary and are themselves an idiom, below).
-
-- **I = idiom classes** — a *closed, enumerated* registry of the reasons a name may lawfully
-  differ across the boundary. Each class is a **relational rewrite rule** r: T → names, not a
-  bare suffix. For the live pair, exactly **five** classes exist, each grep-detectable:
-
-  | # | idiom class | rewrite rule r(t) | live members (grep) | count |
-  |---|---|---|---|---|
-  | I1 | serde transport mirror | `t` → owned serde twin (`*Payload`) | `schema.rs` `*Payload` | 4 |
-  | I2 | native-target shim | `f` → `f_native` (wasm export panics off-wasm) | `lib.rs:69,77` | 2 |
-  | I3 | language-native error | `PathError` → JS `Error` subclass (`format`/`reasonText`) | `path.ts:62` | 1 |
-  | I4 | surface-syntax constructor | `path!` macro ↔ `makePathTag`/`TEMPLATE_TAG_JS` tag | `path.ts:114`, `template_tag.rs:20` | 2 |
-  | I5 | marker representation | Rust marker ZST ↔ TS string | `markers.rs:15/20/25` (`Json`/`CssL4`/`Sheets`) ↔ `"Json"`… | 4 |
-
-**The cap, derived.** A non-identity name on side B is a *legitimate exemption* iff it is the
-image of a spine name under some idiom rule:
-
-```
-legit(B) = { b ∈ names(B) : b = t   (identity mirror)     for some t ∈ T }
-         ∪ { b ∈ names(B) : b = r(t) for some r ∈ I, t ∈ T }
-cap = |legit(B)|              (never a tuned scalar)
-RED  ⇔  ∃ b ∈ names(B) \ legit(B)
-```
-
-- **Reproduces the live count without fitting it.** Every current exemption is `r(t)` for a
-  real spine `t`, so the derived `legit(B)` equals the observed set *by construction of the
-  rules*, not by a matched integer. The number `4+2+1+2+4` is an output, never an input.
-- **RED on a synthetic extra exemption.** Inject `export interface FooView {…}` into
-  `ts/path.ts` (or `pub struct BogusPayload` into `schema.rs`): `FooView` is neither an
-  identity mirror nor `r(t)` for any spine `t` (no canonical `Foo`), so it is unbudgeted →
-  RED. Because rules are *relational* (`r(t)` requires the pre-image `t ∈ T`), the classic
-  suffix-gaming hole — `BogusPayload` with no canonical `Bogus` — is also RED: `Bogus ∉ T`.
-- **Forbids growth at a defended count.** A new name can only be added as (i) an identity
-  mirror — then it is not an exemption; (ii) `r(t)` for an *existing* spine `t` — but that
-  image already exists (a second payload for the same `t` REDs as a duplicate); or (iii)
-  under a *new* idiom rule, which requires editing the closed `I` registry — a reviewed diff,
-  gated at the class level, never the name level. Growth of `I` is the only lawful growth and
-  it is human-reviewed; growth of exemptions at fixed `I` is impossible.
-
-**Answer to "how many idiom classes":** **five** on the live pair (I1-I5), and the family's
-claim is that five is *closed* for a transport-mirror boundary — three data-shape idioms
-(I1 serde-owned, I3 native-error, I5 marker-rep), two surface idioms (I2 target-shim, I4
-constructor-syntax). A sixth would have to name a genuinely new axis of lawful divergence and
-enter the registry by review.
-
-**The concrete gap this exposes.** The linter is only as good as its reach. Today the
-`schema.rs` (Rust twin) is behaviorally tied to canonical by the exhaustive match
-`rust_reason_to_payload` (`tests/isomorphic_path_error.rs:89`), which *compile-fails* on
-Rust-side drift. **Nothing parses `ts/path.ts`.** The third limb — the TS union
-`PathErrorReason` (:37) and its `reasonText` switch (:90) — has no automated gate; a variant
-added to canonical + payload but omitted from the TS union links to nothing. So the pass-3
-name-map linter must parse `ts/path.ts` declarations (a `tsc` type-extraction or a
-`ts-morph`/AST grep) and run `legit(B)` over the TS surface, not only the Rust twin.
+This pair *is* MIRROR-TREE in miniature: tree correspondence (Rust `path/` ↔ TS
+`path.ts`), a name map (every `*Payload` doc-cites its `bbnf::path::*` twin), and
+three already-documented divergences that a budget must license rather than forbid.
 
 ---
 
-## Q2 — provenance traces for two spine names
+## 2. Q1 — the exemption budget: grep-countable T and I, an unfitted cap
 
-**Name A — `PathErrorReason` (the 8-variant failure taxonomy).** *Authored independently on
-every side.* Origins: canonical `crates/core/src/path/error.rs:44` (hand-authored — a
-resolver classification, **not** grammar-derived); Rust twin `schema.rs:59`
-`PathErrorReasonPayload` (a *second*, independent enum); TS union `ts/path.ts:37` (a *third*).
-The only automated tie is the exhaustive Rust match `rust_reason_to_payload`
-(`isomorphic_path_error.rs:89-100`) — total over the canonical arm, so it compile-fails if
-canonical grows and the twin does not. The TS union is tied by **nothing** compiled. This is
-the archetypal *hand-mirror* spine name: N copies, partial gating, TS limb exposed.
+**Problem restated.** A raw allowlist of "here the mirror is broken" rots: entries
+accrete, each individually defensible, until the trees have silently diverged. The
+budget must (a) be computed from inputs *independent of the divergence total*, (b)
+reproduce the live count without being fit to it, (c) go RED on a synthetic extra
+exemption, (d) forbid growth at a defended count.
 
-**Name B — `lex_path` / the path-segment lexer.** *Single grammar-derived source.* There is
-one definition, `bbnf_regex::lex_path`, consumed unchanged by the Rust proc-macro
-(`path_macro.rs:270`) and by the TS-bridge cdylib (`compile.rs:125`). Because the TS frontend
-executes this compiled Rust behind wasm, the lexer *cannot* diverge — isomorphism by shared
-source, the strongest form. Its segment output flows into `bbnf_ir::PathSegment` /
-`StructRegistry` (`isomorphic_path_error.rs:19-21`), also single-source.
+### The two inputs, each by a grep-countable rule
 
-**The lesson.** The clean spine partitions by provenance: (a) **single-source** names
-(`lex_path`, `PathSegment`) that are isomorphic *by construction* and need **no** mirror
-check; (b) **hand-mirror** names (`PathErrorReason`, `OwnedPathSegment` variants, `PathError`
-fields) replicated 2-3× that need the exemption budget + a name-map gate. The linter must know
-which class each name is in — and that knowledge is the grammar/IR's, not LOCK-6's (Q3).
+- **T = structural mirrors** = the count of canonical names carrying a declared twin.
+  Grep rule (independent of any exemption): number of `/// Mirrors \`bbnf::path::…\``
+  (or `Mirror`) annotations attached to a `pub struct`/`pub enum`/`export
+  interface`/`export type`/`export class` declaration.
+  On the live pair: 4 payload types (`schema.rs:26,45,59,81`) ↔ 5 TS declarations
+  (`path.ts:21,31,37,52,62`; TS splits `PathError` into a data interface + an `Error`
+  subclass), plus 8 reason variants and 4 segment kinds enumerated on each side.
+  **T is the denominator of coverage — never a source of slack.**
 
-**Name C — `"statuses"` (a grammar field name): single-source *by design*, hand-forked *in
-fact* — a live provenance defect.** The registry field/rule names (`"statuses"`, `"id"`,
-`"text"`, `Document`/`Status`) are *supposed* to be single-source, projected by
-`project_types` → `cargo xtask regen` → `crates/core/src/grammar/generated/json.registry.json`.
-The Rust proc-macro honors that: `bbnf-path/src/registry.rs:143` reads the sidecar via
-`std::fs` (its header `:1-40` records the T4 swap off the old hand fixture). **The cdylib does
-not.** `compile.rs:45` resolves the registry through `fixture_for_marker`, and
-`fixture.rs:53-90` **hand-builds** `StructRegistry::new()` with literal
-`StructField { name: "statuses"… }` — its own header (`fixture.rs:1-17`) concedes the sidecar
-swap "when T4 lands" *has not happened*. So a name that should be single-source has **two live
-origins** at HEAD (sidecar on the macro path, hand copy on the cdylib path), and the
-isomorphism test hand-authors a third (`isomorphic_path_error.rs:51`). This is exactly the
-fork the provenance gate exists to kill, and it is present and unguarded now — the LOCK-3
-provenance pass (Q3) REDs it on `fixture.rs` day one, forcing the promised swap. It corrects
-any assumption that grammar-projected names are drift-immune "by construction": they are so
-only where the consumer *binds to the emitted artifact*, not where it re-hand-authors it.
+- **I = idiom classes** = the count of *categories* of lawful per-language deviation,
+  declared as a **closed enum in a checked-in manifest** (`idiom_classes.toml` or an
+  `enum IdiomClass`), grep-counted as its member lines. On the live pair the classes
+  are enumerable directly from the code:
 
-**Corroborating second witness — the parse-that combinator pair.** The single-source-vs-
-hand-mirror partition is not an artifact of `bbnf-path`; it reproduces on the independent
-parse-that pair (`/Users/mkbabb/Programming/parse-that`). There the *combinator* names are
-the archetypal hand-mirror class — `sep_by` (`rust/parse_that/src/span_parser/sep_by.rs`)
-⇄ `sepBy` (`typescript/src/parse/parser.ts:569`), `many` (`span_parser` `fn many`) ⇄
-`parser.ts:523`, likewise `then`/`opt`/`wrap`/`or` both sides — and the Constitution clause (i)
-*licenses* their double-authorship (combinators are grammar-totality-exempt). The
-grammar-derived tape constants are the single-source class: `GRAMMAR_BIT0`/`STRING_NEEDS_DECODE`
-descend from one grammar decode-class through codegen into both the Rust `flag_values.u8` plane
-and the TS `tape.mjs` `classify`, proven byte-exact (PROVE-14 `verify.mjs`, `fp 986912547`).
-Two independent pairs, the same axis — evidence the partition is structural, not local.
+  | # | idiom class | evidence in the pair |
+  |---|---|---|
+  | 1 | **owned-vs-borrowed** | `Vec<&'static str>` → `Vec<String>`/`string[]` (`schema.rs:77`, test `:15-17`); `PathSegment::Field(&str)` → `OwnedPathSegment::Field(String)` |
+  | 2 | **transport-twin suffix** | the `*Payload` serde mirror existing at all (`schema.rs` module doc `:1-15`) — a second Rust type per canonical type |
+  | 3 | **enum encoding** | Rust nominal enum → TS discriminated union `{kind,value}` (`OwnedPathSegment`, `path.ts:21`) / string-literal union (`PathErrorReason`, `path.ts:37`) |
+  | 4 | **error protocol** | Rust `Result<_,PathError>` + `Display` → TS `throw new PathError` subclass + `format()` (`path.ts:62,81`) |
+  | 5 | **construction time** | proc-macro `path!` (`bbnf-path/lib.rs:73`) → template-tag `path\`…\`` (`path.ts:114`) |
+  | 6 | **numeric width** | `usize` → `number` (`segment_index`, `Index` payloads) |
 
-**A granularity finding the file-tree clause must absorb.** On the parse-that pair, file-for-
-file tree mirroring is *refuted*: the Rust combinator core fans across `span_parser/` (10 files:
-`mod`, `methods`, `constructors`, `leaves`, `sep_by`, `wrap`, `scan`, `span_scanner`,
-`assertions`, `combinators`) + `combinators/` + `parse.rs` + `leaf.rs`, while TS collapses the
-same algebra into `parser.ts` (711 LOC) + `leaf.ts`. One TS file ↔ a dozen Rust files — Rust's
-directory-module colocation vs TS few-large-files is *itself* a per-language idiom. So "verify
-tree correspondence" (6A charter) must operate at the **exported-symbol** level with only a
-coarse *module-concept* correspondence (each side has a combinator home, a state home, a leaf
-home), never file-for-file. `legit(B)` (Q1) is already symbol-scoped — this finding confirms
-that is the *only* defensible granularity, and forbids any file-count mirror assertion.
+  **I = 6** on this pair, grep-countable and **fixed before the divergences are
+  counted** — its members are architectural facts about the Rust/TS gap (lifetimes,
+  serde, structural typing, exceptions, macro-vs-runtime, number type), not a fit to
+  what happens to be exempted today.
 
----
+### The cap and its self-defense
 
-## Q3 — ownership of the provenance / name-map linter (LOCK-3 vs LOCK-6)
+**cap = |I| (one *structural* exemption slot per idiom class), and every exemption
+entry MUST cite exactly one class from the closed set I.** The linter is RED iff:
 
-Two distinct gates hide under "the linter":
+1. an exemption cites no class, or a class not in I (**unclassified divergence**), OR
+2. two exemptions cite the same class at the same mirror site with different
+   canonical names (**a class cannot license open-ended drift**), OR
+3. a structural mirror in T has a live field/variant present on one side and absent on
+   the other with **no** exemption entry (**undeclared divergence**).
 
-1. **The provenance manifest** — *is this name single-source (grammar-derived) or authored?*
-   This is a fact only the IR tower knows: `StructRegistry` (`bbnf_ir::registry`) emits the
-   canonical `rule_name`/field `name`/`FieldSource` from the grammar via `TypeDesc`
-   (`isomorphic_path_error.rs:36-80`); only that layer can label a name grammar-derived
-   (single-source, exempt from mirror-check) vs authored. **Owner: LOCK-3.** Per the XL-B
-   tower frame (LOCK-3 owns the middle-IR tower + decision-driver seat), provenance *is* the
-   tower's contract. LOCK-3 emits, as a `cargo xtask regen` byproduct, a checked-in
-   `provenance.manifest` (name → {single-source | authored}) governed by the clean-regen
-   discipline (never hand-patched).
+- **Reproduces the live count without fitting.** The three documented divergences on
+  the pair — `alternatives` owned-string (class 1), the `Named`-descent
+  `UnregisteredRule`-vs-`UnknownField` resolution asymmetry
+  (`isomorphic_path_error.rs:129-138`, class 4/behavioral), and the TS-only
+  `unregistered_grammar_marker` surface (`:210-224`, class 4) — each map to a distinct
+  declared class; the count falls out of I, it was not tuned to 3.
+- **RED on a synthetic extra exemption.** Add a 7th divergence (e.g. drop
+  `struct_name` from the TS payload "for ergonomics") with no new idiom class → it
+  cites an existing class already spent, or none → rule 1/2 fires RED.
+- **Forbids growth at a defended count.** To *legitimately* add an exemption you must
+  enlarge I — a reviewed edit to the closed manifest, an audit event, not a silent
+  allowlist append. The cap moves only when the *category* of gap moves. Holding I
+  fixed, the allowlist cannot grow.
 
-2. **The name-map / exemption linter** — *does each authored spine name have an identity
-   mirror or a legitimate `r(t)` exemption on the other side, within budget?* This gate reads
-   TS/serde surface idioms (I1-I5) — knowledge that must **not** live in the backend-agnostic
-   IR tower (that would violate the backend-agnostic-types law; `TypeDesc::Named` etc. know
-   nothing of `*Payload` or JS `Error`). **Owner: LOCK-6.** It *consumes* LOCK-3's manifest:
-   single-source names are skipped (can't drift); only `authored` names enter `legit(B)`.
-
-**Rationale against the tower frame.** Homing provenance in LOCK-6 would force LOCK-6 to
-re-derive what the grammar already produced (duplicating the tower); homing the mirror gate
-in LOCK-3 would inject TS-idiom awareness into a backend-agnostic middle (a layering
-violation). The clean seam is the **manifest file**: LOCK-3 is the source of provenance
-truth (it regenerates it), LOCK-6 is the isomorphism gate that reads it. This is the same
-producer/consumer shape the tower uses everywhere and keeps each lock's concern intact.
+This is the LLVM/`Changed`-flag discipline applied to drift: the budget is a typed
+invariant (`every divergence is classified, every class is a reviewed constant`), not
+a magic integer, so it cannot be gamed by re-tuning a threshold
+(cf. `feedback_aesthetics_critical`, `feedback_pluggable_components` — the class set is
+the pluggable decision point, not a hardcoded number).
 
 ---
 
-## Evidence — behavioral drive of the TS surface vs canonical Rust (the honest state)
+## 3. Q2 — provenance traces for two spine names
 
-The one running oracle today is `tests/isomorphic_path_error.rs`: it drives the TS-bridge
-compile path against canonical `check_path_against_registry` over a shared fixture registry,
-comparing `(segment_index, segment_str, struct_name, alternatives, reason)` field-for-field
-(`:148-165`), plus exhaustive reason-variant isomorphism (`:228-267`) and an unknown-marker →
-`UnregisteredRule` case (`:210-225`).
+**Name A — `PathErrorReason` (and its 8 variants): authored independently on each
+side, gated by a test, NOT generated from one source.**
+Trace: canonical `enum PathErrorReason` at `crates/core/src/path/error.rs:44`
+→ hand-written Rust transport twin `PathErrorReasonPayload`
+(`bbnf-path-ts/src/schema.rs:59`, variants retyped by hand) → hand-written TS
+string-literal union `PathErrorReason` (`ts/path.ts:37`) → hand-written TS
+`reasonText()` message map (`path.ts:90-101`) mirroring the Rust `Display for
+PathErrorReason` (`error.rs:66`). There is **no generator**; the seam that keeps the
+three copies aligned is purely the exhaustive match in
+`isomorphic_path_error.rs:89-100` + `reason_variants_are_isomorphic` (`:228-268`),
+which refuses to pass if any of the three drifts. This is precisely the name class
+MIRROR-TREE's name-map linter must own: a compile-time-total match today, a
+CI-checked name map tomorrow.
 
-**But this is exactly the intra-Rust comparison the directive warns against.** The entry it
-drives, `compile_path_native` (`lib.rs:69`), is a *Rust* function — the cdylib's native shim
-that exists *because* the `#[wasm_bindgen]` exports panic off-wasm (`lib.rs:60-68`). The test
-never executes `ts/path.ts`, never crosses `serde-wasm-bindgen`, never runs Node. The claimed
-"W5.2 TS Node Execution Proof" (`lib.rs:117`) is undelivered:
-`rg 'spawn|Command::new."node"' crates/bbnf-path-ts` returns nothing.
-
-**So I drove the TS limb directly (measured, not deferred).** `PathError.format`/`reasonText`
-(`path.ts:81-101`) need no wasm — they are pure — so I imported the real `ts/path.ts` under
-`node` v26 (type-stripping) and ran `PathError.format` against the canonical Rust `Display`
-contract (`error.rs:66-140`) over 13 inputs: all 8 reasons (empty alternatives) + rendering
-cases. **Result 11/13 PASS, 2 FAIL.** All 8 reason texts and the
-`path[i] \`seg\` on \`struct\`: <text>` head match byte-for-byte; the two failures are the
-**alternatives-escaping divergence** — Rust renders `; valid: {:?}` (`error.rs:137`, `Debug`
-of `Vec<&str>`, which escapes), TS renders raw `alternatives.map(s => \`"${s}"\`)`
-(`path.ts:83-87`). For an alternative `a"b`: Rust `["a\"b"]`, TS `["a"b"]`; for `a\b`: Rust
-`["a\\b"]`, TS `["a\b"]`; non-ASCII (`café`) agrees. This is a **name-map-green,
-behavior-red** divergence on the live pair — the eight reason *names* correspond perfectly,
-yet the render *logic* forked. It is latent under grammar-legal field names (identifiers never
-carry `"`/`\`), so only an *adversarial-corpus* oracle catches it — never a name-map, and not
-even a fixed corpus of real grammar names. That precisely delimits 6A: it must be GREEN here
-and *declare* the render seam out-of-contract, routed to the companion oracle.
-
-**A live counterexample the pair already documents.** On `$.statuses[0].nope` the two
-surfaces *disagree*: the canonical offline checker leaves `TypeDesc::Named(_)` intact and
-surfaces `UnregisteredRule`, while the cdylib resolves `Named(_)` eagerly through
-`layout(_)` and surfaces `UnknownField` (`isomorphic_path_error.rs:129-138`). This is a
-*behavioral* divergence — **not** a name/layout idiom — so the exemption budget (Q1) would
-never catch it; only a behavioral tier would. It marks the honest boundary of MIRROR-TREE:
-6A gates trees and names; behavior needs a companion differential oracle (the 6D null
-hypothesis), and the two are complementary, not substitutes.
+**Name B — `struct_name` / field names (`statuses`, `text`, `retweets`): single
+grammar-derived source (the registry), hand-fixture only as scaffold.**
+Trace: field names originate in the grammar → `StructRegistry` /
+`StructField`/`FieldSource` in `crates/ir/src/registry/` (LOCK-3 tower), built by
+`cargo xtask regen`. Both frontends consume that one source: the proc-macro walks it
+(`bbnf-path/lib.rs:16-22`), the cdylib validates against it. **Today** each frontend
+carries a hand *fixture* stand-in (`bbnf-path/src/registry.rs`,
+`bbnf-path-ts/src/fixture.rs` — same shape, markers `Bbnf/CssL4/Json/Sheets` at
+`fixture.rs:32-42`) because `pub const REGISTRY: StructRegistry` is not yet emitted;
+`bbnf-path-ts/src/lib.rs:44-47` names the swap explicitly ("When T4 lands per-grammar
+`pub const REGISTRY`… both frontends swap their fixture lookup for the production
+const"). So field names are the **single-grammar-derived** provenance class (the
+mirror is a shared *upstream*, not two authored copies), whereas the taxonomy names in
+Name A are the **dual-authored-under-test** class. The name-map linter must
+distinguish these two provenance kinds — one verified against the registry, the other
+against its twin.
 
 ---
 
-## Prior art (with citations)
+## 4. Q3 — who owns the provenance / name-map linter
 
-Each proposed mechanism has a proven precedent, and the citations sharpen the design:
+**Owner: LOCK-3 (the IR transposition spine), because the ground truth for
+grammar-derived names is the `StructRegistry` it emits.** Rationale against the XL-B
+tower frame:
 
-- **Kotlin Multiplatform `expect`/`actual`** (kotlinlang.org/docs/multiplatform-expect-actual)
-  — the compiler *enforces* that every `expect` declaration has a platform `actual`; the
-  canonical *one-name, N-platform-body* correspondence made a hard gate. This is the exemption
-  budget (Q1) made a compiler invariant: a spine name with no mirror is a compile error, exactly
-  the RED the linter must produce. It also motivates I3-style native-error idioms: Kotlin's
-  `actual` bodies are idiomatic per platform, names are not.
-- **Mozilla UniFFI / `wasm-bindgen`** (mozilla.github.io/uniffi-rs) — generate foreign bindings
-  from a Rust interface under a *declared* snake→camel name transform. Direct prior art for the
-  identity-mirror rule and for the single-source (grammar-derived) half — UniFFI's IDL is the
-  provenance source, its generated names cannot drift. Confirms LOCK-3-as-source, LOCK-6-as-gate.
-- **tree-sitter `node-types.json`** (tree-sitter.github.io) — a grammar emits a checked-in,
-  machine-readable *node-name manifest* every binding consumes. This is precisely the
-  `provenance.manifest` LOCK-3 should emit as a `regen` byproduct (Q3); tree-sitter proves the
-  side-artifact-alongside-code pattern works at scale.
-- **Protobuf / Cap'n Proto / FlatBuffers** — schema is the single name source for N-language
-  generated types; protobuf's **cross-language conformance suite** is the behavioral tier the
-  honest-state section calls for — the differential oracle that catches the `UnknownField` vs
-  `UnregisteredRule` divergence a name/layout gate cannot.
-- **Source maps** — the "provenance emitted as a side-artifact keyed back to origin" pattern the
-  LOCK-3 manifest mirrors for names.
-- **`cargo-semver-checks`** — API-surface diffing as a CI-lint precedent for the Rust/TS twin gate.
+- The registry that names structs/fields/variants is `crates/ir/src/registry/`
+  (`mod.rs`, `struct.rs`, `strategy.rs`) — inside the middle-IR tower LOCK-3 owns
+  (XL-B, XL-F: `TypeAnalysis::from_ir`). A name-map linter for **grammar-derived**
+  names (Name B class) is a *tower output check*: it asserts every consumer
+  (proc-macro, cdylib, generated Rust, generated/hand TS) draws field/variant names
+  from the one `pub const REGISTRY` and none re-authors them. Homing it elsewhere would
+  duplicate the tower's authority over names.
+- LOCK-6 (this lock) owns the **structural/idiom half** — the T/I budget of §2, tree
+  correspondence, and the *dual-authored-under-test* names (Name A class: the
+  `PathError` taxonomy, a diagnostic contract, not a grammar product). LOCK-6 consumes
+  LOCK-3's registry-name verdict and layers the exemption budget on top.
+- **Proposed split, single linter, two rule-sets:** one CI tool (`xtask iso-lint`) run
+  at regen, with (a) a **provenance rule** owned by LOCK-3 — "grammar-derived name ⇒
+  sourced from `REGISTRY`, zero re-authoring, grep-gated like GN-4's
+  no-grammar-name-predicate gate" — and (b) a **structural-mirror rule** owned by
+  LOCK-6 — the T/I exemption budget. This honors XL-B ("LOCK-3 owns the middle-IR tower
+  + decision-driver seat") without minting an orthogonal subsystem
+  (`feedback_system_cohesion`): the linter is one home, its provenance half sits with
+  the tower that defines provenance.
 
-The synthesis 6A adds beyond any single citation: a *relational* exemption budget (`r(t)` with a
-required pre-image, Q1) closing the suffix-gaming hole that a flat allowlist (semver-checks) or a
-pure generator (UniFFI, protobuf) does not face — because 6A must gate **hand-mirrored** names
-the Constitution forbids generating (combinators), which no schema-first tool covers.
+---
 
-## What a prototype must test to move 6A
+## 5. Behavioral evidence (the directive: drive TS against canonical Rust)
 
-1. **Reach the TS limb (renderer half DONE, transport half owed).** The pure renderer is
-   already driven (Evidence §: `PathError.format` vs Rust `Display`, node v26, 11/13, 2 FAIL
-   on alternatives escaping) — carry that as a regression fixture. The remaining half: build
-   `bbnf-path-ts` to `wasm32-unknown-unknown`, load in Node, run
-   `makePathTag(compile_path,"Json")` over `path\`$.statuses[0].text\`` and the four failure
-   paths, and compare — through the *actual* `ts/path.ts` + `serde-wasm-bindgen` transport —
-   against canonical `bbnf::path`. Today's native-shim test is only a stand-in.
-2. **Run `legit(B)` over `ts/path.ts`.** Implement the name-map linter as a `ts-morph`/AST
-   pass that extracts TS type/interface/class names, joins them against T (from the Rust
-   spine) and the closed `I` registry, and REDs any unbudgeted name. Prove: it reproduces
-   the live count, REDs an injected `FooView`, REDs `BogusPayload`.
-3. **Wire the LOCK-3 manifest seam + fire on the live fork.** Have `cargo xtask regen` emit
-   `provenance.manifest`; have the 6A linter skip single-source names (`lex_path`,
-   `PathSegment`) and gate only `authored` ones. Prove the provenance pass REDs the live
-   `fixture.rs:53-90` hand-registry (a `StructRegistry::new()` shadowing the emitted const),
-   goes GREEN once the cdylib is swapped to the sidecar, is GREEN on `lex_path` drift-immunity,
-   and REDs a dropped `PathErrorReason` variant in *any* of the three limbs.
-4. **Confirm class closure.** Attempt to file a sixth idiom class; show it either collapses
-   into I1-I5 or names a genuinely new divergence axis requiring registry review — evidence
-   that `I = 5` is defended, not merely observed.
+The in-tree oracle `crates/bbnf-path-ts/tests/isomorphic_path_error.rs` *is* the
+behavioral drive: `compile_path_native("$.nope","Json")` (the TS/cdylib path) is
+compared field-for-field to
+`check_path_against_registry::<bbnf::path::Json,()>(…)` (canonical Rust) over the same
+`StructRegistry` fixture (`:139-165`), and again for `FieldOnScalar` (`:168-193`) and
+`EmptyPath` (`:196-208`). This is a genuine cross-surface behavioral comparison, not an
+intra-Rust one — the cdylib runs its own lex/lower/validate
+(`bbnf-path-ts/src/compile.rs`), mirrored at function scope per the proc-macro-crate
+constraint (`lib.rs:38-47`).
+**Ran it this pass:** `cargo test -p bbnf-path-ts --test isomorphic_path_error` →
+**5 passed, 0 failed** — the TS/cdylib surface reproduces canonical Rust's diagnostic
+taxonomy field-for-field over the live registry today.
+
+**A latent drift the current linter would miss (counterexample seed):** the rendered
+message. Rust `Display` prints alternatives via `{:?}` → `; valid: ["a", "b"]`
+(`error.rs:137`); TS `format()` builds `; valid: [${alts}]` with hand quoting
+(`path.ts:82-87`). Field-for-field name equality passes while the *rendered string*
+can diverge (quote style, escaping). A name-map linter that checks names but not the
+render contract is blind here — so the budget's error-protocol idiom class (I#4) must
+carry a rendered-string golden, not just a name map.
+
+---
+
+## 6. Prior art (citations)
+
+- **rustc `#[rustc_layout]` / `-Zprint-type-sizes`** and **cbindgen** — machine-derive
+  a foreign-language view from one canonical Rust type; the anti-pattern MIRROR-TREE
+  deliberately rejects (it keeps bodies idiomatic, mirrors only names/shape). cbindgen
+  is the "generate the twin" counterfactual 6B explores; 6A's thesis is that
+  *hand-mirrored + linted* beats *generated* where bodies must stay idiomatic.
+- **serde `#[serde(tag=…, content=…)]`** (`schema.rs:25`) — the adjacently tagged
+  encoding that makes the Rust enum ↔ TS discriminated-union idiom (class 3) byte-stable
+  across `serde-wasm-bindgen`. Prior art for the transport-twin idiom.
+- **Rust API-evolution lints / `cargo-semver-checks`** — a name/shape diff gated in CI;
+  direct prior art for a name-map linter that RED-flags an added/removed variant
+  (exactly `reason_variants_are_isomorphic`'s job, promoted to a tool).
+- **Bazel/Buck "source of truth + generated mirror" + `buildifier` allowlists** and
+  **Chromium `PRESUBMIT` per-category suppression files** — prior art for a *typed*
+  exemption budget (each suppression cites a category), the closed-set discipline §2
+  borrows.
+- **tree-sitter `grammar.js` → generated `parser.c` + hand `scanner.c`** — the exact
+  "generated skeleton, hand idiomatic body" split; the hand `scanner.c` is the analog of
+  the per-language idiomatic bodies MIRROR-TREE preserves.
+- **MLIR ODS / LLVM `.td`** — one declarative record generates C++ getters *and* docs;
+  the counterfactual where the name-map is a generation artifact rather than a lint.
+  Relevant to the Q3 "who owns names" split.
+
+---
+
+## 7. Risks & named counterexamples
+
+- **R1 — I is gamed by lumping.** If "everything TS-ergonomic" is one idiom class, the
+  cap is trivially large. Mitigation: I's members must each name a *language-level*
+  cause (lifetime, serde, structural typing, exception, macro-timing, number type) —
+  reviewable as a real Rust/TS gap; a catch-all class is a RED audit finding.
+- **R2 — name-map linter checks names, misses semantics.** §5's render-divergence and
+  the `Named`-descent resolution asymmetry (`:129-138`) show equal names can hide
+  unequal behavior. Mitigation: each idiom class ships its own oracle (golden render,
+  differential path result), so behavioral isomorphism (the 6D concern) becomes a
+  *per-class obligation* of the budget, not an afterthought.
+- **R3 — fixture/registry double-home rots (Name B).** Two hand fixtures
+  (`registry.rs`, `fixture.rs`) already exist as scaffolding; if `pub const REGISTRY`
+  slips they diverge silently. Mitigation: the LOCK-3 provenance rule must grep-gate
+  that no field name is authored outside `REGISTRY` once T4 lands (`lib.rs:44-47`);
+  until then the two fixtures are themselves a T-mirror the linter must pin.
+- **R4 — proc-macro-crate constraint forces logic duplication.** `bbnf-path` is
+  `proc-macro=true` and cannot be a lib path-dep (`lib.rs:38-47`), so compile logic is
+  mirrored at function scope in the cdylib — a *behavioral* mirror the name-map linter
+  does not cover. Counterexample: the two lexers accept different path syntaxes and no
+  name drifts. Mitigation: a shared `bbnf_regex::lex_path` (already the intended common
+  lexer, `lib.rs:16-18`) reduces this to one source; the linter pins the shared-lexer
+  call on both sides.
+
+---
+
+## 8. What a prototype must test to move 6A
+
+1. **Wire `xtask iso-lint` against the live pair** and show the T/I budget: T and I
+   grep-counted from source, cap = |I| = 6, live exemptions = 3 each classified;
+   demonstrate RED on an injected 7th unclassified divergence and RED on an added TS
+   field with no exemption entry (the §2 (b)(c) obligations, as running CLI output).
+2. **Provenance rule dry-run**: grep-gate that every field name in both frontends
+   traces to the fixture/registry shape; inject a hand-authored `"statuses"` literal in
+   the cdylib and show the LOCK-3 rule flags it.
+3. **Per-class oracle for idiom #4**: add the rendered-string golden and prove it
+   catches the `{:?}`-vs-hand-quote render divergence (§5) that field equality misses.
+4. **Cost measurement (the real question 6A vs 6B/6D must settle)**: hand-maintenance
+   cost of the mirror under one *added* variant — add a 9th `PathErrorReason` variant
+   and count the edit sites (canonical enum, `Display`, payload enum, TS union,
+   `reasonText`, the test's two match tables) the linter forces green. That edit-site
+   count, measured, is the number that decides MIRROR-TREE (hand+lint) against
+   SPEC-GENERATED-SKELETON (6B) and ORACLE-ISOMORPHISM (6D). 6A's claim: the count is
+   small and the lint makes it *safe*; the prototype must produce the integer.
+</content>

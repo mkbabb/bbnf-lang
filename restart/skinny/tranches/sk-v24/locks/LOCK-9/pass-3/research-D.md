@@ -1,263 +1,210 @@
-# LOCK-9 · Family 9D — LAZY-SURFACE (streaming-first scanners; kernels selected by a
-# cost model at combinator-compile time)
+# LOCK-9 · Family 9D — THE LAZY / STREAMING SURFACE (parse-that rust)
 
-Charter: streaming-first — scanners as incremental lazy planes over input windows; kernels
-selected by a cost model at combinator-compile time; streaming parse support the design
-center. Steering: F4 (windowed vs streaming input surface) primarily; the cost-model
-kernel-selection half touches F1/F3. All paths absolute-relative to
-`/Users/mkbabb/Programming/parse-that/` unless noted. HEAD `ef10d5b`.
-
----
-
-## 1. The substrate as it stands — a whole-document, twice-resident input
-
-The mechanism 9D would rebuild does not exist in any partial form; the extant surface is its
-antithesis, and that must be stated as the design's starting fact.
-
-**Entry is whole-string, eager.** The only parse entry is `parse_that/src/parse.rs:146`
-`parse_return_state(&self, src: &'a str)` → `parse_that/src/parse.rs:285`
-`ParserState::new(src: &'a str)`, which fixes `end = src.len()` (`:286`) once and never
-grows it. There is no `end`-mutation path, no reader, no feed. `is_at_end` (`state.rs:360`)
-is `offset >= end` against that frozen length.
-
-**The input is materialized TWICE.** `ParserState::new` calls
-`allocate_padded_buf(src.as_bytes())` (`state.rs:287`), producing an OWNED, 64-byte-aligned
-copy of the ENTIRE input plus `INPUT_PAD_BYTES = 64` trailing NUL (`state.rs:57,82-106`),
-held as `padded_buf: Vec<PaddedChunk>` (`state.rs:226`). So during a parse the document is
-resident as the borrowed `src`/`src_bytes` (`&'a str`, `state.rs:204-206`) AND the owned
-padded copy — one `memcpy(N)` at construction (`state.rs:100`). Every SIMD scanner reads the
-owned copy through `PaddedView` (`state.rs:122-170`, obtained via `state.padded()` `:353`).
-
-**The 64-byte tail-NUL is a whole-buffer invariant, not a window property.** `PaddedView`'s
-contract (`state.rs:130-147`, `debug_assert bytes[len..].all(== 0)`) is what lets every
-kernel drop its per-stripe `i + STRIDE <= len` guard — the load-bearing fast-path premise of
-all eight scanners (R3 §4; `state.rs:313-344`). This invariant holds *because the whole
-document is contiguous with a single trailing pad*. A windowed/ring-buffer input breaks it at
-every chunk seam.
-
-**Census confirms zero streaming surface.** `rg 'feed|push_bytes|Decoder|BufRead|
-document_stream|from_reader|from_read'` over `parse_that/src` → **0 live hits** (the `chunk`
-tokens that surface are SIMD STRIPE loads, e.g. `span_parser/scan.rs:139`
-`u8x16::from_slice(&bytes[i..i+16])`, not document chunks). parse-that is **complete-only**:
-every grammar builds one whole owned tree over a fully-resident, pre-padded input.
-
-**F4's own caveat is dispositive for the naive reading.** Whole-document-granularity
-streaming (accept a `BufRead`, buffer it all, then parse) reduces nothing: the tree is still
-built whole; peak tree RSS is unchanged; and the owned `padded_buf` copy is *additional* RSS,
-not saved. If a chunked-feed API over a whole-document build is the only surface 9D can reach,
-it is a pure loss and must be reported as such.
+*Charter (9D): "streaming-first — scanners as incremental lazy planes over input windows;
+kernels selected by a cost model at combinator-compile time; streaming parse support becomes the
+design center." Directive tag: F4 (windowed vs streaming input surface). Family developed alone to
+its strongest form; the strongest form is the honest one, and the honest form splits the charter
+into a refuted half and a lawful half.*
 
 ---
 
-## 2. The `lazy` name is already taken — and means the opposite
+## 0. The governing census (F4, answered as data)
 
-`parse_that/src/lazy.rs` is a construction-deferral primitive, **not** input laziness.
-`LazyParser` (`lazy.rs:20`) memoizes the *built* `Parser` in `cached_parser` (`lazy.rs:22,42`)
-to break recursive-grammar construction cycles; `lazy()` (`lazy.rs:49`) wraps a thunk that
-builds a sub-parser on first call and caches it. Its consumers are exactly the self-referential
-JSON/CSS rules: `parsers/json.rs:50` (`json_array`), `:81` (`json_object`),
-`parsers/css/mod.rs:28,225`. This is deferred parser *building*, invoked over a fully-resident
-input; it moves no byte lazily. 9D must not reuse this word or this type — a "LazyScanner" that
-sounds sibling to `LazyParser` would collide semantically. Any streaming plane needs a new,
-distinct home (candidate: `parse_that/src/stream/`).
+### 0.1 Is there ANY in-wave streaming consumer? — NO. Whole-document owned trees, everywhere.
 
----
+A repo-wide grep (`feed(|push_bytes|Decoder|BufRead|document_stream|from_reader|StreamDeserializer|
+Incomplete|Partial<|StreamIsPartial`, over `rust/` and `typescript/`) returns **zero streaming
+producers in parse-that source**. The only hits are competitor benches (`benches/competitors/
+winnow.rs` `ModalResult`/`Partial`, `typescript/test/benchmarks/nearley.ts:206` `parser.feed`).
+Parse-that itself has no `feed`, no reader, no push/pull refill, no event sink.
 
-## 3. Backtrack IS bounded and PEG-predictive — the ring-buffer feasibility axis
+The input surface is whole-document and *owned*: `ParserState::new` (`parse_that/src/state.rs:285`)
+runs `allocate_padded_buf(src.as_bytes())` (`state.rs:82`), producing an owned, 64-byte-aligned
+`padded_buf: Vec<PaddedChunk>` (`state.rs:226`) — a full copy of the input plus `INPUT_PAD_BYTES=64`
+trailing NUL (`state.rs:57`). Every SIMD kernel loads from the whole-doc `PaddedView`
+(`state.rs:122`, `padded()` at `:353`). The output is a whole owned tree: `JsonValue::Object(Box<Vec<
+(Cow<'a,str>, JsonValue<'a>)>>)` (`parsers/json.rs:21`), with per-container `Vec::with_capacity(4)`
+grown in the hand-rolled loops (`json.rs:64,97`).
 
-The question that decides whether streaming is even *architecturally* possible is F4's second:
-is backtrack bounded (a ring buffer of fixed size can serve rewinds) or unbounded (streaming
-cannot bound its retained window)?
+**Consequence (per F4's own instruction):** the only streaming granularity parse-that could offer is
+*whole-document* — feed one complete JSON/CSS document at a time out of a stream of documents (the
+simdjson `document_stream` / ndjson model). This does **not** reduce peak tree RSS, because each
+document still builds its whole owned tree before the next begins. Peak RSS is the *tree*, not the
+input buffer; whole-document streaming touches only the buffer. So "streaming parse support becomes
+the design center" has **no RSS lever and no consumer** — a consumer-less substrate (Constitution
+viii / Y.13), forbidden as a design center.
 
-**Mechanism.** Backtrack is checkpoint-based, not log-based. `Parser::save_state`
-(`parse.rs:196`, sets `FLAG_SAVE_STATE`) records `checkpoint = state.offset` before the child
-(`parse.rs:105`); on child failure it resets `state.offset = cp` and folds the furthest reach
-into diagnostics: `state.furthest_offset = state.furthest_offset.max(state.offset)` then
-`state.offset = cp` (`parse.rs:114-119`). `furthest_offset` (`state.rs:211`) is a
-diagnostics-only high-water mark (consumed by `snapshot_diagnostic` `state.rs:436-449` and the
-error surface `parse.rs:183-189`), never a re-read trigger. Rewind is O(1) `usize`
-assignment *because the whole document is in memory* — no byte is re-fetched.
+### 0.2 Rewind distance at restore sites over JSON+CSS — BOUNDED, and near-zero for JSON.
 
-**Restore-site inventory (the ring-buffer sizing surface).**
-- Ordered-choice arms: `combinators/macros.rs:91-159` — ~11 `furthest_offset.max(offset)`
-  folds, one per `alt!` branch boundary.
-- Zero-width assertions (the classic unbounded-rewind risk): `span_parser/assertions.rs`
-  Not (`:17-24`), Minus (`:36-43`), LookAhead (`:69-76`), Peek (`:87-90`) — each saves BOTH
-  `offset` and `furthest_offset` and resets both; all are structurally zero-width (they probe
-  then rewind fully).
-- `sep_by` element-after-separator backtrack: `span_parser/sep_by.rs:41`,
-  `combinators/methods/sep_by.rs`.
-- Core save/restore: `parse.rs:105,118`; span mirror `span_parser/combinators.rs:31`,
-  `span_parser/mod.rs:169`.
+Backtracking is uniformly *checkpoint-local*: capture `cp = state.offset`, restore
+`state.offset = cp` on failure. Every restore site follows this idiom:
+- `combinators/methods/alternation.rs:13,18,24` — `.or`: `checkpoint = state.offset`, restore twice.
+- `combinators/macros.rs:91–242` — `alt!` unrolled 2..=N arms, each a `cp`/`state.offset = cp` pair.
+- `span_trait.rs:141,143,152` — `sep_by`: `cp` before each separator; restore on sep-miss or
+  element-after-sep failure (rejects trailing separators). Rewind ≤ one separator + one element try.
+- `leaf.rs:301,306` — flat N-way alternation checkpoint.
 
-**Structural claim (grounded, but the histogram is OWED).** JSON value dispatch is
-first-byte-deterministic — `alt!(object,array,string,number,bool,null)` discriminates on the
-opening byte, so a failed branch rewinds ≈ 0–1 byte (effectively LL(1)/predictive, not
-speculative). Array/object elements are `sep_by(value, sep)`; a failed separator rewinds past
-whitespace + one delimiter — bounded by a token, not the document. CSS adds recovery
-combinators (`parsers/css/` + the `diagnostics`-gated `css_recovery`) whose synchronization
-scan is the widest rewind candidate. **No restore site's rewind is proportional to document
-size**; the bound is per-rule/per-token. Therefore a bounded ring buffer *would* suffice on
-the backtrack axis — CONDITIONAL on the measured P99/max. The prototype obligation (§7.1) is
-to instrument these exact sites and emit the `furthest_offset − offset` and
-`offset − checkpoint` histograms (P50/P99/max, diagnostics on/off) over the JSON+CSS corpora;
-until then "bounded" is a structural argument, not a certified number.
+Rewind distance at a restore is `state.offset(at failure) − cp` — how far the *failed* branch
+advanced. This bounds the ring buffer a streaming reader would need. By corpus:
 
----
+- **JSON: P50 = 0, P99 = 0, max ≈ one token (~20 B).** The value grammar does **not** use `.or()`
+  chains — it uses **first-byte dispatch**: `dispatch_byte_multi(vec![(b"{",object),(b"[",array),
+  (b"\"",string),(b"t",true),(b"f",false),(b"n",null),(b"-0123456789",number)])` (`json.rs:117–125`,
+  impl `leaf.rs:340`). Dispatch reads one byte and jumps — **no checkpoint, no restore**. The only
+  JSON backtrack is inside a leaf that partially matches then fails (a malformed number/keyword),
+  bounded by that token's length. Structural JSON parses with essentially zero rewind.
+- **CSS: bounded by a rule/declaration, never the document.** CSS uses `.or()` and `sep_by`
+  (`css/declaration.rs:103` `from.or(to).or(pct)`; `css/selector.rs:20` `sep_by_small`). Where a
+  selector and a declaration share an ident prefix the failed branch can advance a whole
+  selector/declaration before restore. `css/mod.rs:240` already replaced the top-level `.or()` chain
+  with byte dispatch ("Byte dispatch instead of .or() chain"), capping the common case. Worst-case
+  rewind is one rule's span (tens–low-hundreds of bytes), **not unbounded**.
 
-## 4. The cost-model kernel-selection half — this one is REAL and has a working seed
-
-9D's second clause ("kernels selected by a cost model at combinator-compile time") is not
-speculative; it is already partly built and SPEC-ratified, and it is where 9D's strongest,
-defensible contribution lives — decoupled from the streaming risk.
-
-**SPEC ratifies the cost model as the differentiator.** SK-V24 SPEC §1 (the union): "no other
-parser generator emits grammar-specialized SIMD kernels behind a cost model." The generator's
-decision driver is LOCK-2's CSP/e-graph engine; 9D is a *client* of that driver, contributing
-the kernel candidate set and the per-site selection criterion.
-
-**PROVE-10 is the working template of compile-time kernel selection.** `Prefilter::from_dfa`
-(prototype `automata/prefilter.rs`, +97 LOC) reads the compiled DFA start-state transition row
-and derives the entry-byte set → selects `Byte1/Byte2/Byte3` (memchr/memchr2/memchr3 tiers) or
-`None` (parity fall-through), a one-time O(256) derivation folded into `Dfa::find`. Measured
-9.6×–29× on prefilterable patterns, **0.99× on non-prefilterable controls** (zero regression),
-compile-neutral, 44/44 tests (PROVE-10 REPORT §2, GO). This is *exactly* "a kernel chosen at
-compile time by a grammar-/DFA-derived property," and it is the seed a 9D cost model
-generalizes: the candidate tiers become {memchr prefilter, membership shufti (SPEC §0/01,
-CONFIRMED 7.5×/4.7× skip-heavy, dense-neutral 1.03–1.15×), structural bitmap, fused string
-scan (SPEC §0/03 `vshrn`, 0.898–0.931× cyc/B), scalar}, and the selector is a cost lattice fed
-by the grammar's derived scan character (self-loop membership, rare-entry prefilter, dense
-structural).
-
-**The refutation laws bound the candidate set — the cost model may NOT select these.**
-- 04 (block scheduling dead, 1.05–1.06× only): the M-class OoO core already pipelines the
-  single-block loop; the model selects *tier*, never *pipeline depth*.
-- 02 (digit-scan SIMD NO_GO): latency-bound CPI inversion 0.13→0.30; no digit-vector kernel
-  enters the candidate set — the redress target is float conversion, not the scan.
-- 01 dense-neutrality: shufti wins are skip-heavy only; on dense input it is ~parity, so the
-  cost model must gate prefilter/shufti on a *measured* skip-density estimate, not always-on.
-
-The kernel-selection half therefore stands on its own as a buildable, refutation-respecting
-9D contribution even if the streaming half is refuted.
+**Verdict on the ring-buffer question:** backtrack is *bounded* — a bounded ring buffer provably
+suffices (JSON trivial; CSS one-rule window). But see §3.1: bounded-but-rewardless, and it
+*collides with zero-copy*.
 
 ---
 
-## 5. Prior art — where streaming combinator/DFA parsers actually draw their lines
+## 1. The mechanism, made concrete — reframed to its lawful core
 
-- **nom `streaming` vs `complete` modules** (and winnow's `Partial<&[u8]>` +
-  `ErrMode::Incomplete`): the canonical Rust-combinator streaming contract returns
-  `Incomplete(Needed)` when the window is short, letting the caller feed more. parse-that has
-  NEITHER module — it is complete-only. This is the closest idiomatic template for a 9D
-  streaming lane, and it shows the cost: every leaf combinator must learn a "need more input"
-  return, a pervasive type change to `ParserResult` (`parse.rs:39`).
-- **serde_json `Deserializer::from_reader` + `StreamDeserializer`**: whole-*value* streaming —
-  one JSON value at a time from a `BufRead`, tree dropped between values. This is the ONLY
-  streaming variant with a real peak-RSS win, and the direct analog of a parse-that
-  `document_stream`. It is value-granular, not byte-granular.
-- **simdjson `document_stream` / On-Demand**: batched ndjson; requires `SIMDJSON_PADDING`
-  (the exact analog of parse-that's 64B pad) — and simdjson re-pads per batch, confirming the
-  chunk-seam re-padding cost (§6.3) is real and paid by the SOTA engine, not avoidable.
-- **tree-sitter incremental parse**: edit-incremental (persistent tree, reused subtrees on
-  reparse) — a *different* axis (editor latency, not RSS); not what 9D's "streaming input"
-  means, but the reference for "incremental" if the charter is re-read as edit-incremental.
-- **Ragel / re2c streaming**: DFA scanners with an explicit `p`/`pe`/`eof` window and a resume
-  state — the DFA-scanner-over-a-window model that 9C (SCANNER-AS-DFA) would need and that a
-  windowed 9D would consume. The resumable-DFA state is small (one state id) — the encouraging
-  half of streaming-DFA feasibility.
-- **PEG "cut" (ordered-choice commit) and packrat bounded lookahead**: the theory that a PEG's
-  backtrack is bounded once cuts are placed; corroborates §3's structural bound.
+The charter has two readings of "lazy," and parse-that already realizes one:
 
----
+- **Input-lazy** (a reader pulling bytes on demand into a window, SAX/event emission): **refuted**
+  above — no consumer, no RSS lever, and it breaks zero-copy (§3.1).
+- **Graph-lazy** (the parser *graph* built on demand to break recursion/cycles): **already shipped**
+  as `lazy()` (`lazy.rs:49`), a memoized `UnsafeCell<LazyParser>` whose inner `Parser` is constructed
+  once and cached (`lazy.rs:42–46`), used for `json_array`/`json_object` recursion (`json.rs:50,81`).
+  "Lazy plane over input windows" in parse-that *means* this — deferred parser construction, not
+  deferred input.
 
-## 6. Named risks & counterexamples (why 9D's streaming half is fragile)
+The single lawful, consumer-backed residue of 9D is the charter's second clause: **"kernels selected
+by a cost model at combinator-compile time."** It exists in embryo and is the family's real
+contribution to the gestalt:
 
-**6.1 Consumer-less-substrate law (Constitution viii / Y.13) — 9D's existential risk.** There
-is NO in-wave streaming consumer anywhere. The parse-that consumers are whole-string
-(value.js, latex-paper, keyframes.js — SPEC §2b; all pass a full `&str`). Building a streaming
-surface with no consumer is forbidden by design. 9D must NAME a real streaming consumer
-(ndjson ingest? a large-log CSV lane? a wasm-side reader?) or be reported as a substrate
-without a consumer — a refutation, per the constitution.
+- `leaf.rs::take_until_any_span` (`leaf.rs:177`) selects a scan kernel **at parser-construction time**
+  from the excluded-byte set cardinality: `One(u8)` / `Two` / `Three` / `Lut(Box<[bool;256]>)`
+  (`leaf.rs:182`) — a hand-coded cost model (≤3 distinct bytes → memchr-class compares; >3 → 256-LUT).
+- `span_parser/scan.rs` provides the vtable-free enum-dispatched arms the selection lowers to:
+  `dispatch_take_until_any1` (`scan.rs:9`, `memchr::memchr`), `_any2`, `_any3`, LUT/SIMD-nibble.
+- `bbnf-simd/src/dispatch.rs:42 select_classifier(alphabet:&[u8;64])` is the *same pattern* one level
+  up: pick a classifier for a 64-byte structural alphabet at build time.
 
-**6.2 The owned `padded_buf` is fundamentally anti-streaming.** `allocate_padded_buf`
-(`state.rs:82`) demands the whole input contiguous before parse. A streaming input has no such
-contiguity; the copy would have to become per-window, re-padding at each seam — which either
-re-introduces the per-stripe bounds guard (defeating the fast-path premise of all eight
-scanners, R3 §4) or pays an overlap-copy at every window boundary.
-
-**6.3 Chunk-seam re-padding defeats the PaddedView invariant.** The 64B tail-NUL
-(`state.rs:130-147`) is why kernels are guard-free. At a ring-buffer window boundary the "tail"
-is live data, not NUL, so either the window carries a 64B overlap (simdjson pays this) or the
-boundary stripe reverts to a scalar/guarded tail (`parsers/scan/decode.rs:241`,
-`parsers/scan/number_simd.rs:239` scalar-tail pattern) — a per-window tax that a whole-document
-parse never pays. The prototype must measure whether the streaming RSS win survives this tax.
-
-**6.4 Whole-document streaming ≠ RSS win (F4's caveat, restated as a risk).** Only
-sub-document / value-granular streaming (§5 serde/simdjson model) reduces peak tree RSS. A
-chunked-feed API that still builds the whole tree is a net loss (adds the reader buffer to the
-already-double-resident input). 9D must commit to *value-granular* streaming or nothing.
-
-**6.5 Cost-model over-reach.** A selector that ranks kernels by static instruction count would
-pick the digit-SIMD and block-pipelined kernels the refutation laws (02, 04) kill; the model
-must be fed *measured* cyc/B facts (LOCK-2's PMU fact tables), not static heuristics, or it
-reproduces the refuted wins.
+**The concrete 9D mechanism:** promote the ad-hoc `One/Two/Three/Lut` ladder into a *pluggable cost
+model* over scan-kernel candidates, selected at combinator-construction time — the "compile-time" of a
+combinator library. Not new machinery for a streaming fantasy; the generalization of code that already
+runs, with a live consumer in every `take_until`/scanner site (Y.13 satisfied). It is the natural seam
+to **LOCK-2's cost model** (CSP over per-site lowering: kernel, capacity, prefilter tier) and
+**LOCK-5's prefilter selection** — 9D contributes the *scanner site's* candidate set and cost inputs
+(excluded-set cardinality, expected run length, alphabet separability), never a bespoke solver.
 
 ---
 
-## 7. What a prototype MUST test to move family 9D
+## 2. Substrate & integration seams (path:line where extant code serves)
 
-1. **The rewind histogram (the go/no-go for streaming feasibility).** Instrument the restore
-   sites (`parse.rs:118`, `span_parser/assertions.rs:17-90`, `combinators/macros.rs:91-159`,
-   `sep_by.rs`) to record `furthest_offset − offset` AND `offset − checkpoint` per rewind,
-   over the six JSON corpora + the CSS corpora, diagnostics ON and OFF, base-pinned. Emit
-   P50/P99/max. **Decision rule:** if max is a small constant (independent of document size),
-   a bounded ring buffer suffices and streaming is architecturally possible; if any site's
-   rewind scales with input, streaming is refuted on the backtrack axis. (Diagnostics ON is
-   expected to widen the distribution via `furthest_offset` tracking; report both.)
-
-2. **The ndjson / `document_stream` RSS probe (the only RSS-positive variant).** Build a
-   value-granular lane: parse one JSON value per record from a `BufRead`, drop the tree after
-   each; measure peak RSS (`/usr/bin/time -l` max RSS on this Darwin host) vs the whole-file
-   `parse` on a multi-value corpus. This requires `padded_buf` to become per-record.
-   **Decision rule:** RSS strictly and materially below whole-file, net of the per-record
-   padding cost, or the streaming charter is a loss.
-
-3. **The PaddedView-under-window survival test.** Prototype a ring-buffer window feeding ONE
-   scanner (e.g. `parsers/scan/ws_comment.rs` or `parsers/scan/structural_bitmap.rs`); measure
-   the chunk-seam re-padding cost (overlap-copy vs scalar-tail revert) and the resulting cyc/B
-   vs the whole-buffer guard-free path. **Decision rule:** the guard-free fast-path premise
-   (R3 §4) either survives windowing or the streaming path is measurably slower per byte —
-   quantify the tax.
-
-4. **Name-and-wire a streaming consumer (Y.13).** Identify one real consumer (ndjson ingest,
-   large-log lane, or a wasm reader on the GN-4 seam) and wire it in the same wave, or file the
-   consumer-less refutation. No dormant streaming substrate.
-
-5. **Generalize PROVE-10's compile-time selection into a cost-model kernel picker.** Extend
-   `Prefilter::from_dfa`'s derivation into a selector over {prefilter, membership shufti,
-   structural bitmap, fused `vshrn` string scan, scalar}, driven by a grammar-derived scan
-   character and LOCK-2's PMU fact table; gate shufti/prefilter on a measured skip-density
-   estimate (respecting 01's dense-neutrality). **Decision rule:** on a real grammar scan site,
-   the selected kernel matches or beats always-scan, and the selector never picks a
-   refutation-killed kernel (02/04). This half is buildable independent of streaming and is
-   9D's defensible core.
+| Seam | Location | Role for 9D |
+|---|---|---|
+| Whole-doc owned window | `state.rs:82` `allocate_padded_buf`, `:226` `padded_buf`, `:353` `padded()` | The "input window" already exists — whole-doc, owned, 64B-padded. A streaming window would *replace* this; the pad contract (`INPUT_PAD_BYTES=64`, `:57`) is what a ring buffer must reproduce at every refill boundary. |
+| Cursor + furthest | `state.rs:210` `offset`, `:211` `furthest_offset` | The only mutable position state. `furthest_offset` (`alternation.rs:17`) is the max-reach watermark — the exact quantity a ring buffer must not have discarded. |
+| Checkpoint/restore idiom | `alternation.rs:13–24`, `macros.rs:91–242`, `span_trait.rs:141–152`, `leaf.rs:301–306` | Every rewind site. A ring-buffer window must retain `[min(live checkpoints) .. furthest_offset]`. Bounded (§0.2). |
+| First-byte dispatch (rewind-free) | `json.rs:117`, `leaf.rs:315 dispatch_byte`/`:340 dispatch_byte_multi` | Proves the JSON hot path needs *no* backtrack window at all — the template for eliminating rewind by construction. |
+| Graph-lazy plane | `lazy.rs:49` `lazy()`, `:20 LazyParser`, `:42 get()` | The real "lazy plane" — parser-graph memoization, already shipped. |
+| Compile-time kernel selection | `leaf.rs:177–214` `take_until_any_span` (`One/Two/Three/Lut`), `span_parser/scan.rs:9+` dispatch arms | The lawful 9D core: generalize into a pluggable cost model. Live consumers: every JSON string/number scan, every CSS `take_until`. |
+| Kernel producer home | `bbnf-simd/src/lib.rs` (`compact_mask:228`, `byte_class_from_table_64:256`, `find_ascii_set_member64:208`, `structural_classify_64:301`), `dispatch.rs:42 select_classifier` | Where a shared cost-model-selected kernel would resolve. The contract-split movemask producers (LEAN nibble-`vshrn` / DENSE `vpaddq`) are absent here — F1/9A territory, not 9D. |
+| Zero-copy output contract | `json.rs:19,29` `Cow::Borrowed(s.as_str())`, `state.rs:172 Span<'a>{src:&'a str}` | The counterexample generator (§3.1): outputs borrow `&'a str` from the *whole* `src`. A sliding window invalidates these borrows. |
 
 ---
 
-## 8. Disposition — 9D's honest strongest form
+## 3. Named risks & counterexamples
 
-9D splits cleanly into two claims of very different strength.
+### 3.1 The killer counterexample: streaming destroys zero-copy.
+Parse-that's headline is zero-copy: `sp_quoted_string(...).map(|s| Cow::Borrowed(s.as_str()))`
+(`json.rs:29`) and `Span<'a>{ src: &'a str }` (`state.rs:172`) borrow directly from the whole `src`
+for the *lifetime of the tree*. A sliding/ring-buffer input window frees bytes behind the cursor —
+but the tree still points into them. Streaming therefore **forces owning copies** of every string leaf
+(`Cow::Owned`), converting the zero-copy fast path into an allocating one. The refactor that enables
+streaming *regresses* the exact metric parse-that optimizes. Decisive refutation of "streaming as
+design center."
 
-**The kernel-selection half is REAL, buildable, and refutation-respecting** (§4): PROVE-10 is
-its working seed, LOCK-2's driver is its engine, the candidate tiers are all SPEC §0-measured,
-and the refutation laws bound its choices. This is the half to advance.
+### 3.2 Packrat incompatibility. R3 §1 records a "packrat epoch" (`934b2fa` S.H1). Packrat memo tables
+key on `(rule, absolute offset)` and must survive the whole parse — they pin the entire input.
+Bounded-window streaming and packrat memoization are mutually exclusive (cf. ANTLR
+`UnbufferedCharStream` requiring explicit markers; PEG packrat's O(n)-memory law). Any 9D streaming
+claim must first prove packrat is off on the streamed grammar, or it is unsound.
 
-**The streaming/lazy-input half is a substrate at high risk of being consumer-less** (§6.1)
-and blocked by the owned-padded-buffer contiguity requirement (§6.2) + the PaddedView tail-NUL
-invariant (§6.3). Its only RSS-positive form is value-granular ndjson streaming (§5, §7.2), and
-it needs a named consumer to exist at all. Its go/no-go is the rewind histogram (§7.1) — a
-measurement that does not yet exist and that this family cannot honestly assert without. The
-strongest honest 9D therefore advances the cost-model kernel picker as its core, and carries
-the streaming lane as a *conditional* plane gated on (a) a bounded measured rewind, (b) a
-named value-granular consumer, and (c) a windowed-PaddedView survival proof — any of which
-failing files streaming as a measured refutation rather than shipping a consumer-less lazy
-substrate.
+### 3.3 "Bounded but rewardless." §0.2 proves the ring buffer is small. But small ≠ worthwhile: the
+reward for a bounded input window is bounded *input* RSS, while peak RSS is the *tree* (§0.1). The
+ceiling is known-nil before any prototype — mirroring PT-2 W4's "high-risk, low-reward by measurement"
+arena close (PT-2.md §4 W4): the honest disposition is a *measured refutation*, not a build.
+
+### 3.4 Cost-model over-reach. The lawful residue (§1) must not metastasize into a bespoke solver in
+the scanner crate (Constitution vi; `no-god-modules`, `general-infra-crates`). The cost model is
+LOCK-2's; 9D supplies candidate kernels + cost inputs only. A scanner-local CSP would double-home the
+optimizer.
+
+---
+
+## 4. Prior art (with citations)
+
+- **nom `streaming` vs `complete`** — the canonical combinator streaming model: a `streaming::*` module
+  returns `Err::Incomplete(Needed)` when input may continue; the consumer re-feeds. Documented cost:
+  every combinator doubles, and `Incomplete` propagation is viral (`nom::Err::Incomplete`).
+- **winnow `Partial<&[u8]>` + `StreamIsPartial`** — nom's successor isolates streaming into a *stream
+  wrapper type* (`Partial<I>`) and a trait, so the combinator body is written once; `ErrMode::Incomplete`
+  signals refill. Present only in parse-that's competitor bench (`benches/competitors/winnow.rs:35`).
+  Lesson: streaming is a *stream-type* concern, not a combinator-rewrite — but it still forfeits
+  zero-copy across refills.
+- **simdjson** — `SIMDJSON_PADDING` (64 B) is the exact analog of `INPUT_PAD_BYTES=64` (`state.rs:57`);
+  simdjson requires the *whole padded document* in memory and its `document_stream` handles only
+  *concatenated* (ndjson) documents, each parsed whole. Direct authority for §0.1. On-Demand is lazy
+  *tree materialization* over a whole buffer, not input streaming.
+- **serde_json `from_reader` / `StreamDeserializer`** — serde's own guidance: `from_reader` buffers and
+  is typically *slower* than `from_slice`; `StreamDeserializer` streams *top-level sequences* (ndjson),
+  not sub-document windows. Confirms the whole-document ceiling.
+- **tree-sitter** — incremental *reparse over edits* (retains prior tree, re-lexes changed ranges) — a
+  different axis (edit-incrementality) from byte-streaming; not applicable to a one-shot parse.
+- **re2c `--storable-state` / Ragel push model** — machine-generated refill/ring-buffer state-save cost
+  for genuine push lexers; the boilerplate a streaming scanner inherits.
+- **regex-automata `meta`** — the cost-model-selects-kernel pattern done right: the meta engine picks
+  DFA / lazy-DFA / one-pass / backtracker / PikeVM by static properties at build time. The model for
+  §1's pluggable scanner-kernel selection (and the `pluggable-components` law).
+- **Hyperscan / Teddy** — literal-set prefilter tier selection by set size; the analog of the
+  `One/Two/Three/Lut` ladder (`leaf.rs:182`) generalized.
+
+---
+
+## 5. Exactly what a prototype must test to move this family
+
+1. **Rewind histogram (the F4 evidence).** Instrument `state.rs` restore sites to log
+   `furthest_offset − offset` at every `state.offset = cp`/`checkpoint`. Run the divan combinator +
+   CSS benches (R3 §6) over all six JSON corpora + bootstrap/normalize/tailwind CSS, diagnostics on and
+   off. Emit P50/P99/max per corpus, base-pinned. **Predicted:** JSON P50=P99=0, max ≈ token; CSS
+   max ≈ one rule. Confirms/falsifies "bounded ring buffer suffices." (Cheap: a counter + `Vec<u32>`.)
+2. **Zero-copy-forfeit measurement (the refutation, §3.1).** Fork the JSON string leaf to `Cow::Owned`
+   (simulating a window that cannot borrow) and re-run the paired cold bench + `alloc_probe`
+   (PT-2.md W1). Quantify throughput + alloc regression. **Predicted:** measurable slowdown +
+   per-string alloc explosion — the artifact that closes "streaming as design center" as a *refutation*
+   (PT-2 W4-style dual-outcome close, P39).
+3. **Pluggable kernel-selection prototype (the lawful build).** Extract `take_until_any_span`'s
+   `One/Two/Three/Lut` decision (`leaf.rs:177`) behind a `ScanKernelCost` trait fed by
+   {excluded-set cardinality, alphabet separability from `bbnf-simd::select_classifier`, expected run
+   length}. Gate: byte-identical scan results (parity oracle vs the current ladder), and `otool -tv`
+   insn-count ≤ the hand ladder on the JSON/CSS hot scanners, base-pinned, paired ≥0.98× (the PT-2 W1
+   gate shape). The only 9D artifact that *builds* rather than *refutes*.
+4. **Packrat-off proof (§3.2).** Confirm the streamed grammar carries no live packrat memo table across
+   the window boundary, or record the pin as a hard blocker.
+
+---
+
+## 6. Family disposition (the strongest honest form)
+
+9D's charter as literally stated — *streaming input as the design center* — is **refuted for
+parse-that**: no consumer (§0.1), no peak-RSS lever (peak is the tree), and a decisive collision with
+zero-copy (§3.1). The bounded-rewind ring-buffer question (§0.2) resolves *bounded but rewardless*.
+The lawful, consumer-backed residue is the second charter clause — **compile-time (combinator-
+construction-time) kernel selection by a pluggable cost model** (§1), already running in embryo at
+`leaf.rs:177` + `bbnf-simd/dispatch.rs:42`, generalized into LOCK-2's cost model with 9D supplying the
+scanner-site candidate set. The family advances as: (a) a *measured refutation* of streaming
+(prototype §5.2, an artifact per P39), plus (b) a *landed* pluggable scan-kernel-selection plane
+(prototype §5.3) feeding the gestalt's one cost model. "Lazy" in parse-that already means graph-lazy
+(`lazy()`), not input-lazy.

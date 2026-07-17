@@ -18,6 +18,13 @@ organ-level. Two families do not yet share a tree: 6B/6C/6D ground on **skinny@H
 pair grounds on **top-level `crates/{core,bbnf-path,bbnf-path-ts}`** (LEGACY, archives at GN-0;
 `skinny/crates/bbnf-path` does not exist — verified). Every number below names its tree.
 
+**Load-bearing claims re-verified against HEAD this synthesis (Constitution-vii).**
+(i) `skinny/crates/codegen/src/general_descent/{view.rs 431, emit.rs 452}` = **883 LOC present** —
+the in-production emitter kernel §2 rests on. (ii) `emit_classify` / `LayoutSpec` return **zero hits
+across `skinny/crates`** — 6B's named spec machine is a scratch probe (`pass-3/proto-1-code/`), NOT a
+landed skinny organ (M1). (iii) `skinny/crates/bbnf-path` **ABSENT** — 6A's pair is legacy-only (M2).
+(iv) the `MaterializationDescriptor` seat is live at `skinny/crates/passes/src/lib.rs` (§2 Q5 seam).
+
 ---
 
 ## §1 — Family 6A · MIRROR-TREE + isomorphism LINTER · ADVANCED · dependent-on-6D · crown BUILT+RAN

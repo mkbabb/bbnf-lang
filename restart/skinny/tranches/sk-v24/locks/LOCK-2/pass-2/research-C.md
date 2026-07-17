@@ -93,9 +93,18 @@ production-grade and is the solver of record:
 
 - **A `bounded_sum` / knapsack constraint.** `csp-solver` has `AllDifferent`, `NotEqual`,
   `Implication`, `AllDifferentExcept`, `Lambda` (`constraint/`) — **no linear/sum constraint
-  exists**. The budget knapsack (Σ static_size ≤ B) is net-new: a `BoundedSum` constraint carrying
-  per-value weight vectors and a bound, with a `revise` that prunes values whose min-completion
-  exceeds the bound. This is the single new primitive Family 2C owns in the solver crate.
+  exists** (verified: `constraint/{all_different,not_equal,implication,all_different_except,
+  lambda}.rs` is the whole catalog). The budget knapsack (Σ static_size ≤ B) is net-new: a
+  `BoundedSum` constraint carrying per-value weight vectors and a bound, with a `revise` that prunes
+  values whose min-completion exceeds the bound. The propagator of record is **Trick 2003, *A
+  Dynamic Programming Approach for Consistency and Propagation for Knapsack Constraints*** (the
+  canonical bounds-propagation knapsack; cf. Shaw 2004 *A Constraint for Bin Packing*, Fahle &
+  Sellmann) — O(n log n) once, not the naive O(n) re-sum per `revise`. Named risk: a naive
+  re-summing form is sub-millisecond at fleet scale (≤100 vars) but is a workaround the constitution
+  refuses; the shipped form is the DP propagator. This is the single new primitive Family 2C owns in
+  the solver crate — and it lands in `csp-solver`, not `passes`, because the store is shared with
+  Lock-1 (capacities/width overloads are `bounded_sum` too); a `passes`-local helper would be a
+  consumer-less duplicate (Y.13).
 - **PMU-fed cost table.** A committed fact table mapping (site-kind, candidate) → cyc/B coefficient,
   versioned by `cost_formula_version` (`ir/cost.rs:174`), regenerated only from banked
   `Measurement` rows — never read from env at regen (`static_profile_provider_status:
@@ -123,13 +132,31 @@ Relation to the incumbent: `csp-solver`'s `CostFiniteDomain` B&B (`search.rs:456
 engine* but is fed a graph with **no edges** — every variable independent, so it degenerates to
 per-site argmin and the "solve" is vacuous. PBQP's value here is not a new crate; it is the
 **recognition that coherence + budget ARE the edges**, and that with edges present the search stays
-cheap because the graph is near-tree. Recommendation: keep the B&B engine (it already does
-bound-pruned tree search with `FailFirst`+MAC), add pairwise-cost and `bounded_sum` edges, and rely
-on MAC to reproduce PBQP-reduction efficiency at these tiny scales — do not import a separate PBQP
-solver. E-graph extraction (2A/2B) is **rejected as the decider**: top-down cost extraction handles
-neither the global cardinality budget nor coherence edges without an ILP lift (egg-as-ILP), and it
-re-imports the per-class multiplicity question — 2C's stance is extraction *produces candidates*,
-the CSP *decides*.
+cheap because the graph is near-tree.
+
+**But PBQP is refused *as the solver* for this graph class — precisely because of the budget.**
+PBQP expresses coherence perfectly (a coherence conflict *is* a pairwise cost matrix) but has **no
+way to express the global cardinality/sum budget `Σ static_size ≤ B`** — it is not a pairwise cost.
+The only PBQP encodings of a global budget are (a) Lagrangian-relaxing it into the pairwise costs,
+which forfeits the *hard* feasibility guarantee, or (b) adding a single "budget-pressure" node
+connected to every site — which is a high-degree (degree-n) node that **destroys R0/R1/R2
+reducibility**, forcing the whole solve onto the RN heuristic and losing optimality on the one edge
+2C exists to get right. So PBQP wins the coherence sub-problem and loses the budget sub-problem;
+since the budget is the entire justification for a *solver* (a global trade-off the greedy cascade
+cannot see), PBQP is refused. Recommendation: keep the B&B engine (bound-pruned tree search,
+`FailFirst`+MAC), model coherence as a **hard `ImplicationConstraint`** (already in the crate,
+`constraint/implication.rs:19` — "sub-rule under an offset-tape caller ⟹ shape ∈ {OffsetTape,
+EventTape}"), and add the `bounded_sum` global edge; MAC reproduces PBQP-reduction efficiency at
+these tiny scales. Coherence stays *hard*, never a soft pairwise cost — a legality invariant modeled
+as a preference could emit an identity-violating parser (the Q4 identity-preservation floor).
+
+E-graph extraction (2A/2B) is **rejected as the decider** for the same structural reason: *optimal
+e-graph extraction under a global size constraint is itself the knapsack* — NP-hard, solved in the
+literature as ILP/MaxSAT (egg's LP extractor; Goharshady et al. 2024, *Fast and Optimal Extraction
+for Sparse Equality Graphs*; the `extraction-gym` corpus). Routing the budget through extraction
+buys nothing and buries the constraint inside a cost hack; it also re-imports the per-class
+multiplicity question. 2C's stance is invariant: extraction *produces candidates*, the CSP
+*decides*.
 
 Prior art: [SSA-Based Register Allocation with PBQP (Buchwald/Zwinkau)](https://beza1e1.tuxen.de/pdfs/buchwald11cc.pdf),
 [Nearly Optimal Register Allocation with PBQP, Hames & Scholz 2006](https://link.springer.com/content/pdf/10.1007/11860990_21.pdf),
@@ -137,7 +164,13 @@ Prior art: [SSA-Based Register Allocation with PBQP (Buchwald/Zwinkau)](https://
 [Scholz PBQP page](https://www.complang.tuwien.ac.at/scholz/pbqp.html),
 [Optimal DNN Primitive Selection with PBQP](https://arxiv.org/pdf/1710.01079) — the closest analogue:
 per-layer kernel selection with pairwise data-layout conversion costs, isomorphic to per-site kernel
-selection with substrate-crossing costs.
+selection with substrate-crossing costs. For the extraction-as-decider refusal:
+[egg LP/ILP extraction](https://egraphs-good.github.io/), the
+[extraction-gym benchmark](https://github.com/egraphs-good/extraction-gym), and Goharshady et al.
+2024 (fast/optimal extraction on sparse e-graphs) — all confirm that *global*-constraint extraction
+is the knapsack, which 2C models directly rather than launders through a cost function; and
+[Trick 2003, knapsack-constraint propagation](https://www.andrew.cmu.edu/user/vanhoeve/mdd/related_work/2003_Trick_knapsack.pdf)
+for the `BoundedSum` propagator.
 
 ### Q7 — Budget knapsack as constraint; selection-equivalence with the cascade
 

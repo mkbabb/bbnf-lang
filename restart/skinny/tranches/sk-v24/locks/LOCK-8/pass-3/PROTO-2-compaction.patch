@@ -1,0 +1,113 @@
+# LOCK-8 pass-3 probe 2 (8B+8C compaction) — scratch probe sources
+# base-pin: bbnf-lang HEAD 1a0d3091c ; parse-that rust/regex read-only
+# Build: scratch copy of parse-that per R3 sec 8 (rsync, patch paths absolutized,
+#        CARGO_TARGET_DIR inside copy). probe8 added as a workspace member so only
+#        parse_that's LIB deps compile (its heavy dev-deps are skipped).
+# --- parse-that is UNMUTATED; the only edit is the +1 workspace member line below.
+
+==== EDIT: rust/Cargo.toml (workspace members, +probe8) ====
+-members = ["src", "parse_that", "bootstrap", "regex"]
++members = ["src", "parse_that", "bootstrap", "regex", "probe8"]
+
+==== NEW FILE: rust/probe8/Cargo.toml ====
+[package]
+name = "probe8"
+version = "0.0.0"
+edition = "2024"
+
+[[bin]]
+name = "probe8"
+path = "src/main.rs"
+
+[dependencies]
+parse_that = { path = "../parse_that" }
+
+==== NEW FILE: rust/probe8/src/main.rs ====
+// LOCK-8 pass-3 probe 2 — Cross-language undefined-compaction.
+//
+// QUESTION: TS `all(string('a'), whitespace, string('b'))` TYPES as
+// Parser<[string,string,string]> but YIELDS ['a','b'] (length 2) when the
+// whitespace arm empty-matches (fuseAll drops the undefined-yielding slot,
+// leaf.ts:209/248/270). Does the Rust core compact identically, or keep a
+// FIXED-ARITY tuple with the empty/unit slot present?
+//
+// Rust mirror of TS `whitespace` (SUCCEEDS on zero whitespace, yields
+// `undefined`): `string(" ").opt()` — on "ab" the middle arm empty-matches,
+// consumes nothing, yields `None` (a successful unit/empty arm; cf. parse_that
+// combinator_test.rs:185 `string("x").opt().parse("abc") == Some(None)`).
+//
+// Two flat-tuple mechanisms the brief named build the sequence tuple:
+//   (1) seq!  (combinators/macros.rs:14): `Some((v1, v2, v3))`
+//   (2) ParserFlat::then (impl_parser_flat!, span_trait.rs:184-220):
+//       destructures `($($T,)*)` and appends `last` -> `($($T,)* Last)`.
+// Both are statically-sized tuples: arity is a COMPILE-TIME constant, no
+// runtime path can drop a slot.
+//
+// RUNTIME here exercises mechanism (2). Mechanism (1)'s arity is manifest in
+// source (three `$pN` arms -> a 3-tuple) but its inline `move |state| ..`
+// closure fails rustc higher-ranked-lifetime inference at every EXTERNAL
+// callsite ("implementation of `Fn` is not general enough"), so it cannot be
+// instantiated outside the crate — orthogonal to arity, and it is never
+// exercised in parse_that's own tests/benches either.
+
+use parse_that::{Parser, ParserFlat, string};
+
+/// Count the top-level arity of a tuple type from its `type_name`.
+/// Reflected off the CONCRETE runtime type of the value — not a literal.
+fn tuple_arity(type_name: &str) -> usize {
+    let s = type_name.trim();
+    let inner = &s[1..s.len() - 1]; // strip outer parens
+    let mut depth = 0i32;
+    let mut commas = 0usize;
+    let mut nonempty = false;
+    for c in inner.chars() {
+        match c {
+            '(' | '<' | '[' => depth += 1,
+            ')' | '>' | ']' => depth -= 1,
+            ',' if depth == 0 => commas += 1,
+            c if !c.is_whitespace() => nonempty = true,
+            _ => {}
+        }
+    }
+    if !nonempty { 0 } else { commas + 1 }
+}
+
+fn main() {
+    // ParserFlat::then (impl_parser_flat!, span_trait.rs) — the flat 3-tuple.
+    // string("a").then(ws) : Parser<(&str, Option<&str>)>          (2-tuple)
+    // ParserFlat::then(.., string("b")) : Parser<(&str, Option<&str>, &str)>
+    let ws = string(" ").opt();
+    let p_flat: Parser<(&str, Option<&str>, &str)> =
+        ParserFlat::then(string("a").then(ws), string("b"));
+    let out = p_flat.parse("ab").expect("flat seq must parse 'ab'");
+    let ty = std::any::type_name_of_val(&out);
+    let arity = tuple_arity(ty);
+    let (a, mid, b) = out; // compiles only if arity == 3
+
+    println!("[ParserFlat::then / impl_parser_flat! — span_trait.rs:184]");
+    println!("RUST_INPUT         = \"ab\"   (no space between a and b)");
+    println!("RUST_OUTPUT_TYPE   = {ty}");
+    println!("RUST_SEQ_RESULT    = ({a:?}, {mid:?}, {b:?})");
+    println!("RUST_MIDDLE_ARM    = {mid:?}   (None == whitespace empty-matched; slot KEPT)");
+    println!("RUST_TUPLE_ARITY   = {arity}");
+    // Decisive marker: single integer for a downstream grep.
+    println!("VERDICT_ARITY={arity}");
+}
+
+==== NEW FILE: ts-probe8.mjs (TS half) ====
+// LOCK-8 pass-3 probe 2 — TS half. Cross-language undefined-compaction.
+// all(string('a'), whitespace, string('b')).parse('ab')  — whitespace = regex(/\s*/)
+// empty-matches between 'a' and 'b', yields undefined, and `all` compacts it out
+// (leaf.ts arity-3 branch: `if (state.value !== undefined) out[w++] = state.value;
+//  ... if (w !== 3) out.length = w;`). We assert the runtime .length.
+import { all, string, whitespace } from "/Users/mkbabb/Programming/parse-that/typescript/dist/core.js";
+
+const p = all(string("a"), whitespace, string("b"));
+const value = p.parse("ab"); // parse returns the produced value (the compacted array)
+
+const arr = Array.isArray(value) ? value : [value];
+console.log("TS_INPUT        = \"ab\"");
+console.log("TS_STATIC_TYPE  = Parser<[string, string, string]>  (declared arity 3)");
+console.log("TS_VALUE        = " + JSON.stringify(value));
+console.log("TS_VALUE_LENGTH = " + arr.length);
+console.log("VERDICT_LENGTH=" + arr.length);

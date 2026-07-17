@@ -1,275 +1,295 @@
-# LOCK-8 · Family 8B — THE TYPE PLANE — pass-3 research
+# LOCK-8 · Family 8B — THE TYPE PLANE (parse-that/typescript, TYPE-LEVEL TOTALITY)
 
-*TYPE-LEVEL TOTALITY: the TS type system carries the grammar — full positional inference, a
-typed combinator algebra with no `Parser<any>` anywhere, diagnostics typed by position, all at
-the zero-runtime-cost law. All paths are `parse-that/typescript` (READ-ONLY; any landing rides
-letter BBNF-PT-G). Prototyping is scratch-copy only. Every `path:line` verified against HEAD.*
-
----
-
-## 0. The type surface as it stands (the substrate)
-
-The public combinator algebra is typed at four homes, and the family's whole subject is the gap
-between what these signatures *promise* and what the runtime *delivers*:
-
-- `ExtractValue<T>` — the positional projection, **defined twice**: `parser.ts:9-11` (module) and
-  **re-declared byte-identically inside `all()`** `leaf.ts:155-157`. Both read
-  `{ [K in keyof T]: T[K] extends Parser<infer V> ? V : never }`. DRY defect; one exported home
-  (`src/parse/types.ts`) imported by both is the fix — a pure refactor, zero type-behaviour change.
-- `ParserFunction<T=string>` `parser.ts:14-16` — the megamorphic-IC pointer. Its **type parameter
-  `T` is entirely phantom**: the body is `(val: ParserState<any>) => ParserState<any>`; `T` never
-  appears. Every `as ParserFunction<[T,S]>` / `as ParserFunction<S>` cast strewn through
-  `parser.ts` (lines 100,119,141,157,184,207,229,246,...) is therefore a **type-level no-op** —
-  documentary only. The real typing is minted solely by the `makeParser`/`new Parser` return casts.
-  This is lawful (§1) but it means the "tightening" cannot touch `ParserFunction`; it lives in the
-  return-cast layer.
-- The `Parser<any>` leak sites: `any<T extends Array<Parser<any>>>` `leaf.ts:28`;
-  `all<T extends Array<Parser<any>>>` `leaf.ts:154`; `fuseAll(parsers: Array<Parser<any>>)`
-  `leaf.ts:179`; `restore(saved: {…; value: any})` `state.ts:79`.
-- The value-slot erasure choke points: `state.ok/err/from` each `return this as unknown as
-  ParserState<S>` `state.ts:59,66,73`; `unsafeSetValue`/`unsafeCall`/`unsafeCallRaw`
-  `state.ts:87-99`. `fuseAll` produces its tuple through exactly this door: `return state.ok(out)
-  as ParserState<Result>` `leaf.ts:210,249,271`.
-
-`Parser<T>` is **invariant in `T`**: `T` occurs covariantly in `value:T` (`parser.ts:26`,
-`state.ts:49`) and in `state:ParserState<T>|undefined`, and — nominally — in the `ParserFunction<T>`
-field, but that erases to `any`. So the only real `T`-dependence at runtime is the `value` slot,
-which is genuinely `unknown` until a parse populates it.
+*The TS type system carries the grammar: full positional inference, a typed combinator
+algebra with no `Parser<any>` in a user-facing position, zero runtime cost. All paths cite
+`parse-that/typescript` (READ-ONLY; any landing rides letter BBNF-PT-G). Prototyping is on
+scratch copies. This family develops the type plane alone.*
 
 ---
 
-## 1. Directive-1 audit — the `as unknown as` erasure in the `all` value path
+## 0. The plane's frame
 
-**Where the erasure actually lives.** `all()` itself (`leaf.ts:154-164`) carries a **single** cast,
-`... as Parser<Result>`, not `as unknown as`. Under the *current* loose bound the ternary
-`parsers.length===1 ? parsers[0].parser : fuseAll<Result>(parsers)` has type
-`ParserFunction<any> | ParserFunction<Result>`; `makeParser<T>` infers `T=any`, returns
-`Parser<any>`, and `any → Result` is a plain narrowing — one `as` suffices. The **`as unknown as`**
-form appears (a) in the value producer `state.ok` (`state.ts:59`) that `fuseAll` funnels through,
-and (b) in the two `all()`-consuming combinators: `trim` — `whitespace as unknown as Parser<S>`
-`parser.ts:481`, `all(parser,this,parser) as unknown as Parser<T[]>` `parser.ts:485`,
-`this.wrap(parser,parser) as unknown as Parser<T>` `parser.ts:520` — and `wrap`'s `discard` arm
-`all(start as Parser<unknown>, this as Parser<unknown>, end as Parser<unknown>)` `parser.ts:394`.
-
-**Verdict on the erasure itself: LAWFUL variance-bridging, documentable.** Each `as unknown as
-ParserState<S>` / `as Parser<Result>` bridges the invariant `value`-slot: the runtime object is one
-`ParserState`/`Parser` whose slot genuinely holds the value the target type names. `unknown` is the
-honest intermediary for an invariant reconstruction (`Parser<unknown> → Parser<Result>` is neither a
-widening nor narrowing, so the double-step is *required*, not a smell). This is an
-implementation-boundary erasure of exactly the kind `ParserFunction`'s eslint-disable already
-documents. A written justification suffices; it is **not** a soundness leak *per se*.
-
-**BUT there is a genuine, cast-independent soundness leak underneath it.** `fuseAll` **compacts
-`undefined`**: `if (state.value !== undefined) out[w++] = state.value; ... if (w!==n) out.length=w`
-(`leaf.ts:199,207,209,230,238,246,248,267,270`). The type `ExtractValue<T>` promises a fixed-arity
-positional tuple; the runtime yields a **shorter, index-shifted array** whenever any element parser
-produces `undefined`. Concretely `all(string("a"), whitespace, string("b"))` types as
-`Parser<[string,string,string]>` but, when `whitespace` empty-matches (`regex(/\s*/)` sets
-`unsafeSetValue(undefined)` `leaf.ts:355`), yields `["a","b"]` at length 2. Same for any
-`Parser<X|undefined>` element (notably `opt()` `parser.ts:234-249`, whose type is
-`Parser<T|undefined>`). **No cast form fixes this** — `as`, `as unknown as`, or a perfectly precise
-mapped type all sit *atop* a type→runtime arity contract that `fuseAll` breaks. The erasure merely
-conceals it.
-
-**Disposition (the tension the directive is really probing).** Three routes, only one of which is
-both sound and TS2589-free:
-1. **Keep the O(N) mapped type + document the compaction caveat.** Tighten the bound (§4) so
-   `all<const T extends readonly Parser<unknown>[]>`, keep `as unknown as Parser<Result>` as a
-   documented boundary erasure. TS2589-free (mapped type is non-recursive, O(arity)). Positional
-   type stays *nominally* unsound for `undefined`-typed elements — labelled LAWFUL-NON-MIRROR with
-   the named caveat. **Recommended**: it is the only route that neither risks TS2589 nor breaks
-   consumers.
-2. **Make the type sound by filtering `undefined` positions.** Requires a *recursive* tuple
-   conditional (drop-element is not expressible as a mapped type) — the exact TS2589 hazard the
-   directive fences. Rejected: trades a documented caveat for a compile-time-depth cliff on deep
-   `all()` arities.
-3. **Make the runtime match the type — stop compacting (`out[i]=state.value` unconditionally).**
-   Sound and TS2589-free, but a **breaking runtime change**: every consumer that today receives the
-   compacted array (value.js's `all()` destructures, `wrap`/`trim` which rely on the discard) would
-   see extra `undefined` slots. A semver-major move; out of scope for a 1.1.0 tightening.
-
-The prototype must therefore *exhibit* the compaction divergence (a paired type-vs-runtime test:
-assert the inferred tuple length ≠ observed array length for an `undefined`-yielding element) and
-adopt route 1 with the caveat written into the `all` doc-comment.
+Constitution clause v (the type plane costs zero at runtime) is the family's north star: every
+tightening here is a compile-time judgment that must leave the emitted `dist/*.{js,cjs}`
+byte-identical. That invariant is not asserted — it is the falsifiable close gate (§4). The
+type surface is small and hand-written (2650 LOC, no codegen), so the plane is a signature
+problem, not a generator problem: five method/leaf signatures carry every leak.
 
 ---
 
-## 2. Directive-4 — the `skip`/`sepBy` (and `then`/`chain`) input-type leaks
+## 1. Consumer liveness (P1/P2) — the decisive finding, answered early
 
-These are **input-position** leaks, distinct from the `all` output leak, and every one is **shallow
-and non-recursive — tightening cannot introduce TS2589**:
+**value.js has DIVESTED parse-that entirely; it is no longer a consumer.** The recon baseline
+(value.js 3.1.0 importing `Parser ParserState all any dispatch regex string whitespace
+mergeErrorState` across 9 sites, "59 `all()` sites") is STALE. Current state:
 
-- `skip<S>(parser: Parser<T | S>): …ParserFunction<T>` `parser.ts:189-210`. `S` appears **only**
-  inside the argument union `Parser<T|S>` and nowhere in the result. Because `S` is free, `Parser<T
-  |S>` unifies with *any* `Parser<X>` (`S:=X`), so the parameter is a **disguised `Parser<unknown>`**
-  that pretends to constrain. `skip` discards the argument's value (returns `T`), so the honest,
-  precise signature is `skip(parser: Parser<unknown>): Parser<T>` — drop `S` entirely.
-- `sepBy<S>(sep: Parser<S | T>, min, max)` `parser.ts:569`. Identical pattern: `S` phantom, `sep`'s
-  value is discarded (result is `T[]`). Tighten to `sepBy(sep: Parser<unknown>, min?, max?):
-  Parser<T[]>`.
-- `then<S>(next: Parser<S | T>): …ParserFunction<[T,S]>` `parser.ts:81`. The `| T` widens what is
-  accepted and muddies `S` inference. Precise form: `then<S>(next: Parser<S>): Parser<[T,S]>` —
-  drop the `| T`. `then` builds a literal `[T,S]` tuple (`parser.ts:100`), so it is NOT subject to
-  the §1 compaction; its type is sound once the `|T` is removed.
-- `chain<S>(fn: (value:T)=>Parser<S | T>): …ParserFunction<S>` `parser.ts:124`. The `S|T` return
-  union is loose; precise: `chain<S>(fn: (value:T)=>Parser<S>): Parser<S>`.
-- `or<S>(other: Parser<S>)` `parser.ts:105` is **already precise** (`ParserFunction<T|S>`, correct).
-- `restore(saved:{…; value:any})` `state.ts:79` → `restore(saved:{offset:number; value:T}): this`.
+- `value.js/package.json` is at **4.0.0** and contains **no `@mkbabb/parse-that` dependency**
+  (only a `devDependencies` block; zero `parse-that` string anywhere in `package.json`).
+- **Zero** `@mkbabb/parse-that` imports in `value.js/src` (grep of `*.ts/*.js/*.json`, excl.
+  `node_modules`/`dist`, returns nothing).
+- Git commit `470818c` (*"fix(demo): color picker bug fixes, slider gradients, and parser
+  migration"*) is the `-S'@mkbabb/parse-that'` removal from `package.json`. value.js now
+  **vendors its own parser** under `value.js/src/parsing/{color,stylesheet,timeline}`.
+- The `node_modules/@mkbabb/parse-that@1.0.0` still on disk is a **stale install artifact**,
+  not a live edge. value.js's HEAD is fresh (commit 2026-07-15), so this is a completed,
+  intentional migration — **not a mid-migration WIP branch**. P2 answer: the 4.0.0 import
+  posture is INTENTIONAL and TERMINAL for parse-that.
 
-**No-new-TS2589 check.** All six edits remove a union or a phantom generic from a **depth-1** signature
-— no conditional recursion, no accumulation over a tuple. Instantiation cost per call *drops*
-(one fewer type var to solve; `skip`/`sepBy` lose `S` entirely). The type-test artefact
-(`test/types/inference.test-d.ts`, `@ts-expect-error`/`expect-type` under `tsc --noEmit`) asserts:
-`pA.skip(pB)` infers `Parser<A>` regardless of `B`; `pA.then(pB)` infers `Parser<[A,B]>`;
-`pA.sepBy(comma)` infers `Parser<A[]>`; and a genuinely wrong shape still `@ts-expect-error`s
-(precision proven both directions).
+**latex-paper is the ONLY live external consumer**, and it does not touch the inference
+surface. Its imports are uniformly `Parser, ParserState, regex, string, any` (7 grammar
+sites: `src/bibtex/parser.ts`, `src/grammar/{primitives,commands,math,text,compile,document,
+environments}.ts`). It imports **`any` — never `all`, `skip`, or `sepBy`** — and pins
+`^0.7.1` (installed 0.7.1, `<0.8.0`), predating the 1.0.0 `*Span`/`chain()` cut. Commit
+cadence is low (HEAD 2026-07-02), so it is effectively frozen relative to the backbone. P1
+answer: one live external consumer, on an old pin, exercising `any`/`regex`/`string` only.
 
----
+**keyframes.js is off parse-that**: no `@mkbabb/parse-that` in `keyframes.js/src` and none in
+its `package.json`. Its former transitive edge ran through value.js, which has now divested —
+so keyframes.js is transitively-detached too.
 
-## 3. Directive-2 — does the tightened algebra emit a BYTE-IDENTICAL `dist/`?
-
-**Claim: yes, provably, and the two-step isolation is mandatory because the toolchain moved.**
-Every §1–§2 edit is type-only: generic-bound changes, union removals, `as`/`as unknown as` casts,
-and the `ExtractValue` de-duplication — all erased by the compiler. TS emits **no** JS for a type
-annotation, a generic parameter, a type alias, or an `as` cast. The one class of type-syntax that
-*does* emit (enum / namespace / parameter-property / `import =`) is untouched. So step-(ii) is
-byte-empty **by construction of what is being changed**.
-
-The **isolation is non-negotiable** because a naive before/after `dist/` diff would conflate two
-independent deltas — the build toolchain is `vite ^7 / vitest ^3.2 / typescript ^5.8`
-(`typescript/package.json` devDeps, R4 §4), and the pinned 1.0.0 `dist/` was cut under an earlier
-toolchain:
-- **Step (i) — the version-migration delta.** Build the *unchanged* 1.0.0 source under the pinned
-  toolchain, then again under the candidate toolchain; diff. Vite/esbuild/tsc bumps legitimately
-  perturb emitted JS (helper injection `__spreadArray`/`__assign`, comment handling, sourcemap
-  offsets — note `minify:false, sourcemap:true` in `vite.config.ts`, R4 §4, so emission is
-  human-readable and diffs are meaningful). This delta is **documented, not zero**.
-- **Step (ii) — the tightening delta.** At a *fixed* toolchain, build 1.0.0 source vs the tightened
-  source; diff `dist/*.{js,cjs}`. This **must be byte-empty** (sourcemaps `.map` may differ only if
-  line counts shift, which type-only edits do not cause). Any non-empty `.js` diff is a red flag
-  that a *value* changed — the wave halts and the offending edit is found.
-
-**Named hazard for step (ii).** The `ExtractValue` de-dup moves a type alias out of `all()`'s body
-into a module import. This is still type-only (aliases erase), but it changes an *import graph* — if
-the build inlines per-module, verify the moved import is `import type` so it does not pull a
-value-side symbol. The tape-crossing / decode-speed numbers are LOCK-6's fence, not this family's;
-note only that the byte-diff harness is `vite build` on the **real** toolchain, never an esbuild
-proxy (esbuild's transform ≠ vite's rollup pipeline and would give a false-clean).
+**Consequence for 8B (the load-bearing one):** the `all`/`sepBy` deep-tuple inference surface
+this family tightens has **no live external consumer**. The 59-`all()`-site "native corpus"
+that a prior spec named as the instantiation-budget falsifier no longer exists. The type plane
+is now a **first-party** concern — self-use + type-tests are the legitimate consumer (this
+routes to 8D's consumer-set adjudication, and it directly decides §5's Q3 route).
 
 ---
 
-## 4. Directive-3 — the instantiation-budget figure, and the CONSUMER-LIVENESS pivot (P2)
+## 2. Spec fidelity — divergences a re-cut must absorb
 
-**The live consumer corpus has moved out from under the R4/PT-3 assumptions — this is the family's
-sharpest new fact.** A fresh per-tree census:
-
-- **value.js is now `4.0.0`, on branch `tranche-u`** (HEAD `86a9a17`, 2026-07-15 — a paused WIP
-  campaign, "THE PAUSE — halted at owner order"). Its **`package.json` declares NO
-  `@mkbabb/parse-that` dependency** (grep-empty). Yet **two source files still import it**:
-  `src/subpaths/math.ts`, `src/subpaths/transform.ts`. The R4 snapshot (value.js 3.1.0, `^1.0.0`,
-  9 import sites, "59 `all()` sites") is **superseded**: the live tree has an **undeclared-dep /
-  residual-import mismatch** — the classic signature of a **mid-migration WIP artifact**, not an
-  intended posture. value.js has largely migrated *off* the combinator surface between 3.1.0 and
-  4.0.0, retaining only two subpaths, and even those resolve against a dependency no longer in the
-  manifest. **Answer to P2: WIP-branch artifact, not a settled contract.** Carry both hypotheses
-  only until the owner confirms; the evidence (undeclared dep + 2 residual imports + paused campaign
-  branch) weighs heavily toward "not a stable floor."
-- **latex-paper is unchanged**: `0.2.1`, dep `@mkbabb/parse-that ^0.7.1` → resolves **0.7.1**
-  (`node_modules` confirmed), last commit 2026-07-02 (stale ~2wk). It imports only
-  `Parser, ParserState, regex, string, any` (R4 §7) — **none of which are `all`/`then`/`skip`/
-  `sepBy`**. So latex-paper exercises **zero** of the tightened combinators and is **useless as a
-  tuple-inference budget corpus**, and it still predates the 1.0.0 cut (a 0.7→1.1 jump).
-
-**Consequence for the instantiation budget (gated on P2 = WIP):** neither live consumer is a valid
-native corpus for the tightened `all`/`then`/`skip` inference. value.js-4.0.0 is un-runnable in its
-current WIP state (undeclared dep); latex-paper touches none of the tightened combinators. **Record
-the native measurement as un-runnable and take the figure on parse-that self-use** — the `test/`
-suite + `test/benchmarks/*.bench.ts` (`json-comprehensive`, `pt-b3-fusion` exercise dense `all()`
-nests) + the new type-test suite — **under the EXACT tightened signature, disclosing signature +
-`tsc` version + corpus set**. Instrument via `tsc --extendedDiagnostics` ("Instantiations" count)
-or `--generateTrace traceDir` before/after; the expected direction is a **decrease** (§2 removes
-free type vars). Budget: tightened Instantiations ≤ baseline, the mapped-type `all` (§1 route 1)
-contributing O(arity) per site and **no TS2589 at the deepest observed nest** — the falsifiable
-number that gates the tightening.
-
-**Plane-wide P1 (consumer liveness, forward-looking):** the only unambiguously *live, importing*
-consumer of the combinator surface today is value.js's two residual subpaths — and those are on a
-paused branch with a broken dep declaration. keyframes.js is transitive-through-value.js (R4 §8) and
-inherits the same instability. **The forward consumer set is thin and in flux**; the API-plane (8D)
-and semver decisions must not over-fit to the R4 "59 all() sites" figure, which no longer describes
-HEAD.
+| spec assumption (extant PT-3 codex) | measured truth | disposition |
+|---|---|---|
+| value.js 3.1.0, dep `^1.0.0`, 59 `all()` sites, re-lock `1.0.0→1.1.0` at cut | value.js **4.0.0, no parse-that dep, 0 imports**, vendored parser (`470818c`) | supersede: value.js dropped from the consumer set |
+| "three consumer suites green" gates the cut | one live consumer (latex-paper) + one detached (keyframes) + one divested (value.js) | re-cut to **one** external suite + first-party type-tests |
+| inference tightening's falsifier = value.js's `all()` sites | latex-paper imports `any` only; no external `all`/`sepBy` consumer | falsifier = first-party `*.test-d.ts` + self-use, not a consumer corpus |
+| latex-paper migrates 0.7→1.1 (W0 dry-run) | latex-paper frozen (HEAD 2026-07-02, `^0.7.1`); touches only still-exported symbols | migration is low-risk but **consumer-initiated, not campaign-forced** |
 
 ---
 
-## 5. Prior art (cited) — the type-level combinator canon
+## 3. Q1 — the `as unknown as` erasure inside a tightened `all` signature
 
-- **HKT-free positional tuple inference via variadic tuple types + `infer` in mapped types** is the
-  established pattern; TS 4.0's variadic tuples (Microsoft/TypeScript#39094) and the
-  `{ [K in keyof T]: … infer … }` idiom are exactly `ExtractValue`. parse-that's form is canonical;
-  the only defect is duplication + the loose `Parser<any>` bound, not the technique.
-- **`ReadonlyArray` + `const` type parameters** (TS 5.0 `const` modifiers on type params, TS#51865)
-  are the tightening lever: `all<const T extends readonly Parser<unknown>[]>(...parsers: T)` captures
-  literal tuple structure without a call-site `as const`, fixing inference precision at the source.
-- **The undefined-compaction / type-vs-runtime arity mismatch** mirrors a known hazard in
-  fp-ts / Effect Schema tuple decoders and in Zod's `.tuple()` vs `.array()` split: a decoder that
-  *filters* cannot honestly type as a fixed tuple. Effect's resolution is an explicit
-  "filtered → array" widening; the analogue here is route-1's documented caveat or a distinct
-  `allExact` that never compacts. This is the SOTA adjudication, not a novel gap.
-- **`--generateTrace` instantiation budgeting** is the Microsoft-sanctioned method for guarding
-  compile-time cost (the `@typescript/analyze-trace` tool), and TS2589 ("excessively deep") is the
-  hard wall recursive tuple filters hit — directly validating §1's route-2 rejection.
-- **Zero-runtime-cost type erasure** is a language guarantee (TS emit strips types), the formal
-  backing for §3's byte-empty step-(ii) claim; the isolation discipline (separate the toolchain
-  delta) is standard reproducible-build hygiene.
+**The current `all` does not contain `as unknown as` — it hides the same erasure behind a
+`Parser<any>` bound.** `leaf.ts:154-164`:
+
+```ts
+export function all<T extends Array<Parser<any>>>(...parsers: T) {
+    type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> =
+        { [K in keyof T]: T[K] extends Parser<infer V> ? V : never };
+    type Result = ExtractValue<T>;
+    return makeParser(
+        parsers.length === 1 ? parsers[0].parser : fuseAll<Result>(parsers),
+        createParserContext("all", undefined, ...parsers),
+    ) as Parser<Result>;                 // ← single cast today
+}
+```
+
+`makeParser<T>(parser: ParserFunction<T>): Parser<T>` (`leaf.ts:7`). Because the constraint is
+`Array<Parser<any>>`, `parsers[0].parser` is `ParserFunction<any>`; the ternary's union
+collapses toward `any` (any absorbs), so `makeParser` infers `T = any`, returns `Parser<any>`,
+and `as Parser<Result>` is trivially legal — **a single cast suffices only because the leak is
+present.** Duplicate `ExtractValue` also lives at `parser.ts:9-11` (DRY defect — consolidate to
+one `src/parse/types.ts`).
+
+**What tightening does.** Replacing the bound with `ReadonlyArray<Parser<unknown>>` makes
+`parsers[0].parser: ParserFunction<unknown>`, the union `makeParser<unknown> → Parser<unknown>`,
+and `Parser<unknown> as Parser<Result>` is no longer legal as a single `as`: `Parser<T>` is
+**invariant** in `T` (T sits in input positions via `map<S>(fn:(v:T)=>S)`,
+`then<S>(next: Parser<S|T>)`, `restore(saved:{value:T})` and in output via `parse():…T`), so
+`Parser<Result>` and `Parser<unknown>` are not mutually assignable and TS demands
+`as unknown as Parser<Result>`. **The double-cast is therefore not new unsoundness — it is the
+exact erasure the `Parser<any>` bound performed silently, made explicit and auditable.** That
+is the lawful-erasure verdict with teeth: removing `any` surfaces the honest cast.
+
+**The genuine soundness gap is elsewhere — drop-undefined, not the cast.** `all`/`fuseAll`
+(`leaf.ts:179-273`) trim `undefined`-yielding arms to the live count (`out.length = w`,
+`leaf.ts:209,248,270`). So `all(a, opt(b), c)` types as `ExtractValue = [A, B|undefined, C]`
+but the runtime array is `[a, c]` when `b` is absent — positionally misaligned and one element
+short. `ExtractValue`'s positional tuple **over-describes** the runtime for any arm whose value
+type includes `undefined`. This is the real, documentable soundness concern; the `as unknown
+as` masks it but does not cause it. A faithful type filters `undefined` arms positionally, but
+that is a semantic change to the public type — gate it on the consumer set (now first-party).
+
+**A readonly-variant that removes the double-cast** is possible but is an API addition, not a
+free tightening: introduce a covariant output view `interface ParserOut<out T> { parse(...): …T }`
+that `Parser<T>` implements, have combinator returns be `ParserOut<Result>` (covariant → single
+`as` legal), and keep the invariant `Parser<T>` only where input methods are needed. This
+removes the `as unknown as` down to one cast **and** is checkable (TS 4.7 `in`/`out` variance
+annotations enforce it). It does **not** fix drop-undefined. It adds no `TS2589` (variance
+annotations are declaration-level, zero instantiation depth). Recommendation: classify the
+`as unknown as` as **LAWFUL-ERASURE (invariance bridge, documented)**; treat drop-undefined as
+a separate named soundness row; offer `ParserOut<out T>` as the optional single-cast route.
+
+The same invariance-bridge pattern recurs and is lawful at: `parser.ts:485,520`
+(`all(...)/wrap(...) as unknown as Parser<T[]>` in `trim`), `parser.ts:556,629`
+(`state as unknown as ParserState<T[]>` in `many`/`sepBy` — `ParserState<T>` is likewise
+invariant). Each is a construction-boundary erasure, not a value-level lie; each is
+documentable in one line.
 
 ---
 
-## 6. Integration seams (path:line, where extant code serves)
+## 4. Q2 — does the tightened algebra emit a BYTE-IDENTICAL `dist/`?
 
-- De-dup home: new `src/parse/types.ts` exporting the single `ExtractValue`; imported by
-  `parser.ts:9` and `leaf.ts:155` (delete the inner copy).
-- `all` bound tighten: `leaf.ts:154` `Array<Parser<any>>` → `readonly Parser<unknown>[]` with
-  `const`; `fuseAll` param `leaf.ts:179` likewise; keep `as unknown as Parser<Result>` return with
-  a doc-comment naming the compaction caveat (leaf.ts:160-163).
-- Input-leak tightens: `skip` `parser.ts:189`, `sepBy` `parser.ts:569`, `then` `parser.ts:81`,
-  `chain` `parser.ts:124`, `restore` `state.ts:79`, `any` `leaf.ts:28`.
-- `ParserFunction` `parser.ts:14-16` — **leave as-is** (phantom `T` is lawful variance; the
-  `as ParserFunction<…>` casts are no-ops, do not churn them).
-- Byte-diff harness: `vite build` on `vite.config.ts` (R4 §4), two-step per §3.
-- Type-test project: `test/types/inference.test-d.ts` run under `tsc --noEmit`; instantiation budget
-  via `tsc --extendedDiagnostics`/`--generateTrace`.
+Inference tightening is **pure type-level**: generic bounds, `ExtractValue`, `infer`, variance
+annotations. vite/esbuild strips all types before emit, so the JS/CJS bytes cannot change. The
+gate is a two-step isolation on the REAL toolchain (vite ^7 + `vite-plugin-dts` + typescript
+^5.8, per the manifest — **not** an esbuild proxy, whose type-strip and helper injection differ):
 
----
+1. **Version-migration delta first (attribution isolation).** If the cut bumps
+   vite/tsc/`vite-plugin-dts`, build 1.0.0 source under the OLD toolchain and under the NEW
+   toolchain and diff `dist/**/*.{js,cjs}`. Any byte delta here is the toolchain's (minifier,
+   helper injection, banner), and must be attributed and accepted BEFORE tightening is judged.
+2. **Tightening delta second, on the FIXED toolchain.** Build tightened-signature source vs
+   pristine source under the *same* toolchain and diff `dist/**/*.{js,cjs}`. This diff **must be
+   byte-empty**. Only `dist/**/*.d.ts` may change (the tighter declared types). An eager-alloc
+   census (`= []` occurrences per chunk) is the fast structural cross-check — for a type-only
+   change it must be census-identical (the certified W1 alloc lever was `6→0`; a pure W3
+   tightening must be `N→N`).
 
-## 7. Named risks & counterexamples
-
-- **R-B1 (the real leak): compaction-arity mismatch.** `all(a, opt(b), c): Parser<[A, B|undefined,
-  C]>` runtime-yields length 2 when `opt(b)` fails. Cast-independent; route-1 documents it, route-3
-  would break consumers. The prototype MUST exhibit it (assert inferred-arity ≠ observed-length).
-- **R-B2: TS2589 on the sound route.** A recursive `undefined`-filtering tuple type blows the
-  instantiation depth on deep `all()` nests. Counterexample to route-2; the budget test at the
-  deepest observed nest is the falsifier.
-- **R-B3: byte-diff false-clean via esbuild proxy.** Diffing an esbuild transform instead of the real
-  vite/rollup `dist/` hides an emission change. Cure: §3's harness is `vite build` only.
-- **R-B4: consumer over-fit.** Designing the tightened surface to value.js's R4-era "59 all() sites"
-  when HEAD (4.0.0/tranche-u) has migrated off and declares no dep. Cure: §4's re-census is the
-  authority; carry the owner's P2 answer before pruning/keeping combinators.
-- **R-B5: phantom-generic churn.** "Tightening" `ParserFunction`'s phantom `T` would break the
-  megamorphic-IC variance the eslint-disable protects (R4 §6c) with zero type gain. Do not touch it.
+If any `dist/*.js` byte moves under step 2, the "tightening" smuggled a runtime change (a cast
+that altered emit, an added helper) — that is a zero-cost-law violation and halts the wave. This
+gate is the concrete proof of constitution clause v for the TS side.
 
 ---
 
-## 8. What a prototype must test to move this family
+## 5. Q3 — the instantiation-budget figure
 
-1. **The compaction oracle** — a paired type-vs-runtime test proving `all` with an
-   `undefined`-yielding element diverges in arity (fixes route-1 vs route-3 as a *decision*, not an
-   assumption).
-2. **The tightened type-test suite** RED-on-1.0.0/GREEN-after for `all`/`any`/`then`/`skip`/`sepBy`,
-   with `@ts-expect-error` proving precision both ways.
-3. **The two-step byte-diff** on the real vite toolchain: step-(i) documented toolchain delta,
-   step-(ii) **empty** tightening delta.
-4. **The instantiation budget** via `tsc --generateTrace` on self-use, under the exact tightened
-   signature, with the deepest-nest TS2589-free assertion — disclosing signature + tsc version +
-   corpus (native corpus recorded un-runnable per §4).
-5. **A no-new-TS2589 sweep** across all six §2 edits (they are depth-1; the assertion is that
-   instantiation count does not rise).
+**P2 resolves the gate:** value.js divested, so there is **no migrating consumer** whose native
+`all`-corpus can carry the number; latex-paper exercises `any`, not the deep-tuple inference.
+Per the directive's else-branch, the figure is taken on **self-use + type-tests under the EXACT
+tightened signature**, disclosing signature + tsc version (typescript ^5.8) + corpus.
+
+- **Metric:** `tsc --extendedDiagnostics` "Instantiations" and "Types" counts, plus
+  `--generateTrace` + `@typescript/analyze-trace` on the hot mapped-type (`ExtractValue`),
+  measured over `test/*.test.ts` + a purpose-built `test/types/inference.test-d.ts` that
+  constructs `all`/`any`/`sepBy` at arities 2..8 (the band the unrolled arms cover,
+  `leaf.ts:39-57,183-251`).
+- **Hazard:** `ExtractValue` is a homomorphic mapped type over an inferred tuple; deep nesting
+  (`all(all(all(...)))`) can raise instantiations superlinearly and, at the limit, trip **TS2589**
+  ("excessively deep and possibly infinite"). Budget gate: tightened Instantiations ≤ pristine ×
+  small-margin AND **zero new TS2589** across the arity band + a nested-depth stress case.
+- Because the corpus is first-party, the number is honest only if the test-d corpus mirrors the
+  real historical usage shape. Reconstruct the divested value.js distribution (mostly arity-2/3
+  `all()`) from its now-vendored parser as the realistic synthetic, and **label it synthetic**.
+
+---
+
+## 6. Q4 — the `skip` / `sepBy` input-type leaks
+
+Both type a **discarded-value** parser as `Parser<T | S>`, leaking the receiver's `T` into an
+input position for a value that is thrown away, and over-constraining the argument:
+
+- **`skip<S>(parser: Parser<T | S>)`** (`parser.ts:189`) returns `Parser<T>` — it keeps `this`'s
+  value and **discards** the skipped parser's. The skipped value type is irrelevant, so
+  `Parser<T | S>` both (a) leaks `T` pointlessly and (b) rejects a `Parser<Z>` whose `Z` is
+  unrelated to `T`. **Fix:** `skip(parser: Parser<unknown>): Parser<T>` — strictly more
+  permissive, deletes the phantom `S`.
+- **`sepBy<S>(sep: Parser<S | T>, min?, max?)`** (`parser.ts:569`) returns `Parser<T[]>` and
+  **discards** the separator's value (only element values are collected — `matches[len] =
+  state.value` from `this.parser`, `parser.ts:583-617`). Same leak. **Fix:**
+  `sepBy(sep: Parser<unknown>, min?, max?): Parser<T[]>` — deletes `S`.
+
+Both fixes **remove** a type variable and a union computation, so they **cannot introduce
+TS2589** (they reduce instantiation work). They are source-compatible supersets for well-typed
+callers (any prior `Parser<T|S>` argument is already a `Parser<unknown>`). No `dist/` byte moves
+(§4).
+
+**Siblings (analyze separately, not the same fix):** `then<S>(next: Parser<S|T>)`
+(`parser.ts:81`, returns `[T,S]` — KEEPS both, so `|T` is over-widening of `S`'s inference, not a
+discard-leak; tighten to `next: Parser<S>`) and `or<S>(other: Parser<S|T>)` (`parser.ts:105`,
+returns `T|S` — `|T` redundant since `S|T` already covers `T`; tighten to `other: Parser<S>`).
+`next<S>(parser: Parser<S>)` (`parser.ts:212`, returns `Parser<S>`) is already clean — the
+correct template the others should match.
+
+---
+
+## 7. The mechanism, concrete — tightened signatures + integration seams
+
+| seam | path:line | change | risk |
+|---|---|---|---|
+| duplicate `ExtractValue` | `parser.ts:9-11`, `leaf.ts:155-157` | lift to one `src/parse/types.ts`, import both sides | none (DRY) |
+| `all` bound | `leaf.ts:154` | `Array<Parser<any>>` → `ReadonlyArray<Parser<unknown>>`; cast becomes explicit `as unknown as Parser<Result>` (or `ParserOut<Result>` single cast) | §3 invariance bridge |
+| `fuseAll` param | `leaf.ts:179` | `Array<Parser<any>>` → `ReadonlyArray<Parser<unknown>>` | internal only |
+| `any` bound | `leaf.ts:28` | `Array<Parser<any>>` → `ReadonlyArray<Parser<unknown>>` + `infer` union | latex-paper consumes `any` |
+| `skip` input | `parser.ts:189` | `Parser<T\|S>` → `Parser<unknown>`, drop `<S>` | none (super) |
+| `sepBy` sep | `parser.ts:569` | `Parser<S\|T>` → `Parser<unknown>`, drop `<S>` | none (super) |
+| `then`/`or` input | `parser.ts:81,105` | `Parser<S\|T>` → `Parser<S>` | inference-narrowing |
+| `restore` value | `state.ts:79` | `{value: any}` → `{value: T}` | none |
+| `ParserFunction<T>` | `parser.ts:14-16` | KEEP the implementation-boundary erasure (megamorphic IC needs the type-erased pointer); document, NOT counted as a leak | intentional |
+
+`ParserFunction<T>` is the one lawful internal `any`: it is the erased function-pointer the
+central megamorphic call site dispatches through (`this.parser(state)`, e.g. `parser.ts:53,82`;
+`leaf.ts:44,49`). It never appears in a user-facing return; the type-test suite must whitelist
+it explicitly, or it will read as an open leak.
+
+---
+
+## 8. Prior art (cited)
+
+- **TypeScript variance annotations** (`in`/`out`, TS 4.7): the mechanism that makes an output
+  view `ParserOut<out T>` enforce covariance and legalize a single cast — the principled route
+  out of `as unknown as` (TS handbook, "Variance Annotations").
+- **Method-parameter bivariance** (strictFunctionTypes checks function-type *properties*, not
+  *methods*): why `then`/`skip`/`sepBy` — being methods — are bivariant in their param, which is
+  exactly why `Parser<T>` reads as invariant and the cast is forced. Load-bearing for §3's verdict.
+- **Homomorphic mapped types over inferred tuples** (`{[K in keyof T]: … infer V}`): the
+  `ExtractValue` idiom; the TS2589 depth guard is the known failure mode (io-ts, Zod, and
+  `ts-toolbelt` all document deep-instantiation blowups — Zod's recursive schemas are the
+  canonical TS2589 case study).
+- **Type-level testing:** `tsd` / `expect-type` / `@ts-expect-error` under `tsc --noEmit` — the
+  standard falsifier for "infers precisely both ways" (rejects over-widening AND catches true
+  mismatch). fp-ts and Effect ship exactly this `*.test-d.ts` style.
+- **`tsc --extendedDiagnostics` / `--generateTrace` + `@typescript/analyze-trace`**: the
+  instantiation-budget instrument (§5).
+- **esbuild/vite type-erasure guarantee**: types never reach emit — the ground of §4's byte-empty
+  claim; contrast an esbuild-only proxy whose helper injection differs from real vite/`vite-plugin-dts`.
+- Combinator-typing precedents: **Parsimmon**/**arcsecond** (`any`-heavy — the anti-pattern this
+  family removes) vs **@typed/parser** / **Effect Schema** (precise positional inference — the target).
+
+---
+
+## 9. Risks & counterexamples
+
+- **R1 — the `all` type sharpens and a first-party site breaks.** With no external `all`
+  consumer, the only falsifier is `test/types/inference.test-d.ts`; if it under-covers the arity
+  band, a real narrowing regression ships silently. *Cure:* the test-d corpus reconstructs the
+  divested value.js arity distribution (mostly 2/3) plus a deep-nest stress case.
+- **R2 — drop-undefined stays unsound after tightening.** Tightening the bound does not fix the
+  positional-tuple-vs-trimmed-array mismatch (§3). *Counterexample:* `all(string("a"), opt(b),
+  string("c"))` types `[string, B|undefined, string]`, runs `["a","c"]`. *Disposition:* name it a
+  distinct soundness row; the `undefined`-filtering type is a separate, consumer-gated change
+  (first-party now — low blast radius, but still a public-type change).
+- **R3 — `ParserOut<out T>` over-reaches into an API redesign.** The covariant view removes the
+  double-cast but adds a type; parsimony must bound it to the return position only. *Cure:*
+  prototype both — plain `as unknown as` (documented) vs `ParserOut<out T>` — and keep the smaller
+  one unless the variance annotation pays for itself in measurable leak reduction.
+- **R4 — TS2589 under the tightened `ExtractValue`.** Deep-nested `all` can blow instantiation
+  depth. *Cure:* §5's nested stress case is a gate, not an afterthought; if tripped, the fix is a
+  depth-bounded conditional (`T extends [infer H, ...infer R]` linear recursion) measured against
+  the mapped-type form.
+- **R5 — the stale `node_modules/@mkbabb/parse-that@1.0.0` in value.js misleads a census.** A
+  naive per-tree import census trusting `node_modules` would wrongly count value.js as live.
+  *Cure:* census on `package.json` deps + `src` imports (as §1 did), never on installed trees.
+
+---
+
+## 10. What a prototype must test to move this family
+
+1. **The invariance verdict, mechanically.** On a scratch copy, tighten `all`'s bound to
+   `ReadonlyArray<Parser<unknown>>` and confirm `tsc` forces `as unknown as Parser<Result>`
+   (single `as Parser<Result>` errors "neither sufficiently overlaps"). Then implement
+   `ParserOut<out T>` and confirm a single cast type-checks. Settles §3's route empirically.
+2. **Byte-empty `dist/` (the zero-cost proof).** The §4 two-step isolation on the REAL
+   vite/`vite-plugin-dts` toolchain: version-migration delta measured and attributed, then
+   tightening delta on the fixed toolchain diffed to **zero JS/CJS bytes** (only `.d.ts` moves).
+3. **The type-test falsifier.** `test/types/inference.test-d.ts`: `all(string,regex(/\d/))` ⇒
+   `Parser<[string,string]>` not `Parser<any>`; `any(string,string)` ⇒ `Parser<string>`; a
+   `@ts-expect-error` on a genuinely wrong shape still fires. RED on 1.0.0, GREEN after.
+4. **skip/sepBy supersets.** Confirm `skip(parser: Parser<unknown>)` / `sepBy(sep:
+   Parser<unknown>)` accept every prior call site AND a `Parser<Z>` the old union rejected, with
+   no new TS2589.
+5. **Instantiation budget, disclosed.** `tsc --extendedDiagnostics` Instantiations pristine vs
+   tightened over arity-2..8 + nested stress; report the counts, the signature diff, and
+   typescript ^5.8 — the number lives with its corpus, since no live external `all` corpus exists.
+6. **The drop-undefined row.** A runtime + type differential on `all(a, opt(b), c)` documenting
+   the positional-tuple-vs-trimmed-array gap, so the re-cut carries it as a named soundness
+   decision rather than an invisible cast.

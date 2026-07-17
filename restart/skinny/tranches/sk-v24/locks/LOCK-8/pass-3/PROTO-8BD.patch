@@ -1,0 +1,102 @@
+--- a/typescript/src/parse/leaf.ts
++++ b/typescript/src/parse/leaf.ts
+@@ -1,5 +1,6 @@
+ import { Parser } from "./parser.js";
+ import type { ParserFunction } from "./parser.js";
++import type { ExtractValue } from "./types.js";
+ import type { ParserState, ParserContext, Span } from "./state.js";
+ import { createParserContext } from "./state.js";
+ import { mergeErrorState } from "./utils.js";
+@@ -25,7 +26,7 @@
+ }
+ 
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+-export function any<T extends Array<Parser<any>>>(...parsers: T) {
++export function any<T extends ReadonlyArray<Parser<unknown>>>(...parsers: T) {
+     type Result = T[number] extends Parser<infer V> ? V : never;
+     const n = parsers.length;
+ 
+@@ -151,10 +152,7 @@
+ }
+ 
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+-export function all<T extends Array<Parser<any>>>(...parsers: T) {
+-    type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
+-        [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
+-    };
++export function all<T extends ReadonlyArray<Parser<unknown>>>(...parsers: T) {
+     type Result = ExtractValue<T>;
+ 
+     return makeParser(
+@@ -176,7 +174,7 @@
+  * the fused list builds exactly one flat array).
+  */
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+-function fuseAll<Result = unknown[]>(parsers: Array<Parser<any>>): ParserFunction<Result> {
++function fuseAll<Result = unknown[]>(parsers: ReadonlyArray<Parser<unknown>>): ParserFunction<Result> {
+     const n = parsers.length;
+ 
+     // Arity-2: fully unrolled, two positional bindings, no array indexing.
+--- a/typescript/src/parse/parser.ts
++++ b/typescript/src/parse/parser.ts
+@@ -6,10 +6,6 @@
+ import { trimStateWhitespace, eof, all, _initWhitespace, whitespace } from "./leaf.js";
+ import { packratEnter, packratExit } from "./packrat.js";
+ 
+-type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
+-    [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
+-};
+-
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type-erased function pointer; `any` required for variance
+ export type ParserFunction<T = string> = (
+     val: ParserState<any>,
+@@ -186,14 +182,14 @@
+         );
+     }
+ 
+-    skip<S>(parser: Parser<T | S>) {
++    skip(parser: Parser<unknown>) {
+         const skip = (state: ParserState<T>) => {
+             const savedOffset = state.offset;
+             this.parser(state);
+ 
+             if (!state.isError) {
+                 const value1 = state.value;
+-                parser.parser(state as ParserState<T | S>);
++                parser.parser(state as ParserState<unknown>);
+                 if (!state.isError) {
+                     return state.ok(value1);
+                 }
+@@ -566,7 +562,7 @@
+      * Strictly interleaving: `elem (sep elem)*`. Never accepts a trailing
+      * separator — trailing sep acceptance is a grammar concern.
+      */
+-    sepBy<S>(sep: Parser<S | T>, min: number = 0, max: number = Infinity) {
++    sepBy(sep: Parser<unknown>, min: number = 0, max: number = Infinity) {
+         const sepBy = (state: ParserState<T>) => {
+             const est = min > 0 ? min : 0;
+             const matches: T[] = est > 0 ? new Array<T>(est) : [];
+@@ -593,7 +589,7 @@
+             // trailing separators.
+             while (len > 0 && len < max) {
+                 const cpBeforeSep = state.offset;
+-                sep.parser(state as ParserState<S | T>);
++                sep.parser(state as ParserState<unknown>);
+                 if (state.isError) {
+                     state.offset = cpBeforeSep;
+                     state.isError = false;
+--- /dev/null
++++ b/typescript/src/parse/types.ts
+@@ -0,0 +1,12 @@
++import type { Parser } from "./parser.js";
++
++/**
++ * Tuple value-extraction for a static parser list: maps a
++ * `ReadonlyArray<Parser<unknown>>` to the tuple of its element value types.
++ * Lifted here (PT-E2 combinator-inference tightening) so `all()` (leaf.ts) and
++ * the combinator core (parser.ts) share ONE canonical definition instead of the
++ * two duplicated copies.
++ */
++export type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
++    [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
++};

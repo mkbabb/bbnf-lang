@@ -32,7 +32,14 @@ LOCK-4C VM-core temptation) must clear that refutation, not reopen it.
   1.17-1.93× and the advantage *grows with file size* (`:319-329`). **Trap it named:** its own
   benchmark was dishonest twice — recognizer-only (`outputCst:false`) and `.slice(1,-1)` instead of
   `JSON.parse` on escapes (`:20-26`). The correctness-parity-before-measurement law came from
-  catching this.
+  catching this. Chevrotain's two documented V8 laws bracket 8A: (i) *"define all cache properties
+  in the constructor"* to hold one hidden-class path — exactly PROVE-11's fixed-from-birth fix, so
+  parse-that already banks it; (ii) *"do NOT create a Parser instance for each input — re-use a
+  single instance and reset its state between iterations"*
+  (<https://chevrotain.io/docs/guide/performance.html>). Law (ii) is UNPAID: parse-that allocates a
+  fresh `ParserState` per `.parse()` (R4 §6a; PROVE-11 removed the two inner arrays, not the
+  object). 8A's "allocation-zero hot path" is thus not reached by PROVE-11 alone — the
+  chevrotain-proven remedy is instance-reuse + state-reset, un-adopted here.
 - **Peggy** (PEG→JS codegen), **Nearley+moo** (Earley) — 3-12× slower; codegen/Earley pay for
   generality parse-that does not need for LL(1) grammars.
 - **arcsecond** (francisrstokes — zero-dep Parsec clone), **parjs** (GregRos — TS, fluent OOP),
@@ -52,6 +59,17 @@ LOCK-4C VM-core temptation) must clear that refutation, not reopen it.
   (`Static.Tuple`, `Static.Parse`, `this['input']`→`output` static mapping). The extreme end of 8B —
   and the ceiling that names the boundary: pure type-level parsing hits TS instantiation-depth /
   tuple-recursion limits and type-checker slowdown. <https://github.com/sinclairzx81/parsebox>
+  The ceiling is concrete: the **instantiation-depth limit is ~50** (since 4.1; a separate ~500
+  recursion cap), and exceeding it throws **TS2589 "Type instantiation is excessively deep and
+  possibly infinite"** (<https://oneuptime.com/blog/post/2026-01-24-fix-type-instantiation-excessively-deep-typescript/view>;
+  <https://herringtondarkholme.github.io/2023/04/30/typescript-magic/>). A *full* `ExtractValue`
+  over deeply-nested `all()`/`any()` tuples is exactly the shape that trips it; the literature's
+  mitigations are **tail-recursive types**, **deferred instantiation** (recurse through an object
+  property / array element, which TS defers past the depth counter), and **loop unrolling** (≈2×
+  reachable depth) (<https://dev.to/susisu/how-to-create-deep-recursive-types-5fgg>). Convergent
+  insight for the gestalt: parse-that's arity-unrolling (leaf.ts:39-57,183-251) is a *perf*
+  monomorphization for 8A/W4 AND the literature's depth mitigation for 8B — the two families are
+  ALIGNED on the unrolled arms, not in tension.
   **Trap:** do not let 8B drift toward compile-time *parsing*; the charter is compile-time *typing
   of a runtime parser*. The zero-runtime-cost law (constitution v) is satisfied by inference, not by
   moving parsing into types.
@@ -67,7 +85,16 @@ is **wasm-core + thin TS bindings** (LOCK-6C). Our own measured boundary: PROVE-
 **byte-exact tape crossing** and **4.4× stop-early get in TS**, but **full-walk in TS is ~0.91× —
 native parse won, an honest non-goal** (`SPEC.md §0 row 14`; `PORTFOLIO.md:148-149,156-161`).
 Isomorphism that WINS is *data-layout* (the offset tape) + *behavioral oracle*; isomorphism that
-LOSES is *runtime control-flow shape* (§2 below).
+LOSES is *runtime control-flow shape* (§2 below). PROVE-14's full-walk non-goal is the local
+instance of an external general law: a systematic WASM-vs-JS review finds WASM wins overwhelmingly
+on **small inputs with few boundary crossings** (26.99× XS, 8.22× small) but the advantage
+**collapses as input grows and JS↔WASM back-and-forth rises** (~1.12× medium; some large cases JS
+edges it) because of boundary-crossing cost (<https://benchmarkingwasm.github.io/BenchmarkingWebAssembly/>;
+<https://medium.com/@hashbyt/webassembly-vs-javascript-the-performance-battle-b2936d4c6c03>).
+Verdict for 8C/6C: a wasm-core-as-sole-impl claim must be bounded exactly as PROVE-14 already
+bounds it — the full-walk lane is a *named non-goal per the boundary law*, TS-native survives where
+V8 measurably wins; the boundary is real, input-size- and crossing-frequency-dependent, and must
+be measured (6D's null hypothesis defeated by cost, not asserted).
 
 ---
 
@@ -244,11 +271,17 @@ constraints, not design choices.
   ~+5% not +10.2%; then +13.6% / fused +15.6% / alloc −60.1%); `docs/tranches/sk-v24/PT-3.md`;
   `parse-that/docs/tranches/A/VALUEJS-PT-E-2026-07-05.md`; `SPEC.md §0/§2b`; `PORTFOLIO.md`
   (Constitution + LOCK-6/PROVE-14 isomorphism seed).
-- Web: <https://www.semver-ts.org/> ; learningtypescript.com (TS 4.7 inference break);
+- Web: <https://www.semver-ts.org/> + <https://www.semver-ts.org/formal-spec/2-breaking-changes.html>
+  (widening-return / narrowing-still-errors) ; learningtypescript.com (TS 4.7 inference break);
   <https://www.spakhm.com/ts-parsec> ; <https://github.com/sinclairzx81/parsebox> ;
   <https://github.com/GregRos/parjs> · <https://github.com/gcanti/parser-ts> ;
   <https://github.com/francisrstokes/arcsecond> ; Ohm SLE2017 incremental packrat
-  (ohmjs.org/pubs/sle2017) ; <https://en.wikipedia.org/wiki/Packrat_parser> ;
+  (ohmjs.org/pubs/sle2017) ; <https://en.wikipedia.org/wiki/Packrat_parser> +
+  <https://bford.info/packrat/> (memory-cost / linear-only-with-memory) ;
   <https://dl.acm.org/doi/pdf/10.1145/3428242> (TS inline caching) ;
-  V8 hidden-class/IC (yashschandra medium; ACM DL) ; v8-users closures-&-megamorphism thread ;
+  V8 hidden-class/IC 4-shape megamorphic ceiling (yashschandra medium; ACM DL) ;
+  v8-users closures-&-megamorphism thread ;
+  <https://chevrotain.io/docs/guide/performance.html> (constructor-props + instance-reuse laws) ;
+  TS2589 depth-50 wall + mitigations (oneuptime ; herringtondarkholme ; dev.to/susisu) ;
+  WASM↔JS boundary-collapse systematic review (benchmarkingwasm.github.io ; medium/@hashbyt) ;
   Warth PEPM08 packrat left-recursion ; arXiv:1609.05365 principled stateful parsing.

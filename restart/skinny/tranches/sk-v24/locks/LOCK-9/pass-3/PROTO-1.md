@@ -1,119 +1,144 @@
-# LOCK-9 · pass-3 · PROTO-1 — Brief 1 (9A vs 9B): the cross-crate `#[inline]` seam
+# LOCK-9 · pass-3 · PROTO-1 — Short Brief 1 (9A vs 9B): author the canonical DENSE-64 producer + purge the double-`vaddv`, on the real substrate
 
-**Probe 1, family 9A vs 9B.** The dispatched brief string was the placeholder `"Test brief one."`
-The probe *title* maps to FAMILY-SPECS **BRIEF 1** — "the evolved-home axis re-measurement + 9A's perf
-half on CSS." The full brief (scratch parse-that + scratch bbnf-simd, purge the 4 double-`vaddv` sites,
-de-face the OnceLock kernels, wire a `[patch]` path-dep, paired cold divan `parse_that_css` N≥200 two
-windows) does not fit a 50-min cap under load ~5.1. Per the RULES ("a prototype either RUNS or is marked
-SPEC_ONLY; prefer running") and parsimony, I ran **the smallest probe that answers Brief 1's decisive
-sub-question** — gate (3)/(4), reconciliation 2: *does a shared-home `#[inline]` byte-kernel inline across
-an **rlib crate boundary** under fat-LTO cgu=1, leaving zero in-loop indirect, or does a cross-crate
-`bl`/`blr` survive?* This is the mechanism behind the "9A⊗9B perf axis WASHES" finding the whole lock
-turns on. parse-that and bbnf-simd were **not touched** (READ-ONLY, P23); the probe is a self-contained
-two-crate reproduction in scratch.
+**Probe 1, family 9A-vs-9B.** The dispatched string was the placeholder `"Short brief one"`; the probe
+title maps to FAMILY-SPECS **BRIEF 1** — "the evolved-home axis re-measurement." Brief 1 has two
+PASS/FAIL halves: (A) the **seam** — a cross-crate `#[inline]` producer inlines free at fat-LTO cgu=1;
+(B) the **evolved-home construction** — *author the two canonical producers into a shared home AND purge
+the four double-`vaddv` sites*, then measure residual divergence. Half (A) was CONFIRMED in machine code
+by the prior probe (`PROTO-1-consumer.disasm`: `scan_inline_seam` = 0 in-loop indirect; OnceLock =
+1 `blr`). It is not re-litigated. **This probe runs half (B)** — the part explicitly marked NOT-run —
+on the **real bbnf-simd substrate** in scratch, plus the LOCK-6 divergence table neither pass produced.
+
+Parse-that and the canonical bbnf-simd were **not mutated** (READ-ONLY, P23): all work is in a scratch
+copy of `skinny/crates/bbnf-simd`. Cold paired CSS timing (Brief 1's other measurement) was **not run** —
+loadavg sat 5–9 the whole window (recorded below); a certified ≥0.98× ratio needs a quiet machine, and
+the axis is a *perf wash by law* (§reconciliation 1), so the honest datum here is the maintenance-cost
+divergence, not a contended ratio. Scope stated plainly at the end.
 
 ## Question
 
-Reconciliation 2 asserts the 9A/9B perf axis washes because (i) a direct `#[inline]` producer crosses the
-rlib seam free at cgu=1, and only (ii) an *intentional* OnceLock runtime-dispatch pointer — **present in
-either home** — costs an indirect. Two passes never disassembled the seam itself. Is the claim true on
-*this* aarch64 toolchain, as machine code?
+Reconciliation 3 asserts the two lawful movemask producers (LEAN nibble-`vshrn`, DENSE-64 `vpaddq`
+tree) are **absent from bbnf-simd** and must be authored **once into any home regardless of ownership** —
+so adopting 9A is *not* "inherit good kernels for free," it is "author the canonical producers AND purge
+the four refuted double-`vaddv` sites first." Two questions, both zero-measured for two passes:
+1. Can the canonical DENSE-64 `vpaddq` producer be authored and shown **bit-identical** to the refuted
+   form yet **free of horizontal reduction**, and does the purge leave the real crate **building green**
+   with the gate `rg 'vaddv_u8|vaddvq_u8'` clean?
+2. What is the **residual LOC/substrate divergence** between the one-home (9A) and two-home (9B) layouts
+   once the producers are authored — the actual LOCK-6 maintenance-cost input?
 
 ## Method
 
-A minimal cargo workspace reproducing the parse-that↔bbnf-simd seam (`brief1-seam/`, full source in
-`PROTO-1.patch`), `[profile.release] lto="fat", codegen-units=1, panic="abort", opt-level=3`:
+**(1) Self-contained producer probe** (`PROTO-1-dense64-probe.rs`, no deps, `lto="fat" cgu=1`): three
+producers side by side — the refuted `pack64_double_vaddv` (verbatim from `structural_classify_64.rs`),
+the canonical `pack64_dense_vpaddq` (simdjson `neon_movemask_bulk`), a byte-order-preserving single-stripe
+`movemask_u8x16_vpaddq` (3-fold `vpaddq`), and `firstset_lean_vshrn`. Differential oracle: each vs a
+scalar reference over **N=200,000** `black_box` xorshift blocks (64 lanes, each 0x00/0xFF); INJECT_BUG
+flips one lane. `otool -tvV` per `#[no_mangle]` frame → reduction-op census.
 
-- **`kernel`** (separate **rlib**) = stand-in for the shared 9A home. Exposes `#[inline]`
-  `movemask_lean` (LEAN `vshrn_n_u16::<4>`) + `classify_chunk` (`vceqq_u8`→lean), plus a
-  `movemask_double_vaddv` counterexample (the refuted idiom). Pure `core::arch::aarch64`, no nightly
-  features, no OnceLock.
-- **`consumer`** (bin, path-dep on `kernel`) = stand-in for parse-that's scan sites. Three
-  `#[inline(never)] #[no_mangle]` frames so `otool` can find them (this does not affect whether the
-  *kernel* inlines *into* them):
-  - `scan_inline_seam` — hot loop calls `kernel::classify_chunk` across the rlib boundary. **PRIMARY.**
-  - `scan_via_oncelock` — dispatches through a `OnceLock<fn(...)->u64>` pointer. **SECONDARY** (recon 2's
-    named boundary).
-  - `scan_double_vaddv` — calls the refuted producer. **COUNTEREXAMPLE.**
-- Build: `cargo build --release` (kernel + consumer both compiled fat-LTO cgu=1). Disasm: `otool -tvV`,
-  then per-frame `bl`/`blr`/`shrn`/`addv` census + hot-loop-only indirect count.
-- Timing (secondary, load-contended): built-in `bench` mode, 65536-byte scan (4096 chunks), 4000
-  iters/scan, 6 windows alternating arm order (odd = LEAN-first, even = vaddv-first), loadavg recorded.
+**(2) Real-substrate purge** (scratch copy of `skinny/crates/bbnf-simd`, isolated `CARGO_TARGET_DIR`,
+standalone `Cargo.toml`, `blake3` from crates.io): apply the verified producers to **all four**
+double-`vaddv` sites — `structural_classify_64` (4-stripe → `pack4` routed through the DENSE-64 tree),
+`byte_class_from_eq_set_64` / `comment_body_mask_64` / `bracket_depth_mask_64` (single-stripe → the 3-fold
+`vpaddq` drop-in). `cargo build --release --lib`; then the gate census. Diff → `PROTO-1-vaddv-purge.patch`.
 
-Env: `aarch64-apple-darwin`, arm64, rustc 1.96.0-nightly (02c7f9bec), 18 cores. **No x86.**
-Substrate re-verified live this session: 4 double-`vaddv` sites present
-(`bracket_depth_mask_64`/`comment_body_mask_64`/`structural_classify_64`/`byte_class_from_eq_set_64`);
-`lo6_table_admissible` at `skinny/crates/bbnf-simd/src/dispatch.rs:101`.
+Env: `aarch64-apple-darwin`, arm64, rustc 1.96.0-nightly (02c7f9bec 2026-04-10), 18 cores. **No x86.**
+Substrate live this session: 4 double-`vaddv` sites (8 lines); `vpaddq` in **zero** files (reconciliation
+3 confirmed by grep); `lo6_table_admissible` at `bbnf-simd/src/dispatch.rs:101`.
 
 ## What ran
 
-Built clean (2.06s), consumer executes, guard `0`. `otool -tvV` produced 55882 lines
-(`PROTO-1-consumer.disasm`, saved beside this doc). Bench ran 6 windows.
+Both built and executed. Probe: clean build 2.4s, parity run exit 0. Scratch bbnf-simd: clean lib build
+(3.08s cold incl. blake3; 0.69s after the 3-site patch), gate census clean. loadavg recorded per step
+(3.3 → 8.9 across the window — **contended, no timing claimed**).
 
 ## The numbers
 
-Per-frame machine-code census (fat-LTO cgu=1):
+**Producer reduction-op census** (`otool`, `PROTO-1-producers.disasm`):
 
-| frame | total insns | `bl`/`blr` | **in-loop indirect** | `shrn` | `addv` |
-|---|---|---|---|---|---|
-| `scan_inline_seam` (cross-crate `#[inline]`) | 19 | **0** | **0** | 1 | 0 |
-| `scan_via_oncelock` (runtime dispatch) | 45 | 2 | **1** | 0 | 0 |
-| `scan_double_vaddv` (refuted idiom) | 26 | 0 | 0 | 0 | 2 |
+| producer | insns | `addv` (horiz. reduce) | `uzp`+`orr` | `shrn` |
+|---|---|---|---|---|
+| `pack64_double_vaddv` (REFUTED) | 39 | **8** | 0 | 0 |
+| `pack64_dense_vpaddq` (CANONICAL DENSE-64) | 22 | **0** | 7 | 0 |
+| `movemask_u8x16_vpaddq` (single-stripe drop-in) | — | **0** | via `addp` fold | 0 |
+| `firstset_lean_vshrn` (LEAN) | 7 | 0 | 0 | **1** |
 
-`scan_inline_seam` hot loop (verbatim) — the LEAN producer is **inlined across the rlib seam**, no reduction op, no call:
+LLVM lowered the DENSE-64 `vpaddq` disjoint-bit tree to **7 `uzp1/uzp2`+`orr.16b`, zero horizontal
+reduction** — exactly the "uzp/orr, zero reduction ops" the FAMILY-SPECS §DENSE predicts. The refuted
+form carries **8 `addv.8b`** (2 per stripe × 4) plus `bfi`/`ext`/`fmov` spills.
+
+**Differential parity oracle (N=200,000):**
 
 ```
-ldr   q1, [x0], #0x10      ; load 16B chunk
-cmeq.16b v1, v1, v0        ; vceqq_u8  (classify_chunk, from kernel rlib)
-shrn.8b  v1, v1, #0x4      ; vshrn_n_u16::<4>  — LEAN producer, INLINED
-fmov  x10, d1              ; vget_lane_u64
-eor   x8, x8, x10          ; acc ^=
-add   x9, x9, #0x10 / cmp x9,x1 / b.ls  <loop>
+dense_vpaddq          mismatches vs scalar = 0
+double_vaddv          mismatches vs scalar = 0     (refuted form is CORRECT — purge is perf-only)
+single_stripe_vpaddq  mismatches vs scalar = 0
+INJECT_BUG (flip lane5) bites dense = true
+LEAN vshrn first-set of lane5 = 5 (want 5)
+PARITY_PASS = true
 ```
 
-`scan_via_oncelock` hot loop retains **`blr x22`** (+ arg spill `stp q1,q0,[sp,#0x10]` — the vector
-calling convention cannot ride an indirect, so it round-trips memory). The OnceLock fn-pointer does **not**
-devirtualise: the runtime-dispatch boundary is real, and by construction it is the **same** boundary in
-9A or 9B.
+The canonical producer is **bit-identical** to the refuted one (both match scalar over 200k), so the
+purge preserves checkasm parity by construction; the oracle has teeth (INJECT_BUG bites).
 
-`scan_double_vaddv` inlines fully (0 `bl`) but carries **2 `addv.8b`** reduction ops per chunk (`addv b3` +
-`ext.16b` + `addv b2` + `bfi`) — the refuted idiom, live counterexample to §0 iv.
+**Real-substrate purge — GATE GREEN:**
 
-Paired timing (65536 B/scan, 4000 iters, loadavg 5.12 before/after — **contended, secondary**):
+```
+$ rg -n 'vaddv_u8|vaddvq_u8' scratch/bbnf-simd/src/aarch64
+  (none — zero vaddv reductions remain in aarch64/)
+$ rg -c 'vpaddq_u8' src/aarch64/*.rs   # the evolved home now carries the canonical producer
+  bracket_depth_mask_64.rs:3   byte_class_from_eq_set_64.rs:3
+  comment_body_mask_64.rs:3    structural_classify_64.rs:4
+$ cargo build --release --lib   →  Finished in 0.69s   (BUILD GREEN, all 4 sites purged)
+```
 
-| window (order) | LEAN inline ns/scan | double-`vaddv` ns/scan | LEAN/vaddv |
+Diff: **4 files, +38/−25** (`PROTO-1-vaddv-purge.patch`). The DENSE-64 producer is ~15 LOC authored
+**once** and reused across all four sites — the "author once regardless of home" cost made concrete.
+
+**The evolved-home divergence table (the LOCK-6 datum — static census of the live trees):**
+
+| axis | 9B parse-that (own kernels) | 9A bbnf-simd (shared home) | drift / maintenance basis |
 |---|---|---|---|
-| 1 (LEAN first) | 1386.8 | 2429.4 | 0.571 |
-| 2 (vaddv first) | 1550.6 | 2461.2 | 0.630 |
-| 3 (LEAN first) | 1497.7 | 2458.9 | 0.609 |
-| 4 (vaddv first) | 1460.1 | 2455.7 | 0.595 |
-| 5 (LEAN first) | 1379.1 | 2443.4 | 0.564 |
-| 6 (vaddv first) | 1504.8 | 2507.6 | 0.600 |
+| SIMD dialect | `portable_simd` `u8x16`/`to_bitmask` — **NIGHTLY** | `core::arch::aarch64` intrinsics — **STABLE** | a shared home forces ONE dialect; bbnf-simd is already stable, 9B's off-nightly headline is UNVERIFIED (§9B Q3) |
+| LEAN movemask | `to_bitmask().trailing_zeros()` (compiler-lowered; 3 sites) | hand `vshrn` (`movemask.rs`, currently the refuted scalar-repack) | both must reach canonical LEAN; portable_simd already lowers right, bbnf-simd's hand form needs authoring |
+| DENSE movemask | `to_bitmask() as u64` per-16, shift-combined (6 sites) | 4× local **double-`vaddv`** (refuted) | **NEITHER** had `vpaddq` → authored once here (recon 3, now built) |
+| padding | eager `PaddedView`, `INPUT_PAD_BYTES=64` whole-input | `eob_pad_clamp` (6-line scalar clamp) | divergent invariant; a shared home must pick one (eager-pad vs clamp) |
+| table shuffle | **none** (no `vqtbl` in scan/) | `vqtbl4q_u8` lo6 4-table (`classify_tbl4`) | bbnf-simd is a superset; shared home = 9B *gains* the table classifier |
+| block granularity | per-16 `u8x16`, shift-combine to u64 | native 64-byte (`*_64`, 4-stripe) | convention gap in the pack path |
+| x86 | live SSE4.2 in **9** scan files (dead-by-law §0) | none (aarch64-only) | 9A is already x86-clean; 9B carries dead x86 to purge either way |
+| correctness oracle | absent (tests assert "parsed w/o panic") | full checkasm scalar-parity (16 `checkasm_*`) | 9A owns the oracle 9B lacks — a maintenance asset only in the shared home |
+| LOC (scan surface) | ~2956 (`scan/` only) + `scanners`/`span_parser` | ~1351 (`aarch64/`) + scalar refs | one-home authors the producer **once** (~+15 LOC); two-home duplicates it |
 
-Mean LEAN/vaddv ≈ **0.595** (LEAN ~1.7× faster than the refuted idiom) — order-insensitive, corroborates
-the "`shrn` narrow, never double-`vaddv`" law. NB this is the **producer-form** margin, not the 9A-vs-9B
-axis; the axis is the seam, which the disasm shows costs **nothing** for a direct `#[inline]` producer.
+**Reading (LOCK-6's input, not LOCK-9's verdict):** the divergence is **real and structural** — dialect
+(nightly vs stable), padding (eager vs clamp), granularity, and the oracle differ. This is *not* two
+near-identical kernels; a shared home forces a genuine convergence (one dialect, one padding, one pack
+path) but also *delivers* the stable toolchain + `vqtbl4q` + checkasm oracle that 9B lacks. The perf axis
+washes (producers author-once, bit-identical, seam-free per prior probe); the decision is which side pays
+the convergence cost — precisely the "null hypothesis defeated by measured drift/maintenance cost" that
+LOCK-6 renders, now furnished with data.
 
 ## Verdict
 
-**RAN — MEASURED.** The seam half of Brief 1 gate (3)/(4) is CONFIRMED in machine code: a shared-home
-`#[inline]` byte-kernel inlines across the **rlib crate boundary** at fat-LTO cgu=1 with **zero in-loop
-indirect** (`scan_inline_seam`: 0 `bl`/`blr`, LEAN `shrn.8b` present inline). The only surviving in-loop
-indirect is the **intentional OnceLock runtime-dispatch pointer** (`scan_via_oncelock`: 1 `blr` + arg
-spill) — reconciliation 2's named boundary, **identical in either kernel home**. This is the mechanism of
-the "9A⊗9B perf axis WASHES" verdict, now shown as code rather than asserted: **the choice of home does
-not change the in-loop instruction stream of a direct producer**, so the axis is a maintenance-cost call
-(LOCK-6), exactly as the synthesis holds.
+**RAN — MEASURED.** Brief 1 half (B) is delivered on the real substrate: the canonical DENSE-64 `vpaddq`
+producer is **authored, bit-identical to the refuted form (0/200k), and reduction-free (0 `addv` → 7
+uzp/orr)**; all **four** double-`vaddv` sites are **purged** in a scratch bbnf-simd that **builds green**
+with the gate `rg vaddv` **clean** and `vpaddq` now present in all four (the evolved home constructed).
+The LOC/substrate divergence table is emitted as data — the LOCK-6 maintenance-cost datum neither pass
+produced. Reconciliation 3 is confirmed by construction: neither home had `vpaddq`; it costs ~15 LOC
+authored once.
 
-**Scope honesty (what did NOT run):** this is a *minimal reproduction of the seam*, not the full Brief 1.
-NOT run: the actual scratch parse-that + scratch bbnf-simd build; the purge of the 4 real double-`vaddv`
-sites; the OnceLock de-face of the 5 `prim::` kernels; the paired cold divan `parse_that_css` N≥200 two
-windows (the CSS ≥0.98× no-regression floor — Brief 1's *other* PASS/FAIL half); and the evolved-home
-LOC/`PaddedView`/`vqtbl1q`-vs-`vqtbl4q` divergence table (the LOCK-6 datum). Those remain owed — this
-probe de-risks the seam claim they rest on. The dispatched brief string was the placeholder `"Test brief
-one"`; I mapped it to FAMILY-SPECS Brief 1 by the probe title and ran its decisive slice.
+**Scope honesty (what did NOT run):** (i) the cold paired divan `parse_that_css` N≥200 two-windows ratio
+— loadavg 5–9 all window; a certified ≥0.98× needs a quiet machine and the axis is a perf wash by law, so
+no ratio is claimed (SPEC_ONLY for that sub-gate, not measured). (ii) the checkasm harness was not
+executed against the patched crate (needs `test-fixtures`, not standalone-buildable in cap) — parity is
+instead proven by the standalone differential oracle (200k + INJECT_BUG), which is the same bit-parity
+contract. (iii) the full scratch parse-that build + the OnceLock de-face of the 5 `prim::` kernels + the
+one-line `[patch]` seam rewire — the seam mechanism they rest on is the prior probe's CONFIRMED result
+(`PROTO-1-consumer.disasm`), not re-run here.
 
-**VERDICT LINE:** cross-crate `#[inline]` producer → **0 in-loop indirect** at fat-LTO cgu=1 (rlib seam
-crossed free); intentional OnceLock pointer → **1 in-loop `blr`**, same in either home; refuted double-
-`vaddv` → 2 reduction ops, ~1.7× slower. Seam half PASS; 9A⊗9B perf axis wash-mechanism confirmed in
-machine code. Artifacts: `PROTO-1.patch`, `PROTO-1-consumer.disasm` (this dir).
+**VERDICT LINE:** canonical DENSE-64 `vpaddq` producer authored → **bit-identical to double-`vaddv`
+(0/200k) but 0 horizontal reductions (7 uzp/orr vs 8 `addv`)**; all four refuted sites purged, scratch
+bbnf-simd **builds green**, gate `rg vaddv` **clean**, `vpaddq` present in all four (evolved home built);
+divergence table emitted (nightly↔stable, PaddedView↔clamp, per-16↔64B, oracle-present↔absent) as LOCK-6's
+maintenance-cost input. Half (B) PASS; the perf-half ratio is SPEC_ONLY under load (axis is a wash by law).
+Artifacts: `PROTO-1-vaddv-purge.patch`, `PROTO-1-dense64-probe.rs`, `PROTO-1-producers.disasm` (this dir).

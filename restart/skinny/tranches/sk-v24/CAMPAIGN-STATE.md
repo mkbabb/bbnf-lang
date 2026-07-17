@@ -78,6 +78,17 @@ cron re-armed as job b1933bf3; bbnf p2 resumed as task wwev9d1ov, pt p3 as task 
 future pause. THIRD-WALL RESUME 21:44 ET: bbnf p2 now task ws1yrepwk, pt p3 now task
 wefinh05z (same runIds; closes L2 + L8/9 folds and the wall-lost crits/aggs).
 
+BBNF PASS-2 CLOSED 23:32 ET (task ws1yrepwk, 46/48): ALL FOUR registries folded — L1: 1A 52
+/ 1B 53 ADVANCED (carrier fork alive on iso axis; X8 ruled UNSHIPPED at HEAD — worktree
+over-claim struck; phantom let-gen floor RETIRED as refutation-vacuous, contingent on the
+new G-CRIT-alpha monomorphization-invariant gate co-owned with LOCK-7), 1C/1D BANKED with
+named reactivation experiments; L2: 2A 56 ADVANCED (PROVE-2-PROMOTE = the one artifact both
+probes stepped around: a replacing-not-observing extraction consumer; N*=3.0 flagged
+uniform-corpus artifact — re-run skewed), 2B BANKED 44, 2C BANKED 50 (bounded_sum EARNED-in-
+a-worktree, absent from HEAD — landing is a convergence prerequisite), 2D BLOCKED 32; plus
+the private-XL-lettering reconciliation to CROSS-LOCK.md ordered. L3/L7 folded (full text in
+task output + registries). pt p3 still in flight — PAUSE seals when it closes.
+
 Owner paused the campaign mid-stage-6. State at pause: 7 of 9 registries folded at their
 current pass (bbnf pass-2: LOCK-1/3/7 folded, LOCK-2 pending; pt pass-3: LOCK-4/5/6 folded,
 LOCK-8/9 pending). Heartbeat cron db26fdc3 DELETED by owner order. Both workflows

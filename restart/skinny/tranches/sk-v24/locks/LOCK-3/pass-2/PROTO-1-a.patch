@@ -1,0 +1,55 @@
+diff --git a/skinny/crates/codegen/src/general_descent/emit.rs b/skinny/crates/codegen/src/general_descent/emit.rs
+index f0c481043..2872a955f 100644
+--- a/skinny/crates/codegen/src/general_descent/emit.rs
++++ b/skinny/crates/codegen/src/general_descent/emit.rs
+@@ -285,6 +285,26 @@ fn indent(level: usize) -> String {
+ 
+ /// Emit the recognizer code for one `SinkOnlyExpr`. `node_kind` is the enclosing
+ /// rule's tape kind tag.
++/// Does this recognizer expr consume input? Pure markers
++/// (SpanMark/TapeEmit/DirectBuild/Return) emit only tape bookkeeping and never
++/// advance the cursor, so a `skip_ws` separator adjacent to them is dead.
++fn consumes_input(expr: &SinkOnlyExpr) -> bool {
++    match expr {
++        SinkOnlyExpr::Entry(inner) | SinkOnlyExpr::OptionalBranch(inner) => consumes_input(inner),
++        SinkOnlyExpr::Seq(children) => children.iter().any(consumes_input),
++        SinkOnlyExpr::Alt { branches, .. } => branches.iter().any(consumes_input),
++        SinkOnlyExpr::RepeatLoop { body, .. } => consumes_input(body),
++        SinkOnlyExpr::ValueProject { body, .. } => consumes_input(body),
++        SinkOnlyExpr::CallRule { .. }
++        | SinkOnlyExpr::ByteLiteral(_)
++        | SinkOnlyExpr::RegexProgram { .. } => true,
++        SinkOnlyExpr::SpanMark { .. }
++        | SinkOnlyExpr::TapeEmit
++        | SinkOnlyExpr::DirectBuild(_)
++        | SinkOnlyExpr::Return => false,
++    }
++}
++
+ fn emit_expr(
+     program: &SinkOnlyProgram,
+     expr: &SinkOnlyExpr,
+@@ -298,11 +318,21 @@ fn emit_expr(
+             emit_expr(program, inner, out, level, node_kind)?;
+         }
+         SinkOnlyExpr::Seq(children) => {
+-            for (index, child) in children.iter().enumerate() {
+-                if index > 0 {
++            // LOCK-3 PROTO-1-a G-3B-1 (T_semskip): emit a whitespace separator ONLY
++            // between two input-consuming constructs. A separator adjacent to a pure
++            // marker (SpanMark/TapeEmit/DirectBuild/Return consume no input), or
++            // before the first consuming child (whose leading ws the rule-entry
++            // `skip_ws` in render_rule already covers), is dead — `skip_ws` is
++            // idempotent. This retires the incidental Seq-slot separator that the
++            // materialization markers manufacture.
++            let mut prior_consumed = false;
++            for child in children {
++                let child_consumes = consumes_input(child);
++                if child_consumes && prior_consumed {
+                     let _ = writeln!(out, "{pad}*cursor = skip_ws(bytes, *cursor);");
+                 }
+                 emit_expr(program, child, out, level, node_kind)?;
++                prior_consumed |= child_consumes;
+             }
+         }
+         SinkOnlyExpr::Alt { mode, branches } => {

@@ -1,192 +1,255 @@
 # LOCK-9 pass-3 — PRIOR-ART RESEARCH: the scanner & kernel plane (parse-that rust)
 
-Scope: parse-that's scan/kernel layer — the eight `portable_simd` scanners
+No family allegiance. Sweep of what exists, what won and lost elsewhere for THIS problem class
+(NEON byte-scan kernels, movemask emulation, DFA-lexer scanners, prefilter tiers, shared SIMD
+kernel homes, streaming input surfaces), which constraints our own evidence base already imposes
+(SPEC §0 laws + the PROVE-09 refutation-as-law + PROVE-10), and the traps named in comparable
+systems. Citations inline; internal evidence cited by artifact path.
+
+Scope anchor (R3 §2/§4): the eight `portable_simd` scanners
 (`scanners.rs`, `parsers/scan/{decode,ws_comment,structural_bitmap,quoted_simd,quote_parity,number_simd}.rs`,
-`span_parser/scan.rs`, `state.rs`), the two x86-mixed files (`number_simd.rs`,
-`quote_parity.rs`), the kernel-sharing question with `skinny/crates/bbnf-simd/`, and the
-divan/oracle bench protocol. No family allegiance; this maps external prior art onto the
-problem class and names the constraints our own evidence base already fixes. REGISTRY not read.
+`span_parser/scan.rs`, `state.rs`), the two x86-mixed files (`number_simd.rs`, `quote_parity.rs`),
+the `PaddedView` 64-byte pad invariant (`state.rs:57`), and the kernel-sharing question with
+`skinny/crates/bbnf-simd` (24 aarch64 files, 2324 LOC).
 
 ---
 
-## 1. The movemask problem class — the load-bearing lever (families 9A/9B; PT-2.W1; GN-2.W4)
+## 0. The constraints our own evidence base already imposes (binding, non-negotiable)
 
-parse-that has **no PMOVMSKB**: `to_bitmask` on aarch64 must be synthesized. This is the single
-most-studied kernel in the whole plane, and the SOTA is settled.
+These are LAW before any prior art is weighed — a prior-art win that contradicts one of these is
+a NO-GO here regardless of its pedigree elsewhere.
 
-- **Langdale, "Fitting My Head Through The ARM Holes" (branchfree.org, 2019)** — the canonical
-  catalogue of PMOVMSKB substitutes for NEON. Key finding directly binding on us: simdjson does
-  *not* need a single movemask, it needs **4 in a row into one 64-bit register**, and the
-  amortized ARM sequence is cheap *only when batched* — a naive per-vector movemask is the wrong
-  shape. [1]
-- **Kutenin (Google), "Porting x86 vector bitmask optimizations to Arm NEON" (ARM community
-  blog)** — the `shrn v.8b, v.8h, #4` idiom: treat the 128-bit compare result as eight `u16`,
-  shift-right-narrow by 4, yielding a **64-bit mask at 4-bit-per-lane (nibble) stride** in ONE
-  instruction, then `fmov` to GPR. Applied to zstd/simdjson with large speedups. [2]
-- **Highway / Lemire, "Scanning HTML at Tens of GB/s on ARM" (Software: Practice & Experience
-  55(7), 2025; arXiv 2503.01662)** — production confirmation: WebKit and Blink both ship
-  `vshrn_n_u16(cmp, 4)` as their movemask; measured **~20× over prior scalar HTML scanning**. This
-  is the exact intrinsic PROVE-10's disasm shows (`shrn.8b v0,v0,#4` + `ands #0x8888…`) and that
-  `bbnf-simd/src/aarch64/movemask.rs` already implements (`vshrn_n_u16<4>`). [3][4]
-
-**What LOST — and it is our own refutation as law.** PROVE-09's de-nightly shim built `to_bitmask`
-as a bit-position `vand` + **two `vaddv_u8` halves**; the verify fleet's `otool -tv` counted
-**2271 `addv.8b` vs 509 baseline** — ~4× the reduction work per movemask, the mechanism behind the
-measured regression (VERIFY attack #2). The external literature *predicts* this: `addv`
-horizontal-reduce is the slow substitute; `shrn #4` is the fast one. Prior art and our evidence
-agree — **the double-addv movemask is a named trap; the vshrn-narrow nibble-stride is the only
-lawful `to_bitmask`.** Consumers that *iterate* the mask index at `tz >> 2` (nibble stride);
-presence-only consumers stay on `any()`=`vmaxvq_u8`. [1][2][3] + PROVE-09 VERIFY.
-
-**The classify-floor lever (GN-2.W4).** SPEC §0/04 refuted multi-block software pipelining
-(1.05–1.06× only; the M-class OoO core already pipelines the single block; classify is ALU-bound
-on the movemask bit-stitch). The literature names the real lever identically: the cost is the
-**movemask narrow + vectorized compaction**, not block scheduling — Langdale's "batch the
-movemasks" and Lemire's compaction discussion. Our F1 lever is externally corroborated. [1][3]
+- **The movemask idiom is FIXED, contract-split (SPEC §0/03, §0/04; PROVE-10 disasm).** The
+  certified fused string scan (feature 03, CONFIRMED, twitter parse_tape 0.898–0.931× cyc/B) is
+  the **`vshrn` narrow** movemask (`shrn.8b v0, v0, #4` → `fmov` → mask), disasm-verified in
+  PROVE-10 REPORT §2c. Block scheduling was refuted as a lever (SPEC §0/04, 1.05–1.06× only —
+  the M-class OoO core already pipelines the single-block loop; classify is ALU-bound on the
+  movemask bit-stitch). The F1 lever is the **movemask narrow + vectorized compaction**, not
+  block scheduling. Directive F1 splits it: LEAN nibble-`vshrn` vs DENSE dense-64 `vpaddq` tree.
+- **The double-`addv` movemask is the named trap (PROVE-09 VERIFY, LAW).** The `portable_simd`→NEON
+  shim's `to_bitmask` emitted **2271 `addv.8b` vs baseline 509** — 2× the reduction work per mask —
+  and the claimed 1.34–1.57× speedup was REFUTED to parity-or-slower on fresh paired windows. The
+  standing lesson: two-arm window asymmetry is the classic self-deception; **paired interleaving is
+  mandatory even for "obvious" wins**, and stable-NEON delivers STABILITY value, not speed
+  (SPEC §0/09). Any reborn kernel gates on measured **no-regression**, never a speed claim.
+- **No digit-scan SIMD (SPEC §0/02, NO_GO).** `number_simd.rs` ports its NEON arm to stable and
+  purges x86, but does NOT pursue Mula/Lemire in-vector digit accumulation: −37/−48% instructions
+  but a latency-bound CPI inversion (0.13→0.30) that regresses the product lane. The redress target
+  is FLOAT CONVERSION (Eisel–Lemire materialize tax, +1.48 cyc/B), never the digit scan.
+- **x86 is dead; M-series is NEON-only (SPEC §0 carried).** No SVE/SVE2/SME for byte work; the
+  four-layer x86 abrogation reaches parse-that source (GN-0). Warm benches are disinformation
+  (cold per-parse, paired, N≥200 only).
+- **One-regex-home = parse-that (XL-C, settled; SPEC §1).** Grammar tier keeps `Regex(StringId)`
+  opaque; engine tier keeps rich `Hir`; a string/format bridge joins them — NOT a single-HIR
+  dependency. Vendored parse-that-regex inside skinny is the DFA substrate.
 
 ---
 
-## 2. portable_simd vs core::arch on aarch64 — the stability-not-speed law (family 9B; PT-2)
+## 1. Movemask emulation on aarch64 — the central kernel problem class
 
-- **rust-lang/stdarch #1659** ("aarch64: use portable SIMD intrinsics where possible") and
-  **rust-lang/portable-simd #312** ("weird codegen with masks > 8 lanes") document that
-  `std::simd` mask reductions lower to suboptimal aarch64 sequences — the very artifact PROVE-09's
-  prover *mistook* for a speedup and the verify fleet *disproved* at the instruction level
-  (`tbl`/swizzle identical 516=516; the delta was entirely the movemask reduction tree). [5][6]
-- **"Rust SIMD Benchmark: std::simd vs NEON on Apple M4" (dev.to)** — independent measurement that
-  hand `core::arch::aarch64` NEON and `std::simd` are *close* on M-series when the reduction idiom
-  matches; the gaps appear precisely at mask/bitmask boundaries. [7]
+**What won elsewhere.** ARM's own guidance ("Porting x86 vector bitmask optimizations to Arm
+Neon") is exactly our contract-split, independently arrived at:
+- **`shrn`/`vshrn_n_u16::<4>` is the default.** Shift the 16-bit compare result right by 4 and
+  narrow to 8 bits → a 64-bit register where every matching bit repeats 4× (nibble stride). This
+  is the LEAN producer. ARM notes portable shims (SSE2NEON, SIMDe) "require at least 4 instructions
+  each with ≥2 cycles latency whereas `movemask` takes a single cycle on x86" — i.e. the naive
+  emulation IS the trap, matching PROVE-09's double-`addv` finding.
+- **The `vpaddq` pairwise-accumulation tree wins for DENSE 32/64-byte blocks.** ARM: SIMDJSON
+  preferred pairwise (a `0x01,0x02,…,0x80` bit-position constant + sequential `vpaddq_u8`), ZSTD
+  preferred `shrn`; "it does not necessarily mean the pairwise version is always faster because it
+  requires additional tables and more registers." This is precisely directive F1's DENSE dense-64
+  `vpaddq` tree vs LEAN nibble-`vshrn` split — and the guidance is **measure both**, which our
+  paired-cold protocol already mandates.
+- BurntSushi/memchr's aarch64 work (PR #114) corroborates: `shrn` for ≤16-byte / short runs,
+  `umaxp`-then-`shrn` (existence-only, no position) for longer loops; the naive movemask emulation
+  produced "significant 20% slowdowns in huge/common cases." This is the **short-run vs long-run**
+  divide the scanners live on (PROVE-10 §2 notes short runs favor membership/structural tiers).
 
-**Binding conclusion.** The prior art supports PT-2's charter exactly: the port's honest value is
-**stability, not speed** (SPEC §0/09 REFUTED). It breaks even *iff* the hand movemask uses
-`vshrn #4`; if it regresses to `addv`, it loses. The literature makes the shim's zero-churn
-`to_bitmask` a liability, not a convenience — call-site churn to the nibble stride is the price of
-parity, not an optimization.
+**Implication for LOCK-9.** The canonical producers (F1: LEAN nibble-`vshrn` / DENSE dense-64
+`vpaddq` tree) are absent from `bbnf-simd` and must be authored once regardless of home. Note the
+extant `bbnf-simd/src/aarch64/movemask.rs` is a HYBRID-NAIVE form: `vshrn_n_u16::<4>` narrow
+followed by a **scalar `for pair in 0..8` bit-unpack loop** (`movemask.rs:20-24`) — it produces the
+narrow but then re-serializes it in scalar, which is neither the pure-`fmov`-to-`u64` LEAN form
+(PROVE-10's `fmov x8, d0; ands x8,#0x8888…`) nor the DENSE tree. Both canonical producers are owed.
+
+Sources: [ARM: Porting x86 vector bitmask optimizations to Arm Neon](https://developer.arm.com/community/arm-community-blogs/b/servers-and-cloud-computing-blog/posts/porting-x86-vector-bitmask-optimizations-to-arm-neon),
+[memchr PR #114 aarch64 neon](https://github.com/BurntSushi/memchr/pull/114),
+internal: PROVE-09/VERIFY.md, PROVE-10/REPORT.md §2c, `bbnf-simd/src/aarch64/movemask.rs`.
+
+## 2. portable_simd vs core::arch::aarch64 — the codegen-quality question (F2)
+
+**What is known.** The `portable_simd` `to_bitmask` lowering on aarch64 is the weak link: it emits
+the multi-`addv` reduction the shim's disasm exposed (PROVE-09 VERIFY: 2271 vs 509 `addv.8b`).
+The community consensus (Shnatsel, "State of SIMD in Rust 2025") is that `std::simd` is still
+nightly-only and its aarch64 lowering is uneven vs hand `core::arch` intrinsics; stdarch issue
+#1659 tracks the reverse (using portable intrinsics *inside* stdarch) but that is orthogonal. The
+DEV benchmark "std::simd vs NEON on Apple M4" reports hand-NEON edges on reduction-heavy kernels —
+consistent with our refutation that the win, where it appeared, was window asymmetry not codegen.
+
+**The honest position (SPEC §0/09, PT-2 §1.1).** The de-nightly `core::arch::aarch64` port's value
+is STABILITY (leaving the ICE-prone `nightly-2026-04-11` pin — 93 recorded `on_disk_cache` ICEs,
+R3 §1), not speed. Gate = measured no-regression, paired. Stable `core::arch::aarch64` gives
+byte-lane intrinsic control (the exact `vshrn`/`vpaddq` producers) that `portable_simd` abstracts
+away — which is the correctness argument for the port independent of any perf claim.
+
+**The `smallbox` nightly cut (F2 blast radius).** Sole use site is the parser vtable
+(`parse.rs:1,62,74`); `smallbox!`≡`SmallBox::new` (alloc-neutral, PROVE-09 §"Alloc profile"). Prior
+art for "small-box on stable": `smallbox` 0.8 stable path drops the inline-storage niche optimization
+but keeps S32 inline/heap behavior; the bump-slab-arena alternative is lifetime-invasive over 86
+`Parser::new` sites (the `'a` input lifetime), honestly carried as a tranche-scoped refactor, not a
+prover edit (PROVE-09 §"Why the bump-slab arena was NOT the vtable substitute"). The
+`fmt_helpers_for_derive` residual is a GENERATOR fix (emit `#[derive(Debug)]` not its expansion),
+per the clean-regen edict — not a hand-patch.
+
+Sources: [Shnatsel, State of SIMD in Rust 2025](https://shnatsel.medium.com/the-state-of-simd-in-rust-in-2025-32c263e5f53d),
+[stdarch #1659](https://github.com/rust-lang/stdarch/issues/1659),
+[std::simd vs NEON on Apple M4](https://dev.to/erioharrison/rust-simd-benchmark-stdsimd-vs-neon-on-apple-m4-47jd),
+internal: R3 §2, PROVE-09/REPORT.md, PT-2.md §1.
+
+## 3. Structural-scanner architecture — simdjson / sonic-rs (the JSON kernel lineage)
+
+**What won.** simdjson's two-stage scanner is the reference design our scanners already mirror:
+compute a quote mask Q, remove escaped quotes via odd-length backslash runs (OD), carry-less
+multiply (`clmul`/`pmull`) to turn quote-open positions into an in-string mask R, then classify
+structural `[]{},:` into mask S. The quote-parity via carry-less multiply is Langdale's
+PCLMULQDQ trick ("Finding quote pairs with carry-less multiply"); on aarch64 the equivalent is
+`vmull_p64`/`pmull` — which is exactly the gated aarch64 path in our `quote_parity.rs:51-56`
+(`vmull_p64` under `target_feature="aes"`), with the x86 `_mm_clmulepi64_si128` arm to be purged.
+
+**What lost / the honest limits.** sonic-rs deliberately does NOT use simd-json's full two-stage
+algorithm (it found the staged structural index too costly for its on-demand model). This validates
+our own §0 carried law: **tape-navigation is NOT the get lane** (feature 06 measured stop-early at
+150–1700× the tape-nav cost) — the structural-bitmap scanner earns its keep only for eager full-tape
+parse, and the stop-early/get lanes route around it. sonic-rs' lazy/on-demand posture is the prior
+art for our value-surface split (eager tape / stop-early get / direct-to-struct / TS tape).
+
+**Trap named.** simdjson arranges code to HIDE `pclmulqdq` latency (do not follow it with a
+dependent op). Our `quote_parity.rs` must preserve that scheduling on the `pmull` path; a naive
+port that serializes on the `pmull` result forfeits the latency hiding.
+
+Sources: [Langdale, quote pairs with carry-less multiply](https://branchfree.org/2019/03/06/code-fragment-finding-quote-pairs-with-carry-less-multiply-pclmulqdq/),
+[sonic-rs](https://github.com/cloudwego/sonic-rs), [simdjson.org](https://simdjson.org/),
+internal: R3 §4 (`quote_parity.rs`), SPEC §0/06 carried law.
+
+## 4. Scanner-as-DFA — re2c / ragel / lexgen (family 9C prior art, F3)
+
+**What won.** re2c compiles regex→DFA and emits **direct-coded** lexers (conditional jumps +
+comparisons), which are "faster and often smaller than table-driven analogues" and easier to debug;
+it uses lookahead-TDFA for submatch extraction at minimal overhead, and is "usually a bit faster
+than ragel." This is the strongest evidence FOR family 9C (quote/number/ws scanning as compiled
+DFA/prefilter products of the bootstrapped grammar): direct-threaded DFA codegen is a mature, SOTA
+technique with a decades-long track record. re2c targets Rust among 14 languages.
+
+**What loses / the trap for us.** DFA scanning is byte-at-a-time; it does NOT vectorize the hot
+inner scan. Directive F3's own caution is the counterweight: "a small-multistate serial `vqtbl1q`
+chain is a measured negative on the SHORT runs these scanners see." A grammar→DFA scanner competes
+with the SIMD membership/structural tiers only where the run is long AND the class is
+SIMD-unfriendly. The over-ceiling denominators (255-class / 4096-state) mean rich CSS `url()` /
+wide-unicode leaves may exceed the tractable `[u8;256]`→SIMD classifier tier — the census owes the
+coverage %. Prior art says the classical `nfa→dfa→minimize` pipeline (which `bbnf-regex` already
+has: `dfa.rs` Hopcroft minimization) is the right substrate; LOCK-5 owns whether e-graph/CSP
+extraction beats it, gated head-to-head (measured wins stay, losses are named negative results).
+
+**Byte-class classifier prior art.** simdjson/hyperscan use a `[u8;256]`→nibble-LUT classifier
+(`vqtbl1q_u8` shuffle on hi/lo nibbles) — exactly `bbnf-simd/src/aarch64/classify_tbl4.rs` /
+`byte_class_from_table_64.rs`. The known trap (F3): a **naive nibble-only emit misclassifies the
+structural set** when two structural bytes share a nibble bucket — the emit pass needs
+partition/separability selection, not a blind nibble split.
+
+Sources: [re2c.org](https://re2c.org/), [re2c: lexer generator based on lookahead-TDFA](https://re2c.org/2020_trofimovich_re2c_a_lexer_generator_based_on_lookahead_tdfa.pdf),
+[skvadrik/re2c](https://github.com/skvadrik/re2c),
+internal: R3 §3 (`dfa.rs` Hopcroft), DIRECTIVES F3, `bbnf-simd/aarch64/classify_tbl4.rs`.
+
+## 5. Prefilter / Teddy tier — the multi-byte entry accelerator (PROVE-10 lineage)
+
+**What won (already proven in-house).** PROVE-10 productionised a start-state memchr prefilter into
+`Dfa::find` — **9.6×–29× match throughput** on prefilterable patterns, **0.99× controls**,
+compile-neutral, 44/44 tests (SPEC §0/10 CONFIRMED 8.8–29.5×). It reuses the `Memchr1/2/3` tier
+vocabulary from `accel.rs`. This is the direct descendant of regex-automata's prefilter ladder and
+memchr's rare-byte heuristic.
+
+**The named next tier (out of PROVE-10 scope).** For entry sets >3 bytes, memchr falls to `None`
+(parity). The prior art here is **Teddy** (aho-corasick `packed/teddy`, learned from Hyperscan): a
+SIMD packed multi-substring matcher using nibble-LUT `pshufb`/`vqtbl1q` fingerprints, and the
+rare-byte heuristic ("prefer heuristically-rare bytes; when >3 starting bytes, look for 3 distinct
+bytes at any position"). Teddy is the lawful extension of the prefilter tier to larger literal sets —
+but it is a match-entry accelerator, NOT the scanner itself. Its cost model (build-time LUT, minimum
+haystack length) means it loses on the short runs the parse-that scanners see; weight membership +
+structural tiers there (directive F3).
+
+Sources: [aho-corasick Teddy README](https://github.com/BurntSushi/aho-corasick/blob/master/src/packed/teddy/README.md),
+[Gallant, regex engine internals as a library](https://burntsushi.net/regex-internals/),
+internal: PROVE-10/REPORT.md, SPEC §0/10.
+
+## 6. Shared kernel home vs own kernels (F1 — family 9A vs 9B)
+
+**Prior art on cross-crate SIMD reuse.** simdutf/simdutf8 are the reference for a shared byte-scan
+kernel library consumed by many callers; the `multiversion` crate is the standard for runtime
+feature dispatch. But the recurring finding (CuriousCoding "Distributing Rust SIMD Binaries";
+Shnatsel 2025) is that **cross-crate `#[inline(always)]` of SIMD kernels works but bloats code
+size**, and runtime dispatch adds a branch the fused inner loop wants to avoid. For a fixed-ISA
+target (aarch64-only, no multiversioning needed — x86 is dead) the dispatch concern evaporates; the
+only question is the inline boundary.
+
+**What our own evidence already settles (F1 "do not re-derive").** Cross-crate `#[inline]` across
+the parse-that↔bbnf-simd rlib boundary is measured-LIVE (0 in-loop indirect calls); de-facing a
+facade is bbnf-simd-internal hygiene, not a perf lever. So 9A (one shared aarch64 home) vs 9B (own
+kernels) is NOT a performance question — it is a maintenance/drift-cost question. The residual
+LOC/substrate divergence (padded-view/clamp conventions, single- vs multi-table shuffle, capacity
+constants) between one-home and two-home layouts is the real deliverable, and the canonical movemask
+producers must be authored once into whichever home regardless (they are absent from bbnf-simd today).
+The `PaddedView` 64-byte pad (`state.rs:57`) vs bbnf-simd's `eob_pad_clamp.rs` is a concrete
+convention-divergence site to census.
+
+**Trap named (F1).** The `#[inline]` cross-seam guarantee is config-dependent: under a low cgu count
+or thin-LTO-off build, a large kernel may fail to inline across the crate boundary and become a real
+call. The pass owes the exact (cgu, LTO) config where the seam appears — evidence, not assertion.
+
+Sources: [CuriousCoding, Distributing Rust SIMD Binaries](https://curiouscoding.nl/posts/distributing-rust-simd-binaries/),
+[multiversion crate](https://docs.rs/multiversion/latest/multiversion/),
+[simdutf8](https://crates.io/crates/simdutf8/0.1.2),
+internal: DIRECTIVES F1, R3 §4 (`state.rs:57` PaddedView), `bbnf-simd` file census.
+
+## 7. Windowed vs streaming input surface (F4 — family 9D)
+
+**What exists in the ecosystem.** winnow's `Partial<I>` tags input so parsers return
+`ErrMode::Incomplete` when short and switch to complete-parsing at runtime when the reader reports
+true EOF; nom v8 back-propagated `parse_complete`. simdjson's on-demand and serde_json's
+`StreamDeserializer` handle document-at-a-time streaming. sonic-rs' lazy model is the on-demand
+analogue.
+
+**The honest limit for parse-that (F4).** parse-that's scanners consume a whole owned `PaddedView`
+(64-byte trailing NUL lets every stripe skip a tail guard, `state.rs:57`). Whole-document-granularity
+streaming (the only shape winnow/serde offer cheaply) does NOT reduce peak tree RSS — the tree is
+built whole. So 9D (streaming-first) is a real feature ONLY if there is an in-wave chunked consumer;
+absent one, it is consumer-less substrate (Constitution viii, Y.13 — forbidden). The census owes:
+does any shipped grammar feed chunked/`from_reader`, and what is the rewind distribution
+(`furthest_offset − offset`, P50/P99/max)? If backtrack is BOUNDED, a fixed ring buffer suffices and
+full streaming is unwarranted; if unbounded, streaming needs a materialization boundary the current
+combinator core does not have. Prior art (winnow) shows the runtime complete/partial switch is the
+lawful mechanism — but only pays for itself with a genuine reader-fed consumer.
+
+Sources: [winnow Partial](https://docs.rs/winnow/latest/winnow/stream/struct.Partial.html),
+[winnow streaming discussion #169](https://github.com/winnow-rs/winnow/discussions/169),
+internal: DIRECTIVES F4, R3 §4 (`state.rs` PaddedView), Constitution viii (Y.13).
 
 ---
 
-## 3. Quote-parity / structural bitmap — carryless-multiply prefix-XOR (family 9C; `quote_parity.rs`)
+## 8. Synthesis — the prior-art verdict per family
 
-- **Langdale, "Finding quote pairs with carry-less multiply (PCLMULQDQ)" (branchfree.org, 2019)** —
-  the simdjson prefix-XOR-of-quotes-against-all-ones trick: fill every bit *between* matched
-  quotes, carrying one boolean (odd-quote-count) across 64-bit chunks. [8]
-- The ARM equivalent is `vmull_p64` (polynomial multiply), gated `target_feature="aes"` — exactly
-  `quote_parity.rs:51-56` (`prefix_xor`). A single `vmull_p64` replaces the 6-shift scalar chain;
-  the x86 `pclmulqdq` arm (`quote_parity.rs:42-49`) is the abrogation target; the aarch64
-  `vmull_p64` + 5-shift scalar fallback survive. `bbnf-simd/src/aarch64/bitmap_prefix_xor_64.rs` is
-  the shared-kernel candidate. [8]
-
-**Trap named elsewhere and by us:** the cross-chunk carry-in (odd-parity boolean) is the classic
-escape/quote state-machine bug — `bbnf-simd`'s CHECKASM report flags `escape_mask_64` carry handoff
-as "the proven source of the open divergence." Any kernel-share must carry the exhaustive
-`(bs_mask, bs_carry_in)` sweep with it.
-
----
-
-## 4. Character classification / the prefilter kernel — and the SVE2 TRAP (families 9A/9C)
-
-parse-that's structural classifier and the PROVE-01/05 shufti/truffle prefilter (`classify_tbl4.rs`
-= `vqtbl4q_u8` 4-table) sit on the most active 2025-26 research front.
-
-- **Langdale & Lemire (2019) table-driven branch-free classifier** — nibble→bitmask `vqtbl`
-  lookup, one table pass instead of N comparisons; the basis of shufti/truffle and of
-  `classify_tbl4.rs`. [3][9]
-- **Lemire, "The fastest way to match characters on ARM processors" (2026-04)** — freshest
-  head-to-head on Graviton 4 (Neoverse V2): traditional **NEON table-lookup 15.5 GB/s @ 0.75
-  ins/B** vs **SVE2 `match` 16.0 GB/s @ 0.55 ins/B** (−25% instructions). SVE2 `match`
-  set-membership is the new SOTA. [9]
-
-  **THIS IS A CONSTRAINT, NOT A ROUTE.** SPEC §0 law: *"M-series is NEON-only (no SVE/SVE2/SME for
-  byte work)."* Apple M-class — our sole certified host — has **no SVE2**. The freshest winning
-  technique in the literature is **barred by our evidence base**; NEON `vqtbl` table-lookup is the
-  ceiling on our hardware. A design reaching for `svmatch`/`match` is dead on arrival here. (Cost-
-  model note for 9A/9D: were a Graviton lane ever certified, SVE2 would be a pluggable kernel — but
-  it is out of scope under the current NEON-only certification.) [9]
-
-- PROVE-01 (shufti/truffle prefilter, fused GATE=16) CONFIRMED skip-heavy ~7.5×/4.7×, dense ~1.0×
-  (dense-neutral) — consistent with the literature: table classifiers win big on skip-heavy input,
-  go neutral on dense structural alphabets.
-
----
-
-## 5. Prefilter tier / memchr / Teddy — the DFA-scan seam (family 9C; PROVE-10, PT-N1)
-
-- **BurntSushi, `regex-automata` prefilter ladder + `memchr`** — the rare-byte/`memchr`/`memchr2/3`
-  entry-byte prefilter that PROVE-10 productionized into `Dfa::find` (9.6–29×, 0.99× controls,
-  44/44). memchr's aarch64 backend is NEON (`vshrn` movemask again). Direct prior art for the 9C
-  "scanner-as-DFA" thesis: quote/number/ws scanning become compiled DFA+prefilter products. [10]
-- **aho-corasick Teddy (BurntSushi)** — packed multi-substring SIMD; **works on aarch64 via NEON**,
-  best with <100 patterns, self-confirming matches. The named future tier for entry-sets larger
-  than 3 bytes (PROVE-10 §5 leaves it out of scope; the Teddy/shufti multi-byte tier is the
-  documented next step). [11][12]
-
-**Design implication for 9C/9D.** The external ladder is: `memchr` (1–3 bytes) → Teddy (≤~100
-short patterns) → shufti/truffle (class membership) → full DFA. A grammar-derived cost model (9D)
-selecting among these tiers at combinator-compile time is exactly regex-automata's architecture;
-the prior art says the *tiers* are real and the *selection* is the win, not any single kernel. [10][11]
-
----
-
-## 6. Kernel-sharing & differential testing — one-kernel-library (family 9A)
-
-- **FFmpeg/dav1d `checkasm`** — the reference framework for the kernel-sharing gate: every
-  hand-SIMD variant validated *identical* to a C scalar reference and benchmarked across ISA
-  variants; "a massive element of dav1d's success is handwritten SIMD" made safe by checkasm's
-  scalar-parity differential. [13][14]
-- **`bbnf-simd/CHECKASM-REPORT.md`** already mirrors this: `tests/checkasm_parity.rs` maps each
-  checkasm.h feature (randomized src0/src1, `call_ref`/`call_new`, clobber memcmp, alignment sweep,
-  stack canary, SIG{SEGV,BUS,ILL} guard, outlier filter) to a Rust construct, with a scalar spec
-  per aarch64 primitive and `BBNF_SIMD_INJECT_BUG` self-test. This is the physical isomorphism 9A
-  wants: **one aarch64 kernel home (`bbnf-simd`) with a scalar parity oracle per kernel**, and
-  parse-that scanners as thin consumers.
-
-**The kernel-share is already half-built.** `bbnf-simd/src/aarch64/` carries the exact primitives
-parse-that hand-rolls: `movemask.rs` (`vshrn_n_u16<4>`), `bitmap_prefix_xor_64.rs` (quote parity),
-`structural_classify_64.rs`, `classify_tbl4.rs` (`vqtbl4q_u8`), `string_block.rs`
-(quote/backslash/control), `digit_mac.rs`, plus a full `scalar/` mirror. 9A's "extract or vendor
-under a sync gate" is a de-duplication of *already-parallel* implementations, not a green-field
-build. The trap (CHECKASM §d): the NEON↔scalar handoff at stripe boundaries (`escape_mask_64`,
-`vextq_u8` context) is the historically-divergent seam — any share must carry its exhaustive
-carry-in sweep.
-
----
-
-## 7. Constraints our evidence base already imposes (binding on every family)
-
-1. **NEON-only, no SVE2/SME** (§0) — bars the freshest SOTA char-match (§4 [9]); `vqtbl`+`vshrn` is
-   the hardware ceiling on M-class.
-2. **vshrn-narrow movemask, never double-addv** (§0/09 + PROVE-09 VERIFY, corroborated [1][2][3]) —
-   the one lawful `to_bitmask`; iterating consumers index at `tz>>2`.
-3. **No digit-scan SIMD** (§0/02 NO_GO) — `number_simd.rs` NEON path is ported byte-preserving and
-   x86-purged, never advanced to Mula/Lemire in-vector accumulation (CPI 0.13→0.30 latency
-   inversion). The canada redress targets float *conversion* (Eisel-Lemire tax), not the digit scan.
-4. **No block-scheduling** (§0/04) — the classify lever is movemask-narrow + compaction ([1][3]),
-   not multi-block pipelining.
-5. **Warm benches are disinformation; cold, paired, N≥200, two windows, opposite arm order** (§0 +
-   PT-2.W1 gate) — macOS restricts userspace PMU, so divan wall-clock *ratios* of paired
-   same-binary lanes are the certified metric (PROVE-10 §5); the two-window opposite-order protocol
-   is mandatory precisely because window asymmetry fabricated PROVE-09's speedup.
-6. **x86 abrogation reaches parse-that** — the two x86-mixed files (`number_simd.rs` SSE4.2 arm,
-   `quote_parity.rs` `pclmulqdq` arm) lose their x86 halves; `vmull_p64`/NEON + scalar survive;
-   structural token gate + `tests/no_x86.rs` enforce.
-7. **Scalar parity oracle per kernel** (checkasm law [13][14] + bbnf-simd CHECKASM) — no NEON
-   primitive lands without its `[u8;N]` scalar reference and differential sweep.
-
----
-
-## Sources
-
-[1] Langdale, "Fitting My Head Through The ARM Holes" — https://branchfree.org/2019/04/01/fitting-my-head-through-the-arm-holes-or-two-sequences-to-substitute-for-the-missing-pmovmskb-instruction-on-arm-neon/
-[2] Kutenin, "Porting x86 vector bitmask optimizations to Arm NEON" — https://developer.arm.com/community/arm-community-blogs/b/servers-and-cloud-computing-blog/posts/porting-x86-vector-bitmask-optimizations-to-arm-neon
-[3] Lemire, "Scanning HTML at Tens of Gigabytes per Second on ARM Processors" (SPE 55(7), 2025) — https://arxiv.org/abs/2503.01662
-[4] Lemire, "Checking whether an ARM NEON register is zero" — https://lemire.me/blog/2025/01/20/checking-whether-an-arm-neon-register-is-zero/
-[5] rust-lang/stdarch #1659, "aarch64: use portable SIMD intrinsics where possible" — https://github.com/rust-lang/stdarch/issues/1659
-[6] rust-lang/portable-simd #312, "Weird codegen with masks > 8 lanes" — https://github.com/rust-lang/portable-simd/issues/312
-[7] "Rust SIMD Benchmark: std::simd vs NEON on Apple M4" (dev.to) — https://dev.to/erioharrison/rust-simd-benchmark-stdsimd-vs-neon-on-apple-m4-47jd
-[8] Langdale, "Finding quote pairs with carry-less multiply (PCLMULQDQ)" — https://branchfree.org/2019/03/06/code-fragment-finding-quote-pairs-with-carry-less-multiply-pclmulqdq/
-[9] Lemire, "The fastest way to match characters on ARM processors" (2026-04) — https://lemire.me/blog/2026/04/19/the-fastest-way-to-match-characters-on-arm-processors/
-[10] BurntSushi, aho-corasick DESIGN.md (memchr/prefilter ladder) — https://github.com/BurntSushi/aho-corasick/blob/master/DESIGN.md
-[11] BurntSushi, aho-corasick Teddy README (aarch64 NEON, <100 patterns) — https://github.com/BurntSushi/aho-corasick/blob/master/src/packed/teddy/README.md
-[12] BurntSushi, aho-corasick repo — https://github.com/BurntSushi/aho-corasick
-[13] FFmpeg checkasm — https://deepwiki.com/FFmpeg/FFmpeg/10.1-assembly-testing-with-checkasm
-[14] dav1d tests/checkasm — https://code.videolan.org/videolan/dav1d/-/tree/master/tests/checkasm
+- **9A/9B (shared vs own home):** prior art (simdutf, multiversion) says shared kernels are
+  mainstream but the perf question is moot here (aarch64-only, inline measured-live). The decision is
+  maintenance/drift-cost; the canonical `vshrn`/`vpaddq` producers are owed to EITHER home. Neither
+  9A nor 9B is refuted; the deliverable is the residual-divergence census + the config where inline
+  fails to cross.
+- **9C (scanner-as-DFA):** re2c proves direct-coded DFA scanning is SOTA and Rust-targetable, but it
+  does not vectorize the hot short-run scan — a measured negative on short runs (F3). Lawful only
+  where run-length × class-unfriendliness justifies it; the SIMD membership/structural tiers keep the
+  hot path. Census the over-ceiling coverage %.
+- **9D (streaming):** winnow/serde offer document-granularity streaming that does NOT cut peak RSS;
+  lawful only with an in-wave chunked consumer (else Y.13-forbidden). Owe the rewind histogram +
+  streaming-surface grep.
+- **The invariants that survive every prior-art comparison:** movemask = `vshrn` LEAN / `vpaddq`
+  DENSE (ARM + PROVE-10), NEVER double-`addv` (PROVE-09 LAW); no digit-scan SIMD (§0/02); stable-NEON
+  = stability not speed, gate on no-regression paired (§0/09); pmull latency-hiding preserved on the
+  quote-parity path (simdjson trap).

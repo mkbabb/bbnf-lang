@@ -136,6 +136,52 @@ FlatBuffers/Kaitai) but **cannot** cover the TS-native compile-time inference pl
 conflate "generate the layout/data types" (true, in-tree) with "generate the inference types"
 (ts-rs-false).
 
+## 5b. THE 6C WASM BOUNDARY — three fresh external anchors that pin the wasm-core family (directive 6C Q1/Q2/Q3)
+
+The 6C directive probes exactly where the prior sweeps were thinnest: browser-deployable scan
+choice, view invalidation across a `memory.grow`, and the single-vs-two-instance delivery. Three
+external findings, none previously cited in-lock, resolve them:
+
+- **6C Q2 — `memory.grow()` DETACHES every outstanding typed-array view (a hard, named trap for
+  the "two-parses-through-one-instance" path).** The JS-API spec is definitive: growing a
+  `WebAssembly.Memory` — via the JS `.grow()` or the `memory.grow` instruction — *detaches* the
+  backing `ArrayBuffer` and allocates a fresh one, and **every call to grow detaches all prior
+  buffer references, even `grow(0)`**; the detached buffer's `byteLength` becomes 0 and any view
+  method throws `TypeError` [WebAssembly/spec#646; MDN Memory.grow; awesome.red-badger]. This is
+  not hypothetical for bbnf: PROVE-14's win holds *only* by handing JS zero-copy typed-array
+  views over the four tape planes (`offsets/flag_cursors/flag_values/source`) — and wasm-bindgen
+  has a live bug (**#4395: `TypedArray::view` may use a detached ArrayBuffer during creation**)
+  showing the failure is real, not theoretical. **Constraint imposed:** the batch/streaming
+  path (GN-4.W4, "two parses through one instance") must either (a) forbid `memory.grow` between
+  a view's creation and its last read (pre-size the linear memory), or (b) re-derive all views
+  after any growth (Emscripten's `updateMemoryViews()` discipline) and pay a copy-out that must
+  be charged against the stop-early margin. The offset-tape stop-early lane's 4.4× is only safe
+  if the tape memory is *stable for the read window* — a growth mid-batch silently zeroes the
+  views the get-lane reads. This directly answers 6C Q2 with a spec-level mechanism the prior
+  passes did not name.
+- **6C Q1 — a wasm-SIMD128 structural scan is the browser-winning kernel, and the industry
+  already shipped the proof.** Daniel Lemire's "Scan HTML faster with SIMD — Chrome edition"
+  documents that **Chromium itself adopted SIMD scanning of HTML input**, inspired by simdjson;
+  and WASM-SIMD data-crunching workloads run **2–4× over scalar wasm** in-browser
+  [lemire.me 2024; v8.dev/features/simd]. So for the browser structural-scan choice a
+  128-bit shufti/classify kernel compiled to `v128` beats a TS-native scalar scan — **but** this
+  does NOT resurrect §0's ISA differentiator: WASM SIMD128 vectorizes the *generic* 128-bit
+  membership/shuffle class while **scalarizing the non-`q` NEON narrowing ops** the §0 kernels
+  lean on (the `vshrn`-narrow of feature 03, the fused GATE=16 of 01). The browser gets a
+  *generic-SIMD* scan (real, 2–4× over scalar JS), never the tuned-NEON product — corroborating
+  the pass-2 finding that 6C carries a *degraded* kernel, not the flagship. Answers Q1: wasm-SIMD
+  wins over TS-scalar for the scan, at a measured discount from the NEON native.
+- **6C Q3 — napi-rs v3 (July 2025) collapses the two bindings toward ONE toolchain, hardening the
+  native-core / two-binding verdict.** NAPI-RS v3 now *also* compiles to WebAssembly
+  (`wasm32-wasip1-threads`) with almost no code change, and is the binding Cursor and the
+  frontend-build field (SWC-adjacent) use for high-perf Node addons [napi.rs/blog/announce-v3].
+  This is the settled delivery shape made concrete: one Rust core, a **napi build for Node** (the
+  value.js/latex-paper/keyframes consumer surface, R4 §7 — keeps NEON, no scalarization tax) and
+  a **wasm build for the browser** (generic-SIMD, subject to the grow-detach discipline above),
+  from a *single* binding generator. The "one consolidated cdylib vs two cold instances" price
+  in Q3 tilts toward one core / two *build targets* of the same source, not two hand-written
+  faces — precisely the SWC/Biome shape, now with a single toolchain spanning both.
+
 ---
 
 ## 6. Synthesis — where "reasonable" ends (updated with in-tree corroboration)
@@ -170,7 +216,16 @@ gate exhaustively; (6) ANTLR-class **target lag** — the isomorphism gate must 
 derivative (has TS fallen behind?), i.e. the pass-2 ratchet, not an absolute constant; (7)
 proc-macros are **not linkable libraries** — any Rust logic that must also run in TS/wasm cannot
 be shared by linking and is forced into a mirror + oracle (`bbnf-path-ts` header); (8) two-arm
-window asymmetry (§0/09) — any cross-language bench is paired or it is disinformation.
+window asymmetry (§0/09) — any cross-language bench is paired or it is disinformation; (9)
+**`memory.grow` DETACHES every typed-array view** (even `grow(0)`) — the PROVE-14 zero-copy tape
+planes are silently zeroed by any growth in the read window; the two-parses-through-one-instance
+path must pre-size memory or re-derive views + charge the copy-out against the stop-early margin
+[WebAssembly/spec#646; wasm-bindgen#4395]; (10) **wasm-SIMD128 vectorizes only the generic
+128-bit class** and scalarizes the non-`q` NEON narrowing (`vshrn`/GATE=16) — the browser gets a
+2–4×-over-scalar generic scan, never the §0 tuned-NEON flagship, so 6C carries a *degraded* kernel
+by construction [lemire.me; v8.dev/features/simd]; (11) do NOT hand-maintain two bindings —
+napi-rs v3 emits BOTH the Node-native (NEON-keeping) and the wasm (browser) target from one
+source, so the two-binding delivery is one toolchain, not two twins [napi.rs v3].
 
 ---
 
@@ -202,3 +257,14 @@ window asymmetry (§0/09) — any cross-language bench is paired or it is disinf
   (https://deepwiki.com/swc-project/swc/7.2-node.js-bindings); nickb.dev wasm-vs-native
   (https://nickb.dev/blog/wasm-and-native-node-module-performance-comparison/); yieldcode
   (https://yieldcode.blog/post/native-rust-wasm/)].
+- **6C wasm boundary (new this pass, directive-mapped):** `memory.grow` detaches the ArrayBuffer
+  and invalidates ALL typed-array views, even `grow(0)` [WebAssembly/spec#646
+  (https://github.com/WebAssembly/spec/issues/646); MDN Memory.grow
+  (https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Memory/grow);
+  awesome.red-badger (https://awesome.red-badger.com/chriswhealy/memory-grow-and-arraybuffers)];
+  wasm-bindgen live detached-view bug [#4395
+  (https://github.com/wasm-bindgen/wasm-bindgen/issues/4395)]; wasm-SIMD structural scan (Chromium
+  adopted SIMD HTML scan; 2–4× over scalar wasm) [lemire.me 2024
+  (https://lemire.me/blog/2024/06/08/scan-html-faster-with-simd-instructions-chrome-edition/);
+  v8.dev/features/simd (https://v8.dev/features/simd)]; napi-rs v3 one-toolchain-two-targets
+  [napi.rs/blog/announce-v3 (https://napi.rs/blog/announce-v3)].

@@ -99,6 +99,14 @@ RESUME PROCEDURE (any session — this one or a cold successor):
    passes. Then execute the stage-6 pass-transition (bbnf pass-3 — convergence talk begins;
    pt pass-4).
 
+MODEL EDICT (owner, 2026-07-16 ~22:50 ET, standing law from the next pass launch): Fable's
+model set and reasoning for ALL deep reasoning, challenging, and features of novelty and
+great insight. Baked into the pass script: family researchers (novelty development) and
+adversarial critics (challenging) now INHERIT the session model (Fable) alongside the
+already-Fable distill/synthesize/agglomerate judgment stages; prior-art sweeps and
+prototype implementation/measurement stay opus. In-flight runs are unaffected (script read
+at launch); applies at bbnf p3 / pt p4 where pass-numbered prompts re-key the cache anyway.
+
 PASS-2 BINDING DIRECTIVES (from pass-1 agglomerators, orchestrator-ratified):
 - BASE-PIN RULE: every bbnf-worktree prototype must FIRST verify/fast-forward its tree to
   the commit named in its brief (pass-1 protos ran d2b32f6e3, 51 commits stale — LOCK-3

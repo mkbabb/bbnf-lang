@@ -1,337 +1,268 @@
-# LOCK-5 — THE REGEX CONTINUUM — pass-3 CRIT-2 (adversarial critic 2 of 2, cross-lock weight)
+# LOCK-5 — THE REGEX CONTINUUM — pass-3 · CRIT-2 (adversarial, CROSS-LOCK weight)
 
-Critic 1 hardens intra-lock; my remit (constitution ix) is the **cross-lock view** plus the
-failure-mode checklist and the constitution. I read PORTFOLIO (LOCK-5 + constitution),
-CROSS-LOCK (XL-A…H, conveyed as binding fact), the pass-3 FAMILY-SPECS, all three prototypes
-that RAN this pass (PROTO-1, PROTO-2 fire-census, **PROTO-2-5C**), research-{A,B,C,D,priorart},
-the pass-2 registry + both pass-2 critics, and spot-verified the two load-bearing claims my
-headline rests on.
+Critic 2 of 2. I weight the CROSS-LOCK view (Constitution ix): where LOCK-5 contradicts or double-homes
+against the GN/PT codex and the other locks, and whether its proposals to LOCK-1/2/4/6/7/9 are earned or
+laundered. XL-A/XL-C/XL-H treated as binding fact. All anchors below re-verified this pass at the
+filesystem level; the dominant finding was confirmed by mtime + source + the probes' own run logs.
 
-**Verified in-tree / on-disk this pass (run/grepped, not read from the reports):**
-- `FAMILY-SPECS.md` mtime = **15:27:43**. `PROTO-2-5C.md` mtime = **16:07:57**. `grep -c PROTO-2-5C
-  FAMILY-SPECS.md` = **0**. The synthesis predates the 5C reference-control run by 40 minutes and
-  references it **nowhere**. (§0 — the headline.)
-- `follow_sound_fraction.rs:114` — `match analyze(pattern).first { … }`; line 112 comment: *"`Unknown`
-  ⇒ … full alphabet (sound over-approximation)"* — but the **non-Unknown** path takes `analyze().first`
-  verbatim, which PROTO-1's own Caveat 1 proves UNDER-approximates alternations (`sheet_prefix` returns
-  `Exact{'\''}`, dropping the letter branch). The over-approx source (DFA start-state class set) is
-  **not** wired. 5D's soundness gate is unbuilt exactly as the caveat says. (§5D.)
-- Base-pin split: PROTO-1 + PROTO-2 pin `HEAD = ce51c36fc` (bbnf); PROTO-2-5C pins
-  `HEAD = ef10d5b78` (parse-that, READ-ONLY). Both legitimate under XL-C (one-regex-home = parse-that
-  for the engine). But FAMILY-SPECS §headline asserts *"Two prototypes ran, both base-pinned to
-  `ce51c36fc`"* — it does not know the third exists. (§0.)
-
-None of the three prototypes fabricate. PROTO-2 and PROTO-2-5C are genuinely good science —
-model-independent structural results (proj `total_applied=0`; cong passes≈n allocation-independent),
-honest about their own confounds (the fire-census does not count real-grammar bare-vs-projected
-frequency; the 5C Valmari lane is allocation-confounded and explicitly not load-bearing). **The
-defect is not the code. It is, a SECOND consecutive pass, the synthesis that sits on top of it.**
+**This CRIT-2 reviews the RE-CUT FAMILY-SPECS (mtime 22:40), not the 15:27 draft CRIT-1 saw.** The
+re-cut correctly discharged CRIT-1's dominant finding — §5C now integrates PROTO-2-5C, the centerpiece
+is RUN-EARNED RETIRED, 5C rose to 55%, and the stale "unrun a third pass" language is gone. Credit that.
+The re-cut ALSO adopted CRIT-1's 5A=42% and 5D's earned +run. My charter is what the re-cut STILL gets
+wrong — and it repeats CRIT-1's exact structural failure on a MORE consequential prototype.
 
 ---
 
-## 0. THE HEADLINE — THE STALE-SYNTHESIS DEFECT RECURS: FAMILY-SPECS CONTRADICTS ITS OWN pass-3 5C PROTOTYPE
+## THE DOMINANT FINDING — the re-cut is STALE against its own directory's grammar-driven prototypes; the lock's TITULAR floor is FALSE (UNVERIFIED GESTALT, on the namesake)
 
-Pass-2 CRIT-2's headline was: *"the pass-2 FAMILY-SPECS is STALE against its own pass-2 prototypes"*
-— it declared "no prototype ran" while PROTO-1 (5B RETIRE) and PROTO-2 (5A REFUTED) had run the very
-briefs it nominated for pass-3. **That exact failure mode has recurred, un-fixed, in pass-3, on 5C.**
+**The re-cut synthesis (22:40) fixed the 5C staleness CRIT-1 named and simultaneously left a WORSE one
+uncorrected: it is stale against `PROTO-2-P2.md` (mtime 20:03 — TWO HOURS THIRTY-SEVEN MINUTES before
+the re-cut) and `PROTO-2-P2-CLOSED.md` (22:59).** Both are grammar-driven — the lock's TITULAR
+deliverable, Constitution i. The 20:03 probe was available for the entire re-cut window and was ignored.
 
-The pass-3 FAMILY-SPECS declares, in four places:
-- §headline: *"What did NOT run (a third pass in a row): **5C's reference-Hopcroft control** (the
-  automata-as-extraction centerpiece) … 5C's centerpiece is the lock's one genuinely-unrun decisive
-  number and is **Brief 2**."*
-- §5C: *"centerpiece **unrun a THIRD pass** + prior-art-predicted loss"*, convergence **held at 45%**,
-  *"Brief 2 forces the number that ends it."*
-- §Brief 2: a full pass-4 method to run the reference control.
+The synthesis asserts, in FOUR load-bearing places, a claim its own directory refutes:
 
-But the same directory holds **PROTO-2-5C.md (16:07)** = Brief 2, **RAN** on parse-that HEAD
-`ef10d5b78`, verdict **`RAN_MEASURED — FAIL (the congruence centerpiece RETIRES)`**:
-- oracle 0/56 divergences (all four minimizers + incumbent byte-identical; ρ=1 across the grown
-  corpus);
-- the `DfaSig` congruence rebuild degenerates to **O(n²·k)** on exactly the acyclic chain-DFAs it
-  exists to accelerate (`[01]{8}`: n=9 → **8 passes-to-fixpoint**, allocation-independent, unambiguous);
-- `incumbent ≈ null` (<1%): the `:358` strawman was **never** the source of any "acyclic-beats-Hopcroft"
-  gap at regex scale — the e-graph centerpiece had no cost-model foe to defeat;
-- the e-graph lane is, on top, the **slowest correct lane** on acyclic (cong 37664 > null 24376 >
-  revuz 17168).
+- **Line 70–71 (the lock HEADLINE):** "grammar-driven — remains at **ZERO artifacts after three
+  passes** and is the one genuinely **un-attempted** formulation." — FALSE. PROTO-2-P2 (20:03) is a
+  RAN_MEASURED grammar-driven artifact.
+- **Line 89–97 (Precondition P2):** "grammar-driven is SPEC-ONLY (re-confirmed; **ZERO grammar-driven
+  artifacts after THREE passes**) … `parse_generated(&str) -> bool` still **discards its AST**
+  (source-verified this pass)." — FALSE, and the source-verification hit the WRONG symbol. P2's
+  FINDING 0 (verified from source this pass) establishes TWO `parse_generated`: the `generated.rs:2288
+  -> bool` **diagnostic shim** the synthesis cites, and `regex::parse_generated` (`mod.rs:34`)
+  `-> Result<Hir, ParseError>` — **the real grammar-driven path** (generated parser → typed
+  `RegexParserEnum` AST → `host::lower` fold → bespoke `Hir`). The discard is **already broken at the
+  outer layer**; "break-the-discard" is not a change to author. The synthesis "source-verified" the
+  shim and missed the Hir path its own probe documented 2h37m earlier.
+- **Line 32 ("Four prototypes ran"):** an UNDERCOUNT. By 22:40 the directory held ≥5 RAN probes
+  (proto-1-overapprox, PROTO-2 fork-census, PROTO-2-5C, PROTO-2-P2; and the substrate-building
+  PROTO-1-5D lands 22:51). Counting four while two grammar-driven runs sit un-agglomerated is the
+  tell of incomplete agglomeration (Constitution vii).
+- **Brief 2 (lines 447–468), re-issued as one of "the two sharpest uncertainties for pass-4":** it was
+  EXECUTED (PROTO-2-P2, measured-feasible 43/45) and then CLOSED (PROTO-2-P2-CLOSED, 22:59): **RAW
+  56/56 and BRIDGE 56/56 byte-DFA-identical to the hand parser, 0 rejects / 0 divergences, strict
+  full-parity gate GREEN**, de-dup surface fully quantified (**1 promote / 21 delete / 3 relocate ⇒
+  retire `grammar/misc/regex.bbnf`**). Offering an already-CLOSED probe as a pass-4 obligation is the
+  precise error CRIT-1 caught for 5C's Brief 2 — the re-cut moved the error from 5C to the titular
+  family instead of curing it.
 
-**So Brief 2 was run inside pass-3, after the synthesis was written, and the decisive verdict landed
-— and the synthesis was never reconciled to it.** The FAMILY-SPECS 5C convergence (45%, ADVANCED,
-"centerpiece unrun") is the **pre-run floor**; the run supersedes it. A registry cut from FAMILY-SPECS
-alone would record 5C's centerpiece as "still to be tested" when it has been tested and **refuted**.
-This is the checklist's **unverified gestalt** in its purest form, and it is the **same defect the
-pass-2 critic already named** — a process failure, not a one-off. **Every 5C line below is re-cut from
-PROTO-2-5C, not the stale synthesis.**
+**Why this is WORSE than CRIT-1's finding, and why it is a CROSS-LOCK defect (my charter).** The
+synthesis does not merely mis-state a family number — it hands GESTALT-P an explicit, FALSE floor:
+line 95 instructs the gestalt to read `SPEC-ONLY(grammar-driven)` as **"un-attempted three passes," NOT
+"converged pending LOCK-7."** The directory proves the opposite. The true floor to convey to GESTALT-P /
+LOCK-7A is **PARITY-DEMONSTRATED**: the grammar-driven path is wired end-to-end, DFA-byte-identical to
+the hand parser on 56/56 (raw AND through the XL-C `simplify_hir` bridge), with **one open ARCHITECTURAL
+choice** (host-fold re-sync `host.rs +50/−6` vs grammar-carries-typed-captures + regen — "either closes
+it," GESTALT-P's call) and the de-dup surface CLOSED. That is a converged-pending-LOCK-7A disposition.
+Directing the gestalt to treat it as un-attempted would cause GESTALT-P to re-budget a discharged probe
+and to under-state Constitution-i compliance for the whole parse-that weave. This is unverified-gestalt
+propagating UP the DAG — the most damaging place it can occur.
 
-The reconciled pass-3 truth for 5C: the automata-as-extraction centerpiece is a **run-earned negative
-result** (disposition-certain, exactly the shape of 5B's RETIRED). What survives — 2C-as-table
-(settled) + delete-`:358` (mandatory bug-fix) + a single reverse-topological **Revuz** pass — needs
-**no e-graph-over-automata mechanism at all**. The family qua "e-graph automata beats the classical
-pipeline" is refuted; it dissolved into three non-family-specific deliverables. **Prior art
-(research-priorart TRAP A, Remy Wang) PREDICTED this exact loss**, and the run confirmed the
-prediction — the constitution's own disposition (vii: named negative results are science).
+**Second, minor, same signature.** PROTO-1-5D (22:51) BUILT the `ByteClass` substrate
+(`SimdMode::ByteClass`/`Recognizer::ByteClass`/`BackendExpr::ByteClass` + `match_byteclass_guarded`) and
+**fresh-compiled it green in-tree** (`cargo build -p ir -p passes -p codegen`, EXIT 0). The 22:40
+synthesis still calls that substrate "**DESIGNED, not built**" (line 324) / "**UNBUILT**" (lines 308,
+324). Eleven minutes' staleness — forgivable in isolation, but it is the SAME freeze-before-directory
+pattern, and it under-states 5D's true build state (substrate landed; only the `derive_recognizers`
+FOLLOW-gate rewiring is unwired). CROSS-LOCK double-home #4's "the producer is UNBUILT (masked wildcard)"
+is now half-false: the producer NODES exist and compile; only their SELECTION gate is unwired.
 
----
-
-## FAMILY 5A — ONE-HIR — CRIT-2 floor **45%** (maximal REFUTED pass-2; residual is refactor-shaped; NO 5A prototype ran a THIRD pass; the gate pass-2 flagged as unmovable is unmoved again)
-
-FAMILY-SPECS carries 45% and I concur on the number — but the **reasons** are worse than the prose
-admits, and one is a verbatim repeat of a pass-2 CRIT-2 finding.
-
-- **G5A-a (the `/foo$/` Look-consumer gate is STILL unbuilt — THIRD pass; gate-that-cannot-fail,
-  unmoved twice).** Pass-2 CRIT-2 §G5A-d struck this exact gate: *"the test was not built … Y.13 on
-  `Look::Start` stands exactly where pass-1 left it. Gate-that-cannot-fail: unmoved."* Pass-3
-  FAMILY-SPECS still lists G-5A.2 as *"UNBUILT"* and calls the test *"buildable."* Three passes, a
-  named live correctness defect (`RegexKind` has no anchor variant → `/foo$/` and `/foo/`
-  indistinguishable, both over-accept), a test the synthesis itself says is buildable — and it has
-  never been built. A gate that is "buildable" three passes running and never built is a gate that
-  cannot fail. **Unmoved.**
-- **G5A-b (elegant-reduction, honestly downgraded — CREDIT).** research-A's concession that the
-  1148-LOC classify **RELOCATES, not shrinks** (its `AccelDriven`/`PrefixThenClass`/`CharClassQuantified`
-  tier content is real information an IR pass keeps) directly answers pass-2 CRIT-2 §G5A-e. This is
-  genuine honesty and I credit it — but it also confirms the maximal "1148-LOC collapse" was
-  overclaim, and what remains (delete the ~200-LOC name-gate + the 322-LOC shadow crate) is a
-  **refactor**, not an architecture. The family's distinguishing mechanism is dead; FAMILY-SPECS
-  half-concedes this (*"the residual is refactor-shaped, not architecture-shaped"*).
-- **G5A-c (the shrink is contingent on paying the parser import — net-shrink UNVERIFIED).** G-5A.parser-cost:
-  deleting the heuristic forces skinny to consume a REAL parser (parse-that `hir/parser/` ~787 LOC).
-  Whether the shadow-deletion **net-shrinks** after the import is paid is an open question the
-  synthesis names but does not answer. A "shrink" that imports 787 LOC to delete 522 may be a growth.
-- **G5A-d (grammar-driven SPEC-ONLY — constitution i, THIRD pass, ZERO artifacts).** Re-scoped to
-  "promote + de-dup + break-the-discard" (correct framing) but un-executed; `parse_generated` still
-  discards its AST; two `regex.bbnf` still diverge. Deferred to LOCK-7/7A a third time. (§3.)
-- **G5A-e (automata parity from the narrowed type — G-5A.3, UNRUN THREE PASSES; SPEC_ONLY anchoring
-  a perf claim).** research-B argues `from_expr` is moot under the survivor (the bridge routes to the
-  engine's single `from_hir`), so there is no second NFA builder to keep in parity — a reasonable
-  narrowing, and if it holds G-5A.3 retires as moot. But PROVE-10's 8.8–29.5× band has **never** been
-  reproduced from any narrowed/merged type in three passes; constitution v (zero-runtime-cost of the
-  narrowed automata path) is unverified. The claim rides SPEC-ONLY.
-
-**Assessment. 45% (held — stalled).** Held at 45% for a THIRD pass with a refactor-shaped residual,
-no prototype, and the same Look-consumer gate unmoved. This is not convergence-toward-shipping; it is
-a stable diagnosis. I do not lower it (the analysis genuinely sharpened — classify-relocates conceded),
-but I flag that a family parked at 45% three passes with all gates unbuilt is a candidate for
-**re-labeling from a family to "the survivor's bridge-hardening refactor residual"** — which
-FAMILY-SPECS itself gestures at but does not commit to.
+**Verdict on the finding.** It does NOT impeach any probe — PROTO-2-P2-CLOSED's 56/56 rests on a strict
+byte-canonical DFA oracle, and proto-1-overapprox's partition is machine-asserted (below). It impeaches
+the synthesis's claim to be a converged agglomeration of its OWN directory. **§ headline, Precondition
+P2, cross-lock #5, and Brief 2 must ALL be re-cut against PROTO-2-P2 / PROTO-2-P2-CLOSED before this lock
+is returned to GESTALT-P.**
 
 ---
 
-## FAMILY 5B — LAWFUL-FUNCTOR — CRIT-2 floor **40%** (RETIRED; PROTO-2 strengthened the retire, honestly; conditional on an unratified LOCK-1 fact)
+## CROSS-LOCK LEDGER — where LOCK-5 contradicts / double-homes / launders (my primary charter)
 
-I concur with RETIRED at 40%. PROTO-2 (fire-census) strengthened the pass-2 retire from *estimated*
-to *measured* fork-independence: on projected branches the three regex-specific rules apply
-**exactly 0** work (`proj total_applied=0`, one iteration, no unions) — the 250-LOC de-dup the functor
-claimed dies **for free under Fork-B**, attributable to no family. That is clean.
+**XL5-1 — the 5C→LOCK-2 "BINDING INPUT" over-reaches on ONE of its two halves (a laundered grep).**
+FAMILY-SPECS line 393 routes to LOCK-2 as "a **BINDING** constraint (not a proposal)": (a) automata-min
+is NOT an e-graph island, AND (b) tier-selection is NOT a CSP. **Half (a) is run-earned binding** —
+PROTO-2-5C measured O(n²·k) on the acyclic target class + `incumbent ≈ null`; that legitimately refutes
+LOCK-2's implicit automata-island candidate. **Half (b) is NOT run-earned** — it rests on research-C's
+zero-witness grep (no shared-budget coupling in *today's* `crates/ir/`) plus reasoning; the synthetic
+budget-cap crossover that research-C promised "to exhibit the flip" NEVER ran (the synthesis itself
+concedes this, lines 251–252: "ABSENT today, CONSTRUCTIBLE … gated on a budget-binding corpus that does
+not yet exist"; CRIT-1 flag #3 concurs). LOCK-2's **2C charter (CSP-CENTRAL) explicitly names "prefilter
+tier" as a per-site CSP variable** — so half (b) is a REAL cross-lock contradiction, but its refutation
+is grep-for-today, not run-for-always. Routing both halves as "binding, not a proposal" launders a grep
+into a run and would let GESTALT retire a live LOCK-2 candidate on absent evidence. **Correct routing:
+half (a) BINDING (run-backed); half (b) STRONG PROPOSAL — GESTALT/LOCK-2 must construct the
+budget-binding witness before retiring 2C's tier variable.** This is CRIT-2's sharpest cross-lock ding.
 
-- **G5B-a (retire conditional on the unratified `->` representation — carried, correct, cross-lock).**
-  The retire rests on `->` staying a whole-leaf wrapper (`Project` skinny / `Map` top-level) that
-  never binds a sub-leaf capture. LOCK-1 owns the real `->` typing and has **not** ratified it.
-  Sub-leaf-capture representation un-retires 5B AND breaks 5D's `Project` byte-identity oracle. The
-  synthesis records this correctly as the sole re-open trigger routed to LOCK-1. Good.
-- **G5B-b (research-B's "total reverse functor" must not launder credit — correctly firewalled).**
-  FAMILY-SPECS explicitly refuses to credit the shadow-deletion refactor (net −322, fixes the
-  anchor-blind nullability bug) to 5B — *"crediting it to 5B would launder a retired family's
-  disposition."* This directly discharges a laundering risk; I credit the discipline.
+**XL5-2 — Axis-1 re-cut (double-home #1) is a consumer-less adjudication.** The two-types+bridge verdict
+(XL-C) re-cuts LOCK-4-4D, LOCK-9-9C, LOCK-3-3C — all three were written against ONE-HIR — yet the
+synthesis says the re-cut is "**still nobody's charter**" (line 392). An adjudication that re-cuts three
+downstream families but is owned by no family/charter is a Y.13-adjacent defect at the cross-lock layer:
+a verdict with no consumer. It must become an explicit named GESTALT-P/Ω work item ("re-cut 4D/9C/3C
+against two-types+bridge"), not a floating note. Named, but under-actioned.
 
-**Assessment. 40% (held).** Disposition-certainty of a conditional retire, raised in confidence by
-PROTO-2. No dispute. The one open coupling (LOCK-1 `->` representation) is a cross-lock fact, not an
-intra-lock gap.
+**XL5-3 — cross-lock #5 (5A ⊗ LOCK-7) is stale in the SAME way as the headline.** Line 403–404 tells
+LOCK-7: "Two divergent `regex.bbnf` (one discards its AST) … promote + de-dup + break-the-discard …
+zero artifacts three passes — the substance of Brief 2." PROTO-2-P2-CLOSED settles the de-dup surface
+NUMERICALLY (25 misc rules = 1 promote `octal` / 21 delete [17 dominated + 4 non-regular out-of-scope] /
+3 relocate [flags/end/regex wrapper] ⇒ retire `grammar/misc/regex.bbnf`) AND demonstrates parity. The
+cross-lock note to LOCK-7 must convey a QUANTIFIED de-dup + a PARITY-DEMONSTRATED artifact + the ONE open
+architectural choice — not "zero artifacts / discards its AST."
 
----
+**XL5-4 — double-home #7 (serde-ownership ⊗ LOCK-6) is real and recurring — correctly named.** PROTO-2-P2,
+PROTO-2-P2-CLOSED, and PROTO-2-5C all had to run in a READ-ONLY rsync scratch with repointed patch
+prefixes; the `CharClass: Serialize` ownership question (who lands it, on the parse-that READ-ONLY / LOCK-6
+boundary) persists two passes. PROTO-2-P2-CLOSED confirms parse-that stayed byte-identical
+(`diff … IDENTICAL` pre-edit; the sole change is scratch `host.rs +50/−6`). Legitimate GESTALT-Ω gap;
+the synthesis carries it correctly (cross-lock #7). No ding — logged so GESTALT does not lose it.
 
-## FAMILY 5C — AUTOMATA-AS-EXTRACTION — CRIT-2 floor **55%** (RE-CUT FROM PROTO-2-5C: centerpiece RUN-EARNED RETIRED, disposition-certain; the surviving deliverable needs NO e-graph; FAMILY-SPECS 45%/unrun is STALE)
-
-**The FAMILY-SPECS number and status are stale (§0). Re-cut from the run:**
-
-- **The centerpiece is RETIRED by a run, not "unrun."** PROTO-2-5C discharged the "decisive number unrun
-  three passes." The `DfaSig` congruence rebuild is O(n²·k) on the target acyclic class (passes ≈ diameter
-  ≈ n; `[01]{8}` n=9 → 8 passes; `log n` held only for shallow bushy alternations, refuted for every
-  bounded chain — precisely the class the fast-path exists to accelerate). The e-graph lane is the slowest
-  correct lane on acyclic. **The maximal claim ("e-graph automata beats the classical pipeline") is
-  run-refuted.** This is a real pass-3 advance — the family's decisive question is ANSWERED — and the
-  synthesis missed it because it was written 40 minutes early.
-- **`incumbent ≈ null` erases the family's premise.** Deleting the `:358` full-restart moves the sum
-  <1% on both tags. The "strawman" the whole family was built to beat **was never slow at regex scale**
-  — so the centerpiece had no foe. This is the deepest refutation: not "the e-graph loses the race" but
-  "there was no race to win."
-- **Prior art PREDICTED this (research-priorart TRAP A) and the run confirmed it.** *E-graphs ARE tree
-  automata; the direction that works is automata→e-graph, not eqsat→automata; DAG-extraction is NP-hard
-  and dominates eqsat time.* The centerpiece ran the isomorphism backwards; the measured O(n²·k) is
-  exactly the predicted loss. Constitution vii is satisfied by a **named negative result**.
-- **What survives needs no e-graph:** 2C-as-table (research-C's zero-witness grep settled it — no
-  `lut_budget`/`codegen_budget`/`shared_lut`/`table_budget` coupling anywhere in `crates/ir/src/` → tier
-  selection is LOCAL → the monotone `EngineSet` table wins, CSP over it is Y.13 substrate); the
-  delete-`:358` bug-fix (mandatory, correctness-neutral, 0 divergences); and a single reverse-topological
-  **Revuz** pass (the only lane whose passes stay at 1 as n grows — a structural/table optimization).
-- **2B-as-minimizer BLOCKED (Kozen) — cleanest result in the lock, unchanged.** No finite ground rewrite
-  set is complete for star-equivalence. 2B-as-determinizer survives (25/26 ρ=1); 2A/Hopcroft closes.
-
-**Open gaps (the survivor's, not the centerpiece's):**
-- **G5C-INT (survivor integration UNBUILT).** The minimize-swap (`dfa.rs:89-91`), the Valmari-or-Revuz
-  native partial-DFA handling of `DEAD` (`:330/:340/:423`), and the tier-table home
-  (`info/mod.rs:344`) are specified but not landed. The FAIL disposed the centerpiece; it did not ship
-  the survivor.
-- **G5C-VALMARI (the "correct control" head-to-head is confounded).** PROTO-2-5C's Valmari lane is
-  allocation-confounded (`Vec<Vec<Vec<u32>>>` + per-splitter HashMap) and explicitly NOT load-bearing;
-  the FAIL rests soundly on the allocation-independent passes-count + `incumbent≈null`. But this means
-  the clean "a correct O(n log n) Hopcroft beats congruence on timing" comparison was **not** produced
-  — only the passes-count proxy. Sufficient to dispose the centerpiece; insufficient to size the Revuz
-  win against a de-confounded control (the report says `null/revuz=1.42×`, modest).
-- **G5C-2C ⊗ LOCK-2 — single-home unratified (cross-lock; §3).** research-C discharged the witness
-  search (zero global-budget coupling) → LOCK-5 proposes single-homing the tier table here. LOCK-2 has
-  not deferred it. Still LOCK-5's unilateral proposal.
-
-**Assessment. 55% (RE-CUT UP from the stale 45%).** The number RISES because the decisive control RAN
-and disposed the centerpiece cleanly — disposition-certainty is now high, mirroring 5B's 40%
-RETIRED-with-evidence but higher because a concrete survivor ships (2C-table + Revuz + `:358` fix). It
-is a **convergence-of-disposition** number, not a shipping number; the survivor's integration is
-unbuilt. **Pass-4 must NOT re-budget Brief 2 — it is discharged.** The remaining 5C work is
-integration + the LOCK-2 ratification, not another race.
+**XL5-5 — double-home #2 (5C ∥ LOCK-2) discharge is sound; #3 (LOCK-1 re-open) is sound.** The
+0-divergence corpus + no-coupling grep jointly discharge the CSP-witness search for today's codegen
+(consistent with XL5-1's caveat that "today" ≠ "always"). The LOCK-1 sub-leaf-capture re-open trigger
+correctly binds 5B-un-retire AND 5D's `Project` byte-identity oracle to the same unratified `->` fact,
+routed with PROTO-2 evidence. Both cross-lock claims hold.
 
 ---
 
-## FAMILY 5D — GRAMMAR-FRAGMENT — CRIT-2 floor **43%** (PROTO-1 RAN the fraction, but under an under-approx source its own author flags as unsound-for-the-verdict; substrate + cold-pair unbuilt)
+## FAMILY 5A — ONE-HIR — **CRIT-2 convergence: 42%** (concur with re-cut / CRIT-1)
 
-FAMILY-SPECS raised 35→45 on PROTO-1. The raise is partly earned and partly over-credits a single
-directional number whose soundness the prototype **itself disclaims**.
+The narrowed survivor-residual is honestly bounded and the "classify RELOCATES not shrinks" anti-overclaim
+is genuine. Concur with 42%. Enumerated open gaps:
 
-- **G5D-a (the decisive number ran under an UNSOUND source — prototype-evidence over-reach).** PROTO-1
-  Caveat 1 (verified: `follow_sound_fraction.rs:114` uses `analyze().first`): the fraction ran on an
-  **under-approximating** first-set, so the *"truly SOUND (3)"* verdicts *"are not reliably sound."*
-  The direct-scan-default direction is robust for the **structural** partition (6/16 bounded-by-construction
-  is first-set-independent; the counterexample lands non-disjoint regardless) — but the exact
-  genuine-give-back count and the "sound" trio are **contingent on an over-approx re-run that does not
-  exist** (Brief 1, UNBUILT). Presenting "direct-scan-default RATIFIED" on this basis leans on a number
-  more confident than its source. The load-bearing step — *"draw first(C) from the DFA start-state class
-  set"* — is the elegant-reduction's unconverged hard part.
-- **G5D-b (the `ByteClass` substrate does not fire — masked-fallback, source-confirmed, UNBUILT).**
-  `derive_recognizers` (`passes/src/lib.rs:338`) emits `SimdScan` only for structural bytes or a
-  `QuotedString`-keyed `Regex`; a general `[a-z]` falls to `_ => {}` — the masked wildcard. No
-  `Recognizer::ByteClass`, no `BackendExpr::ByteClass` anywhere (grep: zero). 5D's entire direct-scan
-  chooser is not firing. The fix (add the variant, gate on the FOLLOW fixed point, route to the tape) is
-  unbuilt — same as pass-1 and pass-2. (§G5D-tape.)
-- **G5D-c (the entire cold-pair UNBUILT — G-5D.3).** Class-scan vs prefiltered `Dfa::find`, cold-paired,
-  rare-class AND dense-class: never run. The ratio that decides whether the DFA leaves the generator path
-  or stays reachable is unmeasured after three passes. The "DFA→narrow fallback" verdict is therefore
-  **not yet measured** — it is inferred from the (unsound-source) fraction alone.
-- **G5D-d (PROTO-2 fire-census is genuine evidence FOR 5D — CREDIT).** 5D's direct lowering does not
-  route through the grammar-tier regex e-graph (proj 0/0/0), so keeping one on the generator path is
-  un-consumed substrate. This is a clean, correct use of PROTO-2's result.
+1. **The net-shrink sign remains UNKNOWN — the elegant-reduction trap stands.** Delete ~200-LOC name-gate
+   + ~322-LOC shadow crate "and then the hard part": skinny must import a REAL parser (parse-that
+   `hir/parser/` ~787 LOC). G-5A.shrink is UNBUILT; the family's sole distinguishing win ("SHRINK") could
+   be net GROWTH. PROTO-2-P2-CLOSED's de-dup count de-risks the LOCK-7 grammar seam but NOT the
+   skinny-side import cost — those are different edges.
+2. **Every gate UNBUILT, three passes; zero 5A run.** G-5A.look (`/foo$/` + `LookMatcher`), G-5A.shrink
+   (ΔLOC), G-5A.leak (`[a-c]≡[a-z]` identical `Span` graded against LOCK-1's real HM, not skinny's stub
+   `BuiltinTy`), G-5A.fork-collapse. A refactor-shaped residual with four unbuilt gates.
+3. **The `/foo$/` `Look`-consumer defect is a LIVE correctness claim, still unexercised.** `build_look`
+   (`nfa.rs:254`) collapses six `Look` variants to one zero-width state; anchoring lives OUTSIDE the NFA
+   in `detect_anchored`. The failing-then-passing test (`/foo$/` must reject `"foobar"`) is
+   buildable-and-unbuilt a THIRD pass. Until it runs, "the bridge fixes a live defect" is SPEC-ONLY.
+4. Under XL-C the distinguishing mechanism is dead; the residual is a subset of the survivor's work homed
+   elsewhere → disposition-certainty, not convergence. NOT BLOCKED (no missing primitive). 42%.
 
-**Assessment. 43% (essentially held; I discount the 45→ raise by 2 points).** PROTO-1 is real
-momentum and the structural partition is robust — but the raise credits a *soundness-caveated*
-directional number as if the verdict were settled, and the substrate + the entire cold-pair remain
-unbuilt three passes running. The verdict is directionally right and evidentially soft; 43% registers
-both.
+## FAMILY 5B — LAWFUL-FUNCTOR — **CRIT-2 convergence: 40%** (concur; cleanest disposition)
 
----
+Sound conditional retire, legitimately strengthened by PROTO-2 (fork-independence measured 0/0/0). The
+win-laundering guard is correctly applied (the −322 shadow-crate refactor credited to 5A-residual, NOT
+the functor; the reverse `Hir→String` unparse homed in the bridge round-trip oracle, not 5B). Gaps:
 
-## 2. CROSS-LOCK VIEW (constitution ix — my primary remit)
+1. **The sole re-open condition is genuinely OPEN, not closed** — the retire rests on `->` staying a
+   whole-leaf wrapper (`Map`/`Project`) that never binds a sub-leaf capture, a LOCK-1 fact LOCK-1 has
+   NOT ratified. 40% correctly refuses to read a conditional retire as a shipping number.
+2. **Consumer-assignment residual:** the total `Hir→String` unparse (fixing `canonical_pattern`'s
+   partiality) is currently nobody's GATE — home it in the survivor's bridge-hardening, explicitly.
+   (Note: PROTO-2-P2-CLOSED's `escape_body`/brace-trim re-sync is precisely the reverse-fold direction;
+   the bridge round-trip oracle should absorb it.) Minor. 40%.
 
-**Credit:** the pass-3 FAMILY-SPECS carries the seven-item DOUBLE-HOMES section and the
-INCOMPATIBILITY MAP forward, and correctly folds XL-C (two domain-fit types + bridge) as settled
-fact. That is the right posture. But every resolution is still a **one-sided LOCK-5 proposal**; none
-is ratified by the counterpart lock, and two cross-lock consequences are now **sharper** because of
-the pass-3 runs:
+## FAMILY 5C — AUTOMATA-AS-EXTRACTION — **CRIT-2 convergence: 52%** (re-cut 55%; markdown −3 for the laundered LOCK-2 half + unbuilt integration)
 
-1. **5C's refutation BINDS LOCK-2 (new, load-bearing).** LOCK-2's charter offers `2B-IS-EGRAPH` (the
-   middle IR is an e-graph end to end) and `2C-CSP-CENTRAL` (the decision driver IS a CSP). PROTO-2-5C
-   + research-priorart TRAP A jointly establish that **automata minimization must NOT be an e-graph
-   island and tier-selection must NOT be a CSP** — the e-graph-over-automata direction is run-refuted
-   (O(n²·k)) and the tier has zero shared-resource coupling (local table wins; CSP is Y.13 substrate).
-   This is a binding input LOCK-2 must consume at GESTALT: two of LOCK-2's candidate island/CSP sites
-   are refuted at the regex layer. LOCK-5 names the tier single-home but does **not** name this
-   sharper constraint on 2B/2C; GESTALT-Ω owes the reconciliation.
-2. **Axis-1 verdict ⊗ LOCK-4-4D / LOCK-9-9C / LOCK-3-3C — RE-CUT still owed, still nobody's charter
-   (carried from pass-2, UNMOVED).** XL-C ratified two-types+bridge, but 4D's premise ("one HIR, not a
-   second engine") is weakened, and **9C depends on a `ByteClass` substrate that PROTO-1 confirms does
-   NOT fire** (masked wildcard, G5D-b). So LOCK-9-9C is a **consumer waiting on an un-delivered
-   producer** — the reverse of Y.13, and a real DAG hazard: 9C cannot converge until 5D lands the
-   `ByteClass` recognizer, which is unbuilt three passes. FAMILY-SPECS names this ("the substrate
-   LOCK-5 offers 9C is itself UNBUILT") but leaves it as a pass-4 Brief-1 dependency — meaning 9C's
-   convergence is gated on a number LOCK-5 has not produced.
-3. **5B ⊗ LOCK-1 re-open trigger — correct, unratified.** Carried faithfully; routed to LOCK-1 with
-   PROTO-2 evidence. No dispute.
-4. **rust/ts ⊗ LOCK-6 — the serde-ownership boundary surfaced in BOTH passes, unresolved.** Pass-2's
-   PROTO-2 hit the `CharClass`/`Look` serde E0277 break; pass-3's PROTO-2-5C had to run in a READ-ONLY
-   parse-that scratch (7 external patch prefixes repointed). The "who adds `CharClass: Serialize`"
-   question lands squarely on the parse-that READ-ONLY / LOCK-6 boundary and is unresolved two passes.
-   The mirror/skeleton must carry BOTH types + the automata crossing (PROVE-14 tape) — larger than
-   "carry the merged enum." Still nobody's charter.
-5. **Grammar-driven SPEC-ONLY — constitution i, THIRD pass, ZERO artifacts (the deepest gap).** The
-   lock is literally "the grammar-driven regex engine." After three passes it has prototyped an
-   IR-level fork census, an IR-level lowering fraction, and a parse-that automata race — **not one
-   grammar-driven regex path**. `parse_generated` discards its AST; two `regex.bbnf` diverge. Every
-   pass defers the namesake clause to LOCK-7/7A. A lock that never once exercises its own defining
-   thesis across three passes has not tested whether the thesis holds. Every verdict rides
-   SPEC-ONLY(grammar-driven); GESTALT-P must not read the SPEC-ONLY label as "converged pending
-   LOCK-7" — it is "un-attempted three passes."
+The re-cut correctly integrated PROTO-2-5C: centerpiece RUN-EARNED RETIRED, 2B-as-minimizer cleanly
+BLOCKED (Kozen — least/greatest-fixpoint mismatch; `(ab)*` bisimilar loop states never bottom-up
+congruent; the lock's sharpest impossibility). The disposition is well-earned and run-backed. I mark
+DOWN from 55% for two reasons the re-cut under-weights:
 
----
+1. **The LOCK-2 "binding input" over-reaches (XL5-1).** Half of the flagship cross-lock claim (tier NOT a
+   CSP) is grep-for-today, not run-for-always; the flipping witness never ran. A 55% that includes a
+   laundered binding-input over-states the cross-lock soundness.
+2. **The byte-rarity oracle is a NAMED MISSING INPUT for 2C-as-table** (no in-tree frequency oracle;
+   without regex-automata's ASCII-rank table, accel-byte selection "is guesswork"). The mechanism is
+   settled; one of its inputs is absent → accel-byte DECISIONS are underdetermined. This — not the
+   discharged Brief 2 — is the real pass-4 5C uncertainty.
+3. **`is_acyclic`-dispatch net-positivity is marginal** — Σ(null−revuz)=7208 ns vs 6786 ns dispatch at
+   regex scale (n≤20); the acyclic fast-path's worth over just-deleting-`:358` is unsettled, and its
+   headline still inherits the Valmari allocation-confound (a de-confounded CSR control is UNBUILT).
+4. **Survivor integration ENTIRELY UNBUILT** — minimize-swap (`dfa.rs:89-91`), Valmari/Revuz partial-DFA
+   `DEAD` handling, delete-`:358`, tier-table home (`info/mod.rs:344`). 55% reads as convergence-of-
+   disposition; the shipping distance is larger. FAMILY RETIRED (centerpiece); 2B BLOCKED. **52%.**
 
-## 3. FAILURE-MODE CHECKLIST — HITS
+## FAMILY 5D — GRAMMAR-FRAGMENT — **CRIT-2 convergence: 55%** (concur with re-cut; the +run is earned, machine-asserted)
 
-- **Unverified gestalt (THE headline, RECURRING):** FAMILY-SPECS (15:27) predates and contradicts
-  PROTO-2-5C (16:07) — declares 5C's centerpiece "unrun a THIRD pass / Brief 2" while Brief 2 ran and
-  the centerpiece RETIRED. **Same defect pass-2 CRIT-2 named; recurred un-fixed.**
-- **Gate that cannot fail:** G-5A.2 `/foo$/` Look-consumer test "buildable" three passes, never built
-  — unmoved since pass-1; consumer-less `Look::Start` (Y.13) unmoved.
-- **Elegant-reduction trap:** 5C "minimization as congruence closure" — the load-bearing
-  "and-then-saturate-the-automaton" step RAN and degenerated to O(n²·k) (the trap made explicit and
-  measured); 5D "draw first(C) from an over-approximation" is the unconverged hard part; 5A "automata
-  at PROVE-10 numbers" (G-5A.3) unrun three passes.
-- **Masked fallback:** `derive_recognizers` `_ => {}` swallows the desugared `ByteClass`; the 5D
-  chooser is not firing — source-confirmed, unbuilt three passes.
-- **Prototype-evidence misuse:** 5D's "direct-scan-default RATIFIED" leans on PROTO-1's fraction under
-  an under-approx source its own Caveat 1 disclaims as unsound-for-the-verdict; PROVE-10's perf band
-  un-reproduced from any narrowed type (SPEC_ONLY anchoring a perf claim).
-- **Legacy aliases / divergent homes:** two `regex.bbnf` (one discards its AST); top-level
-  `crates/bbnf-regex` legacy duplicate; the skinny shadow crate (anchor-blind classify).
-- **Spec-cites-itself / circularity:** grammar-driven regex (the regex grammar defines regex; grammars
-  contain regex) SPEC-ONLY and contradicted by two extant grammars; deferred to 7A a third time.
-- **Consumer-less substrate (Y.13):** grammar-tier regex e-graph proven consumer-less under projection
-  (PROTO-2 — a POSITIVE finding, correctly used FOR Fork-B); `Look::Start` inert; LOCK-9-9C is a
-  consumer waiting on the un-delivered `ByteClass` producer (reverse-Y.13 DAG hazard).
-- **Constitution:** (i) grammar-totality SPEC-ONLY, three passes, zero artifacts; (v) zero-runtime-cost
-  of the narrowed automata path unverified (G-5A.3 unrun); (viii) `Look::Start`, 9C's un-delivered
-  producer; (ix) double-homes named but unratified, and the 5C→LOCK-2 binding not yet named.
-- **NOT a vacuous-convergence hit — credit:** 5C's centerpiece disposition is now RUN-earned (a genuine
-  pass-3 advance the synthesis failed to ingest, not a failure of the prototype); research-A's
-  classify-relocates concession and the 5B laundering firewall are honest discipline.
+The re-cut's jump to 55% is EARNED and answers CRIT-1's three strongest 5D objections. I verified
+proto-1-overapprox's run log directly: the partition is **machine-asserted, not prose** —
+`sound→unsound flips: ["sheet_prefix"]`, `unsound→sound flips: []`, `[genuine-give-back trio still
+NON-disjoint under over-approx]: ["word","string","identifier"] (3/3)`, `test result: ok. 1 passed`; the
+single `sheet_prefix` flip is a `!`-delimiter conservative false-positive in BOTH branches (0 genuine
+sound→unsound flips); cold-pair `256/256` byte-identical on both leaves, direct scan 3.25× (rare) /
+2.81–3.00× (dense) vs `Dfa::find`. CRIT-1 gap-1 (unsound predicate), gap-2 (scan-beats-DFA untested),
+gap-3 (prose hand-count) are ALL closed by the sound over-approx run. Genuine advance. Remaining gaps:
+
+1. **Corpus breadth** — 16 leaves, approximate sheets FOLLOW-wiring (39-rule subset, host-heavy rules
+   approximate). The architecture-gating fraction rides a small corpus; the WIRED-fraction re-run on the
+   real JSON/Sheets/CSS corpus (does the give-back residue stay non-empty in production?) is UNBUILT.
+2. **`derive_recognizers` FOLLOW-gate rewiring is the one unwired seam** — PROTO-1-5D built the substrate
+   (compiles green) but did NOT rewire `derive_recognizers` (`passes/src/lib.rs:338`) onto the FOLLOW
+   fixed point under the cap. The closure exists (`proto-1-overapprox/follow_sound_fraction.rs`); wiring
+   is the pass-4 delivery (Brief 1 — the ONE brief that is genuinely open and correctly targeted).
+3. **GRAFT-3 coherence obligation (cross-lock, non-optional)** — 5D's generator-path direct-scan-vs-DFA
+   FOLLOW-guard and 5C-2C's engine-tier prefilter table decide "class-scan vs DFA" for the SAME leaves
+   from two homes; they MUST be ONE dispatch surface (the double-emit trap). Un-built; a real pass-4
+   integration risk that GRAFT-3 names but no family yet owns.
+4. **Capture-leaf `->` (LOCK-1-gated)** — regex-internal `->` forbidden at the byte plane; judge against
+   RE2C TDFA(1). Same unratified LOCK-1 fact as 5B's re-open. NOT BLOCKED. 55%.
+
+## FAMILY P2 — GRAMMAR-DRIVEN (the TITULAR deliverable) — **CRIT-2 convergence: 60%; the floor is PARITY-DEMONSTRATED, NOT "un-attempted"**
+
+Not one of the four charter families, but the lock's namesake (Constitution i) and the subject of my
+dominant finding. It must carry an explicit convergence line so GESTALT-P does not receive the false
+"0 artifacts / un-attempted" floor. State of evidence (verified this pass):
+
+- The grammar-driven path is **wired end-to-end today** (`regex::parse_generated`, `mod.rs:34
+  -> Result<Hir>`; discard already broken; 525-LOC `host.rs` fold). PROTO-2-P2 → measured-feasible
+  (43/45); PROTO-2-P2-CLOSED → **RAW 56/56 & BRIDGE 56/56 byte-DFA-identical to the hand parser, 0
+  reject / 0 diverge, strict full-parity gate GREEN**, closed by a 5-edit host-only re-sync (`+50/−6`,
+  no grammar change, no regen).
+- De-dup surface CLOSED: **1 promote / 21 delete / 3 relocate ⇒ retire `grammar/misc/regex.bbnf`**.
+
+Enumerated OPEN gaps (why 60%, not higher):
+1. **The architectural CHOICE is open, GESTALT-P's call** — host-fold re-sync (verified, smaller
+   surface) vs grammar-carries-typed-captures + regen (cleaner, unbuilt). "Either closes it."
+2. **Two constructs closed by construction, not by the DFA oracle** — bare `^`/`$` anchors and `\p{}`
+   are absent from the 56-corpus; their arms are verified by reasoning, not by a divergence flipping to
+   pass. Bare dot and `\x` WERE in-corpus and ARE oracle-verified.
+3. `lower_class_atom_node_byte` (in-class `\x` range endpoints) left reading `bytes[0]`; no corpus range
+   exercises it (one-line GESTALT-P follow-on).
+4. **SPEC-ONLY → PARITY-DEMONSTRATED, still gated LOCK-7A** for promotion to production parser (the
+   host-fold-vs-grammar-captures choice is the LOCK-7A seam). This is a converged-pending-gate
+   disposition — the OPPOSITE of the synthesis's "un-attempted." 60%.
 
 ---
 
-## 4. CONVERGENCE (CRIT-2 floor — re-cut from the PROTOTYPES, not the stale synthesis)
+## CHECKLIST SUMMARY (failure modes)
 
-| Family | Status | % | One line |
-|---|---|---|---|
-| 5A ONE-HIR | ADVANCED (maximal REFUTED; refactor residual) | **45** | Held/stalled a THIRD pass; classify-relocates honestly conceded (credit); `/foo$/` gate buildable-but-unbuilt three passes (unmoved); net-shrink contingent on 787-LOC parser import; grammar-driven SPEC-ONLY |
-| 5B LAWFUL-FUNCTOR | **RETIRED (earned-conditional)** | **40** | PROTO-2 measured fork-independence (proj `total_applied=0`); conditional on LOCK-1 keeping the whole-leaf `->` repr; laundering firewall correctly held |
-| 5C AUTOMATA-AS-EXTRACTION | **centerpiece RETIRED (run-earned); survivor ADVANCED** | **55** | RE-CUT from PROTO-2-5C (which FAMILY-SPECS never ingested): cong O(n²·k), incumbent≈null, prior-art-predicted loss confirmed → 2C-table + `:358` fix + no-egraph Revuz; Brief 2 DISCHARGED, not pending |
-| 5D GRAMMAR-FRAGMENT | ADVANCING (survivor's lowering policy) | **43** | PROTO-1 RAN the fraction but under an under-approx source it disclaims as unsound-for-verdict; `ByteClass` substrate un-firing + entire cold-pair unbuilt three passes; direction robust, verdict soft |
+- **Unverified / stale gestalt — HIT (dominant):** re-cut (22:40) ignores PROTO-2-P2 (20:03, 2h37m
+  prior); headline / Precondition-P2 / cross-lock-#5 / Brief-2 all refuted by the same directory. The
+  re-cut CURED CRIT-1's 5C staleness and REPRODUCED the identical error on the titular family.
+- **Titular-deliverable floor — INVERTED (was CRIT-1's HIT; now FALSE):** grammar-driven is NOT 0
+  artifacts / un-attempted — it is PARITY-DEMONSTRATED (56/56 raw+bridge), de-dup CLOSED, one
+  architectural choice open. GESTALT-P must receive PARITY-DEMONSTRATED, not "un-attempted."
+- **Vacuous convergence — NOT a hit this re-cut:** numbers moved with evidence (5C 45→55 on PROTO-2-5C,
+  5D +run). Improvement over CRIT-1's finding. But P2's number was never surfaced at all (0-of-a-family).
+- **Elegant-reduction trap — HIT (5A):** "delete name-gate SHRINK" … then import ~787-LOC parser, net
+  sign unknown. (5D's trap is now DISCHARGED — the sound over-approx first(C) ran and machine-asserted.)
+- **Gate that cannot fail — NOT a hit this pass:** proto-1-overapprox machine-asserts the partition
+  (flips/genuine-trio/256-256), PROTO-2-P2-CLOSED uses a strict byte-canonical DFA gate. CRIT-1's
+  partial-hit is CURED.
+- **Laundered binding-input — HIT (cross-lock XL5-1):** 5C→LOCK-2 "binding, not a proposal" over-reaches
+  on the tier-NOT-a-CSP half (grep-for-today, flipping witness never ran). Half (a) binding, half (b)
+  proposal.
+- **Consumer-less adjudication — HIT (cross-lock XL5-2):** the Axis-1 re-cut of 4D/9C/3C is "nobody's
+  charter"; a verdict re-cutting three downstream families with no owner.
+- **Consumer-less substrate — used correctly by the families;** one residual (2C byte-rarity input
+  absent). 5D's ByteClass producer is now BUILT (PROTO-1-5D), not masked — cross-lock #4 half-cured.
+- **SPEC_ONLY anchoring a perf claim — NOT triggered:** discipline held (PROTO-1/PROTO-2 structural or
+  work-counts; PROTO-2-P2* explicitly no-perf; PROVE-10 band not transferred).
+- **Legacy aliases / spec-cites-itself — no violation:** XL-C self-citation is orchestrator-ratified;
+  the two `regex.bbnf` are honest de-dup debt now QUANTIFIED (retire misc, carry `octal`).
 
-**Lock-wide.** No family converged. The single deepest defect is procedural and RECURRING: **the
-FAMILY-SPECS is stale against its own pass-3 prototype (PROTO-2-5C) — the exact failure mode pass-2
-CRIT-2 flagged, un-fixed.** The 5C centerpiece is disposed by a run and the synthesis does not know
-it. The grammar-driven premise (constitution i) is SPEC-ONLY after THREE passes with zero
-grammar-driven artifacts — the lock has never once exercised its own defining thesis. Two of LOCK-2's
-candidate island/CSP sites (automata-min-as-e-graph, tier-as-CSP) are now run-refuted at the regex
-layer, a binding input LOCK-2 must consume. **The FAMILY-SPECS 5C section must be rebuilt from
-PROTO-2-5C before any registry is cut from it.**
-
-**CRIT-2 pass-4 directives (ordered by what gates the most):**
-1. **Reconcile the synthesis to PROTO-2-5C.** Rewrite 5C from the run: centerpiece RETIRED
-   (run-earned, disposition-certain), survivor = 2C-table + `:358` fix + no-egraph Revuz. **Do not
-   re-budget Brief 2 — it is discharged.** Record the same institutional guard the pass-2 critic asked
-   for: reconcile FAMILY-SPECS to every prototype in-folder before cutting the registry.
-2. **Name the 5C→LOCK-2 binding.** Automata minimization is NOT an e-graph island; tier-selection is
-   NOT a CSP (run-refuted + prior-art). Route to LOCK-2 as a constraint on 2B/2C, not a proposal.
-3. **Build the ONE gate that has been "buildable" three passes:** the `/foo$/` Look-consumer test that
-   FAILS on the shadow path and PASSES through the bridge. A gate un-built three passes cannot fail.
-4. **Close 5D's soundness gate (Brief 1 over-approx re-run) BEFORE claiming direct-scan-default
-   ratified;** land the `ByteClass` recognizer so 5D's substrate fires and LOCK-9-9C stops waiting on
-   an un-delivered producer; run the cold-pair.
-5. **Exercise ONE grammar-driven regex path** (promote parse-that `regex.bbnf`, break the AST discard)
-   — the lock's namesake, un-attempted three passes; SPEC-ONLY is not "pending," it is "never tried."
-6. **Ratify (not declare)** the LOCK-2 tier single-home, the LOCK-1 `->` re-open trigger, the LOCK-6
-   serde-ownership boundary, and the 4D/9C/3C re-cut with those locks at GESTALT — every double-home
-   resolution is still LOCK-5's unilateral word.
+**Bottom line for the agglomerator.** The single action that most changes this lock's honesty is
+**re-cutting the headline + Precondition-P2 + cross-lock-#5 + Brief-2 against PROTO-2-P2 / PROTO-2-P2-CLOSED**:
+the grammar-driven titular deliverable is PARITY-DEMONSTRATED (56/56 raw+bridge), de-dup CLOSED, Brief 2
+SPENT — GESTALT-P must NOT be told "un-attempted." Second, **split the 5C→LOCK-2 binding input**: automata-
+min-not-an-island is run-binding; tier-not-a-CSP is a proposal until the budget-cap witness runs. Family
+numbers: 5A 42 (parked refactor, shrink-sign unknown), 5B 40 (clean conditional retire), 5C 52 (disposition
+earned, one cross-lock half laundered + integration unbuilt), 5D 55 (run-earned, machine-asserted, wiring
++ corpus + GRAFT-3 open), P2 60 (PARITY-DEMONSTRATED, one architectural choice + LOCK-7A gate open). The
+lock is a rigorously converged CORE of its own charter — but only once its titular floor is stated as
+PARITY-DEMONSTRATED, not "0 artifacts / un-attempted."

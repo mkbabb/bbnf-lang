@@ -149,7 +149,39 @@ zombies + walls-log entry; if both pass-K workflows DONE and pass-(K+1) unledger
 the stage-6 pass-transition procedure; never duplicate-launch; silent single-line green
 otherwise.
 
-## PAUSE-ON-COMPLETION ORDER (owner, 2026-07-16 ~23:05 ET) — OVERRIDES the pass-transition
+## THE SECOND PAUSE — SEALED 2026-07-17 00:07 ET (pause-on-completion order executed)
+
+PT PASS-3 CLOSED 00:06 ET (task wefinh05z, 51/60): ALL FIVE registries folded — L4: 4A 73
+leads (G-A1 byte-identity PASS on the combinator-built graph; pass-4 keystone = wire the
+REAL shipped SmallBox<dyn ParserFn> API across the crate seam, bbnf-side-builder lane
+BANKED), 4B 66 (canada 1.56x = exogenous ceiling pending the padded-input contract), 4C
+BANKED 63, 4D BLOCKED 58; L5: THE TITULAR DELIVERABLE LANDED — grammar-driven regex Hir at
+FULL 56/56 DFA parity (P2 family ADVANCED 60, convey PARITY-DEMONSTRATED); 5D 55 (ByteClass
+end-to-end + FOLLOW-guard fix; one designed-not-wired seam left); 5C survivor ships as
+table (RETIRED 52); the 5C→LOCK-2 export SPLIT (automata-min half RUN-EARNED BINDING;
+tier-not-CSP half strong-proposal pending the flipping witness); GRAFT-3 born-RED (two
+homes for class-scan-vs-DFA must become one dispatch surface); THIRD stale-gestalt
+recurrence ruled an institutional process guard (reconcile registry to EVERY in-folder
+proto before cutting). L6: 6B 76 / 6A 66 / 6D 66, 6C BANKED 80. L8: 8A temporal specializer
+RETIRED by triple-strike; 8C guard answered (pfa.rs 1.00x/Hopcroft-safe). L9: 9B ADVANCED
+62 (two artifacts banked, off SPEC-ONLY); 9C BLOCKED 43.
+
+WITH bbnf pass-2 closed 23:32 (above), ALL NINE registries are current. Cron b1933bf3
+DELETED. NO pass transition (owner order). State at pause: bbnf next = pass 3 (convergence
+talk opens), pt next = pass 4; Fable model edict live for both from next launch; pending
+cross-lock cuts enumerated in THE PAUSE resume procedure above PLUS from this close: (a)
+the 5C→LOCK-2 SPLIT ruling; (b) GRAFT-3 single-dispatch-surface born-RED; (c) the Axis-1
+two-types re-cut of 4D/9C/3C as a named GESTALT work item (nobody's charter); (d) the TS
+Dfa port needs an owning lock (currently homeless, G-C1 DAG-blocked); (e) X8/bounded_sum/
+TypeDesc::Row land-to-HEAD obligations (worktree-earned, substrate-absent); (f) the
+stale-gestalt process guard (institutional). RESUME = THE PAUSE procedure above (cron
+first, then transition directly — no back-half runs outstanding: launch bbnf p3 + pt p4
+fresh, new runIds, same script, args {"group":"bbnf","locks":[1,2,3,7],"pass":3,
+"baseCommit":"<HEAD at launch>"} / {"group":"pt","locks":[4,5,6,8,9],"pass":4,...}, and
+cut the cross-lock adjudications into CROSS-LOCK.md BEFORE launching so distillers convey
+them).
+
+## PAUSE-ON-COMPLETION ORDER (owner, 2026-07-16 ~23:05 ET) — EXECUTED, see THE SECOND PAUSE
 
 When the in-flight runs (bbnf p2 task ws1yrepwk, pt p3 task wefinh05z) BOTH complete: do
 NOT launch pass K+1. Instead: (1) delete the heartbeat cron (b1933bf3); (2) ledger the

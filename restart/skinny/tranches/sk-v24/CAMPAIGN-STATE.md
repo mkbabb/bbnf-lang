@@ -1,5 +1,13 @@
 # SK-V24 CAMPAIGN STATE — durable resurrection ledger
 
+> **SUPERSEDED IN DIRECTION (2026-07-18): SK-V25.** The model-truth revelation (the
+> "Fable-tier" stages never ran Fable) re-routes the campaign: all work hitherto goes
+> under re-adjudication by a new Codex session (ChatGPT Sol 5.6 / Luna 5.6) per the
+> handoff packet at `restart/skinny/tranches/sk-v25/{HANDOFF,PROMPTS,INVENTORY}.md`.
+> Do NOT execute this file's resume procedure (bbnf p3 / pt p4) — the tail it protects
+> is carried whole in the sk-v25 packet (HANDOFF §9, INVENTORY §D). This ledger remains
+> the historical record and the durability-pattern reference.
+
 THE source of truth for campaign progress. Updated after EVERY stage transition and workflow
 launch/completion. Any session — this one, a cron heartbeat, or a cold-started successor —
 resurrects the campaign from this file alone.

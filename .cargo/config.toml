@@ -46,10 +46,10 @@ rustc-wrapper = "sccache"
 # depends on path-patched members (parse-that, pprint).
 
 [patch.crates-io]
-pprint          = { path = "../pprint/rust" }
-pprint_derive   = { path = "../pprint/rust/derive" }
-parse_that      = { path = "../parse-that/rust/parse_that" }
-bbnf-regex      = { path = "../parse-that/rust/regex" }
+pprint          = { path = "../pprint-skv26/rust" }
+pprint_derive   = { path = "../pprint-skv26/rust/derive" }
+parse_that      = { path = "../parse-that-skv26/rust/parse_that" }
+bbnf-regex      = { path = "../parse-that-skv26/rust/regex" }
 gorgeous        = { path = "crates/gorgeous" }
 bbnf            = { path = "crates/core" }
 bbnf-ir         = { path = "crates/ir" }

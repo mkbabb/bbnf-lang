@@ -1,0 +1,11 @@
+file	direct_parse_that_hits	first_last	notable_symbols
+crates/core/src/grammar/generated/bbnf.rs	285	16-21475	ParserState=106;Span::new=15;scan_ident=21;trim_ws=106
+crates/core/src/grammar/generated/bnf.rs	27	16-3222	ParserState=10;Span::new=13
+crates/core/src/grammar/generated/css_l4.rs	790	16-108324	ParserState=376;Span::new=74;scan_ws_block_comments=282
+crates/core/src/grammar/generated/css_pretty.rs	65	16-8970	ParserState=30;Span::new=25
+crates/core/src/grammar/generated/csv.rs	2	16-32	wildcard imports only
+crates/core/src/grammar/generated/ebnf.rs	45	16-7577	ParserState=26;Span::new=17
+crates/core/src/grammar/generated/google_sheets.rs	171	16-13779	ParserState=74;Span::new=18;scanner and codec calls
+crates/core/src/grammar/generated/json.rs	43	16-3423	ParserState=16;Span::new=5;scanner and codec calls
+crates/core/src/grammar/generated/math.rs	2	16-32	wildcard imports only
+TOTAL	1425	n_a	plus 638 unqualified Parser references supplied by wildcard imports

@@ -1,0 +1,43 @@
+id	repository	kind	observation	evidence	disposition
+E001	bbnf-lang	MACHINE_FACT	HEAD is af15f63e0 and master is 71 commits ahead of origin	git status/log on 2026-07-28	ADMITTED
+E002	bbnf-lang	MACHINE_FACT	current filesystem has 204 tracked changes with +9201/-9670	git diff --stat on 2026-07-28	ADMITTED_PROTECTED
+E003	bbnf-lang	MACHINE_FACT	clean HEAD bbnf library check passes with 190 warnings	cargo check -p bbnf --lib --locked in isolated sibling worktree	ADMITTED
+E004	bbnf-lang	MACHINE_FACT	current dirty locked all-target check fails at generated/runtime ABI	push_branch_tag; AltBranchId/u32; from_u8; CSS host rename	ADMITTED_RED
+E005	bbnf-lang	MACHINE_FACT	clean checkout lacks JSON/CSS benchmark corpora	clean worktree data/ contains only Sheets fixtures	ADMITTED_RED
+E006	bbnf-lang	OBSERVATION	clean-HEAD BBNF JSON medians on ignored local data are 9.864ms canada; 2.637ms citm; 34.97us data; 970.5us twitter	json_monolithic built from af15f63e0; local unsealed corpus	NON_CERTIFYING
+E007	bbnf-lang	OBSERVATION	sonic-rs medians on same local files are 4.611ms; 1.135ms; 25.83us; 433.1us	json_competitors built from af15f63e0; different retained-value semantics	NON_CERTIFYING
+E008	bbnf-lang	MACHINE_FACT	always-on JSON bench build took 6m54s and competitor build took 5m07s	unconditional dev-dependency/LTO build on audit host	ADMITTED_FRICTION
+E009	bbnf-lang	MACHINE_FACT	latest 120 SK/tranche commits: 77 docs-only; 23 code; 16 test/bench; 4 other	git history cohort audit	ADMITTED
+E010	bbnf-lang	MACHINE_FACT	34 of latest 120 use narrow closure language later superseded by SK-V25	git subjects plus SK-V25 ratification	ADMITTED
+E011	bbnf-lang	MACHINE_FACT	SK-V25 filesystem is about 15983 files/1.7GiB but only 3 files are tracked	find/du/git ls-files	ADMITTED_RED
+E012	bbnf-lang	MACHINE_FACT	SK-V25 ratifies 0/18 PT waves; 0/4 VT candidates; 0/6 gestalts; 0 competitive proofs	SK-V25 CAMPAIGN-STATE.md	ADMITTED
+E013	bbnf-lang	MACHINE_FACT	skinny runtime and bbnf-simd test fleets pass current local tests	isolated agent replay	ADMITTED_NARROW
+E014	bbnf-lang	MACHINE_FACT	skinny codegen reproducibility fails on config.rs	cargo test --manifest-path skinny/Cargo.toml -p codegen --lib	ADMITTED_RED
+E015	bbnf-lang	SOURCE_FACT	skinny generator retains CSS/JSON-specific modules and raw grammar reparsing	skinny/crates/codegen/src/**	ADMITTED_RED
+E016	bbnf-lang	SOURCE_FACT	Lock 14 can pass while nine grammar runtime/strategy rows remain	LOCKS.md; Cargo.toml; runtime dirs; lock14 test	ADMITTED_RED
+E017	parse-that	MACHINE_FACT	main is ef10d5b, origin-equal but dirty during audit	git status/log	ADMITTED_PROTECTED
+E018	parse-that	MACHINE_FACT	TS source matches v1.0; build passes; ordinary tests have 112 pass 2 skip and 4 file/suite failures	isolated audit replay	ADMITTED_RED
+E019	parse-that	MACHINE_FACT	proof:perf JSON result is about 6.65-10.01us vs unproven 1.742us baseline	npm performance proof replay	ADMITTED_RED
+E020	parse-that	MACHINE_FACT	live Rust fails capture/noncapture; multiline; Unicode-word regex laws	cargo test isolated target	ADMITTED_RED
+E021	parse-that	MACHINE_FACT	committed Rust test imports nonexistent regex parser module	clean committed Rust test inspection/replay	ADMITTED_RED
+E022	parse-that	MACHINE_FACT	invocation v4 passes 24 semantic tests and large oracle; remains private/unprofiled	isolated prototype replay	ADMITTED_PROTOTYPE
+E023	parse-that	SOURCE_FACT	Span and PaddedView safe APIs rely on debug-only checks before unchecked access	rust/parse_that source audit	ADMITTED_RED
+E024	parse-that	SOURCE_FACT	ParserState copies full input into aligned padding per construction	rust/parse_that source audit	ADMITTED_RED
+E025	parse-that	SOURCE_FACT	handwritten regex path remains primary; generated path is verification-only	regex source/bootstrap audit	ADMITTED_RED
+E026	value.js	MACHINE_FACT	Value 4.0 has zero parse-that dependencies/imports	current f36f780c package/source/test/bench search	ADMITTED
+E027	value.js	HISTORY_FACT	Value 2.0.1 consumed parse-that; 2026-07-17 v4 cut removed it	a7eabcc7 and 164343c1 history	ADMITTED
+E028	value.js	PROTOTYPE_FACT	cand-F 210/210; cand-O 355/355; 30000 fuzz no disagreement; 172 throw cases removed	value V parser-band evidence	ADMITTED_PROTOTYPE
+E029	sessions	MACHINE_FACT	60 relevant independent owner sessions received semantic treatment: 13 Claude + 47 Codex	AUDIT-COVERAGE.tsv	FORMATION_PENDING_RECEIPT
+E030	sessions	MACHINE_FACT	100 newest Codex subagent rollouts were separately treated as execution evidence; 17 turn_aborted	AUDIT-COVERAGE.tsv	FORMATION_PENDING_RECEIPT
+E031	sessions	MACHINE_FACT	446 stratified tranche artifacts were treated from 8768 eligible artifacts; files are not tranche roots	AUDIT-COVERAGE.tsv	FORMATION_PENDING_RECEIPT
+E032	playground	MACHINE_FACT	current source/package search has zero shadcn references	rg across manifests and source	ADMITTED
+E033	SOTA	RESEARCH_FACT	current leading systems separate work planes and specialize bounded kernels	simdjson/yyjson/sonic-rs/cssparser/lightningcss/dav1d audits	FORMATION
+E034	value.js	HISTORY_FACT	approximately 250 wall/redeployment; 217 no-legacy; 192 no-workaround; 110 KISS; 90 no-deferral restatements	/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/excavation/EXHORTATION-CENSUS.md	ADMITTED_QUALIFIED
+E035	value.js	HISTORY_FACT	registers identify 29 half-baked units; 17 silent drops; 16 explicit rejections	/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/excavation/TRUTH-TABLE.md	ADMITTED_QUALIFIED
+E036	sessions	HISTORY_FACT	glass archaeology supplies a broader differently-scoped transcript census	/Users/mkbabb/Programming/glass-ui/docs/tranches/BJ/audits/2026-07-28-session-archaeology/HISTORY-ARCHAEOLOGY-TERRA.md	ADMITTED_SCOPE_WARNING
+E037	sessions	MACHINE_FACT	60 is the relevant semantically treated owner-root corpus, not all globally retained roots	AUDIT-COVERAGE.tsv	ADMITTED_QUALIFIED
+E038	tranches	MACHINE_FACT	446 artifacts and 120 commits are not 100 distinct tranche roots	AUDIT-COVERAGE.tsv	QUALIFIED_PENDING_RECEIPT
+E039	review	MACHINE_FACT	first hostile review task is /root/v26_critic_architecture	collaboration task receipt	ADMITTED
+E040	review	MACHINE_FACT	second hostile review task is /root/v26_critic_history	collaboration task receipt	ADMITTED
+E041	review	MACHINE_FACT	final adjudicator task /root/v26_adjudicator returns PROVISIONAL_ACCEPT	REVIEW-ADJUDICATION.md	ADMITTED
+E042	review	OPERATIONAL_FACT	history critic accidentally reran codex-anamnesis and rewrote an already-untracked external output; no revert attempted	REVIEW-ADJUDICATION.md	ADMITTED_PROTECTED

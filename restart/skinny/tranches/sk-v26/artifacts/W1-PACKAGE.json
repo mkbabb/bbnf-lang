@@ -1,0 +1,89 @@
+{
+  "schema": "sk-v26.w1.package.v1",
+  "disposition": "PASS",
+  "subject": {
+    "repository": "/Users/mkbabb/Programming/parse-that-skv26",
+    "branch": "codex/sk-v26-parse-that",
+    "commit": "9c9714dfdfa6d33b70f5738c311a9abccb4a1bdf",
+    "tree": "76141a76dee446249233056e94ea9b043968bdd4",
+    "clean_after_audit": true
+  },
+  "packages": {
+    "parse_that": {
+      "version": "0.4.0",
+      "package_file_count": 20,
+      "archive_bytes": 12419,
+      "archive_sha256": "4c30d451e42fef441fab29afed4394e142a71b293dc9c4fe301a3b93e8c92293",
+      "uncompressed_entry_bytes": 59336,
+      "uncompressed_tar_stream_bytes": 76800,
+      "cargo_reported_size": "57.9KiB (12.1KiB compressed)",
+      "features": {
+        "default": []
+      },
+      "normal_dependencies": [],
+      "package_verification": {
+        "command": "cargo package -p parse_that --locked",
+        "result": "PASS"
+      },
+      "external_consumer": {
+        "source": "extracted packaged archive",
+        "cargo_home": "new and empty",
+        "mode": "--offline",
+        "result": "PASS",
+        "runtime_probe": "Input plus Run::parse_full plus literal matched abc"
+      }
+    },
+    "bbnf-regex": {
+      "version": "0.1.0",
+      "package_file_count": 46,
+      "archive_bytes": 82831,
+      "archive_sha256": "c9ca32cf4022dbdd238387f9600bc7502d8de3a0f8c6f725a4f289d4e3499d50",
+      "uncompressed_entry_bytes": 356293,
+      "uncompressed_tar_stream_bytes": 394240,
+      "cargo_reported_size": "347.9KiB (80.9KiB compressed)",
+      "features": {
+        "default": [],
+        "serde": [
+          "dep:serde"
+        ]
+      },
+      "normal_dependencies": {
+        "default_locked_graph": [
+          "smallvec 1.15.1"
+        ],
+        "all_features_locked_graph": [
+          "smallvec 1.15.1",
+          "serde 1.0.228",
+          "serde_core 1.0.228",
+          "serde_derive 1.0.228"
+        ],
+        "manifest_constraints": {
+          "smallvec": "1.13",
+          "serde": "1, optional, derive"
+        }
+      },
+      "package_verification": {
+        "command": "cargo package -p bbnf-regex --locked",
+        "result": "PASS"
+      },
+      "external_consumer": {
+        "source": "extracted packaged archive",
+        "empty_cargo_home_offline": {
+          "result": "EXPECTED_FAIL",
+          "reason": "an empty offline registry has no smallvec package"
+        },
+        "warmed_isolated_cargo_home_offline": {
+          "result": "PASS",
+          "resolved_smallvec": "1.15.2",
+          "runtime_probe": "RegexTablePlan::compile(\"[a-z]+\") produced a nonempty DFA"
+        },
+        "interpretation": "The construction package requires its one normal crates.io dependency to be cached or vendored; only the zero-dependency runtime can install from a literally empty offline Cargo home."
+      }
+    }
+  },
+  "workspace_integrity": {
+    "new_repository_artifacts": [],
+    "runtime_bridge_target_present": false,
+    "audit_temporary_tree": "moved to Trash after verification"
+  }
+}

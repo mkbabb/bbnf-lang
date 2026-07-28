@@ -1,0 +1,10 @@
+[package]
+name = "skv26-w1-profile"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+parse_that = { version = "0.4", path = "../../../../../../../parse-that-skv26/rust/parse_that" }
+
+[workspace]

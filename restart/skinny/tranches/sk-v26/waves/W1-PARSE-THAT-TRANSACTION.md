@@ -45,8 +45,9 @@ Compare:
 2. invocation prototype v4;
 3. the new minimal kernel.
 
-Use one generated BBNF grammar-module control plus generated/adversarial law
-cases. Measure:
+Use one direct, generated-shaped BBNF grammar-module control, the real
+`bbnf-regex -> parse_that` table seam, and generated/adversarial law cases.
+Measure:
 
 - semantic equivalence;
 - rollback completeness;
@@ -54,6 +55,24 @@ cases. Measure:
 - allocation and copied bytes;
 - compile/package size;
 - recognize and retained-output throughput.
+
+### Scope correction discovered during execution
+
+W0 authorized product mutation in parse-that only and kept BBNF semantic source
+frozen until the W1 package and crater were sealed. A genuinely generated module
+cannot therefore be produced in W1 without either laundering a handwritten
+fixture as generated output or violating the wave authorization.
+
+`parse_that/tests/kernel/generated_shaped_control.rs` is explicitly an
+isomorphic direct-control fixture, not generator output. It proves the selected
+runtime surface; the standalone runtime-bridge contract proves that the checked
+regex compiler tables execute through that surface. Genuine BBNF-emitted
+literal/regex/sequence/choice/repeat/EOF control in both sink modes is the first
+blocking W2 gate, before any broader semantic-spine implementation. Failure of
+that gate reopens W1; it may not be routed around.
+
+This correction narrows neither the final tranche close nor the required
+crossing. It makes the worktree boundary honest.
 
 ## Excluded
 
@@ -98,9 +117,10 @@ sealed.
 - all transaction laws pass;
 - one Rust crate package installs from a clean package artifact;
 - shared Rust/TypeScript law-vector coordinates are explicit;
-- the generated BBNF control fixture is green and the full BBNF crater is
-  classified path-by-path; the legacy fleet cannot be green until W2 consumes
-  the new API, so no W1 gate may pretend otherwise;
+- the direct generated-shaped control and real compile/runtime table seam are
+  green, the full BBNF crater is classified path-by-path, and genuine generated
+  output is sealed as the first blocking W2 gate; the legacy fleet cannot be
+  green until W2 consumes the new API, so no W1 gate may pretend otherwise;
 - public API receives tri-fold hostile review;
 - raw performance samples satisfy the benchmark constitution or are honestly
   non-promoting.

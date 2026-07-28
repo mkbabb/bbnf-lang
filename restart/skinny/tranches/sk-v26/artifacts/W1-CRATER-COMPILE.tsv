@@ -1,0 +1,2 @@
+scope	command	exit_code	status	first_blocker	source	remainder	normalized_output_sha256	normalized_excerpt
+bbnf_lib	cargo check -p bbnf --lib --locked	101	BLOCKED_AT_DEPENDENCY_RESOLUTION	removed parse_that diagnostics feature requested by gorgeous	crates/gorgeous/Cargo.toml:78	UNREACHABLE_AFTER_FIRST_BLOCKER	9d6ede10193418d396d10dfae75f1f2a335b27c3fe15d92c093da8899df42f9a	package `gorgeous` depends on `parse_that` with feature `diagnostics` but `parse_that` does not have that feature.

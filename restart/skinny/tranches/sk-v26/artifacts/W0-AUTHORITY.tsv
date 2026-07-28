@@ -1,18 +1,18 @@
 id	path	authority_class	dispatchable	current_wave	sha256	durability	disposition
-A001	restart/skinny/tranches/sk-v26/STATE.md	STATE	YES	W0	1655d6db759af188769b005f7ac96bd08574669321c765aa5974bbee04febcce	FILESYSTEM_ONLY	sole current dispatch authority
-A002	restart/skinny/tranches/sk-v26/README.md	ACTIVE_CHARTER	NO	W0	03bafd754948ea403ca7f7cbb6fa7a7d0847882f53acbf16658f97accc4f222d	FILESYSTEM_ONLY	admitted provisional charter
-A003	restart/skinny/tranches/sk-v26/waves/W0-TRUTH-SEAL.md	ACTIVE_CONTRACT	NO	W0	45ab08139e589ac1eedb6d15f265248be2ba027e9d2eb28ec21a1eacba5f1ac6	FILESYSTEM_ONLY	current executable acceptance contract
-A004	restart/skinny/tranches/sk-v26/BENCHMARK-CONSTITUTION.md	POLICY	NO	W0	fdd8ea9f1ed3d1e8be67129bdc2e92d01efdb72fc7a23fe64d3131ce7b3dc643	FILESYSTEM_ONLY	performance acceptance policy
-A005	restart/skinny/tranches/sk-v26/SESSION-PROTOCOL.md	POLICY	NO	W0	d4c2aeafff0e2c6a207abeda31958da76bd7ff515fe51eaeac63abac3e3b7196	FILESYSTEM_ONLY	operational durability policy
-A006	restart/skinny/tranches/sk-v26/OBLIGATION-LEDGER.tsv	MUTABLE_LEDGER	NO	W0	c4b9e517fa02c27dbd130fbc8540c52ce66919fd7ed77e98483ffa46b737f226	FILESYSTEM_ONLY	obligation dimensions; never dispatch
-A007	restart/skinny/tranches/sk-v26/EVIDENCE-LEDGER.tsv	APPEND_ONLY_EVIDENCE	NO	W0	a2f4849e94a65e0495fac1dcc1fa1e456577cef67329d4ab6b6e10e5a266228a	FILESYSTEM_ONLY	evidence only
-A008	restart/skinny/tranches/sk-v26/AUDIT-COVERAGE.tsv	APPEND_ONLY_EVIDENCE	NO	W0	24c6166c2eb99ad4b7e59e3e32fb2b0c8fd5ab141daba1ee27fefab422311a4e	FILESYSTEM_ONLY	coverage only
-A009	restart/skinny/tranches/sk-v26/waves/W1-PARSE-THAT-TRANSACTION.md	BANKED_CONTRACT	NO	W1	aece225c34de844e27630cb71b14c4775a8ed1c91a9958b90d5995dbcf897762	FILESYSTEM_ONLY	W0-selected minimal contract; non-dispatchable until W0 exit
-A010	restart/skinny/tranches/sk-v26/waves/W2-BBNF-SEMANTIC-SPINE.md	BANKED_CONTRACT	NO	W2	70741036f776e1680d4226c6ab609f8dc6716c4cdfe2abaca87c30351f6c2a6e	FILESYSTEM_ONLY	non-dispatchable
-A011	restart/skinny/tranches/sk-v26/waves/W3-GRAMMAR-NEUTRAL-VERTICAL.md	BANKED_CONTRACT	NO	W3	d7df7332e0b2f9b2bc0650ff4adde4cee013832614b96b9845f83bc7281dd7cf	FILESYSTEM_ONLY	non-dispatchable
-A012	restart/skinny/tranches/sk-v26/waves/W4-PROFILE-CUTOVER.md	BANKED_CONTRACT	NO	W4	1dd3f6335a3c9137b1f6519a0f5e40f6be179f01425bbe2f05dc08da2e937e10	FILESYSTEM_ONLY	non-dispatchable
-A013	restart/skinny/tranches/sk-v26/REVIEW-ADJUDICATION.md	FORMATION_EVIDENCE	NO	NA	e22e24537a3b711e367b69f749861ea5e464ccaaba3817a461a0438771720bb9	FILESYSTEM_ONLY	evidence only
-A014	restart/skinny/tranches/sk-v26/LANE-CONSUMERS-AND-PLAYGROUND.md	BANKED_LANE	NO	NA	7b78534bb5911bf54b88cd2eb9d771c6c97cc76a04d5387abd68adfb0c4c9fe9	FILESYSTEM_ONLY	triggered lane; non-dispatchable
+A001	restart/skinny/tranches/sk-v26/STATE.md	STATE	YES	W1	2fe61280ddb9a44ca576e51c4f0bf8b711ab8c52d58a5e4de7533a919466187a	GIT_DURABLE	sole current dispatch authority
+A002	restart/skinny/tranches/sk-v26/README.md	ACTIVE_CHARTER	NO	W0	03bafd754948ea403ca7f7cbb6fa7a7d0847882f53acbf16658f97accc4f222d	GIT_DURABLE	admitted charter; non-dispatchable
+A003	restart/skinny/tranches/sk-v26/waves/W0-TRUTH-SEAL.md	COMPLETED_CONTRACT	NO	W0	45ab08139e589ac1eedb6d15f265248be2ba027e9d2eb28ec21a1eacba5f1ac6	GIT_DURABLE	W0 admitted by W0-ADMISSION.md
+A004	restart/skinny/tranches/sk-v26/BENCHMARK-CONSTITUTION.md	POLICY	NO	W0	fdd8ea9f1ed3d1e8be67129bdc2e92d01efdb72fc7a23fe64d3131ce7b3dc643	GIT_DURABLE	performance acceptance policy
+A005	restart/skinny/tranches/sk-v26/SESSION-PROTOCOL.md	POLICY	NO	W0	d4c2aeafff0e2c6a207abeda31958da76bd7ff515fe51eaeac63abac3e3b7196	GIT_DURABLE	operational durability policy
+A006	restart/skinny/tranches/sk-v26/OBLIGATION-LEDGER.tsv	MUTABLE_LEDGER	NO	W0	c4b9e517fa02c27dbd130fbc8540c52ce66919fd7ed77e98483ffa46b737f226	GIT_DURABLE	obligation dimensions; never dispatch
+A007	restart/skinny/tranches/sk-v26/EVIDENCE-LEDGER.tsv	APPEND_ONLY_EVIDENCE	NO	W0	a2f4849e94a65e0495fac1dcc1fa1e456577cef67329d4ab6b6e10e5a266228a	GIT_DURABLE	evidence only
+A008	restart/skinny/tranches/sk-v26/AUDIT-COVERAGE.tsv	APPEND_ONLY_EVIDENCE	NO	W0	24c6166c2eb99ad4b7e59e3e32fb2b0c8fd5ab141daba1ee27fefab422311a4e	GIT_DURABLE	coverage only
+A009	restart/skinny/tranches/sk-v26/waves/W1-PARSE-THAT-TRANSACTION.md	ACTIVE_CONTRACT	NO	W1	aece225c34de844e27630cb71b14c4775a8ed1c91a9958b90d5995dbcf897762	GIT_DURABLE	W0-selected minimal W1 contract
+A010	restart/skinny/tranches/sk-v26/waves/W2-BBNF-SEMANTIC-SPINE.md	BANKED_CONTRACT	NO	W2	70741036f776e1680d4226c6ab609f8dc6716c4cdfe2abaca87c30351f6c2a6e	GIT_DURABLE	non-dispatchable
+A011	restart/skinny/tranches/sk-v26/waves/W3-GRAMMAR-NEUTRAL-VERTICAL.md	BANKED_CONTRACT	NO	W3	d7df7332e0b2f9b2bc0650ff4adde4cee013832614b96b9845f83bc7281dd7cf	GIT_DURABLE	non-dispatchable
+A012	restart/skinny/tranches/sk-v26/waves/W4-PROFILE-CUTOVER.md	BANKED_CONTRACT	NO	W4	1dd3f6335a3c9137b1f6519a0f5e40f6be179f01425bbe2f05dc08da2e937e10	GIT_DURABLE	non-dispatchable
+A013	restart/skinny/tranches/sk-v26/REVIEW-ADJUDICATION.md	FORMATION_EVIDENCE	NO	NA	e22e24537a3b711e367b69f749861ea5e464ccaaba3817a461a0438771720bb9	GIT_DURABLE	evidence only
+A014	restart/skinny/tranches/sk-v26/LANE-CONSUMERS-AND-PLAYGROUND.md	BANKED_LANE	NO	NA	7b78534bb5911bf54b88cd2eb9d771c6c97cc76a04d5387abd68adfb0c4c9fe9	GIT_DURABLE	triggered lane; non-dispatchable
 H001	/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/CAMPAIGN-STATE.md	EVIDENCE_ONLY	NO	NA	3f0eea04a0575671d8e9326a14081d34f9a222def9759224898c344fd51f1e13	PROTECTED_FILESYSTEM	historical state
 H002	restart/skinny/tranches/sk-v25/HANDOFF.md	EVIDENCE_ONLY	NO	NA	9be82e72d82c09aae2e1dd251c9d516a6843a39868ce9853ef656ea44a9b9786	GIT_BASE	historical handoff
 H003	/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/EVIDENCE-CENSUS.md	EVIDENCE_ONLY	NO	NA	5f06c7aca00b9048f5a62e55307a3795fc95a1ea38cf5a489a4072c6a4892e50	PROTECTED_FILESYSTEM	historical census

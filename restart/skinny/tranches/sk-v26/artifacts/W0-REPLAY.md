@@ -18,8 +18,8 @@ Expected identities:
 
 ```text
 BBNF branch codex/sk-v26-bbnf
-BBNF HEAD   af15f63e0d2d3d719938c13b906a50acbb92ea3b
-BBNF tree   d4b6e212b8bac3d61a54db7d091d1c4cf6c87f5f
+BBNF W0 HEAD 47d51a190fda7f51686d5bad1be149191bbfeba6
+BBNF W0 tree 00af42256deb5a49d5c1ccf1e9cbef3107cc6589
 PT branch   codex/sk-v26-parse-that
 PT W0 HEAD  627c9b46a773a278ed8c60728c9d335be6747905
 PT W0 tree  b0144769472a972bcd4de8f3e67ffcfe264cef99

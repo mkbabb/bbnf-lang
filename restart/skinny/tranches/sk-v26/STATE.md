@@ -8,12 +8,12 @@ Last observed: 2026-07-28, America/New_York.
 
 | Item | State | Evidence / next boundary |
 |---|---|---|
-| Tranche formation | PROVISIONAL_ACCEPT | architecture seam adjudicated; receipt generated; W0 audit/authority receipts still owed |
-| Formation durability | IMPORTED_FILESYSTEM | immutable formation epoch verifies at `epochs/STATE-FORMATION.md` |
+| Tranche formation | ADMITTED | architecture seam adjudicated; immutable formation receipt and W0 git-object receipt verify |
+| Formation durability | GIT_DURABLE | immutable formation epochs landed in W0 payload `47d51a190` |
 | Formation review tasks | ADJUDICATED | `/root/v26_critic_architecture`; `/root/v26_critic_history`; `/root/v26_adjudicator` |
-| Product source mutation | AUTHORIZED_ISOLATED_ONLY | never mutate either protected main |
-| W0 truth seal | IN_PROGRESS | isolated worktrees created; epoch/crossing/audit/authority/corpus receipts materialized |
-| W1 parse-that transaction | BLOCKED_ON_W0 | separate `codex/sk-v26-parse-that` worktree exists; no semantic source edit yet |
+| Product source mutation | AUTHORIZED_W1_PARSE_THAT_ONLY | never mutate either protected main; BBNF semantic source remains blocked on W1 package |
+| W0 truth seal | ADMITTED_GIT_DURABLE | paired payload commits, 63-path overlay, clean dependency pin, replay, and receipts verify |
+| W1 parse-that transaction | IN_PROGRESS_BORN_RED | begin external kernel laws and remove runtime dependency backedges; no semantic source edit yet |
 | W2 BBNF semantic spine | NOT STARTED | blocked on W0 and the W1 crossing contract |
 | W3 grammar-neutral vertical | NOT STARTED | blocked on W2 |
 | W4 profile/cutover | NOT STARTED | blocked on W3 semantic parity |
@@ -30,28 +30,30 @@ Last observed: 2026-07-28, America/New_York.
 
 No operation may mutate either protected main. Cleanup, regeneration, staging,
 commit, revert, or deletion remains bounded to the isolated branches and the
-currently admitted wave. This packet is not git-durable and must not be called
-sealed.
+currently admitted wave. W0 is git-durable at BBNF payload `47d51a190` and
+parse-that payload `627c9b46a`; later waves must add their own receipts.
 
 ## Exact next action
 
-Verify the immutable formation epoch from this directory with:
+Verify the immutable formation epoch and W0 git-object seal from this directory:
 
 ```sh
 shasum -a 256 -c FORMATION-RECEIPT.sha256
+cd ../../../.. && node scripts/skv26-w0-seal.mjs --verify
 ```
 
-The four primary W0 tables now exist. The exact next command is:
+The exact next command is the born-RED W1 kernel test:
 
 ```sh
-cd ../../../.. &&
-node scripts/skv26-authority-lint.mjs &&
-node scripts/skv26-w0-audit-manifest.mjs &&
-node scripts/skv26-w0-dirty-manifest.mjs
+cd /Users/mkbabb/Programming/parse-that-skv26/rust &&
+CARGO_TARGET_DIR=/Users/mkbabb/Programming/parse-that-skv26/target/skv26-w1 \
+cargo test -p parse_that --no-default-features \
+  --test kernel --test kernel_allocation
 ```
 
-Then finish `artifacts/W0-REPLAY.md`, replay it from fresh shells, and adjudicate
-the remaining RED rows before admitting W1.
+The first result must be RED on the absent selected kernel surface. Implement
+only the W1 contract after that receipt; do not repair the legacy regex-parser
+test by restoring competing syntax authority.
 
 ## Handoff rule
 

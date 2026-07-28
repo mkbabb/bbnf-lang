@@ -11,10 +11,10 @@ Last observed: 2026-07-28, America/New_York.
 | Tranche formation | ADMITTED | architecture seam adjudicated; immutable formation receipt and W0 git-object receipt verify |
 | Formation durability | GIT_DURABLE | immutable formation epochs landed in W0 payload `47d51a190` |
 | Formation review tasks | ADJUDICATED | `/root/v26_critic_architecture`; `/root/v26_critic_history`; `/root/v26_adjudicator` |
-| Product source mutation | AUTHORIZED_W1_PARSE_THAT_ONLY | never mutate either protected main; BBNF semantic source remains blocked on W1 package |
+| Product source mutation | AUTHORIZED_W2_PAIRED_SELECTED_SLICE | parse-that may add only the typed module/resource boundary required by W2; BBNF may replace only the selected semantic spine; never mutate either protected main |
 | W0 truth seal | ADMITTED_GIT_DURABLE | paired payload commits, 63-path overlay, clean dependency pin, replay, and receipts verify |
-| W1 parse-that transaction | IN_PROGRESS_BORN_RED | begin external kernel laws and remove runtime dependency backedges; no semantic source edit yet |
-| W2 BBNF semantic spine | NOT STARTED | blocked on W0 and the W1 crossing contract |
+| W1 parse-that transaction | ADMITTED_GIT_DURABLE | parse-that `9c9714dfd`; BBNF evidence `ad7aec5c6`; 70 workspace laws, 7 bridge laws, clean packages, 148-path crater, tri-fold ACCEPT |
+| W2 BBNF semantic spine | IN_PROGRESS_BORN_RED | first add the missing typed parse-that module/resource boundary, then genuine emitted direct control in both sink modes; failure reopens W1 |
 | W3 grammar-neutral vertical | NOT STARTED | blocked on W2 |
 | W4 profile/cutover | NOT STARTED | blocked on W3 semantic parity |
 | Consumer/playground lane | FORMATION-ONLY | explicitly off the core parser critical path |
@@ -31,29 +31,34 @@ Last observed: 2026-07-28, America/New_York.
 No operation may mutate either protected main. Cleanup, regeneration, staging,
 commit, revert, or deletion remains bounded to the isolated branches and the
 currently admitted wave. W0 is git-durable at BBNF payload `47d51a190` and
-parse-that payload `627c9b46a`; later waves must add their own receipts.
+parse-that payload `627c9b46a`. W1 is git-durable at parse-that
+`9c9714dfd` and BBNF evidence payload `ad7aec5c6`. Later waves must add their
+own receipts.
 
 ## Exact next action
 
-Verify the immutable formation epoch and W0 git-object seal from this directory:
+Verify the W1 subjects and replay from this directory:
 
 ```sh
-shasum -a 256 -c FORMATION-RECEIPT.sha256
-cd ../../../.. && node scripts/skv26-w0-seal.mjs --verify
+git -C /Users/mkbabb/Programming/parse-that-skv26 rev-parse HEAD HEAD^{tree}
+git -C /Users/mkbabb/Programming/bbnf-lang-skv26 rev-parse \
+  ad7aec5c6b3731fd6d57008d051fb0799377ae22 \
+  ad7aec5c6b3731fd6d57008d051fb0799377ae22^{tree}
 ```
 
-The exact next command is the born-RED W1 kernel test:
+The exact next command is the born-RED W2 parse-that carrier test:
 
 ```sh
 cd /Users/mkbabb/Programming/parse-that-skv26/rust &&
-CARGO_TARGET_DIR=/Users/mkbabb/Programming/parse-that-skv26/target/skv26-w1 \
-cargo test -p parse_that --no-default-features \
-  --test kernel --test kernel_allocation
+CARGO_TARGET_DIR=/Users/mkbabb/Programming/parse-that-skv26/target/skv26-w2 \
+cargo test -p parse_that --no-default-features --test module_result --locked
 ```
 
-The first result must be RED on the absent selected kernel surface. Implement
-only the W1 contract after that receipt; do not repair the legacy regex-parser
-test by restoring competing syntax authority.
+The first result must be RED on the absent W2 carrier surface. Implement only
+the smallest checked `ModuleResult` and typed resource-boundary delta justified
+by W2. Then make genuine BBNF-emitted literal, regex, sequence, choice, repeat,
+and EOF control green in both discarding and retaining sink modes. Do not
+restore diagnostics compatibility features or adapt the legacy fleet.
 
 ## Handoff rule
 

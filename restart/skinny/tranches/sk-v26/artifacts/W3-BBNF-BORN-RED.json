@@ -1,0 +1,178 @@
+{
+  "schema": "skv26-w3-bbnf-born-red-receipt-v1",
+  "observed_date": "2026-07-29",
+  "repository": "/Users/mkbabb/Programming/bbnf-lang-skv26",
+  "branch": "codex/sk-v26-bbnf",
+  "basis": {
+    "commit": "28461bf7cd8fa73c54aabf098a978ec321d6e665",
+    "tree": "ea05d1c6ad148bd14211f28e90e7f3faebc60bd1"
+  },
+  "parse_that": {
+    "repository": "/Users/mkbabb/Programming/parse-that-skv26",
+    "commit": "ed1ffa24e862b797b01dc4f9215d6be8f7fa0955",
+    "tree": "65d1d58cee5e052804b062a17de571620ba463aa",
+    "version": "0.5.0",
+    "kernel_abi": 3,
+    "worktree_clean": true,
+    "parse_that_package_sha256": "51933a1d4796f7628995fc433b0041a98973ebb5a8cd5eb4e596335a4904bc24",
+    "bbnf_regex_package_sha256": "8399e72b99d10ad96ad7f7499577dd0e84f7e360fbdb2d800b32115ab03b45b0"
+  },
+  "authority": [
+    {
+      "path": "contracts/w3-grammar-instance.schema.json",
+      "sha256": "1815d307ca79a8dfd2e7e58ef29b8ada1020884c75a4d639dfe7964d8aa60feb",
+      "lines": 165
+    },
+    {
+      "path": "restart/skinny/tranches/sk-v26/artifacts/W3-GENERATED-V6-CANONICAL-SHAPE.md",
+      "sha256": "0e0fd05d931f151e4253258dc79420a8c42ff1d589e02df7a6b195431c4a4e84",
+      "lines": 267
+    },
+    {
+      "path": "restart/skinny/tranches/sk-v26/artifacts/W3-IMPLEMENTATION-SEAM-MAP.md",
+      "sha256": "5f5ac21a479114c86a377a7e8b713feed48181c3928302fbb9d1585e107d34a9",
+      "lines": 355
+    },
+    {
+      "path": "restart/skinny/tranches/sk-v26/artifacts/W3-BBNF-BORN-RED-REVIEWS.md",
+      "sha256": "1af3b34f05aaa8f77bfcc52c6db623ced67974adada116e43c426ba4cb44caf2",
+      "lines": 113
+    }
+  ],
+  "contracts": [
+    {
+      "name": "instance_frontend",
+      "path": "crates/core/tests/w3_instance_frontend_contract.rs",
+      "sha256": "d20ef0a176758305e2e3adc1f63f34229df3087c7248d5570a4dbe7e99f60c8f",
+      "lines": 9182,
+      "result": "RED_AS_DESIGNED",
+      "exit_code": 101,
+      "diagnostics": {
+        "E0432": 2,
+        "E0599": 23,
+        "E0609": 14,
+        "total": 39,
+        "unexpected": 0
+      },
+      "independent_review": {
+        "task": "/root/w3_semantic_accept_final",
+        "disposition": "ACCEPT",
+        "p0": 0,
+        "p1": 0,
+        "p2": 0
+      }
+    },
+    {
+      "name": "replay_public",
+      "path": "crates/core/tests/w3_replay_public_contract.rs",
+      "sha256": "ce60dbcf8b26e2934644136e46046c4ac0e34e916c02a7d98906faa6f03f0239",
+      "lines": 9897,
+      "result": "RED_AS_DESIGNED",
+      "exit_code": 101,
+      "diagnostics": {
+        "E0432": 1,
+        "E0599": 3,
+        "total": 4,
+        "unexpected": 0
+      },
+      "independent_review": {
+        "task": "/root/w3_replay_cross_accept",
+        "disposition": "ACCEPT",
+        "p0": 0,
+        "p1": 0,
+        "p2": 0
+      }
+    },
+    {
+      "name": "semantic_pratt",
+      "path": "crates/core/tests/w3_semantic_pratt_contract.rs",
+      "sha256": "8c6f7018a8b19f72fb7a8de599efe0ba8b4616e42c37a7ec49d7bdc93947a6ae",
+      "lines": 12481,
+      "result": "RED_AS_DESIGNED",
+      "exit_code": 101,
+      "diagnostics": {
+        "E0432": 2,
+        "E0599": 55,
+        "total": 57,
+        "unexpected": 0
+      },
+      "independent_review": {
+        "task": "/root/w3_replay_cross_accept",
+        "disposition": "ACCEPT",
+        "p0": 0,
+        "p1": 0,
+        "p2": 0
+      }
+    }
+  ],
+  "dependency_surface": {
+    "manifest_sha256": "c291564f24d37070479f358170eea860aa714f16437444fe527dc02f3ef284d3",
+    "lock_sha256": "128db556b829bbfe946b09384b210c981eaf614054620df94ba70de513eb9e86",
+    "new_dependencies_are_dev_only": true
+  },
+  "incumbent_floor": {
+    "bbnf_library": 13,
+    "bbnf_integration": 44,
+    "total": 57,
+    "result": "PASS"
+  },
+  "external_controls": [
+    {
+      "name": "w2-generated-control",
+      "tests": 8,
+      "result": "PASS"
+    },
+    {
+      "name": "w2-recursive-control",
+      "tests": 5,
+      "result": "PASS"
+    },
+    {
+      "name": "w2-record-control",
+      "tests": 4,
+      "result": "PASS"
+    }
+  ],
+  "union_gates": [
+    {
+      "command": "cargo fmt --all -- --check",
+      "result": "PASS"
+    },
+    {
+      "command": "jq -e . contracts/w3-grammar-instance.schema.json",
+      "result": "PASS"
+    },
+    {
+      "command": "cargo metadata --offline --locked --format-version 1 --no-deps",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    },
+    {
+      "command": "three exact W3 cargo test --no-run targets",
+      "result": "RED_AS_DESIGNED_WITH_ONLY_RECORDED_DIAGNOSTICS"
+    },
+    {
+      "command": "incumbent BBNF lib plus eight integration targets",
+      "result": "PASS_57"
+    },
+    {
+      "command": "three external W2 generated-control packages",
+      "result": "PASS_8_PLUS_5_PLUS_4"
+    }
+  ],
+  "heldout": {
+    "selection_calculated_or_named": false,
+    "candidates_compiled_or_executed": false,
+    "postselection_artifacts_present": false,
+    "selected_instance_present": false
+  },
+  "production": {
+    "w3_source_files_modified": 0,
+    "candidate_selected": false,
+    "implementation_authorized_after_receipt_is_git_durable": true
+  },
+  "disposition": "ACCEPTED_BORN_RED_PENDING_GIT_DURABILITY"
+}

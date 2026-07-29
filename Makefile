@@ -21,7 +21,6 @@
         bench bench-json bench-css bench-bbnf bench-sheets bench-compile \
         profile doctor \
         expand expand-bootstrap expand-derive asm \
-        regen regen-check iter-grammar \
         ay-expand-json ay-expand-named-type ay-asm-close-compound \
         ay-test-value-api ay-test-wire-contract ay-test-named-type \
         ay-samply-json-twitter ay-samply-json-twitter-lookup \

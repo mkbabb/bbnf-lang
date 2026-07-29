@@ -1,6 +1,6 @@
 # W3 clean-break implementation seam map
 
-Status: `BORN_RED_ACCEPTED_IMPLEMENTATION_AUTHORIZED_AFTER_GIT_DURABILITY`.
+Status: `BORN_RED_GIT_DURABLE_IMPLEMENTATION_AUTHORIZED`.
 
 This is an implementation routing artifact, not evidence that implementation
 has begun. No production W3 edit is authorized until the complete born-RED

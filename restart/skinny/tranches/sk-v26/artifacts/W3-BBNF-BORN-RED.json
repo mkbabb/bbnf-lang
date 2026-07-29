@@ -7,6 +7,10 @@
     "commit": "28461bf7cd8fa73c54aabf098a978ec321d6e665",
     "tree": "ea05d1c6ad148bd14211f28e90e7f3faebc60bd1"
   },
+  "durability": {
+    "payload_commit": "dadd6fa775a78d9adf08aa9c40699bc89775a689",
+    "payload_tree": "3865680cb6fccd79ff31f9bf4f038ef43e0fc87a"
+  },
   "parse_that": {
     "repository": "/Users/mkbabb/Programming/parse-that-skv26",
     "commit": "ed1ffa24e862b797b01dc4f9215d6be8f7fa0955",
@@ -30,7 +34,7 @@
     },
     {
       "path": "restart/skinny/tranches/sk-v26/artifacts/W3-IMPLEMENTATION-SEAM-MAP.md",
-      "sha256": "5f5ac21a479114c86a377a7e8b713feed48181c3928302fbb9d1585e107d34a9",
+      "sha256": "793a699c2e479e0f34180fc2591a553a3541b0586380856ec766c0c3c6d19d86",
       "lines": 355
     },
     {
@@ -172,7 +176,7 @@
   "production": {
     "w3_source_files_modified": 0,
     "candidate_selected": false,
-    "implementation_authorized_after_receipt_is_git_durable": true
+    "implementation_authorized": true
   },
-  "disposition": "ACCEPTED_BORN_RED_PENDING_GIT_DURABILITY"
+  "disposition": "BORN_RED_GIT_DURABLE_IMPLEMENTATION_AUTHORIZED"
 }

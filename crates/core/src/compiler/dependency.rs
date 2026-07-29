@@ -1,13 +1,13 @@
 use std::collections::BTreeSet;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::diagnostic::StageResult;
 use super::source::Revision;
 use super::syntax::{NodeKind, Program, RuleId, SccId};
 
 /// Direct, sorted rule dependencies for one immutable source revision.
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct DependencyGraph {
     revision: Revision,
     edges: Vec<Vec<RuleId>>,
@@ -32,6 +32,9 @@ impl DependencyGraph {
                     NodeKind::Sequence(children) | NodeKind::Choice(children) => {
                         // Reverse insertion keeps the traversal itself in NodeId order.
                         pending.extend(children.iter().rev().copied());
+                    }
+                    NodeKind::Record { slots, .. } => {
+                        pending.extend(slots.iter().rev().map(|slot| slot.child()));
                     }
                     NodeKind::Repeat { child, .. } | NodeKind::Transform { child, .. } => {
                         pending.push(*child);
@@ -66,7 +69,7 @@ impl DependencyGraph {
 /// Recursion is a property of the grammar, not a dependency-stage error.  A
 /// component is retained as one finite binder group; later semantic passes
 /// decide whether that group has a productive, input-advancing interpretation.
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct DependencySolution {
     revision: Revision,
     graph: DependencyGraph,

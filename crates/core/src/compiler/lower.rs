@@ -1,14 +1,16 @@
 use bbnf_regex::RegexTablePlan;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::analysis::AnalysisFacts;
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::Revision;
-use super::syntax::{NodeKind, PlanNodeId, Program, RuleId, TransformId};
-use super::typecheck::TypeSolution;
+use super::syntax::{
+    FieldId, NodeKind, PlanNodeId, Program, RecordSlot, RuleId, TransformId, TypeId,
+};
+use super::typecheck::{SemanticType, TypeSolution};
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct RegexPlanData {
     byte_classes: Vec<u8>,
     transitions: Vec<u32>,
@@ -57,7 +59,30 @@ impl From<RegexTablePlan> for RegexPlanData {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[non_exhaustive]
+pub enum PlanRecordSlot {
+    Field { field: FieldId, child: PlanNodeId },
+    Discard { child: PlanNodeId },
+}
+
+impl PlanRecordSlot {
+    pub const fn child(&self) -> PlanNodeId {
+        match self {
+            Self::Field { child, .. } | Self::Discard { child } => *child,
+        }
+    }
+
+    pub const fn field(&self) -> Option<FieldId> {
+        match self {
+            Self::Field { field, .. } => Some(*field),
+            Self::Discard { .. } => None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[non_exhaustive]
 pub enum PlanOp {
     Epsilon,
     Literal(Vec<u8>),
@@ -70,6 +95,10 @@ pub enum PlanOp {
         minimum: u32,
         maximum: Option<u32>,
     },
+    Record {
+        owner: RuleId,
+        slots: Vec<PlanRecordSlot>,
+    },
     Transform {
         child: PlanNodeId,
         transform: TransformId,
@@ -77,10 +106,11 @@ pub enum PlanOp {
     },
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct PlanNode {
     id: PlanNodeId,
     op: PlanOp,
+    semantic_type: TypeId,
 }
 
 impl PlanNode {
@@ -91,13 +121,18 @@ impl PlanNode {
     pub const fn op(&self) -> &PlanOp {
         &self.op
     }
+
+    pub const fn semantic_type(&self) -> TypeId {
+        self.semantic_type
+    }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct LoweredRule {
     id: RuleId,
     root: PlanNodeId,
     name: String,
+    named_type: TypeId,
 }
 
 impl LoweredRule {
@@ -112,13 +147,55 @@ impl LoweredRule {
     pub fn name(&self) -> &str {
         &self.name
     }
+
+    pub const fn named_type(&self) -> TypeId {
+        self.named_type
+    }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub struct LoweredField {
+    id: FieldId,
+    owner: RuleId,
+    slot: u32,
+    child: PlanNodeId,
+    name: String,
+    semantic_type: TypeId,
+}
+
+impl LoweredField {
+    pub const fn id(&self) -> FieldId {
+        self.id
+    }
+
+    pub const fn owner(&self) -> RuleId {
+        self.owner
+    }
+
+    pub const fn slot(&self) -> u32 {
+        self.slot
+    }
+
+    pub const fn child(&self) -> PlanNodeId {
+        self.child
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub const fn semantic_type(&self) -> TypeId {
+        self.semantic_type
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct LoweringPlan {
     revision: Revision,
     nodes: Vec<PlanNode>,
     rules: Vec<LoweredRule>,
+    semantic_types: Vec<SemanticType>,
+    fields: Vec<LoweredField>,
     regexes: Vec<RegexPlanData>,
     entry: RuleId,
 }
@@ -195,6 +272,23 @@ impl LoweringPlan {
                     minimum: *minimum,
                     maximum: *maximum,
                 },
+                NodeKind::Record { owner, slots } => PlanOp::Record {
+                    owner: *owner,
+                    slots: slots
+                        .iter()
+                        .map(|slot| match slot {
+                            RecordSlot::Field { field, child } => PlanRecordSlot::Field {
+                                field: *field,
+                                child: PlanNodeId::checked(child.index())
+                                    .expect("program node identity is representable"),
+                            },
+                            RecordSlot::Discard { child } => PlanRecordSlot::Discard {
+                                child: PlanNodeId::checked(child.index())
+                                    .expect("program node identity is representable"),
+                            },
+                        })
+                        .collect(),
+                },
                 NodeKind::Transform {
                     child,
                     transform,
@@ -206,7 +300,11 @@ impl LoweringPlan {
                     name: name.clone(),
                 },
             };
-            nodes.push(PlanNode { id, op });
+            nodes.push(PlanNode {
+                id,
+                op,
+                semantic_type: types.node_type(node.id()),
+            });
         }
 
         let rules = program
@@ -217,6 +315,20 @@ impl LoweringPlan {
                 root: PlanNodeId::checked(rule.root().index())
                     .expect("program node identity is representable"),
                 name: rule.name().to_owned(),
+                named_type: types.rule_type(rule.id()),
+            })
+            .collect::<Vec<_>>();
+        let fields = program
+            .fields()
+            .iter()
+            .map(|field| LoweredField {
+                id: field.id(),
+                owner: field.owner(),
+                slot: field.slot(),
+                child: PlanNodeId::checked(field.child().index())
+                    .expect("program node identity is representable"),
+                name: field.name().to_owned(),
+                semantic_type: types.node_type(field.child()),
             })
             .collect();
 
@@ -224,6 +336,8 @@ impl LoweringPlan {
             revision: program.revision(),
             nodes,
             rules,
+            semantic_types: types.arena().to_vec(),
+            fields,
             regexes,
             entry: program.entry(),
         })
@@ -243,6 +357,14 @@ impl LoweringPlan {
 
     pub fn rules(&self) -> &[LoweredRule] {
         &self.rules
+    }
+
+    pub fn semantic_types(&self) -> &[SemanticType] {
+        &self.semantic_types
+    }
+
+    pub fn fields(&self) -> &[LoweredField] {
+        &self.fields
     }
 
     pub fn regexes(&self) -> &[RegexPlanData] {

@@ -1,3 +1,4 @@
+use bbnf::compiler::NodeKind;
 use bbnf::{CompileOptions, DiagnosticCode, ModuleInput, StageResult, compile_module};
 
 const CONTROL_FIXTURE: &[u8] = r#"
@@ -39,15 +40,35 @@ fn rejected_code(bytes: &[u8], options: CompileOptions) -> DiagnosticCode {
     }
 }
 
+fn rejected_diagnostics(
+    bytes: &[u8],
+    options: CompileOptions,
+) -> Vec<(DiagnosticCode, usize, usize, String)> {
+    match compile_module(ModuleInput::new("fixture.bbnf", bytes), options) {
+        StageResult::Accepted { .. } => panic!("expected fixture rejection"),
+        StageResult::Rejected { diagnostics } => diagnostics
+            .iter()
+            .map(|diagnostic| {
+                (
+                    diagnostic.code(),
+                    diagnostic.start(),
+                    diagnostic.end(),
+                    diagnostic.message().to_owned(),
+                )
+            })
+            .collect(),
+    }
+}
+
 #[test]
 fn genuine_control_fixture_builds_postorder_nodes_and_lexical_rules() {
     let compiled = accepted(CONTROL_FIXTURE, CompileOptions::default());
 
-    assert_eq!(compiled.source_map.modules()[0].rule_count(), 7);
-    assert_eq!(compiled.source_map.modules()[0].node_count(), 16);
+    assert_eq!(compiled.source_map().modules()[0].rule_count(), 7);
+    assert_eq!(compiled.source_map().modules()[0].node_count(), 16);
     assert_eq!(
         compiled
-            .program
+            .program()
             .rules()
             .iter()
             .map(|rule| rule.name())
@@ -62,23 +83,23 @@ fn genuine_control_fixture_builds_postorder_nodes_and_lexical_rules() {
             "unicode_empty",
         ]
     );
-    for (index, node) in compiled.program.nodes().iter().enumerate() {
+    for (index, node) in compiled.program().nodes().iter().enumerate() {
         assert_eq!(node.id().index(), index);
     }
-    for (index, rule) in compiled.program.rules().iter().enumerate() {
+    for (index, rule) in compiled.program().rules().iter().enumerate() {
         assert_eq!(rule.id().index(), index);
-        assert!(rule.root().index() < compiled.program.nodes().len());
+        assert!(rule.root().index() < compiled.program().nodes().len());
     }
     assert_eq!(
         compiled
-            .program
+            .program()
             .rules()
             .iter()
             .map(|rule| rule.root().index())
             .collect::<Vec<_>>(),
         [3, 6, 9, 11, 13, 14, 15]
     );
-    match compiled.program.nodes()[3].kind() {
+    match compiled.program().nodes()[3].kind() {
         bbnf::compiler::NodeKind::Sequence(children) => assert_eq!(
             children
                 .iter()
@@ -95,13 +116,16 @@ fn source_output_and_revision_are_order_stable() {
     let first = accepted(CONTROL_FIXTURE, CompileOptions::default());
     let second = accepted(CONTROL_FIXTURE, CompileOptions::default());
     let first_source =
-        serde_json::to_value(first.source_map.modules()).expect("serialize first source map");
+        serde_json::to_value(first.source_map().modules()).expect("serialize first source map");
     let second_source =
-        serde_json::to_value(second.source_map.modules()).expect("serialize second source map");
+        serde_json::to_value(second.source_map().modules()).expect("serialize second source map");
 
     assert_eq!(first_source, second_source);
-    assert_eq!(first.source_map.revision(), second.source_map.revision());
-    assert_eq!(first.source_map.modules()[0].bytes(), CONTROL_FIXTURE);
+    assert_eq!(
+        first.source_map().revision(),
+        second.source_map().revision()
+    );
+    assert_eq!(first.source_map().modules()[0].bytes(), CONTROL_FIXTURE);
 }
 
 #[test]
@@ -113,14 +137,14 @@ fn declarative_transform_form_has_stable_identity_and_no_host_surface() {
     let first = accepted(grammar, CompileOptions::default());
     let second = accepted(grammar, CompileOptions::default());
 
-    assert_eq!(first.source_map.modules()[0].transform_count(), 2);
+    assert_eq!(first.source_map().modules()[0].transform_count(), 2);
     assert_eq!(
-        serde_json::to_value(first.source_map.modules()).expect("serialize transform source"),
-        serde_json::to_value(second.source_map.modules()).expect("serialize transform source"),
+        serde_json::to_value(first.source_map().modules()).expect("serialize transform source"),
+        serde_json::to_value(second.source_map().modules()).expect("serialize transform source"),
     );
 
     let transforms = first
-        .program
+        .program()
         .nodes()
         .iter()
         .filter_map(|node| match node.kind() {
@@ -140,7 +164,7 @@ fn declarative_transform_form_has_stable_identity_and_no_host_surface() {
     assert_eq!(transforms, [(1, 0, 0, "capture"), (3, 2, 1, "capture")]);
     assert_eq!(
         first
-            .events
+            .events()
             .transforms()
             .iter()
             .map(|site| (site.id().index(), site.node().index(), site.name()))
@@ -153,6 +177,134 @@ fn declarative_transform_form_has_stable_identity_and_no_host_surface() {
         rejected_code(b"root = \"x\" -> capture;", CompileOptions::default()),
         DiagnosticCode::Syntax
     );
+}
+
+#[test]
+fn percent_records_have_nominal_owners_explicit_slots_and_stable_field_ids() {
+    let grammar = r#"
+root = node;
+node = list | atom;
+list = %{ ~"(", children: node*, ~")" };
+atom = %{ text: @raw(/[A-Za-z]+/), suffix: "!"? };
+empty = %{};
+layout = %{ ~"[", ~"]" };
+"#;
+    let first = accepted(grammar.as_bytes(), CompileOptions::default());
+    let second = accepted(grammar.as_bytes(), CompileOptions::default());
+    let find_rule = |name: &str| {
+        first
+            .program()
+            .rules()
+            .iter()
+            .find(|rule| rule.name() == name)
+            .expect("record fixture rule exists")
+    };
+
+    assert_eq!(
+        first
+            .program()
+            .fields()
+            .iter()
+            .map(|field| {
+                (
+                    field.id().index(),
+                    field.owner().index(),
+                    field.slot(),
+                    field.name(),
+                    field.child().index(),
+                )
+            })
+            .collect::<Vec<_>>(),
+        [
+            (0, find_rule("list").id().index(), 1, "children", 6),
+            (1, find_rule("atom").id().index(), 0, "text", 10),
+            (2, find_rule("atom").id().index(), 1, "suffix", 12),
+        ]
+    );
+    assert_eq!(
+        serde_json::to_value(first.program().fields()).expect("serialize fields"),
+        serde_json::to_value(second.program().fields()).expect("serialize fields"),
+    );
+
+    for (name, expected_slots) in [("list", 3), ("atom", 2), ("empty", 0), ("layout", 2)] {
+        let rule = find_rule(name);
+        match first.program().node(rule.root()).kind() {
+            NodeKind::Record { owner, slots } => {
+                assert_eq!(*owner, rule.id());
+                assert_eq!(slots.len(), expected_slots);
+            }
+            other => panic!("expected `{name}` to own a nominal record, got {other:?}"),
+        }
+    }
+
+    let children = &first.program().fields()[0];
+    let field_start = grammar.find("children: node*").expect("field spelling");
+    assert_eq!(children.span().start() as usize, field_start);
+    assert_eq!(
+        children.span().end() as usize,
+        field_start + "children: node*".len()
+    );
+}
+
+#[test]
+fn record_duplicates_report_the_second_field_name_span() {
+    let grammar = b"root = %{ value: \"x\", value: \"y\" };";
+    let diagnostics = rejected_diagnostics(grammar, CompileOptions::default());
+    let second = grammar
+        .windows(b"value".len())
+        .enumerate()
+        .filter_map(|(index, bytes)| (bytes == b"value").then_some(index))
+        .nth(1)
+        .expect("fixture has a second value field");
+
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].0, DiagnosticCode::DuplicateField);
+    assert_eq!((diagnostics[0].1, diagnostics[0].2), (second, second + 5));
+    assert!(diagnostics[0].3.contains("record owned by rule `root`"));
+}
+
+#[test]
+fn records_are_rejected_outside_one_direct_rule_root() {
+    for grammar in [
+        b"root = %{ value: \"x\" }?;".as_slice(),
+        b"root = %{ value: \"x\" } | \"y\";".as_slice(),
+        b"root = @capture(%{ value: \"x\" });".as_slice(),
+        b"root = %{ child: %{ value: \"x\" } };".as_slice(),
+    ] {
+        assert_eq!(
+            rejected_code(grammar, CompileOptions::default()),
+            DiagnosticCode::RecordMustBeRuleRoot,
+            "fixture should reject: {}",
+            String::from_utf8_lossy(grammar),
+        );
+    }
+}
+
+#[test]
+fn record_delimiters_do_not_steal_bare_or_at_braces() {
+    assert_eq!(
+        rejected_code(b"root = { \"x\" };", CompileOptions::default()),
+        DiagnosticCode::Syntax
+    );
+    assert_eq!(
+        rejected_code(b"root = @{ \"x\" };", CompileOptions::default()),
+        DiagnosticCode::Syntax
+    );
+    assert_eq!(
+        rejected_code(b"root = %{ \"x\" };", CompileOptions::default()),
+        DiagnosticCode::Syntax
+    );
+    assert_eq!(
+        rejected_code(b"root = %{ value: \"x\", };", CompileOptions::default()),
+        DiagnosticCode::Syntax
+    );
+
+    let compiled = accepted(
+        b"root = %{ ~\"{\", value: \"x\", ~\"}\" };",
+        CompileOptions::default(),
+    );
+    assert_eq!(compiled.program().fields().len(), 1);
+    assert_eq!(compiled.program().fields()[0].name(), "value");
 }
 
 #[test]
@@ -173,37 +325,29 @@ fn malformed_and_trailing_input_are_rejected_at_the_frontend() {
 
 #[test]
 fn source_rule_node_and_nesting_budgets_fail_typed() {
-    let source = CompileOptions {
-        source_bytes: 4,
-        ..CompileOptions::default()
-    };
+    let mut source = CompileOptions::default();
+    source.source_bytes = 4;
     assert_eq!(
         rejected_code(b"root = \"x\";", source),
         DiagnosticCode::SourceTooLarge
     );
 
-    let rules = CompileOptions {
-        rules: 1,
-        ..CompileOptions::default()
-    };
+    let mut rules = CompileOptions::default();
+    rules.rules = 1;
     assert_eq!(
         rejected_code(b"root = leaf; leaf = \"x\";", rules),
         DiagnosticCode::ResourceLimit
     );
 
-    let nodes = CompileOptions {
-        nodes: 1,
-        ..CompileOptions::default()
-    };
+    let mut nodes = CompileOptions::default();
+    nodes.nodes = 1;
     assert_eq!(
         rejected_code(b"root = \"x\", \"y\";", nodes),
         DiagnosticCode::ResourceLimit
     );
 
-    let nesting = CompileOptions {
-        syntax_nesting: 1,
-        ..CompileOptions::default()
-    };
+    let mut nesting = CompileOptions::default();
+    nesting.syntax_nesting = 1;
     assert_eq!(
         rejected_code(b"root = ((\"x\"));", nesting),
         DiagnosticCode::ResourceLimit

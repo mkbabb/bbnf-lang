@@ -26,22 +26,22 @@ fn emission_and_replay_are_byte_deterministic() {
     let first = compile();
     let second = compile();
 
-    assert_eq!(first.generated.source(), second.generated.source());
-    assert_eq!(first.generated.manifest(), second.generated.manifest());
+    assert_eq!(first.generated().source(), second.generated().source());
+    assert_eq!(first.generated().manifest(), second.generated().manifest());
     assert_eq!(
-        first.lowering.replay_json().expect("serialize lowering"),
-        second.lowering.replay_json().expect("serialize lowering")
+        first.lowering().replay_json().expect("serialize lowering"),
+        second.lowering().replay_json().expect("serialize lowering")
     );
     assert_eq!(
-        first.events.replay_json().expect("serialize events"),
-        second.events.replay_json().expect("serialize events")
+        first.events().replay_json().expect("serialize events"),
+        second.events().replay_json().expect("serialize events")
     );
 }
 
 #[test]
 fn emitted_rust_is_direct_static_control() {
     let compilation = compile();
-    let source = compilation.generated.source();
+    let source = compilation.generated().source();
 
     for required in [
         "choice",
@@ -73,30 +73,35 @@ fn emitted_rust_is_direct_static_control() {
 
     assert_eq!(
         source.matches("fn node_").count(),
-        compilation.lowering.nodes().len()
+        compilation.lowering().nodes().len()
     );
     assert_eq!(
         source.matches("fn rule_").count(),
-        compilation.lowering.rules().len()
+        compilation.lowering().rules().len()
     );
 }
 
 #[test]
 fn replay_envelopes_name_schema_and_revision() {
     let compilation = compile();
-    let revision = compilation.lowering.revision().hex();
+    let revision = compilation.lowering().revision().hex();
     let lowering = String::from_utf8(
         compilation
-            .lowering
+            .lowering()
             .replay_json()
             .expect("serialize lowering"),
     )
     .expect("JSON is UTF-8");
-    let events = String::from_utf8(compilation.events.replay_json().expect("serialize events"))
-        .expect("JSON is UTF-8");
+    let events = String::from_utf8(
+        compilation
+            .events()
+            .replay_json()
+            .expect("serialize events"),
+    )
+    .expect("JSON is UTF-8");
 
-    assert!(lowering.starts_with("{\"schema\":\"bbnf.lowering-plan.v1\""));
-    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v2\""));
+    assert!(lowering.starts_with("{\"schema\":\"bbnf.lowering-plan.v2\""));
+    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v3\""));
     assert!(lowering.contains(&revision));
     assert!(events.contains(&revision));
 }
@@ -114,10 +119,8 @@ fn wide_choice_hits_the_generated_source_budget_without_quadratic_growth() {
     }
     grammar.push_str(" ;");
 
-    let options = CompileOptions {
-        generated_bytes: 32 * 1024,
-        ..CompileOptions::default()
-    };
+    let mut options = CompileOptions::default();
+    options.generated_bytes = 32 * 1024;
     let result = compile_module(
         ModuleInput::new("contracts/wide-choice.bbnf", grammar.as_bytes()),
         options,

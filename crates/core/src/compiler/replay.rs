@@ -14,15 +14,15 @@ use super::syntax::{NodeRemap, Program};
 use super::typecheck::TypeSolution;
 use super::{CompileOptions, CompiledModule, ModuleInput, StageResult, compile_module};
 
-const SOURCE_MAP_REPLAY_SCHEMA: &str = "bbnf.source-map.v1";
-const PROGRAM_REPLAY_SCHEMA: &str = "bbnf.program.v1";
+const SOURCE_MAP_REPLAY_SCHEMA: &str = "bbnf.source-map.v2";
+const PROGRAM_REPLAY_SCHEMA: &str = "bbnf.program.v2";
 const DEPENDENCY_REPLAY_SCHEMA: &str = "bbnf.dependency-solution.v1";
-const TYPE_REPLAY_SCHEMA: &str = "bbnf.type-solution.v1";
+const TYPE_REPLAY_SCHEMA: &str = "bbnf.type-solution.v2";
 const ANALYSIS_REPLAY_SCHEMA: &str = "bbnf.analysis-facts.v1";
-const LOWERING_REPLAY_SCHEMA: &str = "bbnf.lowering-plan.v1";
+const LOWERING_REPLAY_SCHEMA: &str = "bbnf.lowering-plan.v2";
 const NODE_REMAP_REPLAY_SCHEMA: &str = "bbnf.node-remap.v1";
-const GENERATED_REPLAY_SCHEMA: &str = "bbnf.generated-module.v1";
-const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v1";
+const GENERATED_REPLAY_SCHEMA: &str = "bbnf.generated-module.v2";
+const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v2";
 
 #[derive(Serialize)]
 struct ReplayEnvelope<'a, T> {
@@ -116,6 +116,7 @@ impl GeneratedModule {
 
 #[derive(Serialize)]
 struct CompilationReplay<'a> {
+    options: CompileOptions,
     source_map: &'a SourceMap,
     program: &'a Program,
     remap: &'a NodeRemap,
@@ -134,18 +135,19 @@ impl CompiledModule {
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
         serialize_stage(
             COMPILATION_REPLAY_SCHEMA,
-            self.source_map.revision(),
+            self.source_map().revision(),
             &CompilationReplay {
-                source_map: &self.source_map,
-                program: &self.program,
-                remap: &self.remap,
-                dependency: &self.dependency,
-                types: &self.types,
-                facts: &self.facts,
-                lowering: &self.lowering,
-                events: &self.events,
-                generated_source: self.generated.source(),
-                generated_manifest: self.generated.manifest(),
+                options: self.options(),
+                source_map: self.source_map(),
+                program: self.program(),
+                remap: self.remap(),
+                dependency: self.dependency(),
+                types: self.types(),
+                facts: self.facts(),
+                lowering: self.lowering(),
+                events: self.events(),
+                generated_source: self.generated().source(),
+                generated_manifest: self.generated().manifest(),
             },
         )
     }
@@ -155,6 +157,7 @@ impl CompiledModule {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum ReplayComponent {
+    CompileOptions,
     SourceMap,
     Program,
     NodeRemap,
@@ -170,6 +173,7 @@ pub enum ReplayComponent {
 impl ReplayComponent {
     const fn field(self) -> &'static str {
         match self {
+            Self::CompileOptions => "options",
             Self::SourceMap => "source_map",
             Self::Program => "program",
             Self::NodeRemap => "remap",
@@ -369,7 +373,7 @@ pub fn replay_compilation(
             return Err(ReplayError::CompilationRejected { diagnostics });
         }
     };
-    let rebuilt_revision = rebuilt.source_map.revision().hex();
+    let rebuilt_revision = rebuilt.source_map().revision().hex();
     if packet_revision != rebuilt_revision {
         return Err(ReplayError::RevisionMismatch {
             packet: packet_revision.to_owned(),
@@ -392,6 +396,7 @@ pub fn replay_compilation(
         .expect("compiler replay serialization always contains an object value");
 
     for component in [
+        ReplayComponent::CompileOptions,
         ReplayComponent::SourceMap,
         ReplayComponent::Program,
         ReplayComponent::NodeRemap,

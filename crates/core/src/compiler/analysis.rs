@@ -1,7 +1,7 @@
 use std::collections::{BTreeSet, VecDeque};
 
 use bbnf_regex::{DEAD_STATE, RegexTablePlan};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::budget::CompileOptions;
 use super::dependency::DependencySolution;
@@ -9,7 +9,7 @@ use super::diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
 use super::source::Revision;
 use super::syntax::{NodeId, NodeKind, Program, RuleId};
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 pub struct NodeFacts {
     revision: Revision,
     node: NodeId,
@@ -37,7 +37,7 @@ impl NodeFacts {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 pub struct RuleFacts {
     revision: Revision,
     rule: RuleId,
@@ -63,7 +63,7 @@ impl RuleFacts {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct AnalysisFacts {
     revision: Revision,
     iterations: usize,
@@ -152,6 +152,7 @@ impl AnalysisFacts {
                 | NodeKind::Sequence(_)
                 | NodeKind::Choice(_)
                 | NodeKind::Repeat { .. }
+                | NodeKind::Record { .. }
                 | NodeKind::Transform { .. } => {}
             }
         }
@@ -180,6 +181,10 @@ impl AnalysisFacts {
                     NodeKind::Repeat { child, minimum, .. } => {
                         repeat_facts(previous_nodes[child.index()], *minimum)
                     }
+                    NodeKind::Record { slots, .. } => sequence_facts(
+                        &slots.iter().map(|slot| slot.child()).collect::<Vec<_>>(),
+                        &previous_nodes,
+                    ),
                     NodeKind::Transform { child, .. } => previous_nodes[child.index()],
                 };
                 update_monotone(&mut next_nodes[node.id().index()], derived);
@@ -475,6 +480,15 @@ fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<Rul
             NodeKind::Repeat { child, maximum, .. } => {
                 if *maximum != Some(0) {
                     calls.extend(leading[child.index()].iter().copied());
+                }
+            }
+            NodeKind::Record { slots, .. } => {
+                for slot in slots {
+                    let child = slot.child();
+                    calls.extend(leading[child.index()].iter().copied());
+                    if !facts[child.index()].nullable {
+                        break;
+                    }
                 }
             }
             NodeKind::Transform { child, .. } => {

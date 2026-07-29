@@ -1,16 +1,19 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::lower::LoweringPlan;
 use super::source::Revision;
-use super::syntax::{PlanNodeId, Program, RuleId, TransformId};
+use super::syntax::{FieldId, PlanNodeId, Program, RuleId, TransformId};
 
-pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v2";
+pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v3";
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
+#[non_exhaustive]
 pub enum EventKind {
     EnterRule,
     LeaveRule,
+    EnterField,
+    LeaveField,
     Literal,
     Regex,
     ChoiceBranch,
@@ -19,14 +22,15 @@ pub enum EventKind {
     EndInput,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct EventSite {
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) struct EventSite {
     kind: EventKind,
     node: Option<PlanNodeId>,
     rule: Option<RuleId>,
+    field: Option<FieldId>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct TransformSite {
     id: TransformId,
     node: PlanNodeId,
@@ -47,7 +51,7 @@ impl TransformSite {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct ScalarEventPlan {
     revision: Revision,
     schema: String,
@@ -74,11 +78,13 @@ impl ScalarEventPlan {
                 kind: EventKind::EnterRule,
                 node: None,
                 rule: Some(rule.id()),
+                field: None,
             });
             sites.push(EventSite {
                 kind: EventKind::LeaveRule,
                 node: None,
                 rule: Some(rule.id()),
+                field: None,
             });
         }
         for node in lowering.nodes() {
@@ -105,6 +111,25 @@ impl ScalarEventPlan {
                     });
                     Some(EventKind::Transform)
                 }
+                super::lower::PlanOp::Record { owner, slots } => {
+                    for slot in slots {
+                        if let super::lower::PlanRecordSlot::Field { field, child } = slot {
+                            sites.push(EventSite {
+                                kind: EventKind::EnterField,
+                                node: Some(*child),
+                                rule: Some(*owner),
+                                field: Some(*field),
+                            });
+                            sites.push(EventSite {
+                                kind: EventKind::LeaveField,
+                                node: Some(*child),
+                                rule: Some(*owner),
+                                field: Some(*field),
+                            });
+                        }
+                    }
+                    None
+                }
                 _ => None,
             };
             if let Some(kind) = kind {
@@ -112,6 +137,7 @@ impl ScalarEventPlan {
                     kind,
                     node: Some(node.id()),
                     rule: None,
+                    field: None,
                 });
             }
         }
@@ -119,6 +145,7 @@ impl ScalarEventPlan {
             kind: EventKind::EndInput,
             node: None,
             rule: None,
+            field: None,
         });
 
         StageResult::accepted(Self {
@@ -144,10 +171,17 @@ impl ScalarEventPlan {
 
     pub fn sites(
         &self,
-    ) -> impl ExactSizeIterator<Item = (EventKind, Option<PlanNodeId>, Option<RuleId>)> + '_ {
+    ) -> impl ExactSizeIterator<
+        Item = (
+            EventKind,
+            Option<PlanNodeId>,
+            Option<RuleId>,
+            Option<FieldId>,
+        ),
+    > + '_ {
         self.sites
             .iter()
-            .map(|site| (site.kind, site.node, site.rule))
+            .map(|site| (site.kind, site.node, site.rule, site.field))
     }
 
     pub fn transforms(&self) -> &[TransformSite] {

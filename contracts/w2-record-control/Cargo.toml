@@ -1,0 +1,17 @@
+[package]
+name = "w2-record-control-contract"
+version = "0.0.0"
+edition = "2024"
+publish = false
+build = "build.rs"
+
+[workspace]
+
+[dependencies]
+parse_that = { path = "../../../parse-that-skv26/rust/parse_that" }
+
+[build-dependencies]
+bbnf = { path = "../../crates/core" }
+
+[dev-dependencies]
+blake3 = "1"

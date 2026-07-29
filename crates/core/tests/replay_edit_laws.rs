@@ -24,21 +24,27 @@ fn compile(bytes: &[u8]) -> CompiledModule {
 fn stage_packets(compiled: &CompiledModule) -> Vec<Vec<u8>> {
     vec![
         compiled
-            .source_map
+            .source_map()
             .replay_json()
             .expect("serialize source map"),
-        compiled.program.replay_json().expect("serialize program"),
-        compiled.remap.replay_json().expect("serialize node remap"),
+        compiled.program().replay_json().expect("serialize program"),
         compiled
-            .dependency
+            .remap()
+            .replay_json()
+            .expect("serialize node remap"),
+        compiled
+            .dependency()
             .replay_json()
             .expect("serialize dependency solution"),
-        compiled.types.replay_json().expect("serialize types"),
-        compiled.facts.replay_json().expect("serialize analysis"),
-        compiled.lowering.replay_json().expect("serialize lowering"),
-        compiled.events.replay_json().expect("serialize events"),
+        compiled.types().replay_json().expect("serialize types"),
+        compiled.facts().replay_json().expect("serialize analysis"),
         compiled
-            .generated
+            .lowering()
+            .replay_json()
+            .expect("serialize lowering"),
+        compiled.events().replay_json().expect("serialize events"),
+        compiled
+            .generated()
             .replay_json()
             .expect("serialize generated module"),
         compiled.replay_json().expect("serialize complete carrier"),
@@ -51,7 +57,7 @@ fn every_stage_has_a_deterministic_revision_bound_replay() {
     let second = compile(BASE);
     let first_packets = stage_packets(&first);
     let second_packets = stage_packets(&second);
-    let revision = first.source_map.revision().hex();
+    let revision = first.source_map().revision().hex();
 
     assert_eq!(first_packets, second_packets);
     assert_eq!(first_packets.len(), 10);
@@ -162,6 +168,25 @@ fn complete_replay_rejects_schema_revision_source_stage_and_generated_tampering(
         replay_compilation(&program, options),
         Err(ReplayError::ValueMismatch {
             component: ReplayComponent::Program
+        })
+    );
+
+    let packet_options = tampered_packet(&packet, |value| {
+        value["value"]["options"]["analysis_iterations"] = serde_json::json!(65_537);
+    });
+    assert_eq!(
+        replay_compilation(&packet_options, options),
+        Err(ReplayError::ValueMismatch {
+            component: ReplayComponent::CompileOptions
+        })
+    );
+
+    let mut wrong_caller_options = options;
+    wrong_caller_options.analysis_iterations += 1;
+    assert_eq!(
+        replay_compilation(&packet, wrong_caller_options),
+        Err(ReplayError::ValueMismatch {
+            component: ReplayComponent::CompileOptions
         })
     );
 

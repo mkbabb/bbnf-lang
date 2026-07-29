@@ -2,12 +2,12 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 
-use bbnf::{CompileOptions, ModuleInput, StageResult, compile_module};
+use bbnf::{CompileOptions, CompiledModule, ModuleInput, StageResult, compile_module};
 
 const GRAMMAR_PATH: &str = "grammar/recursive.bbnf";
 const GRAMMAR: &[u8] = include_bytes!("grammar/recursive.bbnf");
 
-fn compile() -> bbnf::GeneratedModule {
+fn compile() -> CompiledModule {
     match compile_module(
         ModuleInput::new(GRAMMAR_PATH, GRAMMAR),
         CompileOptions::default(),
@@ -17,7 +17,7 @@ fn compile() -> bbnf::GeneratedModule {
                 diagnostics.is_empty(),
                 "accepted recursive contract grammar carried diagnostics"
             );
-            value.generated
+            value
         }
         StageResult::Rejected { diagnostics } => {
             let rendered = diagnostics
@@ -36,18 +36,22 @@ fn main() {
     let first = compile();
     let second = compile();
     assert_eq!(
-        first.source(),
-        second.source(),
+        first.generated().source(),
+        second.generated().source(),
         "two compiler runs emitted different recursive Rust"
     );
     assert_eq!(
-        first.manifest(),
-        second.manifest(),
+        first.generated().manifest(),
+        second.generated().manifest(),
         "two compiler runs emitted different recursive manifests"
     );
 
     let output = PathBuf::from(env::var_os("OUT_DIR").expect("Cargo supplies OUT_DIR"));
-    fs::write(output.join("generated.rs"), first.source()).expect("write generated Rust");
-    fs::write(output.join("generated.manifest.json"), first.manifest())
+    fs::write(output.join("generated.rs"), first.generated().source())
+        .expect("write generated Rust");
+    fs::write(
+        output.join("generated.manifest.json"),
+        first.generated().manifest(),
+    )
         .expect("write generated manifest");
 }

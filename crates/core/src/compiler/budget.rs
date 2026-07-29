@@ -2,6 +2,7 @@ use bbnf_regex::TablePlanOptions;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct CompileOptions {
     pub source_bytes: usize,
     pub rules: usize,
@@ -35,6 +36,7 @@ impl Default for CompileOptions {
 /// budgets above so relaxing a build-time bound cannot silently relax an
 /// untrusted-input boundary.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct RuntimeBudget {
     pub input_bytes: usize,
     pub nesting: usize,
@@ -54,6 +56,7 @@ impl Default for RuntimeBudget {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct RegexBudget {
     pub nesting: usize,
     pub nfa_states: usize,

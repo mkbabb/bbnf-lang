@@ -1,10 +1,10 @@
 use blake3::Hasher;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::fmt::Write as _;
 
 use super::syntax::{NodeId, RuleId, TransformId};
 
-const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v2\0";
+const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v3\0";
 
 #[derive(Clone, Copy)]
 pub struct ModuleInput<'a> {
@@ -29,7 +29,7 @@ impl<'a> ModuleInput<'a> {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Revision([u8; 32]);
 
 impl Revision {
@@ -56,7 +56,7 @@ impl Revision {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct SourceSpan {
     start: u32,
     end: u32,
@@ -79,7 +79,21 @@ impl SourceSpan {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) enum SourceRecordSlot {
+    Field {
+        name: String,
+        child: NodeId,
+        name_span: SourceSpan,
+        span: SourceSpan,
+    },
+    Discard {
+        child: NodeId,
+        span: SourceSpan,
+    },
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub(crate) enum SourceNodeKind {
     Epsilon,
     Literal(Vec<u8>),
@@ -97,15 +111,16 @@ pub(crate) enum SourceNodeKind {
         transform: TransformId,
         name: String,
     },
+    Record(Vec<SourceRecordSlot>),
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub(crate) struct SourceNode {
     pub(crate) kind: SourceNodeKind,
     pub(crate) span: SourceSpan,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub(crate) struct SourceRule {
     pub(crate) id: RuleId,
     pub(crate) name: String,
@@ -113,7 +128,7 @@ pub(crate) struct SourceRule {
     pub(crate) span: SourceSpan,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct SourceModule {
     revision: Revision,
     logical_path: String,
@@ -167,7 +182,7 @@ impl SourceModule {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct SourceMap {
     revision: Revision,
     modules: Vec<SourceModule>,

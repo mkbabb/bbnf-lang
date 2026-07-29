@@ -48,15 +48,20 @@ empty = epsilon;
 "#,
     );
 
-    for rule in module.program.rules() {
+    for rule in module.program().rules() {
         assert!(matches!(
-            module.types.semantic_type(module.types.rule_type(rule.id())),
+            module
+                .types()
+                .semantic_type(module.types().rule_type(rule.id())),
             SemanticType::Named(named) if *named == rule.id()
         ));
-        let derivation = &module.types.rule_derivations()[rule.id().index()];
-        assert_eq!(derivation.revision(), module.program.revision());
+        let derivation = &module.types().rule_derivations()[rule.id().index()];
+        assert_eq!(derivation.revision(), module.program().revision());
         assert_eq!(derivation.rule(), rule.id());
-        assert_eq!(derivation.root_type(), module.types.node_type(rule.root()));
+        assert_eq!(
+            derivation.root_type(),
+            module.types().node_type(rule.root())
+        );
     }
 
     let mut saw_unit = false;
@@ -64,11 +69,11 @@ empty = epsilon;
     let mut saw_sum = false;
     let mut saw_option = false;
     let mut saw_list = false;
-    for node in module.program.nodes() {
-        let derivation = &module.types.node_derivations()[node.id().index()];
-        assert_eq!(derivation.revision(), module.program.revision());
+    for node in module.program().nodes() {
+        let derivation = &module.types().node_derivations()[node.id().index()];
+        assert_eq!(derivation.revision(), module.program().revision());
         assert_eq!(derivation.node(), node.id());
-        let semantic = module.types.semantic_type(derivation.type_id());
+        let semantic = module.types().semantic_type(derivation.type_id());
         match (node.kind(), semantic) {
             (NodeKind::Epsilon, SemanticType::Unit) => saw_unit = true,
             (NodeKind::Sequence(children), SemanticType::Product(members)) => {
@@ -91,7 +96,9 @@ empty = epsilon;
             (NodeKind::Transform { child, .. }, semantic) => {
                 assert_eq!(
                     semantic,
-                    module.types.semantic_type(module.types.node_type(*child))
+                    module
+                        .types()
+                        .semantic_type(module.types().node_type(*child))
                 );
             }
             (NodeKind::Literal(_) | NodeKind::Regex(_), SemanticType::Span) => {}
@@ -117,7 +124,7 @@ empty = epsilon;
     );
     let find_rule = |name: &str| {
         module
-            .program
+            .program()
             .rules()
             .iter()
             .find(|rule| rule.name() == name)
@@ -125,27 +132,27 @@ empty = epsilon;
             .id()
     };
 
-    let root = module.facts.rule(find_rule("root"));
+    let root = module.facts().rule(find_rule("root"));
     assert!(root.nullable());
     assert_eq!(root.minimum_consumption(), Some(0));
 
-    let pair = module.facts.rule(find_rule("pair"));
+    let pair = module.facts().rule(find_rule("pair"));
     assert!(!pair.nullable());
     assert_eq!(pair.minimum_consumption(), Some(2));
 
-    let maybe = module.facts.rule(find_rule("maybe"));
+    let maybe = module.facts().rule(find_rule("maybe"));
     assert!(maybe.nullable());
     assert_eq!(maybe.minimum_consumption(), Some(0));
 
-    let many = module.facts.rule(find_rule("many"));
+    let many = module.facts().rule(find_rule("many"));
     assert!(!many.nullable());
     assert_eq!(many.minimum_consumption(), Some(1));
 
-    for fact in module.facts.nodes() {
-        assert_eq!(fact.revision(), module.program.revision());
+    for fact in module.facts().nodes() {
+        assert_eq!(fact.revision(), module.program().revision());
     }
-    for fact in module.facts.rules() {
-        assert_eq!(fact.revision(), module.program.revision());
+    for fact in module.facts().rules() {
+        assert_eq!(fact.revision(), module.program().revision());
     }
 }
 
@@ -178,7 +185,7 @@ string = /[a-z]+/;
     );
     let find_rule = |name: &str| {
         module
-            .program
+            .program()
             .rules()
             .iter()
             .find(|rule| rule.name() == name)
@@ -189,20 +196,20 @@ string = /[a-z]+/;
     let object = find_rule("object");
     let array = find_rule("array");
 
-    assert_eq!(module.facts.rule(value).minimum_consumption(), Some(1));
-    assert_eq!(module.facts.rule(object).minimum_consumption(), Some(2));
-    assert_eq!(module.facts.rule(array).minimum_consumption(), Some(2));
+    assert_eq!(module.facts().rule(value).minimum_consumption(), Some(1));
+    assert_eq!(module.facts().rule(object).minimum_consumption(), Some(2));
+    assert_eq!(module.facts().rule(array).minimum_consumption(), Some(2));
     assert_eq!(
-        module.dependency.component_of(value),
-        module.dependency.component_of(object)
+        module.dependency().component_of(value),
+        module.dependency().component_of(object)
     );
     assert_eq!(
-        module.dependency.component_of(value),
-        module.dependency.component_of(array)
+        module.dependency().component_of(value),
+        module.dependency().component_of(array)
     );
 
     let named_references = module
-        .program
+        .program()
         .nodes()
         .iter()
         .filter_map(|node| match node.kind() {
@@ -213,12 +220,15 @@ string = /[a-z]+/;
     assert!(!named_references.is_empty());
     for (node, rule) in named_references {
         assert!(matches!(
-            module.types.semantic_type(module.types.node_type(node)),
+            module
+                .types()
+                .semantic_type(module.types().node_type(node)),
             SemanticType::Named(bound) if *bound == rule
         ));
     }
     assert!(
-        module.types.arena().len() <= module.program.nodes().len() + module.program.rules().len(),
+        module.types().arena().len()
+            <= module.program().nodes().len() + module.program().rules().len(),
         "recursive rules are represented by finite named binders, never unfolded"
     );
 }
@@ -231,8 +241,8 @@ root = "a", other | "z";
 other = "b", root | "q";
 "#,
     );
-    for rule in module.program.rules() {
-        let facts = module.facts.rule(rule.id());
+    for rule in module.program().rules() {
+        let facts = module.facts().rule(rule.id());
         assert!(!facts.nullable());
         assert_eq!(facts.minimum_consumption(), Some(1));
     }
@@ -277,10 +287,8 @@ fn nullable_prefix_recursion_is_rejected_before_generated_code() {
 
 #[test]
 fn bounded_analysis_exhaustion_is_a_typed_rejection() {
-    let options = CompileOptions {
-        analysis_iterations: 1,
-        ..CompileOptions::default()
-    };
+    let mut options = CompileOptions::default();
+    options.analysis_iterations = 1;
     assert_eq!(
         rejected_code("root = \"x\";", options),
         DiagnosticCode::ResourceLimit

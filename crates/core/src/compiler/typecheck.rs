@@ -1,18 +1,19 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::dependency::DependencySolution;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::Revision;
-use super::syntax::{NodeId, NodeKind, Program, RuleId, TypeId};
+use super::syntax::{FieldId, NodeId, NodeKind, Program, RecordSlot, RuleId, TransformId, TypeId};
 
 /// First-order semantic witnesses admitted by the W2 scalar language.
 ///
 /// `Named` is the only recursive constructor. A rule reference therefore
 /// closes over a finite `RuleId` binder instead of unfolding the referenced
 /// rule's root type into an infinite arena.
-#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+#[non_exhaustive]
 pub enum SemanticType {
     Unit,
     Span,
@@ -21,13 +22,71 @@ pub enum SemanticType {
     Sum(Vec<TypeId>),
     Option(TypeId),
     List(TypeId),
+    Record {
+        owner: RuleId,
+        fields: Vec<RecordFieldType>,
+    },
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+pub struct RecordFieldType {
+    field: FieldId,
+    value: TypeId,
+}
+
+impl RecordFieldType {
+    pub const fn field(&self) -> FieldId {
+        self.field
+    }
+
+    pub const fn value(&self) -> TypeId {
+        self.value
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[non_exhaustive]
+pub enum RecordWitnessSlot {
+    Field { field: FieldId, child: NodeId },
+    Discard { child: NodeId },
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[non_exhaustive]
+pub enum InferenceRule {
+    EpsilonUnit,
+    TerminalSpan,
+    ReferenceNamed {
+        rule: RuleId,
+    },
+    SequenceProduct {
+        children: Vec<NodeId>,
+    },
+    ChoiceSum {
+        children: Vec<NodeId>,
+    },
+    Optional {
+        child: NodeId,
+    },
+    RepetitionList {
+        child: NodeId,
+    },
+    RecordProjection {
+        owner: RuleId,
+        slots: Vec<RecordWitnessSlot>,
+    },
+    TransformPreserves {
+        child: NodeId,
+        transform: TransformId,
+    },
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct NodeTypeDerivation {
     revision: Revision,
     node: NodeId,
     type_id: TypeId,
+    inference: InferenceRule,
 }
 
 impl NodeTypeDerivation {
@@ -42,9 +101,13 @@ impl NodeTypeDerivation {
     pub const fn type_id(&self) -> TypeId {
         self.type_id
     }
+
+    pub const fn inference(&self) -> &InferenceRule {
+        &self.inference
+    }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct RuleTypeDerivation {
     revision: Revision,
     rule: RuleId,
@@ -72,7 +135,7 @@ impl RuleTypeDerivation {
 
 /// Deterministic interned type arena plus a principal derivation for every
 /// node and named rule binder in one source revision.
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct TypeSolution {
     revision: Revision,
     arena: Vec<SemanticType>,
@@ -143,6 +206,7 @@ impl TypeSolution {
                 revision: program.revision(),
                 node: node.id(),
                 type_id: node_types[node.id().index()].expect("all node types were derived"),
+                inference: constraints[node.id().index()].inference(),
             })
             .collect();
         let rules = program
@@ -196,6 +260,252 @@ impl TypeSolution {
     pub fn rule_root_type(&self, rule: RuleId) -> TypeId {
         self.rules[rule.index()].root_type
     }
+
+    /// Independently validate the sealed inference certificates against the
+    /// resolved program. This does not rerun the solver.
+    pub fn verify(&self, program: &Program) -> StageResult<()> {
+        if self.revision != program.revision() {
+            return StageResult::rejected(revision_mismatch(
+                "type verification",
+                program.revision(),
+                self.revision,
+            ));
+        }
+        if self.nodes.len() != program.nodes().len()
+            || self.rules.len() != program.rules().len()
+            || self.arena.len() > program.nodes().len() + program.rules().len()
+        {
+            return StageResult::rejected(type_invariant(
+                "type carrier counts do not match the resolved program",
+            ));
+        }
+
+        let unique = self.arena.iter().collect::<BTreeSet<_>>();
+        if unique.len() != self.arena.len() {
+            return StageResult::rejected(type_invariant(
+                "type arena contains duplicate semantic witnesses",
+            ));
+        }
+
+        for (index, semantic) in self.arena.iter().enumerate() {
+            if let Err(message) = self.verify_semantic_type(index, semantic, program) {
+                return StageResult::rejected(type_invariant(message));
+            }
+        }
+
+        let mut used = BTreeSet::new();
+        for (index, derivation) in self.nodes.iter().enumerate() {
+            let Some(node) = program.nodes().get(index) else {
+                return StageResult::rejected(type_invariant(
+                    "type derivation references an absent node",
+                ));
+            };
+            if derivation.revision != self.revision
+                || derivation.node != node.id()
+                || derivation.type_id.index() >= self.arena.len()
+            {
+                return StageResult::rejected(type_invariant(
+                    "node type derivation identity is not canonical",
+                ));
+            }
+            let expected = match self.expected_node_type(program, node, &derivation.inference) {
+                Ok(expected) => expected,
+                Err(message) => return StageResult::rejected(type_invariant(message)),
+            };
+            if self.semantic_type(derivation.type_id) != &expected {
+                return StageResult::rejected(type_invariant(
+                    "node inference conclusion does not follow from its certified premises",
+                ));
+            }
+            used.insert(derivation.type_id);
+        }
+
+        for (index, derivation) in self.rules.iter().enumerate() {
+            let Some(rule) = program.rules().get(index) else {
+                return StageResult::rejected(type_invariant(
+                    "rule type derivation references an absent rule",
+                ));
+            };
+            if derivation.revision != self.revision
+                || derivation.rule != rule.id()
+                || derivation.named_type.index() >= self.arena.len()
+                || derivation.root_type.index() >= self.arena.len()
+                || self.semantic_type(derivation.named_type) != &SemanticType::Named(rule.id())
+                || derivation.root_type != self.nodes[rule.root().index()].type_id
+            {
+                return StageResult::rejected(type_invariant(
+                    "rule type derivation is not the canonical named binder and root conclusion",
+                ));
+            }
+            used.insert(derivation.named_type);
+            used.insert(derivation.root_type);
+        }
+
+        let mut frontier = used.iter().copied().collect::<Vec<_>>();
+        while let Some(type_id) = frontier.pop() {
+            for child in semantic_children(self.semantic_type(type_id)) {
+                if used.insert(child) {
+                    frontier.push(child);
+                }
+            }
+        }
+        if used.len() != self.arena.len() {
+            return StageResult::rejected(type_invariant(
+                "type arena contains an unreachable semantic witness",
+            ));
+        }
+        StageResult::accepted(())
+    }
+
+    fn verify_semantic_type(
+        &self,
+        _index: usize,
+        semantic: &SemanticType,
+        program: &Program,
+    ) -> Result<(), &'static str> {
+        match semantic {
+            SemanticType::Unit | SemanticType::Span => {}
+            SemanticType::Named(rule) => {
+                if rule.index() >= program.rules().len() {
+                    return Err("named semantic type references an absent rule");
+                }
+            }
+            SemanticType::Product(children) | SemanticType::Sum(children) => {
+                if children
+                    .iter()
+                    .any(|child| child.index() >= self.arena.len())
+                {
+                    return Err("aggregate semantic type references an absent type");
+                }
+            }
+            SemanticType::Option(child) | SemanticType::List(child) => {
+                if child.index() >= self.arena.len() {
+                    return Err("unary semantic type references an absent type");
+                }
+            }
+            SemanticType::Record { owner, fields } => {
+                if owner.index() >= program.rules().len() {
+                    return Err("record semantic type references an absent owner");
+                }
+                let mut previous = None;
+                for field in fields {
+                    if field.field.index() >= program.fields().len()
+                        || field.value.index() >= self.arena.len()
+                        || program.field(field.field).owner() != *owner
+                    {
+                        return Err("record semantic type contains a dangling field");
+                    }
+                    if previous.is_some_and(|id| id >= field.field) {
+                        return Err("record semantic fields are not in canonical order");
+                    }
+                    previous = Some(field.field);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn expected_node_type(
+        &self,
+        program: &Program,
+        node: &super::syntax::Node,
+        inference: &InferenceRule,
+    ) -> Result<SemanticType, &'static str> {
+        let child_type = |child: NodeId| {
+            self.nodes
+                .get(child.index())
+                .filter(|derivation| derivation.node == child)
+                .map(|derivation| derivation.type_id)
+                .ok_or("inference premise references an absent child")
+        };
+        match (node.kind(), inference) {
+            (NodeKind::Epsilon, InferenceRule::EpsilonUnit) => Ok(SemanticType::Unit),
+            (NodeKind::Literal(_) | NodeKind::Regex(_), InferenceRule::TerminalSpan) => {
+                Ok(SemanticType::Span)
+            }
+            (NodeKind::RuleRef(actual), InferenceRule::ReferenceNamed { rule })
+                if actual == rule =>
+            {
+                Ok(SemanticType::Named(*rule))
+            }
+            (NodeKind::Sequence(actual), InferenceRule::SequenceProduct { children })
+                if actual == children =>
+            {
+                Ok(SemanticType::Product(
+                    children
+                        .iter()
+                        .map(|child| child_type(*child))
+                        .collect::<Result<_, _>>()?,
+                ))
+            }
+            (NodeKind::Choice(actual), InferenceRule::ChoiceSum { children })
+                if actual == children =>
+            {
+                Ok(SemanticType::Sum(
+                    children
+                        .iter()
+                        .map(|child| child_type(*child))
+                        .collect::<Result<_, _>>()?,
+                ))
+            }
+            (
+                NodeKind::Repeat {
+                    child: actual,
+                    minimum: 0,
+                    maximum: Some(1),
+                },
+                InferenceRule::Optional { child },
+            ) if actual == child => Ok(SemanticType::Option(child_type(*child)?)),
+            (NodeKind::Repeat { child: actual, .. }, InferenceRule::RepetitionList { child })
+                if actual == child =>
+            {
+                Ok(SemanticType::List(child_type(*child)?))
+            }
+            (
+                NodeKind::Transform {
+                    child: actual_child,
+                    transform: actual_transform,
+                    ..
+                },
+                InferenceRule::TransformPreserves { child, transform },
+            ) if actual_child == child && actual_transform == transform => {
+                Ok(self.semantic_type(child_type(*child)?).clone())
+            }
+            (
+                NodeKind::Record {
+                    owner: actual_owner,
+                    slots: actual_slots,
+                },
+                InferenceRule::RecordProjection { owner, slots },
+            ) if actual_owner == owner && record_witness_matches(actual_slots, slots) => {
+                let fields = slots
+                    .iter()
+                    .filter_map(|slot| match slot {
+                        RecordWitnessSlot::Field { field, child } => {
+                            Some(child_type(*child).map(|value| RecordFieldType {
+                                field: *field,
+                                value,
+                            }))
+                        }
+                        RecordWitnessSlot::Discard { .. } => None,
+                    })
+                    .collect::<Result<_, _>>()?;
+                for slot in slots {
+                    if let RecordWitnessSlot::Field { field, child } = slot {
+                        let declaration = program.field(*field);
+                        if declaration.owner() != *owner || declaration.child() != *child {
+                            return Err("record inference field does not match its declaration");
+                        }
+                    }
+                }
+                Ok(SemanticType::Record {
+                    owner: *owner,
+                    fields,
+                })
+            }
+            _ => Err("inference rule does not match the resolved node form"),
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -207,7 +517,51 @@ enum TypeConstraint {
     Sum(Vec<NodeId>),
     Option(NodeId),
     List(NodeId),
-    Alias(NodeId),
+    Record {
+        owner: RuleId,
+        slots: Vec<RecordSlot>,
+    },
+    TransformAlias {
+        child: NodeId,
+        transform: TransformId,
+    },
+}
+
+impl TypeConstraint {
+    fn inference(&self) -> InferenceRule {
+        match self {
+            Self::Unit => InferenceRule::EpsilonUnit,
+            Self::Span => InferenceRule::TerminalSpan,
+            Self::Named(rule) => InferenceRule::ReferenceNamed { rule: *rule },
+            Self::Product(children) => InferenceRule::SequenceProduct {
+                children: children.clone(),
+            },
+            Self::Sum(children) => InferenceRule::ChoiceSum {
+                children: children.clone(),
+            },
+            Self::Option(child) => InferenceRule::Optional { child: *child },
+            Self::List(child) => InferenceRule::RepetitionList { child: *child },
+            Self::Record { owner, slots } => InferenceRule::RecordProjection {
+                owner: *owner,
+                slots: slots
+                    .iter()
+                    .map(|slot| match slot {
+                        RecordSlot::Field { field, child } => RecordWitnessSlot::Field {
+                            field: *field,
+                            child: *child,
+                        },
+                        RecordSlot::Discard { child } => {
+                            RecordWitnessSlot::Discard { child: *child }
+                        }
+                    })
+                    .collect(),
+            },
+            Self::TransformAlias { child, transform } => InferenceRule::TransformPreserves {
+                child: *child,
+                transform: *transform,
+            },
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -245,7 +599,16 @@ fn collect_constraints(
                 maximum,
             } if *minimum == 0 && *maximum == Some(1) => TypeConstraint::Option(*child),
             NodeKind::Repeat { child, .. } => TypeConstraint::List(*child),
-            NodeKind::Transform { child, .. } => TypeConstraint::Alias(*child),
+            NodeKind::Record { owner, slots } => TypeConstraint::Record {
+                owner: *owner,
+                slots: slots.clone(),
+            },
+            NodeKind::Transform {
+                child, transform, ..
+            } => TypeConstraint::TransformAlias {
+                child: *child,
+                transform: *transform,
+            },
         };
         constraints[index] = Some(constraint);
     }
@@ -334,7 +697,43 @@ fn derive_node_type(
             arena,
             interned,
         )?),
-        TypeConstraint::Alias(child) => {
+        TypeConstraint::Record { owner, slots } => {
+            let mut fields = Vec::new();
+            for slot in slots {
+                match slot {
+                    RecordSlot::Field { field, child } => {
+                        fields.push(RecordFieldType {
+                            field: *field,
+                            value: derive_node_type(
+                                child.index(),
+                                program,
+                                constraints,
+                                states,
+                                node_types,
+                                arena,
+                                interned,
+                            )?,
+                        });
+                    }
+                    RecordSlot::Discard { child } => {
+                        let _ = derive_node_type(
+                            child.index(),
+                            program,
+                            constraints,
+                            states,
+                            node_types,
+                            arena,
+                            interned,
+                        )?;
+                    }
+                }
+            }
+            SemanticType::Record {
+                owner: *owner,
+                fields,
+            }
+        }
+        TypeConstraint::TransformAlias { child, .. } => {
             let type_id = derive_node_type(
                 child.index(),
                 program,
@@ -354,6 +753,47 @@ fn derive_node_type(
     node_types[index] = Some(type_id);
     states[index] = VisitState::Sealed;
     Ok(type_id)
+}
+
+fn record_witness_matches(actual: &[RecordSlot], witness: &[RecordWitnessSlot]) -> bool {
+    actual.len() == witness.len()
+        && actual
+            .iter()
+            .zip(witness)
+            .all(|(actual, witness)| match (actual, witness) {
+                (
+                    RecordSlot::Field {
+                        field: actual_field,
+                        child: actual_child,
+                    },
+                    RecordWitnessSlot::Field {
+                        field: witness_field,
+                        child: witness_child,
+                    },
+                ) => actual_field == witness_field && actual_child == witness_child,
+                (
+                    RecordSlot::Discard {
+                        child: actual_child,
+                    },
+                    RecordWitnessSlot::Discard {
+                        child: witness_child,
+                    },
+                ) => actual_child == witness_child,
+                _ => false,
+            })
+}
+
+fn semantic_children(semantic: &SemanticType) -> Vec<TypeId> {
+    match semantic {
+        SemanticType::Unit | SemanticType::Span | SemanticType::Named(_) => Vec::new(),
+        SemanticType::Product(children) | SemanticType::Sum(children) => children.clone(),
+        SemanticType::Option(child) | SemanticType::List(child) => vec![*child],
+        SemanticType::Record { fields, .. } => fields.iter().map(RecordFieldType::value).collect(),
+    }
+}
+
+fn type_invariant(message: impl Into<String>) -> Diagnostic {
+    Diagnostic::new(DiagnosticCode::InternalInvariant, 0, 0, message)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -494,7 +934,10 @@ array = "[", (value, (",", value)*)?, "]";
     fn structural_occurs_check_rejects_a_cycle_that_does_not_cross_a_named_binder() {
         let (program, _) = program(r#"root = "x";"#);
         let root = program.nodes()[0].id();
-        let constraints = vec![TypeConstraint::Alias(root)];
+        let constraints = vec![TypeConstraint::TransformAlias {
+            child: root,
+            transform: TransformId::checked(0).expect("zero identity"),
+        }];
         let mut states = vec![VisitState::Unseen];
         let mut node_types = vec![None];
         let mut arena = Vec::new();
@@ -512,6 +955,130 @@ array = "[", (value, (",", value)*)?, "]";
         .expect_err("a structural self occurrence is not a named recursive binder");
         assert_eq!(error.code(), DiagnosticCode::InternalInvariant);
         assert!(error.message().contains("occurs-check"));
+    }
+
+    #[test]
+    fn recursive_nominal_records_are_finite_and_certificates_execute() {
+        let (program, dependency) = program(
+            r#"
+root = node;
+node = list | atom;
+list = %{ ~"(", children: node*, ~")" };
+atom = %{ text: @raw(/[A-Za-z]+/) };
+"#,
+        );
+        let solution = match TypeSolution::solve(&program, &dependency) {
+            StageResult::Accepted { value, .. } => value,
+            StageResult::Rejected { .. } => panic!("recursive record fixture must solve"),
+        };
+        assert!(matches!(
+            solution.verify(&program),
+            StageResult::Accepted { .. }
+        ));
+
+        let list = program
+            .rules()
+            .iter()
+            .find(|rule| rule.name() == "list")
+            .expect("list rule");
+        let record_type = solution.semantic_type(solution.rule_root_type(list.id()));
+        let SemanticType::Record { owner, fields } = record_type else {
+            panic!("list root must retain its nominal record type");
+        };
+        assert_eq!(*owner, list.id());
+        assert_eq!(fields.len(), 1);
+        let SemanticType::List(element) = solution.semantic_type(fields[0].value()) else {
+            panic!("recursive children field must be a list");
+        };
+        let node = program
+            .rules()
+            .iter()
+            .find(|rule| rule.name() == "node")
+            .expect("node rule");
+        assert_eq!(
+            solution.semantic_type(*element),
+            &SemanticType::Named(node.id())
+        );
+        assert!(solution.arena().len() <= program.nodes().len() + program.rules().len());
+    }
+
+    #[test]
+    fn certificate_tampering_is_rejected_without_rerunning_the_solver() {
+        let (program, dependency) = program(
+            r#"
+root = %{ left: "a", right: @raw("b") };
+other = %{ value: "c" };
+"#,
+        );
+        let canonical = match TypeSolution::solve(&program, &dependency) {
+            StageResult::Accepted { value, .. } => value,
+            StageResult::Rejected { .. } => panic!("record fixture must solve"),
+        };
+        assert!(matches!(
+            canonical.verify(&program),
+            StageResult::Accepted { .. }
+        ));
+
+        let record_index = program
+            .nodes()
+            .iter()
+            .position(
+                |node| matches!(node.kind(), NodeKind::Record { owner, .. } if owner.index() == 0),
+            )
+            .expect("root record");
+        let transform_index = program
+            .nodes()
+            .iter()
+            .position(|node| matches!(node.kind(), NodeKind::Transform { .. }))
+            .expect("transform node");
+
+        let mut wrong_rule = canonical.clone();
+        wrong_rule.nodes[record_index].inference = InferenceRule::EpsilonUnit;
+        assert!(matches!(
+            wrong_rule.verify(&program),
+            StageResult::Rejected { .. }
+        ));
+
+        let mut dangling_type = canonical.clone();
+        dangling_type.nodes[record_index].type_id =
+            TypeId::checked(canonical.arena.len()).expect("adjacent type identity");
+        assert!(matches!(
+            dangling_type.verify(&program),
+            StageResult::Rejected { .. }
+        ));
+
+        let mut wrong_owner = canonical.clone();
+        if let InferenceRule::RecordProjection { owner, .. } =
+            &mut wrong_owner.nodes[record_index].inference
+        {
+            *owner = program.rules()[1].id();
+        }
+        assert!(matches!(
+            wrong_owner.verify(&program),
+            StageResult::Rejected { .. }
+        ));
+
+        let mut wrong_field_order = canonical.clone();
+        if let InferenceRule::RecordProjection { slots, .. } =
+            &mut wrong_field_order.nodes[record_index].inference
+        {
+            slots.swap(0, 1);
+        }
+        assert!(matches!(
+            wrong_field_order.verify(&program),
+            StageResult::Rejected { .. }
+        ));
+
+        let mut wrong_transform = canonical.clone();
+        if let InferenceRule::TransformPreserves { child, .. } =
+            &mut wrong_transform.nodes[transform_index].inference
+        {
+            *child = program.nodes()[0].id();
+        }
+        assert!(matches!(
+            wrong_transform.verify(&program),
+            StageResult::Rejected { .. }
+        ));
     }
 
     fn deterministic_permutation(count: usize, mut state: u64) -> Vec<usize> {

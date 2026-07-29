@@ -7,7 +7,7 @@ use parse_that::{
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::{
-    ModuleInput, SourceModule, SourceNode, SourceNodeKind, SourceRule, SourceSpan,
+    ModuleInput, SourceModule, SourceNode, SourceNodeKind, SourceRecordSlot, SourceRule, SourceSpan,
 };
 use super::syntax::{NodeId, RuleId, TransformId};
 
@@ -41,6 +41,24 @@ enum DraftNodeKind {
         child: usize,
         transform: usize,
         name: String,
+    },
+    Record(Vec<DraftRecordSlot>),
+}
+
+#[derive(Clone, Debug)]
+enum DraftRecordSlot {
+    Field {
+        name: String,
+        child: usize,
+        name_start: usize,
+        name_end: usize,
+        start: usize,
+        end: usize,
+    },
+    Discard {
+        child: usize,
+        start: usize,
+        end: usize,
     },
 }
 
@@ -293,25 +311,122 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
     ) -> Step<'i, ParsedNode> {
         choice(
             run,
-            |run| self.group(run, depth),
+            |run| self.record(run, depth),
             |run| {
                 choice(
                     run,
-                    |run| self.string_terminal(run),
+                    |run| self.group(run, depth),
                     |run| {
                         choice(
                             run,
-                            |run| self.regex_terminal(run),
+                            |run| self.string_terminal(run),
                             |run| {
                                 choice(
                                     run,
-                                    |run| self.unicode_epsilon(run),
-                                    |run| self.reference_or_epsilon(run),
+                                    |run| self.regex_terminal(run),
+                                    |run| {
+                                        choice(
+                                            run,
+                                            |run| self.unicode_epsilon(run),
+                                            |run| self.reference_or_epsilon(run),
+                                        )
+                                    },
                                 )
                             },
                         )
                     },
                 )
+            },
+        )
+    }
+
+    /// Parse an action-free nominal record: `%{ field: postfix, ~postfix }`.
+    ///
+    /// The frontend preserves field spelling and slot spans but deliberately
+    /// assigns neither ownership nor `FieldId`s. Resolution admits a record
+    /// only when this node is the complete root of one rule, then assigns
+    /// retained fields in lexical rule/slot order.
+    fn record<'i>(&self, run: &mut Run<'i, SyntaxSink>, depth: usize) -> Step<'i, ParsedNode> {
+        sequence(run, |run| {
+            let start = run.cursor().offset();
+            matched!(literal(run, b"%{"));
+            if depth >= self.options.syntax_nesting {
+                return Step::Fault(Fault::ResourceLimit {
+                    at: run.cursor(),
+                    kind: ResourceKind::Nesting,
+                    limit: self.options.syntax_nesting,
+                });
+            }
+            matched!(self.whitespace(run));
+
+            let slots = matched!(choice(
+                run,
+                |run| { literal(run, b"}").map_matched(|_| Vec::<DraftRecordSlot>::new()) },
+                |run| {
+                    let mut slots = vec![matched!(self.record_slot(run, depth + 1))];
+                    matched!(repeat(run, 0, None, |run| {
+                        sequence(run, |run| {
+                            matched!(self.whitespace(run));
+                            matched!(literal(run, b","));
+                            matched!(self.whitespace(run));
+                            slots.push(matched!(self.record_slot(run, depth + 1)));
+                            Step::Matched(())
+                        })
+                    }));
+                    matched!(self.whitespace(run));
+                    matched!(literal(run, b"}"));
+                    Step::Matched(slots)
+                },
+            ));
+
+            self.emit_node(
+                run,
+                DraftNodeKind::Record(slots),
+                start,
+                run.cursor().offset(),
+            )
+        })
+    }
+
+    fn record_slot<'i>(
+        &self,
+        run: &mut Run<'i, SyntaxSink>,
+        depth: usize,
+    ) -> Step<'i, DraftRecordSlot> {
+        choice(
+            run,
+            |run| {
+                sequence(run, |run| {
+                    let start = run.cursor().offset();
+                    let name_span = matched!(regex(run, &self.lexical.identifier));
+                    let name = String::from_utf8(name_span.as_bytes().to_vec())
+                        .expect("the identifier DFA accepts ASCII only");
+                    matched!(self.whitespace(run));
+                    matched!(literal(run, b":"));
+                    matched!(self.whitespace(run));
+                    let child = matched!(self.postfix(run, depth));
+                    Step::Matched(DraftRecordSlot::Field {
+                        name,
+                        child: child.index,
+                        name_start: name_span.start(),
+                        name_end: name_span.end(),
+                        start,
+                        end: child.end,
+                    })
+                })
+            },
+            |run| {
+                sequence(run, |run| {
+                    let start = run.cursor().offset();
+                    matched!(literal(run, b"~"));
+                    matched!(self.whitespace(run));
+                    let child = matched!(self.postfix(run, depth));
+                    Step::Matched(DraftRecordSlot::Discard {
+                        child: child.index,
+                        start,
+                        end: child.end,
+                    })
+                })
             },
         )
     }
@@ -770,6 +885,36 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
             transform: TransformId::checked(transform)?,
             name,
         },
+        DraftNodeKind::Record(slots) => SourceNodeKind::Record(
+            slots
+                .into_iter()
+                .map(|slot| match slot {
+                    DraftRecordSlot::Field {
+                        name,
+                        child,
+                        name_start,
+                        name_end,
+                        start,
+                        end,
+                    } => Some(SourceRecordSlot::Field {
+                        name,
+                        child: (child < parent)
+                            .then_some(child)
+                            .and_then(NodeId::checked)?,
+                        name_span: SourceSpan::checked(name_start, name_end)?,
+                        span: SourceSpan::checked(start, end)?,
+                    }),
+                    DraftRecordSlot::Discard { child, start, end } => {
+                        Some(SourceRecordSlot::Discard {
+                            child: (child < parent)
+                                .then_some(child)
+                                .and_then(NodeId::checked)?,
+                            span: SourceSpan::checked(start, end)?,
+                        })
+                    }
+                })
+                .collect::<Option<Vec<_>>>()?,
+        ),
     })
 }
 

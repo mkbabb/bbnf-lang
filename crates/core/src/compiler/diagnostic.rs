@@ -1,15 +1,17 @@
 use core::fmt;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[non_exhaustive]
 pub enum DiagnosticCode {
     SourceTooLarge,
     Syntax,
     ResourceLimit,
     DuplicateRule,
+    DuplicateField,
     UndefinedRule,
+    RecordMustBeRuleRoot,
     RecursiveRule,
     NullableRepeat,
     Regex,
@@ -18,7 +20,7 @@ pub enum DiagnosticCode {
     InternalInvariant,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct Diagnostic {
     code: DiagnosticCode,
     start: usize,
@@ -68,7 +70,7 @@ impl fmt::Display for Diagnostic {
     }
 }
 
-#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
 pub struct DiagnosticSet {
     diagnostics: Vec<Diagnostic>,
 }

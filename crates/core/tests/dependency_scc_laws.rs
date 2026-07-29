@@ -28,24 +28,24 @@ tail = atom, "t";
 atom = /[0-9]+/;
 "#,
     );
-    let rules = module.program.rules();
+    let rules = module.program().rules();
     let root = rules[0].id();
     let head = rules[1].id();
     let tail = rules[2].id();
     let atom = rules[3].id();
 
     assert_eq!(
-        module.dependency.graph().dependencies(root),
+        module.dependency().graph().dependencies(root),
         &[head, tail],
         "dependency edges use RuleId order, not encounter order"
     );
-    assert_eq!(module.dependency.graph().dependencies(head), &[atom]);
-    assert_eq!(module.dependency.graph().dependencies(tail), &[atom]);
-    assert!(module.dependency.graph().dependencies(atom).is_empty());
+    assert_eq!(module.dependency().graph().dependencies(head), &[atom]);
+    assert_eq!(module.dependency().graph().dependencies(tail), &[atom]);
+    assert!(module.dependency().graph().dependencies(atom).is_empty());
 
-    let order = module.dependency.dependency_order();
+    let order = module.dependency().dependency_order();
     let position = |rule| {
-        let component = module.dependency.component_of(rule);
+        let component = module.dependency().component_of(rule);
         order
             .iter()
             .position(|candidate| *candidate == component)
@@ -57,8 +57,8 @@ atom = /[0-9]+/;
     assert!(position(tail) < position(root));
 
     for rule in rules {
-        let component = module.dependency.component_of(rule.id());
-        assert_eq!(module.dependency.component(component), &[rule.id()]);
+        let component = module.dependency().component_of(rule.id());
+        assert_eq!(module.dependency().component(component), &[rule.id()]);
     }
 }
 
@@ -72,23 +72,23 @@ second = first, "b";
     let first = accepted(source);
     let second = accepted(source);
 
-    assert_eq!(first.program.revision(), second.program.revision());
-    assert_eq!(first.dependency, second.dependency);
+    assert_eq!(first.program().revision(), second.program().revision());
+    assert_eq!(first.dependency(), second.dependency());
     assert_eq!(
-        first.dependency.revision(),
-        first.dependency.graph().revision()
+        first.dependency().revision(),
+        first.dependency().graph().revision()
     );
 }
 
 #[test]
 fn consuming_self_recursion_is_retained_as_one_finite_component() {
     let module = accepted(r#"root = "(", root, ")" | "x";"#);
-    let root = module.program.rules()[0].id();
-    let component = module.dependency.component_of(root);
+    let root = module.program().rules()[0].id();
+    let component = module.dependency().component_of(root);
 
-    assert!(module.dependency.is_recursive(component));
-    assert_eq!(module.dependency.component(component), &[root]);
-    assert_eq!(module.dependency.graph().dependencies(root), &[root]);
+    assert!(module.dependency().is_recursive(component));
+    assert_eq!(module.dependency().component(component), &[root]);
+    assert_eq!(module.dependency().graph().dependencies(root), &[root]);
 }
 
 #[test]
@@ -100,20 +100,20 @@ other = "b", root | atom;
 atom = "x";
 "#,
     );
-    let root = module.program.rules()[0].id();
-    let other = module.program.rules()[1].id();
-    let atom = module.program.rules()[2].id();
-    let recursive = module.dependency.component_of(root);
+    let root = module.program().rules()[0].id();
+    let other = module.program().rules()[1].id();
+    let atom = module.program().rules()[2].id();
+    let recursive = module.dependency().component_of(root);
 
-    assert_eq!(module.dependency.component_of(other), recursive);
-    assert_ne!(module.dependency.component_of(atom), recursive);
-    assert_eq!(module.dependency.component(recursive), &[root, other]);
-    assert!(module.dependency.is_recursive(recursive));
+    assert_eq!(module.dependency().component_of(other), recursive);
+    assert_ne!(module.dependency().component_of(atom), recursive);
+    assert_eq!(module.dependency().component(recursive), &[root, other]);
+    assert!(module.dependency().is_recursive(recursive));
 
-    let order = module.dependency.dependency_order();
+    let order = module.dependency().dependency_order();
     let atom_position = order
         .iter()
-        .position(|id| *id == module.dependency.component_of(atom))
+        .position(|id| *id == module.dependency().component_of(atom))
         .unwrap();
     let recursive_position = order.iter().position(|id| *id == recursive).unwrap();
     assert!(atom_position < recursive_position);
@@ -127,12 +127,12 @@ root = ("x", leaf)+;
 leaf = /[a-z]/;
 "#,
     );
-    let root = module.program.rules()[0].id();
-    let leaf = module.program.rules()[1].id();
-    assert_eq!(module.dependency.graph().dependencies(root), &[leaf]);
+    let root = module.program().rules()[0].id();
+    let leaf = module.program().rules()[1].id();
+    assert_eq!(module.dependency().graph().dependencies(root), &[leaf]);
 
     let references = module
-        .program
+        .program()
         .nodes()
         .iter()
         .filter(|node| matches!(node.kind(), NodeKind::RuleRef(_)))

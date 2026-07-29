@@ -24,5 +24,5 @@ fn main() {
             std::process::exit(1);
         }
     };
-    fs::write(output_path, compilation.generated.source()).expect("write generated Rust");
+    fs::write(output_path, compilation.generated().source()).expect("write generated Rust");
 }

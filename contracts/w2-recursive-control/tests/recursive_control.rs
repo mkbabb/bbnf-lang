@@ -88,54 +88,98 @@ fn genuinely_recursive_generated_control_accepts_and_rejects_nested_inputs() {
 }
 
 #[test]
+fn recursive_event_order_has_an_independent_exact_oracle() {
+    let parsed = parse_events(b"(x)");
+    assert!(matches!(
+        parsed.outcome(),
+        parse_that::Step::Matched(span) if span.as_bytes() == b"(x)"
+    ));
+    let actual = parsed
+        .sink()
+        .events()
+        .iter()
+        .map(|event| {
+            (
+                event.kind(),
+                event.rule(),
+                event.node(),
+                event.field(),
+                event.transform(),
+                event.start(),
+                event.end(),
+                event.value(),
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        actual,
+        vec![
+            (EventKind::EnterRule, Some(0), None, None, None, 0, 0, 0),
+            (EventKind::Literal, None, Some(0), None, None, 0, 1, 0),
+            (EventKind::EnterRule, Some(0), None, None, None, 1, 1, 0),
+            (EventKind::Literal, None, Some(4), None, None, 1, 2, 0),
+            (
+                EventKind::ChoiceBranch,
+                None,
+                Some(5),
+                None,
+                None,
+                1,
+                2,
+                1,
+            ),
+            (EventKind::LeaveRule, Some(0), None, None, None, 1, 2, 0),
+            (EventKind::Literal, None, Some(2), None, None, 2, 3, 0),
+            (
+                EventKind::ChoiceBranch,
+                None,
+                Some(5),
+                None,
+                None,
+                0,
+                3,
+                0,
+            ),
+            (EventKind::LeaveRule, Some(0), None, None, None, 0, 3, 0),
+            (EventKind::EndInput, None, None, None, None, 3, 3, 0),
+        ]
+    );
+}
+
+#[test]
 fn recursive_faults_are_typed_mode_invariant_and_transactional() {
     let input = b"((x))";
     assert_fault_both_modes(
         input,
-        LimitsConfig {
-            input_bytes: input.len() - 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_input_bytes(input.len() - 1),
         parse_that::ResourceKind::Work,
     );
     assert_fault_both_modes(
         input,
-        LimitsConfig {
-            nesting: 2,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_nesting(2),
         parse_that::ResourceKind::Nesting,
     );
     assert_fault_both_modes(
         input,
-        LimitsConfig {
-            logical_events: 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_logical_events(1),
         parse_that::ResourceKind::Events,
     );
     assert_fault_both_modes(
         input,
-        LimitsConfig {
-            work: 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_work(1),
         parse_that::ResourceKind::Work,
     );
 }
 
 #[test]
 fn custom_limits_can_only_tighten_baked_runtime_ceilings() {
-    let oversized = LimitsConfig {
-        input_bytes: usize::MAX,
-        nesting: usize::MAX,
-        logical_events: usize::MAX,
-        work: usize::MAX,
-    };
-    assert_eq!(oversized.bounded(), LimitsConfig::default());
-
+    let oversized = LimitsConfig::default()
+        .with_input_bytes(usize::MAX)
+        .with_nesting(usize::MAX)
+        .with_logical_events(usize::MAX)
+        .with_work(usize::MAX);
     let defaults = LimitsConfig::default();
-    let oversized_input = vec![b'x'; defaults.input_bytes + 1];
+    let oversized_input = vec![b'x'; defaults.input_bytes() + 1];
     assert_fault_both_modes(&oversized_input, oversized, parse_that::ResourceKind::Work);
 }
 

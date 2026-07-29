@@ -461,10 +461,7 @@ fn longest_prefix_does_not_relax_eof_or_trailing_rejection() {
 fn resource_limits_are_typed_and_transactional() {
     let input_limited = parse_events_with_limits(
         INPUT,
-        LimitsConfig {
-            input_bytes: INPUT.len() - 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_input_bytes(INPUT.len() - 1),
     );
     assert!(matches!(
         input_limited.outcome(),
@@ -477,10 +474,7 @@ fn resource_limits_are_typed_and_transactional() {
 
     let depth_limited = parse_events_with_limits(
         INPUT,
-        LimitsConfig {
-            nesting: 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_nesting(1),
     );
     assert!(matches!(
         depth_limited.outcome(),
@@ -493,10 +487,7 @@ fn resource_limits_are_typed_and_transactional() {
 
     let event_limited = parse_events_with_limits(
         INPUT,
-        LimitsConfig {
-            logical_events: 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_logical_events(1),
     );
     assert!(matches!(
         event_limited.outcome(),
@@ -509,10 +500,7 @@ fn resource_limits_are_typed_and_transactional() {
 
     let no_sink_event_limited = check_with_limits(
         INPUT,
-        LimitsConfig {
-            logical_events: 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_logical_events(1),
     );
     assert!(matches!(
         no_sink_event_limited.outcome(),
@@ -524,10 +512,7 @@ fn resource_limits_are_typed_and_transactional() {
 
     let work_limited = parse_events_with_limits(
         INPUT,
-        LimitsConfig {
-            work: 1,
-            ..LimitsConfig::default()
-        },
+        LimitsConfig::default().with_work(1),
     );
     assert!(matches!(
         work_limited.outcome(),
@@ -542,8 +527,8 @@ fn resource_limits_are_typed_and_transactional() {
 #[test]
 fn generated_manifest_is_schema_and_revision_bound() {
     let manifest = include_str!(concat!(env!("OUT_DIR"), "/generated.manifest.json"));
-    assert!(manifest.contains("\"schema\":\"bbnf.generated-rust.v2\""));
-    assert!(manifest.contains("\"event_schema\":\"bbnf.scalar-events.v2\""));
+    assert!(manifest.contains("\"schema\":\"bbnf.generated-rust.v3\""));
+    assert!(manifest.contains("\"event_schema\":\"bbnf.scalar-events.v3\""));
     assert!(manifest.contains("\"transforms\":2"));
     assert!(manifest.contains(REVISION));
 }

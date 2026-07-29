@@ -17,26 +17,72 @@ pub use dependency::{DependencyGraph, DependencySolution};
 pub use diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
 pub use emit::GeneratedModule;
 pub use event::{EventKind, ScalarEventPlan, TransformSite};
-pub use lower::{LoweringPlan, PlanOp};
+pub use lower::{LoweredField, LoweringPlan, PlanOp, PlanRecordSlot};
 pub use replay::{ReplayComponent, ReplayError, replay_compilation};
 pub use source::{ModuleInput, Revision, SourceMap, SourceModule, SourceSpan};
 pub use syntax::{
-    Node, NodeId, NodeKind, NodeRemap, PlanNodeId, Program, Rule, RuleId, SccId, TransformId,
-    TypeId,
+    FieldDecl, FieldId, Node, NodeId, NodeKind, NodeRemap, PlanNodeId, Program, RecordSlot, Rule,
+    RuleId, SccId, TransformId, TypeId,
 };
-pub use typecheck::{NodeTypeDerivation, RuleTypeDerivation, SemanticType, TypeSolution};
+pub use typecheck::{
+    InferenceRule, NodeTypeDerivation, RecordFieldType, RecordWitnessSlot, RuleTypeDerivation,
+    SemanticType, TypeSolution,
+};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CompiledModule {
-    pub source_map: SourceMap,
-    pub program: Program,
-    pub remap: NodeRemap,
-    pub dependency: DependencySolution,
-    pub types: TypeSolution,
-    pub facts: AnalysisFacts,
-    pub lowering: LoweringPlan,
-    pub events: ScalarEventPlan,
-    pub generated: GeneratedModule,
+    options: CompileOptions,
+    source_map: SourceMap,
+    program: Program,
+    remap: NodeRemap,
+    dependency: DependencySolution,
+    types: TypeSolution,
+    facts: AnalysisFacts,
+    lowering: LoweringPlan,
+    events: ScalarEventPlan,
+    generated: GeneratedModule,
+}
+
+impl CompiledModule {
+    pub const fn options(&self) -> CompileOptions {
+        self.options
+    }
+
+    pub const fn source_map(&self) -> &SourceMap {
+        &self.source_map
+    }
+
+    pub const fn program(&self) -> &Program {
+        &self.program
+    }
+
+    pub const fn remap(&self) -> &NodeRemap {
+        &self.remap
+    }
+
+    pub const fn dependency(&self) -> &DependencySolution {
+        &self.dependency
+    }
+
+    pub const fn types(&self) -> &TypeSolution {
+        &self.types
+    }
+
+    pub const fn facts(&self) -> &AnalysisFacts {
+        &self.facts
+    }
+
+    pub const fn lowering(&self) -> &LoweringPlan {
+        &self.lowering
+    }
+
+    pub const fn events(&self) -> &ScalarEventPlan {
+        &self.events
+    }
+
+    pub const fn generated(&self) -> &GeneratedModule {
+        &self.generated
+    }
 }
 
 pub fn compile_module(
@@ -70,6 +116,9 @@ pub fn compile_module(
             return StageResult::Rejected { diagnostics };
         }
     };
+    if let StageResult::Rejected { diagnostics } = types.verify(&program) {
+        return StageResult::Rejected { diagnostics };
+    }
     let facts = match AnalysisFacts::derive(&program, &dependency, options) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => {
@@ -96,6 +145,7 @@ pub fn compile_module(
     };
 
     StageResult::accepted(CompiledModule {
+        options,
         source_map,
         program,
         remap,

@@ -427,7 +427,7 @@ fn dependency_first_acyclic_analysis_is_linear_and_exactly_budgeted() {
         let module = accepted(&source);
         let rules = module.program().rules().len();
         assert_eq!(module.facts().iterations(), rules);
-        assert_eq!(module.facts().work_units(), rules * 6);
+        assert_eq!(module.facts().work_units(), rules * 7);
     }
 
     let source = reference_chain(64);

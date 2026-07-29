@@ -286,8 +286,12 @@ impl AnalysisFacts {
 
         let revision = program.revision();
         let rule_rank = permutation_rank(rule_order);
+        let mut work_budget = AnalysisWorkBudget::new(options.analysis_work);
         let mut work = vec![WorkFacts::default(); program.node_data_rows().len()];
         for &index in node_order {
+            if let Err(diagnostic) = work_budget.charge(1) {
+                return StageResult::rejected(diagnostic);
+            }
             let node = &program.node_data_rows()[index];
             match node.kind() {
                 NodeKindData::Epsilon => {
@@ -325,7 +329,6 @@ impl AnalysisFacts {
         let mut rule_work = vec![WorkFacts::default(); program.rule_data_rows().len()];
 
         let mut iterations = 0_usize;
-        let mut work_budget = AnalysisWorkBudget::new(options.analysis_work);
         let rule_node_ranges = match rule_node_ranges(program, &mut work_budget) {
             Ok(ranges) => ranges,
             Err(diagnostic) => return StageResult::rejected(diagnostic),

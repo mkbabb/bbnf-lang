@@ -1,274 +1,45 @@
 [package]
 name = "bbnf"
-version = "0.2.11"
-edition = "2024"
-license = "MIT"
-description = "BBNF grammar parser and code generator built on parse_that"
-repository = "https://github.com/mkbabb/bbnf-lang"
+version = "0.3.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Deterministic BBNF source-to-direct-Rust compiler"
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
 
 [lib]
 name = "bbnf"
 path = "src/lib.rs"
 
+[[bin]]
+name = "bbnf-gen"
+path = "src/bin/bbnf-gen.rs"
+
+[[test]]
+name = "frontend_contract"
+path = "tests/frontend_contract.rs"
+
+[[test]]
+name = "dependency_scc_laws"
+path = "tests/dependency_scc_laws.rs"
+
+[[test]]
+name = "type_analysis_laws"
+path = "tests/type_analysis_laws.rs"
+
+[[test]]
+name = "emitter_contract"
+path = "tests/emitter_contract.rs"
+
 [dependencies]
-pprint = "0.3"
-parse_that = "0.4"
-bbnf-ir = { version = "0.1", path = "../ir" }
-bbnf-ser = { version = "0.1", path = "../ser" }
-simd-scan = { version = "0.1", path = "../simd-scan" }
-egraph = { path = "../egraph" }
-csp-solver = "0.1"
-rustc-hash = "2"
-
-syn = { version = "2", features = ["full"] }
-quote = "1"
-proc-macro2 = "1"
-indexmap = "2"
-dhat = { version = "0.3", optional = true }
-
-[features]
-dhat-heap = ["dep:dhat"]
-
-# Tranche BB.scaffold.C — bench-matrix tier features.
-#
-# The 5 always-on benches (`json_monolithic`, `css_l4`,
-# `google_sheets_monolithic`, `bbnf_monolithic`, `compile_pipeline`)
-# carry the per-grammar parse+codegen ground truth and compile under
-# `cargo bench --no-run` with NO features. The remainder split into
-# four tiers, each gated by its own feature, so routine `cargo
-# bench-*` paths skip the heavy competitor / stress / VM / callgrind
-# surfaces unless explicitly opted in.
-
-# `competitor` — BBNF-vs-external benches (serde_json, sonic-rs,
-# simd-json, jiter, lightningcss, cssparser, pest, nom, winnow, plus
-# the parse_that internal competitor variant). Gates: `json_competitors`,
-# `css_competitors`, `json_parse_that`, `json_value`.
-competitor = []
-
-# `stress` — large-fixture stress benches that stretch parser
-# robustness on deeply nested / pathological inputs. Gates:
-# `json_stress`, `css_stress`.
-stress = []
-
-# `vm` — VM-target bench surface. The interpreter / DTA walker
-# benches against the AOT path on the same fixtures. Gates:
-# `json_vm`, `css_vm`, `google_sheets_vm`.
-vm = []
-
-# `callgrind` — iai-callgrind CI surface. Linux-only (requires
-# valgrind). Gates: `json_callgrind`. Pulls in the pre-existing
-# `iai` feature alias so a single `--features callgrind` opts in
-# the full bench (the bench source is also gated by
-# `#![cfg(feature = "iai")]` at the file top). iai-callgrind itself
-# is a Linux-target-only dev-dep (see
-# [target.'cfg(target_os = "linux")'.dev-deps] further down in this
-# file); on macOS dev-hosts the dep is absent, so callgrind is a
-# Linux-only opt-in. `.github/workflows/bench-iai.yml` invokes
-# `cargo bench --bench json_callgrind --features callgrind` on
-# Linux CI only.
-callgrind = ["iai"]
-iai = []
-
-# `wasm-bench` — WASM/TS competitor surface. Gates: `json_ts`,
-# `json_wasm`, `css_ts`, `css_wasm`. Routine nextest discovery +
-# `cargo bench-json` / `cargo bench-css` skip the wasmtime +
-# tree-sitter + WASM payload compile unless this feature is set.
-# Activate with `cargo bench --features wasm-bench --bench <name>`.
-wasm-bench = []
+bbnf-regex.workspace = true
+blake3.workspace = true
+parse_that.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
-quote = "1"
-regex = "1"
 tempfile = "3"
-prettyplease = "0.2"
-pprint = "0.3"
-parse_that = "0.4"
-divan = "0.1"
-mimalloc = "0.1"
-sonic-rs = "0.5"
-
-# AZ-IV.W2.4 — `bbnf-path` proc-macro under test from
-# `crates/core/tests/path_macro_*`. Compile-time fixtures import
-# `bbnf::path::TypedPath` from this crate plus the `path!` macro from
-# the proc-macro crate; trybuild-style negative fixtures ride alongside
-# (path_macro_errors).
-bbnf-path = { version = "0.1", path = "../bbnf-path" }
-trybuild = "1"
-
-# JSON competitor parsers
-serde_json = "1"
-serde = { version = "1", features = ["derive"] }
-simd-json = "0.14"
-jiter = "0.8"
-serde_json_borrow = "0.9"
-nom = "7"
-winnow = "0.7"
-pest = "2.5"
-pest_grammars = "2.5"
-
-# Tree-sitter
-tree-sitter = "0.25"
-tree-sitter-json = "0.24"
-
-# CSS competitor parsers
-cssparser = "0.34"
-lightningcss = "1.0.0-alpha.71"
-
-# WASM runtime for benchmarks
-wasmtime = "29"
-
-# Number parsing for borrow/owned tiers
-fast-float2 = "0.2"
-
-
-# ── Bench matrix — Tranche BB.scaffold.C compaction ──────────────────
-#
-# Five always-on benches carry the per-grammar parse+codegen ground
-# truth; the remainder split into four tiers gated by the
-# `competitor`, `stress`, `vm`, `callgrind` features (plus the
-# pre-existing `wasm-bench`). `cargo bench --no-run` with no
-# features compiles only the always-on five; opting into a tier
-# adds its benches without pulling in adjacent tiers.
-
-# ── Always-on (5) ────────────────────────────────────────────────────
-
-[[bench]]
-name = "json_monolithic"
-path = "benches/json/monolithic.rs"
-harness = false
-
-[[bench]]
-name = "css_l4"
-path = "benches/css/l4.rs"
-harness = false
-
-[[bench]]
-name = "google_sheets_monolithic"
-path = "benches/google_sheets/monolithic.rs"
-harness = false
-
-[[bench]]
-name = "bbnf_monolithic"
-path = "benches/bbnf/monolithic.rs"
-harness = false
-
-[[bench]]
-name = "compile_pipeline"
-path = "benches/compile_pipeline.rs"
-harness = false
-
-# AZ-IV.W2.5 — parent-pointer micro-bench for the AscentStrategy
-# default pick. Synthetic node graphs sized to citm / tailwind /
-# sheets cardinality.
-[[bench]]
-name = "path_ascent"
-path = "benches/path_ascent.rs"
-harness = false
-
-# ── Competitor tier (`competitor` feature) ──────────────────────────
-
-[[bench]]
-name = "json_competitors"
-path = "benches/json/competitors.rs"
-harness = false
-required-features = ["competitor"]
-
-[[bench]]
-name = "css_competitors"
-path = "benches/css/competitors.rs"
-harness = false
-required-features = ["competitor"]
-
-[[bench]]
-name = "json_parse_that"
-path = "benches/json/parse_that.rs"
-harness = false
-required-features = ["competitor"]
-
-[[bench]]
-name = "json_value"
-path = "benches/json/value.rs"
-harness = false
-required-features = ["competitor"]
-
-# ── Stress tier (`stress` feature) ──────────────────────────────────
-
-[[bench]]
-name = "json_stress"
-path = "benches/json/stress.rs"
-harness = false
-required-features = ["stress"]
-
-[[bench]]
-name = "css_stress"
-path = "benches/css/stress.rs"
-harness = false
-required-features = ["stress"]
-
-# ── VM tier (`vm` feature) ──────────────────────────────────────────
-
-[[bench]]
-name = "json_vm"
-path = "benches/json/vm.rs"
-harness = false
-required-features = ["vm"]
-
-[[bench]]
-name = "css_vm"
-path = "benches/css/vm.rs"
-harness = false
-required-features = ["vm"]
-
-[[bench]]
-name = "google_sheets_vm"
-path = "benches/google_sheets/vm.rs"
-harness = false
-required-features = ["vm"]
-
-# ── Callgrind tier (`callgrind` feature; pulls `iai`) ──────────────
-#
-# `json_callgrind` requires only `callgrind`; the feature pulls in
-# the pre-existing `iai` alias so the bench source's
-# `#![cfg(feature = "iai")]` inner gate also activates. On non-Linux
-# hosts the iai-callgrind dev-dep is absent and the bench is
-# unbuildable; CI uses Linux exclusively for this tier.
-
-[[bench]]
-name = "json_callgrind"
-path = "benches/json_callgrind.rs"
-harness = false
-required-features = ["callgrind"]
-
-# ── WASM/TS competitor tier (`wasm-bench` feature) ─────────────────
-
-[[bench]]
-name = "json_ts"
-path = "benches/json/ts.rs"
-harness = false
-required-features = ["wasm-bench"]
-
-[[bench]]
-name = "json_wasm"
-path = "benches/json/wasm.rs"
-harness = false
-required-features = ["wasm-bench"]
-
-[[bench]]
-name = "css_ts"
-path = "benches/css/ts.rs"
-harness = false
-required-features = ["wasm-bench"]
-
-[[bench]]
-name = "css_wasm"
-path = "benches/css/wasm.rs"
-harness = false
-required-features = ["wasm-bench"]
-
-
-# iai-callgrind is a Linux-only dev-dep (requires valgrind linkage).
-# macOS dev-hosts skip it; the `iai` feature + `required-features` on the
-# json_callgrind bench make the bench a no-op when the feature is off.
-# CI (Linux) activates the feature explicitly via the workflow yml.
-[target.'cfg(target_os = "linux")'.dev-dependencies]
-iai-callgrind = "0.12"

@@ -1,139 +1,23 @@
 [workspace]
-members = ["crates/core", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/egraph", "crates/egraph-derive", "crates/csp-solver", "crates/simd-scan", "crates/bbnf-path", "crates/bbnf-path-ts", "xtask"]
-exclude = ["wasm"]
+members = ["crates/core"]
 resolver = "2"
 
-# B2: workspace grammar manifest. `cargo xtask regen` reads this table
-# to know which grammars to regenerate. Each entry produces a
-# corresponding `crates/core/src/grammar/generated/<ident>.rs` file.
-#
-# Entries enumerated from the union of every `#[parser(path = "...")]`
-# site across the workspace (rg over crates/). Sites pointing at the
-# SAME grammar file collapse to one manifest entry; the manifest carries
-# the grammar's *capabilities* (prettify, serialize, structural,
-# skip_recover) as features so consumer-side derive attrs can reduce
-# to `include!` + marker struct (W1 scope).
-#
-# `path` is workspace-relative.
-[workspace.metadata.bbnf]
-grammars = [
-    { ident = "bbnf",          path = "grammar/bbnf/bbnf.bbnf",                   features = ["structural", "prettify", "serialize"] },
-    { ident = "json",          path = "grammar/json/json.bbnf",                   features = ["prettify", "serialize"] },
-    { ident = "css_l4",        path = "grammar/css/l4/stylesheet.bbnf",           features = ["skip_recover", "prettify", "serialize"] },
-    { ident = "css_pretty",    path = "grammar/css/pretty.bbnf",                  features = ["skip_recover", "prettify", "serialize"] },
-    { ident = "google_sheets", path = "grammar/google-sheets/google-sheets.bbnf", features = ["skip_recover", "prettify", "serialize"] },
-    { ident = "ebnf",          path = "grammar/ebnf/ebnf.bbnf",                   features = ["prettify", "serialize"] },
-    { ident = "bnf",           path = "grammar/bnf/bnf.bbnf",                     features = ["prettify", "serialize"] },
-    { ident = "csv",           path = "grammar/misc/csv.bbnf",                    features = ["serialize"] },
-    { ident = "math",          path = "grammar/misc/math.bbnf",                   features = ["serialize"] },
-]
+[workspace.package]
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/mkbabb/bbnf-lang"
 
-# AZ-IV.W1.8 — manifest-driven `EmitStrategy::for_grammar` binding
-# table per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22.
-# Replaces the 9-arm allow-list previously hard-coded in
-# `crates/ir/src/registry/strategy.rs::EmitStrategy::for_grammar`.
-# Each row carries every parser-struct ident the grammar advertises
-# plus the Rust-backend `StructBuilder` / `Document` paths the emitter
-# splices into the generated `parse()` body.
-#
-# The canonical run-time mirror lives at
-# `crates/ir/src/registry/strategy.rs::PRODUCTION_MANIFEST_TABLE`;
-# adding a new grammar requires both a row here AND the matching
-# `PRODUCTION_MANIFEST_TABLE` entry. The synthetic-grammar test in
-# `crates/core/tests/synthetic_grammar_strategy.rs` proves the
-# resolver consults the table without source-arm edits.
-[workspace.metadata.bbnf-strategy]
-grammars = [
-    { idents = ["JsonParser", "JsonGrammar"], rust_builder_path = "crate::runtime::json::JsonStructBuilder", rust_document_path = "crate::runtime::json::JsonDocument" },
-    { idents = ["GoogleSheetsParser", "GoogleSheetsGrammar"], rust_builder_path = "crate::runtime::google_sheets::SheetsStructBuilder", rust_document_path = "crate::runtime::google_sheets::SheetsDocument" },
-    { idents = ["CssL4Parser"], rust_builder_path = "crate::runtime::css_l4::CssStructBuilder", rust_document_path = "crate::runtime::css_l4::CssDocument" },
-    { idents = ["BbnfBootstrap", "BbnfParser"], rust_builder_path = "crate::runtime::bbnf::BbnfStructBuilder", rust_document_path = "crate::runtime::bbnf::BbnfDocument" },
-    { idents = ["CsvParser", "CsvGrammar"], rust_builder_path = "crate::runtime::csv::CsvStructBuilder", rust_document_path = "crate::runtime::csv::CsvDocument" },
-    { idents = ["MathParser", "MathGrammar"], rust_builder_path = "crate::runtime::math::MathStructBuilder", rust_document_path = "crate::runtime::math::MathDocument" },
-    { idents = ["BnfParser", "BnfGrammar"], rust_builder_path = "crate::runtime::bnf::BnfStructBuilder", rust_document_path = "crate::runtime::bnf::BnfDocument" },
-    { idents = ["EbnfParser", "EbnfGrammar"], rust_builder_path = "crate::runtime::ebnf::EbnfStructBuilder", rust_document_path = "crate::runtime::ebnf::EbnfDocument" },
-    { idents = ["CssPrettyParser", "CssPrettyGrammar"], rust_builder_path = "crate::runtime::css_pretty::CssPrettyStructBuilder", rust_document_path = "crate::runtime::css_pretty::CssPrettyDocument" },
-]
-
-# ─── Profile tiers (B0.W1.a) ────────────────────────────────────────────
-#
-# Three intentional tiers cover routine iteration, profiling preparation,
-# and final-proof numerics. Do not cross-wire them — each tier has a
-# distinct cost model and a distinct consumer.
-#
-#   Routine        → `ax-iter`        compile-gate / non-samply tests;
-#                                     inherits dev, strips DWARF, fast link.
-#   Profiling-prep → `profiling-prep` build bench/test binaries once for
-#                                     repeatable samply capture; inherits
-#                                     release + re-asserts DWARF invariants
-#                                     that samply symbol resolution needs
-#                                     (see docs/instructions/PROFILING.md
-#                                     §Samply invocation rules).
-#   Final-proof    → `bench`          fat LTO publish-grade numerics;
-#                                     AY.W5-W7 close gates run here.
-#
-# `release` remains the baseline for non-bench binaries; the three tiers
-# above are what AY iteration, profiling, and final-proof actually hit.
-#
-# ────────────────────────────────────────────────────────────────────────
+[workspace.dependencies]
+bbnf-regex = { path = "../parse-that-skv26/rust/regex" }
+blake3 = "1.8"
+parse_that = { path = "../parse-that-skv26/rust/parse_that" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
 [profile.release]
 lto = "thin"
 codegen-units = 1
-debug = true
-strip = false
-split-debuginfo = "packed"
 
 [profile.bench]
-# AW-IV.W2.2 — belt-and-suspenders verification cover for W2.1's
-# inline-emit migration. The hot-path strategy is source-level flat
-# emission (helper bodies spliced into walker arms at codegen); LTO +
-# codegen-units=1 catch any helper that slipped through and remained as
-# a cross-crate call boundary, collapsing it at link time so `nm` shows
-# zero hot-path helper symbols in the bench binary. `debug = true`
-# preserved for samply symbol resolution (see feedback_samply_symbols).
 lto = "fat"
 codegen-units = 1
-debug = true
-
-# B0.W1.a — profiling-prep profile. Build bench/test binaries once,
-# samply them many times, match final-proof numerics. Intent: reusable
-# prepared binaries for AY.W5-W7 samply gates without paying the fat-LTO
-# cost of `[profile.bench]` on every capture.
-#
-# Inherits `release` (thin LTO, codegen-units=1). The three keys below
-# are load-bearing and re-stated explicitly even though `release` already
-# sets them — profile provenance is part of the discipline, and samply
-# symbol resolution depends on every one:
-#   debug = true             → DWARF emitted so samply resolves frames
-#                              (feedback_samply_symbols: samply needs
-#                              debug=true to name hot-path symbols).
-#   strip = false            → DWARF survives the link step; otherwise
-#                              samply falls back to address-only frames.
-#   split-debuginfo = "packed" → DWARF travels in a sibling artefact
-#                              alongside the binary so profile-headless
-#                              symbol load finds it from the bench binary
-#                              path alone.
-[profile.profiling-prep]
-inherits = "release"
-debug = true
-strip = false
-split-debuginfo = "packed"
-
-[profile.dev]
-incremental = true
-codegen-units = 16
-
-[profile.dev.package.bbnf-ir]
-opt-level = 1
-
-[profile.dev.package.csp-solver]
-opt-level = 1
-
-[profile.dev.package.parse_that]
-opt-level = 1
-
-# `[profile.ax-iter]` lives in `.cargo/config.toml` as the workspace's
-# single source of truth (debug = "line-tables-only", codegen-units = 256,
-# incremental = true, opt-level = 0). AZ-III.W0p.2 consolidated the two
-# definitions; do not re-add an `[profile.ax-iter]` block here.

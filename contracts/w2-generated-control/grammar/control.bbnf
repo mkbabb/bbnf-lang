@@ -1,0 +1,4 @@
+root = branch, digits, pair*, "x", "!" ;
+branch = ("a", "x") | ("a", "b") ;
+digits = /[0-9]+/ ;
+pair = "x", "y" ;

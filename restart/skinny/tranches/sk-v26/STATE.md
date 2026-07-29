@@ -15,7 +15,7 @@ Last observed: 2026-07-28, America/New_York.
 | W0 truth seal | ADMITTED_GIT_DURABLE | paired payload commits, 63-path overlay, clean dependency pin, replay, and receipts verify |
 | W1 parse-that transaction | ADMITTED_GIT_DURABLE | parse-that `9c9714dfd`; BBNF evidence `ad7aec5c6`; 70 workspace laws, 7 bridge laws, clean packages, 148-path crater, tri-fold ACCEPT |
 | W2 BBNF semantic spine | ADMITTED_GIT_DURABLE | parse-that `282ccb6f6`; carrier `28a91db51`; evidence `60ee1a51d`; reviews `f46eb9497`; adjudication `3f44a40c1`; tri-fold ACCEPT |
-| W3 grammar-neutral vertical | AUTHORIZED_PREFREEZE | first correct the missing W0 public-witness matrix, seal the generic instance/syntax/Pratt surface, and pass hostile review; held-out selection remains forbidden |
+| W3 grammar-neutral vertical | AUTHORIZED_BORN_RED | two independent designs plus final adjudication select the minimal pre-freeze instance/difference/Trim/Pratt surface; held-out selection remains forbidden |
 | W4 profile/cutover | NOT STARTED | blocked on W3 semantic parity |
 | Consumer/playground lane | FORMATION-ONLY | explicitly off the core parser critical path |
 
@@ -51,16 +51,19 @@ git -C /Users/mkbabb/Programming/parse-that-skv26 rev-parse \
   282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f^{tree}
 ```
 
-The exact next boundary is the W3 pre-freeze correction and born-RED contract:
+The exact next boundary is:
 
-1. add the missing W0 public-witness feature matrix and stable IDs without
-   rewriting W0 admission;
-2. commit born-RED laws for explicit entry identity, strict instance metadata,
-   the action-free syntax union, transactional difference, and genuine Pratt;
-3. implement only the generic surface selected by the independent design
-   synthesis;
-4. pass public-witness and no-overfit controls plus tri-fold hostile review;
-5. create the immutable freeze basis and receipt.
+1. seal the corrective public-witness and five-candidate manifest/case packet
+   described by `artifacts/W3-DESIGN-ADJUDICATION.md`, without compiling the
+   candidates;
+2. commit born-RED parse-that ABI-3 difference laws;
+3. implement and package only the accepted difference primitive;
+4. commit born-RED BBNF instance, syntax, Trim, semantic, Pratt, replay, and
+   public-witness laws;
+5. implement the accepted generic surface without a compatibility path;
+6. pass public-witness, package, no-overfit, regeneration, and zero-diff
+   controls plus tri-fold hostile review;
+7. create the immutable freeze basis and receipt.
 
 Do not calculate, name, materialize, or special-case the held-out selection
 before the freeze receipt is git-durable.

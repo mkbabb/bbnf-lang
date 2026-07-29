@@ -8,7 +8,7 @@ use super::event::{EVENT_SCHEMA, ScalarEventPlan};
 use super::lower::{LoweringPlan, PlanOp, PlanRecordSlot, RegexPlanData};
 use super::source::Revision;
 
-const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v4";
+const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v5";
 
 /// One deterministic, direct Rust parser product.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -142,6 +142,8 @@ impl<'a> RustEmitter<'a> {
             self.events.revision().hex()
         )
         .unwrap();
+        self.source
+            .push_str("const _: () = assert!(parse_that::KERNEL_ABI == 2);\n");
         writeln!(
             self.source,
             "const MAX_INPUT_BYTES: usize = {};",

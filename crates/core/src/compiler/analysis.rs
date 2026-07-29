@@ -235,7 +235,7 @@ impl AnalysisFacts {
         }
 
         let zero_call_edges = zero_consumption_calls(program, &work);
-        let zero_cycles = cyclic_components(&zero_call_edges);
+        let zero_cycles = cyclic_components(program.revision(), &zero_call_edges);
         let zero_cycle_rules = zero_cycles
             .iter()
             .flatten()
@@ -243,9 +243,9 @@ impl AnalysisFacts {
             .collect::<BTreeSet<_>>();
 
         for component_index in 0..dependency.component_count() {
-            let component_id = super::syntax::SccId::checked(component_index)
+            let component_id = super::syntax::SccId::checked(program.revision(), component_index)
                 .expect("component identity was already checked");
-            if !dependency.is_recursive(component_id) {
+            if dependency.is_recursive(component_id) != Some(true) {
                 continue;
             }
             let members = dependency.component_required(component_id);
@@ -349,11 +349,15 @@ impl AnalysisFacts {
     }
 
     pub fn node(&self, id: NodeId) -> Option<NodeFacts> {
-        self.nodes.get(id.index()).copied()
+        (id.revision() == self.revision)
+            .then(|| self.nodes.get(id.index()).copied())
+            .flatten()
     }
 
     pub fn rule(&self, id: RuleId) -> Option<RuleFacts> {
-        self.rules.get(id.index()).copied()
+        (id.revision() == self.revision)
+            .then(|| self.rules.get(id.index()).copied())
+            .flatten()
     }
 }
 
@@ -511,7 +515,7 @@ fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<Rul
 }
 
 /// Canonical SCCs of the zero-consumption call graph, filtered to cycles.
-fn cyclic_components(edges: &[Vec<RuleId>]) -> Vec<Vec<RuleId>> {
+fn cyclic_components(revision: Revision, edges: &[Vec<RuleId>]) -> Vec<Vec<RuleId>> {
     let count = edges.len();
     let mut visited = vec![false; count];
     let mut finish = Vec::with_capacity(count);
@@ -521,7 +525,7 @@ fn cyclic_components(edges: &[Vec<RuleId>]) -> Vec<Vec<RuleId>> {
             continue;
         }
         visited[index] = true;
-        let root = RuleId::checked(index).expect("rule identity is checked");
+        let root = RuleId::checked(revision, index).expect("rule identity is checked");
         let mut stack = vec![(root, 0_usize)];
         while let Some((rule, next)) = stack.last_mut() {
             if *next < edges[rule.index()].len() {
@@ -539,7 +543,7 @@ fn cyclic_components(edges: &[Vec<RuleId>]) -> Vec<Vec<RuleId>> {
 
     let mut reverse = vec![Vec::new(); count];
     for (source_index, targets) in edges.iter().enumerate() {
-        let source = RuleId::checked(source_index).expect("rule identity is checked");
+        let source = RuleId::checked(revision, source_index).expect("rule identity is checked");
         for &target in targets {
             reverse[target.index()].push(source);
         }

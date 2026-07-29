@@ -56,7 +56,9 @@ impl DependencyGraph {
     }
 
     pub fn dependencies(&self, rule: RuleId) -> Option<&[RuleId]> {
-        self.edges.get(rule.index()).map(Vec::as_slice)
+        (rule.revision() == self.revision)
+            .then(|| self.edges.get(rule.index()).map(Vec::as_slice))
+            .flatten()
     }
 
     fn dependencies_required(&self, rule: RuleId) -> &[RuleId] {
@@ -97,12 +99,13 @@ impl DependencySolution {
         components.sort();
 
         let mut component_by_rule = vec![
-            SccId::checked(0)
+            SccId::checked(program.revision(), 0)
                 .expect("zero is a valid component identity");
             graph.rule_count()
         ];
         for (index, members) in components.iter().enumerate() {
-            let component = SccId::checked(index).expect("rule budget bounds SCC identities");
+            let component = SccId::checked(program.revision(), index)
+                .expect("rule budget bounds SCC identities");
             for &member in members {
                 component_by_rule[member.index()] = component;
             }
@@ -129,7 +132,9 @@ impl DependencySolution {
     }
 
     pub fn component(&self, id: SccId) -> Option<&[RuleId]> {
-        self.components.get(id.index()).map(Vec::as_slice)
+        (id.revision() == self.revision)
+            .then(|| self.components.get(id.index()).map(Vec::as_slice))
+            .flatten()
     }
 
     pub const fn component_count(&self) -> usize {
@@ -137,7 +142,9 @@ impl DependencySolution {
     }
 
     pub fn component_of(&self, rule: RuleId) -> Option<SccId> {
-        self.component_by_rule.get(rule.index()).copied()
+        (rule.revision() == self.revision)
+            .then(|| self.component_by_rule.get(rule.index()).copied())
+            .flatten()
     }
 
     pub(crate) fn component_required(&self, id: SccId) -> &[RuleId] {
@@ -147,16 +154,17 @@ impl DependencySolution {
 
     /// Whether a component is genuinely recursive rather than a singleton in
     /// the condensation DAG.
-    pub fn is_recursive(&self, id: SccId) -> bool {
-        self.component(id).is_some_and(|members| {
+    pub fn is_recursive(&self, id: SccId) -> Option<bool> {
+        let members = self.component(id)?;
+        Some(
             members.len() > 1
                 || members.first().is_some_and(|rule| {
                     self.graph
                         .dependencies_required(*rule)
                         .binary_search(rule)
                         .is_ok()
-                })
-        })
+                }),
+        )
     }
 
     /// Components in dependency-first order with `SccId` as the stable tie
@@ -178,7 +186,7 @@ fn strongly_connected_components(graph: &DependencyGraph) -> Vec<Vec<RuleId>> {
             continue;
         }
         visited[index] = true;
-        let root = RuleId::checked(index).expect("graph identities are checked");
+        let root = RuleId::checked(graph.revision(), index).expect("graph identities are checked");
         let mut stack = vec![(root, 0_usize)];
         while let Some((rule, next)) = stack.last_mut() {
             let dependencies = graph.dependencies_required(*rule);
@@ -198,7 +206,8 @@ fn strongly_connected_components(graph: &DependencyGraph) -> Vec<Vec<RuleId>> {
 
     let mut reverse = vec![Vec::new(); count];
     for source_index in 0..count {
-        let source = RuleId::checked(source_index).expect("graph identities are checked");
+        let source =
+            RuleId::checked(graph.revision(), source_index).expect("graph identities are checked");
         for &target in graph.dependencies_required(source) {
             reverse[target.index()].push(source);
         }
@@ -255,7 +264,9 @@ fn dependency_first_order(
     let mut ready = BTreeSet::new();
     for (index, &count) in unresolved_dependencies.iter().enumerate() {
         if count == 0 {
-            ready.insert(SccId::checked(index).expect("component identities are checked"));
+            ready.insert(
+                SccId::checked(graph.revision(), index).expect("component identities are checked"),
+            );
         }
     }
 

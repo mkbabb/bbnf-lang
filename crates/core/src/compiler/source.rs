@@ -4,7 +4,7 @@ use std::fmt::Write as _;
 
 use super::syntax::{NodeId, RuleId, TransformId};
 
-const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v3\0";
+const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v4\0";
 
 #[derive(Clone, Copy)]
 pub struct ModuleInput<'a> {
@@ -139,12 +139,13 @@ pub struct SourceModule {
 
 impl SourceModule {
     pub(crate) fn new(
+        revision: Revision,
         logical_path: String,
         bytes: Vec<u8>,
         nodes: Vec<SourceNode>,
         rules: Vec<SourceRule>,
     ) -> Self {
-        let revision = Revision::for_module(&logical_path, &bytes);
+        debug_assert_eq!(revision, Revision::for_module(&logical_path, &bytes));
         Self {
             revision,
             logical_path,

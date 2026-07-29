@@ -107,7 +107,7 @@ fn consuming_self_recursion_is_retained_as_one_finite_component() {
         .component_of(root)
         .expect("root belongs to its dependency carrier");
 
-    assert!(module.dependency().is_recursive(component));
+    assert_eq!(module.dependency().is_recursive(component), Some(true));
     assert_eq!(
         module.dependency().component(component),
         Some([root].as_slice())
@@ -141,7 +141,7 @@ atom = "x";
         module.dependency().component(recursive),
         Some([root, other].as_slice())
     );
-    assert!(module.dependency().is_recursive(recursive));
+    assert_eq!(module.dependency().is_recursive(recursive), Some(true));
 
     let order = module.dependency().dependency_order();
     let atom_position = order

@@ -711,6 +711,7 @@ fn build_module(
     sink: SyntaxSink,
     options: CompileOptions,
 ) -> StageResult<SourceModule> {
+    let revision = super::source::Revision::for_module(input.logical_path(), input.bytes());
     for event in &sink.events {
         let SyntaxEvent::Node {
             kind: DraftNodeKind::Regex(pattern),
@@ -763,7 +764,7 @@ fn build_module(
                         "node span exceeds the source coordinate domain",
                     ));
                 };
-                let kind = match materialize_node_kind(kind, index) {
+                let kind = match materialize_node_kind(kind, index, revision) {
                     Some(kind) => kind,
                     None => {
                         return StageResult::rejected(invariant_diagnostic(
@@ -799,14 +800,14 @@ fn build_module(
                         "rule events are not lexical or refer to an unknown root",
                     ));
                 }
-                let Some(id) = RuleId::checked(index) else {
+                let Some(id) = RuleId::checked(revision, index) else {
                     return StageResult::rejected(invariant_diagnostic(
                         start,
                         end,
                         "rule identity exceeds the compiler coordinate domain",
                     ));
                 };
-                let Some(root) = NodeId::checked(root) else {
+                let Some(root) = NodeId::checked(revision, root) else {
                     return StageResult::rejected(invariant_diagnostic(
                         start,
                         end,
@@ -838,6 +839,7 @@ fn build_module(
     }
 
     StageResult::accepted(SourceModule::new(
+        revision,
         input.logical_path().to_owned(),
         input.bytes().to_vec(),
         nodes,
@@ -845,7 +847,11 @@ fn build_module(
     ))
 }
 
-fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNodeKind> {
+fn materialize_node_kind(
+    kind: DraftNodeKind,
+    parent: usize,
+    revision: super::source::Revision,
+) -> Option<SourceNodeKind> {
     Some(match kind {
         DraftNodeKind::Epsilon => SourceNodeKind::Epsilon,
         DraftNodeKind::Literal(bytes) => SourceNodeKind::Literal(bytes),
@@ -854,13 +860,21 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
         DraftNodeKind::Sequence(children) => SourceNodeKind::Sequence(
             children
                 .into_iter()
-                .map(|child| (child < parent).then_some(child).and_then(NodeId::checked))
+                .map(|child| {
+                    (child < parent)
+                        .then_some(child)
+                        .and_then(|child| NodeId::checked(revision, child))
+                })
                 .collect::<Option<Vec<_>>>()?,
         ),
         DraftNodeKind::Choice(children) => SourceNodeKind::Choice(
             children
                 .into_iter()
-                .map(|child| (child < parent).then_some(child).and_then(NodeId::checked))
+                .map(|child| {
+                    (child < parent)
+                        .then_some(child)
+                        .and_then(|child| NodeId::checked(revision, child))
+                })
                 .collect::<Option<Vec<_>>>()?,
         ),
         DraftNodeKind::Repeat {
@@ -870,7 +884,7 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
         } => SourceNodeKind::Repeat {
             child: (child < parent)
                 .then_some(child)
-                .and_then(NodeId::checked)?,
+                .and_then(|child| NodeId::checked(revision, child))?,
             minimum,
             maximum,
         },
@@ -881,8 +895,8 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
         } => SourceNodeKind::Transform {
             child: (child < parent)
                 .then_some(child)
-                .and_then(NodeId::checked)?,
-            transform: TransformId::checked(transform)?,
+                .and_then(|child| NodeId::checked(revision, child))?,
+            transform: TransformId::checked(revision, transform)?,
             name,
         },
         DraftNodeKind::Record(slots) => SourceNodeKind::Record(
@@ -900,7 +914,7 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
                         name,
                         child: (child < parent)
                             .then_some(child)
-                            .and_then(NodeId::checked)?,
+                            .and_then(|child| NodeId::checked(revision, child))?,
                         name_span: SourceSpan::checked(name_start, name_end)?,
                         span: SourceSpan::checked(start, end)?,
                     }),
@@ -908,7 +922,7 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
                         Some(SourceRecordSlot::Discard {
                             child: (child < parent)
                                 .then_some(child)
-                                .and_then(NodeId::checked)?,
+                                .and_then(|child| NodeId::checked(revision, child))?,
                             span: SourceSpan::checked(start, end)?,
                         })
                     }

@@ -5,18 +5,41 @@ use serde::Serialize;
 use super::diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
 use super::source::{Revision, SourceModule, SourceNodeKind, SourceRecordSlot, SourceSpan};
 
+// Public compiler identities are full-revision capabilities. Generated
+// parsers never carry them: the wire serializer emits only the compact local
+// ordinal because every replay carrier already has a mandatory revision
+// envelope, while in-memory lookups compare the complete revision first.
 macro_rules! id_type {
     ($name:ident) => {
-        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
-        pub struct $name(u32);
+        #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+        pub struct $name {
+            index: u32,
+            revision: Revision,
+        }
 
         impl $name {
-            pub(crate) fn checked(index: usize) -> Option<Self> {
-                Some(Self(u32::try_from(index).ok()?))
+            pub(crate) fn checked(revision: Revision, index: usize) -> Option<Self> {
+                Some(Self {
+                    index: u32::try_from(index).ok()?,
+                    revision,
+                })
+            }
+
+            pub const fn revision(self) -> Revision {
+                self.revision
             }
 
             pub const fn index(self) -> usize {
-                self.0 as usize
+                self.index as usize
+            }
+        }
+
+        impl Serialize for $name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                serializer.serialize_u32(self.index)
             }
         }
     };
@@ -201,7 +224,8 @@ impl Program {
         let mut nodes = Vec::with_capacity(module.nodes.len());
         let mut fields = Vec::new();
         for (index, source) in module.nodes.iter().enumerate() {
-            let id = NodeId::checked(index).expect("source budget checked node identity");
+            let id = NodeId::checked(module.revision(), index)
+                .expect("source budget checked node identity");
             let kind = match &source.kind {
                 SourceNodeKind::Epsilon => NodeKind::Epsilon,
                 SourceNodeKind::Literal(bytes) => NodeKind::Literal(bytes.clone()),
@@ -270,7 +294,7 @@ impl Program {
                                         ),
                                     ));
                                 }
-                                let field = FieldId::checked(fields.len())
+                                let field = FieldId::checked(module.revision(), fields.len())
                                     .expect("node budget bounds retained field identities");
                                 fields.push(FieldDecl {
                                     id: field,
@@ -347,7 +371,9 @@ impl Program {
     }
 
     pub fn field(&self, id: FieldId) -> Option<&FieldDecl> {
-        self.fields.get(id.index())
+        (id.revision() == self.revision)
+            .then(|| self.fields.get(id.index()))
+            .flatten()
     }
 
     pub const fn entry(&self) -> RuleId {
@@ -355,11 +381,15 @@ impl Program {
     }
 
     pub fn node(&self, id: NodeId) -> Option<&Node> {
-        self.nodes.get(id.index())
+        (id.revision() == self.revision)
+            .then(|| self.nodes.get(id.index()))
+            .flatten()
     }
 
     pub fn rule(&self, id: RuleId) -> Option<&Rule> {
-        self.rules.get(id.index())
+        (id.revision() == self.revision)
+            .then(|| self.rules.get(id.index()))
+            .flatten()
     }
 
     pub(crate) fn field_required(&self, id: FieldId) -> &FieldDecl {
@@ -395,7 +425,9 @@ impl NodeRemap {
     }
 
     pub fn get(&self, old: NodeId) -> Option<NodeId> {
-        self.nodes.get(old.index()).copied().flatten()
+        (old.revision() == self.from)
+            .then(|| self.nodes.get(old.index()).copied().flatten())
+            .flatten()
     }
 
     pub const fn from_revision(&self) -> Revision {

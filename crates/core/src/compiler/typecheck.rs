@@ -179,7 +179,12 @@ impl TypeSolution {
         let mut interned = BTreeMap::new();
         let mut named_by_rule = Vec::with_capacity(program.rules().len());
         for rule in program.rules() {
-            let type_id = intern_type(SemanticType::Named(rule.id()), &mut arena, &mut interned);
+            let type_id = intern_type(
+                program.revision(),
+                SemanticType::Named(rule.id()),
+                &mut arena,
+                &mut interned,
+            );
             named_by_rule.push(type_id);
         }
 
@@ -238,7 +243,9 @@ impl TypeSolution {
     }
 
     pub fn semantic_type(&self, id: TypeId) -> Option<&SemanticType> {
-        self.arena.get(id.index())
+        (id.revision() == self.revision)
+            .then(|| self.arena.get(id.index()))
+            .flatten()
     }
 
     pub fn node_derivations(&self) -> &[NodeTypeDerivation] {
@@ -250,15 +257,21 @@ impl TypeSolution {
     }
 
     pub fn node_type(&self, node: NodeId) -> Option<TypeId> {
-        self.nodes.get(node.index()).map(|value| value.type_id)
+        (node.revision() == self.revision)
+            .then(|| self.nodes.get(node.index()).map(|value| value.type_id))
+            .flatten()
     }
 
     pub fn rule_type(&self, rule: RuleId) -> Option<TypeId> {
-        self.rules.get(rule.index()).map(|value| value.named_type)
+        (rule.revision() == self.revision)
+            .then(|| self.rules.get(rule.index()).map(|value| value.named_type))
+            .flatten()
     }
 
     pub fn rule_root_type(&self, rule: RuleId) -> Option<TypeId> {
-        self.rules.get(rule.index()).map(|value| value.root_type)
+        (rule.revision() == self.revision)
+            .then(|| self.rules.get(rule.index()).map(|value| value.root_type))
+            .flatten()
     }
 
     pub(crate) fn semantic_type_required(&self, id: TypeId) -> &SemanticType {
@@ -317,6 +330,7 @@ impl TypeSolution {
             };
             if derivation.revision != self.revision
                 || derivation.node != node.id()
+                || derivation.type_id.revision() != self.revision
                 || derivation.type_id.index() >= self.arena.len()
             {
                 return StageResult::rejected(type_invariant(
@@ -343,6 +357,8 @@ impl TypeSolution {
             };
             if derivation.revision != self.revision
                 || derivation.rule != rule.id()
+                || derivation.named_type.revision() != self.revision
+                || derivation.root_type.revision() != self.revision
                 || derivation.named_type.index() >= self.arena.len()
                 || derivation.root_type.index() >= self.arena.len()
                 || self.semantic_type_required(derivation.named_type)
@@ -382,30 +398,32 @@ impl TypeSolution {
         match semantic {
             SemanticType::Unit | SemanticType::Span => {}
             SemanticType::Named(rule) => {
-                if rule.index() >= program.rules().len() {
+                if rule.revision() != program.revision() || rule.index() >= program.rules().len() {
                     return Err("named semantic type references an absent rule");
                 }
             }
             SemanticType::Product(children) | SemanticType::Sum(children) => {
-                if children
-                    .iter()
-                    .any(|child| child.index() >= self.arena.len())
-                {
+                if children.iter().any(|child| {
+                    child.revision() != self.revision || child.index() >= self.arena.len()
+                }) {
                     return Err("aggregate semantic type references an absent type");
                 }
             }
             SemanticType::Option(child) | SemanticType::List(child) => {
-                if child.index() >= self.arena.len() {
+                if child.revision() != self.revision || child.index() >= self.arena.len() {
                     return Err("unary semantic type references an absent type");
                 }
             }
             SemanticType::Record { owner, fields } => {
-                if owner.index() >= program.rules().len() {
+                if owner.revision() != program.revision() || owner.index() >= program.rules().len()
+                {
                     return Err("record semantic type references an absent owner");
                 }
                 let mut previous = None;
                 for field in fields {
-                    if field.field.index() >= program.fields().len()
+                    if field.field.revision() != program.revision()
+                        || field.field.index() >= program.fields().len()
+                        || field.value.revision() != self.revision
                         || field.value.index() >= self.arena.len()
                         || program.field_required(field.field).owner() != *owner
                     {
@@ -670,7 +688,7 @@ fn derive_node_type(
         TypeConstraint::Unit => SemanticType::Unit,
         TypeConstraint::Span => SemanticType::Span,
         TypeConstraint::Named(rule) => {
-            if rule.index() >= program.rules().len() {
+            if rule.revision() != program.revision() || rule.index() >= program.rules().len() {
                 return Err(invalid_containment(program, index));
             }
             // Deliberately do not visit the referenced rule root. This is the
@@ -765,7 +783,7 @@ fn derive_node_type(
         }
     };
 
-    let type_id = intern_type(witness, arena, interned);
+    let type_id = intern_type(program.revision(), witness, arena, interned);
     node_types[index] = Some(type_id);
     states[index] = VisitState::Sealed;
     Ok(type_id)
@@ -839,6 +857,7 @@ fn derive_children(
 }
 
 fn intern_type(
+    revision: Revision,
     witness: SemanticType,
     arena: &mut Vec<SemanticType>,
     interned: &mut BTreeMap<SemanticType, TypeId>,
@@ -846,7 +865,7 @@ fn intern_type(
     if let Some(&existing) = interned.get(&witness) {
         return existing;
     }
-    let id = TypeId::checked(arena.len()).expect("node budget bounds type identities");
+    let id = TypeId::checked(revision, arena.len()).expect("node budget bounds type identities");
     interned.insert(witness.clone(), id);
     arena.push(witness);
     id
@@ -952,7 +971,7 @@ array = "[", (value, (",", value)*)?, "]";
         let root = program.nodes()[0].id();
         let constraints = vec![TypeConstraint::TransformAlias {
             child: root,
-            transform: TransformId::checked(0).expect("zero identity"),
+            transform: TransformId::checked(program.revision(), 0).expect("zero identity"),
         }];
         let mut states = vec![VisitState::Unseen];
         let mut node_types = vec![None];
@@ -1059,7 +1078,8 @@ other = %{ value: "c" };
 
         let mut dangling_type = canonical.clone();
         dangling_type.nodes[record_index].type_id =
-            TypeId::checked(canonical.arena.len()).expect("adjacent type identity");
+            TypeId::checked(canonical.revision(), canonical.arena.len())
+                .expect("adjacent type identity");
         assert!(matches!(
             dangling_type.verify(&program),
             StageResult::Rejected { .. }

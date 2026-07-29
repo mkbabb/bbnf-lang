@@ -12,6 +12,8 @@ mod source;
 mod syntax;
 mod typecheck;
 
+const _: () = assert!(parse_that::KERNEL_ABI == 2);
+
 pub use analysis::{AnalysisFacts, NodeFacts, RuleFacts};
 pub use budget::{CompileOptions, RegexBudget, RuntimeBudget};
 pub use dependency::{DependencyGraph, DependencySolution};

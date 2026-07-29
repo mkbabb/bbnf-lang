@@ -219,7 +219,7 @@ impl LoweringPlan {
         let mut regexes = Vec::new();
         let mut nodes = Vec::with_capacity(program.nodes().len());
         for node in program.nodes() {
-            let id = PlanNodeId::checked(node.id().index())
+            let id = PlanNodeId::checked(program.revision(), node.id().index())
                 .expect("program node identity is representable");
             let op = match node.kind() {
                 NodeKind::Epsilon => PlanOp::Epsilon,
@@ -248,7 +248,7 @@ impl LoweringPlan {
                     children
                         .iter()
                         .map(|child| {
-                            PlanNodeId::checked(child.index())
+                            PlanNodeId::checked(program.revision(), child.index())
                                 .expect("program node identity is representable")
                         })
                         .collect(),
@@ -257,7 +257,7 @@ impl LoweringPlan {
                     children
                         .iter()
                         .map(|child| {
-                            PlanNodeId::checked(child.index())
+                            PlanNodeId::checked(program.revision(), child.index())
                                 .expect("program node identity is representable")
                         })
                         .collect(),
@@ -267,7 +267,7 @@ impl LoweringPlan {
                     minimum,
                     maximum,
                 } => PlanOp::Repeat {
-                    child: PlanNodeId::checked(child.index())
+                    child: PlanNodeId::checked(program.revision(), child.index())
                         .expect("program node identity is representable"),
                     minimum: *minimum,
                     maximum: *maximum,
@@ -279,11 +279,11 @@ impl LoweringPlan {
                         .map(|slot| match slot {
                             RecordSlot::Field { field, child } => PlanRecordSlot::Field {
                                 field: *field,
-                                child: PlanNodeId::checked(child.index())
+                                child: PlanNodeId::checked(program.revision(), child.index())
                                     .expect("program node identity is representable"),
                             },
                             RecordSlot::Discard { child } => PlanRecordSlot::Discard {
-                                child: PlanNodeId::checked(child.index())
+                                child: PlanNodeId::checked(program.revision(), child.index())
                                     .expect("program node identity is representable"),
                             },
                         })
@@ -294,7 +294,7 @@ impl LoweringPlan {
                     transform,
                     name,
                 } => PlanOp::Transform {
-                    child: PlanNodeId::checked(child.index())
+                    child: PlanNodeId::checked(program.revision(), child.index())
                         .expect("program node identity is representable"),
                     transform: *transform,
                     name: name.clone(),
@@ -312,7 +312,7 @@ impl LoweringPlan {
             .iter()
             .map(|rule| LoweredRule {
                 id: rule.id(),
-                root: PlanNodeId::checked(rule.root().index())
+                root: PlanNodeId::checked(program.revision(), rule.root().index())
                     .expect("program node identity is representable"),
                 name: rule.name().to_owned(),
                 named_type: types.rule_type_required(rule.id()),
@@ -325,7 +325,7 @@ impl LoweringPlan {
                 id: field.id(),
                 owner: field.owner(),
                 slot: field.slot(),
-                child: PlanNodeId::checked(field.child().index())
+                child: PlanNodeId::checked(program.revision(), field.child().index())
                     .expect("program node identity is representable"),
                 name: field.name().to_owned(),
                 semantic_type: types.node_type_required(field.child()),
@@ -352,7 +352,9 @@ impl LoweringPlan {
     }
 
     pub fn node(&self, id: PlanNodeId) -> Option<&PlanNode> {
-        self.nodes.get(id.index())
+        (id.revision() == self.revision)
+            .then(|| self.nodes.get(id.index()))
+            .flatten()
     }
 
     pub fn rules(&self) -> &[LoweredRule] {

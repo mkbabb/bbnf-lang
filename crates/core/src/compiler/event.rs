@@ -5,7 +5,7 @@ use super::lower::LoweringPlan;
 use super::source::Revision;
 use super::syntax::{FieldId, PlanNodeId, Program, RuleId, TransformId};
 
-pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v4";
+pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v5";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[non_exhaustive]

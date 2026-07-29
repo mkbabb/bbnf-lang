@@ -1,0 +1,16 @@
+{
+  "schema": "bbnf.w3.symbolic-expectation.v1",
+  "oracle": {
+    "kind": "INDEPENDENT_LOWERED_PLAN_EVENT_ORACLE",
+    "authority": "the quoted token is unterminated and the grammar error token requires a semicolon before the closing region",
+    "implementation_generated": false,
+    "normalization": "contracts/w3-public-witnesses/README.md"
+  },
+  "outcome": "MISMATCH",
+  "full_consumption": false,
+  "recovery_policy": "GRAMMAR_ERROR_TOKEN_CONTINUE",
+  "runtime_recovery": "Disabled",
+  "cursor_after": "ENTRY",
+  "observations": [],
+  "reason": "the double-quoted token fails, error_token cannot match without a semicolon or cross }, and no speculative event survives"
+}

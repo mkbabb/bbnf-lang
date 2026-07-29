@@ -1,0 +1,7 @@
+{
+  "schema": "bbnf.grammar-instance.v1",
+  "logical_path": "grammar/misc/math.bbnf",
+  "entry": "expr",
+  "trivia_regex": null,
+  "pratt_tables": []
+}

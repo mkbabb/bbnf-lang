@@ -1,0 +1,42 @@
+{
+  "schema": "bbnf.w3.symbolic-expectation.v1",
+  "oracle": {
+    "kind": "INDEPENDENT_LOWERED_PLAN_EVENT_ORACLE",
+    "authority": "hand-derived from sealed grammar, strict instance, and decoded input bytes",
+    "implementation_generated": false,
+    "normalization": "contracts/w3-public-witnesses/README.md"
+  },
+  "outcome": "MATCH",
+  "full_consumption": true,
+  "recovery_policy": "ATOMIC_REJECT",
+  "runtime_recovery": "Disabled",
+  "cursor_after": "END_INPUT",
+  "observations": [
+    {"kind": "TRIVIA", "lexeme": " \t"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "{"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "\"s\""},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ":"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "\"line\\n\\u0041\""},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ","},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "\"n\""},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ":"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "-12.50e+2"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ","},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "\"a\""},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ":"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "["},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "true"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ","},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "null"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ","},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "{"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "\"z\""},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ":"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "0"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "}"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "]"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "}"},
+    {"kind": "TRIVIA", "lexeme": "\n"},
+    {"kind": "END_INPUT"}
+  ]
+}

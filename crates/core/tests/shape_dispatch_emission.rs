@@ -36,10 +36,9 @@ use bbnf_ir::passes::recognizers::shape_dispatch::{
 use bbnf_ir::registry::SubstrateBinding;
 use bbnf_ir::{IrNode, RuleId};
 
-#[path = "shape_dispatch_emission/fixtures.rs"]
-mod fixtures;
+mod shape_dispatch_fixtures;
 
-use fixtures::*;
+use shape_dispatch_fixtures::*;
 
 // ─── Shared helpers ──────────────────────────────────────────────────
 

@@ -8,8 +8,8 @@ use super::dependency::DependencySolution;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::Revision;
 use super::syntax::{
-    FieldId, FieldIx, NodeId, NodeIds, NodeIx, NodeKindData, Program, RecordSlotData, RuleId,
-    RuleIx, TransformId, TransformIx, TypeId, TypeIds, TypeIx,
+    FieldId, FieldIx, NodeId, NodeIds, NodeIx, NodeKindData, Program, ProjectionKeep,
+    RecordSlotData, RuleId, RuleIx, TransformId, TransformIx, TypeId, TypeIds, TypeIx,
 };
 
 /// Compact semantic witness stored in the type arena.
@@ -217,6 +217,21 @@ pub(crate) enum InferenceRuleData {
         child: NodeIx,
         transform: TransformIx,
     },
+    Projection {
+        left: NodeIx,
+        right: NodeIx,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: NodeIx,
+        exclude: NodeIx,
+    },
+    Trim {
+        child: NodeIx,
+    },
+    Pratt {
+        atom: NodeIx,
+    },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -246,6 +261,21 @@ pub enum InferenceRule<'a> {
     TransformPreserves {
         child: NodeId,
         transform: TransformId,
+    },
+    Projection {
+        left: NodeId,
+        right: NodeId,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: NodeId,
+        exclude: NodeId,
+    },
+    Trim {
+        child: NodeId,
+    },
+    Pratt {
+        atom: NodeId,
     },
 }
 
@@ -278,6 +308,21 @@ fn inference_view<'a>(revision: &'a Revision, data: &'a InferenceRuleData) -> In
                 transform: TransformId::bind(*revision, *transform),
             }
         }
+        InferenceRuleData::Projection { left, right, keep } => InferenceRule::Projection {
+            left: NodeId::bind(*revision, *left),
+            right: NodeId::bind(*revision, *right),
+            keep: *keep,
+        },
+        InferenceRuleData::Difference { include, exclude } => InferenceRule::Difference {
+            include: NodeId::bind(*revision, *include),
+            exclude: NodeId::bind(*revision, *exclude),
+        },
+        InferenceRuleData::Trim { child } => InferenceRule::Trim {
+            child: NodeId::bind(*revision, *child),
+        },
+        InferenceRuleData::Pratt { atom } => InferenceRule::Pratt {
+            atom: NodeId::bind(*revision, *atom),
+        },
     }
 }
 
@@ -963,6 +1008,45 @@ impl TypeSolution {
                     fields,
                 })
             }
+            (
+                NodeKindData::Projection {
+                    left: actual_left,
+                    right: actual_right,
+                    keep: actual_keep,
+                },
+                InferenceRuleData::Projection { left, right, keep },
+            ) if actual_left == left && actual_right == right && actual_keep == keep => {
+                let left_type = child_type(*left)?;
+                let right_type = child_type(*right)?;
+                let kept_type = match keep {
+                    ProjectionKeep::Left => left_type,
+                    ProjectionKeep::Right => right_type,
+                };
+                Ok(self.semantic_type_local(kept_type).clone())
+            }
+            (
+                NodeKindData::Difference {
+                    include: actual_include,
+                    exclude: actual_exclude,
+                },
+                InferenceRuleData::Difference { include, exclude },
+            ) if actual_include == include && actual_exclude == exclude => {
+                let include_type = child_type(*include)?;
+                let _ = child_type(*exclude)?;
+                Ok(self.semantic_type_local(include_type).clone())
+            }
+            (
+                NodeKindData::Trim {
+                    child: actual_child,
+                },
+                InferenceRuleData::Trim { child },
+            ) if actual_child == child => Ok(self.semantic_type_local(child_type(*child)?).clone()),
+            (
+                NodeKindData::Pratt {
+                    atom: actual_atom, ..
+                },
+                InferenceRuleData::Pratt { atom },
+            ) if actual_atom == atom => Ok(self.semantic_type_local(child_type(*atom)?).clone()),
             _ => Err("inference rule does not match the resolved node form"),
         }
     }
@@ -984,6 +1068,21 @@ enum TypeConstraint {
     TransformAlias {
         child: NodeIx,
         transform: TransformIx,
+    },
+    Projection {
+        left: NodeIx,
+        right: NodeIx,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: NodeIx,
+        exclude: NodeIx,
+    },
+    Trim {
+        child: NodeIx,
+    },
+    Pratt {
+        atom: NodeIx,
     },
 }
 
@@ -1020,6 +1119,17 @@ impl TypeConstraint {
                 child: *child,
                 transform: *transform,
             },
+            Self::Projection { left, right, keep } => InferenceRuleData::Projection {
+                left: *left,
+                right: *right,
+                keep: *keep,
+            },
+            Self::Difference { include, exclude } => InferenceRuleData::Difference {
+                include: *include,
+                exclude: *exclude,
+            },
+            Self::Trim { child } => InferenceRuleData::Trim { child: *child },
+            Self::Pratt { atom } => InferenceRuleData::Pratt { atom: *atom },
         }
     }
 }
@@ -1069,6 +1179,17 @@ fn collect_constraints(
                 child: *child,
                 transform: *transform,
             },
+            NodeKindData::Projection { left, right, keep } => TypeConstraint::Projection {
+                left: *left,
+                right: *right,
+                keep: *keep,
+            },
+            NodeKindData::Difference { include, exclude } => TypeConstraint::Difference {
+                include: *include,
+                exclude: *exclude,
+            },
+            NodeKindData::Trim { child } => TypeConstraint::Trim { child: *child },
+            NodeKindData::Pratt { atom, .. } => TypeConstraint::Pratt { atom: *atom },
         };
         constraints[index] = Some(constraint);
     }
@@ -1192,6 +1313,84 @@ fn derive_node_type(
         TypeConstraint::TransformAlias { child, .. } => {
             let type_id = derive_node_type(
                 child.index(),
+                program,
+                constraints,
+                states,
+                node_types,
+                arena,
+                interned,
+            )?;
+            node_types[index] = Some(type_id);
+            states[index] = VisitState::Sealed;
+            return Ok(type_id);
+        }
+        TypeConstraint::Projection { left, right, keep } => {
+            let left_type = derive_node_type(
+                left.index(),
+                program,
+                constraints,
+                states,
+                node_types,
+                arena,
+                interned,
+            )?;
+            let right_type = derive_node_type(
+                right.index(),
+                program,
+                constraints,
+                states,
+                node_types,
+                arena,
+                interned,
+            )?;
+            let type_id = match keep {
+                ProjectionKeep::Left => left_type,
+                ProjectionKeep::Right => right_type,
+            };
+            node_types[index] = Some(type_id);
+            states[index] = VisitState::Sealed;
+            return Ok(type_id);
+        }
+        TypeConstraint::Difference { include, exclude } => {
+            let type_id = derive_node_type(
+                include.index(),
+                program,
+                constraints,
+                states,
+                node_types,
+                arena,
+                interned,
+            )?;
+            let _ = derive_node_type(
+                exclude.index(),
+                program,
+                constraints,
+                states,
+                node_types,
+                arena,
+                interned,
+            )?;
+            node_types[index] = Some(type_id);
+            states[index] = VisitState::Sealed;
+            return Ok(type_id);
+        }
+        TypeConstraint::Trim { child } => {
+            let type_id = derive_node_type(
+                child.index(),
+                program,
+                constraints,
+                states,
+                node_types,
+                arena,
+                interned,
+            )?;
+            node_types[index] = Some(type_id);
+            states[index] = VisitState::Sealed;
+            return Ok(type_id);
+        }
+        TypeConstraint::Pratt { atom } => {
+            let type_id = derive_node_type(
+                atom.index(),
                 program,
                 constraints,
                 states,
@@ -1339,28 +1538,19 @@ mod tests {
     use std::mem::size_of;
 
     use super::*;
-    use crate::compiler::budget::CompileOptions;
-    use crate::compiler::frontend::parse_source;
-    use crate::compiler::source::ModuleInput;
-    use crate::compiler::syntax::Program;
+    use crate::compiler::instance::UNIT_INSTANCE;
+    use crate::compiler::{CompileOptions, GrammarInstanceInput, compile_instance};
 
-    fn program(source: &str) -> (Program, DependencySolution) {
-        let module = match parse_source(
-            ModuleInput::new("type-order-law.bbnf", source.as_bytes()),
-            CompileOptions::default(),
+    fn with_type_fixture(source: &str, inspect: impl FnOnce(&Program, &DependencySolution)) {
+        let options = CompileOptions::default();
+        let compiled = match compile_instance(
+            GrammarInstanceInput::new(UNIT_INSTANCE, source.as_bytes()),
+            options,
         ) {
             StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("source fixture must parse"),
+            StageResult::Rejected { .. } => panic!("grammar-instance fixture must compile"),
         };
-        let program = match Program::resolve(&module) {
-            StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("source fixture must resolve"),
-        };
-        let dependency = match DependencySolution::build(&program) {
-            StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("dependency fixture must resolve"),
-        };
-        (program, dependency)
+        inspect(compiled.program(), compiled.dependency());
     }
 
     #[test]
@@ -1376,52 +1566,58 @@ mod tests {
 
     #[test]
     fn constraint_discovery_permutations_seal_identically() {
-        let (program, dependency) = program(
+        with_type_fixture(
             r#"
 root = value;
 value = object | array | "null";
 object = "{", (value, ":", value)?, "}";
 array = "[", (value, (",", value)*)?, "]";
 "#,
+            |program, dependency| {
+                let canonical = match TypeSolution::solve(program, dependency) {
+                    StageResult::Accepted { value, .. } => value,
+                    StageResult::Rejected { .. } => panic!("recursive binders must solve"),
+                };
+                for seed in 1..=16 {
+                    let schedule = deterministic_permutation(program.node_data_rows().len(), seed);
+                    let candidate =
+                        match TypeSolution::solve_with_order(program, dependency, &schedule) {
+                            StageResult::Accepted { value, .. } => value,
+                            StageResult::Rejected { .. } => {
+                                panic!("permuted constraints must solve")
+                            }
+                        };
+                    assert_eq!(candidate, canonical);
+                }
+            },
         );
-        let canonical = match TypeSolution::solve(&program, &dependency) {
-            StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("recursive binders must solve"),
-        };
-        for seed in 1..=16 {
-            let schedule = deterministic_permutation(program.node_data_rows().len(), seed);
-            let candidate = match TypeSolution::solve_with_order(&program, &dependency, &schedule) {
-                StageResult::Accepted { value, .. } => value,
-                StageResult::Rejected { .. } => panic!("permuted constraints must solve"),
-            };
-            assert_eq!(candidate, canonical);
-        }
     }
 
     #[test]
     fn structural_occurs_check_rejects_non_nominal_cycle() {
-        let (program, _) = program(r#"root = "x";"#);
-        let root = program.node_data_rows()[0].id();
-        let constraints = vec![TypeConstraint::TransformAlias {
-            child: root,
-            transform: TransformIx::checked(0).expect("zero ordinal"),
-        }];
-        let mut states = vec![VisitState::Unseen];
-        let mut node_types = vec![None];
-        let mut arena = Vec::new();
-        let mut interned = BTreeMap::new();
-        let error = derive_node_type(
-            0,
-            &program,
-            &constraints,
-            &mut states,
-            &mut node_types,
-            &mut arena,
-            &mut interned,
-        )
-        .expect_err("a structural self occurrence is not a named binder");
-        assert_eq!(error.code(), DiagnosticCode::InternalInvariant);
-        assert!(error.message().contains("occurs-check"));
+        with_type_fixture(r#"root = "x";"#, |program, _| {
+            let root = program.node_data_rows()[0].id();
+            let constraints = vec![TypeConstraint::TransformAlias {
+                child: root,
+                transform: TransformIx::checked(0).expect("zero ordinal"),
+            }];
+            let mut states = vec![VisitState::Unseen];
+            let mut node_types = vec![None];
+            let mut arena = Vec::new();
+            let mut interned = BTreeMap::new();
+            let error = derive_node_type(
+                0,
+                program,
+                &constraints,
+                &mut states,
+                &mut node_types,
+                &mut arena,
+                &mut interned,
+            )
+            .expect_err("a structural self occurrence is not a named binder");
+            assert_eq!(error.code(), DiagnosticCode::InternalInvariant);
+            assert!(error.message().contains("occurs-check"));
+        });
     }
 
     fn deterministic_permutation(count: usize, mut state: u64) -> Vec<usize> {

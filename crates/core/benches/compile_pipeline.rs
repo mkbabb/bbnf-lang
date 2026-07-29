@@ -12,9 +12,8 @@ use bbnf::pipeline::{
     CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request, compile_paths_request,
 };
 
-#[path = "common/timeout.rs"]
-mod timeout;
-use timeout::{bench_with_timeout, limits};
+mod common;
+use common::timeout::{bench_with_timeout, limits};
 
 fn vm_request() -> CompileRequest {
     CompileRequest {

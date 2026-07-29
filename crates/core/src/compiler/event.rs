@@ -4,12 +4,13 @@ use serde::Serialize;
 
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::lower::{LoweringPlan, PlanOpData, PlanRecordSlotData};
+use super::pratt::{PrattOperatorId, PrattOperatorIx};
 use super::source::Revision;
 use super::syntax::{
     FieldId, FieldIx, PlanNodeId, PlanNodeIx, Program, RuleId, RuleIx, TransformId, TransformIx,
 };
 
-pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v4";
+pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v5";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[non_exhaustive]
@@ -23,6 +24,8 @@ pub enum EventKind {
     ChoiceBranch,
     RepeatCount,
     Transform,
+    Trivia,
+    PrattReduce,
     EndInput,
 }
 
@@ -32,6 +35,7 @@ pub(crate) struct EventSiteData {
     node: Option<PlanNodeIx>,
     rule: Option<RuleIx>,
     field: Option<FieldIx>,
+    operator: Option<PrattOperatorIx>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -142,12 +146,14 @@ impl ScalarEventPlan {
                 node: None,
                 rule: Some(rule.id()),
                 field: None,
+                operator: None,
             });
             sites.push(EventSiteData {
                 kind: EventKind::LeaveRule,
                 node: None,
                 rule: Some(rule.id()),
                 field: None,
+                operator: None,
             });
         }
         for node in lowering.node_data_rows() {
@@ -182,18 +188,55 @@ impl ScalarEventPlan {
                                 node: Some(*child),
                                 rule: Some(*owner),
                                 field: Some(*field),
+                                operator: None,
                             });
                             sites.push(EventSiteData {
                                 kind: EventKind::LeaveField,
                                 node: Some(*child),
                                 rule: Some(*owner),
                                 field: Some(*field),
+                                operator: None,
                             });
                         }
                     }
                     None
                 }
-                PlanOpData::Epsilon | PlanOpData::RuleRef(_) | PlanOpData::Sequence(_) => None,
+                PlanOpData::Trim { .. } => {
+                    if lowering.trivia().is_none() {
+                        return StageResult::rejected(Diagnostic::new(
+                            DiagnosticCode::InternalInvariant,
+                            0,
+                            0,
+                            "Trim lowering requires the singleton validated trivia plan",
+                        ));
+                    }
+                    Some(EventKind::Trivia)
+                }
+                PlanOpData::Pratt { table, .. } => {
+                    let Some(table) = lowering.pratt_tables().get(table.index()) else {
+                        return StageResult::rejected(Diagnostic::new(
+                            DiagnosticCode::InternalInvariant,
+                            0,
+                            0,
+                            "Pratt node references a table outside the lowering arena",
+                        ));
+                    };
+                    for operator in table.operators() {
+                        sites.push(EventSiteData {
+                            kind: EventKind::PrattReduce,
+                            node: Some(node.id()),
+                            rule: None,
+                            field: None,
+                            operator: Some(operator.local()),
+                        });
+                    }
+                    None
+                }
+                PlanOpData::Epsilon
+                | PlanOpData::RuleRef(_)
+                | PlanOpData::Sequence(_)
+                | PlanOpData::Projection { .. }
+                | PlanOpData::Difference { .. } => None,
             };
             if let Some(kind) = kind {
                 sites.push(EventSiteData {
@@ -201,6 +244,7 @@ impl ScalarEventPlan {
                     node: Some(node.id()),
                     rule: None,
                     field: None,
+                    operator: None,
                 });
             }
         }
@@ -209,6 +253,7 @@ impl ScalarEventPlan {
             node: None,
             rule: None,
             field: None,
+            operator: None,
         });
 
         StageResult::accepted(Self {
@@ -235,6 +280,7 @@ impl ScalarEventPlan {
             Option<PlanNodeId>,
             Option<RuleId>,
             Option<FieldId>,
+            Option<PrattOperatorId>,
         ),
     > + '_ {
         self.sites.iter().map(|site| {
@@ -244,6 +290,8 @@ impl ScalarEventPlan {
                     .map(|local| PlanNodeId::bind(self.revision, local)),
                 site.rule.map(|local| RuleId::bind(self.revision, local)),
                 site.field.map(|local| FieldId::bind(self.revision, local)),
+                site.operator
+                    .map(|local| PrattOperatorId::bind(self.revision, local)),
             )
         })
     }
@@ -292,8 +340,9 @@ mod representation_laws {
 
     #[test]
     fn event_rows_use_only_local_ordinals() {
-        assert!(size_of::<EventSiteData>() <= 32);
+        assert!(size_of::<EventSiteData>() <= 40);
         assert!(size_of::<TransformSiteData>() <= 32);
         assert_eq!(size_of::<Option<PlanNodeIx>>(), 8);
+        assert_eq!(size_of::<Option<PrattOperatorIx>>(), 8);
     }
 }

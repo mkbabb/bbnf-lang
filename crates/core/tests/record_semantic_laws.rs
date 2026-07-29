@@ -1,9 +1,12 @@
+mod instance_support;
+
 use bbnf::compiler::{PlanOp, PlanRecordSlot, RecordSlot, SemanticType};
-use bbnf::{CompileOptions, ModuleInput, StageResult, compile_module};
+use bbnf::{CompileOptions, StageResult};
 
 fn accepted(source: &str) -> bbnf::CompiledModule {
-    match compile_module(
-        ModuleInput::new("record-semantic-laws.bbnf", source.as_bytes()),
+    match instance_support::compile(
+        "record-semantic-laws.bbnf",
+        source.as_bytes(),
         CompileOptions::default(),
     ) {
         StageResult::Accepted { value, .. } => value,

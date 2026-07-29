@@ -1,7 +1,7 @@
 error[E0277]: the trait bound `NodeId: serde::Serialize` is not satisfied
-  --> tests/ui/identity/naked_serde.rs:12:39
+  --> tests/ui/identity/naked_serde.rs:11:39
    |
-12 |     let _json = serde_json::to_string(&id).unwrap();
+11 |     let _json = serde_json::to_string(&id).unwrap();
    |                 --------------------- ^^^ the trait `serde_core::ser::Serialize` is not implemented for `NodeId`
    |                 |
    |                 required by a bound introduced by this call

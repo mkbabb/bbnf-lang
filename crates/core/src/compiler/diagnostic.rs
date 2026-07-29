@@ -5,6 +5,7 @@ use serde::Serialize;
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd, Serialize)]
 #[non_exhaustive]
 pub enum DiagnosticCode {
+    InvalidGrammarInstance,
     SourceTooLarge,
     Syntax,
     ResourceLimit,
@@ -16,6 +17,8 @@ pub enum DiagnosticCode {
     NullableRepeat,
     MinimumConsumptionOverflow,
     Regex,
+    UnknownEntry,
+    InvalidPrattTable,
     RevisionMismatch,
     GeneratedSourceTooLarge,
     InternalInvariant,

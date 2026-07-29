@@ -106,67 +106,131 @@ fn assert_prettify_idempotent(fixture: &str, src: &str) {
     );
 }
 
-// ── Per-fixture test pair ──────────────────────────────────────────
-//
-// One `#[test]` per assertion per fixture so CI output names which
-// fixture + which invariant failed. Each fixture appears twice:
-// `<name>_ast_roundtrip` and `<name>_prettify_idempotent`.
+const FIXTURES: &[(&str, &str)] = &[
+    (
+        "grammar/bbnf/bbnf.bbnf",
+        include_str!("../../../grammar/bbnf/bbnf.bbnf"),
+    ),
+    (
+        "grammar/bbnf/expressions.bbnf",
+        include_str!("../../../grammar/bbnf/expressions.bbnf"),
+    ),
+    (
+        "grammar/bbnf/types.bbnf",
+        include_str!("../../../grammar/bbnf/types.bbnf"),
+    ),
+    (
+        "grammar/bnf/bnf.bbnf",
+        include_str!("../../../grammar/bnf/bnf.bbnf"),
+    ),
+    (
+        "grammar/ebnf/ebnf.bbnf",
+        include_str!("../../../grammar/ebnf/ebnf.bbnf"),
+    ),
+    (
+        "grammar/json/json.bbnf",
+        include_str!("../../../grammar/json/json.bbnf"),
+    ),
+    (
+        "grammar/google-sheets/google-sheets.bbnf",
+        include_str!("../../../grammar/google-sheets/google-sheets.bbnf"),
+    ),
+    (
+        "grammar/css/pretty.bbnf",
+        include_str!("../../../grammar/css/pretty.bbnf"),
+    ),
+    (
+        "grammar/css/l4/stylesheet.bbnf",
+        include_str!("../../../grammar/css/l4/stylesheet.bbnf"),
+    ),
+    (
+        "grammar/css/l4/color.bbnf",
+        include_str!("../../../grammar/css/l4/color.bbnf"),
+    ),
+    (
+        "grammar/css/l4/easing.bbnf",
+        include_str!("../../../grammar/css/l4/easing.bbnf"),
+    ),
+    (
+        "grammar/css/l4/selectors.bbnf",
+        include_str!("../../../grammar/css/l4/selectors.bbnf"),
+    ),
+    (
+        "grammar/css/l4/func-body.bbnf",
+        include_str!("../../../grammar/css/l4/func-body.bbnf"),
+    ),
+    (
+        "grammar/css/l4/keyframes.bbnf",
+        include_str!("../../../grammar/css/l4/keyframes.bbnf"),
+    ),
+    (
+        "grammar/css/l4/properties.bbnf",
+        include_str!("../../../grammar/css/l4/properties.bbnf"),
+    ),
+    (
+        "grammar/css/l4/gradients.bbnf",
+        include_str!("../../../grammar/css/l4/gradients.bbnf"),
+    ),
+    (
+        "grammar/css/l4/media.bbnf",
+        include_str!("../../../grammar/css/l4/media.bbnf"),
+    ),
+    (
+        "grammar/css/l4/transforms.bbnf",
+        include_str!("../../../grammar/css/l4/transforms.bbnf"),
+    ),
+    (
+        "grammar/css/l4/filters.bbnf",
+        include_str!("../../../grammar/css/l4/filters.bbnf"),
+    ),
+    (
+        "grammar/css/l4/tokens.bbnf",
+        include_str!("../../../grammar/css/l4/tokens.bbnf"),
+    ),
+    (
+        "grammar/css/l4/value-unit.bbnf",
+        include_str!("../../../grammar/css/l4/value-unit.bbnf"),
+    ),
+    (
+        "grammar/css/l4/keywords.bbnf",
+        include_str!("../../../grammar/css/l4/keywords.bbnf"),
+    ),
+    (
+        "grammar/css/l4/values.bbnf",
+        include_str!("../../../grammar/css/l4/values.bbnf"),
+    ),
+    (
+        "grammar/misc/csv.bbnf",
+        include_str!("../../../grammar/misc/csv.bbnf"),
+    ),
+    (
+        "grammar/misc/math.bbnf",
+        include_str!("../../../grammar/misc/math.bbnf"),
+    ),
+    (
+        "grammar/misc/math-ambiguous.bbnf",
+        include_str!("../../../grammar/misc/math-ambiguous.bbnf"),
+    ),
+    (
+        "grammar/misc/g4.bbnf",
+        include_str!("../../../grammar/misc/g4.bbnf"),
+    ),
+    (
+        "grammar/misc/regex.bbnf",
+        include_str!("../../../grammar/misc/regex.bbnf"),
+    ),
+];
 
-macro_rules! bbnf_fixture {
-    ($name:ident, $path:literal) => {
-        mod $name {
-            use super::*;
-            const SRC: &str = include_str!(concat!("../../../", $path));
-            const FIXTURE: &str = $path;
-
-            #[test]
-            fn ast_roundtrip() {
-                assert_ast_roundtrip(FIXTURE, SRC);
-            }
-
-            #[test]
-            fn prettify_idempotent() {
-                assert_prettify_idempotent(FIXTURE, SRC);
-            }
-        }
-    };
+#[test]
+fn every_fixture_has_stable_ast_projection() {
+    for &(fixture, source) in FIXTURES {
+        assert_ast_roundtrip(fixture, source);
+    }
 }
 
-// Self-hosted BBNF bootstrap + sub-grammars.
-bbnf_fixture!(bbnf_bbnf, "grammar/bbnf/bbnf.bbnf");
-bbnf_fixture!(bbnf_expressions, "grammar/bbnf/expressions.bbnf");
-bbnf_fixture!(bbnf_types, "grammar/bbnf/types.bbnf");
-
-// Backus-Naur families.
-bbnf_fixture!(bnf, "grammar/bnf/bnf.bbnf");
-bbnf_fixture!(ebnf, "grammar/ebnf/ebnf.bbnf");
-
-// Data-interchange grammars.
-bbnf_fixture!(json, "grammar/json/json.bbnf");
-bbnf_fixture!(google_sheets, "grammar/google-sheets/google-sheets.bbnf");
-
-// CSS family.
-bbnf_fixture!(css_pretty, "grammar/css/pretty.bbnf");
-bbnf_fixture!(css_l4_stylesheet, "grammar/css/l4/stylesheet.bbnf");
-bbnf_fixture!(css_l4_color, "grammar/css/l4/color.bbnf");
-bbnf_fixture!(css_l4_easing, "grammar/css/l4/easing.bbnf");
-bbnf_fixture!(css_l4_selectors, "grammar/css/l4/selectors.bbnf");
-bbnf_fixture!(css_l4_func_body, "grammar/css/l4/func-body.bbnf");
-bbnf_fixture!(css_l4_keyframes, "grammar/css/l4/keyframes.bbnf");
-bbnf_fixture!(css_l4_properties, "grammar/css/l4/properties.bbnf");
-bbnf_fixture!(css_l4_gradients, "grammar/css/l4/gradients.bbnf");
-bbnf_fixture!(css_l4_media, "grammar/css/l4/media.bbnf");
-bbnf_fixture!(css_l4_transforms, "grammar/css/l4/transforms.bbnf");
-bbnf_fixture!(css_l4_filters, "grammar/css/l4/filters.bbnf");
-bbnf_fixture!(css_l4_tokens, "grammar/css/l4/tokens.bbnf");
-bbnf_fixture!(css_l4_value_unit, "grammar/css/l4/value-unit.bbnf");
-bbnf_fixture!(css_l4_keywords, "grammar/css/l4/keywords.bbnf");
-bbnf_fixture!(css_l4_values, "grammar/css/l4/values.bbnf");
-
-// Misc grammars (excluding emoji.bbnf + json-commented.bbnf per header
-// caveats — both represent pre-existing BBNF grammar-coverage gaps).
-bbnf_fixture!(misc_csv, "grammar/misc/csv.bbnf");
-bbnf_fixture!(misc_math, "grammar/misc/math.bbnf");
-bbnf_fixture!(misc_math_ambiguous, "grammar/misc/math-ambiguous.bbnf");
-bbnf_fixture!(misc_g4, "grammar/misc/g4.bbnf");
-bbnf_fixture!(misc_regex, "grammar/misc/regex.bbnf");
+#[test]
+fn every_fixture_prettifier_is_idempotent() {
+    for &(fixture, source) in FIXTURES {
+        assert_prettify_idempotent(fixture, source);
+    }
+}

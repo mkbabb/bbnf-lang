@@ -9,6 +9,6 @@
 pub mod compiler;
 
 pub use compiler::{
-    CompilationSession, CompileOptions, CompiledModule, Diagnostic, DiagnosticCode, DiagnosticSet,
-    EditError, GeneratedModule, ModuleInput, RuntimeBudget, StageResult, compile_module,
+    CompileOptions, CompiledModule, Diagnostic, DiagnosticCode, DiagnosticSet, GeneratedModule,
+    GrammarInstanceInput, RuntimeBudget, StageResult, compile_instance,
 };

@@ -8,6 +8,7 @@ use serde::{Serialize, Serializer};
 use super::budget::CompileOptions;
 use super::dependency::DependencySolution;
 use super::diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
+use super::pratt::PrattFixity;
 use super::source::Revision;
 use super::syntax::{NodeId, NodeIx, NodeKindData, Program, RuleId, RuleIx, SccIx};
 
@@ -37,8 +38,9 @@ impl NodeFacts<'_> {
         self.data.nullable
     }
 
-    /// Least bytes consumed by a successful match. `None` denotes an empty
-    /// language rather than an unknown result.
+    /// Proven lower bound on bytes consumed by a successful match. `None`
+    /// denotes an empty language; difference does not attempt exact language
+    /// subtraction.
     pub const fn minimum_consumption(self) -> Option<u64> {
         self.data.minimum_consumption
     }
@@ -70,6 +72,9 @@ impl RuleFacts<'_> {
         self.data.nullable
     }
 
+    /// Proven lower bound on bytes consumed by a successful match. `None`
+    /// denotes an empty language; difference does not attempt exact language
+    /// subtraction.
     pub const fn minimum_consumption(self) -> Option<u64> {
         self.data.minimum_consumption
     }
@@ -245,21 +250,49 @@ impl AnalysisFacts {
         dependency: &DependencySolution,
         options: CompileOptions,
     ) -> StageResult<Self> {
-        Self::derive_with_orders(
-            program,
-            dependency,
-            options,
-            &(0..program.node_data_rows().len()).collect::<Vec<_>>(),
-            &(0..program.rule_data_rows().len()).collect::<Vec<_>>(),
-        )
+        #[cfg(not(test))]
+        {
+            Self::derive_inner(program, dependency, options)
+        }
+        #[cfg(test)]
+        {
+            Self::derive_inner(program, dependency, options, None, None)
+        }
     }
 
+    #[cfg(test)]
     fn derive_with_orders(
         program: &Program,
         dependency: &DependencySolution,
         options: CompileOptions,
         node_order: &[usize],
         rule_order: &[usize],
+    ) -> StageResult<Self> {
+        if !is_permutation(node_order, program.node_data_rows().len())
+            || !is_permutation(rule_order, program.rule_data_rows().len())
+        {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::InternalInvariant,
+                0,
+                0,
+                "analysis schedule is not a complete identity permutation",
+            ));
+        }
+        Self::derive_inner(
+            program,
+            dependency,
+            options,
+            Some(node_order),
+            Some(rule_order),
+        )
+    }
+
+    fn derive_inner(
+        program: &Program,
+        dependency: &DependencySolution,
+        options: CompileOptions,
+        #[cfg(test)] node_order: Option<&[usize]>,
+        #[cfg(test)] rule_order: Option<&[usize]>,
     ) -> StageResult<Self> {
         if program.revision() != dependency.revision() {
             return StageResult::rejected(Diagnostic::new(
@@ -273,23 +306,22 @@ impl AnalysisFacts {
                 ),
             ));
         }
-        if !is_permutation(node_order, program.node_data_rows().len())
-            || !is_permutation(rule_order, program.rule_data_rows().len())
-        {
-            return StageResult::rejected(Diagnostic::new(
-                DiagnosticCode::InternalInvariant,
-                0,
-                0,
-                "analysis schedule is not a complete identity permutation",
-            ));
-        }
-
-        let revision = program.revision();
-        let rule_rank = permutation_rank(rule_order);
         let mut work_budget = AnalysisWorkBudget::new(options.analysis_work);
+        let revision = program.revision();
+        #[cfg(test)]
+        let rule_rank = rule_order.map(permutation_rank);
+        if let Err(diagnostic) =
+            work_budget.charge(program.node_data_rows().len().saturating_mul(2))
+        {
+            return StageResult::rejected(diagnostic);
+        }
         let mut work = vec![WorkFacts::default(); program.node_data_rows().len()];
-        for &index in node_order {
-            if let Err(diagnostic) = work_budget.charge(1) {
+        for position in 0..program.node_data_rows().len() {
+            #[cfg(not(test))]
+            let index = position;
+            #[cfg(test)]
+            let index = node_order.map_or(position, |order| order[position]);
+            if let Err(diagnostic) = work_budget.charge(2) {
                 return StageResult::rejected(diagnostic);
             }
             let node = &program.node_data_rows()[index];
@@ -316,36 +348,74 @@ impl AnalysisFacts {
                             ));
                         }
                     };
-                    work[node.id().index()] = regex_facts(&plan);
+                    work[node.id().index()] = match regex_facts(&plan, &mut work_budget) {
+                        Ok(facts) => facts,
+                        Err(diagnostic) => return StageResult::rejected(diagnostic),
+                    };
                 }
                 NodeKindData::RuleRef(_)
                 | NodeKindData::Sequence(_)
                 | NodeKindData::Choice(_)
                 | NodeKindData::Repeat { .. }
                 | NodeKindData::Record { .. }
-                | NodeKindData::Transform { .. } => {}
+                | NodeKindData::Transform { .. }
+                | NodeKindData::Projection { .. }
+                | NodeKindData::Difference { .. }
+                | NodeKindData::Trim { .. }
+                | NodeKindData::Pratt { .. } => {}
             }
         }
+        if let Err(diagnostic) =
+            work_budget.charge(program.rule_data_rows().len().saturating_mul(2))
+        {
+            return StageResult::rejected(diagnostic);
+        }
         let mut rule_work = vec![WorkFacts::default(); program.rule_data_rows().len()];
+        if let Err(diagnostic) =
+            work_budget.charge(program.rule_data_rows().len().saturating_mul(2))
+        {
+            return StageResult::rejected(diagnostic);
+        }
+        let mut component_positions = vec![usize::MAX; program.rule_data_rows().len()];
 
         let mut iterations = 0_usize;
-        let rule_node_ranges = match rule_node_ranges(program, &mut work_budget) {
-            Ok(ranges) => ranges,
+        let nodes_by_owner = match validate_program_postorder(program, &mut work_budget) {
+            Ok(nodes_by_owner) => nodes_by_owner,
             Err(diagnostic) => return StageResult::rejected(diagnostic),
         };
         for &component in dependency.dependency_order_local() {
+            if let Err(diagnostic) = work_budget.charge(1) {
+                return StageResult::rejected(diagnostic);
+            }
             let members = dependency.component_local(component);
-            let mut scheduled_members = members.to_vec();
-            scheduled_members.sort_by_key(|rule| rule_rank[rule.index()]);
-            let nodes =
-                match component_nodes(&scheduled_members, &rule_node_ranges, &mut work_budget) {
-                    Ok(nodes) => nodes,
-                    Err(diagnostic) => return StageResult::rejected(diagnostic),
-                };
-            let pass_units = nodes
-                .len()
-                .checked_add(members.len())
-                .expect("node and rule budgets fit usize");
+            #[cfg(test)]
+            let scheduled_storage = rule_rank.as_ref().map(|rank| {
+                let mut scheduled = members.to_vec();
+                scheduled.sort_by_key(|rule| rank[rule.index()]);
+                scheduled
+            });
+            #[cfg(test)]
+            let scheduled_members = scheduled_storage.as_deref().unwrap_or(members);
+            #[cfg(not(test))]
+            let scheduled_members = members;
+            if let Err(diagnostic) = work_budget.charge(members.len().saturating_mul(2)) {
+                return StageResult::rejected(diagnostic);
+            }
+            for (position, &rule) in members.iter().enumerate() {
+                component_positions[rule.index()] = position;
+            }
+            let nodes = match component_nodes(&nodes_by_owner, scheduled_members, &mut work_budget)
+            {
+                Ok(nodes) => nodes,
+                Err(diagnostic) => return StageResult::rejected(diagnostic),
+            };
+            if let Err(diagnostic) = work_budget.charge(nodes.len()) {
+                return StageResult::rejected(diagnostic);
+            }
+            let pass_units = match component_pass_units(program, &nodes, members.len()) {
+                Some(units) => units,
+                None => return StageResult::rejected(work_budget.exhausted()),
+            };
             let recursive = dependency.is_recursive_local(component) == Some(true);
             let mut component_iterations = 0_usize;
 
@@ -375,8 +445,9 @@ impl AnalysisFacts {
                     dependency,
                     component,
                     members,
-                    &scheduled_members,
+                    scheduled_members,
                     &nodes,
+                    &component_positions,
                     &mut work,
                     &mut rule_work,
                 );
@@ -386,23 +457,106 @@ impl AnalysisFacts {
             }
         }
 
-        if let Some(node) = minimum_overflow_origin(program, &work) {
+        let overflow_origin = match minimum_overflow_origin(program, &work, &mut work_budget) {
+            Ok(origin) => origin,
+            Err(diagnostic) => return StageResult::rejected(diagnostic),
+        };
+        if let Some(node) = overflow_origin {
             let span = node.span();
             return StageResult::rejected(Diagnostic::new(
                 DiagnosticCode::MinimumConsumptionOverflow,
                 span.start() as usize,
                 span.end() as usize,
-                "the exact minimum successful consumption exceeds u64::MAX bytes",
+                "the analyzed minimum successful consumption exceeds u64::MAX bytes",
             ));
         }
 
-        let mut semantic_diagnostics = Vec::new();
+        let diagnostic_capacity = match program
+            .node_data_rows()
+            .len()
+            .checked_add(program.pratt_table_rows().len())
+            .and_then(|count| count.checked_add(program.pratt_operator_rows().len()))
+            .and_then(|count| {
+                program
+                    .rule_data_rows()
+                    .len()
+                    .checked_mul(2)
+                    .and_then(|rules| count.checked_add(rules))
+            }) {
+            Some(capacity) => capacity,
+            None => return StageResult::rejected(work_budget.exhausted()),
+        };
+        if let Err(diagnostic) = work_budget.charge(diagnostic_capacity) {
+            return StageResult::rejected(diagnostic);
+        }
+        let mut semantic_diagnostics = Vec::with_capacity(diagnostic_capacity);
+        for table in program.pratt_table_rows() {
+            if let Err(diagnostic) = work_budget.charge(1) {
+                return StageResult::rejected(diagnostic);
+            }
+            let atom = program.rule_data_rows()[table.atom_rule().local().index()].root();
+            let atom_facts = rule_work[table.atom_rule().local().index()];
+            if atom_facts.nullable
+                || !matches!(
+                    atom_facts.minimum_consumption,
+                    MinimumConsumption::Finite(value) if value > 0
+                )
+            {
+                let span = program.node_data(atom).span();
+                if let Err(diagnostic) = work_budget.charge(1) {
+                    return StageResult::rejected(diagnostic);
+                }
+                semantic_diagnostics.push(Diagnostic::new(
+                    DiagnosticCode::InvalidPrattTable,
+                    span.start() as usize,
+                    span.end() as usize,
+                    format!(
+                        "Pratt atom rule `{}` must have a nonempty, consuming language",
+                        program.rule_data_rows()[table.atom_rule().local().index()].name()
+                    ),
+                ));
+            }
+            for operator in table.operators() {
+                if let Err(diagnostic) = work_budget.charge(1) {
+                    return StageResult::rejected(diagnostic);
+                }
+                let matcher = program.pratt_operator_rows()[operator.index()].matcher_rule();
+                let matcher_facts = rule_work[matcher.local().index()];
+                if matcher_facts.nullable
+                    || !matches!(
+                        matcher_facts.minimum_consumption,
+                        MinimumConsumption::Finite(value) if value > 0
+                    )
+                {
+                    let matcher_rule = &program.rule_data_rows()[matcher.local().index()];
+                    let span = program.node_data(matcher_rule.root()).span();
+                    if let Err(diagnostic) = work_budget.charge(1) {
+                        return StageResult::rejected(diagnostic);
+                    }
+                    semantic_diagnostics.push(Diagnostic::new(
+                        DiagnosticCode::InvalidPrattTable,
+                        span.start() as usize,
+                        span.end() as usize,
+                        format!(
+                            "Pratt matcher rule `{}` must have a nonempty, consuming language",
+                            matcher_rule.name()
+                        ),
+                    ));
+                }
+            }
+        }
         for node in program.node_data_rows() {
+            if let Err(diagnostic) = work_budget.charge(1) {
+                return StageResult::rejected(diagnostic);
+            }
             let NodeKindData::Repeat { child, .. } = node.kind() else {
                 continue;
             };
             if work[child.index()].nullable {
                 let span = node.span();
+                if let Err(diagnostic) = work_budget.charge(1) {
+                    return StageResult::rejected(diagnostic);
+                }
                 semantic_diagnostics.push(Diagnostic::new(
                     DiagnosticCode::NullableRepeat,
                     span.start() as usize,
@@ -412,36 +566,73 @@ impl AnalysisFacts {
             }
         }
 
-        let zero_call_edges = zero_consumption_calls(program, &work);
-        let zero_cycles = cyclic_components(&zero_call_edges);
-        let zero_cycle_rules = zero_cycles
+        let zero_call_edges = match zero_consumption_calls(program, &work, &mut work_budget) {
+            Ok(edges) => edges,
+            Err(diagnostic) => return StageResult::rejected(diagnostic),
+        };
+        let zero_cycles = match cyclic_components(&zero_call_edges, &mut work_budget) {
+            Ok(cycles) => cycles,
+            Err(diagnostic) => return StageResult::rejected(diagnostic),
+        };
+        if let Err(diagnostic) = work_budget.charge(zero_cycles.len()) {
+            return StageResult::rejected(diagnostic);
+        }
+        let cycle_members = match zero_cycles
             .iter()
-            .flatten()
-            .copied()
-            .collect::<BTreeSet<_>>();
+            .try_fold(0_usize, |count, cycle| count.checked_add(cycle.len()))
+        {
+            Some(count) => count,
+            None => return StageResult::rejected(work_budget.exhausted()),
+        };
+        if let Err(diagnostic) = work_budget.charge(
+            program
+                .rule_data_rows()
+                .len()
+                .checked_mul(2)
+                .and_then(|units| units.checked_add(cycle_members))
+                .unwrap_or(usize::MAX),
+        ) {
+            return StageResult::rejected(diagnostic);
+        }
+        let mut zero_cycle_rules = vec![false; program.rule_data_rows().len()];
+        for &rule in zero_cycles.iter().flatten() {
+            zero_cycle_rules[rule.index()] = true;
+        }
 
         for component_index in 0..dependency.component_count() {
+            if let Err(diagnostic) = work_budget.charge(1) {
+                return StageResult::rejected(diagnostic);
+            }
             let component = SccIx::checked(component_index).expect("component ordinal was bounded");
             if dependency.is_recursive_local(component) != Some(true) {
                 continue;
             }
             let members = dependency.component_local(component);
+            if let Err(diagnostic) = work_budget.charge(members.len().saturating_mul(2)) {
+                return StageResult::rejected(diagnostic);
+            }
             let empty_members = members
                 .iter()
                 .copied()
                 .filter(|rule| rule_work[rule.index()].minimum_consumption.is_empty())
                 .collect::<Vec<_>>();
+            if let Err(diagnostic) = work_budget.charge(members.len().saturating_mul(2)) {
+                return StageResult::rejected(diagnostic);
+            }
             if !empty_members.is_empty()
-                && !members.iter().any(|rule| zero_cycle_rules.contains(rule))
+                && !members.iter().any(|rule| zero_cycle_rules[rule.index()])
             {
-                let first = empty_members[0];
-                let rule = &program.rule_data_rows()[first.index()];
+                let origin = empty_members[0];
+                let rule = &program.rule_data_rows()[origin.index()];
                 let span = program.node_data(rule.root()).span();
                 let names = empty_members
                     .iter()
                     .map(|rule| program.rule_data_rows()[rule.index()].name())
                     .collect::<Vec<_>>()
                     .join(", ");
+                if let Err(diagnostic) = work_budget.charge(1) {
+                    return StageResult::rejected(diagnostic);
+                }
                 semantic_diagnostics.push(Diagnostic::new(
                     DiagnosticCode::RecursiveRule,
                     span.start() as usize,
@@ -454,14 +645,20 @@ impl AnalysisFacts {
         }
 
         for cycle in zero_cycles {
-            let first = cycle[0];
-            let rule = &program.rule_data_rows()[first.index()];
+            if let Err(diagnostic) = work_budget.charge(cycle.len().saturating_mul(2)) {
+                return StageResult::rejected(diagnostic);
+            }
+            let origin = cycle[0];
+            let rule = &program.rule_data_rows()[origin.index()];
             let span = program.node_data(rule.root()).span();
             let names = cycle
                 .iter()
                 .map(|rule| program.rule_data_rows()[rule.index()].name())
                 .collect::<Vec<_>>()
                 .join(" -> ");
+            if let Err(diagnostic) = work_budget.charge(1) {
+                return StageResult::rejected(diagnostic);
+            }
             semantic_diagnostics.push(Diagnostic::new(
                 DiagnosticCode::RecursiveRule,
                 span.start() as usize,
@@ -474,9 +671,25 @@ impl AnalysisFacts {
         }
 
         if !semantic_diagnostics.is_empty() {
+            if let Err(diagnostic) = work_budget.charge(
+                sort_work_bound(semantic_diagnostics.len())
+                    .saturating_add(semantic_diagnostics.len()),
+            ) {
+                return StageResult::rejected(diagnostic);
+            }
             return StageResult::rejected_set(DiagnosticSet::from_vec(semantic_diagnostics));
         }
 
+        if let Err(diagnostic) = work_budget.charge(
+            program
+                .node_data_rows()
+                .len()
+                .checked_add(program.rule_data_rows().len())
+                .and_then(|rows| rows.checked_mul(3))
+                .unwrap_or(usize::MAX),
+        ) {
+            return StageResult::rejected(diagnostic);
+        }
         let nodes = program
             .node_data_rows()
             .iter()
@@ -513,9 +726,17 @@ impl AnalysisFacts {
         self.iterations
     }
 
-    /// Deterministic count of postorder validation, component scheduling, and
-    /// node/rule fact evaluation work. Compilation rejects before this exceeds
-    /// `analysis_work`.
+    /// Deterministic conservative logical-work bound for analysis-owned
+    /// schedules, carrier allocations and fills, traversal, fixed-point
+    /// evaluation, ordered-set/search work, semantic aggregation, zero-call
+    /// graphs, and output materialization. Compilation rejects before this
+    /// exceeds `analysis_work`.
+    ///
+    /// Regex automaton construction is governed independently by
+    /// [`RegexBudget`](super::budget::RegexBudget). Diagnostic string storage
+    /// is bounded by the source/rule/node envelopes; this count covers
+    /// diagnostic-row aggregation and canonical ordering, not allocator or
+    /// formatting implementation details.
     pub const fn work_units(&self) -> usize {
         self.work_units
     }
@@ -636,17 +857,33 @@ impl WorkFacts {
     }
 }
 
-fn regex_facts(plan: &RegexTablePlan) -> WorkFacts {
+fn regex_facts(
+    plan: &RegexTablePlan,
+    work_budget: &mut AnalysisWorkBudget,
+) -> Result<WorkFacts, Diagnostic> {
+    work_budget.charge(1)?;
     let start = plan.start_state() as usize;
     if plan.accepting()[start] {
-        return WorkFacts::some(0);
+        return Ok(WorkFacts::some(0));
     }
 
     let classes = plan.class_count() as usize;
-    let mut distance = vec![None; plan.state_count() as usize];
+    let states = plan.state_count() as usize;
+    work_budget.charge(
+        states
+            .checked_mul(5)
+            .ok_or_else(|| work_budget.exhausted())?,
+    )?;
+    let mut distance = vec![None; states];
     distance[start] = Some(0_u64);
-    let mut pending = VecDeque::from([start]);
+    let mut pending = VecDeque::with_capacity(states);
+    pending.push_back(start);
     while let Some(state) = pending.pop_front() {
+        work_budget.charge(
+            classes
+                .checked_add(1)
+                .ok_or_else(|| work_budget.exhausted())?,
+        )?;
         let next_distance = distance[state]
             .expect("queued regex states have a distance")
             .saturating_add(1);
@@ -659,13 +896,13 @@ fn regex_facts(plan: &RegexTablePlan) -> WorkFacts {
                 continue;
             }
             if plan.accepting()[target] {
-                return WorkFacts::some(next_distance);
+                return Ok(WorkFacts::some(next_distance));
             }
             distance[target] = Some(next_distance);
             pending.push_back(target);
         }
     }
-    WorkFacts::default()
+    Ok(WorkFacts::default())
 }
 
 fn sequence_facts(children: &[NodeIx], facts: &[WorkFacts]) -> WorkFacts {
@@ -718,6 +955,17 @@ fn repeat_facts(child: WorkFacts, minimum: u32) -> WorkFacts {
     }
 }
 
+fn difference_facts(include: WorkFacts, exclude: WorkFacts) -> WorkFacts {
+    if exclude.nullable {
+        WorkFacts::default()
+    } else {
+        WorkFacts {
+            nullable: include.nullable,
+            minimum_consumption: include.minimum_consumption,
+        }
+    }
+}
+
 struct AnalysisWorkBudget {
     used: usize,
     limit: usize,
@@ -756,6 +1004,28 @@ impl AnalysisWorkBudget {
     }
 }
 
+fn sort_work_bound(count: usize) -> usize {
+    if count < 2 {
+        return 0;
+    }
+    let passes = usize::BITS as usize - (count - 1).leading_zeros() as usize;
+    count.saturating_mul(passes)
+}
+
+fn search_work_bound(count: usize) -> usize {
+    let search_space = count.saturating_add(1);
+    let levels = usize::BITS as usize - search_space.leading_zeros() as usize;
+    levels.saturating_add(1)
+}
+
+fn charge_ordered_set_operation(
+    work_budget: &mut AnalysisWorkBudget,
+    count: usize,
+) -> Result<(), Diagnostic> {
+    work_budget.charge(search_work_bound(count))
+}
+
+#[cfg(test)]
 fn permutation_rank(order: &[usize]) -> Vec<usize> {
     let mut rank = vec![0; order.len()];
     for (position, &index) in order.iter().enumerate() {
@@ -764,40 +1034,61 @@ fn permutation_rank(order: &[usize]) -> Vec<usize> {
     rank
 }
 
-fn rule_node_ranges(
+fn validate_program_postorder(
     program: &Program,
     work_budget: &mut AnalysisWorkBudget,
-) -> Result<Vec<Range<usize>>, Diagnostic> {
-    let mut ranges = Vec::with_capacity(program.rule_data_rows().len());
-    let mut next_node = 0_usize;
-    for rule in program.rule_data_rows() {
-        work_budget.charge(1)?;
-        let root = rule.root().index();
-        if root < next_node || root >= program.node_data_rows().len() {
-            return Err(Diagnostic::new(
-                DiagnosticCode::InternalInvariant,
-                0,
-                0,
-                "rule roots do not terminate contiguous postorder node ranges",
-            ));
-        }
-        for index in next_node..=root {
-            work_budget.charge(1)?;
-            let node = &program.node_data_rows()[index];
-            validate_postorder_children(node, work_budget)?;
-        }
-        ranges.push(next_node..root + 1);
-        next_node = root + 1;
-    }
-    if next_node != program.node_data_rows().len() {
+) -> Result<Vec<Vec<NodeIx>>, Diagnostic> {
+    if program.node_owner_rows().len() != program.node_data_rows().len() {
         return Err(Diagnostic::new(
             DiagnosticCode::InternalInvariant,
             0,
             0,
-            "syntax contains nodes outside every rule's contiguous postorder range",
+            "syntax node ownership does not cover the complete node arena",
         ));
     }
-    Ok(ranges)
+    let rule_count = program.rule_data_rows().len();
+    let node_count = program.node_data_rows().len();
+    work_budget.charge(rule_count.saturating_mul(2))?;
+    let mut owner_counts = vec![0_usize; rule_count];
+    for &owner in program.node_owner_rows() {
+        work_budget.charge(3)?;
+        let Some(count) = owner_counts.get_mut(owner.index()) else {
+            return Err(Diagnostic::new(
+                DiagnosticCode::InternalInvariant,
+                0,
+                0,
+                "syntax node identities or owners are not stable local ordinals",
+            ));
+        };
+        *count = count
+            .checked_add(1)
+            .ok_or_else(|| work_budget.exhausted())?;
+    }
+    work_budget.charge(
+        rule_count
+            .checked_mul(2)
+            .and_then(|rules| rules.checked_add(node_count))
+            .ok_or_else(|| work_budget.exhausted())?,
+    )?;
+    let mut nodes_by_owner = owner_counts
+        .into_iter()
+        .map(Vec::with_capacity)
+        .collect::<Vec<_>>();
+    for (index, node) in program.node_data_rows().iter().enumerate() {
+        work_budget.charge(3)?;
+        let owner = program.node_owner_rows()[index];
+        if node.id().index() != index || owner.index() >= nodes_by_owner.len() {
+            return Err(Diagnostic::new(
+                DiagnosticCode::InternalInvariant,
+                0,
+                0,
+                "syntax node identities or owners are not stable local ordinals",
+            ));
+        }
+        nodes_by_owner[owner.index()].push(node.id());
+        validate_postorder_children(node, work_budget)?;
+    }
+    Ok(nodes_by_owner)
 }
 
 fn validate_postorder_children(
@@ -810,7 +1101,18 @@ fn validate_postorder_children(
             work_budget.charge(children.len())?;
             children.iter().all(|child| child.index() < parent)
         }
-        NodeKindData::Repeat { child, .. } | NodeKindData::Transform { child, .. } => {
+        NodeKindData::Projection { left, right, .. }
+        | NodeKindData::Difference {
+            include: left,
+            exclude: right,
+        } => {
+            work_budget.charge(2)?;
+            left.index() < parent && right.index() < parent
+        }
+        NodeKindData::Repeat { child, .. }
+        | NodeKindData::Transform { child, .. }
+        | NodeKindData::Trim { child }
+        | NodeKindData::Pratt { atom: child, .. } => {
             work_budget.charge(1)?;
             child.index() < parent
         }
@@ -836,24 +1138,24 @@ fn validate_postorder_children(
 }
 
 fn component_nodes(
+    nodes_by_owner: &[Vec<NodeIx>],
     scheduled_members: &[RuleIx],
-    rule_node_ranges: &[Range<usize>],
     work_budget: &mut AnalysisWorkBudget,
 ) -> Result<Vec<NodeIx>, Diagnostic> {
-    let capacity = scheduled_members.iter().try_fold(0_usize, |total, member| {
-        total.checked_add(rule_node_ranges[member.index()].len())
-    });
-    let Some(capacity) = capacity else {
-        return Err(work_budget.exhausted());
-    };
-    work_budget.charge(scheduled_members.len())?;
-    work_budget.charge(capacity)?;
-
-    let mut nodes = Vec::with_capacity(capacity);
+    let mut node_count = 0_usize;
     for &member in scheduled_members {
-        nodes.extend(rule_node_ranges[member.index()].clone().map(|index| {
-            NodeIx::checked(index).expect("validated rule range contains bounded node ordinals")
-        }));
+        work_budget.charge(1)?;
+        node_count = node_count
+            .checked_add(nodes_by_owner[member.index()].len())
+            .ok_or_else(|| work_budget.exhausted())?;
+    }
+    work_budget.charge(node_count.saturating_mul(2))?;
+    let mut nodes = Vec::with_capacity(node_count);
+    for &member in scheduled_members {
+        work_budget.charge(1)?;
+        let owned = &nodes_by_owner[member.index()];
+        work_budget.charge(owned.len())?;
+        nodes.extend_from_slice(owned);
     }
     Ok(nodes)
 }
@@ -866,6 +1168,7 @@ fn evaluate_component_pass(
     members: &[RuleIx],
     scheduled_members: &[RuleIx],
     nodes: &[NodeIx],
+    component_positions: &[usize],
     work: &mut [WorkFacts],
     rule_work: &mut [WorkFacts],
 ) -> bool {
@@ -882,10 +1185,7 @@ fn evaluate_component_pass(
             }
             NodeKindData::RuleRef(rule) => {
                 if dependency.component_of_local(*rule) == component {
-                    let position = members
-                        .binary_search(rule)
-                        .expect("dependency components contain every same-component rule");
-                    previous_rules[position]
+                    previous_rules[component_positions[rule.index()]]
                 } else {
                     rule_work[rule.index()]
                 }
@@ -897,6 +1197,12 @@ fn evaluate_component_pass(
             }
             NodeKindData::Record { slots, .. } => sequence_slot_facts(slots, work),
             NodeKindData::Transform { child, .. } => work[child.index()],
+            NodeKindData::Projection { left, right, .. } => sequence_facts(&[*left, *right], work),
+            NodeKindData::Difference { include, exclude } => {
+                difference_facts(work[include.index()], work[exclude.index()])
+            }
+            NodeKindData::Trim { child } => work[child.index()],
+            NodeKindData::Pratt { atom, .. } => work[atom.index()],
         };
         work[node_ix.index()] = derived;
     }
@@ -910,32 +1216,72 @@ fn evaluate_component_pass(
     changed
 }
 
+fn component_pass_units(program: &Program, nodes: &[NodeIx], member_count: usize) -> Option<usize> {
+    let mut units = member_count.checked_mul(5)?;
+    for &node in nodes {
+        units = units.checked_add(1)?;
+        let children = match program.node_data(node).kind() {
+            NodeKindData::Sequence(children) | NodeKindData::Choice(children) => {
+                children.len().checked_mul(2)?
+            }
+            NodeKindData::Record { slots, .. } => slots.len().checked_mul(2)?,
+            NodeKindData::Projection { .. } => 4,
+            NodeKindData::Difference { .. } => 2,
+            NodeKindData::RuleRef(_)
+            | NodeKindData::Repeat { .. }
+            | NodeKindData::Transform { .. }
+            | NodeKindData::Trim { .. }
+            | NodeKindData::Pratt { .. } => 1,
+            NodeKindData::Epsilon | NodeKindData::Literal(_) | NodeKindData::Regex(_) => 0,
+        };
+        units = units.checked_add(children)?;
+    }
+    Some(units)
+}
+
 fn minimum_overflow_origin<'a>(
     program: &'a Program,
     facts: &[WorkFacts],
-) -> Option<&'a super::syntax::NodeData> {
-    let overflowed = program.node_data_rows().iter().filter(|node| {
-        facts[node.id().index()].minimum_consumption == MinimumConsumption::Overflow
-    });
-    let mut first_overflow = None;
-    for node in overflowed {
-        first_overflow.get_or_insert(node);
+    work_budget: &mut AnalysisWorkBudget,
+) -> Result<Option<&'a super::syntax::NodeData>, Diagnostic> {
+    let mut fallback_overflow = None;
+    for node in program.node_data_rows() {
+        work_budget.charge(1)?;
+        if facts[node.id().index()].minimum_consumption != MinimumConsumption::Overflow {
+            continue;
+        }
+        fallback_overflow.get_or_insert(node);
         let direct = match node.kind() {
-            NodeKindData::Sequence(children) => sequence_directly_overflows(
-                children
-                    .iter()
-                    .map(|child| facts[child.index()].minimum_consumption),
-            ),
-            NodeKindData::Record { slots, .. } => sequence_directly_overflows(
-                slots
-                    .iter()
-                    .map(|slot| facts[slot.child().index()].minimum_consumption),
-            ),
+            NodeKindData::Sequence(children) => {
+                work_budget.charge(children.len())?;
+                sequence_directly_overflows(
+                    children
+                        .iter()
+                        .map(|child| facts[child.index()].minimum_consumption),
+                )
+            }
+            NodeKindData::Record { slots, .. } => {
+                work_budget.charge(slots.len())?;
+                sequence_directly_overflows(
+                    slots
+                        .iter()
+                        .map(|slot| facts[slot.child().index()].minimum_consumption),
+                )
+            }
             NodeKindData::Repeat { child, minimum, .. } => {
+                work_budget.charge(1)?;
                 matches!(
                     facts[child.index()].minimum_consumption,
                     MinimumConsumption::Finite(value)
                         if value.checked_mul(u64::from(*minimum)).is_none()
+                )
+            }
+            NodeKindData::Projection { left, right, .. } => {
+                work_budget.charge(2)?;
+                sequence_directly_overflows(
+                    [*left, *right]
+                        .into_iter()
+                        .map(|child| facts[child.index()].minimum_consumption),
                 )
             }
             NodeKindData::Epsilon
@@ -943,13 +1289,16 @@ fn minimum_overflow_origin<'a>(
             | NodeKindData::Regex(_)
             | NodeKindData::RuleRef(_)
             | NodeKindData::Choice(_)
-            | NodeKindData::Transform { .. } => false,
+            | NodeKindData::Transform { .. }
+            | NodeKindData::Difference { .. }
+            | NodeKindData::Trim { .. }
+            | NodeKindData::Pratt { .. } => false,
         };
         if direct {
-            return Some(node);
+            return Ok(Some(node));
         }
     }
-    first_overflow
+    Ok(fallback_overflow)
 }
 
 fn sequence_directly_overflows(values: impl IntoIterator<Item = MinimumConsumption>) -> bool {
@@ -966,6 +1315,7 @@ fn sequence_directly_overflows(values: impl IntoIterator<Item = MinimumConsumpti
     false
 }
 
+#[cfg(test)]
 fn is_permutation(order: &[usize], count: usize) -> bool {
     if order.len() != count {
         return false;
@@ -983,17 +1333,39 @@ fn is_permutation(order: &[usize], count: usize) -> bool {
     true
 }
 
-fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<RuleIx>> {
+fn zero_consumption_calls(
+    program: &Program,
+    facts: &[WorkFacts],
+    work_budget: &mut AnalysisWorkBudget,
+) -> Result<Vec<Vec<RuleIx>>, Diagnostic> {
+    fn extend_calls(
+        calls: &mut BTreeSet<RuleIx>,
+        inherited: &BTreeSet<RuleIx>,
+        work_budget: &mut AnalysisWorkBudget,
+    ) -> Result<(), Diagnostic> {
+        for &rule in inherited {
+            work_budget.charge(1)?;
+            charge_ordered_set_operation(work_budget, calls.len())?;
+            calls.insert(rule);
+        }
+        Ok(())
+    }
+
+    work_budget.charge(program.node_data_rows().len().saturating_mul(2))?;
     let mut leading = vec![BTreeSet::new(); program.node_data_rows().len()];
     for node in program.node_data_rows() {
+        work_budget.charge(2)?;
         let mut calls = BTreeSet::new();
         match node.kind() {
             NodeKindData::RuleRef(rule) => {
+                work_budget.charge(1)?;
+                charge_ordered_set_operation(work_budget, calls.len())?;
                 calls.insert(*rule);
             }
             NodeKindData::Sequence(children) => {
                 for child in children {
-                    calls.extend(leading[child.index()].iter().copied());
+                    work_budget.charge(1)?;
+                    extend_calls(&mut calls, &leading[child.index()], work_budget)?;
                     if !facts[child.index()].nullable {
                         break;
                     }
@@ -1001,51 +1373,117 @@ fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<Rul
             }
             NodeKindData::Choice(children) => {
                 for child in children {
-                    calls.extend(leading[child.index()].iter().copied());
+                    work_budget.charge(1)?;
+                    extend_calls(&mut calls, &leading[child.index()], work_budget)?;
                 }
             }
             NodeKindData::Repeat { child, maximum, .. } => {
+                work_budget.charge(1)?;
                 if *maximum != Some(0) {
-                    calls.extend(leading[child.index()].iter().copied());
+                    extend_calls(&mut calls, &leading[child.index()], work_budget)?;
                 }
             }
             NodeKindData::Record { slots, .. } => {
                 for slot in slots {
+                    work_budget.charge(1)?;
                     let child = slot.child();
-                    calls.extend(leading[child.index()].iter().copied());
+                    extend_calls(&mut calls, &leading[child.index()], work_budget)?;
                     if !facts[child.index()].nullable {
                         break;
                     }
                 }
             }
             NodeKindData::Transform { child, .. } => {
-                calls.extend(leading[child.index()].iter().copied());
+                work_budget.charge(1)?;
+                extend_calls(&mut calls, &leading[child.index()], work_budget)?;
+            }
+            NodeKindData::Projection { left, right, .. } => {
+                work_budget.charge(1)?;
+                extend_calls(&mut calls, &leading[left.index()], work_budget)?;
+                if facts[left.index()].nullable {
+                    work_budget.charge(1)?;
+                    extend_calls(&mut calls, &leading[right.index()], work_budget)?;
+                }
+            }
+            NodeKindData::Difference { include, exclude } => {
+                work_budget.charge(1)?;
+                extend_calls(&mut calls, &leading[exclude.index()], work_budget)?;
+                if !facts[exclude.index()].nullable {
+                    work_budget.charge(1)?;
+                    extend_calls(&mut calls, &leading[include.index()], work_budget)?;
+                }
+            }
+            NodeKindData::Trim { child } => {
+                work_budget.charge(1)?;
+                extend_calls(&mut calls, &leading[child.index()], work_budget)?;
+            }
+            NodeKindData::Pratt { atom, table } => {
+                work_budget.charge(2)?;
+                extend_calls(&mut calls, &leading[atom.index()], work_budget)?;
+                let table = &program.pratt_table_rows()[table.index()];
+                for operator in table.operators() {
+                    work_budget.charge(1)?;
+                    let operator = &program.pratt_operator_rows()[operator.index()];
+                    if operator.fixity() == PrattFixity::Prefix {
+                        work_budget.charge(1)?;
+                        charge_ordered_set_operation(work_budget, calls.len())?;
+                        calls.insert(operator.matcher_rule().local());
+                    }
+                }
             }
             NodeKindData::Epsilon | NodeKindData::Literal(_) | NodeKindData::Regex(_) => {}
         }
         leading[node.id().index()] = calls;
     }
 
-    program
-        .rule_data_rows()
-        .iter()
-        .map(|rule| leading[rule.root().index()].iter().copied().collect())
-        .collect()
+    work_budget.charge(program.rule_data_rows().len().saturating_mul(2))?;
+    let mut edges = Vec::with_capacity(program.rule_data_rows().len());
+    for rule in program.rule_data_rows() {
+        work_budget.charge(1)?;
+        let calls = &leading[rule.root().index()];
+        work_budget.charge(calls.len().saturating_mul(2))?;
+        edges.push(calls.iter().copied().collect());
+    }
+    Ok(edges)
 }
 
-fn cyclic_components(edges: &[Vec<RuleIx>]) -> Vec<Vec<RuleIx>> {
+fn cyclic_components(
+    edges: &[Vec<RuleIx>],
+    work_budget: &mut AnalysisWorkBudget,
+) -> Result<Vec<Vec<RuleIx>>, Diagnostic> {
     let count = edges.len();
+    let mut edge_count = 0usize;
+    for targets in edges {
+        work_budget.charge(1)?;
+        edge_count = edge_count
+            .checked_add(targets.len())
+            .ok_or_else(|| work_budget.exhausted())?;
+    }
+    work_budget.charge(
+        count
+            .checked_mul(12)
+            .and_then(|nodes| {
+                edge_count
+                    .checked_mul(2)
+                    .and_then(|edge_units| nodes.checked_add(edge_units))
+            })
+            .ok_or_else(|| work_budget.exhausted())?,
+    )?;
     let mut visited = vec![false; count];
     let mut finish = Vec::with_capacity(count);
+    let mut stack = Vec::with_capacity(count);
 
     for index in 0..count {
+        work_budget.charge(1)?;
         if visited[index] {
             continue;
         }
         visited[index] = true;
         let root = RuleIx::checked(index).expect("rule ordinal was bounded");
-        let mut stack = vec![(root, 0_usize)];
+        stack.clear();
+        stack.push((root, 0_usize));
         while let Some((rule, next)) = stack.last_mut() {
+            work_budget.charge(1)?;
             if *next < edges[rule.index()].len() {
                 let target = edges[rule.index()][*next];
                 *next += 1;
@@ -1061,35 +1499,50 @@ fn cyclic_components(edges: &[Vec<RuleIx>]) -> Vec<Vec<RuleIx>> {
 
     let mut reverse = vec![Vec::new(); count];
     for (source_index, targets) in edges.iter().enumerate() {
+        work_budget.charge(1)?;
         let source = RuleIx::checked(source_index).expect("rule ordinal was bounded");
         for &target in targets {
+            work_budget.charge(1)?;
             reverse[target.index()].push(source);
         }
     }
     for predecessors in &mut reverse {
+        work_budget.charge(
+            sort_work_bound(predecessors.len())
+                .checked_add(predecessors.len())
+                .ok_or_else(|| work_budget.exhausted())?,
+        )?;
         predecessors.sort_unstable();
         predecessors.dedup();
     }
 
+    work_budget.charge(count)?;
     visited.fill(false);
-    let mut components = Vec::new();
+    let mut components = Vec::with_capacity(count);
+    let mut pending = Vec::with_capacity(count);
     for root in finish.into_iter().rev() {
+        work_budget.charge(1)?;
         if visited[root.index()] {
             continue;
         }
         visited[root.index()] = true;
-        let mut pending = vec![root];
+        pending.clear();
+        pending.push(root);
         let mut component = Vec::new();
         while let Some(rule) = pending.pop() {
+            work_budget.charge(1)?;
             component.push(rule);
             for &predecessor in reverse[rule.index()].iter().rev() {
+                work_budget.charge(1)?;
                 if !visited[predecessor.index()] {
                     visited[predecessor.index()] = true;
                     pending.push(predecessor);
                 }
             }
         }
+        work_budget.charge(sort_work_bound(component.len()))?;
         component.sort_unstable();
+        work_budget.charge(search_work_bound(edges[component[0].index()].len()))?;
         let recursive = component.len() > 1
             || edges[component[0].index()]
                 .binary_search(&component[0])
@@ -1098,8 +1551,13 @@ fn cyclic_components(edges: &[Vec<RuleIx>]) -> Vec<Vec<RuleIx>> {
             components.push(component);
         }
     }
+    work_budget.charge(
+        sort_work_bound(components.len())
+            .checked_mul(count.max(1))
+            .ok_or_else(|| work_budget.exhausted())?,
+    )?;
     components.sort();
-    components
+    Ok(components)
 }
 
 fn update_monotone(current: &mut WorkFacts, derived: WorkFacts) -> bool {
@@ -1123,26 +1581,19 @@ mod tests {
     use std::mem::size_of;
 
     use super::*;
-    use crate::compiler::frontend::parse_source;
-    use crate::compiler::source::ModuleInput;
+    use crate::compiler::instance::UNIT_INSTANCE;
+    use crate::compiler::{GrammarInstanceInput, compile_instance};
 
-    fn program(source: &str) -> (Program, DependencySolution) {
-        let module = match parse_source(
-            ModuleInput::new("analysis-order-law.bbnf", source.as_bytes()),
-            CompileOptions::default(),
+    fn with_analysis_fixture(source: &str, inspect: impl FnOnce(&Program, &DependencySolution)) {
+        let options = CompileOptions::default();
+        let compiled = match compile_instance(
+            GrammarInstanceInput::new(UNIT_INSTANCE, source.as_bytes()),
+            options,
         ) {
             StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("source fixture must parse"),
+            StageResult::Rejected { .. } => panic!("grammar-instance fixture must compile"),
         };
-        let program = match Program::resolve(&module) {
-            StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("source fixture must resolve"),
-        };
-        let dependency = match DependencySolution::build(&program) {
-            StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("dependency fixture must resolve"),
-        };
-        (program, dependency)
+        inspect(compiled.program(), compiled.dependency());
     }
 
     #[test]
@@ -1180,72 +1631,95 @@ mod tests {
 
     #[test]
     fn fixed_point_constraint_permutations_are_identical() {
-        let (program, dependency) = program(
+        with_analysis_fixture(
             r#"
 root = value;
 value = array | "null";
 array = "[", (value, (",", value)*)?, "]";
 "#,
-        );
-        let options = CompileOptions::default();
-        let canonical = match AnalysisFacts::derive(&program, &dependency, options) {
-            StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { .. } => panic!("recursive grammar must analyze"),
-        };
+            |program, dependency| {
+                let options = CompileOptions::default();
+                let canonical = match AnalysisFacts::derive(program, dependency, options) {
+                    StageResult::Accepted { value, .. } => value,
+                    StageResult::Rejected { .. } => panic!("recursive grammar must analyze"),
+                };
 
-        for seed in 1..=16 {
-            let node_order = deterministic_permutation(program.node_data_rows().len(), seed);
-            let rule_order = deterministic_permutation(
-                program.rule_data_rows().len(),
-                seed ^ 0xa076_1d64_78bd_642f,
-            );
-            let candidate = match AnalysisFacts::derive_with_orders(
-                &program,
-                &dependency,
-                options,
-                &node_order,
-                &rule_order,
-            ) {
-                StageResult::Accepted { value, .. } => value,
-                StageResult::Rejected { .. } => panic!("permuted analysis must converge"),
-            };
-            assert_eq!(candidate, canonical);
-        }
+                for seed in 1..=16 {
+                    let node_order =
+                        deterministic_permutation(program.node_data_rows().len(), seed);
+                    let rule_order = deterministic_permutation(
+                        program.rule_data_rows().len(),
+                        seed ^ 0xa076_1d64_78bd_642f,
+                    );
+                    let candidate = match AnalysisFacts::derive_with_orders(
+                        program,
+                        dependency,
+                        options,
+                        &node_order,
+                        &rule_order,
+                    ) {
+                        StageResult::Accepted { value, .. } => value,
+                        StageResult::Rejected { .. } => panic!("permuted analysis must converge"),
+                    };
+                    assert_eq!(candidate, canonical);
+                }
+            },
+        );
     }
 
     #[test]
-    fn overflow_diagnostic_is_identical_across_discovery_permutations() {
+    fn one_under_budget_diagnostic_is_identical_across_discovery_permutations() {
         let mut source = String::from("r0 = \"x\";\n");
         for index in 1..=65 {
-            writeln!(source, "r{index} = r{}, r{};", index - 1, index - 1)
+            writeln!(source, "r{index} = r{};", index - 1)
                 .expect("writing to String is infallible");
         }
         source.push_str("root = r65;\n");
-        let (program, dependency) = program(&source);
-        let options = CompileOptions::default();
-        let canonical = match AnalysisFacts::derive(&program, &dependency, options) {
-            StageResult::Accepted { .. } => panic!("overflowing grammar must be rejected"),
-            StageResult::Rejected { diagnostics } => diagnostics,
-        };
-
-        for seed in 1..=16 {
-            let node_order = deterministic_permutation(program.node_data_rows().len(), seed);
-            let rule_order = deterministic_permutation(
-                program.rule_data_rows().len(),
-                seed ^ 0xa076_1d64_78bd_642f,
-            );
-            let candidate = match AnalysisFacts::derive_with_orders(
-                &program,
-                &dependency,
+        with_analysis_fixture(&source, |program, dependency| {
+            let accepted =
+                match AnalysisFacts::derive(program, dependency, CompileOptions::default()) {
+                    StageResult::Accepted { value, .. } => value,
+                    StageResult::Rejected { .. } => panic!("linear grammar must analyze"),
+                };
+            let options = CompileOptions {
+                analysis_work: accepted
+                    .work_units()
+                    .checked_sub(1)
+                    .expect("accepted analysis performs work"),
+                ..CompileOptions::default()
+            };
+            let node_order = (0..program.node_data_rows().len()).collect::<Vec<_>>();
+            let rule_order = (0..program.rule_data_rows().len()).collect::<Vec<_>>();
+            let canonical = match AnalysisFacts::derive_with_orders(
+                program,
+                dependency,
                 options,
                 &node_order,
                 &rule_order,
             ) {
-                StageResult::Accepted { .. } => panic!("overflowing grammar must be rejected"),
+                StageResult::Accepted { .. } => panic!("one-under analysis must be rejected"),
                 StageResult::Rejected { diagnostics } => diagnostics,
             };
-            assert_eq!(candidate, canonical);
-        }
+
+            for seed in 1..=16 {
+                let node_order = deterministic_permutation(program.node_data_rows().len(), seed);
+                let rule_order = deterministic_permutation(
+                    program.rule_data_rows().len(),
+                    seed ^ 0xa076_1d64_78bd_642f,
+                );
+                let candidate = match AnalysisFacts::derive_with_orders(
+                    program,
+                    dependency,
+                    options,
+                    &node_order,
+                    &rule_order,
+                ) {
+                    StageResult::Accepted { .. } => panic!("one-under analysis must be rejected"),
+                    StageResult::Rejected { diagnostics } => diagnostics,
+                };
+                assert_eq!(candidate, canonical);
+            }
+        });
     }
 
     fn deterministic_permutation(count: usize, mut state: u64) -> Vec<usize> {

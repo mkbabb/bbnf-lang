@@ -6,9 +6,10 @@ use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::event::{EVENT_SCHEMA, ScalarEventPlan};
 use super::lower::{LoweredRegex, LoweringPlan, PlanOpData, PlanRecordSlotData};
+use super::pratt::{PrattFixity, PrattTable};
 use super::source::Revision;
 
-const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v5";
+const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v6";
 
 /// One deterministic, direct Rust parser product.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -58,6 +59,9 @@ impl GeneratedModule {
             regexes: lowering.regexes().len(),
             transforms: events.transforms().len(),
             fields: lowering.fields().len(),
+            trivia_dfas: usize::from(lowering.trivia().is_some()),
+            pratt_tables: lowering.pratt_tables().len(),
+            pratt_operators: lowering.pratt_operators().len(),
         })
         .expect("generated manifest fields are serializable");
 
@@ -93,6 +97,9 @@ struct GeneratedManifest<'a> {
     regexes: usize,
     transforms: usize,
     fields: usize,
+    trivia_dfas: usize,
+    pratt_tables: usize,
+    pratt_operators: usize,
 }
 
 struct RustEmitter<'a> {
@@ -172,13 +179,22 @@ impl<'a> RustEmitter<'a> {
         self.write_event_surface();
         self.write_transform_surface();
         self.write_field_surface();
+        self.write_pratt_surface();
         self.ensure_output_budget()?;
         for (index, regex) in self.plan.regexes().iter().enumerate() {
             self.write_regex(index, regex);
             self.ensure_output_budget()?;
         }
+        if let Some(trivia) = self.plan.trivia() {
+            self.write_trivia(trivia);
+            self.ensure_output_budget()?;
+        }
         for node in self.plan.node_data_rows() {
             self.write_node(node.id().index(), node.op());
+            self.ensure_output_budget()?;
+        }
+        for (index, table) in self.plan.pratt_tables().iter().enumerate() {
+            self.write_pratt(index, table)?;
             self.ensure_output_budget()?;
         }
         for rule in self.plan.rule_data_rows() {
@@ -225,11 +241,19 @@ impl<'a> RustEmitter<'a> {
             .plan
             .node_data_rows()
             .iter()
+            .any(|node| matches!(node.op(), PlanOpData::Difference { .. }))
+        {
+            imports.push("difference");
+        }
+        if self
+            .plan
+            .node_data_rows()
+            .iter()
             .any(|node| matches!(node.op(), PlanOpData::Literal(_)))
         {
             imports.push("literal");
         }
-        if !self.plan.regexes().is_empty() {
+        if !self.plan.regexes().is_empty() || self.plan.trivia().is_some() {
             imports.extend(["regex", "RegexPlan", "RegexTerminal"]);
         }
         if self
@@ -258,6 +282,8 @@ impl<'a> RustEmitter<'a> {
                  ChoiceBranch,\n\
                  RepeatCount,\n\
                  Transform,\n\
+                 Trivia,\n\
+                 PrattReduce,\n\
                  EndInput,\n\
              }\n\n\
              #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
@@ -267,6 +293,7 @@ impl<'a> RustEmitter<'a> {
                  node: Option<u32>,\n\
                  field: Option<u32>,\n\
                  transform: Option<u32>,\n\
+                 operator: Option<u32>,\n\
                  start: u32,\n\
                  end: u32,\n\
                  value: u32,\n\
@@ -277,6 +304,7 @@ impl<'a> RustEmitter<'a> {
                  pub const fn node(&self) -> Option<u32> { self.node }\n\
                  pub const fn field(&self) -> Option<u32> { self.field }\n\
                  pub const fn transform(&self) -> Option<u32> { self.transform }\n\
+                 pub const fn operator(&self) -> Option<u32> { self.operator }\n\
                  pub const fn start(&self) -> u32 { self.start }\n\
                  pub const fn end(&self) -> u32 { self.end }\n\
                  pub const fn value(&self) -> u32 { self.value }\n\
@@ -463,11 +491,7 @@ impl<'a> RustEmitter<'a> {
              {\n\
                  let logical_events = run.sink().len();\n\
                  if logical_events >= limits.config.logical_events {\n\
-                     return resource_fault(\n\
-                         run,\n\
-                         ResourceKind::Events,\n\
-                         limits.config.logical_events,\n\
-                     );\n\
+                     return resource_fault(run, ResourceKind::Events, limits.config.logical_events);\n\
                  }\n\
                  run.emit_with(event);\n\
                  Step::Matched(())\n\
@@ -489,6 +513,7 @@ impl<'a> RustEmitter<'a> {
              fn event(\n\
                  kind: EventKind,\n\
                  identity: EventIdentity,\n\
+                 operator: Option<u32>,\n\
                  start: usize,\n\
                  end: usize,\n\
                  value: u32,\n\
@@ -499,6 +524,7 @@ impl<'a> RustEmitter<'a> {
                      node: identity.node,\n\
                      field: identity.field,\n\
                      transform: identity.transform,\n\
+                     operator,\n\
                      start: u32::try_from(start).expect(\"input bound checked before parsing\"),\n\
                      end: u32::try_from(end).expect(\"input bound checked before parsing\"),\n\
                      value,\n\
@@ -569,6 +595,93 @@ impl<'a> RustEmitter<'a> {
         self.source.push_str("];\n\n");
     }
 
+    fn write_pratt_surface(&mut self) {
+        self.source.push_str(
+            "#[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             pub enum PrattFixity {\n\
+                 Prefix,\n\
+                 Postfix,\n\
+                 Infix,\n\
+             }\n\n\
+             #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             pub struct PrattTableDescriptor {\n\
+                 id: u32,\n\
+                 site_rule: u32,\n\
+                 atom_rule: u32,\n\
+                 operator_start: u32,\n\
+                 operator_len: u32,\n\
+             }\n\n\
+             impl PrattTableDescriptor {\n\
+                 pub const fn id(&self) -> u32 { self.id }\n\
+                 pub const fn site_rule(&self) -> u32 { self.site_rule }\n\
+                 pub const fn atom_rule(&self) -> u32 { self.atom_rule }\n\
+                 pub const fn operator_start(&self) -> u32 { self.operator_start }\n\
+                 pub const fn operator_len(&self) -> u32 { self.operator_len }\n\
+             }\n\n\
+             #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             pub struct PrattOperatorDescriptor {\n\
+                 id: u32,\n\
+                 table: u32,\n\
+                 matcher_rule: u32,\n\
+                 fixity: PrattFixity,\n\
+                 left_binding_power: Option<u16>,\n\
+                 right_binding_power: Option<u16>,\n\
+             }\n\n\
+             impl PrattOperatorDescriptor {\n\
+                 pub const fn id(&self) -> u32 { self.id }\n\
+                 pub const fn table(&self) -> u32 { self.table }\n\
+                 pub const fn matcher_rule(&self) -> u32 { self.matcher_rule }\n\
+                 pub const fn fixity(&self) -> PrattFixity { self.fixity }\n\
+                 pub const fn left_binding_power(&self) -> Option<u16> { self.left_binding_power }\n\
+                 pub const fn right_binding_power(&self) -> Option<u16> { self.right_binding_power }\n\
+             }\n\n",
+        );
+        writeln!(
+            self.source,
+            "pub const PRATT_TABLES: [PrattTableDescriptor; {}] = [",
+            self.plan.pratt_tables().len()
+        )
+        .unwrap();
+        for table in self.plan.pratt_tables() {
+            let operator_start = table.operators().next().map_or(0, |id| id.index());
+            writeln!(
+                self.source,
+                "    PrattTableDescriptor {{ id: {}, site_rule: {}, atom_rule: {}, operator_start: {}, operator_len: {} }},",
+                table.id().index(),
+                table.site_rule().index(),
+                table.atom_rule().index(),
+                operator_start,
+                table.operators().len(),
+            )
+            .unwrap();
+        }
+        self.source.push_str("];\n\n");
+        writeln!(
+            self.source,
+            "pub const PRATT_OPERATORS: [PrattOperatorDescriptor; {}] = [",
+            self.plan.pratt_operators().len()
+        )
+        .unwrap();
+        for operator in self.plan.pratt_operators() {
+            let fixity = match operator.fixity() {
+                PrattFixity::Prefix => "Prefix",
+                PrattFixity::Postfix => "Postfix",
+                PrattFixity::Infix => "Infix",
+            };
+            let left = option_u16(operator.left_binding_power());
+            let right = option_u16(operator.right_binding_power());
+            writeln!(
+                self.source,
+                "    PrattOperatorDescriptor {{ id: {}, table: {}, matcher_rule: {}, fixity: PrattFixity::{fixity}, left_binding_power: {left}, right_binding_power: {right} }},",
+                operator.id().index(),
+                operator.table().index(),
+                operator.matcher_rule().index(),
+            )
+            .unwrap();
+        }
+        self.source.push_str("];\n\n");
+    }
+
     fn write_regex(&mut self, index: usize, regex: &LoweredRegex) {
         write!(
             self.source,
@@ -603,6 +716,37 @@ impl<'a> RustEmitter<'a> {
         .unwrap();
     }
 
+    fn write_trivia(&mut self, trivia: &LoweredRegex) {
+        self.source
+            .push_str("const TRIVIA_BYTE_CLASSES: [u8; 256] = ");
+        write_slice(&mut self.source, trivia.byte_classes());
+        self.source.push_str(";\n");
+        write!(
+            self.source,
+            "const TRIVIA_TRANSITIONS: [u32; {}] = ",
+            trivia.transitions().len()
+        )
+        .unwrap();
+        write_slice(&mut self.source, trivia.transitions());
+        self.source.push_str(";\n");
+        write!(
+            self.source,
+            "const TRIVIA_ACCEPTING: [bool; {}] = ",
+            trivia.accepting().len()
+        )
+        .unwrap();
+        write_slice(&mut self.source, trivia.accepting());
+        self.source.push_str(";\n");
+        writeln!(
+            self.source,
+            "const TRIVIA_PLAN: RegexPlan<'static> = match RegexPlan::new(&TRIVIA_BYTE_CLASSES, {}, {}, {}, &TRIVIA_TRANSITIONS, &TRIVIA_ACCEPTING) {{\n    Ok(plan) => plan,\n    Err(_) => panic!(\"compiler emitted invalid regex table\"),\n}};\n",
+            trivia.state_count(),
+            trivia.class_count(),
+            trivia.start_state()
+        )
+        .unwrap();
+    }
+
     fn write_node(&mut self, index: usize, op: &PlanOpData) {
         writeln!(
             self.source,
@@ -616,14 +760,14 @@ impl<'a> RustEmitter<'a> {
                 write_slice(&mut self.source, bytes);
                 writeln!(
                     self.source,
-                    ") {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Literal, identity(None, Some({index}), None, None), span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
+                    ") {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Literal, identity(None, Some({index}), None, None), None, span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
                 )
                 .unwrap();
             }
             PlanOpData::Regex(regex_index) => {
                 writeln!(
                     self.source,
-                    "    let terminal = RegexTerminal::new(REGEX_{regex_index}_PLAN);\n    match regex(run, &terminal) {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Regex, identity(None, Some({index}), None, None), span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
+                    "    let terminal = RegexTerminal::new(REGEX_{regex_index}_PLAN);\n    match regex(run, &terminal) {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Regex, identity(None, Some({index}), None, None), None, span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
                 )
                 .unwrap();
             }
@@ -657,7 +801,7 @@ impl<'a> RustEmitter<'a> {
                     .unwrap_or_else(|| "None".to_owned());
                 writeln!(
                     self.source,
-                    "    let start = run.cursor().offset();\n    match repeat(run, {minimum}usize, {maximum}, |run| node_{}(run, limits)) {{\n        Step::Matched(count) => {{\n            let end = run.cursor().offset();\n            emit_event(run, limits, || event(EventKind::RepeatCount, identity(None, Some({index}), None, None), start, end, u32::try_from(count).unwrap_or(u32::MAX)))\n        }}\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}",
+                    "    let start = run.cursor().offset();\n    match repeat(run, {minimum}usize, {maximum}, |run| node_{}(run, limits)) {{\n        Step::Matched(count) => {{\n            let end = run.cursor().offset();\n            emit_event(run, limits, || event(EventKind::RepeatCount, identity(None, Some({index}), None, None), None, start, end, u32::try_from(count).unwrap_or(u32::MAX)))\n        }}\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}",
                     child.index()
                 )
                 .unwrap();
@@ -669,7 +813,7 @@ impl<'a> RustEmitter<'a> {
                         PlanRecordSlotData::Field { field, child } => {
                             writeln!(
                                 self.source,
-                                "        let field_start_{} = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::EnterField, identity(Some({}), Some({}), Some({}), None), field_start_{}, field_start_{}, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let field_end_{} = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::LeaveField, identity(Some({}), Some({}), Some({}), None), field_start_{}, field_end_{}, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}",
+                                "        let field_start_{} = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::EnterField, identity(Some({}), Some({}), Some({}), None), None, field_start_{}, field_start_{}, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let field_end_{} = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::LeaveField, identity(Some({}), Some({}), Some({}), None), None, field_start_{}, field_end_{}, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}",
                                 field.index(),
                                 owner.index(),
                                 child.index(),
@@ -703,14 +847,123 @@ impl<'a> RustEmitter<'a> {
             } => {
                 writeln!(
                     self.source,
-                    "    sequence(run, |run| {{\n        let start = run.cursor().offset();\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let end = run.cursor().offset();\n        emit_event(run, limits, || event(EventKind::Transform, identity(None, Some({index}), None, Some({})), start, end, 0))\n    }})",
+                    "    sequence(run, |run| {{\n        let start = run.cursor().offset();\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let end = run.cursor().offset();\n        emit_event(run, limits, || event(EventKind::Transform, identity(None, Some({index}), None, Some({})), None, start, end, 0))\n    }})",
                     child.index(),
                     transform.index(),
                 )
                 .unwrap();
             }
+            PlanOpData::Projection {
+                left,
+                right,
+                keep: _,
+            } => {
+                writeln!(
+                    self.source,
+                    "    sequence(run, |run| {{\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        Step::Matched(())\n    }})",
+                    left.index(),
+                    right.index(),
+                )
+                .unwrap();
+            }
+            PlanOpData::Difference { include, exclude } => {
+                writeln!(
+                    self.source,
+                    "    difference(run, |run| node_{}(run, limits), |run| node_{}(run, limits))",
+                    include.index(),
+                    exclude.index(),
+                )
+                .unwrap();
+            }
+            PlanOpData::Trim { child } => {
+                writeln!(
+                    self.source,
+                    "    sequence(run, |run| {{\n        match regex(run, &RegexTerminal::new(TRIVIA_PLAN)) {{\n            Step::Matched(span) => {{\n                if span.start() != span.end() {{\n                    match emit_event(run, limits, || event(EventKind::Trivia, identity(None, Some({index}), None, None), None, span.start(), span.end(), 0)) {{\n                        Step::Matched(()) => {{}},\n                        Step::Mismatch(failure) => return Step::Mismatch(failure),\n                        Step::Fault(fault) => return Step::Fault(fault),\n                    }}\n                }}\n            }}\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match regex(run, &RegexTerminal::new(TRIVIA_PLAN)) {{\n            Step::Matched(span) => {{\n                if span.start() != span.end() {{\n                    match emit_event(run, limits, || event(EventKind::Trivia, identity(None, Some({index}), None, None), None, span.start(), span.end(), 1)) {{\n                        Step::Matched(()) => {{}},\n                        Step::Mismatch(failure) => return Step::Mismatch(failure),\n                        Step::Fault(fault) => return Step::Fault(fault),\n                    }}\n                }}\n            }}\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        Step::Matched(())\n    }})",
+                    child.index(),
+                )
+                .unwrap();
+            }
+            PlanOpData::Pratt { atom: _, table } => {
+                writeln!(self.source, "    pratt_{}(run, limits, 0)", table.index()).unwrap();
+            }
         }
         self.source.push_str("}\n\n");
+    }
+
+    fn write_pratt(&mut self, table_index: usize, table: &PrattTable) -> Result<(), EmitFailure> {
+        let site_nodes = self
+            .plan
+            .node_data_rows()
+            .iter()
+            .filter_map(|node| match node.op() {
+                PlanOpData::Pratt { atom: _, table } if table.index() == table_index => {
+                    Some(node.id().index())
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let [site_node] = site_nodes.as_slice() else {
+            return Err(EmitFailure::Invariant(format!(
+                "Pratt table {table_index} does not own exactly one lowering site"
+            )));
+        };
+        let operators = table
+            .operators()
+            .map(|id| {
+                self.plan.pratt_operator(id).ok_or_else(|| {
+                    EmitFailure::Invariant(format!(
+                        "Pratt table {table_index} references missing operator {}",
+                        id.index()
+                    ))
+                })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+
+        writeln!(
+            self.source,
+            "fn pratt_{table_index}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits, min_bp: u16) -> Step<'i, ()> {{\n    match charge_work(run, limits) {{\n        Step::Matched(()) => {{}},\n        Step::Mismatch(failure) => return Step::Mismatch(failure),\n        Step::Fault(fault) => return Step::Fault(fault),\n    }}\n    with_depth(run, limits, |run| sequence(run, |run| {{\n        let start = run.cursor().offset();\n        let table = &PRATT_TABLES[{table_index}];\n        let mut selected: Option<usize> = None;"
+        )
+        .unwrap();
+
+        for operator in operators
+            .iter()
+            .filter(|operator| operator.fixity() == PrattFixity::Prefix)
+        {
+            let operator_index = operator.id().index();
+            writeln!(
+                self.source,
+                "        if selected.is_none() {{\n            match rule_{}(run, limits) {{\n                Step::Matched(()) => {{ selected = Some({operator_index}usize); }}\n                Step::Mismatch(failure) => {{}},\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n        }}",
+                operator.matcher_rule().index(),
+            )
+            .unwrap();
+        }
+
+        writeln!(
+            self.source,
+            "        if selected.is_some() {{\n            let prefix_operator = &PRATT_OPERATORS[selected.expect(\"selected prefix operator\")];\n            match pratt_{table_index}(run, limits, prefix_operator.right_binding_power().expect(\"prefix operator binding power\")) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n        }} else {{\n            match rule_{}(run, limits) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n        }}\n        loop {{\n            if selected.is_none() {{",
+            table.atom_rule().index(),
+        )
+        .unwrap();
+
+        for operator in operators
+            .iter()
+            .filter(|operator| operator.fixity() != PrattFixity::Prefix)
+        {
+            let operator_index = operator.id().index();
+            writeln!(
+                self.source,
+                "                if selected.is_none() {{\n                    if PRATT_OPERATORS[{operator_index}].left_binding_power().expect(\"postfix/infix operator binding power\") >= min_bp {{\n                        match rule_{}(run, limits) {{\n                            Step::Matched(()) => {{ selected = Some({operator_index}usize); }}\n                            Step::Mismatch(failure) => {{}},\n                            Step::Fault(fault) => return Step::Fault(fault),\n                        }}\n                    }}\n                }}",
+                operator.matcher_rule().index(),
+            )
+            .unwrap();
+        }
+
+        writeln!(
+            self.source,
+            "            }}\n            let Some(_present) = selected else {{ break; }};\n            let operator = &PRATT_OPERATORS[selected.expect(\"selected Pratt operator\")];\n            match operator.fixity() {{\n                PrattFixity::Prefix => {{}},\n                PrattFixity::Postfix => {{}},\n                PrattFixity::Infix => {{\n                    match pratt_{table_index}(run, limits, operator.right_binding_power().expect(\"infix operator binding power\")) {{\n                        Step::Matched(()) => {{}},\n                        Step::Mismatch(failure) => return Step::Mismatch(failure),\n                        Step::Fault(fault) => return Step::Fault(fault),\n                    }}\n                }}\n            }}\n            let end = run.cursor().offset();\n            match emit_event(run, limits, || event(EventKind::PrattReduce, identity(None, Some({site_node}), None, None), Some(operator.id()), start, end, 0)) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            selected = None;\n        }}\n        Step::Matched(())\n    }}))\n}}\n"
+        )
+        .unwrap();
+        Ok(())
     }
 
     fn write_choice(
@@ -749,7 +1002,7 @@ impl<'a> RustEmitter<'a> {
         self.source.push_str(&" ".repeat(indent + 4));
         writeln!(
             self.source,
-            "let start = run.cursor().offset();\n{}match node_{child}(run, limits) {{\n{}    Step::Matched(()) => {{\n{}        let end = run.cursor().offset();\n{}        emit_event(run, limits, || event(EventKind::ChoiceBranch, identity(None, Some({node}), None, None), start, end, {branch}))\n{}    }}\n{}    Step::Mismatch(failure) => Step::Mismatch(failure),\n{}    Step::Fault(fault) => Step::Fault(fault),\n{}}}",
+            "let start = run.cursor().offset();\n{}match node_{child}(run, limits) {{\n{}    Step::Matched(()) => {{\n{}        let end = run.cursor().offset();\n{}        emit_event(run, limits, || event(EventKind::ChoiceBranch, identity(None, Some({node}), None, None), None, start, end, {branch}))\n{}    }}\n{}    Step::Mismatch(failure) => Step::Mismatch(failure),\n{}    Step::Fault(fault) => Step::Fault(fault),\n{}}}",
             " ".repeat(indent + 4),
             " ".repeat(indent + 4),
             " ".repeat(indent + 4),
@@ -767,7 +1020,7 @@ impl<'a> RustEmitter<'a> {
     fn write_rule(&mut self, rule: usize, root: usize) {
         writeln!(
             self.source,
-            "fn rule_{rule}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits) -> Step<'i, ()> {{\n    match charge_work(run, limits) {{\n        Step::Matched(()) => {{}},\n        Step::Mismatch(failure) => return Step::Mismatch(failure),\n        Step::Fault(fault) => return Step::Fault(fault),\n    }}\n    with_depth(run, limits, |run| sequence(run, |run| {{\n        let start = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::EnterRule, identity(Some({rule}), None, None, None), start, start, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{root}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let end = run.cursor().offset();\n        emit_event(run, limits, || event(EventKind::LeaveRule, identity(Some({rule}), None, None, None), start, end, 0))\n    }}))\n}}\n"
+            "fn rule_{rule}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits) -> Step<'i, ()> {{\n    match charge_work(run, limits) {{\n        Step::Matched(()) => {{}},\n        Step::Mismatch(failure) => return Step::Mismatch(failure),\n        Step::Fault(fault) => return Step::Fault(fault),\n    }}\n    with_depth(run, limits, |run| sequence(run, |run| {{\n        let start = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::EnterRule, identity(Some({rule}), None, None, None), None, start, start, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{root}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let end = run.cursor().offset();\n        emit_event(run, limits, || event(EventKind::LeaveRule, identity(Some({rule}), None, None, None), None, start, end, 0))\n    }}))\n}}\n"
         )
         .unwrap();
     }
@@ -776,7 +1029,7 @@ impl<'a> RustEmitter<'a> {
         let entry = self.plan.entry().index();
         writeln!(
             self.source,
-            "fn parse_with_sink<'i, S: EventSink<Event = ScalarEvent>>(\n    input: Input<'i>,\n    sink: S,\n    config: LimitsConfig,\n) -> ModuleResult<'i, S> {{\n    let config = config.bounded();\n    let input_limit = config.input_bytes.min(u32::MAX as usize);\n    let input_too_large = input.len() > input_limit;\n    let limits = Limits::new(config);\n    Run::with_sink(input, sink).parse_module(|run| {{\n        if input_too_large {{\n            return resource_fault(run, ResourceKind::InputBytes, input_limit);\n        }}\n        sequence(run, |run| {{\n            match rule_{entry}(run, &limits) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            match eof(run) {{\n                Step::Matched(_) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            let at = run.cursor().offset();\n            emit_event(run, &limits, || event(EventKind::EndInput, identity(None, None, None, None), at, at, 0))\n        }})\n    }})\n}}\n\n\
+            "fn parse_with_sink<'i, S: EventSink<Event = ScalarEvent>>(\n    input: Input<'i>,\n    sink: S,\n    config: LimitsConfig,\n) -> ModuleResult<'i, S> {{\n    let config = config.bounded();\n    let input_limit = config.input_bytes.min(u32::MAX as usize);\n    let input_too_large = input.len() > input_limit;\n    let limits = Limits::new(config);\n    Run::with_sink(input, sink).parse_module(|run| {{\n        if input_too_large {{\n            return resource_fault(run, ResourceKind::InputBytes, input_limit);\n        }}\n        sequence(run, |run| {{\n            match rule_{entry}(run, &limits) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            match eof(run) {{\n                Step::Matched(_) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            let at = run.cursor().offset();\n            emit_event(run, &limits, || event(EventKind::EndInput, identity(None, None, None, None), None, at, at, 0))\n        }})\n    }})\n}}\n\n\
              pub fn check(input: &[u8]) -> ModuleResult<'_, NoSink<ScalarEvent>> {{\n    check_with_limits(input, LimitsConfig::default())\n}}\n\n\
              pub fn check_with_limits(input: &[u8], config: LimitsConfig) -> ModuleResult<'_, NoSink<ScalarEvent>> {{\n    parse_with_sink(Input::new(input), NoSink::new(), config)\n}}\n\n\
              pub fn parse_events(input: &[u8]) -> ModuleResult<'_, EventBuffer<'_>> {{\n    parse_events_with_limits(input, LimitsConfig::default())\n}}\n\n\
@@ -850,4 +1103,8 @@ fn write_slice<T: std::fmt::Debug>(output: &mut BoundedSource, values: &[T]) {
         write!(output, "{value:?}").unwrap();
     }
     output.push(']');
+}
+
+fn option_u16(value: Option<u16>) -> String {
+    value.map_or_else(|| "None".to_owned(), |value| format!("Some({value})"))
 }

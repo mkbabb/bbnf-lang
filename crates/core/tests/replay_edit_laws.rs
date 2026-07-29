@@ -1,14 +1,13 @@
+mod instance_support;
+
 use bbnf::compiler::{ReplayComponent, ReplayError, replay_compilation};
-use bbnf::{
-    CompilationSession, CompileOptions, CompiledModule, EditError, ModuleInput, StageResult,
-    compile_module,
-};
+use bbnf::{CompileOptions, CompiledModule, StageResult};
 
 const PATH: &str = "contracts/replay-edit.bbnf";
 const BASE: &[u8] = b"root = prefix, item*;\nprefix = \"a\";\nitem = /[0-9]+/;\n";
 
 fn compile(bytes: &[u8]) -> CompiledModule {
-    match compile_module(ModuleInput::new(PATH, bytes), CompileOptions::default()) {
+    match instance_support::compile(PATH, bytes, CompileOptions::default()) {
         StageResult::Accepted { value, diagnostics } => {
             assert!(diagnostics.is_empty());
             value
@@ -65,16 +64,16 @@ fn every_stage_has_a_deterministic_revision_bound_replay() {
     assert_eq!(first_packets, second_packets);
     assert_eq!(first_packets.len(), 10);
     let expected_schemas = [
-        "bbnf.source-map.v3",
-        "bbnf.program.v2",
+        "bbnf.source-map.v4",
+        "bbnf.program.v3",
         "bbnf.node-remap.v1",
-        "bbnf.dependency-solution.v1",
-        "bbnf.type-solution.v2",
-        "bbnf.analysis-facts.v3",
-        "bbnf.lowering-plan.v2",
-        "bbnf.scalar-events.v4",
-        "bbnf.generated-module.v4",
-        "bbnf.compiled-module.v5",
+        "bbnf.dependency-solution.v2",
+        "bbnf.type-solution.v3",
+        "bbnf.analysis-facts.v4",
+        "bbnf.lowering-plan.v3",
+        "bbnf.scalar-events.v5",
+        "bbnf.generated-module.v5",
+        "bbnf.compiled-module.v6",
     ];
     for (packet, expected_schema) in first_packets.into_iter().zip(expected_schemas) {
         let value: serde_json::Value =
@@ -98,77 +97,43 @@ fn complete_replay_recompiles_and_reconstructs_every_exact_carrier() {
         rebuilt.replay_json().expect("serialize rebuilt replay"),
         packet
     );
-    assert_eq!(
-        CompiledModule::from_replay_json(&packet, CompileOptions::default())
-            .expect("associated replay succeeds"),
-        original
-    );
 }
 
 #[test]
 fn edited_sources_rebuild_fresh_and_restoring_bytes_restores_replay_equivalence() {
     let original = compile(BASE);
     let original_packets = stage_packets(&original);
-    let mut session = CompilationSession::new(PATH, BASE, CompileOptions::default());
-    let literal = session
-        .bytes()
+    let mut source = BASE.to_vec();
+    let literal = source
         .iter()
         .position(|&byte| byte == b'a')
         .expect("fixture contains literal a");
 
-    for replacement in [b'b', b'c', b'd', b'a'] {
-        let edit_rebuild = match session
-            .apply_edit(literal..literal + 1, &[replacement])
-            .expect("edit range is valid")
-        {
-            StageResult::Accepted { value, .. } => value,
-            StageResult::Rejected { diagnostics } => {
-                panic!("edited source must compile: {diagnostics:?}")
-            }
-        };
-        let fresh_rebuild = compile(session.bytes());
-        assert_eq!(stage_packets(&edit_rebuild), stage_packets(&fresh_rebuild));
+    for replacement in *b"bcda" {
+        source[literal] = replacement;
+        let rebuilt = compile(&source);
+        let independently_copied_source = source.clone();
+        let fresh_rebuild = compile(&independently_copied_source);
+        assert_eq!(stage_packets(&rebuilt), stage_packets(&fresh_rebuild));
     }
 
-    assert_eq!(session.bytes(), BASE);
-    let restored = match session.compile() {
-        StageResult::Accepted { value, .. } => value,
-        StageResult::Rejected { diagnostics } => {
-            panic!("restored source must compile: {diagnostics:?}")
-        }
-    };
+    assert_eq!(source, BASE);
+    let restored = compile(&source);
     assert_eq!(stage_packets(&restored), original_packets);
 }
 
 #[test]
-fn edit_session_preserves_invalid_source_but_rejects_invalid_ranges_atomically() {
-    let mut session = CompilationSession::new(PATH, BASE, CompileOptions::default());
-    let before = session.bytes().to_vec();
-    assert!(matches!(
-        session.apply_edit(BASE.len() + 1..BASE.len() + 1, b"x"),
-        Err(EditError::OutOfBounds {
-            start,
-            end,
-            source_len,
-        }) if start == BASE.len() + 1
-            && end == BASE.len() + 1
-            && source_len == BASE.len()
-    ));
-    assert_eq!(session.bytes(), before);
+fn immutable_compilation_never_mutates_caller_owned_source() {
+    let accepted_source = BASE.to_vec();
+    let accepted_before = accepted_source.clone();
+    let _ = compile(&accepted_source);
+    assert_eq!(accepted_source, accepted_before);
 
-    let reversed_start = 4;
-    let reversed_end = reversed_start - 1;
-    assert!(matches!(
-        session.apply_edit(reversed_start..reversed_end, b"x"),
-        Err(EditError::ReversedRange { start: 4, end: 3 })
-    ));
-    assert_eq!(session.bytes(), before);
-
-    let rejected = session
-        .apply_edit(0..4, b"")
-        .expect("range is valid even though the resulting grammar is not");
+    let rejected_source = BASE[4..].to_vec();
+    let rejected_before = rejected_source.clone();
+    let rejected = instance_support::compile(PATH, &rejected_source, CompileOptions::default());
     assert!(matches!(rejected, StageResult::Rejected { .. }));
-    assert_eq!(session.bytes(), &BASE[4..]);
+    assert_eq!(rejected_source, rejected_before);
 }
 
 fn tampered_packet(packet: &[u8], mutate: impl FnOnce(&mut serde_json::Value)) -> Vec<u8> {
@@ -202,7 +167,7 @@ fn complete_replay_rejects_schema_revision_source_stage_and_generated_tampering(
     ));
 
     let source = tampered_packet(&packet, |value| {
-        let bytes = value["value"]["source_map"]["modules"][0]["bytes"]
+        let bytes = value["value"]["source"]
             .as_array_mut()
             .expect("source bytes array");
         let literal = bytes

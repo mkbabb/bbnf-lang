@@ -1,11 +1,12 @@
-use bbnf::{CompileOptions, ModuleInput, StageResult, compile_module};
+mod instance_support;
 
-const PATH: &str = "contracts/w2-generated-control/grammar/control.bbnf";
-const GRAMMAR: &[u8] =
-    include_bytes!("../../../contracts/w2-generated-control/grammar/control.bbnf");
+use bbnf::{CompileOptions, StageResult};
+
+const PATH: &str = "tests/fixtures/emitter-control.bbnf";
+const GRAMMAR: &[u8] = include_bytes!("fixtures/emitter-control.bbnf");
 
 fn compile() -> bbnf::CompiledModule {
-    match compile_module(ModuleInput::new(PATH, GRAMMAR), CompileOptions::default()) {
+    match instance_support::compile(PATH, GRAMMAR, CompileOptions::default()) {
         StageResult::Accepted { value, diagnostics } => {
             assert!(diagnostics.is_empty());
             value
@@ -100,8 +101,8 @@ fn replay_envelopes_name_schema_and_revision() {
     )
     .expect("JSON is UTF-8");
 
-    assert!(lowering.starts_with("{\"schema\":\"bbnf.lowering-plan.v2\""));
-    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v4\""));
+    assert!(lowering.starts_with("{\"schema\":\"bbnf.lowering-plan.v3\""));
+    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v5\""));
     assert!(lowering.contains(&revision));
     assert!(events.contains(&revision));
     let event_packet: serde_json::Value =
@@ -127,10 +128,8 @@ fn wide_choice_hits_the_generated_source_budget_without_quadratic_growth() {
 
     let mut options = CompileOptions::default();
     options.generated_bytes = 32 * 1024;
-    let result = compile_module(
-        ModuleInput::new("contracts/wide-choice.bbnf", grammar.as_bytes()),
-        options,
-    );
+    let result =
+        instance_support::compile("contracts/wide-choice.bbnf", grammar.as_bytes(), options);
     let diagnostics = match result {
         StageResult::Rejected { diagnostics } => diagnostics,
         StageResult::Accepted { .. } => {

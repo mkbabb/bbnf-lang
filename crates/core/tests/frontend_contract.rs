@@ -1,5 +1,7 @@
+mod instance_support;
+
 use bbnf::compiler::NodeKind;
-use bbnf::{CompileOptions, DiagnosticCode, ModuleInput, StageResult, compile_module};
+use bbnf::{CompileOptions, DiagnosticCode, StageResult};
 
 const CONTROL_FIXTURE: &[u8] = r#"
 root = greeting, tail*;
@@ -13,7 +15,7 @@ unicode_empty = ε;
 .as_bytes();
 
 fn accepted(bytes: &[u8], options: CompileOptions) -> bbnf::CompiledModule {
-    match compile_module(ModuleInput::new("fixture.bbnf", bytes), options) {
+    match instance_support::compile("fixture.bbnf", bytes, options) {
         StageResult::Accepted { value, diagnostics } => {
             assert!(diagnostics.is_empty());
             value
@@ -30,7 +32,7 @@ fn accepted(bytes: &[u8], options: CompileOptions) -> bbnf::CompiledModule {
 }
 
 fn rejected_code(bytes: &[u8], options: CompileOptions) -> DiagnosticCode {
-    match compile_module(ModuleInput::new("fixture.bbnf", bytes), options) {
+    match instance_support::compile("fixture.bbnf", bytes, options) {
         StageResult::Accepted { .. } => panic!("expected fixture rejection"),
         StageResult::Rejected { diagnostics } => diagnostics
             .iter()
@@ -44,7 +46,7 @@ fn rejected_diagnostics(
     bytes: &[u8],
     options: CompileOptions,
 ) -> Vec<(DiagnosticCode, usize, usize, String)> {
-    match compile_module(ModuleInput::new("fixture.bbnf", bytes), options) {
+    match instance_support::compile("fixture.bbnf", bytes, options) {
         StageResult::Accepted { .. } => panic!("expected fixture rejection"),
         StageResult::Rejected { diagnostics } => diagnostics
             .iter()
@@ -132,7 +134,10 @@ fn source_output_and_revision_are_order_stable() {
         first.source_map().revision(),
         second.source_map().revision()
     );
-    assert_eq!(first.source_map().modules()[0].bytes(), CONTROL_FIXTURE);
+    assert_eq!(
+        first.source_map().modules()[0].revision(),
+        first.source_map().revision()
+    );
 }
 
 #[test]
@@ -295,10 +300,19 @@ fn records_are_rejected_outside_one_direct_rule_root() {
 
 #[test]
 fn record_delimiters_do_not_steal_bare_or_at_braces() {
-    assert_eq!(
-        rejected_code(b"root = { \"x\" };", CompileOptions::default()),
-        DiagnosticCode::Syntax
-    );
+    let repeated = accepted(b"root = { \"x\" };", CompileOptions::default());
+    let repeated_root = repeated.program().rules().get(0).expect("root rule").root();
+    assert!(matches!(
+        repeated
+            .program()
+            .node(repeated_root)
+            .map(|node| node.kind()),
+        Some(NodeKind::Repeat {
+            minimum: 0,
+            maximum: None,
+            ..
+        })
+    ));
     assert_eq!(
         rejected_code(b"root = @{ \"x\" };", CompileOptions::default()),
         DiagnosticCode::Syntax

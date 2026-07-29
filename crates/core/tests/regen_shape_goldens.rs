@@ -12,10 +12,9 @@ use bbnf::backend::rust::emitter::EmitStrategy;
 use bbnf::backend::rust::emitter::shapes::{array, keyword, number, object, scalar, string};
 use bbnf_ir::registry::SubstrateBinding;
 
-#[path = "shape_dispatch_emission/fixtures.rs"]
-mod fixtures;
+mod shape_dispatch_fixtures;
 
-use fixtures::*;
+use shape_dispatch_fixtures::*;
 
 fn format_tokens(ts: &proc_macro2::TokenStream) -> String {
     let file: syn::File =

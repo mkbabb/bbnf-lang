@@ -12,10 +12,9 @@ use bbnf::backend::rust::emitter::shapes::{
 };
 use bbnf_ir::registry::SubstrateBinding;
 
-#[path = "shape_dispatch_emission/fixtures.rs"]
-mod fixtures;
+mod shape_dispatch_fixtures;
 
-use fixtures::*;
+use shape_dispatch_fixtures::*;
 
 fn json_strategy() -> EmitStrategy {
     EmitStrategy::StructDirect {

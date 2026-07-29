@@ -1,9 +1,12 @@
+mod instance_support;
+
 use bbnf::compiler::NodeKind;
-use bbnf::{CompileOptions, ModuleInput, StageResult, compile_module};
+use bbnf::{CompileOptions, StageResult};
 
 fn accepted(source: &str) -> bbnf::CompiledModule {
-    match compile_module(
-        ModuleInput::new("dependency-laws.bbnf", source.as_bytes()),
+    match instance_support::compile(
+        "dependency-laws.bbnf",
+        source.as_bytes(),
         CompileOptions::default(),
     ) {
         StageResult::Accepted { value, .. } => value,

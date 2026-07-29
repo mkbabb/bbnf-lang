@@ -156,7 +156,7 @@ macro_rules! path {
     [ $( $seg:expr ),* $(,)? ] => {
         &[
             $(
-                $crate::runtime::path::IntoPathSegment::into_path_segment($seg),
+                $crate::runtime::IntoPathSegment::into_path_segment($seg),
             )*
         ]
     };

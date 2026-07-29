@@ -196,41 +196,6 @@ clean-incr:
 	rm -rf target/*/incremental
 	@echo "Incremental cache cleared."
 
-# ─── Regen ───────────────────────────────────────────────────────────────────
-#
-# `cargo xtask regen` is the canonical regen entrypoint post-B2 — runs the
-# 17-pass IR pipeline + emission once per invocation, writing per-grammar
-# source to crates/core/src/grammar/generated/<ident>.rs. The pre-B2
-# `scripts/bootstrap-bbnf.sh` (cargo-expand wrapper + Python post-process)
-# retired with `crates/derive/`; the wall fell from 80+ min cold to seconds.
-
-## Regenerate every grammar enumerated in [workspace.metadata.bbnf.grammars].
-regen:
-	cargo xtask regen
-
-## CI / pre-commit gate: regenerate to a tempdir + diff against the
-## checked-in tree; exit non-zero on drift. Replaces the pre-B2
-## `scripts/check-bootstrap-clean.sh`.
-regen-check:
-	cargo xtask regen --check
-
-## AZ-I.W2-act.W0 hygiene cut H4 — single-grammar regen + check + test
-## chain. Compresses the iter-loop for emitter-touching changes:
-##   make iter-grammar GRAMMAR=json
-##   make iter-grammar GRAMMAR=css_l4
-##   make iter-grammar GRAMMAR=google_sheets
-## Runs in sequence:
-##   1. cargo xtask regen --grammar <ident>     (per-grammar regen)
-##   2. cargo iter-check                         (workspace compile-gate)
-##   3. cargo nextest -E 'test(/<ident>/)'       (filter-set on grammar name)
-## Reclaim ≈ 10 s + 2 cmd-roundtrips per grammar iter under fan-out.
-GRAMMAR ?=
-iter-grammar:
-	@if [ -z "$(GRAMMAR)" ]; then echo "usage: make iter-grammar GRAMMAR=<ident>" >&2; exit 2; fi
-	cargo xtask regen --grammar $(GRAMMAR)
-	cargo iter-check
-	cargo nextest run --cargo-profile ax-iter -p bbnf -E 'test(/$(GRAMMAR)/)'
-
 # ─── Deploy / Watch ──────────────────────────────────────────────────────────
 
 deploy: build-wasm

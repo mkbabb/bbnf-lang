@@ -2,18 +2,34 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 
-use bbnf::{CompileOptions, ModuleInput, StageResult, compile_module};
+use bbnf::{CompileOptions, GrammarInstanceInput, StageResult, compile_instance};
 
 fn main() {
     let mut arguments = env::args_os().skip(1);
-    let input_path = PathBuf::from(arguments.next().expect("usage: bbnf-gen INPUT OUTPUT"));
-    let output_path = PathBuf::from(arguments.next().expect("usage: bbnf-gen INPUT OUTPUT"));
-    assert!(arguments.next().is_none(), "usage: bbnf-gen INPUT OUTPUT");
+    let manifest_path = PathBuf::from(
+        arguments
+            .next()
+            .expect("usage: bbnf-gen MANIFEST SOURCE OUTPUT"),
+    );
+    let source_path = PathBuf::from(
+        arguments
+            .next()
+            .expect("usage: bbnf-gen MANIFEST SOURCE OUTPUT"),
+    );
+    let output_path = PathBuf::from(
+        arguments
+            .next()
+            .expect("usage: bbnf-gen MANIFEST SOURCE OUTPUT"),
+    );
+    assert!(
+        arguments.next().is_none(),
+        "usage: bbnf-gen MANIFEST SOURCE OUTPUT"
+    );
 
-    let bytes = fs::read(&input_path).expect("read BBNF module");
-    let logical_path = input_path.to_string_lossy();
-    let compilation = match compile_module(
-        ModuleInput::new(&logical_path, &bytes),
+    let manifest_bytes = fs::read(&manifest_path).expect("read grammar-instance manifest");
+    let source_bytes = fs::read(&source_path).expect("read BBNF source");
+    let compilation = match compile_instance(
+        GrammarInstanceInput::new(&manifest_bytes, &source_bytes),
         CompileOptions::default(),
     ) {
         StageResult::Accepted { value, .. } => value,

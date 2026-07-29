@@ -1,10 +1,9 @@
-use bbnf::{CompileOptions, ModuleInput, StageResult, compile_module};
+mod support;
+
+use bbnf::StageResult;
 
 fn main() {
-    let module = match compile_module(
-        ModuleInput::new("opacity.bbnf", b"root = \"x\";"),
-        CompileOptions::default(),
-    ) {
+    let module = match support::compile() {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { .. } => return,
     };

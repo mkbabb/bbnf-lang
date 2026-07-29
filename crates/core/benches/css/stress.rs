@@ -13,8 +13,7 @@ static ALLOC: dhat::Alloc = dhat::Alloc;
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[path = "../generators/mod.rs"]
-mod generators;
+mod css_gen;
 
 use divan::counter::BytesCount;
 
@@ -26,7 +25,7 @@ macro_rules! bench_rules {
     ($name:ident, $count:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::css_gen::many_rules($count);
+            let input = css_gen::many_rules($count);
             let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssPrettyParser::parse(&input)
@@ -51,7 +50,7 @@ macro_rules! bench_decls {
     ($name:ident, $count:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::css_gen::many_declarations($count);
+            let input = css_gen::many_declarations($count);
             let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssPrettyParser::parse(&input).unwrap_or_else(|e| {
@@ -76,7 +75,7 @@ macro_rules! bench_selectors {
     ($name:ident, $count:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::css_gen::wide_selector_list($count);
+            let input = css_gen::wide_selector_list($count);
             let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssPrettyParser::parse(&input).unwrap_or_else(|e| {
@@ -101,7 +100,7 @@ macro_rules! bench_nesting {
     ($name:ident, $depth:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::css_gen::media_query_nesting($depth);
+            let input = css_gen::media_query_nesting($depth);
             let bytes = BytesCount::new(input.len());
             {
                 let parsed = CssPrettyParser::parse(&input).unwrap_or_else(|e| {

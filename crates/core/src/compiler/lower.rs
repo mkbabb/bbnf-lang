@@ -6,10 +6,14 @@ use serde::Serialize;
 use super::analysis::AnalysisFacts;
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
+use super::pratt::{
+    PrattOperator, PrattOperatorId, PrattTable, PrattTableId, PrattTableIx, checked_operator,
+    checked_table,
+};
 use super::source::Revision;
 use super::syntax::{
-    FieldId, FieldIx, NodeKindData, PlanNodeId, PlanNodeIds, PlanNodeIx, Program, RecordSlotData,
-    RuleId, RuleIx, TransformId, TransformIx, TypeId, TypeIx,
+    FieldId, FieldIx, NodeKindData, PlanNodeId, PlanNodeIds, PlanNodeIx, Program, ProjectionKeep,
+    RecordSlotData, RuleId, RuleIx, TransformId, TransformIx, TypeId, TypeIx,
 };
 use super::typecheck::{SemanticTypeData, SemanticTypes, TypeSolution};
 
@@ -169,6 +173,22 @@ pub(crate) enum PlanOpData {
         transform: TransformIx,
         name: String,
     },
+    Projection {
+        left: PlanNodeIx,
+        right: PlanNodeIx,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: PlanNodeIx,
+        exclude: PlanNodeIx,
+    },
+    Trim {
+        child: PlanNodeIx,
+    },
+    Pratt {
+        atom: PlanNodeIx,
+        table: PrattTableIx,
+    },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -193,6 +213,22 @@ pub enum PlanOp<'a> {
         child: PlanNodeId,
         transform: TransformId,
         name: &'a str,
+    },
+    Projection {
+        left: PlanNodeId,
+        right: PlanNodeId,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: PlanNodeId,
+        exclude: PlanNodeId,
+    },
+    Trim {
+        child: PlanNodeId,
+    },
+    Pratt {
+        atom: PlanNodeId,
+        table: PrattTableId,
     },
 }
 
@@ -225,6 +261,22 @@ fn plan_op_view<'a>(revision: &'a Revision, data: &'a PlanOpData) -> PlanOp<'a> 
             child: PlanNodeId::bind(*revision, *child),
             transform: TransformId::bind(*revision, *transform),
             name,
+        },
+        PlanOpData::Projection { left, right, keep } => PlanOp::Projection {
+            left: PlanNodeId::bind(*revision, *left),
+            right: PlanNodeId::bind(*revision, *right),
+            keep: *keep,
+        },
+        PlanOpData::Difference { include, exclude } => PlanOp::Difference {
+            include: PlanNodeId::bind(*revision, *include),
+            exclude: PlanNodeId::bind(*revision, *exclude),
+        },
+        PlanOpData::Trim { child } => PlanOp::Trim {
+            child: PlanNodeId::bind(*revision, *child),
+        },
+        PlanOpData::Pratt { atom, table } => PlanOp::Pratt {
+            atom: PlanNodeId::bind(*revision, *atom),
+            table: PrattTableId::bind(*revision, *table),
         },
     }
 }
@@ -355,7 +407,7 @@ macro_rules! lowering_rows {
                 })
             }
 
-            pub fn first(&self) -> Option<$view<'a>> {
+            pub fn head(&self) -> Option<$view<'a>> {
                 self.get(0)
             }
 
@@ -411,6 +463,9 @@ pub struct LoweringPlan {
     semantic_types: Vec<SemanticTypeData>,
     fields: Vec<LoweredFieldData>,
     regexes: Vec<LoweredRegex>,
+    trivia: Option<LoweredRegex>,
+    pratt_tables: Vec<PrattTable>,
+    pratt_operators: Vec<PrattOperator>,
     entry: RuleIx,
 }
 
@@ -419,6 +474,7 @@ impl LoweringPlan {
         program: &Program,
         types: &TypeSolution,
         facts: &AnalysisFacts,
+        trivia_pattern: Option<&str>,
         options: CompileOptions,
     ) -> StageResult<Self> {
         if program.revision() != types.revision() || program.revision() != facts.revision() {
@@ -513,6 +569,28 @@ impl LoweringPlan {
                     transform: *transform,
                     name: name.clone(),
                 },
+                NodeKindData::Projection { left, right, keep } => PlanOpData::Projection {
+                    left: PlanNodeIx::checked(left.index())
+                        .expect("program node ordinal is representable"),
+                    right: PlanNodeIx::checked(right.index())
+                        .expect("program node ordinal is representable"),
+                    keep: *keep,
+                },
+                NodeKindData::Difference { include, exclude } => PlanOpData::Difference {
+                    include: PlanNodeIx::checked(include.index())
+                        .expect("program node ordinal is representable"),
+                    exclude: PlanNodeIx::checked(exclude.index())
+                        .expect("program node ordinal is representable"),
+                },
+                NodeKindData::Trim { child } => PlanOpData::Trim {
+                    child: PlanNodeIx::checked(child.index())
+                        .expect("program node ordinal is representable"),
+                },
+                NodeKindData::Pratt { atom, table } => PlanOpData::Pratt {
+                    atom: PlanNodeIx::checked(atom.index())
+                        .expect("program node ordinal is representable"),
+                    table: *table,
+                },
             };
             nodes.push(PlanNodeData {
                 id,
@@ -545,6 +623,24 @@ impl LoweringPlan {
                 semantic_type: types.node_type_local(field.child()),
             })
             .collect();
+        let trivia = match trivia_pattern {
+            Some(pattern) => {
+                let plan =
+                    match RegexTablePlan::compile_with(pattern, options.regex.table_options()) {
+                        Ok(plan) => plan,
+                        Err(error) => {
+                            return StageResult::rejected(Diagnostic::new(
+                                DiagnosticCode::InvalidGrammarInstance,
+                                0,
+                                0,
+                                format!("validated trivia regex failed lowering: {error}"),
+                            ));
+                        }
+                    };
+                Some(plan.into())
+            }
+            None => None,
+        };
 
         StageResult::accepted(Self {
             revision: program.revision(),
@@ -553,6 +649,9 @@ impl LoweringPlan {
             semantic_types: types.arena_data().to_vec(),
             fields,
             regexes,
+            trivia,
+            pratt_tables: program.pratt_table_rows().to_vec(),
+            pratt_operators: program.pratt_operator_rows().to_vec(),
             entry: program.entry_local(),
         })
     }
@@ -592,6 +691,26 @@ impl LoweringPlan {
         &self.regexes
     }
 
+    pub const fn trivia(&self) -> Option<&LoweredRegex> {
+        self.trivia.as_ref()
+    }
+
+    pub fn pratt_tables(&self) -> &[PrattTable] {
+        &self.pratt_tables
+    }
+
+    pub fn pratt_operators(&self) -> &[PrattOperator] {
+        &self.pratt_operators
+    }
+
+    pub fn pratt_table(&self, id: PrattTableId) -> Option<&PrattTable> {
+        checked_table(self.revision, &self.pratt_tables, id)
+    }
+
+    pub fn pratt_operator(&self, id: PrattOperatorId) -> Option<&PrattOperator> {
+        checked_operator(self.revision, &self.pratt_operators, id)
+    }
+
     pub const fn entry(&self) -> RuleId {
         RuleId::bind(self.revision, self.entry)
     }
@@ -612,6 +731,9 @@ impl LoweringPlan {
             semantic_types: &self.semantic_types,
             fields: &self.fields,
             regexes: RegexPlansReplay(&self.regexes),
+            trivia: self.trivia.as_ref().map(RegexPlanReplay::new),
+            pratt_tables: PrattTablesReplay(&self.pratt_tables),
+            pratt_operators: PrattOperatorsReplay(&self.pratt_operators),
             entry: self.entry,
         }
     }
@@ -625,7 +747,33 @@ pub(super) struct LoweringPlanReplay<'a> {
     semantic_types: &'a [SemanticTypeData],
     fields: &'a [LoweredFieldData],
     regexes: RegexPlansReplay<'a>,
+    trivia: Option<RegexPlanReplay<'a>>,
+    pratt_tables: PrattTablesReplay<'a>,
+    pratt_operators: PrattOperatorsReplay<'a>,
     entry: RuleIx,
+}
+
+#[derive(Serialize)]
+struct RegexPlanReplay<'a> {
+    byte_classes: &'a [u8],
+    transitions: &'a [u32],
+    accepting: &'a [bool],
+    state_count: u32,
+    class_count: u16,
+    start_state: u32,
+}
+
+impl<'a> RegexPlanReplay<'a> {
+    fn new(regex: &'a LoweredRegex) -> Self {
+        Self {
+            byte_classes: &regex.byte_classes,
+            transitions: &regex.transitions,
+            accepting: &regex.accepting,
+            state_count: regex.state_count,
+            class_count: regex.class_count,
+            start_state: regex.start_state,
+        }
+    }
 }
 
 struct RegexPlansReplay<'a>(&'a [LoweredRegex]);
@@ -635,26 +783,73 @@ impl Serialize for RegexPlansReplay<'_> {
     where
         S: serde::Serializer,
     {
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
+        for regex in self.0 {
+            sequence.serialize_element(&RegexPlanReplay::new(regex))?;
+        }
+        sequence.end()
+    }
+}
+
+struct PrattTablesReplay<'a>(&'a [PrattTable]);
+
+impl Serialize for PrattTablesReplay<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         #[derive(Serialize)]
-        struct Regex<'a> {
-            byte_classes: &'a [u8],
-            transitions: &'a [u32],
-            accepting: &'a [bool],
-            state_count: u32,
-            class_count: u16,
-            start_state: u32,
+        struct Table {
+            id: super::pratt::PrattTableIx,
+            site_rule: RuleIx,
+            atom_rule: RuleIx,
+            operator_start: super::pratt::PrattOperatorIx,
+            operator_len: u32,
         }
 
         use serde::ser::SerializeSeq;
         let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
-        for regex in self.0 {
-            sequence.serialize_element(&Regex {
-                byte_classes: &regex.byte_classes,
-                transitions: &regex.transitions,
-                accepting: &regex.accepting,
-                state_count: regex.state_count,
-                class_count: regex.class_count,
-                start_state: regex.start_state,
+        for table in self.0 {
+            sequence.serialize_element(&Table {
+                id: table.id_local(),
+                site_rule: table.site_rule_local(),
+                atom_rule: table.atom_rule_local(),
+                operator_start: table.operator_start_local(),
+                operator_len: table.operator_len(),
+            })?;
+        }
+        sequence.end()
+    }
+}
+
+struct PrattOperatorsReplay<'a>(&'a [PrattOperator]);
+
+impl Serialize for PrattOperatorsReplay<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        #[derive(Serialize)]
+        struct Operator {
+            id: super::pratt::PrattOperatorIx,
+            table: PrattTableIx,
+            matcher_rule: RuleIx,
+            fixity: super::pratt::PrattFixity,
+            left_binding_power: Option<u16>,
+            right_binding_power: Option<u16>,
+        }
+
+        use serde::ser::SerializeSeq;
+        let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
+        for operator in self.0 {
+            sequence.serialize_element(&Operator {
+                id: operator.id_local(),
+                table: operator.table_local(),
+                matcher_rule: operator.matcher_rule_local(),
+                fixity: operator.fixity(),
+                left_binding_power: operator.left_binding_power(),
+                right_binding_power: operator.right_binding_power(),
             })?;
         }
         sequence.end()

@@ -109,52 +109,72 @@ const TAILWIND_NODES: usize = 80_000;
 const TAILWIND_FANOUT: usize = 8;
 
 macro_rules! ascent_bench {
-    ($mod_name:ident, $nodes:expr, $fanout:expr) => {
-        mod $mod_name {
-            use super::*;
+    (
+        $root_traversal:ident,
+        $in_struct_pointer:ident,
+        $hybrid_sidecar:ident,
+        $nodes:expr,
+        $fanout:expr
+    ) => {
+        #[divan::bench]
+        fn $root_traversal(b: divan::Bencher) {
+            let graph = build_graph($nodes, $fanout);
+            let walker = root_traversal_walker(&graph);
+            let strategy = RootTraversal::new(walker);
+            b.bench_local(|| {
+                let hops = climb_all_leaves(&strategy, &graph.leaves);
+                black_box(hops);
+            });
+        }
 
-            #[divan::bench]
-            fn root_traversal(b: divan::Bencher) {
-                let graph = build_graph($nodes, $fanout);
-                let walker = root_traversal_walker(&graph);
-                let strategy = RootTraversal::new(walker);
-                b.bench_local(|| {
-                    let hops = climb_all_leaves(&strategy, &graph.leaves);
-                    black_box(hops);
-                });
-            }
+        #[divan::bench]
+        fn $in_struct_pointer(b: divan::Bencher) {
+            let graph = build_graph($nodes, $fanout);
+            let strategy = InStructPointer::from_parents(graph.parents.clone());
+            b.bench_local(|| {
+                let hops = climb_all_leaves(&strategy, &graph.leaves);
+                black_box(hops);
+            });
+        }
 
-            #[divan::bench]
-            fn in_struct_pointer(b: divan::Bencher) {
-                let graph = build_graph($nodes, $fanout);
-                let strategy = InStructPointer::from_parents(graph.parents.clone());
-                b.bench_local(|| {
-                    let hops = climb_all_leaves(&strategy, &graph.leaves);
-                    black_box(hops);
-                });
-            }
-
-            #[divan::bench]
-            fn hybrid_sidecar(b: divan::Bencher) {
-                let graph = build_graph($nodes, $fanout);
-                let mut strategy = HybridSidecar::new();
-                let parents = graph.parents.clone();
-                strategy.populate_from_walker($nodes, |id| {
-                    let p = parents[id.as_usize()];
-                    if p == NodeId::INVALID { None } else { Some(p) }
-                });
-                b.bench_local(|| {
-                    let hops = climb_all_leaves(&strategy, &graph.leaves);
-                    black_box(hops);
-                });
-            }
+        #[divan::bench]
+        fn $hybrid_sidecar(b: divan::Bencher) {
+            let graph = build_graph($nodes, $fanout);
+            let mut strategy = HybridSidecar::new();
+            let parents = graph.parents.clone();
+            strategy.populate_from_walker($nodes, |id| {
+                let p = parents[id.as_usize()];
+                if p == NodeId::INVALID { None } else { Some(p) }
+            });
+            b.bench_local(|| {
+                let hops = climb_all_leaves(&strategy, &graph.leaves);
+                black_box(hops);
+            });
         }
     };
 }
 
-ascent_bench!(sheets, SHEETS_NODES, SHEETS_FANOUT);
-ascent_bench!(citm, CITM_NODES, CITM_FANOUT);
-ascent_bench!(tailwind, TAILWIND_NODES, TAILWIND_FANOUT);
+ascent_bench!(
+    sheets_root_traversal,
+    sheets_in_struct_pointer,
+    sheets_hybrid_sidecar,
+    SHEETS_NODES,
+    SHEETS_FANOUT
+);
+ascent_bench!(
+    citm_root_traversal,
+    citm_in_struct_pointer,
+    citm_hybrid_sidecar,
+    CITM_NODES,
+    CITM_FANOUT
+);
+ascent_bench!(
+    tailwind_root_traversal,
+    tailwind_in_struct_pointer,
+    tailwind_hybrid_sidecar,
+    TAILWIND_NODES,
+    TAILWIND_FANOUT
+);
 
 fn main() {
     divan::Divan::default()

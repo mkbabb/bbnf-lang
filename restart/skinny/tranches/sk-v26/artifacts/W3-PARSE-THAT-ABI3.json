@@ -1,6 +1,6 @@
 {
   "schema": "skv26-w3-parse-that-abi3-receipt-v1",
-  "observed_date": "2026-07-28",
+  "observed_date": "2026-07-29",
   "repository": "/Users/mkbabb/Programming/parse-that-skv26",
   "branch": "codex/sk-v26-parse-that",
   "born_red": {
@@ -21,8 +21,8 @@
     }
   },
   "implementation": {
-    "commit": "ed1ffa24e862b797b01dc4f9215d6be8f7fa0955",
-    "tree": "65d1d58cee5e052804b062a17de571620ba463aa",
+    "commit": "e31fbfedc24adcb9110a84b93ff1520cb213912d",
+    "tree": "c64a4d345990be9861cb697214cb58ceaee635c4",
     "version": "0.5.0",
     "kernel_abi": 3,
     "new_public_primitives": [
@@ -84,8 +84,8 @@
       "name": "parse_that",
       "version": "0.5.0",
       "files": 24,
-      "bytes": 17443,
-      "sha256": "51933a1d4796f7628995fc433b0041a98973ebb5a8cd5eb4e596335a4904bc24",
+      "bytes": 17426,
+      "sha256": "2db9321e0aa076d1366e71e590ac1775f3d35a5bdd72d6f805f2653e4b23a616",
       "successive_archives_byte_identical": true,
       "cargo_package_verify": "PASS"
     },
@@ -93,8 +93,8 @@
       "name": "bbnf-regex",
       "version": "0.1.0",
       "files": 46,
-      "bytes": 82831,
-      "sha256": "8399e72b99d10ad96ad7f7499577dd0e84f7e360fbdb2d800b32115ab03b45b0",
+      "bytes": 82825,
+      "sha256": "db88eb177836f590116caea382baa27789e1216cb9d086ada8208b435c6bfa19",
       "successive_archives_byte_identical": true,
       "cargo_package_verify": "PASS"
     }

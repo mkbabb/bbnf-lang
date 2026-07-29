@@ -1,27 +1,27 @@
 error[E0451]: fields `local` and `revision` of struct `NodeId` are private
-  --> tests/ui/identity/struct_literal.rs:12:34
+  --> tests/ui/identity/struct_literal.rs:11:34
    |
-12 |     let bbnf::compiler::NodeId { local, revision } = id;
+11 |     let bbnf::compiler::NodeId { local, revision } = id;
    |                                  ^^^^^  ^^^^^^^^ private field
    |                                  |
    |                                  private field
 
 error[E0451]: fields `local` and `revision` of struct `NodeId` are private
-  --> tests/ui/identity/struct_literal.rs:13:44
+  --> tests/ui/identity/struct_literal.rs:12:44
    |
-13 |     let _forged = bbnf::compiler::NodeId { local, revision };
+12 |     let _forged = bbnf::compiler::NodeId { local, revision };
    |                                            ^^^^^  ^^^^^^^^ private field
    |                                            |
    |                                            private field
 
 error: type `compiler::syntax::NodeIx` is private
-  --> tests/ui/identity/struct_literal.rs:12:34
+  --> tests/ui/identity/struct_literal.rs:11:34
    |
-12 |     let bbnf::compiler::NodeId { local, revision } = id;
+11 |     let bbnf::compiler::NodeId { local, revision } = id;
    |                                  ^^^^^ private type
 
 error: type `compiler::syntax::NodeIx` is private
-  --> tests/ui/identity/struct_literal.rs:13:44
+  --> tests/ui/identity/struct_literal.rs:12:44
    |
-13 |     let _forged = bbnf::compiler::NodeId { local, revision };
+12 |     let _forged = bbnf::compiler::NodeId { local, revision };
    |                                            ^^^^^ private type

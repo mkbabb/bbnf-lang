@@ -22,10 +22,9 @@
 //! # Usage
 //!
 //! ```ignore
-//! #[path = "common/timeout.rs"]
-//! mod timeout;
+//! mod common;
 //!
-//! use timeout::{bench_with_timeout, limits};
+//! use common::timeout::{bench_with_timeout, limits};
 //!
 //! #[divan::bench]
 //! fn compile_css_l4(b: divan::Bencher) {

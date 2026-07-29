@@ -1,4 +1,4 @@
-//! Synthetic JSON `GrammarIR` fixture shared by AW-V.W3.3 tests.
+//! Synthetic JSON `GrammarIR` fixture shared by shape-dispatch tests.
 //!
 //! Mirrors `crates/ir/tests/shape_dispatch.rs`'s W3.1 fixture — the
 //! same `IrNode` topology the lowering pass produces for

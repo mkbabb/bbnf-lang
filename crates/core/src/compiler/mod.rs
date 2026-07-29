@@ -2,15 +2,18 @@ mod analysis;
 mod budget;
 mod dependency;
 mod diagnostic;
-mod edit;
 mod emit;
 mod event;
 mod frontend;
+mod instance;
 mod lower;
+mod pratt;
 mod replay;
 mod source;
 mod syntax;
 mod typecheck;
+
+use instance::ValidatedGrammarInstance;
 
 const _: () = assert!(parse_that::KERNEL_ABI == 3);
 
@@ -18,19 +21,20 @@ pub use analysis::{AnalysisFacts, NodeFacts, NodeFactsRows, RuleFacts, RuleFacts
 pub use budget::{CompileOptions, RegexBudget, RuntimeBudget};
 pub use dependency::{DependencyGraph, DependencySolution};
 pub use diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
-pub use edit::{CompilationSession, EditError};
 pub use emit::GeneratedModule;
 pub use event::{EventKind, ScalarEventPlan, TransformSite, TransformSites};
+pub use instance::GrammarInstanceInput;
 pub use lower::{
     LoweredField, LoweredFields, LoweredRegex, LoweredRule, LoweredRules, LoweringPlan, PlanNode,
     PlanNodes, PlanOp, PlanRecordSlot, PlanRecordSlots,
 };
-pub use replay::{ReplayComponent, ReplayError, replay_compilation};
-pub use source::{ModuleInput, Revision, SourceMap, SourceModule, SourceSpan};
+pub use pratt::{PrattFixity, PrattOperator, PrattOperatorId, PrattTable, PrattTableId};
+pub use replay::{CompiledModule, ReplayComponent, ReplayError, replay_compilation};
+pub use source::{Revision, SourceMap, SourceModule, SourceSpan};
 pub use syntax::{
     FieldDecl, FieldId, Fields, Node, NodeId, NodeIds, NodeKind, NodeRemap, Nodes, PlanNodeId,
-    PlanNodeIds, Program, RecordSlot, RecordSlots, Rule, RuleId, RuleIds, Rules, SccId, SccIds,
-    TransformId, TypeId, TypeIds,
+    PlanNodeIds, Program, ProjectionKeep, RecordSlot, RecordSlots, Rule, RuleId, RuleIds, Rules,
+    SccId, SccIds, TransformId, TypeId, TypeIds,
 };
 pub use typecheck::{
     InferenceRule, NodeTypeDerivation, NodeTypeDerivations, RecordFieldType, RecordFieldTypes,
@@ -38,75 +42,65 @@ pub use typecheck::{
     SemanticTypes, TypeSolution,
 };
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CompiledModule {
-    options: CompileOptions,
-    source_map: SourceMap,
-    program: Program,
-    remap: NodeRemap,
-    dependency: DependencySolution,
-    types: TypeSolution,
-    facts: AnalysisFacts,
-    lowering: LoweringPlan,
-    events: ScalarEventPlan,
-    generated: GeneratedModule,
-}
-
-impl CompiledModule {
-    pub const fn options(&self) -> CompileOptions {
-        self.options
-    }
-
-    pub const fn source_map(&self) -> &SourceMap {
-        &self.source_map
-    }
-
-    pub const fn program(&self) -> &Program {
-        &self.program
-    }
-
-    pub const fn remap(&self) -> &NodeRemap {
-        &self.remap
-    }
-
-    pub const fn dependency(&self) -> &DependencySolution {
-        &self.dependency
-    }
-
-    pub const fn types(&self) -> &TypeSolution {
-        &self.types
-    }
-
-    pub const fn facts(&self) -> &AnalysisFacts {
-        &self.facts
-    }
-
-    pub const fn lowering(&self) -> &LoweringPlan {
-        &self.lowering
-    }
-
-    pub const fn events(&self) -> &ScalarEventPlan {
-        &self.events
-    }
-
-    pub const fn generated(&self) -> &GeneratedModule {
-        &self.generated
-    }
-}
-
-pub fn compile_module(
-    input: ModuleInput<'_>,
+pub fn compile_instance(
+    input: GrammarInstanceInput<'_>,
     options: CompileOptions,
 ) -> StageResult<CompiledModule> {
-    let source = match frontend::parse_source(input, options) {
+    let validated = match instance::decode_instance(input, options) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => {
             return StageResult::Rejected { diagnostics };
         }
     };
-    let source_map = SourceMap::one(source);
+    compile_validated_instance(validated, options)
+}
+
+fn compile_validated_instance(
+    validated: ValidatedGrammarInstance<'_>,
+    options: CompileOptions,
+) -> StageResult<CompiledModule> {
+    let (instance, source_bytes) = validated.into_parts();
+    if source_bytes.len() > options.source_bytes || u32::try_from(source_bytes.len()).is_err() {
+        return StageResult::rejected(Diagnostic::new(
+            DiagnosticCode::SourceTooLarge,
+            0,
+            source_bytes.len(),
+            format!(
+                "source has {} bytes; configured limit is {}",
+                source_bytes.len(),
+                options.source_bytes
+            ),
+        ));
+    }
+    let revision = instance.revision(source_bytes);
+    let (source, presentation) = match frontend::parse_source(source_bytes, revision, options) {
+        StageResult::Accepted { value, .. } => value,
+        StageResult::Rejected { diagnostics } => {
+            return StageResult::Rejected { diagnostics };
+        }
+    };
+    match (instance.trivia_regex().is_some(), source.uses_trivia()) {
+        (true, false) => {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::InvalidGrammarInstance,
+                0,
+                0,
+                "trivia_regex is present but the grammar contains no `?w` use",
+            ));
+        }
+        (false, true) => {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::InvalidGrammarInstance,
+                0,
+                0,
+                "the grammar uses `?w` but trivia_regex is null",
+            ));
+        }
+        _ => {}
+    }
+    let source_map = SourceMap::one(source, presentation);
     let module = &source_map.modules()[0];
-    let program = match Program::resolve(module) {
+    let program = match Program::resolve(module, &instance) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => {
             return StageResult::Rejected { diagnostics };
@@ -134,12 +128,13 @@ pub fn compile_module(
             return StageResult::Rejected { diagnostics };
         }
     };
-    let lowering = match LoweringPlan::build(&program, &types, &facts, options) {
-        StageResult::Accepted { value, .. } => value,
-        StageResult::Rejected { diagnostics } => {
-            return StageResult::Rejected { diagnostics };
-        }
-    };
+    let lowering =
+        match LoweringPlan::build(&program, &types, &facts, instance.trivia_regex(), options) {
+            StageResult::Accepted { value, .. } => value,
+            StageResult::Rejected { diagnostics } => {
+                return StageResult::Rejected { diagnostics };
+            }
+        };
     let events = match ScalarEventPlan::seal(&program, &lowering) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => {
@@ -155,6 +150,8 @@ pub fn compile_module(
 
     StageResult::accepted(CompiledModule {
         options,
+        instance,
+        source: source_bytes.to_vec(),
         source_map,
         program,
         remap,

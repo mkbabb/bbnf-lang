@@ -1451,7 +1451,7 @@ fn pratt_site_root_must_be_exactly_its_atom_reference() {
         ("Difference", "expression = atom - number;"),
         ("Trim", "expression = atom ?w;"),
     ];
-    for (kind, replacement) in illegal_source_roots {
+    for (_kind, replacement) in illegal_source_roots {
         let source = edited_source_rule(PRATT_SOURCE, "expression", replacement);
         assert_default_rejected_with(PRATT_MANIFEST, &source, DiagnosticCode::InvalidPrattTable);
     }
@@ -1828,14 +1828,26 @@ fn rust_caller_files(root: &Path, output: &mut BTreeSet<PathBuf>) {
     }
 }
 
-fn module_graph_union_findings(relative: &str, source: &str) -> BTreeSet<String> {
+fn module_graph_union_findings(_relative: &str, source: &str) -> BTreeSet<String> {
     use syn::visit::Visit as _;
 
-    struct ModuleGraph<'a> {
-        relative: &'a str,
+    struct ModuleGraph {
+        item_capable_macro: bool,
         findings: BTreeSet<String>,
     }
-    impl<'ast> syn::visit::Visit<'ast> for ModuleGraph<'_> {
+    impl<'ast> syn::visit::Visit<'ast> for ModuleGraph {
+        fn visit_item_macro(&mut self, item: &'ast syn::ItemMacro) {
+            let previous = std::mem::replace(&mut self.item_capable_macro, true);
+            syn::visit::visit_item_macro(self, item);
+            self.item_capable_macro = previous;
+        }
+
+        fn visit_stmt_macro(&mut self, statement: &'ast syn::StmtMacro) {
+            let previous = std::mem::replace(&mut self.item_capable_macro, true);
+            syn::visit::visit_stmt_macro(self, statement);
+            self.item_capable_macro = previous;
+        }
+
         fn visit_attribute(&mut self, attribute: &'ast syn::Attribute) {
             if attribute.path().is_ident("path") {
                 self.findings
@@ -1856,6 +1868,81 @@ fn module_graph_union_findings(relative: &str, source: &str) -> BTreeSet<String>
         }
 
         fn visit_macro(&mut self, macro_: &'ast syn::Macro) {
+            use syn::parse::Parser as _;
+
+            fn token_stream_carries_module_edge(
+                input: syn::parse::ParseStream<'_>,
+            ) -> syn::Result<bool> {
+                let mut carries_edge = false;
+                while !input.is_empty() {
+                    if input.peek(syn::token::Paren) {
+                        let content;
+                        syn::parenthesized!(content in input);
+                        carries_edge |= token_stream_carries_module_edge(&content)?;
+                        continue;
+                    }
+                    if input.peek(syn::token::Bracket) {
+                        let content;
+                        syn::bracketed!(content in input);
+                        carries_edge |= token_stream_carries_module_edge(&content)?;
+                        continue;
+                    }
+                    if input.peek(syn::token::Brace) {
+                        let content;
+                        syn::braced!(content in input);
+                        carries_edge |= token_stream_carries_module_edge(&content)?;
+                        continue;
+                    }
+                    if input.peek(syn::Ident) {
+                        let ident = input.parse::<syn::Ident>()?;
+                        if ident == "include" && input.peek(syn::Token![!]) {
+                            carries_edge = true;
+                        }
+                        continue;
+                    }
+                    let spelling = input.step(|cursor| {
+                        cursor
+                            .token_tree()
+                            .map(|(token, next)| (token.to_string(), next))
+                            .ok_or_else(|| cursor.error("expected a token tree"))
+                    })?;
+                    carries_edge |= spelling == "mod";
+                }
+                Ok(carries_edge)
+            }
+
+            #[derive(Default)]
+            struct InvocationEdges(bool);
+            impl<'ast> syn::visit::Visit<'ast> for InvocationEdges {
+                fn visit_item_mod(&mut self, item: &'ast syn::ItemMod) {
+                    self.0 = true;
+                    syn::visit::visit_item_mod(self, item);
+                }
+
+                fn visit_attribute(&mut self, attribute: &'ast syn::Attribute) {
+                    self.0 |= attribute.path().is_ident("path")
+                        || (attribute.path().is_ident("cfg_attr")
+                            && attribute.meta.require_list().is_ok_and(|list| {
+                                list.tokens
+                                    .to_string()
+                                    .split(|character: char| {
+                                        !(character == '_' || character.is_alphanumeric())
+                                    })
+                                    .any(|word| word == "path")
+                            }));
+                    syn::visit::visit_attribute(self, attribute);
+                }
+
+                fn visit_macro(&mut self, nested: &'ast syn::Macro) {
+                    self.0 |= nested
+                        .path
+                        .segments
+                        .last()
+                        .is_some_and(|segment| segment.ident == "include");
+                    syn::visit::visit_macro(self, nested);
+                }
+            }
+
             let macro_name = macro_
                 .path
                 .segments
@@ -1863,24 +1950,8 @@ fn module_graph_union_findings(relative: &str, source: &str) -> BTreeSet<String>
                 .map(|segment| segment.ident.to_string())
                 .unwrap_or_default();
             if macro_name == "include" {
-                let exact_generated_control = matches!(
-                    self.relative,
-                    "contracts/w2-generated-control/tests/generated_control.rs"
-                        | "contracts/w2-recursive-control/tests/recursive_control.rs"
-                        | "contracts/w2-record-control/tests/record_control.rs"
-                ) && {
-                    let compact = macro_
-                        .tokens
-                        .to_string()
-                        .chars()
-                        .filter(|character| !character.is_whitespace())
-                        .collect::<String>();
-                    compact == "concat!(env!(\"OUT_DIR\"),\"/generated.rs\")"
-                };
-                if !exact_generated_control {
-                    self.findings
-                        .insert("unsealed include! source edge".to_owned());
-                }
+                self.findings
+                    .insert("unsealed include! source edge".to_owned());
             }
             if macro_name == "macro_rules" {
                 let tokens = macro_.tokens.to_string();
@@ -1895,6 +1966,24 @@ fn module_graph_union_findings(relative: &str, source: &str) -> BTreeSet<String>
                     self.findings
                         .insert("macro-generated module edge".to_owned());
                 }
+            } else if macro_name != "include" && self.item_capable_macro {
+                let mut edges = InvocationEdges::default();
+                if let Ok(file) = syn::parse2::<syn::File>(macro_.tokens.clone()) {
+                    edges.visit_file(&file);
+                }
+                if let Ok(block) = syn::parse2::<syn::Block>(macro_.tokens.clone()) {
+                    edges.visit_block(&block);
+                }
+                if let Ok(expression) = syn::parse2::<syn::Expr>(macro_.tokens.clone()) {
+                    edges.visit_expr(&expression);
+                }
+                let token_edge = token_stream_carries_module_edge
+                    .parse2(macro_.tokens.clone())
+                    .unwrap_or(true);
+                if edges.0 || token_edge {
+                    self.findings
+                        .insert("macro invocation carries an unsealed module edge".to_owned());
+                }
             }
             syn::visit::visit_macro(self, macro_);
         }
@@ -1902,7 +1991,7 @@ fn module_graph_union_findings(relative: &str, source: &str) -> BTreeSet<String>
 
     let syntax = syn::parse_file(source).expect("module-graph source is valid Rust");
     let mut graph = ModuleGraph {
-        relative,
+        item_capable_macro: false,
         findings: BTreeSet::new(),
     };
     graph.visit_file(&syntax);
@@ -1953,6 +2042,10 @@ fn legacy_surface_findings(source: &str) -> BTreeSet<String> {
         }
 
         fn visit_macro(&mut self, item: &'ast syn::Macro) {
+            if !item.path.is_ident("macro_rules") {
+                syn::visit::visit_macro(self, item);
+                return;
+            }
             let tokens = item.tokens.to_string();
             for forbidden in [
                 "CompilationSession",
@@ -2049,21 +2142,38 @@ fn resolution_fallback_findings(syntax_source: &str, source_source: &str) -> BTr
     }
 
     #[derive(Default)]
-    struct LocalCalls(BTreeSet<String>);
+    struct LocalCalls {
+        names: BTreeSet<String>,
+        aliases: std::collections::BTreeMap<String, String>,
+    }
     impl<'ast> syn::visit::Visit<'ast> for LocalCalls {
+        fn visit_local(&mut self, local: &'ast syn::Local) {
+            if let syn::Pat::Ident(binding) = &local.pat
+                && let Some(syn::LocalInit { expr, .. }) = &local.init
+                && let syn::Expr::Path(path) = expr.as_ref()
+                && path.qself.is_none()
+                && path.path.segments.len() == 1
+                && let Some(target) = path.path.get_ident()
+            {
+                self.aliases
+                    .insert(binding.ident.to_string(), target.to_string());
+            }
+            syn::visit::visit_local(self, local);
+        }
+
         fn visit_expr_call(&mut self, call: &'ast syn::ExprCall) {
             if let syn::Expr::Path(path) = call.func.as_ref()
                 && path.qself.is_none()
                 && path.path.segments.len() == 1
                 && let Some(name) = path.path.get_ident()
             {
-                self.0.insert(name.to_string());
+                self.names.insert(name.to_string());
             }
             syn::visit::visit_expr_call(self, call);
         }
 
         fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
-            self.0.insert(call.method.to_string());
+            self.names.insert(call.method.to_string());
             syn::visit::visit_expr_method_call(self, call);
         }
     }
@@ -2141,17 +2251,80 @@ fn resolution_fallback_findings(syntax_source: &str, source_source: &str) -> BTr
         }
 
         fn visit_macro(&mut self, macro_: &'ast syn::Macro) {
-            let words = macro_
-                .tokens
-                .to_string()
-                .split(|character: char| !(character == '_' || character.is_alphanumeric()))
-                .filter(|word| !word.is_empty())
-                .map(str::to_owned)
-                .collect::<BTreeSet<_>>();
-            for forbidden in ["first", "get", "next", "nth", "position", "root"] {
-                if words.contains(forbidden) {
-                    self.findings
-                        .insert(format!("macro-hidden resolution fallback `{forbidden}`"));
+            use syn::parse::Parser as _;
+
+            let macro_name = macro_
+                .path
+                .segments
+                .last()
+                .map(|segment| segment.ident.to_string());
+            if let Ok(arguments) =
+                syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated
+                    .parse2(macro_.tokens.clone())
+            {
+                let skips_template = matches!(
+                    macro_name.as_deref(),
+                    Some(
+                        "eprint"
+                            | "eprintln"
+                            | "format"
+                            | "format_args"
+                            | "panic"
+                            | "print"
+                            | "println"
+                            | "unreachable"
+                    )
+                );
+                for (index, argument) in arguments.iter().enumerate() {
+                    if skips_template && index == 0 && matches!(argument, syn::Expr::Lit(_)) {
+                        continue;
+                    }
+                    self.visit_expr(argument);
+                }
+            } else {
+                let compact = macro_
+                    .tokens
+                    .to_string()
+                    .chars()
+                    .filter(|character| !character.is_whitespace())
+                    .collect::<String>();
+                let contains_zero_call = |method: &str| {
+                    let needle = format!(".{method}(");
+                    let mut cursor = 0;
+                    while let Some(offset) = compact[cursor..].find(&needle) {
+                        let arguments_start = cursor + offset + needle.len();
+                        let Some(arguments_end_offset) = compact[arguments_start..].find(')')
+                        else {
+                            return false;
+                        };
+                        let arguments_end = arguments_start + arguments_end_offset;
+                        let literal = compact[arguments_start..arguments_end]
+                            .chars()
+                            .filter(|character| *character != '_')
+                            .collect::<String>();
+                        if literal.starts_with('0')
+                            && literal
+                                .chars()
+                                .all(|character| character.is_ascii_alphanumeric())
+                        {
+                            return true;
+                        }
+                        cursor = arguments_end + 1;
+                    }
+                    false
+                };
+                for (forbidden, present) in [
+                    ("first", compact.contains("first(")),
+                    ("get", contains_zero_call("get")),
+                    ("next", compact.contains("next(")),
+                    ("nth", contains_zero_call("nth")),
+                    ("position", compact.contains("position(")),
+                    ("root", compact.contains("\"root\"")),
+                ] {
+                    if present {
+                        self.findings
+                            .insert(format!("macro-hidden resolution fallback `{forbidden}`"));
+                    }
                 }
             }
             syn::visit::visit_macro(self, macro_);
@@ -2186,7 +2359,15 @@ fn resolution_fallback_findings(syntax_source: &str, source_source: &str) -> BTr
 
         let mut calls = LocalCalls::default();
         calls.visit_block(&block);
-        for name in calls.0 {
+        for invoked in calls.names {
+            let mut name = invoked;
+            let mut alias_chain = BTreeSet::new();
+            while alias_chain.insert(name.clone()) {
+                let Some(target) = calls.aliases.get(&name) else {
+                    break;
+                };
+                name = target.clone();
+            }
             if !expanded_names.insert(name.clone()) {
                 continue;
             }
@@ -2269,6 +2450,21 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
         }
     }
 
+    fn path_is_one_of(path: &syn::Path, alternatives: &[&[&str]]) -> bool {
+        alternatives.iter().any(|expected| {
+            path.leading_colon.is_none()
+                && path.segments.len() == expected.len()
+                && path
+                    .segments
+                    .iter()
+                    .zip(expected.iter())
+                    .all(|(segment, expected)| {
+                        segment.ident == *expected
+                            && matches!(segment.arguments, syn::PathArguments::None)
+                    })
+        })
+    }
+
     fn exact_fs_read(expression: &syn::Expr, expected_path: &str) -> bool {
         match expression {
             syn::Expr::Call(call) => {
@@ -2276,10 +2472,10 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
                     call.func.as_ref(),
                     syn::Expr::Path(path)
                         if path.qself.is_none()
-                        && path.path.segments.len() >= 2
-                        && path.path.segments.iter().rev().take(2).map(
-                            |segment| segment.ident.to_string()
-                        ).collect::<Vec<_>>() == ["read", "fs"]
+                        && path_is_one_of(
+                            &path.path,
+                            &[&["fs", "read"], &["std", "fs", "read"]],
+                        )
                         && call.args.len() == 1
                 ) && call
                     .args
@@ -2328,9 +2524,13 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
                         call.func.as_ref(),
                         syn::Expr::Path(path)
                             if path.qself.is_none()
-                                && path.path.segments.len() == 2
-                                && path.path.segments[0].ident == "PathBuf"
-                                && path.path.segments[1].ident == "from"
+                                && path_is_one_of(
+                                    &path.path,
+                                    &[
+                                        &["PathBuf", "from"],
+                                        &["std", "path", "PathBuf", "from"],
+                                    ],
+                                )
                     ) =>
             {
                 call.args.first().is_some_and(exact_next_argument)
@@ -2363,9 +2563,13 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
                         call.func.as_ref(),
                         syn::Expr::Path(path)
                             if path.qself.is_none()
-                                && path.path.segments.iter().rev().take(2).map(
-                                    |segment| segment.ident.to_string()
-                                ).collect::<Vec<_>>() == ["args_os", "env"]
+                                && path_is_one_of(
+                                    &path.path,
+                                    &[
+                                        &["env", "args_os"],
+                                        &["std", "env", "args_os"],
+                                    ],
+                                )
                     )
         )
     }
@@ -2379,9 +2583,13 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
                         call.func.as_ref(),
                         syn::Expr::Path(path)
                             if path.qself.is_none()
-                                && path.path.segments.len() == 2
-                                && path.path.segments[0].ident == "CompileOptions"
-                                && path.path.segments[1].ident == "default"
+                                && path_is_one_of(
+                                    &path.path,
+                                    &[
+                                        &["CompileOptions", "default"],
+                                        &["bbnf", "CompileOptions", "default"],
+                                    ],
+                                )
                     )
         )
     }
@@ -2416,7 +2624,7 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
         argument_sources: usize,
         utf8_argument_sources: usize,
         exact_argument_bindings: usize,
-        next_calls: usize,
+        noncanonical_next_calls: usize,
         exact_argument_next_calls: usize,
         fs_reads: usize,
         fs_writes: usize,
@@ -2486,9 +2694,13 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
                             call.func.as_ref(),
                             syn::Expr::Path(path)
                                 if path.qself.is_none()
-                                    && path.path.segments.len() == 2
-                                    && path.path.segments[0].ident == "GrammarInstanceInput"
-                                    && path.path.segments[1].ident == "new"
+                                    && path_is_one_of(
+                                        &path.path,
+                                        &[
+                                            &["GrammarInstanceInput", "new"],
+                                            &["bbnf", "GrammarInstanceInput", "new"],
+                                        ],
+                                    )
                         )
                             && call.args.len() == 2
                             && call.args.first().is_some_and(|argument| {
@@ -2555,9 +2767,10 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
             }));
             self.exact_compile_calls += usize::from(
                 path.is_some_and(|path| {
-                    path.segments
-                        .last()
-                        .is_some_and(|segment| segment.ident == "compile_instance")
+                    path_is_one_of(
+                        path,
+                        &[&["compile_instance"], &["bbnf", "compile_instance"]],
+                    )
                 }) && call.args.len() == 2
                     && call.args.first().is_some_and(|argument| {
                         matches!(
@@ -2567,10 +2780,17 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
                                     constructor.func.as_ref(),
                                     syn::Expr::Path(path)
                                         if path.qself.is_none()
-                                            && path.path.segments.len() == 2
-                                            && path.path.segments[0].ident
-                                                == "GrammarInstanceInput"
-                                            && path.path.segments[1].ident == "new"
+                                            && path_is_one_of(
+                                                &path.path,
+                                                &[
+                                                    &["GrammarInstanceInput", "new"],
+                                                    &[
+                                                        "bbnf",
+                                                        "GrammarInstanceInput",
+                                                        "new",
+                                                    ],
+                                                ],
+                                            )
                                 )
                                     && constructor.args.len() == 2
                                     && constructor.args.first().is_some_and(|argument| {
@@ -2593,9 +2813,13 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
             );
             self.exact_constructors += usize::from(
                 path.is_some_and(|path| {
-                    path.segments.len() == 2
-                        && path.segments[0].ident == "GrammarInstanceInput"
-                        && path.segments[1].ident == "new"
+                    path_is_one_of(
+                        path,
+                        &[
+                            &["GrammarInstanceInput", "new"],
+                            &["bbnf", "GrammarInstanceInput", "new"],
+                        ],
+                    )
                 }) && call.args.len() == 2
                     && call
                         .args
@@ -2608,15 +2832,7 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
             );
             self.exact_output_writes += usize::from(
                 path.is_some_and(|path| {
-                    path.segments.len() >= 2
-                        && path
-                            .segments
-                            .iter()
-                            .rev()
-                            .take(2)
-                            .map(|segment| segment.ident.to_string())
-                            .collect::<Vec<_>>()
-                            == ["write", "fs"]
+                    path_is_one_of(path, &[&["fs", "write"], &["std", "fs", "write"]])
                 }) && call.args.len() == 2
                     && call
                         .args
@@ -2626,20 +2842,27 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
                         exact_generated_source(argument, &self.compilation_bindings)
                     }),
             );
+            let qualified_next = path.is_some_and(|path| {
+                path.segments
+                    .last()
+                    .is_some_and(|segment| segment.ident == "next")
+            });
+            if qualified_next {
+                self.noncanonical_next_calls += 1;
+            }
             syn::visit::visit_expr_call(self, call);
         }
 
         fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
-            self.next_calls += usize::from(call.method == "next" && call.args.is_empty());
-            self.exact_argument_next_calls += usize::from(
-                call.method == "next"
-                    && call.args.is_empty()
-                    && matches!(
-                        call.receiver.as_ref(),
-                        syn::Expr::Path(path)
-                            if path.qself.is_none() && path.path.is_ident("arguments")
-                    ),
-            );
+            let is_next = call.method == "next" && call.args.is_empty();
+            let is_exact_next = is_next
+                && matches!(
+                    call.receiver.as_ref(),
+                    syn::Expr::Path(path)
+                        if path.qself.is_none() && path.path.is_ident("arguments")
+                );
+            self.noncanonical_next_calls += usize::from(is_next && !is_exact_next);
+            self.exact_argument_next_calls += usize::from(is_exact_next);
             if matches!(
                 call.method.to_string().as_str(),
                 "canonicalize"
@@ -2715,6 +2938,49 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
         }
 
         fn visit_macro(&mut self, macro_: &'ast syn::Macro) {
+            fn next_census(source: &str) -> (usize, usize) {
+                let compact = source
+                    .chars()
+                    .filter(|character| !character.is_whitespace())
+                    .collect::<String>();
+                let bytes = compact.as_bytes();
+                let mut cursor = 0;
+                let mut all = 0;
+                let mut exact = 0;
+                while let Some(offset) = compact[cursor..].find("next(") {
+                    let next = cursor + offset;
+                    let arguments_start = next + "next(".len();
+                    let Some(arguments_end_offset) = compact[arguments_start..].find(')') else {
+                        break;
+                    };
+                    let arguments_end = arguments_start + arguments_end_offset;
+                    let arguments = &compact[arguments_start..arguments_end];
+                    all += 1;
+                    let mut receiver_start = next.saturating_sub(1);
+                    while receiver_start != 0
+                        && (bytes[receiver_start - 1] == b'_'
+                            || bytes[receiver_start - 1].is_ascii_alphanumeric())
+                    {
+                        receiver_start -= 1;
+                    }
+                    let exact_method = arguments.is_empty()
+                        && next != 0
+                        && bytes[next - 1] == b'.'
+                        && &compact[receiver_start..next - 1] == "arguments"
+                        && (receiver_start == 0
+                            || !matches!(
+                                bytes[receiver_start - 1],
+                                b'.' | b':' | b'_' | b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z'
+                            ));
+                    exact += usize::from(exact_method);
+                    cursor = arguments_end + 1;
+                }
+                (all, exact)
+            }
+            let (macro_next_calls, exact_macro_next_calls) =
+                next_census(&macro_.tokens.to_string());
+            self.noncanonical_next_calls += macro_next_calls.saturating_sub(exact_macro_next_calls);
+            self.exact_argument_next_calls += exact_macro_next_calls;
             let compact = macro_
                 .tokens
                 .to_string()
@@ -2754,6 +3020,153 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
     }
 
     let syntax = syn::parse_file(source).expect("CLI source is valid Rust");
+    fn has_renamed_or_glob_import(tree: &syn::UseTree) -> bool {
+        match tree {
+            syn::UseTree::Path(path) => has_renamed_or_glob_import(&path.tree),
+            syn::UseTree::Group(group) => group.items.iter().any(has_renamed_or_glob_import),
+            syn::UseTree::Rename(_) | syn::UseTree::Glob(_) => true,
+            syn::UseTree::Name(_) => false,
+        }
+    }
+
+    #[derive(Default)]
+    struct AuthorityProvenance {
+        imports: BTreeSet<Vec<String>>,
+        findings: BTreeSet<String>,
+    }
+    impl AuthorityProvenance {
+        fn record_shadow(&mut self, name: &syn::Ident, kind: &str) {
+            if matches!(
+                name.to_string().as_str(),
+                "CompileOptions"
+                    | "GrammarInstanceInput"
+                    | "Iterator"
+                    | "PathBuf"
+                    | "StageResult"
+                    | "bbnf"
+                    | "compile_instance"
+                    | "env"
+                    | "fs"
+                    | "std"
+            ) {
+                self.findings
+                    .insert(format!("{kind} shadows canonical CLI authority `{name}`"));
+            }
+        }
+    }
+    impl<'ast> syn::visit::Visit<'ast> for AuthorityProvenance {
+        fn visit_item_use(&mut self, item: &'ast syn::ItemUse) {
+            if item.leading_colon.is_some() || has_renamed_or_glob_import(&item.tree) {
+                self.findings
+                    .insert("renamed, globbed, or absolute CLI authority import".to_owned());
+            }
+            collect_use_paths(&item.tree, &mut Vec::new(), &mut self.imports);
+            syn::visit::visit_item_use(self, item);
+        }
+
+        fn visit_item_mod(&mut self, item: &'ast syn::ItemMod) {
+            self.record_shadow(&item.ident, "module");
+            syn::visit::visit_item_mod(self, item);
+        }
+
+        fn visit_item_fn(&mut self, item: &'ast syn::ItemFn) {
+            self.record_shadow(&item.sig.ident, "function");
+            syn::visit::visit_item_fn(self, item);
+        }
+
+        fn visit_item_struct(&mut self, item: &'ast syn::ItemStruct) {
+            self.record_shadow(&item.ident, "struct");
+            syn::visit::visit_item_struct(self, item);
+        }
+
+        fn visit_item_enum(&mut self, item: &'ast syn::ItemEnum) {
+            self.record_shadow(&item.ident, "enum");
+            syn::visit::visit_item_enum(self, item);
+        }
+
+        fn visit_item_union(&mut self, item: &'ast syn::ItemUnion) {
+            self.record_shadow(&item.ident, "union");
+            syn::visit::visit_item_union(self, item);
+        }
+
+        fn visit_item_trait(&mut self, item: &'ast syn::ItemTrait) {
+            self.record_shadow(&item.ident, "trait");
+            syn::visit::visit_item_trait(self, item);
+        }
+
+        fn visit_item_type(&mut self, item: &'ast syn::ItemType) {
+            self.record_shadow(&item.ident, "type alias");
+            syn::visit::visit_item_type(self, item);
+        }
+
+        fn visit_item_const(&mut self, item: &'ast syn::ItemConst) {
+            self.record_shadow(&item.ident, "constant");
+            syn::visit::visit_item_const(self, item);
+        }
+
+        fn visit_item_static(&mut self, item: &'ast syn::ItemStatic) {
+            self.record_shadow(&item.ident, "static");
+            syn::visit::visit_item_static(self, item);
+        }
+
+        fn visit_pat_ident(&mut self, pattern: &'ast syn::PatIdent) {
+            self.record_shadow(&pattern.ident, "binding");
+            syn::visit::visit_pat_ident(self, pattern);
+        }
+
+        fn visit_macro(&mut self, macro_: &'ast syn::Macro) {
+            if macro_.path.is_ident("macro_rules") {
+                let words = macro_
+                    .tokens
+                    .to_string()
+                    .split(|character: char| !(character == '_' || character.is_alphanumeric()))
+                    .filter(|word| !word.is_empty())
+                    .map(ToOwned::to_owned)
+                    .collect::<BTreeSet<_>>();
+                for name in [
+                    "CompileOptions",
+                    "GrammarInstanceInput",
+                    "Iterator",
+                    "PathBuf",
+                    "StageResult",
+                    "bbnf",
+                    "compile_instance",
+                    "env",
+                    "fs",
+                    "std",
+                ] {
+                    if words.contains(name) {
+                        self.findings.insert(format!(
+                            "macro shadows or fabricates CLI authority `{name}`"
+                        ));
+                    }
+                }
+            }
+            syn::visit::visit_macro(self, macro_);
+        }
+    }
+
+    let expected_authority_imports = [
+        &["bbnf", "CompileOptions"][..],
+        &["bbnf", "GrammarInstanceInput"][..],
+        &["bbnf", "StageResult"][..],
+        &["bbnf", "compile_instance"][..],
+        &["std", "env"][..],
+        &["std", "fs"][..],
+        &["std", "path", "PathBuf"][..],
+    ]
+    .into_iter()
+    .map(|path| path.iter().map(ToString::to_string).collect::<Vec<_>>())
+    .collect::<BTreeSet<_>>();
+    let mut provenance = AuthorityProvenance::default();
+    provenance.visit_file(&syntax);
+    if provenance.imports != expected_authority_imports {
+        provenance.findings.insert(format!(
+            "CLI authority imports are {:?}, expected {expected_authority_imports:?}",
+            provenance.imports
+        ));
+    }
+
     #[derive(Default)]
     struct Utf8ArgumentImports(BTreeSet<String>);
     impl<'ast> syn::visit::Visit<'ast> for Utf8ArgumentImports {
@@ -2770,7 +3183,7 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
         argument_sources: 0,
         utf8_argument_sources: 0,
         exact_argument_bindings: 0,
-        next_calls: 0,
+        noncanonical_next_calls: 0,
         exact_argument_next_calls: 0,
         fs_reads: 0,
         fs_writes: 0,
@@ -2793,7 +3206,7 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
         identity_surfaces: BTreeSet::new(),
     };
     transport.visit_file(&syntax);
-    let mut findings = BTreeSet::new();
+    let mut findings = provenance.findings;
     if !utf8_argument_aliases.is_empty() {
         findings.insert(format!(
             "env::args UTF-8 argument imports are present as {utf8_argument_aliases:?}"
@@ -2806,12 +3219,12 @@ fn cli_byte_transport_findings(source: &str) -> BTreeSet<String> {
             transport.exact_argument_bindings,
             1,
         ),
-        ("arguments.next", transport.next_calls, 4),
         (
             "live arguments.next",
             transport.exact_argument_next_calls,
             4,
         ),
+        ("noncanonical next", transport.noncanonical_next_calls, 0),
         ("fs::read", transport.fs_reads, 2),
         ("fs::write", transport.fs_writes, 1),
     ] {
@@ -2949,25 +3362,25 @@ fn collect_serde_decoder_imports(
         syn::UseTree::Rename(rename) => {
             let mut path = prefix.clone();
             path.push(rename.ident.to_string());
-            if path == ["serde_json"] || path == ["serde_json", "self"] {
-                roots.insert(rename.rename.to_string());
-            } else if path == ["serde"] || path == ["serde", "self"] {
-                roots.insert(rename.rename.to_string());
-            } else if path == ["serde", "Deserialize"] {
-                roots.insert(rename.rename.to_string());
-            } else if path.first().map(String::as_str) == Some("serde_json")
-                && path
-                    .last()
-                    .is_some_and(|name| JSON_DECODER_TYPES.contains(&name.as_str()))
+            let serde_json_import = path.first().map(String::as_str) == Some("serde_json");
+            if path == ["serde_json"]
+                || path == ["serde_json", "self"]
+                || path == ["serde"]
+                || path == ["serde", "self"]
+                || path == ["serde", "Deserialize"]
+                || (serde_json_import
+                    && path
+                        .last()
+                        .is_some_and(|name| JSON_DECODER_TYPES.contains(&name.as_str())))
             {
                 roots.insert(rename.rename.to_string());
-            } else if path.first().map(String::as_str) == Some("serde_json")
+            } else if serde_json_import
                 && path
                     .last()
                     .is_some_and(|name| JSON_DECODERS.contains(&name.as_str()))
             {
                 decoder_aliases.insert(rename.rename.to_string());
-            } else if path.first().map(String::as_str) == Some("serde_json") {
+            } else if serde_json_import {
                 roots.insert(rename.rename.to_string());
             }
         }
@@ -3090,43 +3503,84 @@ fn reconstructed_manifest_key(expression: &syn::ExprArray) -> Option<String> {
 }
 
 fn macro_manifest_surface(macro_: &syn::Macro) -> Option<String> {
-    let compact = macro_
-        .tokens
-        .to_string()
-        .bytes()
-        .filter(u8::is_ascii_alphanumeric)
-        .map(|byte| byte.to_ascii_lowercase() as char)
-        .collect::<String>();
+    use syn::parse::Parser as _;
+
+    let source = macro_.tokens.to_string();
+    let macro_name = macro_
+        .path
+        .segments
+        .last()
+        .map(|segment| segment.ident.to_string());
+    let words = source
+        .split(|character: char| !(character == '_' || character.is_alphanumeric()))
+        .filter(|word| !word.is_empty())
+        .map(str::to_ascii_lowercase)
+        .collect::<BTreeSet<_>>();
     let decoder = [
-        "serdejson",
+        "serde_json",
         "deserialize",
         "deserializer",
-        "fromslice",
-        "fromstr",
-        "fromreader",
-        "fromvalue",
+        "from_slice",
+        "from_str",
+        "from_reader",
+        "from_value",
     ]
     .into_iter()
-    .any(|needle| compact.contains(needle));
-    let manifest = [
-        "grammarinstance",
-        "logicalpath",
-        "triviaregex",
-        "pratttables",
-        "siterule",
-        "atomrule",
-        "matcherrule",
-        "leftbindingpower",
-        "rightbindingpower",
+    .any(|needle| words.contains(needle));
+    let manifest_nominal = words.contains("grammarinstance");
+    let manifest_vocabulary = [
+        "schema",
+        "logical_path",
+        "entry",
+        "trivia_regex",
+        "pratt_tables",
     ]
     .into_iter()
-    .any(|needle| compact.contains(needle));
-    (decoder || manifest).then(|| {
-        macro_.path.segments.last().map_or_else(
-            || "<anonymous>".to_owned(),
-            |segment| segment.ident.to_string(),
-        )
-    })
+    .all(|needle| words.contains(needle));
+    let manifest = manifest_nominal
+        || manifest_vocabulary
+        || source.contains("bbnf.grammar-instance.v1")
+        || (macro_.path.is_ident("concat")
+            && syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated
+                .parse2(macro_.tokens.clone())
+                .ok()
+                .and_then(|arguments| {
+                    let mut joined = Vec::new();
+                    for argument in arguments {
+                        match argument {
+                            syn::Expr::Lit(syn::ExprLit {
+                                lit: syn::Lit::Str(literal),
+                                ..
+                            }) => joined.extend_from_slice(literal.value().as_bytes()),
+                            syn::Expr::Lit(syn::ExprLit {
+                                lit: syn::Lit::ByteStr(literal),
+                                ..
+                            }) => joined.extend_from_slice(&literal.value()),
+                            _ => return None,
+                        }
+                    }
+                    Some(joined)
+                })
+                .and_then(|joined| String::from_utf8(joined).ok())
+                .is_some_and(|joined| {
+                    matches!(
+                        joined.as_str(),
+                        "schema"
+                            | "logical_path"
+                            | "entry"
+                            | "trivia_regex"
+                            | "pratt_tables"
+                            | "site_rule"
+                            | "atom_rule"
+                            | "operators"
+                            | "matcher_rule"
+                            | "fixity"
+                            | "left_binding_power"
+                            | "right_binding_power"
+                            | "bbnf.grammar-instance.v1"
+                    )
+                }));
+    (decoder || manifest).then(|| macro_name.unwrap_or_else(|| "<anonymous>".to_owned()))
 }
 
 fn manifest_ownership_findings(relative: &str, source: &str) -> BTreeSet<String> {
@@ -3708,11 +4162,19 @@ fn exact_shared_instance_borrow(ty: &syn::Type) -> bool {
     matches!(
         ty,
         syn::Type::Reference(reference)
-            if reference.mutability.is_none()
+            if reference.lifetime.is_none()
+                && reference.mutability.is_none()
                 && matches!(
                     reference.elem.as_ref(),
                     syn::Type::Path(path)
-                        if path.qself.is_none() && path.path.is_ident("GrammarInstance")
+                        if path.qself.is_none()
+                            && path.path.leading_colon.is_none()
+                            && path.path.segments.len() == 1
+                            && path.path.is_ident("GrammarInstance")
+                            && matches!(
+                                path.path.segments[0].arguments,
+                                syn::PathArguments::None
+                            )
                 )
     )
 }
@@ -3994,6 +4456,54 @@ fn direct_expression_binding(expression: &syn::Expr) -> Option<String> {
 fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
     use syn::visit::Visit as _;
 
+    fn exact_path(expression: &syn::Expr, expected: &[&str]) -> bool {
+        matches!(
+            expression,
+            syn::Expr::Path(path)
+                if path.qself.is_none()
+                    && path.path.segments.len() == expected.len()
+                    && path.path.segments.iter().zip(expected).all(
+                        |(segment, expected)| {
+                            segment.ident == *expected
+                                && matches!(segment.arguments, syn::PathArguments::None)
+                        }
+                    )
+        )
+    }
+
+    fn exact_plain_binding(pattern: &syn::Pat, expected: &str) -> bool {
+        matches!(
+            pattern,
+            syn::Pat::Ident(binding)
+                if binding.ident == expected
+                    && binding.attrs.is_empty()
+                    && binding.by_ref.is_none()
+                    && binding.mutability.is_none()
+                    && binding.subpat.is_none()
+        )
+    }
+
+    fn exact_shared_borrow(ty: &syn::Type, expected: &str) -> bool {
+        matches!(
+            ty,
+            syn::Type::Reference(reference)
+                if reference.lifetime.is_none()
+                    && reference.mutability.is_none()
+                    && matches!(
+                        reference.elem.as_ref(),
+                        syn::Type::Path(path)
+                            if path.qself.is_none()
+                                && path.path.leading_colon.is_none()
+                                && path.path.segments.len() == 1
+                                && path.path.segments[0].ident == expected
+                                && matches!(
+                                    path.path.segments[0].arguments,
+                                    syn::PathArguments::None
+                                )
+                    )
+        )
+    }
+
     let mut imports = BTreeSet::new();
     for item in &syntax.items {
         if let syn::Item::Use(import) = item {
@@ -4007,6 +4517,107 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
     ]) {
         return false;
     }
+    let invalid_pratt_helpers = syntax
+        .items
+        .iter()
+        .filter(|item| {
+            let syn::Item::Fn(function) = item else {
+                return false;
+            };
+            if function.sig.ident != "invalid_pratt_table"
+                || !matches!(function.vis, syn::Visibility::Inherited)
+                || function.sig.constness.is_some()
+                || function.sig.asyncness.is_some()
+                || function.sig.unsafety.is_some()
+                || function.sig.abi.is_some()
+                || function.sig.variadic.is_some()
+                || !function.sig.generics.params.is_empty()
+                || function.sig.generics.where_clause.is_some()
+            {
+                return false;
+            }
+            let [syn::FnArg::Typed(message)] =
+                function.sig.inputs.iter().collect::<Vec<_>>().as_slice()
+            else {
+                return false;
+            };
+            let message_binding = matches!(
+                message.pat.as_ref(),
+                syn::Pat::Ident(binding)
+                    if binding.ident == "message"
+                        && binding.attrs.is_empty()
+                        && binding.by_ref.is_none()
+                        && binding.mutability.is_none()
+                        && binding.subpat.is_none()
+            );
+            let message_type = matches!(
+                message.ty.as_ref(),
+                syn::Type::ImplTrait(impl_trait)
+                    if impl_trait.bounds.len() == 1
+                        && matches!(
+                            impl_trait.bounds.first(),
+                            Some(syn::TypeParamBound::Trait(bound))
+                                if bound.lifetimes.is_none()
+                                    && matches!(bound.modifier, syn::TraitBoundModifier::None)
+                                    && bound.path.segments.len() == 1
+                                    && bound.path.segments[0].ident == "Into"
+                                    && matches!(
+                                        &bound.path.segments[0].arguments,
+                                        syn::PathArguments::AngleBracketed(arguments)
+                                            if arguments.args.len() == 1
+                                                && matches!(
+                                                    arguments.args.first(),
+                                                    Some(syn::GenericArgument::Type(
+                                                        syn::Type::Path(path)
+                                                    )) if path.qself.is_none()
+                                                        && path.path.is_ident("String")
+                                                )
+                                    )
+                        )
+            );
+            let returns_diagnostic = matches!(
+                &function.sig.output,
+                syn::ReturnType::Type(_, ty)
+                    if matches!(
+                        ty.as_ref(),
+                        syn::Type::Path(path)
+                            if path.qself.is_none() && path.path.is_ident("Diagnostic")
+                    )
+            );
+            let [syn::Stmt::Expr(syn::Expr::Call(diagnostic), None)] =
+                function.block.stmts.as_slice()
+            else {
+                return false;
+            };
+            let exact_zero = |expression: &syn::Expr| {
+                matches!(
+                    expression,
+                    syn::Expr::Lit(syn::ExprLit {
+                        lit: syn::Lit::Int(integer),
+                        ..
+                    }) if integer.suffix().is_empty() && integer.base10_digits() == "0"
+                )
+            };
+            message_binding
+                && message_type
+                && returns_diagnostic
+                && exact_path(&diagnostic.func, &["Diagnostic", "new"])
+                && diagnostic.args.len() == 4
+                && diagnostic
+                    .args
+                    .first()
+                    .is_some_and(|code| exact_path(code, &["DiagnosticCode", "InvalidPrattTable"]))
+                && diagnostic.args.iter().nth(1).is_some_and(exact_zero)
+                && diagnostic.args.iter().nth(2).is_some_and(exact_zero)
+                && diagnostic.args.last().is_some_and(|argument| {
+                    matches!(
+                        argument,
+                        syn::Expr::Path(path)
+                            if path.qself.is_none() && path.path.is_ident("message")
+                    )
+                })
+        })
+        .count();
 
     syntax.items.iter().any(|item| {
         let syn::Item::Impl(item) = item else {
@@ -4027,14 +4638,16 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                 return false;
             };
             if method.sig.ident != "resolve"
+                || !method.attrs.is_empty()
                 || !matches!(method.vis, syn::Visibility::Restricted(ref restricted)
-                    if restricted.path.is_ident("crate"))
-                || !method
-                    .sig
-                    .generics
-                    .params
-                    .iter()
-                    .all(|parameter| matches!(parameter, syn::GenericParam::Lifetime(_)))
+                    if restricted.path.is_ident("super"))
+                || method.sig.constness.is_some()
+                || method.sig.asyncness.is_some()
+                || method.sig.unsafety.is_some()
+                || method.sig.abi.is_some()
+                || method.sig.variadic.is_some()
+                || !method.sig.generics.params.is_empty()
+                || method.sig.generics.where_clause.is_some()
             {
                 return false;
             }
@@ -4042,30 +4655,18 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                 matches!(
                     argument,
                     syn::FnArg::Typed(argument)
-                        if matches!(
-                            argument.pat.as_ref(),
-                            syn::Pat::Ident(binding) if binding.ident == "module"
-                        ) && matches!(
-                            argument.ty.as_ref(),
-                            syn::Type::Reference(reference)
-                                if reference.mutability.is_none()
-                                    && matches!(
-                                        reference.elem.as_ref(),
-                                        syn::Type::Path(path)
-                                            if path.qself.is_none()
-                                                && path.path.is_ident("SourceModule")
-                                    )
-                        )
+                        if argument.attrs.is_empty()
+                            && exact_plain_binding(&argument.pat, "module")
+                            && exact_shared_borrow(&argument.ty, "SourceModule")
                 )
             });
             let has_instance = method.sig.inputs.iter().any(|argument| {
                 matches!(
                     argument,
                     syn::FnArg::Typed(argument)
-                        if matches!(
-                            argument.pat.as_ref(),
-                            syn::Pat::Ident(binding) if binding.ident == "instance"
-                        ) && exact_shared_instance_borrow(&argument.ty)
+                        if argument.attrs.is_empty()
+                            && exact_plain_binding(&argument.pat, "instance")
+                            && exact_shared_instance_borrow(&argument.ty)
                 )
             });
             if !has_module || !has_instance || method.sig.inputs.len() != 2 {
@@ -4085,8 +4686,13 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                 resolved_entry_tainted: BTreeSet<String>,
                 rule_name_tainted: BTreeSet<String>,
                 pratt_tainted: BTreeSet<String>,
+                name_maps: BTreeSet<String>,
+                entry_lookup_maps: BTreeSet<String>,
+                name_map_population_maps: BTreeSet<String>,
+                name_map_mutations: std::collections::BTreeMap<String, usize>,
                 entry_calls: usize,
                 entry_equalities: usize,
+                entry_lookups: usize,
                 pratt_calls: usize,
                 entry_overwrites: usize,
             }
@@ -4095,6 +4701,134 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                     names
                         .iter()
                         .any(|name| expression_mentions_ident(expression, name))
+                }
+
+                fn exact_binding_name(
+                    expression: &syn::Expr,
+                    names: &BTreeSet<String>,
+                ) -> Option<String> {
+                    match expression {
+                        syn::Expr::Group(group) => Self::exact_binding_name(&group.expr, names),
+                        syn::Expr::Paren(paren) => Self::exact_binding_name(&paren.expr, names),
+                        syn::Expr::Path(path) if path.qself.is_none() => path
+                            .path
+                            .get_ident()
+                            .map(ToString::to_string)
+                            .filter(|ident| names.contains(ident)),
+                        _ => None,
+                    }
+                }
+
+                fn exact_binding(expression: &syn::Expr, names: &BTreeSet<String>) -> bool {
+                    Self::exact_binding_name(expression, names).is_some()
+                }
+
+                fn exact_path(expression: &syn::Expr, expected: &[&str]) -> bool {
+                    matches!(
+                        expression,
+                        syn::Expr::Path(path)
+                            if path.qself.is_none()
+                                && path.path.segments.len() == expected.len()
+                                && path.path.segments.iter().zip(expected).all(
+                                    |(segment, expected)| {
+                                        segment.ident == *expected
+                                            && matches!(
+                                                segment.arguments,
+                                                syn::PathArguments::None
+                                            )
+                                    }
+                                )
+                    )
+                }
+
+                fn exact_instance_entry(expression: &syn::Expr) -> bool {
+                    matches!(
+                        expression,
+                        syn::Expr::MethodCall(call)
+                            if call.method == "entry"
+                                && call.args.is_empty()
+                                && matches!(
+                                    call.receiver.as_ref(),
+                                    syn::Expr::Path(path)
+                                        if path.qself.is_none()
+                                            && path.path.is_ident("instance")
+                                )
+                    )
+                }
+
+                fn exact_rule_name(expression: &syn::Expr) -> bool {
+                    match expression {
+                        syn::Expr::Field(field)
+                            if matches!(
+                                &field.member,
+                                syn::Member::Named(member) if member == "name"
+                            ) =>
+                        {
+                            matches!(
+                                field.base.as_ref(),
+                                syn::Expr::Path(path)
+                                    if path.qself.is_none()
+                                        && path.path.get_ident().is_some()
+                            )
+                        }
+                        syn::Expr::MethodCall(call)
+                            if call.method == "name" && call.args.is_empty() =>
+                        {
+                            matches!(
+                                call.receiver.as_ref(),
+                                syn::Expr::Path(path)
+                                    if path.qself.is_none()
+                                        && path.path.get_ident().is_some()
+                            )
+                        }
+                        syn::Expr::Group(group) => Self::exact_rule_name(&group.expr),
+                        syn::Expr::Paren(paren) => Self::exact_rule_name(&paren.expr),
+                        _ => false,
+                    }
+                }
+
+                fn exact_name_lookup(&self, expression: &syn::Expr) -> Option<String> {
+                    let syn::Expr::MethodCall(call) = expression else {
+                        return None;
+                    };
+                    (call.method == "get"
+                        && call.args.len() == 1
+                        && call
+                            .args
+                            .first()
+                            .is_some_and(|key| Self::exact_binding(key, &self.entry_tainted)))
+                    .then(|| Self::exact_binding_name(&call.receiver, &self.name_maps))
+                    .flatten()
+                }
+
+                fn exact_unknown_entry_else(init: &syn::LocalInit) -> bool {
+                    let Some((_, alternative)) = &init.diverge else {
+                        return false;
+                    };
+                    let syn::Expr::Block(block) = alternative.as_ref() else {
+                        return false;
+                    };
+                    let [syn::Stmt::Expr(syn::Expr::Return(return_), _)] =
+                        block.block.stmts.as_slice()
+                    else {
+                        return false;
+                    };
+                    let Some(syn::Expr::Call(rejected)) = return_.expr.as_deref() else {
+                        return false;
+                    };
+                    if !Self::exact_path(&rejected.func, &["StageResult", "rejected"])
+                        || rejected.args.len() != 1
+                    {
+                        return false;
+                    }
+                    let Some(syn::Expr::Call(diagnostic)) = rejected.args.first() else {
+                        return false;
+                    };
+                    Self::exact_path(&diagnostic.func, &["Diagnostic", "new"])
+                        && diagnostic.args.len() == 4
+                        && diagnostic.args.first().is_some_and(|code| {
+                            Self::exact_path(code, &["DiagnosticCode", "UnknownEntry"])
+                        })
                 }
 
                 fn entry_equality_count(&self, expression: &syn::Expr) -> usize {
@@ -4107,17 +4841,17 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                         fn visit_expr_binary(&mut self, binary: &'ast syn::ExprBinary) {
                             if matches!(binary.op, syn::BinOp::Eq(_)) {
                                 let left_entry =
-                                    Locals::mentions_any(&binary.left, self.entry_tainted)
-                                        || expression_has_instance_accessor(&binary.left, "entry");
+                                    Locals::exact_binding(&binary.left, self.entry_tainted)
+                                        || Locals::exact_instance_entry(&binary.left);
                                 let right_entry =
-                                    Locals::mentions_any(&binary.right, self.entry_tainted)
-                                        || expression_has_instance_accessor(&binary.right, "entry");
+                                    Locals::exact_binding(&binary.right, self.entry_tainted)
+                                        || Locals::exact_instance_entry(&binary.right);
                                 let left_name =
-                                    Locals::mentions_any(&binary.left, self.rule_name_tainted)
-                                        || expression_has_rule_name(&binary.left);
+                                    Locals::exact_binding(&binary.left, self.rule_name_tainted)
+                                        || Locals::exact_rule_name(&binary.left);
                                 let right_name =
-                                    Locals::mentions_any(&binary.right, self.rule_name_tainted)
-                                        || expression_has_rule_name(&binary.right);
+                                    Locals::exact_binding(&binary.right, self.rule_name_tainted)
+                                        || Locals::exact_rule_name(&binary.right);
                                 self.count += usize::from(
                                     (left_entry && right_name) || (right_entry && left_name),
                                 );
@@ -4137,6 +4871,17 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
             }
             impl<'ast> syn::visit::Visit<'ast> for Locals {
                 fn visit_local(&mut self, local: &'ast syn::Local) {
+                    if let Some(init) = &local.init
+                        && let Some(map) = self.exact_name_lookup(&init.expr)
+                        && Self::exact_unknown_entry_else(init)
+                    {
+                        let resolved = bound_identifiers(&local.pat);
+                        if resolved.len() == 1 {
+                            self.resolved_entry_tainted.extend(resolved);
+                            self.entry_lookup_maps.insert(map);
+                            self.entry_lookups += 1;
+                        }
+                    }
                     let binding = match &local.pat {
                         syn::Pat::Ident(binding) => {
                             Some((binding.ident.to_string(), binding.mutability.is_some()))
@@ -4152,6 +4897,18 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                     if let (Some((binding, mutable)), Some(syn::LocalInit { expr, .. })) =
                         (binding, &local.init)
                     {
+                        if self.name_maps.contains(&binding) {
+                            *self.name_map_mutations.entry(binding.clone()).or_default() += 1;
+                        }
+                        let name_map = matches!(
+                            expr.as_ref(),
+                            syn::Expr::Call(call)
+                                if Self::exact_path(&call.func, &["BTreeMap", "new"])
+                                    && call.args.is_empty()
+                        );
+                        if name_map {
+                            self.name_maps.insert(binding.clone());
+                        }
                         self.entry_overwrites +=
                             usize::from(self.resolved_entry_tainted.contains(&binding));
                         let resolved_entry = self.entry_equality_count(expr) != 0
@@ -4179,6 +4936,111 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                     syn::visit::visit_local(self, local);
                 }
 
+                fn visit_expr_for_loop(&mut self, loop_: &'ast syn::ExprForLoop) {
+                    let exact_module_rules = matches!(
+                        loop_.expr.as_ref(),
+                        syn::Expr::Reference(reference)
+                            if reference.mutability.is_none()
+                                && matches!(
+                                    reference.expr.as_ref(),
+                                    syn::Expr::Field(field)
+                                        if matches!(
+                                            field.base.as_ref(),
+                                            syn::Expr::Path(path)
+                                                if path.qself.is_none()
+                                                    && path.path.is_ident("module")
+                                        )
+                                            && matches!(
+                                                &field.member,
+                                                syn::Member::Named(member) if member == "rules"
+                                            )
+                                )
+                    );
+                    if exact_module_rules {
+                        fn exact_rule_field(
+                            expression: &syn::Expr,
+                            rules: &BTreeSet<String>,
+                            member: &str,
+                        ) -> bool {
+                            matches!(
+                                expression,
+                                syn::Expr::Field(field)
+                                    if matches!(
+                                        &field.member,
+                                        syn::Member::Named(field_member)
+                                            if field_member == member
+                                    )
+                                        && Locals::exact_binding(&field.base, rules)
+                            )
+                        }
+
+                        fn live_insert(expression: &syn::Expr) -> Option<&syn::ExprMethodCall> {
+                            match expression {
+                                syn::Expr::MethodCall(call) if call.method == "insert" => {
+                                    Some(call)
+                                }
+                                syn::Expr::If(if_) => {
+                                    let syn::Expr::MethodCall(is_some) = if_.cond.as_ref() else {
+                                        return None;
+                                    };
+                                    if is_some.method != "is_some" || !is_some.args.is_empty() {
+                                        return None;
+                                    }
+                                    let syn::Expr::MethodCall(insert) = is_some.receiver.as_ref()
+                                    else {
+                                        return None;
+                                    };
+                                    (insert.method == "insert").then_some(insert)
+                                }
+                                _ => None,
+                            }
+                        }
+
+                        let rules = bound_identifiers(&loop_.pat);
+                        let exact_maps = loop_
+                            .body
+                            .stmts
+                            .iter()
+                            .filter_map(|statement| match statement {
+                                syn::Stmt::Expr(expression, _) => live_insert(expression),
+                                _ => None,
+                            })
+                            .filter_map(|insert| {
+                                let exact_name = insert.args.first().is_some_and(|name| {
+                                    matches!(
+                                        name,
+                                        syn::Expr::MethodCall(clone)
+                                            if clone.method == "clone"
+                                                && clone.args.is_empty()
+                                                && exact_rule_field(
+                                                    &clone.receiver,
+                                                    &rules,
+                                                    "name"
+                                                )
+                                    )
+                                });
+                                let exact_id = insert
+                                    .args
+                                    .iter()
+                                    .nth(1)
+                                    .is_some_and(|id| exact_rule_field(id, &rules, "id"));
+                                (insert.args.len() == 2 && exact_name && exact_id)
+                                    .then(|| {
+                                        Locals::exact_binding_name(
+                                            &insert.receiver,
+                                            &self.name_maps,
+                                        )
+                                    })
+                                    .flatten()
+                            })
+                            .collect::<Vec<_>>();
+                        if let [map] = exact_maps.as_slice() {
+                            self.name_map_population_maps.insert(map.clone());
+                        }
+                    }
+                    syn::visit::visit_expr_for_loop(self, loop_);
+                }
+
                 fn visit_expr_method_call(&mut self, call: &'ast syn::ExprMethodCall) {
                     let direct_instance = matches!(
                         call.receiver.as_ref(),
@@ -4190,6 +5052,33 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                         usize::from(direct_instance && call.method == "pratt_tables");
                     if matches!(
                         call.method.to_string().as_str(),
+                        "append"
+                            | "clear"
+                            | "dedup"
+                            | "extend"
+                            | "get_mut"
+                            | "insert"
+                            | "last_mut"
+                            | "pop"
+                            | "push"
+                            | "remove"
+                            | "replace"
+                            | "retain"
+                            | "set"
+                            | "sort"
+                            | "sort_by"
+                            | "sort_by_key"
+                            | "swap"
+                            | "swap_remove"
+                            | "take"
+                            | "truncate"
+                    ) && let Some(map) =
+                        Self::exact_binding_name(&call.receiver, &self.name_maps)
+                    {
+                        *self.name_map_mutations.entry(map).or_default() += 1;
+                    }
+                    if matches!(
+                        call.method.to_string().as_str(),
                         "clear" | "get_mut" | "insert" | "replace" | "set" | "swap" | "take"
                     ) && Self::mentions_any(&call.receiver, &self.resolved_entry_tainted)
                     {
@@ -4199,6 +5088,9 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                 }
 
                 fn visit_expr_assign(&mut self, assign: &'ast syn::ExprAssign) {
+                    if let Some(map) = Self::exact_binding_name(&assign.left, &self.name_maps) {
+                        *self.name_map_mutations.entry(map).or_default() += 1;
+                    }
                     self.entry_overwrites += usize::from(Self::mentions_any(
                         &assign.left,
                         &self.resolved_entry_tainted,
@@ -4216,14 +5108,15 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
 
                 fn visit_expr_binary(&mut self, binary: &'ast syn::ExprBinary) {
                     if matches!(binary.op, syn::BinOp::Eq(_)) {
-                        let left_entry = Self::mentions_any(&binary.left, &self.entry_tainted)
-                            || expression_has_instance_accessor(&binary.left, "entry");
-                        let right_entry = Self::mentions_any(&binary.right, &self.entry_tainted)
-                            || expression_has_instance_accessor(&binary.right, "entry");
-                        let left_name = Self::mentions_any(&binary.left, &self.rule_name_tainted)
-                            || expression_has_rule_name(&binary.left);
-                        let right_name = Self::mentions_any(&binary.right, &self.rule_name_tainted)
-                            || expression_has_rule_name(&binary.right);
+                        let left_entry = Self::exact_binding(&binary.left, &self.entry_tainted)
+                            || Self::exact_instance_entry(&binary.left);
+                        let right_entry = Self::exact_binding(&binary.right, &self.entry_tainted)
+                            || Self::exact_instance_entry(&binary.right);
+                        let left_name = Self::exact_binding(&binary.left, &self.rule_name_tainted)
+                            || Self::exact_rule_name(&binary.left);
+                        let right_name =
+                            Self::exact_binding(&binary.right, &self.rule_name_tainted)
+                                || Self::exact_rule_name(&binary.right);
                         self.entry_equalities +=
                             usize::from((left_entry && right_name) || (right_entry && left_name));
                     }
@@ -4293,6 +5186,7 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                 pratt_tainted: &'a BTreeSet<String>,
                 node_names: BTreeSet<String>,
                 rule_names: BTreeSet<String>,
+                invalid_pratt_helper: bool,
                 live_loops: usize,
             }
             impl<'ast> syn::visit::Visit<'ast> for PrattAttachment<'_> {
@@ -4321,6 +5215,7 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                             node_mutation: bool,
                             rule_mutation: bool,
                             pratt_node: bool,
+                            invalid_pratt_helper: bool,
                             invalid_pratt: bool,
                             mutation_events: Vec<MutationEvent>,
                         }
@@ -4463,6 +5358,8 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                             }
 
                             fn visit_expr_call(&mut self, call: &'ast syn::ExprCall) {
+                                self.invalid_pratt |= self.invalid_pratt_helper
+                                    && exact_path(&call.func, &["invalid_pratt_table"]);
                                 let carrier_escape =
                                     expression_mentions_binding(&call.func, self.node_names)
                                         || expression_mentions_binding(&call.func, self.rule_names)
@@ -4604,6 +5501,7 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                             node_mutation: false,
                             rule_mutation: false,
                             pratt_node: false,
+                            invalid_pratt_helper: self.invalid_pratt_helper,
                             invalid_pratt: false,
                             mutation_events: Vec::new(),
                         };
@@ -4646,6 +5544,7 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                 pratt_tainted: &locals.pratt_tainted,
                 node_names: node_aliases,
                 rule_names: rule_aliases,
+                invalid_pratt_helper: invalid_pratt_helpers == 1,
                 live_loops: 0,
             };
             attachment.visit_block(&method.block);
@@ -4818,8 +5717,20 @@ fn syntax_has_real_instance_resolution(syntax: &syn::File) -> bool {
                 false
             };
 
+            let exact_name_map_resolution = locals.entry_lookups == 1
+                && locals.entry_lookup_maps.len() == 1
+                && locals
+                    .entry_lookup_maps
+                    .is_subset(&locals.name_map_population_maps)
+                && locals
+                    .entry_lookup_maps
+                    .iter()
+                    .all(|map| locals.name_map_mutations.get(map).copied() == Some(1));
+            let exact_entry_resolution = (locals.entry_equalities == 1
+                && locals.entry_lookups == 0)
+                || (locals.entry_equalities == 0 && exact_name_map_resolution);
             locals.entry_calls == 1
-                && locals.entry_equalities == 1
+                && exact_entry_resolution
                 && locals.pratt_calls == 1
                 && locals.entry_overwrites == 0
                 && attachment.live_loops == 1
@@ -6135,6 +7046,480 @@ fn validated_instance_spine_findings(
         ids.count
     }
 
+    fn exact_local_binding(pattern: &syn::Pat) -> Option<String> {
+        match pattern {
+            syn::Pat::Ident(binding) if binding.by_ref.is_none() && binding.subpat.is_none() => {
+                Some(binding.ident.to_string())
+            }
+            _ => None,
+        }
+    }
+
+    fn exact_binding_path(expression: &syn::Expr, bindings: &BTreeSet<String>) -> bool {
+        match expression {
+            syn::Expr::Group(group) => exact_binding_path(&group.expr, bindings),
+            syn::Expr::Paren(paren) => exact_binding_path(&paren.expr, bindings),
+            syn::Expr::Path(path) if path.qself.is_none() => path
+                .path
+                .get_ident()
+                .is_some_and(|ident| bindings.contains(&ident.to_string())),
+            _ => false,
+        }
+    }
+
+    fn exact_manifest_len(expression: &syn::Expr, bindings: &BTreeSet<String>) -> bool {
+        matches!(
+            expression,
+            syn::Expr::MethodCall(call)
+                if call.method == "len"
+                    && call.args.is_empty()
+                    && exact_binding_path(&call.receiver, bindings)
+        )
+    }
+
+    fn exact_instance_budget(expression: &syn::Expr) -> bool {
+        direct_named_field(expression, "options", "instance_bytes")
+    }
+
+    fn exact_path(expression: &syn::Expr, expected: &[&str]) -> bool {
+        matches!(
+            expression,
+            syn::Expr::Path(path)
+                if path.qself.is_none()
+                    && path.path.segments.len() == expected.len()
+                    && path.path.segments.iter().zip(expected).all(|(segment, expected)| {
+                        segment.ident == *expected
+                            && matches!(segment.arguments, syn::PathArguments::None)
+                    })
+        )
+    }
+
+    fn exact_typed_manifest_decoder(
+        expression: &syn::Expr,
+        manifest_aliases: &BTreeSet<String>,
+    ) -> bool {
+        matches!(
+            expression,
+            syn::Expr::Call(call)
+                if matches!(
+                    call.func.as_ref(),
+                    syn::Expr::Path(path)
+                        if path.qself.is_none()
+                            && path.path.segments.len() == 2
+                            && path.path.segments[0].ident == "serde_json"
+                            && path.path.segments[1].ident == "from_slice"
+                            && decoder_returns_nominal(&path.path, "GrammarInstance")
+                )
+                    && call.args.len() == 1
+                    && call.args.first().is_some_and(|argument| {
+                        exact_binding_path(argument, manifest_aliases)
+                    })
+        )
+    }
+
+    fn exact_manifest_budget_condition(
+        expression: &syn::Expr,
+        bindings: &BTreeSet<String>,
+    ) -> bool {
+        matches!(
+            expression,
+            syn::Expr::Binary(binary)
+                if exact_manifest_budget_binary(binary, bindings)
+        )
+    }
+
+    fn exact_manifest_budget_binary(binary: &syn::ExprBinary, bindings: &BTreeSet<String>) -> bool {
+        matches!(binary.op, syn::BinOp::Gt(_))
+            && exact_manifest_len(&binary.left, bindings)
+            && exact_instance_budget(&binary.right)
+    }
+
+    fn block_returns_resource_limit_rejection(block: &syn::Block) -> bool {
+        let [syn::Stmt::Expr(syn::Expr::Return(return_), _)] = block.stmts.as_slice() else {
+            return false;
+        };
+        let Some(syn::Expr::Call(rejected)) = return_.expr.as_deref() else {
+            return false;
+        };
+        if !exact_path(&rejected.func, &["StageResult", "rejected"]) || rejected.args.len() != 1 {
+            return false;
+        }
+        let Some(syn::Expr::Call(diagnostic)) = rejected.args.first() else {
+            return false;
+        };
+        exact_path(&diagnostic.func, &["Diagnostic", "new"])
+            && diagnostic.args.len() == 4
+            && diagnostic
+                .args
+                .first()
+                .is_some_and(|code| exact_path(code, &["DiagnosticCode", "ResourceLimit"]))
+    }
+
+    fn exact_decoder_match(expression: &syn::Expr, manifest_aliases: &BTreeSet<String>) -> bool {
+        fn exact_zero(expression: &syn::Expr) -> bool {
+            matches!(
+                expression,
+                syn::Expr::Lit(syn::ExprLit {
+                    lit: syn::Lit::Int(integer),
+                    ..
+                }) if integer.suffix().is_empty() && integer.base10_digits() == "0"
+            )
+        }
+
+        fn exact_error_rejection(expression: &syn::Expr, error_binding: &str) -> bool {
+            let syn::Expr::Block(block) = expression else {
+                return false;
+            };
+            let [
+                syn::Stmt::Local(message),
+                syn::Stmt::Local(code),
+                syn::Stmt::Expr(syn::Expr::Return(return_), _),
+            ] = block.block.stmts.as_slice()
+            else {
+                return false;
+            };
+
+            let Some(message_binding) = exact_local_binding(&message.pat) else {
+                return false;
+            };
+            let Some(message_init) = message.init.as_ref() else {
+                return false;
+            };
+            let syn::Expr::MethodCall(to_string) = message_init.expr.as_ref() else {
+                return false;
+            };
+            if message_init.diverge.is_some()
+                || to_string.method != "to_string"
+                || !to_string.args.is_empty()
+                || !exact_binding_path(
+                    &to_string.receiver,
+                    &BTreeSet::from([error_binding.to_owned()]),
+                )
+            {
+                return false;
+            }
+
+            let Some(code_binding) = exact_local_binding(&code.pat) else {
+                return false;
+            };
+            let Some(code_init) = code.init.as_ref() else {
+                return false;
+            };
+            let syn::Expr::If(code_choice) = code_init.expr.as_ref() else {
+                return false;
+            };
+            let syn::Expr::MethodCall(contains) = code_choice.cond.as_ref() else {
+                return false;
+            };
+            if code_init.diverge.is_some()
+                || contains.method != "contains"
+                || contains.args.len() != 1
+                || !exact_binding_path(
+                    &contains.receiver,
+                    &BTreeSet::from([message_binding.clone()]),
+                )
+                || !contains
+                    .args
+                    .first()
+                    .is_some_and(|needle| exact_path(needle, &["INVALID_PRATT_REPRESENTATION"]))
+                || !matches!(
+                    code_choice.then_branch.stmts.as_slice(),
+                    [syn::Stmt::Expr(code, None)]
+                        if exact_path(code, &["DiagnosticCode", "InvalidPrattTable"])
+                )
+                || !matches!(
+                    code_choice.else_branch.as_ref(),
+                    Some((_, alternative))
+                        if matches!(
+                            alternative.as_ref(),
+                            syn::Expr::Block(block)
+                                if matches!(
+                                    block.block.stmts.as_slice(),
+                                    [syn::Stmt::Expr(code, None)]
+                                        if exact_path(
+                                            code,
+                                            &["DiagnosticCode", "InvalidGrammarInstance"]
+                                        )
+                                )
+                        )
+                )
+            {
+                return false;
+            }
+
+            let Some(syn::Expr::Call(rejected)) = return_.expr.as_deref() else {
+                return false;
+            };
+            if !exact_path(&rejected.func, &["StageResult", "rejected"]) || rejected.args.len() != 1
+            {
+                return false;
+            }
+            let Some(syn::Expr::Call(diagnostic)) = rejected.args.first() else {
+                return false;
+            };
+            if diagnostic.args.len() != 4 {
+                return false;
+            }
+            let diagnostic_code = &diagnostic.args[0];
+            let start = &diagnostic.args[1];
+            let end = &diagnostic.args[2];
+            let message = &diagnostic.args[3];
+            exact_path(&diagnostic.func, &["Diagnostic", "new"])
+                && exact_binding_path(diagnostic_code, &BTreeSet::from([code_binding]))
+                && exact_zero(start)
+                && exact_zero(end)
+                && exact_binding_path(message, &BTreeSet::from([message_binding]))
+        }
+
+        let syn::Expr::Match(match_) = expression else {
+            return false;
+        };
+        if !exact_typed_manifest_decoder(&match_.expr, manifest_aliases) || match_.arms.len() != 2 {
+            return false;
+        }
+        let [accepted, rejected] = match_.arms.as_slice() else {
+            return false;
+        };
+        let accepted_binding = match &accepted.pat {
+            syn::Pat::TupleStruct(pattern)
+                if pattern.path.is_ident("Ok") && pattern.elems.len() == 1 =>
+            {
+                exact_local_binding(&pattern.elems[0])
+            }
+            _ => None,
+        };
+        let rejected_binding = match &rejected.pat {
+            syn::Pat::TupleStruct(pattern)
+                if pattern.path.is_ident("Err") && pattern.elems.len() == 1 =>
+            {
+                pattern.elems.first().and_then(exact_local_binding)
+            }
+            _ => None,
+        };
+        accepted.guard.is_none()
+            && accepted_binding.as_ref().is_some_and(|binding| {
+                exact_binding_path(&accepted.body, &BTreeSet::from([binding.clone()]))
+            })
+            && rejected.guard.is_none()
+            && rejected_binding
+                .as_deref()
+                .is_some_and(|binding| exact_error_rejection(&rejected.body, binding))
+    }
+
+    fn exact_decoder_local(
+        local: &syn::Local,
+        manifest_aliases: &BTreeSet<String>,
+    ) -> Option<String> {
+        let binding = exact_local_binding(&local.pat)?;
+        local
+            .init
+            .as_ref()
+            .filter(|init| exact_decoder_match(&init.expr, manifest_aliases))
+            .map(|_| binding)
+    }
+
+    fn exact_validated_tail(
+        statement: &syn::Stmt,
+        carrier: &str,
+        decoder_binding: &str,
+        source_binding: &str,
+    ) -> bool {
+        let syn::Stmt::Expr(syn::Expr::Call(accepted), None) = statement else {
+            return false;
+        };
+        if !exact_path(&accepted.func, &["StageResult", "accepted"]) || accepted.args.len() != 1 {
+            return false;
+        }
+        let Some(syn::Expr::Struct(validated)) = accepted.args.first() else {
+            return false;
+        };
+        if validated.qself.is_some()
+            || validated
+                .path
+                .segments
+                .last()
+                .is_none_or(|segment| segment.ident != carrier)
+            || validated.rest.is_some()
+            || validated.fields.len() != 2
+        {
+            return false;
+        }
+        let mut instance = false;
+        let mut source = false;
+        for field in &validated.fields {
+            match &field.member {
+                syn::Member::Named(member) if member == "instance" => {
+                    instance = exact_binding_path(
+                        &field.expr,
+                        &BTreeSet::from([decoder_binding.to_owned()]),
+                    );
+                }
+                syn::Member::Named(member) if member == "source_bytes" => {
+                    source = exact_binding_path(
+                        &field.expr,
+                        &BTreeSet::from([source_binding.to_owned()]),
+                    );
+                }
+                _ => return false,
+            }
+        }
+        instance && source
+    }
+
+    fn exact_source_alias(local: &syn::Local) -> Option<String> {
+        let binding = exact_local_binding(&local.pat)?;
+        local
+            .init
+            .as_ref()
+            .filter(|init| direct_named_field(&init.expr, "input", "source_bytes"))
+            .map(|_| binding)
+    }
+
+    fn exact_instance_validation_guard(statement: &syn::Stmt, decoder_binding: &str) -> bool {
+        let syn::Stmt::Expr(syn::Expr::If(if_), _) = statement else {
+            return false;
+        };
+        if if_.else_branch.is_some() {
+            return false;
+        }
+        let syn::Expr::Let(condition) = if_.cond.as_ref() else {
+            return false;
+        };
+        let diagnostic_binding = match condition.pat.as_ref() {
+            syn::Pat::TupleStruct(pattern)
+                if pattern.path.is_ident("Err") && pattern.elems.len() == 1 =>
+            {
+                pattern.elems.first().and_then(exact_local_binding)
+            }
+            _ => None,
+        };
+        let Some(diagnostic_binding) = diagnostic_binding else {
+            return false;
+        };
+        let syn::Expr::Call(validation) = condition.expr.as_ref() else {
+            return false;
+        };
+        if !exact_path(&validation.func, &["validate_instance"])
+            || validation.args.len() != 2
+            || !validation.args.first().is_some_and(|instance| {
+                matches!(
+                    instance,
+                    syn::Expr::Reference(reference)
+                        if exact_binding_path(
+                            &reference.expr,
+                            &BTreeSet::from([decoder_binding.to_owned()])
+                        )
+                )
+            })
+            || !validation
+                .args
+                .iter()
+                .nth(1)
+                .is_some_and(|options| exact_path(options, &["options"]))
+        {
+            return false;
+        }
+        let [syn::Stmt::Expr(syn::Expr::Return(return_), _)] = if_.then_branch.stmts.as_slice()
+        else {
+            return false;
+        };
+        let Some(syn::Expr::Call(rejected)) = return_.expr.as_deref() else {
+            return false;
+        };
+        exact_path(&rejected.func, &["StageResult", "rejected"])
+            && rejected.args.len() == 1
+            && rejected.args.first().is_some_and(|diagnostic| {
+                exact_binding_path(diagnostic, &BTreeSet::from([diagnostic_binding.to_owned()]))
+            })
+    }
+
+    fn exact_top_level_raw_spine(decoder: &syn::ItemFn, carrier: &str) -> bool {
+        let statements = &decoder.block.stmts;
+        let aliases = statements
+            .iter()
+            .enumerate()
+            .filter_map(|(index, statement)| match statement {
+                syn::Stmt::Local(local) => {
+                    let binding = exact_local_binding(&local.pat)?;
+                    local
+                        .init
+                        .as_ref()
+                        .is_some_and(|init| {
+                            direct_named_field(&init.expr, "input", "manifest_bytes")
+                        })
+                        .then_some((index, binding))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let [(alias_index, alias)] = aliases.as_slice() else {
+            return false;
+        };
+        let source_aliases = statements
+            .iter()
+            .enumerate()
+            .filter_map(|(index, statement)| match statement {
+                syn::Stmt::Local(local) => {
+                    exact_source_alias(local).map(|binding| (index, binding))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let [(source_index, source_binding)] = source_aliases.as_slice() else {
+            return false;
+        };
+        let manifest_aliases = BTreeSet::from([alias.clone()]);
+        let guards = statements
+            .iter()
+            .enumerate()
+            .filter_map(|(index, statement)| match statement {
+                syn::Stmt::Expr(syn::Expr::If(if_), _)
+                    if if_.else_branch.is_none()
+                        && exact_manifest_budget_condition(&if_.cond, &manifest_aliases)
+                        && block_returns_resource_limit_rejection(&if_.then_branch) =>
+                {
+                    Some(index)
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let decoders = statements
+            .iter()
+            .enumerate()
+            .filter_map(|(index, statement)| match statement {
+                syn::Stmt::Local(local) => {
+                    exact_decoder_local(local, &manifest_aliases).map(|binding| (index, binding))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let [guard_index] = guards.as_slice() else {
+            return false;
+        };
+        let [(decoder_index, decoder_binding)] = decoders.as_slice() else {
+            return false;
+        };
+        let Some(tail_index) = statements.len().checked_sub(1) else {
+            return false;
+        };
+        alias_index == &0
+            && source_index == &1
+            && guard_index == &2
+            && decoder_index == &3
+            && alias != source_binding
+            && decoder_binding != alias
+            && decoder_binding != source_binding
+            && statements[decoder_index + 1..tail_index]
+                .iter()
+                .all(|statement| exact_instance_validation_guard(statement, decoder_binding))
+            && exact_validated_tail(
+                &statements[tail_index],
+                carrier,
+                decoder_binding,
+                source_binding,
+            )
+    }
+
     let instance = syn::parse_file(instance_source).expect("instance seam source is valid Rust");
     let compiler = syn::parse_file(compiler_source).expect("compiler seam source is valid Rust");
     let input_aliases = nominal_aliases(&instance, "GrammarInstanceInput");
@@ -6213,10 +7598,15 @@ fn validated_instance_spine_findings(
         current_function: Option<String>,
         input_impl: bool,
         tainted: BTreeSet<String>,
+        manifest_aliases: BTreeSet<String>,
+        source_aliases: BTreeSet<String>,
         manifest_field_reads: usize,
         source_field_reads: usize,
         manifest_reads_outside_decoder: usize,
         source_reads_outside_decoder: usize,
+        direct_manifest_aliases: usize,
+        direct_source_aliases: usize,
+        exact_manifest_budget_guards: usize,
         exact_typed_decoders: usize,
         typed_callable_ingresses: usize,
         decoder_typed_ingresses: usize,
@@ -6259,6 +7649,13 @@ fn validated_instance_spine_findings(
                 }
             }
         }
+
+        fn byte_aliases(&self) -> BTreeSet<String> {
+            // The manifest alias is the sole raw value admitted into a call,
+            // and only the exact typed decoder below may consume it. Source
+            // bytes cross the seam through the validated carrier instead.
+            self.manifest_aliases.clone()
+        }
     }
     impl<'ast> syn::visit::Visit<'ast> for RawManifestFlow<'_> {
         fn visit_item_fn(&mut self, function: &'ast syn::ItemFn) {
@@ -6270,9 +7667,13 @@ fn validated_instance_spine_findings(
             self.decoder_typed_ingresses +=
                 usize::from(function.sig.ident == "decode_instance") * typed_ingresses;
             let previous_tainted = std::mem::take(&mut self.tainted);
+            let previous_manifest_aliases = std::mem::take(&mut self.manifest_aliases);
+            let previous_source_aliases = std::mem::take(&mut self.source_aliases);
             self.seed_typed_arguments(function.sig.inputs.iter());
             self.visit_block(&function.block);
             self.tainted = previous_tainted;
+            self.manifest_aliases = previous_manifest_aliases;
+            self.source_aliases = previous_source_aliases;
             self.current_function = previous_function;
         }
 
@@ -6292,15 +7693,21 @@ fn validated_instance_spine_findings(
             self.decoder_typed_ingresses +=
                 usize::from(function.sig.ident == "decode_instance") * typed_ingresses;
             let previous_tainted = std::mem::take(&mut self.tainted);
+            let previous_manifest_aliases = std::mem::take(&mut self.manifest_aliases);
+            let previous_source_aliases = std::mem::take(&mut self.source_aliases);
             self.seed_typed_arguments(function.sig.inputs.iter());
             self.visit_block(&function.block);
             self.tainted = previous_tainted;
+            self.manifest_aliases = previous_manifest_aliases;
+            self.source_aliases = previous_source_aliases;
             self.current_function = previous_function;
         }
 
         fn visit_expr_closure(&mut self, closure: &'ast syn::ExprClosure) {
             let previous_function = self.current_function.replace("<closure>".to_owned());
             let previous_tainted = self.tainted.clone();
+            let previous_manifest_aliases = self.manifest_aliases.clone();
+            let previous_source_aliases = self.source_aliases.clone();
             self.typed_callable_ingresses += closure
                 .inputs
                 .iter()
@@ -6321,20 +7728,65 @@ fn validated_instance_spine_findings(
             }
             self.visit_expr(&closure.body);
             self.tainted = previous_tainted;
+            self.manifest_aliases = previous_manifest_aliases;
+            self.source_aliases = previous_source_aliases;
             self.current_function = previous_function;
         }
 
         fn visit_local(&mut self, local: &'ast syn::Local) {
+            let direct_binding = exact_local_binding(&local.pat);
+            let mut direct_manifest_alias = false;
+            let mut direct_source_alias = false;
+            let mut direct_whole_carrier = false;
             if let Some(syn::LocalInit { expr, .. }) = &local.init {
-                if direct_tainted_binding(expr, &self.tainted).is_some() {
-                    self.tainted.extend(bound_identifiers(&local.pat));
-                } else {
+                direct_manifest_alias = direct_binding.as_ref().is_some_and(|_| {
+                    self.current_function.as_deref() == Some("decode_instance")
+                        && direct_named_field(expr, "input", "manifest_bytes")
+                });
+                direct_source_alias = direct_binding.as_ref().is_some_and(|_| {
+                    self.current_function.as_deref() == Some("decode_instance")
+                        && direct_named_field(expr, "input", "source_bytes")
+                });
+                direct_whole_carrier = direct_tainted_binding(expr, &self.tainted).is_some();
+                let byte_aliases = self.byte_aliases();
+                let exact_decoder_initializer = exact_decoder_match(expr, &byte_aliases);
+                if !direct_manifest_alias && !direct_source_alias && !direct_whole_carrier {
                     self.raw_forwarding_or_escape += usize::from(
                         expression_contains_whole_tainted_binding(expr, &self.tainted),
+                    );
+                    self.raw_forwarding_or_escape += usize::from(
+                        !exact_decoder_initializer
+                            && expression_mentions_binding(expr, &byte_aliases),
                     );
                 }
             }
             syn::visit::visit_local(self, local);
+            if let Some(binding) = direct_binding {
+                self.manifest_aliases.remove(&binding);
+                self.source_aliases.remove(&binding);
+                if direct_manifest_alias {
+                    self.manifest_aliases.insert(binding);
+                    self.direct_manifest_aliases += 1;
+                } else if direct_source_alias {
+                    self.source_aliases.insert(binding);
+                    self.direct_source_aliases += 1;
+                } else if direct_whole_carrier {
+                    self.tainted.insert(binding);
+                }
+            } else if direct_whole_carrier {
+                self.tainted.extend(bound_identifiers(&local.pat));
+            }
+        }
+
+        fn visit_expr_if(&mut self, expression: &'ast syn::ExprIf) {
+            let exact = self.current_function.as_deref() == Some("decode_instance")
+                && expression.else_branch.is_none()
+                && exact_manifest_budget_condition(&expression.cond, &self.manifest_aliases)
+                && block_returns_resource_limit_rejection(&expression.then_branch);
+            if exact {
+                self.exact_manifest_budget_guards += 1;
+            }
+            syn::visit::visit_expr_if(self, expression);
         }
 
         fn visit_expr_field(&mut self, field: &'ast syn::ExprField) {
@@ -6360,7 +7812,7 @@ fn validated_instance_spine_findings(
         }
 
         fn visit_expr_call(&mut self, call: &'ast syn::ExprCall) {
-            let exact = matches!(
+            let typed_decoder = matches!(
                 call.func.as_ref(),
                 syn::Expr::Path(path)
                     if path.qself.is_none()
@@ -6368,10 +7820,14 @@ fn validated_instance_spine_findings(
                         && path.path.segments[0].ident == "serde_json"
                         && path.path.segments[1].ident == "from_slice"
                         && decoder_returns_nominal(&path.path, "GrammarInstance")
-            ) && call.args.len() == 1
-                && call.args.first().is_some_and(|argument| {
-                    direct_named_field(argument, "input", "manifest_bytes")
-                });
+            );
+            let exact = self.current_function.as_deref() == Some("decode_instance")
+                && typed_decoder
+                && call.args.len() == 1
+                && call
+                    .args
+                    .first()
+                    .is_some_and(|argument| exact_binding_path(argument, &self.manifest_aliases));
             self.exact_typed_decoders += usize::from(exact);
             self.raw_forwarding_or_escape += call
                 .args
@@ -6380,6 +7836,13 @@ fn validated_instance_spine_findings(
                     expression_contains_whole_tainted_binding(argument, &self.tainted)
                 })
                 .count();
+            let byte_aliases = self.byte_aliases();
+            let raw_alias_arguments = call
+                .args
+                .iter()
+                .filter(|argument| expression_mentions_binding(argument, &byte_aliases))
+                .count();
+            self.raw_forwarding_or_escape += raw_alias_arguments.saturating_sub(usize::from(exact));
             syn::visit::visit_expr_call(self, call);
         }
 
@@ -6394,6 +7857,18 @@ fn validated_instance_spine_findings(
                     expression_contains_whole_tainted_binding(argument, &self.tainted)
                 })
                 .count();
+            let byte_aliases = self.byte_aliases();
+            let safe_length_read = call.method == "len"
+                && call.args.is_empty()
+                && exact_binding_path(&call.receiver, &byte_aliases);
+            self.raw_forwarding_or_escape += usize::from(
+                !safe_length_read && expression_mentions_binding(&call.receiver, &byte_aliases),
+            );
+            self.raw_forwarding_or_escape += call
+                .args
+                .iter()
+                .filter(|argument| expression_mentions_binding(argument, &byte_aliases))
+                .count();
             syn::visit::visit_expr_method_call(self, call);
         }
 
@@ -6402,7 +7877,49 @@ fn validated_instance_spine_findings(
                 expression_contains_whole_tainted_binding(&assign.left, &self.tainted)
                     || expression_contains_whole_tainted_binding(&assign.right, &self.tainted),
             );
+            let byte_aliases = self.byte_aliases();
+            self.raw_forwarding_or_escape += usize::from(
+                expression_mentions_binding(&assign.left, &byte_aliases)
+                    || expression_mentions_binding(&assign.right, &byte_aliases),
+            );
             syn::visit::visit_expr_assign(self, assign);
+        }
+
+        fn visit_expr_array(&mut self, array: &'ast syn::ExprArray) {
+            let byte_aliases = self.byte_aliases();
+            self.raw_forwarding_or_escape += usize::from(
+                array
+                    .elems
+                    .iter()
+                    .any(|element| expression_mentions_binding(element, &byte_aliases)),
+            );
+            syn::visit::visit_expr_array(self, array);
+        }
+
+        fn visit_expr_tuple(&mut self, tuple: &'ast syn::ExprTuple) {
+            let byte_aliases = self.byte_aliases();
+            self.raw_forwarding_or_escape += usize::from(
+                tuple
+                    .elems
+                    .iter()
+                    .any(|element| expression_mentions_binding(element, &byte_aliases)),
+            );
+            syn::visit::visit_expr_tuple(self, tuple);
+        }
+
+        fn visit_expr_struct(&mut self, struct_: &'ast syn::ExprStruct) {
+            let byte_aliases = self.byte_aliases();
+            self.raw_forwarding_or_escape += usize::from(
+                struct_
+                    .fields
+                    .iter()
+                    .any(|field| expression_mentions_binding(&field.expr, &byte_aliases))
+                    || struct_
+                        .rest
+                        .as_deref()
+                        .is_some_and(|rest| expression_mentions_binding(rest, &byte_aliases)),
+            );
+            syn::visit::visit_expr_struct(self, struct_);
         }
 
         fn visit_expr_binary(&mut self, binary: &'ast syn::ExprBinary) {
@@ -6424,6 +7941,12 @@ fn validated_instance_spine_findings(
                     && (expression_contains_whole_tainted_binding(&binary.left, &self.tainted)
                         || expression_contains_whole_tainted_binding(&binary.right, &self.tainted)),
             );
+            let byte_aliases = self.byte_aliases();
+            self.raw_forwarding_or_escape += usize::from(
+                !exact_manifest_budget_binary(binary, &byte_aliases)
+                    && (expression_mentions_binding(&binary.left, &byte_aliases)
+                        || expression_mentions_binding(&binary.right, &byte_aliases)),
+            );
             syn::visit::visit_expr_binary(self, binary);
         }
 
@@ -6432,6 +7955,13 @@ fn validated_instance_spine_findings(
                 usize::from(expression.expr.as_deref().is_some_and(|value| {
                     expression_contains_whole_tainted_binding(value, &self.tainted)
                 }));
+            let byte_aliases = self.byte_aliases();
+            self.raw_forwarding_or_escape += usize::from(
+                expression
+                    .expr
+                    .as_deref()
+                    .is_some_and(|value| expression_mentions_binding(value, &byte_aliases)),
+            );
             syn::visit::visit_expr_return(self, expression);
         }
 
@@ -6447,6 +7977,11 @@ fn validated_instance_spine_findings(
                     .iter()
                     .any(|binding| words.contains(binding.as_str())),
             );
+            self.raw_forwarding_or_escape += usize::from(
+                self.manifest_aliases
+                    .iter()
+                    .any(|binding| words.contains(binding.as_str())),
+            );
             syn::visit::visit_macro(self, macro_);
         }
     }
@@ -6455,10 +7990,15 @@ fn validated_instance_spine_findings(
         current_function: None,
         input_impl: false,
         tainted: BTreeSet::new(),
+        manifest_aliases: BTreeSet::new(),
+        source_aliases: BTreeSet::new(),
         manifest_field_reads: 0,
         source_field_reads: 0,
         manifest_reads_outside_decoder: 0,
         source_reads_outside_decoder: 0,
+        direct_manifest_aliases: 0,
+        direct_source_aliases: 0,
+        exact_manifest_budget_guards: 0,
         exact_typed_decoders: 0,
         typed_callable_ingresses: 0,
         decoder_typed_ingresses: 0,
@@ -6466,25 +8006,33 @@ fn validated_instance_spine_findings(
         raw_forwarding_or_escape: 0,
     };
     raw_flow.visit_file(&instance);
+    let exact_top_level_raw_spine = exact_top_level_raw_spine(decoder, &carrier);
     if decoder.sig.ident != "decode_instance"
         || raw_flow.manifest_field_reads != 1
         || raw_flow.source_field_reads != 1
         || raw_flow.manifest_reads_outside_decoder != 0
         || raw_flow.source_reads_outside_decoder != 0
+        || raw_flow.direct_manifest_aliases != 1
+        || raw_flow.exact_manifest_budget_guards != 1
         || raw_flow.exact_typed_decoders != 1
+        || !exact_top_level_raw_spine
         || raw_flow.typed_callable_ingresses != 1
         || raw_flow.decoder_typed_ingresses != 1
         || raw_flow.raw_manifest_macros != 0
         || raw_flow.raw_forwarding_or_escape != 0
     {
         findings.insert(format!(
-            "raw instance flow is decoder={} manifest_reads={} source_reads={} escaped_manifest_reads={} escaped_source_reads={} exact_typed_decoders={} typed_callable_ingresses={} decoder_typed_ingresses={} macro_reads={} forwarding_or_escape={}, expected decode_instance/1/1/0/0/1/1/1/0/0",
+            "raw instance flow is decoder={} manifest_reads={} source_reads={} escaped_manifest_reads={} escaped_source_reads={} direct_manifest_aliases={} direct_source_aliases={} exact_manifest_budget_guards={} exact_typed_decoders={} exact_top_level_raw_spine={} typed_callable_ingresses={} decoder_typed_ingresses={} macro_reads={} forwarding_or_escape={}, expected decode_instance/1/1/0/0/1/(0-or-1)/1/1/true/1/1/0/0",
             decoder.sig.ident,
             raw_flow.manifest_field_reads,
             raw_flow.source_field_reads,
             raw_flow.manifest_reads_outside_decoder,
             raw_flow.source_reads_outside_decoder,
+            raw_flow.direct_manifest_aliases,
+            raw_flow.direct_source_aliases,
+            raw_flow.exact_manifest_budget_guards,
             raw_flow.exact_typed_decoders,
+            exact_top_level_raw_spine,
             raw_flow.typed_callable_ingresses,
             raw_flow.decoder_typed_ingresses,
             raw_flow.raw_manifest_macros,
@@ -7301,18 +8849,41 @@ fn clean_break_and_manifest_ownership_scanners_are_self_falsifying() {
     );
     assert!(
         module_graph_union_findings(
-            "contracts/w2-generated-control/tests/generated_control.rs",
-            r#"include!(concat!(env!("OUT_DIR"), "/generated.rs"));"#
+            "crates/core/src/compiler/example.rs",
+            "fn emit() -> TokenStream { (quote! { pub mod generated {} }) }"
         )
         .is_empty(),
-        "the one generated-control include edge is explicitly sealed"
+        "expression-position token emission is data, not an enclosing source-module edge"
     );
     for source in [
         r#"#[path = "../../../outside.rs"] mod hidden;"#,
         r#"#[cfg_attr(feature = "hidden", path = "../../../outside.rs")] mod hidden;"#,
         r#"include!("../../../outside.rs");"#,
+        r#"include!(concat!(env!("OUT_DIR"), "/generated.rs"));"#,
         r#"macro_rules! hidden { () => { mod outside; } }"#,
         r#"macro_rules! hidden { () => { include!("outside.rs"); } }"#,
+        r#"
+macro_rules! edge { ($($tokens:tt)*) => { $($tokens)* } }
+edge!(#[path = "../../../outside.rs"] mod hidden;);
+"#,
+        r#"
+macro_rules! edge { ($ignored:ident, $($tokens:tt)*) => { $($tokens)* } }
+edge!(ignored, #[path = "../../../outside.rs"] mod hidden;);
+"#,
+        r#"
+macro_rules! edge { ($meta:meta, $($tail:tt)*) => { #[$meta] $($tail)* } }
+edge!(path = "../../../outside.rs", mod hidden;);
+"#,
+        r#"
+macro_rules! edge { (# $junk:ident, $($tail:tt)*) => { $($tail)* } }
+edge!(# ignored, mod hidden;);
+"#,
+        r#"
+fn local() {
+    macro_rules! edge { ($($tail:tt)*) => { $($tail)* } }
+    edge! { #[path = "/tmp/nonexistent-bbnf-outside.rs"] mod hidden; }
+}
+"#,
     ] {
         assert!(
             !module_graph_union_findings("crates/core/src/compiler/example.rs", source).is_empty(),
@@ -7330,6 +8901,13 @@ fn compile_module_notes() {}
         )
         .is_empty(),
         "prose and noncolliding identifiers are not legacy declarations"
+    );
+    assert!(
+        legacy_surface_findings(
+            r#"fn prose() { assert!(matches!("ModuleInput", "compile_module")); }"#
+        )
+        .is_empty(),
+        "ordinary macro arguments containing historical prose are not generated declarations"
     );
     for source in [
         "struct ModuleInput;",
@@ -7461,6 +9039,19 @@ macro_rules! copied {
 }
 "#,
         r#"
+macro_rules! copied {
+    () => {
+        struct CopiedInstance {
+            schema: String,
+            logical_path: String,
+            entry: String,
+            trivia_regex: Option<String>,
+            pratt_tables: Vec<Table>,
+        }
+    };
+}
+"#,
+        r#"
 fn copied(bytes: &[u8]) {
     let key = concat!("logical", "_path");
     let _ = bytes.windows(key.len()).position(|window| window == key.as_bytes());
@@ -7488,6 +9079,34 @@ struct CopiedInstance {
         )
         .is_empty(),
         "format-neutral serialization is not manifest decoding"
+    );
+    assert!(
+        manifest_ownership_findings(
+            "crates/core/src/backend/rust/emitter/shapes/hregex.rs",
+            r#"
+fn emit() {
+    let grammar_suffix = "control";
+    let _ = quote! {
+        let decoded = core::str::from_utf8(input).unwrap_or("");
+        generated_for_grammar(grammar_suffix, decoded)
+    };
+}
+"#
+        )
+        .is_empty(),
+        "punctuation-separated generated-code vocabulary cannot synthesize manifest authority"
+    );
+    assert!(
+        manifest_ownership_findings(
+            "crates/core/src/compiler/analysis.rs",
+            r#"
+fn explain(table: &PrattTable) -> String {
+    format!("atom is {}", table.atom_rule())
+}
+"#
+        )
+        .is_empty(),
+        "ordinary format arguments may consume typed Pratt accessors without owning the manifest"
     );
     assert!(
         !manifest_ownership_findings(
@@ -7665,7 +9284,7 @@ impl DiagnosticCode {
     const InvalidPrattTable: Self = Self;
 }
 impl Program {
-    pub(crate) fn resolve(
+    pub(super) fn resolve(
         module: &SourceModule,
         instance: &GrammarInstance,
     ) -> StageResult<Self> {
@@ -7699,6 +9318,235 @@ impl Program {
     let exact_sibling_use =
         syn::parse_file(exact_sibling_source).expect("exact sibling-use control parses");
     assert!(syntax_has_real_instance_resolution(&exact_sibling_use));
+    let crate_visible_resolver =
+        exact_sibling_source.replacen("pub(super) fn resolve", "pub(crate) fn resolve", 1);
+    assert_ne!(
+        crate_visible_resolver, exact_sibling_source,
+        "resolver visibility falsifier must mutate the exact control"
+    );
+    assert!(
+        !syntax_has_real_instance_resolution(
+            &syn::parse_file(&crate_visible_resolver)
+                .expect("crate-visible resolver falsifier parses")
+        ),
+        "Program::resolve authority remains minimally visible to its compiler parent"
+    );
+    for mutated in [
+        exact_sibling_source.replacen(
+            "pub(super) fn resolve(",
+            "#[inline]\n    pub(super) fn resolve(",
+            1,
+        ),
+        exact_sibling_source.replacen("pub(super) fn resolve(", "pub(super) async fn resolve(", 1),
+        exact_sibling_source.replacen("pub(super) fn resolve(", "pub(super) unsafe fn resolve(", 1),
+        exact_sibling_source.replacen(
+            "pub(super) fn resolve(",
+            "pub(super) extern \"C\" fn resolve(",
+            1,
+        ),
+        exact_sibling_source.replacen(
+            "pub(super) fn resolve(",
+            "pub(super) fn resolve<'unused>(",
+            1,
+        ),
+        exact_sibling_source.replacen(
+            "        module: &SourceModule,",
+            "        mut module: &SourceModule,",
+            1,
+        ),
+        exact_sibling_source.replacen(
+            "        instance: &GrammarInstance,",
+            "        ref instance: &GrammarInstance,",
+            1,
+        ),
+        exact_sibling_source.replacen(
+            "        module: &SourceModule,",
+            "        #[allow(unused)] module: &SourceModule,",
+            1,
+        ),
+        exact_sibling_source.replacen(
+            "        instance: &GrammarInstance,",
+            "        instance: &'borrow GrammarInstance,",
+            1,
+        ),
+        exact_sibling_source.replacen(
+            "        module: &SourceModule,",
+            "        module @ _: &SourceModule,",
+            1,
+        ),
+    ] {
+        assert_ne!(
+            mutated, exact_sibling_source,
+            "resolver-signature falsifier must mutate the exact control"
+        );
+        assert!(
+            !syntax_has_real_instance_resolution(
+                &syn::parse_file(&mutated).expect("resolver-signature falsifier parses")
+            ),
+            "Program::resolve remains one ordinary nongeneric unadorned function"
+        );
+    }
+    let exact_name_map_source = exact_sibling_source.replacen(
+        r#"        let entry_name = instance.entry();
+        let entry = module.rules
+            .iter()
+            .find(|rule| rule.name == entry_name)
+            .map(|rule| rule.id)
+            .ok_or(DiagnosticCode::UnknownEntry)?;
+"#,
+        r#"        let entry_name = instance.entry();
+        let mut names = BTreeMap::new();
+        for rule in &module.rules {
+            names.insert(rule.name.clone(), rule.id);
+        }
+        let Some(&entry) = names.get(entry_name) else {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::UnknownEntry,
+                0,
+                0,
+                "missing entry",
+            ));
+        };
+"#,
+        1,
+    );
+    assert_ne!(
+        exact_name_map_source, exact_sibling_source,
+        "name-map control must replace the equality resolver"
+    );
+    assert!(
+        syntax_has_real_instance_resolution(
+            &syn::parse_file(&exact_name_map_source).expect("exact name-map control parses")
+        ),
+        "the exact populated name-map lookup is a live entry-resolution authority"
+    );
+    let helper_backed_pratt_diagnostic = [
+        exact_name_map_source.replacen(
+            "let _ = DiagnosticCode::InvalidPrattTable;",
+            "let _ = invalid_pratt_table(\"invalid table\");",
+            1,
+        ),
+        r#"
+fn invalid_pratt_table(message: impl Into<String>) -> Diagnostic {
+    Diagnostic::new(DiagnosticCode::InvalidPrattTable, 0, 0, message)
+}
+"#
+        .to_owned(),
+    ]
+    .concat();
+    assert!(
+        syntax_has_real_instance_resolution(
+            &syn::parse_file(&helper_backed_pratt_diagnostic)
+                .expect("helper-backed Pratt diagnostic control parses")
+        ),
+        "an exact typed helper may own the InvalidPrattTable constructor used by the live loop"
+    );
+    for (law, mutated) in [
+        (
+            "wrong helper diagnostic code",
+            helper_backed_pratt_diagnostic.replacen(
+                "Diagnostic::new(DiagnosticCode::InvalidPrattTable, 0, 0, message)",
+                "Diagnostic::new(DiagnosticCode::UnknownEntry, 0, 0, message)",
+                1,
+            ),
+        ),
+        (
+            "early-returning helper",
+            helper_backed_pratt_diagnostic.replacen(
+                "    Diagnostic::new(DiagnosticCode::InvalidPrattTable, 0, 0, message)",
+                "    if true { return Diagnostic::new(DiagnosticCode::UnknownEntry, 0, 0, message); }\n    Diagnostic::new(DiagnosticCode::InvalidPrattTable, 0, 0, message)",
+                1,
+            ),
+        ),
+        (
+            "inexact helper input",
+            helper_backed_pratt_diagnostic.replacen(
+                "fn invalid_pratt_table(message: impl Into<String>) -> Diagnostic",
+                "fn invalid_pratt_table(message: String) -> Diagnostic",
+                1,
+            ),
+        ),
+        (
+            "foreign helper call",
+            helper_backed_pratt_diagnostic.replacen(
+                "invalid_pratt_table(\"invalid table\")",
+                "foreign_invalid_pratt_table(\"invalid table\")",
+                1,
+            ),
+        ),
+    ] {
+        assert_ne!(
+            mutated, helper_backed_pratt_diagnostic,
+            "Pratt-diagnostic helper falsifier `{law}` must mutate its control"
+        );
+        assert!(
+            !syntax_has_real_instance_resolution(
+                &syn::parse_file(&mutated).expect("Pratt-diagnostic helper mutation parses")
+            ),
+            "Pratt-diagnostic helper falsifier `{law}` must be rejected"
+        );
+    }
+    for (law, mutated) in [
+        (
+            "derived lookup key",
+            exact_name_map_source.replacen(
+                "names.get(entry_name)",
+                "names.get(&entry_name.len())",
+                1,
+            ),
+        ),
+        (
+            "derived map key",
+            exact_name_map_source.replacen(
+                "names.insert(rule.name.clone(), rule.id)",
+                "names.insert(rule.name.len(), rule.id)",
+                1,
+            ),
+        ),
+        (
+            "foreign unpopulated lookup map",
+            exact_name_map_source.replacen(
+                "names.get(entry_name)",
+                "foreign_names.get(entry_name)",
+                1,
+            ),
+        ),
+        (
+            "dead nested map population",
+            exact_name_map_source.replacen(
+                "names.insert(rule.name.clone(), rule.id);",
+                "if false { names.insert(rule.name.clone(), rule.id); }",
+                1,
+            ),
+        ),
+        (
+            "map cleared before entry lookup",
+            exact_name_map_source.replacen(
+                "let Some(&entry) = names.get(entry_name) else {",
+                "names.clear();\n        let Some(&entry) = names.get(entry_name) else {",
+                1,
+            ),
+        ),
+        (
+            "unrelated equality beside an unpopulated map",
+            exact_name_map_source.replacen(
+                "names.insert(rule.name.clone(), rule.id);",
+                "let _decoy = rule.name == entry_name;",
+                1,
+            ),
+        ),
+    ] {
+        assert_ne!(
+            mutated, exact_name_map_source,
+            "name-map self-falsifier `{law}` must mutate its control"
+        );
+        assert!(
+            !syntax_has_real_instance_resolution(
+                &syn::parse_file(&mutated).expect("name-map mutation parses")
+            ),
+            "name-map self-falsifier `{law}` must be rejected"
+        );
+    }
     for source in [
         r#"
 type GrammarInstance = ();
@@ -7767,7 +9615,7 @@ impl Program {
 use super::instance::GrammarInstance;
 struct Program;
 impl Program {
-    pub(crate) fn resolve(
+    pub(super) fn resolve(
         module: &SourceModule,
         instance: &GrammarInstance,
     ) -> StageResult<Self> {
@@ -7791,7 +9639,7 @@ impl Program {
             "dummy/aliased/non-live GrammarInstance use must not satisfy ownership"
         );
     }
-    for source in [
+    for (index, source) in [
         exact_sibling_source.replacen(
             "rule.name == entry_name",
             "rule.name.len() == entry_name.len()",
@@ -7920,12 +9768,15 @@ impl Program {
                 "unsafe { rules_handle.as_mut().clear(); }\n        StageResult::accepted(Self { nodes, rules, entry })",
                 1,
             ),
-    ] {
+    ]
+    .into_iter()
+    .enumerate()
+    {
         assert!(
             !syntax_has_real_instance_resolution(
                 &syn::parse_file(&source).expect("returned-resolution mutation parses")
             ),
-            "non-equal, partial-row, or overwritten instance resolution must be rejected"
+            "non-equal, partial-row, or overwritten instance resolution mutation {index} must be rejected"
         );
     }
     assert_eq!(
@@ -8213,7 +10064,7 @@ impl Expose for Holder {
     let sole_program_constructor = r#"
 struct Program;
 impl Program {
-    pub(crate) fn resolve(
+    pub(super) fn resolve(
         module: &SourceModule,
         instance: &GrammarInstance,
     ) -> StageResult<Self> {
@@ -8429,14 +10280,31 @@ pub(super) fn decode_instance<'a>(
     input: GrammarInstanceInput<'a>,
     options: CompileOptions,
 ) -> StageResult<Validated<'a>> {
-    let _ = options;
-    let instance = match serde_json::from_slice::<GrammarInstance>(input.manifest_bytes) {
+    let manifest_bytes = input.manifest_bytes;
+    let source_bytes = input.source_bytes;
+    if manifest_bytes.len() > options.instance_bytes {
+        return StageResult::rejected(Diagnostic::new(
+            DiagnosticCode::ResourceLimit,
+            0,
+            0,
+            "instance too large",
+        ));
+    }
+    let instance = match serde_json::from_slice::<GrammarInstance>(manifest_bytes) {
         Ok(instance) => instance,
-        Err(_) => return StageResult::rejected(),
+        Err(error) => {
+            let message = error.to_string();
+            let code = if message.contains(INVALID_PRATT_REPRESENTATION) {
+                DiagnosticCode::InvalidPrattTable
+            } else {
+                DiagnosticCode::InvalidGrammarInstance
+            };
+            return StageResult::rejected(Diagnostic::new(code, 0, 0, message));
+        }
     };
     StageResult::accepted(Validated {
         instance,
-        source_bytes: input.source_bytes,
+        source_bytes,
     })
 }
 "#;
@@ -8498,8 +10366,15 @@ fn compile_validated_instance(
         1,
     );
     let raw_byte_carrier = exact_instance_seam.replacen(
-        "source_bytes: &'a [u8],",
-        "source_bytes: &'a [u8],\n    manifest_bytes: &'a [u8],",
+        r#"pub(super) struct Validated<'a> {
+    instance: GrammarInstance,
+    source_bytes: &'a [u8],
+}"#,
+        r#"pub(super) struct Validated<'a> {
+    instance: GrammarInstance,
+    source_bytes: &'a [u8],
+    manifest_bytes: &'a [u8],
+}"#,
         1,
     );
     let raw_string_carrier = exact_instance_seam.replacen(
@@ -8508,13 +10383,13 @@ fn compile_validated_instance(
         1,
     );
     let forwarded_manifest = exact_instance_seam.replacen(
-        "serde_json::from_slice::<GrammarInstance>(input.manifest_bytes)",
-        "foreign::decode(input.manifest_bytes)",
+        "serde_json::from_slice::<GrammarInstance>(manifest_bytes)",
+        "foreign::decode(manifest_bytes)",
         1,
     );
     let duplicated_manifest_read = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    inspect(input.manifest_bytes);",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    inspect(input.manifest_bytes);",
         1,
     );
     let borrowed_raw_helper = [
@@ -8543,51 +10418,401 @@ fn compile_validated_instance(
     ]
     .concat();
     let macro_raw_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    inspect!(input);",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    inspect!(input);",
         1,
     );
     let wrapped_raw_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    let _hidden = Holder { raw: input };",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let _hidden = Holder { raw: input };",
         1,
     );
     let assigned_raw_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    let leak;\n    leak = &input;\n    foreign(leak);",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let leak;\n    leak = &input;\n    foreign(leak);",
         1,
     );
     let destructuring_assignment_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    let (mut leak, mut spare) = (None, None);\n    (leak, spare) = (Some(&input), None);\n    foreign(leak);",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let (mut leak, mut spare) = (None, None);\n    (leak, spare) = (Some(&input), None);\n    foreign(leak);",
         1,
     );
     let ref_pattern_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    let ref leak = input;\n    foreign(leak);",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let ref leak = input;\n    foreign(leak);",
         1,
     );
     let assigned_store_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    holder.raw = Some(&input);",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    holder.raw = Some(&input);",
         1,
     );
     let method_argument_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    foreign.store(&input);",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    foreign.store(&input);",
         1,
     );
     let compound_assignment_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    input += replacement;",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    input += replacement;",
         1,
     );
     let returned_raw_escape = exact_instance_seam.replacen(
-        "let _ = options;",
-        "let _ = options;\n    let escape = || -> &GrammarInstanceInput<'_> { return &input; };\n    foreign(escape());",
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let escape = || -> &GrammarInstanceInput<'_> { return &input; };\n    foreign(escape());",
         1,
     );
-    for (instance, compiler) in [
+    let array_manifest_escape = exact_instance_seam.replacen(
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let _leaked = [manifest_bytes];",
+        1,
+    );
+    let tuple_manifest_escape = exact_instance_seam.replacen(
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let _leaked = (manifest_bytes,);",
+        1,
+    );
+    let struct_manifest_escape = exact_instance_seam.replacen(
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let _leaked = Holder { raw: manifest_bytes };",
+        1,
+    );
+    let binary_manifest_escape = exact_instance_seam.replacen(
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    let _leaked = manifest_bytes == b\"\";",
+        1,
+    );
+    for (law, mutated) in [
+        ("array manifest escape", array_manifest_escape.as_str()),
+        ("tuple manifest escape", tuple_manifest_escape.as_str()),
+        ("struct manifest escape", struct_manifest_escape.as_str()),
+        ("binary manifest escape", binary_manifest_escape.as_str()),
+    ] {
+        assert_ne!(
+            mutated, exact_instance_seam,
+            "aggregate raw-manifest self-falsifier `{law}` must mutate the accepted seam"
+        );
+        assert!(
+            !validated_instance_spine_findings(mutated, exact_compiler_spine).is_empty(),
+            "aggregate raw-manifest self-falsifier `{law}` must be rejected"
+        );
+    }
+
+    let exact_decoder_statement = r#"    let instance = match serde_json::from_slice::<GrammarInstance>(manifest_bytes) {
+        Ok(instance) => instance,
+        Err(error) => {
+            let message = error.to_string();
+            let code = if message.contains(INVALID_PRATT_REPRESENTATION) {
+                DiagnosticCode::InvalidPrattTable
+            } else {
+                DiagnosticCode::InvalidGrammarInstance
+            };
+            return StageResult::rejected(Diagnostic::new(code, 0, 0, message));
+        }
+    };
+"#;
+    let early_return_before_guard = exact_instance_seam.replacen(
+        "    if manifest_bytes.len() > options.instance_bytes {",
+        "    return StageResult::rejected();\n    if manifest_bytes.len() > options.instance_bytes {",
+        1,
+    );
+    let forged_source_carrier =
+        exact_instance_seam.replacen("        source_bytes,\n", "        source_bytes: &[],\n", 1);
+    let indexed_before_cap = exact_instance_seam.replacen(
+        "    if manifest_bytes.len() > options.instance_bytes {",
+        "    manifest_bytes[0];\n    if manifest_bytes.len() > options.instance_bytes {",
+        1,
+    );
+    let accepted_decoder_error = exact_instance_seam.replacen(
+        "            return StageResult::rejected(Diagnostic::new(code, 0, 0, message));",
+        "            return StageResult::accepted(Validated { instance: forged_instance, source_bytes: &[] });",
+        1,
+    );
+    let bottom_decoder_error = exact_instance_seam.replacen(
+        "            return StageResult::rejected(Diagnostic::new(code, 0, 0, message));",
+        "            return StageResult::rejected(loop {});",
+        1,
+    );
+    let exit_decoder_error = exact_instance_seam.replacen(
+        "            return StageResult::rejected(Diagnostic::new(code, 0, 0, message));",
+        "            return StageResult::rejected(std::process::exit(0));",
+        1,
+    );
+    let decoder_shadows_source = exact_instance_seam
+        .replacen(
+            "    let instance = match serde_json::from_slice::<GrammarInstance>(manifest_bytes) {",
+            "    let source_bytes = match serde_json::from_slice::<GrammarInstance>(manifest_bytes) {",
+            1,
+        )
+        .replacen(
+            "        instance,\n        source_bytes,",
+            "        instance: source_bytes,\n        source_bytes,",
+            1,
+        );
+    for (law, mutated) in [
+        (
+            "unchanged decoder after an early top-level return",
+            early_return_before_guard.as_str(),
+        ),
+        (
+            "validated carrier with forged source bytes",
+            forged_source_carrier.as_str(),
+        ),
+        (
+            "bare indexed raw-manifest use before the cap",
+            indexed_before_cap.as_str(),
+        ),
+        (
+            "decoder error arm accepts a forged carrier",
+            accepted_decoder_error.as_str(),
+        ),
+        (
+            "decoder error rejection argument diverges forever",
+            bottom_decoder_error.as_str(),
+        ),
+        (
+            "decoder error rejection argument exits the process",
+            exit_decoder_error.as_str(),
+        ),
+        (
+            "decoder binding shadows the source authority",
+            decoder_shadows_source.as_str(),
+        ),
+    ] {
+        assert_ne!(
+            mutated, exact_instance_seam,
+            "live raw-spine self-falsifier `{law}` must mutate the accepted seam"
+        );
+        assert!(
+            !validated_instance_spine_findings(mutated, exact_compiler_spine).is_empty(),
+            "live raw-spine self-falsifier `{law}` must be rejected"
+        );
+    }
+    let decoder_in_guard = exact_instance_seam
+        .replacen(
+            r#"    if manifest_bytes.len() > options.instance_bytes {
+        return StageResult::rejected(Diagnostic::new(
+            DiagnosticCode::ResourceLimit,
+            0,
+            0,
+            "instance too large",
+        ));
+    }
+"#,
+            r#"    if manifest_bytes.len() > options.instance_bytes {
+        return StageResult::rejected(
+            serde_json::from_slice::<GrammarInstance>(manifest_bytes)
+        );
+    }
+"#,
+            1,
+        )
+        .replacen(
+            exact_decoder_statement,
+            "    let instance = forged_instance;\n",
+            1,
+        );
+    let decoder_in_false_branch = exact_instance_seam.replacen(
+        exact_decoder_statement,
+        r#"    if false {
+        let _hidden = serde_json::from_slice::<GrammarInstance>(manifest_bytes);
+    }
+    let instance = forged_instance;
+"#,
+        1,
+    );
+    let decoder_in_closure = exact_instance_seam.replacen(
+        exact_decoder_statement,
+        r#"    let _hidden =
+        || serde_json::from_slice::<GrammarInstance>(manifest_bytes);
+    let instance = forged_instance;
+"#,
+        1,
+    );
+    let decoder_in_async = exact_instance_seam.replacen(
+        exact_decoder_statement,
+        r#"    let _hidden = async {
+        serde_json::from_slice::<GrammarInstance>(manifest_bytes)
+    };
+    let instance = forged_instance;
+"#,
+        1,
+    );
+    let decoder_after_return = exact_instance_seam.replacen(
+        exact_decoder_statement,
+        r#"    return StageResult::rejected();
+    let _hidden = serde_json::from_slice::<GrammarInstance>(manifest_bytes);
+    let instance = forged_instance;
+"#,
+        1,
+    );
+    let decoder_in_nested_branch = exact_instance_seam.replacen(
+        exact_decoder_statement,
+        r#"    if condition {
+        let _hidden = serde_json::from_slice::<GrammarInstance>(manifest_bytes);
+    }
+    let instance = forged_instance;
+"#,
+        1,
+    );
+    let forged_parallel_instance = exact_instance_seam
+        .replacen(
+            "let instance = match serde_json::from_slice::<GrammarInstance>(manifest_bytes) {",
+            "let decoded = match serde_json::from_slice::<GrammarInstance>(manifest_bytes) {",
+            1,
+        )
+        .replacen(
+            "        instance,\n        source_bytes,",
+            "        instance: forged_instance,\n        source_bytes,",
+            1,
+        );
+    for (law, mutated) in [
+        ("decoder inside the cap guard", decoder_in_guard.as_str()),
+        (
+            "decoder inside an if-false branch",
+            decoder_in_false_branch.as_str(),
+        ),
+        ("decoder inside a closure", decoder_in_closure.as_str()),
+        ("decoder inside an async block", decoder_in_async.as_str()),
+        (
+            "decoder after an unconditional return",
+            decoder_after_return.as_str(),
+        ),
+        (
+            "decoder inside a nested live branch",
+            decoder_in_nested_branch.as_str(),
+        ),
+        (
+            "parallel forged instance bypasses decoded binding",
+            forged_parallel_instance.as_str(),
+        ),
+    ] {
+        assert_ne!(
+            mutated, exact_instance_seam,
+            "control-flow raw-manifest self-falsifier `{law}` must mutate the accepted seam"
+        );
+        assert!(
+            !validated_instance_spine_findings(mutated, exact_compiler_spine).is_empty(),
+            "control-flow raw-manifest self-falsifier `{law}` must be rejected"
+        );
+    }
+
+    let foreign_rejection_cap = exact_instance_seam.replacen(
+        "return StageResult::rejected(Diagnostic::new(",
+        "return ForeignStage::rejected(Diagnostic::new(",
+        1,
+    );
+    let foreign_diagnostic_cap = exact_instance_seam.replacen(
+        "return StageResult::rejected(Diagnostic::new(",
+        "return StageResult::rejected(ForeignDiagnostic::new(",
+        1,
+    );
+    let coincidental_resource_limit_cap = exact_instance_seam.replacen(
+        r#"            DiagnosticCode::ResourceLimit,
+            0,
+            0,"#,
+        r#"            DiagnosticCode::Syntax,
+            ResourceLimit,
+            0,"#,
+        1,
+    );
+    for (law, mutated) in [
+        (
+            "foreign terminal-name rejected call",
+            foreign_rejection_cap.as_str(),
+        ),
+        (
+            "foreign diagnostic constructor",
+            foreign_diagnostic_cap.as_str(),
+        ),
+        (
+            "coincidental ResourceLimit identifier",
+            coincidental_resource_limit_cap.as_str(),
+        ),
+    ] {
+        assert_ne!(
+            mutated, exact_instance_seam,
+            "resource-cap self-falsifier `{law}` must mutate the accepted seam"
+        );
+        assert!(
+            !validated_instance_spine_findings(mutated, exact_compiler_spine).is_empty(),
+            "resource-cap self-falsifier `{law}` must be rejected"
+        );
+    }
+    let unrelated_same_name_alias = exact_instance_seam
+        .replacen(
+            "let manifest_bytes = input.manifest_bytes;",
+            "let manifest_bytes = unrelated_bytes;\n    let direct_manifest_bytes = input.manifest_bytes;",
+            1,
+        )
+        .replacen(
+            "if manifest_bytes.len() > options.instance_bytes {",
+            "if direct_manifest_bytes.len() > options.instance_bytes {",
+            1,
+        );
+    let foreign_manifest_alias = exact_instance_seam.replacen(
+        "let manifest_bytes = input.manifest_bytes;",
+        "let manifest_bytes = foreign::identity(input.manifest_bytes);",
+        1,
+    );
+    let missing_manifest_cap = exact_instance_seam.replacen(
+        r#"    if manifest_bytes.len() > options.instance_bytes {
+        return StageResult::rejected(Diagnostic::new(
+            DiagnosticCode::ResourceLimit,
+            0,
+            0,
+            "instance too large",
+        ));
+    }
+"#,
+        "",
+        1,
+    );
+    let canonicalized_manifest_cap = exact_instance_seam.replacen(
+        "if manifest_bytes.len() > options.instance_bytes {",
+        "if canonicalize(manifest_bytes).len() > options.instance_bytes {",
+        1,
+    );
+    let second_raw_manifest_field_read = exact_instance_seam.replacen(
+        "let source_bytes = input.source_bytes;",
+        "let source_bytes = input.source_bytes;\n    inspect(input.manifest_bytes);",
+        1,
+    );
+    let decoder_from_source_bytes = exact_instance_seam.replacen(
+        "serde_json::from_slice::<GrammarInstance>(manifest_bytes)",
+        "serde_json::from_slice::<GrammarInstance>(source_bytes)",
+        1,
+    );
+    for (law, mutated) in [
+        (
+            "unrelated same-name alias",
+            unrelated_same_name_alias.as_str(),
+        ),
+        ("indirect foreign alias", foreign_manifest_alias.as_str()),
+        ("missing raw-length cap", missing_manifest_cap.as_str()),
+        (
+            "canonicalized rather than raw-length cap",
+            canonicalized_manifest_cap.as_str(),
+        ),
+        (
+            "second raw manifest field read",
+            second_raw_manifest_field_read.as_str(),
+        ),
+        (
+            "typed decoder fed source rather than manifest bytes",
+            decoder_from_source_bytes.as_str(),
+        ),
+    ] {
+        assert_ne!(
+            mutated, exact_instance_seam,
+            "raw-manifest self-falsifier `{law}` must mutate the accepted seam"
+        );
+        assert!(
+            !validated_instance_spine_findings(mutated, exact_compiler_spine).is_empty(),
+            "raw-manifest self-falsifier `{law}` must be rejected"
+        );
+    }
+    for (index, (instance, compiler)) in [
         (second_raw_ingress.as_str(), exact_compiler_spine),
         (exact_instance_seam, public_validated.as_str()),
         (exact_instance_seam, inspected_input.as_str()),
@@ -8614,10 +10839,13 @@ fn compile_validated_instance(
         (method_argument_escape.as_str(), exact_compiler_spine),
         (compound_assignment_escape.as_str(), exact_compiler_spine),
         (returned_raw_escape.as_str(), exact_compiler_spine),
-    ] {
+    ]
+    .into_iter()
+    .enumerate()
+    {
         assert!(
             !validated_instance_spine_findings(instance, compiler).is_empty(),
-            "duplicated/raw/discarded validated-instance spine must be rejected"
+            "duplicated/raw/discarded validated-instance spine mutation {index} must be rejected"
         );
     }
 
@@ -8643,6 +10871,7 @@ impl Program {
     fn resolve(module: &SourceModule, instance: &GrammarInstance) {
         let requested = instance.entry();
         let _entry = module.rules.iter().find(|production| production.name == requested);
+        let _diagnostic = format!("root rule lookup uses {:?}", module.rules.get(1));
     }
 }
 fn unrelated(productions: Vec<ProductionData>) {
@@ -8683,6 +10912,51 @@ struct Program;
 impl Program { fn resolve(rows: Rows) { active(rows); } }
 #[cfg(any(test, feature = "legacy"))]
 fn active(rows: Rows) { let _ = rows.first(); }
+"#,
+        r#"
+struct Program;
+impl Program {
+    fn resolve(rows: Rows) {
+        let _ = format!("{}", rows.first());
+    }
+}
+"#,
+        r#"
+struct Program;
+impl Program {
+    fn resolve(rows: Rows) {
+        macro_rules! hidden { () => { rows.first() }; }
+        let _ = hidden!();
+    }
+}
+"#,
+        r#"
+struct Program;
+impl Program {
+    fn resolve(rows: Rows) {
+        macro_rules! hidden { () => { rows.get(0usize) }; }
+        let _ = hidden!();
+    }
+}
+"#,
+        r#"
+struct Program;
+impl Program {
+    fn resolve(rows: Rows) {
+        macro_rules! hidden { () => { Iterator::next(&mut rows) }; }
+        let _ = hidden!();
+    }
+}
+"#,
+        r#"
+struct Program;
+impl Program {
+    fn resolve(rows: Rows) {
+        let choose = hidden_fallback;
+        choose(rows);
+    }
+}
+fn hidden_fallback(rows: Rows) { let _ = rows.first(); }
 "#,
     ] {
         assert!(
@@ -8769,22 +11043,36 @@ fn bbnf_gen_is_the_exact_three_path_byte_transport_without_identity_dispatch() {
         let output_path = temporary
             .path()
             .join(opaque_name(b"output-non-utf8-", b'o'));
-        fs::write(&manifest_path, SIMPLE_MANIFEST).expect("write non-UTF-8 manifest path");
-        fs::write(&source_path, SIMPLE_SOURCE).expect("write non-UTF-8 source path");
-        let output = Command::new(env!("CARGO_BIN_EXE_bbnf-gen"))
-            .args([&manifest_path, &source_path, &output_path])
-            .output()
-            .expect("execute non-UTF-8 CLI path case");
-        assert!(
-            output.status.success(),
-            "non-UTF-8 CLI path case failed:\n{}",
-            String::from_utf8_lossy(&output.stderr)
-        );
-        assert_eq!(
-            fs::read(&output_path).expect("read non-UTF-8 generated output path"),
-            expected,
-            "CLI preserves all three platform-native path arguments"
-        );
+        let manifest_write = fs::write(&manifest_path, SIMPLE_MANIFEST);
+        let source_write = fs::write(&source_path, SIMPLE_SOURCE);
+        if manifest_write.is_ok() && source_write.is_ok() {
+            let output = Command::new(env!("CARGO_BIN_EXE_bbnf-gen"))
+                .args([&manifest_path, &source_path, &output_path])
+                .output()
+                .expect("execute non-UTF-8 CLI path case");
+            assert!(
+                output.status.success(),
+                "non-UTF-8 CLI path case failed:\n{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            assert_eq!(
+                fs::read(&output_path).expect("read non-UTF-8 generated output path"),
+                expected,
+                "CLI preserves all three platform-native path arguments"
+            );
+        } else {
+            assert!(
+                manifest_path.to_str().is_none()
+                    && source_path.to_str().is_none()
+                    && output_path.to_str().is_none(),
+                "the path capability probe may skip only genuinely non-UTF-8 names"
+            );
+            fs::write(
+                temporary.path().join("utf8-path-capability-control"),
+                SIMPLE_SOURCE,
+            )
+            .expect("the temporary filesystem remains writable for its UTF-8 control");
+        }
     }
 
     let extra_path = temporary.path().join("extra");
@@ -8863,6 +11151,11 @@ fn bbnf_gen_is_the_exact_three_path_byte_transport_without_identity_dispatch() {
     );
 
     let exact_cli_control = r#"
+use std::env;
+use std::fs;
+use std::path::PathBuf;
+use bbnf::{CompileOptions, GrammarInstanceInput, StageResult, compile_instance};
+
 fn main() {
     let mut arguments = env::args_os().skip(1);
     let manifest_path = PathBuf::from(arguments.next().expect("manifest path"));
@@ -8884,6 +11177,98 @@ fn main() {
         cli_byte_transport_findings(exact_cli_control).is_empty(),
         "exact raw-byte transport control"
     );
+    let exact_assert_cli_control = exact_cli_control.replacen(
+        r#"    if arguments.next().is_some() {
+        return;
+    }
+"#,
+        "    assert!(arguments.next().is_none(), \"exactly three paths\");\n",
+        1,
+    );
+    assert_ne!(
+        exact_assert_cli_control, exact_cli_control,
+        "assert-macro argument control must replace the explicit branch"
+    );
+    assert!(
+        cli_byte_transport_findings(&exact_assert_cli_control).is_empty(),
+        "an exact assert-macro arity check remains visible to the AST transport census"
+    );
+    let iterator_authority_spoof = [
+        r#"
+mod Iterator {
+    pub fn next<T>(_: &mut T) -> Option<std::ffi::OsString> { None }
+}
+"#,
+        &exact_assert_cli_control.replacen(
+            "arguments.next().is_none()",
+            "Iterator::next(&mut arguments).is_none()",
+            1,
+        ),
+    ]
+    .concat();
+    for (law, mutated) in [
+        (
+            "count-preserving nominal Iterator authority spoof",
+            iterator_authority_spoof,
+        ),
+        (
+            "foreign macro next",
+            exact_assert_cli_control.replacen(
+                "assert!(arguments.next().is_none()",
+                "assert!(alternate_arguments.next().is_none()",
+                1,
+            ),
+        ),
+        (
+            "duplicate macro next",
+            exact_assert_cli_control.replacen(
+                "assert!(arguments.next().is_none()",
+                "assert!(arguments.next().is_none() && arguments.next().is_none()",
+                1,
+            ),
+        ),
+        (
+            "statement-shaped macro body next",
+            exact_assert_cli_control.replacen(
+                "    let manifest_bytes =",
+                "    macro_rules! hidden_next { () => {{ let _ = arguments.next(); }}; }\n    hidden_next!();\n    let manifest_bytes =",
+                1,
+            ),
+        ),
+        (
+            "qualified macro body next",
+            exact_assert_cli_control.replacen(
+                "    let manifest_bytes =",
+                "    macro_rules! hidden_next { () => {{ let _ = Iterator::next(&mut arguments); }}; }\n    hidden_next!();\n    let manifest_bytes =",
+                1,
+            ),
+        ),
+        (
+            "foreign qualified macro next replacement",
+            exact_assert_cli_control.replacen(
+                "arguments.next().is_none()",
+                "foreign::next(&mut arguments).is_none()",
+                1,
+            ),
+        ),
+        (
+            "field-qualified macro receiver replacement",
+            exact_assert_cli_control.replacen(
+                "arguments.next().is_none()",
+                "foreign.arguments.next().is_none()",
+                1,
+            ),
+        ),
+    ] {
+        assert_ne!(
+            mutated, exact_assert_cli_control,
+            "macro next falsifier `{law}` must mutate its control"
+        );
+        assert!(
+            !cli_byte_transport_findings(&mutated).is_empty(),
+            "macro next falsifier `{law}` must be rejected"
+        );
+    }
     let inspect_manifest = exact_cli_control.replacen(
         "let source_bytes =",
         "inspect(&manifest_bytes);\n    let source_bytes =",
@@ -8956,6 +11341,11 @@ fn main() {
         "if alternate_arguments.next().is_some() {",
         1,
     );
+    let foreign_qualified_next = exact_cli_control.replacen(
+        "if arguments.next().is_some() {",
+        "if foreign::next(&mut arguments).is_some() {",
+        1,
+    );
     let rewritten_next_path = exact_cli_control.replacen(
         r#"PathBuf::from(arguments.next().expect("manifest path"))"#,
         r#"PathBuf::from(rewrite(arguments.next().expect("manifest path")))"#,
@@ -8980,6 +11370,17 @@ fn main() {
         })"#,
         1,
     );
+    let env_authority_spoof = exact_cli_control.replacen(
+        "use std::env;",
+        "mod env { pub fn args_os() -> Args { todo!() } }",
+        1,
+    );
+    let fs_authority_spoof = exact_cli_control.replacen(
+        "use std::fs;",
+        "mod fs { pub fn read<T>(_: T) -> Bytes { todo!() } pub fn write<T, U>(_: T, _: U) {} }",
+        1,
+    );
+    let compiler_authority_spoof = ["mod bbnf {}\n", exact_cli_control].concat();
     for source in [
         inspect_manifest,
         inspect_source,
@@ -8996,10 +11397,14 @@ fn main() {
         aliased_utf8_args,
         detached_arguments,
         foreign_next,
+        foreign_qualified_next,
         rewritten_next_path,
         mapped_next_path,
         foreign_path_constructor,
         conditional_next_path,
+        env_authority_spoof,
+        fs_authority_spoof,
+        compiler_authority_spoof,
     ] {
         assert!(
             !cli_byte_transport_findings(&source).is_empty(),
@@ -9016,13 +11421,16 @@ fn every_core_and_external_control_caller_uses_only_the_clean_break_instance_api
         .canonicalize()
         .expect("canonical repository root");
     let mut files = BTreeSet::new();
-    for root in [
-        manifest_dir.to_path_buf(),
-        repository_root.join("contracts/w2-generated-control"),
-        repository_root.join("contracts/w2-recursive-control"),
-        repository_root.join("contracts/w2-record-control"),
+    rust_caller_files(manifest_dir, &mut files);
+    for retired in [
+        "contracts/w2-generated-control",
+        "contracts/w2-recursive-control",
+        "contracts/w2-record-control",
     ] {
-        rust_caller_files(&root, &mut files);
+        assert!(
+            !repository_root.join(retired).exists(),
+            "{retired} must be deleted after its unique laws cross into W3"
+        );
     }
     assert!(!files.is_empty(), "caller traversal found Rust sources");
     let core_sources = files

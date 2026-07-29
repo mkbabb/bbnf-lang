@@ -488,7 +488,7 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
         quote! {}
     };
 
-    quote! {
+    (quote! {
         /// AW-V.W3.2 — per-grammar shape-dispatch support.
         ///
         /// Inlined by every `parse_<shape>_<grammar>_<rule>` emitted
@@ -898,5 +898,5 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
                 Ok(())
             }
         }
-    }
+    })
 }

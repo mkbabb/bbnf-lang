@@ -7,13 +7,13 @@ use parse_that::{
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::{
-    ModuleInput, SourceModule, SourceNodeData, SourceNodeKindData, SourceRecordSlotData,
-    SourceRuleData, SourceSpan,
+    Revision, SourceModule, SourceNodeData, SourceNodeKindData, SourcePresentationData,
+    SourcePresentationHintData, SourceRecordSlotData, SourceRuleData, SourceSpan,
 };
-use super::syntax::{NodeIx, RuleIx, TransformIx};
+use super::syntax::{NodeIx, ProjectionKeep, RuleIx, TransformIx};
 
 const IDENTIFIER_PATTERN: &str = "[A-Za-z_][A-Za-z0-9_-]*";
-const WHITESPACE_PATTERN: &str = "[ \t\r\n]*";
+const WHITESPACE_PATTERN: &str = "[ \t\r\n]+";
 
 macro_rules! matched {
     ($step:expr) => {
@@ -43,7 +43,47 @@ enum DraftNodeKind {
         transform: usize,
         name: String,
     },
+    Projection {
+        left: usize,
+        right: usize,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: usize,
+        exclude: usize,
+    },
+    Trim {
+        child: usize,
+    },
     Record(Vec<DraftRecordSlot>),
+}
+
+#[derive(Clone, Copy, Debug)]
+enum PostfixOperator {
+    Trim,
+    Optional,
+    ZeroOrMore,
+    OneOrMore,
+}
+
+#[derive(Clone, Copy, Debug)]
+enum BinaryOperator {
+    ProjectLeft,
+    ProjectRight,
+    Difference,
+}
+
+#[derive(Clone, Debug)]
+enum DraftPresentationHint {
+    Group,
+    Block,
+    Indent,
+    Dedent,
+    Softline,
+    Hardline,
+    Blankline,
+    Compact,
+    Sep(Vec<u8>),
 }
 
 #[derive(Clone, Debug)]
@@ -78,6 +118,12 @@ enum SyntaxEvent {
         start: usize,
         end: usize,
     },
+    Presentation {
+        target: String,
+        hints: Vec<DraftPresentationHint>,
+        start: usize,
+        end: usize,
+    },
 }
 
 #[derive(Default)]
@@ -86,6 +132,7 @@ struct SyntaxSink {
     nodes: usize,
     rules: usize,
     transforms: usize,
+    presentation_hints: usize,
 }
 
 impl EventSink for SyntaxSink {
@@ -109,6 +156,9 @@ impl EventSink for SyntaxSink {
                     }
                 }
                 SyntaxEvent::Rule { .. } => self.rules -= 1,
+                SyntaxEvent::Presentation { hints, .. } => {
+                    self.presentation_hints -= hints.len();
+                }
             }
         }
     }
@@ -122,6 +172,9 @@ impl EventSink for SyntaxSink {
                 }
             }
             SyntaxEvent::Rule { .. } => self.rules += 1,
+            SyntaxEvent::Presentation { ref hints, .. } => {
+                self.presentation_hints += hints.len();
+            }
         }
         self.events.push(event);
     }
@@ -175,16 +228,162 @@ struct Parser<'bytes, 'plans> {
 
 impl<'bytes, 'plans> Parser<'bytes, 'plans> {
     fn module<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
-        matched!(self.whitespace(run));
-        matched!(repeat(run, 1, None, |run| self.rule(run)));
-        matched!(self.whitespace(run));
+        matched!(self.trivia(run));
+        matched!(repeat(run, 1, None, |run| {
+            choice(run, |run| self.presentation(run), |run| self.rule(run))
+        }));
+        matched!(self.trivia(run));
         matched!(eof(run));
         Step::Matched(())
     }
 
+    fn presentation<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
+        sequence(run, |run| {
+            matched!(self.trivia(run));
+            let start = run.cursor().offset();
+            matched!(literal(run, b"@pretty"));
+            matched!(self.trivia1(run));
+            let target_span = matched!(regex(run, &self.lexical.identifier));
+            let target = String::from_utf8(target_span.as_bytes().to_vec())
+                .expect("the identifier DFA accepts ASCII only");
+            matched!(self.trivia1(run));
+
+            let initial = matched!(self.presentation_hint(run));
+            if run.sink().presentation_hints >= self.options.presentation_hints {
+                return Step::Fault(Fault::ResourceLimit {
+                    at: run.cursor(),
+                    kind: ResourceKind::Events,
+                    limit: self.options.presentation_hints,
+                });
+            }
+            let mut hints = vec![initial];
+            matched!(repeat(run, 0, None, |run| {
+                sequence(run, |run| {
+                    matched!(self.trivia1(run));
+                    let hint = matched!(self.presentation_hint(run));
+                    if run.sink().presentation_hints + hints.len()
+                        >= self.options.presentation_hints
+                    {
+                        return Step::Fault(Fault::ResourceLimit {
+                            at: run.cursor(),
+                            kind: ResourceKind::Events,
+                            limit: self.options.presentation_hints,
+                        });
+                    }
+                    hints.push(hint);
+                    Step::Matched(())
+                })
+            }));
+            matched!(self.trivia(run));
+            matched!(literal(run, b";"));
+            run.emit(SyntaxEvent::Presentation {
+                target,
+                hints,
+                start,
+                end: run.cursor().offset(),
+            });
+            Step::Matched(())
+        })
+    }
+
+    fn presentation_hint<'i>(
+        &self,
+        run: &mut Run<'i, SyntaxSink>,
+    ) -> Step<'i, DraftPresentationHint> {
+        choice(
+            run,
+            |run| literal(run, b"group").map_matched(|_| DraftPresentationHint::Group),
+            |run| {
+                choice(
+                    run,
+                    |run| literal(run, b"block").map_matched(|_| DraftPresentationHint::Block),
+                    |run| {
+                        choice(
+                            run,
+                            |run| {
+                                literal(run, b"indent")
+                                    .map_matched(|_| DraftPresentationHint::Indent)
+                            },
+                            |run| {
+                                choice(
+                                    run,
+                                    |run| {
+                                        literal(run, b"dedent")
+                                            .map_matched(|_| DraftPresentationHint::Dedent)
+                                    },
+                                    |run| {
+                                        choice(
+                                            run,
+                                            |run| {
+                                                literal(run, b"softline").map_matched(|_| {
+                                                    DraftPresentationHint::Softline
+                                                })
+                                            },
+                                            |run| {
+                                                choice(
+                                                    run,
+                                                    |run| {
+                                                        literal(run, b"hardline").map_matched(
+                                                            |_| DraftPresentationHint::Hardline,
+                                                        )
+                                                    },
+                                                    |run| {
+                                                        choice(
+                                                            run,
+                                                            |run| {
+                                                                literal(run, b"blankline")
+                                                                    .map_matched(|_| {
+                                                                        DraftPresentationHint::Blankline
+                                                                    })
+                                                            },
+                                                            |run| {
+                                                                choice(
+                                                                    run,
+                                                                    |run| {
+                                                                        literal(run, b"compact")
+                                                                            .map_matched(|_| {
+                                                                                DraftPresentationHint::Compact
+                                                                            })
+                                                                    },
+                                                                    |run| {
+                                                                        self.presentation_sep(run)
+                                                                    },
+                                                                )
+                                                            },
+                                                        )
+                                                    },
+                                                )
+                                            },
+                                        )
+                                    },
+                                )
+                            },
+                        )
+                    },
+                )
+            },
+        )
+    }
+
+    fn presentation_sep<'i>(
+        &self,
+        run: &mut Run<'i, SyntaxSink>,
+    ) -> Step<'i, DraftPresentationHint> {
+        sequence(run, |run| {
+            matched!(literal(run, b"sep"));
+            matched!(self.trivia(run));
+            matched!(literal(run, b"("));
+            matched!(self.trivia(run));
+            let separator = matched!(self.string_value(run));
+            matched!(self.trivia(run));
+            matched!(literal(run, b")"));
+            Step::Matched(DraftPresentationHint::Sep(separator))
+        })
+    }
+
     fn rule<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
         sequence(run, |run| {
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             let name_span = matched!(regex(run, &self.lexical.identifier));
             if run.sink().rules >= self.options.rules {
                 return Step::Fault(Fault::ResourceLimit {
@@ -195,11 +394,11 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
             }
             let name = String::from_utf8(name_span.as_bytes().to_vec())
                 .expect("the identifier DFA accepts ASCII only");
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             matched!(literal(run, b"="));
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             let root = matched!(self.expression(run, 0));
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             matched!(literal(run, b";"));
             let end = run.cursor().offset();
             let index = run.sink().rules;
@@ -215,14 +414,14 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
     }
 
     fn expression<'i>(&self, run: &mut Run<'i, SyntaxSink>, depth: usize) -> Step<'i, ParsedNode> {
-        let first = matched!(self.sequence_expression(run, depth));
-        let mut children = vec![first.index];
-        let mut end = first.end;
+        let initial = matched!(self.sequence_expression(run, depth));
+        let mut children = vec![initial.index];
+        let mut end = initial.end;
         matched!(repeat(run, 0, None, |run| {
             sequence(run, |run| {
-                matched!(self.whitespace(run));
+                matched!(self.trivia(run));
                 matched!(literal(run, b"|"));
-                matched!(self.whitespace(run));
+                matched!(self.trivia(run));
                 let child = matched!(self.sequence_expression(run, depth));
                 children.push(child.index);
                 end = child.end;
@@ -230,9 +429,9 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
             })
         }));
         if children.len() == 1 {
-            Step::Matched(first)
+            Step::Matched(initial)
         } else {
-            self.emit_node(run, DraftNodeKind::Choice(children), first.start, end)
+            self.emit_node(run, DraftNodeKind::Choice(children), initial.start, end)
         }
     }
 
@@ -241,59 +440,133 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
         run: &mut Run<'i, SyntaxSink>,
         depth: usize,
     ) -> Step<'i, ParsedNode> {
-        let first = matched!(self.postfix(run, depth));
-        let mut children = vec![first.index];
-        let mut end = first.end;
+        let initial = matched!(self.binary_expression(run, depth));
+        let mut children = vec![initial.index];
+        let mut end = initial.end;
         matched!(repeat(run, 0, None, |run| {
             sequence(run, |run| {
-                matched!(self.whitespace(run));
+                matched!(self.trivia(run));
                 matched!(literal(run, b","));
-                matched!(self.whitespace(run));
-                let child = matched!(self.postfix(run, depth));
+                matched!(self.trivia(run));
+                let child = matched!(self.binary_expression(run, depth));
                 children.push(child.index);
                 end = child.end;
                 Step::Matched(())
             })
         }));
         if children.len() == 1 {
-            Step::Matched(first)
+            Step::Matched(initial)
         } else {
-            self.emit_node(run, DraftNodeKind::Sequence(children), first.start, end)
+            self.emit_node(run, DraftNodeKind::Sequence(children), initial.start, end)
         }
+    }
+
+    fn binary_expression<'i>(
+        &self,
+        run: &mut Run<'i, SyntaxSink>,
+        depth: usize,
+    ) -> Step<'i, ParsedNode> {
+        let mut left = matched!(self.postfix(run, depth));
+        matched!(repeat(run, 0, None, |run| {
+            sequence(run, |run| {
+                matched!(self.trivia(run));
+                let operator = matched!(choice(
+                    run,
+                    |run| literal(run, b"<<").map_matched(|_| BinaryOperator::ProjectLeft),
+                    |run| {
+                        choice(
+                            run,
+                            |run| literal(run, b">>").map_matched(|_| BinaryOperator::ProjectRight),
+                            |run| literal(run, b"-").map_matched(|_| BinaryOperator::Difference),
+                        )
+                    },
+                ));
+                matched!(self.trivia(run));
+                let right = matched!(self.postfix(run, depth));
+                let kind = match operator {
+                    BinaryOperator::ProjectLeft => DraftNodeKind::Projection {
+                        left: left.index,
+                        right: right.index,
+                        keep: ProjectionKeep::Left,
+                    },
+                    BinaryOperator::ProjectRight => DraftNodeKind::Projection {
+                        left: left.index,
+                        right: right.index,
+                        keep: ProjectionKeep::Right,
+                    },
+                    BinaryOperator::Difference => DraftNodeKind::Difference {
+                        include: left.index,
+                        exclude: right.index,
+                    },
+                };
+                left = matched!(self.emit_node(run, kind, left.start, right.end));
+                Step::Matched(())
+            })
+        }));
+        Step::Matched(left)
     }
 
     fn postfix<'i>(&self, run: &mut Run<'i, SyntaxSink>, depth: usize) -> Step<'i, ParsedNode> {
         let child = matched!(self.primary(run, depth));
-        let quantifier = matched!(choice(
+        let operator = matched!(choice(
             run,
-            |run| literal(run, b"?").map_matched(|_| (0, Some(1))),
             |run| {
-                choice(
-                    run,
-                    |run| literal(run, b"*").map_matched(|_| (0, None)),
-                    |run| {
-                        choice(
-                            run,
-                            |run| literal(run, b"+").map_matched(|_| (1, None)),
-                            |_| Step::Matched((u32::MAX, Some(u32::MAX))),
-                        )
-                    },
-                )
+                sequence(run, |run| {
+                    matched!(self.trivia(run));
+                    choice(
+                        run,
+                        |run| literal(run, b"?w").map_matched(|_| PostfixOperator::Trim),
+                        |run| {
+                            choice(
+                                run,
+                                |run| literal(run, b"?").map_matched(|_| PostfixOperator::Optional),
+                                |run| {
+                                    choice(
+                                        run,
+                                        |run| {
+                                            literal(run, b"*")
+                                                .map_matched(|_| PostfixOperator::ZeroOrMore)
+                                        },
+                                        |run| {
+                                            literal(run, b"+")
+                                                .map_matched(|_| PostfixOperator::OneOrMore)
+                                        },
+                                    )
+                                },
+                            )
+                        },
+                    )
+                    .map_matched(Some)
+                })
             },
+            |_| Step::Matched(None),
         ));
-        if quantifier.0 == u32::MAX {
-            Step::Matched(child)
-        } else {
-            self.emit_node(
+        match operator {
+            None => Step::Matched(child),
+            Some(PostfixOperator::Trim) => self.emit_node(
                 run,
-                DraftNodeKind::Repeat {
-                    child: child.index,
-                    minimum: quantifier.0,
-                    maximum: quantifier.1,
-                },
+                DraftNodeKind::Trim { child: child.index },
                 child.start,
                 run.cursor().offset(),
-            )
+            ),
+            Some(operator) => {
+                let (minimum, maximum) = match operator {
+                    PostfixOperator::Optional => (0, Some(1)),
+                    PostfixOperator::ZeroOrMore => (0, None),
+                    PostfixOperator::OneOrMore => (1, None),
+                    PostfixOperator::Trim => unreachable!("Trim is materialized separately"),
+                };
+                self.emit_node(
+                    run,
+                    DraftNodeKind::Repeat {
+                        child: child.index,
+                        minimum,
+                        maximum,
+                    },
+                    child.start,
+                    run.cursor().offset(),
+                )
+            }
         }
     }
 
@@ -320,16 +593,28 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                     |run| {
                         choice(
                             run,
-                            |run| self.string_terminal(run),
+                            |run| self.delimited_repeat(run, depth, b"{", b"}", 0, None),
                             |run| {
                                 choice(
                                     run,
-                                    |run| self.regex_terminal(run),
+                                    |run| self.delimited_repeat(run, depth, b"[", b"]", 0, Some(1)),
                                     |run| {
                                         choice(
                                             run,
-                                            |run| self.unicode_epsilon(run),
-                                            |run| self.reference_or_epsilon(run),
+                                            |run| self.string_terminal(run),
+                                            |run| {
+                                                choice(
+                                                    run,
+                                                    |run| self.regex_terminal(run),
+                                                    |run| {
+                                                        choice(
+                                                            run,
+                                                            |run| self.unicode_epsilon(run),
+                                                            |run| self.reference_or_epsilon(run),
+                                                        )
+                                                    },
+                                                )
+                                            },
                                         )
                                     },
                                 )
@@ -358,7 +643,7 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                     limit: self.options.syntax_nesting,
                 });
             }
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
 
             let slots = matched!(choice(
                 run,
@@ -367,14 +652,14 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                     let mut slots = vec![matched!(self.record_slot(run, depth + 1))];
                     matched!(repeat(run, 0, None, |run| {
                         sequence(run, |run| {
-                            matched!(self.whitespace(run));
+                            matched!(self.trivia(run));
                             matched!(literal(run, b","));
-                            matched!(self.whitespace(run));
+                            matched!(self.trivia(run));
                             slots.push(matched!(self.record_slot(run, depth + 1)));
                             Step::Matched(())
                         })
                     }));
-                    matched!(self.whitespace(run));
+                    matched!(self.trivia(run));
                     matched!(literal(run, b"}"));
                     Step::Matched(slots)
                 },
@@ -402,9 +687,9 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                     let name_span = matched!(regex(run, &self.lexical.identifier));
                     let name = String::from_utf8(name_span.as_bytes().to_vec())
                         .expect("the identifier DFA accepts ASCII only");
-                    matched!(self.whitespace(run));
+                    matched!(self.trivia(run));
                     matched!(literal(run, b":"));
-                    matched!(self.whitespace(run));
+                    matched!(self.trivia(run));
                     let child = matched!(self.postfix(run, depth));
                     Step::Matched(DraftRecordSlot::Field {
                         name,
@@ -420,7 +705,7 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                 sequence(run, |run| {
                     let start = run.cursor().offset();
                     matched!(literal(run, b"~"));
-                    matched!(self.whitespace(run));
+                    matched!(self.trivia(run));
                     let child = matched!(self.postfix(run, depth));
                     Step::Matched(DraftRecordSlot::Discard {
                         child: child.index,
@@ -443,7 +728,7 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
             let name_span = matched!(regex(run, &self.lexical.identifier));
             let name = String::from_utf8(name_span.as_bytes().to_vec())
                 .expect("the identifier DFA accepts ASCII only");
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             matched!(literal(run, b"("));
             if depth >= self.options.syntax_nesting {
                 return Step::Fault(Fault::ResourceLimit {
@@ -452,9 +737,9 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                     limit: self.options.syntax_nesting,
                 });
             }
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             let child = matched!(self.expression(run, depth + 1));
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             matched!(literal(run, b")"));
             let transform = run.sink().transforms;
             self.emit_node(
@@ -481,9 +766,9 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                     limit: self.options.syntax_nesting,
                 });
             }
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             let mut inner = matched!(self.expression(run, depth + 1));
-            matched!(self.whitespace(run));
+            matched!(self.trivia(run));
             matched!(literal(run, b")"));
             inner.start = start;
             inner.end = run.cursor().offset();
@@ -491,9 +776,57 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
         })
     }
 
+    fn delimited_repeat<'i>(
+        &self,
+        run: &mut Run<'i, SyntaxSink>,
+        depth: usize,
+        open: &'static [u8],
+        close: &'static [u8],
+        minimum: u32,
+        maximum: Option<u32>,
+    ) -> Step<'i, ParsedNode> {
+        sequence(run, |run| {
+            let start = run.cursor().offset();
+            matched!(literal(run, open));
+            if depth >= self.options.syntax_nesting {
+                return Step::Fault(Fault::ResourceLimit {
+                    at: run.cursor(),
+                    kind: ResourceKind::Nesting,
+                    limit: self.options.syntax_nesting,
+                });
+            }
+            matched!(self.trivia(run));
+            let child = matched!(self.expression(run, depth + 1));
+            matched!(self.trivia(run));
+            matched!(literal(run, close));
+            self.emit_node(
+                run,
+                DraftNodeKind::Repeat {
+                    child: child.index,
+                    minimum,
+                    maximum,
+                },
+                start,
+                run.cursor().offset(),
+            )
+        })
+    }
+
     fn string_terminal<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ParsedNode> {
         sequence(run, |run| {
             let start = run.cursor().offset();
+            let value = matched!(self.string_value(run));
+            self.emit_node(
+                run,
+                DraftNodeKind::Literal(value),
+                start,
+                run.cursor().offset(),
+            )
+        })
+    }
+
+    fn string_value<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, Vec<u8>> {
+        sequence(run, |run| {
             let quote = matched!(choice(
                 run,
                 |run| literal(run, b"\""),
@@ -539,12 +872,7 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                     value.push(byte);
                 }
             }
-            self.emit_node(
-                run,
-                DraftNodeKind::Literal(value),
-                start,
-                run.cursor().offset(),
-            )
+            Step::Matched(value)
         })
     }
 
@@ -602,8 +930,67 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
         self.emit_node(run, kind, span.start(), span.end())
     }
 
-    fn whitespace<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, parse_that::Span<'i>> {
-        regex(run, &self.lexical.whitespace)
+    fn trivia<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
+        matched!(repeat(run, 0, None, |run| { self.trivia_piece(run) }));
+        Step::Matched(())
+    }
+
+    fn trivia1<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
+        matched!(repeat(run, 1, None, |run| self.trivia_piece(run)));
+        Step::Matched(())
+    }
+
+    fn trivia_piece<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
+        choice(
+            run,
+            |run| regex(run, &self.lexical.whitespace).map_matched(|_| ()),
+            |run| {
+                choice(
+                    run,
+                    |run| self.line_comment(run),
+                    |run| self.block_comment(run),
+                )
+            },
+        )
+    }
+
+    fn line_comment<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
+        sequence(run, |run| {
+            matched!(literal(run, b"//"));
+            loop {
+                let offset = run.cursor().offset();
+                let Some(&byte) = self.bytes.get(offset) else {
+                    break;
+                };
+                if byte == b'\n' || byte == b'\r' {
+                    break;
+                }
+                matched!(literal(run, &self.bytes[offset..offset + 1]));
+            }
+            Step::Matched(())
+        })
+    }
+
+    fn block_comment<'i>(&self, run: &mut Run<'i, SyntaxSink>) -> Step<'i, ()> {
+        sequence(run, |run| {
+            matched!(literal(run, b"/*"));
+            loop {
+                let offset = run.cursor().offset();
+                if self
+                    .bytes
+                    .get(offset..offset.saturating_add(2))
+                    .is_some_and(|bytes| bytes == b"*/")
+                {
+                    matched!(literal(run, b"*/"));
+                    return Step::Matched(());
+                }
+                if self.bytes.get(offset).is_none() {
+                    matched!(literal(run, b"*/"));
+                    unreachable!("an EOF cannot match a block-comment delimiter");
+                }
+                matched!(literal(run, &self.bytes[offset..offset + 1]));
+            }
+        })
     }
 
     fn emit_node<'i>(
@@ -646,23 +1033,10 @@ impl<'i, T> StepMap<'i, T> for Step<'i, T> {
 }
 
 pub(crate) fn parse_source(
-    input: ModuleInput<'_>,
+    bytes: &[u8],
+    revision: Revision,
     options: CompileOptions,
-) -> StageResult<SourceModule> {
-    let bytes = input.bytes();
-    if bytes.len() > options.source_bytes || u32::try_from(bytes.len()).is_err() {
-        return StageResult::rejected(Diagnostic::new(
-            DiagnosticCode::SourceTooLarge,
-            0,
-            bytes.len(),
-            format!(
-                "source has {} bytes; configured limit is {}",
-                bytes.len(),
-                options.source_bytes
-            ),
-        ));
-    }
-
+) -> StageResult<(SourceModule, Vec<SourcePresentationData>)> {
     let plans = match LexicalPlans::compile(options) {
         Ok(plans) => plans,
         Err(diagnostic) => return StageResult::rejected(diagnostic),
@@ -680,7 +1054,7 @@ pub(crate) fn parse_source(
         .parse_module(|run| parser.module(run));
     let (_, outcome, sink) = result.into_parts();
     match outcome {
-        Step::Matched(_) => build_module(input, sink, options),
+        Step::Matched(_) => build_module(bytes, revision, sink, options),
         Step::Mismatch(failure) => {
             let at = failure.at().offset();
             StageResult::rejected(Diagnostic::new(
@@ -708,11 +1082,11 @@ pub(crate) fn parse_source(
 }
 
 fn build_module(
-    input: ModuleInput<'_>,
+    bytes: &[u8],
+    revision: Revision,
     sink: SyntaxSink,
     options: CompileOptions,
-) -> StageResult<SourceModule> {
-    let revision = super::source::Revision::for_module(input.logical_path(), input.bytes());
+) -> StageResult<(SourceModule, Vec<SourcePresentationData>)> {
     for event in &sink.events {
         let SyntaxEvent::Node {
             kind: DraftNodeKind::Regex(pattern),
@@ -741,6 +1115,8 @@ fn build_module(
 
     let mut nodes = Vec::with_capacity(sink.nodes);
     let mut rules = Vec::with_capacity(sink.rules);
+    let mut presentation = Vec::new();
+    let mut presentation_spans = Vec::new();
     let expected_transforms = sink.transforms;
     let mut transforms = 0;
     for event in sink.events {
@@ -829,23 +1205,59 @@ fn build_module(
                     span,
                 });
             }
+            SyntaxEvent::Presentation {
+                target,
+                hints,
+                start,
+                end,
+            } => {
+                presentation.push(SourcePresentationData {
+                    target,
+                    hints: hints
+                        .into_iter()
+                        .map(materialize_presentation_hint)
+                        .collect(),
+                });
+                presentation_spans.push((start, end));
+            }
         }
     }
     if transforms != expected_transforms {
         return StageResult::rejected(invariant_diagnostic(
             0,
-            input.bytes().len(),
+            bytes.len(),
             "transform event count disagrees with the transactional syntax sink",
         ));
     }
+    for (row, (start, end)) in presentation.iter().zip(presentation_spans) {
+        if !rules.iter().any(|rule| rule.name == row.target) {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::Syntax,
+                start,
+                end,
+                format!(
+                    "presentation target `{}` does not name a source rule",
+                    row.target
+                ),
+            ));
+        }
+    }
 
-    StageResult::accepted(SourceModule::new(
-        revision,
-        input.logical_path().to_owned(),
-        input.bytes().to_vec(),
-        nodes,
-        rules,
-    ))
+    StageResult::accepted((SourceModule::new(revision, nodes, rules), presentation))
+}
+
+fn materialize_presentation_hint(hint: DraftPresentationHint) -> SourcePresentationHintData {
+    match hint {
+        DraftPresentationHint::Group => SourcePresentationHintData::Group,
+        DraftPresentationHint::Block => SourcePresentationHintData::Block,
+        DraftPresentationHint::Indent => SourcePresentationHintData::Indent,
+        DraftPresentationHint::Dedent => SourcePresentationHintData::Dedent,
+        DraftPresentationHint::Softline => SourcePresentationHintData::Softline,
+        DraftPresentationHint::Hardline => SourcePresentationHintData::Hardline,
+        DraftPresentationHint::Blankline => SourcePresentationHintData::Blankline,
+        DraftPresentationHint::Compact => SourcePresentationHintData::Compact,
+        DraftPresentationHint::Sep(literal) => SourcePresentationHintData::Sep { literal },
+    }
 }
 
 fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNodeKindData> {
@@ -889,6 +1301,26 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
                 .and_then(NodeIx::checked)?,
             transform: TransformIx::checked(transform)?,
             name,
+        },
+        DraftNodeKind::Projection { left, right, keep } => SourceNodeKindData::Projection {
+            left: (left < parent).then_some(left).and_then(NodeIx::checked)?,
+            right: (right < parent)
+                .then_some(right)
+                .and_then(NodeIx::checked)?,
+            keep,
+        },
+        DraftNodeKind::Difference { include, exclude } => SourceNodeKindData::Difference {
+            include: (include < parent)
+                .then_some(include)
+                .and_then(NodeIx::checked)?,
+            exclude: (exclude < parent)
+                .then_some(exclude)
+                .and_then(NodeIx::checked)?,
+        },
+        DraftNodeKind::Trim { child } => SourceNodeKindData::Trim {
+            child: (child < parent)
+                .then_some(child)
+                .and_then(NodeIx::checked)?,
         },
         DraftNodeKind::Record(slots) => SourceNodeKindData::Record(
             slots

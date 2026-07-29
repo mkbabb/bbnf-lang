@@ -1,47 +1,15 @@
-use blake3::Hasher;
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 use std::fmt::Write as _;
 
-use super::syntax::{NodeIx, RuleIx, TransformIx};
-
-const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v4\0";
-
-#[derive(Clone, Copy)]
-pub struct ModuleInput<'a> {
-    logical_path: &'a str,
-    bytes: &'a [u8],
-}
-
-impl<'a> ModuleInput<'a> {
-    pub const fn new(logical_path: &'a str, bytes: &'a [u8]) -> Self {
-        Self {
-            logical_path,
-            bytes,
-        }
-    }
-
-    pub const fn logical_path(self) -> &'a str {
-        self.logical_path
-    }
-
-    pub const fn bytes(self) -> &'a [u8] {
-        self.bytes
-    }
-}
+use super::syntax::{NodeIx, ProjectionKeep, RuleIx, TransformIx};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
 pub struct Revision([u8; 32]);
 
 impl Revision {
-    pub(crate) fn for_module(logical_path: &str, bytes: &[u8]) -> Self {
-        let mut hasher = Hasher::new();
-        hasher.update(REVISION_SCHEMA);
-        hasher.update(&(logical_path.len() as u64).to_le_bytes());
-        hasher.update(logical_path.as_bytes());
-        hasher.update(&(bytes.len() as u64).to_le_bytes());
-        hasher.update(bytes);
-        Self(*hasher.finalize().as_bytes())
+    pub(super) const fn from_bytes(bytes: [u8; 32]) -> Self {
+        Self(bytes)
     }
 
     pub const fn bytes(self) -> [u8; 32] {
@@ -112,6 +80,18 @@ pub(crate) enum SourceNodeKindData {
         transform: TransformIx,
         name: String,
     },
+    Projection {
+        left: NodeIx,
+        right: NodeIx,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: NodeIx,
+        exclude: NodeIx,
+    },
+    Trim {
+        child: NodeIx,
+    },
     Record(Vec<SourceRecordSlotData>),
 }
 
@@ -129,11 +109,29 @@ pub(crate) struct SourceRuleData {
     pub(crate) span: SourceSpan,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub(crate) enum SourcePresentationHintData {
+    Group,
+    Block,
+    Indent,
+    Dedent,
+    Softline,
+    Hardline,
+    Blankline,
+    Compact,
+    Sep { literal: Vec<u8> },
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) struct SourcePresentationData {
+    pub(crate) target: String,
+    pub(crate) hints: Vec<SourcePresentationHintData>,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SourceModule {
     revision: Revision,
-    logical_path: String,
-    bytes: Vec<u8>,
     pub(crate) nodes: Vec<SourceNodeData>,
     pub(crate) rules: Vec<SourceRuleData>,
 }
@@ -141,16 +139,11 @@ pub struct SourceModule {
 impl SourceModule {
     pub(crate) fn new(
         revision: Revision,
-        logical_path: String,
-        bytes: Vec<u8>,
         nodes: Vec<SourceNodeData>,
         rules: Vec<SourceRuleData>,
     ) -> Self {
-        debug_assert_eq!(revision, Revision::for_module(&logical_path, &bytes));
         Self {
             revision,
-            logical_path,
-            bytes,
             nodes,
             rules,
         }
@@ -158,14 +151,6 @@ impl SourceModule {
 
     pub const fn revision(&self) -> Revision {
         self.revision
-    }
-
-    pub fn logical_path(&self) -> &str {
-        &self.logical_path
-    }
-
-    pub fn bytes(&self) -> &[u8] {
-        &self.bytes
     }
 
     pub fn rule_count(&self) -> usize {
@@ -182,19 +167,27 @@ impl SourceModule {
             .filter(|node| matches!(node.kind, SourceNodeKindData::Transform { .. }))
             .count()
     }
+
+    pub(crate) fn uses_trivia(&self) -> bool {
+        self.nodes
+            .iter()
+            .any(|node| matches!(node.kind, SourceNodeKindData::Trim { .. }))
+    }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SourceMap {
     revision: Revision,
     modules: Vec<SourceModule>,
+    presentation: Vec<Vec<SourcePresentationData>>,
 }
 
 impl SourceMap {
-    pub(crate) fn one(module: SourceModule) -> Self {
+    pub(crate) fn one(module: SourceModule, presentation: Vec<SourcePresentationData>) -> Self {
         Self {
             revision: module.revision(),
             modules: vec![module],
+            presentation: vec![presentation],
         }
     }
 
@@ -209,7 +202,10 @@ impl SourceMap {
     pub(super) fn replay_value(&self) -> SourceMapReplay<'_> {
         SourceMapReplay {
             revision: self.revision,
-            modules: SourceModulesReplay(&self.modules),
+            modules: SourceModulesReplay {
+                modules: &self.modules,
+                presentation: &self.presentation,
+            },
         }
     }
 }
@@ -220,7 +216,10 @@ pub(super) struct SourceMapReplay<'a> {
     modules: SourceModulesReplay<'a>,
 }
 
-struct SourceModulesReplay<'a>(&'a [SourceModule]);
+struct SourceModulesReplay<'a> {
+    modules: &'a [SourceModule],
+    presentation: &'a [Vec<SourcePresentationData>],
+}
 
 impl Serialize for SourceModulesReplay<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -230,20 +229,19 @@ impl Serialize for SourceModulesReplay<'_> {
         #[derive(Serialize)]
         struct Module<'a> {
             revision: Revision,
-            logical_path: &'a str,
-            bytes: &'a [u8],
             nodes: &'a [SourceNodeData],
             rules: &'a [SourceRuleData],
+            presentation: &'a [SourcePresentationData],
         }
 
-        let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
-        for module in self.0 {
+        debug_assert_eq!(self.modules.len(), self.presentation.len());
+        let mut sequence = serializer.serialize_seq(Some(self.modules.len()))?;
+        for (module, presentation) in self.modules.iter().zip(self.presentation) {
             sequence.serialize_element(&Module {
                 revision: module.revision,
-                logical_path: &module.logical_path,
-                bytes: &module.bytes,
                 nodes: &module.nodes,
                 rules: &module.rules,
+                presentation,
             })?;
         }
         sequence.end()

@@ -1,7 +1,7 @@
 error[E0624]: method `local` is private
-  --> tests/ui/identity/private_methods.rs:12:16
+  --> tests/ui/identity/private_methods.rs:11:16
    |
-12 |     let _ = id.local();
+11 |     let _ = id.local();
    |                ^^^^^ private method
    |
   ::: src/compiler/syntax.rs

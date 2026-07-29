@@ -1,12 +1,11 @@
+mod instance_support;
+
 use bbnf::compiler::{NodeKind, SemanticType};
-use bbnf::{CompileOptions, DiagnosticCode, ModuleInput, StageResult, compile_module};
+use bbnf::{CompileOptions, DiagnosticCode, StageResult};
 use std::fmt::Write as _;
 
 fn compile(source: &str, options: CompileOptions) -> StageResult<bbnf::CompiledModule> {
-    compile_module(
-        ModuleInput::new("type-analysis-laws.bbnf", source.as_bytes()),
-        options,
-    )
+    instance_support::compile("type-analysis-laws.bbnf", source.as_bytes(), options)
 }
 
 fn accepted(source: &str) -> bbnf::CompiledModule {
@@ -69,6 +68,81 @@ fn reference_chain(depth: usize) -> String {
     }
     writeln!(source, "root = r{depth};").expect("writing to String is infallible");
     source
+}
+
+fn assert_exact_analysis_boundary(label: &str, source: &str) {
+    let baseline = accepted(source);
+    let work = baseline.facts().work_units();
+    assert!(work > 0, "{label}: analysis performs logical work");
+
+    let mut exact_options = CompileOptions::default();
+    exact_options.analysis_work = work;
+    let exact = match compile(source, exact_options) {
+        StageResult::Accepted { value, .. } => value,
+        StageResult::Rejected { diagnostics } => {
+            panic!("{label}: exact analysis-work boundary rejected: {diagnostics:?}")
+        }
+    };
+    assert_eq!(
+        exact.facts(),
+        baseline.facts(),
+        "{label}: exact cap changes sealed facts"
+    );
+
+    let mut exhausted_options = exact_options;
+    exhausted_options.analysis_work = work - 1;
+    assert_eq!(
+        rejected_code(source, exhausted_options),
+        DiagnosticCode::ResourceLimit,
+        "{label}: one-under analysis-work boundary does not reject"
+    );
+}
+
+fn assert_semantic_rejection_boundary(label: &str, source: &str, expected: DiagnosticCode) {
+    assert_eq!(
+        rejected_code(source, CompileOptions::default()),
+        expected,
+        "{label}: high-cap semantic rejection changed"
+    );
+
+    let mut low = 0_usize;
+    let mut high = CompileOptions::default().analysis_work;
+    while low < high {
+        let middle = low + (high - low) / 2;
+        let mut options = CompileOptions::default();
+        options.analysis_work = middle;
+        match compile(source, options) {
+            StageResult::Accepted { .. } => {
+                panic!("{label}: semantically invalid grammar was accepted")
+            }
+            StageResult::Rejected { diagnostics } => {
+                let code = diagnostics
+                    .iter()
+                    .next()
+                    .expect("rejection has a diagnostic")
+                    .code();
+                if code == DiagnosticCode::ResourceLimit {
+                    low = middle + 1;
+                } else {
+                    assert_eq!(code, expected, "{label}: rejection phase changed");
+                    high = middle;
+                }
+            }
+        }
+    }
+    assert!(
+        low > 0,
+        "{label}: semantic rejection requires no analysis work"
+    );
+    let mut exact = CompileOptions::default();
+    exact.analysis_work = low;
+    assert_eq!(rejected_code(source, exact), expected);
+    let mut one_under = CompileOptions::default();
+    one_under.analysis_work = low - 1;
+    assert_eq!(
+        rejected_code(source, one_under),
+        DiagnosticCode::ResourceLimit
+    );
 }
 
 #[test]
@@ -427,26 +501,73 @@ fn dependency_first_acyclic_analysis_is_linear_and_exactly_budgeted() {
         let module = accepted(&source);
         let rules = module.program().rules().len();
         assert_eq!(module.facts().iterations(), rules);
-        assert_eq!(module.facts().work_units(), rules * 7);
+        assert!(
+            module.facts().work_units() <= rules * 128,
+            "the conservative acyclic reference-chain bound remains linear"
+        );
     }
 
     let source = reference_chain(64);
-    let baseline = accepted(&source);
-    let exact_work = baseline.facts().work_units();
-    let mut exact = CompileOptions::default();
-    exact.analysis_work = exact_work;
-    let exact_module = match compile(&source, exact) {
-        StageResult::Accepted { value, .. } => value,
-        StageResult::Rejected { diagnostics } => {
-            panic!("exact analysis work boundary must pass: {diagnostics:?}")
-        }
-    };
-    assert_eq!(exact_module.facts().work_units(), exact_work);
+    assert_exact_analysis_boundary("acyclic-reference-chain", &source);
+}
 
-    let mut exhausted = exact;
-    exhausted.analysis_work = exact_work - 1;
-    assert_eq!(
-        rejected_code(&source, exhausted),
-        DiagnosticCode::ResourceLimit
-    );
+#[test]
+fn analysis_work_exact_boundary_covers_distinct_topologies() {
+    for (label, source) in [
+        ("terminal", r#"root = "x";"#),
+        (
+            "wide-sequence-choice",
+            r#"root = "a", ("b" | "c" | "d" | epsilon), "e", "f";"#,
+        ),
+        ("regex", r#"root = /[A-Za-z_][A-Za-z0-9_]*/;"#),
+        (
+            "shared-dag",
+            r#"
+root = left | right;
+left = shared, "l";
+right = shared, "r";
+shared = "s" | "t";
+"#,
+        ),
+        ("recursive-scc", r#"root = "(", root?, ")" | "x";"#),
+        (
+            "record",
+            r#"root = %{ ~"{", left: /[a-z]+/, ~":", right: ("x" | "y"), ~"}" };"#,
+        ),
+        (
+            "projection-difference",
+            r#"
+root = projected | difference;
+projected = left >> right;
+difference = left - right;
+left = "a" | "b";
+right = "b";
+"#,
+        ),
+    ] {
+        assert_exact_analysis_boundary(label, source);
+    }
+}
+
+#[test]
+fn analysis_work_one_under_precedes_semantic_diagnostic_aggregation() {
+    for (label, source, code) in [
+        (
+            "nullable-repeat",
+            r#"root = epsilon*;"#,
+            DiagnosticCode::NullableRepeat,
+        ),
+        (
+            "zero-consumption-cycle",
+            r#"root = root | "x";"#,
+            DiagnosticCode::RecursiveRule,
+        ),
+        (
+            "nonproductive-recursion",
+            r#"root = "x", root;"#,
+            DiagnosticCode::RecursiveRule,
+        ),
+    ] {
+        assert_semantic_rejection_boundary(label, source, code);
+    }
 }

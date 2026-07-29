@@ -32,11 +32,32 @@ impl DependencyGraph {
                     NodeKindData::Sequence(children) | NodeKindData::Choice(children) => {
                         pending.extend(children.iter().rev().copied());
                     }
+                    NodeKindData::Projection { left, right, .. } => {
+                        pending.push(*right);
+                        pending.push(*left);
+                    }
+                    NodeKindData::Difference { include, exclude } => {
+                        pending.push(*exclude);
+                        pending.push(*include);
+                    }
                     NodeKindData::Record { slots, .. } => {
                         pending.extend(slots.iter().rev().map(|slot| slot.child()));
                     }
-                    NodeKindData::Repeat { child, .. } | NodeKindData::Transform { child, .. } => {
+                    NodeKindData::Repeat { child, .. }
+                    | NodeKindData::Transform { child, .. }
+                    | NodeKindData::Trim { child } => {
                         pending.push(*child);
+                    }
+                    NodeKindData::Pratt { atom, table } => {
+                        pending.push(*atom);
+                        let table = &program.pratt_table_rows()[table.index()];
+                        for operator in table.operators() {
+                            dependencies.insert(
+                                program.pratt_operator_rows()[operator.index()]
+                                    .matcher_rule()
+                                    .local(),
+                            );
+                        }
                     }
                     NodeKindData::Epsilon | NodeKindData::Literal(_) | NodeKindData::Regex(_) => {}
                 }
@@ -107,7 +128,7 @@ impl DependencySolution {
             }
         }
 
-        let dependency_order = dependency_first_order(&graph, &components, &component_by_rule);
+        let dependency_order = dependency_order(&graph, &components, &component_by_rule);
         StageResult::accepted(Self {
             revision: program.revision(),
             graph,
@@ -282,7 +303,7 @@ fn strongly_connected_components(graph: &DependencyGraph) -> Vec<Vec<RuleIx>> {
     components
 }
 
-fn dependency_first_order(
+fn dependency_order(
     graph: &DependencyGraph,
     components: &[Vec<RuleIx>],
     component_by_rule: &[SccIx],

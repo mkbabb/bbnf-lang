@@ -1,7 +1,7 @@
 error[E0277]: the trait bound `bbnf::compiler::Program: serde::Serialize` is not satisfied
-  --> tests/ui/identity/naked_carrier_serde.rs:11:39
+  --> tests/ui/identity/naked_carrier_serde.rs:10:39
    |
-11 |     let _json = serde_json::to_string(module.program()).unwrap();
+10 |     let _json = serde_json::to_string(module.program()).unwrap();
    |                 --------------------- ^^^^^^^^^^^^^^^^ the trait `serde_core::ser::Serialize` is not implemented for `bbnf::compiler::Program`
    |                 |
    |                 required by a bound introduced by this call

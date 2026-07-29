@@ -4,6 +4,10 @@ use std::ops::Range;
 use serde::Serialize;
 
 use super::diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
+use super::instance::{GrammarInstance, InstanceFixity};
+use super::pratt::{
+    PrattFixity, PrattOperator, PrattOperatorIx, PrattTable, PrattTableId, PrattTableIx,
+};
 use super::source::{Revision, SourceModule, SourceNodeKindData, SourceRecordSlotData, SourceSpan};
 
 // Arena ordinals are compiler-private and always remain four bytes. They are
@@ -103,6 +107,12 @@ impl RecordSlot {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd, Serialize)]
+pub enum ProjectionKeep {
+    Left,
+    Right,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub(crate) struct FieldData {
     id: FieldIx,
@@ -163,6 +173,22 @@ pub(crate) enum NodeKindData {
         transform: TransformIx,
         name: String,
     },
+    Projection {
+        left: NodeIx,
+        right: NodeIx,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: NodeIx,
+        exclude: NodeIx,
+    },
+    Trim {
+        child: NodeIx,
+    },
+    Pratt {
+        atom: NodeIx,
+        table: PrattTableIx,
+    },
     Record {
         owner: RuleIx,
         slots: Vec<RecordSlotData>,
@@ -187,6 +213,22 @@ pub enum NodeKind<'a> {
         child: NodeId,
         transform: TransformId,
         name: &'a str,
+    },
+    Projection {
+        left: NodeId,
+        right: NodeId,
+        keep: ProjectionKeep,
+    },
+    Difference {
+        include: NodeId,
+        exclude: NodeId,
+    },
+    Trim {
+        child: NodeId,
+    },
+    Pratt {
+        atom: NodeId,
+        table: PrattTableId,
     },
     Record {
         owner: RuleId,
@@ -241,6 +283,22 @@ impl<'a> Node<'a> {
                 child: NodeId::bind(*self.revision, *child),
                 transform: TransformId::bind(*self.revision, *transform),
                 name,
+            },
+            NodeKindData::Projection { left, right, keep } => NodeKind::Projection {
+                left: NodeId::bind(*self.revision, *left),
+                right: NodeId::bind(*self.revision, *right),
+                keep: *keep,
+            },
+            NodeKindData::Difference { include, exclude } => NodeKind::Difference {
+                include: NodeId::bind(*self.revision, *include),
+                exclude: NodeId::bind(*self.revision, *exclude),
+            },
+            NodeKindData::Trim { child } => NodeKind::Trim {
+                child: NodeId::bind(*self.revision, *child),
+            },
+            NodeKindData::Pratt { atom, table } => NodeKind::Pratt {
+                atom: NodeId::bind(*self.revision, *atom),
+                table: PrattTableId::bind(*self.revision, *table),
             },
             NodeKindData::Record { owner, slots } => NodeKind::Record {
                 owner: RuleId::bind(*self.revision, *owner),
@@ -311,7 +369,7 @@ macro_rules! branded_rows {
                 })
             }
 
-            pub fn first(&self) -> Option<$view<'a>> {
+            pub fn head(&self) -> Option<$view<'a>> {
                 self.get(0)
             }
 
@@ -484,11 +542,14 @@ pub struct Program {
     nodes: Vec<NodeData>,
     rules: Vec<RuleData>,
     fields: Vec<FieldData>,
+    node_owners: Vec<RuleIx>,
     entry: RuleIx,
+    pratt_tables: Vec<PrattTable>,
+    pratt_operators: Vec<PrattOperator>,
 }
 
 impl Program {
-    pub(crate) fn resolve(module: &SourceModule) -> StageResult<Self> {
+    pub(super) fn resolve(module: &SourceModule, instance: &GrammarInstance) -> StageResult<Self> {
         let mut names = BTreeMap::new();
         let mut diagnostics = Vec::new();
         for rule in &module.rules {
@@ -567,6 +628,16 @@ impl Program {
                     transform: *transform,
                     name: name.clone(),
                 },
+                SourceNodeKindData::Projection { left, right, keep } => NodeKindData::Projection {
+                    left: *left,
+                    right: *right,
+                    keep: *keep,
+                },
+                SourceNodeKindData::Difference { include, exclude } => NodeKindData::Difference {
+                    include: *include,
+                    exclude: *exclude,
+                },
+                SourceNodeKindData::Trim { child } => NodeKindData::Trim { child: *child },
                 SourceNodeKindData::Record(source_slots) => {
                     let Some(&owner) = record_owners.get(&id) else {
                         diagnostics.push(Diagnostic::new(
@@ -633,7 +704,7 @@ impl Program {
             return StageResult::rejected_set(DiagnosticSet::from_vec(diagnostics));
         }
 
-        let rules = module
+        let mut rules = module
             .rules
             .iter()
             .map(|rule| RuleData {
@@ -643,19 +714,129 @@ impl Program {
                 span: rule.span,
             })
             .collect::<Vec<_>>();
-        let entry = rules
-            .iter()
-            .find(|rule| rule.name == "root")
-            .or_else(|| rules.first())
-            .map(|rule| rule.id)
-            .expect("frontend requires at least one rule");
+        let mut node_owners = Vec::with_capacity(nodes.len());
+        let mut next_node = 0_usize;
+        for rule in &rules {
+            let root = rule.root.index();
+            if root < next_node || root >= nodes.len() {
+                return StageResult::rejected(Diagnostic::new(
+                    DiagnosticCode::InternalInvariant,
+                    0,
+                    0,
+                    "source rule roots do not delimit stable postorder ownership",
+                ));
+            }
+            node_owners.extend(std::iter::repeat_n(rule.id, root - next_node + 1));
+            next_node = root + 1;
+        }
+        if next_node != nodes.len() {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::InternalInvariant,
+                0,
+                0,
+                "source contains nodes outside every rule ownership range",
+            ));
+        }
+        let entry_name = instance.entry();
+        let Some(&entry) = names.get(entry_name) else {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::UnknownEntry,
+                0,
+                0,
+                format!("entry rule `{entry_name}` is not defined"),
+            ));
+        };
+
+        let instance_tables = instance.pratt_tables();
+        let mut pratt_tables = Vec::with_capacity(instance_tables.len());
+        let mut pratt_operators = Vec::new();
+        for table in instance_tables {
+            let site_name = table.site_rule();
+            let atom_name = table.atom_rule();
+            let Some(&site) = names.get(site_name) else {
+                return StageResult::rejected(invalid_pratt_table(format!(
+                    "Pratt site rule `{site_name}` is not defined"
+                )));
+            };
+            let Some(&atom_rule) = names.get(atom_name) else {
+                return StageResult::rejected(invalid_pratt_table(format!(
+                    "Pratt atom rule `{atom_name}` is not defined"
+                )));
+            };
+            if !matches!(
+                nodes.get(rules[site.index()].root.index()).map(|node| &node.kind),
+                Some(NodeKindData::RuleRef(target)) if *target == atom_rule
+            ) {
+                return StageResult::rejected(invalid_pratt_table(format!(
+                    "Pratt site rule `{site_name}` must be exactly a reference to `{atom_name}`"
+                )));
+            }
+
+            let table_id = PrattTableIx::checked(pratt_tables.len())
+                .expect("Pratt table budget bounds table ordinals");
+            let operator_start = PrattOperatorIx::checked(pratt_operators.len())
+                .expect("Pratt operator budget bounds operator ordinals");
+            let operator_start_index = pratt_operators.len();
+            for operator in table.operators() {
+                let matcher_name = operator.matcher_rule();
+                let Some(&matcher_rule) = names.get(matcher_name) else {
+                    return StageResult::rejected(invalid_pratt_table(format!(
+                        "Pratt matcher rule `{matcher_name}` is not defined"
+                    )));
+                };
+                let fixity = match operator.fixity() {
+                    InstanceFixity::Prefix => PrattFixity::Prefix,
+                    InstanceFixity::Postfix => PrattFixity::Postfix,
+                    InstanceFixity::Infix => PrattFixity::Infix,
+                };
+                let operator_id = PrattOperatorIx::checked(pratt_operators.len())
+                    .expect("Pratt operator budget bounds operator ordinals");
+                pratt_operators.push(PrattOperator::new(
+                    module.revision(),
+                    operator_id,
+                    table_id,
+                    matcher_rule,
+                    fixity,
+                    operator.left_binding_power(),
+                    operator.right_binding_power(),
+                ));
+            }
+            pratt_tables.push(
+                PrattTable::checked(
+                    module.revision(),
+                    table_id,
+                    site,
+                    atom_rule,
+                    operator_start,
+                    pratt_operators.len() - operator_start_index,
+                )
+                .expect("Pratt budgets bound compact table ranges"),
+            );
+
+            let atom = rules[site.index()].root;
+            let pratt = NodeIx::checked(nodes.len()).expect("node budget bounds Pratt wrappers");
+            let span = rules[site.index()].span;
+            nodes.push(NodeData {
+                id: pratt,
+                kind: NodeKindData::Pratt {
+                    atom,
+                    table: table_id,
+                },
+                span,
+            });
+            node_owners.push(site);
+            rules[site.index()].root = pratt;
+        }
 
         StageResult::accepted(Self {
             revision: module.revision(),
             nodes,
             rules,
             fields,
+            node_owners,
             entry,
+            pratt_tables,
+            pratt_operators,
         })
     }
 
@@ -728,8 +909,20 @@ impl Program {
         &self.fields
     }
 
+    pub(crate) fn node_owner_rows(&self) -> &[RuleIx] {
+        &self.node_owners
+    }
+
     pub(crate) const fn entry_local(&self) -> RuleIx {
         self.entry
+    }
+
+    pub(crate) fn pratt_table_rows(&self) -> &[PrattTable] {
+        &self.pratt_tables
+    }
+
+    pub(crate) fn pratt_operator_rows(&self) -> &[PrattOperator] {
+        &self.pratt_operators
     }
 
     pub(super) fn replay_value(&self) -> ProgramReplay<'_> {
@@ -738,9 +931,14 @@ impl Program {
             nodes: &self.nodes,
             rules: &self.rules,
             fields: &self.fields,
+            node_owners: &self.node_owners,
             entry: self.entry,
         }
     }
+}
+
+fn invalid_pratt_table(message: impl Into<String>) -> Diagnostic {
+    Diagnostic::new(DiagnosticCode::InvalidPrattTable, 0, 0, message)
 }
 
 #[derive(Serialize)]
@@ -749,6 +947,7 @@ pub(super) struct ProgramReplay<'a> {
     nodes: &'a [NodeData],
     rules: &'a [RuleData],
     fields: &'a [FieldData],
+    node_owners: &'a [RuleIx],
     entry: RuleIx,
 }
 
@@ -859,6 +1058,18 @@ mod representation_laws {
     use std::mem::size_of;
 
     use super::*;
+    use crate::compiler::instance::UNIT_INSTANCE;
+    use crate::compiler::{CompileOptions, GrammarInstanceInput, compile_instance};
+
+    fn compiled_revision(source: &[u8]) -> Revision {
+        let options = CompileOptions::default();
+        let compiled =
+            match compile_instance(GrammarInstanceInput::new(UNIT_INSTANCE, source), options) {
+                StageResult::Accepted { value, .. } => value,
+                StageResult::Rejected { .. } => panic!("grammar-instance fixture must compile"),
+            };
+        compiled.program().revision()
+    }
 
     #[test]
     fn local_ordinals_and_syntax_rows_stay_compact() {
@@ -889,8 +1100,8 @@ mod representation_laws {
 
     #[test]
     fn remap_accepts_only_its_source_brand_and_emits_its_target_brand() {
-        let from = Revision::for_module("before.bbnf", b"root = \"a\";");
-        let to = Revision::for_module("after.bbnf", b"root = \"b\";");
+        let from = compiled_revision(b"root = \"a\";");
+        let to = compiled_revision(b"root = \"b\";");
         let local = NodeIx::checked(0).expect("zero ordinal");
         let remap = NodeRemap {
             from,

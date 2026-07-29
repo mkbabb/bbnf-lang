@@ -1,4 +1,0 @@
-root = node;
-node = list | atom;
-list = %{ ~"(", children: node*, ~")" };
-atom = %{ text: @raw(/[A-Za-z]+/) };

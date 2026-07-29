@@ -1,10 +1,9 @@
-use bbnf::{CompilationSession, CompileOptions, ModuleInput, StageResult, compile_module};
+mod instance_support;
+
+use bbnf::{CompileOptions, StageResult};
 
 fn accepted(path: &str, source: &str) -> bbnf::CompiledModule {
-    match compile_module(
-        ModuleInput::new(path, source.as_bytes()),
-        CompileOptions::default(),
-    ) {
+    match instance_support::compile(path, source.as_bytes(), CompileOptions::default()) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => panic!(
             "lookup fixture must compile:\n{}",
@@ -154,13 +153,7 @@ fn revision_brand_survives_identical_rebuilds_and_invalidates_across_edits() {
     assert!(second.facts().node(original_node).is_some());
     assert!(second.lowering().node(original_plan_node).is_some());
 
-    let mut session = CompilationSession::new(PATH, SOURCE, CompileOptions::default());
-    let edited = match session.apply_edit(8..9, b"b").expect("edit range is valid") {
-        StageResult::Accepted { value, .. } => value,
-        StageResult::Rejected { diagnostics } => {
-            panic!("edited fixture must compile: {diagnostics:?}")
-        }
-    };
+    let edited = accepted(PATH, r#"root = "b";"#);
     assert_ne!(edited.program().revision(), first.program().revision());
     assert!(edited.program().node(original_node).is_none());
     assert!(edited.program().rule(original_rule).is_none());
@@ -170,15 +163,7 @@ fn revision_brand_survives_identical_rebuilds_and_invalidates_across_edits() {
     assert!(edited.lowering().node(original_plan_node).is_none());
     assert!(edited.remap().get(original_node).is_none());
 
-    let restored = match session
-        .apply_edit(8..9, b"a")
-        .expect("restoration range is valid")
-    {
-        StageResult::Accepted { value, .. } => value,
-        StageResult::Rejected { diagnostics } => {
-            panic!("restored fixture must compile: {diagnostics:?}")
-        }
-    };
+    let restored = accepted(PATH, std::str::from_utf8(SOURCE).expect("ASCII fixture"));
     assert_eq!(restored.program().revision(), first.program().revision());
     assert!(restored.program().node(original_node).is_some());
 

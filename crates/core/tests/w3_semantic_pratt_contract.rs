@@ -15,8 +15,8 @@ use syn::visit::{self, Visit};
 
 const SEMANTIC_SOURCE: &[u8] = br#"
 document = keep_right | keep_left | difference_live | trimmed
-         | difference_nullable | difference_empty | trimmed_again
-         | nullable_trimmed | ordinary_regex;
+         | trimmed_again | ordinary_regex | nullable_trimmed
+         | difference_nullable | difference_empty;
 left = %{ value: "l" };
 kept = %{ value: "k" };
 right = %{ value: "r" };
@@ -248,6 +248,24 @@ project_left = transformed_regex << record_literal;
 baseline_left = transformed_regex, record_literal;
 transformed_regex = @capture(/[a-z]+/);
 record_literal = %{ value: "!" };
+"#;
+
+const GENERIC_CONTROL_SOURCE: &[u8] = br#"
+root = branch, digits, pair*, "x", "!" ;
+branch = (@discarded("a"), "x") | @chosen(("a", "b")) ;
+digits = /[0-9]+/ ;
+pair = "x", "y" ;
+"#;
+
+const RECURSIVE_CONTROL_SOURCE: &[u8] = br#"
+root = ("(", root, ")") | "x" ;
+"#;
+
+const RECURSIVE_RECORD_SOURCE: &[u8] = br#"
+root = node;
+node = list | atom;
+list = %{ ~"(", children: node*, ~")" };
+atom = %{ text: @raw(/[A-Za-z]+/) };
 "#;
 
 fn compiler_event_kind_variants() -> Vec<&'static str> {
@@ -798,41 +816,41 @@ fn generated_descriptor_surface(
     let mut public_items = BTreeSet::new();
 
     for item in &file.items {
-        if let syn::Item::Struct(item) = item {
-            if item.ident == descriptor {
-                assert!(
-                    fields.is_none(),
-                    "generated descriptor `{descriptor}` is declared once"
-                );
-                assert!(
-                    matches!(item.vis, syn::Visibility::Public(_)),
-                    "generated descriptor `{descriptor}` is public"
-                );
-                let syn::Fields::Named(named) = &item.fields else {
-                    panic!("generated descriptor `{descriptor}` must use named fields");
-                };
-                let names = named
-                    .named
-                    .iter()
-                    .map(|field| {
-                        assert!(
-                            matches!(field.vis, syn::Visibility::Inherited),
-                            "generated descriptor `{descriptor}` fields remain private"
-                        );
-                        field
-                            .ident
-                            .as_ref()
-                            .expect("named descriptor field")
-                            .to_string()
-                    })
-                    .collect::<BTreeSet<_>>();
-                assert_eq!(
-                    names.len(),
-                    named.named.len(),
-                    "generated descriptor `{descriptor}` fields are unique"
-                );
-                fields = Some(names);
-            }
+        if let syn::Item::Struct(item) = item
+            && item.ident == descriptor
+        {
+            assert!(
+                fields.is_none(),
+                "generated descriptor `{descriptor}` is declared once"
+            );
+            assert!(
+                matches!(item.vis, syn::Visibility::Public(_)),
+                "generated descriptor `{descriptor}` is public"
+            );
+            let syn::Fields::Named(named) = &item.fields else {
+                panic!("generated descriptor `{descriptor}` must use named fields");
+            };
+            let names = named
+                .named
+                .iter()
+                .map(|field| {
+                    assert!(
+                        matches!(field.vis, syn::Visibility::Inherited),
+                        "generated descriptor `{descriptor}` fields remain private"
+                    );
+                    field
+                        .ident
+                        .as_ref()
+                        .expect("named descriptor field")
+                        .to_string()
+                })
+                .collect::<BTreeSet<_>>();
+            assert_eq!(
+                names.len(),
+                named.named.len(),
+                "generated descriptor `{descriptor}` fields are unique"
+            );
+            fields = Some(names);
         }
 
         let syn::Item::Impl(item) = item else {
@@ -1082,7 +1100,7 @@ fn closure_block(closure: &syn::ExprClosure) -> Option<&syn::Block> {
     }
 }
 
-fn top_level_functions<'a>(file: &'a syn::File) -> BTreeMap<String, Vec<&'a syn::ItemFn>> {
+fn top_level_functions(file: &syn::File) -> BTreeMap<String, Vec<&syn::ItemFn>> {
     let mut functions = BTreeMap::<String, Vec<&syn::ItemFn>>::new();
     for item in &file.items {
         if let syn::Item::Fn(function) = item {
@@ -1844,7 +1862,7 @@ fn assert_parser_primitive_provenance(
         );
         assert!(
             imports.iter().all(|(path, renamed)| {
-                path.last().map_or(true, |name| {
+                path.last().is_none_or(|name| {
                     name != &primitive
                         || (!renamed && path.as_slice() == ["parse_that", primitive.as_str()])
                 })
@@ -3823,7 +3841,12 @@ fn exact_repeat_count_value(expression: &syn::Expr, count: &str) -> bool {
         .is_some_and(|path| path_segments(path).as_slice() == ["u32", "try_from"])
         && conversion.args.len() == 1
         && exact_path(&conversion.args[0], count)
-        && field_path(&fallback.args[0]).as_deref() == Some(&["u32".to_owned(), "MAX".to_owned()])
+        && matches!(
+            &fallback.args[0],
+            syn::Expr::Path(path)
+                if path.qself.is_none()
+                    && path_segments(&path.path).as_slice() == ["u32", "MAX"]
+        )
 }
 
 fn cursor_binding_dominates_event(
@@ -4150,13 +4173,13 @@ fn assert_transform_tail(
     assert_eq!((start.as_str(), end.as_str()), ("start", "end"));
     assert!(exact_cursor_offset(start_initializer) && exact_cursor_offset(end_initializer));
     let child = format!("node_{}", child.index());
-    assert_eq!(child_match_calls(block), [child.clone()]);
+    assert_eq!(child_match_calls(block), std::slice::from_ref(&child));
     assert_eq!(
         direct_internal_calls(&function.block)
             .into_iter()
             .filter(|call| call.starts_with("node_"))
             .collect::<Vec<_>>(),
-        [child.clone()],
+        std::slice::from_ref(&child),
         "{} contains only its recorded Transform child",
         function.sig.ident
     );
@@ -5516,10 +5539,12 @@ fn assert_live_pratt_authority(
         }
 
         fn canonical_assignment(&self, assignment: &syn::ExprAssign) -> bool {
-            expression_path_name(&assignment.left)
-                .is_some_and(|target| self.selections.contains(&target))
-                && assignment_descriptor_value(&assignment.right, self.descriptor_bindings)
+            let known_selection = expression_path_name(&assignment.left)
+                .is_some_and(|target| self.selections.contains(&target));
+            known_selection
+                && (assignment_descriptor_value(&assignment.right, self.descriptor_bindings)
                     .is_some()
+                    || (self.loop_depth != 0 && exact_path(&assignment.right, "None")))
         }
 
         fn canonical_statement(&self, statement: &syn::Stmt) -> bool {
@@ -5852,6 +5877,11 @@ fn assert_pratt_functions(
         let [prefix_selection, loop_selection] = recursive_authorities.as_slice() else {
             unreachable!();
         };
+        assert_eq!(
+            prefix_selection, loop_selection,
+            "{name} prefix and postfix/infix recursion share one selected descriptor authority"
+        );
+        let shared_selection = loop_selection;
         let selection_assignments = descriptor_assignments(
             &syn::Expr::Block(syn::ExprBlock {
                 attrs: Vec::new(),
@@ -5931,9 +5961,8 @@ fn assert_pratt_functions(
         let actual_matchers = calls
             .calls
             .iter()
-            .filter_map(|path| {
-                (path.len() == 1 && matcher_names.contains(&path[0])).then(|| path[0].clone())
-            })
+            .filter(|path| path.len() == 1 && matcher_names.contains(&path[0]))
+            .map(|path| path[0].clone())
             .collect::<Vec<_>>();
         assert_exact_call_order(
             &actual_matchers,
@@ -5995,8 +6024,8 @@ fn assert_pratt_functions(
         );
         assert_eq!(
             event_authority,
-            loop_selection.clone(),
-            "{name} PrattReduce derives from the same selected loop descriptor as RHS recursion"
+            shared_selection.clone(),
+            "{name} sole PrattReduce constructor serves the shared prefix and postfix/infix selection authority"
         );
         assert_eq!(
             descriptor_getter_uses(
@@ -6008,8 +6037,8 @@ fn assert_pratt_functions(
                 "fixity",
                 &descriptor_bindings,
             ),
-            [loop_selection.clone()],
-            "{name} chooses postfix versus infix from the exact selected loop descriptor"
+            std::slice::from_ref(shared_selection),
+            "{name} chooses fixity from the exact shared selected descriptor"
         );
         let pratt_nodes = module
             .lowering()
@@ -6022,10 +6051,17 @@ fn assert_pratt_functions(
             })
             .collect::<Vec<_>>();
         assert_eq!(pratt_nodes.len(), 1, "one PlanOp site for `{name}`");
+        let atom = module
+            .lowering()
+            .node(pratt_nodes[0].1)
+            .unwrap_or_else(|| panic!("{name} PlanOp atom belongs to the lowering carrier"));
+        let PlanOp::RuleRef(atom_rule) = atom.op() else {
+            panic!("{name} PlanOp atom is the exact atom-rule reference");
+        };
         assert_eq!(
-            pratt_nodes[0].1,
+            atom_rule,
             table.atom_rule(),
-            "{name} PlanOp retains the table's exact atom authority"
+            "{name} PlanOp atom resolves to the table's exact atom-rule authority"
         );
         assert_eq!(
             events.rows,
@@ -6218,15 +6254,15 @@ fn assert_trivia_plan(file: &syn::File, module: &CompiledModule, mixed_regex: bo
             );
             assert_eq!(
                 integer_literal(&constructor.args[1]),
-                Some(trivia.state_count())
+                Some(usize::try_from(trivia.state_count()).expect("trivia state count fits usize"))
             );
             assert_eq!(
                 integer_literal(&constructor.args[2]),
-                Some(trivia.class_count())
+                Some(usize::from(trivia.class_count()))
             );
             assert_eq!(
                 integer_literal(&constructor.args[3]),
-                Some(trivia.start_state())
+                Some(usize::try_from(trivia.start_state()).expect("trivia start state fits usize"))
             );
             assert_eq!(
                 array_integers(file, &transitions),
@@ -6309,7 +6345,7 @@ fn assert_no_noncanonical_authority(functions: &BTreeMap<String, Vec<&syn::ItemF
             calls.visit_block(&definition.block);
             assert!(
                 calls.calls.iter().all(|path| {
-                    path.last().map_or(true, |called| {
+                    path.last().is_none_or(|called| {
                         !canonical_control_name(called) && !parser_primitive_name(called)
                     })
                 }),
@@ -7097,6 +7133,23 @@ fn assert_global_control_ownership(
 }
 
 fn assert_generated_manifest_counts(module: &CompiledModule) {
+    #[derive(serde::Serialize)]
+    struct ExpectedGeneratedManifest<'a> {
+        schema: &'static str,
+        event_schema: &'a str,
+        revision: String,
+        source_blake3: String,
+        source_bytes: usize,
+        nodes: usize,
+        rules: usize,
+        regexes: usize,
+        transforms: usize,
+        fields: usize,
+        trivia_dfas: usize,
+        pratt_tables: usize,
+        pratt_operators: usize,
+    }
+
     let raw = module.generated().manifest();
     let manifest: serde_json::Value =
         serde_json::from_str(raw).expect("generated-v6 manifest JSON");
@@ -7173,15 +7226,37 @@ fn assert_generated_manifest_counts(module: &CompiledModule) {
         "generated-v6 manifest source byte count"
     );
     assert_eq!(
-        serde_json::to_string(&manifest).expect("canonical generated manifest serialization"),
+        serde_json::to_string(&ExpectedGeneratedManifest {
+            schema: "bbnf.generated-rust.v6",
+            event_schema: module.events().schema(),
+            revision,
+            source_blake3,
+            source_bytes: generated.len(),
+            nodes: module.lowering().nodes().len(),
+            rules: module.lowering().rules().len(),
+            regexes: module.lowering().regexes().len(),
+            transforms: module.events().transforms().len(),
+            fields: module.lowering().fields().len(),
+            trivia_dfas: usize::from(module.lowering().trivia().is_some()),
+            pratt_tables: module.lowering().pratt_tables().len(),
+            pratt_operators: module.lowering().pratt_operators().len(),
+        })
+        .expect("canonical generated manifest serialization"),
         raw,
-        "generated-v6 manifest bytes are canonical JSON"
+        "generated-v6 manifest bytes use the exact schema-first canonical serialization"
     );
 }
 
 fn assert_generated_v6_source(module: &CompiledModule, source: &str, mixed_regex: bool) {
     let file = syn::parse_file(source).expect("generated v6 is syntactic Rust");
     assert_canonical_surface(&file);
+    for descriptor in ["PrattTableDescriptor", "PrattOperatorDescriptor"] {
+        let (fields, getters) = generated_descriptor_surface(source, descriptor);
+        assert_eq!(
+            getters, fields,
+            "{descriptor} exposes exactly one same-field getter per private field"
+        );
+    }
     let functions = top_level_functions(&file);
     assert_parser_primitive_provenance(&file, &functions);
     assert_global_generated_authority(&file, &functions);
@@ -7200,8 +7275,196 @@ fn assert_generated_v6_canonical(module: &CompiledModule, mixed_regex: bool) {
     assert_generated_v6_source(module, module.generated().source(), mixed_regex);
 }
 
+fn recursive_minimal_import_closure_findings(source: &str) -> BTreeSet<String> {
+    let mut findings = BTreeSet::new();
+    let file = match syn::parse_file(source) {
+        Ok(file) => file,
+        Err(error) => {
+            findings.insert(format!("generated source did not parse: {error}"));
+            return findings;
+        }
+    };
+    let mut flattened = Vec::new();
+    for item in &file.items {
+        if let syn::Item::Use(item) = item {
+            flatten_use_tree(&mut Vec::new(), &item.tree, &mut flattened);
+        }
+    }
+
+    let expected_imports = BTreeSet::from([
+        "EventSink",
+        "Fault",
+        "Input",
+        "ModuleResult",
+        "NoSink",
+        "ResourceKind",
+        "Run",
+        "Step",
+        "choice",
+        "eof",
+        "literal",
+        "sequence",
+    ]);
+    let mut imports = BTreeMap::<String, usize>::new();
+    for (path, renamed) in flattened {
+        if path.first().map(String::as_str) != Some("parse_that") {
+            continue;
+        }
+        if renamed || path.len() != 2 {
+            findings.insert(format!(
+                "noncanonical parse_that import {}",
+                path.join("::")
+            ));
+            continue;
+        }
+        *imports.entry(path[1].clone()).or_default() += 1;
+    }
+    for expected in &expected_imports {
+        match imports.get(*expected) {
+            Some(1) => {}
+            Some(count) => {
+                findings.insert(format!(
+                    "duplicate import parse_that::{expected} ({count} owners)"
+                ));
+            }
+            None => {
+                findings.insert(format!("missing import parse_that::{expected}"));
+            }
+        }
+    }
+    for actual in imports.keys() {
+        if !expected_imports.contains(actual.as_str()) {
+            findings.insert(format!("unexpected import parse_that::{actual}"));
+        }
+    }
+
+    let mut calls = DirectCalls::default();
+    calls.visit_file(&file);
+    let called_primitives = calls
+        .calls
+        .iter()
+        .filter_map(|path| {
+            path.last()
+                .filter(|name| parser_primitive_name(name))
+                .map(String::as_str)
+        })
+        .collect::<BTreeSet<_>>();
+    let expected_calls = BTreeSet::from(["choice", "eof", "literal", "sequence"]);
+    for missing in expected_calls.difference(&called_primitives) {
+        findings.insert(format!("missing direct primitive call {missing}"));
+    }
+    for unexpected in called_primitives.difference(&expected_calls) {
+        findings.insert(format!("unexpected direct primitive call {unexpected}"));
+    }
+    findings
+}
+
+fn assert_recursive_minimal_import_closure(source: &str) {
+    let findings = recursive_minimal_import_closure_findings(source);
+    assert!(
+        findings.is_empty(),
+        "recursive literal-only product did not retain its exact minimal import closure: {findings:?}"
+    );
+}
+
+fn assert_recursive_minimal_import_gate_is_mutation_sensitive(source: &str) {
+    const IMPORT_HEAD: &str = "use parse_that::{";
+    assert_eq!(
+        source.matches(IMPORT_HEAD).count(),
+        1,
+        "recursive mutation basis has one parse_that import"
+    );
+    for forbidden in ["RegexPlan", "RegexTerminal", "regex", "repeat"] {
+        let replacement = format!("{IMPORT_HEAD}{forbidden}, ");
+        let mutated = source.replacen(IMPORT_HEAD, &replacement, 1);
+        let findings = recursive_minimal_import_closure_findings(&mutated);
+        assert!(
+            findings.contains(&format!("unexpected import parse_that::{forbidden}")),
+            "born-red recursive import mutation `{forbidden}` escaped the exact closure: {findings:?}"
+        );
+    }
+}
+
+#[derive(Default)]
+struct GeneratedIdentifierInventory {
+    identifiers: BTreeSet<String>,
+}
+
+impl<'ast> Visit<'ast> for GeneratedIdentifierInventory {
+    fn visit_ident(&mut self, identifier: &'ast syn::Ident) {
+        self.identifiers.insert(identifier.to_string());
+        visit::visit_ident(self, identifier);
+    }
+}
+
+fn record_host_dispatch_absence_findings(source: &str) -> BTreeSet<String> {
+    let mut findings = BTreeSet::new();
+    let file = match syn::parse_file(source) {
+        Ok(file) => file,
+        Err(error) => {
+            findings.insert(format!("generated source did not parse: {error}"));
+            return findings;
+        }
+    };
+    let mut inventory = GeneratedIdentifierInventory::default();
+    inventory.visit_file(&file);
+    for forbidden in [
+        "Action",
+        "Dom",
+        "GrammarIR",
+        "Path",
+        "SourceModule",
+        "Tape",
+        "Value",
+        "callback",
+        "rule_name",
+        "serde_json",
+    ] {
+        if inventory.identifiers.contains(forbidden) {
+            findings.insert(forbidden.to_owned());
+        }
+    }
+    findings
+}
+
+fn assert_record_host_dispatch_absence(source: &str) {
+    let findings = record_host_dispatch_absence_findings(source);
+    assert!(
+        findings.is_empty(),
+        "recursive record product leaked a historical host/runtime dispatch carrier: {findings:?}"
+    );
+}
+
+fn assert_record_host_dispatch_gate_is_mutation_sensitive(source: &str) {
+    for (forbidden, injection) in [
+        ("Action", "\nstruct Action;\n"),
+        ("Dom", "\nstruct Dom;\n"),
+        ("GrammarIR", "\nstruct GrammarIR;\n"),
+        ("Path", "\nstruct Path;\n"),
+        ("SourceModule", "\nstruct SourceModule;\n"),
+        ("Tape", "\nstruct Tape;\n"),
+        ("Value", "\nstruct Value;\n"),
+        ("callback", "\nfn callback() {}\n"),
+        (
+            "rule_name",
+            "\nfn historical_runtime_dispatch(rule_name: u32) { match rule_name { _ => {} } }\n",
+        ),
+        (
+            "serde_json",
+            "\nfn historical_host_dispatch() { let _ = serde_json::Value; }\n",
+        ),
+    ] {
+        let mutated = format!("{source}{injection}");
+        let findings = record_host_dispatch_absence_findings(&mutated);
+        assert!(
+            findings.contains(forbidden),
+            "born-red record carrier mutation `{forbidden}` escaped the absence gate: {findings:?}"
+        );
+    }
+}
+
 fn generated_function_range(source: &str, name: &str) -> std::ops::Range<usize> {
-    let declaration = format!("fn {name}");
+    let declaration = format!("fn {name}<");
     let start = source
         .find(&declaration)
         .unwrap_or_else(|| panic!("generated mutation basis missing `{name}`"));
@@ -7309,20 +7572,13 @@ fn swap_once_in_generated_function(
 fn mutate_pratt_event_descriptor(source: &str, function: &str) -> String {
     let range = generated_function_range(source, function);
     let body = &source[range.clone()];
-    let event = body
-        .find("EventKind::PrattReduce")
-        .expect("PrattReduce mutation basis");
-    let some = body[event..]
-        .find("Some(")
-        .map(|offset| event + offset)
-        .expect("PrattReduce event must carry an operator");
-    let receiver_start = some + "Some(".len();
-    let id = body[receiver_start..]
-        .find(".id())")
-        .map(|offset| receiver_start + offset)
-        .expect("PrattReduce descriptor id mutation basis");
-    let mut mutated = body.to_owned();
-    mutated.replace_range(receiver_start..id, "PRATT_OPERATORS[0]");
+    let needle = "Some(operator.id())";
+    assert_eq!(
+        body.matches(needle).count(),
+        1,
+        "PrattReduce mutation basis has one selected descriptor id"
+    );
+    let mutated = body.replacen(needle, "Some(PRATT_OPERATORS[0].id())", 1);
     let mut product = source.to_owned();
     product.replace_range(range, &mutated);
     product
@@ -7430,6 +7686,14 @@ fn canonical_resource_fixture() -> &'static str {
          let outcome = parser(run);
          limits.depth.set(depth);
          outcome
+     }
+     fn emit_event(run: R, limits: L, event: E) -> Step {
+         let logical_events = run.sink().len();
+         if logical_events >= limits.config.logical_events {
+             return resource_fault(run, ResourceKind::Events, limits.config.logical_events);
+         }
+         run.emit_with(event);
+         Step::Matched(())
      }"
 }
 
@@ -7995,6 +8259,74 @@ fn generated_v6_canonical_verifier_rejects_control_indirection_and_decoys() {
         "min_bp",
         &BTreeSet::from(["selected".to_owned()]),
     );
+    let canonical_reset = syn::parse_file(
+        "fn pratt_0() {
+             let mut selected = None;
+             loop {
+                 if selected.is_none() {
+                     selected = Some(0);
+                 }
+                 let Some(operator) = selected else { break; };
+                 selected = None;
+                 Step::Matched(())
+             }
+         }",
+    )
+    .expect("canonical shared Pratt selection reset syntax");
+    let canonical_reset_functions = top_level_functions(&canonical_reset);
+    assert_live_pratt_authority(
+        &unique_function(&canonical_reset_functions, "pratt_0").block,
+        "pratt_0",
+        &BTreeMap::new(),
+        "min_bp",
+        &BTreeSet::from(["selected".to_owned()]),
+    );
+    for (label, source) in [
+        (
+            "Pratt selection reset outside the canonical loop",
+            "fn pratt_0() {
+                 let mut selected = None;
+                 selected = None;
+                 loop {
+                     if selected.is_none() {
+                         selected = Some(0);
+                     }
+                     let Some(operator) = selected else { break; };
+                     Step::Matched(())
+                 }
+             }",
+        ),
+        (
+            "Pratt reset of a non-selection target",
+            "fn pratt_0() {
+                 let mut selected = None;
+                 loop {
+                     if selected.is_none() {
+                         selected = Some(0);
+                     }
+                     let Some(operator) = selected else { break; };
+                     other = None;
+                     Step::Matched(())
+                 }
+             }",
+        ),
+    ] {
+        let file = syn::parse_file(source).expect("Pratt reset mutation syntax");
+        let functions = top_level_functions(&file);
+        assert!(
+            std::panic::catch_unwind(|| {
+                assert_live_pratt_authority(
+                    &unique_function(&functions, "pratt_0").block,
+                    "pratt_0",
+                    &BTreeMap::new(),
+                    "min_bp",
+                    &BTreeSet::from(["selected".to_owned()]),
+                )
+            })
+            .is_err(),
+            "canonical verifier accepted {label}"
+        );
+    }
     for (label, mutation) in [
         (
             "inert Pratt expression",
@@ -8052,17 +8384,18 @@ fn generated_v6_canonical_verifier_rejects_control_indirection_and_decoys() {
         let file = syn::parse_file(&source).expect("Pratt mismatch mutation syntax");
         let functions = top_level_functions(&file);
         let function = unique_function(&functions, "pratt_0");
-        let probes = pratt_probes(
-            &function.block,
-            &BTreeSet::from(["rule_0".to_owned()]),
-            &BTreeMap::new(),
-            "min_bp",
-        );
-        assert_eq!(probes.len(), 1);
-        assert!(
-            !probes[0].exact_mismatch_fallthrough,
-            "canonical verifier accepted {label}"
-        );
+        let rejected = match std::panic::catch_unwind(|| {
+            pratt_probes(
+                &function.block,
+                &BTreeSet::from(["rule_0".to_owned()]),
+                &BTreeMap::new(),
+                "min_bp",
+            )
+        }) {
+            Err(_) => true,
+            Ok(probes) => probes.len() == 1 && !probes[0].exact_mismatch_fallthrough,
+        };
+        assert!(rejected, "canonical verifier accepted {label}");
     }
     let canonical_fallthrough = syn::parse_file(
         "fn pratt_0() {
@@ -8252,7 +8585,7 @@ fn generated_v6_canonical_verifier_rejects_control_indirection_and_decoys() {
     );
 
     let manual_difference = syn::parse_file(
-        "fn node_0() {\
+        "fn node_0(run: R, limits: &Limits) {\
             match charge_work(run, limits) {\
                 Step::Matched(()) => {},\
                 Step::Mismatch(failure) => return Step::Mismatch(failure),\
@@ -8973,7 +9306,7 @@ fn pratt_is_manifest_attached_revision_branded_and_semantically_closed() {
     assert_rule_facts(&first, "expression", false, Some(1));
 
     let tables = first.lowering().pratt_tables();
-    let table_view = tables.get(0).expect("one public Pratt table");
+    let table_view = tables.first().expect("one public Pratt table");
     assert_eq!(tables.len(), 1);
     assert_eq!(table_view.id(), table);
     assert_eq!(table_view.site_rule(), rule(&first, "expression"));
@@ -9563,7 +9896,7 @@ fn canonical_generated_v6_rejects_full_product_control_and_pratt_mutations() {
         true,
         "dead primitive call hidden in an Epsilon returned path",
     );
-    let (sequence_node, sequence_children) = semantic
+    let (sequence_node, sequence_children) = module
         .lowering()
         .nodes()
         .iter()
@@ -9576,9 +9909,9 @@ fn canonical_generated_v6_rejects_full_product_control_and_pratt_mutations() {
         })
         .expect("semantic fixture contains a multi-child Sequence");
     assert_generated_v6_mutation_rejected(
-        &semantic,
+        &module,
         &replace_once_in_generated_function(
-            semantic.generated().source(),
+            source,
             &format!("node_{sequence_node}"),
             &format!("node_{}(run, limits)", sequence_children[0].index()),
             &format!("node_{}(run, limits)", sequence_children[1].index()),
@@ -10262,6 +10595,15 @@ mod unused_pratt {
 mod event_surface {
     include!("../event_surface_generated.rs");
 }
+mod generic_control {
+    include!("../generic_control_generated.rs");
+}
+mod recursive_control {
+    include!("../recursive_control_generated.rs");
+}
+mod recursive_record {
+    include!("../recursive_record_generated.rs");
+}
 mod semantic {
     include!("../semantic_generated.rs");
 }
@@ -10671,7 +11013,884 @@ macro_rules! scalar_rows_without_outer_envelope {
     }};
 }
 
+const GENERIC_INPUT: &[u8] = b"ab123xyx!";
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct GenericEvent {
+    kind: generic_control::EventKind,
+    rule: Option<u32>,
+    node: Option<u32>,
+    field: Option<u32>,
+    transform: Option<u32>,
+    operator: Option<u32>,
+    start: u32,
+    end: u32,
+    value: u32,
+}
+
+#[allow(clippy::too_many_arguments)]
+const fn generic_event(
+    kind: generic_control::EventKind,
+    rule: Option<u32>,
+    node: Option<u32>,
+    transform: Option<u32>,
+    start: u32,
+    end: u32,
+    value: u32,
+) -> GenericEvent {
+    GenericEvent {
+        kind,
+        rule,
+        node,
+        field: None,
+        transform,
+        operator: None,
+        start,
+        end,
+        value,
+    }
+}
+
+fn generic_view(event: &generic_control::ScalarEvent) -> GenericEvent {
+    GenericEvent {
+        kind: event.kind(),
+        rule: event.rule(),
+        node: event.node(),
+        field: event.field(),
+        transform: event.transform(),
+        operator: event.operator(),
+        start: event.start(),
+        end: event.end(),
+        value: event.value(),
+    }
+}
+
+fn generic_views(events: &[generic_control::ScalarEvent]) -> Vec<GenericEvent> {
+    events.iter().map(generic_view).collect()
+}
+
+fn generic_oracle(input: &[u8]) -> Option<Vec<GenericEvent>> {
+    use generic_control::EventKind;
+
+    let mut events = vec![
+        generic_event(EventKind::EnterRule, Some(0), None, None, 0, 0, 0),
+        generic_event(EventKind::EnterRule, Some(1), None, None, 0, 0, 0),
+    ];
+
+    match input.get(..2)? {
+        b"ax" => {
+            events.push(generic_event(
+                EventKind::Literal,
+                None,
+                Some(7),
+                None,
+                0,
+                1,
+                0,
+            ));
+            events.push(generic_event(
+                EventKind::Transform,
+                None,
+                Some(8),
+                Some(0),
+                0,
+                1,
+                0,
+            ));
+            events.push(generic_event(
+                EventKind::Literal,
+                None,
+                Some(9),
+                None,
+                1,
+                2,
+                0,
+            ));
+            events.push(generic_event(
+                EventKind::ChoiceBranch,
+                None,
+                Some(15),
+                None,
+                0,
+                2,
+                0,
+            ));
+        }
+        b"ab" => {
+            events.push(generic_event(
+                EventKind::Literal,
+                None,
+                Some(11),
+                None,
+                0,
+                1,
+                0,
+            ));
+            events.push(generic_event(
+                EventKind::Literal,
+                None,
+                Some(12),
+                None,
+                1,
+                2,
+                0,
+            ));
+            events.push(generic_event(
+                EventKind::Transform,
+                None,
+                Some(14),
+                Some(1),
+                0,
+                2,
+                0,
+            ));
+            events.push(generic_event(
+                EventKind::ChoiceBranch,
+                None,
+                Some(15),
+                None,
+                0,
+                2,
+                1,
+            ));
+        }
+        _ => return None,
+    }
+    events.push(generic_event(
+        EventKind::LeaveRule,
+        Some(1),
+        None,
+        None,
+        0,
+        2,
+        0,
+    ));
+
+    let mut at = 2usize;
+    let digits_start = at;
+    while input.get(at).is_some_and(u8::is_ascii_digit) {
+        at += 1;
+    }
+    if at == digits_start {
+        return None;
+    }
+    events.push(generic_event(
+        EventKind::EnterRule,
+        Some(2),
+        None,
+        None,
+        digits_start as u32,
+        digits_start as u32,
+        0,
+    ));
+    events.push(generic_event(
+        EventKind::Regex,
+        None,
+        Some(16),
+        None,
+        digits_start as u32,
+        at as u32,
+        0,
+    ));
+    events.push(generic_event(
+        EventKind::LeaveRule,
+        Some(2),
+        None,
+        None,
+        digits_start as u32,
+        at as u32,
+        0,
+    ));
+
+    let pairs_start = at;
+    let mut pairs = 0u32;
+    while input.get(at..at.saturating_add(2)) == Some(b"xy") {
+        let start = at as u32;
+        events.push(generic_event(
+            EventKind::EnterRule,
+            Some(3),
+            None,
+            None,
+            start,
+            start,
+            0,
+        ));
+        events.push(generic_event(
+            EventKind::Literal,
+            None,
+            Some(17),
+            None,
+            start,
+            start + 1,
+            0,
+        ));
+        events.push(generic_event(
+            EventKind::Literal,
+            None,
+            Some(18),
+            None,
+            start + 1,
+            start + 2,
+            0,
+        ));
+        at += 2;
+        pairs += 1;
+        events.push(generic_event(
+            EventKind::LeaveRule,
+            Some(3),
+            None,
+            None,
+            start,
+            at as u32,
+            0,
+        ));
+    }
+    events.push(generic_event(
+        EventKind::RepeatCount,
+        None,
+        Some(3),
+        None,
+        pairs_start as u32,
+        at as u32,
+        pairs,
+    ));
+
+    if input.get(at) != Some(&b'x') || input.get(at + 1) != Some(&b'!') {
+        return None;
+    }
+    events.push(generic_event(
+        EventKind::Literal,
+        None,
+        Some(4),
+        None,
+        at as u32,
+        (at + 1) as u32,
+        0,
+    ));
+    events.push(generic_event(
+        EventKind::Literal,
+        None,
+        Some(5),
+        None,
+        (at + 1) as u32,
+        (at + 2) as u32,
+        0,
+    ));
+    at += 2;
+    if at != input.len() {
+        return None;
+    }
+    events.push(generic_event(
+        EventKind::LeaveRule,
+        Some(0),
+        None,
+        None,
+        0,
+        at as u32,
+        0,
+    ));
+    events.push(generic_event(
+        EventKind::EndInput,
+        None,
+        None,
+        None,
+        at as u32,
+        at as u32,
+        0,
+    ));
+    Some(events)
+}
+
+fn assert_generic_oracle_conformance(input: &[u8]) {
+    let expected = generic_oracle(input);
+    let checked = generic_control::check(input);
+    let parsed = generic_control::parse_events(input);
+    match expected {
+        Some(events) => {
+            assert_matched(checked.outcome(), input.len());
+            assert_matched(parsed.outcome(), input.len());
+            assert_eq!(
+                generic_views(parsed.sink().events()),
+                events,
+                "generic event divergence for input {input:?}"
+            );
+            assert_eq!(
+                EventSink::len(checked.sink()),
+                parsed.sink().events().len(),
+                "generic sink modes counted different logical events for input {input:?}"
+            );
+        }
+        None => {
+            assert!(
+                matches!(checked.outcome(), Step::Mismatch(_)),
+                "generic check accepted oracle-negative input {input:?}: {:?}",
+                checked.outcome()
+            );
+            assert!(
+                matches!(parsed.outcome(), Step::Mismatch(_)),
+                "generic event parse accepted oracle-negative input {input:?}: {:?}",
+                parsed.outcome()
+            );
+            assert_eq!(EventSink::len(checked.sink()), 0);
+            assert!(
+                parsed.sink().events().is_empty(),
+                "generic rejected input retained transactional events: {input:?}"
+            );
+        }
+    }
+}
+
+fn generic_first_event_success(input: &[u8], retaining: bool) -> usize {
+    (0..64)
+        .find(|limit| {
+            let config =
+                generic_control::LimitsConfig::default().with_logical_events(*limit);
+            if retaining {
+                matches!(
+                    generic_control::parse_events_with_limits(input, config).outcome(),
+                    Step::Matched(_)
+                )
+            } else {
+                matches!(
+                    generic_control::check_with_limits(input, config).outcome(),
+                    Step::Matched(_)
+                )
+            }
+        })
+        .expect("generic fixture succeeds below the event-cap search ceiling")
+}
+
+fn assert_generic_fault_both_modes(
+    input: &[u8],
+    limits: generic_control::LimitsConfig,
+    kind: ResourceKind,
+    limit: usize,
+) {
+    let checked = generic_control::check_with_limits(input, limits);
+    assert_resource(checked.outcome(), kind, limit);
+    assert_eq!(
+        EventSink::len(checked.sink()),
+        0,
+        "generic NoSink fault retained a logical event count"
+    );
+    let parsed = generic_control::parse_events_with_limits(input, limits);
+    assert_resource(parsed.outcome(), kind, limit);
+    assert!(
+        parsed.sink().events().is_empty(),
+        "generic retained-sink fault kept transactional events"
+    );
+}
+
+fn exercise_generic_control_laws() {
+    assert_generic_oracle_conformance(GENERIC_INPUT);
+    assert_eq!(
+        generic_control::TRANSFORMS
+            .iter()
+            .map(|descriptor| (descriptor.id(), descriptor.name()))
+            .collect::<Vec<_>>(),
+        [(0, "discarded"), (1, "chosen")]
+    );
+
+    for branch in [b"ax".as_slice(), b"ab".as_slice()] {
+        for digits in [
+            b"0".as_slice(),
+            b"7".as_slice(),
+            b"42".as_slice(),
+            b"123".as_slice(),
+            b"99999".as_slice(),
+        ] {
+            for pair_count in 0..=6 {
+                let mut input = Vec::new();
+                input.extend_from_slice(branch);
+                input.extend_from_slice(digits);
+                for _ in 0..pair_count {
+                    input.extend_from_slice(b"xy");
+                }
+                input.extend_from_slice(b"x!");
+                assert_generic_oracle_conformance(&input);
+            }
+        }
+    }
+    for input in [
+        b"".as_slice(),
+        b"a",
+        b"ab",
+        b"ab0",
+        b"ab0x",
+        b"ab0x!!",
+        b"ab0xy!",
+        b"ax1xyx!tail",
+    ] {
+        assert_generic_oracle_conformance(input);
+    }
+
+    const ALPHABET: &[u8] = b"abxy!01239q";
+    let mut state = 0x9e37_79b9_7f4a_7c15u64;
+    for _ in 0..2_048 {
+        state ^= state << 13;
+        state ^= state >> 7;
+        state ^= state << 17;
+        let len = (state as usize) % 24;
+        let mut input = Vec::with_capacity(len);
+        for _ in 0..len {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            input.push(ALPHABET[(state as usize) % ALPHABET.len()]);
+        }
+        assert_generic_oracle_conformance(&input);
+    }
+
+    assert_generic_fault_both_modes(
+        GENERIC_INPUT,
+        generic_control::LimitsConfig::default()
+            .with_input_bytes(GENERIC_INPUT.len() - 1),
+        ResourceKind::InputBytes,
+        GENERIC_INPUT.len() - 1,
+    );
+    assert_generic_fault_both_modes(
+        GENERIC_INPUT,
+        generic_control::LimitsConfig::default().with_nesting(1),
+        ResourceKind::Nesting,
+        1,
+    );
+    let committed_events = generic_control::parse_events(GENERIC_INPUT)
+        .sink()
+        .events()
+        .len();
+    assert!(committed_events > 0);
+    assert_generic_fault_both_modes(
+        GENERIC_INPUT,
+        generic_control::LimitsConfig::default()
+            .with_logical_events(committed_events - 1),
+        ResourceKind::Events,
+        committed_events - 1,
+    );
+    assert_generic_fault_both_modes(
+        GENERIC_INPUT,
+        generic_control::LimitsConfig::default().with_work(1),
+        ResourceKind::Work,
+        1,
+    );
+
+    let shallow_speculation = b"ax123x!";
+    let deeper_speculation = b"ab123x!";
+    let retained_count = generic_control::parse_events(shallow_speculation)
+        .sink()
+        .events()
+        .len();
+    assert_eq!(
+        generic_control::parse_events(deeper_speculation)
+            .sink()
+            .events()
+            .len(),
+        retained_count
+    );
+    assert_eq!(
+        generic_first_event_success(shallow_speculation, true),
+        retained_count
+    );
+    assert_eq!(
+        generic_first_event_success(deeper_speculation, true),
+        retained_count
+    );
+    assert_eq!(
+        generic_first_event_success(shallow_speculation, false),
+        retained_count
+    );
+    assert_eq!(
+        generic_first_event_success(deeper_speculation, false),
+        retained_count
+    );
+
+    let parsed = generic_control::parse_events(GENERIC_INPUT);
+    let (_, outcome, buffer) = parsed.into_parts();
+    assert_matched(&outcome, GENERIC_INPUT.len());
+    assert_eq!(buffer.revision(), generic_control::REVISION);
+    assert_eq!(buffer.source().bytes().as_ptr(), GENERIC_INPUT.as_ptr());
+    assert_eq!(buffer.source().bytes().len(), GENERIC_INPUT.len());
+    let stream = buffer.into_stream();
+    assert_eq!(stream.revision(), generic_control::REVISION);
+    assert_eq!(stream.source().bytes().as_ptr(), GENERIC_INPUT.as_ptr());
+    assert_eq!(stream.source().bytes().len(), GENERIC_INPUT.len());
+    let (revision, source, events) = stream.into_parts();
+    assert_eq!(revision, generic_control::REVISION);
+    assert_eq!(source.bytes(), GENERIC_INPUT);
+    assert!(!events.is_empty());
+    assert_eq!(
+        generic_control::RAW_SOURCE_SPAN_NORMALIZATION,
+        generic_control::RawSourceSpanNormalization::OriginalInputByteOffsets
+    );
+    assert_eq!(
+        generic_control::RECOVERY_POLICY,
+        generic_control::RecoveryPolicy::Disabled
+    );
+    assert_eq!(
+        generic_control::TRANSACTIONAL_ERROR_POLICY,
+        generic_control::TransactionalErrorPolicy::RollbackAllEventsOnMismatchOrFault
+    );
+}
+
+type RecursiveEvent = (
+    recursive_control::EventKind,
+    Option<u32>,
+    Option<u32>,
+    Option<u32>,
+    Option<u32>,
+    Option<u32>,
+    u32,
+    u32,
+    u32,
+);
+
+fn recursive_view(event: &recursive_control::ScalarEvent) -> RecursiveEvent {
+    (
+        event.kind(),
+        event.rule(),
+        event.node(),
+        event.field(),
+        event.transform(),
+        event.operator(),
+        event.start(),
+        event.end(),
+        event.value(),
+    )
+}
+
+fn assert_recursive_match(input: &[u8]) {
+    let checked = recursive_control::check(input);
+    assert_matched(checked.outcome(), input.len());
+    let parsed = recursive_control::parse_events(input);
+    assert_matched(parsed.outcome(), input.len());
+    assert_eq!(
+        EventSink::len(checked.sink()),
+        parsed.sink().events().len(),
+        "recursive sink modes counted different logical events for {input:?}"
+    );
+    assert_eq!(
+        parsed.sink().events().last().map(|event| event.kind()),
+        Some(recursive_control::EventKind::EndInput)
+    );
+}
+
+fn assert_recursive_mismatch(input: &[u8]) {
+    let checked = recursive_control::check(input);
+    assert!(
+        matches!(checked.outcome(), Step::Mismatch(_)),
+        "recursive check accepted {input:?}: {:?}",
+        checked.outcome()
+    );
+    assert_eq!(EventSink::len(checked.sink()), 0);
+    let parsed = recursive_control::parse_events(input);
+    assert!(
+        matches!(parsed.outcome(), Step::Mismatch(_)),
+        "recursive event parse accepted {input:?}: {:?}",
+        parsed.outcome()
+    );
+    assert!(
+        parsed.sink().events().is_empty(),
+        "recursive mismatch retained transactional events for {input:?}"
+    );
+}
+
+fn assert_recursive_fault_both_modes(
+    input: &[u8],
+    limits: recursive_control::LimitsConfig,
+    kind: ResourceKind,
+) {
+    let checked = recursive_control::check_with_limits(input, limits);
+    assert!(matches!(
+        checked.outcome(),
+        Step::Fault(Fault::ResourceLimit {
+            kind: actual,
+            ..
+        }) if *actual == kind
+    ));
+    assert_eq!(EventSink::len(checked.sink()), 0);
+    let parsed = recursive_control::parse_events_with_limits(input, limits);
+    assert!(matches!(
+        parsed.outcome(),
+        Step::Fault(Fault::ResourceLimit {
+            kind: actual,
+            ..
+        }) if *actual == kind
+    ));
+    assert!(
+        parsed.sink().events().is_empty(),
+        "recursive fault retained transactional events"
+    );
+}
+
+fn exercise_recursive_control_laws() {
+    for input in [b"x".as_slice(), b"(x)", b"((x))", b"((((x))))"] {
+        assert_recursive_match(input);
+    }
+    for input in [
+        b"".as_slice(),
+        b"(",
+        b"(x",
+        b"x)",
+        b"()",
+        b"((x)))",
+        b"((y))",
+    ] {
+        assert_recursive_mismatch(input);
+    }
+
+    let parsed = recursive_control::parse_events(b"(x)");
+    assert_matched(parsed.outcome(), 3);
+    let actual = parsed
+        .sink()
+        .events()
+        .iter()
+        .map(recursive_view)
+        .collect::<Vec<_>>();
+    use recursive_control::EventKind;
+    assert_eq!(
+        actual,
+        vec![
+            (EventKind::EnterRule, Some(0), None, None, None, None, 0, 0, 0),
+            (EventKind::Literal, None, Some(0), None, None, None, 0, 1, 0),
+            (EventKind::EnterRule, Some(0), None, None, None, None, 1, 1, 0),
+            (EventKind::Literal, None, Some(4), None, None, None, 1, 2, 0),
+            (
+                EventKind::ChoiceBranch,
+                None,
+                Some(5),
+                None,
+                None,
+                None,
+                1,
+                2,
+                1,
+            ),
+            (EventKind::LeaveRule, Some(0), None, None, None, None, 1, 2, 0),
+            (EventKind::Literal, None, Some(2), None, None, None, 2, 3, 0),
+            (
+                EventKind::ChoiceBranch,
+                None,
+                Some(5),
+                None,
+                None,
+                None,
+                0,
+                3,
+                0,
+            ),
+            (EventKind::LeaveRule, Some(0), None, None, None, None, 0, 3, 0),
+            (EventKind::EndInput, None, None, None, None, None, 3, 3, 0),
+        ]
+    );
+
+    let ordinary_input = b"((x))";
+    assert_recursive_fault_both_modes(
+        ordinary_input,
+        recursive_control::LimitsConfig::default()
+            .with_input_bytes(ordinary_input.len() - 1),
+        ResourceKind::InputBytes,
+    );
+    assert_recursive_fault_both_modes(
+        ordinary_input,
+        recursive_control::LimitsConfig::default().with_nesting(2),
+        ResourceKind::Nesting,
+    );
+    let committed_events = recursive_control::parse_events(ordinary_input)
+        .sink()
+        .events()
+        .len();
+    assert!(committed_events > 0);
+    assert_recursive_fault_both_modes(
+        ordinary_input,
+        recursive_control::LimitsConfig::default()
+            .with_logical_events(committed_events - 1),
+        ResourceKind::Events,
+    );
+    assert_recursive_fault_both_modes(
+        ordinary_input,
+        recursive_control::LimitsConfig::default().with_work(1),
+        ResourceKind::Work,
+    );
+
+    let oversized = recursive_control::LimitsConfig::default()
+        .with_input_bytes(usize::MAX)
+        .with_nesting(usize::MAX)
+        .with_logical_events(usize::MAX)
+        .with_work(usize::MAX);
+    let defaults = recursive_control::LimitsConfig::default();
+    let oversized_input = vec![b'x'; defaults.input_bytes() + 1];
+    assert_recursive_fault_both_modes(
+        &oversized_input,
+        oversized,
+        ResourceKind::InputBytes,
+    );
+
+    let parsed = recursive_control::parse_events(ordinary_input);
+    let (_, outcome, buffer) = parsed.into_parts();
+    assert_matched(&outcome, ordinary_input.len());
+    assert_eq!(buffer.revision(), recursive_control::REVISION);
+    assert_eq!(buffer.source().bytes().as_ptr(), ordinary_input.as_ptr());
+    assert_eq!(buffer.source().bytes().len(), ordinary_input.len());
+    let stream = buffer.into_stream();
+    assert_eq!(stream.revision(), recursive_control::REVISION);
+    assert_eq!(stream.source().bytes().as_ptr(), ordinary_input.as_ptr());
+    assert_eq!(stream.source().bytes().len(), ordinary_input.len());
+    let (revision, source, events) = stream.into_parts();
+    assert_eq!(revision, recursive_control::REVISION);
+    assert_eq!(source.bytes().as_ptr(), ordinary_input.as_ptr());
+    assert_eq!(source.bytes(), ordinary_input);
+    assert!(!events.is_empty());
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct RecordEvent {
+    kind: recursive_record::EventKind,
+    rule: Option<u32>,
+    node: Option<u32>,
+    field: Option<u32>,
+    transform: Option<u32>,
+    operator: Option<u32>,
+    start: u32,
+    end: u32,
+    value: u32,
+}
+
+#[allow(clippy::too_many_arguments)]
+const fn record_event(
+    kind: recursive_record::EventKind,
+    rule: Option<u32>,
+    node: Option<u32>,
+    field: Option<u32>,
+    transform: Option<u32>,
+    start: u32,
+    end: u32,
+    value: u32,
+) -> RecordEvent {
+    RecordEvent {
+        kind,
+        rule,
+        node,
+        field,
+        transform,
+        operator: None,
+        start,
+        end,
+        value,
+    }
+}
+
+fn record_view(event: &recursive_record::ScalarEvent) -> RecordEvent {
+    RecordEvent {
+        kind: event.kind(),
+        rule: event.rule(),
+        node: event.node(),
+        field: event.field(),
+        transform: event.transform(),
+        operator: event.operator(),
+        start: event.start(),
+        end: event.end(),
+        value: event.value(),
+    }
+}
+
+fn expected_recursive_record_events() -> Vec<RecordEvent> {
+    use recursive_record::EventKind::{
+        ChoiceBranch, EndInput, EnterField, EnterRule, LeaveField, LeaveRule, Literal, Regex,
+        RepeatCount, Transform,
+    };
+    vec![
+        record_event(EnterRule, Some(0), None, None, None, 0, 0, 0),
+        record_event(EnterRule, Some(1), None, None, None, 0, 0, 0),
+        record_event(EnterRule, Some(2), None, None, None, 0, 0, 0),
+        record_event(Literal, None, Some(4), None, None, 0, 1, 0),
+        record_event(EnterField, Some(2), Some(6), Some(0), None, 1, 1, 0),
+        record_event(EnterRule, Some(1), None, None, None, 1, 1, 0),
+        record_event(EnterRule, Some(3), None, None, None, 1, 1, 0),
+        record_event(EnterField, Some(3), Some(10), Some(1), None, 1, 1, 0),
+        record_event(Regex, None, Some(9), None, None, 1, 2, 0),
+        record_event(Transform, None, Some(10), None, Some(0), 1, 2, 0),
+        record_event(LeaveField, Some(3), Some(10), Some(1), None, 1, 2, 0),
+        record_event(LeaveRule, Some(3), None, None, None, 1, 2, 0),
+        record_event(ChoiceBranch, None, Some(3), None, None, 1, 2, 1),
+        record_event(LeaveRule, Some(1), None, None, None, 1, 2, 0),
+        record_event(RepeatCount, None, Some(6), None, None, 1, 2, 1),
+        record_event(LeaveField, Some(2), Some(6), Some(0), None, 1, 2, 0),
+        record_event(Literal, None, Some(7), None, None, 2, 3, 0),
+        record_event(LeaveRule, Some(2), None, None, None, 0, 3, 0),
+        record_event(ChoiceBranch, None, Some(3), None, None, 0, 3, 0),
+        record_event(LeaveRule, Some(1), None, None, None, 0, 3, 0),
+        record_event(LeaveRule, Some(0), None, None, None, 0, 3, 0),
+        record_event(EndInput, None, None, None, None, 3, 3, 0),
+    ]
+}
+
+fn exercise_recursive_record_laws() {
+    assert_eq!(recursive_record::EVENT_SCHEMA, "bbnf.scalar-events.v5");
+    assert_eq!(recursive_record::FIELDS.len(), 2);
+    assert_eq!(
+        (
+            recursive_record::FIELDS[0].id(),
+            recursive_record::FIELDS[0].owner_rule(),
+            recursive_record::FIELDS[0].source_slot(),
+            recursive_record::FIELDS[0].name(),
+        ),
+        (0, 2, 1, "children")
+    );
+    assert_eq!(
+        (
+            recursive_record::FIELDS[1].id(),
+            recursive_record::FIELDS[1].owner_rule(),
+            recursive_record::FIELDS[1].source_slot(),
+            recursive_record::FIELDS[1].name(),
+        ),
+        (1, 3, 0, "text")
+    );
+    assert_ne!(
+        recursive_record::FIELDS[0].semantic_type(),
+        recursive_record::FIELDS[1].semantic_type()
+    );
+
+    let input = b"(x)";
+    let checked = recursive_record::check(input);
+    assert_matched(checked.outcome(), input.len());
+    let parsed = recursive_record::parse_events(input);
+    assert_matched(parsed.outcome(), input.len());
+    let actual = parsed
+        .sink()
+        .events()
+        .iter()
+        .map(record_view)
+        .collect::<Vec<_>>();
+    assert_eq!(actual, expected_recursive_record_events());
+    assert_eq!(EventSink::len(checked.sink()), actual.len());
+
+    let checked_mismatch = recursive_record::check(b"(x");
+    assert!(matches!(checked_mismatch.outcome(), Step::Mismatch(_)));
+    assert_eq!(EventSink::len(checked_mismatch.sink()), 0);
+    let mismatch = recursive_record::parse_events(b"(x");
+    assert!(matches!(mismatch.outcome(), Step::Mismatch(_)));
+    assert!(mismatch.sink().events().is_empty());
+
+    let event_limit =
+        recursive_record::LimitsConfig::default().with_logical_events(6);
+    let checked_limited =
+        recursive_record::check_with_limits(input, event_limit);
+    assert_resource(
+        checked_limited.outcome(),
+        ResourceKind::Events,
+        6,
+    );
+    assert_eq!(EventSink::len(checked_limited.sink()), 0);
+    let limited =
+        recursive_record::parse_events_with_limits(input, event_limit);
+    assert_resource(limited.outcome(), ResourceKind::Events, 6);
+    assert!(limited.sink().events().is_empty());
+}
+
 fn main() {
+    exercise_generic_control_laws();
+    exercise_recursive_control_laws();
+    exercise_recursive_record_laws();
+
     assert_eq!(pratt::PRATT_TABLES.len(), 1);
     assert_eq!(pratt::PRATT_OPERATORS.len(), 8);
     let table = &pratt::PRATT_TABLES[0];
@@ -11970,11 +13189,9 @@ fn render_generated_runtime_main(
     semantic: &CompiledModule,
     multi_pratt: &CompiledModule,
     unused_pratt: &CompiledModule,
-    project_right: &CompiledModule,
-    baseline_right: &CompiledModule,
-    project_left: &CompiledModule,
-    baseline_left: &CompiledModule,
+    projections: &[CompiledModule; 4],
 ) -> String {
+    let [project_right, baseline_right, project_left, baseline_left] = projections;
     let replacements = [
         (
             "__PRATT_NODE__",
@@ -12208,6 +13425,24 @@ item = "x" | /y/;
     let event_surface_manifest =
         manifest_for_entry("contracts/w3/event-surface-runtime.bbnf", "document", None);
     let event_surface = accepted(&event_surface_manifest, EVENT_SURFACE_SOURCE);
+    let generic_control_manifest =
+        manifest_for_entry("contracts/w3/generic-control-runtime.bbnf", "root", None);
+    let generic_control = accepted(&generic_control_manifest, GENERIC_CONTROL_SOURCE);
+    let recursive_control_manifest =
+        manifest_for_entry("contracts/w3/recursive-control-runtime.bbnf", "root", None);
+    let recursive_control = accepted(&recursive_control_manifest, RECURSIVE_CONTROL_SOURCE);
+    let recursive_record_manifest =
+        manifest_for_entry("contracts/w3/recursive-record-runtime.bbnf", "root", None);
+    let recursive_record = accepted(&recursive_record_manifest, RECURSIVE_RECORD_SOURCE);
+    assert_generated_v6_canonical(&generic_control, false);
+    assert_generated_v6_canonical(&recursive_control, false);
+    assert_generated_v6_canonical(&recursive_record, false);
+    assert_recursive_minimal_import_closure(recursive_control.generated().source());
+    assert_recursive_minimal_import_gate_is_mutation_sensitive(
+        recursive_control.generated().source(),
+    );
+    assert_record_host_dispatch_absence(recursive_record.generated().source());
+    assert_record_host_dispatch_gate_is_mutation_sensitive(recursive_record.generated().source());
     let semantic = accepted(SEMANTIC_MANIFEST, SEMANTIC_SOURCE);
     let difference_nullable_exclusion_manifest = manifest_for_entry(
         "contracts/w3/difference-nullable-exclusion-runtime.bbnf",
@@ -12338,10 +13573,7 @@ exclude = "x";
         &semantic,
         &multi_pratt,
         &unused_pratt,
-        project_right,
-        baseline_right,
-        project_left,
-        baseline_left,
+        &projection_modules,
     );
     write_runtime_project(
         temp.path(),
@@ -12419,6 +13651,18 @@ exclude = "x";
             (
                 "event_surface_generated.rs",
                 event_surface.generated().source(),
+            ),
+            (
+                "generic_control_generated.rs",
+                generic_control.generated().source(),
+            ),
+            (
+                "recursive_control_generated.rs",
+                recursive_control.generated().source(),
+            ),
+            (
+                "recursive_record_generated.rs",
+                recursive_record.generated().source(),
             ),
             ("semantic_generated.rs", semantic.generated().source()),
             ("trim_only_generated.rs", trim_only.generated().source()),

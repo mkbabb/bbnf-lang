@@ -4,10 +4,14 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub struct CompileOptions {
+    pub instance_bytes: usize,
     pub source_bytes: usize,
     pub rules: usize,
     pub nodes: usize,
     pub syntax_nesting: usize,
+    pub pratt_tables: usize,
+    pub pratt_operators: usize,
+    pub presentation_hints: usize,
     pub analysis_iterations: usize,
     pub analysis_work: usize,
     pub generated_bytes: usize,
@@ -18,10 +22,14 @@ pub struct CompileOptions {
 impl Default for CompileOptions {
     fn default() -> Self {
         Self {
+            instance_bytes: 1024 * 1024,
             source_bytes: 1024 * 1024,
             rules: 4_096,
             nodes: 65_536,
             syntax_nesting: 256,
+            pratt_tables: 4_096,
+            pratt_operators: 65_536,
+            presentation_hints: 65_536,
             analysis_iterations: 65_536,
             analysis_work: 1_048_576,
             generated_bytes: 16 * 1024 * 1024,

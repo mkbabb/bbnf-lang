@@ -266,7 +266,7 @@ pub fn emit_path_plan(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
 
     let plan_mod_ident = format_ident!("__path_plan");
 
-    quote! {
+    (quote! {
         /// AZ-IV.W3.3 — codegen-emitted lazy-parse path plan.
         ///
         /// The static `PATH_PLAN` carries one row per `(rule, segment
@@ -316,7 +316,7 @@ pub fn emit_path_plan(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
                 ::core::option::Option::None
             }
         }
-    }
+    })
 }
 
 /// Emit one `PathPlanEntry` literal.

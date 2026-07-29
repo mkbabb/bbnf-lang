@@ -45,17 +45,10 @@ jobs:
         run: cargo install cargo-expand --locked
 
       # ── Preflight (routine surface) ────────────────────────────────
-      # Fast checks on the ax-iter profile: regen drift gate (xtask
-      # regenerates per-grammar `crates/core/src/grammar/generated/` to
-      # a tempdir + diffs against checked-in; non-zero exit blocks PR),
-      # clippy, and compile-gate via the iter-check alias (excludes the
-      # heavy link-time crates per B1.md invariant 10). Short timeout —
-      # this block is the iteration loop, not the close gate. Pinned to
-      # partition 1 so the preflight gate runs once per workflow.
-      - name: preflight — regen check (xtask)
+      - name: preflight — generated carrier identity
         if: matrix.partition == 1
         timeout-minutes: 5
-        run: cargo xtask regen --check
+        run: cargo test -p bbnf --test w3_replay_public_contract exactly_three_public_instances_compile_twice_to_byte_identical_carriers --locked -- --exact
       - name: preflight — clippy (ax-iter)
         if: matrix.partition == 1
         timeout-minutes: 10

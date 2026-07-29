@@ -70,11 +70,11 @@ fn every_stage_has_a_deterministic_revision_bound_replay() {
         "bbnf.node-remap.v1",
         "bbnf.dependency-solution.v1",
         "bbnf.type-solution.v2",
-        "bbnf.analysis-facts.v1",
+        "bbnf.analysis-facts.v3",
         "bbnf.lowering-plan.v2",
         "bbnf.scalar-events.v4",
         "bbnf.generated-module.v4",
-        "bbnf.compiled-module.v4",
+        "bbnf.compiled-module.v5",
     ];
     for (packet, expected_schema) in first_packets.into_iter().zip(expected_schemas) {
         let value: serde_json::Value =

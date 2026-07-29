@@ -19,11 +19,11 @@ const SOURCE_MAP_REPLAY_SCHEMA: &str = "bbnf.source-map.v3";
 const PROGRAM_REPLAY_SCHEMA: &str = "bbnf.program.v2";
 const DEPENDENCY_REPLAY_SCHEMA: &str = "bbnf.dependency-solution.v1";
 const TYPE_REPLAY_SCHEMA: &str = "bbnf.type-solution.v2";
-const ANALYSIS_REPLAY_SCHEMA: &str = "bbnf.analysis-facts.v1";
+const ANALYSIS_REPLAY_SCHEMA: &str = "bbnf.analysis-facts.v3";
 const LOWERING_REPLAY_SCHEMA: &str = "bbnf.lowering-plan.v2";
 const NODE_REMAP_REPLAY_SCHEMA: &str = "bbnf.node-remap.v1";
 const GENERATED_REPLAY_SCHEMA: &str = "bbnf.generated-module.v4";
-const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v4";
+const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v5";
 
 #[derive(Serialize)]
 struct ReplayEnvelope<'a, T> {

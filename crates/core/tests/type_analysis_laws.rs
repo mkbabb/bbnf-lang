@@ -1,5 +1,6 @@
 use bbnf::compiler::{NodeKind, SemanticType};
 use bbnf::{CompileOptions, DiagnosticCode, ModuleInput, StageResult, compile_module};
+use std::fmt::Write as _;
 
 fn compile(source: &str, options: CompileOptions) -> StageResult<bbnf::CompiledModule> {
     compile_module(
@@ -34,6 +35,40 @@ fn rejected_code(source: &str, options: CompileOptions) -> DiagnosticCode {
             first.code()
         }
     }
+}
+
+fn rejected_diagnostic(source: &str, options: CompileOptions) -> bbnf::Diagnostic {
+    match compile(source, options) {
+        StageResult::Accepted { .. } => panic!("expected compilation to be rejected"),
+        StageResult::Rejected { diagnostics } => {
+            let mut diagnostics = diagnostics.iter();
+            let first = diagnostics
+                .next()
+                .expect("rejection has a diagnostic")
+                .clone();
+            assert!(diagnostics.next().is_none());
+            first
+        }
+    }
+}
+
+fn doubling_grammar(depth: usize, entry: &str) -> String {
+    let mut source = String::from("r0 = \"x\";\n");
+    for index in 1..=depth {
+        writeln!(source, "r{index} = r{}, r{};", index - 1, index - 1)
+            .expect("writing to String is infallible");
+    }
+    writeln!(source, "root = {entry};").expect("writing to String is infallible");
+    source
+}
+
+fn reference_chain(depth: usize) -> String {
+    let mut source = String::from("r0 = \"x\";\n");
+    for index in 1..=depth {
+        writeln!(source, "r{index} = r{};", index - 1).expect("writing to String is infallible");
+    }
+    writeln!(source, "root = r{depth};").expect("writing to String is infallible");
+    source
 }
 
 #[test]
@@ -338,10 +373,80 @@ fn nullable_prefix_recursion_is_rejected_before_generated_code() {
 
 #[test]
 fn bounded_analysis_exhaustion_is_a_typed_rejection() {
+    let source = "root = \"x\" | \"a\", root;";
     let mut options = CompileOptions::default();
     options.analysis_iterations = 1;
     assert_eq!(
-        rejected_code("root = \"x\";", options),
+        rejected_code(source, options),
+        DiagnosticCode::ResourceLimit
+    );
+
+    options.analysis_iterations = 2;
+    let module = match compile(source, options) {
+        StageResult::Accepted { value, .. } => value,
+        StageResult::Rejected { diagnostics } => {
+            panic!("two exact recursive SCC passes must converge: {diagnostics:?}")
+        }
+    };
+    assert_eq!(module.facts().iterations(), 2);
+}
+
+#[test]
+fn minimum_consumption_overflow_is_a_typed_rejection_not_empty_language() {
+    let source = doubling_grammar(65, "r65");
+    let diagnostic = rejected_diagnostic(&source, CompileOptions::default());
+    assert_eq!(
+        diagnostic.code(),
+        DiagnosticCode::MinimumConsumptionOverflow
+    );
+    assert_eq!(&source[diagnostic.start()..diagnostic.end()], "r63, r63");
+}
+
+#[test]
+fn overflowing_descendant_rejects_even_when_entry_has_a_smaller_alternative() {
+    let source = doubling_grammar(65, "r65 | \"z\"");
+    assert_eq!(
+        rejected_code(&source, CompileOptions::default()),
+        DiagnosticCode::MinimumConsumptionOverflow
+    );
+}
+
+#[test]
+fn record_minimum_addition_overflow_is_a_typed_rejection() {
+    let source = doubling_grammar(63, "%{ left: r63, right: r63 }");
+    assert_eq!(
+        rejected_code(&source, CompileOptions::default()),
+        DiagnosticCode::MinimumConsumptionOverflow
+    );
+}
+
+#[test]
+fn dependency_first_acyclic_analysis_is_linear_and_exactly_budgeted() {
+    for depth in [8, 64, 256] {
+        let source = reference_chain(depth);
+        let module = accepted(&source);
+        let rules = module.program().rules().len();
+        assert_eq!(module.facts().iterations(), rules);
+        assert_eq!(module.facts().work_units(), rules * 6);
+    }
+
+    let source = reference_chain(64);
+    let baseline = accepted(&source);
+    let exact_work = baseline.facts().work_units();
+    let mut exact = CompileOptions::default();
+    exact.analysis_work = exact_work;
+    let exact_module = match compile(&source, exact) {
+        StageResult::Accepted { value, .. } => value,
+        StageResult::Rejected { diagnostics } => {
+            panic!("exact analysis work boundary must pass: {diagnostics:?}")
+        }
+    };
+    assert_eq!(exact_module.facts().work_units(), exact_work);
+
+    let mut exhausted = exact;
+    exhausted.analysis_work = exact_work - 1;
+    assert_eq!(
+        rejected_code(&source, exhausted),
         DiagnosticCode::ResourceLimit
     );
 }

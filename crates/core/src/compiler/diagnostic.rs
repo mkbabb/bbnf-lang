@@ -14,6 +14,7 @@ pub enum DiagnosticCode {
     RecordMustBeRuleRoot,
     RecursiveRule,
     NullableRepeat,
+    MinimumConsumptionOverflow,
     Regex,
     RevisionMismatch,
     GeneratedSourceTooLarge,

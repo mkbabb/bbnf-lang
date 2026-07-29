@@ -14,7 +14,7 @@ use super::syntax::{
 use super::typecheck::{SemanticTypeData, SemanticTypes, TypeSolution};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct RegexPlanData {
+pub struct LoweredRegex {
     byte_classes: Vec<u8>,
     transitions: Vec<u32>,
     accepting: Vec<bool>,
@@ -23,7 +23,7 @@ pub struct RegexPlanData {
     start_state: u32,
 }
 
-impl RegexPlanData {
+impl LoweredRegex {
     pub fn byte_classes(&self) -> &[u8] {
         &self.byte_classes
     }
@@ -49,7 +49,7 @@ impl RegexPlanData {
     }
 }
 
-impl From<RegexTablePlan> for RegexPlanData {
+impl From<RegexTablePlan> for LoweredRegex {
     fn from(plan: RegexTablePlan) -> Self {
         Self {
             byte_classes: plan.byte_classes().to_vec(),
@@ -410,7 +410,7 @@ pub struct LoweringPlan {
     rules: Vec<LoweredRuleData>,
     semantic_types: Vec<SemanticTypeData>,
     fields: Vec<LoweredFieldData>,
-    regexes: Vec<RegexPlanData>,
+    regexes: Vec<LoweredRegex>,
     entry: RuleIx,
 }
 
@@ -588,7 +588,7 @@ impl LoweringPlan {
         LoweredFields::new(&self.revision, &self.fields)
     }
 
-    pub fn regexes(&self) -> &[RegexPlanData] {
+    pub fn regexes(&self) -> &[LoweredRegex] {
         &self.regexes
     }
 
@@ -628,7 +628,7 @@ pub(super) struct LoweringPlanReplay<'a> {
     entry: RuleIx,
 }
 
-struct RegexPlansReplay<'a>(&'a [RegexPlanData]);
+struct RegexPlansReplay<'a>(&'a [LoweredRegex]);
 
 impl Serialize for RegexPlansReplay<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

@@ -4,6 +4,7 @@
 //! depend on `parse_that`, not on this crate or a runtime parser graph.
 
 #![deny(unsafe_code)]
+#![deny(unnameable_types)]
 
 pub mod compiler;
 

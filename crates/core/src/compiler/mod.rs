@@ -14,23 +14,28 @@ mod typecheck;
 
 const _: () = assert!(parse_that::KERNEL_ABI == 2);
 
-pub use analysis::{AnalysisFacts, NodeFacts, RuleFacts};
+pub use analysis::{AnalysisFacts, NodeFacts, NodeFactsRows, RuleFacts, RuleFactsRows};
 pub use budget::{CompileOptions, RegexBudget, RuntimeBudget};
 pub use dependency::{DependencyGraph, DependencySolution};
 pub use diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
 pub use edit::{CompilationSession, EditError};
 pub use emit::GeneratedModule;
-pub use event::{EventKind, ScalarEventPlan, TransformSite};
-pub use lower::{LoweredField, LoweringPlan, PlanOp, PlanRecordSlot};
+pub use event::{EventKind, ScalarEventPlan, TransformSite, TransformSites};
+pub use lower::{
+    LoweredField, LoweredFields, LoweredRegex, LoweredRule, LoweredRules, LoweringPlan, PlanNode,
+    PlanNodes, PlanOp, PlanRecordSlot, PlanRecordSlots,
+};
 pub use replay::{ReplayComponent, ReplayError, replay_compilation};
 pub use source::{ModuleInput, Revision, SourceMap, SourceModule, SourceSpan};
 pub use syntax::{
-    FieldDecl, FieldId, Node, NodeId, NodeKind, NodeRemap, PlanNodeId, Program, RecordSlot, Rule,
-    RuleId, SccId, TransformId, TypeId,
+    FieldDecl, FieldId, Fields, Node, NodeId, NodeIds, NodeKind, NodeRemap, Nodes, PlanNodeId,
+    PlanNodeIds, Program, RecordSlot, RecordSlots, Rule, RuleId, RuleIds, Rules, SccId, SccIds,
+    TransformId, TypeId, TypeIds,
 };
 pub use typecheck::{
-    InferenceRule, NodeTypeDerivation, RecordFieldType, RecordWitnessSlot, RuleTypeDerivation,
-    SemanticType, TypeSolution,
+    InferenceRule, NodeTypeDerivation, NodeTypeDerivations, RecordFieldType, RecordFieldTypes,
+    RecordWitnessSlot, RecordWitnessSlots, RuleTypeDerivation, RuleTypeDerivations, SemanticType,
+    SemanticTypes, TypeSolution,
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]

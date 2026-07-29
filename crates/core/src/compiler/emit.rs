@@ -5,7 +5,7 @@ use serde::Serialize;
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::event::{EVENT_SCHEMA, ScalarEventPlan};
-use super::lower::{LoweringPlan, PlanOpData, PlanRecordSlotData, RegexPlanData};
+use super::lower::{LoweredRegex, LoweringPlan, PlanOpData, PlanRecordSlotData};
 use super::source::Revision;
 
 const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v5";
@@ -569,7 +569,7 @@ impl<'a> RustEmitter<'a> {
         self.source.push_str("];\n\n");
     }
 
-    fn write_regex(&mut self, index: usize, regex: &RegexPlanData) {
+    fn write_regex(&mut self, index: usize, regex: &LoweredRegex) {
         write!(
             self.source,
             "const REGEX_{index}_BYTE_CLASSES: [u8; 256] = "

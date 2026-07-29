@@ -154,6 +154,14 @@ impl DependencySolution {
         &self.components[id.index()]
     }
 
+    pub(crate) fn component_of_local(&self, rule: RuleIx) -> SccIx {
+        self.component_by_rule[rule.index()]
+    }
+
+    pub(crate) fn dependency_order_local(&self) -> &[SccIx] {
+        &self.dependency_order
+    }
+
     /// Whether a component is genuinely recursive rather than a singleton in
     /// the condensation DAG.
     pub fn is_recursive(&self, id: SccId) -> Option<bool> {

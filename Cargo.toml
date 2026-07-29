@@ -8,9 +8,9 @@ license = "MIT"
 repository = "https://github.com/mkbabb/bbnf-lang"
 
 [workspace.dependencies]
-bbnf-regex = { path = "../parse-that-skv26/rust/regex" }
+bbnf-regex = { version = "0.1.0", path = "../parse-that-skv26/rust/regex" }
 blake3 = "1.8"
-parse_that = { path = "../parse-that-skv26/rust/parse_that" }
+parse_that = { version = "0.4.0", path = "../parse-that-skv26/rust/parse_that" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

@@ -152,7 +152,7 @@ fn recursive_faults_are_typed_mode_invariant_and_transactional() {
     assert_fault_both_modes(
         input,
         LimitsConfig::default().with_input_bytes(input.len() - 1),
-        parse_that::ResourceKind::Work,
+        parse_that::ResourceKind::InputBytes,
     );
     assert_fault_both_modes(
         input,
@@ -180,7 +180,11 @@ fn custom_limits_can_only_tighten_baked_runtime_ceilings() {
         .with_work(usize::MAX);
     let defaults = LimitsConfig::default();
     let oversized_input = vec![b'x'; defaults.input_bytes() + 1];
-    assert_fault_both_modes(&oversized_input, oversized, parse_that::ResourceKind::Work);
+    assert_fault_both_modes(
+        &oversized_input,
+        oversized,
+        parse_that::ResourceKind::InputBytes,
+    );
 }
 
 #[test]

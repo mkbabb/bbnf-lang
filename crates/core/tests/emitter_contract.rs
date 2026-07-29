@@ -101,9 +101,15 @@ fn replay_envelopes_name_schema_and_revision() {
     .expect("JSON is UTF-8");
 
     assert!(lowering.starts_with("{\"schema\":\"bbnf.lowering-plan.v2\""));
-    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v3\""));
+    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v4\""));
     assert!(lowering.contains(&revision));
     assert!(events.contains(&revision));
+    let event_packet: serde_json::Value =
+        serde_json::from_str(&events).expect("event replay is JSON");
+    assert!(
+        event_packet["value"].get("lowering").is_none(),
+        "event replay references lowering identities without duplicating its carrier"
+    );
 }
 
 #[test]

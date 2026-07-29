@@ -8,13 +8,12 @@ fn both_sink_modes_execute_the_same_consuming_control() {
     assert!(
         matches!(checked.outcome(), parse_that::Step::Matched(span) if span.as_bytes() == INPUT)
     );
-    assert_eq!(checked.sink().len(), 0);
-
     let parsed = parse_events(INPUT);
     assert!(
         matches!(parsed.outcome(), parse_that::Step::Matched(span) if span.as_bytes() == INPUT)
     );
     assert!(!parsed.sink().events().is_empty());
+    assert_eq!(checked.sink().len(), parsed.sink().events().len());
     assert_eq!(
         parsed.sink().events().last().map(view),
         Some(scalar(
@@ -466,7 +465,7 @@ fn resource_limits_are_typed_and_transactional() {
     assert!(matches!(
         input_limited.outcome(),
         parse_that::Step::Fault(parse_that::Fault::ResourceLimit {
-            kind: parse_that::ResourceKind::Work,
+            kind: parse_that::ResourceKind::InputBytes,
             ..
         })
     ));
@@ -525,10 +524,46 @@ fn resource_limits_are_typed_and_transactional() {
 }
 
 #[test]
+fn logical_event_budget_is_committed_stream_count_not_speculative_branch_work() {
+    fn first_success(input: &[u8], retaining: bool) -> usize {
+        (0..64)
+            .find(|limit| {
+                let config = LimitsConfig::default().with_logical_events(*limit);
+                if retaining {
+                    matches!(
+                        parse_events_with_limits(input, config).outcome(),
+                        parse_that::Step::Matched(_)
+                    )
+                } else {
+                    matches!(
+                        check_with_limits(input, config).outcome(),
+                        parse_that::Step::Matched(_)
+                    )
+                }
+            })
+            .expect("fixture must succeed below the search ceiling")
+    }
+
+    let shallow_speculation = b"ax123x!";
+    let deeper_speculation = b"ab123x!";
+    let retained = parse_events(shallow_speculation);
+    let retained_count = retained.sink().events().len();
+
+    assert_eq!(
+        parse_events(deeper_speculation).sink().events().len(),
+        retained_count
+    );
+    assert_eq!(first_success(shallow_speculation, true), retained_count);
+    assert_eq!(first_success(deeper_speculation, true), retained_count);
+    assert_eq!(first_success(shallow_speculation, false), retained_count);
+    assert_eq!(first_success(deeper_speculation, false), retained_count);
+}
+
+#[test]
 fn generated_manifest_is_schema_and_revision_bound() {
     let manifest = include_str!(concat!(env!("OUT_DIR"), "/generated.manifest.json"));
-    assert!(manifest.contains("\"schema\":\"bbnf.generated-rust.v3\""));
-    assert!(manifest.contains("\"event_schema\":\"bbnf.scalar-events.v3\""));
+    assert!(manifest.contains("\"schema\":\"bbnf.generated-rust.v4\""));
+    assert!(manifest.contains("\"event_schema\":\"bbnf.scalar-events.v4\""));
     assert!(manifest.contains("\"transforms\":2"));
     assert!(manifest.contains(REVISION));
 }

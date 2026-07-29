@@ -248,7 +248,7 @@ impl AnalysisFacts {
             if !dependency.is_recursive(component_id) {
                 continue;
             }
-            let members = dependency.component(component_id);
+            let members = dependency.component_required(component_id);
             let empty_members = members
                 .iter()
                 .copied()
@@ -258,10 +258,12 @@ impl AnalysisFacts {
                 && !members.iter().any(|rule| zero_cycle_rules.contains(rule))
             {
                 let first = empty_members[0];
-                let span = program.node(program.rule(first).root()).span();
+                let span = program
+                    .node_required(program.rule_required(first).root())
+                    .span();
                 let names = empty_members
                     .iter()
-                    .map(|&rule| program.rule(rule).name())
+                    .map(|&rule| program.rule_required(rule).name())
                     .collect::<Vec<_>>()
                     .join(", ");
                 semantic_diagnostics.push(Diagnostic::new(
@@ -278,10 +280,12 @@ impl AnalysisFacts {
 
         for cycle in zero_cycles {
             let first = cycle[0];
-            let span = program.node(program.rule(first).root()).span();
+            let span = program
+                .node_required(program.rule_required(first).root())
+                .span();
             let names = cycle
                 .iter()
-                .map(|&rule| program.rule(rule).name())
+                .map(|&rule| program.rule_required(rule).name())
                 .collect::<Vec<_>>()
                 .join(" -> ");
             semantic_diagnostics.push(Diagnostic::new(
@@ -344,12 +348,12 @@ impl AnalysisFacts {
         &self.rules
     }
 
-    pub fn node(&self, id: NodeId) -> NodeFacts {
-        self.nodes[id.index()]
+    pub fn node(&self, id: NodeId) -> Option<NodeFacts> {
+        self.nodes.get(id.index()).copied()
     }
 
-    pub fn rule(&self, id: RuleId) -> RuleFacts {
-        self.rules[id.index()]
+    pub fn rule(&self, id: RuleId) -> Option<RuleFacts> {
+        self.rules.get(id.index()).copied()
     }
 }
 

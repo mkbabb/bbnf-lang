@@ -42,6 +42,10 @@ path = "tests/replay_edit_laws.rs"
 name = "record_semantic_laws"
 path = "tests/record_semantic_laws.rs"
 
+[[test]]
+name = "carrier_lookup_laws"
+path = "tests/carrier_lookup_laws.rs"
+
 [dependencies]
 bbnf-regex.workspace = true
 blake3.workspace = true

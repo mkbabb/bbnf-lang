@@ -346,20 +346,35 @@ impl Program {
         &self.fields
     }
 
-    pub fn field(&self, id: FieldId) -> &FieldDecl {
-        &self.fields[id.index()]
+    pub fn field(&self, id: FieldId) -> Option<&FieldDecl> {
+        self.fields.get(id.index())
     }
 
     pub const fn entry(&self) -> RuleId {
         self.entry
     }
 
-    pub fn node(&self, id: NodeId) -> &Node {
-        &self.nodes[id.index()]
+    pub fn node(&self, id: NodeId) -> Option<&Node> {
+        self.nodes.get(id.index())
     }
 
-    pub fn rule(&self, id: RuleId) -> &Rule {
-        &self.rules[id.index()]
+    pub fn rule(&self, id: RuleId) -> Option<&Rule> {
+        self.rules.get(id.index())
+    }
+
+    pub(crate) fn field_required(&self, id: FieldId) -> &FieldDecl {
+        self.field(id)
+            .expect("resolved program owns every internal field identity")
+    }
+
+    pub(crate) fn node_required(&self, id: NodeId) -> &Node {
+        self.node(id)
+            .expect("resolved program owns every internal node identity")
+    }
+
+    pub(crate) fn rule_required(&self, id: RuleId) -> &Rule {
+        self.rule(id)
+            .expect("resolved program owns every internal rule identity")
     }
 }
 

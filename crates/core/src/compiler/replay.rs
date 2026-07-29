@@ -21,8 +21,8 @@ const TYPE_REPLAY_SCHEMA: &str = "bbnf.type-solution.v2";
 const ANALYSIS_REPLAY_SCHEMA: &str = "bbnf.analysis-facts.v1";
 const LOWERING_REPLAY_SCHEMA: &str = "bbnf.lowering-plan.v2";
 const NODE_REMAP_REPLAY_SCHEMA: &str = "bbnf.node-remap.v1";
-const GENERATED_REPLAY_SCHEMA: &str = "bbnf.generated-module.v2";
-const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v2";
+const GENERATED_REPLAY_SCHEMA: &str = "bbnf.generated-module.v3";
+const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v3";
 
 #[derive(Serialize)]
 struct ReplayEnvelope<'a, T> {
@@ -83,7 +83,9 @@ impl LoweringPlan {
 
 impl ScalarEventPlan {
     /// Serialize this sealed event product with its event schema and revision.
-    /// The embedded lowering plan makes the replay record self-contained.
+    ///
+    /// Node identities bind this packet to the separately sealed lowering
+    /// packet carried by a complete compilation replay.
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
         serialize_stage(self.schema(), self.revision(), self)
     }

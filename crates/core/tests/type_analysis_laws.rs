@@ -52,14 +52,15 @@ empty = epsilon;
         assert!(matches!(
             module
                 .types()
-                .semantic_type(module.types().rule_type(rule.id())),
-            SemanticType::Named(named) if *named == rule.id()
+                .rule_type(rule.id())
+                .and_then(|type_id| module.types().semantic_type(type_id)),
+            Some(SemanticType::Named(named)) if *named == rule.id()
         ));
         let derivation = &module.types().rule_derivations()[rule.id().index()];
         assert_eq!(derivation.revision(), module.program().revision());
         assert_eq!(derivation.rule(), rule.id());
         assert_eq!(
-            derivation.root_type(),
+            Some(derivation.root_type()),
             module.types().node_type(rule.root())
         );
     }
@@ -73,7 +74,10 @@ empty = epsilon;
         let derivation = &module.types().node_derivations()[node.id().index()];
         assert_eq!(derivation.revision(), module.program().revision());
         assert_eq!(derivation.node(), node.id());
-        let semantic = module.types().semantic_type(derivation.type_id());
+        let semantic = module
+            .types()
+            .semantic_type(derivation.type_id())
+            .expect("derivation type belongs to this type carrier");
         match (node.kind(), semantic) {
             (NodeKind::Epsilon, SemanticType::Unit) => saw_unit = true,
             (NodeKind::Sequence(children), SemanticType::Product(members)) => {
@@ -98,7 +102,9 @@ empty = epsilon;
                     semantic,
                     module
                         .types()
-                        .semantic_type(module.types().node_type(*child))
+                        .node_type(*child)
+                        .and_then(|type_id| module.types().semantic_type(type_id))
+                        .expect("child type belongs to this type carrier")
                 );
             }
             (NodeKind::Literal(_) | NodeKind::Regex(_), SemanticType::Span) => {}
@@ -132,19 +138,31 @@ empty = epsilon;
             .id()
     };
 
-    let root = module.facts().rule(find_rule("root"));
+    let root = module
+        .facts()
+        .rule(find_rule("root"))
+        .expect("rule facts belong to this carrier");
     assert!(root.nullable());
     assert_eq!(root.minimum_consumption(), Some(0));
 
-    let pair = module.facts().rule(find_rule("pair"));
+    let pair = module
+        .facts()
+        .rule(find_rule("pair"))
+        .expect("rule facts belong to this carrier");
     assert!(!pair.nullable());
     assert_eq!(pair.minimum_consumption(), Some(2));
 
-    let maybe = module.facts().rule(find_rule("maybe"));
+    let maybe = module
+        .facts()
+        .rule(find_rule("maybe"))
+        .expect("rule facts belong to this carrier");
     assert!(maybe.nullable());
     assert_eq!(maybe.minimum_consumption(), Some(0));
 
-    let many = module.facts().rule(find_rule("many"));
+    let many = module
+        .facts()
+        .rule(find_rule("many"))
+        .expect("rule facts belong to this carrier");
     assert!(!many.nullable());
     assert_eq!(many.minimum_consumption(), Some(1));
 
@@ -196,9 +214,30 @@ string = /[a-z]+/;
     let object = find_rule("object");
     let array = find_rule("array");
 
-    assert_eq!(module.facts().rule(value).minimum_consumption(), Some(1));
-    assert_eq!(module.facts().rule(object).minimum_consumption(), Some(2));
-    assert_eq!(module.facts().rule(array).minimum_consumption(), Some(2));
+    assert_eq!(
+        module
+            .facts()
+            .rule(value)
+            .expect("value facts")
+            .minimum_consumption(),
+        Some(1)
+    );
+    assert_eq!(
+        module
+            .facts()
+            .rule(object)
+            .expect("object facts")
+            .minimum_consumption(),
+        Some(2)
+    );
+    assert_eq!(
+        module
+            .facts()
+            .rule(array)
+            .expect("array facts")
+            .minimum_consumption(),
+        Some(2)
+    );
     assert_eq!(
         module.dependency().component_of(value),
         module.dependency().component_of(object)
@@ -222,8 +261,9 @@ string = /[a-z]+/;
         assert!(matches!(
             module
                 .types()
-                .semantic_type(module.types().node_type(node)),
-            SemanticType::Named(bound) if *bound == rule
+                .node_type(node)
+                .and_then(|type_id| module.types().semantic_type(type_id)),
+            Some(SemanticType::Named(bound)) if *bound == rule
         ));
     }
     assert!(
@@ -242,7 +282,10 @@ other = "b", root | "q";
 "#,
     );
     for rule in module.program().rules() {
-        let facts = module.facts().rule(rule.id());
+        let facts = module
+            .facts()
+            .rule(rule.id())
+            .expect("rule facts belong to this carrier");
         assert!(!facts.nullable());
         assert_eq!(facts.minimum_consumption(), Some(1));
     }

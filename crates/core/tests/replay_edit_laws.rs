@@ -1,5 +1,8 @@
 use bbnf::compiler::{ReplayComponent, ReplayError, replay_compilation};
-use bbnf::{CompileOptions, CompiledModule, ModuleInput, StageResult, compile_module};
+use bbnf::{
+    CompilationSession, CompileOptions, CompiledModule, EditError, ModuleInput, StageResult,
+    compile_module,
+};
 
 const PATH: &str = "contracts/replay-edit.bbnf";
 const BASE: &[u8] = b"root = prefix, item*;\nprefix = \"a\";\nitem = /[0-9]+/;\n";
@@ -98,22 +101,66 @@ fn complete_replay_recompiles_and_reconstructs_every_exact_carrier() {
 fn edited_sources_rebuild_fresh_and_restoring_bytes_restores_replay_equivalence() {
     let original = compile(BASE);
     let original_packets = stage_packets(&original);
-    let mut working = BASE.to_vec();
-    let literal = working
+    let mut session = CompilationSession::new(PATH, BASE, CompileOptions::default());
+    let literal = session
+        .bytes()
         .iter()
         .position(|&byte| byte == b'a')
         .expect("fixture contains literal a");
 
     for replacement in [b'b', b'c', b'd', b'a'] {
-        working[literal] = replacement;
-        let edit_rebuild = compile(&working);
-        let fresh_bytes = working.clone();
-        let fresh_rebuild = compile(&fresh_bytes);
+        let edit_rebuild = match session
+            .apply_edit(literal..literal + 1, &[replacement])
+            .expect("edit range is valid")
+        {
+            StageResult::Accepted { value, .. } => value,
+            StageResult::Rejected { diagnostics } => {
+                panic!("edited source must compile: {diagnostics:?}")
+            }
+        };
+        let fresh_rebuild = compile(session.bytes());
         assert_eq!(stage_packets(&edit_rebuild), stage_packets(&fresh_rebuild));
     }
 
-    assert_eq!(working, BASE);
-    assert_eq!(stage_packets(&compile(&working)), original_packets);
+    assert_eq!(session.bytes(), BASE);
+    let restored = match session.compile() {
+        StageResult::Accepted { value, .. } => value,
+        StageResult::Rejected { diagnostics } => {
+            panic!("restored source must compile: {diagnostics:?}")
+        }
+    };
+    assert_eq!(stage_packets(&restored), original_packets);
+}
+
+#[test]
+fn edit_session_preserves_invalid_source_but_rejects_invalid_ranges_atomically() {
+    let mut session = CompilationSession::new(PATH, BASE, CompileOptions::default());
+    let before = session.bytes().to_vec();
+    assert!(matches!(
+        session.apply_edit(BASE.len() + 1..BASE.len() + 1, b"x"),
+        Err(EditError::OutOfBounds {
+            start,
+            end,
+            source_len,
+        }) if start == BASE.len() + 1
+            && end == BASE.len() + 1
+            && source_len == BASE.len()
+    ));
+    assert_eq!(session.bytes(), before);
+
+    let reversed_start = 4;
+    let reversed_end = reversed_start - 1;
+    assert!(matches!(
+        session.apply_edit(reversed_start..reversed_end, b"x"),
+        Err(EditError::ReversedRange { start: 4, end: 3 })
+    ));
+    assert_eq!(session.bytes(), before);
+
+    let rejected = session
+        .apply_edit(0..4, b"")
+        .expect("range is valid even though the resulting grammar is not");
+    assert!(matches!(rejected, StageResult::Rejected { .. }));
+    assert_eq!(session.bytes(), &BASE[4..]);
 }
 
 fn tampered_packet(packet: &[u8], mutate: impl FnOnce(&mut serde_json::Value)) -> Vec<u8> {

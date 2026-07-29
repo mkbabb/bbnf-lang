@@ -41,8 +41,11 @@ root = %{ ~"<", tag: /[A-Z]+/, payload: @raw(/[a-z]+/), ~">" };
         vec![(0, 0, 1, "tag"), (1, 0, 2, "payload")]
     );
 
-    let bbnf::compiler::NodeKind::Record { owner, slots } =
-        module.program().node(rule.root()).kind()
+    let bbnf::compiler::NodeKind::Record { owner, slots } = module
+        .program()
+        .node(rule.root())
+        .expect("rule root belongs to this program")
+        .kind()
     else {
         panic!("rule root must be a nominal record");
     };
@@ -58,12 +61,13 @@ root = %{ ~"<", tag: /[A-Z]+/, payload: @raw(/[a-z]+/), ~">" };
     ));
     assert!(matches!(slots[3], RecordSlot::Discard { .. }));
 
-    let SemanticType::Record {
+    let Some(SemanticType::Record {
         owner: type_owner,
         fields: type_fields,
-    } = module
+    }) = module
         .types()
-        .semantic_type(module.types().rule_root_type(rule.id()))
+        .rule_root_type(rule.id())
+        .and_then(|root| module.types().semantic_type(root))
     else {
         panic!("record syntax must retain a distinct semantic record type");
     };
@@ -77,10 +81,16 @@ root = %{ ~"<", tag: /[A-Z]+/, payload: @raw(/[a-z]+/), ~">" };
     ));
 
     let plan_rule = &module.lowering().rules()[0];
-    assert_eq!(plan_rule.named_type(), module.types().rule_type(rule.id()));
-    let plan_node = module.lowering().node(plan_rule.root());
     assert_eq!(
-        plan_node.semantic_type(),
+        Some(plan_rule.named_type()),
+        module.types().rule_type(rule.id())
+    );
+    let plan_node = module
+        .lowering()
+        .node(plan_rule.root())
+        .expect("lowered rule root belongs to this plan");
+    assert_eq!(
+        Some(plan_node.semantic_type()),
         module.types().node_type(rule.root())
     );
     let PlanOp::Record {
@@ -121,14 +131,29 @@ empty = %{};
     };
     let value = find_rule("value");
     let empty = find_rule("empty");
-    assert!(!module.facts().rule(value).nullable());
-    assert_eq!(module.facts().rule(value).minimum_consumption(), Some(7));
-    assert!(module.facts().rule(empty).nullable());
-    assert_eq!(module.facts().rule(empty).minimum_consumption(), Some(0));
+    assert!(!module.facts().rule(value).expect("value facts").nullable());
+    assert_eq!(
+        module
+            .facts()
+            .rule(value)
+            .expect("value facts")
+            .minimum_consumption(),
+        Some(7)
+    );
+    assert!(module.facts().rule(empty).expect("empty facts").nullable());
+    assert_eq!(
+        module
+            .facts()
+            .rule(empty)
+            .expect("empty facts")
+            .minimum_consumption(),
+        Some(0)
+    );
     assert!(matches!(
         module
             .types()
-            .semantic_type(module.types().rule_root_type(empty)),
-        SemanticType::Record { owner, fields } if *owner == empty && fields.is_empty()
+            .rule_root_type(empty)
+            .and_then(|root| module.types().semantic_type(root)),
+        Some(SemanticType::Record { owner, fields }) if *owner == empty && fields.is_empty()
     ));
 }

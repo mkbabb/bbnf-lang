@@ -228,7 +228,12 @@ layout = %{ ~"[", ~"]" };
 
     for (name, expected_slots) in [("list", 3), ("atom", 2), ("empty", 0), ("layout", 2)] {
         let rule = find_rule(name);
-        match first.program().node(rule.root()).kind() {
+        match first
+            .program()
+            .node(rule.root())
+            .expect("rule root belongs to this program")
+            .kind()
+        {
             NodeKind::Record { owner, slots } => {
                 assert_eq!(*owner, rule.id());
                 assert_eq!(slots.len(), expected_slots);

@@ -36,16 +36,28 @@ atom = /[0-9]+/;
 
     assert_eq!(
         module.dependency().graph().dependencies(root),
-        &[head, tail],
+        Some([head, tail].as_slice()),
         "dependency edges use RuleId order, not encounter order"
     );
-    assert_eq!(module.dependency().graph().dependencies(head), &[atom]);
-    assert_eq!(module.dependency().graph().dependencies(tail), &[atom]);
-    assert!(module.dependency().graph().dependencies(atom).is_empty());
+    assert_eq!(
+        module.dependency().graph().dependencies(head),
+        Some([atom].as_slice())
+    );
+    assert_eq!(
+        module.dependency().graph().dependencies(tail),
+        Some([atom].as_slice())
+    );
+    assert_eq!(
+        module.dependency().graph().dependencies(atom),
+        Some(&[][..])
+    );
 
     let order = module.dependency().dependency_order();
     let position = |rule| {
-        let component = module.dependency().component_of(rule);
+        let component = module
+            .dependency()
+            .component_of(rule)
+            .expect("rule belongs to its dependency carrier");
         order
             .iter()
             .position(|candidate| *candidate == component)
@@ -57,8 +69,14 @@ atom = /[0-9]+/;
     assert!(position(tail) < position(root));
 
     for rule in rules {
-        let component = module.dependency().component_of(rule.id());
-        assert_eq!(module.dependency().component(component), &[rule.id()]);
+        let component = module
+            .dependency()
+            .component_of(rule.id())
+            .expect("rule belongs to its dependency carrier");
+        assert_eq!(
+            module.dependency().component(component),
+            Some([rule.id()].as_slice())
+        );
     }
 }
 
@@ -84,11 +102,20 @@ second = first, "b";
 fn consuming_self_recursion_is_retained_as_one_finite_component() {
     let module = accepted(r#"root = "(", root, ")" | "x";"#);
     let root = module.program().rules()[0].id();
-    let component = module.dependency().component_of(root);
+    let component = module
+        .dependency()
+        .component_of(root)
+        .expect("root belongs to its dependency carrier");
 
     assert!(module.dependency().is_recursive(component));
-    assert_eq!(module.dependency().component(component), &[root]);
-    assert_eq!(module.dependency().graph().dependencies(root), &[root]);
+    assert_eq!(
+        module.dependency().component(component),
+        Some([root].as_slice())
+    );
+    assert_eq!(
+        module.dependency().graph().dependencies(root),
+        Some([root].as_slice())
+    );
 }
 
 #[test]
@@ -103,17 +130,23 @@ atom = "x";
     let root = module.program().rules()[0].id();
     let other = module.program().rules()[1].id();
     let atom = module.program().rules()[2].id();
-    let recursive = module.dependency().component_of(root);
+    let recursive = module
+        .dependency()
+        .component_of(root)
+        .expect("root belongs to its dependency carrier");
 
-    assert_eq!(module.dependency().component_of(other), recursive);
-    assert_ne!(module.dependency().component_of(atom), recursive);
-    assert_eq!(module.dependency().component(recursive), &[root, other]);
+    assert_eq!(module.dependency().component_of(other), Some(recursive));
+    assert_ne!(module.dependency().component_of(atom), Some(recursive));
+    assert_eq!(
+        module.dependency().component(recursive),
+        Some([root, other].as_slice())
+    );
     assert!(module.dependency().is_recursive(recursive));
 
     let order = module.dependency().dependency_order();
     let atom_position = order
         .iter()
-        .position(|id| *id == module.dependency().component_of(atom))
+        .position(|id| Some(*id) == module.dependency().component_of(atom))
         .unwrap();
     let recursive_position = order.iter().position(|id| *id == recursive).unwrap();
     assert!(atom_position < recursive_position);
@@ -129,7 +162,10 @@ leaf = /[a-z]/;
     );
     let root = module.program().rules()[0].id();
     let leaf = module.program().rules()[1].id();
-    assert_eq!(module.dependency().graph().dependencies(root), &[leaf]);
+    assert_eq!(
+        module.dependency().graph().dependencies(root),
+        Some([leaf].as_slice())
+    );
 
     let references = module
         .program()

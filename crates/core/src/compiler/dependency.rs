@@ -25,7 +25,7 @@ impl DependencyGraph {
                 if !visited.insert(node_id) {
                     continue;
                 }
-                match program.node(node_id).kind() {
+                match program.node_required(node_id).kind() {
                     NodeKind::RuleRef(target) => {
                         dependencies.insert(*target);
                     }
@@ -55,8 +55,13 @@ impl DependencyGraph {
         self.revision
     }
 
-    pub fn dependencies(&self, rule: RuleId) -> &[RuleId] {
-        &self.edges[rule.index()]
+    pub fn dependencies(&self, rule: RuleId) -> Option<&[RuleId]> {
+        self.edges.get(rule.index()).map(Vec::as_slice)
+    }
+
+    fn dependencies_required(&self, rule: RuleId) -> &[RuleId] {
+        self.dependencies(rule)
+            .expect("dependency graph owns every internal rule identity")
     }
 
     pub const fn rule_count(&self) -> usize {
@@ -123,26 +128,35 @@ impl DependencySolution {
         &self.graph
     }
 
-    pub fn component(&self, id: SccId) -> &[RuleId] {
-        &self.components[id.index()]
+    pub fn component(&self, id: SccId) -> Option<&[RuleId]> {
+        self.components.get(id.index()).map(Vec::as_slice)
     }
 
     pub const fn component_count(&self) -> usize {
         self.components.len()
     }
 
-    pub fn component_of(&self, rule: RuleId) -> SccId {
-        self.component_by_rule[rule.index()]
+    pub fn component_of(&self, rule: RuleId) -> Option<SccId> {
+        self.component_by_rule.get(rule.index()).copied()
+    }
+
+    pub(crate) fn component_required(&self, id: SccId) -> &[RuleId] {
+        self.component(id)
+            .expect("dependency solution owns every internal component identity")
     }
 
     /// Whether a component is genuinely recursive rather than a singleton in
     /// the condensation DAG.
     pub fn is_recursive(&self, id: SccId) -> bool {
-        let members = self.component(id);
-        members.len() > 1
-            || members
-                .first()
-                .is_some_and(|rule| self.graph.dependencies(*rule).binary_search(rule).is_ok())
+        self.component(id).is_some_and(|members| {
+            members.len() > 1
+                || members.first().is_some_and(|rule| {
+                    self.graph
+                        .dependencies_required(*rule)
+                        .binary_search(rule)
+                        .is_ok()
+                })
+        })
     }
 
     /// Components in dependency-first order with `SccId` as the stable tie
@@ -167,7 +181,7 @@ fn strongly_connected_components(graph: &DependencyGraph) -> Vec<Vec<RuleId>> {
         let root = RuleId::checked(index).expect("graph identities are checked");
         let mut stack = vec![(root, 0_usize)];
         while let Some((rule, next)) = stack.last_mut() {
-            let dependencies = graph.dependencies(*rule);
+            let dependencies = graph.dependencies_required(*rule);
             if *next < dependencies.len() {
                 let dependency = dependencies[*next];
                 *next += 1;
@@ -185,7 +199,7 @@ fn strongly_connected_components(graph: &DependencyGraph) -> Vec<Vec<RuleId>> {
     let mut reverse = vec![Vec::new(); count];
     for source_index in 0..count {
         let source = RuleId::checked(source_index).expect("graph identities are checked");
-        for &target in graph.dependencies(source) {
+        for &target in graph.dependencies_required(source) {
             reverse[target.index()].push(source);
         }
     }

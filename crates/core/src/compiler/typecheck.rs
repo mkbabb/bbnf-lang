@@ -237,8 +237,8 @@ impl TypeSolution {
         &self.arena
     }
 
-    pub fn semantic_type(&self, id: TypeId) -> &SemanticType {
-        &self.arena[id.index()]
+    pub fn semantic_type(&self, id: TypeId) -> Option<&SemanticType> {
+        self.arena.get(id.index())
     }
 
     pub fn node_derivations(&self) -> &[NodeTypeDerivation] {
@@ -249,16 +249,31 @@ impl TypeSolution {
         &self.rules
     }
 
-    pub fn node_type(&self, node: NodeId) -> TypeId {
-        self.nodes[node.index()].type_id
+    pub fn node_type(&self, node: NodeId) -> Option<TypeId> {
+        self.nodes.get(node.index()).map(|value| value.type_id)
     }
 
-    pub fn rule_type(&self, rule: RuleId) -> TypeId {
-        self.rules[rule.index()].named_type
+    pub fn rule_type(&self, rule: RuleId) -> Option<TypeId> {
+        self.rules.get(rule.index()).map(|value| value.named_type)
     }
 
-    pub fn rule_root_type(&self, rule: RuleId) -> TypeId {
-        self.rules[rule.index()].root_type
+    pub fn rule_root_type(&self, rule: RuleId) -> Option<TypeId> {
+        self.rules.get(rule.index()).map(|value| value.root_type)
+    }
+
+    pub(crate) fn semantic_type_required(&self, id: TypeId) -> &SemanticType {
+        self.semantic_type(id)
+            .expect("type solution owns every internal type identity")
+    }
+
+    pub(crate) fn node_type_required(&self, node: NodeId) -> TypeId {
+        self.node_type(node)
+            .expect("type solution owns every internal node identity")
+    }
+
+    pub(crate) fn rule_type_required(&self, rule: RuleId) -> TypeId {
+        self.rule_type(rule)
+            .expect("type solution owns every internal rule identity")
     }
 
     /// Independently validate the sealed inference certificates against the
@@ -312,7 +327,7 @@ impl TypeSolution {
                 Ok(expected) => expected,
                 Err(message) => return StageResult::rejected(type_invariant(message)),
             };
-            if self.semantic_type(derivation.type_id) != &expected {
+            if self.semantic_type_required(derivation.type_id) != &expected {
                 return StageResult::rejected(type_invariant(
                     "node inference conclusion does not follow from its certified premises",
                 ));
@@ -330,7 +345,8 @@ impl TypeSolution {
                 || derivation.rule != rule.id()
                 || derivation.named_type.index() >= self.arena.len()
                 || derivation.root_type.index() >= self.arena.len()
-                || self.semantic_type(derivation.named_type) != &SemanticType::Named(rule.id())
+                || self.semantic_type_required(derivation.named_type)
+                    != &SemanticType::Named(rule.id())
                 || derivation.root_type != self.nodes[rule.root().index()].type_id
             {
                 return StageResult::rejected(type_invariant(
@@ -343,7 +359,7 @@ impl TypeSolution {
 
         let mut frontier = used.iter().copied().collect::<Vec<_>>();
         while let Some(type_id) = frontier.pop() {
-            for child in semantic_children(self.semantic_type(type_id)) {
+            for child in semantic_children(self.semantic_type_required(type_id)) {
                 if used.insert(child) {
                     frontier.push(child);
                 }
@@ -391,7 +407,7 @@ impl TypeSolution {
                 for field in fields {
                     if field.field.index() >= program.fields().len()
                         || field.value.index() >= self.arena.len()
-                        || program.field(field.field).owner() != *owner
+                        || program.field_required(field.field).owner() != *owner
                     {
                         return Err("record semantic type contains a dangling field");
                     }
@@ -469,7 +485,7 @@ impl TypeSolution {
                 },
                 InferenceRule::TransformPreserves { child, transform },
             ) if actual_child == child && actual_transform == transform => {
-                Ok(self.semantic_type(child_type(*child)?).clone())
+                Ok(self.semantic_type_required(child_type(*child)?).clone())
             }
             (
                 NodeKind::Record {
@@ -492,7 +508,7 @@ impl TypeSolution {
                     .collect::<Result<_, _>>()?;
                 for slot in slots {
                     if let RecordWitnessSlot::Field { field, child } = slot {
-                        let declaration = program.field(*field);
+                        let declaration = program.field_required(*field);
                         if declaration.owner() != *owner || declaration.child() != *child {
                             return Err("record inference field does not match its declaration");
                         }
@@ -981,13 +997,15 @@ atom = %{ text: @raw(/[A-Za-z]+/) };
             .iter()
             .find(|rule| rule.name() == "list")
             .expect("list rule");
-        let record_type = solution.semantic_type(solution.rule_root_type(list.id()));
-        let SemanticType::Record { owner, fields } = record_type else {
+        let record_type = solution
+            .rule_root_type(list.id())
+            .and_then(|root| solution.semantic_type(root));
+        let Some(SemanticType::Record { owner, fields }) = record_type else {
             panic!("list root must retain its nominal record type");
         };
         assert_eq!(*owner, list.id());
         assert_eq!(fields.len(), 1);
-        let SemanticType::List(element) = solution.semantic_type(fields[0].value()) else {
+        let Some(SemanticType::List(element)) = solution.semantic_type(fields[0].value()) else {
             panic!("recursive children field must be a list");
         };
         let node = program
@@ -997,7 +1015,7 @@ atom = %{ text: @raw(/[A-Za-z]+/) };
             .expect("node rule");
         assert_eq!(
             solution.semantic_type(*element),
-            &SemanticType::Named(node.id())
+            Some(&SemanticType::Named(node.id()))
         );
         assert!(solution.arena().len() <= program.nodes().len() + program.rules().len());
     }

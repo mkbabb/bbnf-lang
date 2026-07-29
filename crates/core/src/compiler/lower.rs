@@ -303,7 +303,7 @@ impl LoweringPlan {
             nodes.push(PlanNode {
                 id,
                 op,
-                semantic_type: types.node_type(node.id()),
+                semantic_type: types.node_type_required(node.id()),
             });
         }
 
@@ -315,7 +315,7 @@ impl LoweringPlan {
                 root: PlanNodeId::checked(rule.root().index())
                     .expect("program node identity is representable"),
                 name: rule.name().to_owned(),
-                named_type: types.rule_type(rule.id()),
+                named_type: types.rule_type_required(rule.id()),
             })
             .collect::<Vec<_>>();
         let fields = program
@@ -328,7 +328,7 @@ impl LoweringPlan {
                 child: PlanNodeId::checked(field.child().index())
                     .expect("program node identity is representable"),
                 name: field.name().to_owned(),
-                semantic_type: types.node_type(field.child()),
+                semantic_type: types.node_type_required(field.child()),
             })
             .collect();
 
@@ -351,8 +351,8 @@ impl LoweringPlan {
         &self.nodes
     }
 
-    pub fn node(&self, id: PlanNodeId) -> &PlanNode {
-        &self.nodes[id.index()]
+    pub fn node(&self, id: PlanNodeId) -> Option<&PlanNode> {
+        self.nodes.get(id.index())
     }
 
     pub fn rules(&self) -> &[LoweredRule] {

@@ -2,6 +2,7 @@ mod analysis;
 mod budget;
 mod dependency;
 mod diagnostic;
+mod edit;
 mod emit;
 mod event;
 mod frontend;
@@ -15,6 +16,7 @@ pub use analysis::{AnalysisFacts, NodeFacts, RuleFacts};
 pub use budget::{CompileOptions, RegexBudget, RuntimeBudget};
 pub use dependency::{DependencyGraph, DependencySolution};
 pub use diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
+pub use edit::{CompilationSession, EditError};
 pub use emit::GeneratedModule;
 pub use event::{EventKind, ScalarEventPlan, TransformSite};
 pub use lower::{LoweredField, LoweringPlan, PlanOp, PlanRecordSlot};
@@ -137,7 +139,7 @@ pub fn compile_module(
             return StageResult::Rejected { diagnostics };
         }
     };
-    let generated = match GeneratedModule::emit(&events, options) {
+    let generated = match GeneratedModule::emit(&events, &lowering, options) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => {
             return StageResult::Rejected { diagnostics };

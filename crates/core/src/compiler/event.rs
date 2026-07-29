@@ -5,7 +5,7 @@ use super::lower::LoweringPlan;
 use super::source::Revision;
 use super::syntax::{FieldId, PlanNodeId, Program, RuleId, TransformId};
 
-pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v3";
+pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v4";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 #[non_exhaustive]
@@ -55,7 +55,6 @@ impl TransformSite {
 pub struct ScalarEventPlan {
     revision: Revision,
     schema: String,
-    lowering: LoweringPlan,
     sites: Vec<EventSite>,
     transforms: Vec<TransformSite>,
 }
@@ -151,7 +150,6 @@ impl ScalarEventPlan {
         StageResult::accepted(Self {
             revision: program.revision(),
             schema: EVENT_SCHEMA.to_owned(),
-            lowering: lowering.clone(),
             sites,
             transforms,
         })
@@ -163,10 +161,6 @@ impl ScalarEventPlan {
 
     pub fn schema(&self) -> &str {
         &self.schema
-    }
-
-    pub const fn lowering(&self) -> &LoweringPlan {
-        &self.lowering
     }
 
     pub fn sites(

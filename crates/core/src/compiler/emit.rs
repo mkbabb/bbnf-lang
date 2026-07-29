@@ -8,7 +8,7 @@ use super::event::{EVENT_SCHEMA, ScalarEventPlan};
 use super::lower::{LoweringPlan, PlanOp, PlanRecordSlot, RegexPlanData};
 use super::source::Revision;
 
-const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v3";
+const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v4";
 
 /// One deterministic, direct Rust parser product.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -19,8 +19,20 @@ pub struct GeneratedModule {
 }
 
 impl GeneratedModule {
-    pub(crate) fn emit(events: &ScalarEventPlan, options: CompileOptions) -> StageResult<Self> {
-        let mut emitter = RustEmitter::new(events, options);
+    pub(crate) fn emit(
+        events: &ScalarEventPlan,
+        lowering: &LoweringPlan,
+        options: CompileOptions,
+    ) -> StageResult<Self> {
+        if events.revision() != lowering.revision() {
+            return StageResult::rejected(Diagnostic::new(
+                DiagnosticCode::RevisionMismatch,
+                0,
+                0,
+                "emitter inputs carry different revisions",
+            ));
+        }
+        let mut emitter = RustEmitter::new(events, lowering, options);
         if let Err(failure) = emitter.write_module() {
             let (code, message) = match failure {
                 EmitFailure::Invariant(message) => (DiagnosticCode::InternalInvariant, message),
@@ -41,11 +53,11 @@ impl GeneratedModule {
             revision: revision.hex(),
             source_blake3: source_digest,
             source_bytes: source.len(),
-            nodes: events.lowering().nodes().len(),
-            rules: events.lowering().rules().len(),
-            regexes: events.lowering().regexes().len(),
+            nodes: lowering.nodes().len(),
+            rules: lowering.rules().len(),
+            regexes: lowering.regexes().len(),
             transforms: events.transforms().len(),
-            fields: events.lowering().fields().len(),
+            fields: lowering.fields().len(),
         })
         .expect("generated manifest fields are serializable");
 
@@ -91,10 +103,10 @@ struct RustEmitter<'a> {
 }
 
 impl<'a> RustEmitter<'a> {
-    fn new(events: &'a ScalarEventPlan, options: CompileOptions) -> Self {
+    fn new(events: &'a ScalarEventPlan, plan: &'a LoweringPlan, options: CompileOptions) -> Self {
         Self {
             events,
-            plan: events.lowering(),
+            plan,
             options,
             source: BoundedSource::new(options.generated_bytes),
         }
@@ -391,7 +403,6 @@ impl<'a> RustEmitter<'a> {
              struct Limits {\n\
                  config: LimitsConfig,\n\
                  depth: Cell<usize>,\n\
-                 logical_events: Cell<usize>,\n\
                  work: Cell<usize>,\n\
              }\n\n\
              impl Limits {\n\
@@ -399,7 +410,6 @@ impl<'a> RustEmitter<'a> {
                      Self {\n\
                          config,\n\
                          depth: Cell::new(0),\n\
-                         logical_events: Cell::new(0),\n\
                          work: Cell::new(0),\n\
                      }\n\
                  }\n\
@@ -449,7 +459,7 @@ impl<'a> RustEmitter<'a> {
                  S: EventSink<Event = ScalarEvent>,\n\
                  F: FnOnce() -> ScalarEvent,\n\
              {\n\
-                 let logical_events = limits.logical_events.get();\n\
+                 let logical_events = run.sink().len();\n\
                  if logical_events >= limits.config.logical_events {\n\
                      return resource_fault(\n\
                          run,\n\
@@ -457,7 +467,6 @@ impl<'a> RustEmitter<'a> {
                          limits.config.logical_events,\n\
                      );\n\
                  }\n\
-                 limits.logical_events.set(logical_events + 1);\n\
                  run.emit_with(event);\n\
                  Step::Matched(())\n\
              }\n\n\
@@ -765,7 +774,7 @@ impl<'a> RustEmitter<'a> {
         let entry = self.plan.entry().index();
         writeln!(
             self.source,
-            "fn parse_with_sink<'i, S: EventSink<Event = ScalarEvent>>(\n    input: Input<'i>,\n    sink: S,\n    config: LimitsConfig,\n) -> ModuleResult<'i, S> {{\n    let config = config.bounded();\n    let input_limit = config.input_bytes.min(u32::MAX as usize);\n    let input_too_large = input.len() > input_limit;\n    let limits = Limits::new(config);\n    Run::with_sink(input, sink).parse_module(|run| {{\n        if input_too_large {{\n            return resource_fault(run, ResourceKind::Work, input_limit);\n        }}\n        sequence(run, |run| {{\n            match rule_{entry}(run, &limits) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            match eof(run) {{\n                Step::Matched(_) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            let at = run.cursor().offset();\n            emit_event(run, &limits, || event(EventKind::EndInput, identity(None, None, None, None), at, at, 0))\n        }})\n    }})\n}}\n\n\
+            "fn parse_with_sink<'i, S: EventSink<Event = ScalarEvent>>(\n    input: Input<'i>,\n    sink: S,\n    config: LimitsConfig,\n) -> ModuleResult<'i, S> {{\n    let config = config.bounded();\n    let input_limit = config.input_bytes.min(u32::MAX as usize);\n    let input_too_large = input.len() > input_limit;\n    let limits = Limits::new(config);\n    Run::with_sink(input, sink).parse_module(|run| {{\n        if input_too_large {{\n            return resource_fault(run, ResourceKind::InputBytes, input_limit);\n        }}\n        sequence(run, |run| {{\n            match rule_{entry}(run, &limits) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            match eof(run) {{\n                Step::Matched(_) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            let at = run.cursor().offset();\n            emit_event(run, &limits, || event(EventKind::EndInput, identity(None, None, None, None), at, at, 0))\n        }})\n    }})\n}}\n\n\
              pub fn check(input: &[u8]) -> ModuleResult<'_, NoSink<ScalarEvent>> {{\n    check_with_limits(input, LimitsConfig::default())\n}}\n\n\
              pub fn check_with_limits(input: &[u8], config: LimitsConfig) -> ModuleResult<'_, NoSink<ScalarEvent>> {{\n    parse_with_sink(Input::new(input), NoSink::new(), config)\n}}\n\n\
              pub fn parse_events(input: &[u8]) -> ModuleResult<'_, EventBuffer<'_>> {{\n    parse_events_with_limits(input, LimitsConfig::default())\n}}\n\n\

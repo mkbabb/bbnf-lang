@@ -15,7 +15,7 @@ Last observed: 2026-07-28, America/New_York.
 | W0 truth seal | ADMITTED_GIT_DURABLE | paired payload commits, 63-path overlay, clean dependency pin, replay, and receipts verify |
 | W1 parse-that transaction | ADMITTED_GIT_DURABLE | parse-that `9c9714dfd`; BBNF evidence `ad7aec5c6`; 70 workspace laws, 7 bridge laws, clean packages, 148-path crater, tri-fold ACCEPT |
 | W2 BBNF semantic spine | ADMITTED_GIT_DURABLE | parse-that `282ccb6f6`; carrier `28a91db51`; evidence `60ee1a51d`; reviews `f46eb9497`; adjudication `3f44a40c1`; tri-fold ACCEPT |
-| W3 grammar-neutral vertical | AUTHORIZED_BORN_RED | two independent designs plus final adjudication select the minimal pre-freeze instance/difference/Trim/Pratt surface; held-out selection remains forbidden |
+| W3 grammar-neutral vertical | IN_PROGRESS_PARSE_THAT_ABI3_GREEN | public/candidate packet `1ab3e5640`; parse-that RED `88a71c24`; ABI-3 implementation `ed1ffa24`; BBNF born-RED laws are next; held-out selection remains forbidden |
 | W4 profile/cutover | NOT STARTED | blocked on W3 semantic parity |
 | Consumer/playground lane | FORMATION-ONLY | explicitly off the core parser critical path |
 
@@ -35,35 +35,34 @@ parse-that payload `627c9b46a`. W1 is git-durable at parse-that
 `9c9714dfd` and BBNF evidence payload `ad7aec5c6`. W2 is git-durable at
 parse-that `282ccb6f6`, BBNF carrier `28a91db51`, evidence `60ee1a51d`,
 reviews `f46eb9497`, and adjudication `3f44a40c1`. Later waves must add their
-own receipts.
+own receipts. W3 has durably presealed its public/candidate inputs at BBNF
+`1ab3e5640`; parse-that's born-RED contract is `88a71c24`, and the accepted
+0.5.0 / ABI-3 implementation is `ed1ffa24`.
 
 ## Exact next action
 
-Verify the admitted W2 subjects from this directory:
+Verify the current W3 subjects from this directory:
 
 ```sh
-git rev-parse \
-  28a91db51177495efb61cd1c664a85b37fdd9529^{tree} \
-  60ee1a51d694b5cf3fd76779336ef165e593129f^{tree} \
-  f46eb9497522ea97e164e8a1e4160784aa53eb1e^{tree} \
-  3f44a40c1297a962c4a227433814864598f44ae1^{tree}
+git rev-parse 1ab3e56408c7c92e931d18b2b0bbb9848fd8595c^{tree}
 git -C /Users/mkbabb/Programming/parse-that-skv26 rev-parse \
-  282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f^{tree}
+  88a71c24f22dc8e53ae482aaead2e4865f0dbc36^{tree} \
+  ed1ffa24e862b797b01dc4f9215d6be8f7fa0955^{tree}
+shasum -a 256 artifacts/W3-PARSE-THAT-ABI3.json
 ```
+
+Expected parse-that trees are `ae06f60f96a4b76410a214d126bdfc700614e048`
+and `65d1d58cee5e052804b062a17de571620ba463aa`. The ABI-3 receipt
+SHA-256 is `eb8678899905d725926ebf892a8d60874aa9343c60cd7bfd24dac33b9ae92e55`.
 
 The exact next boundary is:
 
-1. seal the corrective public-witness and five-candidate manifest/case packet
-   described by `artifacts/W3-DESIGN-ADJUDICATION.md`, without compiling the
-   candidates;
-2. commit born-RED parse-that ABI-3 difference laws;
-3. implement and package only the accepted difference primitive;
-4. commit born-RED BBNF instance, syntax, Trim, semantic, Pratt, replay, and
-   public-witness laws;
-5. implement the accepted generic surface without a compatibility path;
-6. pass public-witness, package, no-overfit, regeneration, and zero-diff
+1. commit born-RED BBNF instance, syntax, Trim, semantic, Pratt, replay, and
+   public-witness laws against exact parse-that `0.5.0` / ABI 3;
+2. implement the accepted generic surface without a compatibility path;
+3. pass public-witness, package, no-overfit, regeneration, and zero-diff
    controls plus tri-fold hostile review;
-7. create the immutable freeze basis and receipt.
+4. create the immutable freeze basis and receipt.
 
 Do not calculate, name, materialize, or special-case the held-out selection
 before the freeze receipt is git-durable.

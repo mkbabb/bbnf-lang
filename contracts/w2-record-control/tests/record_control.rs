@@ -30,7 +30,7 @@ fn view(event: &ScalarEvent) -> View {
 
 #[test]
 fn nominal_record_descriptors_are_static_and_revision_bound() {
-    assert_eq!(EVENT_SCHEMA, "bbnf.scalar-events.v5");
+    assert_eq!(EVENT_SCHEMA, "bbnf.scalar-events.v4");
     assert_eq!(FIELDS.len(), 2);
     assert_eq!(
         (
@@ -52,7 +52,7 @@ fn nominal_record_descriptors_are_static_and_revision_bound() {
     );
     assert!(FIELDS[0].semantic_type() != FIELDS[1].semantic_type());
     assert!(MANIFEST.contains("\"schema\":\"bbnf.generated-rust.v5\""));
-    assert!(MANIFEST.contains("\"event_schema\":\"bbnf.scalar-events.v5\""));
+    assert!(MANIFEST.contains("\"event_schema\":\"bbnf.scalar-events.v4\""));
     assert!(MANIFEST.contains("\"fields\":2"));
 }
 

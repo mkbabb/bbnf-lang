@@ -99,7 +99,13 @@ fn genuine_control_fixture_builds_postorder_nodes_and_lexical_rules() {
             .collect::<Vec<_>>(),
         [3, 6, 9, 11, 13, 14, 15]
     );
-    match compiled.program().nodes()[3].kind() {
+    match compiled
+        .program()
+        .nodes()
+        .get(3)
+        .expect("root sequence")
+        .kind()
+    {
         bbnf::compiler::NodeKind::Sequence(children) => assert_eq!(
             children
                 .iter()
@@ -115,10 +121,11 @@ fn genuine_control_fixture_builds_postorder_nodes_and_lexical_rules() {
 fn source_output_and_revision_are_order_stable() {
     let first = accepted(CONTROL_FIXTURE, CompileOptions::default());
     let second = accepted(CONTROL_FIXTURE, CompileOptions::default());
-    let first_source =
-        serde_json::to_value(first.source_map().modules()).expect("serialize first source map");
-    let second_source =
-        serde_json::to_value(second.source_map().modules()).expect("serialize second source map");
+    let first_source = first.source_map().replay_json().expect("source-map replay");
+    let second_source = second
+        .source_map()
+        .replay_json()
+        .expect("source-map replay");
 
     assert_eq!(first_source, second_source);
     assert_eq!(
@@ -139,8 +146,8 @@ fn declarative_transform_form_has_stable_identity_and_no_host_surface() {
 
     assert_eq!(first.source_map().modules()[0].transform_count(), 2);
     assert_eq!(
-        serde_json::to_value(first.source_map().modules()).expect("serialize transform source"),
-        serde_json::to_value(second.source_map().modules()).expect("serialize transform source"),
+        first.source_map().replay_json().expect("transform replay"),
+        second.source_map().replay_json().expect("transform replay"),
     );
 
     let transforms = first
@@ -152,12 +159,7 @@ fn declarative_transform_form_has_stable_identity_and_no_host_surface() {
                 child,
                 transform,
                 name,
-            } => Some((
-                node.id().index(),
-                child.index(),
-                transform.index(),
-                name.as_str(),
-            )),
+            } => Some((node.id().index(), child.index(), transform.index(), name)),
             _ => None,
         })
         .collect::<Vec<_>>();
@@ -221,9 +223,15 @@ layout = %{ ~"[", ~"]" };
             (2, find_rule("atom").id().index(), 1, "suffix", 12),
         ]
     );
+    let first_program: serde_json::Value =
+        serde_json::from_slice(&first.program().replay_json().expect("program replay"))
+            .expect("program replay JSON");
+    let second_program: serde_json::Value =
+        serde_json::from_slice(&second.program().replay_json().expect("program replay"))
+            .expect("program replay JSON");
     assert_eq!(
-        serde_json::to_value(first.program().fields()).expect("serialize fields"),
-        serde_json::to_value(second.program().fields()).expect("serialize fields"),
+        first_program["value"]["fields"],
+        second_program["value"]["fields"],
     );
 
     for (name, expected_slots) in [("list", 3), ("atom", 2), ("empty", 0), ("layout", 2)] {
@@ -235,14 +243,14 @@ layout = %{ ~"[", ~"]" };
             .kind()
         {
             NodeKind::Record { owner, slots } => {
-                assert_eq!(*owner, rule.id());
+                assert_eq!(owner, rule.id());
                 assert_eq!(slots.len(), expected_slots);
             }
             other => panic!("expected `{name}` to own a nominal record, got {other:?}"),
         }
     }
 
-    let children = &first.program().fields()[0];
+    let children = first.program().fields().get(0).expect("children field");
     let field_start = grammar.find("children: node*").expect("field spelling");
     assert_eq!(children.span().start() as usize, field_start);
     assert_eq!(
@@ -309,7 +317,15 @@ fn record_delimiters_do_not_steal_bare_or_at_braces() {
         CompileOptions::default(),
     );
     assert_eq!(compiled.program().fields().len(), 1);
-    assert_eq!(compiled.program().fields()[0].name(), "value");
+    assert_eq!(
+        compiled
+            .program()
+            .fields()
+            .get(0)
+            .expect("value field")
+            .name(),
+        "value"
+    );
 }
 
 #[test]

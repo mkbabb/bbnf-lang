@@ -64,14 +64,22 @@ fn every_stage_has_a_deterministic_revision_bound_replay() {
 
     assert_eq!(first_packets, second_packets);
     assert_eq!(first_packets.len(), 10);
-    for packet in first_packets {
+    let expected_schemas = [
+        "bbnf.source-map.v3",
+        "bbnf.program.v2",
+        "bbnf.node-remap.v1",
+        "bbnf.dependency-solution.v1",
+        "bbnf.type-solution.v2",
+        "bbnf.analysis-facts.v1",
+        "bbnf.lowering-plan.v2",
+        "bbnf.scalar-events.v4",
+        "bbnf.generated-module.v4",
+        "bbnf.compiled-module.v4",
+    ];
+    for (packet, expected_schema) in first_packets.into_iter().zip(expected_schemas) {
         let value: serde_json::Value =
             serde_json::from_slice(&packet).expect("replay packet is JSON");
-        assert!(
-            value["schema"]
-                .as_str()
-                .is_some_and(|schema| schema.starts_with("bbnf."))
-        );
+        assert_eq!(value["schema"].as_str(), Some(expected_schema));
         assert_eq!(value["revision"].as_str(), Some(revision.as_str()));
         assert!(!value["value"].is_null());
     }

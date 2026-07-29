@@ -25,7 +25,7 @@ fn record_projection_is_retained_exactly_from_program_through_lowering() {
 root = %{ ~"<", tag: /[A-Z]+/, payload: @raw(/[a-z]+/), ~">" };
 "#,
     );
-    let rule = &module.program().rules()[0];
+    let rule = module.program().rules().get(0).expect("root rule");
     let fields = module.program().fields();
     assert_eq!(fields.len(), 2);
     assert_eq!(
@@ -49,17 +49,23 @@ root = %{ ~"<", tag: /[A-Z]+/, payload: @raw(/[a-z]+/), ~">" };
     else {
         panic!("rule root must be a nominal record");
     };
-    assert_eq!(*owner, rule.id());
-    assert!(matches!(slots[0], RecordSlot::Discard { .. }));
+    assert_eq!(owner, rule.id());
     assert!(matches!(
-        slots[1],
+        slots.get(0).expect("slot zero"),
+        RecordSlot::Discard { .. }
+    ));
+    assert!(matches!(
+        slots.get(1).expect("slot one"),
         RecordSlot::Field { field, .. } if field.index() == 0
     ));
     assert!(matches!(
-        slots[2],
+        slots.get(2).expect("slot two"),
         RecordSlot::Field { field, .. } if field.index() == 1
     ));
-    assert!(matches!(slots[3], RecordSlot::Discard { .. }));
+    assert!(matches!(
+        slots.get(3).expect("slot three"),
+        RecordSlot::Discard { .. }
+    ));
 
     let Some(SemanticType::Record {
         owner: type_owner,
@@ -71,16 +77,22 @@ root = %{ ~"<", tag: /[A-Z]+/, payload: @raw(/[a-z]+/), ~">" };
     else {
         panic!("record syntax must retain a distinct semantic record type");
     };
-    assert_eq!(*type_owner, rule.id());
+    assert_eq!(type_owner, rule.id());
     assert_eq!(type_fields.len(), 2);
-    assert_eq!(type_fields[0].field(), fields[0].id());
-    assert_eq!(type_fields[1].field(), fields[1].id());
+    assert_eq!(
+        type_fields.get(0).expect("tag type").field(),
+        fields.get(0).expect("tag field").id()
+    );
+    assert_eq!(
+        type_fields.get(1).expect("payload type").field(),
+        fields.get(1).expect("payload field").id()
+    );
     assert!(matches!(
         module.types().verify(module.program()),
         StageResult::Accepted { .. }
     ));
 
-    let plan_rule = &module.lowering().rules()[0];
+    let plan_rule = module.lowering().rules().get(0).expect("root plan");
     assert_eq!(
         Some(plan_rule.named_type()),
         module.types().rule_type(rule.id())
@@ -100,15 +112,30 @@ root = %{ ~"<", tag: /[A-Z]+/, payload: @raw(/[a-z]+/), ~">" };
     else {
         panic!("lowering must preserve record recognition and projection");
     };
-    assert_eq!(*plan_owner, rule.id());
-    assert!(matches!(plan_slots[0], PlanRecordSlot::Discard { .. }));
+    assert_eq!(plan_owner, rule.id());
     assert!(matches!(
-        plan_slots[1],
-        PlanRecordSlot::Field { field, .. } if field == fields[0].id()
+        plan_slots.get(0).expect("plan slot zero"),
+        PlanRecordSlot::Discard { .. }
     ));
-    assert_eq!(module.lowering().semantic_types(), module.types().arena());
+    assert!(matches!(
+        plan_slots.get(1).expect("plan slot one"),
+        PlanRecordSlot::Field { field, .. }
+            if field == fields.get(0).expect("tag field").id()
+    ));
+    assert_eq!(
+        module.lowering().semantic_types().collect::<Vec<_>>(),
+        module.types().arena().collect::<Vec<_>>()
+    );
     assert_eq!(module.lowering().fields().len(), 2);
-    assert_eq!(module.lowering().fields()[1].name(), "payload");
+    assert_eq!(
+        module
+            .lowering()
+            .fields()
+            .get(1)
+            .expect("payload field")
+            .name(),
+        "payload"
+    );
 }
 
 #[test]
@@ -154,6 +181,6 @@ empty = %{};
             .types()
             .rule_root_type(empty)
             .and_then(|root| module.types().semantic_type(root)),
-        Some(SemanticType::Record { owner, fields }) if *owner == empty && fields.is_empty()
+        Some(SemanticType::Record { owner, fields }) if owner == empty && fields.is_empty()
     ));
 }

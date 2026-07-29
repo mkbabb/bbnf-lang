@@ -7,9 +7,10 @@ use parse_that::{
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::{
-    ModuleInput, SourceModule, SourceNode, SourceNodeKind, SourceRecordSlot, SourceRule, SourceSpan,
+    ModuleInput, SourceModule, SourceNodeData, SourceNodeKindData, SourceRecordSlotData,
+    SourceRuleData, SourceSpan,
 };
-use super::syntax::{NodeId, RuleId, TransformId};
+use super::syntax::{NodeIx, RuleIx, TransformIx};
 
 const IDENTIFIER_PATTERN: &str = "[A-Za-z_][A-Za-z0-9_-]*";
 const WHITESPACE_PATTERN: &str = "[ \t\r\n]*";
@@ -764,7 +765,7 @@ fn build_module(
                         "node span exceeds the source coordinate domain",
                     ));
                 };
-                let kind = match materialize_node_kind(kind, index, revision) {
+                let kind = match materialize_node_kind(kind, index) {
                     Some(kind) => kind,
                     None => {
                         return StageResult::rejected(invariant_diagnostic(
@@ -774,7 +775,7 @@ fn build_module(
                         ));
                     }
                 };
-                if let SourceNodeKind::Transform { transform, .. } = &kind {
+                if let SourceNodeKindData::Transform { transform, .. } = &kind {
                     if transform.index() != transforms {
                         return StageResult::rejected(invariant_diagnostic(
                             start,
@@ -784,7 +785,7 @@ fn build_module(
                     }
                     transforms += 1;
                 }
-                nodes.push(SourceNode { kind, span });
+                nodes.push(SourceNodeData { kind, span });
             }
             SyntaxEvent::Rule {
                 index,
@@ -800,14 +801,14 @@ fn build_module(
                         "rule events are not lexical or refer to an unknown root",
                     ));
                 }
-                let Some(id) = RuleId::checked(revision, index) else {
+                let Some(id) = RuleIx::checked(index) else {
                     return StageResult::rejected(invariant_diagnostic(
                         start,
                         end,
                         "rule identity exceeds the compiler coordinate domain",
                     ));
                 };
-                let Some(root) = NodeId::checked(revision, root) else {
+                let Some(root) = NodeIx::checked(root) else {
                     return StageResult::rejected(invariant_diagnostic(
                         start,
                         end,
@@ -821,7 +822,7 @@ fn build_module(
                         "rule span exceeds the source coordinate domain",
                     ));
                 };
-                rules.push(SourceRule {
+                rules.push(SourceRuleData {
                     id,
                     name,
                     root,
@@ -847,44 +848,34 @@ fn build_module(
     ))
 }
 
-fn materialize_node_kind(
-    kind: DraftNodeKind,
-    parent: usize,
-    revision: super::source::Revision,
-) -> Option<SourceNodeKind> {
+fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNodeKindData> {
     Some(match kind {
-        DraftNodeKind::Epsilon => SourceNodeKind::Epsilon,
-        DraftNodeKind::Literal(bytes) => SourceNodeKind::Literal(bytes),
-        DraftNodeKind::Regex(pattern) => SourceNodeKind::Regex(String::from_utf8(pattern).ok()?),
-        DraftNodeKind::Reference(name) => SourceNodeKind::Reference(name),
-        DraftNodeKind::Sequence(children) => SourceNodeKind::Sequence(
+        DraftNodeKind::Epsilon => SourceNodeKindData::Epsilon,
+        DraftNodeKind::Literal(bytes) => SourceNodeKindData::Literal(bytes),
+        DraftNodeKind::Regex(pattern) => {
+            SourceNodeKindData::Regex(String::from_utf8(pattern).ok()?)
+        }
+        DraftNodeKind::Reference(name) => SourceNodeKindData::Reference(name),
+        DraftNodeKind::Sequence(children) => SourceNodeKindData::Sequence(
             children
                 .into_iter()
-                .map(|child| {
-                    (child < parent)
-                        .then_some(child)
-                        .and_then(|child| NodeId::checked(revision, child))
-                })
+                .map(|child| (child < parent).then_some(child).and_then(NodeIx::checked))
                 .collect::<Option<Vec<_>>>()?,
         ),
-        DraftNodeKind::Choice(children) => SourceNodeKind::Choice(
+        DraftNodeKind::Choice(children) => SourceNodeKindData::Choice(
             children
                 .into_iter()
-                .map(|child| {
-                    (child < parent)
-                        .then_some(child)
-                        .and_then(|child| NodeId::checked(revision, child))
-                })
+                .map(|child| (child < parent).then_some(child).and_then(NodeIx::checked))
                 .collect::<Option<Vec<_>>>()?,
         ),
         DraftNodeKind::Repeat {
             child,
             minimum,
             maximum,
-        } => SourceNodeKind::Repeat {
+        } => SourceNodeKindData::Repeat {
             child: (child < parent)
                 .then_some(child)
-                .and_then(|child| NodeId::checked(revision, child))?,
+                .and_then(NodeIx::checked)?,
             minimum,
             maximum,
         },
@@ -892,14 +883,14 @@ fn materialize_node_kind(
             child,
             transform,
             name,
-        } => SourceNodeKind::Transform {
+        } => SourceNodeKindData::Transform {
             child: (child < parent)
                 .then_some(child)
-                .and_then(|child| NodeId::checked(revision, child))?,
-            transform: TransformId::checked(revision, transform)?,
+                .and_then(NodeIx::checked)?,
+            transform: TransformIx::checked(transform)?,
             name,
         },
-        DraftNodeKind::Record(slots) => SourceNodeKind::Record(
+        DraftNodeKind::Record(slots) => SourceNodeKindData::Record(
             slots
                 .into_iter()
                 .map(|slot| match slot {
@@ -910,19 +901,19 @@ fn materialize_node_kind(
                         name_end,
                         start,
                         end,
-                    } => Some(SourceRecordSlot::Field {
+                    } => Some(SourceRecordSlotData::Field {
                         name,
                         child: (child < parent)
                             .then_some(child)
-                            .and_then(|child| NodeId::checked(revision, child))?,
+                            .and_then(NodeIx::checked)?,
                         name_span: SourceSpan::checked(name_start, name_end)?,
                         span: SourceSpan::checked(start, end)?,
                     }),
                     DraftRecordSlot::Discard { child, start, end } => {
-                        Some(SourceRecordSlot::Discard {
+                        Some(SourceRecordSlotData::Discard {
                             child: (child < parent)
                                 .then_some(child)
-                                .and_then(|child| NodeId::checked(revision, child))?,
+                                .and_then(NodeIx::checked)?,
                             span: SourceSpan::checked(start, end)?,
                         })
                     }

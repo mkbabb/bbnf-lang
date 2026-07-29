@@ -1,6 +1,7 @@
 use core::fmt;
 
-use serde::Serialize;
+use serde::ser::SerializeStruct;
+use serde::{Serialize, Serializer};
 use serde_json::Value;
 
 use super::analysis::AnalysisFacts;
@@ -15,12 +16,12 @@ use super::typecheck::TypeSolution;
 use super::{CompileOptions, CompiledModule, ModuleInput, StageResult, compile_module};
 
 const SOURCE_MAP_REPLAY_SCHEMA: &str = "bbnf.source-map.v3";
-const PROGRAM_REPLAY_SCHEMA: &str = "bbnf.program.v3";
-const DEPENDENCY_REPLAY_SCHEMA: &str = "bbnf.dependency-solution.v2";
-const TYPE_REPLAY_SCHEMA: &str = "bbnf.type-solution.v3";
-const ANALYSIS_REPLAY_SCHEMA: &str = "bbnf.analysis-facts.v2";
-const LOWERING_REPLAY_SCHEMA: &str = "bbnf.lowering-plan.v3";
-const NODE_REMAP_REPLAY_SCHEMA: &str = "bbnf.node-remap.v2";
+const PROGRAM_REPLAY_SCHEMA: &str = "bbnf.program.v2";
+const DEPENDENCY_REPLAY_SCHEMA: &str = "bbnf.dependency-solution.v1";
+const TYPE_REPLAY_SCHEMA: &str = "bbnf.type-solution.v2";
+const ANALYSIS_REPLAY_SCHEMA: &str = "bbnf.analysis-facts.v1";
+const LOWERING_REPLAY_SCHEMA: &str = "bbnf.lowering-plan.v2";
+const NODE_REMAP_REPLAY_SCHEMA: &str = "bbnf.node-remap.v1";
 const GENERATED_REPLAY_SCHEMA: &str = "bbnf.generated-module.v4";
 const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v4";
 
@@ -28,13 +29,13 @@ const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v4";
 struct ReplayEnvelope<'a, T> {
     schema: &'a str,
     revision: String,
-    value: &'a T,
+    value: T,
 }
 
 fn serialize_stage<T: Serialize>(
     schema: &str,
     revision: Revision,
-    value: &T,
+    value: T,
 ) -> Result<Vec<u8>, serde_json::Error> {
     serde_json::to_vec(&ReplayEnvelope {
         schema,
@@ -45,31 +46,39 @@ fn serialize_stage<T: Serialize>(
 
 impl SourceMap {
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(SOURCE_MAP_REPLAY_SCHEMA, self.revision(), self)
+        serialize_stage(
+            SOURCE_MAP_REPLAY_SCHEMA,
+            self.revision(),
+            self.replay_value(),
+        )
     }
 }
 
 impl Program {
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(PROGRAM_REPLAY_SCHEMA, self.revision(), self)
+        serialize_stage(PROGRAM_REPLAY_SCHEMA, self.revision(), self.replay_value())
     }
 }
 
 impl DependencySolution {
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(DEPENDENCY_REPLAY_SCHEMA, self.revision(), self)
+        serialize_stage(
+            DEPENDENCY_REPLAY_SCHEMA,
+            self.revision(),
+            self.replay_value(),
+        )
     }
 }
 
 impl TypeSolution {
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(TYPE_REPLAY_SCHEMA, self.revision(), self)
+        serialize_stage(TYPE_REPLAY_SCHEMA, self.revision(), self.replay_value())
     }
 }
 
 impl AnalysisFacts {
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(ANALYSIS_REPLAY_SCHEMA, self.revision(), self)
+        serialize_stage(ANALYSIS_REPLAY_SCHEMA, self.revision(), self.replay_value())
     }
 }
 
@@ -77,7 +86,7 @@ impl LoweringPlan {
     /// Serialize this sealed lowering product with an explicit schema and
     /// revision. Field and collection order are deterministic.
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(LOWERING_REPLAY_SCHEMA, self.revision(), self)
+        serialize_stage(LOWERING_REPLAY_SCHEMA, self.revision(), self.replay_value())
     }
 }
 
@@ -87,13 +96,17 @@ impl ScalarEventPlan {
     /// Node identities bind this packet to the separately sealed lowering
     /// packet carried by a complete compilation replay.
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(self.schema(), self.revision(), self)
+        serialize_stage(self.schema(), self.revision(), self.replay_value())
     }
 }
 
 impl NodeRemap {
     pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
-        serialize_stage(NODE_REMAP_REPLAY_SCHEMA, self.to_revision(), self)
+        serialize_stage(
+            NODE_REMAP_REPLAY_SCHEMA,
+            self.to_revision(),
+            self.replay_value(),
+        )
     }
 }
 
@@ -108,7 +121,7 @@ impl GeneratedModule {
         serialize_stage(
             GENERATED_REPLAY_SCHEMA,
             self.revision(),
-            &GeneratedReplay {
+            GeneratedReplay {
                 source: self.source(),
                 manifest: self.manifest(),
             },
@@ -116,7 +129,6 @@ impl GeneratedModule {
     }
 }
 
-#[derive(Serialize)]
 struct CompilationReplay<'a> {
     options: CompileOptions,
     source_map: &'a SourceMap,
@@ -131,6 +143,27 @@ struct CompilationReplay<'a> {
     generated_manifest: &'a str,
 }
 
+impl Serialize for CompilationReplay<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("CompilationReplay", 11)?;
+        state.serialize_field("options", &self.options)?;
+        state.serialize_field("source_map", &self.source_map.replay_value())?;
+        state.serialize_field("program", &self.program.replay_value())?;
+        state.serialize_field("remap", &self.remap.replay_value())?;
+        state.serialize_field("dependency", &self.dependency.replay_value())?;
+        state.serialize_field("types", &self.types.replay_value())?;
+        state.serialize_field("facts", &self.facts.replay_value())?;
+        state.serialize_field("lowering", &self.lowering.replay_value())?;
+        state.serialize_field("events", &self.events.replay_value())?;
+        state.serialize_field("generated_source", self.generated_source)?;
+        state.serialize_field("generated_manifest", self.generated_manifest)?;
+        state.end()
+    }
+}
+
 impl CompiledModule {
     /// Serialize the complete immutable carrier as one revision-bound replay
     /// packet. The packet contains every stage and the exact generated product.
@@ -138,7 +171,7 @@ impl CompiledModule {
         serialize_stage(
             COMPILATION_REPLAY_SCHEMA,
             self.source_map().revision(),
-            &CompilationReplay {
+            CompilationReplay {
                 options: self.options(),
                 source_map: self.source_map(),
                 program: self.program(),

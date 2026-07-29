@@ -563,7 +563,7 @@ fn logical_event_budget_is_committed_stream_count_not_speculative_branch_work() 
 fn generated_manifest_is_schema_and_revision_bound() {
     let manifest = include_str!(concat!(env!("OUT_DIR"), "/generated.manifest.json"));
     assert!(manifest.contains("\"schema\":\"bbnf.generated-rust.v5\""));
-    assert!(manifest.contains("\"event_schema\":\"bbnf.scalar-events.v5\""));
+    assert!(manifest.contains("\"event_schema\":\"bbnf.scalar-events.v4\""));
     assert!(manifest.contains("\"transforms\":2"));
     assert!(manifest.contains(REVISION));
 }

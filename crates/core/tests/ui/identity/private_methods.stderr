@@ -1,0 +1,10 @@
+error[E0624]: method `local` is private
+  --> tests/ui/identity/private_methods.rs:12:16
+   |
+12 |     let _ = id.local();
+   |                ^^^^^ private method
+   |
+  ::: src/compiler/syntax.rs
+   |
+   |             pub(crate) const fn local(self) -> $local {
+   |             ----------------------------------------- private method defined here

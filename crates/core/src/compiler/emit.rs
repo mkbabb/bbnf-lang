@@ -5,7 +5,7 @@ use serde::Serialize;
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::event::{EVENT_SCHEMA, ScalarEventPlan};
-use super::lower::{LoweringPlan, PlanOp, PlanRecordSlot, RegexPlanData};
+use super::lower::{LoweringPlan, PlanOpData, PlanRecordSlotData, RegexPlanData};
 use super::source::Revision;
 
 const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v5";
@@ -113,8 +113,8 @@ impl<'a> RustEmitter<'a> {
     }
 
     fn write_module(&mut self) -> Result<(), EmitFailure> {
-        for node in self.plan.nodes() {
-            if matches!(node.op(), PlanOp::Choice(children) if children.is_empty()) {
+        for node in self.plan.node_data_rows() {
+            if matches!(node.op(), PlanOpData::Choice(children) if children.is_empty()) {
                 return Err(EmitFailure::Invariant(format!(
                     "sealed lowering plan contains empty choice at node {}",
                     node.id().index()
@@ -177,11 +177,11 @@ impl<'a> RustEmitter<'a> {
             self.write_regex(index, regex);
             self.ensure_output_budget()?;
         }
-        for node in self.plan.nodes() {
+        for node in self.plan.node_data_rows() {
             self.write_node(node.id().index(), node.op());
             self.ensure_output_budget()?;
         }
-        for rule in self.plan.rules() {
+        for rule in self.plan.rule_data_rows() {
             self.write_rule(rule.id().index(), rule.root().index());
             self.ensure_output_budget()?;
         }
@@ -215,17 +215,17 @@ impl<'a> RustEmitter<'a> {
         ];
         if self
             .plan
-            .nodes()
+            .node_data_rows()
             .iter()
-            .any(|node| matches!(node.op(), PlanOp::Choice(_)))
+            .any(|node| matches!(node.op(), PlanOpData::Choice(_)))
         {
             imports.push("choice");
         }
         if self
             .plan
-            .nodes()
+            .node_data_rows()
             .iter()
-            .any(|node| matches!(node.op(), PlanOp::Literal(_)))
+            .any(|node| matches!(node.op(), PlanOpData::Literal(_)))
         {
             imports.push("literal");
         }
@@ -234,9 +234,9 @@ impl<'a> RustEmitter<'a> {
         }
         if self
             .plan
-            .nodes()
+            .node_data_rows()
             .iter()
-            .any(|node| matches!(node.op(), PlanOp::Repeat { .. }))
+            .any(|node| matches!(node.op(), PlanOpData::Repeat { .. }))
         {
             imports.push("repeat");
         }
@@ -603,15 +603,15 @@ impl<'a> RustEmitter<'a> {
         .unwrap();
     }
 
-    fn write_node(&mut self, index: usize, op: &PlanOp) {
+    fn write_node(&mut self, index: usize, op: &PlanOpData) {
         writeln!(
             self.source,
             "fn node_{index}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits) -> Step<'i, ()> {{\n    match charge_work(run, limits) {{\n        Step::Matched(()) => {{}},\n        Step::Mismatch(failure) => return Step::Mismatch(failure),\n        Step::Fault(fault) => return Step::Fault(fault),\n    }}"
         )
         .unwrap();
         match op {
-            PlanOp::Epsilon => self.source.push_str("    Step::Matched(())\n"),
-            PlanOp::Literal(bytes) => {
+            PlanOpData::Epsilon => self.source.push_str("    Step::Matched(())\n"),
+            PlanOpData::Literal(bytes) => {
                 self.source.push_str("    match literal(run, &");
                 write_slice(&mut self.source, bytes);
                 writeln!(
@@ -620,17 +620,17 @@ impl<'a> RustEmitter<'a> {
                 )
                 .unwrap();
             }
-            PlanOp::Regex(regex_index) => {
+            PlanOpData::Regex(regex_index) => {
                 writeln!(
                     self.source,
                     "    let terminal = RegexTerminal::new(REGEX_{regex_index}_PLAN);\n    match regex(run, &terminal) {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Regex, identity(None, Some({index}), None, None), span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
                 )
                 .unwrap();
             }
-            PlanOp::RuleRef(rule) => {
+            PlanOpData::RuleRef(rule) => {
                 writeln!(self.source, "    rule_{}(run, limits)", rule.index()).unwrap();
             }
-            PlanOp::Sequence(children) => {
+            PlanOpData::Sequence(children) => {
                 self.source.push_str("    sequence(run, |run| {\n");
                 for child in children {
                     writeln!(
@@ -642,12 +642,12 @@ impl<'a> RustEmitter<'a> {
                 }
                 self.source.push_str("        Step::Matched(())\n    })\n");
             }
-            PlanOp::Choice(children) => {
+            PlanOpData::Choice(children) => {
                 self.source.push_str("    ");
                 self.write_choice(index, children, 0, 4);
                 self.source.push('\n');
             }
-            PlanOp::Repeat {
+            PlanOpData::Repeat {
                 child,
                 minimum,
                 maximum,
@@ -662,11 +662,11 @@ impl<'a> RustEmitter<'a> {
                 )
                 .unwrap();
             }
-            PlanOp::Record { owner, slots } => {
+            PlanOpData::Record { owner, slots } => {
                 self.source.push_str("    sequence(run, |run| {\n");
                 for slot in slots {
                     match slot {
-                        PlanRecordSlot::Field { field, child } => {
+                        PlanRecordSlotData::Field { field, child } => {
                             writeln!(
                                 self.source,
                                 "        let field_start_{} = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::EnterField, identity(Some({}), Some({}), Some({}), None), field_start_{}, field_start_{}, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let field_end_{} = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::LeaveField, identity(Some({}), Some({}), Some({}), None), field_start_{}, field_end_{}, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}",
@@ -686,7 +686,7 @@ impl<'a> RustEmitter<'a> {
                             )
                             .unwrap();
                         }
-                        PlanRecordSlot::Discard { child } => {
+                        PlanRecordSlotData::Discard { child } => {
                             writeln!(
                                 self.source,
                                 "        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}",
@@ -698,7 +698,7 @@ impl<'a> RustEmitter<'a> {
                 }
                 self.source.push_str("        Step::Matched(())\n    })\n");
             }
-            PlanOp::Transform {
+            PlanOpData::Transform {
                 child, transform, ..
             } => {
                 writeln!(
@@ -716,7 +716,7 @@ impl<'a> RustEmitter<'a> {
     fn write_choice(
         &mut self,
         node: usize,
-        children: &[super::syntax::PlanNodeId],
+        children: &[super::syntax::PlanNodeIx],
         branch: usize,
         indent: usize,
     ) {

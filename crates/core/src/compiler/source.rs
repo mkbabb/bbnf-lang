@@ -1,8 +1,9 @@
 use blake3::Hasher;
-use serde::Serialize;
+use serde::ser::SerializeSeq;
+use serde::{Serialize, Serializer};
 use std::fmt::Write as _;
 
-use super::syntax::{NodeId, RuleId, TransformId};
+use super::syntax::{NodeIx, RuleIx, TransformIx};
 
 const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v4\0";
 
@@ -80,61 +81,61 @@ impl SourceSpan {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub(crate) enum SourceRecordSlot {
+pub(crate) enum SourceRecordSlotData {
     Field {
         name: String,
-        child: NodeId,
+        child: NodeIx,
         name_span: SourceSpan,
         span: SourceSpan,
     },
     Discard {
-        child: NodeId,
+        child: NodeIx,
         span: SourceSpan,
     },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub(crate) enum SourceNodeKind {
+pub(crate) enum SourceNodeKindData {
     Epsilon,
     Literal(Vec<u8>),
     Regex(String),
     Reference(String),
-    Sequence(Vec<NodeId>),
-    Choice(Vec<NodeId>),
+    Sequence(Vec<NodeIx>),
+    Choice(Vec<NodeIx>),
     Repeat {
-        child: NodeId,
+        child: NodeIx,
         minimum: u32,
         maximum: Option<u32>,
     },
     Transform {
-        child: NodeId,
-        transform: TransformId,
+        child: NodeIx,
+        transform: TransformIx,
         name: String,
     },
-    Record(Vec<SourceRecordSlot>),
+    Record(Vec<SourceRecordSlotData>),
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub(crate) struct SourceNode {
-    pub(crate) kind: SourceNodeKind,
+pub(crate) struct SourceNodeData {
+    pub(crate) kind: SourceNodeKindData,
     pub(crate) span: SourceSpan,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
-pub(crate) struct SourceRule {
-    pub(crate) id: RuleId,
+pub(crate) struct SourceRuleData {
+    pub(crate) id: RuleIx,
     pub(crate) name: String,
-    pub(crate) root: NodeId,
+    pub(crate) root: NodeIx,
     pub(crate) span: SourceSpan,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SourceModule {
     revision: Revision,
     logical_path: String,
     bytes: Vec<u8>,
-    pub(crate) nodes: Vec<SourceNode>,
-    pub(crate) rules: Vec<SourceRule>,
+    pub(crate) nodes: Vec<SourceNodeData>,
+    pub(crate) rules: Vec<SourceRuleData>,
 }
 
 impl SourceModule {
@@ -142,8 +143,8 @@ impl SourceModule {
         revision: Revision,
         logical_path: String,
         bytes: Vec<u8>,
-        nodes: Vec<SourceNode>,
-        rules: Vec<SourceRule>,
+        nodes: Vec<SourceNodeData>,
+        rules: Vec<SourceRuleData>,
     ) -> Self {
         debug_assert_eq!(revision, Revision::for_module(&logical_path, &bytes));
         Self {
@@ -178,12 +179,12 @@ impl SourceModule {
     pub fn transform_count(&self) -> usize {
         self.nodes
             .iter()
-            .filter(|node| matches!(node.kind, SourceNodeKind::Transform { .. }))
+            .filter(|node| matches!(node.kind, SourceNodeKindData::Transform { .. }))
             .count()
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SourceMap {
     revision: Revision,
     modules: Vec<SourceModule>,
@@ -203,5 +204,62 @@ impl SourceMap {
 
     pub fn modules(&self) -> &[SourceModule] {
         &self.modules
+    }
+
+    pub(super) fn replay_value(&self) -> SourceMapReplay<'_> {
+        SourceMapReplay {
+            revision: self.revision,
+            modules: SourceModulesReplay(&self.modules),
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub(super) struct SourceMapReplay<'a> {
+    revision: Revision,
+    modules: SourceModulesReplay<'a>,
+}
+
+struct SourceModulesReplay<'a>(&'a [SourceModule]);
+
+impl Serialize for SourceModulesReplay<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        struct Module<'a> {
+            revision: Revision,
+            logical_path: &'a str,
+            bytes: &'a [u8],
+            nodes: &'a [SourceNodeData],
+            rules: &'a [SourceRuleData],
+        }
+
+        let mut sequence = serializer.serialize_seq(Some(self.0.len()))?;
+        for module in self.0 {
+            sequence.serialize_element(&Module {
+                revision: module.revision,
+                logical_path: &module.logical_path,
+                bytes: &module.bytes,
+                nodes: &module.nodes,
+                rules: &module.rules,
+            })?;
+        }
+        sequence.end()
+    }
+}
+
+#[cfg(test)]
+mod representation_laws {
+    use std::mem::size_of;
+
+    use super::*;
+
+    #[test]
+    fn source_rows_keep_local_ordinals_and_pre_branding_widths() {
+        assert!(size_of::<SourceNodeData>() <= 48);
+        assert!(size_of::<SourceRuleData>() <= 40);
+        assert!(size_of::<SourceRecordSlotData>() <= 48);
     }
 }

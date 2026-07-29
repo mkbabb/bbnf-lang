@@ -46,6 +46,10 @@ path = "tests/record_semantic_laws.rs"
 name = "carrier_lookup_laws"
 path = "tests/carrier_lookup_laws.rs"
 
+[[test]]
+name = "identity_opacity"
+path = "tests/identity_opacity.rs"
+
 [dependencies]
 bbnf-regex.workspace = true
 blake3.workspace = true
@@ -55,3 +59,4 @@ serde_json.workspace = true
 
 [dev-dependencies]
 tempfile = "3"
+trybuild = "1"

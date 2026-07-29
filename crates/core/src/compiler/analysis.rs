@@ -1,77 +1,242 @@
 use std::collections::{BTreeSet, VecDeque};
+use std::ops::Range;
 
 use bbnf_regex::{DEAD_STATE, RegexTablePlan};
-use serde::Serialize;
+use serde::ser::SerializeSeq;
+use serde::{Serialize, Serializer};
 
 use super::budget::CompileOptions;
 use super::dependency::DependencySolution;
 use super::diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
 use super::source::Revision;
-use super::syntax::{NodeId, NodeKind, Program, RuleId};
+use super::syntax::{NodeId, NodeIx, NodeKindData, Program, RuleId, RuleIx, SccIx};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
-pub struct NodeFacts {
-    revision: Revision,
-    node: NodeId,
+pub(crate) struct NodeFactsData {
+    node: NodeIx,
     nullable: bool,
     minimum_consumption: Option<u64>,
 }
 
-impl NodeFacts {
+#[derive(Clone, Copy, Debug)]
+pub struct NodeFacts<'a> {
+    revision: &'a Revision,
+    data: &'a NodeFactsData,
+}
+
+impl NodeFacts<'_> {
     pub const fn revision(self) -> Revision {
-        self.revision
+        *self.revision
     }
 
     pub const fn node(self) -> NodeId {
-        self.node
+        NodeId::bind(*self.revision, self.data.node)
     }
 
     pub const fn nullable(self) -> bool {
-        self.nullable
+        self.data.nullable
     }
 
-    /// Least number of bytes consumed by a successful match. `None` denotes
-    /// an empty language rather than an unknown result.
+    /// Least bytes consumed by a successful match. `None` denotes an empty
+    /// language rather than an unknown result.
     pub const fn minimum_consumption(self) -> Option<u64> {
-        self.minimum_consumption
+        self.data.minimum_consumption
     }
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
-pub struct RuleFacts {
-    revision: Revision,
-    rule: RuleId,
+pub(crate) struct RuleFactsData {
+    rule: RuleIx,
     nullable: bool,
     minimum_consumption: Option<u64>,
 }
 
-impl RuleFacts {
+#[derive(Clone, Copy, Debug)]
+pub struct RuleFacts<'a> {
+    revision: &'a Revision,
+    data: &'a RuleFactsData,
+}
+
+impl RuleFacts<'_> {
     pub const fn revision(self) -> Revision {
-        self.revision
+        *self.revision
     }
 
     pub const fn rule(self) -> RuleId {
-        self.rule
+        RuleId::bind(*self.revision, self.data.rule)
     }
 
     pub const fn nullable(self) -> bool {
-        self.nullable
+        self.data.nullable
     }
 
     pub const fn minimum_consumption(self) -> Option<u64> {
-        self.minimum_consumption
+        self.data.minimum_consumption
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+macro_rules! fact_rows {
+    ($name:ident, $view:ident, $data:ident) => {
+        #[derive(Clone, Debug)]
+        pub struct $name<'a> {
+            revision: &'a Revision,
+            rows: &'a [$data],
+            remaining: Range<usize>,
+        }
+
+        impl<'a> $name<'a> {
+            fn new(revision: &'a Revision, rows: &'a [$data]) -> Self {
+                Self {
+                    revision,
+                    rows,
+                    remaining: 0..rows.len(),
+                }
+            }
+
+            pub fn get(&self, index: usize) -> Option<$view<'a>> {
+                self.rows.get(index).map(|data| $view {
+                    revision: self.revision,
+                    data,
+                })
+            }
+
+            pub fn iter(&self) -> Self {
+                Self::new(self.revision, self.rows)
+            }
+
+            pub fn is_empty(&self) -> bool {
+                self.remaining.start >= self.remaining.end
+            }
+        }
+
+        impl<'a> Iterator for $name<'a> {
+            type Item = $view<'a>;
+
+            fn next(&mut self) -> Option<Self::Item> {
+                let index = self.remaining.next()?;
+                self.get(index)
+            }
+
+            fn size_hint(&self) -> (usize, Option<usize>) {
+                self.remaining.size_hint()
+            }
+        }
+
+        impl DoubleEndedIterator for $name<'_> {
+            fn next_back(&mut self) -> Option<Self::Item> {
+                let index = self.remaining.next_back()?;
+                self.get(index)
+            }
+        }
+
+        impl ExactSizeIterator for $name<'_> {}
+    };
+}
+
+fact_rows!(NodeFactsRows, NodeFacts, NodeFactsData);
+fact_rows!(RuleFactsRows, RuleFacts, RuleFactsData);
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AnalysisFacts {
     revision: Revision,
     iterations: usize,
-    nodes: Vec<NodeFacts>,
-    rules: Vec<RuleFacts>,
+    nodes: Vec<NodeFactsData>,
+    rules: Vec<RuleFactsData>,
+}
+
+pub(super) struct AnalysisFactsReplay<'a>(&'a AnalysisFacts);
+
+impl Serialize for AnalysisFactsReplay<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        struct Wire<'a> {
+            revision: Revision,
+            iterations: usize,
+            nodes: FactWireRows<'a, NodeFactsData>,
+            rules: FactWireRows<'a, RuleFactsData>,
+        }
+
+        Wire {
+            revision: self.0.revision,
+            iterations: self.0.iterations,
+            nodes: FactWireRows {
+                revision: self.0.revision,
+                rows: &self.0.nodes,
+            },
+            rules: FactWireRows {
+                revision: self.0.revision,
+                rows: &self.0.rules,
+            },
+        }
+        .serialize(serializer)
+    }
+}
+
+struct FactWireRows<'a, T> {
+    revision: Revision,
+    rows: &'a [T],
+}
+
+impl Serialize for FactWireRows<'_, NodeFactsData> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        struct Row {
+            revision: Revision,
+            node: NodeIx,
+            nullable: bool,
+            minimum_consumption: Option<u64>,
+        }
+
+        let mut sequence = serializer.serialize_seq(Some(self.rows.len()))?;
+        for row in self.rows {
+            sequence.serialize_element(&Row {
+                revision: self.revision,
+                node: row.node,
+                nullable: row.nullable,
+                minimum_consumption: row.minimum_consumption,
+            })?;
+        }
+        sequence.end()
+    }
+}
+
+impl Serialize for FactWireRows<'_, RuleFactsData> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        #[derive(Serialize)]
+        struct Row {
+            revision: Revision,
+            rule: RuleIx,
+            nullable: bool,
+            minimum_consumption: Option<u64>,
+        }
+
+        let mut sequence = serializer.serialize_seq(Some(self.rows.len()))?;
+        for row in self.rows {
+            sequence.serialize_element(&Row {
+                revision: self.revision,
+                rule: row.rule,
+                nullable: row.nullable,
+                minimum_consumption: row.minimum_consumption,
+            })?;
+        }
+        sequence.end()
+    }
 }
 
 impl AnalysisFacts {
+    pub(super) fn replay_value(&self) -> AnalysisFactsReplay<'_> {
+        AnalysisFactsReplay(self)
+    }
+
     pub(crate) fn derive(
         program: &Program,
         dependency: &DependencySolution,
@@ -81,14 +246,11 @@ impl AnalysisFacts {
             program,
             dependency,
             options,
-            &(0..program.nodes().len()).collect::<Vec<_>>(),
-            &(0..program.rules().len()).collect::<Vec<_>>(),
+            &(0..program.node_data_rows().len()).collect::<Vec<_>>(),
+            &(0..program.rule_data_rows().len()).collect::<Vec<_>>(),
         )
     }
 
-    /// Evaluate constraints in arbitrary orders but commit every fixed-point
-    /// round synchronously. This makes both the result and iteration receipt
-    /// independent of traversal, parallel discovery, or hash iteration.
     fn derive_with_orders(
         program: &Program,
         dependency: &DependencySolution,
@@ -108,8 +270,8 @@ impl AnalysisFacts {
                 ),
             ));
         }
-        if !is_permutation(node_order, program.nodes().len())
-            || !is_permutation(rule_order, program.rules().len())
+        if !is_permutation(node_order, program.node_data_rows().len())
+            || !is_permutation(rule_order, program.rule_data_rows().len())
         {
             return StageResult::rejected(Diagnostic::new(
                 DiagnosticCode::InternalInvariant,
@@ -120,17 +282,17 @@ impl AnalysisFacts {
         }
 
         let revision = program.revision();
-        let mut work = vec![WorkFacts::default(); program.nodes().len()];
+        let mut work = vec![WorkFacts::default(); program.node_data_rows().len()];
         for &index in node_order {
-            let node = &program.nodes()[index];
+            let node = &program.node_data_rows()[index];
             match node.kind() {
-                NodeKind::Epsilon => {
+                NodeKindData::Epsilon => {
                     work[node.id().index()] = WorkFacts::some(0);
                 }
-                NodeKind::Literal(bytes) => {
+                NodeKindData::Literal(bytes) => {
                     work[node.id().index()] = WorkFacts::some(bytes.len() as u64);
                 }
-                NodeKind::Regex(pattern) => {
+                NodeKindData::Regex(pattern) => {
                     let plan = match RegexTablePlan::compile_with(
                         pattern,
                         options.regex.table_options(),
@@ -148,15 +310,15 @@ impl AnalysisFacts {
                     };
                     work[node.id().index()] = regex_facts(&plan);
                 }
-                NodeKind::RuleRef(_)
-                | NodeKind::Sequence(_)
-                | NodeKind::Choice(_)
-                | NodeKind::Repeat { .. }
-                | NodeKind::Record { .. }
-                | NodeKind::Transform { .. } => {}
+                NodeKindData::RuleRef(_)
+                | NodeKindData::Sequence(_)
+                | NodeKindData::Choice(_)
+                | NodeKindData::Repeat { .. }
+                | NodeKindData::Record { .. }
+                | NodeKindData::Transform { .. } => {}
             }
         }
-        let mut rule_work = vec![WorkFacts::default(); program.rules().len()];
+        let mut rule_work = vec![WorkFacts::default(); program.rule_data_rows().len()];
 
         let mut iterations = 0;
         let converged = loop {
@@ -170,30 +332,27 @@ impl AnalysisFacts {
             let mut next_rules = previous_rules.clone();
 
             for &index in node_order {
-                let node = &program.nodes()[index];
+                let node = &program.node_data_rows()[index];
                 let derived = match node.kind() {
-                    NodeKind::Epsilon | NodeKind::Literal(_) | NodeKind::Regex(_) => {
+                    NodeKindData::Epsilon | NodeKindData::Literal(_) | NodeKindData::Regex(_) => {
                         previous_nodes[node.id().index()]
                     }
-                    NodeKind::RuleRef(rule) => previous_rules[rule.index()],
-                    NodeKind::Sequence(children) => sequence_facts(children, &previous_nodes),
-                    NodeKind::Choice(children) => choice_facts(children, &previous_nodes),
-                    NodeKind::Repeat { child, minimum, .. } => {
+                    NodeKindData::RuleRef(rule) => previous_rules[rule.index()],
+                    NodeKindData::Sequence(children) => sequence_facts(children, &previous_nodes),
+                    NodeKindData::Choice(children) => choice_facts(children, &previous_nodes),
+                    NodeKindData::Repeat { child, minimum, .. } => {
                         repeat_facts(previous_nodes[child.index()], *minimum)
                     }
-                    NodeKind::Record { slots, .. } => sequence_facts(
-                        &slots.iter().map(|slot| slot.child()).collect::<Vec<_>>(),
-                        &previous_nodes,
-                    ),
-                    NodeKind::Transform { child, .. } => previous_nodes[child.index()],
+                    NodeKindData::Record { slots, .. } => {
+                        sequence_slot_facts(slots, &previous_nodes)
+                    }
+                    NodeKindData::Transform { child, .. } => previous_nodes[child.index()],
                 };
                 update_monotone(&mut next_nodes[node.id().index()], derived);
             }
 
-            // Rules observe the prior node round as well. This Jacobi-style
-            // update is slower than in-place propagation but order-invariant.
             for &index in rule_order {
-                let rule = &program.rules()[index];
+                let rule = &program.rule_data_rows()[index];
                 let derived = previous_nodes[rule.root().index()];
                 update_monotone(&mut next_rules[rule.id().index()], derived);
             }
@@ -219,8 +378,8 @@ impl AnalysisFacts {
         }
 
         let mut semantic_diagnostics = Vec::new();
-        for node in program.nodes() {
-            let NodeKind::Repeat { child, .. } = node.kind() else {
+        for node in program.node_data_rows() {
+            let NodeKindData::Repeat { child, .. } = node.kind() else {
                 continue;
             };
             if work[child.index()].nullable {
@@ -235,7 +394,7 @@ impl AnalysisFacts {
         }
 
         let zero_call_edges = zero_consumption_calls(program, &work);
-        let zero_cycles = cyclic_components(program.revision(), &zero_call_edges);
+        let zero_cycles = cyclic_components(&zero_call_edges);
         let zero_cycle_rules = zero_cycles
             .iter()
             .flatten()
@@ -243,12 +402,11 @@ impl AnalysisFacts {
             .collect::<BTreeSet<_>>();
 
         for component_index in 0..dependency.component_count() {
-            let component_id = super::syntax::SccId::checked(program.revision(), component_index)
-                .expect("component identity was already checked");
-            if dependency.is_recursive(component_id) != Some(true) {
+            let component = SccIx::checked(component_index).expect("component ordinal was bounded");
+            if dependency.is_recursive_local(component) != Some(true) {
                 continue;
             }
-            let members = dependency.component_required(component_id);
+            let members = dependency.component_local(component);
             let empty_members = members
                 .iter()
                 .copied()
@@ -258,12 +416,11 @@ impl AnalysisFacts {
                 && !members.iter().any(|rule| zero_cycle_rules.contains(rule))
             {
                 let first = empty_members[0];
-                let span = program
-                    .node_required(program.rule_required(first).root())
-                    .span();
+                let rule = &program.rule_data_rows()[first.index()];
+                let span = program.node_data(rule.root()).span();
                 let names = empty_members
                     .iter()
-                    .map(|&rule| program.rule_required(rule).name())
+                    .map(|rule| program.rule_data_rows()[rule.index()].name())
                     .collect::<Vec<_>>()
                     .join(", ");
                 semantic_diagnostics.push(Diagnostic::new(
@@ -271,8 +428,7 @@ impl AnalysisFacts {
                     span.start() as usize,
                     span.end() as usize,
                     format!(
-                        "recursive component {} has no finite successful derivation for: {names}",
-                        component_index
+                        "recursive component {component_index} has no finite successful derivation for: {names}"
                     ),
                 ));
             }
@@ -280,12 +436,11 @@ impl AnalysisFacts {
 
         for cycle in zero_cycles {
             let first = cycle[0];
-            let span = program
-                .node_required(program.rule_required(first).root())
-                .span();
+            let rule = &program.rule_data_rows()[first.index()];
+            let span = program.node_data(rule.root()).span();
             let names = cycle
                 .iter()
-                .map(|&rule| program.rule_required(rule).name())
+                .map(|rule| program.rule_data_rows()[rule.index()].name())
                 .collect::<Vec<_>>()
                 .join(" -> ");
             semantic_diagnostics.push(Diagnostic::new(
@@ -304,20 +459,18 @@ impl AnalysisFacts {
         }
 
         let nodes = program
-            .nodes()
+            .node_data_rows()
             .iter()
-            .map(|node| NodeFacts {
-                revision,
+            .map(|node| NodeFactsData {
                 node: node.id(),
                 nullable: work[node.id().index()].nullable,
                 minimum_consumption: work[node.id().index()].minimum_consumption,
             })
             .collect();
         let rules = program
-            .rules()
+            .rule_data_rows()
             .iter()
-            .map(|rule| RuleFacts {
-                revision,
+            .map(|rule| RuleFactsData {
                 rule: rule.id(),
                 nullable: rule_work[rule.id().index()].nullable,
                 minimum_consumption: rule_work[rule.id().index()].minimum_consumption,
@@ -340,24 +493,32 @@ impl AnalysisFacts {
         self.iterations
     }
 
-    pub fn nodes(&self) -> &[NodeFacts] {
-        &self.nodes
+    pub fn nodes(&self) -> NodeFactsRows<'_> {
+        NodeFactsRows::new(&self.revision, &self.nodes)
     }
 
-    pub fn rules(&self) -> &[RuleFacts] {
-        &self.rules
+    pub fn rules(&self) -> RuleFactsRows<'_> {
+        RuleFactsRows::new(&self.revision, &self.rules)
     }
 
-    pub fn node(&self, id: NodeId) -> Option<NodeFacts> {
+    pub fn node(&self, id: NodeId) -> Option<NodeFacts<'_>> {
         (id.revision() == self.revision)
-            .then(|| self.nodes.get(id.index()).copied())
+            .then(|| self.nodes.get(id.local().index()))
             .flatten()
+            .map(|data| NodeFacts {
+                revision: &self.revision,
+                data,
+            })
     }
 
-    pub fn rule(&self, id: RuleId) -> Option<RuleFacts> {
+    pub fn rule(&self, id: RuleId) -> Option<RuleFacts<'_>> {
         (id.revision() == self.revision)
-            .then(|| self.rules.get(id.index()).copied())
+            .then(|| self.rules.get(id.local().index()))
             .flatten()
+            .map(|data| RuleFacts {
+                revision: &self.revision,
+                data,
+            })
     }
 }
 
@@ -405,11 +566,10 @@ fn regex_facts(plan: &RegexTablePlan) -> WorkFacts {
             pending.push_back(target);
         }
     }
-
     WorkFacts::default()
 }
 
-fn sequence_facts(children: &[NodeId], facts: &[WorkFacts]) -> WorkFacts {
+fn sequence_facts(children: &[NodeIx], facts: &[WorkFacts]) -> WorkFacts {
     let nullable = children.iter().all(|child| facts[child.index()].nullable);
     let minimum_consumption = children.iter().try_fold(0_u64, |total, child| {
         total.checked_add(facts[child.index()].minimum_consumption?)
@@ -420,7 +580,20 @@ fn sequence_facts(children: &[NodeId], facts: &[WorkFacts]) -> WorkFacts {
     }
 }
 
-fn choice_facts(children: &[NodeId], facts: &[WorkFacts]) -> WorkFacts {
+fn sequence_slot_facts(slots: &[super::syntax::RecordSlotData], facts: &[WorkFacts]) -> WorkFacts {
+    let nullable = slots
+        .iter()
+        .all(|slot| facts[slot.child().index()].nullable);
+    let minimum_consumption = slots.iter().try_fold(0_u64, |total, slot| {
+        total.checked_add(facts[slot.child().index()].minimum_consumption?)
+    });
+    WorkFacts {
+        nullable,
+        minimum_consumption,
+    }
+}
+
+fn choice_facts(children: &[NodeIx], facts: &[WorkFacts]) -> WorkFacts {
     WorkFacts {
         nullable: children.iter().any(|child| facts[child.index()].nullable),
         minimum_consumption: children
@@ -459,20 +632,15 @@ fn is_permutation(order: &[usize], count: usize) -> bool {
     true
 }
 
-/// Rule calls that may be entered before the current rule has consumed input.
-///
-/// The frontend assigns children before their containing node, so this is a
-/// linear dynamic program over immutable syntax. A sequence exposes calls from
-/// successive children only while every preceding child is nullable.
-fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<RuleId>> {
-    let mut leading = vec![BTreeSet::new(); program.nodes().len()];
-    for node in program.nodes() {
+fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<RuleIx>> {
+    let mut leading = vec![BTreeSet::new(); program.node_data_rows().len()];
+    for node in program.node_data_rows() {
         let mut calls = BTreeSet::new();
         match node.kind() {
-            NodeKind::RuleRef(rule) => {
+            NodeKindData::RuleRef(rule) => {
                 calls.insert(*rule);
             }
-            NodeKind::Sequence(children) => {
+            NodeKindData::Sequence(children) => {
                 for child in children {
                     calls.extend(leading[child.index()].iter().copied());
                     if !facts[child.index()].nullable {
@@ -480,17 +648,17 @@ fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<Rul
                     }
                 }
             }
-            NodeKind::Choice(children) => {
+            NodeKindData::Choice(children) => {
                 for child in children {
                     calls.extend(leading[child.index()].iter().copied());
                 }
             }
-            NodeKind::Repeat { child, maximum, .. } => {
+            NodeKindData::Repeat { child, maximum, .. } => {
                 if *maximum != Some(0) {
                     calls.extend(leading[child.index()].iter().copied());
                 }
             }
-            NodeKind::Record { slots, .. } => {
+            NodeKindData::Record { slots, .. } => {
                 for slot in slots {
                     let child = slot.child();
                     calls.extend(leading[child.index()].iter().copied());
@@ -499,23 +667,22 @@ fn zero_consumption_calls(program: &Program, facts: &[WorkFacts]) -> Vec<Vec<Rul
                     }
                 }
             }
-            NodeKind::Transform { child, .. } => {
+            NodeKindData::Transform { child, .. } => {
                 calls.extend(leading[child.index()].iter().copied());
             }
-            NodeKind::Epsilon | NodeKind::Literal(_) | NodeKind::Regex(_) => {}
+            NodeKindData::Epsilon | NodeKindData::Literal(_) | NodeKindData::Regex(_) => {}
         }
         leading[node.id().index()] = calls;
     }
 
     program
-        .rules()
+        .rule_data_rows()
         .iter()
         .map(|rule| leading[rule.root().index()].iter().copied().collect())
         .collect()
 }
 
-/// Canonical SCCs of the zero-consumption call graph, filtered to cycles.
-fn cyclic_components(revision: Revision, edges: &[Vec<RuleId>]) -> Vec<Vec<RuleId>> {
+fn cyclic_components(edges: &[Vec<RuleIx>]) -> Vec<Vec<RuleIx>> {
     let count = edges.len();
     let mut visited = vec![false; count];
     let mut finish = Vec::with_capacity(count);
@@ -525,7 +692,7 @@ fn cyclic_components(revision: Revision, edges: &[Vec<RuleId>]) -> Vec<Vec<RuleI
             continue;
         }
         visited[index] = true;
-        let root = RuleId::checked(revision, index).expect("rule identity is checked");
+        let root = RuleIx::checked(index).expect("rule ordinal was bounded");
         let mut stack = vec![(root, 0_usize)];
         while let Some((rule, next)) = stack.last_mut() {
             if *next < edges[rule.index()].len() {
@@ -543,7 +710,7 @@ fn cyclic_components(revision: Revision, edges: &[Vec<RuleId>]) -> Vec<Vec<RuleI
 
     let mut reverse = vec![Vec::new(); count];
     for (source_index, targets) in edges.iter().enumerate() {
-        let source = RuleId::checked(revision, source_index).expect("rule identity is checked");
+        let source = RuleIx::checked(source_index).expect("rule ordinal was bounded");
         for &target in targets {
             reverse[target.index()].push(source);
         }
@@ -603,6 +770,8 @@ fn update_monotone(current: &mut WorkFacts, derived: WorkFacts) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::mem::size_of;
+
     use super::*;
     use crate::compiler::frontend::parse_source;
     use crate::compiler::source::ModuleInput;
@@ -627,6 +796,14 @@ mod tests {
     }
 
     #[test]
+    fn fact_rows_retain_pre_branding_width() {
+        assert_eq!(size_of::<NodeIx>(), 4);
+        assert_eq!(size_of::<RuleIx>(), 4);
+        assert!(size_of::<NodeFactsData>() <= 24);
+        assert!(size_of::<RuleFactsData>() <= 24);
+    }
+
+    #[test]
     fn fixed_point_constraint_permutations_are_identical() {
         let (program, dependency) = program(
             r#"
@@ -642,9 +819,11 @@ array = "[", (value, (",", value)*)?, "]";
         };
 
         for seed in 1..=16 {
-            let node_order = deterministic_permutation(program.nodes().len(), seed);
-            let rule_order =
-                deterministic_permutation(program.rules().len(), seed ^ 0xa076_1d64_78bd_642f);
+            let node_order = deterministic_permutation(program.node_data_rows().len(), seed);
+            let rule_order = deterministic_permutation(
+                program.rule_data_rows().len(),
+                seed ^ 0xa076_1d64_78bd_642f,
+            );
             let candidate = match AnalysisFacts::derive_with_orders(
                 &program,
                 &dependency,

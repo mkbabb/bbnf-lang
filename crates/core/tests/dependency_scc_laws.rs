@@ -29,30 +29,46 @@ atom = /[0-9]+/;
 "#,
     );
     let rules = module.program().rules();
-    let root = rules[0].id();
-    let head = rules[1].id();
-    let tail = rules[2].id();
-    let atom = rules[3].id();
+    let root = rules.get(0).expect("root").id();
+    let head = rules.get(1).expect("head").id();
+    let tail = rules.get(2).expect("tail").id();
+    let atom = rules.get(3).expect("atom").id();
 
     assert_eq!(
-        module.dependency().graph().dependencies(root),
-        Some([head, tail].as_slice()),
+        module
+            .dependency()
+            .graph()
+            .dependencies(root)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(vec![head, tail]),
         "dependency edges use RuleId order, not encounter order"
     );
     assert_eq!(
-        module.dependency().graph().dependencies(head),
-        Some([atom].as_slice())
+        module
+            .dependency()
+            .graph()
+            .dependencies(head)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(vec![atom])
     );
     assert_eq!(
-        module.dependency().graph().dependencies(tail),
-        Some([atom].as_slice())
+        module
+            .dependency()
+            .graph()
+            .dependencies(tail)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(vec![atom])
     );
     assert_eq!(
-        module.dependency().graph().dependencies(atom),
-        Some(&[][..])
+        module
+            .dependency()
+            .graph()
+            .dependencies(atom)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(Vec::new())
     );
 
-    let order = module.dependency().dependency_order();
+    let order = module.dependency().dependency_order().collect::<Vec<_>>();
     let position = |rule| {
         let component = module
             .dependency()
@@ -74,8 +90,11 @@ atom = /[0-9]+/;
             .component_of(rule.id())
             .expect("rule belongs to its dependency carrier");
         assert_eq!(
-            module.dependency().component(component),
-            Some([rule.id()].as_slice())
+            module
+                .dependency()
+                .component(component)
+                .map(Iterator::collect::<Vec<_>>),
+            Some(vec![rule.id()])
         );
     }
 }
@@ -101,7 +120,7 @@ second = first, "b";
 #[test]
 fn consuming_self_recursion_is_retained_as_one_finite_component() {
     let module = accepted(r#"root = "(", root, ")" | "x";"#);
-    let root = module.program().rules()[0].id();
+    let root = module.program().rules().get(0).expect("root").id();
     let component = module
         .dependency()
         .component_of(root)
@@ -109,12 +128,19 @@ fn consuming_self_recursion_is_retained_as_one_finite_component() {
 
     assert_eq!(module.dependency().is_recursive(component), Some(true));
     assert_eq!(
-        module.dependency().component(component),
-        Some([root].as_slice())
+        module
+            .dependency()
+            .component(component)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(vec![root])
     );
     assert_eq!(
-        module.dependency().graph().dependencies(root),
-        Some([root].as_slice())
+        module
+            .dependency()
+            .graph()
+            .dependencies(root)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(vec![root])
     );
 }
 
@@ -127,9 +153,9 @@ other = "b", root | atom;
 atom = "x";
 "#,
     );
-    let root = module.program().rules()[0].id();
-    let other = module.program().rules()[1].id();
-    let atom = module.program().rules()[2].id();
+    let root = module.program().rules().get(0).expect("root").id();
+    let other = module.program().rules().get(1).expect("other").id();
+    let atom = module.program().rules().get(2).expect("atom").id();
     let recursive = module
         .dependency()
         .component_of(root)
@@ -138,12 +164,15 @@ atom = "x";
     assert_eq!(module.dependency().component_of(other), Some(recursive));
     assert_ne!(module.dependency().component_of(atom), Some(recursive));
     assert_eq!(
-        module.dependency().component(recursive),
-        Some([root, other].as_slice())
+        module
+            .dependency()
+            .component(recursive)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(vec![root, other])
     );
     assert_eq!(module.dependency().is_recursive(recursive), Some(true));
 
-    let order = module.dependency().dependency_order();
+    let order = module.dependency().dependency_order().collect::<Vec<_>>();
     let atom_position = order
         .iter()
         .position(|id| Some(*id) == module.dependency().component_of(atom))
@@ -160,11 +189,15 @@ root = ("x", leaf)+;
 leaf = /[a-z]/;
 "#,
     );
-    let root = module.program().rules()[0].id();
-    let leaf = module.program().rules()[1].id();
+    let root = module.program().rules().get(0).expect("root").id();
+    let leaf = module.program().rules().get(1).expect("leaf").id();
     assert_eq!(
-        module.dependency().graph().dependencies(root),
-        Some([leaf].as_slice())
+        module
+            .dependency()
+            .graph()
+            .dependencies(root)
+            .map(Iterator::collect::<Vec<_>>),
+        Some(vec![leaf])
     );
 
     let references = module

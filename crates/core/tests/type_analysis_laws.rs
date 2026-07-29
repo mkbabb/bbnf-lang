@@ -54,9 +54,13 @@ empty = epsilon;
                 .types()
                 .rule_type(rule.id())
                 .and_then(|type_id| module.types().semantic_type(type_id)),
-            Some(SemanticType::Named(named)) if *named == rule.id()
+            Some(SemanticType::Named(named)) if named == rule.id()
         ));
-        let derivation = &module.types().rule_derivations()[rule.id().index()];
+        let derivation = module
+            .types()
+            .rule_derivations()
+            .get(rule.id().index())
+            .expect("rule derivation");
         assert_eq!(derivation.revision(), module.program().revision());
         assert_eq!(derivation.rule(), rule.id());
         assert_eq!(
@@ -71,7 +75,11 @@ empty = epsilon;
     let mut saw_option = false;
     let mut saw_list = false;
     for node in module.program().nodes() {
-        let derivation = &module.types().node_derivations()[node.id().index()];
+        let derivation = module
+            .types()
+            .node_derivations()
+            .get(node.id().index())
+            .expect("node derivation");
         assert_eq!(derivation.revision(), module.program().revision());
         assert_eq!(derivation.node(), node.id());
         let semantic = module
@@ -102,7 +110,7 @@ empty = epsilon;
                     semantic,
                     module
                         .types()
-                        .node_type(*child)
+                        .node_type(child)
                         .and_then(|type_id| module.types().semantic_type(type_id))
                         .expect("child type belongs to this type carrier")
                 );
@@ -252,7 +260,7 @@ string = /[a-z]+/;
         .nodes()
         .iter()
         .filter_map(|node| match node.kind() {
-            NodeKind::RuleRef(rule) => Some((node.id(), *rule)),
+            NodeKind::RuleRef(rule) => Some((node.id(), rule)),
             _ => None,
         })
         .collect::<Vec<_>>();
@@ -263,7 +271,7 @@ string = /[a-z]+/;
                 .types()
                 .node_type(node)
                 .and_then(|type_id| module.types().semantic_type(type_id)),
-            Some(SemanticType::Named(bound)) if *bound == rule
+            Some(SemanticType::Named(bound)) if bound == rule
         ));
     }
     assert!(

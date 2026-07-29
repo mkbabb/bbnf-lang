@@ -1,0 +1,354 @@
+{
+  "schema": "sk-v26.w2.event-schema.v1",
+  "disposition": "SEALED_FOR_W2_SCALAR_EVENT_VERTICAL",
+  "subject": {
+    "repository": "/Users/mkbabb/Programming/bbnf-lang-skv26",
+    "branch": "codex/sk-v26-bbnf",
+    "commit": "28a91db51177495efb61cd1c664a85b37fdd9529",
+    "tree": "df6f1b063acfc49b3e0382fbd4a46892be7e5328",
+    "parse_that_commit": "282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f",
+    "parse_that_tree": "4e813a353251f86906baee44a9c4d28e743fe27b"
+  },
+  "schemas": {
+    "event_plan": "bbnf.scalar-events.v4",
+    "generated_rust": "bbnf.generated-rust.v5",
+    "generated_replay": "bbnf.generated-module.v4",
+    "complete_replay": "bbnf.compiled-module.v5",
+    "source_revision_domain": "bbnf.w2.source.v4"
+  },
+  "carrier_relation": {
+    "event_plan_contents": "revision, schema, ordered EventSite values, and ordered TransformSite descriptors only",
+    "lowering_relation": "ScalarEventPlan::seal checks revision equality against LoweringPlan; GeneratedModule::emit receives the sealed event and lowering carriers separately and rejects a revision mismatch",
+    "non_duplication": "ScalarEventPlan does not own, clone, embed, or serialize a LoweringPlan",
+    "kernel_abi": "generated Rust contains a compile-time assertion that parse_that::KERNEL_ABI == 2; BBNF and every standalone generated control require parse_that =0.4.1 exactly",
+    "identity_storage": "EventSiteData and TransformSiteData store compiler-private local ordinals and remain at or below 32 bytes; Option<PlanNodeIx> remains at or below 8 bytes",
+    "serialization_opacity": "public compiler capabilities and sealed carriers do not implement serde::Serialize; only private replay adapters expose compact local ordinals under the event carrier revision",
+    "wire_version_law": "the capability/local-index split changed in-memory authority and opacity, not the already-compact ScalarEventPlan wire shape, so the event plan remains bbnf.scalar-events.v4 while generated Rust remains independently at v5",
+    "public_nameability": "the crate denies unnameable_types and publicly re-exports every returned event view and iterator type through bbnf::compiler"
+  },
+  "semantic_plane": {
+    "class": "P2 ordered scalar event stream",
+    "consumption": "the selected entry rule followed by explicit EOF; a success span covers the complete input",
+    "output": "one revision- and borrowed-source-bound EventBuffer or EventStream",
+    "excluded_outputs": [
+      "tape",
+      "DOM",
+      "path result",
+      "typed materialization",
+      "host action result"
+    ]
+  },
+  "stream_envelope": {
+    "revision": {
+      "type": "&'static str",
+      "meaning": "lowercase grammar-module revision under bbnf.w2.source.v4"
+    },
+    "source": {
+      "type": "parse_that::Input<'i>",
+      "meaning": "borrowed immutable data input whose original bytes define all event spans"
+    },
+    "events": {
+      "type": "Vec<ScalarEvent>",
+      "meaning": "ordered events retained by EventBuffer and transferred without losing revision or source by EventStream::into_parts"
+    },
+    "qualification": "Source identity is an envelope property. ScalarEvent is Copy and does not independently carry the source or grammar revision."
+  },
+  "scalar_event": {
+    "layout": [
+      {
+        "field": "kind",
+        "type": "EventKind"
+      },
+      {
+        "field": "rule",
+        "type": "Option<u32>",
+        "identity": "RuleId lexical ordinal"
+      },
+      {
+        "field": "node",
+        "type": "Option<u32>",
+        "identity": "PlanNodeId"
+      },
+      {
+        "field": "field",
+        "type": "Option<u32>",
+        "identity": "FieldId lexical ordinal"
+      },
+      {
+        "field": "transform",
+        "type": "Option<u32>",
+        "identity": "TransformId lexical ordinal"
+      },
+      {
+        "field": "start",
+        "type": "u32",
+        "coordinate": "inclusive original-input byte offset"
+      },
+      {
+        "field": "end",
+        "type": "u32",
+        "coordinate": "exclusive original-input byte offset"
+      },
+      {
+        "field": "value",
+        "type": "u32",
+        "meaning": "kind-specific scalar payload"
+      }
+    ],
+    "construction": "fields are private and exposed by const getters; EventKind is non_exhaustive"
+  },
+  "event_kinds": [
+    {
+      "kind": "EnterRule",
+      "required_identity": [
+        "rule"
+      ],
+      "absent_identity": [
+        "node",
+        "field",
+        "transform"
+      ],
+      "span": "zero-width at rule entry",
+      "value": 0,
+      "ordering": "before the rule root"
+    },
+    {
+      "kind": "LeaveRule",
+      "required_identity": [
+        "rule"
+      ],
+      "absent_identity": [
+        "node",
+        "field",
+        "transform"
+      ],
+      "span": "complete successful rule invocation",
+      "value": 0,
+      "ordering": "after the rule root and all nested events"
+    },
+    {
+      "kind": "EnterField",
+      "required_identity": [
+        "rule",
+        "node",
+        "field"
+      ],
+      "absent_identity": [
+        "transform"
+      ],
+      "span": "zero-width at retained field entry",
+      "value": 0,
+      "ordering": "immediately before the retained field child",
+      "qualification": "the node identity is the field child PlanNodeId, not the enclosing record node"
+    },
+    {
+      "kind": "LeaveField",
+      "required_identity": [
+        "rule",
+        "node",
+        "field"
+      ],
+      "absent_identity": [
+        "transform"
+      ],
+      "span": "complete successful retained field child",
+      "value": 0,
+      "ordering": "immediately after the retained field child and its nested events"
+    },
+    {
+      "kind": "Literal",
+      "required_identity": [
+        "node"
+      ],
+      "absent_identity": [
+        "rule",
+        "field",
+        "transform"
+      ],
+      "span": "exact literal bytes consumed",
+      "value": 0,
+      "ordering": "after terminal success"
+    },
+    {
+      "kind": "Regex",
+      "required_identity": [
+        "node"
+      ],
+      "absent_identity": [
+        "rule",
+        "field",
+        "transform"
+      ],
+      "span": "exact longest accepted regex prefix consumed by the table terminal",
+      "value": 0,
+      "ordering": "after terminal success"
+    },
+    {
+      "kind": "ChoiceBranch",
+      "required_identity": [
+        "node"
+      ],
+      "absent_identity": [
+        "rule",
+        "field",
+        "transform"
+      ],
+      "span": "the selected branch's complete successful span",
+      "value": "zero-based branch ordinal",
+      "ordering": "after all events from the selected branch"
+    },
+    {
+      "kind": "RepeatCount",
+      "required_identity": [
+        "node"
+      ],
+      "absent_identity": [
+        "rule",
+        "field",
+        "transform"
+      ],
+      "span": "the complete repeated region, including a zero-width region when count is zero",
+      "value": "successful repetition count",
+      "ordering": "after every retained iteration event",
+      "qualification": "nullable children are rejected before emission, input is bounded to u32 coordinates, and each successful iteration advances; the count is therefore exactly representable"
+    },
+    {
+      "kind": "Transform",
+      "required_identity": [
+        "node",
+        "transform"
+      ],
+      "absent_identity": [
+        "rule",
+        "field"
+      ],
+      "span": "the action-free transform child's complete successful span",
+      "value": 0,
+      "ordering": "after all child events",
+      "qualification": "the transform name is declarative metadata in TRANSFORMS; no host callback executes"
+    },
+    {
+      "kind": "EndInput",
+      "required_identity": [],
+      "absent_identity": [
+        "rule",
+        "node",
+        "field",
+        "transform"
+      ],
+      "span": "zero-width at exact EOF",
+      "value": 0,
+      "ordering": "the final event of every successful complete parse"
+    }
+  ],
+  "descriptors": {
+    "TRANSFORMS": {
+      "entry": [
+        "id: u32",
+        "name: &'static str"
+      ],
+      "order": "contiguous lexical TransformId"
+    },
+    "FIELDS": {
+      "entry": [
+        "id: u32",
+        "owner_rule: u32",
+        "source_slot: u32",
+        "child_node: u32",
+        "semantic_type: u32",
+        "name: &'static str"
+      ],
+      "order": "contiguous retained FieldId in rule and source-slot order",
+      "discard_policy": "a ~slot remains recognition control but has no FieldDescriptor and emits no field boundary events"
+    }
+  },
+  "ordering": {
+    "rule": "EnterRule, root events, LeaveRule",
+    "field": "EnterField, child events, LeaveField",
+    "choice": "selected child events, ChoiceBranch",
+    "repeat": "all iteration events, RepeatCount",
+    "transform": "child events, Transform",
+    "module": "entry rule events, EndInput",
+    "failed_speculation": "cursor and sink length are restored before a later choice branch is attempted"
+  },
+  "normalization": {
+    "spans": "OriginalInputByteOffsets",
+    "strings": "none; raw source spelling is recoverable from the source-bound span",
+    "numbers": "none; the production event plane does not decode or canonicalize numeric spelling",
+    "utf8": "data input is opaque bytes at this event layer; grammar regex semantics govern acceptance",
+    "input_mutation_padding_copying": "borrowed immutable input; no padding or data-input copy"
+  },
+  "errors": {
+    "recovery": "Disabled",
+    "error_events": "none",
+    "mismatch": "typed parse_that::Step::Mismatch",
+    "fault": "typed parse_that::Step::Fault",
+    "transactionality": "RollbackAllEventsOnMismatchOrFault for the complete module transaction"
+  },
+  "resource_limits": {
+    "baked_defaults": {
+      "input_bytes": 1048576,
+      "nesting": 256,
+      "logical_events": 65536,
+      "work": 1048576
+    },
+    "caller_policy": "LimitsConfig has private fields, getters, and with_* builders; caller values can only tighten baked maxima",
+    "mode_invariance": "logical event and work charges occur in both allocation-free NoSink recognition and EventBuffer retained-event modes",
+    "transactional_counting": "the logical-event charge is the current sink length; parse-that checkpoints and truncates both EventBuffer and counting NoSink, so failed speculation does not consume the committed-event budget",
+    "fault_kinds": {
+      "nesting": "ResourceKind::Nesting",
+      "logical_events": "ResourceKind::Events",
+      "work": "ResourceKind::Work",
+      "input_bytes": "ResourceKind::InputBytes"
+    }
+  },
+  "evidence": {
+    "event_plan_source": {
+      "path": "crates/core/src/compiler/event.rs",
+      "sha256": "b3b6e1f6bda3ec5d3cdfb137cf7b45fd6413b38c03aaf0bba68432453926636e"
+    },
+    "emitter_source": {
+      "path": "crates/core/src/compiler/emit.rs",
+      "sha256": "5619203dfe42f15104d92b147ac728af798ca42d029745c97eb36511f6919ed2"
+    },
+    "generated_control": {
+      "path": "contracts/w2-generated-control/tests/generated_control.rs",
+      "sha256": "2393c043b16281dd723aed474f310c59587f5f164234ff31f8905cc6158b4c5f"
+    },
+    "recursive_control": {
+      "path": "contracts/w2-recursive-control/tests/recursive_control.rs",
+      "sha256": "b9e01e3ff6104e1e05c06cebc2b8d958d761dc9d3f994dd0c73019edb3f36631"
+    },
+    "record_control": {
+      "path": "contracts/w2-record-control/tests/record_control.rs",
+      "sha256": "93a8180b51dabbfed990c2811098f5b2929720cd6c5ceb901a7310bdf5fac5f3"
+    },
+    "parse_that_transaction": {
+      "path": "/Users/mkbabb/Programming/parse-that-skv26/rust/parse_that/src/transaction.rs",
+      "sha256": "05254c4f1a9ee44c00a6cf4518be6282db089c48e8d939ead486d72cd9b8a3ac"
+    },
+    "parse_that_resource_kind": {
+      "path": "/Users/mkbabb/Programming/parse-that-skv26/rust/parse_that/src/outcome.rs",
+      "sha256": "6d42de899db79f106cf985b609e42583fb1d2dc550f8571c5f03c4e94b91a0b0"
+    },
+    "parse_that_kernel_abi": {
+      "path": "/Users/mkbabb/Programming/parse-that-skv26/rust/parse_that/src/lib.rs",
+      "sha256": "3990d946a63be22e6150886604081849b0101d12e09d4568b9de57692c22b7f0",
+      "crate_version": "0.4.1",
+      "kernel_abi": 2
+    },
+    "public_reexports": {
+      "path": "crates/core/src/compiler/mod.rs",
+      "sha256": "c7ea7bb1e09269cf8920e0e4d080179bb60a58acb69c9ceb18d23e2f167db68e"
+    },
+    "unnameable_types_lint": {
+      "path": "crates/core/src/lib.rs",
+      "sha256": "60afa497826ce59279578842daec7dc30c9069efebb4753d9ca1ed7a89efba9b"
+    }
+  },
+  "limitations": [
+    "The production event API deliberately exposes no checksum function; checksum evidence is a test oracle, not part of event semantics.",
+    "A copied ScalarEvent without its EventStream does not retain source identity.",
+    "This schema does not claim tape, DOM, path, typed-output, normalization, recovery, NEON, or ASM behavior."
+  ]
+}

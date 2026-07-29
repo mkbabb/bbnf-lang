@@ -1,0 +1,414 @@
+{
+  "schema": "sk-v26.w2.type-laws.v1",
+  "disposition": "PASS_FOR_SEALED_FIRST_ORDER_W2_SCOPE",
+  "subject": {
+    "repository": "/Users/mkbabb/Programming/bbnf-lang-skv26",
+    "branch": "codex/sk-v26-bbnf",
+    "commit": "28a91db51177495efb61cd1c664a85b37fdd9529",
+    "tree": "df6f1b063acfc49b3e0382fbd4a46892be7e5328",
+    "parse_that_commit": "282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f",
+    "parse_that_tree": "4e813a353251f86906baee44a9c4d28e743fe27b"
+  },
+  "scope": {
+    "language": "first-order grammar shape inference for the W2 scalar event vertical",
+    "semantic_types": [
+      "Unit",
+      "Span",
+      "Named(RuleId)",
+      "Product(Vec<TypeId>)",
+      "Sum(Vec<TypeId>)",
+      "Option(TypeId)",
+      "List(TypeId)",
+      "Record { owner: RuleId, fields: Vec<RecordFieldType> }"
+    ],
+    "recursive_boundary": "RuleRef closes over a finite Named(RuleId) binder and never unfolds the referenced rule root",
+    "record_boundary": "a nominal record is the complete root of exactly one rule; only explicitly named slots enter its semantic field list",
+    "not_claimed": [
+      "Hindley-Milner generalization",
+      "rank-1 schemes",
+      "row polymorphism",
+      "effects",
+      "traits",
+      "host-language result typing",
+      "layout inference"
+    ]
+  },
+  "inference_rules": [
+    {
+      "certificate": "EpsilonUnit",
+      "syntax": "NodeKind::Epsilon",
+      "premises": [],
+      "result": "SemanticType::Unit",
+      "preservation": "the verifier requires the exact syntax/certificate pair and exact interned result"
+    },
+    {
+      "certificate": "TerminalSpan",
+      "syntax": "NodeKind::Literal or NodeKind::Regex",
+      "premises": [],
+      "result": "SemanticType::Span",
+      "preservation": "the terminal retains its original-input byte span"
+    },
+    {
+      "certificate": "ReferenceNamed { rule }",
+      "syntax": "NodeKind::RuleRef(rule)",
+      "premises": [
+        "rule is in bounds"
+      ],
+      "result": "SemanticType::Named(rule)",
+      "preservation": "the verifier compares the referenced and certified RuleId without traversing the recursive root"
+    },
+    {
+      "certificate": "SequenceProduct { children }",
+      "syntax": "NodeKind::Sequence(children)",
+      "premises": [
+        "each child has a verified TypeId in source order"
+      ],
+      "result": "SemanticType::Product(child types)",
+      "preservation": "certificate child identities and order must equal the program"
+    },
+    {
+      "certificate": "ChoiceSum { children }",
+      "syntax": "NodeKind::Choice(children)",
+      "premises": [
+        "each branch has a verified TypeId in source order"
+      ],
+      "result": "SemanticType::Sum(branch types)",
+      "preservation": "certificate branch identities and order must equal the program"
+    },
+    {
+      "certificate": "Optional { child }",
+      "syntax": "NodeKind::Repeat { minimum: 0, maximum: Some(1), child }",
+      "premises": [
+        "child has a verified TypeId",
+        "analysis later rejects a nullable repeated child to preserve parse-that progress"
+      ],
+      "result": "SemanticType::Option(child type)",
+      "preservation": "the verifier requires the exact optional bounds and child"
+    },
+    {
+      "certificate": "RepetitionList { child }",
+      "syntax": "all other NodeKind::Repeat forms",
+      "premises": [
+        "child has a verified TypeId",
+        "analysis later rejects a nullable repeated child"
+      ],
+      "result": "SemanticType::List(child type)",
+      "preservation": "the verifier requires the exact child"
+    },
+    {
+      "certificate": "RecordProjection { owner, slots }",
+      "syntax": "NodeKind::Record { owner, slots }",
+      "premises": [
+        "owner is the unique direct rule-root owner",
+        "certificate slots exactly equal program slots in source order",
+        "every retained FieldId resolves to the same owner, source slot, and child",
+        "every child has a verified TypeId"
+      ],
+      "result": "SemanticType::Record { owner, fields: retained fields only }",
+      "preservation": "discarded slots remain recognition premises but are absent from the semantic field list; retained field order is preserved"
+    },
+    {
+      "certificate": "TransformPreserves { child, transform }",
+      "syntax": "NodeKind::Transform { child, transform, name }",
+      "premises": [
+        "child has a verified TypeId",
+        "transform identity equals the program"
+      ],
+      "result": "the child's TypeId",
+      "preservation": "the action-free transform is declarative metadata and cannot change the semantic type"
+    }
+  ],
+  "certificate_encoding": {
+    "in_memory_node_derivation": [
+      "node: NodeIx",
+      "type_id: TypeIx",
+      "inference: InferenceRuleData"
+    ],
+    "wire_node_derivation": [
+      "revision: Revision",
+      "node: u32 carrier-local ordinal",
+      "type_id: u32 carrier-local ordinal",
+      "inference: compact ordinal-bearing certificate"
+    ],
+    "in_memory_rule_derivation": [
+      "rule: RuleIx",
+      "named_type: TypeIx",
+      "root_type: TypeIx"
+    ],
+    "wire_rule_derivation": [
+      "revision: Revision",
+      "rule: u32 carrier-local ordinal",
+      "named_type: u32 carrier-local ordinal",
+      "root_type: u32 carrier-local ordinal"
+    ],
+    "record_field_type": [
+      "field: FieldIx / compact u32 ordinal",
+      "value: TypeIx / compact u32 ordinal"
+    ],
+    "serialized_schema": "bbnf.type-solution.v2",
+    "version_law": "the private local-index/public-capability split preserves the already-compact v2 wire shape; representation-only authority and opacity changes do not justify a schema-number increase"
+  },
+  "verifier": {
+    "entry": "TypeSolution::verify(&Program)",
+    "invocation": "compile_module invokes verify after solve and before analysis/lowering",
+    "checks": [
+      "program and solution revisions match",
+      "node and rule derivation counts and identities are exact",
+      "the type arena contains no duplicate semantic witness",
+      "all private TypeIx, RuleIx, FieldIx, NodeIx, and TransformIx references are in bounds under the solution's exact program Revision; every public view rebrands them with that Revision",
+      "semantic child references are acyclic except through Named(RuleId)",
+      "every certificate matches its exact NodeKind and recomputes its exact result",
+      "every field descriptor agrees with its nominal owner and child",
+      "every arena member is reachable from a node or named rule derivation"
+    ],
+    "tamper_witnesses": [
+      "wrong inference rule",
+      "dangling TypeId",
+      "wrong record owner",
+      "wrong field order",
+      "wrong transform child"
+    ],
+    "failure": "typed DiagnosticCode::InternalInvariant; no fallback type is substituted"
+  },
+  "identity_authority": {
+    "public_capability": "NodeId, RuleId, FieldId, TransformId, TypeId, SccId, and PlanNodeId carry the exact full Revision plus a private u32 local ordinal; NodeId is 36 bytes on the audited target",
+    "private_storage": "compiler arenas and carrier rows store four-byte NodeIx, RuleIx, FieldIx, TransformIx, TypeIx, SccIx, and PlanNodeIx values rather than repeated public capabilities",
+    "row_ceilings_bytes": {
+      "SourceNodeData": 48,
+      "SourceRuleData": 40,
+      "SourceRecordSlotData": 48,
+      "NodeData": 56,
+      "RuleData": 40,
+      "FieldData": 48,
+      "NodeKindData": 40,
+      "RecordSlotData": 12,
+      "SemanticTypeData": 32,
+      "InferenceRuleData": 40,
+      "TypeConstraint": 40,
+      "RuleTypeDerivationData": 12,
+      "NodeTypeDerivationData": 48,
+      "NodeFactsData": 24,
+      "RuleFactsData": 24,
+      "PlanRecordSlotData": 12,
+      "PlanNodeData": 48,
+      "LoweredRuleData": 40,
+      "LoweredFieldData": 48,
+      "PlanOpData": 40,
+      "EventSiteData": 32,
+      "TransformSiteData": 32
+    },
+    "lookup_law": "every public carrier lookup rejects a foreign revision before indexing, including a foreign ID whose local ordinal is in range",
+    "determinism": "separately compiled identical logical path and bytes have the same Revision and their branded IDs interoperate",
+    "edit_law": "editing away invalidates all old branded IDs; restoring identical path and bytes restores the Revision and deterministic IDs",
+    "remap_law": "NodeRemap checks the input ID against from_revision and brands a successful result with to_revision",
+    "wire_law": "private replay adapters serialize compact u32 carrier-local ordinals under revision-bearing carriers; serialized ordinals are not portable public lookup capabilities",
+    "serialization_opacity": "public capability types and sealed carriers do not implement serde::Serialize; local index types, their constructors/accessors, and capability fields remain private"
+  },
+  "principality": {
+    "claim": "first-order structural principality only",
+    "meaning": "for a fixed admitted Program, constructors determine one canonical interned structural type solution and one executable certificate per node",
+    "order_evidence": {
+      "type_constraint_discovery": "16 fixed-seed permutations compare exactly with the canonical TypeSolution",
+      "analysis": "16 fixed-seed node/rule discovery permutations run the same dependency-first SCC schedule and compare exact AnalysisFacts; overflowing witnesses compare exact diagnostics",
+      "qualification": "type derivation seals nodes in canonical NodeId order after constraint discovery; this is not a claim about arbitrary parallel sealing or HM unification"
+    },
+    "edit_evidence": {
+      "kind": "stateful edit route with deterministic full invalidation and clean-rebuild equality",
+      "cases": "four single-byte source states b, c, d, then restored a",
+      "comparison": "CompilationSession mutates its owned source, recompiles the complete immutable carrier, and every serialized stage packet equals a fresh compile of the same current bytes",
+      "atomicity": "reversed and out-of-bounds edit ranges leave session bytes untouched; a valid edit whose source is rejected remains the session's new source and returns typed diagnostics",
+      "qualification": "full invalidation is explicit; there is no incremental cache, incremental compiler, or incremental type solver in W2"
+    }
+  },
+  "recursive_and_occurs_laws": {
+    "accepted": [
+      "productive consuming self recursion",
+      "productive consuming mutual recursion",
+      "recursive nominal records whose retained fields contain List(Named(rule))"
+    ],
+    "rejected": [
+      "structural containment cycles that do not cross Named(RuleId)",
+      "direct and mutual zero-consumption recursive cycles",
+      "consuming but nonproductive recursion",
+      "nullable-prefix recursion",
+      "repetition of every nullable child, including a bounded optional child"
+    ],
+    "resource_bound": "analysis exceeding the configured synchronous fixed-point iteration limit is a typed ResourceLimit rejection"
+  },
+  "analysis_semantics": {
+    "serialized_schema": "bbnf.analysis-facts.v3",
+    "schema_lineage": "v2 names the rejected full-capability epoch and is not reused; v3 adds required work_units and replaces global rounds with deterministic dependency-first component passes",
+    "minimum_lattice": [
+      "Finite(u64)",
+      "Empty",
+      "Overflow"
+    ],
+    "overflow_law": "surviving sequence, record, or descendant overflow rejects with DiagnosticCode::MinimumConsumptionOverflow at the exact origin span; overflow can still refine to a smaller finite successful choice",
+    "schedule": "DependencySolution components are visited in dependency-first order; simultaneously ready components use local SccIx as a stable tie breaker and rule discovery permutations only affect a deterministic within-component rank",
+    "iteration_law": "acyclic components take one pass; the selected recursive fixture rejects at analysis_iterations=1 and converges in exactly two passes at 2",
+    "work_law": "analysis_work is charged before every terminal or regex initialization, during rule-range and component scheduling, and before every node/rule component pass; accepted AnalysisFacts records the exact work_units charge",
+    "scaling_witness": "singleton acyclic reference chains at 8, 64, and 256 rules use exactly seven work units per rule; the exact cap passes and one less is a typed ResourceLimit rejection",
+    "determinism": "16 fixed-seed discovery permutations produce byte-identical accepted facts or byte-identical MinimumConsumptionOverflow diagnostics",
+    "public_api": "AnalysisFacts::iterations and AnalysisFacts::work_units are public, and all returned row/view/iterator types are publicly re-exported under crate-level deny(unnameable_types)"
+  },
+  "record_laws": {
+    "syntax": "%{ field: postfix, ~postfix } as one complete rule root",
+    "nominality": "Record owner is RuleId",
+    "retention": "only explicitly named fields receive FieldId and semantic RecordFieldType",
+    "discard": "a ~slot remains in Program and LoweringPlan recognition order but has no semantic field",
+    "empty_record": "SemanticType::Record with its owner and an empty field vector",
+    "duplicates": "duplicate retained names in one record are rejected at the second name span",
+    "lowering": "PlanNode and LoweredRule retain TypeId; LoweredField retains owner, source slot, child, name, and semantic TypeId"
+  },
+  "optimizer_disposition": {
+    "direct_algorithms": "authoritative, including the dependency-first SCC analysis worklist",
+    "egraph": "not present in the selected W2 compiler slice; no bounded equality-island witness requested activation",
+    "csp": "not present in the selected W2 compiler slice; no coupled global-choice witness requested activation",
+    "claim": "absence and direct-default disposition, not a performance or novelty claim"
+  },
+  "evidence": {
+    "typecheck": {
+      "path": "crates/core/src/compiler/typecheck.rs",
+      "sha256": "b48589ca2248bbbb8aad3fbebd4ccda660f65dbf0cac6d75f264a883fbefd86a",
+      "colocated_tests": 3
+    },
+    "analysis": {
+      "path": "crates/core/src/compiler/analysis.rs",
+      "sha256": "5f07b21612c15085c34725c778c341d2bf41e64d9affdf4fae1fbcad5abf447b",
+      "colocated_tests": 4
+    },
+    "type_analysis_contract": {
+      "path": "crates/core/tests/type_analysis_laws.rs",
+      "sha256": "a5bffd2a245aabbd0dda5505600fdfeac3f30facbc664075ba221825f90c571e",
+      "tests": 14
+    },
+    "record_semantic_contract": {
+      "path": "crates/core/tests/record_semantic_laws.rs",
+      "sha256": "29edb5a52dc90689979b407dee9ca79fcd9b01f10d46e72750c5fc060968e8dd",
+      "tests": 2
+    },
+    "replay_edit_contract": {
+      "path": "crates/core/tests/replay_edit_laws.rs",
+      "sha256": "ab0fbe721bc30c5e2c15c7faaecd4a0b12dc444b979258c93434a1f6cd64d4df",
+      "tests": 6
+    },
+    "edit_route": {
+      "path": "crates/core/src/compiler/edit.rs",
+      "sha256": "9554a3799b99e9dc172c347500a010c716ae431fe33d5dc565f585176ad4050b"
+    },
+    "checked_carrier_lookup_contract": {
+      "path": "crates/core/tests/carrier_lookup_laws.rs",
+      "sha256": "789e5d8d819f3b582da5a1f1789fe66e00543052d4f427186bde9aa3ee0ae6cb",
+      "tests": 3,
+      "law": "same-index and out-of-bounds identities from another revision are rejected at every public lookup; identical rebuilds interoperate; edit-away invalidates and edit-back restores; replay IDs remain numeric local ordinals"
+    },
+    "compiler_colocated_unit_laws": {
+      "colocated_tests": 13,
+      "distribution": "source 1; syntax/remap 2; dependency 1; type 3; analysis 4; lowering 1; event 1",
+      "baseline_representation_remap_order_occurs_laws": 11,
+      "analysis_repair_additions": "minimum-consumption lattice law and overflow-diagnostic permutation law",
+      "sources": [
+        {
+          "path": "crates/core/src/compiler/source.rs",
+          "sha256": "96fb4eaf244f81d1b463534a7335c633c166d37cfb60ef465bf19fd9dbc498b9"
+        },
+        {
+          "path": "crates/core/src/compiler/syntax.rs",
+          "sha256": "295d7e64a3bad1677c74c705d71698867ea80baeaf0f2a095659a40142796a22"
+        },
+        {
+          "path": "crates/core/src/compiler/dependency.rs",
+          "sha256": "7155f613491288c5ade4d6f3743c524016812bba6dea08ad2b07d33593447a34"
+        },
+        {
+          "path": "crates/core/src/compiler/typecheck.rs",
+          "sha256": "b48589ca2248bbbb8aad3fbebd4ccda660f65dbf0cac6d75f264a883fbefd86a"
+        },
+        {
+          "path": "crates/core/src/compiler/analysis.rs",
+          "sha256": "5f07b21612c15085c34725c778c341d2bf41e64d9affdf4fae1fbcad5abf447b"
+        },
+        {
+          "path": "crates/core/src/compiler/lower.rs",
+          "sha256": "be6e1cf8c878b4769b33f0154f8dc4d9dd90a1fc54cbc1a4124333fed00455a1"
+        },
+        {
+          "path": "crates/core/src/compiler/event.rs",
+          "sha256": "b3b6e1f6bda3ec5d3cdfb137cf7b45fd6413b38c03aaf0bba68432453926636e"
+        }
+      ]
+    },
+    "analysis_budget": {
+      "path": "crates/core/src/compiler/budget.rs",
+      "sha256": "f0c80b8ab048e4264fde9e52377b31cc344086a66a4e379fc1886f5831f54d30"
+    },
+    "public_reexports": {
+      "path": "crates/core/src/compiler/mod.rs",
+      "sha256": "c7ea7bb1e09269cf8920e0e4d080179bb60a58acb69c9ceb18d23e2f167db68e"
+    },
+    "unnameable_types_lint": {
+      "path": "crates/core/src/lib.rs",
+      "sha256": "60afa497826ce59279578842daec7dc30c9069efebb4753d9ca1ed7a89efba9b"
+    },
+    "identity_opacity_contract": {
+      "path": "crates/core/tests/identity_opacity.rs",
+      "sha256": "0bcebc07008144e0f189eed1a907871f5a5086852504161b30b719b46be7a989",
+      "tests": 1,
+      "compile_fail_cases": 5,
+      "cases": [
+        "private local index types cannot be imported",
+        "sealed Program cannot be serialized directly",
+        "public NodeId cannot be serialized directly",
+        "private local accessor cannot be called",
+        "private capability fields prevent destructuring and forging"
+      ],
+      "fixtures": [
+        {
+          "path": "crates/core/tests/ui/identity/hidden_locals.rs",
+          "sha256": "c5d204c902d3b0adec59ada5d682af8f7767b4ba8447142bdefcc204de8ff486"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/hidden_locals.stderr",
+          "sha256": "05d19f98cbb681ed60475ad241289a4a0352f3d29920c6f2f5d4e776ba6e14e4"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/naked_carrier_serde.rs",
+          "sha256": "fdf0a7ec8d2bd4b8f75283507ba7fe66c380a135e3eb800f78117a9d94c5ceaa"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/naked_carrier_serde.stderr",
+          "sha256": "1701d91b98ba6c3cc6b8fc0fd2b06ad15e2f8f8e13537d243c25b82d4ba3430c"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/naked_serde.rs",
+          "sha256": "1a50be11e4080638895065888e15ef8fdc417579465f8f25e537e3f2d76fe6ae"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/naked_serde.stderr",
+          "sha256": "d6d715474b39c113b292fb1685a094dda6b54bf8245f6e25084d71126c157b29"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/private_methods.rs",
+          "sha256": "1a7df1a4f44e52734a6de918988f3a3618c1ea63d971cabdf8526bb4ce4f1545"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/private_methods.stderr",
+          "sha256": "9b0df781c7cf8eb7100833cd31e82b9e734479e70ade7a1a55a783bb4f2d972f"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/struct_literal.rs",
+          "sha256": "7b6bd243e5ef8a4ba6628d93dc29b35fc0737def1ba99c08b57f6870b1b848d9"
+        },
+        {
+          "path": "crates/core/tests/ui/identity/struct_literal.stderr",
+          "sha256": "7ed91fdde5e3447152a84a43018e6b3b43f53e4e360303a4e21af6686438b744"
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "This artifact does not promote broader full type resolution beyond the sealed first-order W2 grammar-shape language.",
+    "The transform rule proves type identity only; it does not execute or type a host callback.",
+    "Constraint-discovery permutation, dependency-first SCC scheduling, and CompilationSession full-invalidation equality do not establish an incremental compiler."
+  ]
+}

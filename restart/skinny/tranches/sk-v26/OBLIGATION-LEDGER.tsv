@@ -5,11 +5,11 @@ O003	parse-that first	owner prompt; E017-E025/E052-E054	admitted	sealed	landed	v
 O004	keep parse-that main intact	owner prompt; E017/E043	admitted	sealed	landed	verified	git_durable	W0-W1	W0-EPOCH.tsv	W0 authorization	clean_worktree_only
 O005	perfect both parse-that and BBNF	owner prompt; E012/E018/E052-E058	admitted	sealed	in_flight	captured	git_durable	W1-W3	W3-GENERALITY-DIFF.json	W1 package accepted	one_crossing_one_vertical
 O006	grammar generality; no JSON/CSS overfit	owner prompt; E015-E016	admitted	sealed	unstarted	captured	filesystem_only	W3	W3-GENERALITY-DIFF.json	post-freeze held-out selection	build_or_reject
-O007	robust prototypes	owner prompt; E022/E028/E052-E056	admitted	sealed	in_flight	verified	git_durable	W1-W2	W1-TRANSACTION-LAWS.json;W2-SCALAR-PROFILE.json	wave gates	promote_bank_or_reject
-O008	robust profiling	owner prompt; E006-E008	admitted	sealed	unstarted	captured	filesystem_only	W2-W4	W4-PROFILE.json	equivalent event adapter	promote_bank_or_reject
+O007	robust prototypes	owner prompt; E022/E028/E052-E056/E065	admitted	sealed	landed	verified	git_durable	W1-W2	W1-TRANSACTION-LAWS.json;W2-SCALAR-PROFILE.json	wave gates	transaction_built;scalar_classifier_rejected
+O008	robust profiling	owner prompt; E006-E008/E065	admitted	sealed	in_flight	captured	git_durable	W2-W4	W4-PROFILE.json	equivalent event adapter	W2_negative_witness;W4_promote_bank_or_reject
 O009	best SOTA	owner prompt; E006-E008/E033	admitted	sealed	unstarted	owed	filesystem_only	W4	W4-PROFILE.json	semantic-plane equivalence	claim_or_no_claim
 O010	Rust plus ASM inspired by dav1d	owner prompt; E033	admitted	sealed	unstarted	captured	filesystem_only	W4	W4-CHECKASM.json	NEON profile deficiency; ASM four-part gate	promote_bank_or_reject
-O011	full type resolution/inference	owner prompt; SK-V25 type evidence	admitted	sealed	unstarted	captured	filesystem_only	W2	W2-TYPE-LAWS.json	failing sealed grammar witness	build_witnessed_rules;bank_rest
+O011	full type resolution/inference	owner prompt; SK-V25 type evidence; E062	admitted	sealed	landed	verified	git_durable	W2	W2-TYPE-LAWS.json	failing sealed grammar witness	built_first_order_witnessed_rules;banked_unwitnessed_extensions
 O012	CSP and e-graph novelty	owner prompt; SK-V25 graph evidence	admitted	sealed	unstarted	captured	filesystem_only	W2-W4	W2-TYPE-LAWS.json	coupled-choice/equality witness	direct_default;admit_or_retire
 O013	unified Value API	owner prompt; SK-V25 value evidence	admitted	banked	unstarted	owed	filesystem_only	future_sink_owner	future sink contract	event vertical complete plus named consumer	banked_with_trigger
 O014	lazy and eager evaluation	owner prompt; SK-V25 value evidence	admitted	banked	unstarted	owed	filesystem_only	future_sink_owner	future borrowed/materialized conformance	event vertical complete plus named consumer	banked_with_trigger
@@ -28,8 +28,8 @@ O026	GOLDEN GLASS	owner prompt; Glass archaeology	admitted	banked	unstarted	owed
 O027	BREATH OF LIFE	owner prompt; Glass archaeology	admitted	banked	unstarted	owed	filesystem_only	playground_owner	motion/feedback/latency contract	frontend lane authorization	banked_with_trigger
 O028	MOVEMENT OF MOMENTUM	owner prompt; Glass archaeology	admitted	banked	unstarted	owed	filesystem_only	playground_owner	interaction/motion contract	frontend lane authorization	banked_with_trigger
 O029	frontend design skill	owner prompt	admitted	sealed	unstarted	owed	filesystem_only	playground_owner	two designs plus adjudication	any frontend design mutation	required_on_activation
-O030	colocation and modularity	owner prompt; source topology audit	admitted	sealed	unstarted	captured	filesystem_only	W2-W4	owner/edge reduction receipt	selected-path implementation	build_or_retire
-O031	test topology	owner prompt; 50 inline modules observed; E053	admitted	sealed	in_flight	captured	git_durable	W1-W4	test topology receipt	new/replaced contracts	external_contracts;colocated_unit_laws
+O030	colocation and modularity	owner prompt; source topology audit; E060	admitted	sealed	in_flight	verified	git_durable	W2-W4	owner/edge reduction receipt	selected-path implementation	W2_owner_modules_landed;W4_build_or_retire
+O031	test topology	owner prompt; 50 inline modules observed; E053/E061	admitted	sealed	in_flight	verified	git_durable	W1-W4	test topology receipt	new/replaced contracts	external_contracts;colocated_unit_laws
 O032	prune skinny plane	owner prompt; E013-E016	admitted	sealed	unstarted	captured	filesystem_only	W4	W4-REPLACEMENT.tsv	path-level equivalence	delete_only_covered_paths
 O033	no x86	owner prompt; E003	admitted	sealed	unstarted	captured	filesystem_only	W0-W4	W4-REPLACEMENT.tsv	selected vertical coverage	zero_in_vertical;repo_wide_banked_per_surface
 O034	Apple ARM profiling	owner prompt; benchmark history	admitted	sealed	unstarted	captured	filesystem_only	W4	W4-PROFILE.json	event adapter equivalence	promote_bank_or_reject
@@ -39,4 +39,4 @@ O037	audit 100+ tranches	owner prompt; E009-E012/E031/E044	admitted	draft	unstar
 O038	Fable/Opus routing	owner prompt	admitted	sealed	unstarted	adjudicated	filesystem_only	root	REVIEW-ADJUDICATION.md	review seam	requested_identities_unavailable;callable_workers_recorded
 O039	two designs plus adjudicator	owner prompt	admitted	sealed	unstarted	adjudicated	filesystem_only	root	REVIEW-ADJUDICATION.md	architecture/API/cutover/perf/frontend seams	satisfied_for_formation;required_at_future_seams
 O040	chronic deferrals	owner prompt; recurrence census	admitted	sealed	unstarted	captured	filesystem_only	root	OBLIGATION-LEDGER.tsv	tranche close	build_bank_with_trigger_or_retire
-O041	no implementation in this phase	owner prompt	admitted	sealed	unstarted	verified	filesystem_only	root	git status scope check	current session	satisfied
+O041	no implementation in this phase	owner prompt; later explicit SK-V26 implementation goal	superseded	sealed	landed	verified	git_durable	root	git status scope check	explicit implementation authorization	superseded_by_explicit_sk_v26_implementation_goal

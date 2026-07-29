@@ -143,7 +143,7 @@ impl<'a> RustEmitter<'a> {
         )
         .unwrap();
         self.source
-            .push_str("const _: () = assert!(parse_that::KERNEL_ABI == 2);\n");
+            .push_str("const _: () = assert!(parse_that::KERNEL_ABI == 3);\n");
         writeln!(
             self.source,
             "const MAX_INPUT_BYTES: usize = {};",

@@ -12,7 +12,7 @@ mod source;
 mod syntax;
 mod typecheck;
 
-const _: () = assert!(parse_that::KERNEL_ABI == 2);
+const _: () = assert!(parse_that::KERNEL_ABI == 3);
 
 pub use analysis::{AnalysisFacts, NodeFacts, NodeFactsRows, RuleFacts, RuleFactsRows};
 pub use budget::{CompileOptions, RegexBudget, RuntimeBudget};

@@ -2,9 +2,9 @@ use blake3::Hasher;
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
 
-use super::syntax::{NodeId, RuleId};
+use super::syntax::{NodeId, RuleId, TransformId};
 
-const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v1\0";
+const REVISION_SCHEMA: &[u8] = b"bbnf.w2.source.v2\0";
 
 #[derive(Clone, Copy)]
 pub struct ModuleInput<'a> {
@@ -92,6 +92,11 @@ pub(crate) enum SourceNodeKind {
         minimum: u32,
         maximum: Option<u32>,
     },
+    Transform {
+        child: NodeId,
+        transform: TransformId,
+        name: String,
+    },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -152,6 +157,13 @@ impl SourceModule {
 
     pub fn node_count(&self) -> usize {
         self.nodes.len()
+    }
+
+    pub fn transform_count(&self) -> usize {
+        self.nodes
+            .iter()
+            .filter(|node| matches!(node.kind, SourceNodeKind::Transform { .. }))
+            .count()
     }
 }
 

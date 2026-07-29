@@ -9,7 +9,7 @@ use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::{
     ModuleInput, SourceModule, SourceNode, SourceNodeKind, SourceRule, SourceSpan,
 };
-use super::syntax::{NodeId, RuleId};
+use super::syntax::{NodeId, RuleId, TransformId};
 
 const IDENTIFIER_PATTERN: &str = "[A-Za-z_][A-Za-z0-9_-]*";
 const WHITESPACE_PATTERN: &str = "[ \t\r\n]*";
@@ -37,6 +37,11 @@ enum DraftNodeKind {
         minimum: u32,
         maximum: Option<u32>,
     },
+    Transform {
+        child: usize,
+        transform: usize,
+        name: String,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -61,6 +66,7 @@ struct SyntaxSink {
     events: Vec<SyntaxEvent>,
     nodes: usize,
     rules: usize,
+    transforms: usize,
 }
 
 impl EventSink for SyntaxSink {
@@ -77,7 +83,12 @@ impl EventSink for SyntaxSink {
                 .pop()
                 .expect("event length exceeds rollback mark")
             {
-                SyntaxEvent::Node { .. } => self.nodes -= 1,
+                SyntaxEvent::Node { kind, .. } => {
+                    self.nodes -= 1;
+                    if matches!(kind, DraftNodeKind::Transform { .. }) {
+                        self.transforms -= 1;
+                    }
+                }
                 SyntaxEvent::Rule { .. } => self.rules -= 1,
             }
         }
@@ -85,7 +96,12 @@ impl EventSink for SyntaxSink {
 
     fn push(&mut self, event: Self::Event) {
         match event {
-            SyntaxEvent::Node { .. } => self.nodes += 1,
+            SyntaxEvent::Node { ref kind, .. } => {
+                self.nodes += 1;
+                if matches!(kind, DraftNodeKind::Transform { .. }) {
+                    self.transforms += 1;
+                }
+            }
             SyntaxEvent::Rule { .. } => self.rules += 1,
         }
         self.events.push(event);
@@ -265,6 +281,18 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
     fn primary<'i>(&self, run: &mut Run<'i, SyntaxSink>, depth: usize) -> Step<'i, ParsedNode> {
         choice(
             run,
+            |run| self.transform(run, depth),
+            |run| self.non_transform_primary(run, depth),
+        )
+    }
+
+    fn non_transform_primary<'i>(
+        &self,
+        run: &mut Run<'i, SyntaxSink>,
+        depth: usize,
+    ) -> Step<'i, ParsedNode> {
+        choice(
+            run,
             |run| self.group(run, depth),
             |run| {
                 choice(
@@ -286,6 +314,44 @@ impl<'bytes, 'plans> Parser<'bytes, 'plans> {
                 )
             },
         )
+    }
+
+    /// Parse the sole W2 transform form: `@identifier(expression)`.
+    ///
+    /// The identifier is inert declarative metadata. It is never interpreted
+    /// as host code, a callback, a dependency, or a build feature.
+    fn transform<'i>(&self, run: &mut Run<'i, SyntaxSink>, depth: usize) -> Step<'i, ParsedNode> {
+        sequence(run, |run| {
+            let start = run.cursor().offset();
+            matched!(literal(run, b"@"));
+            let name_span = matched!(regex(run, &self.lexical.identifier));
+            let name = String::from_utf8(name_span.as_bytes().to_vec())
+                .expect("the identifier DFA accepts ASCII only");
+            matched!(self.whitespace(run));
+            matched!(literal(run, b"("));
+            if depth >= self.options.syntax_nesting {
+                return Step::Fault(Fault::ResourceLimit {
+                    at: run.cursor(),
+                    kind: ResourceKind::Nesting,
+                    limit: self.options.syntax_nesting,
+                });
+            }
+            matched!(self.whitespace(run));
+            let child = matched!(self.expression(run, depth + 1));
+            matched!(self.whitespace(run));
+            matched!(literal(run, b")"));
+            let transform = run.sink().transforms;
+            self.emit_node(
+                run,
+                DraftNodeKind::Transform {
+                    child: child.index,
+                    transform,
+                    name,
+                },
+                start,
+                run.cursor().offset(),
+            )
+        })
     }
 
     fn group<'i>(&self, run: &mut Run<'i, SyntaxSink>, depth: usize) -> Step<'i, ParsedNode> {
@@ -558,6 +624,8 @@ fn build_module(
 
     let mut nodes = Vec::with_capacity(sink.nodes);
     let mut rules = Vec::with_capacity(sink.rules);
+    let expected_transforms = sink.transforms;
+    let mut transforms = 0;
     for event in sink.events {
         match event {
             SyntaxEvent::Node {
@@ -590,6 +658,16 @@ fn build_module(
                         ));
                     }
                 };
+                if let SourceNodeKind::Transform { transform, .. } = &kind {
+                    if transform.index() != transforms {
+                        return StageResult::rejected(invariant_diagnostic(
+                            start,
+                            end,
+                            "transform identities are not contiguous lexical ordinals",
+                        ));
+                    }
+                    transforms += 1;
+                }
                 nodes.push(SourceNode { kind, span });
             }
             SyntaxEvent::Rule {
@@ -636,6 +714,13 @@ fn build_module(
             }
         }
     }
+    if transforms != expected_transforms {
+        return StageResult::rejected(invariant_diagnostic(
+            0,
+            input.bytes().len(),
+            "transform event count disagrees with the transactional syntax sink",
+        ));
+    }
 
     StageResult::accepted(SourceModule::new(
         input.logical_path().to_owned(),
@@ -673,6 +758,17 @@ fn materialize_node_kind(kind: DraftNodeKind, parent: usize) -> Option<SourceNod
                 .and_then(NodeId::checked)?,
             minimum,
             maximum,
+        },
+        DraftNodeKind::Transform {
+            child,
+            transform,
+            name,
+        } => SourceNodeKind::Transform {
+            child: (child < parent)
+                .then_some(child)
+                .and_then(NodeId::checked)?,
+            transform: TransformId::checked(transform)?,
+            name,
         },
     })
 }

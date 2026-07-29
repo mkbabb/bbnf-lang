@@ -10,6 +10,7 @@ pub struct CompileOptions {
     pub analysis_iterations: usize,
     pub generated_bytes: usize,
     pub regex: RegexBudget,
+    pub runtime: RuntimeBudget,
 }
 
 impl Default for CompileOptions {
@@ -22,6 +23,32 @@ impl Default for CompileOptions {
             analysis_iterations: 65_536,
             generated_bytes: 16 * 1024 * 1024,
             regex: RegexBudget::default(),
+            runtime: RuntimeBudget::default(),
+        }
+    }
+}
+
+/// Default resource envelope baked into one generated parser.
+///
+/// These limits govern the emitted runtime only. They are deliberately
+/// independent of the compiler's source, syntax, analysis, and generated-code
+/// budgets above so relaxing a build-time bound cannot silently relax an
+/// untrusted-input boundary.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct RuntimeBudget {
+    pub input_bytes: usize,
+    pub nesting: usize,
+    pub logical_events: usize,
+    pub work: usize,
+}
+
+impl Default for RuntimeBudget {
+    fn default() -> Self {
+        Self {
+            input_bytes: 1024 * 1024,
+            nesting: 256,
+            logical_events: 65_536,
+            work: 1_048_576,
         }
     }
 }

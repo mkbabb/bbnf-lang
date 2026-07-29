@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::lower::LoweringPlan;
 use super::source::Revision;
-use super::syntax::{PlanNodeId, Program, RuleId};
+use super::syntax::{PlanNodeId, Program, RuleId, TransformId};
 
-pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v1";
+pub const EVENT_SCHEMA: &str = "bbnf.scalar-events.v2";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum EventKind {
@@ -15,6 +15,7 @@ pub enum EventKind {
     Regex,
     ChoiceBranch,
     RepeatCount,
+    Transform,
     EndInput,
 }
 
@@ -26,11 +27,33 @@ pub struct EventSite {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TransformSite {
+    id: TransformId,
+    node: PlanNodeId,
+    name: String,
+}
+
+impl TransformSite {
+    pub const fn id(&self) -> TransformId {
+        self.id
+    }
+
+    pub const fn node(&self) -> PlanNodeId {
+        self.node
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct ScalarEventPlan {
     revision: Revision,
     schema: String,
     lowering: LoweringPlan,
     sites: Vec<EventSite>,
+    transforms: Vec<TransformSite>,
 }
 
 impl ScalarEventPlan {
@@ -45,6 +68,7 @@ impl ScalarEventPlan {
         }
 
         let mut sites = Vec::new();
+        let mut transforms = Vec::new();
         for rule in lowering.rules() {
             sites.push(EventSite {
                 kind: EventKind::EnterRule,
@@ -63,6 +87,24 @@ impl ScalarEventPlan {
                 super::lower::PlanOp::Regex(_) => Some(EventKind::Regex),
                 super::lower::PlanOp::Choice(_) => Some(EventKind::ChoiceBranch),
                 super::lower::PlanOp::Repeat { .. } => Some(EventKind::RepeatCount),
+                super::lower::PlanOp::Transform {
+                    transform, name, ..
+                } => {
+                    if transform.index() != transforms.len() {
+                        return StageResult::rejected(Diagnostic::new(
+                            DiagnosticCode::InternalInvariant,
+                            0,
+                            0,
+                            "lowering transform identities are not contiguous lexical ordinals",
+                        ));
+                    }
+                    transforms.push(TransformSite {
+                        id: *transform,
+                        node: node.id(),
+                        name: name.clone(),
+                    });
+                    Some(EventKind::Transform)
+                }
                 _ => None,
             };
             if let Some(kind) = kind {
@@ -84,6 +126,7 @@ impl ScalarEventPlan {
             schema: EVENT_SCHEMA.to_owned(),
             lowering: lowering.clone(),
             sites,
+            transforms,
         })
     }
 
@@ -105,5 +148,9 @@ impl ScalarEventPlan {
         self.sites
             .iter()
             .map(|site| (site.kind, site.node, site.rule))
+    }
+
+    pub fn transforms(&self) -> &[TransformSite] {
+        &self.transforms
     }
 }

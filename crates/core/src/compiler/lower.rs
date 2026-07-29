@@ -5,7 +5,7 @@ use super::analysis::AnalysisFacts;
 use super::budget::CompileOptions;
 use super::diagnostic::{Diagnostic, DiagnosticCode, StageResult};
 use super::source::Revision;
-use super::syntax::{NodeKind, PlanNodeId, Program, RuleId};
+use super::syntax::{NodeKind, PlanNodeId, Program, RuleId, TransformId};
 use super::typecheck::TypeSolution;
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -69,6 +69,11 @@ pub enum PlanOp {
         child: PlanNodeId,
         minimum: u32,
         maximum: Option<u32>,
+    },
+    Transform {
+        child: PlanNodeId,
+        transform: TransformId,
+        name: String,
     },
 }
 
@@ -189,6 +194,16 @@ impl LoweringPlan {
                         .expect("program node identity is representable"),
                     minimum: *minimum,
                     maximum: *maximum,
+                },
+                NodeKind::Transform {
+                    child,
+                    transform,
+                    name,
+                } => PlanOp::Transform {
+                    child: PlanNodeId::checked(child.index())
+                        .expect("program node identity is representable"),
+                    transform: *transform,
+                    name: name.clone(),
                 },
             };
             nodes.push(PlanNode { id, op });

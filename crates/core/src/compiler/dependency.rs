@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use serde::{Deserialize, Serialize};
 
-use super::diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
+use super::diagnostic::StageResult;
 use super::source::Revision;
 use super::syntax::{NodeKind, Program, RuleId, SccId};
 
@@ -33,7 +33,9 @@ impl DependencyGraph {
                         // Reverse insertion keeps the traversal itself in NodeId order.
                         pending.extend(children.iter().rev().copied());
                     }
-                    NodeKind::Repeat { child, .. } => pending.push(*child),
+                    NodeKind::Repeat { child, .. } | NodeKind::Transform { child, .. } => {
+                        pending.push(*child);
+                    }
                     NodeKind::Epsilon | NodeKind::Literal(_) | NodeKind::Regex(_) => {}
                 }
             }
@@ -59,11 +61,11 @@ impl DependencyGraph {
     }
 }
 
-/// Canonical SCC decomposition and dependency-first component order.
+/// Canonical SCC decomposition and dependency-first condensation order.
 ///
-/// The selected W2 language rejects every recursive component. Retaining the
-/// decomposition here still makes that rejection structural and replayable,
-/// rather than relying on a traversal accident or approximating recursion.
+/// Recursion is a property of the grammar, not a dependency-stage error.  A
+/// component is retained as one finite binder group; later semantic passes
+/// decide whether that group has a productive, input-advancing interpretation.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct DependencySolution {
     revision: Revision,
@@ -107,44 +109,7 @@ impl DependencySolution {
             dependency_order,
         };
 
-        let mut diagnostics = Vec::new();
-        for (index, members) in solution.components.iter().enumerate() {
-            let recursive = members.len() > 1
-                || members.first().is_some_and(|rule| {
-                    solution
-                        .graph
-                        .dependencies(*rule)
-                        .binary_search(rule)
-                        .is_ok()
-                });
-            if !recursive {
-                continue;
-            }
-
-            let names = members
-                .iter()
-                .map(|&rule| program.rule(rule).name())
-                .collect::<Vec<_>>()
-                .join(" -> ");
-            let first = members[0];
-            let span = program.node(program.rule(first).root()).span();
-            diagnostics.push(Diagnostic::new(
-                DiagnosticCode::RecursiveRule,
-                span.start() as usize,
-                span.end() as usize,
-                format!(
-                    "recursive rule component {index} ({names}) is outside the \
-                     selected scalar language; recursion, including left \
-                     recursion, must be removed rather than approximated"
-                ),
-            ));
-        }
-
-        if diagnostics.is_empty() {
-            StageResult::accepted(solution)
-        } else {
-            StageResult::rejected_set(DiagnosticSet::from_vec(diagnostics))
-        }
+        StageResult::accepted(solution)
     }
 
     pub const fn revision(&self) -> Revision {
@@ -165,6 +130,16 @@ impl DependencySolution {
 
     pub fn component_of(&self, rule: RuleId) -> SccId {
         self.component_by_rule[rule.index()]
+    }
+
+    /// Whether a component is genuinely recursive rather than a singleton in
+    /// the condensation DAG.
+    pub fn is_recursive(&self, id: SccId) -> bool {
+        let members = self.component(id);
+        members.len() > 1
+            || members
+                .first()
+                .is_some_and(|rule| self.graph.dependencies(*rule).binary_search(rule).is_ok())
     }
 
     /// Components in dependency-first order with `SccId` as the stable tie

@@ -105,6 +105,57 @@ fn source_output_and_revision_are_order_stable() {
 }
 
 #[test]
+fn declarative_transform_form_has_stable_identity_and_no_host_surface() {
+    // W2 deliberately admits exactly this action-free form:
+    // `@identifier(expression)`. The identifier is metadata, not executable
+    // code, a callback, a dependency, or a build feature.
+    let grammar = b"root = @capture(\"x\"), @capture(/y+/);";
+    let first = accepted(grammar, CompileOptions::default());
+    let second = accepted(grammar, CompileOptions::default());
+
+    assert_eq!(first.source_map.modules()[0].transform_count(), 2);
+    assert_eq!(
+        serde_json::to_value(first.source_map.modules()).expect("serialize transform source"),
+        serde_json::to_value(second.source_map.modules()).expect("serialize transform source"),
+    );
+
+    let transforms = first
+        .program
+        .nodes()
+        .iter()
+        .filter_map(|node| match node.kind() {
+            bbnf::compiler::NodeKind::Transform {
+                child,
+                transform,
+                name,
+            } => Some((
+                node.id().index(),
+                child.index(),
+                transform.index(),
+                name.as_str(),
+            )),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(transforms, [(1, 0, 0, "capture"), (3, 2, 1, "capture")]);
+    assert_eq!(
+        first
+            .events
+            .transforms()
+            .iter()
+            .map(|site| (site.id().index(), site.node().index(), site.name()))
+            .collect::<Vec<_>>(),
+        [(0, 1, "capture"), (1, 3, "capture")]
+    );
+
+    // There is no compatibility arrow or host-action spelling.
+    assert_eq!(
+        rejected_code(b"root = \"x\" -> capture;", CompileOptions::default()),
+        DiagnosticCode::Syntax
+    );
+}
+
+#[test]
 fn malformed_and_trailing_input_are_rejected_at_the_frontend() {
     assert_eq!(
         rejected_code(b"root = (\"x\";", CompileOptions::default()),

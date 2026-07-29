@@ -44,13 +44,19 @@ fn emitted_rust_is_direct_static_control() {
     let source = compilation.generated.source();
 
     for required in [
-        "use parse_that::{choice, eof, literal, regex, repeat, sequence,",
+        "choice",
+        "eof",
+        "literal",
+        "regex",
+        "repeat",
+        "sequence",
         "RegexPlan::new",
         "fn node_",
         "fn rule_",
         "parse_module",
         "pub fn check",
         "pub fn parse_events",
+        "pub const TRANSFORMS",
     ] {
         assert!(source.contains(required), "missing `{required}`");
     }
@@ -90,7 +96,43 @@ fn replay_envelopes_name_schema_and_revision() {
         .expect("JSON is UTF-8");
 
     assert!(lowering.starts_with("{\"schema\":\"bbnf.lowering-plan.v1\""));
-    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v1\""));
+    assert!(events.starts_with("{\"schema\":\"bbnf.scalar-events.v2\""));
     assert!(lowering.contains(&revision));
     assert!(events.contains(&revision));
+}
+
+#[test]
+fn wide_choice_hits_the_generated_source_budget_without_quadratic_growth() {
+    let mut grammar = String::from("root = ");
+    for index in 0..20_000 {
+        if index != 0 {
+            grammar.push_str(" | ");
+        }
+        grammar.push('"');
+        grammar.push_str(&format!("branch-{index}"));
+        grammar.push('"');
+    }
+    grammar.push_str(" ;");
+
+    let options = CompileOptions {
+        generated_bytes: 32 * 1024,
+        ..CompileOptions::default()
+    };
+    let result = compile_module(
+        ModuleInput::new("contracts/wide-choice.bbnf", grammar.as_bytes()),
+        options,
+    );
+    let diagnostics = match result {
+        StageResult::Rejected { diagnostics } => diagnostics,
+        StageResult::Accepted { .. } => {
+            panic!("adversarial wide choice unexpectedly fit its 32 KiB output budget")
+        }
+    };
+    assert_eq!(
+        diagnostics
+            .iter()
+            .next()
+            .map(|diagnostic| diagnostic.code()),
+        Some(bbnf::DiagnosticCode::GeneratedSourceTooLarge)
+    );
 }

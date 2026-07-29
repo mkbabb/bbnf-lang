@@ -29,6 +29,7 @@ id_type!(RuleId);
 id_type!(TypeId);
 id_type!(SccId);
 id_type!(PlanNodeId);
+id_type!(TransformId);
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum NodeKind {
@@ -42,6 +43,11 @@ pub enum NodeKind {
         child: NodeId,
         minimum: u32,
         maximum: Option<u32>,
+    },
+    Transform {
+        child: NodeId,
+        transform: TransformId,
+        name: String,
     },
 }
 
@@ -144,6 +150,15 @@ impl Program {
                     minimum: *minimum,
                     maximum: *maximum,
                 },
+                SourceNodeKind::Transform {
+                    child,
+                    transform,
+                    name,
+                } => NodeKind::Transform {
+                    child: *child,
+                    transform: *transform,
+                    name: name.clone(),
+                },
             };
             nodes.push(Node {
                 id,
@@ -223,5 +238,13 @@ impl NodeRemap {
 
     pub fn get(&self, old: NodeId) -> Option<NodeId> {
         self.nodes.get(old.index()).copied().flatten()
+    }
+
+    pub const fn from_revision(&self) -> Revision {
+        self.from
+    }
+
+    pub const fn to_revision(&self) -> Revision {
+        self.to
     }
 }

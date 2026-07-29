@@ -88,6 +88,12 @@ empty = epsilon;
                 SemanticType::Option(_),
             ) => saw_option = true,
             (NodeKind::Repeat { .. }, SemanticType::List(_)) => saw_list = true,
+            (NodeKind::Transform { child, .. }, semantic) => {
+                assert_eq!(
+                    semantic,
+                    module.types.semantic_type(module.types.node_type(*child))
+                );
+            }
             (NodeKind::Literal(_) | NodeKind::Regex(_), SemanticType::Span) => {}
             (NodeKind::RuleRef(rule), SemanticType::Named(named)) => {
                 assert_eq!(named, rule);
@@ -148,6 +154,124 @@ fn repetition_of_nullable_child_is_rejected() {
     assert_eq!(
         rejected_code("root = epsilon*;", CompileOptions::default()),
         DiagnosticCode::NullableRepeat
+    );
+}
+
+#[test]
+fn bounded_nullable_repetition_is_rejected_to_match_the_runtime_progress_law() {
+    assert_eq!(
+        rejected_code("root = epsilon?;", CompileOptions::default()),
+        DiagnosticCode::NullableRepeat
+    );
+}
+
+#[test]
+fn json_like_recursive_sum_uses_finite_named_binders_and_converges() {
+    let module = accepted(
+        r#"
+root = value;
+value = object | array | string;
+object = "{", (string, ":", value, (",", string, ":", value)*)?, "}";
+array = "[", (value, (",", value)*)?, "]";
+string = /[a-z]+/;
+"#,
+    );
+    let find_rule = |name: &str| {
+        module
+            .program
+            .rules()
+            .iter()
+            .find(|rule| rule.name() == name)
+            .expect("test rule exists")
+            .id()
+    };
+    let value = find_rule("value");
+    let object = find_rule("object");
+    let array = find_rule("array");
+
+    assert_eq!(module.facts.rule(value).minimum_consumption(), Some(1));
+    assert_eq!(module.facts.rule(object).minimum_consumption(), Some(2));
+    assert_eq!(module.facts.rule(array).minimum_consumption(), Some(2));
+    assert_eq!(
+        module.dependency.component_of(value),
+        module.dependency.component_of(object)
+    );
+    assert_eq!(
+        module.dependency.component_of(value),
+        module.dependency.component_of(array)
+    );
+
+    let named_references = module
+        .program
+        .nodes()
+        .iter()
+        .filter_map(|node| match node.kind() {
+            NodeKind::RuleRef(rule) => Some((node.id(), *rule)),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert!(!named_references.is_empty());
+    for (node, rule) in named_references {
+        assert!(matches!(
+            module.types.semantic_type(module.types.node_type(node)),
+            SemanticType::Named(bound) if *bound == rule
+        ));
+    }
+    assert!(
+        module.types.arena().len() <= module.program.nodes().len() + module.program.rules().len(),
+        "recursive rules are represented by finite named binders, never unfolded"
+    );
+}
+
+#[test]
+fn consuming_self_and_mutual_recursion_have_exact_reachability_facts() {
+    let module = accepted(
+        r#"
+root = "a", other | "z";
+other = "b", root | "q";
+"#,
+    );
+    for rule in module.program.rules() {
+        let facts = module.facts.rule(rule.id());
+        assert!(!facts.nullable());
+        assert_eq!(facts.minimum_consumption(), Some(1));
+    }
+}
+
+#[test]
+fn direct_and_mutual_zero_consumption_cycles_are_typed_rejections() {
+    assert_eq!(
+        rejected_code(r#"root = root | "x";"#, CompileOptions::default()),
+        DiagnosticCode::RecursiveRule
+    );
+    assert_eq!(
+        rejected_code(
+            r#"
+root = other;
+other = root | "x";
+"#,
+            CompileOptions::default()
+        ),
+        DiagnosticCode::RecursiveRule
+    );
+}
+
+#[test]
+fn consuming_but_nonproductive_recursion_is_typed_rejection() {
+    assert_eq!(
+        rejected_code(r#"root = "x", root;"#, CompileOptions::default()),
+        DiagnosticCode::RecursiveRule
+    );
+}
+
+#[test]
+fn nullable_prefix_recursion_is_rejected_before_generated_code() {
+    assert_eq!(
+        rejected_code(
+            r#"root = (epsilon, root) | "x";"#,
+            CompileOptions::default()
+        ),
+        DiagnosticCode::RecursiveRule
     );
 }
 

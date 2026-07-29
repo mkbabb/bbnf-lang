@@ -8,7 +8,7 @@ use super::event::{EVENT_SCHEMA, ScalarEventPlan};
 use super::lower::{LoweringPlan, PlanOp, RegexPlanData};
 use super::source::Revision;
 
-const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v1";
+const GENERATED_SCHEMA: &str = "bbnf.generated-rust.v2";
 
 /// One deterministic, direct Rust parser product.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -21,44 +21,36 @@ pub struct GeneratedModule {
 impl GeneratedModule {
     pub(crate) fn emit(events: &ScalarEventPlan, options: CompileOptions) -> StageResult<Self> {
         let mut emitter = RustEmitter::new(events, options);
-        if let Err(message) = emitter.write_module() {
-            return StageResult::rejected(Diagnostic::new(
-                DiagnosticCode::InternalInvariant,
-                0,
-                0,
-                message,
-            ));
-        }
-        if emitter.source.len() > options.generated_bytes {
-            return StageResult::rejected(Diagnostic::new(
-                DiagnosticCode::GeneratedSourceTooLarge,
-                0,
-                0,
-                format!(
-                    "generated Rust is {} bytes; configured limit is {}",
-                    emitter.source.len(),
-                    options.generated_bytes
+        if let Err(failure) = emitter.write_module() {
+            let (code, message) = match failure {
+                EmitFailure::Invariant(message) => (DiagnosticCode::InternalInvariant, message),
+                EmitFailure::OutputBudget { limit } => (
+                    DiagnosticCode::GeneratedSourceTooLarge,
+                    format!("generated Rust exceeded the configured limit of {limit} bytes"),
                 ),
-            ));
+            };
+            return StageResult::rejected(Diagnostic::new(code, 0, 0, message));
         }
 
         let revision = events.revision();
-        let source_digest = blake3::hash(emitter.source.as_bytes()).to_hex().to_string();
+        let source = emitter.source.into_string();
+        let source_digest = blake3::hash(source.as_bytes()).to_hex().to_string();
         let manifest = serde_json::to_string(&GeneratedManifest {
             schema: GENERATED_SCHEMA,
             event_schema: events.schema(),
             revision: revision.hex(),
             source_blake3: source_digest,
-            source_bytes: emitter.source.len(),
+            source_bytes: source.len(),
             nodes: events.lowering().nodes().len(),
             rules: events.lowering().rules().len(),
             regexes: events.lowering().regexes().len(),
+            transforms: events.transforms().len(),
         })
         .expect("generated manifest fields are serializable");
 
         StageResult::accepted(Self {
             revision,
-            source: emitter.source,
+            source,
             manifest,
         })
     }
@@ -86,13 +78,14 @@ struct GeneratedManifest<'a> {
     nodes: usize,
     rules: usize,
     regexes: usize,
+    transforms: usize,
 }
 
 struct RustEmitter<'a> {
     events: &'a ScalarEventPlan,
     plan: &'a LoweringPlan,
     options: CompileOptions,
-    source: String,
+    source: BoundedSource,
 }
 
 impl<'a> RustEmitter<'a> {
@@ -101,17 +94,17 @@ impl<'a> RustEmitter<'a> {
             events,
             plan: events.lowering(),
             options,
-            source: String::new(),
+            source: BoundedSource::new(options.generated_bytes),
         }
     }
 
-    fn write_module(&mut self) -> Result<(), String> {
+    fn write_module(&mut self) -> Result<(), EmitFailure> {
         for node in self.plan.nodes() {
             if matches!(node.op(), PlanOp::Choice(children) if children.is_empty()) {
-                return Err(format!(
+                return Err(EmitFailure::Invariant(format!(
                     "sealed lowering plan contains empty choice at node {}",
                     node.id().index()
-                ));
+                )));
             }
         }
 
@@ -121,10 +114,9 @@ impl<'a> RustEmitter<'a> {
             self.events.revision().hex()
         )
         .unwrap();
-        self.source.push_str(
-            "use core::cell::Cell;\n\
-             use parse_that::{choice, eof, literal, regex, repeat, sequence, EventSink, Fault, Input, ModuleResult, NoSink, RegexPlan, RegexTerminal, ResourceKind, Run, Step};\n\n",
-        );
+        self.source.push_str("use core::cell::Cell;\n");
+        self.write_parse_that_imports();
+        self.source.push('\n');
         writeln!(
             self.source,
             "pub const EVENT_SCHEMA: &str = {EVENT_SCHEMA:?};"
@@ -139,39 +131,106 @@ impl<'a> RustEmitter<'a> {
         writeln!(
             self.source,
             "const MAX_INPUT_BYTES: usize = {};",
-            self.options.source_bytes
+            self.options.runtime.input_bytes
         )
         .unwrap();
         writeln!(
             self.source,
             "const MAX_NESTING: usize = {};",
-            self.options.syntax_nesting
+            self.options.runtime.nesting
         )
         .unwrap();
         writeln!(
             self.source,
-            "const MAX_EVENTS: usize = {};\n",
-            self.options.generated_bytes
+            "const MAX_LOGICAL_EVENTS: usize = {};",
+            self.options.runtime.logical_events
+        )
+        .unwrap();
+        writeln!(
+            self.source,
+            "const MAX_WORK: usize = {};\n",
+            self.options.runtime.work
         )
         .unwrap();
 
         self.write_event_surface();
+        self.write_transform_surface();
+        self.ensure_output_budget()?;
         for (index, regex) in self.plan.regexes().iter().enumerate() {
             self.write_regex(index, regex);
+            self.ensure_output_budget()?;
         }
         for node in self.plan.nodes() {
             self.write_node(node.id().index(), node.op());
+            self.ensure_output_budget()?;
         }
         for rule in self.plan.rules() {
             self.write_rule(rule.id().index(), rule.root().index());
+            self.ensure_output_budget()?;
         }
         self.write_public_surface();
+        self.ensure_output_budget()?;
         Ok(())
+    }
+
+    fn ensure_output_budget(&self) -> Result<(), EmitFailure> {
+        if self.source.exceeded() {
+            Err(EmitFailure::OutputBudget {
+                limit: self.options.generated_bytes,
+            })
+        } else {
+            Ok(())
+        }
+    }
+
+    fn write_parse_that_imports(&mut self) {
+        let mut imports = vec![
+            "eof",
+            "sequence",
+            "EventSink",
+            "Fault",
+            "Input",
+            "ModuleResult",
+            "NoSink",
+            "ResourceKind",
+            "Run",
+            "Step",
+        ];
+        if self
+            .plan
+            .nodes()
+            .iter()
+            .any(|node| matches!(node.op(), PlanOp::Choice(_)))
+        {
+            imports.push("choice");
+        }
+        if self
+            .plan
+            .nodes()
+            .iter()
+            .any(|node| matches!(node.op(), PlanOp::Literal(_)))
+        {
+            imports.push("literal");
+        }
+        if !self.plan.regexes().is_empty() {
+            imports.extend(["regex", "RegexPlan", "RegexTerminal"]);
+        }
+        if self
+            .plan
+            .nodes()
+            .iter()
+            .any(|node| matches!(node.op(), PlanOp::Repeat { .. }))
+        {
+            imports.push("repeat");
+        }
+        imports.sort_unstable();
+        writeln!(self.source, "use parse_that::{{{}}};", imports.join(", ")).unwrap();
     }
 
     fn write_event_surface(&mut self) {
         self.source.push_str(
             "#[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             #[non_exhaustive]\n\
              pub enum EventKind {\n\
                  EnterRule,\n\
                  LeaveRule,\n\
@@ -179,30 +238,56 @@ impl<'a> RustEmitter<'a> {
                  Regex,\n\
                  ChoiceBranch,\n\
                  RepeatCount,\n\
+                 Transform,\n\
                  EndInput,\n\
              }\n\n\
              #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
              pub struct ScalarEvent {\n\
-                 pub kind: EventKind,\n\
-                 pub rule: Option<u32>,\n\
-                 pub node: Option<u32>,\n\
-                 pub start: u32,\n\
-                 pub end: u32,\n\
-                 pub value: u32,\n\
+                 kind: EventKind,\n\
+                 rule: Option<u32>,\n\
+                 node: Option<u32>,\n\
+                 transform: Option<u32>,\n\
+                 start: u32,\n\
+                 end: u32,\n\
+                 value: u32,\n\
              }\n\n\
-             #[derive(Clone, Debug, Default, Eq, PartialEq)]\n\
-             pub struct EventBuffer {\n\
+             impl ScalarEvent {\n\
+                 pub const fn kind(&self) -> EventKind { self.kind }\n\
+                 pub const fn rule(&self) -> Option<u32> { self.rule }\n\
+                 pub const fn node(&self) -> Option<u32> { self.node }\n\
+                 pub const fn transform(&self) -> Option<u32> { self.transform }\n\
+                 pub const fn start(&self) -> u32 { self.start }\n\
+                 pub const fn end(&self) -> u32 { self.end }\n\
+                 pub const fn value(&self) -> u32 { self.value }\n\
+             }\n\n\
+             #[derive(Clone, Debug)]\n\
+             pub struct EventBuffer<'i> {\n\
+                 revision: &'static str,\n\
+                 source: Input<'i>,\n\
                  events: Vec<ScalarEvent>,\n\
              }\n\n\
-             impl EventBuffer {\n\
+             impl<'i> EventBuffer<'i> {\n\
+                 fn new(source: Input<'i>) -> Self {\n\
+                     Self { revision: REVISION, source, events: Vec::new() }\n\
+                 }\n\n\
+                 pub const fn revision(&self) -> &'static str {\n\
+                     self.revision\n\
+                 }\n\n\
+                 pub const fn source(&self) -> Input<'i> {\n\
+                     self.source\n\
+                 }\n\n\
                  pub fn events(&self) -> &[ScalarEvent] {\n\
                      &self.events\n\
                  }\n\n\
-                 pub fn into_events(self) -> Vec<ScalarEvent> {\n\
-                     self.events\n\
+                 pub fn into_stream(self) -> EventStream<'i> {\n\
+                     EventStream {\n\
+                         revision: self.revision,\n\
+                         source: self.source,\n\
+                         events: self.events,\n\
+                     }\n\
                  }\n\
              }\n\n\
-             impl EventSink for EventBuffer {\n\
+             impl EventSink for EventBuffer<'_> {\n\
                  type Event = ScalarEvent;\n\n\
                  fn len(&self) -> usize {\n\
                      self.events.len()\n\
@@ -214,28 +299,81 @@ impl<'a> RustEmitter<'a> {
                      self.events.push(event);\n\
                  }\n\
              }\n\n\
+             #[derive(Clone, Debug)]\n\
+             pub struct EventStream<'i> {\n\
+                 revision: &'static str,\n\
+                 source: Input<'i>,\n\
+                 events: Vec<ScalarEvent>,\n\
+             }\n\n\
+             impl<'i> EventStream<'i> {\n\
+                 pub const fn revision(&self) -> &'static str { self.revision }\n\
+                 pub const fn source(&self) -> Input<'i> { self.source }\n\
+                 pub fn events(&self) -> &[ScalarEvent] { &self.events }\n\
+                 pub fn into_parts(self) -> (&'static str, Input<'i>, Vec<ScalarEvent>) {\n\
+                     (self.revision, self.source, self.events)\n\
+                 }\n\
+             }\n\n\
+             #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             #[non_exhaustive]\n\
+             pub enum RawSourceSpanNormalization {\n\
+                 OriginalInputByteOffsets,\n\
+             }\n\n\
+             #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             #[non_exhaustive]\n\
+             pub enum RecoveryPolicy {\n\
+                 Disabled,\n\
+             }\n\n\
+             #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             #[non_exhaustive]\n\
+             pub enum TransactionalErrorPolicy {\n\
+                 RollbackAllEventsOnMismatchOrFault,\n\
+             }\n\n\
+             pub const RAW_SOURCE_SPAN_NORMALIZATION: RawSourceSpanNormalization =\n\
+                 RawSourceSpanNormalization::OriginalInputByteOffsets;\n\
+             pub const RECOVERY_POLICY: RecoveryPolicy = RecoveryPolicy::Disabled;\n\
+             pub const TRANSACTIONAL_ERROR_POLICY: TransactionalErrorPolicy =\n\
+                 TransactionalErrorPolicy::RollbackAllEventsOnMismatchOrFault;\n\n\
              #[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
              pub struct LimitsConfig {\n\
                  pub input_bytes: usize,\n\
                  pub nesting: usize,\n\
-                 pub events: usize,\n\
+                 pub logical_events: usize,\n\
+                 pub work: usize,\n\
              }\n\n\
              impl Default for LimitsConfig {\n\
                  fn default() -> Self {\n\
                      Self {\n\
                          input_bytes: MAX_INPUT_BYTES,\n\
                          nesting: MAX_NESTING,\n\
-                         events: MAX_EVENTS,\n\
+                         logical_events: MAX_LOGICAL_EVENTS,\n\
+                         work: MAX_WORK,\n\
+                     }\n\
+                 }\n\
+             }\n\n\
+             impl LimitsConfig {\n\
+                 fn bounded(self) -> Self {\n\
+                     Self {\n\
+                         input_bytes: self.input_bytes.min(MAX_INPUT_BYTES),\n\
+                         nesting: self.nesting.min(MAX_NESTING),\n\
+                         logical_events: self.logical_events.min(MAX_LOGICAL_EVENTS),\n\
+                         work: self.work.min(MAX_WORK),\n\
                      }\n\
                  }\n\
              }\n\n\
              struct Limits {\n\
                  config: LimitsConfig,\n\
                  depth: Cell<usize>,\n\
+                 logical_events: Cell<usize>,\n\
+                 work: Cell<usize>,\n\
              }\n\n\
              impl Limits {\n\
                  fn new(config: LimitsConfig) -> Self {\n\
-                     Self { config, depth: Cell::new(0) }\n\
+                     Self {\n\
+                         config,\n\
+                         depth: Cell::new(0),\n\
+                         logical_events: Cell::new(0),\n\
+                         work: Cell::new(0),\n\
+                     }\n\
                  }\n\
              }\n\n\
              fn resource_fault<'i, T, S: EventSink<Event = ScalarEvent>>(\n\
@@ -244,6 +382,17 @@ impl<'a> RustEmitter<'a> {
                  limit: usize,\n\
              ) -> Step<'i, T> {\n\
                  Step::Fault(Fault::ResourceLimit { at: run.cursor(), kind, limit })\n\
+             }\n\n\
+             fn charge_work<'i, S: EventSink<Event = ScalarEvent>>(\n\
+                 run: &Run<'i, S>,\n\
+                 limits: &Limits,\n\
+             ) -> Step<'i, ()> {\n\
+                 let work = limits.work.get();\n\
+                 if work >= limits.config.work {\n\
+                     return resource_fault(run, ResourceKind::Work, limits.config.work);\n\
+                 }\n\
+                 limits.work.set(work + 1);\n\
+                 Step::Matched(())\n\
              }\n\n\
              fn with_depth<'i, T, S, F>(\n\
                  run: &mut Run<'i, S>,\n\
@@ -272,17 +421,24 @@ impl<'a> RustEmitter<'a> {
                  S: EventSink<Event = ScalarEvent>,\n\
                  F: FnOnce() -> ScalarEvent,\n\
              {\n\
-                 if run.sink().len() >= limits.config.events {\n\
-                     return resource_fault(run, ResourceKind::Events, limits.config.events);\n\
+                 let logical_events = limits.logical_events.get();\n\
+                 if logical_events >= limits.config.logical_events {\n\
+                     return resource_fault(\n\
+                         run,\n\
+                         ResourceKind::Events,\n\
+                         limits.config.logical_events,\n\
+                     );\n\
                  }\n\
+                 limits.logical_events.set(logical_events + 1);\n\
                  run.emit_with(event);\n\
                  Step::Matched(())\n\
              }\n\n\
              fn event(\n\
                  kind: EventKind,\n\
-                 rule: Option<u32>,\n\
-                 node: Option<u32>,\n\
-                 start: usize,\n\
+	                 rule: Option<u32>,\n\
+	                 node: Option<u32>,\n\
+	                 transform: Option<u32>,\n\
+	                 start: usize,\n\
                  end: usize,\n\
                  value: u32,\n\
              ) -> ScalarEvent {\n\
@@ -290,12 +446,38 @@ impl<'a> RustEmitter<'a> {
                      kind,\n\
                      rule,\n\
                      node,\n\
+                     transform,\n\
                      start: u32::try_from(start).expect(\"input bound checked before parsing\"),\n\
                      end: u32::try_from(end).expect(\"input bound checked before parsing\"),\n\
                      value,\n\
                  }\n\
              }\n\n",
         );
+    }
+
+    fn write_transform_surface(&mut self) {
+        self.source.push_str(
+            "#[derive(Clone, Copy, Debug, Eq, PartialEq)]\n\
+             pub struct TransformDescriptor {\n\
+                 id: u32,\n\
+                 name: &'static str,\n\
+             }\n\n\
+             impl TransformDescriptor {\n\
+                 pub const fn id(&self) -> u32 { self.id }\n\
+                 pub const fn name(&self) -> &'static str { self.name }\n\
+             }\n\n\
+             pub const TRANSFORMS: &[TransformDescriptor] = &[\n",
+        );
+        for transform in self.events.transforms() {
+            writeln!(
+                self.source,
+                "    TransformDescriptor {{ id: {}, name: {:?} }},",
+                transform.id().index(),
+                transform.name(),
+            )
+            .unwrap();
+        }
+        self.source.push_str("];\n\n");
     }
 
     fn write_regex(&mut self, index: usize, regex: &RegexPlanData) {
@@ -335,7 +517,7 @@ impl<'a> RustEmitter<'a> {
     fn write_node(&mut self, index: usize, op: &PlanOp) {
         writeln!(
             self.source,
-            "fn node_{index}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits) -> Step<'i, ()> {{"
+            "fn node_{index}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits) -> Step<'i, ()> {{\n    match charge_work(run, limits) {{\n        Step::Matched(()) => {{}},\n        Step::Mismatch(failure) => return Step::Mismatch(failure),\n        Step::Fault(fault) => return Step::Fault(fault),\n    }}"
         )
         .unwrap();
         match op {
@@ -345,14 +527,14 @@ impl<'a> RustEmitter<'a> {
                 write_slice(&mut self.source, bytes);
                 writeln!(
                     self.source,
-                    ") {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Literal, None, Some({index}), span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
+                    ") {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Literal, None, Some({index}), None, span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
                 )
                 .unwrap();
             }
             PlanOp::Regex(regex_index) => {
                 writeln!(
                     self.source,
-                    "    let terminal = RegexTerminal::new(REGEX_{regex_index}_PLAN);\n    match regex(run, &terminal) {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Regex, None, Some({index}), span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
+                    "    let terminal = RegexTerminal::new(REGEX_{regex_index}_PLAN);\n    match regex(run, &terminal) {{\n        Step::Matched(span) => emit_event(run, limits, || event(EventKind::Regex, None, Some({index}), None, span.start(), span.end(), 0)),\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}"
                 )
                 .unwrap();
             }
@@ -386,8 +568,19 @@ impl<'a> RustEmitter<'a> {
                     .unwrap_or_else(|| "None".to_owned());
                 writeln!(
                     self.source,
-                    "    let start = run.cursor().offset();\n    match repeat(run, {minimum}usize, {maximum}, |run| node_{}(run, limits)) {{\n        Step::Matched(count) => {{\n            let end = run.cursor().offset();\n            emit_event(run, limits, || event(EventKind::RepeatCount, None, Some({index}), start, end, u32::try_from(count).unwrap_or(u32::MAX)))\n        }}\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}",
+                    "    let start = run.cursor().offset();\n    match repeat(run, {minimum}usize, {maximum}, |run| node_{}(run, limits)) {{\n        Step::Matched(count) => {{\n            let end = run.cursor().offset();\n            emit_event(run, limits, || event(EventKind::RepeatCount, None, Some({index}), None, start, end, u32::try_from(count).unwrap_or(u32::MAX)))\n        }}\n        Step::Mismatch(failure) => Step::Mismatch(failure),\n        Step::Fault(fault) => Step::Fault(fault),\n    }}",
                     child.index()
+                )
+                .unwrap();
+            }
+            PlanOp::Transform {
+                child, transform, ..
+            } => {
+                writeln!(
+                    self.source,
+                    "    sequence(run, |run| {{\n        let start = run.cursor().offset();\n        match node_{}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let end = run.cursor().offset();\n        emit_event(run, limits, || event(EventKind::Transform, None, Some({index}), Some({}), start, end, 0))\n    }})",
+                    child.index(),
+                    transform.index(),
                 )
                 .unwrap();
             }
@@ -402,29 +595,36 @@ impl<'a> RustEmitter<'a> {
         branch: usize,
         indent: usize,
     ) {
+        if self.source.exceeded() {
+            return;
+        }
         if children.len() == 1 {
             self.write_choice_branch(node, children[0].index(), branch, indent);
             return;
         }
+        let midpoint = children.len() / 2;
         self.source.push_str("choice(run,\n");
         self.source.push_str(&" ".repeat(indent + 4));
         self.source.push_str("|run| ");
-        self.write_choice_branch(node, children[0].index(), branch, indent + 4);
+        self.write_choice(node, &children[..midpoint], branch, indent + 4);
         self.source.push_str(",\n");
         self.source.push_str(&" ".repeat(indent + 4));
         self.source.push_str("|run| ");
-        self.write_choice(node, &children[1..], branch + 1, indent + 4);
+        self.write_choice(node, &children[midpoint..], branch + midpoint, indent + 4);
         self.source.push('\n');
         self.source.push_str(&" ".repeat(indent));
         self.source.push(')');
     }
 
     fn write_choice_branch(&mut self, node: usize, child: usize, branch: usize, indent: usize) {
+        if self.source.exceeded() {
+            return;
+        }
         self.source.push_str("{\n");
         self.source.push_str(&" ".repeat(indent + 4));
         writeln!(
             self.source,
-            "let start = run.cursor().offset();\n{}match node_{child}(run, limits) {{\n{}    Step::Matched(()) => {{\n{}        let end = run.cursor().offset();\n{}        emit_event(run, limits, || event(EventKind::ChoiceBranch, None, Some({node}), start, end, {branch}))\n{}    }}\n{}    Step::Mismatch(failure) => Step::Mismatch(failure),\n{}    Step::Fault(fault) => Step::Fault(fault),\n{}}}",
+            "let start = run.cursor().offset();\n{}match node_{child}(run, limits) {{\n{}    Step::Matched(()) => {{\n{}        let end = run.cursor().offset();\n{}        emit_event(run, limits, || event(EventKind::ChoiceBranch, None, Some({node}), None, start, end, {branch}))\n{}    }}\n{}    Step::Mismatch(failure) => Step::Mismatch(failure),\n{}    Step::Fault(fault) => Step::Fault(fault),\n{}}}",
             " ".repeat(indent + 4),
             " ".repeat(indent + 4),
             " ".repeat(indent + 4),
@@ -442,7 +642,7 @@ impl<'a> RustEmitter<'a> {
     fn write_rule(&mut self, rule: usize, root: usize) {
         writeln!(
             self.source,
-            "fn rule_{rule}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits) -> Step<'i, ()> {{\n    with_depth(run, limits, |run| sequence(run, |run| {{\n        let start = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::EnterRule, Some({rule}), None, start, start, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{root}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let end = run.cursor().offset();\n        emit_event(run, limits, || event(EventKind::LeaveRule, Some({rule}), None, start, end, 0))\n    }}))\n}}\n"
+            "fn rule_{rule}<'i, S: EventSink<Event = ScalarEvent>>(run: &mut Run<'i, S>, limits: &Limits) -> Step<'i, ()> {{\n    match charge_work(run, limits) {{\n        Step::Matched(()) => {{}},\n        Step::Mismatch(failure) => return Step::Mismatch(failure),\n        Step::Fault(fault) => return Step::Fault(fault),\n    }}\n    with_depth(run, limits, |run| sequence(run, |run| {{\n        let start = run.cursor().offset();\n        match emit_event(run, limits, || event(EventKind::EnterRule, Some({rule}), None, None, start, start, 0)) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        match node_{root}(run, limits) {{\n            Step::Matched(()) => {{}},\n            Step::Mismatch(failure) => return Step::Mismatch(failure),\n            Step::Fault(fault) => return Step::Fault(fault),\n        }}\n        let end = run.cursor().offset();\n        emit_event(run, limits, || event(EventKind::LeaveRule, Some({rule}), None, None, start, end, 0))\n    }}))\n}}\n"
         )
         .unwrap();
     }
@@ -451,17 +651,72 @@ impl<'a> RustEmitter<'a> {
         let entry = self.plan.entry().index();
         writeln!(
             self.source,
-            "fn parse_with_sink<'i, S: EventSink<Event = ScalarEvent>>(\n    input: Input<'i>,\n    sink: S,\n    config: LimitsConfig,\n) -> ModuleResult<'i, S> {{\n    let input_limit = config.input_bytes.min(u32::MAX as usize);\n    let input_too_large = input.len() > input_limit;\n    let limits = Limits::new(config);\n    Run::with_sink(input, sink).parse_module(|run| {{\n        if input_too_large {{\n            return resource_fault(run, ResourceKind::Work, input_limit);\n        }}\n        sequence(run, |run| {{\n            match rule_{entry}(run, &limits) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            match eof(run) {{\n                Step::Matched(_) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            let at = run.cursor().offset();\n            emit_event(run, &limits, || event(EventKind::EndInput, None, None, at, at, 0))\n        }})\n    }})\n}}\n\n\
+            "fn parse_with_sink<'i, S: EventSink<Event = ScalarEvent>>(\n    input: Input<'i>,\n    sink: S,\n    config: LimitsConfig,\n) -> ModuleResult<'i, S> {{\n    let config = config.bounded();\n    let input_limit = config.input_bytes.min(u32::MAX as usize);\n    let input_too_large = input.len() > input_limit;\n    let limits = Limits::new(config);\n    Run::with_sink(input, sink).parse_module(|run| {{\n        if input_too_large {{\n            return resource_fault(run, ResourceKind::Work, input_limit);\n        }}\n        sequence(run, |run| {{\n            match rule_{entry}(run, &limits) {{\n                Step::Matched(()) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            match eof(run) {{\n                Step::Matched(_) => {{}},\n                Step::Mismatch(failure) => return Step::Mismatch(failure),\n                Step::Fault(fault) => return Step::Fault(fault),\n            }}\n            let at = run.cursor().offset();\n            emit_event(run, &limits, || event(EventKind::EndInput, None, None, None, at, at, 0))\n        }})\n    }})\n}}\n\n\
              pub fn check(input: &[u8]) -> ModuleResult<'_, NoSink<ScalarEvent>> {{\n    check_with_limits(input, LimitsConfig::default())\n}}\n\n\
              pub fn check_with_limits(input: &[u8], config: LimitsConfig) -> ModuleResult<'_, NoSink<ScalarEvent>> {{\n    parse_with_sink(Input::new(input), NoSink::new(), config)\n}}\n\n\
-             pub fn parse_events(input: &[u8]) -> ModuleResult<'_, EventBuffer> {{\n    parse_events_with_limits(input, LimitsConfig::default())\n}}\n\n\
-             pub fn parse_events_with_limits(input: &[u8], config: LimitsConfig) -> ModuleResult<'_, EventBuffer> {{\n    parse_with_sink(Input::new(input), EventBuffer::default(), config)\n}}\n"
+             pub fn parse_events(input: &[u8]) -> ModuleResult<'_, EventBuffer<'_>> {{\n    parse_events_with_limits(input, LimitsConfig::default())\n}}\n\n\
+             pub fn parse_events_with_limits(input: &[u8], config: LimitsConfig) -> ModuleResult<'_, EventBuffer<'_>> {{\n    let source = Input::new(input);\n    parse_with_sink(source, EventBuffer::new(source), config)\n}}\n"
         )
         .unwrap();
     }
 }
 
-fn write_slice<T: std::fmt::Debug>(output: &mut String, values: &[T]) {
+enum EmitFailure {
+    Invariant(String),
+    OutputBudget { limit: usize },
+}
+
+struct BoundedSource {
+    text: String,
+    limit: usize,
+    exceeded: bool,
+}
+
+impl BoundedSource {
+    fn new(limit: usize) -> Self {
+        Self {
+            text: String::new(),
+            limit,
+            exceeded: false,
+        }
+    }
+
+    fn push_str(&mut self, value: &str) {
+        let _ = std::fmt::Write::write_str(self, value);
+    }
+
+    fn push(&mut self, value: char) {
+        let _ = std::fmt::Write::write_char(self, value);
+    }
+
+    const fn exceeded(&self) -> bool {
+        self.exceeded
+    }
+
+    fn into_string(self) -> String {
+        self.text
+    }
+}
+
+impl std::fmt::Write for BoundedSource {
+    fn write_str(&mut self, value: &str) -> std::fmt::Result {
+        if self.exceeded {
+            return Ok(());
+        }
+        let Some(next_len) = self.text.len().checked_add(value.len()) else {
+            self.exceeded = true;
+            return Ok(());
+        };
+        if next_len > self.limit {
+            self.exceeded = true;
+            return Ok(());
+        }
+        self.text.push_str(value);
+        Ok(())
+    }
+}
+
+fn write_slice<T: std::fmt::Debug>(output: &mut BoundedSource, values: &[T]) {
     output.push('[');
     for (index, value) in values.iter().enumerate() {
         if index != 0 {

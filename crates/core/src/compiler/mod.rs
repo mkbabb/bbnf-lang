@@ -12,22 +12,25 @@ mod syntax;
 mod typecheck;
 
 pub use analysis::{AnalysisFacts, NodeFacts, RuleFacts};
-pub use budget::{CompileOptions, RegexBudget};
+pub use budget::{CompileOptions, RegexBudget, RuntimeBudget};
 pub use dependency::{DependencyGraph, DependencySolution};
 pub use diagnostic::{Diagnostic, DiagnosticCode, DiagnosticSet, StageResult};
 pub use emit::GeneratedModule;
-pub use event::{EventKind, ScalarEventPlan};
+pub use event::{EventKind, ScalarEventPlan, TransformSite};
 pub use lower::{LoweringPlan, PlanOp};
+pub use replay::{ReplayComponent, ReplayError, replay_compilation};
 pub use source::{ModuleInput, Revision, SourceMap, SourceModule, SourceSpan};
 pub use syntax::{
-    Node, NodeId, NodeKind, NodeRemap, PlanNodeId, Program, Rule, RuleId, SccId, TypeId,
+    Node, NodeId, NodeKind, NodeRemap, PlanNodeId, Program, Rule, RuleId, SccId, TransformId,
+    TypeId,
 };
 pub use typecheck::{NodeTypeDerivation, RuleTypeDerivation, SemanticType, TypeSolution};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CompiledModule {
     pub source_map: SourceMap,
     pub program: Program,
+    pub remap: NodeRemap,
     pub dependency: DependencySolution,
     pub types: TypeSolution,
     pub facts: AnalysisFacts,
@@ -54,6 +57,7 @@ pub fn compile_module(
             return StageResult::Rejected { diagnostics };
         }
     };
+    let remap = NodeRemap::identity(&program);
     let dependency = match DependencySolution::build(&program) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => {
@@ -94,6 +98,7 @@ pub fn compile_module(
     StageResult::accepted(CompiledModule {
         source_map,
         program,
+        remap,
         dependency,
         types,
         facts,

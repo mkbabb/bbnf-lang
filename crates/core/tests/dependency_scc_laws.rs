@@ -1,5 +1,5 @@
 use bbnf::compiler::NodeKind;
-use bbnf::{CompileOptions, DiagnosticCode, ModuleInput, StageResult, compile_module};
+use bbnf::{CompileOptions, ModuleInput, StageResult, compile_module};
 
 fn accepted(source: &str) -> bbnf::CompiledModule {
     match compile_module(
@@ -15,21 +15,6 @@ fn accepted(source: &str) -> bbnf::CompiledModule {
                 .join("\n");
             panic!("expected compilation to succeed:\n{rendered}");
         }
-    }
-}
-
-fn rejected_codes(source: &str) -> Vec<DiagnosticCode> {
-    match compile_module(
-        ModuleInput::new("dependency-laws.bbnf", source.as_bytes()),
-        CompileOptions::default(),
-    ) {
-        StageResult::Accepted { .. } => {
-            panic!("expected compilation to be rejected")
-        }
-        StageResult::Rejected { diagnostics } => diagnostics
-            .iter()
-            .map(|diagnostic| diagnostic.code())
-            .collect(),
     }
 }
 
@@ -96,20 +81,42 @@ second = first, "b";
 }
 
 #[test]
-fn self_recursion_is_rejected_instead_of_approximated() {
-    let codes = rejected_codes("root = root | \"x\";");
-    assert_eq!(codes, vec![DiagnosticCode::RecursiveRule]);
+fn consuming_self_recursion_is_retained_as_one_finite_component() {
+    let module = accepted(r#"root = "(", root, ")" | "x";"#);
+    let root = module.program.rules()[0].id();
+    let component = module.dependency.component_of(root);
+
+    assert!(module.dependency.is_recursive(component));
+    assert_eq!(module.dependency.component(component), &[root]);
+    assert_eq!(module.dependency.graph().dependencies(root), &[root]);
 }
 
 #[test]
-fn mutual_recursion_is_rejected_instead_of_approximated() {
-    let codes = rejected_codes(
+fn consuming_mutual_recursion_has_canonical_members_and_scc_identity() {
+    let module = accepted(
         r#"
-root = other;
-other = root | "x";
+root = "a", other | atom;
+other = "b", root | atom;
+atom = "x";
 "#,
     );
-    assert_eq!(codes, vec![DiagnosticCode::RecursiveRule]);
+    let root = module.program.rules()[0].id();
+    let other = module.program.rules()[1].id();
+    let atom = module.program.rules()[2].id();
+    let recursive = module.dependency.component_of(root);
+
+    assert_eq!(module.dependency.component_of(other), recursive);
+    assert_ne!(module.dependency.component_of(atom), recursive);
+    assert_eq!(module.dependency.component(recursive), &[root, other]);
+    assert!(module.dependency.is_recursive(recursive));
+
+    let order = module.dependency.dependency_order();
+    let atom_position = order
+        .iter()
+        .position(|id| *id == module.dependency.component_of(atom))
+        .unwrap();
+    let recursive_position = order.iter().position(|id| *id == recursive).unwrap();
+    assert!(atom_position < recursive_position);
 }
 
 #[test]

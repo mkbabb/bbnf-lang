@@ -34,6 +34,10 @@ path = "tests/type_analysis_laws.rs"
 name = "emitter_contract"
 path = "tests/emitter_contract.rs"
 
+[[test]]
+name = "replay_edit_laws"
+path = "tests/replay_edit_laws.rs"
+
 [dependencies]
 bbnf-regex.workspace = true
 blake3.workspace = true

@@ -38,14 +38,11 @@ const mapFactor = ([term, op]: [any, any]) => {
 };
 
 function mapStatePosition(parser: Parser<any>) {
-    return parser.mapState((newState, oldState) => {
-        if (newState.value && newState.value.range === undefined) {
-            newState.value.range = {
-                start: oldState.offset,
-                end: newState.offset,
-            };
+    return parser.mapSpan((value, start, end) => {
+        if (value && value.range === undefined) {
+            value.range = { start, end };
         }
-        return newState;
+        return value;
     });
 }
 

@@ -5,7 +5,8 @@ import {
     any,
     eof,
     regex,
-    regexSpan,
+    memoize,
+    mergeMemos,
     string,
     dispatch,
     mergeErrorState,
@@ -252,7 +253,7 @@ export function ASTToParser(
         return dispatch(table);
     }
 
-    function generateParser(name: string, expr: Expression, discarded: boolean = false): Parser<any> {
+    function generateParser(name: string, expr: Expression): Parser<any> {
         // Try pattern recognition first
         const wrapResult = tryWrapRegexCoalesce(expr);
         if (wrapResult) return wrapResult;
@@ -279,17 +280,13 @@ export function ASTToParser(
                 return eof().opt();
 
             case "group":
-                return generateParser(name, expr.value as Expression, discarded);
+                return generateParser(name, expr.value as Expression);
 
             case "regex":
-                // Phase 3.2: Use regexSpan when the result is discarded (right side
-                // of skip, left side of next) to avoid substring allocation.
-                return discarded
-                    ? regexSpan(expr.value as RegExp)
-                    : regex(expr.value as RegExp);
+                return regex(expr.value as RegExp);
 
             case "optionalWhitespace":
-                return generateParser(name, expr.value as any, discarded).trim();
+                return generateParser(name, expr.value as any).trim();
 
             case "optional":
                 return generateParser(name, expr.value as Expression).opt();
@@ -305,14 +302,12 @@ export function ASTToParser(
                     generateParser(
                         name,
                         (expr.value as [Expression, Expression])[1],
-                        true, // right side of skip is discarded
                     ),
                 );
             case "next":
                 return generateParser(
                     name,
                     (expr.value as [Expression, Expression])[0],
-                    true, // left side of next is discarded
                 ).next(
                     generateParser(
                         name,
@@ -477,12 +472,12 @@ export function ASTToParser(
         // high-ref acyclic rules get lightweight mergeMemos.
         if (enableMemoization) {
             if (sccEntryPoints.has(name)) {
-                parser = parser.memoize();
+                parser = memoize(parser);
             } else if (
                 !cyclicRules.has(name) &&
                 (refCounts.get(name) ?? 0) > SELECTIVE_THRESHOLD
             ) {
-                parser = parser.mergeMemos();
+                parser = mergeMemos(parser);
             }
         }
 
@@ -517,7 +512,7 @@ export function ASTToParser(
         for (const recover of recovers) {
             const original = nonterminals[recover.ruleName];
             if (original) {
-                const syncParser = generateParser(recover.ruleName + "$sync", recover.syncExpr, true);
+                const syncParser = generateParser(recover.ruleName + "$sync", recover.syncExpr);
                 nonterminals[recover.ruleName] = original.recover(syncParser, null);
             }
         }

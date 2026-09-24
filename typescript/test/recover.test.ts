@@ -6,8 +6,6 @@ import type { RecoverDirective, ParsedGrammar } from "../src/types";
 import {
     enableDiagnostics,
     disableDiagnostics,
-    getCollectedDiagnostics,
-    clearCollectedDiagnostics,
 } from "@mkbabb/parse-that";
 
 describe("@recover grammar parsing", () => {
@@ -99,13 +97,10 @@ list = item * ;
         const [nonterminals] = BBNFToParser(input);
 
         enableDiagnostics();
-        clearCollectedDiagnostics();
 
         // Mix of valid and invalid items
         // "a=b;" is valid, "!!bad;" is invalid (should recover), "c=d;" is valid
-        const result = nonterminals.list.parse("a=b;!!bad;c=d;");
-
-        const diagnostics = getCollectedDiagnostics();
+        const { value: result, diagnostics } = nonterminals.list.parseState("a=b;!!bad;c=d;");
         disableDiagnostics();
 
         // Should have parsed something (recovered items + valid ones)
@@ -126,7 +121,6 @@ list = item * ;
         const [nonterminals] = BBNFToParser(input);
 
         enableDiagnostics();
-        clearCollectedDiagnostics();
 
         const result = nonterminals.list.parse("123bad;a=b;");
 

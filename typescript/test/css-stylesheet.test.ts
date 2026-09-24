@@ -6,8 +6,6 @@ import { BBNFToParserFromFile } from "../src/generate";
 import {
     enableDiagnostics,
     disableDiagnostics,
-    getCollectedDiagnostics,
-    clearCollectedDiagnostics,
 } from "@mkbabb/parse-that";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -24,7 +22,6 @@ describe("CSS Stylesheet BBNF Grammar", () => {
             [nonterminals] = BBNFToParserFromFile(entryPath);
         }
         enableDiagnostics();
-        clearCollectedDiagnostics();
     });
 
     afterEach(() => {
@@ -44,9 +41,9 @@ describe("CSS Stylesheet BBNF Grammar", () => {
     describe("valid CSS parsing", () => {
         it("should parse a simple valid rule", () => {
             const input = `.foo { color: red; }`;
-            const result = nonterminals.stylesheet.parse(input);
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(input);
             expect(result).toBeDefined();
-            expect(getCollectedDiagnostics()).toHaveLength(0);
+            expect(diagnostics).toHaveLength(0);
         });
 
         it("should parse multiple valid rules", () => {
@@ -54,42 +51,39 @@ describe("CSS Stylesheet BBNF Grammar", () => {
 .foo { color: red; font-size: 16px; }
 .bar { margin: 0; padding: 10px; }
 `;
-            const result = nonterminals.stylesheet.parse(input.trim());
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(input.trim());
             expect(result).toBeDefined();
-            expect(getCollectedDiagnostics()).toHaveLength(0);
+            expect(diagnostics).toHaveLength(0);
         });
 
         it("should parse a rule with class and type selectors", () => {
             const input = `.heading { color: red; }`;
-            const result = nonterminals.stylesheet.parse(input);
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(input);
             expect(result).toBeDefined();
-            expect(getCollectedDiagnostics()).toHaveLength(0);
+            expect(diagnostics).toHaveLength(0);
         });
     });
 
     describe("error recovery", () => {
         it("should recover from a missing semicolon between declarations", () => {
             const input = `.test { margin: 0\n  padding: 0; }`;
-            const result = nonterminals.stylesheet.parse(input);
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(input);
             expect(result).toBeDefined();
-            const diagnostics = getCollectedDiagnostics();
             expect(diagnostics.length).toBeGreaterThanOrEqual(1);
         });
 
         it("should recover from a missing colon in a declaration", () => {
             const input = `.test { width 100%; max-width: 960px; }`;
-            const result = nonterminals.stylesheet.parse(input);
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(input);
             expect(result).toBeDefined();
-            const diagnostics = getCollectedDiagnostics();
             expect(diagnostics.length).toBeGreaterThanOrEqual(1);
         });
 
         it("should recover from an invalid selector and continue", () => {
             // Use a selector that starts validly but has a malformed block
             const input = `.bad { color ; }\n.valid { color: green; }`;
-            const result = nonterminals.stylesheet.parse(input);
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(input);
             expect(result).toBeDefined();
-            const diagnostics = getCollectedDiagnostics();
             // The "color ;" declaration is malformed (missing colon+value) — should recover
             expect(diagnostics.length).toBeGreaterThanOrEqual(1);
         });
@@ -104,16 +98,8 @@ describe("CSS Stylesheet BBNF Grammar", () => {
         });
 
         it("should parse the file and collect multiple diagnostics", () => {
-            const result = nonterminals.stylesheet.parse(cssContent);
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(cssContent);
 
-            const diagnostics = getCollectedDiagnostics();
-
-            // Print diagnostics for visual inspection
-            if (diagnostics.length > 0) {
-                for (const d of diagnostics) {
-                    console.error(`  [line ${d.line}:${d.column}] ${d.found ?? "recovery"}`);
-                }
-            }
 
             // The file has 7 intentional errors — we should catch several
             expect(diagnostics.length).toBeGreaterThanOrEqual(3);
@@ -123,7 +109,7 @@ describe("CSS Stylesheet BBNF Grammar", () => {
         });
 
         it("should recover and continue past errors to parse the valid .success rule", () => {
-            const result = nonterminals.stylesheet.parse(cssContent);
+            const { value: result, diagnostics } = nonterminals.stylesheet.parseState(cssContent);
 
             // The result should be an array of parsed rules
             expect(result).toBeDefined();
@@ -136,9 +122,7 @@ describe("CSS Stylesheet BBNF Grammar", () => {
         });
 
         it("diagnostics should have correct source positions", () => {
-            nonterminals.stylesheet.parse(cssContent);
-
-            const diagnostics = getCollectedDiagnostics();
+            const { diagnostics } = nonterminals.stylesheet.parseState(cssContent);
             expect(diagnostics.length).toBeGreaterThan(0);
 
             for (const d of diagnostics) {
@@ -148,9 +132,7 @@ describe("CSS Stylesheet BBNF Grammar", () => {
         });
 
         it("each diagnostic should have a message or offset info", () => {
-            nonterminals.stylesheet.parse(cssContent);
-
-            const diagnostics = getCollectedDiagnostics();
+            const { diagnostics } = nonterminals.stylesheet.parseState(cssContent);
             expect(diagnostics.length).toBeGreaterThan(0);
 
             for (const d of diagnostics) {

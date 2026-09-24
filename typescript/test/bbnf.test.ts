@@ -1,4 +1,4 @@
-import { whitespace, regex, string, all, Parser, eof } from "@mkbabb/parse-that";
+import { whitespace, regex, string, all, Parser, eof, memoize } from "@mkbabb/parse-that";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -340,7 +340,11 @@ describe("BBNF Parser", () => {
         const parser = nonterminals.grammar;
 
         for (let i = 0; i < 10; i++) {
-            grammar = parser.eof().parse(grammar).flat(Infinity).join("");
+            // The tokens rejoin with a separator: `?w` discards the whitespace that
+            // separates adjacent identifiers (`@pretty rule group`), so a bare join
+            // yields `@prettyrulegroup`, which is not BBNF. parse-that 0.8.2 hid that
+            // by returning a partial value from a failed parse; 2.x returns none.
+            grammar = parser.eof().parse(grammar).flat(Infinity).join(" ");
             expect(grammar).toBeTruthy();
             // Self-parse result is verified via expect(grammar).toBeTruthy() above.
         }
@@ -424,7 +428,7 @@ describe("BBNF Parser", () => {
         for (const key of Object.keys(nonterminals)) {
             nonterminals[key] = nonterminals[key].trim();
             if (memoFuncs.includes(key)) {
-                nonterminals[key] = nonterminals[key].memoize();
+                nonterminals[key] = memoize(nonterminals[key]);
             }
         }
 

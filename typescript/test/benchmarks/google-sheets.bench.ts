@@ -12,11 +12,6 @@ const grammarSrc = fs.readFileSync(grammarPath, "utf8");
 const [nonterminals] = BBNFToParser(grammarSrc);
 const parser = nonterminals.formula;
 
-// Suppress console.error from parse-that on intentional error paths
-const origError = console.error;
-function suppress() { console.error = () => {}; }
-function restore() { console.error = origError; }
-
 // ---------------------------------------------------------------------------
 // Test formulas
 // ---------------------------------------------------------------------------
@@ -63,21 +58,18 @@ const options: BenchOptions = {
 // ---------------------------------------------------------------------------
 describe(`Google Sheets — simple (${Buffer.byteLength(simple)} B)`, () => {
     bench("parse", () => {
-        suppress();
-        try { parser.parse(simple); } finally { restore(); }
+        parser.parse(simple);
     }, options);
 });
 
 describe(`Google Sheets — pathological LET (${Buffer.byteLength(pathological)} B)`, () => {
     bench("parse", () => {
-        suppress();
-        try { parser.parse(pathological); } finally { restore(); }
+        parser.parse(pathological);
     }, options);
 });
 
 describe(`Google Sheets — wide SUMPRODUCT (~${Math.round(wideFormulaBytes / 1024)} KB)`, () => {
     bench("parse", () => {
-        suppress();
-        try { parser.parse(wideFormula); } finally { restore(); }
+        parser.parse(wideFormula);
     }, options);
 });

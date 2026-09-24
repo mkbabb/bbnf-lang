@@ -1,3 +1,4 @@
+// SERVED MODEL: claude-opus-5-5
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 

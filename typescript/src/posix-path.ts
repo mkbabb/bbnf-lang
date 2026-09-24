@@ -1,3 +1,4 @@
+// SERVED MODEL: claude-opus-5-5
 /**
  * The three path operations the `@import` loader needs, over `/`-separated
  * module IDs, with no `node:path`.

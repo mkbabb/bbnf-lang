@@ -12,7 +12,8 @@ import type { ActionKind, Emission } from "./emit.js";
 export type Action =
     | Readonly<{ kind: "map"; fn: (value: any) => unknown }>
     | Readonly<{ kind: "span"; fn: (value: any, start: number, end: number) => unknown }>
-    | Readonly<{ kind: "text"; fn: (text: string) => unknown }>;
+    | Readonly<{ kind: "text"; fn: (text: string) => unknown }>
+    | Readonly<{ kind: "groups"; fn: (...groups: any[]) => unknown }>;
 
 /** A rule the host supplies: matches at `offset`, answers the end (or -1), writes its value to `box.v`. */
 export type HostRule = (source: string, offset: number, box: { v: unknown }) => number;

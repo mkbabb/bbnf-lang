@@ -58,8 +58,13 @@ kind is a compile error. `createParser` also checks the table at runtime.
 
 ## Actions
 
-An action is `{ kind: "map", fn(value) }`, `{ kind: "span", fn(value, start, end) }` or
-`{ kind: "text", fn(text) }`. A `text` rule is only recognized, never built.
+An action is `{ kind: "map", fn(value) }`, `{ kind: "span", fn(value, start, end) }`,
+`{ kind: "text", fn(text) }` or `{ kind: "groups", fn(...groups) }`. A `text` rule is only
+recognized, never built. A `groups` rule's body is one regex leaf with capturing groups: the leaf
+runs once and the action receives what each group captured, in order (an unmatched group
+`undefined`), so a token such as `12.5deg` reaches its action already split into `12.5` and `deg`
+and the action never runs a second regex over the same text. `bbnf gen` refuses a `groups` action
+on any other body.
 
 - **Actions are pure and total.** Recognize mode skips them wherever the grammar discards a value
   (`a >> b`'s `a`, `a << b`'s `b`, `a - b`'s `b`, a `text` rule's body), and the routing may try an

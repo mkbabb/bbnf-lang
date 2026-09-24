@@ -28,8 +28,15 @@ import { analyzeFirst, routes } from "./analysis/first.js";
 import { singleClassRun } from "./analysis/regex.js";
 import { collectDependencies } from "./analysis/deps.js";
 
-/** How a rule's action receives its match: the value; the value and its span; or the text alone. */
-export type ActionKind = "map" | "span" | "text";
+/**
+ * How a rule's action receives its match: the value; the value and its span; the text alone; or, for a
+ * rule whose body is one regex leaf with capturing groups, the groups the match captured (`fn(...groups)`,
+ * an unmatched group `undefined`), so the action never re-splits the text with a second regex.
+ */
+export type ActionKind = "map" | "span" | "text" | "groups";
+
+/** The number of capturing groups in `re`. */
+const groupCount = (re: RegExp): number => new RegExp(`${re.source}|`, re.flags.replace(/[gy]/g, "")).exec("")!.length - 1;
 
 export type EmitOptions = Readonly<{
     /** The rules that carry an action, and each action's kind (read from the consumer's table). */
@@ -134,7 +141,13 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
     const actionKinds: Record<string, ActionKind> = {};
     for (const [name, kind] of Object.entries(opts.actionKinds ?? {})) {
         if (!ast.has(name)) throw new Error(`emit: action for unknown rule \`${name}\``);
-        if (kind !== "map" && kind !== "span" && kind !== "text") throw new Error(`emit: \`${name}\` has action kind \`${String(kind)}\``);
+        if (kind !== "map" && kind !== "span" && kind !== "text" && kind !== "groups") throw new Error(`emit: \`${name}\` has action kind \`${String(kind)}\``);
+        if (kind === "groups") {
+            const leaf = unwrap(ast.get(name)!.expression);
+            if (leaf.type !== "regex" || groupCount(leaf.value as RegExp) === 0) {
+                throw new Error(`emit: \`${name}\` has a groups action, so its body must be one regex leaf with a capturing group`);
+            }
+        }
     }
     for (const name of ast.keys()) { const k = opts.actionKinds?.[name]; if (k !== undefined) actionKinds[name] = k; }
     const hostNames = [...(opts.host ?? [])];
@@ -205,6 +218,12 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
         return `let ${to} = ${from}; for (; ${to} < s.length; ${to}++) { const ${c} = s.charCodeAt(${to}); if (${c} !== 32 && (${c} < 9 || ${c} > 13)) break; }\n`;
     };
 
+    /**
+     * The regex leaf of the `groups` rule being emitted in value mode: that one leaf runs `exec` and
+     * leaves its match array in `V`, which the rule's action line spreads into the action's groups.
+     */
+    let groupsLeaf: Expression | null = null;
+
     /** Emits code that sets `out` to the end offset (or -1) of `e` matched at `pos`, in `mode`. */
     function gen(e: Expression, mode: Mode, pos: string, out: string, rn: string): string {
         const keep = mode === "v";
@@ -219,6 +238,15 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
             case "regex": {
                 // parse-that 2.x (F-p-EOF): end of input is an ordinary position; an empty match is `undefined`.
                 const re = e.value as RegExp;
+                if (keep && e === groupsLeaf) {
+                    const R = constName(new RegExp(re.source, re.flags.replace(/[gy]/g, "") + "y"));
+                    const inf = info(e), m = tmp("m");
+                    const match = `${R}.lastIndex = ${pos}; const ${m} = ${R}.exec(s); if (${m} !== null) { ${out} = ${R}.lastIndex; V = ${m}; } else ${out} = -1;`;
+                    if (inf.nullable) return `{ ${match} }\n`;
+                    const c = tmp("c");
+                    const audit = opts.audit ? `if (!${mayStart(c, inf)}) { ${R}.lastIndex = ${pos}; AUDIT.check(${out}, ${R}.test(s) ? ${R}.lastIndex : -1, ${JSON.stringify(`guard /${re.source}/${re.flags} in ${rn}`)}, s, ${pos}); }\n` : "";
+                    return `{ const ${c} = s.charCodeAt(${pos}); if (!${mayStart(c, inf)}) ${out} = -1; else { ${match} }\n  ${audit}}\n`;
+                }
                 const run = singleClassRun(re);
                 if (run !== null && run.all) {
                     const miss = run.min === 1 ? `if (${pos} >= s.length) ${out} = -1; else ` : "";
@@ -355,6 +383,7 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
         const [name, mode] = queue.shift()!;
         const kind = actionKinds[name];
         const bodyMode: Mode = kind === "text" ? "r" : mode;
+        groupsLeaf = kind === "groups" && mode === "v" ? unwrap(ast.get(name)!.expression) : null;
         let body = `let o; ${rcSave("rl")}${gen(ast.get(name)!.expression, bodyMode, "i", "o", name)}${hasRec ? "if (o < 0) RC.length = rl;\n" : ""}`;
         const sync = recovers.get(name);
         if (sync !== undefined) {
@@ -369,7 +398,11 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
         if (kind !== undefined && mode === "v") {
             const A = `A${actNames.length}`;
             actNames.push(name);
-            body += kind === "map" ? `if (o >= 0) V = ${A}(V);\n` : kind === "span" ? `if (o >= 0) V = ${A}(V, i, o);\n` : `if (o >= 0) V = ${A}(s.substring(i, o));\n`;
+            const groups = kind === "groups" ? Array.from({ length: groupCount(groupsLeaf!.value as RegExp) }, (_, g) => `V[${g + 1}]`).join(", ") : "";
+            body += kind === "map" ? `if (o >= 0) V = ${A}(V);\n`
+                : kind === "span" ? `if (o >= 0) V = ${A}(V, i, o);\n`
+                    : kind === "groups" ? `if (o >= 0) V = ${A}(${groups});\n`
+                        : `if (o >= 0) V = ${A}(s.substring(i, o));\n`;
         }
         fns.push(`/** @type {Rule} */ function ${fnName.get(`${name}/${mode}`)}(s, i) {\n${body}return o;\n}`);
     }
@@ -418,11 +451,11 @@ ${body}
     return { body, module, dts: declarations(header, ruleNames, entryNames, actionKinds, hostNames), ruleNames, entryNames, actionKinds, hostNames };
 }
 
-/** The module's declarations: the typed action table (kinds map/span/text) and the parser's shape. */
+/** The module's declarations: the typed action table (kinds map/span/text/groups) and the parser's shape. */
 function declarations(header: string, ruleNames: readonly string[], entryNames: readonly string[],
     actionKinds: Readonly<Record<string, ActionKind>>, hostNames: readonly string[]): string {
     const q = (v: string) => JSON.stringify(v);
-    const kindType: Record<ActionKind, string> = { map: "MapAction", span: "SpanAction", text: "TextAction" };
+    const kindType: Record<ActionKind, string> = { map: "MapAction", span: "SpanAction", text: "TextAction", groups: "GroupsAction" };
     const acts = Object.entries(actionKinds);
     return `${header}export declare const RULE_NAMES: readonly [${ruleNames.map(q).join(", ")}];
 export type RuleName = (typeof RULE_NAMES)[number];
@@ -438,6 +471,8 @@ export interface MapAction<R = unknown> { readonly kind: "map"; readonly fn: (va
 export interface SpanAction<R = unknown> { readonly kind: "span"; readonly fn: (value: any, start: number, end: number) => R }
 /** Receives only the text the rule matched (the rule is recognized, never built). Pure and total. */
 export interface TextAction<R = unknown> { readonly kind: "text"; readonly fn: (text: string) => R }
+/** Receives the capturing groups its regex leaf matched, in order (an unmatched group \`undefined\`). Pure and total. */
+export interface GroupsAction<R = unknown> { readonly kind: "groups"; readonly fn: (...groups: any[]) => R }
 /** One action per rule that takes one, of exactly the kind the grammar was generated with. */
 export interface Actions {
 ${acts.map(([n, k]) => `    readonly ${q(n)}: ${kindType[k]};`).join("\n")}

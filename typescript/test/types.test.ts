@@ -61,4 +61,19 @@ describe("the generated module's types", () => {
         const lines = tsc([consumer]).map((d) => d.split(":").slice(0, 2).join(":"));
         expect([...new Set(lines)].sort()).toEqual(["consumer.ts:6", "consumer.ts:7", "consumer.ts:8", "consumer.ts:9"]);
     });
+
+    it("a groups action is typed GroupsAction: the module passes tsc --strict and a wrong kind is rejected", () => {
+        writeFileSync(join(dir, "dim.bbnf"), `dim = /(\\d+)([a-z]*)/ ;\n`);
+        const file = write("dim", generate({ grammar: join(dir, "dim.bbnf"), read, actions: { dim: { kind: "groups" } }, entries: ["dim"] }));
+        expect(tsc([file, file.replace(/\.js$/, ".d.ts")])).toEqual([]);
+        const consumer = join(dir, "dim-consumer.ts");
+        writeFileSync(consumer, [
+            `import { createParser } from "./dim.js";`,
+            `const p = createParser({ dim: { kind: "groups", fn: (n: string, unit: string) => [Number(n), unit] as const } });`,
+            `void p.entries.dim("1px");`,
+            `createParser({ dim: { kind: "text", fn: (t: string) => t } });`, // line 4: wrong kind
+        ].join("\n") + "\n");
+        const lines = tsc([consumer]).map((d) => d.split(":").slice(0, 2).join(":"));
+        expect([...new Set(lines)]).toEqual(["dim-consumer.ts:4"]);
+    });
 });

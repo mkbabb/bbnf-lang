@@ -21,7 +21,7 @@ import { fromParser, toParser } from "./facade.js";
 export type FacadeOptions = Readonly<{
     /** Apply left-recursion elimination to the grammar first. */
     optimizeGraph?: boolean;
-    /** Actions by rule name (map · span · text). */
+    /** Actions by rule name (map · span · text · groups). */
     actions?: Readonly<Record<string, Action>>;
     /** Rules the host supplies as parse-that parsers; a grammar rule of the same name is replaced. */
     host?: Readonly<Record<string, Parser<any>>>;

@@ -11,6 +11,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import type { ActionKind } from "./emit.js";
 import { check, generate } from "./gen.js";
 
 const USAGE = "usage: bbnf gen <grammar.bbnf> --actions <module> --out <file.js> [--export <name>] [--entries a,b] [--max-depth n] [--check]";
@@ -36,7 +37,7 @@ async function main(argv: string[]): Promise<number> {
     if (positional.length !== 1 || actionsPath === undefined || out === undefined) fail(USAGE);
     const mod = (await import(pathToFileURL(resolve(actionsPath)).href)) as Record<string, unknown>;
     const name = flags.get("export");
-    const table = (name !== undefined ? mod[name] : mod.actions ?? mod.default) as Record<string, { kind: "map" | "span" | "text" }> | undefined;
+    const table = (name !== undefined ? mod[name] : mod.actions ?? mod.default) as Record<string, { kind: ActionKind }> | undefined;
     if (table === undefined || table === null || typeof table !== "object") fail(`${actionsPath} exports no action table${name ? ` \`${name}\`` : ""}`);
     const maxDepth = flags.has("max-depth") ? Number(flags.get("max-depth")) : undefined;
     const generated = generate({

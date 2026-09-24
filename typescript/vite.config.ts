@@ -10,11 +10,14 @@ export default defineConfig({
         lib: {
             entry: {
                 bbnf: "./src/index.ts",
+                // node only (build time): the generator and the `bbnf` CLI
+                gen: "./src/gen.ts",
+                cli: "./src/cli.ts",
             },
             formats: ["es", "cjs"],
         },
         rollupOptions: {
-            external: ["@mkbabb/parse-that", "@mkbabb/pprint"],
+            external: ["@mkbabb/parse-that", "@mkbabb/pprint", /^node:/],
         },
     },
 

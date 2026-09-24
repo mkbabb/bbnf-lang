@@ -8,10 +8,21 @@
             "types": "./dist/src/index.d.ts",
             "import": "./dist/bbnf.js",
             "require": "./dist/bbnf.cjs"
+        },
+        "./gen": {
+            "types": "./dist/src/gen.d.ts",
+            "import": "./dist/gen.js",
+            "require": "./dist/gen.cjs"
         }
+    },
+    "bin": {
+        "bbnf": "./dist/cli.js"
     },
     "typesVersions": {
         "*": {
+            "gen": [
+                "dist/src/gen.d.ts"
+            ],
             "*": [
                 "dist/src/index.d.ts"
             ]

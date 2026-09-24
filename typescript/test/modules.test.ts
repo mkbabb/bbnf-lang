@@ -1,6 +1,6 @@
 // SERVED MODEL: claude-opus-5-5
 import { describe, it, expect } from "vitest";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 
 import { resolve, dirname, extname } from "../src/posix-path.js";
 import { grammarFromModules, loadModuleGraphSync } from "../src/imports.js";
@@ -26,11 +26,24 @@ describe("posix-path (no node:path)", () => {
 
 describe("the @import loader reads only through the host's reader (F-b-1)", () => {
     it("no source module imports a node builtin", () => {
-        for (const f of readdirSync(new URL("../src", import.meta.url), { recursive: true })) {
-            if (!String(f).endsWith(".ts")) continue;
+        // Every module the library entry reaches (src/index.ts's import graph). The build-time
+        // generator and CLI (src/gen.ts, src/cli.ts: the `./gen` export and `bin`) run on node and
+        // are separate entries; the browser library never reaches them.
+        const seen = new Set<string>();
+        const queue = ["index.ts"];
+        while (queue.length > 0) {
+            const f = queue.shift()!;
+            if (seen.has(f)) continue;
+            seen.add(f);
             const text = readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8");
-            expect(text, String(f)).not.toMatch(/^\s*(import|export)\b[^;]*from\s+"(node:)?(fs|path|os|url)"/m);
+            expect(text, f).not.toMatch(/^\s*(import|export)\b[^;]*from\s+"(node:)?(fs|path|os|url|crypto)"/m);
+            for (const m of text.matchAll(/^\s*(?:import|export)\b[^;]*from\s+"(\.[^"]+)\.js"/gm)) {
+                const dir = f.includes("/") ? f.slice(0, f.lastIndexOf("/") + 1) : "";
+                queue.push(new URL(`${m[1]}.ts`, `file:///${dir}`).pathname.slice(1));
+            }
         }
+        expect(seen.has("gen.ts") || seen.has("cli.ts")).toBe(false);
+        expect(seen.size).toBeGreaterThan(15);
     });
 
     it("merges a module graph from a files map", () => {

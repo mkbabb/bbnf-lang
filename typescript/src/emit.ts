@@ -16,7 +16,8 @@
 //   · a single-class run (`[^()"']+`, `\s*`) in a token position is a code-unit loop; in a bulk-text
 //     position (a block body, a prelude, the gap between blocks — `analysis/bulk.ts` `bulkTextRuns`,
 //     decided from the grammar's structure, never from the input or the engine) it is one sticky
-//     regex scan; the audit build re-runs each bulk scan as the grammar spelt it; a non-nullable regex leaf, `p?`
+//     regex scan, and so is every negated class run (`[^…]`), uniformly (value.js ESC-W7l-1 (b));
+//     the audit build re-runs each such scan as the grammar spelt it; a non-nullable regex leaf, `p?`
 //     and `p*` test the first unit before entering the regex engine or the call;
 //   · an escape run in a regex leaf (`(?:\\[\s\S]|[^"\\])*`, a string literal's body) is unrolled
 //     (`analysis/regex.ts` `unrollEscapeRuns`): same match, no per-iteration alternation to backtrack;
@@ -279,8 +280,11 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
                     const miss = run.min === 1 ? `if (${pos} >= s.length) ${out} = -1; else ` : "";
                     return `${miss}{ ${keep ? `V = ${pos} < s.length ? s.substring(${pos}) : undefined; ` : ""}${out} = s.length; }\n`;
                 }
-                if (run !== null && bulkLeaves.has(e)) {
-                    // A bulk-text run: one sticky scan of the class, `+` (an empty run is the miss or the empty match).
+                // A negated class run (`[^…]`) is scanned the same way wherever it stands, uniformly (value.js
+                // ESC-W7l-1 (b), COHESION §0di: the static bulk-text form alone left SpiderMonkey's rejected and
+                // large stylesheets above the retired parser; its code-unit loops run at half its regex speed).
+                if (run !== null && (bulkLeaves.has(e) || run.cls.source.startsWith("[^"))) {
+                    // A bulk-text or negated run: one sticky scan of the class, `+` (an empty run is the miss or the empty match).
                     const R = constName(new RegExp(`${run.cls.source}+`, run.cls.flags + "y"));
                     const Ro = opts.audit ? constName(new RegExp(re.source, re.flags.replace(/[gy]/g, "") + "y")) : null;
                     const same = Ro === null ? "" : `{ ${Ro}.lastIndex = ${pos}; AUDIT.check(${out}, ${Ro}.test(s) ? ${Ro}.lastIndex : -1, ${JSON.stringify(`bulk /${re.source}/${re.flags} in ${rn}`)}, s, ${pos}); }\n`;

@@ -31,6 +31,7 @@ items = item , ( "," , item ) * ;
 rule  = pre , ( ";" | "{" >> body << "}" ) ;
 gap   = /[\s;]+/ * ;
 sheet = gap , ( rule , gap ) * ;
+word  = /[a-z]+/ ;
 `;
 
 describe("bulkTextRuns", () => {
@@ -59,12 +60,14 @@ describe("bulkTextRuns", () => {
         expect([...bulkTextRuns(new Map([...small!].reverse()))].sort()).toEqual(["body", "gap", "pre"]);
     });
 
-    it("the emitter scans bulk runs with one sticky regex and keeps token runs as loops", () => {
+    it("the emitter scans bulk runs and negated runs with one sticky regex; other token runs stay loops", () => {
         const [, ast] = BBNFToAST(SHEET);
         const { body } = emitGrammar(ast!, {});
-        for (const cls of [`[^{}\\"]+`, `[^{;\\"]+`, `[\\\\s;]+`]) expect(body).toContain(`new RegExp("${cls}", "y")`);
-        expect(body).not.toContain(`new RegExp("[^,\\"]+", "y")`); // item: the loop's non-ASCII test is the class alone
-        expect(body).toContain(`new RegExp("[^,\\"]", "y")`);
+        // Bulk text (body, pre, gap), and every negated class run (item's, uniformly: ESC-W7l-1 (b)).
+        for (const cls of [`[^{}\\"]+`, `[^{;\\"]+`, `[\\\\s;]+`, `[^,\\"]+`]) expect(body).toContain(`new RegExp("${cls}", "y")`);
+        // word: a token run over a positive class keeps the code-unit loop (its non-ASCII test is the class alone).
+        expect(body).not.toContain(`new RegExp("[a-z]+", "y")`);
+        expect(body).toContain(`new RegExp("[a-z]", "y")`);
     });
 
     it("answers what the grammar spells at every offset of every short sheet (audit, exhaustive)", () => {

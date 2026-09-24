@@ -66,10 +66,12 @@ export type Emission = Readonly<{
 }>;
 
 /**
- * The default back-edge nesting limit. Set below the smallest engine's measured throw point, with
- * margin (README "Nesting depth": V8 and JavaScriptCore read through Playwright, JSC the smaller).
+ * The default back-edge nesting limit, set below the smallest engine's measured throw point with
+ * margin (README "Nesting depth"). Measured 2026-09-23 on value.js's grammar, 13 nesting shapes, a
+ * fresh main thread: V8 throws at 913 back-edges at the least (node 26: 913; Chromium 148: 917),
+ * JavaScriptCore at 4,970 (WebKit 26.4). 256 is 0.28 of V8's and parse-that's own nesting limit.
  */
-export const DEFAULT_MAX_DEPTH = 1000;
+export const DEFAULT_MAX_DEPTH = 256;
 
 /** The key of the FAIL sentinel every face shares (`Symbol.for`, so modules agree without imports). */
 export const FAIL_KEY = "@mkbabb/bbnf-lang/FAIL";

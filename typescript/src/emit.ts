@@ -88,8 +88,8 @@ export const FAIL: unique symbol = Symbol.for(FAIL_KEY) as never;
 type Mode = "v" | "r";
 const unwrap = (e: Expression): Expression => (e.type === "group" ? unwrap(e.value as Expression) : e);
 
-/** One edge `from→to` on every cycle of the rule graph: the back-edges of a DFS in rule order. */
-export function backEdges(ast: AST, recovers: readonly RecoverDirective[] = []): Set<string> {
+/** Each rule's references to rules of the grammar (its body and its `@recover` sync expressions). */
+function ruleDeps(ast: AST, recovers: readonly RecoverDirective[]): Map<string, string[]> {
     const deps = new Map<string, string[]>();
     for (const [name, rule] of ast) {
         const d = new Set<string>();
@@ -97,6 +97,12 @@ export function backEdges(ast: AST, recovers: readonly RecoverDirective[] = []):
         for (const r of recovers) if (r.ruleName === name) collectDependencies(r.syncExpr, d);
         deps.set(name, [...d].filter((n) => ast.has(n)));
     }
+    return deps;
+}
+
+/** One edge `from→to` on every cycle of the rule graph: the back-edges of a DFS in rule order. */
+export function backEdges(ast: AST, recovers: readonly RecoverDirective[] = []): Set<string> {
+    const deps = ruleDeps(ast, recovers);
     const state = new Map<string, 1 | 2>(); // 1 on the stack, 2 done
     const out = new Set<string>();
     for (const root of ast.keys()) {
@@ -143,6 +149,18 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
     if (!Number.isInteger(maxDepth) || maxDepth < 0) throw new Error(`emit: maxDepth ${maxDepth}`);
     const depth = maxDepth > 0;
     const back = depth ? backEdges(ast, opts.recovers) : new Set<string>();
+    // An entry that reaches no back-edge cannot nest: it carries no depth reset or check at all.
+    const deps = ruleDeps(ast, opts.recovers ?? []);
+    const backFrom = new Set([...back].map((edge) => edge.slice(0, edge.indexOf("\u0000"))));
+    const nests = (entry: string): boolean => {
+        const seen = new Set([entry]), stack = [entry];
+        while (stack.length > 0) {
+            const r = stack.pop()!;
+            if (backFrom.has(r)) return true;
+            for (const d of deps.get(r)!) if (!seen.has(d)) { seen.add(d); stack.push(d); }
+        }
+        return false;
+    };
     const { info } = analyzeFirst(ast);
     // With `@recover` directives, recovered spans (`RC`, flat triples rule·start·end) are rolled back
     // wherever the parse backtracks, exactly as parse-that rolls its diagnostics back.
@@ -357,14 +375,14 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
     }
 
     const q = JSON.stringify;
-    const tripped = depth ? ` && D <= ${maxDepth}` : "";
-    const reset = `${depth ? "D = 0; " : ""}${hasRec ? "RC.length = 0; " : ""}`;
+    const fault = entryNames.map((n) => depth && nests(n));
+    const reset = (j: number) => `${fault[j] ? "D = 0; " : ""}${hasRec ? "RC.length = 0; " : ""}`;
     const entryFns = entryNames.map((n, j) =>
-        `/** @param {string} s */ function e${j}(s) { ${reset}const o = ${fnName.get(`${n}/v`)}(s, 0); return o === s.length${tripped} ? V : FAIL; }`);
-    const wrap = depth || hasRec;
-    const ruleFns = wrap
-        ? entryNames.map((n, j) => `/** @type {Rule} */ function x${j}(s, i) { ${reset}const o = ${fnName.get(`${n}/v`)}(s, i); return ${depth ? `D > ${maxDepth} ? -1 : ` : ""}o; }`)
-        : [];
+        `/** @param {string} s */ function e${j}(s) { ${reset(j)}const o = ${fnName.get(`${n}/v`)}(s, 0); return o === s.length${fault[j] ? ` && D <= ${maxDepth}` : ""} ? V : FAIL; }`);
+    const wrap = entryNames.map((_, j) => fault[j] || hasRec);
+    const ruleFns = entryNames.flatMap((n, j) => (wrap[j]
+        ? [`/** @type {Rule} */ function x${j}(s, i) { ${reset(j)}const o = ${fnName.get(`${n}/v`)}(s, i); return ${fault[j] ? `D > ${maxDepth} ? -1 : ` : ""}o; }`]
+        : []));
     const table = (names: readonly string[], f: (n: string, j: number) => string) => `{ ${names.map((n, j) => `${q(n)}: ${f(n, j)}`).join(", ")} }`;
     const body = [
         `"use strict";`,
@@ -380,7 +398,7 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
         ...(depth ? [`let D = 0;`, `const TRIP = 1073741824;`] : []),
         ...(hasRec ? [`const RC = [];`] : []),
         ...fns, ...helpers, ...entryFns, ...ruleFns,
-        `return { rules: ${table(entryNames, (n, j) => (wrap ? `x${j}` : fnName.get(`${n}/v`)!))}, entries: ${table(entryNames, (_, j) => `e${j}`)}, value: () => V${
+        `return { rules: ${table(entryNames, (n, j) => (wrap[j] ? `x${j}` : fnName.get(`${n}/v`)!))}, entries: ${table(entryNames, (_, j) => `e${j}`)}, value: () => V${
             hasRec ? `, recovered: () => RC` : ""}${
             opts.audit ? `, recognize: ${table(ruleNames, (n) => `(s, i) => { ${depth ? "D = 0; " : ""}return ${fnName.get(`${n}/r`)}(s, i); }`)}` : ""} };`,
     ].join("\n");

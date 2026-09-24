@@ -35,3 +35,35 @@ describe("value semantics: bbnf-lang's own grammars (conformance/grammars.json)"
         });
     }
 });
+
+/** E-1: the build-time module (written, imported) answers every corpus case exactly as runtime compile(). */
+describe("value semantics: the emitted module = runtime compile() (both corpora)", async () => {
+    const { mkdtempSync, writeFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const { BBNFToAST } = await import("../src/parse.js");
+    const { compile } = await import("../src/compile.js");
+    const { emitGrammar } = await import("../src/emit.js");
+    const { loadGrammar } = await import("../src/generate.js");
+    const dir = mkdtempSync(join(tmpdir(), "bbnf-conf-"));
+    const readFile = (p: string) => readFileSync(p, "utf8");
+    const gdir = new URL("./fixtures/grammar/", import.meta.url).pathname;
+    const cases = [
+        ...load("semantics.json").map((c) => ({ c, ast: BBNFToAST(c.grammar)[1]! })),
+        ...load("grammars.json").map((c) => ({ c, ast: loadGrammar(`${gdir}${c.grammar}`, readFile)[0] })),
+    ];
+    let n = 0;
+    for (const { c, ast } of cases) {
+        it(`${c.grammar.slice(0, 40)} ${c.rule} ${JSON.stringify(c.input.slice(0, 24))}`, async () => {
+            const runtime = compile(ast);
+            const file = join(dir, `m${n++}.mjs`);
+            writeFileSync(file, emitGrammar(ast).module);
+            const m = await import(file);
+            const emitted = m.createParser({});
+            const a = runtime.rules[c.rule](c.input, 0), b = emitted.rules[c.rule](c.input, 0);
+            expect(b).toBe(a);
+            if (a >= 0) expect(encode(emitted.value())).toEqual(encode(runtime.value()));
+            expect(emitted.entries[c.rule](c.input) === m.FAIL).toBe(runtime.entries[c.rule](c.input) === m.FAIL);
+        });
+    }
+});

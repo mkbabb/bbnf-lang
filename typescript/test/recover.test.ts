@@ -122,7 +122,10 @@ list = item * ;
 
         enableDiagnostics();
 
-        const result = nonterminals.list.parse("123bad;a=b;");
+        // The first item starts as an item can (`bad…`) and fails; it recovers to its `;`.
+        // (0.1.4 recovered at any unit; 0.2 recovers where the rule can start: VALUE-SEMANTICS.md
+        // "@recover", so an ordered choice never recovers an alternative that cannot apply.)
+        const result = nonterminals.list.parse("bad!123;a=b;");
 
         disableDiagnostics();
 
@@ -131,6 +134,28 @@ list = item * ;
         if (result) {
             expect(result).toContain(null);
         }
+    });
+
+    it("recovers only where the rule can start (its FIRST set)", () => {
+        const [nonterminals] = BBNFToParser(`
+@recover item /[^;]*;/ ;
+item = /[a-z]+/ , "=" , /[a-z]+/ , ";" ;
+list = item * ;
+`);
+        // `1` cannot start an item: no recovery, the list stops before it.
+        const st = nonterminals.list.parseState("123bad;a=b;");
+        expect(st.isError).toBe(false);
+        expect(st.value).toEqual([]);
+        expect(st.offset).toBe(0);
+        // Between choices: a recovered alternative that cannot start here is not taken.
+        const [nt2] = BBNFToParser(`
+@recover at /[^}]+}/ ;
+at = "@" , /[a-z]+/ , ";" ;
+rule = /[a-z.]+/ , "{" , /[^}]*/ , "}" ;
+item = at | rule ;
+`);
+        expect(nt2.item.parse(".foo{x}")).toEqual([".foo", "{", "x", "}"]);
+        expect(nt2.item.parse("@bad{x}")).toBe(null);
     });
 });
 

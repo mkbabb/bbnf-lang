@@ -1,4 +1,4 @@
-import { whitespace, regex, string, all, Parser, eof, memoize } from "@mkbabb/parse-that";
+import { whitespace, regex, string, Parser } from "@mkbabb/parse-that";
 
 import { test, expect, describe, it } from "vitest";
 import fs from "fs";
@@ -9,34 +9,41 @@ import {
     insertRandomWhitespace,
     reduceMathExpression,
 } from "./utils";
-import { BBNFToParser, BBNFToParserFromFile } from "../src/generate";
-import type { Nonterminals } from "../src/types";
+import { BBNFToParser, BBNFToParserFromFile, facade, loadGrammar } from "../src/generate";
+import { BBNFToAST } from "../src/parse";
+import { removeAllLeftRecursion } from "../src/optimize";
+import { analyzeGrammar } from "../src/analysis";
+import type { AST, Expression } from "../src/types";
 
 /** The node host's module reader (the loader assumes no filesystem). */
 const readFile = (p: string) => fs.readFileSync(p, "utf8");
 
-const comma = string(",").trim();
-const div = string("/").trim();
+// 0.2: a rule is changed by an ACTION or supplied by the HOST at compile time (the emitted rules
+// call each other directly; the returned table is never mutated). What these tests once did by
+// reassigning `nonterminals[name]` is said here as actions, host parsers, or `?w` around a rule.
+const map = <T,>(fn: (value: any) => T) => ({ kind: "map", fn }) as const;
+const astOf = (text: string): AST => {
+    const [, ast] = BBNFToAST(text);
+    if (!ast) throw new Error("grammar failed to parse");
+    return ast;
+};
+/** `?w` around each named rule (all by default): the whitespace `.trim()` on the rule added. */
+const trimRules = (ast: AST, names: Iterable<string> = [...ast.keys()]): AST => {
+    for (const n of names) {
+        const r = ast.get(n)!;
+        r.expression = { type: "optionalWhitespace", value: r.expression } as unknown as Expression;
+    }
+    return ast;
+};
 
 const mathParser = (grammar: string) => {
-    const [nonterminals, ast] = BBNFToParser(grammar);
-
-    // The math grammar has no built-in whitespace handling, so trim all
-    // nonterminals to allow spaces around operators and operands.
-    for (const key of Object.keys(nonterminals)) {
-        nonterminals[key] = nonterminals[key].trim();
-    }
-
-    nonterminals.expr = nonterminals.expr.map(reduceMathExpression);
-    nonterminals.term = nonterminals.term.map(reduceMathExpression);
+    // The math grammar has no built-in whitespace handling, so every rule is trimmed to allow
+    // spaces around operators and operands.
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-    nonterminals.number = regex(numberRegex)
-        .trim()
-        .map((v) => {
-            return parseFloat(v);
-        });
-
-    return [nonterminals, ast] as const;
+    return facade(trimRules(astOf(grammar)), [], {
+        actions: { expr: map(reduceMathExpression), term: map(reduceMathExpression) },
+        host: { number: regex(numberRegex).trim().map((v) => parseFloat(v)) },
+    });
 };
 
 const CSSColorParser = (grammarPath: string) => {
@@ -48,149 +55,111 @@ const CSSColorParser = (grammarPath: string) => {
         a?: number;
     }
 
-    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath, readFile);
-
-    nonterminals.whitespace = whitespace;
-    // comma/div use .trim() so they absorb surrounding whitespace
-    // (CSS allows "rgb(255 , 255 , 255)" etc.)
-    nonterminals.comma = string(",").trim();
-    nonterminals.div = string("/").trim();
-    nonterminals.digit = regex(/\d|[a-fA-F]/);
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-    nonterminals.number = regex(numberRegex).map((v) => {
-        return parseFloat(v);
-    });
-    nonterminals.integer = regex(/\d+/).map(Number);
-    nonterminals.percentage = nonterminals.percentage.map((value) => {
-        return value / 100;
-    });
-    nonterminals.colorPercentage = nonterminals.colorPercentage.map((value) => {
-        return value * 255;
-    });
+    return BBNFToParserFromFile(grammarPath, readFile, {
+        host: {
+            whitespace,
+            // comma/div use .trim() so they absorb surrounding whitespace
+            // (CSS allows "rgb(255 , 255 , 255)" etc.)
+            comma: string(",").trim(),
+            div: string("/").trim(),
+            digit: regex(/\d|[a-fA-F]/),
+            number: regex(numberRegex).map((v) => parseFloat(v)),
+            integer: regex(/\d+/).map(Number),
+        },
+        actions: {
+            percentage: map((value) => value / 100),
+            colorPercentage: map((value) => value * 255),
+            hex: map((digits) => {
+                let hex = digits.join("");
+                let alpha = 1;
 
-    nonterminals.hex = nonterminals.hex.map((digits) => {
-        let hex = digits.join("");
-        let alpha = 1;
-
-        if (hex.length === 3 || hex.length === 4) {
-            hex = hex.replace(/./g, "$&$&");
-        }
-        if (hex.length === 8) {
-            alpha = parseInt(hex.slice(6, 8), 16) / 255;
-            hex = hex.slice(0, 6);
-        }
-        const r = parseInt(hex.slice(0, 2), 16);
-        const g = parseInt(hex.slice(2, 4), 16);
-        const b = parseInt(hex.slice(4, 6), 16);
-        return {
-            type: "rgb",
-            r,
-            g,
-            b,
-        } as Color;
+                if (hex.length === 3 || hex.length === 4) {
+                    hex = hex.replace(/./g, "$&$&");
+                }
+                if (hex.length === 8) {
+                    alpha = parseInt(hex.slice(6, 8), 16) / 255;
+                    hex = hex.slice(0, 6);
+                }
+                const r = parseInt(hex.slice(0, 2), 16);
+                const g = parseInt(hex.slice(2, 4), 16);
+                const b = parseInt(hex.slice(4, 6), 16);
+                return { type: "rgb", r, g, b } as Color;
+            }),
+            colorFunction: map(([type, r, g, b, a]) => ({ type, r, g, b, a }) as Color),
+            color: map((color) => [color, "color"] as const),
+        },
     });
-
-    nonterminals.colorFunction = nonterminals.colorFunction.map(
-        ([type, r, g, b, a]) => {
-            const color: Color = {
-                type,
-                r,
-                g,
-                b,
-                a,
-            };
-            return color;
-        }
-    );
-
-    nonterminals.color = nonterminals.color.map((color) => {
-        return [color, "color"] as const;
-    });
-    return [nonterminals, ast] as const;
 };
 
-const CSSValueUnitParser = (grammarPath: string) => {
-    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath, readFile);
-
+const CSSValueUnitParser = (grammarPath: string, color: Parser<unknown>) => {
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-    nonterminals.number = regex(numberRegex)
+    const number = regex(numberRegex)
         .trim()
-        .map((v) => {
-            return parseFloat(v);
-        });
-    nonterminals.integer = regex(/\d+/).map(Number);
-
-    // Unitless numbers produce a scalar from the grammar, not a [value, unit] tuple.
-    // Wrap them to match the expected shape.
-    nonterminals.unitless = nonterminals.number.map((value: number) => ({
-        value,
-        unit: "",
-    }));
-
-    // Dimension rules (length, angle, etc.) produce [value, unit] tuples.
-    nonterminals.valueUnit = nonterminals.valueUnit.map((v: any) => {
-        // If already an object with value/unit (from unitless override), pass through
-        if (v && typeof v === "object" && "value" in v) {
-            return v;
-        }
-        // Otherwise it's a [value, unit] tuple from a dimension rule
-        const [value, unit] = v;
-        return {
-            value,
-            unit: unit,
-        } as const;
+        .map((v) => parseFloat(v));
+    return BBNFToParserFromFile(grammarPath, readFile, {
+        host: {
+            number,
+            integer: regex(/\d+/).map(Number),
+            // Unitless numbers produce a scalar from the grammar, not a [value, unit] tuple.
+            // Wrap them to match the expected shape.
+            unitless: number.map((value: number) => ({ value, unit: "" })),
+            color,
+        },
+        actions: {
+            // Dimension rules (length, angle, etc.) produce [value, unit] tuples.
+            valueUnit: map((v: any) => {
+                // If already an object with value/unit (from the unitless host rule), pass through
+                if (v && typeof v === "object" && "value" in v) return v;
+                // Otherwise it's a [value, unit] tuple from a dimension rule
+                const [value, unit] = v;
+                return { value, unit } as const;
+            }),
+        },
     });
-
-    return [nonterminals, ast] as const;
 };
 
 const BBNFParserLeftRecursion = (grammar: string) => {
-    const [nonterminals, ast] = BBNFToParser(grammar, true);
-
-    nonterminals.integer = regex(/\d+/).trim().map(Number);
-    nonterminals.string = regex(/[a-zA-Z]+/)
-        .trim()
-        .map((v) => {
-            return v.charCodeAt(0);
-        });
-    nonterminals.vibes = string("vibes")
-        .trim()
-        .map((v) => {
-            return -10;
-        });
-    nonterminals.whatzupwitu = string("whatzupwitu")
-        .trim()
-        .map((v) => {
-            return 17;
-        });
-
-    nonterminals.expr = nonterminals.expr.trim().map((v) => {
-        if (v.length === 2 && v[1]) {
-            // Concatenation is positional: the tail `expr_0 , ε` keeps its ε slot (undefined).
-            const [head, [step]] = v;
-            return reduceMathExpression([head, [step]]);
-        } else {
-            return v[0];
-        }
+    const [nonterminals, ast] = BBNFToParser(grammar, {
+        optimizeGraph: true,
+        host: {
+            integer: regex(/\d+/).trim().map(Number),
+            string: regex(/[a-zA-Z]+/)
+                .trim()
+                .map((v) => v.charCodeAt(0)),
+            vibes: string("vibes")
+                .trim()
+                .map(() => -10),
+            whatzupwitu: string("whatzupwitu")
+                .trim()
+                .map(() => 17),
+        },
+        actions: {
+            expr: map((v) => {
+                if (v.length === 2 && v[1]) {
+                    // Concatenation is positional: the tail `expr_0 , ε` keeps its ε slot (undefined).
+                    const [head, [step]] = v;
+                    return reduceMathExpression([head, [step]]);
+                } else {
+                    return v[0];
+                }
+            }),
+        },
     });
-
-    return [nonterminals, ast] as const;
+    // The whole expression is trimmed (its leaves trim themselves).
+    return [{ ...nonterminals, expr: nonterminals.expr.trim() }, ast] as const;
 };
 
 export const JSONParser = (grammar: string) => {
-    const [nonterminals, ast] = BBNFToParser(grammar);
-
-    nonterminals.null = nonterminals.null.map(() => null);
-    nonterminals.bool = nonterminals.bool.map((v: string) => v === "true");
-    nonterminals.number = nonterminals.number.map(Number);
-    nonterminals.string = nonterminals.string.map((s: string) =>
-        s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s),
-    );
-    nonterminals.object = nonterminals.object.map(
-        (pairs: [string, any][]) => Object.fromEntries(pairs),
-    );
-
-    nonterminals.value = nonterminals.value.trim();
+    const [nonterminals] = facade(trimRules(astOf(grammar), ["value"]), [], {
+        actions: {
+            null: map(() => null),
+            bool: map((v: string) => v === "true"),
+            number: map(Number),
+            string: map((s: string) => (s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s))),
+            object: map((pairs: [string, any][]) => Object.fromEntries(pairs)),
+        },
+    });
     return nonterminals.value;
 };
 
@@ -239,10 +208,9 @@ describe("BBNF Parser", () => {
         const grammarPath = path.resolve("test/fixtures/grammar/css/css-value-unit.bbnf");
         const colorGrammarPath = path.resolve("test/fixtures/grammar/css/css-color.bbnf");
 
-        const [nonterminals] = CSSValueUnitParser(grammarPath);
         const [colorNonterminals] = CSSColorParser(colorGrammarPath);
+        const [nonterminals] = CSSValueUnitParser(grammarPath, colorNonterminals.color);
 
-        nonterminals.color = colorNonterminals.color;
         const parser = nonterminals.valueUnit;
 
         const units = [
@@ -306,12 +274,14 @@ describe("BBNF Parser", () => {
 
     it("should parse a CSS keyframes grammar", () => {
         const grammarPath = path.resolve("test/fixtures/grammar/css/css-keyframes.bbnf");
-        const [nonterminals, ast] = BBNFToParserFromFile(grammarPath, readFile);
-
-        nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
         const numberRegex = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-        nonterminals.number = regex(numberRegex).map((v) => parseFloat(v));
-        nonterminals.integer = regex(/[-+]?\d+/).map(Number);
+        const [ast, recovers] = loadGrammar(grammarPath, readFile);
+        const [nonterminals] = facade(trimRules(ast, ["KEYFRAMES_RULE"]), recovers, {
+            host: {
+                number: regex(numberRegex).map((v) => parseFloat(v)),
+                integer: regex(/[-+]?\d+/).map(Number),
+            },
+        });
 
         const keyframes = /* css */ `
             @keyframes matrixExample {
@@ -392,7 +362,7 @@ describe("BBNF Parser", () => {
     it("should parse regular expressions", () => {
         const grammar = fs.readFileSync("test/fixtures/grammar/lang/regex.bbnf", "utf8");
 
-        const [nonterminals, ast] = BBNFToParser(grammar);
+        const [nonterminals, ast] = BBNFToParser(grammar, { actions: { regex: map((regex) => regex) } });
 
         const regexExamples = [
             /[A-Z]\w+/,
@@ -403,10 +373,6 @@ describe("BBNF Parser", () => {
             /[\dA-Fa-f]{8}-[\dA-Fa-f]{4}-[\dA-Fa-f]{4}-[\dA-Fa-f]{4}-[\dA-Fa-f]{12}/,
             /^(?=.{8,}).*\w\b$/y,
         ];
-
-        nonterminals.regex = nonterminals.regex.map((regex) => {
-            return regex;
-        });
 
         // debugging(nonterminals);
 
@@ -421,21 +387,14 @@ describe("BBNF Parser", () => {
     it("should parse an ambiguous BBNF grammar", () => {
         let grammar = fs.readFileSync("test/fixtures/grammar/lang/g4.bbnf", "utf8");
 
-        const [nonterminals, ast] = BBNFToParser(grammar, true);
+        // Every rule trimmed (memoization stays off in 0.2: the emitted parser has none).
+        const g = astOf(grammar);
+        const [nonterminals] = facade(trimRules(removeAllLeftRecursion(g, analyzeGrammar(g))), []);
 
         const sentences = [
             "the big cat ate the green green woman",
             "the woman hit the man with the banana",
         ];
-
-        const memoFuncs = ["sentence"];
-
-        for (const key of Object.keys(nonterminals)) {
-            nonterminals[key] = nonterminals[key].trim();
-            if (memoFuncs.includes(key)) {
-                nonterminals[key] = memoize(nonterminals[key]);
-            }
-        }
 
         const parser = nonterminals.sentence;
         // debugging(nonterminals);
@@ -450,8 +409,7 @@ describe("BBNF Parser", () => {
         let grammar = fs.readFileSync("test/fixtures/grammar/lang/ebnf.bbnf", "utf8");
 
         for (let i = 0; i < 10; i++) {
-            const [nonterminals, ast] = BBNFToParser(grammar);
-            nonterminals.S = regex(/\s*/);
+            const [nonterminals, ast] = BBNFToParser(grammar, { host: { S: regex(/\s*/) } });
 
             const parser = nonterminals.grammar.trim();
             const result = parser.parse(grammar);
@@ -491,12 +449,11 @@ describe("BBNF Parser", () => {
 
     it("should parse a CSS values grammar", () => {
         const grammarPath = path.resolve("test/fixtures/grammar/css/css-values.bbnf");
-        const [nonterminals] = BBNFToParserFromFile(grammarPath, readFile);
-
         // Override number/integer with runtime parsers
         const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
-        nonterminals.number = regex(numberRegex).map((v) => parseFloat(v));
-        nonterminals.integer = regex(/\d+/).map(Number);
+        const [nonterminals] = BBNFToParserFromFile(grammarPath, readFile, {
+            host: { number: regex(numberRegex).map((v) => parseFloat(v)), integer: regex(/\d+/).map(Number) },
+        });
 
         const values = [
             "10px",
@@ -546,18 +503,15 @@ describe("BBNF Parser", () => {
             "test/fixtures/grammar/lang/json-commented.bbnf",
             "utf8",
         );
-        const [nonterminals] = BBNFToParser(grammar);
-
-        nonterminals.null = nonterminals.null.map(() => null);
-        nonterminals.bool = nonterminals.bool.map((v: string) => v === "true");
-        nonterminals.number = nonterminals.number.map(Number);
-        nonterminals.string = nonterminals.string.map((s: string) =>
-            s.indexOf("\\") === -1 ? s : JSON.parse(`"${s}"`),
-        );
-        nonterminals.object = nonterminals.object.map(
-            (pairs: [string, any][]) => Object.fromEntries(pairs),
-        );
-        nonterminals.value = nonterminals.value.trim();
+        const [nonterminals] = facade(trimRules(astOf(grammar), ["value"]), [], {
+            actions: {
+                null: map(() => null),
+                bool: map((v: string) => v === "true"),
+                number: map(Number),
+                string: map((s: string) => (s.indexOf("\\") === -1 ? s : JSON.parse(`"${s}"`))),
+                object: map((pairs: [string, any][]) => Object.fromEntries(pairs)),
+            },
+        });
 
         const jsonInput = '{"hello": [1, true, null, "world"]}';
         const parsed = nonterminals.value.parse(jsonInput);
@@ -572,7 +526,7 @@ describe("BBNF Parser", () => {
         // The ambiguous grammar uses left recursion with optional operator,
         // which causes infinite recursion in the TS runtime. Verify that the
         // grammar at least compiles (parses the BBNF source) successfully.
-        const [nonterminals] = BBNFToParser(grammar, true);
+        const [nonterminals] = BBNFToParser(grammar, { optimizeGraph: true });
         expect(nonterminals.expression).toBeTruthy();
         expect(nonterminals.number).toBeTruthy();
     });

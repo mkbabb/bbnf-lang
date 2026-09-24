@@ -1,0 +1,14 @@
+{
+ "note": "SERVED MODEL: claude-opus-5-5. Dated addendum (2026-09-23, X.P.W7 .e) beside grammars.json, which stays byte-identical: a case whose frozen answer came from a rewrite of the pre-emitter runtime that broke a VALUE-SEMANTICS.md law. The emitter answers the law; each correction names it. conformance.test.ts reads grammars.json through these corrections.",
+ "corrections": [
+  {
+   "grammar": "lang/json.bbnf",
+   "rule": "value",
+   "input": "[1,]",
+   "was": { "ok": false },
+   "expect": { "ok": true, "value": ["1"], "end": 4 },
+   "law": "a * stops at the first iteration that fails or consumes nothing",
+   "reason": "array = \"[\" >> ((value << comma ?) *)?w << \"]\": the iteration `value << comma ?` consumes \"1,\", the next fails at \"]\", and \"]\" closes. The frozen refusal came from the combinator runtime's `(item << sep?)*` -> `item.sepBy(sep)` rewrite (trySepByDetect, 0.1.4 generate.ts), which refuses a trailing separator the grammar admits; that runtime is retired (one emitter, no second interpreter)."
+  }
+ ]
+}

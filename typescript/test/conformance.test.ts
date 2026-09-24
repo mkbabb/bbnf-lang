@@ -7,7 +7,12 @@ import { encode } from "./conformance/grammar-cases.js";
 
 /** VALUE-SEMANTICS.md, read against runtime compile(): every case answered exactly. */
 type Case = { id?: string; law?: string; grammar: string; rule: string; input: string; expect: { ok: boolean; value?: unknown; end?: number } };
-const load = (f: string) => JSON.parse(readFileSync(new URL(`./conformance/${f}`, import.meta.url), "utf8")).cases as Case[];
+const read = (f: string) => JSON.parse(readFileSync(new URL(`./conformance/${f}`, import.meta.url), "utf8"));
+/** The dated corrections beside a frozen corpus (grammars.addendum-*.json), keyed grammar·rule·input. */
+const corrections = new Map<string, Case["expect"]>(
+    (read("grammars.addendum-2026-09-23.json").corrections as Case[]).map((c) => [`${c.grammar}\u0000${c.rule}\u0000${c.input}`, c.expect]),
+);
+const load = (f: string) => (read(f).cases as Case[]).map((c) => ({ ...c, expect: corrections.get(`${c.grammar}\u0000${c.rule}\u0000${c.input}`) ?? c.expect }));
 const answer = (st: { isError: boolean; value: unknown; offset: number }) =>
     st.isError ? { ok: false } : { ok: true, value: encode(st.value), end: st.offset };
 

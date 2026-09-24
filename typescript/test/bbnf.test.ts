@@ -166,7 +166,9 @@ const BBNFParserLeftRecursion = (grammar: string) => {
 
     nonterminals.expr = nonterminals.expr.trim().map((v) => {
         if (v.length === 2 && v[1]) {
-            return reduceMathExpression(v);
+            // Concatenation is positional: the tail `expr_0 , ε` keeps its ε slot (undefined).
+            const [head, [step]] = v;
+            return reduceMathExpression([head, [step]]);
         } else {
             return v[0];
         }

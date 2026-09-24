@@ -1,0 +1,405 @@
+{
+ "note": "The BBNF value-semantics conformance corpus (VALUE-SEMANTICS.md). Every face (runtime compile(), the emitted module, the facade) answers each case exactly: ok, value (undefined written {\"$undefined\": true}), end offset. Hand-stated per law, never regenerated.",
+ "cases": [
+  {
+   "id": "concat-2",
+   "law": "concatenation is positional",
+   "grammar": "r = \"a\" , \"b\" ? ;",
+   "rule": "r",
+   "input": "a",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     {
+      "$undefined": true
+     }
+    ],
+    "end": 1
+   }
+  },
+  {
+   "id": "concat-3",
+   "law": "concatenation is positional",
+   "grammar": "r = \"a\" , \"b\" ? , \"c\" ;",
+   "rule": "r",
+   "input": "ac",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     {
+      "$undefined": true
+     },
+     "c"
+    ],
+    "end": 2
+   }
+  },
+  {
+   "id": "concat-3-full",
+   "law": "concatenation is positional",
+   "grammar": "r = \"a\" , \"b\" ? , \"c\" ;",
+   "rule": "r",
+   "input": "abc",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     "b",
+     "c"
+    ],
+    "end": 3
+   }
+  },
+  {
+   "id": "concat-group",
+   "law": "concatenation is positional",
+   "grammar": "r = \"a\" , ( \"b\" ? , \"c\" ? ) ;",
+   "rule": "r",
+   "input": "a",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     [
+      {
+       "$undefined": true
+      },
+      {
+       "$undefined": true
+      }
+     ]
+    ],
+    "end": 1
+   }
+  },
+  {
+   "id": "opt-empty",
+   "law": "opt yields undefined",
+   "grammar": "r = \"a\" ? ;",
+   "rule": "r",
+   "input": "",
+   "expect": {
+    "ok": true,
+    "value": {
+     "$undefined": true
+    },
+    "end": 0
+   }
+  },
+  {
+   "id": "opt-hit",
+   "law": "opt yields undefined",
+   "grammar": "r = \"a\" ? ;",
+   "rule": "r",
+   "input": "a",
+   "expect": {
+    "ok": true,
+    "value": "a",
+    "end": 1
+   }
+  },
+  {
+   "id": "many",
+   "law": "many stops without progress",
+   "grammar": "r = \"a\" * ;",
+   "rule": "r",
+   "input": "aab",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     "a"
+    ],
+    "end": 2
+   }
+  },
+  {
+   "id": "many-empty",
+   "law": "many stops without progress",
+   "grammar": "r = \"a\" * ;",
+   "rule": "r",
+   "input": "b",
+   "expect": {
+    "ok": true,
+    "value": [],
+    "end": 0
+   }
+  },
+  {
+   "id": "many-noprogress",
+   "law": "many stops without progress",
+   "grammar": "r = ( \"a\" ? ) * ;",
+   "rule": "r",
+   "input": "aab",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     "a"
+    ],
+    "end": 2
+   }
+  },
+  {
+   "id": "many-noprogress-empty",
+   "law": "many stops without progress",
+   "grammar": "r = ( \"a\" ? ) * ;",
+   "rule": "r",
+   "input": "",
+   "expect": {
+    "ok": true,
+    "value": [],
+    "end": 0
+   }
+  },
+  {
+   "id": "many1",
+   "law": "many stops without progress",
+   "grammar": "r = \"a\" + ;",
+   "rule": "r",
+   "input": "aa",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     "a"
+    ],
+    "end": 2
+   }
+  },
+  {
+   "id": "many1-fail",
+   "law": "many stops without progress",
+   "grammar": "r = \"a\" + ;",
+   "rule": "r",
+   "input": "b",
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "id": "minus-excluded",
+   "law": "minus tries the excluded side first",
+   "grammar": "r = /[a-z]+/ - \"if\" ;",
+   "rule": "r",
+   "input": "if",
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "id": "minus-prefix",
+   "law": "minus tries the excluded side first",
+   "grammar": "r = /[a-z]+/ - \"if\" ;",
+   "rule": "r",
+   "input": "iff",
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "id": "minus-pass",
+   "law": "minus tries the excluded side first",
+   "grammar": "r = /[a-z]+/ - \"if\" ;",
+   "rule": "r",
+   "input": "go",
+   "expect": {
+    "ok": true,
+    "value": "go",
+    "end": 2
+   }
+  },
+  {
+   "id": "next",
+   "law": ">> keeps the right",
+   "grammar": "r = \"(\" >> /[0-9]+/ ;",
+   "rule": "r",
+   "input": "(12",
+   "expect": {
+    "ok": true,
+    "value": "12",
+    "end": 3
+   }
+  },
+  {
+   "id": "skip",
+   "law": "<< keeps the left",
+   "grammar": "r = /[0-9]+/ << \")\" ;",
+   "rule": "r",
+   "input": "12)",
+   "expect": {
+    "ok": true,
+    "value": "12",
+    "end": 3
+   }
+  },
+  {
+   "id": "wrap",
+   "law": ">> keeps the right, << the left",
+   "grammar": "r = \"(\" >> /[0-9]+/ << \")\" ;",
+   "rule": "r",
+   "input": "(12)",
+   "expect": {
+    "ok": true,
+    "value": "12",
+    "end": 4
+   }
+  },
+  {
+   "id": "regex-eof-empty",
+   "law": "regex at end of input",
+   "grammar": "r = /\\s*/ ;",
+   "rule": "r",
+   "input": "",
+   "expect": {
+    "ok": true,
+    "value": {
+     "$undefined": true
+    },
+    "end": 0
+   }
+  },
+  {
+   "id": "regex-mid-empty",
+   "law": "regex at end of input",
+   "grammar": "r = /\\s*/ , \"x\" ;",
+   "rule": "r",
+   "input": "x",
+   "expect": {
+    "ok": true,
+    "value": [
+     {
+      "$undefined": true
+     },
+     "x"
+    ],
+    "end": 1
+   }
+  },
+  {
+   "id": "regex-eof-nonempty",
+   "law": "regex at end of input",
+   "grammar": "r = /[a-z]+/ ;",
+   "rule": "r",
+   "input": "",
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "id": "concat-eof-ws",
+   "law": "regex at end of input",
+   "grammar": "r = \"a\" , /\\s*/ ;",
+   "rule": "r",
+   "input": "a",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     {
+      "$undefined": true
+     }
+    ],
+    "end": 1
+   }
+  },
+  {
+   "id": "alt-order",
+   "law": "choice is ordered: the first success wins",
+   "grammar": "r = \"a\" | \"ab\" ;",
+   "rule": "r",
+   "input": "ab",
+   "expect": {
+    "ok": true,
+    "value": "a",
+    "end": 1
+   }
+  },
+  {
+   "id": "alt-routed-ci",
+   "law": "routing answers the ordered choice",
+   "grammar": "r = /none/i | /[0-9]+/ ;",
+   "rule": "r",
+   "input": "NONE",
+   "expect": {
+    "ok": true,
+    "value": "NONE",
+    "end": 4
+   }
+  },
+  {
+   "id": "alt-routed-nonascii",
+   "law": "routing answers the ordered choice",
+   "grammar": "r = /[a-z]+/ | /[^;]+/ ;",
+   "rule": "r",
+   "input": "é;",
+   "expect": {
+    "ok": true,
+    "value": "é",
+    "end": 1
+   }
+  },
+  {
+   "id": "alt-eof",
+   "law": "routing answers the ordered choice",
+   "grammar": "r = /[a-z]+/ | /\\s*/ ;",
+   "rule": "r",
+   "input": "",
+   "expect": {
+    "ok": true,
+    "value": {
+     "$undefined": true
+    },
+    "end": 0
+   }
+  },
+  {
+   "id": "epsilon",
+   "law": "epsilon yields undefined",
+   "grammar": "r = \"a\" , ε ;",
+   "rule": "r",
+   "input": "a",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     {
+      "$undefined": true
+     }
+    ],
+    "end": 1
+   }
+  },
+  {
+   "id": "trim",
+   "law": "?w yields the inner value",
+   "grammar": "r = \"a\" ?w , \"b\" ;",
+   "rule": "r",
+   "input": "a  b",
+   "expect": {
+    "ok": true,
+    "value": [
+     "a",
+     "b"
+    ],
+    "end": 4
+   }
+  },
+  {
+   "id": "alt-nullable-first",
+   "law": "choice is ordered: the first success wins",
+   "grammar": "r = /a?/ | \"(\" ;",
+   "rule": "r",
+   "input": "(",
+   "expect": {
+    "ok": true,
+    "value": {
+     "$undefined": true
+    },
+    "end": 0
+   }
+  }
+ ]
+}

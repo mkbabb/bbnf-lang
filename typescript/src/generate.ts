@@ -332,8 +332,8 @@ export function ASTToParser(
                 if (parsers.at(-1)?.context?.name === "eof") {
                     parsers.pop();
                 }
-                // Specialize: 2-element concatenation avoids the loop in all()
-                // Must preserve all()'s undefined-skipping semantics.
+                // Specialize: 2-element concatenation avoids the loop in all().
+                // Positional, as all(): slot i is element i's value, undefined kept.
                 if (parsers.length === 2) {
                     const [p1, p2] = parsers;
                     const all2 = (state: ParserState<any>) => {
@@ -350,15 +350,7 @@ export function ASTToParser(
                             state.isError = true;
                             return state;
                         }
-                        const v2 = state.value;
-                        if (v1 !== undefined) {
-                            return v2 !== undefined
-                                ? state.ok([v1, v2])
-                                : state.ok([v1]);
-                        }
-                        return v2 !== undefined
-                            ? state.ok([v2])
-                            : state.ok([]);
+                        return state.ok([v1, state.value]);
                     };
                     return new Parser(
                         all2,

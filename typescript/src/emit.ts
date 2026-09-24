@@ -58,6 +58,15 @@ export type EmitOptions = Readonly<{
      */
     audit?: boolean;
     /**
+     * Evidence builds only: a per-rule profile. Every rule function (each mode) and every hoisted
+     * alternative counts its calls and failures and accumulates its inclusive time; every action counts
+     * its calls and time; an action value a failing function discards is counted once, at the innermost
+     * failing function around it; every entry counts its calls, refusals and time. The parser gains
+     * `profile()` and `resetProfile()`. A shipping build never sets it, and without it the emitted text
+     * carries none of this code (it is compiled out, not switched off at run time).
+     */
+    instrument?: boolean;
+    /**
      * Evidence builds only: the alternatives a non-ASCII first unit is routed to, per ordered choice
      * (`null` keeps the grammar's). `test/stock-ascii.test.ts` passes bbnf-lang 0.1.4's ASCII-only
      * dispatch here to prove the one analysis differs from 0.1.4 only in the F-b-4 rows; a shipping
@@ -207,6 +216,15 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
     };
     const helpers: string[] = [];
     const actNames: string[] = [];
+    // The instrument's slots (one per emitted function) and the declaration every function goes through.
+    const slots: string[] = [];
+    const ruleDecl = (f: string, label: string, code: string): string => {
+        if (!opts.instrument) return `/** @type {Rule} */ function ${f}(s, i) {${code}}`;
+        const j = slots.push(label) - 1;
+        return `/** @type {Rule} */ function ${f}$(s, i) {${code}}\n` +
+            `/** @type {Rule} */ function ${f}(s, i) { PC[${j}]++; const a0 = ACT, d0 = DISC, t0 = NOW(); const o = ${f}$(s, i); PT[${j}] += NOW() - t0; ` +
+            `if (o < 0) { PF[${j}]++; const own = ACT - a0 - (DISC - d0); PD[${j}] += own; DISC += own; } return o; }`;
+    };
 
     /** A first-unit test of `c` against `inf` (true = may start). */
     const mayStart = (c: string, inf: Info): string =>
@@ -355,7 +373,7 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
                     const u = unwrap(a);
                     if (u.type === "nonterminal" || u.type === "literal" || u.type === "regex") return (o: string) => gen(a, mode, pos, o, rn);
                     const h = tmp("h"), o2 = tmp("o");
-                    helpers.push(`/** @type {Rule} */ function ${h}(s, i) { let ${o2}; ${gen(a, mode, "i", o2, rn)}return ${o2}; }`);
+                    helpers.push(ruleDecl(h, `${rn}/${mode} alt ${h}`, ` let ${o2}; ${gen(a, mode, "i", o2, rn)}return ${o2}; `));
                     return (o: string) => `${o} = ${h}(s, ${pos});\n`;
                 });
                 const T = constName(r.tbl), c = tmp("c"), g = tmp("g");
@@ -404,14 +422,15 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
                     : kind === "groups" ? `if (o >= 0) V = ${A}(${groups});\n`
                         : `if (o >= 0) V = ${A}(s.substring(i, o));\n`;
         }
-        fns.push(`/** @type {Rule} */ function ${fnName.get(`${name}/${mode}`)}(s, i) {\n${body}return o;\n}`);
+        fns.push(ruleDecl(fnName.get(`${name}/${mode}`)!, `${name}/${mode}`, `\n${body}return o;\n`));
     }
 
     const q = JSON.stringify;
     const fault = entryNames.map((n) => depth && nests(n));
     const reset = (j: number) => `${fault[j] ? "D = 0; " : ""}${hasRec ? "RC.length = 0; " : ""}`;
     const entryFns = entryNames.map((n, j) =>
-        `/** @param {string} s */ function e${j}(s) { ${reset(j)}const o = ${fnName.get(`${n}/v`)}(s, 0); return o === s.length${fault[j] ? ` && D <= ${maxDepth}` : ""} ? V : FAIL; }`);
+        `/** @param {string} s */ function e${j}${opts.instrument ? "$" : ""}(s) { ${reset(j)}const o = ${fnName.get(`${n}/v`)}(s, 0); return o === s.length${fault[j] ? ` && D <= ${maxDepth}` : ""} ? V : FAIL; }${
+            opts.instrument ? `\n/** @param {string} s */ function e${j}(s) { EC[${j}]++; const t0 = NOW(); const r = e${j}$(s); ET[${j}] += NOW() - t0; if (r === FAIL) EF[${j}]++; return r; }` : ""}`);
     const wrap = entryNames.map((_, j) => fault[j] || hasRec);
     const ruleFns = entryNames.flatMap((n, j) => (wrap[j]
         ? [`/** @type {Rule} */ function x${j}(s, i) { ${reset(j)}const o = ${fnName.get(`${n}/v`)}(s, i); return ${fault[j] ? `D > ${maxDepth} ? -1 : ` : ""}o; }`]
@@ -422,7 +441,14 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
         `/** @typedef {(s: string, i: number) => number} Rule */`,
         `for (const [n, k] of Object.entries(ACTION_KINDS)) { const a = A[n]; if (a == null || a.kind !== k || typeof a.fn !== "function") throw new TypeError("bbnf: rule \`" + n + "\` needs a " + k + " action"); }`,
         `for (const n of Object.keys(A)) if (!Object.prototype.hasOwnProperty.call(ACTION_KINDS, n)) throw new TypeError("bbnf: no rule \`" + n + "\` takes an action (a stale parser module?)");`,
-        ...actNames.map((n, j) => `const A${j} = A[${q(n)}].fn;`),
+        ...(opts.instrument
+            ? [`const NOW = () => globalThis.performance.now();`, `let ACT = 0, DISC = 0;`,
+                `const PC = new Float64Array(${slots.length}), PF = new Float64Array(${slots.length}), PT = new Float64Array(${slots.length}), PD = new Float64Array(${slots.length});`,
+                `const AC = new Float64Array(${actNames.length}), AT = new Float64Array(${actNames.length});`,
+                `const EC = new Float64Array(${entryNames.length}), EF = new Float64Array(${entryNames.length}), ET = new Float64Array(${entryNames.length});`,
+                `const instrumented = (f, k) => function () { AC[k]++; ACT++; const t0 = NOW(); const r = f.apply(undefined, arguments); AT[k] += NOW() - t0; return r; };`]
+            : []),
+        ...actNames.map((n, j) => (opts.instrument ? `const A${j} = instrumented(A[${q(n)}].fn, ${j});` : `const A${j} = A[${q(n)}].fn;`)),
         ...(hostNames.length > 0
             ? [...hostNames.map((n, j) => `const H${j} = H[${q(n)}]; if (typeof H${j} !== "function") throw new TypeError("bbnf: host rule \`" + ${q(n)} + "\` is not supplied");`), `const HB = { v: undefined };`]
             : []),
@@ -433,7 +459,11 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
         ...fns, ...helpers, ...entryFns, ...ruleFns,
         `return { rules: ${table(entryNames, (n, j) => (wrap[j] ? `x${j}` : fnName.get(`${n}/v`)!))}, entries: ${table(entryNames, (_, j) => `e${j}`)}, value: () => V${
             hasRec ? `, recovered: () => RC` : ""}${
-            opts.audit ? `, recognize: ${table(ruleNames, (n) => `(s, i) => { ${depth ? "D = 0; " : ""}return ${fnName.get(`${n}/r`)}(s, i); }`)}` : ""} };`,
+            opts.audit ? `, recognize: ${table(ruleNames, (n) => `(s, i) => { ${depth ? "D = 0; " : ""}return ${fnName.get(`${n}/r`)}(s, i); }`)}` : ""}${
+            opts.instrument ? `, profile: () => ({ slots: ${q(slots)}, calls: Array.from(PC), fails: Array.from(PF), time: Array.from(PT), discarded: Array.from(PD), `
+                + `actions: ${q(actNames)}, actionCalls: Array.from(AC), actionTime: Array.from(AT), `
+                + `entries: ${q(entryNames)}, entryCalls: Array.from(EC), entryFails: Array.from(EF), entryTime: Array.from(ET) }), `
+                + `resetProfile: () => { for (const a of [PC, PF, PT, PD, AC, AT, EC, EF, ET]) a.fill(0); ACT = 0; DISC = 0; }` : ""} };`,
     ].join("\n");
 
     const header = opts.header ?? "";

@@ -6,10 +6,8 @@ import { computeRefCounts, findAliases, findTransparentAlternations } from "./me
 
 export * from "./deps.js";
 export * from "./scc.js";
-export * from "./charset.js";
-export * from "./first-sets.js";
-export * from "./regex-first.js";
-export * from "./dispatch.js";
+export * from "./regex.js";
+export * from "./first.js";
 export * from "./metadata.js";
 
 /**

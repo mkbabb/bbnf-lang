@@ -10,11 +10,11 @@ import {
     computeRefCounts,
     analyzeGrammar,
     CharSet,
-    computeFirstSets,
+    analyzeFirst,
+    routes,
     findFirstSetConflicts,
-    buildDispatchTable,
-    buildPartialDispatchTable,
 } from "../src/analysis/index.js";
+import type { Routes } from "../src/analysis/index.js";
 import { rule, nonterminal, literal, alternation, regexExpr, optional } from "./helpers/ast-builders.js";
 
 // ---------------------------------------------------------------------------
@@ -88,9 +88,7 @@ describe("findFirstSetConflicts", () => {
         const ast: AST = new Map([
             rule("r", alternation([literal("a"), literal("ab"), literal("b")])),
         ]);
-        const analysis = analyzeGrammar(ast);
-        const firstNullable = computeFirstSets(ast, analysis);
-        const conflicts = findFirstSetConflicts(ast, firstNullable);
+        const conflicts = findFirstSetConflicts(ast);
 
         expect(conflicts.has("r")).toBe(true);
         const rConflicts = conflicts.get("r")!;
@@ -104,9 +102,7 @@ describe("findFirstSetConflicts", () => {
         const ast: AST = new Map([
             rule("r", alternation([literal("a"), literal("b")])),
         ]);
-        const analysis = analyzeGrammar(ast);
-        const firstNullable = computeFirstSets(ast, analysis);
-        const conflicts = findFirstSetConflicts(ast, firstNullable);
+        const conflicts = findFirstSetConflicts(ast);
 
         expect(conflicts.has("r")).toBe(false);
     });
@@ -267,100 +263,65 @@ describe("buildDepGraphs", () => {
 // Dispatch table tests
 // ---------------------------------------------------------------------------
 
-describe("buildDispatchTable", () => {
-    it("builds perfect table for disjoint literals", () => {
-        // r = "a" | "b" | "c"
-        const ast: AST = new Map([
-            rule("r", alternation([literal("a"), literal("b"), literal("c")])),
-        ]);
-        const analysis = analyzeGrammar(ast);
-        const fn = computeFirstSets(ast, analysis);
-        const alts = [literal("a"), literal("b"), literal("c")];
+/** The ordered sub-choice routed for unit `c` (`[]` = the choice fails there). */
+const routed = (r: Routes, c: number): number[] => (r.tbl[c] < 0 ? [] : r.groups[r.tbl[c]]);
+const routesOf = (alts: ReturnType<typeof literal>[]) => {
+    const ast: AST = new Map([rule("r", alternation(alts))]);
+    const { info } = analyzeFirst(ast);
+    return routes(alts.map((a) => info(a)));
+};
 
-        const dt = buildDispatchTable(alts, fn.firstSets, fn.nullable);
-        expect(dt).not.toBeNull();
-        expect(dt!.isPerfect).toBe(true);
-        expect(dt!.table[97]).toBe(0); // 'a' → 0
-        expect(dt!.table[98]).toBe(1); // 'b' → 1
-        expect(dt!.table[99]).toBe(2); // 'c' → 2
-        expect(dt!.table[100]).toBe(-1); // 'd' → -1
+describe("routes: disjoint alternatives (0.1.4's perfect dispatch)", () => {
+    it("routes each first unit to its one alternative", () => {
+        // r = "a" | "b" | "c"
+        const rt = routesOf([literal("a"), literal("b"), literal("c")]);
+        expect(rt).not.toBeNull();
+        expect(routed(rt!, 97)).toEqual([0]); // 'a' → 0
+        expect(routed(rt!, 98)).toEqual([1]); // 'b' → 1
+        expect(routed(rt!, 99)).toEqual([2]); // 'c' → 2
+        expect(routed(rt!, 100)).toEqual([]); // 'd' → none
+        expect(rt!.na).toBe(-1); // no alternative starts with a non-ASCII unit
+        expect(rt!.eof).toBe(-1); // nor succeeds at end of input
     });
 
-    it("returns null for overlapping FIRST sets", () => {
+    it("returns null for overlapping first sets that leave one route (the whole choice)", () => {
         // r = "ab" | "ac" — both start with 'a'
-        const ast: AST = new Map([
-            rule("r", alternation([literal("ab"), literal("ac")])),
-        ]);
-        const analysis = analyzeGrammar(ast);
-        const fn = computeFirstSets(ast, analysis);
-
-        const dt = buildDispatchTable([literal("ab"), literal("ac")], fn.firstSets, fn.nullable);
-        expect(dt).toBeNull();
+        expect(routesOf([literal("ab"), literal("ac")])).toBeNull();
     });
 });
 
-describe("buildPartialDispatchTable", () => {
-    it("groups colliding alternatives, dispatches disjoint ones", () => {
+describe("routes: colliding alternatives (0.1.4's partial dispatch)", () => {
+    it("groups colliding alternatives in order, routes disjoint ones alone", () => {
         // r = "ab" | "ac" | "{" | "["
-        // 'a' collides between "ab" and "ac" → same group
-        // '{' and '[' are each disjoint → own groups
-        const alts = [literal("ab"), literal("ac"), literal("{"), literal("[")];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const fn = computeFirstSets(ast, analysis);
-
-        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
-        expect(pt).not.toBeNull();
-        expect(pt!.groups.length).toBeGreaterThanOrEqual(3);
-        expect(pt!.fallbackIndices).toEqual([]);
-
-        // '{' and '[' should be in their own single-element groups.
-        const braceGroup = pt!.groups.find((g) => g.includes(2));
-        const bracketGroup = pt!.groups.find((g) => g.includes(3));
-        expect(braceGroup!.length).toBe(1);
-        expect(bracketGroup!.length).toBe(1);
-
-        // "ab" and "ac" should be in the same group.
-        const aGroup = pt!.groups.find((g) => g.includes(0));
-        expect(aGroup).toContain(1);
-
-        // Table should dispatch correctly.
-        expect(pt!.table[123]).toBeGreaterThanOrEqual(0); // '{'
-        expect(pt!.table[91]).toBeGreaterThanOrEqual(0);  // '['
-        expect(pt!.table[97]).toBeGreaterThanOrEqual(0);  // 'a'
+        const rt = routesOf([literal("ab"), literal("ac"), literal("{"), literal("[")]);
+        expect(rt).not.toBeNull();
+        expect(rt!.groups.length).toBeGreaterThanOrEqual(3);
+        expect(routed(rt!, 123)).toEqual([2]); // '{'
+        expect(routed(rt!, 91)).toEqual([3]); // '['
+        expect(routed(rt!, 97)).toEqual([0, 1]); // 'a': "ab" then "ac", in order
     });
 
     it("returns null when all alternatives collide", () => {
-        // r = "abc" | "axy" | "azz" — all start with 'a', one group
-        const alts = [literal("abc"), literal("axy"), literal("azz")];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const fn = computeFirstSets(ast, analysis);
-
-        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
-        expect(pt).toBeNull(); // One group ≤ 1 → not helpful
+        // r = "abc" | "axy" | "azz" — all start with 'a', one route
+        expect(routesOf([literal("abc"), literal("axy"), literal("azz")])).toBeNull();
     });
 
-    it("returns null for fewer than 3 alternatives", () => {
-        const alts = [literal("a"), literal("b")];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const fn = computeFirstSets(ast, analysis);
-
-        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
-        expect(pt).toBeNull();
+    it("routes two disjoint alternatives (no minimum count)", () => {
+        const rt = routesOf([literal("a"), literal("b")]);
+        expect(routed(rt!, 97)).toEqual([0]);
+        expect(routed(rt!, 98)).toEqual([1]);
     });
 
-    it("separates nullable alternatives into fallback", () => {
-        // r = "a" | "b" | c? — optional c is nullable → fallback
-        const alts = [literal("a"), literal("b"), optional(literal("c")), literal("{")];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const fn = computeFirstSets(ast, analysis);
-
-        const pt = buildPartialDispatchTable(alts, fn.firstSets, fn.nullable);
-        expect(pt).not.toBeNull();
-        expect(pt!.fallbackIndices).toContain(2); // optional is nullable
+    it("keeps a nullable alternative in its ordered place on every route", () => {
+        // r = "a" | "b" | "c"? | "{" — the optional can succeed anywhere, after "a"/"b" are tried
+        const rt = routesOf([literal("a"), literal("b"), optional(literal("c")), literal("{")]);
+        expect(rt).not.toBeNull();
+        expect(routed(rt!, 97)).toEqual([0, 2]);
+        expect(routed(rt!, 99)).toEqual([2]);
+        expect(routed(rt!, 123)).toEqual([2, 3]); // "c"? (empty) wins before "{", as the plain choice
+        expect(routed(rt!, 122)).toEqual([2]);
+        expect(rt!.groups[rt!.na]).toEqual([2]);
+        expect(rt!.groups[rt!.eof]).toEqual([2]);
     });
 });
 

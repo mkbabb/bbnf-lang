@@ -15,8 +15,8 @@ import {
 import type { ParserState } from "@mkbabb/parse-that";
 import type { Expression, Nonterminals, AST, RecoverDirective } from "./types.js";
 import { removeAllLeftRecursion } from "./optimize.js";
-import { analyzeGrammar, computeFirstSets, buildDispatchTable, buildPartialDispatchTable, dedupGroups } from "./analysis/index.js";
-import type { AnalysisCache, FirstNullable } from "./analysis/index.js";
+import { analyzeGrammar, analyzeFirst, routes, dedupGroups } from "./analysis/index.js";
+import type { AnalysisCache, FirstAnalysis } from "./analysis/index.js";
 import { BBNFToAST, BBNFToASTWithImports } from "./parse.js";
 import { loadModuleGraphSync, mergeModuleAST, mergeModuleRecovers } from "./imports.js";
 import { resolve as resolveModuleId } from "./posix-path.js";
@@ -68,7 +68,7 @@ function findSccEntryPoints(cache: AnalysisCache): Set<string> {
 export function ASTToParser(
     ast: AST,
     analysis?: AnalysisCache,
-    firstNullable?: FirstNullable,
+    first?: FirstAnalysis,
     recovers?: RecoverDirective[],
     tagAlternations = false,
     enableMemoization = false,
@@ -76,7 +76,7 @@ export function ASTToParser(
     // Compute analysis if not provided
     const cache = analysis ?? analyzeGrammar(ast);
     const { cyclicRules, topoOrder } = cache;
-    const fnData = firstNullable ?? computeFirstSets(ast, cache);
+    const firstFacts = first ?? analyzeFirst(ast);
 
     const nonterminals: Nonterminals = {};
 
@@ -380,77 +380,32 @@ export function ASTToParser(
                     parsers = parsers.map((p, i) => p.map((v: any) => ({ _branch: i, value: v })));
                 }
 
-                // Try to build a dispatch table for O(1) alternation.
-                if (parsers.length >= 2) {
-                    // Perfect dispatch: all branches have disjoint FIRST sets.
-                    const perfectDispatch = buildDispatchTable(
-                        alts,
-                        fnData.firstSets,
-                        fnData.nullable,
+                // Route the ordered choice by the unit at the cursor (the one analysis, sound
+                // on regex flags, escapes, lookarounds, non-ASCII units and end of input): each
+                // route is the ordered sub-choice of the alternatives that can start there.
+                const route = parsers.length >= 2 ? routes(alts.map((a) => firstFacts.info(a))) : null;
+                if (route) {
+                    const { tbl, na, eof: atEof } = route;
+                    const groupParsers = route.groups.map((members) =>
+                        members.length === 1 ? parsers[members[0]] : any(...members.map((i) => parsers[i])),
                     );
-
-                    if (perfectDispatch?.isPerfect) {
-                        const tbl = perfectDispatch.table;
-                        const dispatchParser = (state: ParserState<any>) => {
-                            const ch = state.src.charCodeAt(state.offset);
-                            const idx = ch < 128 ? tbl[ch] : -1;
-                            if (idx >= 0) {
-                                return parsers[idx].parser(state);
-                            }
-                            mergeErrorState(state as ParserState<unknown>);
-                            return state.err(undefined);
-                        };
-                        return new Parser(
-                            dispatchParser,
-                            createParserContext("dispatch", undefined, ...parsers),
-                        );
-                    }
-
-                    // Partial dispatch: group colliding alternatives, dispatch to groups.
-                    const partial = buildPartialDispatchTable(
-                        alts,
-                        fnData.firstSets,
-                        fnData.nullable,
+                    const dispatchParser = (state: ParserState<any>) => {
+                        const src = state.src;
+                        const offset = state.offset;
+                        let g: number;
+                        if (offset >= src.length) g = atEof;
+                        else {
+                            const c = src.charCodeAt(offset);
+                            g = c < 128 ? tbl[c] : na;
+                        }
+                        if (g >= 0) return groupParsers[g].parser(state);
+                        mergeErrorState(state as ParserState<unknown>);
+                        return state.err(undefined);
+                    };
+                    return new Parser(
+                        dispatchParser,
+                        createParserContext("dispatch", undefined, ...parsers),
                     );
-
-                    if (partial) {
-                        const tbl = partial.table;
-                        // Build group parsers: single → direct, multi → any().
-                        const groupParsers = partial.groups.map((indices) =>
-                            indices.length === 1
-                                ? parsers[indices[0]]
-                                : any(...indices.map((i) => parsers[i])),
-                        );
-                        const fallbackParser =
-                            partial.fallbackIndices.length > 0
-                                ? any(...partial.fallbackIndices.map((i) => parsers[i]))
-                                : null;
-
-                        const dispatchParser = (state: ParserState<any>) => {
-                            const ch = state.src.charCodeAt(state.offset);
-                            const groupIdx = ch < 128 ? tbl[ch] : -1;
-                            if (groupIdx >= 0) {
-                                const result = groupParsers[groupIdx].parser(state);
-                                if (!state.isError) return result;
-                                // Group failed — try nullable fallback.
-                                if (fallbackParser) {
-                                    state.isError = false;
-                                    return fallbackParser.parser(state);
-                                }
-                                return result;
-                            }
-                            // No dispatch match — try nullable fallback.
-                            if (fallbackParser) {
-                                return fallbackParser.parser(state);
-                            }
-                            mergeErrorState(state as ParserState<unknown>);
-                            return state.err(undefined);
-                        };
-                        return new Parser(
-                            dispatchParser,
-                            createParserContext("dispatch", undefined, ...parsers),
-                        );
-                    }
                 }
 
                 return any(...parsers);
@@ -550,8 +505,7 @@ export function BBNFToParser(
 
     // Re-analyze if left recursion changed the AST
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
-    const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations, optimizeGraph);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, analyzeFirst(finalAst), recovers, tagAlternations, optimizeGraph);
     return [nonterminals, finalAst] as const;
 }
 
@@ -605,7 +559,6 @@ export function BBNFToParserFromFile(
     const finalAst = optimizeGraph ? removeAllLeftRecursion(ast, analysis) : ast;
 
     const finalAnalysis = finalAst !== ast ? analyzeGrammar(finalAst) : analysis;
-    const firstNullable = computeFirstSets(finalAst, finalAnalysis);
-    const nonterminals = ASTToParser(finalAst, finalAnalysis, firstNullable, recovers, tagAlternations, optimizeGraph);
+    const nonterminals = ASTToParser(finalAst, finalAnalysis, analyzeFirst(finalAst), recovers, tagAlternations, optimizeGraph);
     return [nonterminals, finalAst] as const;
 }

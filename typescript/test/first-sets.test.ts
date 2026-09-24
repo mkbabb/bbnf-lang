@@ -1,84 +1,77 @@
 import { describe, it, expect } from "vitest";
 
 import type { AST } from "../src/types.js";
-import {
-    CharSet,
-    regexFirstChars,
-    computeFirstSets,
-    buildDispatchTable,
-    analyzeGrammar,
-} from "../src/analysis/index.js";
+import { regexFirst, analyzeFirst, routes } from "../src/analysis/index.js";
+import type { Routes } from "../src/analysis/index.js";
 import { rule, nonterminal, literal, alternation, concatenation, regexExpr, optional, epsilon } from "./helpers/ast-builders.js";
 
 // ---------------------------------------------------------------------------
-// regexFirstChars
+// regexFirst (sound: `first` is a superset, never `null`)
 // ---------------------------------------------------------------------------
 
-describe("regexFirstChars", () => {
+describe("regexFirst", () => {
     it("extracts chars from character class [abc]", () => {
-        const cs = regexFirstChars(/[abc]/);
-        expect(cs).not.toBeNull();
-        expect(cs!.has(97)).toBe(true); // a
-        expect(cs!.has(98)).toBe(true); // b
-        expect(cs!.has(99)).toBe(true); // c
-        expect(cs!.has(100)).toBe(false); // d
+        const cs = regexFirst(/[abc]/).first;
+        expect(cs.has(97)).toBe(true); // a
+        expect(cs.has(98)).toBe(true); // b
+        expect(cs.has(99)).toBe(true); // c
+        expect(cs.has(100)).toBe(false); // d
     });
 
     it("extracts chars from range [a-z]", () => {
-        const cs = regexFirstChars(/[a-z]/);
-        expect(cs).not.toBeNull();
-        expect(cs!.has(97)).toBe(true); // a
-        expect(cs!.has(122)).toBe(true); // z
-        expect(cs!.has(65)).toBe(false); // A
+        const cs = regexFirst(/[a-z]/).first;
+        expect(cs.has(97)).toBe(true); // a
+        expect(cs.has(122)).toBe(true); // z
+        expect(cs.has(65)).toBe(false); // A
     });
 
     it("handles negated class [^a]", () => {
-        const cs = regexFirstChars(/[^a]/);
-        expect(cs).not.toBeNull();
-        expect(cs!.has(97)).toBe(false); // a is excluded
-        expect(cs!.has(98)).toBe(true); // b is included
+        const cs = regexFirst(/[^a]/).first;
+        expect(cs.has(97)).toBe(false); // a is excluded
+        expect(cs.has(98)).toBe(true); // b is included
     });
 
     it("handles alternation (a|b)", () => {
-        const cs = regexFirstChars(/a|b/);
-        expect(cs).not.toBeNull();
-        expect(cs!.has(97)).toBe(true); // a
-        expect(cs!.has(98)).toBe(true); // b
-        expect(cs!.has(99)).toBe(false); // c
+        const cs = regexFirst(/a|b/).first;
+        expect(cs.has(97)).toBe(true); // a
+        expect(cs.has(98)).toBe(true); // b
+        expect(cs.has(99)).toBe(false); // c
     });
 
     it("handles escape sequences (\\d)", () => {
-        const cs = regexFirstChars(/\d/);
-        expect(cs).not.toBeNull();
-        expect(cs!.has(48)).toBe(true); // 0
-        expect(cs!.has(57)).toBe(true); // 9
-        expect(cs!.has(97)).toBe(false); // a
+        const cs = regexFirst(/\d/).first;
+        expect(cs.has(48)).toBe(true); // 0
+        expect(cs.has(57)).toBe(true); // 9
+        expect(cs.has(97)).toBe(false); // a
     });
 
-    it("returns null for complex patterns like dot (.)", () => {
-        const cs = regexFirstChars(/./);
-        expect(cs).toBeNull();
+    it("answers dot (.) soundly: every unit but the line terminators", () => {
+        const cs = regexFirst(/./).first;
+        expect(cs.has(97)).toBe(true);
+        expect(cs.has(32)).toBe(true);
+        expect(cs.has(10)).toBe(false); // \n
+        expect(cs.has(13)).toBe(false); // \r
+        expect(cs.nonAscii).toBe(true);
     });
 
     it("handles \\w escape", () => {
-        const cs = regexFirstChars(/\w/);
-        expect(cs).not.toBeNull();
-        expect(cs!.has(48)).toBe(true); // 0
-        expect(cs!.has(65)).toBe(true); // A
-        expect(cs!.has(97)).toBe(true); // a
-        expect(cs!.has(95)).toBe(true); // _
+        const cs = regexFirst(/\w/).first;
+        expect(cs.has(48)).toBe(true); // 0
+        expect(cs.has(65)).toBe(true); // A
+        expect(cs.has(97)).toBe(true); // a
+        expect(cs.has(95)).toBe(true); // _
     });
 });
 
 // ---------------------------------------------------------------------------
-// computeFirstSets
+// analyzeFirst (per-rule facts to a fixpoint)
 // ---------------------------------------------------------------------------
 
-describe("computeFirstSets", () => {
+describe("analyzeFirst", () => {
     it("literal has its first char in FIRST set", () => {
         const ast: AST = new Map([rule("r", literal("hello"))]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets } = computeFirstSets(ast, analysis);
+        const { ruleInfo } = analyzeFirst(ast);
+        const firstSets = new Map([...ruleInfo].map(([k, v]) => [k, v.first]));
         expect(firstSets.get("r")!.has(104)).toBe(true); // 'h'
     });
 
@@ -86,8 +79,8 @@ describe("computeFirstSets", () => {
         const ast: AST = new Map([
             rule("r", alternation([literal("abc"), literal("xyz")])),
         ]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets } = computeFirstSets(ast, analysis);
+        const { ruleInfo } = analyzeFirst(ast);
+        const firstSets = new Map([...ruleInfo].map(([k, v]) => [k, v.first]));
         expect(firstSets.get("r")!.has(97)).toBe(true); // 'a'
         expect(firstSets.get("r")!.has(120)).toBe(true); // 'x'
     });
@@ -96,8 +89,8 @@ describe("computeFirstSets", () => {
         const ast: AST = new Map([
             rule("r", concatenation([literal("a"), literal("b")])),
         ]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets } = computeFirstSets(ast, analysis);
+        const { ruleInfo } = analyzeFirst(ast);
+        const firstSets = new Map([...ruleInfo].map(([k, v]) => [k, v.first]));
         expect(firstSets.get("r")!.has(97)).toBe(true); // 'a'
         expect(firstSets.get("r")!.has(98)).toBe(false); // 'b' is not reachable
     });
@@ -106,8 +99,8 @@ describe("computeFirstSets", () => {
         const ast: AST = new Map([
             rule("r", concatenation([optional(literal("a")), literal("b")])),
         ]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets, nullable } = computeFirstSets(ast, analysis);
+        const { ruleInfo } = analyzeFirst(ast);
+        const firstSets = new Map([...ruleInfo].map(([k, v]) => [k, v.first]));
         expect(firstSets.get("r")!.has(97)).toBe(true); // 'a' from optional
         expect(firstSets.get("r")!.has(98)).toBe(true); // 'b' since first is nullable
     });
@@ -117,8 +110,8 @@ describe("computeFirstSets", () => {
             rule("a", nonterminal("b")),
             rule("b", literal("xyz")),
         ]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets } = computeFirstSets(ast, analysis);
+        const { ruleInfo } = analyzeFirst(ast);
+        const firstSets = new Map([...ruleInfo].map(([k, v]) => [k, v.first]));
         expect(firstSets.get("a")!.has(120)).toBe(true); // 'x' from b
     });
 
@@ -128,8 +121,8 @@ describe("computeFirstSets", () => {
             rule("a", alternation([literal("x"), nonterminal("b")])),
             rule("b", alternation([literal("y"), nonterminal("a")])),
         ]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets } = computeFirstSets(ast, analysis);
+        const { ruleInfo } = analyzeFirst(ast);
+        const firstSets = new Map([...ruleInfo].map(([k, v]) => [k, v.first]));
         // Both should have 'x' and 'y'
         expect(firstSets.get("a")!.has(120)).toBe(true); // 'x'
         expect(firstSets.get("a")!.has(121)).toBe(true); // 'y'
@@ -138,57 +131,43 @@ describe("computeFirstSets", () => {
     });
 });
 
-// ---------------------------------------------------------------------------
-// buildDispatchTable
+// routes (0.1.4's buildDispatchTable, answered soundly)
 // ---------------------------------------------------------------------------
 
-describe("buildDispatchTable", () => {
-    it("builds perfect table for disjoint alternatives", () => {
-        const alts = [literal("a"), literal("b"), literal("c")];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets, nullable } = computeFirstSets(ast, analysis);
+const routed = (r: Routes, c: number): number[] => (r.tbl[c] < 0 ? [] : r.groups[r.tbl[c]]);
+const routesOf = (alts: Parameters<typeof alternation>[0]) => {
+    const ast: AST = new Map([rule("r", alternation(alts))]);
+    const { info } = analyzeFirst(ast);
+    return routes(alts.map((a) => info(a)));
+};
 
-        const result = buildDispatchTable(alts, firstSets, nullable);
-        expect(result).not.toBeNull();
-        expect(result!.isPerfect).toBe(true);
-        expect(result!.table[97]).toBe(0); // 'a' -> branch 0
-        expect(result!.table[98]).toBe(1); // 'b' -> branch 1
-        expect(result!.table[99]).toBe(2); // 'c' -> branch 2
+describe("routes", () => {
+    it("routes disjoint alternatives one to one", () => {
+        const rt = routesOf([literal("a"), literal("b"), literal("c")]);
+        expect(rt).not.toBeNull();
+        expect(routed(rt!, 97)).toEqual([0]); // 'a' -> branch 0
+        expect(routed(rt!, 98)).toEqual([1]); // 'b' -> branch 1
+        expect(routed(rt!, 99)).toEqual([2]); // 'c' -> branch 2
     });
 
-    it("returns null for overlapping alternatives", () => {
+    it("returns null for overlapping alternatives (one route, the whole choice)", () => {
         // "ab" and "ac" both start with 'a'
-        const alts = [literal("ab"), literal("ac")];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets, nullable } = computeFirstSets(ast, analysis);
-
-        const result = buildDispatchTable(alts, firstSets, nullable);
-        expect(result).toBeNull();
+        expect(routesOf([literal("ab"), literal("ac")])).toBeNull();
     });
 
-    it("returns null when an alternative is nullable", () => {
-        const alts = [literal("a"), epsilon()];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets, nullable } = computeFirstSets(ast, analysis);
-
-        const result = buildDispatchTable(alts, firstSets, nullable);
-        expect(result).toBeNull();
+    it("keeps a nullable alternative on every route, after the ones before it", () => {
+        const rt = routesOf([literal("a"), epsilon()]);
+        expect(rt).not.toBeNull();
+        expect(routed(rt!, 97)).toEqual([0, 1]);
+        expect(routed(rt!, 98)).toEqual([1]);
+        expect(rt!.groups[rt!.eof]).toEqual([1]);
     });
 
     it("handles regex-based alternatives", () => {
         // /[0-9]/ and /[a-z]/ are disjoint
-        const alts = [regexExpr(/[0-9]/), regexExpr(/[a-z]/)];
-        const ast: AST = new Map([rule("r", alternation(alts))]);
-        const analysis = analyzeGrammar(ast);
-        const { firstSets, nullable } = computeFirstSets(ast, analysis);
-
-        const result = buildDispatchTable(alts, firstSets, nullable);
-        expect(result).not.toBeNull();
-        expect(result!.isPerfect).toBe(true);
-        expect(result!.table[48]).toBe(0); // '0' -> branch 0
-        expect(result!.table[97]).toBe(1); // 'a' -> branch 1
+        const rt = routesOf([regexExpr(/[0-9]/), regexExpr(/[a-z]/)]);
+        expect(rt).not.toBeNull();
+        expect(routed(rt!, 48)).toEqual([0]); // '0' -> branch 0
+        expect(routed(rt!, 97)).toEqual([1]); // 'a' -> branch 1
     });
 });

@@ -75,7 +75,7 @@ export type Emission = Readonly<{
 /**
  * The default back-edge nesting limit, set below the smallest engine's measured throw point with
  * margin (README "Nesting depth"). Measured 2026-09-23/24 on value.js's grammar, 13 nesting shapes,
- * a fresh main thread: V8 throws at 881–917 back-edges at the least (node 26, Chromium 148),
+ * a fresh main thread: V8 throws at 881–934 back-edges at the least (node 26, Chromium 148),
  * JavaScriptCore at 4,970–5,047 (WebKit 26.4). 256 is under 0.3 of V8's.
  */
 export const DEFAULT_MAX_DEPTH = 256;

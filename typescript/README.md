@@ -76,7 +76,7 @@ answers failure, the parse trips, and the entry answers `FAIL`. A deeply nested 
 it never throws `RangeError`. An entry that reaches no back-edge carries no counter at all.
 
 The default sits below the smallest engine's measured throw point, with margin. Measured on
-value.js's grammar, 13 nesting shapes, a fresh main thread (2026-09-23/24): V8 throws at 881–917
+value.js's grammar, 13 nesting shapes, a fresh main thread (2026-09-23/24): V8 throws at 881–934
 back-edges at the least (node 26, Chromium 148) and JavaScriptCore at 4,970–5,047 (WebKit 26.4).
 `calc(` nested 10,000 deep is refused on all three. `--max-depth 0` emits no counter.
 

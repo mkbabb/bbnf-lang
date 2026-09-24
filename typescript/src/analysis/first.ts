@@ -122,8 +122,10 @@ export type Routes = Readonly<{ tbl: Int16Array; groups: number[][]; na: number;
  * The routing of an ordered choice by its first unit; `null` when every route is the whole choice
  * (routing would buy nothing). `tbl[c]` routes ASCII unit `c`, `na` every non-ASCII unit, `eof`
  * the end of input; a group is an ascending list of alternative indices, `-1` none.
+ * `nonAscii` replaces the non-ASCII route: evidence builds only (the stock-ASCII proof in
+ * `test/stock-ascii.test.ts`); a shipping build never passes it (COHESION §0ck 1).
  */
-export function routes(infos: Info[]): Routes | null {
+export function routes(infos: Info[], nonAscii: readonly number[] | null = null): Routes | null {
     const groupKey = new Map<string, number>();
     const groups: number[][] = [];
     const groupOf = (members: number[]): number => {
@@ -135,7 +137,7 @@ export function routes(infos: Info[]): Routes | null {
     };
     const tbl = new Int16Array(128);
     for (let c = 0; c < 128; c++) tbl[c] = groupOf(infos.flatMap((x, m) => (x.nullable || x.first.ascii[c] ? [m] : [])));
-    const na = groupOf(infos.flatMap((x, m) => (x.nullable || x.first.nonAscii ? [m] : [])));
+    const na = groupOf(nonAscii !== null ? [...nonAscii] : infos.flatMap((x, m) => (x.nullable || x.first.nonAscii ? [m] : [])));
     const eof = groupOf(infos.flatMap((x, m) => (x.eofOk ? [m] : [])));
     if (groups.length === 1 && groups[0].length === infos.length) return null;
     return { tbl, groups, na, eof };

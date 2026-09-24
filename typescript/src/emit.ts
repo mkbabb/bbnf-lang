@@ -50,6 +50,13 @@ export type EmitOptions = Readonly<{
      * rule is also emitted in recognize mode (`recognize[name]`) for the mode differential.
      */
     audit?: boolean;
+    /**
+     * Evidence builds only: the alternatives a non-ASCII first unit is routed to, per ordered choice
+     * (`null` keeps the grammar's). `test/stock-ascii.test.ts` passes bbnf-lang 0.1.4's ASCII-only
+     * dispatch here to prove the one analysis differs from 0.1.4 only in the F-b-4 rows; a shipping
+     * build never sets it (COHESION §0ck 1: stock-ASCII routing is never reproduced).
+     */
+    nonAsciiRoute?: (alternatives: readonly Expression[]) => readonly number[] | null;
 }>;
 
 export type Emission = Readonly<{
@@ -67,9 +74,9 @@ export type Emission = Readonly<{
 
 /**
  * The default back-edge nesting limit, set below the smallest engine's measured throw point with
- * margin (README "Nesting depth"). Measured 2026-09-23 on value.js's grammar, 13 nesting shapes, a
- * fresh main thread: V8 throws at 913 back-edges at the least (node 26: 913; Chromium 148: 917),
- * JavaScriptCore at 4,970 (WebKit 26.4). 256 is 0.28 of V8's and parse-that's own nesting limit.
+ * margin (README "Nesting depth"). Measured 2026-09-23/24 on value.js's grammar, 13 nesting shapes,
+ * a fresh main thread: V8 throws at 881–917 back-edges at the least (node 26, Chromium 148),
+ * JavaScriptCore at 4,970–5,047 (WebKit 26.4). 256 is under 0.3 of V8's.
  */
 export const DEFAULT_MAX_DEPTH = 256;
 
@@ -290,7 +297,7 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
             }
             case "alternation": {
                 const alts = e.value as Expression[];
-                const r = routes(alts.map(info));
+                const r = routes(alts.map(info), opts.nonAsciiRoute?.(alts) ?? null);
                 const L = tmp("L"), rl = tmp("rl");
                 const next = (o: string, Lx: string, last: boolean) =>
                     hasRec ? `if (${o} >= 0) break ${Lx}; ${rcBack(rl)}\n` : last ? "" : `if (${o} >= 0) break ${Lx};\n`;

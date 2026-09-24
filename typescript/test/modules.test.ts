@@ -48,7 +48,7 @@ describe("the @import loader reads only through the host's reader (F-b-1)", () =
             if (t === undefined) throw new Error(`no module ${id}`);
             return t;
         });
-        expect(registry.errors.map((e) => [e.type, e.path])).toEqual([["FileNotFound", "/g/absent.bbnf"]]);
+        expect(registry.errors.map((e) => [e.type, "path" in e ? e.path : undefined])).toEqual([["FileNotFound", "/g/absent.bbnf"]]);
         expect(() => grammarFromModules(files, "/g/main.bbnf")).toThrow(/absent\.bbnf/);
     });
 });

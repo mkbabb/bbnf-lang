@@ -263,3 +263,21 @@ export function singleClassRun(re: RegExp): { cls: RegExp; tbl: Uint8Array; min:
     const all = /^\[(?:\\s\\S|\\S\\s|\\d\\D|\\D\\d|\\w\\W|\\W\\w|\^)\]$/.test(m[1]);
     return { cls, tbl, min: m[2] === "+" ? 1 : 0, all };
 }
+
+/**
+ * The escape-run loop, unrolled (value.js X.P.W7 `.l`): `(?:\\[\s\S]|[^X\\])*` — a star over an
+ * alternation of an escape pair and a class that excludes the backslash, as a string literal's body is
+ * spelt — becomes `[^X\\]*(?:\\[\s\S][^X\\]*)*` (either order of the two arms; greedy `*` only).
+ * Same language and same preferred match in every context: the arms are disjoint (one begins with `\`,
+ * the other excludes it) and each is one iteration, so both spellings stop at the same boundaries and
+ * give them back in the same order. What changes is the engine's work: no per-iteration alternation to
+ * record for backtracking. JavaScriptCore paid ~12 ms to refuse one unclosed quote 178 KB from the end
+ * of a real sheet in the first spelling, ~1 ms in the second (value.js `bench/records/2026-09-24-x-p-w7-yarr.json`).
+ */
+export function unrollEscapeRuns(source: string): string {
+    return source.replace(/(?<!(?:^|[^\\])(?:\\\\)*\\)\(\?:(?:\\\\\[\\s\\S\]\|\[\^([^\]\\]*)\\\\\]|\[\^([^\]\\]*)\\\\\]\|\\\\\[\\s\\S\])\)\*(?![?*+{])/g,
+        (_, a: string | undefined, b: string | undefined) => {
+            const cls = `[^${a ?? b}\\\\]`;
+            return `${cls}*(?:\\\\[\\s\\S]${cls}*)*`;
+        });
+}

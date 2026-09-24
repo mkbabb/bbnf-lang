@@ -15,6 +15,8 @@
 //     not a plain leaf or reference is hoisted into its own function, so routes share its code;
 //   · a single-class run (`[^()"']+`, `\s*`) is a code-unit loop; a non-nullable regex leaf, `p?`
 //     and `p*` test the first unit before entering the regex engine or the call;
+//   · an escape run in a regex leaf (`(?:\\[\s\S]|[^"\\])*`, a string literal's body) is unrolled
+//     (`analysis/regex.ts` `unrollEscapeRuns`): same match, no per-iteration alternation to backtrack;
 //   · a reference is a DIRECT call to the referenced rule's function (no trampoline, no table);
 //   · the nesting-depth fault: a counter on the recursive back-edges alone (a DFS over the rule
 //     graph marks one edge on every cycle). Beyond `maxDepth` the call answers failure, the parse
@@ -25,7 +27,7 @@
 import type { AST, Expression, RecoverDirective } from "./types.js";
 import type { Info } from "./analysis/first.js";
 import { analyzeFirst, routes } from "./analysis/first.js";
-import { singleClassRun } from "./analysis/regex.js";
+import { singleClassRun, unrollEscapeRuns } from "./analysis/regex.js";
 import { collectDependencies } from "./analysis/deps.js";
 
 /**
@@ -277,17 +279,21 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
   for (; ${q} < s.length; ${q}++) { const ${c} = s.charCodeAt(${q}); if (${c} < 128) { if (${T}[${c}] === 0) break; } else { ${C}.lastIndex = ${q}; if (!${C}.test(s)) break; } }
   if (${q} - ${pos} < ${run.min}) ${out} = -1; else { ${keep ? `V = ${q} > ${pos} ? s.substring(${pos}, ${q}) : undefined; ` : ""}${out} = ${q}; } }\n`;
                 }
-                const R = constName(new RegExp(re.source, re.flags.replace(/[gy]/g, "") + "y"));
+                const flags = re.flags.replace(/[gy]/g, "") + "y", unrolled = unrollEscapeRuns(re.source);
+                const R = constName(new RegExp(unrolled, flags));
                 const inf = info(e);
+                // An audit build re-runs an unrolled leaf as the grammar spelt it.
+                const Ro = opts.audit && unrolled !== re.source ? constName(new RegExp(re.source, flags)) : null;
+                const same = Ro === null ? "" : `{ ${Ro}.lastIndex = ${pos}; AUDIT.check(${out}, ${Ro}.test(s) ? ${Ro}.lastIndex : -1, ${JSON.stringify(`unrolled /${re.source}/${re.flags} in ${rn}`)}, s, ${pos}); }\n`;
                 if (!inf.nullable) {
                     const c = tmp("c");
                     const audit = opts.audit ? `if (!${mayStart(c, inf)}) { ${R}.lastIndex = ${pos}; AUDIT.check(${out}, ${R}.test(s) ? ${R}.lastIndex : -1, ${JSON.stringify(`guard /${re.source}/${re.flags} in ${rn}`)}, s, ${pos}); }\n` : "";
                     return `{ const ${c} = s.charCodeAt(${pos});
   if (!${mayStart(c, inf)}) ${out} = -1;
   else { ${R}.lastIndex = ${pos}; if (${R}.test(s)) { ${out} = ${R}.lastIndex; ${keep ? `V = s.substring(${pos}, ${out}); ` : ""}} else ${out} = -1; }
-  ${audit}}\n`;
+  ${audit}${same}}\n`;
                 }
-                return `{ ${R}.lastIndex = ${pos}; if (${R}.test(s)) { ${out} = ${R}.lastIndex; ${keep ? `V = ${out} > ${pos} ? s.substring(${pos}, ${out}) : undefined; ` : ""}} else ${out} = -1; }\n`;
+                return `{ ${R}.lastIndex = ${pos}; if (${R}.test(s)) { ${out} = ${R}.lastIndex; ${keep ? `V = ${out} > ${pos} ? s.substring(${pos}, ${out}) : undefined; ` : ""}} else ${out} = -1; }\n${same}`;
             }
             case "nonterminal": {
                 const target = e.value as string;

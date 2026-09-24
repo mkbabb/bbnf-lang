@@ -19,6 +19,7 @@ import { analyzeGrammar, computeFirstSets, buildDispatchTable, buildPartialDispa
 import type { AnalysisCache, FirstNullable } from "./analysis/index.js";
 import { BBNFToAST, BBNFToASTWithImports } from "./parse.js";
 import { loadModuleGraphSync, mergeModuleAST, mergeModuleRecovers } from "./imports.js";
+import { resolve as resolveModuleId } from "./posix-path.js";
 
 function escapeRegex(s: string): string {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -562,17 +563,19 @@ export function BBNFToParser(
  * to executable parsers.
  *
  * @param entryPath - Path to the main `.bbnf` file.
- * @param readFileSync - Optional custom file reader (for testing/browser use).
+ * @param readFileSync - The host's reader: module ID → text (a node host passes
+ *   `(p) => fs.readFileSync(p, "utf8")`; no filesystem is assumed).
  * @param optimizeGraph - If true, apply left-recursion elimination.
  * @returns [nonterminals, ast] — the compiled parser map and final AST.
  */
 export function BBNFToParserFromFile(
     entryPath: string,
-    readFileSync?: (path: string) => string,
+    readFileSync: (path: string) => string,
     optimizeGraph: boolean = false,
     tagAlternations: boolean = false,
 ) {
-    const registry = loadModuleGraphSync(entryPath, readFileSync);
+    const entry = resolveModuleId(entryPath);
+    const registry = loadModuleGraphSync(entry, readFileSync);
 
     if (registry.errors.length > 0) {
         const errorMessages = registry.errors
@@ -594,8 +597,8 @@ export function BBNFToParserFromFile(
         throw new Error(`Import resolution errors:\n${errorMessages}`);
     }
 
-    const ast = mergeModuleAST(registry, entryPath);
-    const recovers = mergeModuleRecovers(registry, entryPath);
+    const ast = mergeModuleAST(registry, entry);
+    const recovers = mergeModuleRecovers(registry, entry);
     dedupGroups(ast);
 
     const analysis = analyzeGrammar(ast);

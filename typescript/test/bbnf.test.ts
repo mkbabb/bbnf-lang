@@ -12,6 +12,9 @@ import {
 import { BBNFToParser, BBNFToParserFromFile } from "../src/generate";
 import type { Nonterminals } from "../src/types";
 
+/** The node host's module reader (the loader assumes no filesystem). */
+const readFile = (p: string) => fs.readFileSync(p, "utf8");
+
 const comma = string(",").trim();
 const div = string("/").trim();
 
@@ -45,7 +48,7 @@ const CSSColorParser = (grammarPath: string) => {
         a?: number;
     }
 
-    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
+    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath, readFile);
 
     nonterminals.whitespace = whitespace;
     // comma/div use .trim() so they absorb surrounding whitespace
@@ -107,7 +110,7 @@ const CSSColorParser = (grammarPath: string) => {
 };
 
 const CSSValueUnitParser = (grammarPath: string) => {
-    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
+    const [nonterminals, ast] = BBNFToParserFromFile(grammarPath, readFile);
 
     const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
     nonterminals.number = regex(numberRegex)
@@ -301,7 +304,7 @@ describe("BBNF Parser", () => {
 
     it("should parse a CSS keyframes grammar", () => {
         const grammarPath = path.resolve("test/fixtures/grammar/css/css-keyframes.bbnf");
-        const [nonterminals, ast] = BBNFToParserFromFile(grammarPath);
+        const [nonterminals, ast] = BBNFToParserFromFile(grammarPath, readFile);
 
         nonterminals.KEYFRAMES_RULE = nonterminals.KEYFRAMES_RULE.trim();
         const numberRegex = /[-+]?(\d+)?(\.\d+)?([eE][-+]?\d+)?/;
@@ -459,7 +462,7 @@ describe("BBNF Parser", () => {
 
     it("should parse a CSS selectors grammar", () => {
         const grammarPath = path.resolve("test/fixtures/grammar/css/css-selectors.bbnf");
-        const [nonterminals] = BBNFToParserFromFile(grammarPath);
+        const [nonterminals] = BBNFToParserFromFile(grammarPath, readFile);
 
         const selectors = [
             "div",
@@ -486,7 +489,7 @@ describe("BBNF Parser", () => {
 
     it("should parse a CSS values grammar", () => {
         const grammarPath = path.resolve("test/fixtures/grammar/css/css-values.bbnf");
-        const [nonterminals] = BBNFToParserFromFile(grammarPath);
+        const [nonterminals] = BBNFToParserFromFile(grammarPath, readFile);
 
         // Override number/integer with runtime parsers
         const numberRegex = /(\d+)?(\.\d+)?([eE][-+]?\d+)?/;

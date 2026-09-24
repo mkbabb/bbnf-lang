@@ -7,8 +7,7 @@
  * and type definitions.
  */
 
-import * as path from "node:path";
-import * as fs from "node:fs";
+import * as path from "./posix-path.js";
 
 import type { Expression } from "./types.js";
 import { BBNFToASTWithImports } from "./parse.js";
@@ -33,23 +32,6 @@ function resolveImportPath(dir: string, importPath: string): string {
         return joined + ".bbnf";
     }
     return joined;
-}
-
-/**
- * Canonicalize a path. When a custom readFileSync is provided we skip
- * `fs.realpathSync` (since the file may not exist on disk) and just
- * use `path.resolve`.
- */
-function canonicalize(filePath: string, useRealFs: boolean): string {
-    if (useRealFs) {
-        try {
-            return fs.realpathSync(filePath);
-        } catch {
-            // Fall through to path.resolve if the file doesn't exist yet.
-            return path.resolve(filePath);
-        }
-    }
-    return path.resolve(filePath);
 }
 
 // ---------------------------------------------------------------------------
@@ -153,7 +135,6 @@ function transitiveModuleDeps(
 export function resolveImportsFor(
     filePath: string,
     registry: ModuleRegistry,
-    useRealFs: boolean = true,
 ): void {
     const module = registry.modules.get(filePath);
     if (!module) {
@@ -169,8 +150,7 @@ export function resolveImportsFor(
     const localNames = new Set(module.localRuleNames);
 
     for (const imp of module.imports) {
-        const importPath = resolveImportPath(dir, imp.path);
-        const canonical = canonicalize(importPath, useRealFs);
+        const canonical = resolveImportPath(dir, imp.path);
 
         const target = registry.modules.get(canonical);
         if (!target) {
@@ -275,18 +255,16 @@ export function resolveImportsFor(
  * first error.
  *
  * @param entryPath - Path to the root `.bbnf` file.
- * @param readFileSync - Optional file reader for testing / browser use.
- *   When provided, `fs.realpathSync` is skipped and paths are resolved
- *   via `path.resolve` only.
+ * @param readFileSync - The host's reader: module ID → text. The loader
+ *   assumes no filesystem; a node host passes `(p) => fs.readFileSync(p, "utf8")`,
+ *   a browser bundle a files-map lookup.
  */
 export function loadModuleGraphSync(
     entryPath: string,
-    readFileSync?: (path: string) => string,
+    readFileSync: (path: string) => string,
 ): ModuleRegistry {
-    const useRealFs = !readFileSync;
-    const reader = readFileSync ?? ((p: string) => fs.readFileSync(p, "utf-8"));
-
-    const entry = canonicalize(path.resolve(entryPath), useRealFs);
+    const reader = readFileSync;
+    const entry = path.resolve(entryPath);
 
     const registry: ModuleRegistry = {
         modules: new Map(),
@@ -296,7 +274,7 @@ export function loadModuleGraphSync(
 
     const visited = new Set<string>();
 
-    loadRecursiveSync(entry, "<entry>", registry, visited, reader, useRealFs);
+    loadRecursiveSync(entry, "<entry>", registry, visited, reader);
 
     // Phase 2: resolve imports for every visited module.
     // Reverse order so leaves (no imports) are resolved first, ensuring
@@ -304,7 +282,7 @@ export function loadModuleGraphSync(
     // resolving its dependents.
     const visitOrder = [...visited].reverse();
     for (const filePath of visitOrder) {
-        resolveImportsFor(filePath, registry, useRealFs);
+        resolveImportsFor(filePath, registry);
     }
 
     return registry;
@@ -316,7 +294,6 @@ function loadRecursiveSync(
     registry: ModuleRegistry,
     visited: Set<string>,
     reader: (path: string) => string,
-    useRealFs: boolean,
 ): void {
     // Already parsed (or currently being parsed — cycle). Return harmlessly.
     if (visited.has(filePath)) {
@@ -366,9 +343,8 @@ function loadRecursiveSync(
     // Recurse on imports. Cycles find the file already in visited and return.
     const dir = path.dirname(filePath);
     for (const imp of parsed.imports) {
-        const importPath = resolveImportPath(dir, imp.path);
-        const canonical = canonicalize(importPath, useRealFs);
-        loadRecursiveSync(canonical, filePath, registry, visited, reader, useRealFs);
+        const canonical = resolveImportPath(dir, imp.path);
+        loadRecursiveSync(canonical, filePath, registry, visited, reader);
     }
 }
 
@@ -382,18 +358,15 @@ function loadRecursiveSync(
  * Same algorithm as {@link loadModuleGraphSync} but uses async file reading.
  *
  * @param entryPath - Path to the root `.bbnf` file.
- * @param readFile - Optional async file reader for testing / browser use.
+ * @param readFile - The host's async reader: module ID → text (no filesystem
+ *   is assumed).
  */
 export async function loadModuleGraph(
     entryPath: string,
-    readFile?: (path: string) => Promise<string>,
+    readFile: (path: string) => Promise<string>,
 ): Promise<ModuleRegistry> {
-    const useRealFs = !readFile;
-    const reader =
-        readFile ??
-        ((p: string) => fs.promises.readFile(p, "utf-8") as Promise<string>);
-
-    const entry = canonicalize(path.resolve(entryPath), useRealFs);
+    const reader = readFile;
+    const entry = path.resolve(entryPath);
 
     const registry: ModuleRegistry = {
         modules: new Map(),
@@ -409,13 +382,12 @@ export async function loadModuleGraph(
         registry,
         visited,
         reader,
-        useRealFs,
     );
 
     // Phase 2: resolve imports for every visited module (reverse for bottom-up).
     const visitOrder = [...visited].reverse();
     for (const filePath of visitOrder) {
-        resolveImportsFor(filePath, registry, useRealFs);
+        resolveImportsFor(filePath, registry);
     }
 
     return registry;
@@ -427,7 +399,6 @@ async function loadRecursiveAsync(
     registry: ModuleRegistry,
     visited: Set<string>,
     reader: (path: string) => Promise<string>,
-    useRealFs: boolean,
 ): Promise<void> {
     // Already parsed (or currently being parsed — cycle). Return harmlessly.
     if (visited.has(filePath)) {
@@ -476,15 +447,13 @@ async function loadRecursiveAsync(
     // Recurse on imports. Cycles find the file already in visited and return.
     const dir = path.dirname(filePath);
     for (const imp of parsed.imports) {
-        const importPath = resolveImportPath(dir, imp.path);
-        const canonical = canonicalize(importPath, useRealFs);
+        const canonical = resolveImportPath(dir, imp.path);
         await loadRecursiveAsync(
             canonical,
             filePath,
             registry,
             visited,
             reader,
-            useRealFs,
         );
     }
 }

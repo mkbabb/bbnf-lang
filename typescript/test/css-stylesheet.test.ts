@@ -10,6 +10,8 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const grammarDir = resolve(__dirname, "fixtures/grammar/css");
+/** The node host's module reader (the loader assumes no filesystem). */
+const readFile = (p: string) => readFileSync(p, "utf-8");
 const testDir = resolve(__dirname, "fixtures/grammar/tests/css");
 
 describe("CSS Stylesheet BBNF Grammar", () => {
@@ -19,7 +21,7 @@ describe("CSS Stylesheet BBNF Grammar", () => {
         // Compile the css-stylesheet.bbnf grammar with @recover directives
         if (!nonterminals) {
             const entryPath = resolve(grammarDir, "css-stylesheet.bbnf");
-            [nonterminals] = BBNFToParserFromFile(entryPath);
+            [nonterminals] = BBNFToParserFromFile(entryPath, readFile);
         }
         enableDiagnostics();
     });

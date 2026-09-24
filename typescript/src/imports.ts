@@ -5,11 +5,13 @@
  * and merge utilities ({@link mergeModuleAST}, {@link mergeModuleRecovers},
  * {@link mergeModulePretties}) for combining multi-file grammars.
  *
- * Loading and file-system operations live in `imports-loader.ts`.
+ * Loading lives in `imports-loader.ts`; it assumes no filesystem (module IDs
+ * resolve through `posix-path.ts`, and every read goes through the host's reader).
  */
 
 import type { RecoverDirective, PrettyDirective, ProductionRule } from "./types.js";
-import { fullModuleRules } from "./imports-loader.js";
+import { fullModuleRules, loadModuleGraphSync } from "./imports-loader.js";
+import { resolve as resolveModuleId } from "./posix-path.js";
 
 // Re-export loader functions so existing consumers don't break.
 export {
@@ -224,4 +226,24 @@ export function mergeModulePretties(
     }
 
     return pretties;
+}
+
+/**
+ * The merged rule table of `entry` and every module it imports, read from
+ * `files` (module ID → text): a bundler's `?raw` imports, a fetch, or a node
+ * host's files. Nothing else is assumed. Throws with every import error listed.
+ */
+export function grammarFromModules(
+    files: Readonly<Record<string, string>>,
+    entry: string,
+): import("./types.js").AST {
+    const registry = loadModuleGraphSync(entry, (id) => {
+        const text = files[id];
+        if (text === undefined) throw new Error(`no module \`${id}\``);
+        return text;
+    });
+    if (registry.errors.length > 0) {
+        throw new Error(`bbnf imports:\n${registry.errors.map(formatImportError).join("\n")}`);
+    }
+    return mergeModuleAST(registry, resolveModuleId(entry));
 }

@@ -1,0 +1,111 @@
+@import "tokens.bbnf" ;
+// SERVED MODEL: claude-opus-5-5
+//
+// stylesheet.bbnf — every text the stylesheet layer (`../stylesheet.ts` · `../rules.ts` ·
+// `../timeline.ts` · `../syntax.ts`, through `../bbnf/sheet.ts`) reads above the component value:
+// top-level lists (css-syntax-3 §5.4.8 — a delimiter inside a `()` block or a string does not
+// separate), rule lists, at-rule preludes, declarations, the `@property`/`@function`/`@scope`
+// preludes and the timeline functions. X.P.W6.x: these rules replace the hand scanners the retired
+// `grammar.ts` (`splitTopLevel`) and the stylesheet layer (the block, prelude, colon and empty-comma
+// scanners) carried.
+//
+// Every rule here yields TEXT, or tags carrying text: its leaves are the matched code units, and the
+// actions (`../bbnf/stylesheet.ts`) join them — the grammar alone decides where a run ends. `quoted`
+// and `textGroup` are this module's own leaves because `value.bbnf` gives `string` a value action.
+
+quoted     = /"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/ ;
+textGroup  = "(" , textBody , ")" ;
+textBody   = ( /[^()"']+/ | quoted | textGroup ) * ;
+
+// ── top-level lists ──────────────────────────────────────────────────────────────────
+commaRun   = ( /[^(),"']+/ | quoted | textGroup ) * ;
+commaItems = commaRun , ( "," , commaRun ) * ;
+semiRun    = ( /[^();"']+/ | quoted | textGroup ) * ;
+semiItems  = semiRun , ( ";" , semiRun ) * ;
+spaceRun   = ( /[^()\s"']+/ | quoted | textGroup ) + ;
+spaceItems = ws , ( spaceRun , ws ) * ;
+// The trailing text of a production, possibly empty (`?`: a regex leaf fails at end of input).
+restText   = /[\s\S]+/ ? ;
+
+// ── rule lists (css-syntax-3 §5.4.1) ─────────────────────────────────────────────────
+// Between rules: whitespace, a stray `;`, comments. A rule is a prelude — any text outside a `()`
+// block or a string, up to a `{` or `;` — closed by `;` or by a `{}` block whose body is read as
+// text (braces nest; strings are opaque; the body is parsed by its own reader). A sheet that does
+// not end on a rule boundary ends on exactly one of three named faults: an unclosed comment, an
+// unclosed block, or a prelude no `{`/`;` closes.
+comment      = /\/\*[\s\S]*?\*\// ;
+ruleGap      = ( /[\s;]+/ | comment ) * ;
+preludeRun   = ( /[^{;()"']+/ | quoted | textGroup ) * ;
+blockBody    = ( /[^{}"']+/ | quoted | openQuote | "{" , blockBody , "}" ) * ;
+// A string a block body never closes runs to the end of input (the block is then unclosed).
+openQuote    = /["'][\s\S]*/ ;
+semiTail     = ";" ;
+blockTail    = "{" >> blockBody << "}" ;
+// A rule never starts inside a comment: at a rule boundary `/*` opens one (css-syntax-3 §4.3.2).
+ruleBlock    = ( preludeRun , ( semiTail | blockTail ) ) - openComment ;
+openComment  = /\/\*[\s\S]*/ ;
+openBlock    = preludeRun , "{" , restText ;
+openRule     = /[\s\S]+/ ;
+ruleList     = ruleGap , ( ruleBlock , ruleGap ) * , ( openComment | openBlock | openRule ) ? ;
+
+// ── at-rule preludes (a rule's trimmed prelude) ───────────────────────────────────────
+atPrelude        = atKeyframes | atProperty | atFunction | atScope | atStartingStyle
+                 | atScrollTimeline | atViewTimeline | atOther ;
+atKeyframes      = /@[kK]eyframes /i , restText ;
+atProperty       = /@[pP]roperty /i , restText ;
+atFunction       = /@[fF]unction /i , restText ;
+atScope          = /@[sS]cope/i , restText ;
+atStartingStyle  = /@[sS]tarting-style$/i ;
+atScrollTimeline = /@[sS]croll-timeline /i , restText ;
+atViewTimeline   = /@[vV]iew-timeline /i , restText ;
+atOther          = atName , atRest ? ;
+atName           = /@[^ ]*/ ;
+atRest           = " " >> restText ;
+
+// `@property <custom-property-name>` (css-properties-values-api-1 §3).
+propertyName = /--[-_a-zA-Z][-_a-zA-Z\d]*/ ;
+// A `syntax` descriptor's text, its one leading and one trailing quote set aside.
+syntaxText   = /['"]/ ? , syntaxCore ? , /['"]/ ? ;
+syntaxCore   = /(?:(?!['"]$)[\s\S])+/ ;
+// css-properties-values-api-1 §5: `<syntax-component> [ '|' <syntax-component> ]*`, or `*`.
+syntaxPart   = /[^|]+/ ? ;
+syntaxAlts   = syntaxPart , ( "|" , syntaxPart ) * ;
+
+// `@scope (<scope-start>)? [to (<scope-end>)]?` (css-cascade-6 §2.5): each group's text.
+scopeGroup   = "(" >> textBody << ")" ;
+scopeLimit   = /[tT][oO]/ >> ws >> scopeGroup ;
+scopePrelude = ws , ( scopeGroup , ( ws >> scopeLimit ) ? , ws ) ? ;
+
+// `@function <dashed-function>( <function-parameter>#? )` (css-mixins-1 §2.1). The parameter
+// list is the text up to the prelude's last `)`; each parameter is `<custom-property-name>
+// <syntax>? [ : <default> ]?`, its colon the first outside a `()` block or a string.
+functionName   = /--[-\w]+/ ;
+functionParams = /[\s\S]*(?=\)$)/ ;
+functionHead   = /@[fF]unction\s+/i >> functionName , /\s*\(/ >> functionParams << ")" ;
+colonRun       = ( /[^():"']+/ | quoted | textGroup ) * ;
+paramDefault   = ":" >> restText ;
+functionParam  = colonRun , paramDefault ? ;
+paramName      = /--[-\w]+/ ;
+paramSyntax    = /\s+/ >> /[^\n]+/ ;
+paramHead      = paramName , paramSyntax ? ;
+
+// ── declarations (css-syntax-3 §5.4.6) ────────────────────────────────────────────────
+// `name: value !important?` — the name is the text before the first `:`.
+declName       = /[^:]+/ ;
+declValue      = /(?:(?![!][iI]mportant\s*$)[\s\S])+/i ? ;
+declImportant  = /![iI]mportant\s*$/i ;
+declaration    = declName , ":" , declValue , declImportant ? ;
+// A comma list with its separators kept, so an empty item is found where it stands.
+listComma      = "," ;
+commaSpans     = commaRun , ( listComma , commaRun ) * ;
+
+// ── timelines (scroll-animations-1 §2–§4) ─────────────────────────────────────────────
+// `scroll(…)` / `view(…)`: the arguments as space- or comma-separated runs.
+argRun         = ( /[^()\s,"']+/ | quoted | textGroup ) + ;
+timelineArgs   = /[\s,]*/ ? , ( argRun , /[\s,]*/ ? ) * ;
+scrollFn       = /[sS]croll\(/i >> timelineArgs << ")" ;
+viewFn         = /[vV]iew\(/i >> timelineArgs << ")" ;
+// The text that opens a timeline in an `animation-trigger` (a keyword, a name, or a function).
+timelineLead   = /(?:[aA]uto|[nN]one|--|[sS]croll\(|[vV]iew\()[\s\S]*/i ;
+// A timeline inset or range offset: `auto` or a length-percentage.
+timelineLength = /[aA]uto/i | /[+-]?(?:\d+\.?\d*|\.\d+)(?:%|[a-zA-Z]+)?/ ;

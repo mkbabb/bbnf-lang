@@ -309,7 +309,7 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
                     const u = unwrap(a);
                     if (u.type === "nonterminal" || u.type === "literal" || u.type === "regex") return (o: string) => gen(a, mode, pos, o, rn);
                     const h = tmp("h"), o2 = tmp("o");
-                    helpers.push(`function ${h}(s, i) { let ${o2}; ${gen(a, mode, "i", o2, rn)}return ${o2}; }`);
+                    helpers.push(`/** @type {Rule} */ function ${h}(s, i) { let ${o2}; ${gen(a, mode, "i", o2, rn)}return ${o2}; }`);
                     return (o: string) => `${o} = ${h}(s, ${pos});\n`;
                 });
                 const T = constName(r.tbl), c = tmp("c"), g = tmp("g");
@@ -353,29 +353,30 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
             actNames.push(name);
             body += kind === "map" ? `if (o >= 0) V = ${A}(V);\n` : kind === "span" ? `if (o >= 0) V = ${A}(V, i, o);\n` : `if (o >= 0) V = ${A}(s.substring(i, o));\n`;
         }
-        fns.push(`function ${fnName.get(`${name}/${mode}`)}(s, i) {\n${body}return o;\n}`);
+        fns.push(`/** @type {Rule} */ function ${fnName.get(`${name}/${mode}`)}(s, i) {\n${body}return o;\n}`);
     }
 
     const q = JSON.stringify;
     const tripped = depth ? ` && D <= ${maxDepth}` : "";
     const reset = `${depth ? "D = 0; " : ""}${hasRec ? "RC.length = 0; " : ""}`;
     const entryFns = entryNames.map((n, j) =>
-        `function e${j}(s) { ${reset}const o = ${fnName.get(`${n}/v`)}(s, 0); return o === s.length${tripped} ? V : FAIL; }`);
+        `/** @param {string} s */ function e${j}(s) { ${reset}const o = ${fnName.get(`${n}/v`)}(s, 0); return o === s.length${tripped} ? V : FAIL; }`);
     const wrap = depth || hasRec;
     const ruleFns = wrap
-        ? entryNames.map((n, j) => `function x${j}(s, i) { ${reset}const o = ${fnName.get(`${n}/v`)}(s, i); return ${depth ? `D > ${maxDepth} ? -1 : ` : ""}o; }`)
+        ? entryNames.map((n, j) => `/** @type {Rule} */ function x${j}(s, i) { ${reset}const o = ${fnName.get(`${n}/v`)}(s, i); return ${depth ? `D > ${maxDepth} ? -1 : ` : ""}o; }`)
         : [];
     const table = (names: readonly string[], f: (n: string, j: number) => string) => `{ ${names.map((n, j) => `${q(n)}: ${f(n, j)}`).join(", ")} }`;
     const body = [
         `"use strict";`,
-        `for (const n of Object.keys(ACTION_KINDS)) { const a = A[n]; if (a == null || a.kind !== ACTION_KINDS[n] || typeof a.fn !== "function") throw new TypeError("bbnf: rule \`" + n + "\` needs a " + ACTION_KINDS[n] + " action"); }`,
+        `/** @typedef {(s: string, i: number) => number} Rule */`,
+        `for (const [n, k] of Object.entries(ACTION_KINDS)) { const a = A[n]; if (a == null || a.kind !== k || typeof a.fn !== "function") throw new TypeError("bbnf: rule \`" + n + "\` needs a " + k + " action"); }`,
         `for (const n of Object.keys(A)) if (!Object.prototype.hasOwnProperty.call(ACTION_KINDS, n)) throw new TypeError("bbnf: no rule \`" + n + "\` takes an action (a stale parser module?)");`,
         ...actNames.map((n, j) => `const A${j} = A[${q(n)}].fn;`),
         ...(hostNames.length > 0
             ? [...hostNames.map((n, j) => `const H${j} = H[${q(n)}]; if (typeof H${j} !== "function") throw new TypeError("bbnf: host rule \`" + ${q(n)} + "\` is not supplied");`), `const HB = { v: undefined };`]
             : []),
         ...consts.map((src, j) => `const K${j} = ${src};`),
-        `let V;`,
+        `/** @type {any} */ let V;`,
         ...(depth ? [`let D = 0;`, `const TRIP = 1073741824;`] : []),
         ...(hasRec ? [`const RC = [];`] : []),
         ...fns, ...helpers, ...entryFns, ...ruleFns,
@@ -389,6 +390,9 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
 export const ENTRY_NAMES = Object.freeze(${q(entryNames)});
 export const ACTION_KINDS = Object.freeze(${q(actionKinds)});
 ${hostNames.length > 0 ? `export const HOST_NAMES = Object.freeze(${q(hostNames)});\n` : ""}export const FAIL = Symbol.for(${q(FAIL_KEY)});
+/**
+ * @param {Readonly<Record<string, { readonly kind: string; readonly fn: (...args: any[]) => unknown }>>} A${hostNames.length > 0 ? "\n * @param {Readonly<Record<string, (s: string, i: number, box: { v: unknown }) => number>>} H" : ""}
+ */
 export function createParser(A${hostNames.length > 0 ? ", H" : ""}) {
 ${body}
 }

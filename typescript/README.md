@@ -69,6 +69,10 @@ on any other body.
 - **Actions are pure and total.** Recognize mode skips them wherever the grammar discards a value
   (`a >> b`'s `a`, `a << b`'s `b`, `a - b`'s `b`, a `text` rule's body), and the routing may try an
   alternative that then fails. An action with an effect would see both.
+- **A refusal builds nothing it discards.** A `text` rule's action runs only once the sequence
+  around it has matched (its value is a function of its span, so it waits); a text run that a
+  failed alternative leaves to be scanned again at the same offset (`analysis/reentry.ts`) keeps its
+  last recognize answer for the retry. Actions of one sequence may therefore run in any order.
 - **The value register is not re-entrant.** A parser's functions share one register, so an action
   never calls a parse entry (of the same parser or any other), and one parser serves one parse at a
   time.

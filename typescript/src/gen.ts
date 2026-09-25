@@ -10,6 +10,8 @@ import { createHash } from "node:crypto";
 import emitSource from "./emit.ts?raw";
 import firstSource from "./analysis/first.ts?raw";
 import regexSource from "./analysis/regex.ts?raw";
+import bulkSource from "./analysis/bulk.ts?raw";
+import reentrySource from "./analysis/reentry.ts?raw";
 import { emitGrammar } from "./emit.js";
 import type { ActionKind } from "./emit.js";
 import { loadGrammar } from "./generate.js";
@@ -34,7 +36,7 @@ export type GenerateOptions = Readonly<{
 export type Generated = Readonly<{ js: string; dts: string; sha256: string }>;
 
 /** The emitter's identity: its own source and the analysis it compiles from. */
-export const EMITTER_SHA256 = sha256(`${emitSource}\u0000${firstSource}\u0000${regexSource}`);
+export const EMITTER_SHA256 = sha256([emitSource, firstSource, regexSource, bulkSource, reentrySource].join("\u0000"));
 
 function sha256(text: string): string {
     return createHash("sha256").update(text).digest("hex");

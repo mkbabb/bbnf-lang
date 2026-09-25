@@ -22,6 +22,10 @@
 //   · an escape run in a regex leaf (`(?:\\[\s\S]|[^"\\])*`, a string literal's body) is unrolled
 //     (`analysis/regex.ts` `unrollEscapeRuns`): same match, no per-iteration alternation to backtrack;
 //   · a reference is a DIRECT call to the referenced rule's function (no trampoline, no table);
+//   · a refusal builds nothing it discards and re-scans nothing it has classified (value.js `.l3`,
+//     COHESION §0dq): a sequence element a `text` rule matches is recognized, and its value (the
+//     action over the span) built only once the sequence commits; a re-entered text run
+//     (`analysis/reentry.ts`) keeps its last recognize answer for the retry at the same offset;
 //   · the nesting-depth fault: a counter on the recursive back-edges alone (a DFS over the rule
 //     graph marks one edge on every cycle). Beyond `maxDepth` the call answers failure, the parse
 //     trips, and the entry answers FAIL: a deep input is refused, never a `RangeError`.
@@ -33,6 +37,7 @@ import type { Info } from "./analysis/first.js";
 import { analyzeFirst, routes } from "./analysis/first.js";
 import { singleClassRun, unrollEscapeRuns } from "./analysis/regex.js";
 import { bulkTextRuns, textRunLeaves } from "./analysis/bulk.js";
+import { reenteredRules } from "./analysis/reentry.js";
 import { collectDependencies } from "./analysis/deps.js";
 
 /**
@@ -197,6 +202,11 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
     // With `@recover` directives, recovered spans (`RC`, flat triples rule·start·end) are rolled back
     // wherever the parse backtracks, exactly as parse-that rolls its diagnostics back.
     const hasRec = recovers.size > 0;
+    // The re-entered rules (`analysis/reentry.ts`): each keeps its last recognize answer, so a scan a
+    // failed alternative already made at an offset is read, not repeated (none with `@recover`, whose
+    // recognize runs also record spans).
+    const reentered = hasRec ? [] : reenteredRules(ast);
+    const memo = (name: string): string => `M${reentered.indexOf(name)}`;
     const rcSave = (v: string) => (hasRec ? `const ${v} = RC.length; ` : "");
     const rcBack = (v: string) => (hasRec ? `RC.length = ${v}; ` : "");
 
@@ -226,6 +236,24 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
     };
     const helpers: string[] = [];
     const actNames: string[] = [];
+    /** A rule's action binding, bound on first use (the rule's own function, or a deferred text value). */
+    const actName = (name: string): string => {
+        let j = actNames.indexOf(name);
+        if (j < 0) j = actNames.push(name) - 1;
+        return `A${j}`;
+    };
+    /**
+     * The text rule `e` references, when its value can wait for its sequence to commit: a `text`
+     * action's value is its action over the matched text, a function of the span alone, so a sequence
+     * element that such a rule matches is recognized, and its value built only once every later
+     * element has matched. A refusal then builds no value it discards (value.js X.P.W7 `.l3`).
+     */
+    const deferredText = (e: Expression): string | null => {
+        const u = unwrap(e);
+        if (u.type !== "nonterminal") return null;
+        const name = u.value as string;
+        return ast.has(name) && actionKinds[name] === "text" && !recovers.has(name) ? name : null;
+    };
     // The instrument's slots (one per emitted function) and the declaration every function goes through.
     const slots: string[] = [];
     const ruleDecl = (f: string, label: string, code: string): string => {
@@ -363,6 +391,11 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
             case "skip": {
                 const [a, b] = e.value as Expression[];
                 const t = tmp("t"), u = tmp("u"), v = tmp("v");
+                const text = keep ? deferredText(a) : null;
+                if (text !== null) {
+                    // `a` is a text rule: recognized, its value built once `b` has matched too.
+                    return `{ let ${t}; ${gen(a, "r", pos, t, rn)}if (${t} < 0) ${out} = -1; else { let ${u}; ${gen(b, "r", t, u, rn)}if (${u} < 0) ${out} = -1; else { V = ${actName(text)}(s.substring(${pos}, ${t})); ${out} = ${u}; } } }\n`;
+                }
                 return `{ let ${t}; ${gen(a, mode, pos, t, rn)}if (${t} < 0) ${out} = -1; else { ${keep ? `const ${v} = V; ` : ""}let ${u}; ${gen(b, "r", t, u, rn)}if (${u} < 0) ${out} = -1; else { ${keep ? `V = ${v}; ` : ""}${out} = ${u}; } } }\n`;
             }
             case "minus": {
@@ -376,10 +409,14 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
                 const ts = parts.map(() => tmp("t")), vs = parts.map(() => tmp("v"));
                 let code = `${L}: { ${out} = -1;\n`;
                 let at = pos;
+                const late: string[] = [];
                 parts.forEach((p, idx) => {
-                    code += `let ${ts[idx]}; ${gen(p, mode, at, ts[idx], rn)}if (${ts[idx]} < 0) break ${L}; ${keep ? `const ${vs[idx]} = V;` : ""}\n`;
+                    const text = keep && idx < parts.length - 1 ? deferredText(p) : null;
+                    code += `let ${ts[idx]}; ${gen(p, text === null ? mode : "r", at, ts[idx], rn)}if (${ts[idx]} < 0) break ${L}; ${keep && text === null ? `const ${vs[idx]} = V;` : ""}\n`;
+                    if (text !== null) late.push(`const ${vs[idx]} = ${actName(text)}(s.substring(${at}, ${ts[idx]}));`);
                     at = ts[idx];
                 });
+                if (late.length > 0) code += `${late.join(" ")}\n`; // the deferred text values, now committed
                 if (keep) code += `V = [${vs.join(", ")}];\n`; // positional (VALUE-SEMANTICS.md)
                 return code + `${out} = ${at}; }\n`;
             }
@@ -437,9 +474,18 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
             const starts = inf.nullable ? "" : `const ${c} = s.charCodeAt(i); if (${mayStart(c, inf)}) `;
             body += `if (o < 0) { ${starts}{ let ${u}; ${gen(sync, "r", "i", u, name)}if (${u} > i) { RC.push(${ruleNames.indexOf(name)}, i, ${u}); ${mode === "v" ? "V = null; " : ""}return ${u}; } } }\n`;
         }
+        if (mode === "r" && reentered.includes(name)) {
+            // A re-entered rule keeps its last recognize answer (keyed by input and offset). A run that
+            // trips the depth fault stores nothing, so a kept answer is the grammar's answer; the audit
+            // build re-runs every kept answer and checks it.
+            const M = memo(name);
+            const store = `${depth ? `if (D <= ${maxDepth}) ` : ""}{ ${M}s = s; ${M}i = i; ${M}o = o; }\n`;
+            body = opts.audit
+                ? `const h = s === ${M}s && i === ${M}i, ho = ${M}o;\n${body}if (h) AUDIT.check(ho, o, ${JSON.stringify(`kept ${name}`)}, s, i);\n${store}`
+                : `if (s === ${M}s && i === ${M}i) return ${M}o;\n${body}${store}`;
+        }
         if (kind !== undefined && mode === "v") {
-            const A = `A${actNames.length}`;
-            actNames.push(name);
+            const A = actName(name);
             const groups = kind === "groups" ? Array.from({ length: groupCount(groupsLeaf!.value as RegExp) }, (_, g) => `V[${g + 1}]`).join(", ") : "";
             body += kind === "map" ? `if (o >= 0) V = ${A}(V);\n`
                 : kind === "span" ? `if (o >= 0) V = ${A}(V, i, o);\n`
@@ -451,11 +497,19 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
 
     const q = JSON.stringify;
     const fault = entryNames.map((n) => depth && nests(n));
-    const reset = (j: number) => `${fault[j] ? "D = 0; " : ""}${hasRec ? "RC.length = 0; " : ""}`;
+    // A parse starts with no kept answers: each entry that reaches a re-entered rule clears their offsets.
+    const reach = (entry: string): Set<string> => {
+        const seen = new Set([entry]), stack = [entry];
+        while (stack.length > 0) for (const d of deps.get(stack.pop()!)!) if (!seen.has(d)) { seen.add(d); stack.push(d); }
+        return seen;
+    };
+    const cached = reentered.filter((n) => fnName.has(`${n}/r`)); // the re-entered rules recognized somewhere
+    const kept = entryNames.map((n) => { const r = reach(n); return cached.filter((m) => r.has(m)); });
+    const reset = (j: number) => `${fault[j] ? "D = 0; " : ""}${hasRec ? "RC.length = 0; " : ""}${kept[j].map((m) => `${memo(m)}i = -1; `).join("")}`;
     const entryFns = entryNames.map((n, j) =>
         `/** @param {string} s */ function e${j}${opts.instrument ? "$" : ""}(s) { ${reset(j)}const o = ${fnName.get(`${n}/v`)}(s, 0); return o === s.length${fault[j] ? ` && D <= ${maxDepth}` : ""} ? V : FAIL; }${
             opts.instrument ? `\n/** @param {string} s */ function e${j}(s) { EC[${j}]++; const t0 = NOW(); const r = e${j}$(s); ET[${j}] += NOW() - t0; if (r === FAIL) EF[${j}]++; return r; }` : ""}`);
-    const wrap = entryNames.map((_, j) => fault[j] || hasRec);
+    const wrap = entryNames.map((_, j) => fault[j] || hasRec || kept[j].length > 0);
     const ruleFns = entryNames.flatMap((n, j) => (wrap[j]
         ? [`/** @type {Rule} */ function x${j}(s, i) { ${reset(j)}const o = ${fnName.get(`${n}/v`)}(s, i); return ${fault[j] ? `D > ${maxDepth} ? -1 : ` : ""}o; }`]
         : []));
@@ -480,6 +534,7 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
         `/** @type {any} */ let V;`,
         ...(depth ? [`let D = 0;`, `const TRIP = 1073741824;`] : []),
         ...(hasRec ? [`const RC = [];`] : []),
+        ...cached.map((n) => `/** @type {string | undefined} */ let ${memo(n)}s; let ${memo(n)}i = -1, ${memo(n)}o = -1;`),
         ...fns, ...helpers, ...entryFns, ...ruleFns,
         `return { rules: ${table(entryNames, (n, j) => (wrap[j] ? `x${j}` : fnName.get(`${n}/v`)!))}, entries: ${table(entryNames, (_, j) => `e${j}`)}, value: () => V${
             hasRec ? `, recovered: () => RC` : ""}${

@@ -8,6 +8,7 @@ export * from "./deps.js";
 export * from "./scc.js";
 export * from "./regex.js";
 export * from "./bulk.js";
+export * from "./reentry.js";
 export * from "./first.js";
 export * from "./metadata.js";
 

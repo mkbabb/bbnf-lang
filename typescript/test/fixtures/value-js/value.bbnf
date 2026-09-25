@@ -1,0 +1,62 @@
+@import "tokens.bbnf" ;
+@import "math.bbnf" ;
+@import "color.bbnf" ;
+// SERVED MODEL: claude-opus-5-5
+//
+// value.bbnf — component values (css-values-4 §2, css-syntax-3 §5.4.8), keyframe selectors
+// (css-animations-1 §3.2 + scroll-animations-1 §4.2 named ranges) and <easing-function>
+// (css-easing-2 §2–§4), as `/css`'s `parseCssValue` · `parseCssValues` · `parseCssScalar` ·
+// `parseKeyframeSelector` · `parseTimingFunction` read them.
+
+// ── component values ──────────────────────────────────────────────────────────────
+// Precedence, loosest first: the comma list, the slash list, the space list.
+valueTop   = ws >> commaList << ws ;
+commaList  = slashList , ( comma >> slashList ) * ;
+slashList  = spaceList , ( slash >> spaceList ) * ;
+spaceList  = valueTerm , ( termSep >> valueTerm ) * ;
+// Juxtaposed terms are separated by whitespace, or stand directly against a `:`/`;` token.
+termSep    = /\s+|(?=[:;])|(?<=[:;])/ ;
+
+valueTerm  = colorCall | varCall | call | numeric | string | operator | identTerm | badTerm ;
+// A component no production above reads (`@` in `calc(1px @ 2px)`). It is matched only to be
+// REFUSED — its action answers `css_syntax` expecting a scalar, with the diagnostic spanning exactly
+// this run — so a malformed value names its offending component rather than the whole input.
+badTerm    = /[^\s(),\/:;"']+/ ;
+
+// var() / env(): the fallback is a `<declaration-value>?` (css-variables-1 §2), which may end in a
+// comma or be empty — `var(--a, red,)` and `var(--a,)` are valid; the trailing comma carries no item.
+varCall    = /(?:[vV]ar|[eE]nv)(?=\()/i , /\(\s*/ >> varBody << close ;
+varBody    = commaList << ( /\s*,/ ? ) ;
+
+// A colour function is a colour, never a generic call: `rgb(1)` is a malformed colour.
+colorCall  = relativeColor | rgbFn | hslFn | hwbFn | labFn | lchFn | oklabFn | oklchFn | colorFn | hex ;
+colorHead  = /(?:[rR]gba?|[hH]sla?|[hH]wb|[lL]ab|[lL]ch|[oO]klab|[oO]klch|[cC]olor)\(/i ;
+call       = ( callName - colorHead ) , /\(\s*/ >> ( commaList ? ) << close ;
+callName   = /(?:--[\w-]*|[a-zA-Z_-][\w-]*)(?=\()/ ;
+
+// `1.` is not a number (css-syntax-3 §4.3.12, PB-12): a numeric is never followed by a `.`.
+numeric    = /[+-]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?[%a-zA-Z-]*(?![\w\\.])/ ;
+operator   = /<=|>=|==|!=|[+*<>=:;]|-(?![\w-])/ ;
+identTerm  = /[-_a-zA-Z][-_a-zA-Z\d]*(?![\w(-])/ ;
+
+// A single scalar — `parseCssScalar`: a colour, a number with its unit, a string, an
+// operator token or a keyword.
+scalarTop  = ws >> scalarTerm << ws ;
+scalarTerm = colorMix | lightDark | colorCall | numeric | string | operator | identTerm ;
+
+// A whole colour — `parseCssColor`.
+colorTop   = ws >> color << ws ;
+
+// ── keyframe selectors ────────────────────────────────────────────────────────────
+keyframeSelector = ws >> ( selectorKeyword | selectorNamed | percentage ) << ws ;
+selectorKeyword  = /(?:[fF]rom|[tT]o)(?![\w-])/i ;
+selectorNamed    = /(?:[eE]ntry|[eE]xit|[cC]over|[cC]ontain)(?![\w-])/i , ( ws1 >> percentage ) ? ;
+
+// ── <easing-function> ─────────────────────────────────────────────────────────────
+timingFunction = ws >> ( cubicBezier | stepsFn | linearFn | timingKeyword ) << ws ;
+timingKeyword  = /(?:[lL]inear|[eE]ase-in-out|[eE]ase-in|[eE]ase-out|[eE]ase|[sS]tep-start|[sS]tep-end)(?![\w(-])/i ;
+cubicBezier    = /[cC]ubic-bezier\(\s*/i >> number , comma >> number , comma >> number , comma >> number << close ;
+stepsFn        = /[sS]teps\(\s*/i >> number , ( comma >> stepPosition ) ? << close ;
+stepPosition   = /(?:[jJ]ump-start|[jJ]ump-end|[jJ]ump-none|[jJ]ump-both|[sS]tart|[eE]nd)(?![\w-])/i ;
+linearFn       = /[lL]inear\(\s*/i >> linearStop , ( comma >> linearStop ) * << close ;
+linearStop     = number , ( ws1 >> percentage ) ? , ( ws1 >> percentage ) ? ;

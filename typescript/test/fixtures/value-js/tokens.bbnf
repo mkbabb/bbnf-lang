@@ -1,0 +1,39 @@
+// SERVED MODEL: claude-opus-5-5
+//
+// value.js's CSS grammar — the SOURCE OF TRUTH (X.P.W6 · the owner's ruling 2026-09-23,
+// "No custom grammar, unless it's BBNF"). These `.bbnf` modules are compiled at load by the
+// published BBNF toolchain (`@mkbabb/bbnf-lang` `BBNFToParser`) into `@mkbabb/parse-that`
+// parsers; `src/css/bbnf/` attaches the semantic actions (values, never grammar).
+//
+// The modules are concatenated in one order — tokens · math · color · value — because
+// bbnf-lang 0.1.4's `@import` loader is unusable in its published build (see `load.ts`).
+//
+// tokens.bbnf — css-syntax-3 §4 tokens, as the value and colour productions read them.
+// Keywords and function names are ASCII case-insensitive (`/…/i`); every keyword carries an
+// ident-boundary lookahead so `nonesuch` is never `none`. Each case-insensitive regex also spells
+// the FIRST letter of every alternative as a class (`/[nN]one/i`): bbnf-lang 0.1.4 builds its
+// alternation dispatch tables from a regex's `source` alone (`regexFirstChars` never reads
+// `flags`), so `/none/i` would be dispatched on `n` only and `NONE` refused before it is tried.
+
+// `?`: parse-that's regex leaf fails at end of input even when the pattern matches empty.
+ws       = /\s*/ ? ;
+ws1      = /\s+/ ;
+comma    = /\s*,\s*/ ;
+slash    = /\s*\/\s*/ ;
+close    = /\s*\)/ ;
+
+// <number> — a bare number is never the prefix of a dimension or a percentage, and never the
+// integer part of a longer number (`0` of `0.15deg`): css-syntax-3 §4.3.12 consumes digits greedily.
+number     = /[+-]?(?:\d*\.\d+|\d+(?!\.\d))(?:[eE][+-]?\d+)?(?![\w%\\])/ ;
+percentage = /[+-]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?%/ ;
+dimension  = /[+-]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?[a-zA-Z_][\w-]*/ ;
+angle      = /[+-]?(?:\d*\.\d+|\d+)(?:[eE][+-]?\d+)?(?:[dD]eg|[gG]rad|[rR]ad|[tT]urn)(?![\w-])/i ;
+
+none       = /[nN]one(?![\w-])/i ;
+ident      = /-?[a-zA-Z_][\w-]*|--[\w-]*/ ;
+dashedIdent = /--[\w-]+/ ;
+string     = /"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/ ;
+
+// An opaque balanced run — the body of `var()`/`env()` fallbacks, whose grammar is the
+// property's own and is checked only at computed-value time (css-variables-1 §3).
+balanced   = ( /[^()"']+/ | string | "(" , balanced , ")" ) * ;

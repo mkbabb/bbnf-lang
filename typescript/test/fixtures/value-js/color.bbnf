@@ -1,0 +1,77 @@
+@import "tokens.bbnf" ;
+@import "math.bbnf" ;
+// SERVED MODEL: claude-opus-5-5
+//
+// color.bbnf — CSS Color 4 (https://www.w3.org/TR/css-color-4/) and the CSS Color 5
+// functions `color-mix()` and `light-dark()` (https://www.w3.org/TR/css-color-5/).
+// Every numeric component admits a math function (css-color-4 §4, `calc()` in channels).
+// Channel scales, clamps and the `none`→missing reading are the semantic layer's
+// (`src/css/bbnf/color.ts`); every syntactic rule of the specification is here.
+
+color = colorMix | lightDark | relativeColor | rgbFn | hslFn | hwbFn | labFn | lchFn
+      | oklabFn | oklchFn | colorFn | varFn | hex | colorKeyword ;
+
+// ── components (css-color-4 §4.1) ────────────────────────────────────────────────
+component  = mathFn | percentage | number | none ;
+hueValue   = mathFn | angle | number | none ;
+alphaValue = mathFn | percentage | number | none ;
+alphaTail  = ( slash >> alphaValue ) ? ;
+
+// ── rgb() / rgba() — §5.1 modern, and <legacy-rgb-syntax> ──────────────────────
+// The legacy comma forms admit neither `none` nor a mix of numbers and percentages
+// (KFA-14; css-color-4's changelog: "Made explicit that legacy forms do not support none").
+rgbFn        = /[rR]gba?\(\s*/i >> ( rgbModern | rgbLegacyPct | rgbLegacyNum ) << close ;
+rgbModern    = component , ws >> component , ws >> component , alphaTail ;
+rgbLegacyPct = legacyPct , comma >> legacyPct , comma >> legacyPct , legacyAlpha ;
+rgbLegacyNum = legacyNum , comma >> legacyNum , comma >> legacyNum , legacyAlpha ;
+legacyPct    = mathFn | percentage ;
+legacyNum    = mathFn | number ;
+legacyHue    = mathFn | angle | number ;
+legacyAlpha  = ( comma >> ( mathFn | percentage | number ) ) ? ;
+
+// ── hsl() / hsla() — §7, and <legacy-hsl-syntax> ────────────────────────────────
+hslFn     = /[hH]sla?\(\s*/i >> ( hslModern | hslLegacy ) << close ;
+hslModern = hueValue , ws >> component , ws >> component , alphaTail ;
+hslLegacy = legacyHue , comma >> legacyPct , comma >> legacyPct , legacyAlpha ;
+
+// ── hwb() §8 · lab()/lch() §9.1–9.2 · oklab()/oklch() §9.3–9.4 — modern only ─────
+hwbFn   = /[hH]wb\(\s*/i >> hueValue , ws >> component , ws >> component , alphaTail << close ;
+labFn   = /[lL]ab\(\s*/i >> component , ws >> component , ws >> component , alphaTail << close ;
+lchFn   = /[lL]ch\(\s*/i >> component , ws >> component , ws >> hueValue , alphaTail << close ;
+oklabFn = /[oO]klab\(\s*/i >> component , ws >> component , ws >> component , alphaTail << close ;
+oklchFn = /[oO]klch\(\s*/i >> component , ws >> component , ws >> hueValue , alphaTail << close ;
+
+// ── color() — §10, the predefined spaces (display-p3-linear included) ─────────────
+colorFn    = /[cC]olor\(\s*/i >> colorSpace , ws1 >> component , ws >> component , ws >> component , alphaTail << close ;
+colorSpace = /(?:[sS]rgb-linear|[sS]rgb|[dD]isplay-p3-linear|[dD]isplay-p3|[aA]98-rgb|[pP]rophoto-rgb|[rR]ec2020|[xX]yz-d50|[xX]yz-d65|[xX]yz)(?![\w-])/i ;
+
+// ── relative colour — css-color-5 §4: `<fn>(from <color> …)` ───────────────────────
+// Parsed whole; its value depends on the origin colour's resolution, so the semantic
+// layer answers `color_context_required` (the contract value.js carries for it).
+relativeColor = relativeHead , ws1 >> color , relativeTail << close ;
+relativeHead  = /(?:[rR]gba?|[hH]sla?|[hH]wb|[lL]ab|[lL]ch|[oO]klab|[oO]klch)\(\s*from(?![\w-])/i
+              | /[cC]olor\(\s*from(?![\w-])/i ;
+relativeTail  = ( ws1 >> colorSpace ) ? , ws1 >> relativeComp , ws >> relativeComp , ws >> relativeComp ,
+                ( slash >> relativeComp ) ? ;
+relativeComp  = mathFn | percentage | angle | number | none | calcKeyword ;
+
+// ── color-mix() — css-color-5 §3 ────────────────────────────────────────────────
+// color-mix() = color-mix( <color-interpolation-method>? , [ <color> && <percentage [0,100]>? ]# )
+colorMix     = /[cC]olor-mix\(\s*/i >> ( mixMethod << comma ) ? , mixItem , ( comma >> mixItem ) * << close ;
+mixMethod    = /[iI]n(?![\w-])/i >> ws1 >> ( mixPolar | mixRect ) ;
+mixPolar     = polarSpace , ( ws1 >> hueMethod ) ? ;
+mixRect      = rectSpace ;
+polarSpace   = /(?:[hH]sl|[hH]wb|[lL]ch|[oO]klch)(?![\w-])/i ;
+rectSpace    = /(?:[sS]rgb-linear|[sS]rgb|[dD]isplay-p3-linear|[dD]isplay-p3|[aA]98-rgb|[pP]rophoto-rgb|[rR]ec2020|[lL]ab|[oO]klab|[xX]yz-d50|[xX]yz-d65|[xX]yz)(?![\w-])/i ;
+hueMethod    = /(?:[sS]horter|[lL]onger|[iI]ncreasing|[dD]ecreasing)\s+hue(?![\w-])/i ;
+mixItem      = mixLead | mixTrail ;
+mixLead      = mixPercent , ws >> color ;
+mixTrail     = color , ( ws >> mixPercent ) ? ;
+mixPercent   = mathFn | percentage ;
+
+// ── light-dark() — css-color-5 §2 ───────────────────────────────────────────────
+lightDark = /[lL]ight-dark\(\s*/i >> color , comma >> color << close ;
+
+// ── hex (§5.2) and the keyword colours (§6: named, transparent, currentcolor, system)
+hex          = /#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![\w-])/ ;
+colorKeyword = /[a-zA-Z][\w-]*(?![\w(-])/ ;

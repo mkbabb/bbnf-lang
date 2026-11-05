@@ -1,0 +1,87 @@
+{
+  "$id": "cb-b0/1",
+  "title": "CB-B0 bench record (sk-v27 LW1.CON-1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "record_key", "label", "matrix", "created_at", "repo", "host", "toolchain",
+               "build_note", "command", "harness", "conditions", "reps", "summary", "status", "status_reasons"],
+  "properties": {
+    "schema": {"enum": ["cb-b0/1"]},
+    "record_key": {"type": "string", "pattern": "^[0-9a-f]{16}-[0-9a-f]{12}-[A-Za-z0-9_.-]+-(PORTABLE|NATIVE)$"},
+    "label": {"type": "string", "pattern": "^.+$"},
+    "matrix": {"enum": ["PORTABLE", "NATIVE"]},
+    "created_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\+00:00$"},
+    "repo": {
+      "type": "object", "additionalProperties": false,
+      "required": ["commit", "tree_hash", "tree_hash_excludes", "head_tree", "dirty"],
+      "properties": {
+        "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "tree_hash": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "tree_hash_excludes": {"type": "array", "items": {"enum": ["docs/benchmarks/records"]}, "minItems": 1},
+        "head_tree": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "dirty": {"type": "boolean"}
+      }
+    },
+    "host": {
+      "type": "object", "additionalProperties": false,
+      "required": ["model", "cpu", "ncpu", "perflevel0_cpus", "os", "mem_bytes"],
+      "properties": {
+        "model": {"type": "string"}, "cpu": {"type": "string"}, "ncpu": {"type": "integer", "minimum": 1},
+        "perflevel0_cpus": {"type": "integer", "minimum": 0}, "os": {"type": "string"},
+        "mem_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "toolchain": {"type": "string"},
+    "build_note": {"type": "string"},
+    "command": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "harness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["guarded_run", "bench_lock_held", "qos_requested", "quiet_load", "qos_ui_min_fraction", "harness_sha256"],
+      "properties": {
+        "guarded_run": {"type": "string"}, "bench_lock_held": {"type": "boolean"},
+        "qos_requested": {"type": "string"}, "quiet_load": {"type": "number"},
+        "qos_ui_min_fraction": {"type": "number"},
+        "harness_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "conditions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["load_before", "load_after", "therm_before", "therm_after"],
+      "properties": {
+        "load_before": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1},
+        "load_after": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 1},
+        "therm_before": {"type": "object", "required": ["raw", "warning"], "properties": {"raw": {"type": "string"}, "warning": {"type": "boolean"}}},
+        "therm_after": {"type": "object", "required": ["raw", "warning"], "properties": {"raw": {"type": "string"}, "warning": {"type": "boolean"}}}
+      }
+    },
+    "reps": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["i", "wall_ns", "exit", "user_us", "sys_us", "maxrss_bytes", "instructions", "cycles",
+                     "qos_cpu", "qos_dominant", "qos_ui_fraction", "load_before", "load_after", "metrics", "stdout_sha256"],
+        "properties": {
+          "i": {"type": "integer", "minimum": 0}, "wall_ns": {"type": "integer", "minimum": 0},
+          "exit": {"type": "integer"}, "user_us": {"type": "integer", "minimum": 0},
+          "sys_us": {"type": "integer", "minimum": 0}, "maxrss_bytes": {"type": "integer", "minimum": 0},
+          "instructions": {"type": ["integer", "null"]}, "cycles": {"type": ["integer", "null"]},
+          "qos_cpu": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+          "qos_dominant": {"enum": ["default", "maintenance", "background", "utility", "legacy", "user_initiated", "user_interactive", "unknown"]},
+          "qos_ui_fraction": {"type": "number", "minimum": 0},
+          "load_before": {"type": "number", "minimum": 0}, "load_after": {"type": "number", "minimum": 0},
+          "metrics": {"type": "object", "additionalProperties": {"type": ["number", "null"]}},
+          "stdout_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "summary": {
+      "type": "object", "required": ["wall_ms"],
+      "additionalProperties": {
+        "type": "object", "required": ["n"],
+        "properties": {"n": {"type": "integer", "minimum": 0}}
+      }
+    },
+    "status": {"enum": ["QUIET", "NOISY"]},
+    "status_reasons": {"type": "array", "items": {"type": "string"}}
+  }
+}

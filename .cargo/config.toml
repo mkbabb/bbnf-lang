@@ -52,14 +52,20 @@ rustc-wrapper = "sccache"
 # with `cargo --config 'patch.crates-io.parse_that.path="…"'`; never commit
 # a sibling path.
 #
+# pprint is pinned to 2b4d2d48, the commit this lockfile was built against
+# (FmtBuilder and the emit surface exist only from there). It is not yet on
+# a branch of the pprint remote; LW1.TOPO-3's custody push of pprint's local
+# master to sk-lineage/pprint-local makes it fetchable. Until then a clean
+# clone fails at the pprint fetch, and nowhere else.
+#
 # bbnf-regex (in parse-that) depends on csp-solver, egraph and egraph-derive,
 # which live here. This table resolves them to the local crates for the whole
 # graph, which is what keeps the bbnf-lang ↔ parse-that cycle buildable until
 # LW2.TOPO-1 moves them (ruling X-5).
 
 [patch.crates-io]
-pprint          = { git = "https://github.com/mkbabb/pprint", rev = "dbbd301728ede70e27556a6f14d3f0c483662a24" }
-pprint_derive   = { git = "https://github.com/mkbabb/pprint", rev = "dbbd301728ede70e27556a6f14d3f0c483662a24" }
+pprint          = { git = "https://github.com/mkbabb/pprint", rev = "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4" }
+pprint_derive   = { git = "https://github.com/mkbabb/pprint", rev = "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4" }
 parse_that      = { git = "https://github.com/mkbabb/parse-that", rev = "47e928acca0e73ab1a5e7e3f802ca8090ebc4722" }
 bbnf-regex      = { git = "https://github.com/mkbabb/parse-that", rev = "47e928acca0e73ab1a5e7e3f802ca8090ebc4722" }
 gorgeous        = { path = "crates/gorgeous" }

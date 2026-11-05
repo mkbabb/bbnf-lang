@@ -149,10 +149,25 @@ export function backEdges(ast: AST, recovers: readonly RecoverDirective[] = []):
     return out;
 }
 
-/** A constant as JavaScript source (typed tables, sticky regexes). */
+/**
+ * A constant as JavaScript source (typed tables, sticky regexes). The tables are packed (bbnf-lang#2):
+ * a 0/1 `Uint8Array` as hex nibbles (`KB`, 4 entries per digit, low bit first), an `Int16Array` whose
+ * entries are all in [-1, 90] as one printable character each (`KI`, code − 36, never `"` or `\\`);
+ * both decode once, at `createParser`, into the same typed array, so the lookup a rule runs is unchanged.
+ */
 function literalOf(v: unknown): string {
-    if (v instanceof Uint8Array) return `new Uint8Array([${Array.from(v).join(",")}])`;
-    if (v instanceof Int16Array) return `new Int16Array([${Array.from(v).join(",")}])`;
+    if (v instanceof Uint8Array) {
+        if (v.length % 4 === 0 && v.every((x) => x === 0 || x === 1)) {
+            let h = "";
+            for (let c = 0; c < v.length; c += 4) h += (v[c] | (v[c + 1] << 1) | (v[c + 2] << 2) | (v[c + 3] << 3)).toString(16);
+            return `KB(${JSON.stringify(h)})`;
+        }
+        return `new Uint8Array([${Array.from(v).join(",")}])`;
+    }
+    if (v instanceof Int16Array) {
+        if (v.every((x) => x >= -1 && x <= 90 && x !== 56)) return `KI(${JSON.stringify(String.fromCharCode(...Array.from(v, (x) => x + 36)))})`;
+        return `new Int16Array([${Array.from(v).join(",")}])`;
+    }
     if (v instanceof RegExp) return `new RegExp(${JSON.stringify(v.source)}, ${JSON.stringify(v.flags)})`;
     throw new Error(`emit: unserializable constant ${String(v)}`);
 }
@@ -458,6 +473,7 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
     for (const name of ruleNames) ruleFn(name, "v");
     if (opts.audit) for (const name of ruleNames) ruleFn(name, "r");
     const fns: string[] = [];
+    const textValue = new Map<string, number>(); // a text rule's value function → its index in `fns`
     while (queue.length > 0) {
         const [name, mode] = queue.shift()!;
         const kind = actionKinds[name];
@@ -492,7 +508,17 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
                     : kind === "groups" ? `if (o >= 0) V = ${A}(${groups});\n`
                         : `if (o >= 0) V = ${A}(s.substring(i, o));\n`;
         }
+        if (kind === "text" && mode === "v" && sync === undefined && !hasRec) textValue.set(name, fns.length);
         fns.push(ruleDecl(fnName.get(`${name}/${mode}`)!, `${name}/${mode}`, `\n${body}return o;\n`));
+    }
+    // A text rule's value body is its recognize body (`bodyMode`), so where the grammar also needs the
+    // recognize function, the value function calls it instead of repeating it (bbnf-lang#2): one copy
+    // of the scan, the same end, the action over the same span. A kept re-entered answer is keyed by
+    // input and offset, so reading it here answers what the scan would.
+    for (const [name, j] of textValue) {
+        const r = fnName.get(`${name}/r`);
+        if (r === undefined) continue;
+        fns[j] = ruleDecl(fnName.get(`${name}/v`)!, `${name}/v`, `\nconst o = ${r}(s, i);\nif (o >= 0) V = ${actName(name)}(s.substring(i, o));\nreturn o;\n`);
     }
 
     const q = JSON.stringify;
@@ -526,10 +552,17 @@ export function emitGrammar(ast: AST, opts: EmitOptions = {}): Emission {
                 `const EC = new Float64Array(${entryNames.length}), EF = new Float64Array(${entryNames.length}), ET = new Float64Array(${entryNames.length});`,
                 `const instrumented = (f, k) => function () { AC[k]++; ACT++; const t0 = NOW(); const r = f.apply(undefined, arguments); AT[k] += NOW() - t0; return r; };`]
             : []),
-        ...actNames.map((n, j) => (opts.instrument ? `const A${j} = instrumented(A[${q(n)}].fn, ${j});` : `const A${j} = A[${q(n)}].fn;`)),
+        // Names interned (bbnf-lang#2): each binding reads its action by its index in ACTION_KINDS.
+        ...(opts.instrument
+            ? actNames.map((n, j) => `const A${j} = instrumented(A[${q(n)}].fn, ${j});`)
+            : actNames.length > 0
+                ? [`const AK = Object.keys(ACTION_KINDS);`, `const [${actNames.map((_, j) => `A${j}`).join(", ")}] = [${actNames.map((n) => { const k = Object.keys(actionKinds).indexOf(n); if (k < 0) throw new Error(`emit: action binding for \`${n}\` has no kind`); return k; }).join(",")}].map((j) => A[AK[j]].fn);`]
+                : []),
         ...(hostNames.length > 0
             ? [...hostNames.map((n, j) => `const H${j} = H[${q(n)}]; if (typeof H${j} !== "function") throw new TypeError("bbnf: host rule \`" + ${q(n)} + "\` is not supplied");`), `const HB = { v: undefined };`]
             : []),
+        ...(consts.some((src) => src.startsWith("KB(")) ? [`/** @param {string} h */ const KB = (h) => { const t = new Uint8Array(h.length * 4); for (let c = 0; c < t.length; c++) t[c] = (parseInt(h[c >> 2], 16) >> (c & 3)) & 1; return t; };`] : []),
+        ...(consts.some((src) => src.startsWith("KI(")) ? [`/** @param {string} h */ const KI = (h) => { const t = new Int16Array(h.length); for (let c = 0; c < t.length; c++) t[c] = h.charCodeAt(c) - 36; return t; };`] : []),
         ...consts.map((src, j) => `const K${j} = ${src};`),
         `/** @type {any} */ let V;`,
         ...(depth ? [`let D = 0;`, `const TRIP = 1073741824;`] : []),

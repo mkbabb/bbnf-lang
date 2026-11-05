@@ -1,0 +1,8 @@
+# consumer heads read 2026-11-05 after `git fetch origin`; ref = origin default branch
+repo	path	ref	sha
+value.js	~/Programming/value.js	origin/master	12fe04a75674e983eb8609d7bf24e803ea895c7e
+keyframes.js	~/Programming/keyframes.js	origin/master	fdb5987f1454fc481b66240c2f75c9fe4897ea64
+fourier-analysis	~/Programming/fourier-analysis	origin/master	09f1adb72501dd4cd09ba9ad4d1870bffd81dbf6
+glass-ui	~/Programming/glass-ui	origin/master	5994e896695b15260b66b0fdb0e613a6ec80316c
+daraksha	~/Programming/daraksha	origin/master	50350a1d041ffb7e9963e2a1ba228b4c32713853
+sci-report	~/Programming/sci-report	origin/master	bbcbd503da4827da188afcad4525adc58b01d036

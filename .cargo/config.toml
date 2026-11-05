@@ -41,15 +41,33 @@
 [build]
 rustc-wrapper = "sccache"
 
-# ── Path patches ─────────────────────────────────────────────────────────────
-# Sibling-repo path resolution for bbnf-lang. Mirror these in any repo that
-# depends on path-patched members (parse-that, pprint).
+# ── Patches ──────────────────────────────────────────────────────────────────
+# CB-1a (sk-v27 LW1.COMP-4): the build is hermetic. Sibling repos enter as
+# `git` + `rev` edges pinned to commits on their remotes, so a clean clone
+# builds with no sibling checkout and no path that leaves this repository.
+# Moving a pin is one commit that edits a `rev` here and the lockfile.
+#
+# To build against a local sibling checkout while developing across repos,
+# override the edge outside the repository, e.g. in ~/.cargo/config.toml or
+# with `cargo --config 'patch.crates-io.parse_that.path="…"'`; never commit
+# a sibling path.
+#
+# pprint is pinned to 2b4d2d48, the commit this lockfile was built against
+# (FmtBuilder and the emit surface exist only from there). It is not yet on
+# a branch of the pprint remote; LW1.TOPO-3's custody push of pprint's local
+# master to sk-lineage/pprint-local makes it fetchable. Until then a clean
+# clone fails at the pprint fetch, and nowhere else.
+#
+# bbnf-regex (in parse-that) depends on csp-solver, egraph and egraph-derive,
+# which live here. This table resolves them to the local crates for the whole
+# graph, which is what keeps the bbnf-lang ↔ parse-that cycle buildable until
+# LW2.TOPO-1 moves them (ruling X-5).
 
 [patch.crates-io]
-pprint          = { path = "../pprint/rust" }
-pprint_derive   = { path = "../pprint/rust/derive" }
-parse_that      = { path = "../parse-that/rust/parse_that" }
-bbnf-regex      = { path = "../parse-that/rust/regex" }
+pprint          = { git = "https://github.com/mkbabb/pprint", rev = "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4" }
+pprint_derive   = { git = "https://github.com/mkbabb/pprint", rev = "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4" }
+parse_that      = { git = "https://github.com/mkbabb/parse-that", rev = "47e928acca0e73ab1a5e7e3f802ca8090ebc4722" }
+bbnf-regex      = { git = "https://github.com/mkbabb/parse-that", rev = "47e928acca0e73ab1a5e7e3f802ca8090ebc4722" }
 gorgeous        = { path = "crates/gorgeous" }
 bbnf            = { path = "crates/core" }
 bbnf-ir         = { path = "crates/ir" }

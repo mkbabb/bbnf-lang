@@ -16,17 +16,9 @@ quote = "1"
 proptest = "1"
 divan = "0.1"
 
+[target.'cfg(unix)'.dev-dependencies]
+libc = "0.2"
+
 [[bench]]
 name = "stage1_throughput"
 harness = false
-
-[features]
-default = []
-# Opt-in to AVX-512 VBMI2 codegen. Off by default because most CI hosts
-# don't have AVX-512; toggle when running on Sapphire Rapids / Zen 4 /
-# similar. The compile-time `#[cfg(target_feature = "avx512vbmi2")]`
-# on `src/avx512.rs` still gates the body, so enabling this feature
-# without the matching `RUSTFLAGS="-C target-feature=+avx512vbmi2"`
-# is a no-op (the module body remains empty per the
-# published-rationale comment in src/avx512.rs).
-avx512 = []

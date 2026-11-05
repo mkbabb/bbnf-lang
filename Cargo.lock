@@ -3240,6 +3240,7 @@ name = "simd-scan"
 version = "0.1.0"
 dependencies = [
  "divan",
+ "libc",
  "proc-macro2",
  "proptest",
  "quote",

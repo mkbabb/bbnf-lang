@@ -10,6 +10,8 @@ jobs:
   rust:
     name: Rust — preflight + workspace close (shard ${{ matrix.partition }}/${{ matrix.total }})
     runs-on: ubuntu-latest
+    env:
+      SCCACHE_GHA_ENABLED: "true"
     # ── Nextest partitioning (AZ-III.W0p.5) ────────────────────────────
     # The workspace test step runs as a 3-shard matrix via
     # `cargo nextest --partition count:N/M`; nextest deterministically
@@ -36,6 +38,11 @@ jobs:
           rustc --version
           cargo --version
       - uses: Swatinem/rust-cache@v2
+      # .cargo/config.toml mandates sccache as the rustc wrapper (no fallback);
+      # the runner must provide it, backed by the Actions cache (sk-v27 LW1
+      # lockstep gate: master run 41952596773 died at `sccache rustc -vV`).
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: install cargo-nextest
         uses: taiki-e/install-action@v2
         with:

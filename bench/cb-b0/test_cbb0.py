@@ -77,6 +77,17 @@ class TreeHash(unittest.TestCase):
             self.assertNotEqual(h0, cbb0.tree_hash(r)["tree_hash"])
 
 
+class OwnRepo(unittest.TestCase):
+    def test_the_harness_bytecode_does_not_move_the_key(self):
+        # Running these tests writes __pycache__/ beside the harness; it must be ignored, or every record
+        # taken after a test run is keyed by bytecode no clean checkout has.
+        repo = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        for rel in ("bench/cb-b0/__pycache__/cbb0.cpython-3.pyc", "bench/pins/__pycache__/pins.cpython-3.pyc",
+                    "bench/__pycache__/test_prereg.cpython-3.pyc"):
+            r = subprocess.run(["git", "-C", repo, "check-ignore", "-q", rel])
+            self.assertEqual(r.returncode, 0, f"{rel} is not ignored")
+
+
 class Manifest(unittest.TestCase):
     def test_dry_run_is_schema_valid(self):
         with ScratchRepo() as r, tempfile.TemporaryDirectory() as out:

@@ -1,0 +1,25 @@
+repo	sha	manifest	package	declared	lockfile	copies	versions	one_copy	paths	integrity
+value.js	12fe04a75674	api/package.json	@mkbabb/value.js	dependencies:^4.0.0	api/package-lock.json	1	4.0.0	GREEN	node_modules/@mkbabb/value.js@4.0.0	sha512-Z8ywb4htSxJl
+value.js	12fe04a75674	package.json	@mkbabb/value.js	(transitive)	package-lock.json	1	4.0.0	GREEN	node_modules/@mkbabb/value.js@4.0.0	sha512-Z8ywb4htSxJl
+value.js	12fe04a75674	package.json	@mkbabb/parse-that	(transitive)	package-lock.json	1	2.0.0	GREEN	node_modules/@mkbabb/parse-that@2.0.0	sha512-naiByrx1GJC1
+value.js	12fe04a75674	package.json	@mkbabb/bbnf-lang	dev:0.3.0	package-lock.json	1	0.3.0	GREEN	node_modules/@mkbabb/bbnf-lang@0.3.0	sha512-dMtZajlZCeuy
+value.js	12fe04a75674	package.json	@mkbabb/keyframes.js	dev:^6.0.0	package-lock.json	1	6.0.0	GREEN	node_modules/@mkbabb/keyframes.js@6.0.0	sha512-mpb3gSxU8UgO
+value.js	12fe04a75674	package.json	@mkbabb/glass-ui	dev:10.1.3	package-lock.json	1	10.1.3	GREEN	node_modules/@mkbabb/glass-ui@10.1.3	sha512-URKzGBjP3cwx
+keyframes.js	fdb5987f1454	package.json	@mkbabb/value.js	dependencies:4.2.0	package-lock.json	1	4.2.0	GREEN	node_modules/@mkbabb/value.js@4.2.0	sha512-9DX3LfsK6dU8
+keyframes.js	fdb5987f1454	package.json	@mkbabb/glass-ui	dev:10.1.3	package-lock.json	1	10.1.3	GREEN	node_modules/@mkbabb/glass-ui@10.1.3	sha512-URKzGBjP3cwx
+fourier-analysis	09f1adb72501	web/package.json	@mkbabb/value.js	dependencies:4.2.0	web/package-lock.json	1	4.2.0	GREEN	node_modules/@mkbabb/value.js@4.2.0	sha512-9DX3LfsK6dU8
+fourier-analysis	09f1adb72501	web/package.json	@mkbabb/parse-that	(transitive)	web/package-lock.json	2	0.7.2 0.8.2	RED 2 versions	node_modules/@mkbabb/latex-paper/node_modules/@mkbabb/parse-that@0.7.2 node_modules/@mkbabb/parse-that@0.8.2	sha512-8rvdtnOrm0Cj sha512-0hs7OYm649Nm
+fourier-analysis	09f1adb72501	web/package.json	@mkbabb/bbnf-lang	(transitive)	web/package-lock.json	1	0.1.4	GREEN	node_modules/@mkbabb/bbnf-lang@0.1.4	sha512-26sXtJJOt3Sk
+fourier-analysis	09f1adb72501	web/package.json	@mkbabb/keyframes.js	dependencies:6.3.0	web/package-lock.json	1	6.3.0	GREEN	node_modules/@mkbabb/keyframes.js@6.3.0	sha512-5pf0UHDYGroB
+fourier-analysis	09f1adb72501	web/package.json	@mkbabb/glass-ui	dependencies:10.1.3	web/package-lock.json	1	10.1.3	GREEN	node_modules/@mkbabb/glass-ui@10.1.3	sha512-URKzGBjP3cwx
+glass-ui	5994e896695b	package.json	@mkbabb/value.js	dev:^4.0.0 peer:^4.0.0	package-lock.json	1	4.0.0	GREEN	node_modules/@mkbabb/value.js@4.0.0	sha512-Z8ywb4htSxJl
+glass-ui	5994e896695b	package.json	@mkbabb/keyframes.js	dev:^6.0.0 peer:^6.0.0	package-lock.json	1	6.0.0	GREEN	node_modules/@mkbabb/keyframes.js@6.0.0	sha512-mpb3gSxU8UgO
+daraksha	50350a1d041f	package.json	@mkbabb/value.js	dependencies:4.2.0	package-lock.json	1	4.2.0	GREEN	node_modules/@mkbabb/value.js@4.2.0	sha512-9DX3LfsK6dU8
+daraksha	50350a1d041f	package.json	@mkbabb/keyframes.js	dependencies:6.2.1	package-lock.json	1	6.2.1	GREEN	node_modules/@mkbabb/keyframes.js@6.2.1	sha512-zc2mqDveV0Hl
+daraksha	50350a1d041f	package.json	@mkbabb/glass-ui	dependencies:10.1.4	package-lock.json	1	10.1.4	GREEN	node_modules/@mkbabb/glass-ui@10.1.4	sha512-xHP/6BlmsAcv
+sci-report	bbcbd503da48	dashboards/package.json	@mkbabb/value.js	dependencies:4.0.0	(none)	0		n/a		
+sci-report	bbcbd503da48	dashboards/package.json	@mkbabb/keyframes.js	dependencies:6.0.0	(none)	0		n/a		
+sci-report	bbcbd503da48	dashboards/package.json	@mkbabb/glass-ui	dependencies:7.0.0	(none)	0		n/a		
+sci-report	bbcbd503da48	package.json	@mkbabb/value.js	(transitive)	package-lock.json	1	4.0.0	GREEN	node_modules/@mkbabb/value.js@4.0.0	sha512-Z8ywb4htSxJl
+sci-report	bbcbd503da48	package.json	@mkbabb/keyframes.js	(transitive)	package-lock.json	1	6.0.0	GREEN	node_modules/@mkbabb/keyframes.js@6.0.0	sha512-mpb3gSxU8UgO
+sci-report	bbcbd503da48	package.json	@mkbabb/glass-ui	(transitive)	package-lock.json	1	7.0.0	GREEN	node_modules/@mkbabb/glass-ui@7.0.0	sha512-iK2DaPNbnEOk

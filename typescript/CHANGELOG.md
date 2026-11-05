@@ -16,7 +16,9 @@
   differs. That is why this is a 0.x minor rather than a breaking release. The
   commit is left as it is; this note is the correction.
 - Releases are now published from CI with npm provenance on a
-  `typescript-v*.*.*` tag (`.github/workflows/release-npm.yml`).
+  `typescript-v*.*.*` tag (`.github/workflows/release-npm.yml`). `package.json`
+  now names its `repository` (`github.com/mkbabb/bbnf-lang`, directory
+  `typescript`). npm requires this to verify the provenance bundle.
 - The JSON data fixture read by `bbnf.test.ts` and the conformance suite is now
   checked in. A root `data/` ignore rule had kept it out, so a clean checkout
   could not run the suite.

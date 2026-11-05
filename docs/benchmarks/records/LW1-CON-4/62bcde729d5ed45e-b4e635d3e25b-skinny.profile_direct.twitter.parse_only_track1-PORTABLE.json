@@ -1,0 +1,397 @@
+{
+ "schema": "cb-b0/1",
+ "record_key": "62bcde729d5ed45e-b4e635d3e25b-skinny.profile_direct.twitter.parse_only_track1-PORTABLE",
+ "label": "skinny.profile_direct.twitter.parse_only_track1",
+ "matrix": "PORTABLE",
+ "created_at": "2026-11-05T17:25:25+00:00",
+ "repo": {
+  "commit": "b4e635d3e25b4581f55ab3819eb121f779cb11ec",
+  "tree_hash": "62bcde729d5ed45e53f2b33dc2aa0727c62b6788",
+  "tree_hash_excludes": [
+   "docs/benchmarks/records"
+  ],
+  "head_tree": "228c3e31aefeb87665db070fd558cc7a3a592703",
+  "dirty": true
+ },
+ "host": {
+  "model": "Mac17,7",
+  "cpu": "Apple M5 Max",
+  "ncpu": 18,
+  "perflevel0_cpus": 6,
+  "os": "Darwin 25.4.0",
+  "mem_bytes": 137438953472
+ },
+ "toolchain": "rustc 1.96.0-nightly (02c7f9bec 2026-04-10)",
+ "build_note": "cargo build --release --locked; matrix PORTABLE (NATIVE = RUSTFLAGS='-C target-cpu=native'); patches: pprint 2b4d2d4, parse-that b4f63f4 (via --config, see ~/.dev-logs/bbnf-lockstep/competition/con4/build.sh)",
+ "command": [
+  "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-competition/target/cb-b0-skinny-PORTABLE/release/profile_direct",
+  "50",
+  "twitter",
+  "parse_only_track1",
+  "3"
+ ],
+ "harness": {
+  "guarded_run": "78b5b48bdc",
+  "bench_lock_held": true,
+  "qos_requested": "user_interactive (set by the measured binary; the kernel rejects a spawn-attribute raise and exec resets thread QoS)",
+  "quiet_load": 8.0,
+  "qos_ui_min_fraction": 0.95,
+  "harness_sha256": "c355c0bc587af44b3afda362c16cb65a030a56dbccf04331952804617d797632"
+ },
+ "conditions": {
+  "load_before": [
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875
+  ],
+  "load_after": [
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875,
+   26.09326171875
+  ],
+  "therm_before": {
+   "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+   "warning": false
+  },
+  "therm_after": {
+   "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+   "warning": false
+  }
+ },
+ "reps": [
+  {
+   "wall_ns": 226795625,
+   "exit": 0,
+   "user_us": 15030,
+   "sys_us": 2640,
+   "maxrss_bytes": 2506752,
+   "instructions": 228013491,
+   "cycles": 58495195,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 413287,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 0,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.41401,
+    "mbps": 19323.218
+   },
+   "stdout_sha256": "873041f59de7a0c9d238ae835db3e0db6d073431dad523848b6ca5e691514dce"
+  },
+  {
+   "wall_ns": 19248167,
+   "exit": 0,
+   "user_us": 15044,
+   "sys_us": 1927,
+   "maxrss_bytes": 2506752,
+   "instructions": 226273426,
+   "cycles": 58628811,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 407345,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 1,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.424052,
+    "mbps": 18865.625
+   },
+   "stdout_sha256": "c9f056a445411c992a731ffc3ab26ce476f521e392db11ad792ca15517b672bb"
+  },
+  {
+   "wall_ns": 21977084,
+   "exit": 0,
+   "user_us": 16119,
+   "sys_us": 2352,
+   "maxrss_bytes": 2506752,
+   "instructions": 227420197,
+   "cycles": 60138337,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 443344,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 2,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.480259,
+    "mbps": 16657.675
+   },
+   "stdout_sha256": "cb264aa922be8fd73b7e88c507402588837596737435653efb0905011bd4e99c"
+  },
+  {
+   "wall_ns": 19267542,
+   "exit": 0,
+   "user_us": 14776,
+   "sys_us": 2055,
+   "maxrss_bytes": 2506752,
+   "instructions": 226142281,
+   "cycles": 57838525,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 399331,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 3,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.416413,
+    "mbps": 19211.713
+   },
+   "stdout_sha256": "b84bb20df58141be21f555784fc8e8ab23e8d152486434a74f58fed78f9c90ec"
+  },
+  {
+   "wall_ns": 22539042,
+   "exit": 0,
+   "user_us": 16285,
+   "sys_us": 2234,
+   "maxrss_bytes": 2506752,
+   "instructions": 227243346,
+   "cycles": 60762766,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 444479,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 4,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.490801,
+    "mbps": 16299.878
+   },
+   "stdout_sha256": "8587b28395370bfed3bbd0a983b41f21d1588a308fb3d43b4e8301341619a84c"
+  },
+  {
+   "wall_ns": 18688500,
+   "exit": 0,
+   "user_us": 14686,
+   "sys_us": 2265,
+   "maxrss_bytes": 2506752,
+   "instructions": 225803509,
+   "cycles": 57350234,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 393088,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 5,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.399241,
+    "mbps": 20038.024
+   },
+   "stdout_sha256": "8b8637a779161fcc42c63a4bd4aa516952f2a2a18cba527dd7b6da96729824fd"
+  },
+  {
+   "wall_ns": 23618167,
+   "exit": 0,
+   "user_us": 16704,
+   "sys_us": 2116,
+   "maxrss_bytes": 2506752,
+   "instructions": 226977464,
+   "cycles": 59555606,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 451704,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 6,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.547236,
+    "mbps": 14618.932
+   },
+   "stdout_sha256": "9dffac482696ee568436916024a18e0849192aad549c2ee54576a26a4645208b"
+  },
+  {
+   "wall_ns": 20969792,
+   "exit": 0,
+   "user_us": 16316,
+   "sys_us": 1892,
+   "maxrss_bytes": 2506752,
+   "instructions": 226670051,
+   "cycles": 57048248,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 437044,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 7,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.462153,
+    "mbps": 17310.278
+   },
+   "stdout_sha256": "0e4480402d9a3ed38d3e7db40ba96600b653b9c68c9bc74858bcd3ee0e462ce2"
+  },
+  {
+   "wall_ns": 18396792,
+   "exit": 0,
+   "user_us": 14388,
+   "sys_us": 2108,
+   "maxrss_bytes": 2506752,
+   "instructions": 226166219,
+   "cycles": 56277713,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 387929,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 8,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.397036,
+    "mbps": 20149.309
+   },
+   "stdout_sha256": "177925fd81180bae2533dde3ed14737f7d21f69322650cc1319ad26194216778"
+  },
+  {
+   "wall_ns": 22503792,
+   "exit": 0,
+   "user_us": 15678,
+   "sys_us": 2131,
+   "maxrss_bytes": 2506752,
+   "instructions": 226666737,
+   "cycles": 60941888,
+   "qos_cpu": {
+    "default": 0,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 427433,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 9,
+   "load_before": 26.09326171875,
+   "load_after": 26.09326171875,
+   "metrics": {
+    "ns_per_byte": 0.498075,
+    "mbps": 16061.847
+   },
+   "stdout_sha256": "6f57ab8c9b2e42dba7c9ddab79a6a05670cb0121c63c9347c21ff93011337335"
+  }
+ ],
+ "summary": {
+  "wall_ms": {
+   "n": 10,
+   "median": 21.473438,
+   "p25": 19.25301075,
+   "p75": 22.5302295,
+   "iqr": 3.2772187499999994,
+   "mad": 2.1753125000000004,
+   "min": 18.396792,
+   "max": 226.795625,
+   "rel_iqr": 0.1526173289065309
+  },
+  "ns_per_byte": {
+   "n": 10,
+   "median": 0.44310249999999995,
+   "p25": 0.41461075,
+   "p75": 0.4881655,
+   "iqr": 0.07355475,
+   "mad": 0.04050899999999999,
+   "min": 0.397036,
+   "max": 0.547236,
+   "rel_iqr": 0.16599940194424542
+  },
+  "mbps": {
+   "n": 10,
+   "median": 18087.9515,
+   "p25": 16389.327250000002,
+   "p75": 19295.34175,
+   "iqr": 2906.0144999999975,
+   "mad": 1609.1749999999993,
+   "min": 14618.932,
+   "max": 20149.309,
+   "rel_iqr": 0.16066023286274278
+  }
+ },
+ "status": "NOISY",
+ "status_reasons": [
+  "load1 >= 8 before 10/10 reps (max 26.09)",
+  "user-interactive QoS < 0.95 of CPU on 10/10 reps (dominant bucket: legacy)"
+ ]
+}

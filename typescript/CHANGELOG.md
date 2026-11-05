@@ -20,6 +20,11 @@
 - The JSON data fixture read by `bbnf.test.ts` and the conformance suite is now
   checked in. A root `data/` ignore rule had kept it out, so a clean checkout
   could not run the suite.
+- `test/size.test.ts` was pinned on macOS, and its gz pin failed on the
+  ubuntu-latest release runner (23,704 against 23,650), because zlib builds
+  differ. The raw-byte pin is exact on every platform and is unchanged
+  (112,516). The gz pin is now 23,750: the larger measured reading, rounded up
+  to 50 B.
 
 ## 0.2.0
 

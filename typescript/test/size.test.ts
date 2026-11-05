@@ -39,5 +39,7 @@ describe("emitted size (bbnf-lang#2)", () => {
 });
 
 // Measured 2026-11-04 (node zlib default level): base origin/master 2fe18f9c → 132,645 raw / 23,985 gz;
-// this emitter → 112,516 / 23,638. Pinned at the measured raw and the gz rounded up to 50 B (zlib builds differ).
-const PIN = { raw: 112516, gzip: 23650 };
+// this emitter → 112,516 raw on every platform; gz 23,638 on macOS (Node 26) and 23,704 on the
+// ubuntu-latest runner (Node 24), because the zlib builds differ. raw is the exact pin. gz is pinned
+// at the larger measured reading rounded up to 50 B, so that it holds on both platforms.
+const PIN = { raw: 112516, gzip: 23750 };

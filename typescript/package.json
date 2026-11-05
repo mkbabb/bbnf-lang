@@ -2,6 +2,11 @@
     "name": "@mkbabb/bbnf-lang",
     "version": "0.3.0",
     "description": "BBNF grammar parser and code generator",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/mkbabb/bbnf-lang.git",
+        "directory": "typescript"
+    },
     "type": "module",
     "exports": {
         ".": {
@@ -16,7 +21,7 @@
         }
     },
     "bin": {
-        "bbnf": "./dist/cli.js"
+        "bbnf": "dist/cli.js"
     },
     "typesVersions": {
         "*": {

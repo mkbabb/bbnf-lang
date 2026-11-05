@@ -27,6 +27,8 @@
 
 mod budgets;
 mod constraints;
+#[cfg(test)]
+mod csp_contract;
 mod plan;
 mod visit;
 

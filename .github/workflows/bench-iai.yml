@@ -23,9 +23,15 @@ permissions:
 jobs:
   iai-bench:
     runs-on: ubuntu-latest
+    env:
+      SCCACHE_GHA_ENABLED: "true"
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      # .cargo/config.toml mandates sccache as the rustc wrapper (no fallback).
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: install valgrind
         run: |

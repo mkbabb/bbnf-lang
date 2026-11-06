@@ -39,6 +39,25 @@ const ADDENDUM: &str = "restart/skinny/tranches/sk-v26/artifacts/W0-PUBLIC-WITNE
 const PUBLIC_CASES: &str = "restart/skinny/tranches/sk-v26/artifacts/W3-PUBLIC-WITNESS-CASES.tsv";
 const CANDIDATE_PRESEAL: &str = "restart/skinny/tranches/sk-v26/artifacts/W3-CANDIDATE-PRESEAL.tsv";
 const PACKET_README: &str = "contracts/w3-public-witnesses/README.md";
+const W3_ARTIFACT_ROOT: &str = "restart/skinny/tranches/sk-v26/artifacts/";
+const W3_FREEZE: &str = "restart/skinny/tranches/sk-v26/artifacts/W3-FREEZE.tsv";
+const W3_PREFREEZE_ACCEPTANCE: &str =
+    "restart/skinny/tranches/sk-v26/artifacts/W3-PREFREEZE-ACCEPTANCE.md";
+const W3_FORBIDDEN_SURFACE_ABSENCE: &str =
+    "restart/skinny/tranches/sk-v26/artifacts/W3-FORBIDDEN-SURFACE-ABSENCE.tsv";
+const W3_FROZEN_RECEIPT: &str = "restart/skinny/tranches/sk-v26/artifacts/W2-FROZEN-RECEIPT";
+const HELDOUT_POOL_RECEIPT: &str =
+    "restart/skinny/tranches/sk-v26/artifacts/W0-HELDOUT-POOL-RECEIPT.tsv";
+const SELECTED_INSTANCE_ROOT: &str = "contracts/w3-public-witnesses/selected-instance";
+const SELECTED_INSTANCE_MANIFEST: &str =
+    "contracts/w3-public-witnesses/selected-instance/instance.json";
+const W3_RECEIPT_REF: &str = "refs/tags/skv26-w3-frozen-receipt-v1";
+const W3_POSTFREEZE_ARTIFACTS: [&str; 4] = [
+    "restart/skinny/tranches/sk-v26/artifacts/W3-HELDOUT-SELECTION.md",
+    "restart/skinny/tranches/sk-v26/artifacts/W3-GENERALITY-DIFF.json",
+    "restart/skinny/tranches/sk-v26/artifacts/W3-REGEN.json",
+    "restart/skinny/tranches/sk-v26/artifacts/W3-REPLAY.md",
+];
 
 const ADDENDUM_SHA256: &str = "60ca85e297278643b89aa4817a5c333e8114bc3774037344d083e7080c5ecc1c";
 const PUBLIC_CASES_SHA256: &str =
@@ -718,6 +737,1217 @@ fn immutable_git_object_reader(repository: &Path) -> Command {
         .env("GIT_NO_REPLACE_OBJECTS", "1")
         .current_dir(repository);
     command
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct FrozenTreeEntry {
+    mode: String,
+    kind: String,
+    object: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct FreezeRepository {
+    commit: String,
+    tree: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct FreezeAuthority {
+    bbnf: FreezeRepository,
+    parse_that: FreezeRepository,
+}
+
+struct ZeroDiffPolicy<'a> {
+    expected_receipt_object: &'a str,
+    selected_object: &'a str,
+    expected_parse_tree: &'a str,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct FrozenReceipt {
+    basis: FreezeRepository,
+    freeze: FreezeRepository,
+    parse_that: FreezeRepository,
+    freeze_sha256: String,
+    packages: BTreeMap<String, (u64, String)>,
+    authorities: BTreeMap<String, String>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct SelectedAuthority {
+    identity: String,
+    ordinal: String,
+    manifest_object: String,
+    selection_sha256: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+struct PostfreezeAuthority {
+    receipt: FrozenReceipt,
+    receipt_commit: String,
+    freeze_commit: String,
+    selected: SelectedAuthority,
+}
+
+fn git_revision(repository: &Path, revision: &str) -> String {
+    let output = command_output(
+        immutable_git_object_reader(repository).args(["rev-parse", "--verify", revision]),
+        &format!("resolve immutable Git revision `{revision}`"),
+    );
+    std::str::from_utf8(&output.stdout)
+        .expect("Git revision identity is UTF-8")
+        .trim()
+        .to_owned()
+}
+
+fn git_object_kind(repository: &Path, revision: &str) -> String {
+    let output = command_output(
+        immutable_git_object_reader(repository).args(["cat-file", "-t", revision]),
+        &format!("read immutable Git object kind `{revision}`"),
+    );
+    std::str::from_utf8(&output.stdout)
+        .expect("Git object kind is UTF-8")
+        .trim()
+        .to_owned()
+}
+
+fn immutable_git_bytes(repository: &Path, revision: &str, path: &str) -> Vec<u8> {
+    command_output(
+        immutable_git_object_reader(repository).args(["show", &format!("{revision}:{path}")]),
+        &format!("read immutable Git object `{revision}:{path}`"),
+    )
+    .stdout
+}
+
+fn git_parents(repository: &Path, commit: &str) -> Vec<String> {
+    let output = command_output(
+        immutable_git_object_reader(repository).args(["rev-list", "--parents", "-n", "1", commit]),
+        &format!("read immutable Git parents for `{commit}`"),
+    );
+    let mut fields = std::str::from_utf8(&output.stdout)
+        .expect("Git parent row is UTF-8")
+        .split_whitespace();
+    assert_eq!(
+        fields.next(),
+        Some(commit),
+        "Git parent row starts with the requested commit"
+    );
+    fields.map(str::to_owned).collect()
+}
+
+fn assert_object_id(label: &str, value: &str) {
+    assert!(
+        value.len() == 40
+            && value
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f')),
+        "{label} is not an exact 40-hex Git object identity: `{value}`"
+    );
+}
+
+fn assert_sha256(label: &str, value: &str) {
+    assert!(
+        value.len() == 64
+            && value
+                .bytes()
+                .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f')),
+        "{label} is not an exact lowercase SHA-256: `{value}`"
+    );
+}
+
+fn parse_frozen_receipt(bytes: &[u8]) -> FrozenReceipt {
+    const STRING_KEYS: [&str; 24] = [
+        "schema",
+        "bbnf_basis_commit",
+        "bbnf_basis_tree",
+        "bbnf_freeze_commit",
+        "bbnf_freeze_tree",
+        "parse_that_commit",
+        "parse_that_tree",
+        "bbnf_version",
+        "parse_that_version",
+        "bbnf_regex_version",
+        "bbnf_package_sha256",
+        "parse_that_package_sha256",
+        "bbnf_regex_package_sha256",
+        "freeze_sha256",
+        "public_witness_addendum_sha256",
+        "candidate_preseal_sha256",
+        "heldout_pool_receipt_sha256",
+        "instance_schema_sha256",
+        "forbidden_surface_absence_sha256",
+        "prefreeze_acceptance_sha256",
+        "bbnf_toolchain_sha256",
+        "parse_that_toolchain_sha256",
+        "parse_that_abi3_sha256",
+        "generated_shape_sha256",
+    ];
+    const INTEGER_KEYS: [&str; 3] = [
+        "bbnf_package_bytes",
+        "parse_that_package_bytes",
+        "bbnf_regex_package_bytes",
+    ];
+
+    let value = strict_json_bytes(bytes, W3_FROZEN_RECEIPT)
+        .unwrap_or_else(|error| panic!("{W3_FROZEN_RECEIPT}: {error}"));
+    assert_eq!(
+        serde_json::to_vec(&value).expect("canonical frozen receipt serialization"),
+        bytes,
+        "the raw-byte selection authority uses one canonical compact JSON encoding"
+    );
+    let object = value
+        .as_object()
+        .expect("the frozen receipt must be one JSON object");
+    let expected = STRING_KEYS
+        .into_iter()
+        .chain(INTEGER_KEYS)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        object.keys().map(String::as_str).collect::<BTreeSet<_>>(),
+        expected,
+        "the frozen receipt has one closed field set"
+    );
+    let string = |key: &str| {
+        object[key]
+            .as_str()
+            .unwrap_or_else(|| panic!("{W3_FROZEN_RECEIPT}: `{key}` must be a string"))
+            .to_owned()
+    };
+    for key in INTEGER_KEYS {
+        assert!(
+            object[key].as_u64().is_some_and(|bytes| bytes > 0),
+            "{W3_FROZEN_RECEIPT}: `{key}` must be a positive byte count"
+        );
+    }
+    assert_eq!(
+        string("schema"),
+        "bbnf.skv26.w3-frozen-receipt.v1",
+        "frozen receipt schema"
+    );
+    assert_eq!(string("bbnf_version"), "0.4.0");
+    assert_eq!(string("parse_that_version"), "0.5.0");
+    assert_eq!(string("bbnf_regex_version"), "0.1.0");
+
+    let receipt = FrozenReceipt {
+        basis: FreezeRepository {
+            commit: string("bbnf_basis_commit"),
+            tree: string("bbnf_basis_tree"),
+        },
+        freeze: FreezeRepository {
+            commit: string("bbnf_freeze_commit"),
+            tree: string("bbnf_freeze_tree"),
+        },
+        parse_that: FreezeRepository {
+            commit: string("parse_that_commit"),
+            tree: string("parse_that_tree"),
+        },
+        freeze_sha256: string("freeze_sha256"),
+        packages: BTreeMap::from([
+            (
+                "bbnf".to_owned(),
+                (
+                    object["bbnf_package_bytes"]
+                        .as_u64()
+                        .expect("BBNF package byte count"),
+                    string("bbnf_package_sha256"),
+                ),
+            ),
+            (
+                "parse_that".to_owned(),
+                (
+                    object["parse_that_package_bytes"]
+                        .as_u64()
+                        .expect("parse-that package byte count"),
+                    string("parse_that_package_sha256"),
+                ),
+            ),
+            (
+                "bbnf-regex".to_owned(),
+                (
+                    object["bbnf_regex_package_bytes"]
+                        .as_u64()
+                        .expect("bbnf-regex package byte count"),
+                    string("bbnf_regex_package_sha256"),
+                ),
+            ),
+        ]),
+        authorities: [
+            ("public_witness_addendum", "public_witness_addendum_sha256"),
+            ("candidate_preseal", "candidate_preseal_sha256"),
+            ("heldout_pool_receipt", "heldout_pool_receipt_sha256"),
+            ("instance_schema", "instance_schema_sha256"),
+            (
+                "forbidden_surface_absence",
+                "forbidden_surface_absence_sha256",
+            ),
+            ("prefreeze_acceptance", "prefreeze_acceptance_sha256"),
+            ("bbnf_toolchain", "bbnf_toolchain_sha256"),
+            ("parse_that_toolchain", "parse_that_toolchain_sha256"),
+            ("parse_that_abi3", "parse_that_abi3_sha256"),
+            ("generated_shape", "generated_shape_sha256"),
+        ]
+        .into_iter()
+        .map(|(name, key)| (name.to_owned(), string(key)))
+        .collect(),
+    };
+    for (label, repository) in [
+        ("BBNF basis", &receipt.basis),
+        ("BBNF freeze", &receipt.freeze),
+        ("parse-that", &receipt.parse_that),
+    ] {
+        assert_object_id(&format!("{label} commit"), &repository.commit);
+        assert_object_id(&format!("{label} tree"), &repository.tree);
+    }
+    for key in STRING_KEYS {
+        if key.ends_with("_sha256") {
+            assert_sha256(key, &string(key));
+        }
+    }
+    receipt
+}
+
+fn git_tree_entries(repository: &Path, revision: &str) -> BTreeMap<String, FrozenTreeEntry> {
+    let output = command_output(
+        immutable_git_object_reader(repository).args([
+            "ls-tree",
+            "-r",
+            "-z",
+            "--full-tree",
+            revision,
+        ]),
+        &format!("list immutable Git tree `{revision}`"),
+    );
+    let mut entries = BTreeMap::new();
+    for row in output
+        .stdout
+        .split(|byte| *byte == 0)
+        .filter(|row| !row.is_empty())
+    {
+        let separator = row
+            .iter()
+            .position(|byte| *byte == b'\t')
+            .expect("Git tree row has a path separator");
+        let metadata = std::str::from_utf8(&row[..separator]).expect("Git tree metadata is UTF-8");
+        let fields = metadata.split_whitespace().collect::<Vec<_>>();
+        assert_eq!(fields.len(), 3, "Git tree metadata width");
+        let path = std::str::from_utf8(&row[separator + 1..]).expect("Git tree path is UTF-8");
+        assert!(
+            entries
+                .insert(
+                    path.to_owned(),
+                    FrozenTreeEntry {
+                        mode: fields[0].to_owned(),
+                        kind: fields[1].to_owned(),
+                        object: fields[2].to_owned(),
+                    },
+                )
+                .is_none(),
+            "immutable Git tree contains duplicate path `{path}`"
+        );
+    }
+    entries
+}
+
+fn changed_tree_paths(
+    basis: &BTreeMap<String, FrozenTreeEntry>,
+    current: &BTreeMap<String, FrozenTreeEntry>,
+) -> BTreeSet<String> {
+    basis
+        .keys()
+        .chain(current.keys())
+        .filter(|path| basis.get(*path) != current.get(*path))
+        .cloned()
+        .collect()
+}
+
+fn no_rename_changed_paths(repository: &Path, basis: &str, current: &str) -> BTreeSet<String> {
+    let output = command_output(
+        immutable_git_object_reader(repository).args([
+            "diff-tree",
+            "--no-commit-id",
+            "--name-only",
+            "-r",
+            "--no-renames",
+            "-z",
+            basis,
+            current,
+        ]),
+        "list postfreeze paths with rename detection disabled",
+    );
+    output
+        .stdout
+        .split(|byte| *byte == 0)
+        .filter(|path| !path.is_empty())
+        .map(|path| {
+            std::str::from_utf8(path)
+                .expect("changed Git path is UTF-8")
+                .to_owned()
+        })
+        .collect()
+}
+
+fn assert_single_added_blob(repository: &Path, parent: &str, child: &str, path: &str) {
+    assert_eq!(
+        git_parents(repository, child),
+        [parent],
+        "`{child}` must be the single-parent child of `{parent}`"
+    );
+    let before = git_tree_entries(repository, parent);
+    let after = git_tree_entries(repository, child);
+    assert_eq!(
+        changed_tree_paths(&before, &after),
+        BTreeSet::from([path.to_owned()]),
+        "`{child}` must change only `{path}`"
+    );
+    let entry = after
+        .get(path)
+        .unwrap_or_else(|| panic!("`{child}` must add `{path}`"));
+    assert!(
+        !before.contains_key(path) && entry.mode == "100644" && entry.kind == "blob",
+        "`{child}` must add `{path}` as one non-executable regular blob"
+    );
+    assert_eq!(
+        no_rename_changed_paths(repository, parent, child),
+        BTreeSet::from([path.to_owned()]),
+        "the no-renames Git diff must name only `{path}`"
+    );
+}
+
+fn parse_that_repository() -> PathBuf {
+    root()
+        .parent()
+        .expect("BBNF worktree has a parent")
+        .join("parse-that-skv26")
+}
+
+fn parse_freeze_inventory(bytes: &[u8]) -> FreezeAuthority {
+    const HEADER: &str =
+        "repository\tcommit\ttree\tpath\tmode\tgit_object\tsha256\tbytes\tdisposition";
+    assert!(bytes.ends_with(b"\n"), "{W3_FREEZE}: terminal LF");
+    assert!(!bytes.contains(&b'\r'), "{W3_FREEZE}: CR is forbidden");
+    let text = std::str::from_utf8(bytes).expect("W3 freeze inventory is UTF-8");
+    let mut lines = text.lines();
+    assert_eq!(lines.next(), Some(HEADER), "{W3_FREEZE}: exact header");
+
+    let repositories = BTreeMap::from([
+        ("bbnf-lang-skv26", root()),
+        ("parse-that-skv26", parse_that_repository()),
+    ]);
+    let mut identities = BTreeMap::<String, FreezeRepository>::new();
+    let mut rows = BTreeSet::new();
+    let mut roots = BTreeSet::new();
+    let mut generated = BTreeSet::new();
+    for (index, line) in lines.enumerate() {
+        let fields = line.split('\t').collect::<Vec<_>>();
+        assert_eq!(fields.len(), 9, "{W3_FREEZE}: row {} width", index + 2);
+        let [
+            repository,
+            commit,
+            tree,
+            path,
+            mode,
+            object,
+            hash,
+            byte_count,
+            disposition,
+        ] = fields.as_slice()
+        else {
+            unreachable!("freeze row width was checked");
+        };
+        assert!(
+            rows.insert(((*repository).to_owned(), (*path).to_owned())),
+            "{W3_FREEZE}: duplicate `{repository}:{path}`"
+        );
+        assert_sha256(&format!("{repository}:{path} SHA-256"), hash);
+        let byte_count = byte_count
+            .parse::<usize>()
+            .unwrap_or_else(|error| panic!("{W3_FREEZE}: `{repository}:{path}` bytes: {error}"));
+
+        if *repository == "generated" {
+            assert_eq!(
+                (*commit, *tree, *mode, *object, *disposition),
+                ("-", "-", "-", "-", "GENERATED_OUTPUT"),
+                "{W3_FREEZE}: generated row authority"
+            );
+            let ordinal = path
+                .strip_prefix("public/")
+                .and_then(|path| path.strip_suffix(".rs"))
+                .unwrap_or_else(|| panic!("{W3_FREEZE}: unknown generated path `{path}`"));
+            assert!(
+                PUBLIC_ORDINALS.contains(&ordinal),
+                "{W3_FREEZE}: unknown generated public ordinal `{ordinal}`"
+            );
+            let output = compile_public(ordinal)
+                .generated()
+                .source()
+                .as_bytes()
+                .to_vec();
+            assert_eq!(byte_count, output.len(), "{path}: generated byte count");
+            assert_eq!(*hash, sha256_hex(&output), "{path}: generated digest");
+            generated.insert((*path).to_owned());
+            continue;
+        }
+
+        let repository_path = repositories
+            .get(repository)
+            .unwrap_or_else(|| panic!("{W3_FREEZE}: unknown repository `{repository}`"));
+        assert_object_id(&format!("{repository} commit"), commit);
+        assert_object_id(&format!("{repository} tree"), tree);
+        assert_object_id(&format!("{repository}:{path} object"), object);
+        let identity = FreezeRepository {
+            commit: (*commit).to_owned(),
+            tree: (*tree).to_owned(),
+        };
+        assert_eq!(
+            identities
+                .entry((*repository).to_owned())
+                .or_insert(identity),
+            &FreezeRepository {
+                commit: (*commit).to_owned(),
+                tree: (*tree).to_owned(),
+            },
+            "{W3_FREEZE}: one identity per repository"
+        );
+        assert_eq!(
+            git_revision(repository_path, &format!("{commit}^{{tree}}")),
+            *tree,
+            "{W3_FREEZE}: `{repository}` commit/tree relation"
+        );
+
+        let (expected_mode, expected_kind, expected_object) = if *path == "." {
+            roots.insert((*repository).to_owned());
+            ("040000".to_owned(), "tree".to_owned(), (*tree).to_owned())
+        } else {
+            let entry = git_tree_entries(repository_path, commit)
+                .remove(*path)
+                .unwrap_or_else(|| panic!("{W3_FREEZE}: `{repository}:{path}` is absent"));
+            (entry.mode, entry.kind, entry.object)
+        };
+        assert_eq!(
+            *mode, expected_mode,
+            "{W3_FREEZE}: `{repository}:{path}` mode"
+        );
+        assert_eq!(
+            *object, expected_object,
+            "{W3_FREEZE}: `{repository}:{path}` object"
+        );
+        assert_eq!(
+            expected_kind,
+            if *path == "." { "tree" } else { "blob" },
+            "{W3_FREEZE}: `{repository}:{path}` object kind"
+        );
+        assert_eq!(
+            *disposition,
+            if *path == "." {
+                "ROOT_TREE"
+            } else {
+                "FROZEN_GIT_OBJECT"
+            },
+            "{W3_FREEZE}: `{repository}:{path}` disposition"
+        );
+        let payload = command_output(
+            immutable_git_object_reader(repository_path).args(["cat-file", &expected_kind, object]),
+            &format!("read frozen Git object `{repository}:{path}`"),
+        )
+        .stdout;
+        assert_eq!(payload.len(), byte_count, "{repository}:{path} byte count");
+        assert_eq!(sha256_hex(&payload), *hash, "{repository}:{path} digest");
+    }
+    assert_eq!(
+        roots,
+        BTreeSet::from(["bbnf-lang-skv26".to_owned(), "parse-that-skv26".to_owned()]),
+        "{W3_FREEZE}: both repository roots"
+    );
+    assert_eq!(
+        generated,
+        PUBLIC_ORDINALS
+            .into_iter()
+            .map(|ordinal| format!("public/{ordinal}.rs"))
+            .collect(),
+        "{W3_FREEZE}: exact public generated-output set"
+    );
+    for required in [
+        W3_PREFREEZE_ACCEPTANCE,
+        W3_FORBIDDEN_SURFACE_ABSENCE,
+        "crates/core/Cargo.toml",
+        "crates/core/src/lib.rs",
+        "crates/core/src/bin/bbnf-gen.rs",
+        "crates/core/src/compiler/analysis.rs",
+        "crates/core/src/compiler/budget.rs",
+        "crates/core/src/compiler/dependency.rs",
+        "crates/core/src/compiler/diagnostic.rs",
+        "crates/core/src/compiler/emit.rs",
+        "crates/core/src/compiler/event.rs",
+        "crates/core/src/compiler/frontend.rs",
+        "crates/core/src/compiler/instance.rs",
+        "crates/core/src/compiler/lower.rs",
+        "crates/core/src/compiler/mod.rs",
+        "crates/core/src/compiler/pratt.rs",
+        "crates/core/src/compiler/replay.rs",
+        "crates/core/src/compiler/source.rs",
+        "crates/core/src/compiler/syntax.rs",
+        "crates/core/src/compiler/typecheck.rs",
+        "crates/core/tests/w3_instance_frontend_contract.rs",
+        "crates/core/tests/w3_replay_public_contract.rs",
+        "crates/core/tests/w3_semantic_pratt_contract.rs",
+        "contracts/w3-grammar-instance.schema.json",
+        ADDENDUM,
+        PUBLIC_CASES,
+        CANDIDATE_PRESEAL,
+        HELDOUT_POOL_RECEIPT,
+        PACKET_README,
+        "Cargo.lock",
+        "Cargo.toml",
+        "rust-toolchain.toml",
+    ] {
+        assert!(
+            rows.contains(&("bbnf-lang-skv26".to_owned(), required.to_owned())),
+            "{W3_FREEZE}: required BBNF authority `{required}`"
+        );
+    }
+    for required in [
+        "rust/Cargo.toml",
+        "rust/Cargo.lock",
+        "rust/parse_that/Cargo.toml",
+        "rust/parse_that/src/control.rs",
+        "rust/parse_that/src/input.rs",
+        "rust/parse_that/src/lib.rs",
+        "rust/parse_that/src/module.rs",
+        "rust/parse_that/src/outcome.rs",
+        "rust/parse_that/src/run.rs",
+        "rust/parse_that/src/terminal.rs",
+        "rust/parse_that/src/transaction.rs",
+        "rust/parse_that/tests/kernel.rs",
+        "rust/parse_that/tests/kernel/difference_laws.rs",
+        "rust/parse_that/tests/kernel_allocation.rs",
+        "rust/regex/Cargo.toml",
+        "rust/regex/src/lib.rs",
+        "rust/contracts/runtime_bridge/Cargo.toml",
+        "rust/contracts/runtime_bridge/Cargo.lock",
+        "rust/contracts/runtime_bridge/tests/runtime_bridge.rs",
+        "rust-toolchain.toml",
+    ] {
+        assert!(
+            rows.contains(&("parse-that-skv26".to_owned(), required.to_owned())),
+            "{W3_FREEZE}: required parse-that authority `{required}`"
+        );
+    }
+    let bbnf = identities
+        .remove("bbnf-lang-skv26")
+        .expect("W3 freeze has BBNF identity");
+    let parse_that = identities
+        .remove("parse-that-skv26")
+        .expect("W3 freeze has parse-that identity");
+    assert!(
+        identities.is_empty(),
+        "W3 freeze has only paired identities"
+    );
+    FreezeAuthority { bbnf, parse_that }
+}
+
+fn zero_diff_findings(
+    basis: &BTreeMap<String, FrozenTreeEntry>,
+    current: &BTreeMap<String, FrozenTreeEntry>,
+    actual_parse_tree: &str,
+    policy: ZeroDiffPolicy<'_>,
+) -> Vec<String> {
+    let mut findings = Vec::new();
+    if actual_parse_tree != policy.expected_parse_tree {
+        findings.push(format!(
+            "parse-that tree changed from {} to {actual_parse_tree}",
+            policy.expected_parse_tree
+        ));
+    }
+
+    for required in std::iter::once(W3_FROZEN_RECEIPT)
+        .chain(std::iter::once(SELECTED_INSTANCE_MANIFEST))
+        .chain(W3_POSTFREEZE_ARTIFACTS)
+    {
+        if !current.contains_key(required) {
+            findings.push(format!("required postfreeze path `{required}` is missing"));
+        }
+    }
+
+    let paths = basis
+        .keys()
+        .chain(current.keys())
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    for path in paths {
+        let before = basis.get(&path);
+        let after = current.get(&path);
+        if before == after {
+            continue;
+        }
+
+        if path == SELECTED_INSTANCE_MANIFEST {
+            match (before, after) {
+                (None, Some(FrozenTreeEntry { mode, kind, object }))
+                    if mode == "100644" && kind == "blob" && object == policy.selected_object => {}
+                (_, Some(entry)) if entry.mode == "120000" => findings.push(format!(
+                    "selected manifest `{path}` is a symlink instead of a regular presealed blob"
+                )),
+                _ => findings.push(format!(
+                    "selected manifest `{path}` is not the one byte-identical presealed addition"
+                )),
+            }
+            continue;
+        }
+        if path == SELECTED_INSTANCE_ROOT || path.starts_with(&format!("{SELECTED_INSTANCE_ROOT}/"))
+        {
+            findings.push(format!(
+                "second or noncanonical selected-instance path `{path}`"
+            ));
+            continue;
+        }
+        if path == W3_FROZEN_RECEIPT {
+            match (before, after) {
+                (None, Some(FrozenTreeEntry { mode, kind, object }))
+                    if mode == "100644"
+                        && kind == "blob"
+                        && object == policy.expected_receipt_object => {}
+                _ => findings.push(format!(
+                    "frozen receipt `{path}` differs from the tagged receipt blob"
+                )),
+            }
+            continue;
+        }
+        if W3_POSTFREEZE_ARTIFACTS.contains(&path.as_str()) {
+            match (before, after) {
+                (
+                    None,
+                    Some(FrozenTreeEntry {
+                        mode,
+                        kind,
+                        object: _,
+                    }),
+                ) if mode == "100644" && kind == "blob" => {}
+                (_, Some(entry)) if entry.mode == "120000" => {
+                    findings.push(format!("postfreeze authority `{path}` is a symlink"))
+                }
+                _ => findings.push(format!(
+                    "postfreeze authority `{path}` is not a new regular addition"
+                )),
+            }
+            continue;
+        }
+
+        match (before, after) {
+            (Some(_), None) => findings.push(format!("frozen path `{path}` was deleted")),
+            (None, Some(entry)) if entry.mode == "120000" => {
+                findings.push(format!("new symlink `{path}`"))
+            }
+            (None, Some(_)) if path.ends_with(".rs") => {
+                findings.push(format!("new generic source `{path}`"))
+            }
+            (None, Some(_)) => findings.push(format!("new frozen-tree path `{path}`")),
+            (Some(old), Some(new)) if old.mode != new.mode || old.kind != new.kind => findings
+                .push(format!(
+                    "mode or object-kind change at `{path}`: {} {} -> {} {}",
+                    old.mode, old.kind, new.mode, new.kind
+                )),
+            (Some(_), Some(_)) if path.ends_with("Cargo.toml") => findings.push(format!(
+                "dependency or feature manifest content changed at `{path}`"
+            )),
+            (Some(_), Some(_)) => findings.push(format!("frozen content changed at `{path}`")),
+            (None, None) => unreachable!("the union contains an extant path"),
+        }
+    }
+    findings.sort();
+    findings.dedup();
+    findings
+}
+
+fn synthetic_zero_diff_policy_is_exhaustive() {
+    fn entry(mode: &str, object: &str) -> FrozenTreeEntry {
+        FrozenTreeEntry {
+            mode: mode.to_owned(),
+            kind: "blob".to_owned(),
+            object: object.to_owned(),
+        }
+    }
+
+    let basis = BTreeMap::from([
+        ("Cargo.toml".to_owned(), entry("100644", "manifest-v1")),
+        ("src/lib.rs".to_owned(), entry("100644", "source-v1")),
+        (
+            "crates/core/tests/w3_replay_public_contract.rs".to_owned(),
+            entry("100644", "verifier-v1"),
+        ),
+        (W3_FREEZE.to_owned(), entry("100644", "freeze-v1")),
+    ]);
+    let selected_object = "selected-presealed";
+    let mut admitted = basis.clone();
+    admitted.insert(
+        SELECTED_INSTANCE_MANIFEST.to_owned(),
+        entry("100644", selected_object),
+    );
+    admitted.insert(W3_FROZEN_RECEIPT.to_owned(), entry("100644", "receipt-v1"));
+    for (index, artifact) in W3_POSTFREEZE_ARTIFACTS.into_iter().enumerate() {
+        admitted.insert(
+            artifact.to_owned(),
+            entry("100644", &format!("evidence-{index}")),
+        );
+    }
+    assert!(
+        zero_diff_findings(
+            &basis,
+            &admitted,
+            "parse-tree-v1",
+            ZeroDiffPolicy {
+                expected_receipt_object: "receipt-v1",
+                selected_object,
+                expected_parse_tree: "parse-tree-v1",
+            },
+        )
+        .is_empty(),
+        "the exact receipt, selected manifest, and four regular evidence artifacts are admitted"
+    );
+
+    let reject = |label: &str, candidate: BTreeMap<String, FrozenTreeEntry>, needle: &str| {
+        let findings = zero_diff_findings(
+            &basis,
+            &candidate,
+            "parse-tree-v1",
+            ZeroDiffPolicy {
+                expected_receipt_object: "receipt-v1",
+                selected_object,
+                expected_parse_tree: "parse-tree-v1",
+            },
+        );
+        assert!(
+            findings.iter().any(|finding| finding.contains(needle)),
+            "{label}: missing `{needle}` rejection in {findings:?}"
+        );
+    };
+
+    let mut content = admitted.clone();
+    content.insert("src/lib.rs".to_owned(), entry("100644", "source-v2"));
+    reject("content mutation", content, "frozen content changed");
+
+    let mut mode = admitted.clone();
+    mode.insert("src/lib.rs".to_owned(), entry("100755", "source-v1"));
+    reject("mode mutation", mode, "mode or object-kind");
+
+    let mut addition = admitted.clone();
+    addition.insert("README.new".to_owned(), entry("100644", "new-file"));
+    reject("addition", addition, "new frozen-tree path");
+
+    let mut deletion = admitted.clone();
+    deletion.remove("src/lib.rs");
+    reject("deletion", deletion, "was deleted");
+
+    let mut rename = admitted.clone();
+    let source = rename.remove("src/lib.rs").expect("rename source");
+    rename.insert("src/renamed.rs".to_owned(), source);
+    reject("rename source deletion", rename.clone(), "was deleted");
+    reject("rename source addition", rename, "new generic source");
+
+    let mut symlink = admitted.clone();
+    symlink.insert(
+        "src/link.rs".to_owned(),
+        FrozenTreeEntry {
+            mode: "120000".to_owned(),
+            kind: "blob".to_owned(),
+            object: "link-target".to_owned(),
+        },
+    );
+    reject("symlink", symlink, "new symlink");
+
+    for (label, object) in [
+        ("dependency mutation", "manifest-dependency"),
+        ("feature mutation", "manifest-feature"),
+    ] {
+        let mut manifest = admitted.clone();
+        manifest.insert("Cargo.toml".to_owned(), entry("100644", object));
+        reject(label, manifest, "dependency or feature manifest");
+    }
+
+    let mut generic_source = admitted.clone();
+    generic_source.insert("src/new.rs".to_owned(), entry("100644", "new-source"));
+    reject("new generic source", generic_source, "new generic source");
+
+    let mut second_manifest = admitted.clone();
+    second_manifest.insert(
+        format!("{SELECTED_INSTANCE_ROOT}/second.json"),
+        entry("100644", selected_object),
+    );
+    reject(
+        "second selected manifest",
+        second_manifest,
+        "second or noncanonical selected-instance",
+    );
+
+    let mut changed_selected = admitted.clone();
+    changed_selected.insert(
+        SELECTED_INSTANCE_MANIFEST.to_owned(),
+        entry("100644", "different-candidate"),
+    );
+    reject(
+        "changed selected manifest",
+        changed_selected,
+        "not the one byte-identical presealed addition",
+    );
+
+    let mut changed_receipt = admitted.clone();
+    changed_receipt.insert(W3_FROZEN_RECEIPT.to_owned(), entry("100644", "receipt-v2"));
+    reject(
+        "changed frozen receipt",
+        changed_receipt,
+        "differs from the tagged receipt blob",
+    );
+
+    let mut evidence_symlink = admitted.clone();
+    evidence_symlink.insert(
+        W3_POSTFREEZE_ARTIFACTS[3].to_owned(),
+        FrozenTreeEntry {
+            mode: "120000".to_owned(),
+            kind: "blob".to_owned(),
+            object: "evidence-target".to_owned(),
+        },
+    );
+    reject("evidence symlink", evidence_symlink, "postfreeze authority");
+
+    let mut arbitrary_evidence = admitted.clone();
+    arbitrary_evidence.insert(
+        format!("{W3_ARTIFACT_ROOT}UNLISTED-EVIDENCE.txt"),
+        entry("100644", "unlisted-evidence"),
+    );
+    reject(
+        "unlisted evidence",
+        arbitrary_evidence,
+        "new frozen-tree path",
+    );
+
+    let parse_findings = zero_diff_findings(
+        &basis,
+        &admitted,
+        "parse-tree-v2",
+        ZeroDiffPolicy {
+            expected_receipt_object: "receipt-v1",
+            selected_object,
+            expected_parse_tree: "parse-tree-v1",
+        },
+    );
+    assert!(
+        parse_findings
+            .iter()
+            .any(|finding| finding.contains("parse-that tree changed")),
+        "parse-that tree mutation is rejected: {parse_findings:?}"
+    );
+
+    for required in std::iter::once(W3_FROZEN_RECEIPT)
+        .chain(std::iter::once(SELECTED_INSTANCE_MANIFEST))
+        .chain(W3_POSTFREEZE_ARTIFACTS)
+    {
+        let mut missing = admitted.clone();
+        missing.remove(required);
+        reject(
+            &format!("missing required postfreeze path {required}"),
+            missing,
+            &format!("required postfreeze path `{required}` is missing"),
+        );
+    }
+}
+
+fn assert_clean_repository(repository: &Path, label: &str) {
+    let output = command_output(
+        Command::new("git")
+            .args(["status", "--porcelain=v1", "--untracked-files=all"])
+            .current_dir(repository),
+        &format!("inspect {label} worktree state"),
+    );
+    assert!(
+        output.stdout.is_empty(),
+        "{label} worktree must be clean:\n{}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+}
+
+fn assert_ancestor(repository: &Path, ancestor: &str, descendant: &str) {
+    let status = immutable_git_object_reader(repository)
+        .args(["merge-base", "--is-ancestor", ancestor, descendant])
+        .status()
+        .expect("run immutable Git ancestry check");
+    assert!(
+        status.success(),
+        "`{descendant}` must descend from frozen receipt `{ancestor}`"
+    );
+}
+
+fn selected_authority(receipt_bytes: &[u8], freeze_commit: &str) -> SelectedAuthority {
+    let pool_bytes = immutable_git_bytes(&root(), freeze_commit, HELDOUT_POOL_RECEIPT);
+    assert_eq!(
+        Some(pool_bytes.as_slice()),
+        preselection_basis_bytes(HELDOUT_POOL_RECEIPT).as_deref(),
+        "selection-pool receipt bytes equal the immutable W0 preselection authority"
+    );
+    let pool_text =
+        std::str::from_utf8(&pool_bytes).expect("selection-pool receipt authority is UTF-8");
+    let candidates = pool_text
+        .lines()
+        .filter_map(|line| line.strip_prefix("candidate\t"))
+        .map(|line| line.split('\t').next().expect("candidate identity"))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        candidates,
+        ["BNF", "CSV", "G4", "MATH", "REGEX"],
+        "selection-pool order is the sealed lexical byte order"
+    );
+    assert!(
+        pool_text.ends_with(
+            "preimage\tW2-FROZEN-RECEIPT raw bytes followed immediately by this receipt's raw bytes\n"
+        ),
+        "selection-pool receipt fixes the exact raw-byte preimage"
+    );
+    let digest = Sha256::new()
+        .chain_update(receipt_bytes)
+        .chain_update(&pool_bytes)
+        .finalize();
+    let index = digest.iter().fold(0usize, |remainder, byte| {
+        (remainder * 256 + usize::from(*byte)) % CANDIDATE_ORDINALS.len()
+    });
+    let (ordinal, identity) = CANDIDATE_IDENTITIES[index];
+    assert_eq!(ordinal, CANDIDATE_ORDINALS[index]);
+    let manifest_path = format!("contracts/w3-public-witnesses/candidates/{ordinal}/instance.json");
+    let manifest_object = git_tree_entries(&root(), freeze_commit)
+        .remove(&manifest_path)
+        .unwrap_or_else(|| panic!("frozen selected manifest `{manifest_path}`"))
+        .object;
+    SelectedAuthority {
+        identity: identity.to_owned(),
+        ordinal: ordinal.to_owned(),
+        manifest_object,
+        selection_sha256: format!("{digest:x}"),
+    }
+}
+
+fn verify_w3_freeze_phase() -> Option<PostfreezeAuthority> {
+    synthetic_zero_diff_policy_is_exhaustive();
+    let freeze_exists = root().join(W3_FREEZE).exists();
+    let receipt_exists = root().join(W3_FROZEN_RECEIPT).exists();
+    assert!(
+        freeze_exists || !receipt_exists,
+        "the frozen receipt cannot exist without W3-FREEZE"
+    );
+
+    if !freeze_exists {
+        let probe = immutable_git_object_reader(&root())
+            .args(["rev-parse", "--verify", W3_RECEIPT_REF])
+            .output()
+            .expect("probe frozen receipt tag");
+        assert!(
+            !probe.status.success() && probe.stdout.is_empty(),
+            "receipt anchor cannot precede the freeze"
+        );
+        for path in std::iter::once(SELECTED_INSTANCE_MANIFEST).chain(W3_POSTFREEZE_ARTIFACTS) {
+            assert!(
+                !root().join(path).exists(),
+                "postfreeze path `{path}` cannot precede W3-FREEZE"
+            );
+        }
+        return None;
+    }
+
+    let freeze_commit = if receipt_exists {
+        assert_eq!(
+            git_object_kind(&root(), W3_RECEIPT_REF),
+            "commit",
+            "receipt anchor is one lightweight commit tag"
+        );
+        let receipt_commit = git_revision(&root(), W3_RECEIPT_REF);
+        assert_object_id("frozen receipt tag target", &receipt_commit);
+        let parents = git_parents(&root(), &receipt_commit);
+        assert_eq!(parents.len(), 1, "receipt commit has one parent");
+        parents[0].clone()
+    } else {
+        let probe = immutable_git_object_reader(&root())
+            .args(["rev-parse", "--verify", W3_RECEIPT_REF])
+            .output()
+            .expect("probe frozen receipt tag");
+        assert!(
+            !probe.status.success() && probe.stdout.is_empty(),
+            "receipt anchor cannot precede the receipt"
+        );
+        git_revision(&root(), "HEAD")
+    };
+    let freeze_bytes = immutable_git_bytes(&root(), &freeze_commit, W3_FREEZE);
+    let freeze = parse_freeze_inventory(&freeze_bytes);
+    let basis_parents = git_parents(&root(), &freeze_commit);
+    assert_eq!(basis_parents.len(), 1, "freeze commit has one parent");
+    let basis_commit = &basis_parents[0];
+    assert_eq!(
+        &freeze.bbnf.commit, basis_commit,
+        "freeze inventories its parent"
+    );
+    assert_eq!(
+        git_revision(&root(), &format!("{basis_commit}^{{tree}}")),
+        freeze.bbnf.tree,
+        "freeze inventories the parent tree"
+    );
+    assert_single_added_blob(&root(), basis_commit, &freeze_commit, W3_FREEZE);
+
+    let parse_repository = parse_that_repository();
+    assert_eq!(
+        git_revision(&parse_repository, "HEAD"),
+        freeze.parse_that.commit,
+        "parse-that remains at the frozen commit"
+    );
+    assert_eq!(
+        git_revision(&parse_repository, "HEAD^{tree}"),
+        freeze.parse_that.tree,
+        "parse-that remains at the frozen tree"
+    );
+
+    if !receipt_exists {
+        for path in std::iter::once(SELECTED_INSTANCE_MANIFEST).chain(W3_POSTFREEZE_ARTIFACTS) {
+            assert!(
+                !root().join(path).exists(),
+                "postfreeze path `{path}` cannot precede the receipt"
+            );
+        }
+        assert_clean_repository(&root(), "BBNF freeze");
+        assert_clean_repository(&parse_repository, "parse-that freeze");
+        return None;
+    }
+
+    let receipt_commit = git_revision(&root(), W3_RECEIPT_REF);
+    let receipt_bytes = immutable_git_bytes(&root(), &receipt_commit, W3_FROZEN_RECEIPT);
+    let receipt = parse_frozen_receipt(&receipt_bytes);
+    assert_eq!(
+        receipt.freeze.commit, freeze_commit,
+        "receipt fixes its parent freeze commit"
+    );
+    assert_eq!(
+        receipt.freeze.tree,
+        git_revision(&root(), &format!("{freeze_commit}^{{tree}}")),
+        "receipt fixes its parent freeze tree"
+    );
+    assert_eq!(receipt.basis, freeze.bbnf, "receipt fixes the freeze basis");
+    assert_eq!(
+        receipt.parse_that, freeze.parse_that,
+        "receipt fixes the parse-that basis"
+    );
+    assert_eq!(
+        receipt.freeze_sha256,
+        sha256_hex(&freeze_bytes),
+        "receipt fixes the freeze bytes"
+    );
+    for (name, repository, commit, path) in [
+        (
+            "public_witness_addendum",
+            root(),
+            freeze_commit.as_str(),
+            ADDENDUM,
+        ),
+        (
+            "candidate_preseal",
+            root(),
+            freeze_commit.as_str(),
+            CANDIDATE_PRESEAL,
+        ),
+        (
+            "heldout_pool_receipt",
+            root(),
+            freeze_commit.as_str(),
+            HELDOUT_POOL_RECEIPT,
+        ),
+        (
+            "instance_schema",
+            root(),
+            freeze_commit.as_str(),
+            "contracts/w3-grammar-instance.schema.json",
+        ),
+        (
+            "forbidden_surface_absence",
+            root(),
+            freeze_commit.as_str(),
+            W3_FORBIDDEN_SURFACE_ABSENCE,
+        ),
+        (
+            "prefreeze_acceptance",
+            root(),
+            freeze_commit.as_str(),
+            W3_PREFREEZE_ACCEPTANCE,
+        ),
+        (
+            "bbnf_toolchain",
+            root(),
+            freeze_commit.as_str(),
+            "rust-toolchain.toml",
+        ),
+        (
+            "parse_that_toolchain",
+            parse_repository.clone(),
+            receipt.parse_that.commit.as_str(),
+            "rust-toolchain.toml",
+        ),
+        (
+            "parse_that_abi3",
+            root(),
+            freeze_commit.as_str(),
+            "restart/skinny/tranches/sk-v26/artifacts/W3-PARSE-THAT-ABI3.json",
+        ),
+        (
+            "generated_shape",
+            root(),
+            freeze_commit.as_str(),
+            "restart/skinny/tranches/sk-v26/artifacts/W3-GENERATED-V6-CANONICAL-SHAPE.md",
+        ),
+    ] {
+        assert_eq!(
+            sha256_hex(&immutable_git_bytes(&repository, commit, path)),
+            receipt.authorities[name],
+            "receipt fixes `{name}`"
+        );
+    }
+    assert_single_added_blob(&root(), &freeze_commit, &receipt_commit, W3_FROZEN_RECEIPT);
+
+    let head = git_revision(&root(), "HEAD");
+    assert_ancestor(&root(), &receipt_commit, &head);
+    let selected = selected_authority(&receipt_bytes, &freeze_commit);
+    let basis_tree = git_tree_entries(&root(), &freeze_commit);
+    let current_tree = git_tree_entries(&root(), &head);
+    let receipt_object = git_tree_entries(&root(), &receipt_commit)
+        .remove(W3_FROZEN_RECEIPT)
+        .expect("tagged receipt commit contains the frozen receipt")
+        .object;
+    let changed = changed_tree_paths(&basis_tree, &current_tree);
+    assert_eq!(
+        no_rename_changed_paths(&root(), &freeze_commit, &head),
+        changed,
+        "path-keyed object changes equal the no-renames Git diff"
+    );
+    let findings = zero_diff_findings(
+        &basis_tree,
+        &current_tree,
+        &git_revision(&parse_repository, "HEAD^{tree}"),
+        ZeroDiffPolicy {
+            expected_receipt_object: &receipt_object,
+            selected_object: &selected.manifest_object,
+            expected_parse_tree: &receipt.parse_that.tree,
+        },
+    );
+    assert!(
+        findings.is_empty(),
+        "postfreeze zero-diff findings: {findings:#?}"
+    );
+    assert_eq!(
+        git_revision(&parse_repository, "HEAD"),
+        receipt.parse_that.commit,
+        "parse-that commit remains frozen"
+    );
+    assert_clean_repository(&root(), "BBNF postfreeze");
+    assert_clean_repository(&parse_repository, "parse-that postfreeze");
+    let authority = PostfreezeAuthority {
+        receipt,
+        receipt_commit,
+        freeze_commit,
+        selected,
+    };
+    validate_postfreeze_artifacts(&authority);
+    Some(authority)
 }
 
 fn preselection_basis_bytes(display: &str) -> Option<Vec<u8>> {
@@ -1956,12 +3186,15 @@ fn preselection_findings(base: &Path) -> Vec<String> {
 #[test]
 fn active_roots_remain_preselection_only_and_the_guard_self_falsifies() {
     let repository = root();
-    assert_eq!(
-        preselection_findings(&repository),
-        Vec::<String>::new(),
-        "the exhaustive repository contains no selection/materialization output, generated \
-         modules, obscuring directory symlinks, or checked-in external W3 harness"
-    );
+    let selected = verify_w3_freeze_phase();
+    if selected.is_none() {
+        assert_eq!(
+            preselection_findings(&repository),
+            Vec::<String>::new(),
+            "the exhaustive repository contains no selection/materialization output, generated \
+             modules, obscuring directory symlinks, or checked-in external W3 harness"
+        );
+    }
     assert_replacement_refs_cannot_rewrite_frozen_basis();
 
     let temporary = tempfile::tempdir().expect("preselection guard fixtures");
@@ -3060,25 +4293,34 @@ fn grammar_instance_schema_and_all_sealed_instances_are_strict() {
 
 #[test]
 fn packet_inventory_ordinals_modes_and_preselection_paths_are_exact() {
+    let postfreeze = verify_w3_freeze_phase();
     let packet_root = root().join("contracts/w3-public-witnesses");
     let mut files = BTreeSet::new();
     let mut directories = BTreeSet::new();
     walk_packet(&packet_root, &packet_root, &mut files, &mut directories);
 
-    assert_eq!(files.len(), 84, "sealed packet file count");
-    assert_eq!(files, packet_file_inventory(), "sealed packet files");
-    assert_eq!(directories.len(), 19, "sealed packet directory count");
+    let mut expected_files = packet_file_inventory();
+    let mut expected_directories = packet_directory_inventory();
+    if postfreeze.is_some() {
+        expected_files.insert("selected-instance/instance.json".to_owned());
+        expected_directories.insert("selected-instance".to_owned());
+    }
+    assert_eq!(files, expected_files, "sealed packet files");
     assert_eq!(
-        directories,
-        packet_directory_inventory(),
+        directories, expected_directories,
         "sealed packet directories and exact ordinal roots"
     );
-    for forbidden in ["selected", "selected-instance", "materialized"] {
+    for forbidden in ["selected", "materialized"] {
         assert!(
             !packet_root.join(forbidden).exists(),
-            "pre-freeze packet must not contain a {forbidden} directory"
+            "packet must not contain a {forbidden} directory"
         );
     }
+    assert_eq!(
+        packet_root.join("selected-instance").exists(),
+        postfreeze.is_some(),
+        "the selected-instance directory exists only after authenticated receipt selection"
+    );
 }
 
 #[test]
@@ -3325,6 +4567,82 @@ fn public_instance(ordinal: &str) -> (Vec<u8>, Vec<u8>, Value) {
     (manifest_bytes, source_bytes, manifest)
 }
 
+struct SelectedWitness {
+    identity: String,
+    ordinal: String,
+    manifest: Vec<u8>,
+    source: Vec<u8>,
+    manifest_value: Value,
+    cases: Vec<Vec<String>>,
+}
+
+fn selected_witness(authority: &PostfreezeAuthority) -> SelectedWitness {
+    let rows = read_tsv(
+        CANDIDATE_PRESEAL,
+        &[
+            "candidate_id",
+            "ordinal",
+            "grammar_path",
+            "grammar_sha256",
+            "instance_path",
+            "instance_sha256",
+            "case_ledger_path",
+            "case_ledger_sha256",
+            "case_classes",
+            "recovery_policy",
+            "execution_state",
+            "disposition",
+        ],
+    );
+    let row = rows
+        .iter()
+        .find(|row| row[0] == authority.selected.identity && row[1] == authority.selected.ordinal)
+        .expect("authenticated selection has one presealed row");
+    assert_eq!(row[8], "POSITIVE,NEGATIVE,RECOVERY_POLICY,FULL_CONSUMPTION");
+    assert_eq!(row[9], "ATOMIC_REJECT");
+    assert_eq!(row[10], "NOT_COMPILED_OR_EXECUTED");
+    assert_eq!(row[11], "PRESEALED_W0_POOL_INPUT");
+    let manifest = immutable_git_bytes(&root(), &authority.freeze_commit, &row[4]);
+    let source = immutable_git_bytes(&root(), &authority.freeze_commit, &row[2]);
+    let case_ledger = immutable_git_bytes(&root(), &authority.freeze_commit, &row[6]);
+    assert_eq!(sha256_hex(&manifest), row[5], "selected manifest preseal");
+    assert_eq!(sha256_hex(&source), row[3], "selected source W0 seal");
+    assert_eq!(
+        sha256_hex(&case_ledger),
+        row[7],
+        "selected case-ledger preseal"
+    );
+    assert_eq!(
+        bytes(SELECTED_INSTANCE_MANIFEST),
+        manifest,
+        "selected product manifest is byte-identical to its preseal"
+    );
+    let cases = read_tsv(&row[6], &CASE_HEADER);
+    assert_eq!(cases.len(), 4, "selected witness has four sealed cases");
+    close_case_rows(
+        &cases,
+        &BTreeMap::from([(
+            format!("CANDIDATE-{}-PRESEAL-V1", authority.selected.ordinal),
+            (row[6].clone(), row[9].clone()),
+        )]),
+    );
+    let manifest_value = strict_json_bytes(&manifest, SELECTED_INSTANCE_MANIFEST)
+        .expect("selected instance JSON is strict");
+    assert_eq!(
+        manifest_value["logical_path"].as_str(),
+        Some(row[2].as_str()),
+        "selected instance binds the frozen W0 source"
+    );
+    SelectedWitness {
+        identity: authority.selected.identity.clone(),
+        ordinal: authority.selected.ordinal.clone(),
+        manifest,
+        source,
+        manifest_value,
+        cases,
+    }
+}
+
 #[derive(Clone, Copy)]
 enum CompileAuthority {
     Public,
@@ -3358,6 +4676,10 @@ fn compile_authority(
             && !candidate_sources.contains(&sha256_hex(source_bytes)),
         "{at}: sealed candidate bytes reached the compiler boundary"
     );
+    compile_checked(manifest_bytes, source_bytes, at)
+}
+
+fn compile_checked(manifest_bytes: &[u8], source_bytes: &[u8], at: &str) -> CompiledModule {
     match compile_instance(
         GrammarInstanceInput::new(manifest_bytes, source_bytes),
         CompileOptions::default(),
@@ -3371,6 +4693,162 @@ fn compile_authority(
             panic!("{at}: compilation rejected: {rendered:?}");
         }
     }
+}
+
+fn compile_selected(witness: &SelectedWitness) -> CompiledModule {
+    compile_checked(
+        &witness.manifest,
+        &witness.source,
+        "authenticated selected witness",
+    )
+}
+
+fn expected_selection_artifact(
+    authority: &PostfreezeAuthority,
+    witness: &SelectedWitness,
+) -> String {
+    format!(
+        "# W3 held-out selection\n\n\
+- schema: `bbnf.skv26.w3-heldout-selection.v1`\n\
+- receipt ref: `{W3_RECEIPT_REF}`\n\
+- receipt commit: `{}`\n\
+- freeze commit: `{}`\n\
+- selection SHA-256: `{}`\n\
+- candidate: `{}`\n\
+- ordinal: `{}`\n\
+- manifest SHA-256: `{}`\n\
+- source SHA-256: `{}`\n\
+- rule: unsigned big-endian SHA-256 of raw receipt bytes followed by the sealed W0 pool receipt, modulo 5; no reroll\n\
+- disposition: `SELECTED_AFTER_DURABLE_RECEIPT`\n",
+        authority.receipt_commit,
+        authority.freeze_commit,
+        authority.selected.selection_sha256,
+        witness.identity,
+        witness.ordinal,
+        sha256_hex(&witness.manifest),
+        sha256_hex(&witness.source),
+    )
+}
+
+fn expected_generality_artifact(
+    authority: &PostfreezeAuthority,
+    witness: &SelectedWitness,
+) -> Value {
+    json!({
+        "schema": "bbnf.skv26.w3-generality-diff.v1",
+        "freeze_commit": authority.freeze_commit,
+        "receipt_commit": authority.receipt_commit,
+        "parse_that_commit": authority.receipt.parse_that.commit,
+        "parse_that_tree": authority.receipt.parse_that.tree,
+        "selected_candidate": witness.identity,
+        "selected_ordinal": witness.ordinal,
+        "selected_manifest_sha256": sha256_hex(&witness.manifest),
+        "selected_source_sha256": sha256_hex(&witness.source),
+        "changed_paths": std::iter::once(W3_FROZEN_RECEIPT)
+            .chain(std::iter::once(SELECTED_INSTANCE_MANIFEST))
+            .chain(W3_POSTFREEZE_ARTIFACTS)
+            .collect::<Vec<_>>(),
+        "forbidden_changes": 0,
+        "disposition": "PASS"
+    })
+}
+
+fn expected_regen_artifact(witness: &SelectedWitness) -> Value {
+    let temporary = tempfile::tempdir().expect("durable regeneration evidence");
+    let first = temporary.path().join("first");
+    let second = temporary.path().join("second");
+    fs::create_dir(&first).expect("first durable regeneration root");
+    fs::create_dir(&second).expect("second durable regeneration root");
+    let registry = Path::new("/SKV26-FROZEN-REGISTRY");
+    let first_products = generate_external_runtime(&first, registry, Some(witness));
+    let second_products = generate_external_runtime(&second, registry, Some(witness));
+    assert_eq!(
+        first_products, second_products,
+        "durable evidence generation is byte-identical across empty roots"
+    );
+    let products = first_products
+        .iter()
+        .map(|(path, bytes)| {
+            json!({
+                "path": path,
+                "bytes": bytes.len(),
+                "sha256": sha256_hex(bytes),
+            })
+        })
+        .collect::<Vec<_>>();
+    json!({
+        "schema": "bbnf.skv26.w3-regen.v1",
+        "selected_candidate": witness.identity,
+        "selected_ordinal": witness.ordinal,
+        "products": products,
+        "dual_empty_root_identity": true,
+        "disposition": "PASS"
+    })
+}
+
+fn expected_replay_artifact(witness: &SelectedWitness) -> String {
+    let cases = witness
+        .cases
+        .iter()
+        .map(|row| format!("- `{}` (`{}`): `PASS`\n", row[0], row[2]))
+        .collect::<String>();
+    format!(
+        "# W3 replay\n\n\
+- schema: `bbnf.skv26.w3-replay.v1`\n\
+- selected candidate: `{}`\n\
+- selected ordinal: `{}`\n\
+- selected cases: `4/4 PASS`\n\
+{}\
+- retaining/NoSink parity: `PASS`\n\
+- dual-empty-root generation: `PASS`\n\
+- registry-only BBNF consumer: `PASS`\n\
+- exact package crossing: `PASS`\n\
+- postfreeze zero-diff: `PASS`\n\n\
+## Parser ownership boundary\n\n\
+- `PUB-CSS-EVENT-V1` is prospectively a CSS-shaped nested-region control only; it proves zero CSS Syntax, selector, declaration, property, typed-value, cascade, computed-value, or full-CSS percentage.\n\
+- parse-that owns reusable combinators, spans, recovery, and runtime only where a live consumer proves need.\n\
+- Value owns the CSS grammar, CSS consumer, and editor/workbench behavior; BBNF does not mint a competing CSS parser.\n\
+- The ownership receipt was routed after the frozen receipt to Value task `019fae36-1241-7d33-9c14-58d86be7fae3`.\n",
+        witness.identity, witness.ordinal, cases,
+    )
+}
+
+fn assert_canonical_json_artifact(path: &str, expected: &Value) {
+    let actual = bytes(path);
+    assert_eq!(
+        strict_json_bytes(&actual, path).expect("postfreeze JSON artifact is strict"),
+        *expected,
+        "{path}: closed content"
+    );
+    assert_eq!(
+        actual,
+        serde_json::to_vec(expected).expect("canonical postfreeze JSON serialization"),
+        "{path}: canonical compact JSON bytes"
+    );
+}
+
+fn validate_postfreeze_artifacts(authority: &PostfreezeAuthority) {
+    let witness = selected_witness(authority);
+    assert_eq!(
+        bytes(W3_POSTFREEZE_ARTIFACTS[0]),
+        expected_selection_artifact(authority, &witness).as_bytes(),
+        "{}: closed selection receipt",
+        W3_POSTFREEZE_ARTIFACTS[0]
+    );
+    assert_canonical_json_artifact(
+        W3_POSTFREEZE_ARTIFACTS[1],
+        &expected_generality_artifact(authority, &witness),
+    );
+    assert_canonical_json_artifact(
+        W3_POSTFREEZE_ARTIFACTS[2],
+        &expected_regen_artifact(&witness),
+    );
+    assert_eq!(
+        bytes(W3_POSTFREEZE_ARTIFACTS[3]),
+        expected_replay_artifact(&witness).as_bytes(),
+        "{}: closed replay and ownership receipt",
+        W3_POSTFREEZE_ARTIFACTS[3]
+    );
 }
 
 fn compile_public(ordinal: &str) -> CompiledModule {
@@ -5074,6 +6552,32 @@ fn synthetic_observation_source(observation: SyntheticObservation) -> String {
     }
 }
 
+fn sealed_case_source(row: &[String], runner_index: usize) -> String {
+    let expectation = json_file(&row[5]);
+    let outcome = match expectation["outcome"].as_str().unwrap() {
+        "MATCH" => "ExpectedOutcome::Match",
+        "MISMATCH" => "ExpectedOutcome::Mismatch",
+        other => panic!("validated outcome {other}"),
+    };
+    let cursor_after = match expectation["cursor_after"].as_str().unwrap() {
+        "ENTRY" => "ExpectedCursorAfter::Entry",
+        "END_INPUT" => "ExpectedCursorAfter::EndInput",
+        other => panic!("validated cursor_after {other}"),
+    };
+    let observations = expectation["observations"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(expectation_observation_source)
+        .collect::<Vec<_>>()
+        .join(",");
+    format!(
+        "Case{{ordinal:{runner_index},id:{:?},input:{},outcome:{outcome},cursor_after:{cursor_after},observations:&[{observations}]}},\n",
+        row[0],
+        rust_bytes(&decode_input(&row[3]))
+    )
+}
+
 fn rule_ordinal(compiled: &CompiledModule, name: &str) -> u32 {
     compiled
         .program()
@@ -5139,7 +6643,7 @@ fn pratt_metadata_source(instance: &Value, compiled: &CompiledModule) -> (String
     (tables, operators)
 }
 
-fn runtime_runner_source() -> String {
+fn runtime_runner_source(selected: Option<&SelectedWitness>) -> String {
     let public_ordinals = discovered_public_ordinals();
     let public_case_rows = read_tsv(PUBLIC_CASES, &CASE_HEADER);
     let mut source = String::from(
@@ -5544,6 +7048,9 @@ macro_rules! define_runner {
         )
         .unwrap();
     }
+    if selected.is_some() {
+        source.push_str("#[path = \"generated/selected.rs\"] mod selected;\n");
+    }
     source.push('\n');
     for ordinal in &public_ordinals {
         let instance = json_file(&format!(
@@ -5569,6 +7076,15 @@ macro_rules! define_runner {
         )
         .unwrap();
     }
+    if let Some(selected) = selected {
+        let compiled = compile_selected(selected);
+        let (tables, operators) = pratt_metadata_source(&selected.manifest_value, &compiled);
+        writeln!(
+            source,
+            "define_runner!(run_selected, normalize_selected, selected, {tables}, {operators});"
+        )
+        .unwrap();
+    }
 
     source.push_str("\nconst CASES: &[Case] = &[\n");
     for row in &public_case_rows {
@@ -5583,31 +7099,7 @@ macro_rules! define_runner {
             .iter()
             .position(|candidate| *candidate == ordinal)
             .expect("sealed public ordinal");
-        let expectation = json_file(&row[5]);
-        let outcome = match expectation["outcome"].as_str().unwrap() {
-            "MATCH" => "ExpectedOutcome::Match",
-            "MISMATCH" => "ExpectedOutcome::Mismatch",
-            other => panic!("validated outcome {other}"),
-        };
-        let cursor_after = match expectation["cursor_after"].as_str().unwrap() {
-            "ENTRY" => "ExpectedCursorAfter::Entry",
-            "END_INPUT" => "ExpectedCursorAfter::EndInput",
-            other => panic!("validated cursor_after {other}"),
-        };
-        let observations = expectation["observations"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .map(expectation_observation_source)
-            .collect::<Vec<_>>()
-            .join(",");
-        writeln!(
-            source,
-            "Case{{ordinal:{ordinal_index},id:{:?},input:{},outcome:{outcome},cursor_after:{cursor_after},observations:&[{observations}]}},",
-            row[0],
-            rust_bytes(&decode_input(&row[3]))
-        )
-        .unwrap();
+        source.push_str(&sealed_case_source(row, ordinal_index));
     }
     for (control_index, control) in SYNTHETIC_CONTROLS.iter().copied().enumerate() {
         for case in control.cases {
@@ -5636,11 +7128,17 @@ macro_rules! define_runner {
             .unwrap();
         }
     }
+    if let Some(selected) = selected {
+        let runner_index = public_ordinals.len() + SYNTHETIC_CONTROLS.len();
+        for row in &selected.cases {
+            source.push_str(&sealed_case_source(row, runner_index));
+        }
+    }
     source.push_str("];\n\n");
     writeln!(
         source,
         "const RUNNERS: [fn(&Case); {}] = [",
-        public_ordinals.len() + SYNTHETIC_CONTROLS.len()
+        public_ordinals.len() + SYNTHETIC_CONTROLS.len() + usize::from(selected.is_some())
     )
     .unwrap();
     for ordinal in &public_ordinals {
@@ -5649,12 +7147,16 @@ macro_rules! define_runner {
     for control in SYNTHETIC_CONTROLS {
         writeln!(source, "run_{},", control.module).unwrap();
     }
+    if selected.is_some() {
+        source.push_str("run_selected,\n");
+    }
     source.push_str("];\n\n");
     let case_count = public_case_rows.len()
         + SYNTHETIC_CONTROLS
             .iter()
             .map(|row| row.cases.len())
-            .sum::<usize>();
+            .sum::<usize>()
+        + selected.map_or(0, |selected| selected.cases.len());
     writeln!(
         source,
         r#"fn main() {{
@@ -5681,7 +7183,11 @@ fn local_registry_config(registry: &Path) -> String {
     )
 }
 
-fn generate_external_runtime(output_root: &Path, registry: &Path) -> BTreeMap<String, Vec<u8>> {
+fn generate_external_runtime(
+    output_root: &Path,
+    registry: &Path,
+    selected: Option<&SelectedWitness>,
+) -> BTreeMap<String, Vec<u8>> {
     assert!(output_root.is_dir(), "output root must already exist");
     assert!(
         fs::read_dir(output_root)
@@ -5703,7 +7209,7 @@ fn generate_external_runtime(output_root: &Path, registry: &Path) -> BTreeMap<St
     );
     products.insert(
         "src/main.rs".to_owned(),
-        runtime_runner_source().into_bytes(),
+        runtime_runner_source(selected).into_bytes(),
     );
     let public_ordinals = discovered_public_ordinals();
     for ordinal in &public_ordinals {
@@ -5727,6 +7233,15 @@ fn generate_external_runtime(output_root: &Path, registry: &Path) -> BTreeMap<St
             compiled.generated().source().as_bytes().to_vec(),
         );
     }
+    if let Some(selected) = selected {
+        let compiled = compile_selected(selected);
+        validate_generated_manifest("selected external manifest", &compiled);
+        assert_generated_parse_module_boundary("selected", compiled.generated().source());
+        products.insert(
+            "src/generated/selected.rs".to_owned(),
+            compiled.generated().source().as_bytes().to_vec(),
+        );
+    }
     let mut expected_products = BTreeSet::from([
         ".cargo/config.toml".to_owned(),
         "Cargo.toml".to_owned(),
@@ -5742,6 +7257,9 @@ fn generate_external_runtime(output_root: &Path, registry: &Path) -> BTreeMap<St
             .iter()
             .map(|control| format!("src/generated/{}.rs", control.module)),
     );
+    if selected.is_some() {
+        expected_products.insert("src/generated/selected.rs".to_owned());
+    }
     assert_eq!(
         products.keys().cloned().collect::<BTreeSet<_>>(),
         expected_products,
@@ -5754,17 +7272,20 @@ fn generate_external_runtime(output_root: &Path, registry: &Path) -> BTreeMap<St
         fs::write(&path, contents)
             .unwrap_or_else(|error| panic!("{}: write product: {error}", path.display()));
     }
-    assert!(
-        !output_root.join("selected").exists()
-            && !output_root.join("selected-instance").exists()
-            && !output_root.join("materialized").exists(),
-        "pre-freeze generic output must not create a selected/materialized directory"
-    );
+    if selected.is_none() {
+        assert!(
+            !output_root.join("selected").exists()
+                && !output_root.join("selected-instance").exists()
+                && !output_root.join("materialized").exists(),
+            "pre-freeze generic output must not create a selected/materialized directory"
+        );
+    }
     products
 }
 
 fn assert_generic_external_runtime_is_dual_root_identical_and_executes_all_public_cases(
     registry: &Path,
+    selected: Option<&SelectedWitness>,
 ) {
     let temporary = tempfile::tempdir().expect("external public-witness consumer");
     let first_root = temporary.path().join("first-empty-root");
@@ -5772,8 +7293,8 @@ fn assert_generic_external_runtime_is_dual_root_identical_and_executes_all_publi
     fs::create_dir(&first_root).expect("first initially empty root");
     fs::create_dir(&second_root).expect("second initially empty root");
 
-    let first_products = generate_external_runtime(&first_root, registry);
-    let second_products = generate_external_runtime(&second_root, registry);
+    let first_products = generate_external_runtime(&first_root, registry, selected);
+    let second_products = generate_external_runtime(&second_root, registry, selected);
     assert_eq!(
         first_products, second_products,
         "independent generation into two initially empty roots is byte-identical"
@@ -6160,7 +7681,11 @@ fn construct_local_registry(
     registry
 }
 
-fn assert_registry_only_package_consumer(registry: &Path, scratch: &Path) {
+fn assert_registry_only_package_consumer(
+    registry: &Path,
+    scratch: &Path,
+    selected: Option<&SelectedWitness>,
+) {
     let consumer = scratch.join("registry-consumer");
     fs::create_dir_all(consumer.join("src")).expect("registry consumer source");
     fs::create_dir_all(consumer.join(".cargo")).expect("registry consumer Cargo config");
@@ -6186,9 +7711,7 @@ parse_that = { version = "=0.5.0", default-features = false }
         local_registry_config(registry),
     )
     .expect("registry consumer configuration");
-    fs::write(
-        consumer.join("src/main.rs"),
-        r##"use bbnf::{CompileOptions, GrammarInstanceInput, StageResult, compile_instance};
+    let mut source = r##"use bbnf::{CompileOptions, GrammarInstanceInput, StageResult, compile_instance};
 
 fn main() {
     assert_eq!(parse_that::KERNEL_ABI, 3);
@@ -6207,9 +7730,29 @@ fn main() {
             .starts_with("{\"schema\":\"bbnf.generated-rust.v6\",")
     );
 }
-"##,
-    )
-    .expect("registry consumer source");
+"##
+    .to_owned();
+    if let Some(selected) = selected {
+        assert!(source.ends_with("}\n"));
+        source.truncate(source.len() - 2);
+        writeln!(
+            source,
+            r#"    let selected_instance = {};
+    let selected_source = {};
+    let StageResult::Accepted {{ diagnostics, .. }} = compile_instance(
+        GrammarInstanceInput::new(selected_instance, selected_source),
+        CompileOptions::default(),
+    ) else {{
+        panic!("registry-only BBNF consumer rejected the authenticated selected witness");
+    }};
+    assert!(diagnostics.is_empty());
+}}"#,
+            rust_bytes(&selected.manifest),
+            rust_bytes(&selected.source),
+        )
+        .unwrap();
+    }
+    fs::write(consumer.join("src/main.rs"), source).expect("registry consumer source");
 
     let isolated_home = scratch.join("isolated-cargo-home");
     fs::create_dir(&isolated_home).expect("isolated Cargo home");
@@ -6265,6 +7808,8 @@ fn main() {
 
 #[test]
 fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
+    let postfreeze = verify_w3_freeze_phase();
+    let selected = postfreeze.as_ref().map(selected_witness);
     let temporary = tempfile::tempdir().expect("W3 package crossing");
     let parse_that_root = root()
         .parent()
@@ -6303,6 +7848,28 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
         "0.4.0",
         Some(&dependency_registry),
     ));
+    if let Some(authority) = &postfreeze {
+        for package in &packages {
+            let (expected_bytes, expected_sha256) = authority
+                .receipt
+                .packages
+                .get(&package.name)
+                .unwrap_or_else(|| panic!("{}: frozen package receipt", package.name));
+            assert_eq!(
+                fs::metadata(&package.archive)
+                    .expect("fresh package archive metadata")
+                    .len(),
+                *expected_bytes,
+                "{}: fresh package byte count binds the frozen receipt",
+                package.name
+            );
+            assert_eq!(
+                package.sha256, *expected_sha256,
+                "{}: fresh package digest binds the frozen receipt",
+                package.name
+            );
+        }
+    }
 
     let receipt_path = "restart/skinny/tranches/sk-v26/artifacts/W3-PARSE-THAT-ABI3.json";
     assert_sha(receipt_path, PARSE_THAT_ABI3_RECEIPT_SHA256);
@@ -6337,8 +7904,11 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
     }
 
     let registry = construct_local_registry(temporary.path(), &metadata, &packages);
-    assert_registry_only_package_consumer(&registry, temporary.path());
-    assert_generic_external_runtime_is_dual_root_identical_and_executes_all_public_cases(&registry);
+    assert_registry_only_package_consumer(&registry, temporary.path(), selected.as_ref());
+    assert_generic_external_runtime_is_dual_root_identical_and_executes_all_public_cases(
+        &registry,
+        selected.as_ref(),
+    );
 }
 
 fn attribute_selects_module_path(attribute: &syn::Attribute) -> bool {

@@ -132,7 +132,10 @@ pub trait JsonPathQuery: Sized {
     fn query<'p>(doc: &JsonDocument<'p>, path: Path<'_>) -> Option<Self>;
 }
 #[inline]
-fn walk_path<'a, 'p>(doc: &'a JsonDocument<'p>, path: Path<'_>) -> Option<&'a JsonValue<'p>> {
+fn walk_path<'a, 'p>(
+    doc: &'a JsonDocument<'p>,
+    path: Path<'_>,
+) -> Option<&'a JsonValue<'p>> {
     let mut current: &'a JsonValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {

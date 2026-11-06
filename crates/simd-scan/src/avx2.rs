@@ -7,7 +7,7 @@
 //!
 //! Per chunk:
 //! - **Singletons** (any cardinality): per-singleton `_mm256_cmpeq_epi8`
-//!   + OR-reduce. `<= 8` enables a `_mm256_shuffle_epi8` nibble-LUT
+//!   and an OR-reduce. `<= 8` enables a `_mm256_shuffle_epi8` nibble-LUT
 //!   path that pays one shuffle per chunk instead of N comparisons.
 //! - **Movemask**: `_mm256_movemask_epi8` → `u32` chunk mask.
 //!

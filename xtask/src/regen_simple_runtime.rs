@@ -949,7 +949,7 @@ impl __P__PathQuery for &str {
             | __P__Value::CellRef(s)
             | __P__Value::Identifier(s)
             | __P__Value::SheetPrefix { text: s, .. } => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
@@ -1877,11 +1877,11 @@ impl<'p> __P__StructBuilder<'p> {{
             return;
         }}
         if let Some(OpenFrame::Object {{ pending_key, .. }}) = self.stack.last_mut() {{
-            if pending_key.is_none() {{
-                if let __P__Value::String(s) = value {{
-                    *pending_key = Some(s);
-                    return;
-                }}
+            if pending_key.is_none()
+                && let __P__Value::String(s) = value
+            {{
+                *pending_key = Some(s);
+                return;
             }}
             debug_assert!(
                 pending_key.is_some(),
@@ -2290,7 +2290,7 @@ impl __P__PathQuery for &str {
         let value = walk_path(doc, path)?;
         match value {
             __P__Value::String(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
@@ -2872,21 +2872,16 @@ fn emit_typed_bbnf_value(projection: &RuntimeProjection) -> String {
         r#"
 use __MODULE__::arena::__P__CompoundId;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum __P__Value<'p> {
     Int(i64),
     Float(f64),
     Bool(bool),
     Span(&'p str),
     Tag(u8),
+    #[default]
     Unit,
     Compound(__P__CompoundId),
-}
-
-impl<'p> Default for __P__Value<'p> {
-    fn default() -> Self {
-        __P__Value::Unit
-    }
 }
 "#,
         projection,
@@ -3085,7 +3080,18 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
                     Some((a, b)) => (a.min(lo), b.max(hi)),
                 });
             }
-            __P__Value::Compound(_) => {
+            __P__Value::Compound(id) => {
+                // A compound that recorded its own bounds spans them even
+                // when no child carries a span (e.g. a literal-only branch
+                // such as `epsilon`), as `byte_span` reads them.
+                if let Some((lo, hi)) = self.doc.compound(id).bounds {
+                    let (lo, hi) = (lo as usize, hi as usize);
+                    *acc = Some(match *acc {
+                        None => (lo, hi),
+                        Some((a, b)) => (a.min(lo), b.max(hi)),
+                    });
+                    return;
+                }
                 for child in self.children_iter() {
                     child.fold_span_range(input_start, input_end, acc);
                 }
@@ -3174,7 +3180,7 @@ impl __P__PathQuery for &str {
     fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             __P__Value::Span(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
@@ -4135,7 +4141,7 @@ impl {p}PathQuery for &str {{
     fn query<'p>(doc: &{p}Document<'p>, path: Path<'_>) -> Option<Self> {{
         match walk_path(doc, path)? {{
             {p}Value::Span(s) => {{
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe {{ core::mem::transmute::<&'p str, &str>(extended) }})
             }}
             _ => None,
@@ -4255,17 +4261,12 @@ fn emit_value(projection: &RuntimeProjection) -> String {
         r#"
 use {module}::arena::{p}CompoundId;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum {p}Value<'p> {{
     Span(&'p str),
+    #[default]
     Unit,
     Compound({p}CompoundId),
-}}
-
-impl<'p> Default for {p}Value<'p> {{
-    fn default() -> Self {{
-        Self::Unit
-    }}
 }}
 "#
     )

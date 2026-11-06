@@ -114,7 +114,10 @@ pub trait CsvPathQuery: Sized {
     fn query<'p>(doc: &CsvDocument<'p>, path: Path<'_>) -> Option<Self>;
 }
 #[inline]
-fn walk_path<'a, 'p>(doc: &'a CsvDocument<'p>, path: Path<'_>) -> Option<&'a CsvValue<'p>> {
+fn walk_path<'a, 'p>(
+    doc: &'a CsvDocument<'p>,
+    path: Path<'_>,
+) -> Option<&'a CsvValue<'p>> {
     let mut current: &'a CsvValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {

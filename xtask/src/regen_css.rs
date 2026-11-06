@@ -553,6 +553,11 @@ fn emit_arena(projection: &RuntimeProjection) -> Result<String> {
     for slab in &projection.arena.slabs {
         out.push_str(&format!("{}: Vec<Vec<{}>>,\n", slab.field, slab.item));
     }
+    // `push_color` hands each colour out as `&'p`; the box keeps that
+    // address fixed when the Vec reallocates.
+    out.push_str(
+        "#[expect(clippy::vec_box, reason = \"boxed for address stability of handed-out &'p refs\")]\n",
+    );
     out.push_str(&format!(
         "{}: Vec<Box<{}>>,\n",
         projection.arena.colors.field, projection.arena.colors.item
@@ -803,6 +808,10 @@ enum OpenFrame<'p> {{
     Wrap {{ value: Option<CssTypedValue<'p>> }},
     Numeric {{ kind: NumericKind, magnitude: Option<f64>, unit: Option<u8> }},
     ColorFunction {{ kind_tag: Option<u8>, space_tag: Option<u8>, components_base: usize }},
+    // `begin_compound` opens frames by registry rule id, and `colorMix`
+    // carries no `StructLayout` in the css_l4 registry, so nothing opens
+    // this frame yet; the arms that close it stay for when it does.
+    #[expect(dead_code, reason = "colorMix has no StructLayout in the css_l4 registry yet")]
     ColorMix {{
         mix_space: Option<u8>,
         hue_method: Option<u8>,
@@ -1079,19 +1088,17 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             None
         }};
         match (captured, self.stack.last_mut()) {{
-            (Some(text), Some(OpenFrame::SelectorList {{ span, .. }})) => {{
-                if span.is_empty() {{
-                    *span = text;
-                }}
+            (Some(text), Some(OpenFrame::SelectorList {{ span, .. }})) if span.is_empty() => {{
+                *span = text;
             }}
             // Capture the generic at-rule's full source span as its
             // `name` so the typed summary can recognise the at-rules
             // cssparser's `StyleSheetParser` consumes specially and does
             // not surface as generic at-rules (`@charset` foremost).
-            (Some(text), Some(OpenFrame::GenericAtRule {{ name, .. }})) => {{
-                if name.is_empty() || *name == ";" {{
-                    *name = text;
-                }}
+            (Some(text), Some(OpenFrame::GenericAtRule {{ name, .. }}))
+                if name.is_empty() || *name == ";" =>
+            {{
+                *name = text;
             }}
             _ => {{}}
         }}
@@ -1402,10 +1409,10 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
     fn push_branch_tag(&mut self, branch_index: u32) {{
         match self.stack.last_mut() {{
             Some(OpenFrame::Numeric {{ unit, .. }}) => *unit = Some(branch_index as u8),
-            Some(OpenFrame::ColorFunction {{ kind_tag, space_tag, .. }}) => {{
-                if kind_tag.is_none() && space_tag.is_none() {{
-                    *kind_tag = Some(branch_index as u8);
-                }}
+            Some(OpenFrame::ColorFunction {{ kind_tag, space_tag, .. }})
+                if kind_tag.is_none() && space_tag.is_none() =>
+            {{
+                *kind_tag = Some(branch_index as u8);
             }}
             Some(OpenFrame::ColorMix {{ mix_space, hue_method, .. }}) => {{
                 if mix_space.is_none() {{
@@ -1414,10 +1421,8 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                     *hue_method = Some(branch_index as u8);
                 }}
             }}
-            Some(OpenFrame::DirPseudo {{ kind_tag }}) => {{
-                if kind_tag.is_none() {{
-                    *kind_tag = Some(branch_index as u8);
-                }}
+            Some(OpenFrame::DirPseudo {{ kind_tag }}) if kind_tag.is_none() => {{
+                *kind_tag = Some(branch_index as u8);
             }}
             _ => {{}}
         }}
@@ -1464,7 +1469,7 @@ impl<'p> CssDocument<'p> {
     pub fn to_value(&self) -> &StyleSheet { &self.root }
     pub fn get<T: CssPathQuery>(&self, path: Path<'_>) -> Option<T> { T::query(self, path) }
     pub fn walk_declarations(&self) -> CssDeclWalk<'_, 'p> {
-        CssDeclWalk { doc: self, stack: vec![CssWalkItem::RuleList(self.root.rules, 0)] }
+        CssDeclWalk { doc: self, stack: vec![CssWalkItem::Rules(self.root.rules, 0)] }
     }
     pub fn walk_values<'a>(&'a self) -> impl Iterator<Item = (&'p str, &'a CssTypedValue<'p>)> + 'a {
         self.walk_declarations().flat_map(|decl| {
@@ -1482,9 +1487,9 @@ impl<'p> CssDocument<'p> {
 
 #[derive(Debug)]
 enum CssWalkItem {
-    RuleList(CssRuleListId, usize),
-    DeclList(CssDeclListId, usize),
-    KeyframeList(CssKeyframeListId, usize),
+    Rules(CssRuleListId, usize),
+    Decls(CssDeclListId, usize),
+    Keyframes(CssKeyframeListId, usize),
 }
 
 pub struct CssDeclWalk<'a, 'p: 'a> {
@@ -1498,21 +1503,21 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
         loop {
             let top = self.stack.last_mut()?;
             match top {
-                CssWalkItem::RuleList(id, idx) => {
+                CssWalkItem::Rules(id, idx) => {
                     let rules = self.doc.rules(*id);
                     if let Some(rule) = rules.get(*idx) {
                         *idx += 1;
                         match rule {
-                            CssRule::Style(style) => self.stack.push(CssWalkItem::DeclList(style.declarations, 0)),
-                            CssRule::Media(media) => self.stack.push(CssWalkItem::RuleList(media.rules, 0)),
-                            CssRule::Keyframes(kf) => self.stack.push(CssWalkItem::KeyframeList(kf.blocks, 0)),
+                            CssRule::Style(style) => self.stack.push(CssWalkItem::Decls(style.declarations, 0)),
+                            CssRule::Media(media) => self.stack.push(CssWalkItem::Rules(media.rules, 0)),
+                            CssRule::Keyframes(kf) => self.stack.push(CssWalkItem::Keyframes(kf.blocks, 0)),
                             CssRule::GenericAt(_) => {}
                         }
                     } else {
                         self.stack.pop();
                     }
                 }
-                CssWalkItem::DeclList(id, idx) => {
+                CssWalkItem::Decls(id, idx) => {
                     let decls = self.doc.decls(*id);
                     if let Some(decl) = decls.get(*idx) {
                         *idx += 1;
@@ -1520,11 +1525,11 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
                     }
                     self.stack.pop();
                 }
-                CssWalkItem::KeyframeList(id, idx) => {
+                CssWalkItem::Keyframes(id, idx) => {
                     let blocks = self.doc.keyframes(*id);
                     if let Some(block) = blocks.get(*idx) {
                         *idx += 1;
-                        self.stack.push(CssWalkItem::DeclList(block.declarations, 0));
+                        self.stack.push(CssWalkItem::Decls(block.declarations, 0));
                     } else {
                         self.stack.pop();
                     }
@@ -1763,13 +1768,13 @@ impl CssPathQuery for &str {
                 let extended: &'p str = decl.property;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
-            CssWalkCursor::Value(value, _) => match value {
-                CssTypedValue::String(s) | CssTypedValue::Ident(s) | CssTypedValue::Span(s) => {
-                    let extended: &'p str = *s;
-                    Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
-                }
-                _ => None,
-            },
+            CssWalkCursor::Value(
+                CssTypedValue::String(s) | CssTypedValue::Ident(s) | CssTypedValue::Span(s),
+                _,
+            ) => {
+                let extended: &'p str = s;
+                Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
+            }
             _ => None,
         }
     }

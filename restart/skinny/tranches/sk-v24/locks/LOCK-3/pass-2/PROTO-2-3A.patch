@@ -1,0 +1,646 @@
+diff --git a/skinny/crates/codegen/src/lib.rs b/skinny/crates/codegen/src/lib.rs
+index 902778578..cf9e9b807 100644
+--- a/skinny/crates/codegen/src/lib.rs
++++ b/skinny/crates/codegen/src/lib.rs
+@@ -21,6 +21,9 @@ pub use grammar_provider::{
+     RuntimeGrammarSource, RuntimeOutputLabels, RuntimeProfileContract, RuntimeWorkspaceMetadata,
+ };
+ 
++// E3 sink edge, exposed for the per-edge `differential(edge, corpus)` oracle (family 3A).
++pub use lower::sink_only::{lower_expr_probe, DirectShape, SinkOnlyExpr, SinkOnlySpanKind};
++
+ #[derive(Debug, Error)]
+ pub enum CodegenError {
+     #[error(transparent)]
+diff --git a/skinny/crates/codegen/src/lower/sink_only.rs b/skinny/crates/codegen/src/lower/sink_only.rs
+index fb5904f97..b844c0286 100644
+--- a/skinny/crates/codegen/src/lower/sink_only.rs
++++ b/skinny/crates/codegen/src/lower/sink_only.rs
+@@ -171,6 +171,14 @@ pub fn lower_program(backend: &BackendIr, ctx: &LowerCtx<'_>) -> Option<SinkOnly
+     })
+ }
+ 
++/// E3 edge entry point: the real `BackendExpr -> SinkOnlyExpr` sink map, callable on a single
++/// node with no `LowerCtx`. This is the transformation a per-edge `differential(E3, corpus)`
++/// oracle validates by translation-validation (arm correspondence), needing no reference impl.
++pub fn lower_expr_probe(expr: &BackendExpr) -> SinkOnlyExpr {
++    let mut facts = SinkOnlyFacts::default();
++    lower_expr(expr, &mut facts)
++}
++
+ fn lower_expr(expr: &BackendExpr, facts: &mut SinkOnlyFacts) -> SinkOnlyExpr {
+     match expr {
+         BackendExpr::Entry(inner) => SinkOnlyExpr::Entry(Box::new(lower_expr(inner, facts))),
+diff --git a/skinny/crates/codegen/tests/differential_edge_oracle_probe.rs b/skinny/crates/codegen/tests/differential_edge_oracle_probe.rs
+new file mode 100644
+index 000000000..e2de19d0b
+--- /dev/null
++++ b/skinny/crates/codegen/tests/differential_edge_oracle_probe.rs
+@@ -0,0 +1,607 @@
++//! LOCK-3 pass-2 · PROTO BRIEF 2 (family 3A) — the per-edge `differential(edge, corpus)` refinement
++//! oracle. Question: does the runner LOCALIZE an injected single-arm fault to its edge — E3 map fault
++//! trips the E3 correspondence oracle (named arm), an E2 input fault trips the E2 oracle while E3
++//! stays GREEN — rather than reporting merely "a failure"? E3 is the *free* oracle: `lower_expr`
++//! (`codegen::lower::sink_only`) is a 1:1 arm map `BackendExpr ↦ SinkOnlyExpr`, so translation
++//! validation `correspond(x, lower(x))` needs no reference implementation.
++
++use codegen::{lower_expr_probe, DirectShape, SinkOnlyExpr, SinkOnlySpanKind};
++use ir::{
++    AltMode, BackendExpr, DirectBuildField, DirectBuildSource, SpanKind, SpanMarkKind, TapeKind,
++};
++use std::collections::hash_map::DefaultHasher;
++use std::hash::{Hash, Hasher};
++
++// ---------------------------------------------------------------------------------------------
++// E3 correspondence oracle — reference-free translation validation of the 1:1 arm map.
++// Returns the list of localized mismatches (empty == GREEN). Each mismatch NAMES the tree path
++// and the offending arm, so the caller learns *which edge/arm* failed, never merely "a failure".
++// ---------------------------------------------------------------------------------------------
++fn e3_correspond(b: &BackendExpr, s: &SinkOnlyExpr, path: &str) -> Vec<String> {
++    let mut out = Vec::new();
++    match (b, s) {
++        (BackendExpr::Entry(bi), SinkOnlyExpr::Entry(si)) => {
++            out.extend(e3_correspond(bi, si, &format!("{path}/Entry")))
++        }
++        (BackendExpr::Seq(bs), SinkOnlyExpr::Seq(ss)) => {
++            if bs.len() != ss.len() {
++                out.push(format!("{path}/Seq: arity {} != {}", bs.len(), ss.len()));
++            }
++            for (i, (bc, sc)) in bs.iter().zip(ss.iter()).enumerate() {
++                out.extend(e3_correspond(bc, sc, &format!("{path}/Seq[{i}]")));
++            }
++        }
++        (
++            BackendExpr::Alt {
++                mode: bm,
++                branches: bb,
++            },
++            SinkOnlyExpr::Alt {
++                mode: sm,
++                branches: sb,
++            },
++        ) => {
++            if bm != sm {
++                out.push(format!("{path}/Alt: mode {bm:?} != {sm:?}"));
++            }
++            if bb.len() != sb.len() {
++                out.push(format!("{path}/Alt: arity {} != {}", bb.len(), sb.len()));
++            }
++            for (i, (bc, sc)) in bb.iter().zip(sb.iter()).enumerate() {
++                out.extend(e3_correspond(bc, sc, &format!("{path}/Alt[{i}]")));
++            }
++        }
++        (
++            BackendExpr::RepeatLoop { body: bbody, min: bmin },
++            SinkOnlyExpr::RepeatLoop { body: sbody, min: smin },
++        ) => {
++            if bmin != smin {
++                out.push(format!("{path}/RepeatLoop: min {bmin} != {smin}"));
++            }
++            out.extend(e3_correspond(bbody, sbody, &format!("{path}/RepeatLoop")));
++        }
++        (BackendExpr::OptionalBranch(bi), SinkOnlyExpr::OptionalBranch(si)) => {
++            out.extend(e3_correspond(bi, si, &format!("{path}/OptionalBranch")))
++        }
++        (BackendExpr::ByteLiteral(bbytes), SinkOnlyExpr::ByteLiteral(sbytes)) => {
++            if bbytes != sbytes {
++                out.push(format!("{path}/ByteLiteral: bytes {bbytes:?} != {sbytes:?}"));
++            }
++        }
++        (
++            BackendExpr::RegexProgram { pattern: bp, span_kind: bk },
++            SinkOnlyExpr::RegexProgram { span_kind: sk, pattern: sp },
++        ) => {
++            if bp != sp {
++                out.push(format!("{path}/RegexProgram: pattern {bp:?} != {sp:?}"));
++            }
++            if !span_kind_corresponds(*bk, *sk) {
++                out.push(format!("{path}/RegexProgram: span_kind {bk:?} !~ {sk:?}"));
++            }
++        }
++        (BackendExpr::CallRule { callee: bc }, SinkOnlyExpr::CallRule { callee: sc }) => {
++            if bc != sc {
++                out.push(format!("{path}/CallRule: callee {bc:?} != {sc:?}"));
++            }
++        }
++        // SpanMark intentionally drops `kind` in the sink IR: correspondence checks the retained
++        // `label` only. Documented lossy arm — the oracle must not demand a field the map erases.
++        (BackendExpr::SpanMark { label: bl, .. }, SinkOnlyExpr::SpanMark { label: sl }) => {
++            if bl != sl {
++                out.push(format!("{path}/SpanMark: label {bl:?} != {sl:?}"));
++            }
++        }
++        // TapeEmit drops `kind`: nothing retained to compare; correspondence is discriminant-only.
++        (BackendExpr::TapeEmit { .. }, SinkOnlyExpr::TapeEmit) => {}
++        (
++            BackendExpr::DirectBuild { shape: bsh, fields: bf },
++            SinkOnlyExpr::DirectBuild(DirectShape { shape: ssh, fields: sf }),
++        ) => {
++            if bsh != ssh {
++                out.push(format!("{path}/DirectBuild: shape {bsh:?} != {ssh:?}"));
++            }
++            if bf != sf {
++                out.push(format!("{path}/DirectBuild: fields differ"));
++            }
++        }
++        (
++            BackendExpr::ValueProject { body: bbody, target: bt, ty: bty },
++            SinkOnlyExpr::ValueProject { body: sbody, target: st, ty: sty },
++        ) => {
++            if bt != st {
++                out.push(format!("{path}/ValueProject: target {bt:?} != {st:?}"));
++            }
++            if bty != sty {
++                out.push(format!("{path}/ValueProject: ty {bty:?} != {sty:?}"));
++            }
++            out.extend(e3_correspond(bbody, sbody, &format!("{path}/ValueProject")));
++        }
++        (BackendExpr::Return, SinkOnlyExpr::Return) => {}
++        // Discriminant mismatch: name both sides at the path — this is the localization signal.
++        (b, s) => out.push(format!(
++            "{path}: arm mismatch {} ↦ {}",
++            backend_tag(b),
++            sink_tag(s)
++        )),
++    }
++    out
++}
++
++fn span_kind_corresponds(b: SpanKind, s: SinkOnlySpanKind) -> bool {
++    matches!(
++        (b, s),
++        (SpanKind::String, SinkOnlySpanKind::String)
++            | (SpanKind::Number, SinkOnlySpanKind::Number)
++            | (SpanKind::Whitespace, SinkOnlySpanKind::Whitespace)
++    )
++}
++
++fn backend_tag(b: &BackendExpr) -> &'static str {
++    match b {
++        BackendExpr::Entry(_) => "Entry",
++        BackendExpr::Seq(_) => "Seq",
++        BackendExpr::Alt { .. } => "Alt",
++        BackendExpr::RepeatLoop { .. } => "RepeatLoop",
++        BackendExpr::OptionalBranch(_) => "OptionalBranch",
++        BackendExpr::ByteLiteral(_) => "ByteLiteral",
++        BackendExpr::RegexProgram { .. } => "RegexProgram",
++        BackendExpr::CallRule { .. } => "CallRule",
++        BackendExpr::SpanMark { .. } => "SpanMark",
++        BackendExpr::TapeEmit { .. } => "TapeEmit",
++        BackendExpr::DirectBuild { .. } => "DirectBuild",
++        BackendExpr::ValueProject { .. } => "ValueProject",
++        BackendExpr::Return => "Return",
++    }
++}
++
++fn sink_tag(s: &SinkOnlyExpr) -> &'static str {
++    match s {
++        SinkOnlyExpr::Entry(_) => "Entry",
++        SinkOnlyExpr::Seq(_) => "Seq",
++        SinkOnlyExpr::Alt { .. } => "Alt",
++        SinkOnlyExpr::RepeatLoop { .. } => "RepeatLoop",
++        SinkOnlyExpr::OptionalBranch(_) => "OptionalBranch",
++        SinkOnlyExpr::ByteLiteral(_) => "ByteLiteral",
++        SinkOnlyExpr::RegexProgram { .. } => "RegexProgram",
++        SinkOnlyExpr::CallRule { .. } => "CallRule",
++        SinkOnlyExpr::SpanMark { .. } => "SpanMark",
++        SinkOnlyExpr::TapeEmit => "TapeEmit",
++        SinkOnlyExpr::DirectBuild(_) => "DirectBuild",
++        SinkOnlyExpr::ValueProject { .. } => "ValueProject",
++        SinkOnlyExpr::Return => "Return",
++    }
++}
++
++// ---------------------------------------------------------------------------------------------
++// Terminal structural digest of a SinkOnlyExpr forest — the coarse end-to-end check. It DETECTS a
++// change but does not localize it (contrast with the edge oracle which names the arm).
++// ---------------------------------------------------------------------------------------------
++fn digest(s: &SinkOnlyExpr, h: &mut u64) {
++    let mix = |h: &mut u64, x: u64| {
++        *h ^= x;
++        *h = h.wrapping_mul(0x100000001b3);
++    };
++    mix(h, sink_tag(s).len() as u64 ^ (sink_tag(s).as_bytes().iter().map(|b| *b as u64).sum::<u64>() << 3));
++    match s {
++        SinkOnlyExpr::Entry(i) | SinkOnlyExpr::OptionalBranch(i) => digest(i, h),
++        SinkOnlyExpr::Seq(cs) => cs.iter().for_each(|c| digest(c, h)),
++        SinkOnlyExpr::Alt { mode, branches } => {
++            mix(h, if *mode == AltMode::Dispatch { 1 } else { 2 });
++            branches.iter().for_each(|c| digest(c, h));
++        }
++        SinkOnlyExpr::RepeatLoop { body, min } => {
++            mix(h, *min as u64 + 7);
++            digest(body, h);
++        }
++        SinkOnlyExpr::ByteLiteral(b) => b.iter().for_each(|x| mix(h, *x as u64)),
++        SinkOnlyExpr::RegexProgram { span_kind, pattern } => {
++            mix(h, *span_kind as u64);
++            pattern.bytes().for_each(|x| mix(h, x as u64));
++        }
++        SinkOnlyExpr::CallRule { callee } => callee.bytes().for_each(|x| mix(h, x as u64)),
++        SinkOnlyExpr::SpanMark { label } => label.bytes().for_each(|x| mix(h, x as u64)),
++        SinkOnlyExpr::TapeEmit | SinkOnlyExpr::Return => {}
++        SinkOnlyExpr::DirectBuild(d) => d.shape.bytes().for_each(|x| mix(h, x as u64)),
++        SinkOnlyExpr::ValueProject { body, target, ty } => {
++            target.bytes().for_each(|x| mix(h, x as u64));
++            if let Some(t) = ty {
++                t.bytes().for_each(|x| mix(h, x as u64));
++            }
++            digest(body, h);
++        }
++    }
++}
++
++fn forest_digest(forest: &[SinkOnlyExpr]) -> u64 {
++    let mut h = 0xcbf29ce484222325u64;
++    forest.iter().for_each(|s| digest(s, &mut h));
++    h
++}
++
++// ---------------------------------------------------------------------------------------------
++// The MUTANT E3 map: a verbatim copy of the shipping arm map, but a single injected arm is
++// mis-lowered. Simulates a real single-arm regression a CI oracle must catch AND localize.
++// ---------------------------------------------------------------------------------------------
++#[derive(Clone, Copy, PartialEq)]
++enum Fault {
++    ByteLiteralToReturn, // discriminant flip
++    RegexSpanFlip,       // payload corruption, same discriminant (the subtle case)
++    AltDropLastBranch,   // arity change
++    ValueProjectTarget,  // payload string corruption
++    SeqReverse,          // child-order corruption
++}
++
++fn lower_mutant(b: &BackendExpr, f: Fault) -> SinkOnlyExpr {
++    match b {
++        BackendExpr::ByteLiteral(bytes) if f == Fault::ByteLiteralToReturn => SinkOnlyExpr::Return,
++        BackendExpr::RegexProgram { pattern, span_kind: _ } if f == Fault::RegexSpanFlip => {
++            SinkOnlyExpr::RegexProgram {
++                span_kind: SinkOnlySpanKind::Number, // corpus witness is String → flip
++                pattern: pattern.clone(),
++            }
++        }
++        BackendExpr::Alt { mode, branches } if f == Fault::AltDropLastBranch => SinkOnlyExpr::Alt {
++            mode: *mode,
++            branches: branches
++                .iter()
++                .take(branches.len().saturating_sub(1))
++                .map(|c| lower_mutant(c, f))
++                .collect(),
++        },
++        BackendExpr::ValueProject { body, target: _, ty } if f == Fault::ValueProjectTarget => {
++            SinkOnlyExpr::ValueProject {
++                body: Box::new(lower_mutant(body, f)),
++                target: "WRONG".to_string(),
++                ty: ty.clone(),
++            }
++        }
++        BackendExpr::Seq(cs) if f == Fault::SeqReverse => {
++            SinkOnlyExpr::Seq(cs.iter().rev().map(|c| lower_mutant(c, f)).collect())
++        }
++        // Every other arm: identical to the shipping map (recursing with the same fault flag).
++        BackendExpr::Entry(i) => SinkOnlyExpr::Entry(Box::new(lower_mutant(i, f))),
++        BackendExpr::Seq(cs) => SinkOnlyExpr::Seq(cs.iter().map(|c| lower_mutant(c, f)).collect()),
++        BackendExpr::Alt { mode, branches } => SinkOnlyExpr::Alt {
++            mode: *mode,
++            branches: branches.iter().map(|c| lower_mutant(c, f)).collect(),
++        },
++        BackendExpr::RepeatLoop { body, min } => SinkOnlyExpr::RepeatLoop {
++            body: Box::new(lower_mutant(body, f)),
++            min: *min,
++        },
++        BackendExpr::OptionalBranch(i) => {
++            SinkOnlyExpr::OptionalBranch(Box::new(lower_mutant(i, f)))
++        }
++        BackendExpr::ByteLiteral(bytes) => SinkOnlyExpr::ByteLiteral(bytes.clone()),
++        BackendExpr::RegexProgram { pattern, span_kind } => SinkOnlyExpr::RegexProgram {
++            span_kind: match span_kind {
++                SpanKind::String => SinkOnlySpanKind::String,
++                SpanKind::Number => SinkOnlySpanKind::Number,
++                SpanKind::Whitespace => SinkOnlySpanKind::Whitespace,
++            },
++            pattern: pattern.clone(),
++        },
++        BackendExpr::CallRule { callee } => SinkOnlyExpr::CallRule {
++            callee: callee.clone(),
++        },
++        BackendExpr::SpanMark { label, .. } => SinkOnlyExpr::SpanMark {
++            label: label.clone(),
++        },
++        BackendExpr::TapeEmit { .. } => SinkOnlyExpr::TapeEmit,
++        BackendExpr::DirectBuild { shape, fields } => SinkOnlyExpr::DirectBuild(DirectShape {
++            shape: shape.clone(),
++            fields: fields.clone(),
++        }),
++        BackendExpr::ValueProject { body, target, ty } => SinkOnlyExpr::ValueProject {
++            body: Box::new(lower_mutant(body, f)),
++            target: target.clone(),
++            ty: ty.clone(),
++        },
++        BackendExpr::Return => SinkOnlyExpr::Return,
++    }
++}
++
++// ---------------------------------------------------------------------------------------------
++// O2 — a materialize (E2) structural-contract oracle: every DirectBuild carries a non-empty shape
++// and non-empty field names. An E2 (input) fault violating this is caught HERE, at E2, while the E3
++// correspondence oracle stays GREEN because the shipping map faithfully lowered the corrupt input.
++// ---------------------------------------------------------------------------------------------
++fn o2_materialize_contract(b: &BackendExpr, path: &str) -> Vec<String> {
++    let mut out = Vec::new();
++    match b {
++        BackendExpr::DirectBuild { shape, fields } => {
++            if shape.is_empty() {
++                out.push(format!("{path}/DirectBuild: empty shape"));
++            }
++            if fields.iter().any(|fld| fld.name.is_empty()) {
++                out.push(format!("{path}/DirectBuild: empty field name"));
++            }
++        }
++        BackendExpr::Entry(i) | BackendExpr::OptionalBranch(i) => {
++            out.extend(o2_materialize_contract(i, path))
++        }
++        BackendExpr::Seq(cs) => cs
++            .iter()
++            .enumerate()
++            .for_each(|(i, c)| out.extend(o2_materialize_contract(c, &format!("{path}[{i}]")))),
++        BackendExpr::Alt { branches, .. } => branches
++            .iter()
++            .for_each(|c| out.extend(o2_materialize_contract(c, path))),
++        BackendExpr::RepeatLoop { body, .. } | BackendExpr::ValueProject { body, .. } => {
++            out.extend(o2_materialize_contract(body, path))
++        }
++        _ => {}
++    }
++    out
++}
++
++// A witness per BackendExpr arm — guarantees the census covers all 13 arms (family 3A / G-3A-b).
++fn arm_corpus() -> Vec<(&'static str, BackendExpr)> {
++    let field = DirectBuildField {
++        name: "k".into(),
++        source: DirectBuildSource::Span { label: "s".into() },
++        target: None,
++    };
++    vec![
++        ("Entry", BackendExpr::Entry(Box::new(BackendExpr::Return))),
++        (
++            "Seq",
++            BackendExpr::Seq(vec![
++                BackendExpr::ByteLiteral(b"{".to_vec()),
++                BackendExpr::Return,
++            ]),
++        ),
++        (
++            "Alt",
++            BackendExpr::Alt {
++                mode: AltMode::Dispatch,
++                branches: vec![
++                    BackendExpr::ByteLiteral(b"t".to_vec()),
++                    BackendExpr::ByteLiteral(b"f".to_vec()),
++                ],
++            },
++        ),
++        (
++            "RepeatLoop",
++            BackendExpr::RepeatLoop {
++                body: Box::new(BackendExpr::ByteLiteral(b",".to_vec())),
++                min: 0,
++            },
++        ),
++        (
++            "OptionalBranch",
++            BackendExpr::OptionalBranch(Box::new(BackendExpr::ByteLiteral(b"-".to_vec()))),
++        ),
++        ("ByteLiteral", BackendExpr::ByteLiteral(b"null".to_vec())),
++        (
++            "RegexProgram",
++            BackendExpr::RegexProgram {
++                pattern: "[0-9]+".into(),
++                span_kind: SpanKind::String,
++            },
++        ),
++        ("CallRule", BackendExpr::CallRule { callee: "value".into() }),
++        (
++            "SpanMark",
++            BackendExpr::SpanMark {
++                kind: SpanMarkKind::Start,
++                label: "string".into(),
++            },
++        ),
++        ("TapeEmit", BackendExpr::TapeEmit { kind: TapeKind::StringValue }),
++        (
++            "DirectBuild",
++            BackendExpr::DirectBuild {
++                shape: "JsonString".into(),
++                fields: vec![field.clone()],
++            },
++        ),
++        (
++            "ValueProject",
++            BackendExpr::ValueProject {
++                body: Box::new(BackendExpr::CallRule { callee: "input".into() }),
++                target: "input".into(),
++                ty: Some("Span".into()),
++            },
++        ),
++        ("Return", BackendExpr::Return),
++    ]
++}
++
++#[test]
++fn e3_oracle_is_green_on_the_shipping_map_over_all_arms() {
++    // (a) Reproduce the digest floor: the shipping E3 map corresponds arm-for-arm on every witness.
++    // Zero-witness arms cannot exist here — the census supplies one per arm (G-3A-b: unverified
++    // becomes impossible by construction for this corpus).
++    let corpus = arm_corpus();
++    assert_eq!(corpus.len(), 13, "census must cover all 13 BackendExpr arms");
++    for (name, node) in &corpus {
++        let sink = lower_expr_probe(node);
++        let mism = e3_correspond(node, &sink, name);
++        assert!(mism.is_empty(), "arm {name}: shipping map must correspond, got {mism:?}");
++    }
++}
++
++#[test]
++fn e3_map_fault_is_localized_to_its_arm_never_merely_a_failure() {
++    let corpus = arm_corpus();
++    // (arm expected to be flagged, fault) — the localization matrix.
++    let cases: &[(&str, Fault)] = &[
++        ("ByteLiteral", Fault::ByteLiteralToReturn),
++        ("RegexProgram", Fault::RegexSpanFlip),
++        ("Alt", Fault::AltDropLastBranch),
++        ("ValueProject", Fault::ValueProjectTarget),
++        ("Seq", Fault::SeqReverse),
++    ];
++    let clean_forest: Vec<SinkOnlyExpr> =
++        corpus.iter().map(|(_, n)| lower_expr_probe(n)).collect();
++    let clean_dg = forest_digest(&clean_forest);
++
++    for (expect_arm, fault) in cases {
++        // Which corpus witnesses contain the faulted arm? Those are the ONLY ones that may flag.
++        let mut flagged_arms: Vec<String> = Vec::new();
++        let mut mutant_forest: Vec<SinkOnlyExpr> = Vec::new();
++        for (name, node) in &corpus {
++            let mutant = lower_mutant(node, *fault);
++            mutant_forest.push(mutant.clone());
++            let mism = e3_correspond(node, &mutant, name);
++            if !mism.is_empty() {
++                flagged_arms.push((*name).to_string());
++                // Localization: the mismatch text must name the faulted arm somewhere in the path.
++                assert!(
++                    mism.iter().any(|m| m.contains(expect_arm)),
++                    "fault {expect_arm}: witness {name} flagged but path does not name the arm: {mism:?}"
++                );
++            }
++        }
++        // The E3 oracle flagged AT LEAST the arm's own witness — a localized name, not a bare bool.
++        assert!(
++            flagged_arms.iter().any(|a| a == expect_arm),
++            "fault {expect_arm}: E3 oracle failed to flag the arm witness (flagged={flagged_arms:?})"
++        );
++        // Every flagged witness genuinely CONTAINS the faulted arm (no false localization).
++        for a in &flagged_arms {
++            let (_, node) = corpus.iter().find(|(n, _)| n == a).unwrap();
++            assert!(
++                contains_backend_arm(node, expect_arm),
++                "fault {expect_arm}: falsely localized to witness {a} that lacks the arm"
++            );
++        }
++        // The terminal digest ALSO breaks — a coarse end-to-end check DETECTS but does not localize.
++        let mut_dg = forest_digest(&mutant_forest);
++        assert_ne!(clean_dg, mut_dg, "fault {expect_arm}: terminal digest must break");
++        eprintln!(
++            "LOCALIZE fault@{expect_arm}: E3 flagged {} witness(es) {:?}; terminal_digest {:016x}->{:016x} (broke)",
++            flagged_arms.len(),
++            flagged_arms,
++            clean_dg,
++            mut_dg
++        );
++    }
++}
++
++fn contains_backend_arm(b: &BackendExpr, arm: &str) -> bool {
++    if backend_tag(b) == arm {
++        return true;
++    }
++    match b {
++        BackendExpr::Entry(i) | BackendExpr::OptionalBranch(i) => contains_backend_arm(i, arm),
++        BackendExpr::Seq(cs) => cs.iter().any(|c| contains_backend_arm(c, arm)),
++        BackendExpr::Alt { branches, .. } => branches.iter().any(|c| contains_backend_arm(c, arm)),
++        BackendExpr::RepeatLoop { body, .. } | BackendExpr::ValueProject { body, .. } => {
++            contains_backend_arm(body, arm)
++        }
++        _ => false,
++    }
++}
++
++#[test]
++fn e2_input_fault_trips_e2_oracle_while_e3_stays_green() {
++    // The distinguishing result: an upstream (E2 / materialize) fault corrupts the *input* IR.
++    // The shipping E3 map faithfully lowers the corrupt input, so the E3 correspondence oracle is
++    // GREEN (the map is correct); the E2 structural-contract oracle O2 catches it — LOCALIZED to
++    // E2, not misattributed to E3. This is why "differential per edge" ≠ "a single terminal bool".
++    let good = BackendExpr::DirectBuild {
++        shape: "JsonString".into(),
++        fields: vec![DirectBuildField {
++            name: "k".into(),
++            source: DirectBuildSource::Span { label: "s".into() },
++            target: None,
++        }],
++    };
++    let corrupt = BackendExpr::DirectBuild {
++        shape: String::new(), // E2 fault: materialize emitted an empty shape
++        fields: vec![DirectBuildField {
++            name: "k".into(),
++            source: DirectBuildSource::Span { label: "s".into() },
++            target: None,
++        }],
++    };
++
++    // E2 oracle: GREEN on good input, RED (localized) on corrupt input.
++    assert!(o2_materialize_contract(&good, "good").is_empty());
++    let e2 = o2_materialize_contract(&corrupt, "corrupt");
++    assert!(
++        e2.iter().any(|m| m.contains("empty shape")),
++        "E2 oracle must localize the empty-shape fault, got {e2:?}"
++    );
++
++    // E3 correspondence over the corrupt input with the SHIPPING map: GREEN (faithful lowering).
++    let sink = lower_expr_probe(&corrupt);
++    let e3 = e3_correspond(&corrupt, &sink, "corrupt");
++    assert!(
++        e3.is_empty(),
++        "E3 oracle must stay GREEN under an upstream E2 fault (map is faithful), got {e3:?}"
++    );
++
++    // Terminal digest DOES change (good vs corrupt) — detection without localization.
++    assert_ne!(
++        forest_digest(&[lower_expr_probe(&good)]),
++        forest_digest(&[sink]),
++        "terminal digest should register the corruption"
++    );
++}
++
++// ---------------------------------------------------------------------------------------------
++// Live grounding: run the REAL json pipeline (grammar -> passes::compile -> BackendIr) and prove
++// the SHIPPING E3 map corresponds arm-for-arm on live IR (E3 oracle GREEN on the real corpus).
++// Records E1 (node_types) and E2 (backend_ir) reference digests the fault matrix leaves invariant.
++// ---------------------------------------------------------------------------------------------
++fn hash64<T: Hash>(t: &T) -> u64 {
++    let mut h = DefaultHasher::new();
++    t.hash(&mut h);
++    h.finish()
++}
++
++#[test]
++fn e3_oracle_green_on_live_json_backend_ir() {
++    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammars/json.bbnf");
++    let source = std::fs::read_to_string(path).expect("read json.bbnf");
++    let grammar = grammar::parse_grammar("json", &source).expect("parse json grammar");
++    let out = passes::compile(&grammar).expect("compile json");
++
++    // E1 reference digest (infer output) and E2 reference digest (materialize output).
++    // These are computed upstream of E3; a pure E3-map fault leaves both byte-identical.
++    let mut e1_keys: Vec<(usize, u64)> = out
++        .layout_facts
++        .node_types
++        .iter()
++        .map(|(k, v)| (k.0, hash64(&format!("{v:?}"))))
++        .collect();
++    e1_keys.sort();
++    let e1_digest = hash64(&e1_keys);
++    let e2_digest = hash64(&format!("{:?}", out.backend_ir.rules));
++    assert!(e1_digest != 0 && e2_digest != 0);
++
++    // E3 oracle over every rule of the live BackendIr: the shipping map must correspond.
++    let mut rule_count = 0usize;
++    let mut node_count = 0usize;
++    for rule in &out.backend_ir.rules {
++        rule_count += 1;
++        node_count += count_nodes(&rule.expr);
++        let sink = lower_expr_probe(&rule.expr);
++        let mism = e3_correspond(&rule.expr, &sink, &rule.name);
++        assert!(
++            mism.is_empty(),
++            "live rule {}: shipping E3 map must correspond, got {mism:?}",
++            rule.name
++        );
++    }
++    eprintln!(
++        "LIVE json: rules={rule_count} backend_nodes={node_count} \
++         E1_digest={e1_digest:016x} E2_digest={e2_digest:016x} E3=GREEN"
++    );
++    assert!(rule_count > 0 && node_count > rule_count);
++}
++
++fn count_nodes(b: &BackendExpr) -> usize {
++    1 + match b {
++        BackendExpr::Entry(i) | BackendExpr::OptionalBranch(i) => count_nodes(i),
++        BackendExpr::Seq(cs) => cs.iter().map(count_nodes).sum(),
++        BackendExpr::Alt { branches, .. } => branches.iter().map(count_nodes).sum(),
++        BackendExpr::RepeatLoop { body, .. } | BackendExpr::ValueProject { body, .. } => {
++            count_nodes(body)
++        }
++        _ => 0,
++    }
++}

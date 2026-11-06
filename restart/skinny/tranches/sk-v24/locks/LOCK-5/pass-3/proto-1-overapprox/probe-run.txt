@@ -1,0 +1,24 @@
+=== (a-crossval) DFA start-state class set — over-approx first(C) ===
+  json::ws                   /[ \t\n\r]*/  first=[\t-\n,\r,SP] (|4|)
+  json::number               /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/  first=[-,0-9] (|11|)
+  json::string               /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/  first=["] (|1|)
+  sheets::number             /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/  first=[.,0-9] (|11|)
+  sheets::string             /"([^"]|"")*"/  first=["] (|1|)
+  sheets::boolean_true       /[tT][rR][uU][eE]/  first=[T,t] (|2|)
+  sheets::boolean_false      /[fF][aA][lL][sS][eE]/  first=[F,f] (|2|)
+  sheets::sheet_prefix       /'(?:[^']|'')*'!|[A-Za-z_]\w*!/  first=[',A-Z,_,a-z] (|54|)
+  sheets::cell_ref           /\$?[A-Za-z]{1,3}\$?\d+/  first=[$,A-Z,a-z] (|53|)
+  sheets::range_end_num      /\$?\d+/  first=[$,0-9] (|11|)
+  sheets::range_end_alpha    /\$?[A-Za-z]{1,3}/  first=[$,A-Z,a-z] (|53|)
+  sheets::identifier         /[A-Za-z_][A-Za-z0-9_.]*/  first=[A-Z,_,a-z] (|53|)
+  sheets::let_call           /[lL][eE][tT]\(/  first=[L,l] (|2|)
+  sheets::lambda_call        /[lL][aA][mM][bB][dD][aA]\(/  first=[L,l] (|2|)
+  sheets::formula            /=?/  first=[=] (|1|)
+  counterexample::word       /[a-z]+/  first=[a-z] (|26|)
+
+=== (c) cold-paired direct-scan vs Dfa::find ===
+loadavg: n/a (darwin)
+  [hex6[rare]] tape byte-identical (matched span): 256/256
+  [hex6[rare]] direct=1.37 ns/scan  Dfa::find=4.24 ns/scan  median(direct_speed/dfa_speed)=3.246x  (reps=240, inputs=256)
+  [lower[dense]] tape byte-identical (matched span): 256/256
+  [lower[dense]] direct=4.16 ns/scan  Dfa::find=11.79 ns/scan  median(direct_speed/dfa_speed)=2.812x  (reps=240, inputs=256)

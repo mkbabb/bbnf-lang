@@ -1,0 +1,9 @@
+=== tsc --noEmit (tightened) ===
+src/parse/parser.ts(192,56): error TS2304: Cannot find name 'S'.
+src/parse/parser.ts(592,49): error TS2304: Cannot find name 'S'.
+TSC_EXIT=2
+=== vite build (tightened) ===
+dist/diagnostics-DpUY87_d.cjs     3.79 kB │ gzip: 1.13 kB │ map:   9.02 kB
+dist/packrat-entry-46NYx4_U.cjs  41.04 kB │ gzip: 9.02 kB │ map: 115.33 kB
+✓ built in 554ms
+BUILD_EXIT=

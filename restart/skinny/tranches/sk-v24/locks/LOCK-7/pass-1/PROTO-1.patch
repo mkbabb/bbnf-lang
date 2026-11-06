@@ -1,0 +1,103 @@
+diff --git a/skinny/crates/grammar/tests/probe_bbnf_selfhost.rs b/skinny/crates/grammar/tests/probe_bbnf_selfhost.rs
+new file mode 100644
+index 000000000..d31685627
+--- /dev/null
++++ b/skinny/crates/grammar/tests/probe_bbnf_selfhost.rs
+@@ -0,0 +1,97 @@
++//! LOCK-7 probe t1 (family f1) — the §0 base-case wall.
++//!
++//! Question: does the skinny hand front-end parser (`grammar::parse_grammar`,
++//! the SEED of every ladder posture 7A/7B/7D) ACCEPT bbnf's own surface —
++//! `@import`, `@{}` host-capture, `?w`, `->`, grammar-function closures, the
++//! recursive term→factor→…→rhs alternation tower? If not, at which byte does it
++//! reject? This isolates the PARSE wall from the downstream lowering wall.
++
++const BBNF_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../grammar/bbnf");
++
++fn read(name: &str) -> String {
++    let path = format!("{BBNF_DIR}/{name}");
++    std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path}: {e}"))
++}
++
++/// Strip `@import … ;` directive lines so the concatenation is self-contained
++/// (no cross-file specifier resolution needed to reach the parser proper).
++fn strip_imports(src: &str) -> String {
++    src.lines()
++        .filter(|l| !l.trim_start().starts_with("@import"))
++        .collect::<Vec<_>>()
++        .join("\n")
++}
++
++fn byte_to_linecol(src: &str, off: usize) -> (usize, usize, String) {
++    let clamped = off.min(src.len());
++    let prefix = &src[..clamped];
++    let line = prefix.matches('\n').count() + 1;
++    let col = clamped - prefix.rfind('\n').map(|i| i + 1).unwrap_or(0) + 1;
++    let end = src[clamped..]
++        .find('\n')
++        .map(|i| clamped + i)
++        .unwrap_or(src.len());
++    let line_start = prefix.rfind('\n').map(|i| i + 1).unwrap_or(0);
++    (line, col, src[line_start..end].to_string())
++}
++
++fn report(label: &str, name: &str, src: &str, res: Result<usize, grammar::GrammarError>) {
++    match res {
++        Ok(rule_count) => {
++            eprintln!("PROBE[{label}] {name}: PARSE OK — {rule_count} rules accepted");
++        }
++        Err(e) => {
++            let s = e.to_string();
++            // GrammarError Display: "{code}: {message} at byte {offset}"
++            let off = s
++                .rsplit("at byte ")
++                .next()
++                .and_then(|t| t.trim().parse::<usize>().ok());
++            if let Some(off) = off {
++                let (line, col, text) = byte_to_linecol(src, off);
++                eprintln!("PROBE[{label}] {name}: REJECT @ byte {off} (line {line}, col {col})");
++                eprintln!("PROBE[{label}]   err: {s}");
++                eprintln!("PROBE[{label}]   line: {text:?}");
++                let ctx_start = off.saturating_sub(24).min(src.len());
++                let ctx_end = (off + 24).min(src.len());
++                eprintln!("PROBE[{label}]   ctx: …{:?}⟨HERE⟩{:?}…",
++                    &src[ctx_start..off.min(src.len())], &src[off.min(src.len())..ctx_end]);
++            } else {
++                eprintln!("PROBE[{label}] {name}: REJECT (no byte offset) — {s}");
++            }
++        }
++    }
++}
++
++#[test]
++fn probe_a_literal_gate_single_source() {
++    // The §0 gate verbatim: emit_from_source("bbnf", bbnf.bbnf) begins with
++    // parse_grammar on the raw single source (imports unresolved).
++    let src = read("bbnf.bbnf");
++    let res = grammar::parse_grammar("bbnf", &src).map(|g| g.rules.len());
++    report("A/literal-single-source", "bbnf.bbnf", &src, res);
++}
++
++#[test]
++fn probe_b_self_contained_closure() {
++    // Imports inlined: bbnf.bbnf ∪ expressions.bbnf ∪ types.bbnf with @import
++    // lines removed → a single self-contained grammar. Isolates the pure parse +
++    // resolve_refs + validate question from the import machinery.
++    let bbnf = strip_imports(&read("bbnf.bbnf"));
++    let exprs = strip_imports(&read("expressions.bbnf"));
++    let types = strip_imports(&read("types.bbnf"));
++    let src = format!("{bbnf}\n\n{exprs}\n\n{types}\n");
++    let res = grammar::parse_grammar("bbnf", &src).map(|g| g.rules.len());
++    report("B/self-contained", "bbnf∪expr∪types", &src, res);
++}
++
++#[test]
++fn probe_c_each_file_standalone() {
++    // Which of the three files (minus imports) individually pass parse+resolve?
++    // resolve_refs will flag cross-file refs; parse_rules alone is the surface test.
++    for name in ["types.bbnf", "expressions.bbnf", "bbnf.bbnf"] {
++        let src = strip_imports(&read(name));
++        let res = grammar::parse_grammar("bbnf", &src).map(|g| g.rules.len());
++        report("C/standalone", name, &src, res);
++    }
++}

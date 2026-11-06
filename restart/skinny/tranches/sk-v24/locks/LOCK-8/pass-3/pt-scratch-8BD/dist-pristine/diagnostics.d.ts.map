@@ -1,0 +1,1 @@
+{"version":3,"file":"diagnostics.d.ts","sourceRoot":"","sources":["../src/parse/diagnostics.ts"],"names":[],"mappings":"AAKA,OAAO,EACH,eAAe,EACf,iBAAiB,EACjB,kBAAkB,EAClB,iBAAiB,EACjB,uBAAuB,EACvB,yBAAyB,GAC5B,MAAM,YAAY,CAAC;AACpB,YAAY,EAAE,UAAU,EAAE,aAAa,EAAE,UAAU,EAAE,MAAM,YAAY,CAAC"}

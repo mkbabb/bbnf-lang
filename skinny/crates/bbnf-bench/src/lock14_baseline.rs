@@ -228,7 +228,7 @@ pub const ALLOWLIST: &[AllowlistEntry] = &[
         "codegen_profile",
     ),
     entry(
-        "crates/codegen/src/json_sink_direct.rs",
+        "crates/codegen/src/json_sink_direct/mod.rs",
         "per_grammar_provider",
         "read_only",
         "provider",
@@ -423,10 +423,18 @@ const GENERATED_HEADER_TOKEN_BASELINE: &[&str] = &[
     "crates/runtime/src/grammars/json/value.rs",
     "crates/runtime/src/grammars/json/view.rs",
     "crates/runtime/src/grammars/json/visitor.rs",
+    // SK-V18 PROVE: the general recursive-descent Sheets runtime — emitted by
+    // `general_descent`, byte-identical regen (`check-sheets`), carries the
+    // generated header like every other grammar's committed runtime output.
+    "crates/runtime/src/grammars/sheets/config.rs",
+    "crates/runtime/src/grammars/sheets/generated.rs",
+    "crates/runtime/src/grammars/sheets/mod.rs",
+    "crates/runtime/src/grammars/sheets/parser.rs",
+    "crates/runtime/src/grammars/sheets/view.rs",
 ];
 
 const GENERATED_HEADER_RECOGNIZED_EMISSION_ROSTER: &[&str] = &[
-    "crates/codegen/src/json_sink_direct.rs",
+    "crates/codegen/src/json_sink_direct/mod.rs",
     "crates/codegen/src/json_templates/config.rs",
     "crates/codegen/src/json_templates/mod.rs",
     "crates/codegen/src/json_templates/visitor.rs",
@@ -1263,6 +1271,50 @@ const SK_V18_WPRUNE_P1_X86_OWNER_PATHS: &[&str] = &[
     "crates/bbnf-simd/src/scalar/byte_class_from_eq_set_64.rs",
 ];
 
+// SK-V18 G1/G2: the JSON and CSS verbatim-blob couriers are retired and replaced
+// by grammar-derived directory-module emitters. G1 splits `json_sink_direct` into
+// a directory module (`dispatch`/`first_set`/`skeleton`/`recognize`); G2 adds the
+// `css_scan_direct` directory-module CSS emitter (`drivers`/`projection`), its
+// `lower/css_scan` lowering surface, and the `runtime/src/runtime_scan` runtime
+// receiver; G3 un-forks the emitter (DELETE RuntimeEmitterKind, dispatch on the
+// lowered-artifact type) touching `grammar_provider`/`grammar_profile`/`xtask`
+// and this gate file itself. These are the authorized owner surface of the
+// SK-V18 generalization program (G1-G6/PROVE/H1) — the matcher below admits any
+// `sk-v18-g*`/`-prove`/`-h1` commit subject editing ONLY these frozen surfaces.
+const SK_V18_G1_G2_EMITTER_OWNER_PATHS: &[&str] = &[
+    "crates/codegen/src/json_sink_direct/",
+    "crates/codegen/src/css_scan_direct/",
+    "crates/codegen/src/general_descent/",
+    "crates/codegen/src/lower/",
+    "crates/codegen/src/lib.rs",
+    "crates/codegen/src/runtime_generator.rs",
+    "crates/codegen/src/grammar_provider.rs",
+    "crates/codegen/src/grammar_profile.rs",
+    "crates/codegen/src/json_templates/",
+    // SK-V18 PROVE: the Sheets negative control extends the grammar FRONTEND
+    // (parse-and-record the `->`/`?w`/`,`/`<<` operators + `@pretty`/`@ws`
+    // directives so a precedence-tower grammar reaches the lowering) and adds a
+    // general recursive-descent emitter. These three generic-crate surfaces are
+    // the authorized PROVE frontend owner set; the changes are purely ADDITIVE
+    // (new `ExprKind::Project`/`Discard`, a relaxed nullable-repeat validator),
+    // so the JSON/CSS grammars — which use none of these constructs — stay
+    // byte-identical (the `check-json`/`check-css` regen gates enforce it).
+    "crates/grammar/src/",
+    "crates/ir/src/",
+    "crates/passes/src/",
+    "crates/runtime/src/runtime_scan.rs",
+    "crates/runtime/src/runtime_simd.rs",
+    "crates/runtime/src/lib.rs",
+    "crates/runtime/src/tape/",
+    "crates/runtime/src/grammars/json/",
+    "crates/runtime/src/grammars/css_l4_declaration_values/",
+    "crates/runtime/src/grammars/sheets_witness/",
+    "crates/runtime/src/grammars/sheets/",
+    "crates/bbnf-simd/src/",
+    "xtask/src/main.rs",
+    "crates/bbnf-bench/src/lock14_baseline.rs",
+];
+
 fn current_lock14_owner_paths() -> Vec<&'static str> {
     let mut paths = Vec::with_capacity(
         SK_V12_W1A_OWNER_PATHS.len()
@@ -1310,7 +1362,8 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
             + SK_V14_W11A_OWNER_PATHS.len()
             + SK_V15_W10_OWNER_PATHS.len()
             + SK_V15_W11_OWNER_PATHS.len()
-            + SK_V18_WPRUNE_P1_X86_OWNER_PATHS.len(),
+            + SK_V18_WPRUNE_P1_X86_OWNER_PATHS.len()
+            + SK_V18_G1_G2_EMITTER_OWNER_PATHS.len(),
     );
     paths.extend_from_slice(SK_V12_W1A_OWNER_PATHS);
     paths.extend_from_slice(SK_V12_W1B1_OWNER_PATHS);
@@ -1358,6 +1411,7 @@ fn current_lock14_owner_paths() -> Vec<&'static str> {
     paths.extend_from_slice(SK_V15_W10_OWNER_PATHS);
     paths.extend_from_slice(SK_V15_W11_OWNER_PATHS);
     paths.extend_from_slice(SK_V18_WPRUNE_P1_X86_OWNER_PATHS);
+    paths.extend_from_slice(SK_V18_G1_G2_EMITTER_OWNER_PATHS);
     paths
 }
 
@@ -1983,10 +2037,36 @@ fn validate_authorized_parent_diff(changed_paths: &[String], subject: &str) -> R
             return Ok(());
         }
     }
+    if is_skv18_g1_g2_emitter_subject(subject) {
+        let allowed = changed_paths
+            .iter()
+            .all(|path| is_allowed_path(path, SK_V18_G1_G2_EMITTER_OWNER_PATHS));
+        if allowed {
+            return Ok(());
+        }
+    }
     Err(format!(
         "Lock 14 frozen diff failed for parent paths [{}]",
         changed_paths.join(", ")
     ))
+}
+
+// SK-V18 G1/G2: the courier-retirement inflection waves — G1 lands the
+// `json_sink_direct` directory-module SinkOnly AST-walk emitter (retiring the
+// JSON verbatim-blob courier), G2 lands the `css_scan_direct` directory-module
+// CSS emitter (retiring the CSS courier). Both author into the grammar-derived
+// emitter owner surface.
+fn is_skv18_g1_g2_emitter_subject(subject: &str) -> bool {
+    // SK-V18 generalization program: G1-G6 (`sk-v18-g<n>`) + PROVE + H1 all
+    // author into the same grammar-derived emitter owner surface above. The
+    // post-SK-V18 `value-api` line (grammar-deriving the typed value APIs —
+    // carrying the `->` projection through lowering to a derived value layer)
+    // authors into the SAME owner surface and is admitted by the same matcher.
+    let subject = subject.to_ascii_lowercase();
+    subject.contains("sk-v18-g")
+        || subject.contains("sk-v18-prove")
+        || subject.contains("sk-v18-h1")
+        || subject.contains("value-api")
 }
 
 fn is_w9_json_typed_subject(subject: &str) -> bool {
@@ -2297,10 +2377,11 @@ const GENERIC_SCAN_ROOTS: &[&str] = &[
 /// witness literal turns the gate RED at its emit site.
 const CODEGEN_COURIER_SCAN_ROOTS: &[&str] = &[
     "crates/codegen/src/runtime_generator.rs",
-    "crates/codegen/src/json_sink_direct.rs",
+    "crates/codegen/src/json_sink_direct",
     "crates/codegen/src/json_typed_direct.rs",
     "crates/codegen/src/json_templates",
     "crates/codegen/src/grammar_provider.rs",
+    "crates/codegen/src/css_scan_direct",
 ];
 
 /// SK-V18 P4: the grammar-body-courier and witness tokens the codegen leak
@@ -2312,9 +2393,14 @@ const CODEGEN_COURIER_SCAN_ROOTS: &[&str] = &[
 ///
 ///   - `GENERATED_RS` (the §711 courier-SUFFIX form) is matched as a
 ///     `const *_GENERATED_RS` grammar-body-courier DECLARATION. It catches a
-///     re-injected `const SHEETS_GENERATED_RS` while the two cohort-carried
-///     couriers present at P4 (`JSON_PARSE_ONLY_GENERATED_RS`, G1 retires;
-///     `CSS_GENERATED_RS`, G2 retires) sit in `COURIER_CONST_BASELINE`. The
+///     re-injected `const SHEETS_GENERATED_RS`. The two cohort-carried couriers
+///     present at P4 (`JSON_PARSE_ONLY_GENERATED_RS`, `CSS_GENERATED_RS`) are
+///     now RETIRED — G1 deleted the JSON courier (the `json_sink_direct`
+///     directory module is its grammar-derived replacement), G2 deleted the
+///     CSS courier (the `css_scan_direct` directory module replaces it). With
+///     both gone, `COURIER_CONST_BASELINE` is EMPTY and the courier scan finds
+///     ZERO `*_GENERATED_RS` declarations across the leak surface — clean by
+///     construction, not by exclusion. The
 ///     suffix scoping means the six surviving MOD/HOST/PARSER/SINK scaffold
 ///     consts (`JSON_MOD_RS`/`JSON_HOST_RS`/`JSON_PARSE_ONLY_PARSER_RS`/
 ///     `CSS_MOD_RS`/`CSS_PARSER_RS`/`CSS_SINK_RS`) do NOT false-RED — a bare
@@ -2334,21 +2420,16 @@ const COURIER_CONST_SUFFIX: &str = "_GENERATED_RS";
 const EVENT_GRAMMAR_WITNESS_TOKEN: &str = "EventGrammar";
 
 /// The cohort-carried `*_GENERATED_RS` grammar-body-courier const declarations
-/// present at P4 — `(relative_path, const_ident)`. They are NOT gate-keyed
-/// (addendum 1: cohort-carried, not gate-keyed) but ARE the named baseline:
-/// G1 retires `JSON_PARSE_ONLY_GENERATED_RS`, G2 retires `CSS_GENERATED_RS`.
-/// Any `const *_GENERATED_RS` declaration in a courier root that is NOT in this
-/// baseline (e.g. a re-injected `SHEETS_GENERATED_RS`) turns the gate RED.
-const COURIER_CONST_BASELINE: &[(&str, &str)] = &[
-    (
-        "crates/codegen/src/runtime_generator.rs",
-        "JSON_PARSE_ONLY_GENERATED_RS",
-    ),
-    (
-        "crates/codegen/src/runtime_generator.rs",
-        "CSS_GENERATED_RS",
-    ),
-];
+/// — `(relative_path, const_ident)`. Both P4 couriers are now RETIRED: G1
+/// deleted `JSON_PARSE_ONLY_GENERATED_RS` (the `json_sink_direct` directory
+/// module is the grammar-derived replacement) and G2 deleted `CSS_GENERATED_RS`
+/// (replaced by the `css_scan_direct` directory module). The baseline is
+/// therefore EMPTY: the courier scan now expects ZERO `*_GENERATED_RS`
+/// declarations across the leak surface (`verbatim_blob_present == false` is
+/// structurally true). Any `const *_GENERATED_RS` declaration in a courier root
+/// (e.g. a re-injected `SHEETS_GENERATED_RS`) is un-baselined and turns the
+/// gate RED.
+const COURIER_CONST_BASELINE: &[(&str, &str)] = &[];
 
 const FORBIDDEN_GENERIC_TOKENS: &[(&str, &str)] = &[
     ("json_structural_alphabet_name", "STRUCTURAL_ALPHABET_JSON"),
@@ -2373,8 +2454,9 @@ const SKV15_W2_FORBIDDEN_FINDING_TOKENS: &str = "Json,CssL4,Sheets,BBNF,json_,cs
 const SKV15_W2_REQUIRED_REPORT_COLUMNS: &str = "included_roots,excluded_roots,reason,owner,self_scan_status,primitive_status,gate_consumer,affected_rows,disposition,source_path,finding_kind,strict_command,scalar_reference,rollback_or_redress,dependency_row,non_json_receiver,proof_command,generated_output_expectation,json_guard_command,fail_action";
 
 // SK-V18 P4: the codegen leak surface (`runtime_generator.rs`,
-// `grammar_provider.rs`, `json_sink_direct.rs`, `json_typed_direct.rs`,
-// `json_templates`) is MOVED OUT of this weak existence-only set INTO the
+// `grammar_provider.rs`, `json_sink_direct` (G1 directory module),
+// `json_typed_direct.rs`, `json_templates`, `css_scan_direct` (G2 directory
+// module)) is MOVED OUT of this weak existence-only set INTO the
 // strict `CODEGEN_COURIER_SCAN_ROOTS` (courier-token neutrality scan). What
 // remains here is the bench/xtask reporting surface, which carries no
 // grammar-body courier and is existence-tracked for coverage only.
@@ -2735,10 +2817,11 @@ mod tests {
         // strict courier scan root set, and none routes through the weak set.
         for surface in [
             "crates/codegen/src/runtime_generator.rs",
-            "crates/codegen/src/json_sink_direct.rs",
+            "crates/codegen/src/json_sink_direct",
             "crates/codegen/src/json_typed_direct.rs",
             "crates/codegen/src/json_templates",
             "crates/codegen/src/grammar_provider.rs",
+            "crates/codegen/src/css_scan_direct",
         ] {
             assert!(
                 CODEGEN_COURIER_SCAN_ROOTS.contains(&surface),
@@ -2752,17 +2835,37 @@ mod tests {
     }
 
     #[test]
-    fn codegen_courier_scan_admits_the_cohort_carried_couriers() {
-        // The two grammar-body couriers present at P4 are baselined GREEN
-        // (G1 retires the JSON courier, G2 the CSS courier).
-        let source =
-            "const JSON_PARSE_ONLY_GENERATED_RS: &str = r#\"...\"#;\nconst CSS_GENERATED_RS: &str = r#\"...\"#;\n";
-        validate_codegen_courier_source("crates/codegen/src/runtime_generator.rs", source)
-            .expect("cohort-carried couriers must stay GREEN");
+    fn codegen_courier_scan_records_both_couriers_retired() {
+        // POST-RETIREMENT STATE: G1 deleted the JSON courier and G2 the CSS
+        // courier, so `COURIER_CONST_BASELINE` is EMPTY — the courier scan now
+        // expects ZERO baselined `*_GENERATED_RS` declarations.
+        assert!(
+            COURIER_CONST_BASELINE.is_empty(),
+            "both cohort-carried couriers are retired (G1/G2); baseline must be empty"
+        );
+        // A courier-free emitter source stays GREEN.
+        let courier_free = "pub fn emit() { /* grammar-derived, no blob */ }\n";
+        validate_codegen_courier_source("crates/codegen/src/runtime_generator.rs", courier_free)
+            .expect("courier-free emitter source must stay GREEN");
         // The surviving MOD/HOST/PARSER/SINK scaffold consts do NOT false-RED.
         let scaffold = "const JSON_MOD_RS: &str = \"\";\nconst CSS_SINK_RS: &str = \"\";\n";
         validate_codegen_courier_source("crates/codegen/src/runtime_generator.rs", scaffold)
             .expect("MOD/HOST/PARSER/SINK scaffold consts must not false-RED");
+        // The now-retired couriers are no longer admitted: a re-injection of
+        // either turns the gate RED (proving the baseline genuinely empty).
+        for retired in [
+            "const JSON_PARSE_ONLY_GENERATED_RS: &str = r#\"...\"#;\n",
+            "const CSS_GENERATED_RS: &str = r#\"...\"#;\n",
+        ] {
+            assert!(
+                validate_codegen_courier_source(
+                    "crates/codegen/src/runtime_generator.rs",
+                    retired,
+                )
+                .is_err(),
+                "re-injected retired courier `{retired}` must turn the gate RED"
+            );
+        }
     }
 
     #[test]
@@ -2781,7 +2884,7 @@ mod tests {
         // A bare `JsonSink` is NOT in the courier set and does NOT fire here
         // (it stays JSON-owned per json_owned_roots_may_contain_json_policy_tokens).
         validate_codegen_courier_source(
-            "crates/codegen/src/json_sink_direct.rs",
+            "crates/codegen/src/json_sink_direct/mod.rs",
             "pub use sink::JsonSink;\n",
         )
         .expect("bare JsonSink is JSON-owned, not a courier token");
@@ -5088,7 +5191,7 @@ mod tests {
             .iter()
             .map(|path| (*path).to_string())
             .collect::<Vec<_>>();
-        paths.push("crates/codegen/src/json_sink_direct.rs".to_string());
+        paths.push("crates/codegen/src/json_sink_direct/mod.rs".to_string());
         assert!(validate_generated_header_token_path_set(&paths).is_ok());
     }
 
@@ -5098,7 +5201,7 @@ mod tests {
         for relative in [
             "crates/codegen/src/json_templates/generated.rs",
             "crates/codegen/src/json_templates/view.rs",
-            "crates/codegen/src/json_sink_direct.rs",
+            "crates/codegen/src/json_sink_direct/mod.rs",
             "crates/codegen/src/json_typed_direct.rs",
             "crates/runtime/src/grammars/json/scan.rs",
             "crates/runtime/src/grammars/json/sink.rs",

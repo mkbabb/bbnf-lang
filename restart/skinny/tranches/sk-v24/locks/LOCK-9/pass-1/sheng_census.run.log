@@ -1,0 +1,76 @@
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/crates/core)` was not used in the crate graph
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/ser)` was not used in the crate graph
+warning: patch `csp-solver v0.6.0 (/Users/mkbabb/Programming/csc411/CSC411_HW2_ProgrammingQuestion/csp-solver)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling proc-macro2 v1.0.106
+   Compiling libc v0.2.184
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling rustix v1.1.4
+   Compiling shlex v1.3.0
+   Compiling find-msvc-tools v0.1.9
+   Compiling bitflags v2.11.0
+   Compiling clap_lex v1.1.0
+   Compiling anstyle v1.0.14
+   Compiling csp-solver v0.1.0
+   Compiling rustc-hash v2.1.2
+   Compiling smallvec v1.15.1
+   Compiling cfg-if v1.0.4
+   Compiling regex-lite v0.1.9
+   Compiling condtype v1.3.0
+   Compiling cc v1.2.58
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/egraph)
+   Compiling libmimalloc-sys v0.1.44
+   Compiling errno v0.3.14
+   Compiling syn v2.0.117
+   Compiling terminal_size v0.4.4
+   Compiling clap_builder v4.6.0
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/egraph-derive)
+   Compiling divan-macros v0.1.21
+   Compiling clap v4.6.1
+   Compiling bbnf-regex v0.1.0 (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/rust/regex)
+   Compiling divan v0.1.21
+   Compiling mimalloc v0.1.48
+    Finished `release` profile [optimized] target(s) in 4.40s
+     Running tests/sheng_census.rs (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/target/release/deps/sheng_census-e2440f4c3890a420)
+
+running 1 test
+
+########## LOCK-9 PROTO-2 : Tier-2 Sheng feasibility census ##########
+
+=== BYTE mode (unicode=false) — the Sheng-relevant model ===
+leaf           states  classes       s*c | Tier-2 (<=16&<=16) tbl4 (s*c<=64)    
+--------------------------------------------------------------------------------
+number              9        7        63 | YES                YES               
+string-body         4        4        16 | YES                YES               
+ws+comment          5        5        25 | YES                YES               
+identifier          2        3         6 | YES                YES               
+hex                 2        2         4 | YES                YES               
+
+=== UNICODE mode (unicode=true) — literal Dfa::compile default ===
+leaf           states  classes       s*c | Tier-2 (<=16&<=16) tbl4 (s*c<=64)    
+--------------------------------------------------------------------------------
+number              9        7        63 | YES                YES               
+string-body         4        4        16 | YES                YES               
+ws+comment          5        5        25 | YES                YES               
+identifier          2        3         6 | YES                YES               
+hex                 2        2         4 | YES                YES               
+
+=== VERDICT (byte mode) ===
+string-body: 4x4 = 16 s*c  -> tbl4(<=64): FIT
+number:      9x7 = 63 s*c  -> tbl4(<=64): FIT
+
+tbl4-fitting leaves (byte mode): 5/5  (100%)
+Tier-2 (vqtbl1q, <=16&<=16) fitting leaves: 5/5
+
+>>> VERDICT: TIER-2 GO (both string-body AND number fit <=64 s*c) <<<
+#####################################################################
+
+test sheng_census ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

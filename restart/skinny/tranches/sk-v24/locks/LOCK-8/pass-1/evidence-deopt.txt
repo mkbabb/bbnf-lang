@@ -1,0 +1,5 @@
+[bailout (kind: deopt-eager, reason: wrong map): begin. deoptimizing 0x3ed9630d6931 <JSFunction next (sfi = 0x2585254c93c9)>, 0x3fce26281f11 <Code MAGLEV>, opt id 2, bytecode offset 3, deopt exit 0, FP to SP delta 32, caller SP 0x00016ee9d718, pc 0x000122e453b4]
+### PROBE 3 — deopt sweep (steady-state jsonParser + synthetic CSS-value triple)
+[bailout (kind: deopt-eager, reason: prepare for on stack replacement (OSR)): begin. deoptimizing 0x0d9058dbdef9 <JSFunction (sfi = 0xd9058db9269)>, 0x3829391cdb89 <Code MAGLEV>, opt id 49, bytecode offset 1092, deopt exit 11, FP to SP delta 416, caller SP 0x00016ee9da48, pc 0x000122e77d58]
+[bailout (kind: deopt-eager, reason: Insufficient type feedback for binary operation): begin. deoptimizing 0x0d9058dbdef9 <JSFunction (sfi = 0xd9058db9269)>, 0x3829391cfc31 <Code TURBOFAN_JS>, opt id 51, bytecode offset 1138, deopt exit 1, FP to SP delta 448, caller SP 0x00016ee9da48, pc 0x000122e798a8]
+RESULT grammar_shipped_same=false mech_shipped_same=false mech_fixed_same=true PROBE1_PASS=true

@@ -1,0 +1,368 @@
+diff --git a/skinny/crates/bbnf-bench/src/bin/dispatch_canon_bench.rs b/skinny/crates/bbnf-bench/src/bin/dispatch_canon_bench.rs
+new file mode 100644
+index 000000000..d5cb352f4
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/src/bin/dispatch_canon_bench.rs
+@@ -0,0 +1,362 @@
++//! PROVE-2-DISPATCH-CYCB-PAIRED — LOCK-2 deciding half.
++//!
++//! Byte-faithful clone of `json_canon_bench.rs`'s `ri_cycles` harness
++//! (proc_pid_rusage RUSAGE_INFO_V5 — the SAME counter PROVE-12 used for cyc/B),
++//! repurposed to decide: at large N, is DISPATCH-table lowering (branch on the
++//! first byte — exactly what `runtime/.../json/value.rs:33` emits) actually
++//! FASTER in measured cyc/B than SEQUENTIAL-trial (ordered alt attempts with
++//! fail-fast on first-byte mismatch), and does the direction REVERSE at N=2?
++//!
++//! Two RUNNABLE parsers over a rule of N pairwise-disjoint-FIRST alternatives
++//! (the JSON `value` shape generalised: N keywords, distinct first bytes):
++//!   DISPATCH   — `match first_byte { .. }`  (O(1) select; real generated shape)
++//!   SEQUENTIAL — `for k in 0..N { if first_byte == KW[k][0] { .. } }`  (trial)
++//! Both perform ONE full keyword verify per token; only the SELECT cost differs,
++//! so ins/B is the load-invariant parity check and cyc/B the load-sensitive one
++//! measured paired (interleaved DISPATCH/SEQUENTIAL blocks per window, >=3
++//! windows) so load hits both sides of every ratio equally.
++
++use std::hint::black_box;
++
++// --- PMU via proc_pid_rusage V5 — verbatim from json_canon_bench.rs ---
++#[repr(C)]
++#[derive(Default, Clone, Copy)]
++struct RusageInfoV5 {
++    ri_uuid: [u8; 16],
++    ri_user_time: u64,
++    ri_system_time: u64,
++    ri_pkg_idle_wkups: u64,
++    ri_interrupt_wkups: u64,
++    ri_pageins: u64,
++    ri_wired_size: u64,
++    ri_resident_size: u64,
++    ri_phys_footprint: u64,
++    ri_proc_start_abstime: u64,
++    ri_proc_exit_abstime: u64,
++    ri_child_user_time: u64,
++    ri_child_system_time: u64,
++    ri_child_pkg_idle_wkups: u64,
++    ri_child_interrupt_wkups: u64,
++    ri_child_pageins: u64,
++    ri_child_elapsed_abstime: u64,
++    ri_diskio_bytesread: u64,
++    ri_diskio_byteswritten: u64,
++    ri_cpu_time_qos_default: u64,
++    ri_cpu_time_qos_maintenance: u64,
++    ri_cpu_time_qos_background: u64,
++    ri_cpu_time_qos_utility: u64,
++    ri_cpu_time_qos_legacy: u64,
++    ri_cpu_time_qos_user_initiated: u64,
++    ri_cpu_time_qos_user_interactive: u64,
++    ri_billed_system_time: u64,
++    ri_serviced_system_time: u64,
++    ri_logical_writes: u64,
++    ri_lifetime_max_phys_footprint: u64,
++    ri_instructions: u64,
++    ri_cycles: u64,
++    ri_billed_energy: u64,
++    ri_serviced_energy: u64,
++    ri_interval_max_phys_footprint: u64,
++    ri_runnable_time: u64,
++    ri_flags: u64,
++}
++const RUSAGE_INFO_V5: i32 = 5;
++extern "C" {
++    fn proc_pid_rusage(pid: libc::pid_t, flavor: i32, buffer: *mut u8) -> i32;
++}
++fn read_rusage_v5() -> RusageInfoV5 {
++    let mut ri = RusageInfoV5::default();
++    let rc = unsafe {
++        proc_pid_rusage(
++            libc::getpid(),
++            RUSAGE_INFO_V5,
++            (&mut ri) as *mut RusageInfoV5 as *mut u8,
++        )
++    };
++    if rc != 0 {
++        panic!("proc_pid_rusage failed rc={rc}");
++    }
++    ri
++}
++
++// --- The rule: 8 pairwise-disjoint-FIRST alternatives (JSON `value` shape). ---
++// Equal length so byte accounting is uniform; distinct first bytes a..=h.
++const KW: [&[u8]; 8] = [
++    b"apple", b"berry", b"cocoa", b"dates", b"elder", b"figgy", b"grape", b"honey",
++];
++const KWLEN: usize = 5;
++const TOKLEN: usize = KWLEN + 1; // keyword + single space separator
++
++/// Build a corpus of `~target` bytes: round-robin the first `n` alternatives so
++/// the matching alt is uniformly distributed over 0..n — SEQUENTIAL's mean trial
++/// depth is (n+1)/2, DISPATCH's is 1, for every token (every token is a
++/// value-start). Deterministic (no shuffle needed; round-robin is uniform).
++fn make_corpus(n: usize, target: usize) -> Vec<u8> {
++    let mut buf = Vec::with_capacity(target + TOKLEN);
++    let mut k = 0usize;
++    while buf.len() < target {
++        buf.extend_from_slice(KW[k % n]);
++        buf.push(b' ');
++        k += 1;
++    }
++    buf
++}
++
++/// DISPATCH lowering: branch on the first byte, O(1) select, then verify.
++/// Mirrors `runtime/src/grammars/json/value.rs:33` `match src[offset] { .. }`.
++#[inline(never)]
++fn parse_dispatch(buf: &[u8]) -> u64 {
++    let mut i = 0usize;
++    let mut ck = 0u64;
++    let len = buf.len();
++    while i + KWLEN <= len {
++        let alt = match buf[i] {
++            b'a' => 0usize,
++            b'b' => 1,
++            b'c' => 2,
++            b'd' => 3,
++            b'e' => 4,
++            b'f' => 5,
++            b'g' => 6,
++            b'h' => 7,
++            _ => {
++                i += 1;
++                continue;
++            }
++        };
++        // one full keyword verify (identical work to SEQUENTIAL on the match)
++        if buf[i..i + KWLEN] == *KW[alt] {
++            ck = ck.wrapping_add(alt as u64).wrapping_mul(0x9E37);
++        }
++        i += TOKLEN;
++    }
++    ck
++}
++
++/// LUT DISPATCH lowering: the textbook 256-entry "branch on first byte" table,
++/// populated for the live `n` alternatives. Cost is n-INDEPENDENT (one load,
++/// one sentinel test, one verify) — the purest dispatch-table shape, sized to
++/// the rule (only `n` live entries) rather than a fixed match arm count.
++#[inline(never)]
++fn parse_dispatch_lut(buf: &[u8], n: usize) -> u64 {
++    let mut lut = [0xFFu8; 256];
++    for k in 0..n {
++        lut[KW[k][0] as usize] = k as u8;
++    }
++    let mut i = 0usize;
++    let mut ck = 0u64;
++    let len = buf.len();
++    while i + KWLEN <= len {
++        let a = lut[buf[i] as usize];
++        if a == 0xFF {
++            i += 1;
++            continue;
++        }
++        let alt = a as usize;
++        if buf[i..i + KWLEN] == *KW[alt] {
++            ck = ck.wrapping_add(alt as u64).wrapping_mul(0x9E37);
++        }
++        i += TOKLEN;
++    }
++    ck
++}
++
++/// SEQUENTIAL lowering: try alternatives in order; fail fast on first-byte
++/// mismatch; verify the one whose first byte matches. Mean select depth (n+1)/2.
++#[inline(never)]
++fn parse_sequential(buf: &[u8], n: usize) -> u64 {
++    let mut i = 0usize;
++    let mut ck = 0u64;
++    let len = buf.len();
++    while i + KWLEN <= len {
++        let b = buf[i];
++        let mut matched = usize::MAX;
++        for k in 0..n {
++            if b == KW[k][0] {
++                // first byte matched -> full verify (fail-fast trial semantics)
++                if buf[i..i + KWLEN] == *KW[k] {
++                    matched = k;
++                }
++                break;
++            }
++        }
++        if matched != usize::MAX {
++            ck = ck.wrapping_add(matched as u64).wrapping_mul(0x9E37);
++        }
++        i += TOKLEN;
++    }
++    ck
++}
++
++fn loadavg() -> String {
++    std::process::Command::new("sysctl")
++        .args(["-n", "vm.loadavg"])
++        .output()
++        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
++        .unwrap_or_default()
++}
++
++struct Window {
++    disp_cyc_pb: f64,
++    seq_cyc_pb: f64,
++    lut_cyc_pb: f64,
++    disp_ins_pb: f64,
++    seq_ins_pb: f64,
++    lut_ins_pb: f64,
++    ratio_cyc: f64,     // match-dispatch / sequential  (<1 => dispatch faster)
++    ratio_ins: f64,
++    ratio_lut_cyc: f64, // lut-dispatch   / sequential
++    ratio_lut_ins: f64,
++}
++
++/// One paired window: block of `iters` DISPATCH parses, then `iters` SEQUENTIAL,
++/// interleaved-adjacent so load/thermal hits both. ri read straddles each block.
++fn window(buf: &[u8], n: usize, iters: usize) -> Window {
++    let total_bytes = (buf.len() as u128) * (iters as u128);
++
++    // DISPATCH block
++    let ri0 = read_rusage_v5();
++    let mut ck = 0u64;
++    for _ in 0..iters {
++        ck ^= parse_dispatch(black_box(buf));
++    }
++    let ri1 = read_rusage_v5();
++    black_box(ck);
++    let disp_cyc = (ri1.ri_cycles - ri0.ri_cycles) as f64;
++    let disp_ins = (ri1.ri_instructions - ri0.ri_instructions) as f64;
++
++    // LUT-DISPATCH block
++    let ri_l0 = read_rusage_v5();
++    let mut ckl = 0u64;
++    for _ in 0..iters {
++        ckl ^= parse_dispatch_lut(black_box(buf), black_box(n));
++    }
++    let ri_l1 = read_rusage_v5();
++    black_box(ckl);
++    let lut_cyc = (ri_l1.ri_cycles - ri_l0.ri_cycles) as f64;
++    let lut_ins = (ri_l1.ri_instructions - ri_l0.ri_instructions) as f64;
++
++    // SEQUENTIAL block
++    let ri2 = read_rusage_v5();
++    let mut ck2 = 0u64;
++    for _ in 0..iters {
++        ck2 ^= parse_sequential(black_box(buf), black_box(n));
++    }
++    let ri3 = read_rusage_v5();
++    black_box(ck2);
++    let seq_cyc = (ri3.ri_cycles - ri2.ri_cycles) as f64;
++    let seq_ins = (ri3.ri_instructions - ri2.ri_instructions) as f64;
++
++    let tb = total_bytes as f64;
++    Window {
++        disp_cyc_pb: disp_cyc / tb,
++        seq_cyc_pb: seq_cyc / tb,
++        lut_cyc_pb: lut_cyc / tb,
++        disp_ins_pb: disp_ins / tb,
++        seq_ins_pb: seq_ins / tb,
++        lut_ins_pb: lut_ins / tb,
++        ratio_cyc: disp_cyc / seq_cyc,
++        ratio_ins: disp_ins / seq_ins,
++        ratio_lut_cyc: lut_cyc / seq_cyc,
++        ratio_lut_ins: lut_ins / seq_ins,
++    }
++}
++
++fn mean(v: &[f64]) -> f64 {
++    v.iter().sum::<f64>() / v.len() as f64
++}
++/// 95% CI of the paired ratio (normal approx, matches json_canon emit_paired).
++fn ci95(v: &[f64]) -> (f64, f64, f64) {
++    let n = v.len();
++    let m = mean(v);
++    let var = v.iter().map(|x| (x - m).powi(2)).sum::<f64>() / (n as f64 - 1.0);
++    let se = (var / n as f64).sqrt();
++    (m, m - 1.96 * se, m + 1.96 * se)
++}
++
++fn run_n(n: usize, windows: usize, iters: usize, corpus_bytes: usize) {
++    let buf = make_corpus(n, corpus_bytes);
++    // correctness: all three parsers must agree (identical token stream => identical ck)
++    let cd = parse_dispatch(&buf);
++    let cs = parse_sequential(&buf, n);
++    let cl = parse_dispatch_lut(&buf, n);
++    assert_eq!(cd, cs, "N={n}: match-dispatch/sequential disagree — not the same parse");
++    assert_eq!(cl, cs, "N={n}: lut-dispatch/sequential disagree — not the same parse");
++
++    // touch / warm equally, then measured windows
++    let _ = window(&buf, n, iters);
++    let mut ws = Vec::with_capacity(windows);
++    for _ in 0..windows {
++        ws.push(window(&buf, n, iters));
++    }
++
++    let disp_cyc: Vec<f64> = ws.iter().map(|w| w.disp_cyc_pb).collect();
++    let seq_cyc: Vec<f64> = ws.iter().map(|w| w.seq_cyc_pb).collect();
++    let disp_ins: Vec<f64> = ws.iter().map(|w| w.disp_ins_pb).collect();
++    let seq_ins: Vec<f64> = ws.iter().map(|w| w.seq_ins_pb).collect();
++    let lut_cyc: Vec<f64> = ws.iter().map(|w| w.lut_cyc_pb).collect();
++    let lut_ins: Vec<f64> = ws.iter().map(|w| w.lut_ins_pb).collect();
++    let rc: Vec<f64> = ws.iter().map(|w| w.ratio_cyc).collect();
++    let ri: Vec<f64> = ws.iter().map(|w| w.ratio_ins).collect();
++    let rlc: Vec<f64> = ws.iter().map(|w| w.ratio_lut_cyc).collect();
++    let rli: Vec<f64> = ws.iter().map(|w| w.ratio_lut_ins).collect();
++
++    let (rc_m, rc_lo, rc_hi) = ci95(&rc);
++    let (ri_m, ri_lo, ri_hi) = ci95(&ri);
++    let (rlc_m, rlc_lo, rlc_hi) = ci95(&rlc);
++    let (rli_m, rli_lo, rli_hi) = ci95(&rli);
++
++    println!("# --- N={n} (alternatives) ---");
++    println!(
++        "N={n} bytes={} windows={windows} iters={iters} \
++         match_cyc_pb={:.4} lut_cyc_pb={:.4} seq_cyc_pb={:.4} \
++         match_ins_pb={:.4} lut_ins_pb={:.4} seq_ins_pb={:.4}",
++        buf.len(),
++        mean(&disp_cyc),
++        mean(&lut_cyc),
++        mean(&seq_cyc),
++        mean(&disp_ins),
++        mean(&lut_ins),
++        mean(&seq_ins),
++    );
++    // RATIO = dispatch / sequential.  <1 (and CI hi<1) => dispatch faster.
++    println!(
++        "RATIO N={n} cyc match-dispatch/sequential mean={rc_m:.4} lo95={rc_lo:.4} hi95={rc_hi:.4}  \
++         (hi<1.0 => DISPATCH faster, excludes parity)"
++    );
++    println!(
++        "RATIO N={n} cyc lut-dispatch/sequential   mean={rlc_m:.4} lo95={rlc_lo:.4} hi95={rlc_hi:.4}  \
++         (hi<1.0 => DISPATCH faster, excludes parity)"
++    );
++    println!(
++        "RATIO N={n} ins match-dispatch/sequential mean={ri_m:.4} lo95={ri_lo:.4} hi95={ri_hi:.4}  \
++         (load-invariant parity check)"
++    );
++    println!(
++        "RATIO N={n} ins lut-dispatch/sequential   mean={rli_m:.4} lo95={rli_lo:.4} hi95={rli_hi:.4}  \
++         (load-invariant parity check)"
++    );
++}
++
++fn main() {
++    let args: Vec<String> = std::env::args().collect();
++    let windows: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(20);
++    let iters: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(64);
++    let corpus_bytes: usize = args.get(3).and_then(|s| s.parse().ok()).unwrap_or(64 * 1024);
++
++    let host = std::process::Command::new("uname")
++        .arg("-m")
++        .output()
++        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
++        .unwrap_or_default();
++    println!(
++        "# PROVE-2 dispatch-vs-sequential cyc/B  windows={windows} iters={iters} \
++         corpus_bytes={corpus_bytes} host={host} loadavg={}",
++        loadavg()
++    );
++    println!("# paired: per window, DISPATCH block then SEQUENTIAL block, adjacent; ri_cycles straddles each.");
++    // Predicted crossover N* = 3: N=8 => DISPATCH wins; N=2 => reversal.
++    run_n(2, windows, iters, corpus_bytes);
++    run_n(8, windows, iters, corpus_bytes);
++    println!("# loadavg(end)={}", loadavg());
++}

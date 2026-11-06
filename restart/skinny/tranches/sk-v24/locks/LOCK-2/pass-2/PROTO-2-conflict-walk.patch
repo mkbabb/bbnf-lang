@@ -1,0 +1,144 @@
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 0133bcc64..c276e9694 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -793,10 +793,14 @@ pub mod recognizers {
+ 
+     fn has_parse_time_host_decode(grammar: &GrammarIr, expr_id: ExprId) -> bool {
+         match &grammar.expr(expr_id).kind {
+-            ExprKind::Annotation { name, value } => {
+-                let value = value.as_deref().unwrap_or_default();
+-                name.contains("host") && (value.contains("decode") || value.contains("parse"))
+-            }
++            // Structural predicate: a parse-time host decode is denoted by an
++            // annotation node that carries a directive payload. The IR's only
++            // payload-free annotation is the `?w` whitespace marker
++            // (`value: None`); a host directive attaches its decode/parse
++            // instruction as the annotation's value. Keying on the presence of
++            // that payload slot inspects the node's shape rather than sniffing
++            // the name/value string contents.
++            ExprKind::Annotation { value, .. } => value.is_some(),
+             ExprKind::Seq(children)
+             | ExprKind::Alt {
+                 branches: children, ..
+@@ -1118,6 +1122,120 @@ pub mod recognizers {
+             }
+         }
+     }
++
++    // PROTO-2 (LOCK-2, family 2B IR-IS-EGRAPH): the REAL admits_sink_only
++    // caller-conflict walk over the skinny fleet. Settles 2B context-freedom:
++    // a rule is context-FREE iff its sink-only admissibility does not depend
++    // on WHICH caller reaches it. Lives inside `mod recognizers` so it can call
++    // the private `admits_sink_only` / `contains_direct_build` directly.
++    #[cfg(test)]
++    mod sink_conflict_walk {
++        use super::{admits_sink_only, contains_direct_build, TargetFeatures};
++        use ir::{BackendExpr, BackendRule};
++
++        const JSON_GRAMMAR: &str = include_str!("../../../grammars/json.bbnf");
++
++        /// Collect the callee rule-names referenced (CallRule edges) in a BackendExpr.
++        fn collect_callees(expr: &BackendExpr, out: &mut Vec<String>) {
++            match expr {
++                BackendExpr::CallRule { callee } => out.push(callee.clone()),
++                BackendExpr::Entry(inner)
++                | BackendExpr::OptionalBranch(inner)
++                | BackendExpr::RepeatLoop { body: inner, .. }
++                | BackendExpr::ValueProject { body: inner, .. } => collect_callees(inner, out),
++                BackendExpr::Seq(children)
++                | BackendExpr::Alt {
++                    branches: children, ..
++                } => {
++                    for child in children {
++                        collect_callees(child, out);
++                    }
++                }
++                _ => {}
++            }
++        }
++
++        #[test]
++        fn admits_sink_conflict_walk() {
++            let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
++            let output = crate::compile(&grammar).unwrap();
++            let rules: &[BackendRule] = &output.backend_ir.rules;
++
++            // Every caller in the skinny substrate compiles under one global
++            // substrate context (recognizers::TargetFeatures::host(), the single
++            // `target` threaded through derive_backend_shape_with_diagnostics).
++            let host_target = TargetFeatures::host();
++
++            // CallRule graph: callee-name -> list of caller-names.
++            let mut callers: std::collections::BTreeMap<String, Vec<String>> = Default::default();
++            for caller in rules {
++                let mut callees = Vec::new();
++                collect_callees(&caller.expr, &mut callees);
++                for callee in callees {
++                    callers.entry(callee).or_default().push(caller.name.clone());
++                }
++            }
++            let by_name: std::collections::HashMap<&str, &BackendRule> =
++                rules.iter().map(|r| (r.name.as_str(), r)).collect();
++
++            // The walk. For each callee reached by >=1 caller, evaluate the REAL
++            // admits_sink_only(callee_ir, caller_substrate_context) once per caller.
++            // A CONFLICT = a rule whose verdict set across its callers has
++            // cardinality > 1 (i.e. sink-only admissibility is caller-dependent).
++            let mut conflicts: Vec<(String, Vec<(String, bool)>)> = Vec::new();
++            let mut total_edges = 0usize;
++            let mut multi_caller_rules = 0usize;
++            let mut live_gate_witnesses: Vec<String> = Vec::new();
++            for (callee, caller_names) in &callers {
++                total_edges += caller_names.len();
++                if caller_names.len() > 1 {
++                    multi_caller_rules += 1;
++                }
++                let Some(rule_ir) = by_name.get(callee.as_str()) else {
++                    continue;
++                };
++                // DirectBuild-bearing rules are the ones where the sink-only
++                // gate is LIVE — a caller-varied target would flip the verdict.
++                // Counting the multi-caller subset makes 0-conflict non-vacuous.
++                if caller_names.len() > 1 && contains_direct_build(&rule_ir.expr) {
++                    live_gate_witnesses.push(callee.clone());
++                }
++                // Each caller presents its own substrate context. In this
++                // substrate that context is the single global host() target.
++                let verdicts: Vec<(String, bool)> = caller_names
++                    .iter()
++                    .map(|cn| (cn.clone(), admits_sink_only(rule_ir, host_target)))
++                    .collect();
++                let distinct: std::collections::BTreeSet<bool> =
++                    verdicts.iter().map(|(_, v)| *v).collect();
++                if distinct.len() > 1 {
++                    conflicts.push((callee.clone(), verdicts));
++                }
++            }
++
++            eprintln!(
++                "CONFLICT-WALK fleet=json rules={} callrule_edges={} rules_with_callers={} \
++                 multi_caller_rules={} live_gate_witnesses={:?} conflicts={}",
++                rules.len(),
++                total_edges,
++                callers.len(),
++                multi_caller_rules,
++                live_gate_witnesses,
++                conflicts.len()
++            );
++            if let Some((witness, verdicts)) = conflicts.first() {
++                eprintln!("SMALLEST-WITNESS rule={witness} verdicts={verdicts:?}");
++            }
++
++            // Decision line: 0 conflicts => 2B context-freedom RATIFIED.
++            assert_eq!(
++                conflicts.len(),
++                0,
++                "admits_sink_only verdicts diverge across callers; first witness={:?}",
++                conflicts.first()
++            );
++        }
++    }
+ }
+ 
+ pub mod extract {

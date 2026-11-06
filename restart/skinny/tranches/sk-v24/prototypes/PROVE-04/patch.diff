@@ -1,0 +1,453 @@
+diff --git a/skinny/crates/bbnf-simd/src/aarch64/mod.rs b/skinny/crates/bbnf-simd/src/aarch64/mod.rs
+index 2517d2da0..b2f57fbe2 100644
+--- a/skinny/crates/bbnf-simd/src/aarch64/mod.rs
++++ b/skinny/crates/bbnf-simd/src/aarch64/mod.rs
+@@ -31,6 +31,8 @@ pub mod quad_load;
+ #[cfg(target_arch = "aarch64")]
+ pub mod string_block;
+ #[cfg(target_arch = "aarch64")]
++pub mod structural_scan;
++#[cfg(target_arch = "aarch64")]
+ pub mod unescape_uxxxx;
+ #[cfg(target_arch = "aarch64")]
+ pub mod utf8;
+diff --git a/skinny/crates/bbnf-simd/src/aarch64/structural_scan.rs b/skinny/crates/bbnf-simd/src/aarch64/structural_scan.rs
+new file mode 100644
+index 000000000..866750fb4
+--- /dev/null
++++ b/skinny/crates/bbnf-simd/src/aarch64/structural_scan.rs
+@@ -0,0 +1,217 @@
++//! PROVE-04 — two-block (2×64B) software-pipelined structural/quote scan.
++//!
++//! simdjson stage-1 transcribed onto the NEON stripe scanner: per 64-byte block
++//! classify the structural set `{ } [ ] : ,`, the string delimiter `"`, and the
++//! escape `\`; resolve escapes (odd/even backslash-run parity) and in-string
++//! membership (prefix-xor), then emit the positions of structurals that lie
++//! OUTSIDE a string literal. The three block masks are packed with the certified
++//! `vshrn_n_u16::<4>` mask-narrow idiom (`super::movemask::movemask_u8x16`).
++//!
++//! Three lanes share one `resolve_block` + tail so parity is structural — the only
++//! difference is how the per-block masks are produced and how the block loop is
++//! scheduled:
++//!   * [`scan_scalar_ref`]  — byte-walk classify (the executable parity oracle).
++//!   * [`scan_single`]      — NEON classify, one block per iteration (baseline).
++//!   * [`scan_pipelined`]   — NEON classify staged one block ahead: block N+1's
++//!                            vector loads/compares issue while block N's scalar
++//!                            carry math + compaction retire — two 64B blocks in
++//!                            flight (prologue / steady-state overlap / epilogue).
++
++use core::arch::aarch64::*;
++
++use super::movemask::movemask_u8x16;
++
++/// Cross-block scan carry: backslash-run parity and in-string parity.
++#[derive(Clone, Copy, Default)]
++pub struct ScanCarry {
++    pub bs: bool,
++    pub quote: bool,
++}
++
++/// Raw per-block classification: (structural, quote, backslash) bitmasks.
++type BlockMasks = (u64, u64, u64);
++
++/// Resolve one block's raw masks against the running carry and emit the
++/// positions of structurals not inside a string. Shared by every lane.
++#[inline(always)]
++fn resolve_block(masks: BlockMasks, carry: &mut ScanCarry, base: usize, out: &mut Vec<u32>) {
++    let (struct_raw, quote_raw, bs_raw) = masks;
++    let (escape, new_bs) = crate::escape_mask_64(bs_raw, carry.bs);
++    carry.bs = new_bs;
++    let real_quotes = quote_raw & !escape;
++    let inside = crate::prefix_xor_64(real_quotes, carry.quote);
++    carry.quote = (inside >> 63) & 1 == 1;
++    crate::compact_mask(base, struct_raw & !inside, out);
++}
++
++/// Scalar block classifier — the parity oracle's mask producer.
++#[inline(always)]
++fn classify_block_scalar(block: &[u8; 64]) -> BlockMasks {
++    let (mut s, mut q, mut b) = (0u64, 0u64, 0u64);
++    for (i, &c) in block.iter().enumerate() {
++        let bit = 1u64 << i;
++        match c {
++            b'{' | b'}' | b'[' | b']' | b':' | b',' => s |= bit,
++            b'"' => q |= bit,
++            b'\\' => b |= bit,
++            _ => {}
++        }
++    }
++    (s, q, b)
++}
++
++/// NEON block classifier: vceqq fan (structural) + two vceqq (quote, backslash),
++/// each packed via the vshrn movemask idiom.
++///
++/// # Safety
++/// `ptr..ptr+64` must be readable.
++#[inline(always)]
++unsafe fn classify_block_neon(ptr: *const u8) -> BlockMasks {
++    unsafe {
++        let lbrace = vdupq_n_u8(b'{');
++        let rbrace = vdupq_n_u8(b'}');
++        let lbrack = vdupq_n_u8(b'[');
++        let rbrack = vdupq_n_u8(b']');
++        let colon = vdupq_n_u8(b':');
++        let comma = vdupq_n_u8(b',');
++        let quote = vdupq_n_u8(b'"');
++        let bslash = vdupq_n_u8(b'\\');
++
++        let (mut s, mut q, mut b) = (0u64, 0u64, 0u64);
++        for k in 0..4 {
++            let chunk = vld1q_u8(ptr.add(k * 16));
++            let sc = vorrq_u8(
++                vorrq_u8(
++                    vorrq_u8(vceqq_u8(chunk, lbrace), vceqq_u8(chunk, rbrace)),
++                    vorrq_u8(vceqq_u8(chunk, lbrack), vceqq_u8(chunk, rbrack)),
++                ),
++                vorrq_u8(vceqq_u8(chunk, colon), vceqq_u8(chunk, comma)),
++            );
++            let qc = vceqq_u8(chunk, quote);
++            let bc = vceqq_u8(chunk, bslash);
++            let shift = k * 16;
++            s |= (movemask_u8x16(sc) as u64) << shift;
++            q |= (movemask_u8x16(qc) as u64) << shift;
++            b |= (movemask_u8x16(bc) as u64) << shift;
++        }
++        (s, q, b)
++    }
++}
++
++/// Shared tail: zero-pad the <64-byte remainder into one block and resolve it.
++/// Zero bytes never classify as structural/quote/backslash, so padding is inert.
++#[inline(always)]
++fn scan_tail(input: &[u8], start: usize, carry: &mut ScanCarry, out: &mut Vec<u32>) {
++    if start >= input.len() {
++        return;
++    }
++    let mut pad = [0u8; 64];
++    let rem = &input[start..];
++    pad[..rem.len()].copy_from_slice(rem);
++    resolve_block(classify_block_scalar(&pad), carry, start, out);
++}
++
++/// The executable parity oracle: scalar classify, one block per iteration.
++#[inline(never)]
++pub fn scan_scalar_ref(input: &[u8]) -> Vec<u32> {
++    let mut out = Vec::with_capacity(input.len() / 8 + 8);
++    let mut carry = ScanCarry::default();
++    let mut i = 0;
++    while i + 64 <= input.len() {
++        let block: &[u8; 64] = input[i..i + 64].try_into().unwrap();
++        resolve_block(classify_block_scalar(block), &mut carry, i, &mut out);
++        i += 64;
++    }
++    scan_tail(input, i, &mut carry, &mut out);
++    out
++}
++
++/// Baseline: NEON classify, one 64B block per iteration.
++#[inline(never)]
++pub fn scan_single(input: &[u8]) -> Vec<u32> {
++    let mut out = Vec::with_capacity(input.len() / 8 + 8);
++    let mut carry = ScanCarry::default();
++    let mut i = 0;
++    // SAFETY: loop guard keeps ptr..ptr+64 in bounds.
++    unsafe {
++        while i + 64 <= input.len() {
++            resolve_block(
++                classify_block_neon(input.as_ptr().add(i)),
++                &mut carry,
++                i,
++                &mut out,
++            );
++            i += 64;
++        }
++    }
++    scan_tail(input, i, &mut carry, &mut out);
++    out
++}
++
++/// Classify-only fold (no compaction) — isolates the pure classify-stage
++/// pipeline from the shared carry/compaction. Baseline: one block per iteration.
++#[inline(never)]
++pub fn classify_fold_single(input: &[u8]) -> u64 {
++    let mut acc = 0u64;
++    let mut i = 0;
++    // SAFETY: loop guard keeps ptr..ptr+64 in bounds.
++    unsafe {
++        while i + 64 <= input.len() {
++            let (s, q, b) = classify_block_neon(input.as_ptr().add(i));
++            acc = acc.rotate_left(1) ^ s ^ q.rotate_left(21) ^ b.rotate_left(42);
++            i += 64;
++        }
++    }
++    acc
++}
++
++/// Classify-only fold, 2×64B software-pipelined (block N+1 staged ahead of the
++/// fold of block N). Folds in the same order as [`classify_fold_single`], so an
++/// identical return value is a bonus parity check on the classify masks.
++#[inline(never)]
++pub fn classify_fold_pipelined(input: &[u8]) -> u64 {
++    let mut acc = 0u64;
++    let nblocks = input.len() / 64;
++    // SAFETY: b*64 .. b*64+64 stays in bounds for b < nblocks.
++    unsafe {
++        if nblocks > 0 {
++            let mut staged = classify_block_neon(input.as_ptr());
++            for b in 1..nblocks {
++                let next = classify_block_neon(input.as_ptr().add(b * 64));
++                let (s, q, bb) = staged;
++                acc = acc.rotate_left(1) ^ s ^ q.rotate_left(21) ^ bb.rotate_left(42);
++                staged = next;
++            }
++            let (s, q, bb) = staged;
++            acc = acc.rotate_left(1) ^ s ^ q.rotate_left(21) ^ bb.rotate_left(42);
++        }
++    }
++    acc
++}
++
++/// PROVE-04: 2×64B software-pipelined NEON scan. Block N+1's vector classify is
++/// staged ahead of block N's carry-dependent resolve, keeping two 64B blocks in
++/// flight so the independent vector loads/compares overlap the scalar carry math.
++#[inline(never)]
++pub fn scan_pipelined(input: &[u8]) -> Vec<u32> {
++    let mut out = Vec::with_capacity(input.len() / 8 + 8);
++    let mut carry = ScanCarry::default();
++    let nblocks = input.len() / 64;
++    // SAFETY: b*64 .. b*64+64 stays in bounds for b < nblocks.
++    unsafe {
++        if nblocks > 0 {
++            // Prologue: classify block 0.
++            let mut staged = classify_block_neon(input.as_ptr());
++            // Steady state: classify block b (independent) while resolving b-1.
++            for b in 1..nblocks {
++                let next = classify_block_neon(input.as_ptr().add(b * 64));
++                resolve_block(staged, &mut carry, (b - 1) * 64, &mut out);
++                staged = next;
++            }
++            // Epilogue: resolve the last staged block.
++            resolve_block(staged, &mut carry, (nblocks - 1) * 64, &mut out);
++        }
++    }
++    scan_tail(input, nblocks * 64, &mut carry, &mut out);
++    out
++}
+diff --git a/skinny/crates/bbnf-simd/tests/structural_scan_bench.rs b/skinny/crates/bbnf-simd/tests/structural_scan_bench.rs
+new file mode 100644
+index 000000000..3e74f1d89
+--- /dev/null
++++ b/skinny/crates/bbnf-simd/tests/structural_scan_bench.rs
+@@ -0,0 +1,211 @@
++//! PROVE-04 microbench: single-block vs 2×64B software-pipelined structural/quote
++//! scan. Cold-per-parse, paired per-sample interleaving, PMU cyc/byte via
++//! `proc_pid_rusage(RUSAGE_INFO_V5).ri_cycles` (per-process → load-robust).
++//!
++//! Run: `cargo test --release -p bbnf-simd --test structural_scan_bench -- --nocapture`
++//! Env: `SCAN_BENCH_N` (samples, default 200), `SCAN_BENCH_ITERS` (per sample, default 8).
++
++#![cfg(target_arch = "aarch64")]
++
++use std::hint::black_box;
++use std::path::PathBuf;
++
++use bbnf_simd::aarch64::structural_scan::{
++    classify_fold_pipelined, classify_fold_single, scan_pipelined, scan_scalar_ref, scan_single,
++};
++
++// --- PMU via proc_pid_rusage V5 (cycles), mirrors css_canon_bench.rs:44-102 ---
++#[repr(C)]
++#[derive(Default, Clone, Copy)]
++struct RusageInfoV5 {
++    ri_uuid: [u8; 16],
++    ri_user_time: u64,
++    ri_system_time: u64,
++    ri_pkg_idle_wkups: u64,
++    ri_interrupt_wkups: u64,
++    ri_pageins: u64,
++    ri_wired_size: u64,
++    ri_resident_size: u64,
++    ri_phys_footprint: u64,
++    ri_proc_start_abstime: u64,
++    ri_proc_exit_abstime: u64,
++    ri_child_user_time: u64,
++    ri_child_system_time: u64,
++    ri_child_pkg_idle_wkups: u64,
++    ri_child_interrupt_wkups: u64,
++    ri_child_pageins: u64,
++    ri_child_elapsed_abstime: u64,
++    ri_diskio_bytesread: u64,
++    ri_diskio_byteswritten: u64,
++    ri_cpu_time_qos_default: u64,
++    ri_cpu_time_qos_maintenance: u64,
++    ri_cpu_time_qos_background: u64,
++    ri_cpu_time_qos_utility: u64,
++    ri_cpu_time_qos_legacy: u64,
++    ri_cpu_time_qos_user_initiated: u64,
++    ri_cpu_time_qos_user_interactive: u64,
++    ri_billed_system_time: u64,
++    ri_serviced_system_time: u64,
++    ri_logical_writes: u64,
++    ri_lifetime_max_phys_footprint: u64,
++    ri_instructions: u64,
++    ri_cycles: u64,
++    ri_billed_energy: u64,
++    ri_serviced_energy: u64,
++    ri_interval_max_phys_footprint: u64,
++    ri_runnable_time: u64,
++    ri_flags: u64,
++}
++const RUSAGE_INFO_V5: i32 = 5;
++extern "C" {
++    fn proc_pid_rusage(pid: libc::pid_t, flavor: i32, buffer: *mut u8) -> i32;
++}
++fn cycles_now() -> u64 {
++    let mut ri = RusageInfoV5::default();
++    let rc = unsafe {
++        proc_pid_rusage(
++            libc::getpid(),
++            RUSAGE_INFO_V5,
++            (&mut ri) as *mut RusageInfoV5 as *mut u8,
++        )
++    };
++    assert_eq!(rc, 0, "proc_pid_rusage failed");
++    ri.ri_cycles
++}
++
++fn loadavg() -> [f64; 3] {
++    let mut la = [0.0f64; 3];
++    unsafe { libc::getloadavg(la.as_mut_ptr(), 3) };
++    la
++}
++
++fn corpus(name: &str) -> Vec<u8> {
++    let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++    p.push("../test-fixtures/corpus/json");
++    p.push(format!("{name}.json"));
++    std::fs::read(&p).unwrap_or_else(|e| panic!("read {}: {e}", p.display()))
++}
++
++/// Measure cycles for `iters` runs of a scan lane over `input`.
++#[inline(never)]
++fn measure_cycles(lane: fn(&[u8]) -> Vec<u32>, input: &[u8], iters: u32) -> u64 {
++    let c0 = cycles_now();
++    for _ in 0..iters {
++        black_box(lane(black_box(input)));
++    }
++    cycles_now() - c0
++}
++
++#[inline(never)]
++fn measure_cycles_fold(lane: fn(&[u8]) -> u64, input: &[u8], iters: u32) -> u64 {
++    let c0 = cycles_now();
++    for _ in 0..iters {
++        black_box(lane(black_box(input)));
++    }
++    cycles_now() - c0
++}
++
++fn median(v: &mut [f64]) -> f64 {
++    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    v[v.len() / 2]
++}
++
++/// mean and 95% CI (normal approx) of per-sample ratios.
++fn ratio_stats(ratios: &[f64]) -> (f64, f64) {
++    let n = ratios.len() as f64;
++    let mean = ratios.iter().sum::<f64>() / n;
++    let var = ratios.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / (n - 1.0);
++    (mean, 1.96 * (var / n).sqrt())
++}
++
++#[test]
++fn prove04_pipelined_scan() {
++    let corpora = ["twitter", "citm_catalog", "canada"];
++    let n: u32 = std::env::var("SCAN_BENCH_N")
++        .ok()
++        .and_then(|s| s.parse().ok())
++        .unwrap_or(200);
++    let iters: u32 = std::env::var("SCAN_BENCH_ITERS")
++        .ok()
++        .and_then(|s| s.parse().ok())
++        .unwrap_or(8);
++
++    let la = loadavg();
++    println!("\n=== PROVE-04: 2x64B software-pipelined structural/quote scan ===");
++    println!(
++        "host=aarch64  N={n}  iters/sample={iters}  loadavg={:.2}/{:.2}/{:.2}",
++        la[0], la[1], la[2]
++    );
++    println!(
++        "{:<14} {:>10} {:>12} {:>12} {:>12} {:>10} {:>18}",
++        "corpus", "bytes", "lane", "single c/B", "pipe c/B", "ratio", "95% CI (single/pipe)"
++    );
++
++    for name in corpora {
++        let input = corpus(name);
++        let bytes = input.len() as f64;
++
++        // --- parity: scalar oracle == neon single == neon pipelined ---
++        let oracle = scan_scalar_ref(&input);
++        let single_pos = scan_single(&input);
++        let pipe_pos = scan_pipelined(&input);
++        assert_eq!(oracle, single_pos, "{name}: neon single != scalar oracle");
++        assert_eq!(oracle, pipe_pos, "{name}: neon pipelined != scalar oracle");
++        assert_eq!(
++            classify_fold_single(&input),
++            classify_fold_pipelined(&input),
++            "{name}: classify fold mismatch"
++        );
++        let structural = oracle.len();
++
++        // --- full scan (classify + carry + compaction) ---
++        let mut single_cpb = Vec::with_capacity(n as usize);
++        let mut pipe_cpb = Vec::with_capacity(n as usize);
++        let mut ratios = Vec::with_capacity(n as usize);
++        for _ in 0..n {
++            let cs = measure_cycles(scan_single, &input, iters);
++            let cp = measure_cycles(scan_pipelined, &input, iters);
++            single_cpb.push(cs as f64 / (bytes * iters as f64));
++            pipe_cpb.push(cp as f64 / (bytes * iters as f64));
++            ratios.push(cs as f64 / cp as f64);
++        }
++        let (rm, rci) = ratio_stats(&ratios);
++        println!(
++            "{:<14} {:>10} {:>12} {:>12.4} {:>12.4} {:>10.4} {:>10.4} +/-{:.4}",
++            name,
++            input.len(),
++            "full-scan",
++            median(&mut single_cpb),
++            median(&mut pipe_cpb),
++            rm,
++            rm,
++            rci
++        );
++
++        // --- classify-only fold (isolates the classify-stage pipeline) ---
++        let mut fs_cpb = Vec::with_capacity(n as usize);
++        let mut fp_cpb = Vec::with_capacity(n as usize);
++        let mut fratios = Vec::with_capacity(n as usize);
++        for _ in 0..n {
++            let cs = measure_cycles_fold(classify_fold_single, &input, iters);
++            let cp = measure_cycles_fold(classify_fold_pipelined, &input, iters);
++            fs_cpb.push(cs as f64 / (bytes * iters as f64));
++            fp_cpb.push(cp as f64 / (bytes * iters as f64));
++            fratios.push(cs as f64 / cp as f64);
++        }
++        let (frm, frci) = ratio_stats(&fratios);
++        println!(
++            "{:<14} {:>10} {:>12} {:>12.4} {:>12.4} {:>10.4} {:>10.4} +/-{:.4}  ({} structural)",
++            name,
++            input.len(),
++            "classify",
++            median(&mut fs_cpb),
++            median(&mut fp_cpb),
++            frm,
++            frm,
++            frci,
++            structural
++        );
++    }
++    println!();
++}

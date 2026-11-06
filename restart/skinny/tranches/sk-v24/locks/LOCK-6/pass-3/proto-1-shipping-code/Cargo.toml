@@ -1,0 +1,26 @@
+# PROTO-6C probe crate (LOCK-6 pass-3, probe 1). Detached single-package
+# workspace so it never joins the root workspace or the sibling `wasm/`
+# package. Reuses the SHIPPING `crates/simd-scan` v128 kernel verbatim
+# (path dep) — no bespoke re-implementation.
+[package]
+name = "bbnf-wasm-6c"
+version = "0.0.0"
+edition = "2021"
+publish = false
+description = "6C resident-bytes probe: shipping simd-scan v128 kernel as a raw-ABI wasm cdylib."
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+simd-scan = { path = "../../crates/simd-scan" }
+
+[profile.release]
+opt-level = 3
+lto = true
+panic = "abort"
+
+# Detach: own workspace root, no members. Keeps this out of the root
+# workspace graph and the sibling `wasm/` package's config patch set.
+[workspace]

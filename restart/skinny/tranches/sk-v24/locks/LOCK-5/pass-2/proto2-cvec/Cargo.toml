@@ -1,0 +1,24 @@
+[package]
+name = "proto2-cvec"
+version = "0.0.0"
+edition = "2024"
+
+[[bin]]
+name = "proto2"
+path = "src/main.rs"
+
+[dependencies]
+egraph = "0.1"
+egraph-derive = "0.1"
+bbnf-regex = { version = "0.1", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Mirror the working bbnf-lang main .cargo/config [patch.crates-io] table so
+# the same egraph / egraph-derive / csp-solver / bbnf-regex sources resolve
+# and unify exactly as they do in the real workspace build.
+[patch.crates-io]
+egraph        = { path = "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-39/crates/egraph" }
+egraph-derive = { path = "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-39/crates/egraph-derive" }
+csp-solver    = { path = "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-39/crates/csp-solver" }
+bbnf-regex    = { path = "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/regex" }

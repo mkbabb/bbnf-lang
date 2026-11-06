@@ -1,0 +1,4694 @@
+{
+  "when": "2026-07-02T09:02:21.855Z",
+  "results": [
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "ref",
+      "settledHeight": 120451,
+      "preSettleScrollHeight": 120437,
+      "scrollbarHonesty": {
+        "ratio": 1,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.140625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1835
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "A-ii",
+      "settledHeight": 120451,
+      "preSettleScrollHeight": 61166,
+      "scrollbarHonesty": {
+        "ratio": 0.508,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.140625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1741,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.007376
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.016864
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.00967
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.002443
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.016764
+          }
+        ],
+        "worstFraction": 0.016864,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "B-ii",
+      "settledHeight": 120451,
+      "preSettleScrollHeight": 11752,
+      "scrollbarHonesty": {
+        "ratio": 0.098,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.140625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1719,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.007376
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.03351
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.00967
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.029098
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.00741
+          }
+        ],
+        "worstFraction": 0.03351,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "A-i",
+      "settledHeight": 120451,
+      "preSettleScrollHeight": 59718,
+      "scrollbarHonesty": {
+        "ratio": 0.496,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.140625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1718,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.008771
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.02078
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.013777
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.007458
+          }
+        ],
+        "worstFraction": 0.02078,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "B-i",
+      "settledHeight": 120451,
+      "preSettleScrollHeight": 10304,
+      "scrollbarHonesty": {
+        "ratio": 0.086,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.140625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1715,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.03402
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.02078
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.037693
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.007477
+          }
+        ],
+        "worstFraction": 0.037693,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "ref",
+      "settledHeight": 174872,
+      "preSettleScrollHeight": 167915,
+      "scrollbarHonesty": {
+        "ratio": 0.96,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.1875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.40625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.359375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.15625,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3741
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "A-ii",
+      "settledHeight": 174872,
+      "preSettleScrollHeight": 132762,
+      "scrollbarHonesty": {
+        "ratio": 0.759,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.1875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.40625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.359375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.15625,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2799,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.027452
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.000489
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.000097
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.006292
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.005787
+          }
+        ],
+        "worstFraction": 0.027452,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "B-ii",
+      "settledHeight": 174872,
+      "preSettleScrollHeight": 12592,
+      "scrollbarHonesty": {
+        "ratio": 0.072,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.1875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.40625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.359375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.15625,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2488,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.027452
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.006647
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.000097
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.007565
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.006811
+          }
+        ],
+        "worstFraction": 0.027452,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "A-i",
+      "settledHeight": 174872,
+      "preSettleScrollHeight": 131236,
+      "scrollbarHonesty": {
+        "ratio": 0.75,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.1875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.40625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.359375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.15625,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2788,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.002139
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.004928
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.010229
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.015628
+          }
+        ],
+        "worstFraction": 0.015628,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "B-i",
+      "settledHeight": 174872,
+      "preSettleScrollHeight": 11066,
+      "scrollbarHonesty": {
+        "ratio": 0.063,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.1875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.40625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.359375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.15625,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2512,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.028658
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.004928
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.011463
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.010821
+          }
+        ],
+        "worstFraction": 0.028658,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "ref",
+      "settledHeight": 86990,
+      "preSettleScrollHeight": 86930,
+      "scrollbarHonesty": {
+        "ratio": 0.999,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1580
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "A-ii",
+      "settledHeight": 86990,
+      "preSettleScrollHeight": 60823,
+      "scrollbarHonesty": {
+        "ratio": 0.699,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1510,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.005849
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.006472
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.005259
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.003308
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.008086
+          }
+        ],
+        "worstFraction": 0.008086,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "B-ii",
+      "settledHeight": 86990,
+      "preSettleScrollHeight": 11409,
+      "scrollbarHonesty": {
+        "ratio": 0.131,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1469,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.005849
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.009869
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.005259
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.012329
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.005951
+          }
+        ],
+        "worstFraction": 0.012329,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "A-i",
+      "settledHeight": 86990,
+      "preSettleScrollHeight": 59700,
+      "scrollbarHonesty": {
+        "ratio": 0.686,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1489,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.002396
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.004332
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.008052
+          }
+        ],
+        "worstFraction": 0.008052,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "B-i",
+      "settledHeight": 86990,
+      "preSettleScrollHeight": 10286,
+      "scrollbarHonesty": {
+        "ratio": 0.118,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1486,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.007126
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.012329
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.006738
+          }
+        ],
+        "worstFraction": 0.012329,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "ref",
+      "settledHeight": 147077,
+      "preSettleScrollHeight": 134944,
+      "scrollbarHonesty": {
+        "ratio": 0.918,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3213
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "A-ii",
+      "settledHeight": 147077,
+      "preSettleScrollHeight": 132614,
+      "scrollbarHonesty": {
+        "ratio": 0.902,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2637,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.012018
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.002544
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.003786
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.006861
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.001831
+          }
+        ],
+        "worstFraction": 0.012018,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "B-ii",
+      "settledHeight": 147077,
+      "preSettleScrollHeight": 12444,
+      "scrollbarHonesty": {
+        "ratio": 0.085,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2363,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.012018
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.014823
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.003786
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.006308
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.017822
+          }
+        ],
+        "worstFraction": 0.017822,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "A-i",
+      "settledHeight": 147077,
+      "preSettleScrollHeight": 131218,
+      "scrollbarHonesty": {
+        "ratio": 0.892,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2655,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.001748
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.005418
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.00845
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.004587
+          }
+        ],
+        "worstFraction": 0.00845,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "B-i",
+      "settledHeight": 147077,
+      "preSettleScrollHeight": 11048,
+      "scrollbarHonesty": {
+        "ratio": 0.075,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2359,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.009848
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.005418
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.013576
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.017822
+          }
+        ],
+        "worstFraction": 0.017822,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "ref",
+      "settledHeight": 87102,
+      "preSettleScrollHeight": 87042,
+      "scrollbarHonesty": {
+        "ratio": 0.999,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1389
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "A-ii",
+      "settledHeight": 87102,
+      "preSettleScrollHeight": 60935,
+      "scrollbarHonesty": {
+        "ratio": 0.7,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1329,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.003034
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.004795
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.003347
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.002675
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.005257
+          }
+        ],
+        "worstFraction": 0.005257,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "B-ii",
+      "settledHeight": 87102,
+      "preSettleScrollHeight": 11521,
+      "scrollbarHonesty": {
+        "ratio": 0.132,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1318,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.003034
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.005693
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.003347
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.007171
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.006887
+          }
+        ],
+        "worstFraction": 0.007171,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "A-i",
+      "settledHeight": 87102,
+      "preSettleScrollHeight": 59812,
+      "scrollbarHonesty": {
+        "ratio": 0.687,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1328,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.002677
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.002167
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.004844
+          }
+        ],
+        "worstFraction": 0.004844,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "B-i",
+      "settledHeight": 87102,
+      "preSettleScrollHeight": 10398,
+      "scrollbarHonesty": {
+        "ratio": 0.119,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.453125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 1335,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.004218
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.007171
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.006582
+          }
+        ],
+        "worstFraction": 0.007171,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "ref",
+      "settledHeight": 147189,
+      "preSettleScrollHeight": 135056,
+      "scrollbarHonesty": {
+        "ratio": 0.918,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2868
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "A-ii",
+      "settledHeight": 147189,
+      "preSettleScrollHeight": 132726,
+      "scrollbarHonesty": {
+        "ratio": 0.902,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2383,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.008185
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.001899
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.002637
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.003576
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.000904
+          }
+        ],
+        "worstFraction": 0.008185,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "B-ii",
+      "settledHeight": 147189,
+      "preSettleScrollHeight": 12556,
+      "scrollbarHonesty": {
+        "ratio": 0.085,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2139,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0.008185
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.010138
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.002637
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.003629
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.017078
+          }
+        ],
+        "worstFraction": 0.017078,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "A-i",
+      "settledHeight": 147189,
+      "preSettleScrollHeight": 131330,
+      "scrollbarHonesty": {
+        "ratio": 0.892,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2403,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.001226
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.004792
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.005722
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.002265
+          }
+        ],
+        "worstFraction": 0.005722,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "B-i",
+      "settledHeight": 147189,
+      "preSettleScrollHeight": 11160,
+      "scrollbarHonesty": {
+        "ratio": 0.076,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.3125,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.171875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.421875,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.46875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2117,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.007052
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.004792
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.008253
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.017288
+          }
+        ],
+        "worstFraction": 0.017288,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "ref",
+      "settledHeight": 120455,
+      "preSettleScrollHeight": 120455,
+      "scrollbarHonesty": {
+        "ratio": 1,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.75,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 4130
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "A-ii",
+      "settledHeight": 120455,
+      "preSettleScrollHeight": 61166,
+      "scrollbarHonesty": {
+        "ratio": 0.508,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.75,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3554,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "B-ii",
+      "settledHeight": 120455,
+      "preSettleScrollHeight": 11752,
+      "scrollbarHonesty": {
+        "ratio": 0.098,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.75,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3533,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.031131
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.018584
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0.031131,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "A-i",
+      "settledHeight": 120455,
+      "preSettleScrollHeight": 59718,
+      "scrollbarHonesty": {
+        "ratio": 0.496,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.75,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3581,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "B-i",
+      "settledHeight": 120455,
+      "preSettleScrollHeight": 10304,
+      "scrollbarHonesty": {
+        "ratio": 0.086,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.015625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.75,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3525,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.031131
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.018584
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.000018
+          }
+        ],
+        "worstFraction": 0.031131,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "ref",
+      "settledHeight": 174931,
+      "preSettleScrollHeight": 174931,
+      "scrollbarHonesty": {
+        "ratio": 1,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.796875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.5625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.625,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.78125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.078125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 21160
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "A-ii",
+      "settledHeight": 174931,
+      "preSettleScrollHeight": 132762,
+      "scrollbarHonesty": {
+        "ratio": 0.759,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.796875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.5625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.625,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.78125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.078125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 9499,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "B-ii",
+      "settledHeight": 174931,
+      "preSettleScrollHeight": 12592,
+      "scrollbarHonesty": {
+        "ratio": 0.072,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.796875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.5625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.625,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.78125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.078125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 7096,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.03618
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.031052
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0.03618,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "A-i",
+      "settledHeight": 174931,
+      "preSettleScrollHeight": 131236,
+      "scrollbarHonesty": {
+        "ratio": 0.75,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.796875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.5625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.625,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.78125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.078125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 9634,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourierN",
+      "arm": "B-i",
+      "settledHeight": 174517,
+      "preSettleScrollHeight": 11066,
+      "scrollbarHonesty": {
+        "ratio": 0.063,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.796875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.5625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.625,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.78125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.671875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 7057,
+      "heightDeltaVsRefPct": -0.24,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.036223
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.034299
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.069131
+          }
+        ],
+        "worstFraction": 0.069131,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 414.41,
+        "worstHeightDeltaPx": 414.41,
+        "failures": 15,
+        "bad": [
+          {
+            "id": "extended-proofs",
+            "dTop": 0,
+            "dHeight": 414.40999999999997
+          },
+          {
+            "id": "sturm-liouville-completeness",
+            "dTop": 0,
+            "dHeight": 414.4100000000001
+          },
+          {
+            "id": "image-reconstruction-pipeline",
+            "dTop": 414.4100000000035,
+            "dHeight": 0
+          },
+          {
+            "id": "otsu-thresholding",
+            "dTop": 414.4099999999744,
+            "dHeight": 0
+          },
+          {
+            "id": "morphological-operations-and-contour-extraction",
+            "dTop": 414.4099999999744,
+            "dHeight": 0
+          },
+          {
+            "id": "subject-isolation",
+            "dTop": 414.3999999999942,
+            "dHeight": 0
+          },
+          {
+            "id": "structure-and-feature-contours",
+            "dTop": 414.4100000000035,
+            "dHeight": 0
+          },
+          {
+            "id": "contour-filtering-and-deduplication",
+            "dTop": 414.4100000000035,
+            "dHeight": 0
+          },
+          {
+            "id": "savitzky-golay-smoothing",
+            "dTop": 414.4099999999744,
+            "dHeight": 0
+          },
+          {
+            "id": "tour-ordering",
+            "dTop": 414.4000000000233,
+            "dHeight": 0
+          }
+        ],
+        "pass": false
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "ref",
+      "settledHeight": 86982,
+      "preSettleScrollHeight": 86982,
+      "scrollbarHonesty": {
+        "ratio": 1,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3304
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "A-ii",
+      "settledHeight": 86982,
+      "preSettleScrollHeight": 60823,
+      "scrollbarHonesty": {
+        "ratio": 0.699,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3070,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "B-ii",
+      "settledHeight": 86982,
+      "preSettleScrollHeight": 11409,
+      "scrollbarHonesty": {
+        "ratio": 0.131,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3015,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.010574
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.010997
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.002748
+          }
+        ],
+        "worstFraction": 0.010997,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "A-i",
+      "settledHeight": 86982,
+      "preSettleScrollHeight": 59700,
+      "scrollbarHonesty": {
+        "ratio": 0.686,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3038,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "B-i",
+      "settledHeight": 86982,
+      "preSettleScrollHeight": 10286,
+      "scrollbarHonesty": {
+        "ratio": 0.118,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 3087,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.010574
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.010997
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.003059
+          }
+        ],
+        "worstFraction": 0.010997,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "ref",
+      "settledHeight": 147039,
+      "preSettleScrollHeight": 147039,
+      "scrollbarHonesty": {
+        "ratio": 1,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 12843
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "A-ii",
+      "settledHeight": 147039,
+      "preSettleScrollHeight": 132614,
+      "scrollbarHonesty": {
+        "ratio": 0.902,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 8590,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "B-ii",
+      "settledHeight": 147039,
+      "preSettleScrollHeight": 12444,
+      "scrollbarHonesty": {
+        "ratio": 0.085,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 6739,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.013716
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.001971
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0.013716,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "A-i",
+      "settledHeight": 147039,
+      "preSettleScrollHeight": 131218,
+      "scrollbarHonesty": {
+        "ratio": 0.892,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 8597,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourierN",
+      "arm": "B-i",
+      "settledHeight": 147039,
+      "preSettleScrollHeight": 11048,
+      "scrollbarHonesty": {
+        "ratio": 0.075,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 6959,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.013724
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.024404
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0.024404,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "ref",
+      "settledHeight": 87094,
+      "preSettleScrollHeight": 87094,
+      "scrollbarHonesty": {
+        "ratio": 1,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2963
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "A-ii",
+      "settledHeight": 87094,
+      "preSettleScrollHeight": 60935,
+      "scrollbarHonesty": {
+        "ratio": 0.7,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2677,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "B-ii",
+      "settledHeight": 87094,
+      "preSettleScrollHeight": 11521,
+      "scrollbarHonesty": {
+        "ratio": 0.132,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2679,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.005318
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.006504
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.004946
+          }
+        ],
+        "worstFraction": 0.006504,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "A-i",
+      "settledHeight": 87094,
+      "preSettleScrollHeight": 59812,
+      "scrollbarHonesty": {
+        "ratio": 0.687,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2729,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "B-i",
+      "settledHeight": 87094,
+      "preSettleScrollHeight": 10398,
+      "scrollbarHonesty": {
+        "ratio": 0.119,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "nsec-2-0-0",
+          "errorPx": 0.109375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-5-0-0",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-8-0-0",
+          "errorPx": 0.515625,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-6-1",
+          "errorPx": 0.34375,
+          "settleFrames": 2
+        },
+        {
+          "id": "nsec-9",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 2687,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.005318
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.006504
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.005099
+          }
+        ],
+        "worstFraction": 0.006504,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 18,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 100,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "ref",
+      "settledHeight": 147151,
+      "preSettleScrollHeight": 147151,
+      "scrollbarHonesty": {
+        "ratio": 1,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 11745
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "A-ii",
+      "settledHeight": 147151,
+      "preSettleScrollHeight": 132726,
+      "scrollbarHonesty": {
+        "ratio": 0.902,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 7870,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "B-ii",
+      "settledHeight": 147220,
+      "preSettleScrollHeight": 12556,
+      "scrollbarHonesty": {
+        "ratio": 0.085,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.328125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.828125,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.265625,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.953125,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 6046,
+      "heightDeltaVsRefPct": 0.05,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.009033
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.019877
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.016612
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.049674
+          }
+        ],
+        "worstFraction": 0.049674,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 168.74,
+        "worstHeightDeltaPx": 168.74,
+        "failures": 72,
+        "bad": [
+          {
+            "id": "lens-i-linear-algebra",
+            "dTop": 0,
+            "dHeight": 168.72999999999593
+          },
+          {
+            "id": "convergence-of-fourier-series",
+            "dTop": 0,
+            "dHeight": 168.73999999999978
+          },
+          {
+            "id": "pointwise-convergence",
+            "dTop": 0,
+            "dHeight": 168.73000000000002
+          },
+          {
+            "id": "mathbf-l-2-convergence",
+            "dTop": 168.7300000000032,
+            "dHeight": 0
+          },
+          {
+            "id": "the-gibbs-phenomenon",
+            "dTop": 168.72999999999593,
+            "dHeight": 0
+          },
+          {
+            "id": "almost-everywhere-convergence",
+            "dTop": 168.7300000000032,
+            "dHeight": 0
+          },
+          {
+            "id": "the-spectral-theorem-and-diagonalization",
+            "dTop": 168.72999999999593,
+            "dHeight": 0
+          },
+          {
+            "id": "eigentheory-foundations",
+            "dTop": 168.74000000000524,
+            "dHeight": 0
+          },
+          {
+            "id": "what-is-an-eigenvalue",
+            "dTop": 168.74000000000524,
+            "dHeight": 0
+          },
+          {
+            "id": "diagonalization",
+            "dTop": 168.72999999999593,
+            "dHeight": 0
+          }
+        ],
+        "pass": false
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "A-i",
+      "settledHeight": 147151,
+      "preSettleScrollHeight": 131330,
+      "scrollbarHonesty": {
+        "ratio": 0.892,
+        "pass": true
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.59375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.09375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.53125,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.296875,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 8372,
+      "heightDeltaVsRefPct": 0,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0
+          },
+          {
+            "f": 0.5,
+            "fraction": 0
+          },
+          {
+            "f": 0.75,
+            "fraction": 0
+          },
+          {
+            "f": 0.95,
+            "fraction": 0
+          }
+        ],
+        "worstFraction": 0,
+        "pass": true
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 0,
+        "worstHeightDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      }
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourierN",
+      "arm": "B-i",
+      "settledHeight": 147063,
+      "preSettleScrollHeight": 11160,
+      "scrollbarHonesty": {
+        "ratio": 0.076,
+        "pass": false
+      },
+      "landings": [
+        {
+          "id": "hermite-polynomials",
+          "errorPx": 0.546875,
+          "settleFrames": 2
+        },
+        {
+          "id": "legendre-polynomials-via-the-schl-fli-integral",
+          "errorPx": 0.734375,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-discrete-cosine-transform-dct",
+          "errorPx": 0.234375,
+          "settleFrames": 2
+        },
+        {
+          "id": "principal-component-analysis",
+          "errorPx": 0.671875,
+          "settleFrames": 2
+        },
+        {
+          "id": "the-web-companion-computational-pipeline",
+          "errorPx": 0.359375,
+          "settleFrames": 2
+        }
+      ],
+      "landingPass": true,
+      "pageErrors": [],
+      "ms": 7029,
+      "heightDeltaVsRefPct": -0.06,
+      "restDiff": {
+        "perShot": [
+          {
+            "f": 0,
+            "fraction": 0
+          },
+          {
+            "f": 0.25,
+            "fraction": 0.009377
+          },
+          {
+            "f": 0.5,
+            "fraction": 0.019701
+          },
+          {
+            "f": 0.75,
+            "fraction": 0.016612
+          },
+          {
+            "f": 0.95,
+            "fraction": 0.065364
+          }
+        ],
+        "worstFraction": 0.065364,
+        "pass": false
+      },
+      "gapCheck": {
+        "boundaries": 27,
+        "worstDeltaPx": 0,
+        "failures": 0,
+        "bad": [],
+        "pass": true
+      },
+      "geometry": {
+        "compared": 98,
+        "worstTopDeltaPx": 87.94,
+        "worstHeightDeltaPx": 175.08,
+        "failures": 72,
+        "bad": [
+          {
+            "id": "lens-i-linear-algebra",
+            "dTop": 0,
+            "dHeight": 87.13999999999942
+          },
+          {
+            "id": "convergence-of-fourier-series",
+            "dTop": 0,
+            "dHeight": 87.14000000000033
+          },
+          {
+            "id": "pointwise-convergence",
+            "dTop": 0,
+            "dHeight": 87.13999999999999
+          },
+          {
+            "id": "mathbf-l-2-convergence",
+            "dTop": 87.13999999999942,
+            "dHeight": 0
+          },
+          {
+            "id": "the-gibbs-phenomenon",
+            "dTop": 87.13999999999942,
+            "dHeight": 0
+          },
+          {
+            "id": "almost-everywhere-convergence",
+            "dTop": 87.13999999999942,
+            "dHeight": 0
+          },
+          {
+            "id": "the-spectral-theorem-and-diagonalization",
+            "dTop": 87.13999999999942,
+            "dHeight": 0
+          },
+          {
+            "id": "eigentheory-foundations",
+            "dTop": 87.13999999999942,
+            "dHeight": 0
+          },
+          {
+            "id": "what-is-an-eigenvalue",
+            "dTop": 87.13999999999942,
+            "dHeight": 0
+          },
+          {
+            "id": "diagonalization",
+            "dTop": 87.13999999999942,
+            "dHeight": 0
+          }
+        ],
+        "pass": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+--- /Users/mkbabb/Programming/parse-that/rust/parse_that/src/regex/host.rs	2026-04-30 11:35:38
++++ /private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/rust/parse_that/src/regex/host.rs	2026-07-16 22:56:46
+@@ -63,7 +63,21 @@
+             }
+         }
+ 
+-        RegexParserEnum::atom(inner) => lower_node(inner, src, ctx),
++        RegexParserEnum::atom(inner) => {
++            // Meta-atom desync (LOCK-7A fix): bare `.` / `^` / `$` route through
++            // `class_atom_0` (and possibly `atom_0`) because codegen shares the
++            // single-char sub-parser between the atom arm and the in-class atom.
++            // At atom position these are META (dot-class / anchors), not literals.
++            if let RegexParserEnum::class_atom_0(span) | RegexParserEnum::atom_0(span) = inner {
++                match span.as_str() {
++                    "." => return Ok(make_dot(ctx)),
++                    "^" => return Ok(Hir::Look(Look::Start)),
++                    "$" => return Ok(Hir::Look(Look::End)),
++                    _ => {}
++                }
++            }
++            lower_node(inner, src, ctx)
++        }
+ 
+         // group_0: group with inner alternation (capturing, non-capturing, scoped flags)
+         RegexParserEnum::group_0((flags_or_prefix, inner)) => {
+@@ -107,7 +121,7 @@
+         }
+ 
+         // escape: backslash sequence (span contains everything after \\)
+-        RegexParserEnum::escape(span) => lower_escape(span.as_str(), ctx),
++        RegexParserEnum::escape(span) => lower_escape(&escape_body(span), ctx),
+ 
+         // literal: single non-meta character
+         RegexParserEnum::literal(span) => {
+@@ -156,7 +170,7 @@
+         }
+ 
+         // class_escape: backslash sequence inside class
+-        RegexParserEnum::class_escape(span) => lower_class_escape(span.as_str()),
++        RegexParserEnum::class_escape(span) => lower_class_escape(&escape_body(span)),
+ 
+         // quantifier: parsed but applied by quantified
+         RegexParserEnum::quantifier(span) => {
+@@ -210,12 +224,15 @@
+ }
+ 
+ fn parse_braced_quantifier(s: &str) -> Result<(u32, Option<u32>, &[u8]), ParseError> {
+-    // s is the span content: "n" or "n," or "n,m" with optional trailing "?"
++    // Brace-span desync (LOCK-7A fix): `>>`/`<<` trim the projected VALUE but the
++    // node's `.as_str()` span is the full consumed extent INCLUDING the braces —
++    // "{4}", "{2,3}", "{6,}", "{2,3}?". Strip the leading `{` and split on `}`
++    // (the trailing `?`, if present, follows the brace and drives greediness).
+     let s = s.trim();
+-    let (num_part, rest) = if let Some(q_pos) = s.find('?') {
+-        (&s[..q_pos], &s.as_bytes()[q_pos..])
+-    } else {
+-        (s, &s.as_bytes()[s.len()..])
++    let body = s.strip_prefix('{').unwrap_or(s);
++    let (num_part, rest) = match body.find('}') {
++        Some(i) => (&body[..i], &body.as_bytes()[i + 1..]),
++        None => (body, &body.as_bytes()[body.len()..]),
+     };
+ 
+     if let Some(comma_pos) = num_part.find(',') {
+@@ -245,6 +262,26 @@
+     }
+ }
+ 
++/// Reconstruct the full escape body (everything after the leading `\`) from the
++/// source span.
++///
++/// Escape-sigil-span desync (LOCK-7A fix): the grammar's directional skip
++/// (`"\\" >> "x" >> /hex/`, `"\\" >> "u" >> "{" >> /hex/ << "}"`, etc.) strips the
++/// sigil (`x`/`u`/`p`) and brace delimiters from the projected span, so the
++/// sigil-dispatched arms in `lower_escape`/`lower_class_escape` (which switch on
++/// `bytes[0]`) never fire — `\x41` arrives as `"41"` and lowers to literal `'4'`.
++/// `Span` carries the full source (`.src`) plus offsets, so we recover the body by
++/// scanning back to the `\` and re-slicing. Brace delimiters are left in place (the
++/// `u`/`p` arms trim them) so that a legitimately-escaped `\{`/`\}` is preserved.
++fn escape_body(span: &crate::Span<'_>) -> String {
++    let bytes = span.src.as_bytes();
++    let mut i = span.start;
++    while i > 0 && bytes[i - 1] != b'\\' {
++        i -= 1;
++    }
++    String::from_utf8_lossy(&bytes[i..span.end]).into_owned()
++}
++
+ fn lower_escape(text: &str, ctx: &LowerCtx) -> Result<Hir, ParseError> {
+     let bytes = text.as_bytes();
+     match bytes[0] {
+@@ -289,7 +326,8 @@
+         b'p' | b'P' => {
+             // \p{Name} or \P{Name} — text is "p{Name}" or "P{Name}"
+             let negated = bytes[0] == b'P';
+-            let name = &text[1..]; // already stripped { } by grammar >>
++            // `escape_body` preserves braces; trim the `\p{Name}` delimiters here.
++            let name = text[1..].trim_start_matches('{').trim_end_matches('}');
+             let ranges = unicode::unicode_category_ranges(name).ok_or_else(|| ParseError {
+                 message: format!("unknown Unicode property: {}", name),
+                 offset: 0,

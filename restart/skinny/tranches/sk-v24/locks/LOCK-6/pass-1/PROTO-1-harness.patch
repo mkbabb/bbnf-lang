@@ -1,0 +1,191 @@
+diff --git a/probe6c/Cargo.toml b/probe6c/Cargo.toml
+new file mode 100644
+--- /dev/null	2026-07-16 04:42:07
++++ b/probe6c/Cargo.toml
+@@ -0,0 +1,21 @@
++[package]
++name = "probe6c"
++version = "0.0.0"
++edition = "2024"
++
++[lib]
++crate-type = ["cdylib", "rlib"]
++path = "src/lib.rs"
++
++[[bin]]
++name = "native"
++path = "src/main.rs"
++
++[dependencies]
++simd-scan = { path = "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_50d1252c-5ea-23/crates/simd-scan" }
++
++[profile.release]
++opt-level = 3
++lto = true
++codegen-units = 1
++panic = "abort"
+diff --git a/probe6c/src/lib.rs b/probe6c/src/lib.rs
+new file mode 100644
+--- /dev/null	2026-07-16 04:42:07
++++ b/probe6c/src/lib.rs
+@@ -0,0 +1,51 @@
++//! Shared kernel entry for the 6C R-A NEON-crossing probe.
++//!
++//! One JSON structural alphabet, consumed by both the native
++//! (aarch64 NEON) binary and the wasm32 (SIMD128) cdylib. The wasm
++//! exports below let a JS driver copy a corpus into linear memory
++//! once, then time `scan_structural` node-for-node identically to the
++//! native path.
++
++use simd_scan::alphabet::StructuralAlphabet;
++use simd_scan::scan_structural;
++
++/// JSON structural alphabet: 6 singletons + 1 quote class, 0 digraphs.
++/// Identical to `benches/stage1_throughput.rs::JSON_ALPHABET`.
++pub const JSON: StructuralAlphabet =
++    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
++
++/// Scan `input` under the JSON alphabet, returning the structural
++/// index length (returned to defeat dead-code elimination on the
++/// driver side). This is the single measured hot path.
++#[inline]
++pub fn scan_len(input: &[u8]) -> u32 {
++    let idx = scan_structural(input, &JSON);
++    idx.len() as u32
++}
++
++// ---- wasm FFI surface ----------------------------------------------------
++
++#[cfg(target_arch = "wasm32")]
++mod wasm_ffi {
++    use super::scan_len;
++
++    /// Allocate `len` bytes in linear memory and return the pointer.
++    /// The driver writes the corpus here, then passes the same
++    /// `(ptr, len)` to `scan_json`. The buffer is leaked (called once
++    /// per process), so the pointer stays valid for the run.
++    #[unsafe(no_mangle)]
++    pub extern "C" fn walloc(len: usize) -> *mut u8 {
++        let mut v = vec![0u8; len];
++        let p = v.as_mut_ptr();
++        core::mem::forget(v);
++        p
++    }
++
++    /// Scan the buffer at `(ptr, len)` and return the structural
++    /// index length.
++    #[unsafe(no_mangle)]
++    pub extern "C" fn scan_json(ptr: *const u8, len: usize) -> u32 {
++        let input = unsafe { core::slice::from_raw_parts(ptr, len) };
++        scan_len(input)
++    }
++}
+diff --git a/probe6c/src/main.rs b/probe6c/src/main.rs
+new file mode 100644
+--- /dev/null	2026-07-16 04:42:07
++++ b/probe6c/src/main.rs
+@@ -0,0 +1,51 @@
++//! Native (aarch64 NEON) throughput harness for the 6C R-A probe.
++//!
++//! Reads a corpus file, then times `scan_structural` cold-per-parse
++//! (each iteration is an independent scan that allocates a fresh
++//! `StructuralIndex`, matching `benches/stage1_throughput.rs`). Reports
++//! median and best (peak) MB/s over N samples so the wasm driver can be
++//! compared apples-to-apples.
++
++use std::hint::black_box;
++use std::time::Instant;
++
++fn main() {
++    let args: Vec<String> = std::env::args().collect();
++    let path = &args[1];
++    let n: usize = args.get(2).map(|s| s.parse().unwrap()).unwrap_or(200);
++
++    let input = std::fs::read(path).unwrap();
++    let len = input.len();
++
++    // Warm the icache/branch predictors a little, but every measured
++    // sample is still an independent cold-per-parse scan.
++    for _ in 0..20 {
++        black_box(probe6c::scan_len(black_box(input.as_slice())));
++    }
++
++    let mut samples: Vec<f64> = Vec::with_capacity(n);
++    let mut acc: u64 = 0;
++    for _ in 0..n {
++        let t = Instant::now();
++        let r = probe6c::scan_len(black_box(input.as_slice()));
++        let dt = t.elapsed().as_secs_f64();
++        acc = acc.wrapping_add(r as u64);
++        samples.push(dt);
++    }
++    black_box(acc);
++
++    samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    let best = samples[0];
++    let median = samples[n / 2];
++    let mb = len as f64 / 1_000_000.0;
++    println!(
++        "native len={} n={} idx_sum={} best_us={:.2} median_us={:.2} best_MBps={:.1} median_MBps={:.1}",
++        len,
++        n,
++        acc,
++        best * 1e6,
++        median * 1e6,
++        mb / best,
++        mb / median,
++    );
++}
+diff --git a/probe6c/driver.mjs b/probe6c/driver.mjs
+new file mode 100644
+--- /dev/null	2026-07-16 04:42:07
++++ b/probe6c/driver.mjs
+@@ -0,0 +1,48 @@
++// Wasm (SIMD128) throughput driver for the 6C R-A probe.
++//
++// Loads the probe6c cdylib, copies a corpus into linear memory once,
++// then times scan_json cold-per-parse (each call is an independent
++// scan allocating a fresh index inside wasm). Reports median and best
++// MB/s over N samples — identical measurement shape to the native
++// harness, so the two are directly comparable.
++
++import { readFileSync } from "node:fs";
++import { performance } from "node:perf_hooks";
++
++const [, , wasmPath, corpusPath, nArg] = process.argv;
++const N = nArg ? parseInt(nArg, 10) : 200;
++
++const bytes = readFileSync(wasmPath);
++const corpus = readFileSync(corpusPath);
++const len = corpus.length;
++
++const { instance } = await WebAssembly.instantiate(bytes, {});
++const { memory, walloc, scan_json } = instance.exports;
++
++// Allocate once, then re-fetch the buffer view (walloc may grow memory,
++// which detaches any earlier view).
++const ptr = walloc(len);
++new Uint8Array(memory.buffer, ptr, len).set(corpus);
++
++// Warm.
++let acc = 0;
++for (let i = 0; i < 20; i++) acc += scan_json(ptr, len);
++
++const samples = new Float64Array(N);
++for (let i = 0; i < N; i++) {
++    const t = performance.now();
++    const r = scan_json(ptr, len);
++    const dt = (performance.now() - t) / 1000; // seconds
++    acc += r;
++    samples[i] = dt;
++}
++
++const sorted = Array.from(samples).sort((a, b) => a - b);
++const best = sorted[0];
++const median = sorted[Math.floor(N / 2)];
++const mb = len / 1_000_000;
++console.log(
++    `wasm   len=${len} n=${N} idx_sum=${acc} ` +
++        `best_us=${(best * 1e6).toFixed(2)} median_us=${(median * 1e6).toFixed(2)} ` +
++        `best_MBps=${(mb / best).toFixed(1)} median_MBps=${(mb / median).toFixed(1)}`,
++);

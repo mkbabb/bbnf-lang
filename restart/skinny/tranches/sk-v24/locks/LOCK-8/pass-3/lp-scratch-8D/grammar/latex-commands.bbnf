@@ -1,0 +1,33 @@
+/* LaTeX Command Structures
+ * Context-free argument patterns for known commands.
+ * Actual command dispatch is hand-written (context-sensitive).
+ */
+
+@import "latex-tokens.bbnf" ;
+
+/* ── Sectioning commands ──────────────────────────────────────────── */
+sectionCmd = "\\" , ( "chapter" | "section" | "subsection" | "subsubsection" ) , "*" ? , braceGroup ;
+
+/* ── Formatting commands ──────────────────────────────────────────── */
+textCmd = "\\" , ( "textit" | "textbf" | "emph" | "texttt" | "text" | "mathit" | "mathrm" | "mathbf" ) , braceGroup ;
+
+/* ── Reference commands ───────────────────────────────────────────── */
+refCmd = "\\" , ( "ref" | "eqref" | "label" | "hyperref" ) , braceGroup ;
+citeCmd = "\\cite" , bracketGroup ? , braceGroup ;
+
+/* ── Href ─────────────────────────────────────────────────────────── */
+hrefCmd = "\\href" , braceGroup , braceGroup ;
+
+/* ── Figure commands ──────────────────────────────────────────────── */
+includegraphicsCmd = "\\includegraphics" , bracketGroup ? , braceGroup ;
+captionCmd = "\\caption" , braceGroup ;
+
+/* ── Newtheorem ───────────────────────────────────────────────────── */
+newtheoremCmd = "\\newtheorem" , braceGroup , bracketGroup ? , braceGroup , bracketGroup ? ;
+
+/* ── Skip/spacing commands ────────────────────────────────────────── */
+skipCmd = "\\" , ( "medskip" | "smallskip" | "bigskip" | "vfill" | "hfill" | "noindent" | "newline" | "centering" | "newpage" | "clearpage" | "cleardoublepage" | "maketitle" | "tableofcontents" ) ;
+vspaceCmd = "\\" , ( "vspace" | "hspace" ) , "*" ? , braceGroup ;
+
+/* ── Paragraph command ────────────────────────────────────────────── */
+paragraphCmd = "\\paragraph" , braceGroup ;

@@ -1,0 +1,499 @@
+{
+  "generatedAt": "2026-07-02T07:14:10.111Z",
+  "R1": "windowed baseline RETIRED regardless (fails VR-4..9 structurally); appears as scroll reference only",
+  "R2": "shipped default = mount: 'governed'",
+  "R3": {
+    "eagerTable": [
+      {
+        "n": 8,
+        "worstLongtaskMs": {
+          "median": 125,
+          "min": 117,
+          "max": 129
+        },
+        "fcpMs": {
+          "median": 252,
+          "min": 240,
+          "max": 264
+        },
+        "longtaskTotalMs": {
+          "median": 219,
+          "min": 208,
+          "max": 232
+        }
+      },
+      {
+        "n": 16,
+        "worstLongtaskMs": {
+          "median": 148,
+          "min": 148,
+          "max": 154
+        },
+        "fcpMs": {
+          "median": 272,
+          "min": 264,
+          "max": 276
+        },
+        "longtaskTotalMs": {
+          "median": 239,
+          "min": 232,
+          "max": 245
+        }
+      },
+      {
+        "n": 24,
+        "worstLongtaskMs": {
+          "median": 171,
+          "min": 170,
+          "max": 177
+        },
+        "fcpMs": {
+          "median": 300,
+          "min": 292,
+          "max": 300
+        },
+        "longtaskTotalMs": {
+          "median": 266,
+          "min": 260,
+          "max": 269
+        }
+      },
+      {
+        "n": 32,
+        "worstLongtaskMs": {
+          "median": 189,
+          "min": 185,
+          "max": 198
+        },
+        "fcpMs": {
+          "median": 308,
+          "min": 300,
+          "max": 328
+        },
+        "longtaskTotalMs": {
+          "median": 274,
+          "min": 269,
+          "max": 295
+        }
+      },
+      {
+        "n": 40,
+        "worstLongtaskMs": {
+          "median": 219,
+          "min": 199,
+          "max": 252
+        },
+        "fcpMs": {
+          "median": 340,
+          "min": 320,
+          "max": 432
+        },
+        "longtaskTotalMs": {
+          "median": 308,
+          "min": 291,
+          "max": 374
+        }
+      },
+      {
+        "n": 60,
+        "worstLongtaskMs": {
+          "median": 245,
+          "min": 237,
+          "max": 252
+        },
+        "fcpMs": {
+          "median": 364,
+          "min": 356,
+          "max": 384
+        },
+        "longtaskTotalMs": {
+          "median": 333,
+          "min": 325,
+          "max": 348
+        }
+      },
+      {
+        "n": 80,
+        "worstLongtaskMs": {
+          "median": 284,
+          "min": 271,
+          "max": 292
+        },
+        "fcpMs": {
+          "median": 412,
+          "min": 396,
+          "max": 420
+        },
+        "longtaskTotalMs": {
+          "median": 380,
+          "min": 362,
+          "max": 388
+        }
+      },
+      {
+        "n": 120,
+        "worstLongtaskMs": {
+          "median": 365,
+          "min": 353,
+          "max": 378
+        },
+        "fcpMs": {
+          "median": 488,
+          "min": 472,
+          "max": 512
+        },
+        "longtaskTotalMs": {
+          "median": 454,
+          "min": 443,
+          "max": 478
+        }
+      },
+      {
+        "n": 160,
+        "worstLongtaskMs": {
+          "median": 427,
+          "min": 416,
+          "max": 435
+        },
+        "fcpMs": {
+          "median": 560,
+          "min": 544,
+          "max": 568
+        },
+        "longtaskTotalMs": {
+          "median": 528,
+          "min": 511,
+          "max": 535
+        }
+      },
+      {
+        "n": 220,
+        "worstLongtaskMs": {
+          "median": 550,
+          "min": 535,
+          "max": 564
+        },
+        "fcpMs": {
+          "median": 664,
+          "min": 660,
+          "max": 688
+        },
+        "longtaskTotalMs": {
+          "median": 632,
+          "min": 629,
+          "max": 656
+        }
+      }
+    ],
+    "evalBaselineMs": 147,
+    "note": "demo main.ts mounts synchronously inside the bundle-eval task — worst longtask = eval+mount fused; decomposed reading subtracts the windowed-mode baseline (same bundle, ~3-section mount)",
+    "sCross_literal": 32,
+    "sCross_mountAttributable": 80,
+    "thresholdConstant_literal": 25,
+    "thresholdConstant_mountAttributable": 64
+  },
+  "R4": {
+    "chosenBatch": 2,
+    "batchPickRule": "smallest batch with p95 patchMs < 16.7",
+    "batchSummaries": {
+      "2": {
+        "n": 324,
+        "avg": 5.32,
+        "median": 5.3,
+        "p95": 8.1,
+        "max": 13.4,
+        "over33": 0,
+        "over16_7": 0,
+        "over8_3": 12
+      },
+      "4": {
+        "n": 162,
+        "avg": 8.99,
+        "median": 8.5,
+        "p95": 14.2,
+        "max": 18.9,
+        "over33": 0,
+        "over16_7": 3,
+        "over8_3": 86
+      },
+      "8": {
+        "n": 81,
+        "avg": 16.59,
+        "median": 16,
+        "p95": 25.2,
+        "max": 30,
+        "over33": 0,
+        "over16_7": 30,
+        "over8_3": 81
+      }
+    },
+    "governedTable": [
+      {
+        "batch": 2,
+        "worstLongtaskMs": {
+          "median": 125,
+          "min": 122,
+          "max": 133
+        },
+        "fcpMs": {
+          "median": 248,
+          "min": 248,
+          "max": 264
+        },
+        "fullRevealMs": {
+          "median": 1999,
+          "min": 1991,
+          "max": 2007
+        },
+        "patchP95": {
+          "median": 7.9,
+          "min": 7.7,
+          "max": 8.7
+        },
+        "patchMax": {
+          "median": 10.4,
+          "min": 9,
+          "max": 13.4
+        }
+      },
+      {
+        "batch": 4,
+        "worstLongtaskMs": {
+          "median": 131,
+          "min": 128,
+          "max": 133
+        },
+        "fcpMs": {
+          "median": 256,
+          "min": 244,
+          "max": 260
+        },
+        "fullRevealMs": {
+          "median": 1110,
+          "min": 1104,
+          "max": 1110
+        },
+        "patchP95": {
+          "median": 13.9,
+          "min": 13.8,
+          "max": 15.5
+        },
+        "patchMax": {
+          "median": 18.8,
+          "min": 18.7,
+          "max": 18.9
+        }
+      },
+      {
+        "batch": 8,
+        "worstLongtaskMs": {
+          "median": 125,
+          "min": 125,
+          "max": 128
+        },
+        "fcpMs": {
+          "median": 248,
+          "min": 248,
+          "max": 252
+        },
+        "fullRevealMs": {
+          "median": 744,
+          "min": 740,
+          "max": 765
+        },
+        "patchP95": {
+          "median": 26,
+          "min": 23.3,
+          "max": 29.8
+        },
+        "patchMax": {
+          "median": 26.7,
+          "min": 25.2,
+          "max": 30
+        }
+      }
+    ],
+    "i_allLongtasksUnder200": true,
+    "ii_scrollWithin10pctAnd0Over33": true,
+    "ii_avgFrameDeltaPct": 0.2,
+    "scrollTable": {
+      "windowed": {
+        "avgFrameMs": {
+          "median": 8.4,
+          "min": 8.38,
+          "max": 8.41
+        },
+        "p95FrameMs": {
+          "median": 10.1,
+          "min": 10.1,
+          "max": 10.1
+        },
+        "maxFrameMs": {
+          "median": 18.3,
+          "min": 18.3,
+          "max": 18.5
+        },
+        "framesOver33": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "scrollHeightPx": {
+          "median": 250634,
+          "min": 250634,
+          "max": 251026
+        }
+      },
+      "eager": {
+        "avgFrameMs": {
+          "median": 8.43,
+          "min": 8.42,
+          "max": 8.48
+        },
+        "p95FrameMs": {
+          "median": 10.1,
+          "min": 10.1,
+          "max": 10.2
+        },
+        "maxFrameMs": {
+          "median": 18.4,
+          "min": 18,
+          "max": 18.5
+        },
+        "framesOver33": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "scrollHeightPx": {
+          "median": 252871,
+          "min": 252871,
+          "max": 252871
+        }
+      },
+      "governed": {
+        "avgFrameMs": {
+          "median": 8.42,
+          "min": 8.4,
+          "max": 8.42
+        },
+        "p95FrameMs": {
+          "median": 10.1,
+          "min": 10.1,
+          "max": 10.1
+        },
+        "maxFrameMs": {
+          "median": 18.5,
+          "min": 18,
+          "max": 25.1
+        },
+        "framesOver33": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "scrollHeightPx": {
+          "median": 252871,
+          "min": 252871,
+          "max": 252871
+        }
+      }
+    },
+    "iii_landingErrorPxMax1": true,
+    "landingTable": {
+      "stress-220": {
+        "target": "sec-210",
+        "errorPx": {
+          "median": 0.09,
+          "min": 0.09,
+          "max": 0.09
+        },
+        "revealMs": {
+          "median": 637.7,
+          "min": 606.4,
+          "max": 647.5
+        },
+        "worstLongtaskDuringMs": {
+          "median": 0,
+          "min": 0,
+          "max": 0
+        },
+        "settleFrames": {
+          "median": 2,
+          "min": 2,
+          "max": 2
+        }
+      },
+      "fourier-real": {
+        "target": "subject-isolation",
+        "errorPx": {
+          "median": 0.31,
+          "min": 0.31,
+          "max": 0.31
+        },
+        "revealMs": {
+          "median": 778.1,
+          "min": 759.7,
+          "max": 817.6
+        },
+        "worstLongtaskDuringMs": {
+          "median": 151,
+          "min": 139,
+          "max": 155
+        },
+        "settleFrames": {
+          "median": 2,
+          "min": 2,
+          "max": 2
+        }
+      }
+    },
+    "PASS": true
+  },
+  "R5": "NOT TRIGGERED — governor passes R4; neither VR-14 fallback fires",
+  "fourierTable": {
+    "fourier-eager-initial": {
+      "worstLongtaskMs": {
+        "median": 891,
+        "min": 847,
+        "max": 893
+      },
+      "fcpMs": {
+        "median": 1036,
+        "min": 996,
+        "max": 1036
+      },
+      "fullRevealMs": null
+    },
+    "fourier-governed-initial": {
+      "worstLongtaskMs": {
+        "median": 123,
+        "min": 121,
+        "max": 124
+      },
+      "fcpMs": {
+        "median": 260,
+        "min": 256,
+        "max": 260
+      },
+      "fullRevealMs": {
+        "median": 1285,
+        "min": 1267,
+        "max": 1287
+      }
+    },
+    "fourier-windowed-initial": {
+      "worstLongtaskMs": {
+        "median": 134,
+        "min": 134,
+        "max": 141
+      },
+      "fcpMs": {
+        "median": 240,
+        "min": 240,
+        "max": 244
+      },
+      "fullRevealMs": null
+    }
+  }
+}

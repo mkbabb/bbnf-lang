@@ -1,0 +1,18 @@
+--- a/rust/parse_that/src/parsers/scan/quote_parity.rs
++++ b/rust/parse_that/src/parsers/scan/quote_parity.rs
+@@ Arm A: route the prefix-xor kernel through the shared bbnf-simd crate.
+@@ Requires `bbnf-simd = { path = "<skinny>/crates/bbnf-simd" }` in
+@@ parse_that/Cargo.toml [dependencies]. bbnf_simd::prefix_xor_64(mask,false)
+@@ is bit-identical to the local prefix_xor(mask) for carry_in=false.
+@@ -136,7 +136,7 @@ pub fn compute_in_string_bitmap<F>(view: PaddedView<'_>, mut f: F)
+         let real_quotes = quote_bits & !escaped;
+
+-        let in_string = prefix_xor(real_quotes) ^ prev_instring;
++        let in_string = bbnf_simd::prefix_xor_64(real_quotes, false) ^ prev_instring;
+
+         f(offset, in_string, real_quotes);
+@@ -162,7 +162,7 @@ pub fn compute_in_string_bitmap<F>(view: PaddedView<'_>, mut f: F)
+         let real_quotes = quote_bits & !escaped & valid_mask;
+-        let in_string = (prefix_xor(real_quotes) ^ prev_instring) & valid_mask;
++        let in_string = (bbnf_simd::prefix_xor_64(real_quotes, false) ^ prev_instring) & valid_mask;
+         f(offset, in_string, real_quotes);

@@ -1,4 +1,16 @@
 // JSON-owned structural scan source; not part of the generated JSON roster.
+//
+// G5 disposition (SK-V18): this module is NEUTRALIZED on the live JSON path. The
+// only entry `parse_direct` reaches is `structural_capacity_for`, and the live
+// default `CapacityPlan` is `GrowOnly` (no env override) — which returns a
+// constant 256 and touches NONE of the structural scanners below. The heavy
+// entries (`scan_structurals` + its aarch64 `neon::scan`, `sampled_structural_
+// capacity`, `exact_structural_count`) are reachable ONLY under the explicit
+// non-default `BBNF_TAPE_CAPACITY=A|B|C` plans (capacity-strategy experiments)
+// and the bench/parity harnesses — they carry ZERO live-path self-time. The
+// capacity probe is KEPT (it owns the live constant); the scanners stay gated
+// behind their plan, not deleted (the env-selectable plans + the scan-parity
+// tests still exercise them).
 use bbnf_simd::{ScanBackend, ScalarParityReport, StructuralAlphabet, StructuralIndex};
 
 use crate::tape::CapacityPlan;

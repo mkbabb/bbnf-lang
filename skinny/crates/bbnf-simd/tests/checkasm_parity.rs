@@ -676,3 +676,162 @@ fn classifier_bench_robust_mean() {
         "checkasm bench produced no measurements"
     );
 }
+
+// =============================================================================
+// SK-V18 G6 — STRUCTURAL_CLASSIFY_64 differential over the REAL css-l4 corpora.
+//
+// dav1d discipline: the NEON `vceqq` fan (scheme α) must agree with the scalar
+// reference per-byte classification BIT-FOR-BIT — significant mask AND every
+// kind mask — at EVERY 64-byte block, swept across all start offsets `0..64`,
+// over the four real 71KB–495KB css-l4-sk-v14 corpora, for each of the four
+// grammar-derived STOP partitions. This is the binding correctness gate the
+// scalar-shell integration rides; it runs BEFORE any wiring.
+//
+// The four corpora are `include_bytes!`-embedded (not a dev-dep on bbnf-bench,
+// which sits ABOVE bbnf-simd in the graph — the upward dep is forbidden).
+//
+// Injection falsifier: with `BBNF_SIMD_INJECT_BUG` set, the NEON-side partition
+// DROPS `{` from its `open` bucket; the differential must then FAIL on every
+// corpus (the real CSS bodies are dense with `{`). Revert → PASS.
+// =============================================================================
+
+use bbnf_simd::prim::{structural_classify_64, KindPartition, StructuralClassify64};
+use bbnf_simd::scalar::structural_classify_64::structural_classify_64_scalar;
+
+/// The four real css-l4-sk-v14 corpora, embedded at compile time.
+const CSS_CORPORA: &[(&str, &[u8])] = &[
+    (
+        "animate",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../corpora/css-l4-sk-v14/animate-4.1.1.min.css"
+        )),
+    ),
+    (
+        "tailwindcss",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../corpora/css-l4-sk-v14/tailwindcss-0.2.0.min.css"
+        )),
+    ),
+    (
+        "bootstrap",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../corpora/css-l4-sk-v14/bootstrap-5.3.3.min.css"
+        )),
+    ),
+    (
+        "material",
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../corpora/css-l4-sk-v14/material-components-web-14.0.0.min.css"
+        )),
+    ),
+];
+
+/// The grammar-derived CSS kind buckets (caller data, mirroring the runtime
+/// `runtime_scan` partition). `open`/`close`/`quote`/`slash` are fixed by the
+/// SKIP_ALPHABET family; `stop` is one of the four STOP sets per call site.
+const CSS_OPEN: &[u8] = b"([{";
+const CSS_CLOSE: &[u8] = b")]}";
+const CSS_QUOTE: &[u8] = b"'\"";
+const CSS_SLASH: &[u8] = b"/";
+
+/// The four grammar-derived STOP partitions reaching `css_balanced_component_scan`.
+const CSS_STOP_SETS: &[&[u8]] = &[b";{}", b"{};", b";}", b":{};"];
+
+fn css_partition<'a>(stop: &'a [u8], inject_open: &'a [u8]) -> KindPartition<'a> {
+    KindPartition {
+        open: inject_open,
+        close: CSS_CLOSE,
+        quote: CSS_QUOTE,
+        slash: CSS_SLASH,
+        stop,
+    }
+}
+
+#[test]
+fn structural_classify_64_neon_matches_scalar_css_corpora() {
+    signal_guard::arm();
+
+    // Under injection the NEON-side `open` bucket drops `{`; otherwise both
+    // sides see the identical partition.
+    let inject = injection_enabled();
+    let neon_open: &[u8] = if inject { b"([" } else { CSS_OPEN };
+
+    let mut block_comparisons = 0usize;
+    let mut divergences = 0usize;
+    let mut first_divergence: Option<String> = None;
+
+    for (name, corpus) in CSS_CORPORA {
+        assert!(
+            corpus.len() >= 64,
+            "css corpus {name} too small to classify a block"
+        );
+        for &stop in CSS_STOP_SETS {
+            let scalar_part = css_partition(stop, CSS_OPEN);
+            let neon_part = css_partition(stop, neon_open);
+
+            // Sweep the block start across all 64 misalignments, then stride by
+            // 64 through the corpus. (offset + k*64) visits every byte position
+            // as a block-relative bit across the offset sweep.
+            for offset in 0..64usize {
+                let mut base = offset;
+                while base + 64 <= corpus.len() {
+                    let block: &[u8; 64] = corpus[base..base + 64]
+                        .try_into()
+                        .expect("64-byte block by loop guard");
+
+                    let want: StructuralClassify64 =
+                        structural_classify_64_scalar(block, &scalar_part);
+                    // The dispatcher routes to NEON on aarch64, scalar elsewhere;
+                    // on aarch64 this is the NEON `vceqq` fan under test.
+                    let got: StructuralClassify64 =
+                        stack_clobber_then(|| structural_classify_64(block, &neon_part));
+
+                    block_comparisons += 1;
+                    if got != want {
+                        divergences += 1;
+                        if first_divergence.is_none() {
+                            first_divergence = Some(format!(
+                                "corpus={name} stop={stop:?} base={base} \
+                                 want={want:?} got={got:?}"
+                            ));
+                        }
+                    }
+                    base += 64;
+                }
+            }
+        }
+    }
+
+    assert!(
+        block_comparisons > 0,
+        "no css blocks classified — corpora missing?"
+    );
+
+    if inject {
+        assert!(
+            divergences > 0,
+            "injection falsifier did not fire: dropping `{{` from the NEON open \
+             bucket produced ZERO divergences over {block_comparisons} css blocks"
+        );
+        eprintln!(
+            "[checkasm-css] injection confirmed: {divergences} / {block_comparisons} \
+             block-classify divergences when `{{` dropped from NEON open"
+        );
+    } else {
+        assert_eq!(
+            divergences, 0,
+            "structural_classify_64 NEON≠scalar over real css corpora: \
+             {divergences} / {block_comparisons} blocks diverged (first: {})",
+            first_divergence.unwrap_or_default()
+        );
+        eprintln!(
+            "[checkasm-css] structural_classify_64 NEON==scalar: \
+             {block_comparisons} block-classify comparisons, 0 divergences \
+             (4 corpora × 4 stop sets × 64 offsets)"
+        );
+    }
+}

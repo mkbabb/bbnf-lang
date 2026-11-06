@@ -1,0 +1,263 @@
+# PROVE-2-ALTCOST-CROSSOVER — my delta (the two-line rewire + crossover test)
+# base: ce51c36fc  |  reuses PROTO-1's widen.rs + widen_confluent.rs (already in worktree)
+### crates/ir/src/egraph/cost.rs (the rewire)
+diff --git a/crates/ir/src/egraph/cost.rs b/crates/ir/src/egraph/cost.rs
+index 72217213e..699f9fc7c 100644
+--- a/crates/ir/src/egraph/cost.rs
++++ b/crates/ir/src/egraph/cost.rs
+@@ -108,12 +108,18 @@ impl CostModel<GrammarENode> for GrammarCostModel {
+ 
+             GrammarENode::Alt(children, dispatch) => {
+                 let child_sum: f64 = children.iter().map(|&id| child_cost(id)).sum();
+-                let base =
+-                    structural + self.weights.alt_per_branch * children.len() as f64 + child_sum;
++                let n = children.len() as f64;
++                let shared = structural + child_sum;
+                 if dispatch.is_some() {
+-                    base + self.weights.dispatch_bonus
++                    // DISPATCH-table form: fixed table-setup cost plus a
++                    // cheap O(1) per-arm byte-match. Reads the calibrated
++                    // `dispatch_table` / `dispatch_branch` coefficients the
++                    // CSP strategy solver already ships (cost_weights.rs).
++                    shared + self.weights.dispatch_table + n * self.weights.dispatch_branch
+                 } else {
+-                    base
++                    // SEQUENTIAL-trial form: no table setup, linear
++                    // per-branch trial penalty.
++                    shared + n * self.weights.alt_per_branch
+                 }
+             }
+ 
+### crates/ir/tests/egraph/main.rs (mod registration)
+diff --git a/crates/ir/tests/egraph/main.rs b/crates/ir/tests/egraph/main.rs
+index 8500e3e20..977a02261 100644
+--- a/crates/ir/tests/egraph/main.rs
++++ b/crates/ir/tests/egraph/main.rs
+@@ -5,6 +5,7 @@
+ //! test semantics. Add new e-graph tests as additional `mod ...;`
+ //! declarations here, with the actual test bodies under `tests/egraph/`.
+ 
++mod alt_cost_crossover;
+ mod egraph_analysis;
+ mod egraph_grammar;
+ mod egraph_interner;
+@@ -13,3 +14,4 @@ mod egraph_roundtrip;
+ mod egraph_suffix;
+ mod egraph_universal;
+ mod type_desc_interner;
++mod widen_confluent;
+diff --git a/crates/ir/tests/egraph/alt_cost_crossover.rs b/crates/ir/tests/egraph/alt_cost_crossover.rs
+new file mode 100644
+index 000000000..4310838d6
+--- /dev/null
++++ b/crates/ir/tests/egraph/alt_cost_crossover.rs
+@@ -0,0 +1,209 @@
++//! LOCK-2 pass-2 PROVE-2-ALTCOST-CROSSOVER probe.
++//!
++//! PROTO-1 (`widen_confluent`) proved a *registered, confluent,
++//! terminating* widening rewrite manufactures a dispatch-table twin
++//! beside the sequential-trial `Alt` at a child-bearing node. But the
++//! `GrammarCostModel::cost` Alt arm was a scalar constant in N — it
++//! paid `alt_per_branch * N` for BOTH forms and added a flat
++//! `dispatch_bonus`, so extraction picked identically across the whole
++//! calibrated weight space and only the *forbidden* `dispatch_bonus`
++//! SIGN flip changed the pick.
++//!
++//! The two-line rewire nets the two forms against the coefficients the
++//! CSP strategy solver already ships calibrated:
++//!
++//!   DISPATCH   = structural + Σchild + dispatch_table + N·dispatch_branch
++//!   SEQUENTIAL = structural + Σchild +                  N·alt_per_branch
++//!
++//! `structural + Σchild` is identical for both forms (they share the
++//! same children), so the pick reduces to the sign of
++//!
++//!   Δ(N) = dispatch_table + N·(dispatch_branch − alt_per_branch)
++//!        = 3.0 + N·(0.5 − 1.5) = 3.0 − N
++//!
++//! which crosses zero at N* = dispatch_table / (alt_per_branch −
++//! dispatch_branch) = 3.0. Δ>0 ⇒ SEQUENTIAL cheaper (small N); Δ<0 ⇒
++//! DISPATCH cheaper (large N). This test proves ONE unmodified
++//! `CALIBRATED_WEIGHTS` vector picks SEQUENTIAL at N=2 and DISPATCH at
++//! N=8 — a real structural crossover, not a sign flip.
++
++use bbnf_ir::egraph::node::GrammarENode;
++use bbnf_ir::egraph::rules::{
++    CommonSuffixFactor, DeduplicateAltBranches, FuseAltRegexBranches, ManufactureDispatchAlt,
++    SupersetAbsorbAlt, UnionMergeAlt,
++};
++use bbnf_ir::egraph::{GrammarCostModel, SharedStrings};
++use bbnf_ir::GrammarIR;
++use egraph::{
++    CostModel, CspScheduler, EGraph, Extractor, Id, NoAnalysis, RewriteFn, Scheduler,
++    CALIBRATED_WEIGHTS,
++};
++
++/// Eight ASCII sentinels with pairwise-disjoint FIRST bytes. The first
++/// `n` are used to build an `n`-branch child-bearing `Alt`.
++const SENTINELS: [&str; 8] = ["{", "[", "\"", "t", "f", "n", "<", ">"];
++
++/// Build an `n`-branch JSON-`value`-shaped alternation — each branch is
++/// `Seq([Literal(sentinel), Ref(distinct_rule)])`, exactly the shape
++/// `ManufactureDispatchAlt` matches. Returns `(egraph, root, branches)`.
++fn build_n_branch_alt(
++    n: usize,
++) -> (EGraph<GrammarENode, NoAnalysis>, SharedStrings, Id, Vec<Id>) {
++    let pool = SharedStrings::from_ir(&GrammarIR::default());
++    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
++
++    let mut branches: Vec<Id> = Vec::new();
++    for (i, s) in SENTINELS.iter().take(n).enumerate() {
++        let sid = pool.intern(s);
++        let lit = eg.add(GrammarENode::Literal(sid));
++        let rest = eg.add(GrammarENode::Ref(i as u32 + 1));
++        let seq = eg.add(GrammarENode::Seq(Box::new([lit, rest])));
++        branches.push(seq);
++    }
++    let root = eg.add(GrammarENode::Alt(branches.clone().into_boxed_slice(), None));
++    eg.rebuild();
++    (eg, pool, root, branches)
++}
++
++/// The shipping all-narrowing set plus the widening rule under test.
++fn rule_boxes(pool: &SharedStrings) -> Vec<Box<dyn RewriteFn<GrammarENode, NoAnalysis>>> {
++    vec![
++        Box::new(DeduplicateAltBranches),
++        Box::new(SupersetAbsorbAlt::new(pool.clone())),
++        Box::new(UnionMergeAlt::new(pool.clone())),
++        Box::new(FuseAltRegexBranches::new(pool.clone())),
++        Box::new(CommonSuffixFactor),
++        Box::new(ManufactureDispatchAlt::new(pool.clone())),
++    ]
++}
++
++/// The default (calibrated) grammar cost model — `weights` already
++/// aliases `CALIBRATED_WEIGHTS` via `CostWeights::default`.
++fn calibrated_model() -> GrammarCostModel {
++    let cm = GrammarCostModel::default();
++    // Assert the vector under test is *exactly* the shipping calibrated
++    // one — no per-test tuning is permitted for this probe.
++    assert_eq!(cm.weights.alt_per_branch, CALIBRATED_WEIGHTS.alt_per_branch);
++    assert_eq!(cm.weights.dispatch_branch, CALIBRATED_WEIGHTS.dispatch_branch);
++    assert_eq!(cm.weights.dispatch_table, CALIBRATED_WEIGHTS.dispatch_table);
++    cm
++}
++
++/// Saturate an `n`-branch Alt and return whether extraction picks the
++/// DISPATCH form, plus the two forms' costs for the ledger.
++fn extract_pick(n: usize) -> (bool, f64, f64, f64) {
++    let (mut eg, pool, root, branches) = build_n_branch_alt(n);
++    let boxes = rule_boxes(&pool);
++    let rules: Vec<&dyn RewriteFn<GrammarENode, NoAnalysis>> =
++        boxes.iter().map(|b| b.as_ref()).collect();
++    CspScheduler::default().run(&mut eg, &rules);
++
++    // Confluence sanity: both forms present at the root class.
++    let canon = eg.find_ref(root);
++    let mut have_none = false;
++    let mut have_some = false;
++    for node in eg.class(canon).iter() {
++        if let GrammarENode::Alt(_, d) = node {
++            if d.is_some() {
++                have_some = true;
++            } else {
++                have_none = true;
++            }
++        }
++    }
++    assert!(
++        have_none && have_some,
++        "N={n}: class must carry BOTH sequential and dispatch Alt forms"
++    );
++
++    let cm = calibrated_model();
++    let ext = Extractor::new(&eg, &cm);
++
++    // Directly cost each form on the SAME children so the crossover
++    // margin is explicit and independent of extraction internals.
++    let child_sum: f64 = branches.iter().map(|&b| ext.best_cost(b).unwrap()).sum();
++    let some_node = GrammarENode::Alt(
++        branches.clone().into_boxed_slice(),
++        Some(bbnf_ir::AltDispatch {
++            table: vec![0u8; 128],
++            fallback_idx: None,
++        }),
++    );
++    let none_node = GrammarENode::Alt(branches.clone().into_boxed_slice(), None);
++    let child_cost = |id: Id| ext.best_cost(id).unwrap();
++    let dispatch_cost = cm.cost(&some_node, &child_cost);
++    let sequential_cost = cm.cost(&none_node, &child_cost);
++
++    let picked_dispatch =
++        matches!(ext.best_node(root), Some(GrammarENode::Alt(_, Some(_))));
++
++    let delta = 3.0 - n as f64; // dispatch_table + N(dispatch_branch − alt_per_branch)
++    eprintln!(
++        "[CROSSOVER] N={n} Δ(N)={delta:+.1} child_sum={child_sum:.1} \
++         dispatch_cost={dispatch_cost:.2} sequential_cost={sequential_cost:.2} \
++         pick={}",
++        if picked_dispatch { "DISPATCH" } else { "SEQUENTIAL" },
++    );
++
++    (picked_dispatch, dispatch_cost, sequential_cost, child_sum)
++}
++
++/// The master assertion: ONE fixed calibrated vector yields a
++/// structural crossover — 2 branches → SEQUENTIAL, 8 branches →
++/// DISPATCH, crossing at N* ≈ 3.
++#[test]
++fn alt_cost_crossover_single_vector_crosses() {
++    let (pick2, disp2, seq2, _) = extract_pick(2);
++    let (pick8, disp8, seq8, _) = extract_pick(8);
++
++    // N=2: Δ = +1.0, sequential strictly cheaper.
++    assert!(
++        !pick2,
++        "N=2 must extract SEQUENTIAL under CALIBRATED_WEIGHTS \
++         (dispatch={disp2:.2} > sequential={seq2:.2})"
++    );
++    assert!(
++        seq2 < disp2,
++        "N=2 sequential cost must be strictly below dispatch: {seq2:.2} vs {disp2:.2}"
++    );
++
++    // N=8: Δ = −5.0, dispatch strictly cheaper.
++    assert!(
++        pick8,
++        "N=8 must extract DISPATCH under CALIBRATED_WEIGHTS \
++         (dispatch={disp8:.2} < sequential={seq8:.2})"
++    );
++    assert!(
++        disp8 < seq8,
++        "N=8 dispatch cost must be strictly below sequential: {disp8:.2} vs {seq8:.2}"
++    );
++}
++
++/// Bracket the crossover: the pick must flip exactly once, between N=3
++/// (tie/first-dispatch) and its neighbours, matching N* = 3.0.
++#[test]
++fn alt_cost_crossover_brackets_n_star_at_three() {
++    // Δ(2)=+1 → SEQ, Δ(3)=0 → tie (min-pick is deterministic but the
++    // margin is zero), Δ(4)=−1 → DISPATCH. The transition sits at N*=3.
++    let (pick2, _, _, _) = extract_pick(2);
++    let (pick4, disp4, seq4, _) = extract_pick(4);
++
++    assert!(!pick2, "N=2 (Δ=+1) picks SEQUENTIAL");
++    assert!(pick4, "N=4 (Δ=−1) picks DISPATCH");
++    assert!(
++        disp4 < seq4,
++        "N=4 dispatch must be cheaper: {disp4:.2} vs {seq4:.2}"
++    );
++
++    // The single-vector monotone flip: as N grows past 3 the pick turns
++    // over and stays over — a genuine structural crossover.
++    for n in 2..=8usize {
++        let (pick, disp, seq, _) = extract_pick(n);
++        let expect_dispatch = (n as f64) > 3.0;
++        assert_eq!(
++            pick, expect_dispatch,
++            "N={n}: expected {} (dispatch={disp:.2} sequential={seq:.2})",
++            if expect_dispatch { "DISPATCH" } else { "SEQUENTIAL" }
++        );
++    }
++}

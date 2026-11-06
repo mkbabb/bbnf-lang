@@ -53,8 +53,37 @@ pub trait Domain: Clone + PartialEq + Debug {
     /// The returned iterator is owned — it does NOT borrow `&self`, so the
     /// domain can be mutated while iteration is in progress (the iterator
     /// holds a snapshot).
-    fn iter(&self) -> impl Iterator<Item = Self::Value> {
+    ///
+    /// `+ use<Self>` is load-bearing, not decorative: edition 2024's
+    /// default RPIT-capture rule ties the opaque return type to the
+    /// elided `&self` lifetime even though no implementation actually
+    /// borrows anything, which blocks exactly the
+    /// `for v in x.iter() { x.remove(&v) }` pattern this trait's own doc
+    /// comment above promises works. The precise-capture bound tells the
+    /// compiler what's already true of every implementation.
+    fn iter(&self) -> impl Iterator<Item = Self::Value> + use<Self> {
         self.values().into_iter()
+    }
+
+    /// Restrict the domain to hold only `val`, removing every other value.
+    /// Returns an iterator over the values that were removed, for the
+    /// caller's undo log (`Variable::restrict_to`).
+    ///
+    /// Default: iterate + remove one at a time — zero heap allocation
+    /// given `iter()`'s owned-snapshot contract, but O(domain size) bit
+    /// ops. Override where the internal representation allows a single
+    /// bulk mutation instead of a per-value one — e.g. `BitsetDomain`
+    /// clears every bit but `val`'s in one bitwise AND (`bitset.rs`),
+    /// turning an O(domain size) sequence of individual clears into O(1).
+    fn restrict_to(&mut self, val: &Self::Value) -> impl Iterator<Item = Self::Value> + use<Self> {
+        let mut removed = Vec::new();
+        for v in self.iter() {
+            if v != *val {
+                self.remove(&v);
+                removed.push(v);
+            }
+        }
+        removed.into_iter()
     }
 }
 

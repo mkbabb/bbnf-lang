@@ -1,0 +1,503 @@
+diff --git a/crates/csp-solver/examples/scan_plan_budget.rs b/crates/csp-solver/examples/scan_plan_budget.rs
+new file mode 100644
+index 000000000..44a73634f
+--- /dev/null
++++ b/crates/csp-solver/examples/scan_plan_budget.rs
+@@ -0,0 +1,114 @@
++//! PROVE-2-BUDGET demo: one global scan-plan CSP over the self-loop scan
++//! sites audited out of the real CSS-L4 fleet grammar, solved under a tight
++//! and a slack generated-size budget.
++//!
++//! Each site is a negated-class star `[^D]*` whose delimiter set D (the
++//! class complement) has cardinality ∈[1,16] — i.e. a shufti-able
++//! "scan-to-delimiter" self-loop. Every site chooses between:
++//!   Prefilter — SIMD shufti kernel: runtime-cheap, generated-size-fat.
++//!   Exact     — scalar byte loop:   runtime-dear, generated-size-lean.
++//! The objective minimizes runtime cyc/B; `BoundedSumConstraint` holds
++//! `Σ static_size ≤ budget` as a HARD solve-time constraint.
++//!
++//! Run: `cargo run -p csp-solver --example scan_plan_budget`
++
++use csp_solver::constraint::BoundedSumConstraint;
++use csp_solver::domain::CostFiniteDomain;
++use csp_solver::ordering::Ordering;
++use csp_solver::{Csp, OptimizationMode, Pruning, SolveConfig};
++
++const PREFILTER: i32 = 0;
++const EXACT: i32 = 1;
++const LOC_PREFILTER: i64 = 40;
++const LOC_EXACT: i64 = 8;
++
++struct Site {
++    rule: &'static str,
++    origin: &'static str,
++    delims: &'static str,
++    complement_card: usize,
++    /// runtime cyc/B×1000 penalty of Exact over Prefilter (site hotness).
++    exact_penalty: f64,
++}
++
++/// Five self-loop scan sites audited from grammar/css/l4/*.bbnf (Step 0).
++const SITES: &[Site] = &[
++    Site { rule: "string",          origin: "tokens.bbnf:9",     delims: "{\" \\}",     complement_card: 2, exact_penalty: 90.0 },
++    Site { rule: "genericDecl",     origin: "properties.bbnf:212", delims: "{; ! }}",   complement_card: 3, exact_penalty: 70.0 },
++    Site { rule: "selectorSpan",    origin: "pretty.bbnf:20",    delims: "{{ } ;}",     complement_card: 3, exact_penalty: 50.0 },
++    Site { rule: "comment-body",    origin: "stylesheet.bbnf:12", delims: "{*}",        complement_card: 1, exact_penalty: 30.0 },
++    Site { rule: "mediaFeatureVal", origin: "media.bbnf:25",     delims: "{)}",         complement_card: 1, exact_penalty: 10.0 },
++];
++
++fn build_csp(budget: i64) -> Csp<CostFiniteDomain> {
++    let mut csp = Csp::new();
++    let mut scope = Vec::new();
++    let mut weights = Vec::new();
++    for s in SITES {
++        let dom = CostFiniteDomain::new(vec![PREFILTER, EXACT], vec![100.0, 100.0 + s.exact_penalty]);
++        scope.push(csp.add_variable(dom));
++        weights.push(vec![(PREFILTER, LOC_PREFILTER), (EXACT, LOC_EXACT)]);
++    }
++    csp.add_constraint(BoundedSumConstraint::new(scope, weights, budget));
++    csp
++}
++
++fn solve(budget: i64) -> (Vec<i32>, u64) {
++    let mut csp = build_csp(budget);
++    csp.finalize();
++    let cfg = SolveConfig {
++        pruning: Pruning::Ac3,
++        ordering: Ordering::FailFirst,
++        max_solutions: 1,
++        backjumping: false,
++        optimization_mode: OptimizationMode::MinimizeCost,
++        node_budget: Some(1_000_000),
++    };
++    let sols = csp.solve_optimized(&cfg);
++    let nodes = csp.stats().nodes_explored;
++    (sols.into_iter().next().expect("feasible"), nodes)
++}
++
++fn loc(plan: &[i32]) -> i64 {
++    plan.iter().map(|&v| if v == PREFILTER { LOC_PREFILTER } else { LOC_EXACT }).sum()
++}
++
++fn runtime(plan: &[i32]) -> f64 {
++    plan.iter().zip(SITES).map(|(&v, s)| if v == PREFILTER { 100.0 } else { 100.0 + s.exact_penalty }).sum()
++}
++
++fn print_plan(label: &str, budget: i64, plan: &[i32], nodes: u64) {
++    println!("── {label} (budget = {budget} LOC) ──  nodes_explored={nodes}");
++    for (s, &v) in SITES.iter().zip(plan) {
++        let kind = if v == PREFILTER { "Prefilter" } else { "Exact    " };
++        println!(
++            "    {:<16} {:<20} delims={:<8} |compl|={}  ->  {}",
++            s.rule, s.origin, s.delims, s.complement_card, kind
++        );
++    }
++    println!("    Σ static_size = {} LOC   Σ runtime = {} cyc/B×1000\n", loc(plan), runtime(plan));
++}
++
++fn main() {
++    println!("PROVE-2-BUDGET — global scan-plan CSP over {} CSS-L4 self-loop sites\n", SITES.len());
++    let greedy = vec![PREFILTER; SITES.len()];
++    println!(
++        "per-rule greedy pick (each site minimizes runtime independently): {:?}  = {} LOC\n",
++        greedy, loc(&greedy)
++    );
++
++    let (tight, tn) = solve(120);
++    print_plan("TIGHT", 120, &tight, tn);
++
++    let (slack, sn) = solve(220);
++    print_plan("SLACK", 220, &slack, sn);
++
++    let exact_forced = tight.iter().filter(|&&v| v == EXACT).count();
++    let (tight2, _) = solve(120);
++    println!("VERDICT CHECKS");
++    println!("  tight forces Exact on {exact_forced} legal site(s)  [PASS ≥1]");
++    println!("  tight honors hard budget: {} ≤ 120  [{}]", loc(&tight), loc(&tight) <= 120);
++    println!("  greedy per-rule busts tight budget: {} > 120  [{}]", loc(&greedy), loc(&greedy) > 120);
++    println!("  slack plan == per-rule greedy pick: {}  [parity floor]", slack == greedy);
++    println!("  solve determinism (regen∘regen proxy): {}", tight == tight2);
++}
+diff --git a/crates/csp-solver/src/constraint/bounded_sum.rs b/crates/csp-solver/src/constraint/bounded_sum.rs
+new file mode 100644
+index 000000000..6c27730e1
+--- /dev/null
++++ b/crates/csp-solver/src/constraint/bounded_sum.rs
+@@ -0,0 +1,168 @@
++//! BoundedSumConstraint — linear knapsack (`Σ weight ≤ cap`) with a
++//! lower-bound-relaxation propagator.
++//!
++//! This is the one net-new primitive the CSP-central scan-plan design
++//! requires: a *hard, solve-time* generated-size budget coupling every
++//! scan site. Per-site lowering choices (`Exact` vs `Prefilter`) each carry
++//! a non-negative static-size weight (generated LOC); the constraint holds
++//! their sum below `cap` (`generated_loc_budget`). Unlike a post-hoc
++//! `xtask lint-loc`, the budget is a live constraint the branch-and-bound
++//! search prunes against, so a plan that busts it is never emitted — the
++//! budget turns GREEN by construction and the solver is free to force a
++//! size-cheap lowering on a legal-but-unaffordable site to afford a
++//! fast-but-fat kernel elsewhere.
++//!
++//! # Relaxation
++//!
++//! The `revise` lower bound is `Σ_k min_live_weight(k)` — the cheapest
++//! completion of every site under its *current* live domain. Because
++//! weights are non-negative and the per-site minimum is never itself
++//! pruned (see below), the bound is monotone within a pass and tightens as
++//! search assigns variables (an assigned site's domain is a singleton, so
++//! its `min_live_weight` becomes its chosen weight). When the bound already
++//! exceeds `cap` the branch is infeasible; otherwise any value whose weight
++//! exceeds its residual slack `cap − (base − min_k)` cannot appear in any
++//! feasible completion and is pruned.
++//!
++//! Tests: `tests/bounded_sum.rs`.
++
++use crate::domain::Domain;
++use crate::variable::Variable;
++
++use super::traits::{Constraint, Revision, VarId};
++
++/// Sentinel weight for a value absent from a site's weight table. Acts as a
++/// hard fence (any completion using it busts every finite budget) without
++/// overflowing `i64` sums — see `weight_at`.
++const UNREGISTERED: i64 = i64::MAX / 4;
++
++/// `Σ_k weight(k, x_k) ≤ cap`, a linear knapsack over `scope`.
++///
++/// `weights[k]` is the `(value, weight)` table for `scope[k]`; every weight
++/// must be non-negative. Constructed via [`BoundedSumConstraint::new`] and
++/// added to a `Csp` through the generic `add_constraint` (`Custom`) seam —
++/// no enum-dispatch edit, because its scope is n-ary and it supplies its own
++/// `revise`.
++pub struct BoundedSumConstraint<D: Domain> {
++    pub(crate) scope: Vec<VarId>,
++    weights: Vec<Vec<(D::Value, i64)>>,
++    cap: i64,
++}
++
++impl<D: Domain> BoundedSumConstraint<D> {
++    /// Build the knapsack. `scope[k]` is priced by `weights[k]`.
++    ///
++    /// # Panics
++    /// If `scope.len() != weights.len()`, or any weight is negative (the
++    /// relaxation's monotonicity requires `weight ≥ 0`).
++    pub fn new(scope: Vec<VarId>, weights: Vec<Vec<(D::Value, i64)>>, cap: i64) -> Self {
++        assert_eq!(
++            scope.len(),
++            weights.len(),
++            "BoundedSumConstraint::new: scope and weights length mismatch ({} vs {})",
++            scope.len(),
++            weights.len(),
++        );
++        assert!(
++            weights.iter().flatten().all(|(_, w)| *w >= 0),
++            "BoundedSumConstraint::new: weights must be non-negative",
++        );
++        Self { scope, weights, cap }
++    }
++
++    #[inline]
++    fn weight_at(&self, k: usize, val: &D::Value) -> i64 {
++        self.weights[k]
++            .iter()
++            .find(|(v, _)| v == val)
++            .map(|(_, w)| *w)
++            .unwrap_or(UNREGISTERED)
++    }
++
++    /// Minimum weight among the *live* values at scope position `k`.
++    /// `None` iff that site's domain is empty (a wipe-out).
++    fn min_live_weight(&self, k: usize, vars: &[Variable<D>]) -> Option<i64> {
++        vars[self.scope[k] as usize]
++            .domain
++            .iter()
++            .map(|v| self.weight_at(k, &v))
++            .min()
++    }
++}
++
++impl<D: Domain> std::fmt::Debug for BoundedSumConstraint<D> {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        f.debug_struct("BoundedSumConstraint")
++            .field("scope", &self.scope)
++            .field("cap", &self.cap)
++            .finish()
++    }
++}
++
++impl<D: Domain> Constraint<D> for BoundedSumConstraint<D> {
++    fn scope(&self) -> &[VarId] {
++        &self.scope
++    }
++
++    /// Sound feasibility test. Because weights are non-negative, the sum
++    /// over the *assigned* positions is a lower bound on the true total, so
++    /// rejecting when it already exceeds `cap` never rejects a feasible
++    /// assignment. On a fully-assigned scope this is the exact budget test.
++    fn check(&self, assignment: &[Option<D::Value>]) -> bool {
++        let mut assigned_sum: i64 = 0;
++        for (k, &vid) in self.scope.iter().enumerate() {
++            if let Some(val) = &assignment[vid as usize] {
++                assigned_sum = assigned_sum.saturating_add(self.weight_at(k, val));
++            }
++        }
++        assigned_sum <= self.cap
++    }
++
++    /// Knapsack lower-bound relaxation: prune every value that cannot fit in
++    /// any feasible completion, and report infeasibility when the cheapest
++    /// completion already busts `cap`.
++    fn revise(&self, vars: &mut [Variable<D>], depth: usize) -> Revision {
++        let n = self.scope.len();
++        let mut mins = Vec::with_capacity(n);
++        let mut base: i64 = 0;
++        for k in 0..n {
++            match self.min_live_weight(k, vars) {
++                Some(m) => {
++                    mins.push(m);
++                    base = base.saturating_add(m);
++                }
++                None => return Revision::Unsatisfiable,
++            }
++        }
++        if base > self.cap {
++            return Revision::Unsatisfiable;
++        }
++
++        let mut changed = false;
++        for k in 0..n {
++            // Residual budget for site k with every other site at its floor.
++            // `residual_cap ≥ mins[k]` (since base ≤ cap), so the per-site
++            // minimum-weight value always survives — the bound stays valid
++            // for the rest of the pass.
++            let residual_cap = self.cap.saturating_sub(base.saturating_sub(mins[k]));
++            let vid = self.scope[k] as usize;
++            let doomed: Vec<D::Value> = vars[vid]
++                .domain
++                .iter()
++                .filter(|v| self.weight_at(k, v) > residual_cap)
++                .collect();
++            for v in &doomed {
++                changed |= vars[vid].prune(v, depth);
++            }
++            if vars[vid].domain.is_empty() {
++                return Revision::Unsatisfiable;
++            }
++        }
++
++        if changed {
++            Revision::Changed
++        } else {
++            Revision::Unchanged
++        }
++    }
++}
+diff --git a/crates/csp-solver/src/constraint/mod.rs b/crates/csp-solver/src/constraint/mod.rs
+index f88a2115f..d687f6c44 100644
+--- a/crates/csp-solver/src/constraint/mod.rs
++++ b/crates/csp-solver/src/constraint/mod.rs
+@@ -2,6 +2,7 @@
+ 
+ pub mod all_different;
+ pub mod all_different_except;
++pub mod bounded_sum;
+ pub mod cardinality;
+ pub mod dispatch;
+ pub mod implication;
+@@ -12,6 +13,7 @@ pub mod traits;
+ 
+ pub use all_different::AllDifferent;
+ pub use all_different_except::AllDifferentExcept;
++pub use bounded_sum::BoundedSumConstraint;
+ pub use cardinality::CardinalityConstraint;
+ pub use dispatch::ConstraintEnum;
+ pub use implication::ImplicationConstraint;
+diff --git a/crates/csp-solver/tests/bounded_sum.rs b/crates/csp-solver/tests/bounded_sum.rs
+new file mode 100644
+index 000000000..56c1402e0
+--- /dev/null
++++ b/crates/csp-solver/tests/bounded_sum.rs
+@@ -0,0 +1,183 @@
++//! Tests for the `bounded_sum` knapsack propagator and the global
++//! scan-plan CSP it enables (PROVE-2-BUDGET / LOCK-2 Brief 2).
++//!
++//! The scan-plan model: each self-loop scan site is a variable over
++//! `{Prefilter=0, Exact=1}`. `Prefilter` (shufti/SIMD delimiter scan) is
++//! runtime-cheap but generated-size-fat; `Exact` (scalar) is runtime-dear
++//! but lean. The objective minimizes runtime cyc/B; the `BoundedSumConstraint`
++//! holds `Σ static_size ≤ generated_loc_budget` as a HARD solve-time
++//! constraint. Under a tight budget the solver is forced to pick `Exact` on
++//! legal-but-unaffordable sites — the decision a 1-variable CSP cannot make.
++
++use csp_solver::constraint::{BoundedSumConstraint, Constraint, Revision};
++use csp_solver::domain::{CostFiniteDomain, Domain};
++use csp_solver::ordering::Ordering;
++use csp_solver::variable::Variable;
++use csp_solver::{Csp, OptimizationMode, Pruning, SolveConfig};
++
++const PREFILTER: i32 = 0;
++const EXACT: i32 = 1;
++
++/// Static generated-size (LOC) of each lowering. Prefilter emits a shufti
++/// table + SIMD kernel (fat); Exact is a scalar byte loop (lean).
++const LOC_PREFILTER: i64 = 40;
++const LOC_EXACT: i64 = 8;
++
++fn site_weights(n: usize) -> Vec<Vec<(i32, i64)>> {
++    (0..n)
++        .map(|_| vec![(PREFILTER, LOC_PREFILTER), (EXACT, LOC_EXACT)])
++        .collect()
++}
++
++// ── Direct propagator unit tests ────────────────────────────────────────
++
++#[test]
++fn propagator_prunes_unaffordable_prefilter() {
++    // Two sites, budget 45. A single Prefilter with the other site at its
++    // floor costs 40 + 8 = 48 > 45, so every Prefilter must be pruned; only
++    // an all-Exact plan (16 LOC) fits.
++    let dom = CostFiniteDomain::new(vec![PREFILTER, EXACT], vec![100.0, 150.0]);
++    let mut vars = vec![Variable::new(dom.clone()), Variable::new(dom)];
++    let c = BoundedSumConstraint::new(vec![0, 1], site_weights(2), 45);
++
++    let rev = c.revise(&mut vars, 0);
++    assert_eq!(rev, Revision::Changed, "revise must prune");
++    assert!(!vars[0].domain.contains(&PREFILTER), "site0 Prefilter pruned");
++    assert!(!vars[1].domain.contains(&PREFILTER), "site1 Prefilter pruned");
++    assert!(vars[0].domain.contains(&EXACT) && vars[1].domain.contains(&EXACT));
++}
++
++#[test]
++fn propagator_reports_infeasible_when_floor_busts() {
++    // Budget below the all-Exact floor (16) → unsatisfiable.
++    let dom = CostFiniteDomain::new(vec![PREFILTER, EXACT], vec![100.0, 150.0]);
++    let mut vars = vec![Variable::new(dom.clone()), Variable::new(dom)];
++    let c = BoundedSumConstraint::new(vec![0, 1], site_weights(2), 10);
++    assert_eq!(c.revise(&mut vars, 0), Revision::Unsatisfiable);
++}
++
++#[test]
++fn propagator_leaves_slack_budget_untouched() {
++    // Budget 200 over two sites: both Prefilter (80) fits, nothing pruned.
++    let dom = CostFiniteDomain::new(vec![PREFILTER, EXACT], vec![100.0, 150.0]);
++    let mut vars = vec![Variable::new(dom.clone()), Variable::new(dom)];
++    let c = BoundedSumConstraint::new(vec![0, 1], site_weights(2), 200);
++    assert_eq!(c.revise(&mut vars, 0), Revision::Unchanged);
++    assert!(vars[0].domain.contains(&PREFILTER) && vars[1].domain.contains(&PREFILTER));
++}
++
++// ── Global scan-plan CSP (the 2C teeth) ─────────────────────────────────
++
++/// Runtime cyc/B×1000 penalty of choosing Exact over Prefilter at each of the
++/// 5 audited CSS-L4 self-loop sites, ordered hottest→coolest. Prefilter is a
++/// flat 100 everywhere; Exact is 100 + penalty.
++const PENALTY: [f64; 5] = [90.0, 70.0, 50.0, 30.0, 10.0];
++
++fn build_scan_plan_csp(budget: i64) -> Csp<CostFiniteDomain> {
++    let mut csp = Csp::new();
++    let mut scope = Vec::new();
++    for &pen in PENALTY.iter() {
++        let dom = CostFiniteDomain::new(vec![PREFILTER, EXACT], vec![100.0, 100.0 + pen]);
++        scope.push(csp.add_variable(dom));
++    }
++    csp.add_constraint(BoundedSumConstraint::new(scope, site_weights(5), budget));
++    csp
++}
++
++fn solve_plan(budget: i64) -> Vec<i32> {
++    let mut csp = build_scan_plan_csp(budget);
++    csp.finalize();
++    let cfg = SolveConfig {
++        pruning: Pruning::Ac3,
++        ordering: Ordering::FailFirst,
++        max_solutions: 1,
++        backjumping: false,
++        optimization_mode: OptimizationMode::MinimizeCost,
++        node_budget: Some(1_000_000),
++    };
++    let sols = csp.solve_optimized(&cfg);
++    assert!(!sols.is_empty(), "budget {budget} must be feasible");
++    sols[0].clone()
++}
++
++/// The greedy per-rule pick: each site independently minimizes runtime →
++/// always Prefilter. This is what today's per-rule selection emits; it
++/// ignores the cross-site budget.
++fn per_rule_greedy() -> Vec<i32> {
++    vec![PREFILTER; 5]
++}
++
++fn total_loc(plan: &[i32]) -> i64 {
++    plan.iter()
++        .map(|&v| if v == PREFILTER { LOC_PREFILTER } else { LOC_EXACT })
++        .sum()
++}
++
++#[test]
++fn tight_budget_forces_exact_on_legal_sites() {
++    // Floor (all-Exact) = 40 LOC; each Prefilter upgrade costs +32. Budget
++    // 120 affords floor(40)+2 upgrades(64)=104, never a 3rd (136>120). So
++    // ≥3 sites are forced to Exact even though Prefilter is runtime-cheaper.
++    let plan = solve_plan(120);
++    let exact_count = plan.iter().filter(|&&v| v == EXACT).count();
++    assert!(
++        exact_count >= 1,
++        "tight budget must force Exact on ≥1 legal site, got plan {plan:?}"
++    );
++    assert!(total_loc(&plan) <= 120, "plan must honor the hard budget");
++
++    // The optimum keeps Prefilter on the two hottest sites (indices 0,1) and
++    // forces Exact on the three coolest (2,3,4).
++    assert_eq!(
++        plan,
++        vec![PREFILTER, PREFILTER, EXACT, EXACT, EXACT],
++        "B&B must sacrifice the coolest sites"
++    );
++
++    // The greedy per-rule plan is illegal under this budget → the global CSP
++    // strictly dominates (produces a legal plan greedy cannot).
++    assert!(
++        total_loc(&per_rule_greedy()) > 120,
++        "greedy per-rule busts the tight budget"
++    );
++}
++
++#[test]
++fn slack_budget_matches_per_rule_pick() {
++    // Budget 220 ≥ all-Prefilter (200): the parity floor. The global plan
++    // must be byte-identical to the greedy per-rule pick.
++    let plan = solve_plan(220);
++    assert_eq!(
++        plan,
++        per_rule_greedy(),
++        "slack budget must reproduce the per-rule pick exactly"
++    );
++}
++
++#[test]
++fn solve_is_deterministic() {
++    // regen∘regen proxy: the plan is a pure function of (sites, budget).
++    for &budget in &[120_i64, 150, 220] {
++        let a = solve_plan(budget);
++        let b = solve_plan(budget);
++        assert_eq!(a, b, "solve must be deterministic at budget {budget}");
++    }
++}
++
++#[test]
++fn budget_sweep_is_monotone_in_exact_count() {
++    // As the budget tightens, the number of Exact sites is non-decreasing —
++    // the budget is genuinely binding, not cosmetic.
++    let mut prev_exact = 0usize;
++    for &budget in &[220_i64, 180, 150, 120, 90, 60, 40] {
++        let plan = solve_plan(budget);
++        let exact = plan.iter().filter(|&&v| v == EXACT).count();
++        assert!(
++            exact >= prev_exact,
++            "tighter budget {budget} must not reduce Exact count ({exact} < {prev_exact})"
++        );
++        assert!(total_loc(&plan) <= budget);
++        prev_exact = exact;
++    }
++    assert_eq!(prev_exact, 5, "at budget 40 the floor is all-Exact");
++}

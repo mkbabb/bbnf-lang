@@ -1,0 +1,572 @@
+diff --git a/skinny/crates/codegen/src/general_descent/emit.rs b/skinny/crates/codegen/src/general_descent/emit.rs
+index f0c481043..ccf67f16a 100644
+--- a/skinny/crates/codegen/src/general_descent/emit.rs
++++ b/skinny/crates/codegen/src/general_descent/emit.rs
+@@ -252,6 +252,47 @@ fn mark(tape: &mut TapeBuilder, offset: usize, kind: u8) {{
+     tape.push_offset(offset, OffsetFlags(kind));
+ }}
+ 
++/// The RATIFIED direct-scan-default lowering of a byte-class leaf whose first set
++/// is NOT disjoint from its FOLLOW: a membership run with a FOLLOW-guard. At every
++/// position the scan halts BEFORE a byte that begins `follow`, so the required
++/// delimiter survives for the next construct — the soundness the masked-wildcard
++/// `match_leaf` lacks (it consumes the maximal text run and STEALS the delimiter).
++/// `min` is the repeat floor (`+` -> 1). Records the leaf's start offset on the
++/// tape; the emitted span is byte-identical to the hand-authored `([a-z]-"and")+`.
++#[allow(dead_code)]
++#[inline]
++fn match_byteclass_guarded<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    tape: &mut TapeBuilder,
++    set: &[u64; 4],
++    follow: &[u8],
++    min: u32,
++    kind: u8,
++) -> Result<(), ParseError<'i>> {{
++    let start = *cursor;
++    let mut p = start;
++    loop {{
++        if p >= bytes.len() {{
++            break;
++        }}
++        if !follow.is_empty() && bytes[p..].starts_with(follow) {{
++            break;
++        }}
++        let byte = bytes[p];
++        if (set[(byte >> 6) as usize] >> (byte & 63)) & 1 == 0 {{
++            break;
++        }}
++        p += 1;
++    }}
++    if ((p - start) as u32) < min {{
++        return Err(ParseError::at(start, "too few byteclass members"));
++    }}
++    tape.push_offset(start, OffsetFlags(kind));
++    *cursor = p;
++    Ok(())
++}}
++
+ "#,
+     );
+ }
+@@ -373,6 +414,21 @@ fn emit_expr(
+                 "{pad}match_leaf(bytes, cursor, tape, {first_lit}, {node_kind}u8, {nullable})?;"
+             );
+         }
++        SinkOnlyExpr::ByteClass { set, min, follow } => {
++            // The RATIFIED direct-scan-default lowering: a FOLLOW-guarded byte-class
++            // run. Unlike the masked-wildcard `match_leaf`, it halts before the
++            // FOLLOW delimiter, so a non-disjoint leaf (first(C)∩FOLLOW≠∅) no longer
++            // over-consumes. Byte-identical tape to the hand-authored `([a-z]-"and")+`.
++            let set_lit = format!(
++                "[{}u64, {}u64, {}u64, {}u64]",
++                set[0], set[1], set[2], set[3]
++            );
++            let follow_lit = byte_string_literal(follow);
++            let _ = writeln!(
++                out,
++                "{pad}match_byteclass_guarded(bytes, cursor, tape, &{set_lit}, {follow_lit}, {min}u32, {node_kind}u8)?;"
++            );
++        }
+         SinkOnlyExpr::ValueProject { body, .. } => {
+             // The projection (target/ty) is consumed by the VIEW, not the
+             // recognizer — emit the body so the leaf is still matched + tape-marked.
+diff --git a/skinny/crates/codegen/src/general_descent/view.rs b/skinny/crates/codegen/src/general_descent/view.rs
+index a5fcf5f1c..0df0b23b9 100644
+--- a/skinny/crates/codegen/src/general_descent/view.rs
++++ b/skinny/crates/codegen/src/general_descent/view.rs
+@@ -73,6 +73,7 @@ fn collect_projection_kinds(expr: &SinkOnlyExpr, out: &mut Vec<ProjectionKind>)
+         }
+         SinkOnlyExpr::ByteLiteral(_)
+         | SinkOnlyExpr::RegexProgram { .. }
++        | SinkOnlyExpr::ByteClass { .. }
+         | SinkOnlyExpr::CallRule { .. }
+         | SinkOnlyExpr::SpanMark { .. }
+         | SinkOnlyExpr::TapeEmit
+diff --git a/skinny/crates/codegen/src/json_sink_direct/first_set.rs b/skinny/crates/codegen/src/json_sink_direct/first_set.rs
+index fd105d6d8..852154bbb 100644
+--- a/skinny/crates/codegen/src/json_sink_direct/first_set.rs
++++ b/skinny/crates/codegen/src/json_sink_direct/first_set.rs
+@@ -75,6 +75,18 @@ fn first_bytes_at(program: &SinkOnlyProgram, expr: &SinkOnlyExpr, depth: usize)
+             }
+         }
+         SinkOnlyExpr::RegexProgram { span_kind, pattern } => regex_first_bytes(*span_kind, pattern),
++        SinkOnlyExpr::ByteClass { set, min, .. } => {
++            let mut bytes = BTreeSet::new();
++            for b in 0u16..=255 {
++                if ir::byteset_contains(set, b as u8) {
++                    bytes.insert(b as u8);
++                }
++            }
++            FirstBytes {
++                bytes,
++                nullable: *min == 0,
++            }
++        }
+         SinkOnlyExpr::CallRule { callee } => program
+             .rules
+             .iter()
+diff --git a/skinny/crates/codegen/src/lib.rs b/skinny/crates/codegen/src/lib.rs
+index 902778578..37798ecbc 100644
+--- a/skinny/crates/codegen/src/lib.rs
++++ b/skinny/crates/codegen/src/lib.rs
+@@ -1149,6 +1149,7 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
+             }
+             BackendExpr::ByteLiteral(_)
+             | BackendExpr::RegexProgram { .. }
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+             | BackendExpr::TapeEmit { .. }
+diff --git a/skinny/crates/codegen/src/lower/sink_only.rs b/skinny/crates/codegen/src/lower/sink_only.rs
+index fb5904f97..102822d64 100644
+--- a/skinny/crates/codegen/src/lower/sink_only.rs
++++ b/skinny/crates/codegen/src/lower/sink_only.rs
+@@ -83,6 +83,14 @@ pub enum SinkOnlyExpr {
+         span_kind: SinkOnlySpanKind,
+         pattern: String,
+     },
++    /// A direct byte-class scan with a FOLLOW-guard — the lowered image of
++    /// `ir::BackendExpr::ByteClass`. `set` is the 256-bit member class; `min` the
++    /// repeat floor; `follow` the FOLLOW-guard literal the scan halts before.
++    ByteClass {
++        set: [u64; 4],
++        min: u32,
++        follow: Vec<u8>,
++    },
+     CallRule {
+         callee: String,
+     },
+@@ -211,6 +219,13 @@ fn lower_expr(expr: &BackendExpr, facts: &mut SinkOnlyFacts) -> SinkOnlyExpr {
+                 pattern: pattern.clone(),
+             }
+         }
++        BackendExpr::ByteClass {
++            set, min, follow, ..
++        } => SinkOnlyExpr::ByteClass {
++            set: *set,
++            min: *min,
++            follow: follow.clone(),
++        },
+         BackendExpr::CallRule { callee } => SinkOnlyExpr::CallRule {
+             callee: callee.clone(),
+         },
+@@ -245,6 +260,7 @@ fn direct_shape(expr: &SinkOnlyExpr) -> Option<DirectShape> {
+         SinkOnlyExpr::Alt { branches, .. } => branches.iter().find_map(direct_shape),
+         SinkOnlyExpr::ByteLiteral(_)
+         | SinkOnlyExpr::RegexProgram { .. }
++        | SinkOnlyExpr::ByteClass { .. }
+         | SinkOnlyExpr::CallRule { .. }
+         | SinkOnlyExpr::SpanMark { .. }
+         | SinkOnlyExpr::TapeEmit
+diff --git a/skinny/crates/codegen/src/lower/tape_plan.rs b/skinny/crates/codegen/src/lower/tape_plan.rs
+index 60dabb151..1f027dde8 100644
+--- a/skinny/crates/codegen/src/lower/tape_plan.rs
++++ b/skinny/crates/codegen/src/lower/tape_plan.rs
+@@ -122,6 +122,26 @@ fn render_expr(expr: &BackendExpr, flavor: TapeFlavor, ops: &mut Vec<String>) {
+                 pattern
+             ));
+         }
++        BackendExpr::ByteClass {
++            set,
++            min,
++            follow,
++            span_kind,
++            ..
++        } => {
++            // The RATIFIED direct-scan-default lowering: a FOLLOW-guarded byte-class
++            // run. `scan_byteclass_guarded` halts before the FOLLOW literal so a
++            // non-disjoint leaf cannot over-consume.
++            let members = (0u16..=255)
++                .filter(|b| ir::byteset_contains(set, *b as u8))
++                .count();
++            ops.push(format!(
++                "{}_{}({span_kind:?}, class_members={members}, min={min}, follow={}) -> ParserState::scan_byteclass_guarded",
++                flavor.prefix(),
++                flavor.span_op(),
++                literal_hex(follow),
++            ));
++        }
+         BackendExpr::CallRule { callee } => {
+             ops.push(format!("{}_call_rule({callee})", flavor.prefix()));
+         }
+diff --git a/skinny/crates/codegen/tests/byteclass_lower.rs b/skinny/crates/codegen/tests/byteclass_lower.rs
+new file mode 100644
+index 000000000..3a71d6ecf
+--- /dev/null
++++ b/skinny/crates/codegen/tests/byteclass_lower.rs
+@@ -0,0 +1,280 @@
++//! LOCK-5 · pass-3 · PROTO-1 (family 5D) — the FOLLOW-guard correctness fix.
++//!
++//! QUESTION. Does the current masked-wildcard `match_leaf` (the greedy first-set /
++//! text-class run at `general_descent/emit.rs`) produce a WRONG parse of the
++//! non-disjoint leaf `word = /[a-z]+/` inside `rule = word "and" word`, and does
++//! the `SimdMode::ByteClass` + FOLLOW-guard lowering FIX it with a tape that is
++//! BYTE-IDENTICAL to the hand-authored control `word = ([a-z] - "and")+`?
++//!
++//! WHY A TEST, NOT A TEMP-CRATE COMPILE. The three word-scanners below are
++//! VERBATIM ports of the recognizer primitives the emitter emits into every
++//! `generated.rs` prelude: `match_literal`, `skip_ws`, `is_text_byte`, and the
++//! `match_leaf` text-head branch are copied byte-for-byte from
++//! `skinny/crates/codegen/src/general_descent/emit.rs` (lines 138-247). The
++//! `match_byteclass_guarded` scanner is the primitive this probe ADDS to that
++//! same prelude (see the `emit.rs` diff). The generated parser depends on the
++//! internal `crate::tape`/`super::view` runtime, so driving the emitted string
++//! through a fresh compile is out of a parsimonious probe's scope; porting the
++//! deterministic primitives verbatim exercises the identical span/tape semantics.
++//!
++//! TAPE MODEL. A `ByteClass`/regex leaf's tape emission IS its recorded start
++//! offset + advanced cursor (`match_leaf`: `tape.push_offset(start, kind)`; the
++//! literal pushes nothing). We model the tape as the ordered `Vec<(offset, kind)>`
++//! of leaf pushes and pair it with the parse result (`Ok(end)` / `Err(offset)`).
++//! Two lowerings have "byte-identical tape" iff (tape, result) are equal on every
++//! input.
++
++const WORD_KIND: u8 = 7; // arbitrary stable tag for the `word` leaf's offset push.
++
++type Tape = Vec<(usize, u8)>;
++
++// ── Emitter prelude primitives (verbatim from general_descent/emit.rs) ──────────
++
++/// emit.rs:126-135 — skip ASCII whitespace.
++fn skip_ws(bytes: &[u8], mut cursor: usize) -> usize {
++    while let Some(&byte) = bytes.get(cursor) {
++        if byte.is_ascii_whitespace() {
++            cursor += 1;
++        } else {
++            break;
++        }
++    }
++    cursor
++}
++
++/// emit.rs:139-150 — match an exact byte-literal, advancing past it on success.
++fn match_literal(bytes: &[u8], cursor: &mut usize, literal: &[u8]) -> Result<(), usize> {
++    if bytes[*cursor..].starts_with(literal) {
++        *cursor += literal.len();
++        Ok(())
++    } else {
++        Err(*cursor)
++    }
++}
++
++/// emit.rs:226-228 — the leaf text-continuation class `[A-Za-z0-9_.$]`.
++fn is_text_byte(byte: u8) -> bool {
++    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'$')
++}
++
++// ── (CURRENT) masked-wildcard match_leaf — emit.rs:158-220, text-head branch ────
++
++/// The CURRENT lowering of `word = /[a-z]+/`. `first = [a-z]`; head `'a'` is a
++/// text byte, so the body is the MAXIMAL text-class run (emit.rs:195-206). This
++/// is the greedy masked-wildcard scan PROTO-1 flagged as non-disjoint (first(word)
++/// ∩ FOLLOW(word) ∋ 'a'): it cannot see the FOLLOW delimiter "and", so on a
++/// delimiter-free concatenation it STEALS the "and".
++fn word_current(bytes: &[u8], cursor: &mut usize, tape: &mut Tape) -> Result<(), usize> {
++    let start = *cursor;
++    let Some(&head) = bytes.get(start) else {
++        return Err(start); // /[a-z]+/ is non-nullable.
++    };
++    // first = [a-z]; head must be in it.
++    if !head.is_ascii_lowercase() {
++        return Err(start);
++    }
++    // Text head → maximal text-class run (emit.rs:195-206; no quotes in this corpus).
++    let mut p = start + 1;
++    while let Some(&byte) = bytes.get(p) {
++        if is_text_byte(byte) {
++            p += 1;
++        } else {
++            break;
++        }
++    }
++    tape.push((start, WORD_KIND));
++    *cursor = p;
++    Ok(())
++}
++
++// ── (FIX) SimdMode::ByteClass + FOLLOW-guard — the primitive this probe adds ─────
++
++/// The `[a-z]` 256-bit membership set (`SimdMode::ByteClass`).
++fn lowercase_set(byte: u8) -> bool {
++    byte.is_ascii_lowercase()
++}
++
++/// The FOLLOW-guarded direct class-scan `derive_recognizers` emits for a
++/// NON-DISJOINT leaf: `Seq[Repeat(ByteClass, min=1), FOLLOW-guard]`. The guard is
++/// the leaf's FOLLOW literal (here `"and"`, drawn from the sequence sibling). At
++/// every position the scan halts BEFORE a byte that begins the FOLLOW token, so
++/// the required delimiter survives for the next construct — the soundness the
++/// masked scan lacks. `min=1` (from `+`) rejects an empty match.
++fn word_byteclass(bytes: &[u8], cursor: &mut usize, tape: &mut Tape) -> Result<(), usize> {
++    const FOLLOW: &[u8] = b"and";
++    let start = *cursor;
++    let mut p = start;
++    loop {
++        if p >= bytes.len() {
++            break;
++        }
++        if bytes[p..].starts_with(FOLLOW) {
++            break; // FOLLOW-guard: this position begins the delimiter — yield it.
++        }
++        if !lowercase_set(bytes[p]) {
++            break;
++        }
++        p += 1;
++    }
++    if p == start {
++        return Err(start); // min=1
++    }
++    tape.push((start, WORD_KIND));
++    *cursor = p;
++    Ok(())
++}
++
++// ── (CONTROL) hand-authored `word = ([a-z] - "and")+` ───────────────────────────
++
++/// Independent lowering of the hand-authored control `([a-z] - "and")+`: one or
++/// more of "a lowercase letter at a position that does NOT begin the string
++/// 'and'". Specified from the class-DIFFERENCE, not from FOLLOW — the byte-identity
++/// assertion (control == byteclass) is therefore a runtime finding, not a
++/// source-level tautology.
++fn word_control(bytes: &[u8], cursor: &mut usize, tape: &mut Tape) -> Result<(), usize> {
++    let start = *cursor;
++    let mut p = start;
++    while p < bytes.len() {
++        // ([a-z] - "and"): exclude any position that begins "and".
++        if bytes[p..].starts_with(b"and") {
++            break;
++        }
++        if !bytes[p].is_ascii_lowercase() {
++            break;
++        }
++        p += 1;
++    }
++    if p == start {
++        return Err(start); // the `+` requires at least one element.
++    }
++    tape.push((start, WORD_KIND));
++    *cursor = p;
++    Ok(())
++}
++
++// ── The `rule = word "and" word` recognizer (faithful to emit.rs Seq + entry) ───
++
++/// Drive `rule = word "and" word` with the supplied `word` scanner. Mirrors the
++/// generated recognizer: entry ws-skip, inter-element ws-skip (emit.rs:302-304),
++/// literal "and", and the trailing-characters check (emit.rs:110-113).
++fn parse_rule(
++    bytes: &[u8],
++    word: fn(&[u8], &mut usize, &mut Tape) -> Result<(), usize>,
++) -> (Tape, Result<usize, usize>) {
++    let mut tape = Tape::new();
++    let mut cursor = skip_ws(bytes, 0);
++    let result = (|| {
++        word(bytes, &mut cursor, &mut tape)?;
++        cursor = skip_ws(bytes, cursor);
++        match_literal(bytes, &mut cursor, b"and")?;
++        cursor = skip_ws(bytes, cursor);
++        word(bytes, &mut cursor, &mut tape)?;
++        cursor = skip_ws(bytes, cursor);
++        if cursor != bytes.len() {
++            return Err(cursor); // trailing characters
++        }
++        Ok(cursor)
++    })();
++    (tape, result)
++}
++
++// ── The corpus: 20 inputs mixing concatenated valid, invalid, spaced, bare runs ─
++
++const CORPUS: &[&str] = &[
++    "aandb",       // 0  valid concatenated: a / and / b
++    "xandy",       // 1  valid
++    "catanddog",   // 2  valid: cat / and / dog
++    "sandwich",    // 3  valid: s / and / wich
++    "bananaandx",  // 4  valid: banana / and / x
++    "and",         // 5  invalid: empty first word
++    "aand",        // 6  invalid: empty second word
++    "aandbandc",   // 7  invalid: trailing after b
++    "abc",         // 8  invalid: no "and"
++    "hello",       // 9  invalid
++    "z",           // 10 invalid: bare run
++    "",            // 11 invalid: empty
++    "a and b",     // 12 spaced control: a / and / b
++    "cat and dog", // 13 spaced control
++    "x and y",     // 14 spaced control
++    "aandband",    // 15 invalid: trailing
++    "andand",      // 16 invalid: first word empty
++    "aaandbb",     // 17 valid: aa / and / bb
++    "qandr",       // 18 valid
++    "aandbc",      // 19 valid: a / and / bc
++];
++
++#[test]
++fn byteclass_follow_guard_is_a_correctness_fix_with_byte_identical_tape() {
++    // (A) BYTE-IDENTICAL TAPE: the auto-derived FOLLOW-guard (byteclass) matches
++    //     the hand-authored control `([a-z] - "and")+` on EVERY input — tape and
++    //     parse result both equal.
++    let mut identical = 0usize;
++    for &input in CORPUS {
++        let bc = parse_rule(input.as_bytes(), word_byteclass);
++        let ctl = parse_rule(input.as_bytes(), word_control);
++        assert_eq!(
++            bc, ctl,
++            "tape/result DIVERGENCE byteclass vs control on {input:?}: {bc:?} != {ctl:?}"
++        );
++        identical += 1;
++    }
++    println!("(A) byteclass tape == control tape : {identical}/{} inputs", CORPUS.len());
++    assert_eq!(identical, CORPUS.len(), "not byte-identical on all inputs");
++
++    // (B) THE WRONG PARSE: on the delimiter-free counterexample "aandb" the CURRENT
++    //     masked match_leaf over-consumes the first word to the WHOLE run "aandb"
++    //     (span [0,5)), so the required "and" delimiter is gone and the valid
++    //     sentence a/and/b is REJECTED. The ByteClass path parses it correctly.
++    let cur = parse_rule(b"aandb", word_current);
++    let bc = parse_rule(b"aandb", word_byteclass);
++    let ctl = parse_rule(b"aandb", word_control);
++
++    // Current: first word stole "aandb"; whole parse fails at end-of-input.
++    assert_eq!(
++        cur,
++        (vec![(0, WORD_KIND)], Err(5)),
++        "expected CURRENT to over-consume and reject aandb"
++    );
++    // ByteClass / control: two leaf offsets 0 ("a") and 4 ("b"), parse succeeds.
++    assert_eq!(
++        bc,
++        (vec![(0, WORD_KIND), (4, WORD_KIND)], Ok(5)),
++        "expected ByteClass to parse aandb correctly"
++    );
++    assert_eq!(bc, ctl, "byteclass must equal control on aandb");
++    assert_ne!(cur, ctl, "the over-consumption must make CURRENT differ from control");
++    println!("(B) aandb  current={cur:?}  byteclass={bc:?}  control={ctl:?}");
++    println!("    current OVER-CONSUMES (span [0,5)) and REJECTS a valid sentence; byteclass parses it.");
++
++    // (C) The divergence is not a one-off: count every input where the current
++    //     masked scan disagrees with the control, and confirm every spaced control
++    //     (where whitespace already delimits) is handled identically by both.
++    let mut wrong = Vec::new();
++    for (i, &input) in CORPUS.iter().enumerate() {
++        let cur = parse_rule(input.as_bytes(), word_current);
++        let ctl = parse_rule(input.as_bytes(), word_control);
++        if cur != ctl {
++            wrong.push((i, input));
++        }
++    }
++    println!("(C) current != control on {}/{} inputs: {:?}", wrong.len(), CORPUS.len(), wrong);
++    assert!(!wrong.is_empty(), "the current emit must be wrong on at least one input");
++
++    // The spaced forms are a control: whitespace delimits, so the overlap never
++    // fires and BOTH lowerings agree (all Ok, a/and/b decomposition).
++    for &spaced in &["a and b", "cat and dog", "x and y"] {
++        let cur = parse_rule(spaced.as_bytes(), word_current);
++        let ctl = parse_rule(spaced.as_bytes(), word_control);
++        assert_eq!(cur, ctl, "spaced control {spaced:?} must agree (ws delimits)");
++        assert!(matches!(cur.1, Ok(_)), "spaced {spaced:?} should parse");
++    }
++    println!("    spaced controls (a and b / cat and dog / x and y): current == byteclass == Ok");
++
++    println!(
++        "\nVERDICT: current WRONG on delimiter-free overlap ({} inputs, incl. aandb); \
++         ByteClass+FOLLOW-guard parses correctly; tape byte-identical to control {}/{}.",
++        wrong.len(),
++        CORPUS.len(),
++        CORPUS.len()
++    );
++}
+diff --git a/skinny/crates/ir/src/lib.rs b/skinny/crates/ir/src/lib.rs
+index d7efca4e5..66eed2f8b 100644
+--- a/skinny/crates/ir/src/lib.rs
++++ b/skinny/crates/ir/src/lib.rs
+@@ -409,6 +409,19 @@ pub enum BackendExpr {
+         target: String,
+         ty: Option<String>,
+     },
++    /// A direct byte-class scan (the RATIFIED direct-scan-default lowering of a
++    /// FOLLOW-sound / bounded-give-back regex leaf). `set` is the 256-bit member
++    /// class as four little-endian words; `min`/`max` are the repeat bounds (`+`
++    /// → min 1, `*` → min 0); `follow` is the FOLLOW-guard literal the scan halts
++    /// BEFORE (empty when the leaf is genuinely disjoint and needs no guard) —
++    /// this is the `Seq[Repeat, FOLLOW-guard]` fusion collapsed into one node.
++    ByteClass {
++        set: [u64; 4],
++        min: u32,
++        max: Option<u32>,
++        follow: Vec<u8>,
++        span_kind: SpanKind,
++    },
+     Return,
+ }
+ 
+@@ -419,11 +432,40 @@ pub enum Recognizer {
+         alphabet: StructuralAlphabet,
+         site: SimdSite,
+     },
++    /// A direct byte-class recognizer emitted for a leaf whose first-set is NOT
++    /// disjoint from its FOLLOW (the masked-wildcard `match_leaf` over-consumes
++    /// there): `set` is the member class, `follow` the FOLLOW-guard literal the
++    /// scan halts before, `site` where it runs.
++    ByteClass {
++        set: [u64; 4],
++        follow: Vec<u8>,
++        site: SimdSite,
++    },
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+ pub enum SimdMode {
+     Exact,
++    /// Membership scan over a 256-bit byte class (four little-endian words).
++    ByteClass([u64; 4]),
++}
++
++/// Build a 256-bit byte-class bitset (four little-endian words) from inclusive
++/// byte ranges — the representation `SimdMode::ByteClass` / `BackendExpr::ByteClass`
++/// carry. `byteset_contains` is the membership test the emitted scan compiles to.
++pub fn byteset_from_ranges(ranges: &[(u8, u8)]) -> [u64; 4] {
++    let mut set = [0u64; 4];
++    for &(lo, hi) in ranges {
++        for b in lo..=hi {
++            set[(b >> 6) as usize] |= 1u64 << (b & 63);
++        }
++    }
++    set
++}
++
++/// Membership test for a 256-bit byte-class bitset.
++pub fn byteset_contains(set: &[u64; 4], byte: u8) -> bool {
++    (set[(byte >> 6) as usize] >> (byte & 63)) & 1 == 1
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 0133bcc64..12051e531 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -977,6 +977,7 @@ pub mod recognizers {
+             } => children.iter().any(contains_direct_build),
+             BackendExpr::ByteLiteral(_)
+             | BackendExpr::RegexProgram { .. }
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+             | BackendExpr::TapeEmit { .. }
+@@ -999,6 +1000,7 @@ pub mod recognizers {
+                 .any(|child| contains_tape_kind(child, needle)),
+             BackendExpr::ByteLiteral(_)
+             | BackendExpr::RegexProgram { .. }
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+             | BackendExpr::DirectBuild { .. }
+@@ -1016,6 +1018,7 @@ pub mod recognizers {
+             BackendExpr::Seq(children) => children.iter().map(alt_branch_count).max().unwrap_or(0),
+             BackendExpr::ByteLiteral(_)
+             | BackendExpr::RegexProgram { .. }
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+             | BackendExpr::TapeEmit { .. }

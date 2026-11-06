@@ -1,0 +1,553 @@
+# PROTO-2 pass-2 (7D) — the ONLY code added to a pt-scratch COPY of parse-that.
+# Origin READ-ONLY & untouched. Copy per R3 sec 8; CARGO_TARGET_DIR inside copy.
+# Build/run: cd rust; cargo run --release --example oracle_7d -p regex-bootstrap
+# ============================================================================
+# (1) probe helper added to the copy's regex/mod.rs — exposes the PRE-LOWER AST
+#     (generated parser output before host::lower) for divergence classification.
+#     Needs pub(crate) __RegexParserEnumCtx, so it must live inside parse_that.
+# ----------------------------------------------------------------------------
+--- a/parse_that/src/regex/mod.rs	2026-04-30 11:35:38
++++ b/parse_that/src/regex/mod.rs	2026-07-16 13:44:39
+@@ -56,3 +56,19 @@
+     }
+     host::lower(&ast, pattern, opts)
+ }
++
++/// PT-SCRATCH PROBE ADDITION (LOCK-7 pass-2 7D oracle) — NOT in the READ-ONLY
++/// origin. Runs ONLY the generated combinator parser (the pre-`host::lower`
++/// stage) and returns its typed AST as a `Debug` string, plus whether the
++/// recognizer consumed the whole input. This is the pre-lower witness used to
++/// partition a divergence into an oracle VERDICT (parser AST differs) vs a
++/// `host.rs` OBLIGATION (parser accepted, fold is wrong). Needs `pub(crate)`
++/// `__RegexParserEnumCtx`, so it must live inside this crate.
++pub fn parse_generated_ast_debug(pattern: &str) -> (bool, usize, Option<String>) {
++    let ctx = generated::__RegexParserEnumCtx::with_capacity(pattern.len().max(64));
++    let parser_fn = generated::RegexParser::regex();
++    let (result, state) = parser_fn.parse_return_state_with_context(pattern, &ctx);
++    let full = result.is_some() && state.offset >= pattern.len();
++    let dbg = result.map(|ast| format!("{:?}", ast));
++    (full, state.offset, dbg)
++}
+
+# ============================================================================
+# (2) NEW FILE: rust/bootstrap/examples/oracle_7d.rs  (the probe harness)
+# ----------------------------------------------------------------------------
+--- /dev/null	2026-07-16 13:53:21
++++ b/bootstrap/examples/oracle_7d.rs	2026-07-16 13:51:49
+@@ -0,0 +1,516 @@
++//! LOCK-7 pass-2 probe 2 (family 7D META-CIRCULAR-ORACLE): the regex Tier-S
++//! differential-oracle ledger row under a PINNED `ORACLE_REL_V1`.
++//!
++//! BINDING PIN (anti-vacuity): Tier-S is bound to the PRODUCER
++//!   GEN  = parse_that::regex::parse_generated_with -> Result<Hir, _>
++//!            (generated combinator parser from bootstrap/regex.bbnf + host::lower)
++//! against the primary
++//!   HAND = parse_that::regex::parse_with           -> Result<Hir, _>
++//! NEVER the `generated.rs:2288` `bool` twin (used ONLY as a pre-lower
++//! recognizer witness for divergence classification — planted mutation M3
++//! proves binding Tier-S to it is rejected as vacuous).
++//!
++//! ORACLE_REL_V1 = R1 ∘ R2 ∘ R3 (pinned, versioned):
++//!   R1  bottom-up unit-collapse to a fixpoint:
++//!         Concat([]) ≡ Empty ≡ Alt([])   (host.rs:44,54,89 emit Hir::Empty)
++//!         Concat([x]) ≡ x ,  Alt([x]) ≡ x
++//!   R2  satisfied by construction: BOTH sides terminate in host::lower / the
++//!         hand parser at the SAME stage (post-parse Hir, no linker pass).
++//!   R3  group / class / quantifier structure preserved FIELD-FOR-FIELD
++//!         (Repetition{min,max,greedy}, Group nesting, Class ranges/negated).
++//!
++//! Classification of every residual divergence:
++//!   * parser (pre-lower) AST differs  -> oracle VERDICT (bank)
++//!   * parser accepted, host::lower wrong/errs (post-lower) -> host.rs
++//!     OBLIGATION (fix); name the clause.
++
++use std::hint::black_box;
++use std::time::Instant;
++
++use parse_that::regex::{
++    self, ByteRange, CharClass, Hir, ParseError, ParseOptions, Repetition,
++};
++
++// ── The committed PROTO-2-7D 51-pattern set (pass-1 corpus, verbatim) ──────
++const PROTO_2_7D: &[&str] = &[
++    r#"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?"#,
++    r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#,
++    r"[a-zA-Z_][\w-]*",
++    r"-?[a-zA-Z_][\w-]*|--[\w-]+",
++    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
++    r"[-+]?(\d+(\.\d+)?|\.\d+)([eE][-+]?\d+)?",
++    r"[-+]?\d+",
++    r"(?s)(?:\s|/\*.*?\*/)*",
++    r"[0-9a-fA-F]{3,8}",
++    r"[0-9a-fA-F]+",
++    r"[iIsS]",
++    r"[^\]\\]",
++    r"[^\\()\[\]{}|*+?.^$]",
++    r#""(?:[^"\\]|\\[\s\S])*"|'(?:[^'\\]|\\[\s\S])*'"#,
++    r"\d+",
++    r"\s+",
++    r"\w+",
++    r"[a-z]+",
++    r".",
++    r"\\",
++    r"(?:foo|bar|baz)+",
++    r"(a|b)(c|d)",
++    r"a*",
++    r"a+?",
++    r"a{3,5}",
++    r"\n\r\t",
++    r"\.",
++    r"",
++    r"(?:-?[a-zA-Z_]|\\[^\n])(?:[\w-]|\\[^\n])*",
++    r"[-+]?\d*n",
++    r"https?://[a-zA-Z0-9./-]+",
++    r"(?:[a-z]+\.)+[a-z]+",
++    r"#[0-9a-fA-F]{3,6}",
++    r"\d+px",
++    r"\d+%",
++    r"\d+(?:px|em|rem|vh|vw)",
++    r"\d{4}-\d{2}-\d{2}",
++    r"\d{2}:\d{2}:\d{2}",
++    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
++    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
++    r"0x[0-9a-fA-F]+",
++    r"0b[01]+",
++    r"0[0-7]+",
++    r"\d+\.\d+",
++    r"\d+(?:_\d+)*",
++    r"[A-Za-z0-9+/]+",
++    r"\$[a-zA-Z_][a-zA-Z0-9_]*",
++    r"[a-zA-Z][a-zA-Z0-9]*",
++    r"\w+(?:[-_]\w+)*",
++    r"(?:foo|bar)*",
++    r"(?:[a-z]{2,4})+",
++];
++
++// ── parse_that/tests/regex/parser_test.rs patterns (brief: "+ test patterns") ─
++const PT_REGEX_TESTS: &[&str] = &[
++    r"(?s).",     // dotall applied to dot — the direct inline-flag propagation probe
++    r"(?:abc)",   // non-capturing group
++    r"[^abc]",    // negated class
++    r"[a-z]",     // range class
++    r"\/",        // escaped slash
++    r"\d",        // bare shorthand
++    r"\w",        // bare shorthand
++];
++
++// ── ORACLE_REL_V1 :  N = R1 ∘ R2 ∘ R3  (R2 by construction) ───────────────
++/// Bottom-up unit-collapse to a fixpoint (R1) + field-for-field structural
++/// preservation (R3). One bottom-up pass reaches the fixpoint; `norm` is
++/// idempotent (verified by re-application in `assert_idempotent`).
++fn norm(h: &Hir) -> Hir {
++    match h {
++        Hir::Concat(items) => {
++            let mut v: Vec<Hir> = items.iter().map(norm).collect();
++            match v.len() {
++                0 => Hir::Empty,          // R1: Concat([]) ≡ Empty
++                1 => v.pop().unwrap(),    // R1: Concat([x]) ≡ x
++                _ => Hir::Concat(v),      // R3: order preserved field-for-field
++            }
++        }
++        Hir::Alternation(items) => {
++            let mut v: Vec<Hir> = items.iter().map(norm).collect();
++            match v.len() {
++                0 => Hir::Empty,          // R1: Alt([]) ≡ Empty
++                1 => v.pop().unwrap(),    // R1: Alt([x]) ≡ x
++                _ => Hir::Alternation(v), // R3: arm order + count preserved (M4 relies on this)
++            }
++        }
++        // R3 — group nesting preserved (NOT collapsed).
++        Hir::Group(inner) => Hir::Group(Box::new(norm(inner))),
++        // R3 — quantifier fields preserved (min/max/greedy) (M1 relies on this).
++        Hir::Repetition(r) => Hir::Repetition(Repetition {
++            sub: Box::new(norm(&r.sub)),
++            min: r.min,
++            max: r.max,
++            greedy: r.greedy,
++        }),
++        // Leaves — Empty / Literal / Class / Look — field-for-field (R3).
++        other => other.clone(),
++    }
++}
++
++fn oracle_eq(a: &Hir, b: &Hir) -> bool {
++    norm(a) == norm(b)
++}
++
++#[derive(PartialEq, Eq, Clone, Copy, Debug)]
++enum Class {
++    Agree,
++    HostObligation, // parser accepted (pre-lower OK) but host::lower wrong/errs
++    OracleVerdict,  // parser (pre-lower) itself diverges
++}
++
++fn main() {
++    let opts = ParseOptions::default(); // unicode:true — identical both sides (R2)
++
++    // Full corpus = committed 51 + the parse_that regex test patterns.
++    let corpus: Vec<&str> = PROTO_2_7D
++        .iter()
++        .chain(PT_REGEX_TESTS.iter())
++        .copied()
++        .collect();
++
++    println!("================ LOCK-7 pass-2 · 7D regex Tier-S · ORACLE_REL_V1 ================");
++    println!(
++        "corpus: {} committed PROTO-2-7D + {} parse_that regex-test = {} patterns",
++        PROTO_2_7D.len(),
++        PT_REGEX_TESTS.len(),
++        corpus.len()
++    );
++    println!("binding: GEN = parse_generated_with (->Hir)  vs  HAND = parse_with (->Hir)");
++    println!();
++
++    // ─── PLANTED MUTATIONS (falsification gate — ALL four must trip) ──────────
++    run_planted_mutations(&opts);
++
++    // ─── PARITY LEDGER under ORACLE_REL_V1 ───────────────────────────────────
++    let mut raw_eq = 0usize; // strict Hir eq (pre-normalization) — for the R1 delta
++    let mut agree = 0usize; // Empty-normed agreement (both Ok & oracle_eq, or both Err)
++    let mut struct_div = 0usize; // both Ok, N-diverge
++    let mut membership_div = 0usize; // one Ok / one Err
++    let mut both_err = 0usize;
++    let mut rows: Vec<(String, Class, String)> = Vec::new();
++
++    for &p in &corpus {
++        let hand = regex::parse_with(p, &opts);
++        let genr = regex::parse_generated_with(p, &opts);
++        let (pre_full, pre_off, ast_dbg) = regex::parse_generated_ast_debug(p);
++
++        match (&hand, &genr) {
++            (Ok(h), Ok(g)) => {
++                if h == g {
++                    raw_eq += 1;
++                }
++                if oracle_eq(h, g) {
++                    agree += 1;
++                } else {
++                    struct_div += 1;
++                    // Both parsers ACCEPTED and consumed all input, yet N(hand) !=
++                    // N(gen). host::lower is a deterministic total function of
++                    // (AST, src, opts); both sides share opts (R2). Therefore a
++                    // both-Ok Hir difference is IMPOSSIBLE unless the generated
++                    // parser committed to a DIFFERENT tree than the correct one:
++                    // the divergence is PRE-LOWER by construction -> oracle VERDICT.
++                    // The AST witnesses which wrong parse decision was made.
++                    let (cls, reason) = classify_struct(&ast_dbg);
++                    rows.push((
++                        p.to_string(),
++                        cls,
++                        format!(
++                            "STRUCT-DIVERGE (both Ok, N differs => pre-lower)  verdict={}\n        N(hand)={:?}\n        N(gen) ={:?}\n        ast={}",
++                            reason,
++                            norm(h),
++                            norm(g),
++                            ast_dbg.as_deref().unwrap_or("<none>")
++                        ),
++                    ));
++                }
++            }
++            (Err(_), Err(_)) => {
++                both_err += 1;
++                agree += 1; // both reject = membership agreement (R-consistent)
++            }
++            (Ok(_h), Err(e)) => {
++                membership_div += 1;
++                let cls = if pre_full {
++                    Class::HostObligation // parser consumed all input, fold failed
++                } else {
++                    Class::OracleVerdict // recognizer itself stalled at pre_off
++                };
++                rows.push((
++                    p.to_string(),
++                    cls,
++                    format!(
++                        "HAND-OK / GEN-ERR  gen_err=\"{}\"  pre_recognizer_full={} (off {})\n        clause={}",
++                        e.message,
++                        pre_full,
++                        pre_off,
++                        name_host_clause(&e.message)
++                    ),
++                ));
++            }
++            (Err(e), Ok(_g)) => {
++                membership_div += 1;
++                rows.push((
++                    p.to_string(),
++                    Class::OracleVerdict,
++                    format!("HAND-ERR / GEN-OK  hand_err=\"{}\"", e.message),
++                ));
++            }
++        }
++    }
++
++    let total = corpus.len();
++    println!("=== PARITY LEDGER (ORACLE_REL_V1) ===");
++    println!("total patterns              : {}", total);
++    println!("strict-Hir-eq (pre-R1)      : {}/{} = {:.4}", raw_eq, total, raw_eq as f64 / total as f64);
++    println!("  R1 delta (Empty-normed)   : +{}  (Concat([]) ≡ Empty healed rows)", agree.saturating_sub(raw_eq + both_err));
++    println!("both accept + N-equal       : {}", agree - both_err);
++    println!("both reject (agree)         : {}", both_err);
++    println!("both accept + N-DIVERGE     : {}", struct_div);
++    println!("membership disagree         : {}", membership_div);
++    println!(
++        "*** PARITY (Empty-normed)   : {}/{} = {:.4} ***",
++        agree, total, agree as f64 / total as f64
++    );
++    println!();
++
++    // ─── DIVERGENCE CLASSIFICATION ───────────────────────────────────────────
++    let n_host = rows.iter().filter(|r| r.1 == Class::HostObligation).count();
++    let n_verdict = rows.iter().filter(|r| r.1 == Class::OracleVerdict).count();
++    let n_struct_unclassified = rows
++        .iter()
++        .filter(|r| r.1 == Class::Agree)
++        .count();
++    println!("=== DIVERGENCE CLASSIFICATION ({} rows) ===", rows.len());
++    println!("host.rs OBLIGATION (fix, post-lower) : {}", n_host);
++    println!("oracle VERDICT (bank, pre-lower)     : {}", n_verdict);
++    if n_struct_unclassified > 0 {
++        println!("UNCLASSIFIED (manual)                : {}", n_struct_unclassified);
++    }
++    for (p, cls, detail) in &rows {
++        println!("  [{:?}] {:?}\n        {}", cls, p, detail);
++    }
++    println!();
++    let clean = n_struct_unclassified == 0;
++    println!(
++        "residual-classification CLEAN: {}  (all divergences named host.rs obligation or oracle verdict)",
++        clean
++    );
++    println!();
++
++    // ─── COLD PAIRED PERF (gen vs hand) ──────────────────────────────────────
++    cold_paired_perf(&corpus, &opts);
++
++    // ─── VERDICT LINE ────────────────────────────────────────────────────────
++    let parity = agree as f64 / total as f64;
++    println!();
++    println!("=== LEDGER ROW ===");
++    println!("rel_id=ORACLE_REL_V1  binding=parse_generated_with(->Hir)  parity_pct={:.4}", parity);
++    println!(
++        "row_complete={}  (parity>=0.80 Empty-normed: {} ; classification clean: {})",
++        parity >= 0.80 && clean,
++        parity >= 0.80,
++        clean
++    );
++    let promotable = clean && n_verdict == 0;
++    println!(
++        "regex disposition: {}",
++        if parity >= 1.0 {
++            "parity=100 -> gate on perf only"
++        } else if promotable {
++            "PROMOTABLE modulo LOCK-5 (every residual is a host.rs obligation; 0 oracle verdicts) + perf"
++        } else {
++            "ORACLE-ONLY (residual includes genuine oracle verdicts)"
++        }
++    );
++}
++
++// ── classify a both-Ok structural divergence: always an oracle VERDICT ─────
++// (both parsers accepted, host::lower is deterministic + total, opts shared =>
++// the generated PARSE TREE differs => pre-lower). Name the specific wrong
++// parse decision from the AST witness.
++fn classify_struct(ast_dbg: &Option<String>) -> (Class, &'static str) {
++    let ad = ast_dbg.as_deref().unwrap_or("");
++    // `.` routed to a class-literal node (class_atom_0) instead of the dot
++    // metachar (atom_0). Note: substring test is exact — atom_0 as a whole
++    // token would be "atom(atom_0("; the dot mis-parse shows "atom(class_atom_0(".
++    let dot_misparse = ad.contains("atom(class_atom_0(");
++    // `(?flags)` parsed as a PLAIN capturing group (`group(`) wrapping a flag
++    // letter, instead of the bare-flag group_1 that host.rs::apply_flags folds.
++    let flag_misparse = ad.contains("group(class_atom_0(") || ad.contains("group(alternation");
++    match (dot_misparse, flag_misparse) {
++        (true, true) => (
++            Class::OracleVerdict,
++            "grammar: `(?s)` -> plain group (not group_1) AND `.` -> class_atom_0 (not atom_0 dot); host.rs group_1/make_dot never reached",
++        ),
++        (true, false) => (
++            Class::OracleVerdict,
++            "grammar: `.` metachar parsed as class_atom_0 (literal) instead of atom_0 (dot); host.rs::make_dot never reached",
++        ),
++        (false, true) => (
++            Class::OracleVerdict,
++            "grammar: inline-flag `(?flags)` parsed as a plain capturing group, not group_1; host.rs::apply_flags never reached",
++        ),
++        (false, false) => (
++            Class::OracleVerdict,
++            "pre-lower parse-tree divergence (both Ok, deterministic fold => AST differs)",
++        ),
++    }
++}
++
++fn name_host_clause(msg: &str) -> &'static str {
++    if msg.contains("repetition bound") {
++        "host.rs::parse_braced_quantifier (via lower_quantifier) — bounded {n,m}: span carries the braces, num_part parse fails"
++    } else if msg.contains("hex") || msg.contains("unicode") || msg.contains("codepoint") {
++        "host.rs::lower_escape"
++    } else if msg.contains("Unicode property") {
++        "host.rs::lower_escape (\\p{...})"
++    } else {
++        "host.rs (unnamed) — inspect"
++    }
++}
++
++// ── PLANTED MUTATIONS — all four must TRIP (be detected) ──────────────────
++fn run_planted_mutations(opts: &ParseOptions) {
++    println!("=== PLANTED-MUTATION FALSIFICATION (all 4 must trip) ===");
++    let mut all_tripped = true;
++
++    // M1: swap one quantifier greedy->lazy in a gen copy -> R3 flags.
++    let base = regex::parse_generated_with("a+", opts).expect("a+ parses");
++    let mutant = flip_first_greedy(&base);
++    let m1 = !oracle_eq(&base, &mutant); // oracle DISTINGUISHES them
++    println!("  M1 quantifier greedy->lazy   : tripped={} (R3 preserves `greedy`)", m1);
++    all_tripped &= m1;
++
++    // M2: drop a group -> R3 flags.
++    let g = regex::parse_generated_with("(a)", opts).expect("(a) parses");
++    let ungrouped = strip_first_group(&g); // removes the Group wrapper
++    let m2 = !oracle_eq(&g, &ungrouped);
++    println!("  M2 drop a group              : tripped={} (R3 preserves Group nesting)", m2);
++    all_tripped &= m2;
++
++    // M3: bind the bool twin where the producer is expected -> binding rejected.
++    // The bool twin (generated.rs:2288) returns `bool`; it cannot witness a
++    // structural divergence. Proof of vacuity: two patterns whose HIRs differ
++    // under ORACLE_REL_V1 both map to the SAME bool (true) -> the bool binding
++    // cannot compute the relation, so the anti-vacuity guard REJECTS it.
++    let twin_pattern_a = regex::generated::parse_generated("(a)"); // true
++    let twin_pattern_b = regex::generated::parse_generated("a"); // true
++    let hir_a = norm(&regex::parse_generated_with("(a)", opts).unwrap());
++    let hir_b = norm(&regex::parse_generated_with("a", opts).unwrap());
++    let twin_says_same = twin_pattern_a == twin_pattern_b; // both true — vacuous
++    let hir_says_different = hir_a != hir_b; // Group(a) != Literal(a)
++    let m3 = twin_says_same && hir_says_different; // binding to twin is provably vacuous -> reject
++    println!(
++        "  M3 bool-twin binding rejected: tripped={} (twin: same={}, Hir: different={})",
++        m3, twin_says_same, hir_says_different
++    );
++    all_tripped &= m3;
++
++    // M4: mis-associate an alt arm -> R1 does NOT mask it.
++    let alt = regex::parse_generated_with("a|b|c", opts).expect("a|b|c parses");
++    let misassoc = misassociate_alt(&alt); // Alt([a,b,c]) -> Alt([Alt([a,b]),c])
++    let m4 = !oracle_eq(&alt, &misassoc); // R1 collapses only singletons, so the nesting survives
++    println!("  M4 mis-associate alt arm     : tripped={} (R1 collapses only singletons)", m4);
++    all_tripped &= m4;
++
++    // Idempotence of N (R1 fixpoint sanity).
++    let sample = regex::parse_generated_with(r"(?:[a-z]+\.)+[a-z]+", opts).unwrap();
++    let once = norm(&sample);
++    let twice = norm(&once);
++    let idem = once == twice;
++    println!("  (N idempotent / fixpoint)    : {}", idem);
++    all_tripped &= idem;
++
++    assert!(
++        all_tripped,
++        "FALSIFICATION FAILED: not all planted mutations tripped — oracle is unsound, green cannot be trusted"
++    );
++    println!("  -> ALL planted mutations tripped; oracle is non-vacuous.");
++    println!();
++}
++
++fn flip_first_greedy(h: &Hir) -> Hir {
++    match h {
++        Hir::Repetition(r) => Hir::Repetition(Repetition {
++            sub: r.sub.clone(),
++            min: r.min,
++            max: r.max,
++            greedy: !r.greedy,
++        }),
++        Hir::Concat(v) => Hir::Concat(v.iter().map(flip_first_greedy).collect()),
++        Hir::Group(g) => Hir::Group(Box::new(flip_first_greedy(g))),
++        other => other.clone(),
++    }
++}
++
++fn strip_first_group(h: &Hir) -> Hir {
++    match h {
++        Hir::Group(inner) => (**inner).clone(), // drop the Group wrapper
++        Hir::Concat(v) => Hir::Concat(v.iter().map(strip_first_group).collect()),
++        other => other.clone(),
++    }
++}
++
++fn misassociate_alt(h: &Hir) -> Hir {
++    match h {
++        Hir::Alternation(v) if v.len() >= 3 => {
++            let left = Hir::Alternation(vec![v[0].clone(), v[1].clone()]);
++            let mut rest = vec![left];
++            rest.extend(v[2..].iter().cloned());
++            Hir::Alternation(rest)
++        }
++        other => other.clone(),
++    }
++}
++
++#[allow(dead_code)]
++fn sanity_hir() -> Hir {
++    Hir::Class(CharClass::Bytes {
++        ranges: vec![ByteRange::new(b'a', b'z')],
++        negated: false,
++    })
++}
++#[allow(dead_code)]
++fn _pe(_e: &ParseError) {}
++
++// ── COLD PAIRED PERF ──────────────────────────────────────────────────────
++fn median(mut v: Vec<f64>) -> f64 {
++    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    let n = v.len();
++    if n == 0 {
++        return f64::NAN;
++    }
++    if n % 2 == 1 {
++        v[n / 2]
++    } else {
++        (v[n / 2 - 1] + v[n / 2]) / 2.0
++    }
++}
++
++fn cold_paired_perf(corpus: &[&str], opts: &ParseOptions) {
++    const REPS: usize = 3000;
++    let mut hand_us: Vec<f64> = Vec::with_capacity(REPS);
++    let mut gen_us: Vec<f64> = Vec::with_capacity(REPS);
++
++    // Untimed prime (icache/branch predictor) — NOT result caching; every parse
++    // still allocates a fresh Hir, so every timed pass is COLD.
++    for _ in 0..50 {
++        for &p in corpus {
++            black_box(regex::parse_with(black_box(p), opts)).ok();
++            black_box(regex::parse_generated_with(black_box(p), opts)).ok();
++        }
++    }
++    for _ in 0..REPS {
++        let t0 = Instant::now();
++        for &p in corpus {
++            black_box(regex::parse_with(black_box(p), opts)).ok();
++        }
++        hand_us.push(t0.elapsed().as_nanos() as f64 / 1000.0);
++
++        let t1 = Instant::now();
++        for &p in corpus {
++            black_box(regex::parse_generated_with(black_box(p), opts)).ok();
++        }
++        gen_us.push(t1.elapsed().as_nanos() as f64 / 1000.0);
++    }
++    let hm = median(hand_us);
++    let gm = median(gen_us);
++    println!("=== COLD PAIRED PERF (release -O3, {} reps, per corpus-pass) ===", REPS);
++    println!("HAND  parse_with            median: {:.3} us/pass", hm);
++    println!("GEN   parse_generated_with  median: {:.3} us/pass", gm);
++    println!(
++        "perf_ratio GEN/HAND         : {:.3}x  ({})",
++        gm / hm,
++        if gm <= hm {
++            "perf gate PASS (<=1.0)"
++        } else {
++            "perf gate FAIL (>1.0) -> ORACLE-ONLY lawful"
++        }
++    );
++}

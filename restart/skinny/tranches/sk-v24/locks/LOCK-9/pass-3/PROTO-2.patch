@@ -1,0 +1,500 @@
+--- /dev/null	2026-07-16 20:15:43
++++ a/parse-that/rust/regex/examples/emit_probe.rs	2026-07-16 20:14:51
+@@ -0,0 +1,497 @@
++//! LOCK-9 pass-3 · Brief 2 · PROTO-2 — the 9C `[u8;256]→SIMD` emit-pass feasibility,
++//! run against the REAL bbnf-regex DFA engine (this crate).
++//!
++//! For three grammar leaves we (1) compile the leaf to a minimized DFA via the real
++//! `Dfa::compile_with`, (2) derive the member byte-set by probing the DFA itself,
++//! (3) run the separability predicate (ported `bbnf_simd::dispatch::lo6_table_admissible`)
++//! on the derived alphabet, (4) route to the correct SIMD tier and emit a classifier,
++//! (5) assert bit-identical scan output vs a scalar reference over an alignment sweep +
++//! xorshift random blocks, with an INJECT_BUG that must break parity, and (6) prove the
++//! lo6-colliding CSS set is rejected off the `vqtbl4q` nibble tier with NO silent drop.
++//!
++//! NEON kernels below are faithful ports of `skinny/crates/bbnf-simd/src/aarch64/*`
++//! (classify_tbl4, byte_class_from_table_64, structural_classify_64, movemask). aarch64 only.
++
++use bbnf_regex::{Dfa, DfaOptions};
++use core::arch::aarch64::*;
++
++// ─────────────────────────────────────────────────────────────────────────────
++// Ported predicate: bbnf_simd::dispatch::lo6_table_admissible (dispatch.rs:101)
++// ─────────────────────────────────────────────────────────────────────────────
++fn lo6_table_admissible(alphabet: &[u8; 64]) -> bool {
++    let mut seen = [false; 64];
++    let mut len = 0usize;
++    for byte in alphabet.iter().copied().take_while(|byte| *byte != 0) {
++        len += 1;
++        let slot = (byte & 0x3f) as usize;
++        if seen[slot] {
++            return false;
++        }
++        seen[slot] = true;
++    }
++    len != 0
++}
++
++// ─────────────────────────────────────────────────────────────────────────────
++// Ported: build_lo6_table (classify_tbl4.rs) — last-write-wins per lo6 slot.
++// ─────────────────────────────────────────────────────────────────────────────
++fn build_lo6_table(alphabet: &[u8]) -> [u8; 64] {
++    let mut table = [0u8; 64];
++    for byte in alphabet.iter().copied().filter(|byte| *byte != 0) {
++        table[(byte & 0x3f) as usize] = byte;
++    }
++    table
++}
++
++// Ported: movemask_u8x16 (movemask.rs) — vshrn nibble-narrow pack to 16 bits.
++#[inline(always)]
++unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
++    let pairs = vshrn_n_u16::<4>(vreinterpretq_u16_u8(value));
++    let nibble_bits = vand_u8(pairs, vdup_n_u8(0x11));
++    let lane_bits = vorr_u8(
++        vand_u8(nibble_bits, vdup_n_u8(0x01)),
++        vsri_n_u8::<3>(vdup_n_u8(0), nibble_bits),
++    );
++    let widened = vcombine_u8(lane_bits, vdup_n_u8(0));
++    let interleaved = vzip1q_u8(widened, widened);
++    let mut packed = [0u8; 16];
++    vst1q_u8(packed.as_mut_ptr(), interleaved);
++    let mut mask = 0u16;
++    for pair in 0..8 {
++        let bits = packed[pair * 2];
++        mask |= u16::from(bits & 0x03) << (pair * 2);
++    }
++    mask
++}
++
++// Tier NeonTbl4 — membership mask via the lo6 `vqtbl4q` table (classify_tbl4.rs).
++// member(b) := (table[b & 0x3f] == b) & (table[b & 0x3f] > 0).
++#[inline(always)]
++unsafe fn classify_tbl4_membership(ptr: *const u8, table: uint8x16x4_t) -> u64 {
++    let mut mask = 0u64;
++    for lane in 0..4 {
++        let chunk = vld1q_u8(ptr.add(lane * 16));
++        let low6 = vandq_u8(chunk, vdupq_n_u8(0x3f));
++        let class = vqtbl4q_u8(table, low6);
++        let member = vandq_u8(vceqq_u8(class, chunk), vcgtq_u8(class, vdupq_n_u8(0)));
++        mask |= u64::from(movemask_u8x16(member)) << (lane * 16);
++    }
++    mask
++}
++
++// Tier structural — the `vceqq` fan (structural_classify_64.rs "significant" mask).
++#[inline(always)]
++unsafe fn structural_membership(ptr: *const u8, members: &[u8]) -> u64 {
++    let mut mask = 0u64;
++    for lane in 0..4 {
++        let chunk = vld1q_u8(ptr.add(lane * 16));
++        let mut acc = vdupq_n_u8(0);
++        for &m in members {
++            acc = vorrq_u8(acc, vceqq_u8(chunk, vdupq_n_u8(m)));
++        }
++        mask |= u64::from(movemask_u8x16(acc)) << (lane * 16);
++    }
++    mask
++}
++
++// Tier FullTable — ported scalar byte_class_from_table_64 (the NEON kernel delegates
++// to this exact scalar body). membership(b) := table256[b] != 0. Collision-free.
++fn byte_class_from_table_64(src: &[u8; 64], table: &[u8; 256]) -> u64 {
++    let mut mask = 0u64;
++    for index in 0..64 {
++        if table[src[index] as usize] != 0 {
++            mask |= 1u64 << index;
++        }
++    }
++    mask
++}
++
++// Scalar reference oracle: bit i set iff window[i] is a DFA-member byte.
++fn scalar_membership(window: &[u8], member_set: &[bool; 256]) -> u64 {
++    let mut mask = 0u64;
++    for i in 0..64 {
++        if member_set[window[i] as usize] {
++            mask |= 1u64 << i;
++        }
++    }
++    mask
++}
++
++// xorshift64* — deterministic block generator.
++struct Rng(u64);
++impl Rng {
++    fn next_u64(&mut self) -> u64 {
++        let mut x = self.0;
++        x ^= x >> 12;
++        x ^= x << 25;
++        x ^= x >> 27;
++        self.0 = x;
++        x.wrapping_mul(0x2545F4914F6CDD1D)
++    }
++    fn byte(&mut self) -> u8 {
++        (self.next_u64() & 0xff) as u8
++    }
++}
++
++/// Derive the member byte-set from the REAL DFA: byte b is a member iff the DFA
++/// accepts the single-byte input [b] (longest anchored match ends at 1).
++fn derive_member_set(dfa: &Dfa) -> [bool; 256] {
++    let mut set = [false; 256];
++    for b in 0u16..256 {
++        let byte = b as u8;
++        set[b as usize] = dfa.find_at(&[byte], 0) == Some(1);
++    }
++    set
++}
++
++fn members_of(set: &[bool; 256]) -> Vec<u8> {
++    (0u16..256)
++        .filter(|&b| set[b as usize])
++        .map(|b| b as u8)
++        .collect()
++}
++
++fn pack_alphabet(members: &[u8]) -> [u8; 64] {
++    let mut a = [0u8; 64];
++    for (i, &m) in members.iter().enumerate() {
++        a[i] = m;
++    }
++    a
++}
++
++#[derive(Clone, Copy, PartialEq, Eq, Debug)]
++enum Tier {
++    NeonTbl4,
++    FullTable,
++}
++
++/// Build a random test buffer that mixes member and non-member bytes so masks are
++/// non-trivial; guarantees each member appears frequently.
++fn build_buffer(rng: &mut Rng, members: &[u8], len: usize) -> Vec<u8> {
++    let mut buf = vec![0u8; len];
++    for slot in buf.iter_mut() {
++        // ~45% chance a member byte, else a uniformly random byte.
++        if !members.is_empty() && (rng.byte() < 115) {
++            *slot = members[(rng.byte() as usize) % members.len()];
++        } else {
++            *slot = rng.byte();
++        }
++    }
++    buf
++}
++
++/// Run the emitted classifier for `tier` over `ptr` (64 bytes). unsafe: reads 64 bytes.
++unsafe fn emit_classify(
++    tier: Tier,
++    ptr: *const u8,
++    lo6: uint8x16x4_t,
++    full: &[u8; 256],
++) -> u64 {
++    match tier {
++        Tier::NeonTbl4 => classify_tbl4_membership(ptr, lo6),
++        Tier::FullTable => {
++            let src: &[u8; 64] = &*(ptr as *const [u8; 64]);
++            byte_class_from_table_64(src, full)
++        }
++    }
++}
++
++fn run_leaf(name: &str, pattern: &str, want_unicode: bool) -> LeafReport {
++    let opts = DfaOptions {
++        state_limit: 4096,
++        minimize: true,
++        unicode: want_unicode,
++    };
++    let dfa = Dfa::compile_with(pattern, &opts)
++        .unwrap_or_else(|| panic!("DFA compile returned None for {name} `{pattern}`"));
++
++    let member_set = derive_member_set(&dfa);
++    let members = members_of(&member_set);
++    let alphabet = pack_alphabet(&members);
++    let separable = lo6_table_admissible(&alphabet);
++    let tier = if separable { Tier::NeonTbl4 } else { Tier::FullTable };
++
++    // Emit the tables for both possible tiers.
++    let lo6_tbl = build_lo6_table(&members);
++    let lo6_vec = unsafe { vld1q_u8_x4(lo6_tbl.as_ptr()) };
++    let mut full_tbl = [0u8; 256];
++    for &m in &members {
++        full_tbl[m as usize] = 0xff;
++    }
++
++    // ── Parity sweep: alignment 0..63 × many xorshift blocks ──
++    let mut rng = Rng(0x9E3779B97F4A7C15 ^ (name.len() as u64) << 8);
++    let buf = build_buffer(&mut rng, &members, 8192);
++    let mut blocks = 0usize;
++    let mut mismatches = 0usize;
++    // slide a 64-byte window across every start offset (covers all 64 alignments).
++    let mut off = 0usize;
++    while off + 64 <= buf.len() {
++        let ptr = unsafe { buf.as_ptr().add(off) };
++        let simd = std::hint::black_box(unsafe { emit_classify(tier, ptr, lo6_vec, &full_tbl) });
++        let scalar = std::hint::black_box(scalar_membership(&buf[off..off + 64], &member_set));
++        if simd != scalar {
++            mismatches += 1;
++        }
++        blocks += 1;
++        off += 1;
++    }
++
++    // ── structural vceqq-fan cross-check (only meaningful for separable structural sets) ──
++    let mut fan_checked = false;
++    let mut fan_mismatches = 0usize;
++    if separable {
++        fan_checked = true;
++        let mut o = 0usize;
++        while o + 64 <= buf.len() {
++            let ptr = unsafe { buf.as_ptr().add(o) };
++            let fan = unsafe { structural_membership(ptr, &members) };
++            let scalar = scalar_membership(&buf[o..o + 64], &member_set);
++            if fan != scalar {
++                fan_mismatches += 1;
++            }
++            o += 7; // sub-sample; fan is O(members) per lane
++        }
++    }
++
++    // ── INJECT_BUG: flip one class entry; parity MUST break on blocks containing it ──
++    // Mutate the emitted table for the *actual* tier and count the bite rate over the
++    // blocks that contain the mutated member byte.
++    let bite = if let Some(&victim) = members.first() {
++        let mut lo6_bug = lo6_tbl;
++        let mut full_bug = full_tbl;
++        lo6_bug[(victim & 0x3f) as usize] = 0; // drop the victim from the lo6 table
++        full_bug[victim as usize] = 0; // drop the victim from the full table
++        let lo6_bug_vec = unsafe { vld1q_u8_x4(lo6_bug.as_ptr()) };
++        let mut containing = 0usize;
++        let mut bit = 0usize;
++        let mut o = 0usize;
++        while o + 64 <= buf.len() {
++            let window = &buf[o..o + 64];
++            if window.iter().any(|&b| b == victim) {
++                containing += 1;
++                let ptr = unsafe { buf.as_ptr().add(o) };
++                let buggy = unsafe {
++                    match tier {
++                        Tier::NeonTbl4 => classify_tbl4_membership(ptr, lo6_bug_vec),
++                        Tier::FullTable => {
++                            let src: &[u8; 64] = &*(ptr as *const [u8; 64]);
++                            byte_class_from_table_64(src, &full_bug)
++                        }
++                    }
++                };
++                let scalar = scalar_membership(window, &member_set);
++                if buggy != scalar {
++                    bit += 1;
++                }
++            }
++            o += 1;
++        }
++        Some((victim, bit, containing))
++    } else {
++        None
++    };
++
++    LeafReport {
++        name: name.to_string(),
++        pattern: pattern.to_string(),
++        num_classes: dfa.num_classes,
++        states: dfa.state_count(),
++        members: members.clone(),
++        separable,
++        tier,
++        blocks,
++        mismatches,
++        fan_checked,
++        fan_mismatches,
++        bite,
++    }
++}
++
++struct LeafReport {
++    name: String,
++    pattern: String,
++    num_classes: u16,
++    states: usize,
++    members: Vec<u8>,
++    separable: bool,
++    tier: Tier,
++    blocks: usize,
++    mismatches: usize,
++    fan_checked: bool,
++    fan_mismatches: usize,
++    bite: Option<(u8, usize, usize)>,
++}
++
++fn show_bytes(members: &[u8]) -> String {
++    members
++        .iter()
++        .map(|&b| {
++            let c = b as char;
++            if b.is_ascii_graphic() {
++                format!("{c}(0x{b:02X})")
++            } else {
++                format!("·(0x{b:02X})")
++            }
++        })
++        .collect::<Vec<_>>()
++        .join(" ")
++}
++
++fn main() {
++    println!("=== LOCK-9 Brief 2 · PROTO-2 · emit-pass feasibility vs REAL bbnf-regex DFA ===\n");
++
++    let leaves = [
++        ("ws", r"[ \t\n\r]+", false),
++        ("json_structural", r#"[{}\[\]:,"\\]"#, false),
++        ("css_colliding", r"[;{}:]", false),
++    ];
++
++    let mut all_pass = true;
++    let mut reports = Vec::new();
++    for (name, pat, uni) in leaves {
++        let r = run_leaf(name, pat, uni);
++        println!("── leaf `{}`  pattern {}", r.name, r.pattern);
++        println!(
++            "   DFA: num_classes={} states={}  (ceilings: 255 classes / 4096 states)",
++            r.num_classes, r.states
++        );
++        println!("   members[{}]: {}", r.members.len(), show_bytes(&r.members));
++        println!(
++            "   separable(lo6)={}  → emit tier = {:?}",
++            r.separable, r.tier
++        );
++        println!(
++            "   PARITY: {} blocks (alignment sweep 0..63), mismatches = {}  {}",
++            r.blocks,
++            r.mismatches,
++            if r.mismatches == 0 { "[BIT-IDENTICAL]" } else { "[FAIL]" }
++        );
++        if r.fan_checked {
++            println!(
++                "   vceqq-fan cross-check: mismatches = {}  {}",
++                r.fan_mismatches,
++                if r.fan_mismatches == 0 { "[MATCH]" } else { "[FAIL]" }
++            );
++        }
++        if let Some((v, bit, cont)) = r.bite {
++            let rate = if cont == 0 { 0.0 } else { bit as f64 / cont as f64 };
++            println!(
++                "   INJECT_BUG (drop 0x{:02X}): bit {}/{} containing-blocks = {:.1}% bite  {}",
++                v,
++                bit,
++                cont,
++                rate * 100.0,
++                if rate >= 0.90 { "[TEETH]" } else { "[NO-TEETH]" }
++            );
++            if rate < 0.90 {
++                all_pass = false;
++            }
++        }
++        if r.mismatches != 0 || (r.fan_checked && r.fan_mismatches != 0) {
++            all_pass = false;
++        }
++        println!();
++        reports.push(r);
++    }
++
++    // ── GATE 4 (load-bearing): the lo6-colliding CSS set MUST be misclassified by a
++    //    naive lo6/nibble emit, and the separability gate MUST route it off vqtbl4q. ──
++    println!("── GATE 4 · lo6-collision silent-drop proof (CSS `;{{}}:`) ──");
++    let css = &reports[2];
++    assert_eq!(css.name, "css_colliding");
++    let members = &css.members;
++    let has_semi = members.contains(&b';');
++    let has_brace = members.contains(&b'{');
++    println!(
++        "   set contains ;(0x3B)={} {{(0x7B)={}  lo6(0x3B)=0x{:02X} lo6(0x7B)=0x{:02X}",
++        has_semi,
++        has_brace,
++        b';' & 0x3f,
++        b'{' & 0x3f
++    );
++    println!("   separable(lo6) = {} (expect false)", css.separable);
++    let gate_routes_off_tbl4 = !css.separable && css.tier == Tier::FullTable;
++
++    // Build the NAIVE lo6 classifier over the colliding members and scan a window that
++    // contains BOTH ; and {.  A naive nibble/lo6 emit silently drops one member.
++    let naive_lo6 = build_lo6_table(members);
++    let naive_vec = unsafe { vld1q_u8_x4(naive_lo6.as_ptr()) };
++    let mut win = [b'.'; 64];
++    win[3] = b';';
++    win[10] = b'{';
++    win[20] = b'}';
++    win[40] = b':';
++    let naive_mask = unsafe { classify_tbl4_membership(win.as_ptr(), naive_vec) };
++    let scalar_mask = {
++        let mut m = 0u64;
++        let set = {
++            let mut s = [false; 256];
++            for &b in members {
++                s[b as usize] = true;
++            }
++            s
++        };
++        for i in 0..64 {
++            if set[win[i] as usize] {
++                m |= 1u64 << i;
++            }
++        }
++        m
++    };
++    // Which colliding member is dropped: the slot 0x3B holds whichever was written last.
++    let slot_holder = naive_lo6[0x3b];
++    let dropped: u8 = if slot_holder == b'{' { b';' } else { b'{' };
++    let naive_drops = naive_mask != scalar_mask;
++    println!(
++        "   naive lo6 table[0x3B] = 0x{:02X} → member 0x{:02X} SILENTLY DROPPED",
++        slot_holder, dropped
++    );
++    println!(
++        "   naive_lo6_mask=0x{:016X}  scalar_mask=0x{:016X}  differ={}  {}",
++        naive_mask,
++        scalar_mask,
++        naive_drops,
++        if naive_drops { "[NAIVE MISCLASSIFIES — as required]" } else { "[GATE-4 FAIL]" }
++    );
++
++    // The emit pass routes non-separable → FullTable, which is bit-identical.
++    let mut full = [0u8; 256];
++    for &m in members {
++        full[m as usize] = 0xff;
++    }
++    let routed_mask = byte_class_from_table_64(&win, &full);
++    let routed_ok = routed_mask == scalar_mask;
++    println!(
++        "   gate routes off vqtbl4q → FullTable: mask=0x{:016X}  bit-identical={}  {}",
++        routed_mask, routed_ok, if routed_ok { "[NO SILENT DROP]" } else { "[FAIL]" }
++    );
++    let gate4_ok = gate_routes_off_tbl4 && naive_drops && routed_ok && has_semi && has_brace;
++    if !gate4_ok {
++        all_pass = false;
++    }
++    println!();
++
++    // ── Census: \p{L} over-ceiling row (Tier X) via the REAL engine ──
++    println!("── CENSUS · Tier-X `\\p{{L}}` over-ceiling (unicode) ──");
++    let pl = Dfa::compile_with(r"\p{L}", &DfaOptions::default());
++    match pl {
++        Some(d) => println!(
++            "   \\p{{L}} compiled: num_classes={} states={} (vs 255/4096 ceilings)",
++            d.num_classes,
++            d.state_count()
++        ),
++        None => println!("   \\p{{L}} → Dfa::compile_with returned None (state_limit/explosion) — Tier-X excluded, as spec'd"),
++    }
++    println!();
++
++    println!(
++        "VERDICT: {}",
++        if all_pass && gate4_ok {
++            "PASS — all three leaves emit a bit-identical classifier via the correct tier; the colliding set is rejected off the nibble tier with no silent drop; INJECT_BUG bites."
++        } else {
++            "FAIL — see failing lines above."
++        }
++    );
++    std::process::exit(if all_pass && gate4_ok { 0 } else { 1 });
++}

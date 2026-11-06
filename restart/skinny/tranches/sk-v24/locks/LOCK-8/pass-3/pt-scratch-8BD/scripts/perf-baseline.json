@@ -1,0 +1,6 @@
+{
+    "schema": "pt-q-perf-baseline/2",
+    "note": "proof:perf anchor. Timings are machine-relative; the gate keys on the json-comprehensive REGRESSION RATIO (current vs baseline), not absolutes. PT-Q5: clause B re-anchored from the synthetic ca/cl/cu corpus to the REAL CSS function-name bucket (the value.js dispatch shape); the subTable widening was RETRACTED. Rebuild on a representative machine via UPDATE_PERF_BASELINE=1.",
+    "jsonComprehensiveNsPerParse": 1742.455,
+    "dispatchSpeedupPct": 38.12315856723158
+}

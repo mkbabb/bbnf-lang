@@ -30,16 +30,9 @@ pub struct RuntimeWorkspaceMetadata {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RuntimeProfileContract {
-    pub emitter: RuntimeEmitterKind,
     pub expected_files: &'static [&'static str],
     pub frontend_requirements: RuntimeFrontendRequirements,
     pub output_labels: Option<RuntimeOutputLabels>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RuntimeEmitterKind {
-    CompiledLowering,
-    RequestFacts,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -107,16 +100,12 @@ pub fn emit_runtime_from_request(
         .collect::<Vec<_>>();
     let facts = grammar::parse_runtime_source_facts(&source_refs)?;
     validate_frontend_closure(&request, &facts)?;
-    if request.profile_contract.emitter != RuntimeEmitterKind::RequestFacts {
-        if let Some(unsupported) = facts.first_unsupported() {
-            return Err(CodegenError::UnsupportedRuntimeConstruct {
-                code: unsupported.code,
-                path: unsupported.path,
-                offset: unsupported.offset,
-                source_hash: unsupported.source_hash,
-            });
-        }
-    }
+    // SK-V18 G3: the lowering-vs-scan SELECTION is no longer read from a config
+    // tag here — it is computed inside `runtime_generator::lower_for_runtime`
+    // from the SAME `facts.first_unsupported()` construct-kind predicate. A
+    // lowerable grammar produces the `SinkOnly` artifact; a non-lowerable one
+    // (CSS) produces the raw-AST-derived `Scan` artifact. The neutral render
+    // path dispatches on the artifact VARIANT, never on a grammar tag.
     validate_frontend_requirements(&request.profile_contract.frontend_requirements, &facts)?;
     runtime_generator::emit_from_request(&request, &facts)
 }

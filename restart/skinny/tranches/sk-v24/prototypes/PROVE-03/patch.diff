@@ -1,0 +1,484 @@
+diff --git a/skinny/crates/bbnf-simd/src/aarch64/string_block.rs b/skinny/crates/bbnf-simd/src/aarch64/string_block.rs
+index c6d1825d9..281270541 100644
+--- a/skinny/crates/bbnf-simd/src/aarch64/string_block.rs
++++ b/skinny/crates/bbnf-simd/src/aarch64/string_block.rs
+@@ -70,3 +70,65 @@ pub unsafe fn scan_string_special_block(
+         }
+     }
+ }
++
++/// Sentinel returned by [`first_string_terminal`] / its scalar anchor when no
++/// byte in the 16-byte block is a terminator, escape, or control byte.
++pub const NO_TERMINAL: u32 = 16;
++
++/// Scalar reference — parity anchor for [`first_string_terminal`].
++///
++/// Returns the index of the first byte that is the terminator, the escape byte,
++/// or a control byte (`< control_limit`), or [`NO_TERMINAL`] if none.
++#[inline]
++pub fn first_string_terminal_scalar(
++    bytes: &[u8; 16],
++    terminator: u8,
++    escape: u8,
++    control_limit: u8,
++) -> u32 {
++    for (index, &byte) in bytes.iter().enumerate() {
++        if byte == terminator || byte == escape || byte < control_limit {
++            return index as u32;
++        }
++    }
++    NO_TERMINAL
++}
++
++/// Fused single-pass terminal scan for a trusted (already-UTF-8) JSON string body.
++///
++/// ORs the terminator / escape / control compares into one predicate vector, then
++/// narrows the 16-byte compare to a 64-bit nibble-mask with a single
++/// `vshrn_n_u16::<4>` (the simdjson/Lemire NEON idiom) and extracts the first
++/// index via `trailing_zeros() >> 2` — no full `movemask` store/scalar-reduce.
++/// Control-byte validation thus rides the same pass that locates the closing
++/// quote and escapes, replacing a `memchr2` + separate control walk with one
++/// NEON stride. Returns the first terminal index, or [`NO_TERMINAL`] if none.
++///
++/// # Safety
++///
++/// `ptr` must point to 16 readable bytes.
++#[inline(always)]
++pub unsafe fn first_string_terminal(
++    ptr: *const u8,
++    terminator: u8,
++    escape: u8,
++    control_limit: u8,
++) -> u32 {
++    let chunk = unsafe { vld1q_u8(ptr) };
++    let special = unsafe {
++        let is_term = vceqq_u8(chunk, vdupq_n_u8(terminator));
++        let is_esc = vceqq_u8(chunk, vdupq_n_u8(escape));
++        let is_ctrl = vcltq_u8(chunk, vdupq_n_u8(control_limit));
++        vorrq_u8(vorrq_u8(is_term, is_esc), is_ctrl)
++    };
++    // Each input byte (0x00 or 0xFF) narrows to a 4-bit nibble in the 64-bit
++    // result; the first set nibble is `trailing_zeros() >> 2`.
++    let narrowed =
++        unsafe { vshrn_n_u16::<4>(vreinterpretq_u16_u8(special)) };
++    let mask = unsafe { vget_lane_u64::<0>(vreinterpret_u64_u8(narrowed)) };
++    if mask == 0 {
++        NO_TERMINAL
++    } else {
++        mask.trailing_zeros() >> 2
++    }
++}
+diff --git a/skinny/crates/bbnf-simd/tests/checkasm_string_terminal_block.rs b/skinny/crates/bbnf-simd/tests/checkasm_string_terminal_block.rs
+new file mode 100644
+index 000000000..36f92ad73
+--- /dev/null
++++ b/skinny/crates/bbnf-simd/tests/checkasm_string_terminal_block.rs
+@@ -0,0 +1,95 @@
++#![cfg(target_arch = "aarch64")]
++
++//! Parity oracle for the PROVE-03 fused terminal-scan kernel.
++//!
++//! `first_string_terminal` (NEON: OR-fan of compares → `vshrn` nibble-mask →
++//! `trailing_zeros() >> 2`) must return the same first-terminal index as
++//! `first_string_terminal_scalar` for every 16-byte block — it is the
++//! single-pass replacement for the trusted JSON string body's old `memchr2` +
++//! separate control walk.
++
++mod checkasm_common;
++
++use bbnf_simd::aarch64::string_block::{
++    first_string_terminal, first_string_terminal_scalar, NO_TERMINAL,
++};
++use checkasm_common::{guarded_call, Xorshift64};
++
++const TERMINATOR: u8 = b'"';
++const ESCAPE: u8 = b'\\';
++const CONTROL_LIMIT: u8 = 0x20;
++
++fn neon(block: &[u8; 16]) -> u32 {
++    guarded_call(|| unsafe {
++        first_string_terminal(block.as_ptr(), TERMINATOR, ESCAPE, CONTROL_LIMIT)
++    })
++}
++
++fn scalar(block: &[u8; 16]) -> u32 {
++    first_string_terminal_scalar(block, TERMINATOR, ESCAPE, CONTROL_LIMIT)
++}
++
++#[test]
++fn plain_ascii_body_has_no_terminal() {
++    let block = *b"abcdefghijklmnop";
++    assert_eq!(neon(&block), NO_TERMINAL);
++    assert_eq!(neon(&block), scalar(&block));
++}
++
++#[test]
++fn detects_first_of_quote_escape_control() {
++    let mut block = *b"hello world!!!!!";
++    block[7] = b'\\';
++    block[11] = 0x09; // tab is a control byte in JSON string bodies
++    block[3] = b'"';
++    // First terminal is the quote at index 3.
++    assert_eq!(scalar(&block), 3);
++    assert_eq!(neon(&block), 3);
++    // Control-before-quote: inject a control byte earlier than the quote.
++    block[1] = 0x1f;
++    assert_eq!(scalar(&block), 1);
++    assert_eq!(neon(&block), 1);
++}
++
++#[test]
++fn multibyte_utf8_lead_and_continuation_are_not_terminal() {
++    // Emoji + CJK: every byte is >= 0x80, none is quote/escape/control.
++    let mut block = [b' '; 16];
++    let text = "😀水漢字".as_bytes();
++    block[..text.len()].copy_from_slice(text);
++    assert_eq!(scalar(&block), NO_TERMINAL);
++    assert_eq!(neon(&block), scalar(&block));
++}
++
++#[test]
++fn del_byte_is_not_control() {
++    // 0x7f (DEL) is >= 0x20, so it is NOT a JSON control byte.
++    let mut block = [b'a'; 16];
++    block[5] = 0x7f;
++    assert_eq!(scalar(&block), NO_TERMINAL);
++    assert_eq!(neon(&block), NO_TERMINAL);
++}
++
++#[test]
++fn fuzz_neon_matches_scalar_all_blocks() {
++    let mut rng = Xorshift64::new(0x50524f56_45303300); // "PROVE03"
++    let mut block = [0u8; 16];
++    for _ in 0..200_000 {
++        rng.fill(&mut block);
++        // Bias a fraction of lanes toward the interesting bytes so the fuzzer
++        // exercises hits at every index, not just the empty-mask fast path.
++        for lane in block.iter_mut() {
++            match *lane & 0x0f {
++                0 => *lane = b'"',
++                1 => *lane = b'\\',
++                2 => *lane &= 0x1f, // control range
++                _ => {}
++            }
++        }
++        assert_eq!(
++            neon(&block),
++            scalar(&block),
++            "NEON/scalar divergence on block {block:?}"
++        );
++    }
++}
+diff --git a/skinny/crates/parse-that-regex/Cargo.toml b/skinny/crates/parse-that-regex/Cargo.toml
+index 40e1a9efd..15f5cba3a 100644
+--- a/skinny/crates/parse-that-regex/Cargo.toml
++++ b/skinny/crates/parse-that-regex/Cargo.toml
+@@ -8,5 +8,4 @@ rust-version.workspace = true
+ 
+ [dependencies]
+ bbnf-simd.workspace = true
+-memchr.workspace = true
+ thiserror.workspace = true
+diff --git a/skinny/crates/parse-that-regex/src/lib.rs b/skinny/crates/parse-that-regex/src/lib.rs
+index 089776fc3..5ae15c693 100644
+--- a/skinny/crates/parse-that-regex/src/lib.rs
++++ b/skinny/crates/parse-that-regex/src/lib.rs
+@@ -683,37 +683,44 @@ fn skip_string_plain(
+ }
+ 
+ #[inline(always)]
+-fn skip_string_plain_trusted(input: &[u8], cursor: usize) -> usize {
+-    let special = match memchr::memchr2(b'"', b'\\', &input[cursor..]) {
+-        Some(index) => cursor + index,
+-        None => input.len(),
+-    };
+-
+-    if let Some(control) = first_control_byte(input, cursor, special) {
+-        return control;
++fn skip_string_plain_trusted(input: &[u8], mut cursor: usize) -> usize {
++    // Fused single pass: locate the first terminator / escape / control byte in
++    // one stride, so control-byte validation rides the same scan that finds the
++    // closing quote and escapes — replacing the old memchr2 + separate control
++    // walk (two passes over identical bytes) with one NEON stride.
++    #[cfg(target_arch = "aarch64")]
++    unsafe {
++        while cursor + 16 <= input.len() {
++            let index = bbnf_simd::aarch64::string_block::first_string_terminal(
++                input.as_ptr().add(cursor),
++                b'"',
++                b'\\',
++                0x20,
++            );
++            if index != bbnf_simd::aarch64::string_block::NO_TERMINAL {
++                return cursor + index as usize;
++            }
++            cursor += 16;
++        }
+     }
+ 
+-    special
+-}
+-
+-#[inline(always)]
+-fn first_control_byte(input: &[u8], mut cursor: usize, end: usize) -> Option<usize> {
+-    debug_assert!(cursor <= end && end <= input.len());
+-    while cursor + 8 <= end {
++    while cursor + 8 <= input.len() {
+         let block = unsafe { std::ptr::read_unaligned(input.as_ptr().add(cursor).cast::<u64>()) };
+-        let control = control_byte_mask(block);
+-        if control != 0 {
+-            return Some(cursor + control.trailing_zeros() as usize / 8);
++        let special = string_special_mask(block);
++        if special != 0 {
++            return cursor + special.trailing_zeros() as usize / 8;
+         }
+         cursor += 8;
+     }
+-    while cursor < end {
+-        if input[cursor] < 0x20 {
+-            return Some(cursor);
++
++    while cursor < input.len() {
++        match input[cursor] {
++            b'"' | b'\\' | 0x00..=0x1f => return cursor,
++            _ => cursor += 1,
+         }
+-        cursor += 1;
+     }
+-    None
++
++    input.len()
+ }
+ 
+ #[inline(always)]
+@@ -731,12 +738,6 @@ fn string_special_mask(block: u64) -> u64 {
+ 
+ const HIGH_BITS: u64 = 0x8080_8080_8080_8080;
+ 
+-#[inline(always)]
+-fn control_byte_mask(block: u64) -> u64 {
+-    const CONTROL_LIMITS: u64 = 0x2020_2020_2020_2020;
+-    block.wrapping_sub(CONTROL_LIMITS) & !block & HIGH_BITS
+-}
+-
+ #[inline(always)]
+ fn first_non_ascii_before(mask: u16, byte_index: usize) -> bool {
+     mask != 0 && (mask.trailing_zeros() as usize) < byte_index
+diff --git a/skinny/crates/parse-that-regex/tests/prove03_string_kernels.rs b/skinny/crates/parse-that-regex/tests/prove03_string_kernels.rs
+new file mode 100644
+index 000000000..e7cb526fd
+--- /dev/null
++++ b/skinny/crates/parse-that-regex/tests/prove03_string_kernels.rs
+@@ -0,0 +1,212 @@
++//! PROVE-03 correctness corpus for the fused string kernels.
++//!
++//! The trusted JSON string body now locates the first terminator / escape /
++//! control byte in a single fused NEON stride (`scan_string_terminal_block`),
++//! replacing the old `memchr2` + separate control walk. This suite is the scalar
++//! parity oracle: an independent byte-by-byte reference cross-checked against the
++//! shipping kernels over a fuzz corpus, plus explicit multibyte, surrogate-escape,
++//! and malformed cases.
++
++use parse_that_regex::{
++    match_string, match_string_at_quote_trusted_utf8, unescape_string, RegexErrorKind, StringMode,
++};
++
++/// Independent scalar reference for a trusted JSON string body: returns the raw
++/// end offset (index past the closing quote) or the byte offset of the first
++/// structural fault. Deliberately written the naive byte-at-a-time way so it
++/// shares no code with the SIMD kernels under test.
++fn ref_scan_trusted(input: &[u8], offset: usize) -> Result<usize, usize> {
++    assert_eq!(input[offset], b'"');
++    let mut cursor = offset + 1;
++    while cursor < input.len() {
++        match input[cursor] {
++            b'"' => return Ok(cursor + 1),
++            b'\\' => {
++                // Skip the escape opener plus one payload byte; `\u` payloads are
++                // additionally validated by the kernel but for terminal-position
++                // parity we only need to step over the escaped byte here.
++                cursor += 1;
++                if cursor >= input.len() {
++                    return Err(offset);
++                }
++                if input[cursor] == b'u' {
++                    cursor += 5;
++                } else {
++                    cursor += 1;
++                }
++            }
++            b if b < 0x20 => return Err(cursor),
++            _ => cursor += 1,
++        }
++    }
++    Err(offset)
++}
++
++fn quote(body: &str) -> Vec<u8> {
++    let mut v = Vec::with_capacity(body.len() + 2);
++    v.push(b'"');
++    v.extend_from_slice(body.as_bytes());
++    v.push(b'"');
++    v
++}
++
++#[test]
++fn plain_and_multibyte_bodies_match_reference() {
++    let bodies = [
++        "",
++        "a",
++        "hello world",
++        "the quick brown fox jumps over the lazy dog many times over",
++        "café résumé naïve",
++        "日本語のテキスト水漢字",
++        "emoji 😀🎉🚀 mixed with ascii and 漢字 CJK content here",
++        "a string that is definitely longer than sixteen bytes to exercise the neon stride",
++        "mix 日本 ascii 😀 more ascii tail padding padding padding padding",
++    ];
++    for body in bodies {
++        let buf = quote(body);
++        let want = ref_scan_trusted(&buf, 0).expect("well-formed");
++        let got = match_string_at_quote_trusted_utf8(&buf, 0).expect("trusted match");
++        assert_eq!(got.raw_end, want, "trusted raw_end mismatch on {body:?}");
++        assert_eq!(got.raw_end, buf.len());
++
++        // The untrusted, UTF-8-validating path must locate the same terminator.
++        let untrusted = match_string(&buf, 0, StringMode::Utf8).expect("utf8 match");
++        assert_eq!(untrusted.raw_end, want, "untrusted raw_end mismatch on {body:?}");
++    }
++}
++
++#[test]
++fn control_byte_position_matches_reference() {
++    // Inject a raw control byte at each position of a multibyte-laced body and
++    // assert the kernel flags exactly the reference offset.
++    let base = b"prefix bytes here \xf0\x9f\x98\x80 more tail bytes to force a stride";
++    for control in [0x00u8, 0x09, 0x1f] {
++        for pos in 0..base.len() {
++            let mut buf = Vec::with_capacity(base.len() + 2);
++            buf.push(b'"');
++            buf.extend_from_slice(base);
++            buf.push(b'"');
++            // Skip positions that fall inside the multibyte sequence so we keep
++            // the buffer valid UTF-8 up to the injected control byte.
++            let inject = 1 + pos;
++            if buf[inject] >= 0x80 {
++                continue;
++            }
++            buf[inject] = control;
++            let want = ref_scan_trusted(&buf, 0);
++            let got = match_string_at_quote_trusted_utf8(&buf, 0);
++            match (want, got) {
++                (Err(off), Err(err)) => {
++                    assert_eq!(err.offset, off, "control offset mismatch");
++                    assert_eq!(err.kind, RegexErrorKind::ControlCharacter);
++                }
++                (Ok(end), Ok(m)) => assert_eq!(m.raw_end, end),
++                other => panic!("reference/kernel disagreement: {other:?}"),
++            }
++        }
++    }
++}
++
++#[test]
++fn unterminated_string_is_flagged() {
++    let buf = b"\"no closing quote here just running off the end of the buffer bytes";
++    let err = match_string_at_quote_trusted_utf8(buf, 0).unwrap_err();
++    assert_eq!(err.kind, RegexErrorKind::UnterminatedString);
++}
++
++#[test]
++fn surrogate_pair_escape_decodes() {
++    // "😀" is the UTF-16 surrogate pair for U+1F600 😀.
++    let raw = "\\uD83D\\uDE00";
++    let decoded = unescape_string(raw).expect("valid surrogate pair");
++    assert_eq!(decoded, "😀");
++
++    // BMP escape.
++    assert_eq!(unescape_string("\\u00e9").expect("é"), "é");
++    // Mixed escapes and literal multibyte content.
++    assert_eq!(
++        unescape_string("tab\\tand newline\\nand 漢字 and \\uD83D\\uDE80").expect("mixed"),
++        "tab\tand newline\nand 漢字 and 🚀"
++    );
++}
++
++#[test]
++fn malformed_escapes_are_rejected() {
++    // Lone high surrogate.
++    assert_eq!(
++        unescape_string("\\uD83D").unwrap_err().kind,
++        RegexErrorKind::InvalidSurrogatePair
++    );
++    // Lone low surrogate.
++    assert_eq!(
++        unescape_string("\\uDE00").unwrap_err().kind,
++        RegexErrorKind::InvalidSurrogatePair
++    );
++    // High surrogate followed by a non-low-surrogate escape.
++    assert_eq!(
++        unescape_string("\\uD83D\\u0041").unwrap_err().kind,
++        RegexErrorKind::InvalidSurrogatePair
++    );
++    // Invalid escape letter.
++    assert_eq!(
++        unescape_string("\\x").unwrap_err().kind,
++        RegexErrorKind::InvalidEscape
++    );
++    // Non-hex in a unicode escape.
++    assert!(unescape_string("\\u00zz").is_err());
++}
++
++#[test]
++fn invalid_utf8_is_rejected_on_untrusted_path() {
++    // Raw bytes that are not valid UTF-8 must be rejected by the validating path.
++    for bad in [
++        &b"\"\xff\""[..],       // stray 0xff
++        &b"\"\xc3\x28\""[..],   // bad continuation
++        &b"\"\xe0\x80\x80\""[..], // overlong
++        &b"\"\xed\xa0\x80\""[..], // surrogate encoded as utf-8
++        &b"\"\xf0\x9f\x98\""[..], // truncated 4-byte sequence before quote
++    ] {
++        let result = match_string(bad, 0, StringMode::Utf8);
++        assert!(
++            matches!(
++                result,
++                Err(ref e) if e.kind == RegexErrorKind::InvalidUtf8
++            ),
++            "expected InvalidUtf8 for {bad:?}, got {result:?}"
++        );
++    }
++}
++
++#[test]
++fn fuzz_trusted_scan_matches_reference() {
++    // Xorshift fuzz: build random valid-UTF-8 string bodies (ascii + multibyte +
++    // escapes) and assert the fused kernel agrees with the byte-at-a-time
++    // reference on the terminal position.
++    let mut state = 0x9e3779b97f4a7c15u64;
++    let mut next = || {
++        state ^= state << 13;
++        state ^= state >> 7;
++        state ^= state << 17;
++        state
++    };
++    let palette = [
++        "a", "b", " ", "z", "café", "水", "😀", "漢字", "\\n", "\\t", "\\\"", "\\\\",
++        "\\uD83D\\uDE00", "\\u00e9", "long ascii run of plain content here",
++    ];
++    for _ in 0..20_000 {
++        let mut body = String::new();
++        let pieces = (next() % 12) as usize;
++        for _ in 0..pieces {
++            body.push_str(palette[(next() as usize) % palette.len()]);
++        }
++        let buf = quote(&body);
++        let want = ref_scan_trusted(&buf, 0);
++        let got = match_string_at_quote_trusted_utf8(&buf, 0);
++        match (want, got) {
++            (Ok(end), Ok(m)) => assert_eq!(m.raw_end, end, "raw_end mismatch on {body:?}"),
++            (Err(_), Err(_)) => {}
++            other => panic!("reference/kernel disagreement on {body:?}: {other:?}"),
++        }
++    }
++}

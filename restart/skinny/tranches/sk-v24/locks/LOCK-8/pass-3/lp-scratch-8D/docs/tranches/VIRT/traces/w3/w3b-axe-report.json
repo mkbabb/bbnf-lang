@@ -1,0 +1,62 @@
+{
+  "chromium": {
+    "axeVersion": {
+      "name": "axe-core",
+      "version": "4.12.1"
+    },
+    "violationCount": 1,
+    "criticalOrSerious": [],
+    "pass": true,
+    "violations": [
+      {
+        "id": "page-has-heading-one",
+        "impact": "moderate",
+        "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+        "nodes": 1,
+        "sampleTargets": [
+          [
+            "html"
+          ]
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 170
+      }
+    ],
+    "errors": []
+  },
+  "webkit": {
+    "axeVersion": {
+      "name": "axe-core",
+      "version": "4.12.1"
+    },
+    "violationCount": 1,
+    "criticalOrSerious": [],
+    "pass": true,
+    "violations": [
+      {
+        "id": "page-has-heading-one",
+        "impact": "moderate",
+        "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+        "nodes": 1,
+        "sampleTargets": [
+          [
+            "html"
+          ]
+        ]
+      }
+    ],
+    "incomplete": [
+      {
+        "id": "color-contrast",
+        "impact": "serious",
+        "nodes": 170
+      }
+    ],
+    "errors": []
+  }
+}

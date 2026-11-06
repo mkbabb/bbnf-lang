@@ -1,0 +1,68 @@
+{
+    "name": "@mkbabb/latex-paper",
+    "version": "0.2.1",
+    "type": "module",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./transform": {
+            "types": "./dist/transform.d.ts",
+            "import": "./dist/transform.js"
+        },
+        "./vite": {
+            "types": "./dist/vite.d.ts",
+            "import": "./dist/vite.js"
+        },
+        "./vue": {
+            "types": "./dist/vue/index.d.ts",
+            "import": "./dist/vue.js"
+        },
+        "./theme": "./src/vue/theme.css"
+    },
+    "files": [
+        "dist",
+        "grammar",
+        "src/vue/theme.css"
+    ],
+    "scripts": {
+        "build": "tsup && vue-tsc -p tsconfig.vue.json",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:coverage": "vitest run --coverage",
+        "prepare": "npm run build"
+    },
+    "dependencies": {
+        "@mkbabb/bbnf-lang": "^0.1.1",
+        "@mkbabb/parse-that": "^0.7.1",
+        "highlight.js": "^11.11.1"
+    },
+    "peerDependencies": {
+        "katex": "^0.16",
+        "vite": "^6.0 || ^7.0",
+        "vue": "^3.5"
+    },
+    "peerDependenciesMeta": {
+        "katex": {
+            "optional": true
+        },
+        "vite": {
+            "optional": true
+        },
+        "vue": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@types/node": "^25.3.5",
+        "esbuild-plugin-vue3": "^0.5.1",
+        "katex": "^0.16",
+        "tsup": "^8.0",
+        "typescript": "^5.8",
+        "vite": "^7.0",
+        "vitest": "^3.0",
+        "vue": "^3.5",
+        "vue-tsc": "^3.2.5"
+    }
+}

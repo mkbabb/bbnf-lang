@@ -1,0 +1,30 @@
+loadavg at start: 22:56  up  8:51, 1 user, load averages: 4.55 5.56 6.41
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/crates/core)` was not used in the crate graph
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/ser)` was not used in the crate graph
+warning: patch `csp-solver v0.6.0 (/Users/mkbabb/Programming/csc411/CSC411_HW2_ProgrammingQuestion/csp-solver)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling parse_that v0.4.0 (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/rust/parse_that)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.23s
+     Running tests/grammar_driven_regex.rs (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/target/debug/deps/grammar_driven_regex-3db2d8d196c7604c)
+
+running 1 test
+
+===== GRAMMAR-DRIVEN REGEX PARITY ORACLE =====
+corpus                : 56 patterns
+hand parser rejects   : 0
+generated rejects     : 0  (LOCK-7A bootstrap-parity gap)
+RAW    DFA-equivalent : 56/56  (both-parsed pairs)
+BRIDGE DFA-equivalent : 56/56  (both threaded through simplify_hir)
+raw divergences       : 0
+bridge divergences    : 0
+==============================================
+
+test grammar_driven_regex_parity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+loadavg at end: 22:57  up  8:51, 1 user, load averages: 4.33 5.40 6.31

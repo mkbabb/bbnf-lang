@@ -295,7 +295,6 @@ fn test_type_inference_span_compression() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -352,7 +351,6 @@ fn test_type_inference_seq_mixed_no_compression() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -411,7 +409,6 @@ fn test_type_inference_alt_join_same() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -463,7 +460,6 @@ fn test_type_inference_alt_join_different() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -506,7 +502,6 @@ fn test_type_inference_map_override() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -586,7 +581,6 @@ fn test_type_inference_recursive_cycle() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -836,7 +830,6 @@ fn test_type_inference_vec_wrapping() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -920,7 +913,6 @@ fn test_type_inference_complex_pipeline() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 

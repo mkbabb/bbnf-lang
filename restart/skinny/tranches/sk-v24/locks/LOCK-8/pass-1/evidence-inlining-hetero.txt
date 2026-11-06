@@ -1,0 +1,14 @@
+sanity general5 isError=false value=["a","xx","5","b"," "]
+sanity arity3  isError=false value=["a","xx","5"]
+>>> OPTIMIZE fusedGeneralHetero
+Inlining {<SharedFunctionInfo ok>} into {<SharedFunctionInfo fusedGeneralHetero>}
+Inlining {<SharedFunctionInfo unsafeSetValue>} into {<SharedFunctionInfo fusedGeneralHetero>}
+>>> OPTIMIZE fusedArity3Hetero
+Inlining {<SharedFunctionInfo ok>} into {<SharedFunctionInfo fusedArity3Hetero>}
+Inlining {<SharedFunctionInfo unsafeSetValue>} into {<SharedFunctionInfo fusedArity3Hetero>}
+Inlining {<SharedFunctionInfo stringParser>} into {<SharedFunctionInfo fusedArity3Hetero>}
+Inlining {<SharedFunctionInfo unsafeSetValue>} into {<SharedFunctionInfo fusedArity3Hetero>}
+Inlining {<SharedFunctionInfo stringParser>} into {<SharedFunctionInfo fusedArity3Hetero>}
+Inlining {<SharedFunctionInfo unsafeSetValue>} into {<SharedFunctionInfo fusedArity3Hetero>}
+Inlining {<SharedFunctionInfo regexParser>} into {<SharedFunctionInfo fusedArity3Hetero>}
+Inlining {<SharedFunctionInfo unsafeSetValue>} into {<SharedFunctionInfo fusedArity3Hetero>}

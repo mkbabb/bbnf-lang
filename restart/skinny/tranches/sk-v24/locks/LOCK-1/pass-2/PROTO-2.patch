@@ -1,0 +1,612 @@
+diff --git a/crates/core/src/backend/rust/emitter/path_plan.rs b/crates/core/src/backend/rust/emitter/path_plan.rs
+index 951c72baf..9dba55cbb 100644
+--- a/crates/core/src/backend/rust/emitter/path_plan.rs
++++ b/crates/core/src/backend/rust/emitter/path_plan.rs
+@@ -135,7 +135,9 @@ fn rows_for_layout(layout: &StructLayout) -> Vec<PlanRow> {
+     let mut rows = Vec::new();
+ 
+     match layout.kind {
+-        LayoutKind::Struct => {
++        // `Row` is a fielded aggregate (key→value pairs); it plans its
++        // path rows exactly as a `Struct` does.
++        LayoutKind::Struct | LayoutKind::Row => {
+             for field in layout.fields() {
+                 rows.extend(rows_for_struct_field(layout.rule_id, field));
+             }
+diff --git a/crates/core/src/backend/rust/emitter/registry_emit.rs b/crates/core/src/backend/rust/emitter/registry_emit.rs
+index f3bd66b17..c56f46c94 100644
+--- a/crates/core/src/backend/rust/emitter/registry_emit.rs
++++ b/crates/core/src/backend/rust/emitter/registry_emit.rs
+@@ -114,6 +114,7 @@ fn emit_layout_kind(kind: LayoutKind) -> TokenStream {
+         LayoutKind::TaggedEnum => format_ident!("TaggedEnum"),
+         LayoutKind::UntaggedEnum => format_ident!("UntaggedEnum"),
+         LayoutKind::NewtypeWrapper => format_ident!("NewtypeWrapper"),
++        LayoutKind::Row => format_ident!("Row"),
+     };
+     quote! { ::bbnf_ir::registry::LayoutKind::#variant }
+ }
+@@ -184,6 +185,12 @@ fn emit_type_desc(td: &TypeDesc) -> TokenStream {
+                 ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(#inner_ts))
+             }
+         }
++        TypeDesc::Row(inner) => {
++            let inner_ts = emit_type_desc(inner);
++            quote! {
++                ::bbnf_ir::TypeDesc::Row(::std::boxed::Box::new(#inner_ts))
++            }
++        }
+         TypeDesc::Tuple(items) => {
+             let item_ts: Vec<TokenStream> = items.iter().map(emit_type_desc).collect();
+             quote! {
+diff --git a/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs b/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
+index 79f8b6093..999e85d1d 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
+@@ -181,6 +181,9 @@ fn quote_layout_kind(kind: LayoutKind) -> TokenStream {
+         LayoutKind::NewtypeWrapper => {
+             quote! { ::bbnf_ir::registry::LayoutKind::NewtypeWrapper }
+         }
++        LayoutKind::Row => {
++            quote! { ::bbnf_ir::registry::LayoutKind::Row }
++        }
+     }
+ }
+ 
+diff --git a/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs b/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs
+index 4ae78f412..7d7173a1b 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs
+@@ -112,6 +112,9 @@ fn quote_layout_kind(kind: LayoutKind) -> TokenStream {
+         LayoutKind::NewtypeWrapper => {
+             quote! { ::bbnf_ir::registry::LayoutKind::NewtypeWrapper }
+         }
++        LayoutKind::Row => {
++            quote! { ::bbnf_ir::registry::LayoutKind::Row }
++        }
+     }
+ }
+ 
+diff --git a/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs b/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs
+index 760267c64..ab1613e70 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs
+@@ -69,6 +69,9 @@ fn quote_layout_kind(kind: LayoutKind) -> TokenStream {
+         LayoutKind::NewtypeWrapper => {
+             quote! { ::bbnf_ir::registry::LayoutKind::NewtypeWrapper }
+         }
++        LayoutKind::Row => {
++            quote! { ::bbnf_ir::registry::LayoutKind::Row }
++        }
+     }
+ }
+ 
+diff --git a/crates/core/src/backend/rust/ir_types.rs b/crates/core/src/backend/rust/ir_types.rs
+index a7cfefbd7..349e3e500 100644
+--- a/crates/core/src/backend/rust/ir_types.rs
++++ b/crates/core/src/backend/rust/ir_types.rs
+@@ -347,6 +347,14 @@ fn type_desc_to_syn_raw(
+             boxed_enum_type.clone()
+         }
+         TypeDesc::Enum => enum_type.clone(),
++        TypeDesc::Row(inner) => {
++            // Engine-agnostic record (key→value). The Rust backend
++            // resolves `Row` to its native keyed shape — a span-keyed
++            // association list. `Row` is produced by a pure-IR structural
++            // analysis; no runtime dispatch consults it.
++            let inner_ty = type_desc_to_syn_raw(inner, enum_type, boxed_enum_type, ir, use_slices);
++            parse_quote!(Vec<(::parse_that::Span<'a>, #inner_ty)>)
++        }
+         TypeDesc::Named(sid) => {
+             let type_str = ir.get_string(*sid);
+             syn::parse_str(type_str)
+diff --git a/crates/core/src/backend/ts/projection.rs b/crates/core/src/backend/ts/projection.rs
+index 92f648a2d..6e2cc9ce8 100644
+--- a/crates/core/src/backend/ts/projection.rs
++++ b/crates/core/src/backend/ts/projection.rs
+@@ -27,6 +27,9 @@ pub fn type_desc_to_ts(td: &TypeDesc, enum_name: &str, ir: &GrammarIR) -> String
+         | TypeDesc::U64 => "number".to_string(),
+         TypeDesc::Option(inner) => format!("{} | null", type_desc_to_ts(inner, enum_name, ir)),
+         TypeDesc::Vec(inner) => format!("{}[]", type_desc_to_ts(inner, enum_name, ir)),
++        // Engine-agnostic record (key→value). TS resolves `Row` to its
++        // native keyed object type.
++        TypeDesc::Row(inner) => format!("Record<string, {}>", type_desc_to_ts(inner, enum_name, ir)),
+         TypeDesc::Tuple(elems) => {
+             let parts: Vec<_> = elems
+                 .iter()
+diff --git a/crates/core/src/grammar/schema/build.rs b/crates/core/src/grammar/schema/build.rs
+index 216f50584..18280b66e 100644
+--- a/crates/core/src/grammar/schema/build.rs
++++ b/crates/core/src/grammar/schema/build.rs
+@@ -321,7 +321,7 @@ fn derive_field_role(
+             FieldRole::PrimaryChild
+         }
+         TypeDesc::Option(_) => FieldRole::OptionalChild,
+-        TypeDesc::Vec(_) => FieldRole::RepeatedChildren,
++        TypeDesc::Vec(_) | TypeDesc::Row(_) => FieldRole::RepeatedChildren,
+         TypeDesc::Tuple(_) => FieldRole::PrimaryChild,
+         TypeDesc::F64
+         | TypeDesc::Bool
+diff --git a/crates/core/tests/proto2_row_shape.rs b/crates/core/tests/proto2_row_shape.rs
+new file mode 100644
+index 000000000..a40c35f32
+--- /dev/null
++++ b/crates/core/tests/proto2_row_shape.rs
+@@ -0,0 +1,133 @@
++//! LOCK-1 pass-2 probe 2 (Open R): row-inference vs hint.
++//!
++//! Question: can record-vs-list be DERIVED by inference from body
++//! structure alone — no `{`/`[` byte match, no per-grammar name gate —
++//! closing the masked fallback?
++//!
++//! Method: compile a bare JSON grammar (zero `->`) and a typed variant
++//! that adds a single `->`-declared key role on the pair's key leg. Run
++//! the engine-neutral `TypeShapeAnalysis` classifier on `object` and
++//! `array` in each. The classifier reads only IR body shape + `ir.types`;
++//! it never inspects a delimiter byte and never gates on a rule name.
++
++use bbnf::backend::driver::analysis::TypeAnalysis;
++use bbnf::pipeline::{compile_grammar, PipelineOptions};
++use bbnf_ir::passes::types::constraint::shape::{classify, derive_collection_type, ShapeClass};
++use bbnf_ir::{GrammarIR, TypeDesc};
++
++// Bare JSON structure — ZERO `->`. `value` is last so it is the entry
++// rule (entry = rules.last()), keeping object/array/pair reachable.
++const BARE: &str = r#"
++string = /"[^"]*"/ ;
++number = /-?[0-9]+/ ;
++comma = "," ?w ;
++colon = ":" ?w ;
++object = "{" >> (( pair << comma ? ) *)?w << "}" ;
++array = "[" >> (( value << comma ? ) *)?w << "]" ;
++pair = string, colon >> value ;
++value = object | array | string | number ;
++"#;
++
++// Typed variant — identical structure to BARE, plus a single
++// `->`-declared key role on the pair's key leg. The role is declared
++// rule-level (`keystr = /.../ -> key`, the canonical `regex -> Type`
++// newtype shape, mirroring `number = /.../ -> f64`) rather than inline
++// `(string -> key)`, which trips the typed-materialization invariant
++// (an arrow applied to a Ref inside a Seq finds no value_expr head).
++// The declared fact is identical: an engine-agnostic `TypeDesc::Named("key")`
++// role on the pair's leading leg. That is the ONLY delta from BARE.
++const TYPED: &str = r#"
++string = /"[^"]*"/ ;
++number = /-?[0-9]+/ ;
++comma = "," ?w ;
++colon = ":" ?w ;
++keystr = /"[^"]*"/ -> input : key ;
++object = "{" >> (( pair << comma ? ) *)?w << "}" ;
++array = "[" >> (( value << comma ? ) *)?w << "]" ;
++pair = keystr, colon >> value ;
++value = object | array | string | number ;
++"#;
++
++fn rule_id(ir: &GrammarIR, name: &str) -> u32 {
++    ir.rules
++        .iter()
++        .find(|r| ir.get_string(r.name) == name)
++        .unwrap_or_else(|| panic!("rule `{name}` not found"))
++        .id
++}
++
++fn dump(tag: &str, ir: &GrammarIR) {
++    eprintln!("── {tag} ──────────────────────────────");
++    eprintln!("rules: {}", ir.rules.len());
++    for r in &ir.rules {
++        let ty = ir
++            .types
++            .iter()
++            .find(|(id, _)| *id == r.id)
++            .map(|(_, t)| format!("{t:?}"))
++            .unwrap_or_else(|| "<none>".into());
++        eprintln!("  {:<8} : {}", ir.get_string(r.name), ty);
++    }
++    for name in ["object", "array"] {
++        let id = rule_id(ir, name);
++        eprintln!("  class({name}) = {:?}", classify(ir, id));
++    }
++}
++
++#[test]
++fn proto2_row_inference_vs_hint() {
++    let opts = PipelineOptions::default();
++
++    let bare = compile_grammar(BARE, &opts).expect("compile bare");
++    dump("BARE (zero ->)", &bare);
++    let typed = compile_grammar(TYPED, &opts).expect("compile typed");
++    dump("TYPED (+ keystr -> key)", &typed);
++
++    // ── Typed variant: structure + declared key role → Row / List ──────
++    let t_obj = rule_id(&typed, "object");
++    let t_arr = rule_id(&typed, "array");
++    let c_obj = classify(&typed, t_obj);
++    let c_arr = classify(&typed, t_arr);
++    eprintln!("TYPED: class(object)={c_obj:?} class(array)={c_arr:?}");
++    assert_eq!(c_obj, ShapeClass::Row, "typed object must derive Row");
++    assert_eq!(c_arr, ShapeClass::List, "typed array must derive List");
++
++    // ── Bare variant: no declared key role → object refuses, not guesses ─
++    let b_obj = rule_id(&bare, "object");
++    let b_arr = rule_id(&bare, "array");
++    let cb_obj = classify(&bare, b_obj);
++    let cb_arr = classify(&bare, b_arr);
++    eprintln!("BARE: class(object)={cb_obj:?} class(array)={cb_arr:?}");
++    assert_eq!(
++        cb_obj,
++        ShapeClass::Unknown,
++        "bare object must honestly refuse (no key role, no brace-guess)"
++    );
++    // array's element is a bare value even in the bare grammar — a
++    // list is unambiguous without any key role.
++    assert_eq!(cb_arr, ShapeClass::List, "bare array is an unambiguous list");
++
++    // ── The derived Row lowers through TypeAnalysis::from_ir ───────────
++    let row_ty = derive_collection_type(&typed, t_obj).expect("object derives a collection type");
++    assert!(
++        matches!(row_ty, TypeDesc::Row(_)),
++        "object lowers to TypeDesc::Row, got {row_ty:?}"
++    );
++    let mut lowered = typed.clone();
++    // Write the structurally-derived Row into the rule's type, then let
++    // the backend snapshot clone it — proving Row survives from_ir with
++    // no runtime/dispatch consultation.
++    if let Some(slot) = lowered.types.iter_mut().find(|(id, _)| *id == t_obj) {
++        slot.1 = row_ty.clone();
++    } else {
++        lowered.types.push((t_obj, row_ty.clone()));
++    }
++    let analysis = TypeAnalysis::from_ir(&lowered);
++    let carried = analysis
++        .rule_types
++        .iter()
++        .any(|(id, t)| *id == t_obj && matches!(t, TypeDesc::Row(_)));
++    assert!(carried, "TypeDesc::Row must survive TypeAnalysis::from_ir");
++
++    eprintln!("VERDICT: object=Row array=List via structure + a `->`-declared key role; bare object refuses. NO per-grammar name hint, NO brace byte.");
++}
+diff --git a/crates/ir/src/passes/types/constraint/mod.rs b/crates/ir/src/passes/types/constraint/mod.rs
+index e7aaab73b..d64f487b2 100644
+--- a/crates/ir/src/passes/types/constraint/mod.rs
++++ b/crates/ir/src/passes/types/constraint/mod.rs
+@@ -31,6 +31,7 @@ pub mod operators;
+ pub mod reference;
+ pub mod revise;
+ pub mod seq;
++pub mod shape;
+ 
+ pub use csp_solver::constraint::VarId as TypeVarId;
+ 
+@@ -40,3 +41,4 @@ pub use grounds::{EqualConstraint, GroundConstraint};
+ pub use operators::{MapConstraint, OptionalConstraint, ProjectConstraint, RepeatConstraint};
+ pub use reference::RefConstraint;
+ pub use seq::{SeqChildKind, SeqConstraint};
++pub use shape::{classify, derive_collection_type, ShapeClass};
+diff --git a/crates/ir/src/passes/types/constraint/shape.rs b/crates/ir/src/passes/types/constraint/shape.rs
+new file mode 100644
+index 000000000..909d0aee3
+--- /dev/null
++++ b/crates/ir/src/passes/types/constraint/shape.rs
+@@ -0,0 +1,270 @@
++//! `TypeShapeAnalysis` — engine-neutral structural classifier for the
++//! record-vs-list axis.
++//!
++//! LOCK-1 pass-2 probe 2 (Open R). Answers: can a collection rule be
++//! classified as a **record** ([`ShapeClass::Row`]) or a **list**
++//! ([`ShapeClass::List`]) purely from the shape of its IR body and the
++//! types its own `->` annotations declare — with **no** delimiter-byte
++//! peek and **no** per-grammar rule-name gate?
++//!
++//! The classifier reads three facts, all engine-agnostic:
++//!
++//! 1. **A repetition spine** — a `Repeat { hi > 1 }` reachable from the
++//!    rule body (`X *`). A rule with no such spine is not a collection;
++//!    the analysis refuses ([`ShapeClass::Unknown`]).
++//! 2. **The repeated element's projected type** — resolved through the
++//!    element's `Ref` into `ir.types`. No byte of the element's literal
++//!    surface is ever inspected.
++//! 3. **A key role on the element** — a `->`-declared type fact. When the
++//!    repeated element carries a leg whose projected type is the reserved
++//!    engine-agnostic key role (`TypeDesc::Named("key")`), the collection
++//!    is a record. The role is declared in the grammar's own type
++//!    vocabulary; every backend resolves it to its native key type.
++//!
++//! The discriminator is therefore **structure + declared type**, never
++//! an open-brace-vs-open-bracket byte peek and never a `rule.name` gate.
++//! Where the declared key fact is absent (a bare grammar with a two-leg
++//! element and no `->`),
++//! the analysis honestly refuses rather than brace-guessing: a repeated
++//! two-tuple is indistinguishable from a record without the key role.
++
++use crate::types::{IrNode, RuleId, TypeDesc};
++use crate::GrammarIR;
++
++/// The reserved engine-agnostic type role marking a record key. A
++/// `->`-declared fact in the grammar's own type vocabulary — not a
++/// rule name, not a byte. Backends resolve it to their native key type
++/// (Rust `&str`/owned key, TS `string` index, WASM key span).
++pub const KEY_ROLE: &str = "key";
++
++/// Structural class derived for a collection rule's body.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub enum ShapeClass {
++    /// Record / associative map — the repeated element carries a
++    /// `->`-declared key role. Lowers to [`TypeDesc::Row`].
++    Row,
++    /// List — the repeated element is a bare single value. Lowers to
++    /// [`TypeDesc::Vec`].
++    List,
++    /// Refused. Either no repetition spine, or a repeated composite
++    /// element with no declared key role (a bare two-tuple that could be
++    /// a list-of-pairs just as well as a record). The analysis does not
++    /// brace-guess.
++    Unknown,
++}
++
++impl ShapeClass {
++    /// True for [`ShapeClass::Row`].
++    pub fn is_row(self) -> bool {
++        matches!(self, ShapeClass::Row)
++    }
++
++    /// True for [`ShapeClass::List`].
++    pub fn is_list(self) -> bool {
++        matches!(self, ShapeClass::List)
++    }
++}
++
++/// Classify a rule's body on the record-vs-list axis.
++///
++/// Reads only the IR body shape and `ir.types`; never a delimiter byte,
++/// never `rule.name`.
++pub fn classify(ir: &GrammarIR, rule_id: RuleId) -> ShapeClass {
++    let Some(rule) = ir.rules.iter().find(|r| r.id == rule_id) else {
++        return ShapeClass::Unknown;
++    };
++
++    // Fact 1: a repetition spine. No spine → not a collection.
++    let Some(spine_inner) = find_repeat_spine(&rule.body) else {
++        return ShapeClass::Unknown;
++    };
++
++    // The repeated element's semantic core, delimiter scaffolding
++    // (`Skip`/`Next`/`OptionalWhitespace`/`Map`/nested `Repeat`) stripped
++    // by *shape*, without reading any literal's bytes.
++    let element = element_core(spine_inner);
++    let element_rid = match element {
++        IrNode::Ref(target) => Some(*target),
++        _ => None,
++    };
++
++    // Fact 3: a declared key role reachable from the element → record.
++    //
++    // The element rule's *projected* tuple collapses referenced sub-rules
++    // to `BoxedEnum` (the Seq/Ref projection erases a `Named` role behind
++    // a `Ref`), so the key role is sought where it survives: on the
++    // element rule's own type AND on the types of the rules its body legs
++    // reference (`keystr : Named("key")`).
++    let has_key = match element_rid {
++        Some(rid) => rule_carries_key_role(ir, rid),
++        None => element_type(ir, element).is_some_and(|t| contains_key_role(ir, t)),
++    };
++    if has_key {
++        return ShapeClass::Row;
++    }
++
++    // Fact 2: the element's projected type. A composite element (a tuple
++    // of >= 2 legs) with no declared key role is ambiguous — a
++    // list-of-tuples reads identically — so refuse. A bare single value
++    // is an unambiguous list. No resolvable type → refuse.
++    let element_ty = element_rid
++        .and_then(|rid| rule_type(ir, rid))
++        .or_else(|| element_type(ir, element));
++    match element_ty {
++        Some(ty) if is_composite(ty) => ShapeClass::Unknown,
++        Some(_) => ShapeClass::List,
++        None => ShapeClass::Unknown,
++    }
++}
++
++/// True if a `->`-declared key role is reachable from a rule: on the
++/// rule's own projected type, or on the type of any rule its body legs
++/// reference (one level — the projection collapses referenced `Named`
++/// roles to `BoxedEnum`, so the role is recovered from the referent's
++/// own type, not the collapsed tuple).
++fn rule_carries_key_role(ir: &GrammarIR, rule_id: RuleId) -> bool {
++    if rule_type(ir, rule_id).is_some_and(|t| contains_key_role(ir, t)) {
++        return true;
++    }
++    let Some(rule) = ir.rules.iter().find(|r| r.id == rule_id) else {
++        return false;
++    };
++    let mut refs = Vec::new();
++    collect_refs(&rule.body, &mut refs);
++    refs.iter()
++        .any(|rid| rule_type(ir, *rid).is_some_and(|t| contains_key_role(ir, t)))
++}
++
++/// A rule's own projected type from `ir.types`.
++fn rule_type(ir: &GrammarIR, rule_id: RuleId) -> Option<&TypeDesc> {
++    ir.types.iter().find(|(id, _)| *id == rule_id).map(|(_, t)| t)
++}
++
++/// Collect every `Ref` target reachable in a body tree (this rule's tree
++/// only — never crosses into another rule). Reads Copy `RuleId`s; no
++/// borrow escapes, so `for_each_child` recursion is sound here.
++fn collect_refs(node: &IrNode, out: &mut Vec<RuleId>) {
++    if let IrNode::Ref(target) = node {
++        out.push(*target);
++    }
++    node.for_each_child(&mut |child| collect_refs(child, out));
++}
++
++/// Lower a classified rule to its engine-agnostic collection type.
++///
++/// - [`ShapeClass::Row`] → [`TypeDesc::Row`] over the element's value leg.
++/// - [`ShapeClass::List`] → [`TypeDesc::Vec`] over the element type.
++/// - [`ShapeClass::Unknown`] → `None` (the rule keeps its inferred type).
++pub fn derive_collection_type(ir: &GrammarIR, rule_id: RuleId) -> Option<TypeDesc> {
++    match classify(ir, rule_id) {
++        ShapeClass::Row => {
++            let value = row_value_type(ir, rule_id).unwrap_or(TypeDesc::Enum);
++            Some(TypeDesc::Row(Box::new(value)))
++        }
++        ShapeClass::List => {
++            let value = list_element_type(ir, rule_id).unwrap_or(TypeDesc::Enum);
++            Some(TypeDesc::Vec(Box::new(value)))
++        }
++        ShapeClass::Unknown => None,
++    }
++}
++
++// ── Structural walkers (shape only — never a literal byte) ───────────────
++
++/// Find the collection spine: the inner node of the first reachable
++/// `Repeat { hi > 1 }` (a `*` / `+`). Optional repeats (`?`, `hi == 1`)
++/// are skipped so a trailing `comma ?` never masquerades as the spine.
++fn find_repeat_spine(node: &IrNode) -> Option<&IrNode> {
++    match node {
++        IrNode::Repeat { inner, hi, .. } if *hi > 1 => Some(inner),
++        IrNode::Repeat { inner, .. }
++        | IrNode::Negate(inner)
++        | IrNode::OptionalWhitespace(inner)
++        | IrNode::Map { inner, .. } => find_repeat_spine(inner),
++        IrNode::Seq(children) => children.iter().find_map(find_repeat_spine),
++        IrNode::Alt(branches, _) => branches.iter().find_map(|b| find_repeat_spine(&b.node)),
++        IrNode::Skip(a, b) | IrNode::Next(a, b) | IrNode::Minus(a, b) => {
++            find_repeat_spine(a).or_else(|| find_repeat_spine(b))
++        }
++        IrNode::TokenDispatch {
++            token,
++            arms,
++            fallback,
++        } => find_repeat_spine(token)
++            .or_else(|| arms.iter().find_map(|arm| find_repeat_spine(&arm.continuation)))
++            .or_else(|| find_repeat_spine(fallback)),
++        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon | IrNode::Ref(_) => None,
++    }
++}
++
++/// Strip delimiter scaffolding from a repeated element down to its
++/// semantic core. `Skip(a, _)` keeps `a`; `Next(_, b)` keeps `b`;
++/// `OptionalWhitespace`/`Map`/nested `Repeat` unwrap. Stops at the first
++/// `Ref`/leaf/`Seq`/`Alt`. Purely shape-directed.
++fn element_core(node: &IrNode) -> &IrNode {
++    match node {
++        IrNode::Skip(a, _) => element_core(a),
++        IrNode::Next(_, b) => element_core(b),
++        IrNode::OptionalWhitespace(inner)
++        | IrNode::Map { inner, .. }
++        | IrNode::Repeat { inner, .. } => element_core(inner),
++        other => other,
++    }
++}
++
++/// The element's projected type, resolved through a `Ref` into
++/// `ir.types`. A non-`Ref` element has no rule-level type to consult.
++fn element_type<'a>(ir: &'a GrammarIR, element: &IrNode) -> Option<&'a TypeDesc> {
++    match element {
++        IrNode::Ref(target) => ir.types.iter().find(|(id, _)| id == target).map(|(_, t)| t),
++        _ => None,
++    }
++}
++
++// ── Type-level predicates (declared facts — never a rule name) ───────────
++
++/// True if a declared key role (`Named("key")`) appears anywhere in the
++/// type, at any nesting depth.
++fn contains_key_role(ir: &GrammarIR, ty: &TypeDesc) -> bool {
++    match ty {
++        TypeDesc::Named(sid) => ir.get_string(*sid) == KEY_ROLE,
++        TypeDesc::Option(inner) | TypeDesc::Vec(inner) | TypeDesc::Row(inner) => {
++            contains_key_role(ir, inner)
++        }
++        TypeDesc::Tuple(parts) | TypeDesc::HeterogeneousAltJoin(parts) => {
++            parts.iter().any(|p| contains_key_role(ir, p))
++        }
++        _ => false,
++    }
++}
++
++/// True if the type is a composite element (a tuple of >= 2 legs) — a
++/// key/value-shaped pair whose record-ness cannot be decided without a
++/// declared key role.
++fn is_composite(ty: &TypeDesc) -> bool {
++    matches!(ty, TypeDesc::Tuple(parts) if parts.len() >= 2)
++}
++
++/// The value leg of a record's key→value element: the last tuple leg
++/// (the leg following the key). Falls back to the whole element type.
++fn row_value_type(ir: &GrammarIR, rule_id: RuleId) -> Option<TypeDesc> {
++    let element = collection_element(ir, rule_id)?;
++    match element_type(ir, element)? {
++        TypeDesc::Tuple(parts) => parts.last().cloned(),
++        other => Some(other.clone()),
++    }
++}
++
++/// The element type of a list.
++fn list_element_type(ir: &GrammarIR, rule_id: RuleId) -> Option<TypeDesc> {
++    let element = collection_element(ir, rule_id)?;
++    element_type(ir, element).cloned()
++}
++
++/// The semantic core of a rule's repeated element, or `None` if the rule
++/// has no repetition spine.
++fn collection_element<'a>(ir: &'a GrammarIR, rule_id: RuleId) -> Option<&'a IrNode> {
++    let rule = ir.rules.iter().find(|r| r.id == rule_id)?;
++    let spine = find_repeat_spine(&rule.body)?;
++    Some(element_core(spine))
++}
+diff --git a/crates/ir/src/passes/types/mod.rs b/crates/ir/src/passes/types/mod.rs
+index c2d84396b..3f9b76155 100644
+--- a/crates/ir/src/passes/types/mod.rs
++++ b/crates/ir/src/passes/types/mod.rs
+@@ -606,7 +606,7 @@ fn intern_recursive(ty: &TypeDesc, interner: &mut TypeDescInterner) {
+     // Intern the outermost first so the id order reflects the walk.
+     interner.intern(ty.clone());
+     match ty {
+-        TypeDesc::Option(inner) | TypeDesc::Vec(inner) => {
++        TypeDesc::Option(inner) | TypeDesc::Vec(inner) | TypeDesc::Row(inner) => {
+             intern_recursive(inner, interner);
+         }
+         TypeDesc::Tuple(elems) => {
+diff --git a/crates/ir/src/registry/struct.rs b/crates/ir/src/registry/struct.rs
+index dc0c50b9c..064e43b2d 100644
+--- a/crates/ir/src/registry/struct.rs
++++ b/crates/ir/src/registry/struct.rs
+@@ -69,6 +69,14 @@ pub enum LayoutKind {
+     /// Newtype wrapper around a single typed leaf — `Map(Regex,
+     /// -> Primitive)` is the canonical case. Always exactly one field.
+     NewtypeWrapper,
++    /// Record / associative map — a collection whose repeated element is
++    /// a key→value pair (the element carries a key-typed leg). The
++    /// structural dual of the list projection (a `Repeat` whose element
++    /// is a bare value → `Vec<T>`). Projects the rule type to
++    /// [`TypeDesc::Row`]. Derived structurally by `TypeShapeAnalysis`
++    /// from the presence of a `->`-declared key leg on the repeated
++    /// element — never from a `{`-byte peek or a rule-name gate.
++    Row,
+ }
+ 
+ /// Provenance tag for a `StructField`.
+diff --git a/crates/ir/src/types/type_desc.rs b/crates/ir/src/types/type_desc.rs
+index 8dd7e3b49..e76bf5c26 100644
+--- a/crates/ir/src/types/type_desc.rs
++++ b/crates/ir/src/types/type_desc.rs
+@@ -37,6 +37,15 @@ pub enum TypeDesc {
+     Option(Box<TypeDesc>),
+     /// A vector of values.
+     Vec(Box<TypeDesc>),
++    /// A record / associative map: a string-keyed collection of a
++    /// homogeneous value type. The structural dual of [`TypeDesc::Vec`]:
++    /// `Vec` is index → T, `Row` is key → T. Backend-agnostic — Rust
++    /// resolves to a keyed map/struct, TS to an object type, WASM to a
++    /// keyed tape span. Derived structurally (never brace-guessed) by
++    /// `passes::types::constraint::shape::TypeShapeAnalysis` when a
++    /// collection rule's repeated element carries a key-typed leg (a
++    /// `->`-declared role, not a per-grammar name gate).
++    Row(Box<TypeDesc>),
+     /// A fixed-size tuple.
+     Tuple(Vec<TypeDesc>),
+     /// A boxed enum variant: `Box<EnumName<'a>>`.

@@ -1,0 +1,139 @@
+diff --git a/crates/ir/examples/prove2_branch.rs b/crates/ir/examples/prove2_branch.rs
+new file mode 100644
+index 000000000..a344dfc62
+--- /dev/null
++++ b/crates/ir/examples/prove2_branch.rs
+@@ -0,0 +1,133 @@
++//! LOCK-2 / PROVE-2-BRANCH — Part A: extraction divergence on a real Alt.
++//!
++//! Question (master-gate conjunct 1): does a rewrite that manufactures a
++//! *real* e-class alternative — the dispatch-table form of an `Alt` kept
++//! ALONGSIDE the sequential-trial form (not collapsed to one canonical
++//! form) — cause `Extractor::best_node` to pick DIFFERENTLY under two
++//! weight vectors?
++//!
++//! This exercises the production machinery verbatim: the real
++//! `GrammarENode::Alt(children, Option<AltDispatch>)` e-node, the real
++//! `GrammarCostModel` (which prices the dispatch form via the shared
++//! `CostWeights::dispatch_bonus`), and the real greedy bottom-up
++//! `egraph::Extractor`.
++//!
++//! The Alt used is the JSON `value` alternation — 7 branches keyed by
++//! disjoint leading bytes `{  [  "  -/digit  t  f  n` — the canonical
++//! fleet-grammar Alt that the tree prices but no rewrite exercises.
++//!
++//! Run:  cargo run -p bbnf-ir --example prove2_branch
++
++use bbnf_ir::egraph::{GrammarCostModel, GrammarENode};
++use bbnf_ir::AltDispatch;
++use egraph::{EGraph, Extractor, Id, NoAnalysis};
++
++/// Build the 128-entry ASCII dispatch table for the JSON `value` Alt.
++/// `table[byte]` = branch index, 255 = no direct match (→ fallback).
++fn json_value_dispatch() -> AltDispatch {
++    let mut table = vec![255u8; 128];
++    table[b'{' as usize] = 0; // object
++    table[b'[' as usize] = 1; // array
++    table[b'"' as usize] = 2; // string
++    table[b'-' as usize] = 3; // number
++    for d in b'0'..=b'9' {
++        table[d as usize] = 3;
++    }
++    table[b't' as usize] = 4; // true
++    table[b'f' as usize] = 5; // false
++    table[b'n' as usize] = 6; // null
++    AltDispatch {
++        table,
++        fallback_idx: None,
++    }
++}
++
++fn is_table(n: &GrammarENode) -> bool {
++    matches!(n, GrammarENode::Alt(_, Some(_)))
++}
++
++fn form_name(n: &GrammarENode) -> &'static str {
++    match n {
++        GrammarENode::Alt(_, Some(_)) => "dispatch-table  Alt(_, Some(AltDispatch))",
++        GrammarENode::Alt(_, None) => "sequential-trial Alt(_, None)",
++        _ => "??? (not an Alt — e-class collapsed to a non-Alt canonical form)",
++    }
++}
++
++fn main() {
++    // ── Build the e-graph with the JSON `value` Alt as 7 leaf branches.
++    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::default();
++
++    // 7 distinct branch leaves (object/array/string/number/true/false/null).
++    // Distinct `Ref(RuleId)` leaves — content is immaterial; only that the
++    // two Alt forms share the *same* children so the cost delta isolates
++    // to the dispatch flag.
++    let children: Vec<Id> = (0u32..7).map(|r| eg.add(GrammarENode::Ref(r))).collect();
++    let children: Box<[Id]> = children.into_boxed_slice();
++
++    // Sequential-trial form: Alt(children, None).
++    let seq_id = eg.add(GrammarENode::Alt(children.clone(), None));
++
++    // THE REWRITE (manufacture-dispatch-alternative): the dispatch-table
++    // form of the SAME Alt, unioned into the SAME e-class. Both forms
++    // survive in the class — we deliberately do NOT collapse to one.
++    let table_id = eg.add(GrammarENode::Alt(children.clone(), Some(json_value_dispatch())));
++
++    assert_ne!(
++        seq_id, table_id,
++        "the two Alt forms must hashcons to distinct e-nodes"
++    );
++
++    eg.union(seq_id, table_id);
++    eg.rebuild();
++    let cls = eg.find(seq_id);
++
++    let n_forms = eg
++        .class(cls)
++        .iter()
++        .filter(|n| matches!(n, GrammarENode::Alt(..)))
++        .count();
++    println!("e-class {cls:?} holds {n_forms} distinct Alt candidate forms (expect 2)");
++    assert_eq!(n_forms, 2, "e-class must hold BOTH forms — no collapse");
++
++    // ── W1: favor table (dispatch_bonus = -2.0, the calibrated default).
++    let mut cost_w1 = GrammarCostModel::default();
++    cost_w1.weights.dispatch_bonus = -2.0;
++
++    // ── W2: favor sequential (dispatch_bonus = +2.0, sign-flipped).
++    let mut cost_w2 = GrammarCostModel::default();
++    cost_w2.weights.dispatch_bonus = 2.0;
++
++    let ex1 = Extractor::new(&eg, &cost_w1);
++    let ex2 = Extractor::new(&eg, &cost_w2);
++
++    let pick1 = ex1.best_node(cls).expect("W1 extraction").clone();
++    let pick2 = ex2.best_node(cls).expect("W2 extraction").clone();
++    let cost1 = ex1.best_cost(cls).expect("W1 cost");
++    let cost2 = ex2.best_cost(cls).expect("W2 cost");
++
++    println!("\nW1 (dispatch_bonus=-2.0, favor table):");
++    println!("   picked = {}", form_name(&pick1));
++    println!("   best_cost = {cost1:.3}");
++    println!("W2 (dispatch_bonus=+2.0, favor sequential):");
++    println!("   picked = {}", form_name(&pick2));
++    println!("   best_cost = {cost2:.3}");
++
++    let diverged = is_table(&pick1) != is_table(&pick2);
++    println!("\n── VERDICT (Part A) ──");
++    println!("picks differ under W1 vs W2: {diverged}");
++    println!(
++        "W1 chose table: {}   W2 chose table: {}",
++        is_table(&pick1),
++        is_table(&pick2)
++    );
++    assert!(
++        diverged,
++        "FAIL: Extractor picked the SAME form under both weight vectors"
++    );
++    assert!(
++        is_table(&pick1) && !is_table(&pick2),
++        "expected W1=table, W2=seq"
++    );
++    println!("PASS: two weight vectors extract DIFFERENT nodes from the same real Alt e-class.");
++}

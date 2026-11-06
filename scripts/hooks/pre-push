@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# bbnf-lang pre-push hook — csp-solver vendor-sync gate.
+#
+# Runs BOTH stages of scripts/sync-csp-solver-vendor.sh before any push:
+#   --check   the vendored crates/csp-solver/{src,data} still matches its pinned
+#             csc411 revision byte-for-byte (no hand-edits, no silent drift), and
+#   --verify  the pinned code still compiles every consumer — root {bbnf, bbnf-ir,
+#             egraph} ∪ skinny {passes} ∪ vendored csp-solver × {default, py} — and
+#             the vendored lattice suite passes.
+#
+# This is the enforcement that --update's printed reminders used only to advise
+# (constraint-trait-bound-spike §8.3: advisory → enforcement).
+#
+# Skips during rebase/merge so half-applied trees don't block conflict resolution.
+#
+# NOTE: bbnf-lang's origin is under a standing never-push order. This hook is a
+# defense-in-depth gate for the day that order is lifted — it is not an
+# endorsement of pushing.
+set -euo pipefail
+
+if [ -f .git/MERGE_HEAD ] || [ -f .git/REBASE_HEAD ] || [ -d .git/rebase-merge ] || [ -d .git/rebase-apply ]; then
+    exit 0
+fi
+
+repo_root="$(git rev-parse --show-toplevel)"
+gate="${repo_root}/scripts/sync-csp-solver-vendor.sh"
+
+if [ ! -x "${gate}" ]; then
+    echo "error: ${gate} missing or not executable — run scripts/install-hooks.sh?" >&2
+    exit 1
+fi
+
+echo "pre-push: csp-solver vendor-sync --check …"
+"${gate}" --check
+echo "pre-push: csp-solver vendor-sync --verify …"
+"${gate}" --verify
+echo "pre-push: csp-solver vendor-sync gate green."

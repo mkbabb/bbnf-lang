@@ -1,0 +1,23 @@
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/algebra_superset.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/algebra_superset-095c9b98cbcfca18)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/algebra_union.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/algebra_union-3691a9fc4226f5dd)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/egraph_rules_flatten.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/egraph_rules_flatten-82ff252a5d3eefaa)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/egraph_rules_redundant.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/egraph_rules_redundant-3eb22fa12a680580)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/egraph_rules_repetition.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/egraph_rules_repetition-b55f07815b3b26af)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/egraph_rules_superset.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/egraph_rules_superset-761277ccbc99a8f6)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/egraph_rules_union.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/egraph_rules_union-09b212c748b2b560)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/egraph_simplify.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/egraph_simplify-e5c143acbccdbc05)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/info.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/info-c6589968c3ec5dca)
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/path_lexer.rs (/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/target/debug/deps/path_lexer-76096dacc2b0a560)
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+   Doc-tests bbnf_regex
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

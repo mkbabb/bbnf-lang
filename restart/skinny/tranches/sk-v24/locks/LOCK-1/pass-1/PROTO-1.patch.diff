@@ -1,0 +1,438 @@
+diff --git a/crates/core/tests/lock1_residue_census.rs b/crates/core/tests/lock1_residue_census.rs
+new file mode 100644
+index 000000000..c47d3988e
+--- /dev/null
++++ b/crates/core/tests/lock1_residue_census.rs
+@@ -0,0 +1,432 @@
++//! SK-V24 LOCK-1 pass-1 probe 1 — judgment-mix census.
++//!
++//! Question: is the non-equality residue of the LIVE root CSP type pass
++//! rich enough to justify any solver beyond an ordered defaulting
++//! lattice? Adjudicates the engine fork 1A (defaulting lattice) vs
++//! 1B/1D (one-store / e-graph).
++//!
++//! Method: for each corpus grammar we compile through the live pipeline
++//! (which runs `project_types`), re-run the identical constraint
++//! generation (`generate_constraints`) + `propagate` that
++//! `project_types` runs, then walk every rule body classifying each
++//! constraint EXACTLY as `generate.rs` emits it — one tag per
++//! propagator construction. Alt joins are split homogeneous vs
++//! heterogeneous by the Alt node's *solved* `TypeDesc`: the solver
++//! lifts a genuinely-disagreeing join to
++//! `TypeDesc::HeterogeneousAltJoin(..)`, so the solved type is the
++//! ground truth for "genuinely multi-valued residue".
++//!
++//! Run: `cargo test -p bbnf --test lock1_residue_census census -- --nocapture`
++
++use std::collections::HashMap;
++use std::path::PathBuf;
++
++use bbnf::pipeline::{
++    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
++};
++use bbnf_ir::dag::NodeId;
++use bbnf_ir::passes::types::generate::generate_constraints;
++use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, TypeDesc};
++
++fn grammar_path(rel: &str) -> PathBuf {
++    let manifest = env!("CARGO_MANIFEST_DIR");
++    PathBuf::from(manifest).join("../../grammar").join(rel)
++}
++
++fn compile_ir(rel: &str) -> Result<GrammarIR, String> {
++    let entry = grammar_path(rel);
++    let request = CompileRequest {
++        options: PipelineOptions::default(),
++        target: CompileTarget::Vm,
++    };
++    match compile_paths_request(std::slice::from_ref(&entry), &request) {
++        Ok(CompileOutput::Vm(ir)) => Ok(ir),
++        Ok(other) => Err(format!("unexpected output {other:?}")),
++        Err(e) => Err(format!("{e:?}")),
++    }
++}
++
++const KINDS: [&str; 7] = [
++    "equality",
++    "sum-homo",
++    "sum-hetero",
++    "width",
++    "capacity",
++    "decode-class",
++    "overload",
++];
++
++#[derive(Default, Clone)]
++struct Census {
++    /// primary-context propagators, keyed by kind
++    p: HashMap<&'static str, u64>,
++    /// vec-context propagators, keyed by kind
++    v: HashMap<&'static str, u64>,
++    max_alt_arity: u32,
++    max_alt_rule: String,
++    hetero_alts: u64,
++    rules: u64,
++}
++
++impl Census {
++    fn bump_p(&mut self, k: &'static str) {
++        *self.p.entry(k).or_insert(0) += 1;
++    }
++    fn bump_v(&mut self, k: &'static str) {
++        *self.v.entry(k).or_insert(0) += 1;
++    }
++    fn merge(&mut self, other: &Census) {
++        for k in KINDS {
++            *self.p.entry(k).or_insert(0) += other.p.get(k).copied().unwrap_or(0);
++            *self.v.entry(k).or_insert(0) += other.v.get(k).copied().unwrap_or(0);
++        }
++        self.hetero_alts += other.hetero_alts;
++        self.rules += other.rules;
++        if other.max_alt_arity > self.max_alt_arity {
++            self.max_alt_arity = other.max_alt_arity;
++            self.max_alt_rule = other.max_alt_rule.clone();
++        }
++    }
++    fn total_p(&self) -> u64 {
++        KINDS.iter().map(|k| self.p.get(k).copied().unwrap_or(0)).sum()
++    }
++    fn total_all(&self) -> u64 {
++        self.total_p() + KINDS.iter().map(|k| self.v.get(k).copied().unwrap_or(0)).sum::<u64>()
++    }
++    fn get_p(&self, k: &str) -> u64 {
++        self.p.get(k).copied().unwrap_or(0)
++    }
++    fn get_all(&self, k: &str) -> u64 {
++        self.p.get(k).copied().unwrap_or(0) + self.v.get(k).copied().unwrap_or(0)
++    }
++}
++
++/// Solved `TypeDesc` for a tree occurrence, via the DAG NodeId → solved map.
++fn solved(
++    ir: &GrammarIR,
++    solved_map: &HashMap<NodeId, TypeDesc>,
++    node: &IrNode,
++) -> Option<TypeDesc> {
++    let nid = ir.dag.as_ref()?.node_for(node)?;
++    solved_map.get(&nid).cloned()
++}
++
++fn alt_kind(solved: Option<&TypeDesc>) -> &'static str {
++    match solved {
++        Some(TypeDesc::HeterogeneousAltJoin(_)) => "sum-hetero",
++        _ => "sum-homo",
++    }
++}
++
++/// Classify a `Map`'s propagator by its `FnDescriptor` — the same
++/// value `generate.rs` grounds the Map var to.
++fn map_kind(fd: &FnDescriptor) -> &'static str {
++    match fd {
++        // fused span→scalar decode
++        FnDescriptor::NumberConvert { .. } | FnDescriptor::HexConvert { .. } => "decode-class",
++        // user `->` value action: typed leaf (named/scalar) is a decode;
++        // Span/none is a pure pass-through (equality).
++        FnDescriptor::Expr { return_type, .. } => match return_type {
++            None | Some(TypeDesc::Span) => "equality",
++            Some(_) => "decode-class",
++        },
++        // structural wraps — deterministic, no residue
++        FnDescriptor::SpanCapture | FnDescriptor::EnumWrap { .. } | FnDescriptor::BoxWrap => {
++            "equality"
++        }
++    }
++}
++
++fn walk(
++    node: &IrNode,
++    ir: &GrammarIR,
++    sm: &HashMap<NodeId, TypeDesc>,
++    c: &mut Census,
++    rule_name: &str,
++) {
++    match node {
++        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => {
++            c.bump_p("equality");
++            c.bump_v("equality");
++        }
++        IrNode::Ref(rid) => {
++            // Primary: RefConstraint. Scalar/Span target → propagation
++            // (equality); compound collapse (BoxedEnum / hetero) → a
++            // decode-class decision (which enum variant this ref holds).
++            let k = match solved(ir, sm, node) {
++                Some(ref t) if t.is_scalar_payload() => "equality",
++                Some(TypeDesc::BoxedEnum) | Some(TypeDesc::HeterogeneousAltJoin(_)) => {
++                    "decode-class"
++                }
++                _ => "equality",
++            };
++            c.bump_p(k);
++            c.bump_v("equality"); // Ground(vec, Enum)
++            let _ = rid;
++        }
++        IrNode::Seq(children) => {
++            for ch in children {
++                let is_sp = if let IrNode::Ref(id) = ch {
++                    let r = &ir.rules[*id as usize];
++                    r.meta.has_sp_method && !r.meta.is_transparent
++                } else {
++                    false
++                };
++                if is_sp {
++                    c.bump_p("equality"); // Ground(override_var, Span)
++                }
++                walk(ch, ir, sm, c, rule_name);
++            }
++            c.bump_p("width"); // SeqConstraint
++            c.bump_v("equality"); // Equal(vec, var)
++        }
++        IrNode::Alt(branches, _) => {
++            for b in branches {
++                walk(&b.node, ir, sm, c, rule_name);
++            }
++            let k = alt_kind(solved(ir, sm, node).as_ref());
++            c.bump_p(k); // AltConstraint
++            c.bump_v(k); // AltInVecConstraint (same verdict)
++            if k == "sum-hetero" {
++                c.hetero_alts += 1;
++            }
++            let arity = branches.len() as u32;
++            if arity > c.max_alt_arity {
++                c.max_alt_arity = arity;
++                c.max_alt_rule = rule_name.to_string();
++            }
++        }
++        IrNode::Repeat { inner, lo, hi } => {
++            walk(inner, ir, sm, c, rule_name);
++            if *lo == 0 && *hi == 1 {
++                c.bump_p("equality"); // OptionalConstraint (deterministic wrap)
++                c.bump_v("equality"); // Equal(vec, var)
++            } else {
++                c.bump_p("capacity"); // RepeatConstraint (Vec)
++                c.bump_v("equality"); // Equal(vec, var)
++            }
++        }
++        IrNode::Skip(a, b) | IrNode::Minus(a, b) => {
++            walk(a, ir, sm, c, rule_name);
++            walk(b, ir, sm, c, rule_name);
++            c.bump_p("equality"); // ProjectConstraint(var)
++            c.bump_v("equality"); // ProjectConstraint(vec)
++        }
++        IrNode::Next(a, b) => {
++            walk(a, ir, sm, c, rule_name);
++            walk(b, ir, sm, c, rule_name);
++            c.bump_p("equality");
++            c.bump_v("equality");
++        }
++        IrNode::Negate(inner) => {
++            walk(inner, ir, sm, c, rule_name);
++            c.bump_p("equality"); // Ground(var, Tuple[])
++            c.bump_v("equality");
++        }
++        IrNode::OptionalWhitespace(inner) => {
++            walk(inner, ir, sm, c, rule_name);
++            c.bump_p("equality"); // Equal(var, inner)
++            c.bump_v("equality");
++        }
++        IrNode::Map { inner, fn_id } => {
++            walk(inner, ir, sm, c, rule_name);
++            let k = map_kind(&ir.fns[*fn_id as usize]);
++            c.bump_p(k); // MapConstraint(var)
++            c.bump_v(k); // MapConstraint(vec)
++        }
++        IrNode::TokenDispatch { arms, fallback, .. } => {
++            for arm in arms {
++                walk(&arm.continuation, ir, sm, c, rule_name);
++                if let Some(mf) = arm.map_fn {
++                    c.bump_p(map_kind(&ir.fns[mf as usize]));
++                }
++            }
++            walk(fallback, ir, sm, c, rule_name);
++            let k = alt_kind(solved(ir, sm, node).as_ref());
++            c.bump_p(k); // AltConstraint over arms + fallback
++            c.bump_v("equality"); // Equal(vec, var)
++            if k == "sum-hetero" {
++                c.hetero_alts += 1;
++            }
++            let arity = (arms.len() + 1) as u32;
++            if arity > c.max_alt_arity {
++                c.max_alt_arity = arity;
++                c.max_alt_rule = rule_name.to_string();
++            }
++        }
++    }
++}
++
++fn census_of(ir: &GrammarIR) -> Census {
++    // Mirror project_types: fresh DAG, generate constraints, propagate.
++    let mut ir = ir.clone();
++    ir.dag = None;
++    bbnf_ir::dag::ensure_dag(&mut ir);
++    let mut system = generate_constraints(&ir);
++    let _ = system.csp.propagate();
++
++    // Materialize NodeId → solved TypeDesc from the propagated CSP.
++    let mut solved_map: HashMap<NodeId, TypeDesc> = HashMap::new();
++    for (&nid, &var) in &system.node_vars {
++        if let Some(ty) = system.csp.variables[var as usize].domain.solved.clone() {
++            solved_map.insert(nid, ty);
++        }
++    }
++
++    let mut c = Census::default();
++    c.rules = ir.rules.len() as u64;
++    // Global per-rule Equal(rule = body).
++    for _ in &ir.rules {
++        c.bump_p("equality");
++    }
++    for rule in &ir.rules {
++        let name = ir.get_string(rule.name).to_string();
++        walk(&rule.body, &ir, &solved_map, &mut c, &name);
++    }
++    c
++}
++
++fn pct(n: u64, d: u64) -> f64 {
++    if d == 0 {
++        0.0
++    } else {
++        100.0 * n as f64 / d as f64
++    }
++}
++
++fn print_grammar(label: &str, c: &Census) {
++    let total_all = c.total_all();
++    let total_p = c.total_p();
++    println!("\n### {label}   (rules={}, propagators: all={}, primary={})", c.rules, total_all, total_p);
++    println!(
++        "{:<14} {:>8} {:>7}   {:>8} {:>7}",
++        "kind", "ALL", "%", "PRIMARY", "%"
++    );
++    for k in KINDS {
++        println!(
++            "{:<14} {:>8} {:>6.1}%   {:>8} {:>6.1}%",
++            k,
++            c.get_all(k),
++            pct(c.get_all(k), total_all),
++            c.get_p(k),
++            pct(c.get_p(k), total_p),
++        );
++    }
++    // Adjudication aggregates.
++    let eq_sum_all = c.get_all("equality") + c.get_all("sum-homo") + c.get_all("sum-hetero");
++    let eq_sum_p = c.get_p("equality") + c.get_p("sum-homo") + c.get_p("sum-hetero");
++    // "genuinely multi-valued residue": heterogeneous Alt joins that
++    // cannot collapse homogeneously. width/capacity/decode are
++    // deterministic monotone functions (fixed arity, fixed decode) — not
++    // multi-valued — so they are NOT counted as genuine residue, only
++    // tallied against the ≤2 structural gate below.
++    let residue_all = c.get_all("sum-hetero");
++    let residue_p = c.get_p("sum-hetero");
++    let structural_nonEq_all = c.get_all("width")
++        + c.get_all("capacity")
++        + c.get_all("decode-class")
++        + c.get_all("overload");
++    println!(
++        "  equality+sum-shape: ALL {:.1}%   PRIMARY {:.1}%",
++        pct(eq_sum_all, total_all),
++        pct(eq_sum_p, total_p)
++    );
++    println!(
++        "  genuine multi-valued residue (hetero-alt): ALL {:.1}%   PRIMARY {:.1}%",
++        pct(residue_all, total_all),
++        pct(residue_p, total_p)
++    );
++    println!(
++        "  structural non-eq (width+cap+decode+overload): ALL {}  |  hetero-alt rules: {}",
++        structural_nonEq_all, c.hetero_alts
++    );
++    println!(
++        "  max alternation arity: {} (rule `{}`)",
++        c.max_alt_arity, c.max_alt_rule
++    );
++}
++
++#[test]
++fn census() {
++    println!("\n================ LOCK-1 pass-1 · residue census ================");
++
++    // The four grammars. CSS (L4) is represented by its four named
++    // corpus files, aggregated into one grammar bucket.
++    let json = compile_ir("json/json.bbnf");
++    let sheets = compile_ir("google-sheets/google-sheets.bbnf");
++    let bbnf = compile_ir("bbnf/bbnf.bbnf");
++
++    let css_files = ["properties", "gradients", "color", "selectors"];
++    let mut css = Census::default();
++    let mut css_ok: Vec<&str> = Vec::new();
++    let mut css_err: Vec<(String, String)> = Vec::new();
++    for f in css_files {
++        match compile_ir(&format!("css/l4/{f}.bbnf")) {
++            Ok(ir) => {
++                css.merge(&census_of(&ir));
++                css_ok.push(f);
++            }
++            Err(e) => css_err.push((f.to_string(), e)),
++        }
++    }
++
++    let mut rows: Vec<(String, Census)> = Vec::new();
++    match &json {
++        Ok(ir) => rows.push(("JSON".into(), census_of(ir))),
++        Err(e) => println!("JSON compile FAILED: {e}"),
++    }
++    if !css_ok.is_empty() {
++        rows.push((format!("CSS L4 [{}]", css_ok.join("+")), css));
++    }
++    for (f, e) in &css_err {
++        println!("CSS file `{f}` compile FAILED: {e}");
++    }
++    match &sheets {
++        Ok(ir) => rows.push(("Sheets".into(), census_of(ir))),
++        Err(e) => println!("Sheets compile FAILED: {e}"),
++    }
++    match &bbnf {
++        Ok(ir) => rows.push(("BBNF".into(), census_of(ir))),
++        Err(e) => println!("BBNF compile FAILED: {e}"),
++    }
++
++    for (label, c) in &rows {
++        print_grammar(label, c);
++    }
++
++    // ── Verdict ────────────────────────────────────────────────────
++    println!("\n================ VERDICT ================");
++    let mut all_thin = true;
++    let mut any_rich = false;
++    for (label, c) in &rows {
++        let total_all = c.total_all();
++        let eq_sum = pct(
++            c.get_all("equality") + c.get_all("sum-homo") + c.get_all("sum-hetero"),
++            total_all,
++        );
++        let residue = pct(c.get_all("sum-hetero"), total_all);
++        let structural = c.get_all("width")
++            + c.get_all("capacity")
++            + c.get_all("decode-class")
++            + c.get_all("overload");
++        // strict THIN gate (as written in the brief): eq+sum ≥95% AND
++        // width/decode/capacity/overload ≤2.
++        let thin_strict = eq_sum >= 95.0 && structural <= 2;
++        // residue gate: any grammar ≥15% genuine multi-valued residue.
++        if residue >= 15.0 {
++            any_rich = true;
++        }
++        if !thin_strict {
++            all_thin = false;
++        }
++        println!(
++            "{label:<16} eq+sum={eq_sum:5.1}%  hetero-residue={residue:5.1}%  structural-nonEq={structural:<4}  thin_strict={thin_strict}"
++        );
++    }
++    println!("\nall_thin_strict = {all_thin}   any_rich(≥15% hetero) = {any_rich}");
++    if any_rich {
++        println!("=> RICH: one-store / e-graph thesis holds (R-B1 store-shape + 1D extraction go live).");
++    } else {
++        println!("=> THIN: residue collapses toward 1A + ordered defaulting lattice; CSP/e-graph thesis fails on evidence.");
++    }
++}

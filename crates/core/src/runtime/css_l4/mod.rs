@@ -5,6 +5,7 @@ pub mod document;
 pub mod parse_with;
 pub mod value;
 pub mod view;
+pub mod host;
 pub use arena::{
     CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId,
     CssValueListId,

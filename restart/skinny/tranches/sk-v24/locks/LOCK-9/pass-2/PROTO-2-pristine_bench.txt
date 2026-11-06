@@ -1,0 +1,20 @@
+===== PRISTINE window A 10:05:29 load=11.26 13.49 13.98 =====
+micro_parse_that          fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ json_number_float_exp  13.11 ns      │ 18.48 ns      │ 14.09 ns      │ 13.94 ns      │ 200     │ 102400
+├─ json_number_int_large  17.34 ns      │ 45.18 ns      │ 17.51 ns      │ 17.77 ns      │ 200     │ 51200
+╰─ json_number_int_small  10.59 ns      │ 90.51 ns      │ 10.83 ns      │ 12.87 ns      │ 200     │ 102400
+parse_that_combinator  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ apache              93.7 µs       │ 291.7 µs      │ 96.2 µs       │ 102.8 µs      │ 200     │ 200
+├─ canada              2.18 ms       │ 3.211 ms      │ 2.463 ms      │ 2.476 ms      │ 200     │ 200
+├─ citm_catalog        937 µs        │ 1.379 ms      │ 997.8 µs      │ 1.053 ms      │ 200     │ 200
+╰─ twitter             421.6 µs      │ 712.6 µs      │ 434.8 µs      │ 463.4 µs      │ 200     │ 200
+===== PRISTINE window B 10:05:31 load=10.83 13.36 13.93 =====
+micro_parse_that          fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ json_number_float_exp  13.11 ns      │ 68.94 ns      │ 14.41 ns      │ 16.3 ns       │ 200     │ 102400
+├─ json_number_int_large  17.18 ns      │ 18 ns         │ 17.34 ns      │ 17.51 ns      │ 200     │ 51200
+╰─ json_number_int_small  10.75 ns      │ 22.63 ns      │ 11.32 ns      │ 11.58 ns      │ 200     │ 102400
+parse_that_combinator  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ apache              95.66 µs      │ 331.4 µs      │ 97.66 µs      │ 107.4 µs      │ 200     │ 200
+├─ canada              2.159 ms      │ 3.558 ms      │ 2.407 ms      │ 2.471 ms      │ 200     │ 200
+├─ citm_catalog        984.2 µs      │ 1.485 ms      │ 1.061 ms      │ 1.1 ms        │ 200     │ 200
+╰─ twitter             423.4 µs      │ 774.2 µs      │ 462.4 µs      │ 497.4 µs      │ 200     │ 200

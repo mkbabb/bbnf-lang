@@ -1,0 +1,39 @@
+diff --git a/crates/ir/src/passes/types/constraint/revise.rs b/crates/ir/src/passes/types/constraint/revise.rs
+index ca3db1b22..5cd88d5f7 100644
+--- a/crates/ir/src/passes/types/constraint/revise.rs
++++ b/crates/ir/src/passes/types/constraint/revise.rs
+@@ -26,11 +26,29 @@ use super::domain::TypeDomain;
+ /// Assign a type to a variable's domain. Returns true if the type changed.
+ pub(super) fn assign(vars: &mut [Variable<TypeDomain>], var: TypeVarId, ty: TypeDesc) -> bool {
+     let slot = &mut vars[var as usize].domain.solved;
+-    if slot.as_ref() == Some(&ty) {
+-        false
+-    } else {
+-        *slot = Some(ty);
+-        true
++    match slot.as_ref() {
++        // Idempotent: already the same type.
++        Some(existing) if *existing == ty => false,
++        // B1 clash arm (LOCK-1 pass-2). A disagreement between two
++        // *concrete* types is a genuine type clash, not a refinement:
++        // the running CSP must NOT last-writer-wins over it. Refuse the
++        // overwrite and (once threaded) record a
++        // `TypeObligation::TypeClash`. On json/css_pretty/google_sheets
++        // this arm is dormant: every observed disagreement refines the
++        // coarse `BoxedEnum` placeholder to its structural type, so
++        // `existing` is always `BoxedEnum` and never a concrete type
++        // (measured: 69/69 disagreements had `existing == BoxedEnum`).
++        Some(existing) if *existing != TypeDesc::BoxedEnum => {
++            // record_clash(sink, var, existing.clone(), ty);  // parity-inert
++            false
++        }
++        // None (first assignment) or `BoxedEnum` refinement: the coarse
++        // placeholder legitimately ascends to its structural type. This
++        // last-writer-wins step is the load-bearing refinement carrier.
++        _ => {
++            *slot = Some(ty);
++            true
++        }
+     }
+ }
+ 

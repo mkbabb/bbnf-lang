@@ -10,7 +10,11 @@ impl JsonArrayId {
     }
     #[inline]
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
+        if self.0 == 0 {
+            None
+        } else {
+            Some((self.0 - 1) as usize)
+        }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -23,7 +27,11 @@ impl JsonObjectId {
     }
     #[inline]
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
+        if self.0 == 0 {
+            None
+        } else {
+            Some((self.0 - 1) as usize)
+        }
     }
 }
 #[derive(Debug, Default)]

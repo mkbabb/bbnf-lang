@@ -19,11 +19,16 @@ pub fn emit_parse_wrap(
     rule: &IrRule,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &super::PayloadPlanner<'_>,
 ) -> TokenStream {
     match strategy {
-        EmitStrategy::StructDirect { .. } => {
-            struct_direct::emit_parse_wrap_struct_direct(grammar_suffix, rule, ir, strategy)
-        }
+        EmitStrategy::StructDirect { .. } => struct_direct::emit_parse_wrap_struct_direct(
+            grammar_suffix,
+            rule,
+            ir,
+            strategy,
+            payload_planner,
+        ),
     }
 }
 

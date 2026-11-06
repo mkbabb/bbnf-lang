@@ -1,0 +1,12 @@
+diff --git a/crates/core/src/lower/expression/wrap.rs b/crates/core/src/lower/expression/wrap.rs
+--- a/crates/core/src/lower/expression/wrap.rs
++++ b/crates/core/src/lower/expression/wrap.rs
+@@ -152,7 +152,7 @@ pub(crate) fn lower_mapped_factor<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
+     if factor_hi > value_lo || value_hi > mapped_hi {
+         panic!("mapped_factor: value-expression bounds overlap or escape their parent");
+     }
+-    let rhs_text = bounded_text(input, value_lo, value_hi, "value expression").trim();
++    let rhs_text = bounded_text(input, factor_hi, value_hi, "value expression").trim();
+     if rhs_text.is_empty() {
+         panic!("mapped_factor: structurally present value expression has empty source bounds");
+     }

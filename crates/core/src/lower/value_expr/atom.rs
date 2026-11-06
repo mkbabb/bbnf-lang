@@ -1,16 +1,19 @@
 //! Atom-layer lowering: unary prefixes, parenthesised expressions,
 //! identifier-shaped atoms, function calls, paths, and string literals.
 
-use bbnf_ir::{MapExpr, MapUnaryOp};
+use bbnf_ir::{MapExpr, MapUnaryOp, NumericDomain};
 
 use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfValue, BbnfView};
 
 use super::super::LowerCtx;
-use super::dispatch_value_expr;
-use super::literals::{parse_float_literal, parse_numeric_literal_text};
+use super::literals::{
+    ParsedNumericLiteral, parse_float_literal, parse_int_literal, parse_numeric_literal_text,
+    split_numeric_suffix,
+};
 use super::simple_kinds::lookup_value_env;
 use super::view_walk::find_descendant_by_compound_kind;
+use super::{LoweredValueExpr, dispatch_value_expr};
 
 // ─── Unary ───────────────────────────────────────────────────────────────────
 
@@ -21,23 +24,37 @@ use super::view_walk::find_descendant_by_compound_kind;
 /// is the bare atom.
 pub(super) fn lower_value_unary<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let text = node.span_text_opt().unwrap_or("");
+) -> LoweredValueExpr {
+    let text = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or("");
     let first_byte = text.as_bytes().first().copied();
     match first_byte {
         Some(b'!') | Some(b'-') => {
             let atom = first_atom_child(node).unwrap_or(node);
-            let inner = dispatch_value_expr(atom, ctx);
+            if first_byte == Some(b'-') && direct_integer_literal_text(text.trim()) {
+                // This must precede atom dispatch: the positive magnitude of
+                // every signed minimum is one past the corresponding MAX and
+                // therefore cannot be represented as an intermediate IntLit.
+                return lower_parsed_numeric(
+                    parse_int_literal(text.trim()),
+                    expected_numeric_domain,
+                    text.trim(),
+                );
+            }
+            let inner_source = text.get(1..).map(str::trim);
+            let inner = dispatch_value_expr(atom, inner_source, expected_numeric_domain, ctx);
             let op = if first_byte == Some(b'!') {
                 MapUnaryOp::Not
             } else {
                 MapUnaryOp::Neg
             };
-            MapExpr::UnaryOp {
-                op,
-                inner: Box::new(inner),
-            }
+            LoweredValueExpr::unary(op, inner, expected_numeric_domain, text)
         }
         _ => {
             // Bare atom — descend through the single child.
@@ -45,12 +62,50 @@ pub(super) fn lower_value_unary<'a, 'p: 'a>(
             // No child compound at all — fall back to atom dispatch
             // on `node` itself (which classifies the span text).
             if same_focus(atom, node) {
-                lower_value_atom(node, ctx)
+                lower_value_atom(node, source_hint, expected_numeric_domain, ctx)
             } else {
-                dispatch_value_expr(atom, ctx)
+                dispatch_value_expr(atom, source_hint, expected_numeric_domain, ctx)
             }
         }
     }
+}
+
+/// Return the exact spelling only for a direct integer-literal atom.
+///
+/// The `value_atom` boundary is significant: parenthesised arithmetic and
+/// arbitrary unary operands must still route through normal expression
+/// lowering. Leaf projection may surface the atom itself or its exact Span,
+/// so the lexical check is deliberately confined to this structural child.
+fn direct_integer_literal_text(text: &str) -> bool {
+    let unsigned_text = text
+        .strip_prefix('+')
+        .or_else(|| text.strip_prefix('-'))
+        .unwrap_or(text);
+    if !unsigned_text
+        .as_bytes()
+        .first()
+        .is_some_and(|byte| byte.is_ascii_digit())
+    {
+        return false;
+    }
+    let (digits, suffix) = split_numeric_suffix(text);
+    let magnitude = digits
+        .strip_prefix('+')
+        .or_else(|| digits.strip_prefix('-'))
+        .unwrap_or(digits);
+    let valid_digits = if let Some(hex) = magnitude
+        .strip_prefix("0x")
+        .or_else(|| magnitude.strip_prefix("0X"))
+    {
+        !hex.is_empty() && hex.bytes().all(|byte| byte.is_ascii_hexdigit())
+    } else {
+        !magnitude.is_empty() && magnitude.bytes().all(|byte| byte.is_ascii_digit())
+    };
+    valid_digits
+        && matches!(
+            suffix,
+            "" | "i8" | "i16" | "i32" | "i64" | "u8" | "u16" | "u32" | "u64"
+        )
 }
 
 /// Find the first child compound of a unary view that looks like an
@@ -79,6 +134,72 @@ pub(super) fn same_focus<'a, 'p: 'a>(a: BbnfView<'a, 'p>, b: BbnfView<'a, 'p>) -
     }
 }
 
+fn lower_parsed_numeric(
+    parsed: ParsedNumericLiteral,
+    expected_numeric_domain: Option<NumericDomain>,
+    source: &str,
+) -> LoweredValueExpr {
+    LoweredValueExpr::numeric_literal(
+        parsed.expr,
+        parsed.domain,
+        parsed.has_explicit_domain,
+        expected_numeric_domain,
+        source,
+    )
+}
+
+pub(super) fn lower_projected_int(
+    value: i64,
+    source: Option<&str>,
+    expected_numeric_domain: Option<NumericDomain>,
+) -> LoweredValueExpr {
+    if let Some(source) = source.map(str::trim).filter(|source| {
+        source
+            .as_bytes()
+            .first()
+            .is_some_and(|byte| byte.is_ascii_digit())
+    }) {
+        return lower_parsed_numeric(
+            parse_numeric_literal_text(source),
+            expected_numeric_domain,
+            source,
+        );
+    }
+    LoweredValueExpr::numeric_literal(
+        MapExpr::IntLit(value),
+        NumericDomain::I64,
+        false,
+        expected_numeric_domain,
+        source.unwrap_or("<projected i64>"),
+    )
+}
+
+pub(super) fn lower_projected_float(
+    value: f64,
+    source: Option<&str>,
+    expected_numeric_domain: Option<NumericDomain>,
+) -> LoweredValueExpr {
+    if let Some(source) = source.map(str::trim).filter(|source| {
+        source
+            .as_bytes()
+            .first()
+            .is_some_and(|byte| byte.is_ascii_digit() || *byte == b'.')
+    }) {
+        return lower_parsed_numeric(
+            parse_numeric_literal_text(source),
+            expected_numeric_domain,
+            source,
+        );
+    }
+    LoweredValueExpr::numeric_literal(
+        MapExpr::FloatLit(value),
+        NumericDomain::F64,
+        false,
+        expected_numeric_domain,
+        source.unwrap_or("<projected f64>"),
+    )
+}
+
 // ─── Atom classification ─────────────────────────────────────────────────────
 
 /// Lower a `value_atom` compound. Under struct-direct projection the
@@ -102,15 +223,19 @@ pub(super) fn same_focus<'a, 'p: 'a>(a: BbnfView<'a, 'p>, b: BbnfView<'a, 'p>) -
 ///   - bare identifier → ident
 pub(super) fn lower_value_atom<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+) -> LoweredValueExpr {
     // Leaf-projected payloads: dispatch directly on the typed leaf.
     match node.focus() {
-        BbnfValue::Int(v) => return MapExpr::IntLit(v),
-        BbnfValue::Float(v) => return MapExpr::FloatLit(v),
-        BbnfValue::Bool(v) => return MapExpr::BoolLit(v),
+        BbnfValue::Int(v) => return lower_projected_int(v, source_hint, expected_numeric_domain),
+        BbnfValue::Float(v) => {
+            return lower_projected_float(v, source_hint, expected_numeric_domain);
+        }
+        BbnfValue::Bool(v) => return LoweredValueExpr::bool(MapExpr::BoolLit(v)),
         BbnfValue::Span(s) => {
-            return classify_span_atom(s, ctx);
+            return classify_span_atom(s, expected_numeric_domain, ctx);
         }
         BbnfValue::Compound(_) => {}
         BbnfValue::Tag(_) | BbnfValue::Unit => {
@@ -125,7 +250,9 @@ pub(super) fn lower_value_atom<'a, 'p: 'a>(
     // (`bool_lit` pushes only `BbnfValue::Bool(_)`, `int_lit` only
     // `Int(_)`, `float_lit` only `Float(_)`). Recover the lone typed-
     // leaf descendant before resorting to the source-text classifier.
-    if let Some(folded) = fold_typed_leaf_descendant(node, ctx) {
+    if let Some(folded) =
+        fold_typed_leaf_descendant(node, source_hint, expected_numeric_domain, ctx)
+    {
         return folded;
     }
 
@@ -142,41 +269,57 @@ pub(super) fn lower_value_atom<'a, 'p: 'a>(
             | Some(BbnfCompoundKind::ValuePath)
             | Some(BbnfCompoundKind::ValueFnCall)
             | Some(BbnfCompoundKind::ValueClosure) => {
-                return dispatch_value_expr(child, ctx);
+                return dispatch_value_expr(child, source_hint, expected_numeric_domain, ctx);
             }
             _ => {}
         }
     }
 
     // Compound atom — classify by span text.
-    let text = node.span_text_opt().unwrap_or_else(|| {
-        panic!(
-            "lower/value_expr/atom.rs: lower_value_atom on compound focus \
-             with no recoverable span (kind = {:?})",
-            node.compound_kind(),
-        )
-    });
+    let text = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or_else(|| {
+            panic!(
+                "lower/value_expr/atom.rs: lower_value_atom on compound focus \
+                 with no recoverable span (kind = {:?})",
+                node.compound_kind(),
+            )
+        });
     let trimmed = text.trim_start();
     let first = trimmed.as_bytes().first().copied();
 
     match first {
-        Some(b'0'..=b'9') => parse_numeric_literal_text(trimmed),
+        Some(b'0'..=b'9') => lower_parsed_numeric(
+            parse_numeric_literal_text(trimmed),
+            expected_numeric_domain,
+            trimmed,
+        ),
         Some(b'.') => {
             // `.5e3` — leading dot float.
-            parse_float_literal(trimmed)
+            lower_parsed_numeric(
+                parse_float_literal(trimmed),
+                expected_numeric_domain,
+                trimmed,
+            )
         }
-        Some(b'"') => MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)),
-        Some(b'\'') => MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)),
-        Some(b'(') => lower_paren_atom(node, ctx),
+        Some(b'"') => {
+            LoweredValueExpr::unknown(MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)))
+        }
+        Some(b'\'') => {
+            LoweredValueExpr::unknown(MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)))
+        }
+        Some(b'(') => lower_paren_atom(node, Some(trimmed), expected_numeric_domain, ctx),
         Some(b'!') | Some(b'-') => {
             // Unary prefix leaked into atom dispatch — the optimizer
             // collapsed the `value_unary` wrapper and what reached us
             // is a unary-shaped compound tagged `value_atom`. Route
             // through the unary path so the `!` / `-` prefix is honoured.
-            lower_value_unary(node, ctx)
+            lower_value_unary(node, Some(trimmed), expected_numeric_domain, ctx)
         }
         Some(b) if b == b'_' || (b as char).is_ascii_alphabetic() => {
-            lower_atom_named(node, trimmed, ctx)
+            lower_atom_named(node, trimmed, expected_numeric_domain, ctx)
         }
         Some(_) | None => panic!(
             "lower/value_expr/atom.rs: lower_value_atom saw an unexpected \
@@ -196,8 +339,10 @@ pub(super) fn lower_value_atom<'a, 'p: 'a>(
 /// the source-text classifier cannot route.
 fn fold_typed_leaf_descendant<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
+    expected_numeric_domain: Option<NumericDomain>,
     _ctx: &mut LowerCtx<'p>,
-) -> Option<MapExpr> {
+) -> Option<LoweredValueExpr> {
     // Walk depth-first with a recursion budget; the first typed-leaf
     // wins. The depth bound (32) is well past any realistic value-
     // expression nesting depth (the BBNF grammar's value-expression
@@ -224,7 +369,20 @@ fn fold_typed_leaf_descendant<'a, 'p: 'a>(
     }
     let mut out: Option<MapExpr> = None;
     descend(node, &mut out, 32);
-    out
+    match out? {
+        MapExpr::IntLit(value) => Some(lower_projected_int(
+            value,
+            source_hint,
+            expected_numeric_domain,
+        )),
+        MapExpr::FloatLit(value) => Some(lower_projected_float(
+            value,
+            source_hint,
+            expected_numeric_domain,
+        )),
+        MapExpr::BoolLit(value) => Some(LoweredValueExpr::bool(MapExpr::BoolLit(value))),
+        _ => unreachable!("typed descendant collector only records scalar literals"),
+    }
 }
 
 /// Classify a `Span`-shaped atom by its leading byte. The atom may
@@ -240,12 +398,22 @@ fn fold_typed_leaf_descendant<'a, 'p: 'a>(
 /// mapped_factor would have built. The numeric arms route through
 /// `parse_numeric_literal_text` to honour the typed-suffix
 /// projection (`split_numeric_suffix("0u8") → ("0", "u8")`).
-fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
+fn classify_span_atom<'p>(
+    text: &'p str,
+    expected_numeric_domain: Option<NumericDomain>,
+    ctx: &mut LowerCtx<'p>,
+) -> LoweredValueExpr {
     let trimmed = text.trim_start();
     let first = trimmed.as_bytes().first().copied();
     match first {
-        Some(b'"') | Some(b'\'') => MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)),
-        Some(b'0'..=b'9') => parse_numeric_literal_text(trimmed),
+        Some(b'"') | Some(b'\'') => {
+            LoweredValueExpr::unknown(MapExpr::StringLit(intern_string_lit_inner(trimmed, ctx)))
+        }
+        Some(b'0'..=b'9') => lower_parsed_numeric(
+            parse_numeric_literal_text(trimmed),
+            expected_numeric_domain,
+            trimmed,
+        ),
         Some(b'.')
             if trimmed
                 .as_bytes()
@@ -253,7 +421,11 @@ fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
                 .copied()
                 .is_some_and(|b| b.is_ascii_digit()) =>
         {
-            parse_float_literal(trimmed)
+            lower_parsed_numeric(
+                parse_float_literal(trimmed),
+                expected_numeric_domain,
+                trimmed,
+            )
         }
         _ => lower_bare_ident(trimmed, ctx),
     }
@@ -264,19 +436,33 @@ fn classify_span_atom<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
 /// projection delivered as `BbnfValue::Span`). Routes through
 /// [`classify_span_atom`] — surfaced for use by the top-level
 /// dispatcher's leaf fast-path in `mod.rs`.
-pub(super) fn lower_bare_ident_or_string<'p>(text: &'p str, ctx: &mut LowerCtx<'p>) -> MapExpr {
-    classify_span_atom(text, ctx)
+pub(super) fn lower_bare_ident_or_string<'p>(
+    text: &'p str,
+    expected_numeric_domain: Option<NumericDomain>,
+    ctx: &mut LowerCtx<'p>,
+) -> LoweredValueExpr {
+    classify_span_atom(text, expected_numeric_domain, ctx)
 }
 
 /// Lower a parenthesised atom: `( value_expr )`. The structural
 /// shape pushes only the inner `value_expr` compound (the parens
 /// consume bytes without pushing). The grammar guarantees exactly
 /// one semantic child compound here.
-fn lower_paren_atom<'a, 'p: 'a>(node: BbnfView<'a, 'p>, ctx: &mut LowerCtx<'p>) -> MapExpr {
+fn lower_paren_atom<'a, 'p: 'a>(
+    node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
+    expected_numeric_domain: Option<NumericDomain>,
+    ctx: &mut LowerCtx<'p>,
+) -> LoweredValueExpr {
     let inner = find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueExpr)
         .or_else(|| RuntimeView::children(&node).next())
         .expect("lower_paren_atom: parenthesised atom is missing its value_expr child");
-    dispatch_value_expr(inner, ctx)
+    let inner_source = source_hint
+        .map(str::trim)
+        .and_then(|source| source.strip_prefix('('))
+        .and_then(|source| source.strip_suffix(')'))
+        .map(str::trim);
+    dispatch_value_expr(inner, inner_source, expected_numeric_domain, ctx)
 }
 
 /// Lower an atom whose leading text is identifier-shaped: bool
@@ -286,14 +472,15 @@ fn lower_paren_atom<'a, 'p: 'a>(node: BbnfView<'a, 'p>, ctx: &mut LowerCtx<'p>) 
 fn lower_atom_named<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     trimmed: &'p str,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+) -> LoweredValueExpr {
     // Bool literals.
     if trimmed.starts_with("true") && !next_ident_byte(trimmed, 4) {
-        return MapExpr::BoolLit(true);
+        return LoweredValueExpr::bool(MapExpr::BoolLit(true));
     }
     if trimmed.starts_with("false") && !next_ident_byte(trimmed, 5) {
-        return MapExpr::BoolLit(false);
+        return LoweredValueExpr::bool(MapExpr::BoolLit(false));
     }
 
     // Input chain: `input` keyword followed by zero or more `.ident`
@@ -312,7 +499,7 @@ fn lower_atom_named<'a, 'p: 'a>(
     );
     let after_head = trimmed[head_len..].trim_start();
     if after_head.starts_with('(') {
-        return lower_fn_call_atom(node, trimmed, ctx);
+        return lower_fn_call_atom(node, trimmed, expected_numeric_domain, ctx);
     }
     if after_head.starts_with("::") {
         return lower_path_atom(node, trimmed, ctx);
@@ -359,7 +546,7 @@ pub(super) fn lower_input_chain<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     trimmed: &'p str,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+) -> LoweredValueExpr {
     // The grammar produces `Repeat(.ident)*`. Recover the prop name
     // by scanning the source slice past the `input` keyword: each
     // `.ident` segment yields one prop name; we use the LAST prop
@@ -374,7 +561,7 @@ pub(super) fn lower_input_chain<'a, 'p: 'a>(
     if !trimmed.starts_with("input") {
         let _ = node;
         let _ = ctx;
-        return MapExpr::Input;
+        return LoweredValueExpr::unknown(MapExpr::Input);
     }
     let after = &trimmed[5..]; // skip "input"
     let mut last_prop: Option<&str> = None;
@@ -400,9 +587,9 @@ pub(super) fn lower_input_chain<'a, 'p: 'a>(
     match last_prop {
         Some(name) => {
             let sid = ctx.strings.intern(name);
-            MapExpr::InputProp { prop: sid }
+            LoweredValueExpr::unknown(MapExpr::InputProp { prop: sid })
         }
-        None => MapExpr::Input,
+        None => LoweredValueExpr::unknown(MapExpr::Input),
     }
 }
 
@@ -414,8 +601,9 @@ pub(super) fn lower_input_chain<'a, 'p: 'a>(
 pub(super) fn lower_fn_call_atom<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     trimmed: &'p str,
+    _expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+) -> LoweredValueExpr {
     // Recover the full path from the source slice. The path is
     // `ident (:: ident)*`; everything up to the opening `(` belongs
     // to the path.
@@ -424,10 +612,10 @@ pub(super) fn lower_fn_call_atom<'a, 'p: 'a>(
 
     // Walk the atom's children to find the arg list.
     let args: Vec<MapExpr> = collect_fn_call_args(node, ctx);
-    MapExpr::FnCall {
+    LoweredValueExpr::unknown(MapExpr::FnCall {
         name: name_sid,
         args,
-    }
+    })
 }
 
 /// Reconstruct a `::`-separated path text from the atom's source
@@ -496,7 +684,7 @@ fn collect_value_expr_args_rec<'a, 'p: 'a>(
 ) {
     if !skip_self {
         if node.compound_kind() == Some(BbnfCompoundKind::ValueExpr) {
-            args.push(dispatch_value_expr(node, ctx));
+            args.push(dispatch_value_expr(node, node.span_text_opt(), None, ctx).expr);
             return;
         }
     }
@@ -507,7 +695,7 @@ fn collect_value_expr_args_rec<'a, 'p: 'a>(
         let kind = child.compound_kind();
         match kind {
             Some(BbnfCompoundKind::ValueExpr) => {
-                args.push(dispatch_value_expr(child, ctx));
+                args.push(dispatch_value_expr(child, child.span_text_opt(), None, ctx).expr);
             }
             Some(BbnfCompoundKind::ValueClosure)
             | Some(BbnfCompoundKind::ValueFnCall)
@@ -529,7 +717,7 @@ pub(super) fn lower_path_atom<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     trimmed: &'p str,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+) -> LoweredValueExpr {
     // The path is fully recoverable from the source slice; the
     // structural-mode tape doesn't push per-segment records.
     let _ = node;
@@ -538,13 +726,13 @@ pub(super) fn lower_path_atom<'a, 'p: 'a>(
         return lower_bare_ident(&path, ctx);
     }
     if let Some(bound) = lookup_value_env(&path, &ctx.value_env) {
-        return bound;
+        return LoweredValueExpr::unknown(bound);
     }
     let sid = ctx.strings.intern(&path);
-    MapExpr::FnCall {
+    LoweredValueExpr::unknown(MapExpr::FnCall {
         name: sid,
         args: vec![MapExpr::Input],
-    }
+    })
 }
 
 // ─── Bare-ident resolution ───────────────────────────────────────────────────
@@ -553,15 +741,15 @@ pub(super) fn lower_path_atom<'a, 'p: 'a>(
 /// param bindings shadow ambient names; otherwise the identifier
 /// becomes a one-arg function call on `MapExpr::Input` (the legacy
 /// semantics — bare names are treated as transformer functions).
-pub(super) fn lower_bare_ident<'p>(name: &str, ctx: &mut LowerCtx<'p>) -> MapExpr {
+pub(super) fn lower_bare_ident<'p>(name: &str, ctx: &mut LowerCtx<'p>) -> LoweredValueExpr {
     if let Some(bound) = lookup_value_env(name, &ctx.value_env) {
-        return bound;
+        return LoweredValueExpr::unknown(bound);
     }
     let sid = ctx.strings.intern(name);
-    MapExpr::FnCall {
+    LoweredValueExpr::unknown(MapExpr::FnCall {
         name: sid,
         args: vec![MapExpr::Input],
-    }
+    })
 }
 
 // ─── String literal ──────────────────────────────────────────────────────────
@@ -569,12 +757,12 @@ pub(super) fn lower_bare_ident<'p>(name: &str, ctx: &mut LowerCtx<'p>) -> MapExp
 pub(super) fn lower_string_lit<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+) -> LoweredValueExpr {
     let text = match node.focus() {
         BbnfValue::Span(s) => s,
         _ => node.span_text_opt().unwrap_or(""),
     };
-    MapExpr::StringLit(intern_string_lit_inner(text, ctx))
+    LoweredValueExpr::unknown(MapExpr::StringLit(intern_string_lit_inner(text, ctx)))
 }
 
 /// Strip the surrounding quote characters from a string-literal
@@ -586,5 +774,6 @@ fn intern_string_lit_inner<'p>(text: &str, ctx: &mut LowerCtx<'p>) -> bbnf_ir::S
     } else {
         text
     };
-    ctx.strings.intern(inner)
+    let semantic = crate::backend::unescape_literal(inner);
+    ctx.strings.intern(&semantic)
 }

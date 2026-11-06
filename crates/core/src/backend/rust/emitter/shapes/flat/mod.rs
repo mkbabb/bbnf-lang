@@ -72,8 +72,15 @@ pub fn emit_parse_flat(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
+    payload_planner: &super::PayloadPlanner<'_>,
 ) -> TokenStream {
-    struct_direct::emit_parse_flat_struct_direct(grammar_suffix, rule, ir, strategy)
+    struct_direct::emit_parse_flat_struct_direct(
+        grammar_suffix,
+        rule,
+        ir,
+        strategy,
+        payload_planner,
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -103,30 +110,22 @@ fn walk_positions<'a>(
     out: &mut Vec<PositionedNode<'a>>,
 ) {
     match node {
-        // AX.W0a.2.p — preserve `Map { Regex, host-fn }` so the
-        // typed-leaf position emitter sees the annotation + emits the
-        // host-fn call + arena payload (CSS `hex` host-fn pattern and
-        // `NumberConvert` f64 scan). The Map arm in
-        // `emit_tape_position_core` falls back to transparent unwrap
-        // for structural Map / non-regex inners so other arms retain
-        // their existing behaviour.
-        IrNode::Map { inner, .. } if matches!(inner.as_ref(), IrNode::Regex(_)) => {
+        // Map, Skip, and Next are semantic payload boundaries, not
+        // transparent structural trivia. Preserve each node so the
+        // struct-direct position emitter can apply replacement/discard
+        // rollback while still parsing every recognition operand.
+        IrNode::Map { .. } | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
             out.push(PositionedNode {
                 node,
                 leading_ws: leading,
                 trailing_ws: trailing,
             });
         }
-        IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
         IrNode::OptionalWhitespace(inner) => walk_positions(inner, true, true, out),
         IrNode::Seq(children) => {
             for child in children {
                 walk_positions(child, leading, trailing, out);
             }
-        }
-        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            walk_positions(lhs, leading, trailing, out);
-            walk_positions(rhs, leading, trailing, out);
         }
         IrNode::Epsilon => {}
         _ => out.push(PositionedNode {

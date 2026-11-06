@@ -6,7 +6,7 @@
 //! per the scalar-name table in `TypeDesc::from_scalar_name`) must
 //! reach Rust backend preparation as `TypeDesc::Named(sid)`. The invariant
 //! is end-to-end: the projection survives lowering, the normaliser
-//! loop, the e-graph saturation block, reachability pruning, and the
+//! loop, reachability pruning, and the
 //! Rust-backend preparation pass (`analyze_grammar → project_types`).
 //!
 //! The assertion is at emit-side: `compile_paths_request` with
@@ -190,7 +190,7 @@ fn assert_named_preserved(grammar_paths: &[PathBuf], named_rules: &[(&str, &str)
                     "AY invariant 23: rule `{rule_name}` projects as \
                      Named(\"{actual}\") at emit; expected Named(\"{type_name}\"). \
                      The grammar-declared `-> input : <Name>` annotation did \
-                     not survive through lowering + normalisation + e-graph + \
+                     not survive through lowering + normalisation + \
                      `project_types`."
                 );
             }

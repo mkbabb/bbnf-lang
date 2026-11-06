@@ -1,0 +1,34 @@
+BB-C.W0 ambient optimizer authority — R4 mutation specimen apply-check
+Frozen: 2026-07-22T20:44:09Z
+Repository HEAD: af15f63e0d2d3d719938c13b906a50acbb92ea3b
+Method: read-only git apply --check; no patch applied; no Cargo/build/test/mutant run.
+
+COMMAND: git apply --check restart/skinny/tranches/sk-v25/waves/BB-C/evidence/W0-AMBIENT-R4-MUTATIONS/M01-cost-restoration-invents-unit-cost.patch
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+COMMAND: git apply --check restart/skinny/tranches/sk-v25/waves/BB-C/evidence/W0-AMBIENT-R4-MUTATIONS/M02-discard-custom-hard-constraint.patch
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+COMMAND: git apply --check restart/skinny/tranches/sk-v25/waves/BB-C/evidence/W0-AMBIENT-R4-MUTATIONS/M03-consume-budget-incumbent.patch
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+COMMAND: git apply --check restart/skinny/tranches/sk-v25/waves/BB-C/evidence/W0-AMBIENT-R4-MUTATIONS/M04-unsat-per-variable-fallback.patch
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+COMMAND: git apply --check restart/skinny/tranches/sk-v25/waves/BB-C/evidence/W0-AMBIENT-R4-MUTATIONS/M05-ignore-cancellation.patch
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+COMMAND: git apply --check restart/skinny/tranches/sk-v25/waves/BB-C/evidence/W0-AMBIENT-R4-MUTATIONS/M06-accept-incomplete-foreign-decode.patch
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+COMMAND: git apply --check restart/skinny/tranches/sk-v25/waves/BB-C/evidence/W0-AMBIENT-R4-MUTATIONS/M07-publish-before-late-merge-failure.patch
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+All four target hashes after the seven checks are byte-identical to SOURCE-RESTORATION.sha256.

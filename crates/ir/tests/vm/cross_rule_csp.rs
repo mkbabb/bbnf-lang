@@ -11,11 +11,14 @@
 use std::collections::{HashMap, HashSet};
 
 use bbnf_ir::passes::materialization::{MaterializationClass, classify_materialization};
-use bbnf_ir::passes::solve_grammar_components;
-use bbnf_ir::{
-    AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
-    StringId, TypeDescInterner,
+use bbnf_ir::passes::{
+    DecisionFamily, GrammarSolveControl, OptimizationFailureLocus, OptimizationUnavailableReason,
+    SolveCompletionStatus, solve_grammar_components,
 };
+use bbnf_ir::{
+    AltBranch, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId, TypeDescInterner,
+};
+use csp_solver::CancelToken;
 
 // ── Fixture builders ─────────────────────────────────────────────────
 
@@ -439,7 +442,9 @@ fn engine_propagation_unifies_component_regex_engines() {
     // AG.5 — exercise the live solver. The `EnginePropagation`
     // constraint unifies the regex engine across the component;
     // the per-StringId engine decisions must match.
-    let (decisions, _mat) = solve_grammar_components(&ir);
+    let decisions = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("component solve must be available")
+        .decisions;
     let dag = ir.dag.as_ref().unwrap();
     let engine_decisions = bbnf_ir::passes::extract_regex_engine_decisions(&ir, &decisions);
     // Both regex rules carry distinct StringIds (3 and 4); the
@@ -522,4 +527,267 @@ fn reference_partition_disconnected_graph() {
     for comp in partition {
         assert_eq!(comp.len(), 1);
     }
+}
+
+#[test]
+fn component_report_members_are_sorted_and_complete() {
+    let ir = make_ir(
+        vec![
+            rule(2, 2, IrNode::Literal(3)),
+            rule(0, 0, IrNode::Seq(vec![IrNode::Ref(2), IrNode::Ref(1)])),
+            rule(1, 1, IrNode::Literal(3)),
+        ],
+        vec!["root".into(), "left".into(), "right".into(), "x".into()],
+    );
+
+    let solved = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("connected component must solve");
+    assert_eq!(solved.reports.len(), 1);
+    assert_eq!(solved.reports[0].members, vec![0, 1, 2]);
+}
+
+#[test]
+fn configured_public_mixed_components_cancel_at_the_first_boundary() {
+    let ir = make_ir(
+        vec![
+            rule(0, 0, IrNode::Literal(2)),
+            rule(1, 1, IrNode::Literal(3)),
+        ],
+        vec!["left".into(), "right".into(), "x".into(), "y".into()],
+    );
+    let token = CancelToken::new();
+    token.cancel();
+    let error = solve_grammar_components(
+        &ir,
+        &GrammarSolveControl {
+            node_budget: Some(1_000_000),
+            cancel: Some(token),
+        },
+    )
+    .expect_err("a configured cancellation must expose no grammar output");
+
+    assert_eq!(error.reason, OptimizationUnavailableReason::Cancelled);
+    assert_eq!(error.locus, OptimizationFailureLocus::Search);
+    assert_eq!(error.reports.len(), 1);
+    assert_eq!(error.reports[0].root, 0);
+    assert_eq!(error.reports[0].members, vec![0]);
+    assert_eq!(error.reports[0].status, SolveCompletionStatus::Cancelled);
+    assert!(error.reports[0].cancelled);
+    assert_eq!(
+        error.reports[0].failure,
+        Some(OptimizationFailureLocus::Search),
+    );
+}
+
+#[test]
+fn missing_dag_is_typed_unavailable() {
+    let mut ir = make_ir(
+        vec![rule(0, 0, IrNode::Literal(1))],
+        vec!["r".into(), "x".into()],
+    );
+    ir.dag = None;
+    let error = solve_grammar_components(&ir, &GrammarSolveControl::default()).unwrap_err();
+    assert_eq!(error.reason, OptimizationUnavailableReason::MissingDag);
+    assert_eq!(error.locus, OptimizationFailureLocus::GrammarDag);
+    assert!(error.reports.is_empty());
+}
+
+#[test]
+fn conflicting_disconnected_shared_node_is_not_published() {
+    for pinned_first in [true, false] {
+        let mut pinned = RuleMeta::default();
+        pinned.preserve_identity = true;
+        let plain = RuleMeta::default();
+        let (first, second) = if pinned_first {
+            (pinned, plain)
+        } else {
+            (plain, pinned)
+        };
+        let body = IrNode::Literal(2);
+        let mut ir = make_ir(
+            vec![
+                rule_with_meta(0, 0, body.clone(), first),
+                rule_with_meta(1, 1, body, second),
+            ],
+            vec!["first".into(), "second".into(), "x".into()],
+        );
+        let shared = {
+            let dag = ir.dag.as_ref().unwrap();
+            assert_eq!(
+                dag.node_for(&ir.rules[0].body),
+                dag.node_for(&ir.rules[1].body),
+                "fixture must exercise a hash-consed NodeId shared across components",
+            );
+            dag.node_for(&ir.rules[0].body).unwrap()
+        };
+
+        // Deliberately restore the lower shared initial class after the global
+        // classifier. The pinned rule still clamps to MustTape; the plain rule
+        // can select TransparentElide, so the second component genuinely
+        // conflicts with the already-completed first component.
+        ir.materialization
+            .insert(shared, MaterializationClass::TransparentElide);
+
+        let error = solve_grammar_components(&ir, &GrammarSolveControl::default()).unwrap_err();
+        assert_eq!(
+            error.reason,
+            OptimizationUnavailableReason::InvalidAssignment
+        );
+        assert_eq!(
+            error.locus,
+            OptimizationFailureLocus::Merge {
+                node: shared,
+                family: DecisionFamily::Materialization,
+            },
+        );
+        assert_eq!(error.reports.len(), 2);
+        assert!(matches!(
+            error.reports[0].status,
+            SolveCompletionStatus::FactorizedExact | SolveCompletionStatus::Optimal
+        ));
+        assert_eq!(
+            error.reports[1].status,
+            SolveCompletionStatus::InvalidAssignment,
+        );
+        assert_eq!(error.reports[1].failure, Some(error.locus));
+        assert_eq!(error.reports[1].objective, None);
+    }
+}
+
+#[test]
+fn repeated_same_rule_node_has_one_family_authority() {
+    fn solve(
+        reversed: bool,
+    ) -> (
+        bbnf_ir::passes::RecognizerDecision,
+        bbnf_ir::passes::ComponentReport,
+    ) {
+        let shared = alt(vec![IrNode::Regex(1), IrNode::Regex(2)]);
+        let mut children = vec![
+            shared.clone(),
+            IrNode::Literal(3),
+            shared,
+            IrNode::Literal(4),
+        ];
+        if reversed {
+            children.reverse();
+        }
+        let ir = make_ir(
+            vec![rule(0, 0, IrNode::Seq(children))],
+            vec![
+                "entry".into(),
+                "a".into(),
+                "b".into(),
+                "middle".into(),
+                "tail".into(),
+            ],
+        );
+        let dag = ir.dag.as_ref().unwrap();
+        let IrNode::Seq(children) = &ir.rules[0].body else {
+            unreachable!()
+        };
+        let shared_id = dag
+            .node_for(
+                children
+                    .iter()
+                    .find(|node| matches!(node, IrNode::Alt(..)))
+                    .unwrap(),
+            )
+            .unwrap();
+        let solved = solve_grammar_components(&ir, &GrammarSolveControl::default())
+            .expect("repeated site must solve");
+        assert_eq!(solved.reports[0].variables.alt, 1);
+        assert_eq!(solved.reports[0].variables.engine, 2);
+        assert_eq!(solved.reports[0].sites.alt, 1);
+        assert_eq!(solved.reports[0].domain_values.alt, 1);
+        assert_eq!(
+            solved.reports[0].constraints.token_dispatch, 2,
+            "both unique child engine variables must target the shared Alt authority once",
+        );
+        assert_eq!(
+            solved.reports[0].covered_sites,
+            solved.reports[0].semantic_sites,
+        );
+        assert_eq!(solved.reports[0].status, SolveCompletionStatus::Optimal);
+        assert!(solved.reports[0].objective.is_some());
+        assert_eq!(solved.reports[0].failure, None);
+        (
+            solved.decisions[&shared_id].clone(),
+            solved.reports[0].clone(),
+        )
+    }
+
+    let forward = solve(false);
+    let reverse = solve(true);
+    assert_eq!(forward, reverse);
+}
+
+#[test]
+fn connected_shared_rule_roots_reuse_one_site_and_ignore_ref_order() {
+    fn solve(
+        reversed: bool,
+    ) -> (
+        bbnf_ir::passes::RecognizerDecision,
+        bbnf_ir::passes::ComponentReport,
+    ) {
+        let shared = alt(vec![IrNode::Literal(3), IrNode::Literal(4)]);
+        let mut pinned = RuleMeta::default();
+        pinned.preserve_identity = true;
+        let plain = RuleMeta::default();
+        let (left_meta, right_meta) = if reversed {
+            (plain, pinned)
+        } else {
+            (pinned, plain)
+        };
+        let refs = if reversed {
+            vec![IrNode::Ref(2), IrNode::Ref(1)]
+        } else {
+            vec![IrNode::Ref(1), IrNode::Ref(2)]
+        };
+        let mut ir = make_ir(
+            vec![
+                rule(0, 0, IrNode::Seq(refs)),
+                rule_with_meta(1, 1, shared.clone(), left_meta),
+                rule_with_meta(2, 2, shared, right_meta),
+            ],
+            vec![
+                "caller".into(),
+                "left".into(),
+                "right".into(),
+                "a".into(),
+                "b".into(),
+            ],
+        );
+        let dag = ir.dag.as_ref().unwrap();
+        let shared_id = dag.node_for(&ir.rules[1].body).unwrap();
+        assert_eq!(Some(shared_id), dag.node_for(&ir.rules[2].body));
+        ir.materialization
+            .insert(shared_id, MaterializationClass::TransparentElide);
+        let solved = solve_grammar_components(&ir, &GrammarSolveControl::default())
+            .expect("connected shared roots must solve");
+        assert_eq!(solved.reports.len(), 1);
+        assert_eq!(solved.reports[0].variables.alt, 1);
+        assert_eq!(solved.reports[0].variables.materialization, 2);
+        assert_eq!(
+            solved.reports[0].covered_sites,
+            solved.reports[0].semantic_sites,
+        );
+        assert_eq!(
+            solved.reports[0].status,
+            SolveCompletionStatus::FactorizedExact,
+        );
+        assert_eq!(
+            solved.materialization[&shared_id],
+            MaterializationClass::MustTape,
+            "pinned and plain occurrences must join legality on one root variable",
+        );
+        (
+            solved.decisions[&shared_id].clone(),
+            solved.reports[0].clone(),
+        )
+    }
+
+    let forward = solve(false);
+    let reverse = solve(true);
+    assert_eq!(forward, reverse);
 }

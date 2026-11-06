@@ -1,0 +1,4 @@
+bbnf-regex	0.1.0	/private/tmp/bbnf-g3-r3-8003fa19464878e2/parse-that/rust/regex/Cargo.toml	path
+parse_that	0.4.0	/private/tmp/bbnf-g3-r3-8003fa19464878e2/parse-that/rust/parse_that/Cargo.toml	path
+pprint	0.3.6	/private/tmp/bbnf-g3-r3-8003fa19464878e2/pprint/rust/Cargo.toml	path
+pprint_derive	0.2.2	/private/tmp/bbnf-g3-r3-8003fa19464878e2/pprint/rust/derive/Cargo.toml	path

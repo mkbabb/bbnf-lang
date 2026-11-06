@@ -1,0 +1,64 @@
+{
+  "algorithm_sha256": "1fa707954622584ceaaadd787d61c6c603bf2cec5101a9cad2d10e0b0251da12",
+  "base_post_ledger_sha256": "e006e3ea3c3a3f273b62cf75cfdfb0f68872fdadb10d2d16be6a5324cfb79922",
+  "post2": {
+    "bytes": 15313349,
+    "ledger_file_sha256": "efa627865654d94c409cda7a20e959cc7e976f8dc68cf204c2c0927b1a7b9a01",
+    "ledger_sha256": "efa627865654d94c409cda7a20e959cc7e976f8dc68cf204c2c0927b1a7b9a01",
+    "members": 843,
+    "path_file_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba",
+    "path_set_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba"
+  },
+  "post_to_post2": {
+    "added": [],
+    "changed": [
+      {
+        "after": {
+          "bytes": 125719,
+          "mode": "0644",
+          "sha256": "9d40aaa2892b9899b5a606d095517809b1fdd3b6468799fd004a8a5641a6d4c3"
+        },
+        "before": {
+          "bytes": 124350,
+          "mode": "0644",
+          "sha256": "82a0e360b64bcd762dd90e584f32f95911bb6fa05305168ee104f257a3621a8f"
+        },
+        "path": "bbnf-lang/xtask/src/regen_simple_runtime.rs"
+      }
+    ],
+    "removed": []
+  },
+  "pre_to_post2": {
+    "added": [],
+    "changed": [
+      {
+        "after": {
+          "bytes": 19855,
+          "mode": "0644",
+          "sha256": "54827145fe52f1cb0391a802031b3a7e137911fb4eab1b5bbfa304ca1c0ad0eb"
+        },
+        "before": {
+          "bytes": 19936,
+          "mode": "0644",
+          "sha256": "ce3ae9af7d93e6066fad2ff7e0ea404405bdff29df64bd803f82fe095067fc5f"
+        },
+        "path": "bbnf-lang/xtask/src/architecture/evidence/binding/apple.rs"
+      },
+      {
+        "after": {
+          "bytes": 125719,
+          "mode": "0644",
+          "sha256": "9d40aaa2892b9899b5a606d095517809b1fdd3b6468799fd004a8a5641a6d4c3"
+        },
+        "before": {
+          "bytes": 124350,
+          "mode": "0644",
+          "sha256": "82a0e360b64bcd762dd90e584f32f95911bb6fa05305168ee104f257a3621a8f"
+        },
+        "path": "bbnf-lang/xtask/src/regen_simple_runtime.rs"
+      }
+    ],
+    "removed": []
+  },
+  "schema": "bb-c.w0.r7-custody.v1-post2"
+}

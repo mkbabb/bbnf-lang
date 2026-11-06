@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "/usr/bin/arch",
+    "-arm64",
+    "/tmp/bbcw0-r7-native-nooverlay.wogEcp/target/aarch64-apple-darwin/ax-iter/xtask",
+    "regen-css-pretty"
+  ],
+  "command": "regen-css-pretty",
+  "cwd": "/private/tmp/bbcw0-r7-programming-candidate.dyTgSs/bbnf-lang",
+  "end_unix_ns": 1784765710904448000,
+  "ordinal": 2,
+  "start_unix_ns": 1784765710870474000,
+  "status": 0,
+  "stderr_bytes": 0,
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stdout_bytes": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "wall_ns": 33973083
+}

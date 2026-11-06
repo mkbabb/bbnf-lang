@@ -1,0 +1,27 @@
+#!/bin/sh
+set -eu
+
+case "${PYTHONOPTIMIZE+x}:${NODE_OPTIONS+x}:${NODE_PATH+x}:${PYTHONHOME+x}:${PYTHONPATH+x}:${PYTHONSTARTUP+x}:${PYTHONINSPECT+x}:${PYTHONWARNINGS+x}:${PYTHONPYCACHEPREFIX+x}:${PYTHONUTF8+x}:${PYTHONSAFEPATH+x}:${PYTHONNOUSERSITE+x}:${PYTHONDONTWRITEBYTECODE+x}:${NODE_EXTRA_CA_CERTS+x}:${NODE_ICU_DATA+x}:${OPENSSL_CONF+x}:${SSL_CERT_FILE+x}:${SSL_CERT_DIR+x}:${DYLD_INSERT_LIBRARIES+x}:${DYLD_LIBRARY_PATH+x}:${DYLD_FRAMEWORK_PATH+x}:${LD_PRELOAD+x}" in
+  :::::::::::::::::::::) ;;
+  *)
+    echo "governed startup environment rejected" >&2
+    exit 78
+    ;;
+esac
+
+case "$0" in
+  */*) root=${0%/*} ;;
+  *)
+    echo "launcher must be invoked by path" >&2
+    exit 78
+    ;;
+esac
+CDPATH= cd -P -- "$root"
+root=$(pwd -P)
+
+exec /usr/bin/env -i \
+  LC_ALL=C \
+  TZ=UTC \
+  __CF_USER_TEXT_ENCODING=0x1F8:0x0:0x0 \
+  /opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python \
+  -I -S -B -X utf8 "$root/verify.py" "$@"

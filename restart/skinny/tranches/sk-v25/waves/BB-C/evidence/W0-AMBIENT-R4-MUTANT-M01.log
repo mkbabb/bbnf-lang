@@ -1,0 +1,21 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.30s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 1 test
+
+thread 'passes::csp_strategy::tests::prune_restore_preserves_canonical_cost_and_order' (3408141) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:126:9:
+assertion `left == right` failed
+  left: [0, 4607182418800017408, 4607182418800017408]
+ right: [0, 4611686018427387904, 4625478292286210048]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test passes::csp_strategy::tests::prune_restore_preserves_canonical_cost_and_order ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::prune_restore_preserves_canonical_cost_and_order
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

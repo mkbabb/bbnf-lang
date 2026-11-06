@@ -111,7 +111,6 @@ struct SumVariantSpec {
 #[derive(Debug, serde::Deserialize)]
 struct ArenaSpec {
     slabs: Vec<SlabSpec>,
-    colors: ColorPoolSpec,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -123,14 +122,6 @@ struct SlabSpec {
     resolve: String,
     count: String,
     capacity_arg: String,
-}
-
-#[derive(Debug, serde::Deserialize)]
-struct ColorPoolSpec {
-    field: String,
-    item: String,
-    push: String,
-    count: String,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -219,6 +210,25 @@ pub fn check() -> Result<Vec<PathBuf>> {
     }
 
     Ok(paths)
+}
+
+/// Render one CSS runtime source member without writing the generated tree.
+pub fn render_source(file_name: &str) -> Result<String> {
+    render_runtime_files()?
+        .into_iter()
+        .find(|file| file.path.file_name().is_some_and(|name| name == file_name))
+        .map(|file| file.source)
+        .ok_or_else(|| anyhow!("CSS runtime projection has no source member `{file_name}`"))
+}
+
+/// Render the registry-independent CSS value projection without writing it.
+pub fn render_value_source() -> Result<String> {
+    let workspace_root = workspace_root()?;
+    let projection = load_projection(&workspace_root)?;
+    validate_workspace_grammar(&workspace_root, &projection)?;
+    let path = workspace_root.join(&projection.output_dir).join("value.rs");
+    let formatted = format_rust(&emit_value(&projection)?, &path)?;
+    Ok(format!("{CSS_GENERATED_HEADER}{formatted}"))
 }
 
 fn render_runtime_files() -> Result<Vec<RenderedRuntimeFile>> {
@@ -551,7 +561,7 @@ fn emit_arena(projection: &RuntimeProjection) -> Result<String> {
 
     let mut out = String::new();
     out.push_str(
-        "use crate::runtime::css_l4::value::{CssColor, CssRule, CssTypedValue, Declaration, KeyframeBlock, Selector};\n",
+        "use crate::runtime::css_l4::value::{CssRule, CssTypedValue, Declaration, KeyframeBlock, Selector};\n",
     );
     for slab in &projection.arena.slabs {
         out.push_str("#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]\n");
@@ -566,10 +576,6 @@ fn emit_arena(projection: &RuntimeProjection) -> Result<String> {
     for slab in &projection.arena.slabs {
         out.push_str(&format!("{}: Vec<Vec<{}>>,\n", slab.field, slab.item));
     }
-    out.push_str(&format!(
-        "{}: Vec<Box<{}>>,\n",
-        projection.arena.colors.field, projection.arena.colors.item
-    ));
     out.push_str("}\n");
 
     out.push_str("impl<'p> CssArena<'p> {\n");
@@ -588,7 +594,6 @@ fn emit_arena(projection: &RuntimeProjection) -> Result<String> {
             slab.field, slab.capacity_arg
         ));
     }
-    out.push_str(&format!("{}: Vec::new(),\n", projection.arena.colors.field));
     out.push_str("}}\n");
 
     for slab in &projection.arena.slabs {
@@ -603,17 +608,6 @@ fn emit_arena(projection: &RuntimeProjection) -> Result<String> {
             slab.field
         ));
     }
-    out.push_str(&format!(
-        "pub fn {}(&mut self, color: {}) -> &'p {} {{ let boxed = Box::new(color); self.{}.push(boxed); let last = self.{}.last().expect(\"just pushed\"); let raw: &{} = last.as_ref(); unsafe {{ core::mem::transmute::<&{}, &'p {}>(raw) }} }}\n",
-        projection.arena.colors.push,
-        projection.arena.colors.item,
-        projection.arena.colors.item,
-        projection.arena.colors.field,
-        projection.arena.colors.field,
-        projection.arena.colors.item.replace("'p", "'_"),
-        projection.arena.colors.item.replace("'p", "'_"),
-        projection.arena.colors.item
-    ));
     for slab in &projection.arena.slabs {
         out.push_str(&format!(
             "pub fn {}(&self, id: {}) -> &[{}] {{ match id.slab_index() {{ None => &[], Some(i) => self.{}[i].as_slice() }} }}\n",
@@ -626,22 +620,14 @@ fn emit_arena(projection: &RuntimeProjection) -> Result<String> {
             slab.count, slab.field
         ));
     }
-    out.push_str(&format!(
-        "pub fn {}(&self) -> usize {{ self.{}.len() }}\n",
-        projection.arena.colors.count, projection.arena.colors.field
-    ));
     out.push_str("pub fn truncate(&mut self, ");
     for slab in &projection.arena.slabs {
         out.push_str(&format!("{}: usize, ", slab.field));
     }
-    out.push_str("colors: usize) {\n");
+    out.push_str(") {\n");
     for slab in &projection.arena.slabs {
         out.push_str(&format!("self.{}.truncate({});\n", slab.field, slab.field));
     }
-    out.push_str(&format!(
-        "self.{}.truncate(colors);\n",
-        projection.arena.colors.field
-    ));
     out.push_str("}\n}\n");
 
     Ok(out)
@@ -698,7 +684,9 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
             "StyleSheet" => {
                 "OpenFrame::StyleSheet { rules_base: self.pending_rules.len() }".to_string()
             }
-            "HexColor" => "OpenFrame::HexColor { hex_span: None }".to_string(),
+            "HexColor" => "OpenFrame::HexColor { packed: None }".to_string(),
+            "NamedColor" => "OpenFrame::NamedColor { packed: None }".to_string(),
+            "CurrentColor" => "OpenFrame::CurrentColor".to_string(),
             "StyleRule" => {
                 "OpenFrame::StyleRule { selectors_base: self.pending_selectors.len(), decls_base: self.pending_decls.len(), span: \"\" }"
                     .to_string()
@@ -742,7 +730,11 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
     for (id, frame) in &routes.colors {
         let source = match frame.as_str() {
             "ColorFunction" => {
-                "OpenFrame::ColorFunction { kind_tag: None, space_tag: None, components_base: self.pending_components.len() }"
+                "OpenFrame::ColorFunction { kind_tag: None, components_base: self.pending_components.len() }"
+                    .to_string()
+            }
+            "ColorPredefined" => {
+                "OpenFrame::ColorPredefined { space_tag: None, components_base: self.pending_components.len() }"
                     .to_string()
             }
             other => bail!("unknown color frame `{other}`"),
@@ -775,21 +767,21 @@ fn emit_builder(_projection: &RuntimeProjection, routes: &ResolvedBuilderRoutes)
 
     Ok(format!(
         r#"
-use bbnf_ir::registry::StructLayout;
+use bbnf_ir::registry::{{AltBranchId, StructLayout}};
 
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::css_l4::arena::CssArena;
 use crate::runtime::css_l4::document::CssDocument;
 use crate::runtime::css_l4::value::{{
-    CssAngle, CssAngleUnit, CssColor, CssColorFunction, CssColorMix, CssColorPredefined,
-    CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,
-    CssFunction, CssHueMethod, CssLength, CssLengthUnit, CssPercentage, CssResolution,
-    CssResolutionUnit, CssRule, CssTime, CssTimeUnit, CssTypedValue, Declaration, GenericAtRule,
-    KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
+    CssAngle, CssAngleUnit, CssColor, CssColorFunction, CssColorPredefined, CssColorSpace,
+    CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit, CssFunction, CssLength,
+    CssLengthUnit, CssPercentage, CssResolution, CssResolutionUnit, CssRule, CssTime, CssTimeUnit,
+    CssTypedValue, Declaration, GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector,
+    StyleRule, StyleSheet,
 }};
 use crate::runtime::handle::CompoundHandle;
 
-// O(1) checkpoint design: every growing per-frame container is hoisted
+// O(depth) checkpoint design: every growing per-frame container is hoisted
 // out of the `OpenFrame` into a builder-owned append-only scratch stack
 // (`pending_rules` / `pending_decls` / `pending_selectors` /
 // `pending_values` / `pending_blocks` / `pending_components`). Each
@@ -821,17 +813,12 @@ enum OpenFrame<'p> {{
     SelectorList {{ selectors_base: usize, span: &'p str }},
     Wrap {{ value: Option<CssTypedValue<'p>> }},
     Numeric {{ kind: NumericKind, magnitude: Option<f64>, unit: Option<u8> }},
-    ColorFunction {{ kind_tag: Option<u8>, space_tag: Option<u8>, components_base: usize }},
-    ColorMix {{
-        mix_space: Option<u8>,
-        hue_method: Option<u8>,
-        left: Option<&'p CssColor<'p>>,
-        left_pct: Option<f64>,
-        right: Option<&'p CssColor<'p>>,
-        right_pct: Option<f64>,
-    }},
+    ColorFunction {{ kind_tag: Option<u8>, components_base: usize }},
+    ColorPredefined {{ space_tag: Option<u8>, components_base: usize }},
     Function {{ kind: FunctionKind, name: &'p str, args_base: usize }},
-    HexColor {{ hex_span: Option<&'p str> }},
+    HexColor {{ packed: Option<u32> }},
+    NamedColor {{ packed: Option<u32> }},
+    CurrentColor,
     DirPseudo {{ kind_tag: Option<u8> }},
 }}
 
@@ -887,12 +874,11 @@ pub struct CssStructBuilder<'p> {{
     pending_components: Vec<f64>,
 }}
 
-// O(1) checkpoint: pure `Copy`/length markers. `stack` is cloned, but the
-// frames are now `Copy` scalars + cursor indices (the growing containers
-// live in the builder's append-only scratch stacks), so the clone is an
-// O(stack-depth) memcpy rather than the prior O(document) deep clone of
-// `StyleSheet.rules`. Every other field is a `usize` length marker or a
-// `Copy` snapshot; rollback truncates the scratch stacks to these markers.
+// O(depth) checkpoint: `stack` and `span_starts` are cloned. Frames are
+// `Copy` scalars + cursor indices and growing containers live in append-only
+// scratch stacks, so work is proportional to nesting depth rather than
+// document size. Every other field is a length marker or `Copy` snapshot;
+// rollback truncates the scratch stacks and restores both cloned stacks.
 #[derive(Debug, Clone)]
 pub struct CssStructCheckpoint<'p> {{
     rules: usize,
@@ -900,12 +886,11 @@ pub struct CssStructCheckpoint<'p> {{
     selectors: usize,
     values: usize,
     keyframes: usize,
-    colors: usize,
     stack: Vec<OpenFrame<'p>>,
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
-    span_starts_len: usize,
+    span_starts: Vec<u32>,
     pending_rules_len: usize,
     pending_decls_len: usize,
     pending_selectors_len: usize,
@@ -976,6 +961,20 @@ impl<'p> CssStructBuilder<'p> {{
     }}
 
     fn deposit_value(&mut self, value: CssTypedValue<'p>) {{
+        if matches!(
+            self.stack.last(),
+            Some(OpenFrame::ColorFunction {{ .. }} | OpenFrame::ColorPredefined {{ .. }})
+        ) {{
+            let component = match value {{
+                CssTypedValue::Number(value) => value,
+                CssTypedValue::Dimension(CssDimension::Percentage(CssPercentage {{ value }})) => {{
+                    value
+                }}
+                other => panic!("color component deposited an unsupported value: {{other:?}}"),
+            }};
+            self.pending_components.push(component);
+            return;
+        }}
         // Values land on the nearest value-collecting frame's scratch
         // suffix. `Declaration` / `Function` both accumulate into the
         // shared `pending_values` stack (each holds its own `*_base`
@@ -1028,7 +1027,6 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             selectors: self.arena.selector_slab_count(),
             values: self.arena.value_slab_count(),
             keyframes: self.arena.keyframe_slab_count(),
-            colors: self.arena.color_count(),
             // O(stack-depth) memcpy of `Copy` frames (growing containers
             // hoisted to the scratch stacks below). This restores the
             // exact below-marker frame scalars + `*_base` cursors on
@@ -1037,7 +1035,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             root: self.root,
             next_handle: self.next_handle,
             pending_value: self.pending_value,
-            span_starts_len: self.span_starts.len(),
+            span_starts: self.span_starts.clone(),
             pending_rules_len: self.pending_rules.len(),
             pending_decls_len: self.pending_decls.len(),
             pending_selectors_len: self.pending_selectors.len(),
@@ -1054,19 +1052,20 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             checkpoint.selectors,
             checkpoint.values,
             checkpoint.keyframes,
-            checkpoint.colors,
         );
         self.stack = checkpoint.stack;
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_value = checkpoint.pending_value;
-        // Truncate every append-only scratch stack to its checkpoint
+        // Restore the full span-start stack because speculative work can
+        // pop starts that predate the checkpoint. Truncate every genuinely
+        // append-only scratch stack to its checkpoint length.
         // length. This is the precise inverse of the speculative appends
         // (rules / decls / selectors / values / blocks / components and
         // the span-start cursor); below-marker frames keep their `*_base`
         // cursors via the restored `stack`, so their drain ranges are
         // unchanged.
-        self.span_starts.truncate(checkpoint.span_starts_len);
+        self.span_starts = checkpoint.span_starts;
         self.pending_rules.truncate(checkpoint.pending_rules_len);
         self.pending_decls.truncate(checkpoint.pending_decls_len);
         self.pending_selectors.truncate(checkpoint.pending_selectors_len);
@@ -1217,83 +1216,85 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 }}
             }}
             OpenFrame::Numeric {{ kind, magnitude, unit }} => {{
-                let value = magnitude.unwrap_or(0.0);
-                let dim = match (kind, unit) {{
-                    (NumericKind::Length, Some(u)) => CssDimension::Length(CssLength {{
+                let value = magnitude.expect("Numeric closed without a magnitude");
+                let unit = unit.expect("Numeric closed without its grammar-owned unit tag");
+                let dim = match kind {{
+                    NumericKind::Length => CssDimension::Length(CssLength {{
                         value,
-                        unit: CssLengthUnit::from_discriminant(u),
+                        unit: CssLengthUnit::from_discriminant(unit),
                     }}),
-                    (NumericKind::Angle, Some(u)) => CssDimension::Angle(CssAngle {{
+                    NumericKind::Angle => CssDimension::Angle(CssAngle {{
                         value,
-                        unit: CssAngleUnit::from_discriminant(u).unwrap_or(CssAngleUnit::Deg),
+                        unit: CssAngleUnit::from_discriminant(unit)
+                            .expect("angle grammar emitted an unknown unit tag"),
                     }}),
-                    (NumericKind::Time, Some(u)) => CssDimension::Time(CssTime {{
+                    NumericKind::Time => CssDimension::Time(CssTime {{
                         value,
-                        unit: CssTimeUnit::from_discriminant(u).unwrap_or(CssTimeUnit::S),
+                        unit: CssTimeUnit::from_discriminant(unit)
+                            .expect("time grammar emitted an unknown unit tag"),
                     }}),
-                    (NumericKind::Frequency, Some(u)) => CssDimension::Frequency(CssFrequency {{
+                    NumericKind::Frequency => CssDimension::Frequency(CssFrequency {{
                         value,
-                        unit: CssFrequencyUnit::from_discriminant(u).unwrap_or(CssFrequencyUnit::Hz),
+                        unit: CssFrequencyUnit::from_discriminant(unit)
+                            .expect("frequency grammar emitted an unknown unit tag"),
                     }}),
-                    (NumericKind::Resolution, Some(u)) => CssDimension::Resolution(CssResolution {{
+                    NumericKind::Resolution => CssDimension::Resolution(CssResolution {{
                         value,
-                        unit: CssResolutionUnit::from_discriminant(u).unwrap_or(CssResolutionUnit::Dppx),
+                        unit: CssResolutionUnit::from_discriminant(unit)
+                            .expect("resolution grammar emitted an unknown unit tag"),
                     }}),
-                    (NumericKind::Flex, _) => CssDimension::Flex(CssFlex {{ value }}),
-                    (NumericKind::Percentage, _) => CssDimension::Percentage(CssPercentage {{ value }}),
-                    _ => CssDimension::Unitless(value),
+                    NumericKind::Flex => {{
+                        assert_eq!(unit, 0, "flex grammar emitted an unknown unit tag");
+                        CssDimension::Flex(CssFlex {{ value }})
+                    }}
+                    NumericKind::Percentage => {{
+                        assert_eq!(unit, 255, "percentage grammar emitted an unknown unit tag");
+                        CssDimension::Percentage(CssPercentage {{ value }})
+                    }}
                 }};
                 self.deposit_value(CssTypedValue::Dimension(dim));
             }}
-            OpenFrame::ColorFunction {{ kind_tag, space_tag, components_base }} => {{
+            OpenFrame::ColorFunction {{ kind_tag, components_base }} => {{
                 let components: Vec<f64> = self.pending_components.split_off(components_base);
-                let c1 = components.first().copied().unwrap_or(0.0);
-                let c2 = components.get(1).copied().unwrap_or(0.0);
-                let c3 = components.get(2).copied().unwrap_or(0.0);
+                assert!(
+                    (3..=4).contains(&components.len()),
+                    "functional color requires exactly three components and optional alpha"
+                );
+                let c1 = components[0];
+                let c2 = components[1];
+                let c3 = components[2];
                 let alpha = components.get(3).copied();
-                let color = if let Some(kind) = kind_tag {{
-                    CssColor::Function(CssColorFunction {{
-                        kind: CssColorType::from_discriminant(kind).unwrap_or(CssColorType::Rgb),
-                        c1,
-                        c2,
-                        c3,
-                        alpha,
-                    }})
-                }} else if let Some(space) = space_tag {{
-                    CssColor::Predefined(CssColorPredefined {{
-                        space: CssColorSpace::from_discriminant(space).unwrap_or(CssColorSpace::Srgb),
-                        c1,
-                        c2,
-                        c3,
-                        alpha,
-                    }})
-                }} else {{
-                    CssColor::Function(CssColorFunction {{
-                        kind: CssColorType::Rgb,
-                        c1,
-                        c2,
-                        c3,
-                        alpha,
-                    }})
-                }};
+                let color = CssColor::Function(CssColorFunction {{
+                    kind: kind_tag
+                        .and_then(CssColorType::from_discriminant)
+                        .expect("functional color closed without a valid grammar-owned kind tag"),
+                    c1,
+                    c2,
+                    c3,
+                    alpha,
+                }});
                 self.deposit_value(CssTypedValue::Color(color));
             }}
-            OpenFrame::ColorMix {{ mix_space, hue_method, left, left_pct, right, right_pct }} => {{
-                let mix_space = mix_space
-                    .and_then(CssColorSpace::from_discriminant)
-                    .unwrap_or(CssColorSpace::Srgb);
-                let hue_method = hue_method.and_then(CssHueMethod::from_discriminant);
-                let fallback = self.arena.push_color(CssColor::Hex(0x00000000));
-                let left = left.unwrap_or(fallback);
-                let right = right.unwrap_or(fallback);
-                self.deposit_value(CssTypedValue::Color(CssColor::Mix(CssColorMix {{
-                    mix_space,
-                    hue_method,
-                    left,
-                    left_pct,
-                    right,
-                    right_pct,
-                }})));
+            OpenFrame::ColorPredefined {{ space_tag, components_base }} => {{
+                let components: Vec<f64> = self.pending_components.split_off(components_base);
+                assert!(
+                    (3..=4).contains(&components.len()),
+                    "predefined color requires exactly three components and optional alpha"
+                );
+                let c1 = components[0];
+                let c2 = components[1];
+                let c3 = components[2];
+                let alpha = components.get(3).copied();
+                let color = CssColor::Predefined(CssColorPredefined {{
+                    space: space_tag
+                        .and_then(CssColorSpace::from_discriminant)
+                        .expect("predefined color closed without a valid grammar-owned space tag"),
+                    c1,
+                    c2,
+                    c3,
+                    alpha,
+                }});
+                self.deposit_value(CssTypedValue::Color(color));
             }}
             OpenFrame::Function {{ kind, name, args_base }} => {{
                 let args: Vec<CssTypedValue<'p>> = self.pending_values.split_off(args_base);
@@ -1314,7 +1315,8 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 let text: &'p str = match kind_tag {{
                     Some(1) => ":dir(rtl)",
                     Some(0) => ":dir(ltr)",
-                    _ => ":dir()",
+                    Some(_) => panic!("dir grammar emitted an unknown direction tag"),
+                    None => panic!("dir pseudo closed without its grammar-owned direction tag"),
                 }};
                 // `:dir(...)` lands as one pseudo-class selector on the
                 // nearest open `SelectorList` / `StyleRule` (both collect
@@ -1329,14 +1331,16 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                     self.deposit_value(CssTypedValue::Span(text));
                 }}
             }}
-            OpenFrame::HexColor {{ hex_span }} => {{
-                let packed = hex_span
-                    .map(|s| {{
-                        let digits = s.strip_prefix('#').unwrap_or(s);
-                        crate::runtime::css_l4::host::parse_hex_color(digits)
-                    }})
-                    .unwrap_or(0);
+            OpenFrame::HexColor {{ packed }} => {{
+                let packed = packed.expect("HexColor closed without an exact u32 payload");
                 self.deposit_value(CssTypedValue::Color(CssColor::Hex(packed)));
+            }}
+            OpenFrame::NamedColor {{ packed }} => {{
+                let packed = packed.expect("NamedColor closed without an exact u32 payload");
+                self.deposit_value(CssTypedValue::Color(CssColor::Named(packed)));
+            }}
+            OpenFrame::CurrentColor => {{
+                self.deposit_value(CssTypedValue::Color(CssColor::CurrentColor));
             }}
         }}
     }}
@@ -1345,18 +1349,19 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
         // `ColorFunction` collects components into the `pending_components`
         // scratch; the borrow of `self.stack` is released before the
         // scratch push so the two `&mut self` paths do not overlap.
-        if matches!(self.stack.last(), Some(OpenFrame::ColorFunction {{ .. }})) {{
+        if matches!(
+            self.stack.last(),
+            Some(OpenFrame::ColorFunction {{ .. }} | OpenFrame::ColorPredefined {{ .. }})
+        ) {{
             self.pending_components.push(value);
             return;
         }}
         match self.stack.last_mut() {{
-            Some(OpenFrame::Numeric {{ magnitude, .. }}) => *magnitude = Some(value),
-            Some(OpenFrame::ColorMix {{ left_pct, right_pct, left, right, .. }}) => {{
-                if left.is_some() && left_pct.is_none() {{
-                    *left_pct = Some(value);
-                }} else if right.is_some() && right_pct.is_none() {{
-                    *right_pct = Some(value);
-                }}
+            Some(OpenFrame::Numeric {{ magnitude, .. }}) => {{
+                assert!(
+                    magnitude.replace(value).is_none(),
+                    "Numeric received more than one magnitude"
+                );
             }}
             _ => self.deposit_value(CssTypedValue::Number(value)),
         }}
@@ -1367,10 +1372,43 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
     }}
 
     fn push_leaf_with_u64(&mut self, value: u64) {{
-        if value <= u32::MAX as u64 {{
-            self.deposit_value(CssTypedValue::Color(CssColor::Hex(value as u32)));
-        }} else {{
-            self.deposit_value(CssTypedValue::Number(value as f64));
+        match self.stack.last_mut() {{
+            Some(OpenFrame::HexColor {{ packed }} | OpenFrame::NamedColor {{ packed }}) => {{
+                let value = u32::try_from(value)
+                    .expect("CSS packed-color payload exceeds its declared u32 type");
+                assert!(
+                    packed.replace(value).is_none(),
+                    "CSS packed-color frame received more than one u32 payload"
+                );
+            }}
+            _ => self.deposit_value(CssTypedValue::Unsigned(value)),
+        }}
+    }}
+
+    fn push_leaf_with_u8(&mut self, value: u8) {{
+        match self.stack.last_mut() {{
+            Some(OpenFrame::Numeric {{ unit, .. }}) => {{
+                assert!(unit.replace(value).is_none(), "Numeric received more than one unit tag");
+            }}
+            Some(OpenFrame::ColorFunction {{ kind_tag, .. }}) => {{
+                assert!(
+                    kind_tag.replace(value).is_none(),
+                    "functional color received more than one kind tag"
+                );
+            }}
+            Some(OpenFrame::ColorPredefined {{ space_tag, .. }}) => {{
+                assert!(
+                    space_tag.replace(value).is_none(),
+                    "predefined color received more than one space tag"
+                );
+            }}
+            Some(OpenFrame::DirPseudo {{ kind_tag }}) => {{
+                assert!(
+                    kind_tag.replace(value).is_none(),
+                    "dir pseudo received more than one direction tag"
+                );
+            }}
+            _ => self.deposit_value(CssTypedValue::U8(value)),
         }}
     }}
 
@@ -1409,38 +1447,15 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             Some(OpenFrame::GenericAtRule {{ name, .. }}) if name.is_empty() => {{
                 *name = lifetime_extended;
             }}
-            Some(OpenFrame::HexColor {{ hex_span }}) if hex_span.is_none() => {{
-                *hex_span = Some(lifetime_extended);
-            }}
             _ => self.deposit_value(CssTypedValue::Span(lifetime_extended)),
         }}
     }}
 
     fn push_leaf_with_unit(&mut self) {{}}
 
-    fn push_branch_tag(&mut self, branch_index: u32) {{
-        match self.stack.last_mut() {{
-            Some(OpenFrame::Numeric {{ unit, .. }}) => *unit = Some(branch_index as u8),
-            Some(OpenFrame::ColorFunction {{ kind_tag, space_tag, .. }}) => {{
-                if kind_tag.is_none() && space_tag.is_none() {{
-                    *kind_tag = Some(branch_index as u8);
-                }}
-            }}
-            Some(OpenFrame::ColorMix {{ mix_space, hue_method, .. }}) => {{
-                if mix_space.is_none() {{
-                    *mix_space = Some(branch_index as u8);
-                }} else if hue_method.is_none() {{
-                    *hue_method = Some(branch_index as u8);
-                }}
-            }}
-            Some(OpenFrame::DirPseudo {{ kind_tag }}) => {{
-                if kind_tag.is_none() {{
-                    *kind_tag = Some(branch_index as u8);
-                }}
-            }}
-            _ => {{}}
-        }}
-    }}
+    // CSS projects structural choice through its typed frame/value variants;
+    // the runtime has no generic branch-identity field to populate.
+    fn select_alt_branch(&mut self, _branch: AltBranchId) {{}}
 }}
 "#,
     ))
@@ -1617,7 +1632,7 @@ pub trait CssVisitor<'p> {
     fn visit_selector(&mut self, _selector: &Selector<'p>) {}
     fn visit_declaration(&mut self, _declaration: &Declaration<'p>) {}
     fn visit_value(&mut self, _value: &CssTypedValue<'p>) {}
-    fn visit_color(&mut self, _color: &CssColor<'p>) {}
+    fn visit_color(&mut self, _color: &CssColor) {}
     fn visit_function(&mut self, _function: &CssFunction<'p>) {}
 }
 
@@ -1702,8 +1717,10 @@ where
         CssTypedValue::Function(function) => walk_function(doc, function, visitor),
         CssTypedValue::List(id) => walk_value_list(doc, *id, visitor),
         CssTypedValue::Dimension(_)
+        | CssTypedValue::U8(_)
         | CssTypedValue::Number(_)
         | CssTypedValue::Integer(_)
+        | CssTypedValue::Unsigned(_)
         | CssTypedValue::String(_)
         | CssTypedValue::Ident(_)
         | CssTypedValue::GlobalKeyword(_)
@@ -1711,21 +1728,11 @@ where
     }
 }
 
-fn walk_color<'p, V>(color: &CssColor<'p>, visitor: &mut V)
+fn walk_color<'p, V>(color: &CssColor, visitor: &mut V)
 where
     V: CssVisitor<'p> + ?Sized,
 {
     visitor.visit_color(color);
-    match color {
-        CssColor::Mix(mix) => {
-            walk_color(mix.left, visitor);
-            walk_color(mix.right, visitor);
-        }
-        CssColor::Hex(_)
-        | CssColor::Named { .. }
-        | CssColor::Function(_)
-        | CssColor::Predefined(_) => {}
-    }
 }
 
 fn walk_function<'p, V>(doc: &CssDocument<'p>, function: &CssFunction<'p>, visitor: &mut V)
@@ -1815,6 +1822,33 @@ impl CssPathQuery for f64 {
         }
     }
 }
+
+impl CssPathQuery for i64 {
+    fn query<'p>(doc: &CssDocument<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            CssWalkCursor::Value(CssTypedValue::Integer(value), _) => Some(*value),
+            _ => None,
+        }
+    }
+}
+
+impl CssPathQuery for u64 {
+    fn query<'p>(doc: &CssDocument<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            CssWalkCursor::Value(CssTypedValue::Unsigned(value), _) => Some(*value),
+            _ => None,
+        }
+    }
+}
+
+impl CssPathQuery for u8 {
+    fn query<'p>(doc: &CssDocument<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            CssWalkCursor::Value(CssTypedValue::U8(value), _) => Some(*value),
+            _ => None,
+        }
+    }
+}
 "#
         .to_string(),
     )
@@ -1840,7 +1874,15 @@ impl<'a, 'p: 'a> RuntimeView<'p> for CssView<'a, 'p> {
             CssFocus::Decl(_) => None,
             CssFocus::Value(value) => match value {
                 CssTypedValue::String(s) | CssTypedValue::Ident(s) | CssTypedValue::Span(s) => Some(*s),
-                _ => None,
+                CssTypedValue::Dimension(_)
+                | CssTypedValue::U8(_)
+                | CssTypedValue::Number(_)
+                | CssTypedValue::Integer(_)
+                | CssTypedValue::Unsigned(_)
+                | CssTypedValue::GlobalKeyword(_)
+                | CssTypedValue::Color(_)
+                | CssTypedValue::Function(_)
+                | CssTypedValue::List(_) => None,
             },
             CssFocus::KeyframeBlock(block) => Some(block.selector),
         }

@@ -29,7 +29,9 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::passes::csp_strategy::{AltMode, WrapMode, solve_grammar_components};
+use bbnf_ir::passes::csp_strategy::{
+    AltMode, GrammarSolveControl, WrapMode, solve_grammar_components,
+};
 use bbnf_ir::passes::materialization::classify_materialization;
 use bbnf_ir::passes::patterns::{
     NodeFacts, NodeKind, OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
@@ -178,7 +180,9 @@ fn shape_constraint_pins_alt_mode_for_keyword_prefix() {
     };
     install_recognizer_fact(&mut ir, 0, shape);
 
-    let (decisions, _mat) = solve_grammar_components(&ir);
+    let decisions = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("component solve must be available")
+        .decisions;
     let dag = ir.dag.as_ref().unwrap();
     let alt_id = dag.node_for(&ir.rules[0].body).unwrap();
     let mode = decisions
@@ -221,7 +225,9 @@ fn shape_constraint_disconnect_falls_back_to_checkpoint() {
     // No recognizer fact installed: the CSP has only Checkpoint in
     // the Alt domain.
 
-    let (decisions, _mat) = solve_grammar_components(&ir);
+    let decisions = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("component solve must be available")
+        .decisions;
     let dag = ir.dag.as_ref().unwrap();
     let alt_id = dag.node_for(&ir.rules[0].body).unwrap();
     let mode = decisions
@@ -283,7 +289,9 @@ fn layout_constraint_pins_wrap_mode_when_delim_scan_present() {
         },
     );
 
-    let (decisions, _mat) = solve_grammar_components(&ir);
+    let decisions = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("component solve must be available")
+        .decisions;
     let mode = decisions
         .get(&wrap_id)
         .and_then(|d| d.wrap_mode.as_ref())
@@ -311,7 +319,9 @@ fn layout_constraint_disconnect_picks_generic_without_fact() {
     );
     let ir = make_ir(vec![rule(0, 0, body)], strings);
 
-    let (decisions, _mat) = solve_grammar_components(&ir);
+    let decisions = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("component solve must be available")
+        .decisions;
     let dag = ir.dag.as_ref().unwrap();
     let wrap_id = dag.node_for(&ir.rules[0].body).unwrap();
     let mode = decisions
@@ -380,7 +390,9 @@ fn dispatch_constraint_pins_alt_mode_when_key_dispatch_config_present() {
     );
     ir.key_dispatch_configs.insert(alt_id, key_match);
 
-    let (decisions, _mat) = solve_grammar_components(&ir);
+    let decisions = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("component solve must be available")
+        .decisions;
     let mode = decisions
         .get(&alt_id)
         .and_then(|d| d.alt_mode.as_ref())

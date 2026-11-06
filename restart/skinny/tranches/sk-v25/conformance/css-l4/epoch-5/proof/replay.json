@@ -1,0 +1,48 @@
+{
+  "baseline_subject_sha256": "2ff4987bca76b8e6491849b15af2fb26bd2fec0b4c7fdcbcfdcba7677e6aa1b0",
+  "byte_mismatches": [],
+  "empty_root_count": 4,
+  "pair_count": 2,
+  "run_count": 4,
+  "runs": [
+    {
+      "artifact_bytes": 15322797,
+      "artifact_files": 8,
+      "counterexamples": 23,
+      "result_digest": "ab4870b9eebd0db3e542c6b975efc6cb92b5f961663db9c43150cd94d368815a",
+      "run": "pair-1-a",
+      "stdout": "{\"artifacts\": 8, \"counterexamples\": 23, \"status\": \"BYTE_REPLAY_VALID_LOCAL_AND_DOWNSTREAM_RED\", \"units\": 2565}",
+      "unit_digest": "868e551f37de3a095d884b41a33596c9edd8d2cfc0563674c20954c74cd6a2e0"
+    },
+    {
+      "artifact_bytes": 15322797,
+      "artifact_files": 8,
+      "counterexamples": 23,
+      "result_digest": "ab4870b9eebd0db3e542c6b975efc6cb92b5f961663db9c43150cd94d368815a",
+      "run": "pair-1-b",
+      "stdout": "{\"artifacts\": 8, \"counterexamples\": 23, \"status\": \"BYTE_REPLAY_VALID_LOCAL_AND_DOWNSTREAM_RED\", \"units\": 2565}",
+      "unit_digest": "868e551f37de3a095d884b41a33596c9edd8d2cfc0563674c20954c74cd6a2e0"
+    },
+    {
+      "artifact_bytes": 15322797,
+      "artifact_files": 8,
+      "counterexamples": 23,
+      "result_digest": "ab4870b9eebd0db3e542c6b975efc6cb92b5f961663db9c43150cd94d368815a",
+      "run": "pair-2-a",
+      "stdout": "{\"artifacts\": 8, \"counterexamples\": 23, \"status\": \"BYTE_REPLAY_VALID_LOCAL_AND_DOWNSTREAM_RED\", \"units\": 2565}",
+      "unit_digest": "868e551f37de3a095d884b41a33596c9edd8d2cfc0563674c20954c74cd6a2e0"
+    },
+    {
+      "artifact_bytes": 15322797,
+      "artifact_files": 8,
+      "counterexamples": 23,
+      "result_digest": "ab4870b9eebd0db3e542c6b975efc6cb92b5f961663db9c43150cd94d368815a",
+      "run": "pair-2-b",
+      "stdout": "{\"artifacts\": 8, \"counterexamples\": 23, \"status\": \"BYTE_REPLAY_VALID_LOCAL_AND_DOWNSTREAM_RED\", \"units\": 2565}",
+      "unit_digest": "868e551f37de3a095d884b41a33596c9edd8d2cfc0563674c20954c74cd6a2e0"
+    }
+  ],
+  "schema_version": 1,
+  "status": "PASS_TWO_COMPLETE_TWO_ROOT_REPLAY_PAIRS",
+  "stored_mismatches": []
+}

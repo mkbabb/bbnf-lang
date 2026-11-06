@@ -293,6 +293,28 @@ fn bbnf_rule() {
     );
 }
 
+#[test]
+fn bbnf_pratt_operators_roundtrip_from_generated_metadata() {
+    for input in [
+        "x = \"a\" << \"b\" ;",
+        "x = \"a\" >> \"b\" ;",
+        "x = \"a\" - \"b\" ;",
+    ] {
+        let emitted = bbnf_emit(input);
+        assert!(
+            emitted.contains(if input.contains("<<") {
+                "<<"
+            } else if input.contains(">>") {
+                ">>"
+            } else {
+                "-"
+            }),
+            "serializer lost the Pratt operator: {emitted:?}"
+        );
+        assert_eq!(emitted, bbnf_emit(&emitted));
+    }
+}
+
 // ── CSS Pretty ───────────────────────────────────────────────────────────────
 //
 // AZ-II.cutover.L Phase 3c — CSS Pretty flipped to struct-direct; same

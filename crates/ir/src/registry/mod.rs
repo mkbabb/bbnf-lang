@@ -35,5 +35,71 @@ pub mod strategy;
 #[allow(clippy::module_inception)]
 mod r#struct;
 
+/// Exact structural identifier for one alternative within an `Alt` node.
+///
+/// Semantic grammar values are not branch identifiers: typed `u8` maps travel
+/// through the value API instead. The `u16` domain admits 65,536 alternatives
+/// while fitting the shared 16-byte tape header without a side allocation.
+#[derive(
+    serde::Serialize, serde::Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord,
+)]
+#[serde(transparent)]
+#[repr(transparent)]
+pub struct AltBranchId(u16);
+
+impl AltBranchId {
+    pub const MAX_INDEX: u16 = u16::MAX;
+    pub const MAX_COUNT: usize = u16::MAX as usize + 1;
+
+    #[inline]
+    pub const fn new(index: u16) -> Self {
+        Self(index)
+    }
+
+    #[inline]
+    pub const fn get(self) -> u16 {
+        self.0
+    }
+}
+
+impl From<u16> for AltBranchId {
+    #[inline]
+    fn from(index: u16) -> Self {
+        Self::new(index)
+    }
+}
+
+impl From<AltBranchId> for u16 {
+    #[inline]
+    fn from(index: AltBranchId) -> Self {
+        index.get()
+    }
+}
+
+impl From<AltBranchId> for u32 {
+    #[inline]
+    fn from(index: AltBranchId) -> Self {
+        u32::from(index.get())
+    }
+}
+
+impl TryFrom<u32> for AltBranchId {
+    type Error = core::num::TryFromIntError;
+
+    #[inline]
+    fn try_from(index: u32) -> Result<Self, Self::Error> {
+        u16::try_from(index).map(Self::new)
+    }
+}
+
+impl TryFrom<usize> for AltBranchId {
+    type Error = core::num::TryFromIntError;
+
+    #[inline]
+    fn try_from(index: usize) -> Result<Self, Self::Error> {
+        u16::try_from(index).map(Self::new)
+    }
+}
+
 pub use strategy::{EmitStrategy, ManifestStrategyEntry, SubstrateBinding};
 pub use r#struct::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};

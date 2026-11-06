@@ -34,13 +34,13 @@ where
             let mut builder = SheetsStructBuilder::new();
             let mut pos: usize = 0;
             parse_GoogleSheetsParser_formula(
-                    src.as_bytes(),
-                    &mut pos,
-                    &mut state,
-                    &mut builder,
-                    cursor,
-                )
-                .ok()?;
+                src.as_bytes(),
+                &mut pos,
+                &mut state,
+                &mut builder,
+                cursor,
+            )
+            .ok()?;
             let doc: SheetsDocument<'_> = builder.finalise(src);
             let mut segments: Vec<PathSegment<'_>> = Vec::with_capacity(path.len());
             for owned in path.owned_segments() {
@@ -58,9 +58,8 @@ mod tests {
     #[ignore = "Flat-shape lazy honoring: formula is a flat compound."]
     fn parse_with_resolves_number_leaf() {
         let src = "=42";
-        let path: TypedPath<Sheets, f64> = TypedPath::from_owned(
-            vec![OwnedPathSegment::Index(0), OwnedPathSegment::Index(0)],
-        );
+        let path: TypedPath<Sheets, f64> =
+            TypedPath::from_owned(vec![OwnedPathSegment::Index(0), OwnedPathSegment::Index(0)]);
         let lazy = parse_with::<f64>(src, &path);
         assert_eq!(lazy, Some(42.0));
     }

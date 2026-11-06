@@ -1,0 +1,12 @@
+2026-07-22T22:24:02Z MODEL=gpt-5.6-sol EFFORT=ultra HOST=arm64
+COMMAND: git apply --check <each exact R5-M01..R5-M09 patch against its bound dirty-worktree preimage>
+PASS R5-M01 M01-bypass-factor-suffix-boundary.patch
+PASS R5-M02 M02-retain-objective-after-merge-failure.patch
+PASS R5-M03 M03-delete-pre-accept-cancellation.patch
+PASS R5-M04 M04-delete-before-next-cancellation.patch
+PASS R5-M05 M05-delete-final-return-cancellation.patch
+PASS R5-M06 M06-ignore-solver-stats-cancellation.patch
+PASS R5-M07 M07-ignore-current-token-cancellation.patch
+PASS R5-M08 M08-accept-incomplete-or-oversized-solution.patch
+PASS R5-M09 M09-accept-foreign-variable-id.patch
+SUMMARY: 9/9 apply-clean; 0 applied; 0 executed; 0 native credit.

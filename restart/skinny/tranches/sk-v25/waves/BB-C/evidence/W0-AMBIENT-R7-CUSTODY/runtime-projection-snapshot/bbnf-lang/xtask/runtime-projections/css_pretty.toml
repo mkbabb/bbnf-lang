@@ -1,0 +1,50 @@
+schema_version = 1
+grammar = "css_pretty"
+grammar_source = "grammar/css/pretty.bbnf"
+entry_rule = "stylesheet"
+runtime_module = "crate::runtime::css_pretty"
+output_dir = "crates/core/src/runtime/css_pretty"
+parser_type = "CssPrettyParser"
+type_prefix = "CssPretty"
+module_name = "css_pretty"
+
+[kind]
+default = "Other"
+layout_mode = "rule_routes"
+variants = [
+  "Ws",
+  "SelectorSpan",
+  "ValueSpan",
+  "PropertyName",
+  "Important",
+  "OptSemicolon",
+  "Declaration",
+  "BlockContent",
+  "RuleBlock",
+  "QualifiedRule",
+  "MediaRule",
+  "SupportsRule",
+  "FontFaceRule",
+  "ImportRule",
+  "AtRuleBody",
+  "GenericAtRule",
+  "AtRule",
+  "RuleItem",
+  "RuleList",
+  "Stylesheet",
+  "Other",
+]
+routes = [
+  { rule = "important", kind = "Important" },
+  { rule = "importRule", kind = "ImportRule" },
+  { rule = "declaration", kind = "Declaration" },
+  { rule = "genericAtRule", kind = "GenericAtRule" },
+  { rule = "qualifiedRule", kind = "QualifiedRule" },
+  { rule = "mediaRule", kind = "MediaRule" },
+  { rule = "supportsRule", kind = "SupportsRule" },
+  { rule = "fontFaceRule", kind = "FontFaceRule" },
+  { rule = "ruleBlock", kind = "RuleBlock" },
+  { rule = "blockContent", kind = "BlockContent" },
+  { rule = "ruleList", kind = "RuleList" },
+  { rule = "stylesheet", kind = "Stylesheet" },
+]

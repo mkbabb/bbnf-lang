@@ -62,13 +62,12 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
     }
     pub fn child(&self, i: usize) -> Option<BbnfView<'a, 'p>> {
         match self.focus {
-            BbnfValue::Compound(id) => {
-                self.doc
-                    .compound(id)
-                    .children
-                    .get(i)
-                    .map(|v| BbnfView::focused(self.doc, *v))
-            }
+            BbnfValue::Compound(id) => self
+                .doc
+                .compound(id)
+                .children
+                .get(i)
+                .map(|v| BbnfView::focused(self.doc, *v)),
             _ => None,
         }
     }
@@ -105,10 +104,7 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
         }
     }
 }
-fn compute_byte_span<'p>(
-    doc: &BbnfDocument<'p>,
-    focus: BbnfValue<'p>,
-) -> Option<(u32, u32)> {
+fn compute_byte_span<'p>(doc: &BbnfDocument<'p>, focus: BbnfValue<'p>) -> Option<(u32, u32)> {
     match focus {
         BbnfValue::Span(s) => {
             let input_ptr = doc.input.as_ptr() as usize;

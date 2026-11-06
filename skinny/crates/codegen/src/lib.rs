@@ -1182,7 +1182,7 @@ fn decision_spine_changes_generated_selection_fixture() {
         &output.backend_ir,
         &output.layout_facts,
         passes::recognizers::TargetFeatures {
-            avx512bw: false,
+            simd_byte_classification: false,
             collapsed_stage_author_declared: false,
             direct_only_output: false,
             direct_build_consumer: false,

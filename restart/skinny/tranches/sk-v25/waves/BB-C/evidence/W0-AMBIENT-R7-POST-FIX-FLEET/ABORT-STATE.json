@@ -1,0 +1,21 @@
+{
+  "build_inputs": {
+    "bytes": 15309199,
+    "ledger_sha256": "4e9a8f4b5db5e7e5fa46b44301abbdc55e58e38a81f5433470327b8480076a7c",
+    "members": 843,
+    "path_set_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba"
+  },
+  "build_started": false,
+  "grammar_facts_sha256": "b89686298f2710b0170e5e0f7a70c7b153447972aca3bbda5a28ed16fb28f5e2",
+  "head": "af15f63e0d2d3d719938c13b906a50acbb92ea3b",
+  "porcelain_v1_z": {
+    "bytes": 116438,
+    "sha256": "6cf294d6d53800ce998a163cfbc062c1cf623f026564adfcecd10345d1a44d7c"
+  },
+  "pratt_const_fold_sha256": "43454beeb49f5b5da88a17259894b4d72cefe0dd57e7ef1ce70ed44d8da5bd85",
+  "regen_started": false,
+  "runtime_started": false,
+  "schema": "bb-c.w0.r7-post-fix-fleet-abort.v1",
+  "terminal_disposition": "RED_HOSTILE_PRE_RUN_STOP",
+  "workspace": "/Users/mkbabb/Programming/bbnf-lang"
+}

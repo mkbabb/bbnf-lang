@@ -1,0 +1,24 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.73s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 2 tests
+
+thread 'passes::csp_strategy::tests::factorized_acceptance_observes_boundary_cancellation' (6986833) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:315:10:
+cancelled factorized proof must not commit: ()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'passes::csp_strategy::tests::constrained_acceptance_observes_boundary_cancellation' (6986832) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:352:10:
+cancelled constrained proof must not commit: ()
+test passes::csp_strategy::tests::constrained_acceptance_observes_boundary_cancellation ... FAILED
+test passes::csp_strategy::tests::factorized_acceptance_observes_boundary_cancellation ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::constrained_acceptance_observes_boundary_cancellation
+    passes::csp_strategy::tests::factorized_acceptance_observes_boundary_cancellation
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

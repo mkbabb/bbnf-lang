@@ -1,0 +1,13 @@
+[package]
+name = "bbnf-type-kernel-v4"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[workspace]
+
+[lints.rust]
+unsafe_code = "forbid"

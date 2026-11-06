@@ -1,0 +1,10 @@
+diff --git a/crates/ir/src/passes/csp_strategy/domain.rs b/crates/ir/src/passes/csp_strategy/domain.rs
+--- a/crates/ir/src/passes/csp_strategy/domain.rs
++++ b/crates/ir/src/passes/csp_strategy/domain.rs
+@@ -205,5 +205,6 @@ impl Domain for StrategyDomain {
+     fn add(&mut self, val: &StrategyValue) {
+         if let Some(index) = self.canonical_index(val) {
+             self.active[index] = true;
++            self.entries[index].1 = 1.0;
+         }
+     }

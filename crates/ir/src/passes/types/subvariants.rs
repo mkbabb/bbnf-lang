@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use crate::dag::GrammarDag;
-use crate::{IrNode, RuleId, TypeDesc};
+use crate::{AltBranchId, IrNode, RuleId, TypeDesc};
 
 use super::type_map::TypeMap;
 
@@ -11,7 +11,7 @@ use super::type_map::TypeMap;
 pub(super) struct RawSubVariant {
     pub variant_name: String,
     pub ty: TypeDesc,
-    pub branch_index: u32,
+    pub branch_index: AltBranchId,
 }
 
 /// Collect raw sub-variants for all heterogeneous alternations in a rule's body.
@@ -84,7 +84,8 @@ fn collect_sub_variants_walk(
                     variants.push(RawSubVariant {
                         variant_name,
                         ty: ty.clone(),
-                        branch_index: i as u32,
+                        branch_index: AltBranchId::try_from(i)
+                            .expect("Alt width must be validated before sub-variant projection"),
                     });
                 }
             }

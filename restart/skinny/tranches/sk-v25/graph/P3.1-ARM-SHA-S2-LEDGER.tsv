@@ -1,0 +1,15 @@
+sha256	bytes	lines	path	S2 responsibility
+389e326c0e3f7a5ceabfecb33ecf6d59a61506506a15153482c3d1ff11d90bde	8425	142	Cargo.toml	optimizes the expanded SHA vector gate in the test profile without changing release selection
+0c0ed5f0999f8c1a0f0e087931ba2885752af7e7f23dbaf131524160a4cba7a6	114954	4694	Cargo.lock	pins the target-only sha2/sha2-asm resolution and exact registry checksums
+4a455c5f615a1b7b86bdc76cdf7b57ec013f546cb6af2590563675851ad61766	2626	76	xtask/Cargo.toml	declares the Apple-AArch64-only mandatory asm SHA dependency and explicit architecture test seam
+c157e2007023f0cc8db0baba7a8ba80b83c1ee4e0b00b9b9478f2e1877c5aa5c	710	17	xtask/src/lib.rs	rejects every non-Apple-AArch64 xtask target at compile time
+9b05928e4507966c6d5f7ab2eb96c90e404c370a4f2470983b754d5669c2f1a0	3487	122	xtask/src/architecture/hash.rs	uses the target-selected SHA implementation, deletes the optimized-away assertion, and retains complete one-shot/chunked vectors
+3ec31fd59f6f7f85323f5ee467fc38db1b52a1946832dc3f9301f48fcfca6dbc	67985	1818	xtask/src/architecture/evidence/binding.rs	adds the v3.2 build receipt, exact frozen Apple-ARM argv and feature-graph hash boundary, expanded governing census, and self-hash recomputation
+957cc6bf87c30db57a8c56fbe419eded5bd6eb38e182e180a22af39024a128ce	14334	424	xtask/src/architecture/mod.rs	exports the cohesive assay module and narrow test seams
+1b1de30191ba2e533a6d9607995fbd9cf260b14cb37980efdfbae80182c34c22	27899	852	xtask/src/architecture/assay.rs	captures and hashes the exact inverted Cargo feature trees, drives only exact frozen A/B builds, validates external census, eight slots, publications, mandatory RFC6901 deltas, and exact twins
+ec1477d9661c93c8c1e4adaa1d2d86e23b8fbdd601253912d4dcbc84e7ea195c	3516	120	xtask/tests/architecture.rs	installs the isomorphic S2 assay test module
+140393756c02d94f5651469f97a834bfc6c725a587a43bc4780ca496185cd3ce	80787	2180	xtask/tests/architecture/evidence.rs	proves build-receipt clean break, fail-closed inputs, explicit integration fallback, and governing census drift rejection
+6636baab2b99514abb1269dace08e901b7c5eac331744134079e31060018f5b8	21112	555	xtask/tests/architecture/assay.rs	proves live differential Cargo trees, exact argv/tree binding, no-x86 rejection, no-retry slots, external census, mandatory/unauthorized deltas, closure, unknown-key rejection, and twins
+2154261fae7cdf3e575b5633d97aaa075008426303b50a5606d856839d7947c4	6444	105	restart/skinny/tranches/sk-v25/graph/P3.1-ARM-SHA-SUCCESSOR-AUTHORITY.md	supersedes the dead assertion claim and delegates exact launch/comparison law
+df360fc35b50ae649214ef4bcc21586d357a47772887329b5528cfe956d3a1b8	8529	187	restart/skinny/tranches/sk-v25/graph/P3.1-ARM-SHA-ASSAY-PROTOCOL.md	freezes subjects, differential feature receipts, environment thresholds, no-write roots, eight processes, comparator closure, statistics, and stopping law
+7b01d9789bc469311d4e8cbcd210d76d3ad24cccb45020a0b3dd943afe892cb8	127036	290	restart/skinny/tranches/sk-v25/RUN-LEDGER.md	appends the dead-assertion correction, bounded-repair status, and repaired-byte hostile launch intent without rewriting history

@@ -14,7 +14,9 @@ use proc_macro2::TokenStream;
 use quote::quote;
 
 use super::super::super::regex_scan_adapter::regex_scan_adapter_ident;
-use super::super::alt_dispatch::branches::branch_payload_push;
+use super::super::alt_dispatch::branches::{
+    PayloadPlanner, branch_payload_push, payload_push_from_fn,
+};
 use super::super::dispatcher::emit_ref_call_shape;
 use super::super::sanitise_grammar;
 
@@ -31,8 +33,9 @@ pub(in crate::backend::rust::emitter::shapes) fn emit_seq_branch_structural_stru
     support_mod: &proc_macro2::Ident,
     grammar_suffix: &str,
     ir: &GrammarIR,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> TokenStream {
-    emit_branch_position_core_struct_direct(seq, support_mod, grammar_suffix, ir)
+    emit_branch_position_core_struct_direct(seq, support_mod, grammar_suffix, ir, payload_planner)
 }
 
 /// Emit a single position inside a structural Seq Alt-branch attempt
@@ -52,6 +55,7 @@ fn emit_branch_position_core_struct_direct(
     support_mod: &proc_macro2::Ident,
     grammar_suffix: &str,
     ir: &GrammarIR,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> TokenStream {
     match node {
         IrNode::Literal(sid) => {
@@ -78,6 +82,9 @@ fn emit_branch_position_core_struct_direct(
                 let _ = (#call)?;
             },
             None => quote! {
+                compile_error!(
+                    "structural Ref target has no emitted per-shape driver"
+                );
                 return ::core::result::Result::Err(
                     crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
@@ -107,30 +114,125 @@ fn emit_branch_position_core_struct_direct(
             let inner: Vec<TokenStream> = children
                 .iter()
                 .map(|c| {
-                    emit_branch_position_core_struct_direct(c, support_mod, grammar_suffix, ir)
+                    emit_branch_position_core_struct_direct(
+                        c,
+                        support_mod,
+                        grammar_suffix,
+                        ir,
+                        payload_planner,
+                    )
                 })
                 .collect();
             quote! { #(#inner)* }
         }
-        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            let l = emit_branch_position_core_struct_direct(lhs, support_mod, grammar_suffix, ir);
-            let r = emit_branch_position_core_struct_direct(rhs, support_mod, grammar_suffix, ir);
-            quote! { #l #r }
+        IrNode::Skip(kept, discarded) => {
+            let kept_emit = emit_branch_position_core_struct_direct(
+                kept,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
+            let discarded_emit = emit_branch_position_core_struct_direct(
+                discarded,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
+            quote! {
+                #kept_emit
+                {
+                    let __discarded_builder_checkpoint = builder.checkpoint();
+                    let __discarded_result: ::core::result::Result<
+                        (),
+                        crate::runtime::DtaError,
+                    > = (|| {
+                        #discarded_emit
+                        ::core::result::Result::Ok(())
+                    })();
+                    builder.rollback(__discarded_builder_checkpoint);
+                    __discarded_result?;
+                }
+            }
+        }
+        IrNode::Next(discarded, kept) => {
+            let discarded_emit = emit_branch_position_core_struct_direct(
+                discarded,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
+            let kept_emit = emit_branch_position_core_struct_direct(
+                kept,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
+            quote! {
+                {
+                    let __discarded_builder_checkpoint = builder.checkpoint();
+                    let __discarded_result: ::core::result::Result<
+                        (),
+                        crate::runtime::DtaError,
+                    > = (|| {
+                        #discarded_emit
+                        ::core::result::Result::Ok(())
+                    })();
+                    builder.rollback(__discarded_builder_checkpoint);
+                    __discarded_result?;
+                }
+                #kept_emit
+            }
         }
         IrNode::OptionalWhitespace(inner) => {
-            let i = emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir);
+            let i = emit_branch_position_core_struct_direct(
+                inner,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
             quote! {
                 let _ = #support_mod::skip_space(input, p, state);
                 #i
                 let _ = #support_mod::skip_space(input, p, state);
             }
         }
-        IrNode::Map { inner, .. } => {
-            emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir)
+        IrNode::Map { inner, fn_id } => {
+            let inner = emit_branch_position_core_struct_direct(
+                inner,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
+            match ir.fns.get(*fn_id as usize) {
+                Some(descriptor) => match payload_push_from_fn(descriptor, ir) {
+                    Ok(Some(payload)) => quote! {
+                        {
+                            let __map_builder_checkpoint = builder.checkpoint();
+                            #inner
+                            builder.rollback(__map_builder_checkpoint);
+                            #payload
+                        }
+                    },
+                    Ok(None) => inner,
+                    Err(message) => quote! { compile_error!(#message); },
+                },
+                None => quote! { compile_error!("Map references a missing function descriptor"); },
+            }
         }
         IrNode::Repeat { inner, lo, hi } => {
-            let inner_emit =
-                emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir);
+            let inner_emit = emit_branch_position_core_struct_direct(
+                inner,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
             let lo_lit = *lo;
             let hi_is_finite = *hi != u32::MAX;
             let hi_lit = *hi;
@@ -213,8 +315,24 @@ fn emit_branch_position_core_struct_direct(
                         support_mod,
                         grammar_suffix,
                         ir,
+                        payload_planner,
                     );
-                    let payload_push = branch_payload_push(&branch.node, ir);
+                    // Direct Map positions now own their scalar payload after
+                    // their inner parser succeeds. Retain the historical unit
+                    // marker only for genuinely unmapped nested-Alt arms.
+                    let arity = payload_planner.node_arity(&branch.node);
+                    let payload_push = if arity.is_exactly(0) {
+                        branch_payload_push(&branch.node, ir)
+                    } else if arity.is_exactly(1) {
+                        quote! {}
+                    } else {
+                        quote! {
+                            compile_error!(
+                                "nested Alt branch does not emit exactly one \
+                                 committed semantic payload"
+                            );
+                        }
+                    };
                     quote! {
                         {
                             let __alt_save_p = *p;
@@ -253,8 +371,13 @@ fn emit_branch_position_core_struct_direct(
             }
         }
         IrNode::Negate(inner) => {
-            let inner_emit =
-                emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir);
+            let inner_emit = emit_branch_position_core_struct_direct(
+                inner,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
             quote! {
                 {
                     let __neg_save_p = *p;
@@ -279,10 +402,20 @@ fn emit_branch_position_core_struct_direct(
             }
         }
         IrNode::Minus(primary, excluded) => {
-            let primary_emit =
-                emit_branch_position_core_struct_direct(primary, support_mod, grammar_suffix, ir);
-            let excluded_emit =
-                emit_branch_position_core_struct_direct(excluded, support_mod, grammar_suffix, ir);
+            let primary_emit = emit_branch_position_core_struct_direct(
+                primary,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
+            let excluded_emit = emit_branch_position_core_struct_direct(
+                excluded,
+                support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
             quote! {
                 {
                     let __minus_save_p = *p;
@@ -308,6 +441,9 @@ fn emit_branch_position_core_struct_direct(
             }
         }
         IrNode::TokenDispatch { .. } => quote! {
+            compile_error!(
+                "TokenDispatch has no exact StructDirect emission path"
+            );
             return ::core::result::Result::Err(
                 crate::runtime::DtaError::Syntax {
                     offset: *p as u32,

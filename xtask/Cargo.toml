@@ -25,6 +25,11 @@ path = "src/lib.rs"
 name = "xtask"
 path = "src/main.rs"
 
+[[test]]
+name = "architecture"
+path = "tests/architecture.rs"
+required-features = ["architecture-test-seams"]
+
 [dependencies]
 # Workspace path-deps. Versions match the workspace's existing pins
 # verified against Cargo.lock at B2.W0.a authorship.
@@ -62,6 +67,10 @@ toml            = "0.8"
 # exit non-zero on drift.
 tempfile        = "3"
 
+[target.aarch64-apple-darwin.dependencies]
+sha2 = { version = "0.10", features = ["asm"] }
+
 [features]
 default = []
+architecture-test-seams = []
 grammar-regen = ["dep:bbnf"]

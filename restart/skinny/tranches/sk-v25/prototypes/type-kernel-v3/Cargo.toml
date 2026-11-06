@@ -1,0 +1,14 @@
+[package]
+name = "bbnf-type-kernel-v3"
+version = "0.3.0"
+edition = "2024"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+bbnf-ir = { path = "../../../../../../crates/ir" }
+
+[workspace]
+

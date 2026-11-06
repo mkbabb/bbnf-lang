@@ -1,0 +1,31 @@
+Darwin MacBook-Pro 25.4.0 Darwin Kernel Version 25.4.0: Thu Mar 19 19:33:50 PDT 2026; root:xnu-12377.101.15~1/RELEASE_ARM64_T6050 arm64
+arm64
+ProductName:		macOS
+ProductVersion:		26.4.1
+BuildVersion:		25E253
+Apple M5 Max
+cargo 1.96.0-nightly (eb94155a9 2026-04-09)
+release: 1.96.0-nightly
+commit-hash: eb94155a9a60943bd7b1cb04abec42f5d0de6ddc
+commit-date: 2026-04-09
+host: aarch64-apple-darwin
+libgit2: 1.9.2 (sys:0.20.4 vendored)
+libcurl: 8.7.1 (sys:0.4.87+curl-8.19.0 system ssl:(SecureTransport) LibreSSL/3.3.6)
+ssl: OpenSSL 3.5.4 30 Sep 2025
+os: Mac OS 26.4.1 [64-bit]
+rustc 1.96.0-nightly (02c7f9bec 2026-04-10)
+binary: rustc
+commit-hash: 02c7f9bec0fd583160f8bcccb830216023b07bee
+commit-date: 2026-04-10
+host: aarch64-apple-darwin
+release: 1.96.0-nightly
+LLVM version: 22.1.2
+nightly-2026-04-11-aarch64-apple-darwin (overridden by '/Users/mkbabb/Programming/bbnf-lang/rust-toolchain.toml')
+/opt/homebrew/bin/jq
+jq-1.8.1
+ef35d26cab5fffd780c5272142dc2d5ae37ae02cae7885204030e48020f74cd1  /opt/homebrew/bin/jq
+/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+2026-07-22 16:33:01.139 xcodebuild[25923:37780117] Writing error result bundle to /var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/ResultBundle_2026-22-07_16-33-0001.xcresult
+xcodebuild: error: SDK "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk" cannot be located.
+xcrun: error: unable to lookup item 'SDKVersion' in SDK '/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk'
+sdk_version=unavailable

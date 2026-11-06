@@ -1,0 +1,431 @@
+schema = "bbnf.architecture.constellation.v3.1"
+
+[[repositories]]
+id = "bbnf"
+discovery = "workspace_root"
+
+[[repositories]]
+id = "parse-that"
+discovery = "sibling"
+sibling_name = "parse-that"
+
+[[repositories]]
+id = "pprint"
+discovery = "sibling"
+sibling_name = "pprint"
+
+[[products]]
+id = "bbnf-language"
+repository = "bbnf"
+workspaces = ["bbnf-root", "bbnf-skinny", "bbnf-wasm"]
+package_faces = ["bbnf-root-rust", "bbnf-skinny-rust", "bbnf-wasm-rust", "bbnf-root-frontend", "bbnf-extension", "bbnf-playground", "bbnf-wasm-browser", "bbnf-wasm-node", "bbnf-wasm-node-debug"]
+
+[[products]]
+id = "parse-that-language"
+repository = "parse-that"
+workspaces = ["parse-that-rust"]
+package_faces = ["parse-that-rust-face", "parse-that-typescript"]
+
+[[workspaces]]
+id = "bbnf-root"
+repository = "bbnf"
+manifest = "Cargo.toml"
+package_faces = ["bbnf-root-rust", "bbnf-root-frontend", "bbnf-extension", "bbnf-playground"]
+
+[[workspaces]]
+id = "bbnf-skinny"
+repository = "bbnf"
+manifest = "skinny/Cargo.toml"
+package_faces = ["bbnf-skinny-rust"]
+
+[[workspaces]]
+id = "bbnf-wasm"
+repository = "bbnf"
+manifest = "wasm/Cargo.toml"
+package_faces = ["bbnf-wasm-rust", "bbnf-wasm-browser", "bbnf-wasm-node", "bbnf-wasm-node-debug"]
+
+[[workspaces]]
+id = "parse-that-rust"
+repository = "parse-that"
+manifest = "rust/Cargo.toml"
+package_faces = ["parse-that-rust-face", "parse-that-typescript"]
+
+[[contexts]]
+id = "cargo-bbnf-root"
+kind = "cargo"
+repository = "bbnf"
+workspace = "bbnf-root"
+package_faces = ["bbnf-root-rust"]
+manifest = "Cargo.toml"
+lock = "Cargo.lock"
+config_inputs = []
+target = "host"
+profile = "dev"
+
+[[contexts]]
+id = "cargo-bbnf-skinny"
+kind = "cargo"
+repository = "bbnf"
+workspace = "bbnf-skinny"
+package_faces = ["bbnf-skinny-rust"]
+manifest = "skinny/Cargo.toml"
+lock = "skinny/Cargo.lock"
+config_inputs = []
+target = "host"
+profile = "dev"
+
+[[contexts]]
+id = "cargo-bbnf-wasm"
+kind = "cargo"
+repository = "bbnf"
+workspace = "bbnf-wasm"
+package_faces = ["bbnf-wasm-rust"]
+manifest = "wasm/Cargo.toml"
+lock = "wasm/Cargo.lock"
+config_inputs = []
+target = "wasm32-unknown-unknown"
+profile = "release"
+
+[[contexts]]
+id = "cargo-parse-that-rust"
+kind = "cargo"
+repository = "parse-that"
+workspace = "parse-that-rust"
+package_faces = ["parse-that-rust-face"]
+manifest = "rust/Cargo.toml"
+lock = "rust/Cargo.lock"
+config_inputs = []
+target = "host"
+profile = "dev"
+
+[[contexts]]
+id = "frontend-bbnf-root"
+kind = "frontend"
+repository = "bbnf"
+workspace = "bbnf-root"
+package_faces = ["bbnf-root-frontend", "bbnf-extension", "bbnf-playground"]
+manifest = "package.json"
+lock = "package-lock.json"
+config_inputs = ["extension/package.json", "extension/tsconfig.json", "playground/package.json", "playground/playwright.config.ts", "playground/tsconfig.json", "playground/tsconfig.node.json", "playground/vite.config.ts"]
+target = "browser-node"
+profile = "production-test"
+
+[[contexts]]
+id = "frontend-parse-that-typescript"
+kind = "frontend"
+repository = "parse-that"
+workspace = "parse-that-rust"
+package_faces = ["parse-that-typescript"]
+manifest = "typescript/package.json"
+lock = "typescript/package-lock.json"
+config_inputs = ["typescript/tsconfig.json", "typescript/vite.config.ts"]
+target = "browser-node"
+profile = "production-test"
+
+[[package_faces]]
+id = "bbnf-root-rust"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-root"
+kind = "rust"
+root = "."
+manifest = "Cargo.toml"
+
+[[package_faces]]
+id = "bbnf-skinny-rust"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-skinny"
+kind = "rust"
+root = "skinny"
+manifest = "skinny/Cargo.toml"
+
+[[package_faces]]
+id = "bbnf-wasm-rust"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-wasm"
+kind = "rust"
+root = "wasm"
+manifest = "wasm/Cargo.toml"
+
+[[package_faces]]
+id = "bbnf-root-frontend"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-root"
+kind = "frontend"
+root = "."
+manifest = "package.json"
+
+[[package_faces]]
+id = "bbnf-extension"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-root"
+kind = "frontend"
+root = "extension"
+manifest = "extension/package.json"
+
+[[package_faces]]
+id = "bbnf-playground"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-root"
+kind = "frontend"
+root = "playground"
+manifest = "playground/package.json"
+
+[[package_faces]]
+id = "bbnf-wasm-browser"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-wasm"
+kind = "generated_frontend"
+root = "wasm/pkg"
+manifest = "wasm/pkg/package.json"
+
+[[package_faces]]
+id = "bbnf-wasm-node"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-wasm"
+kind = "generated_frontend"
+root = "wasm/pkg-node"
+manifest = "wasm/pkg-node/package.json"
+
+[[package_faces]]
+id = "bbnf-wasm-node-debug"
+repository = "bbnf"
+product = "bbnf-language"
+workspace = "bbnf-wasm"
+kind = "generated_frontend"
+root = "wasm/pkg-node-debug"
+manifest = "wasm/pkg-node-debug/package.json"
+
+[[package_faces]]
+id = "parse-that-rust-face"
+repository = "parse-that"
+product = "parse-that-language"
+workspace = "parse-that-rust"
+kind = "rust"
+root = "rust"
+manifest = "rust/Cargo.toml"
+
+[[package_faces]]
+id = "parse-that-typescript"
+repository = "parse-that"
+product = "parse-that-language"
+workspace = "parse-that-rust"
+kind = "frontend"
+root = "typescript"
+manifest = "typescript/package.json"
+
+[[documentation]]
+id = "p1-contract-authority"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P1-ADJUDICATION.md"
+role = "contract_authority"
+
+[[documentation]]
+id = "p2-verdict-authority"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P2-ADJUDICATION.md"
+role = "verdict_authority"
+
+[[documentation]]
+id = "p2-review-a-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P2-REVIEW-A.md"
+role = "superseded_evidence"
+superseded_by = "p2-verdict-authority"
+
+[[documentation]]
+id = "p2-review-b-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P2-REVIEW-B.md"
+role = "superseded_evidence"
+superseded_by = "p2-verdict-authority"
+
+[[documentation]]
+id = "p3-verdict-authority"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3-ADJUDICATION.md"
+role = "verdict_authority"
+
+[[documentation]]
+id = "p3-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3-EVIDENCE.md"
+role = "superseded_evidence"
+superseded_by = "p3-verdict-authority"
+
+[[documentation]]
+id = "p3-review-a-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3-REVIEW-A.md"
+role = "superseded_evidence"
+superseded_by = "p3-verdict-authority"
+
+[[documentation]]
+id = "p3-review-b-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3-REVIEW-B.md"
+role = "superseded_evidence"
+superseded_by = "p3-verdict-authority"
+
+[[documentation]]
+id = "p31-gestalt1-verdict-authority"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-1-ADJUDICATION.md"
+role = "verdict_authority"
+
+[[documentation]]
+id = "p31-gestalt1-critic-a-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-1-CRITIC-A.md"
+role = "superseded_evidence"
+superseded_by = "p31-gestalt1-verdict-authority"
+
+[[documentation]]
+id = "p31-gestalt1-critic-c-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-1-CRITIC-C.md"
+role = "superseded_evidence"
+superseded_by = "p31-gestalt1-verdict-authority"
+
+[[documentation]]
+id = "p31-gestalt1-critic-b-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-1-CRITIC-B.md"
+role = "superseded_evidence"
+superseded_by = "p31-gestalt1-verdict-authority"
+
+[[documentation]]
+id = "p31-gestalt2-verdict-authority"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-2-ADJUDICATION.md"
+role = "verdict_authority"
+
+[[documentation]]
+id = "p31-repair-author-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-REPAIR-AUTHOR.md"
+role = "superseded_evidence"
+superseded_by = "p31-gestalt2-verdict-authority"
+
+[[documentation]]
+id = "p31-gestalt2-critic-a-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-2-CRITIC-A.md"
+role = "superseded_evidence"
+superseded_by = "p31-gestalt2-verdict-authority"
+
+[[documentation]]
+id = "p31-gestalt2-critic-b-evidence"
+repository = "bbnf"
+path = "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-2-CRITIC-B.md"
+role = "superseded_evidence"
+superseded_by = "p31-gestalt2-verdict-authority"
+
+[[exclusions]]
+id = "git-state"
+repository = "bbnf"
+pattern = ".git/**"
+reason = "git administrative state is represented by the worktree plane"
+
+[[exclusions]]
+id = "node-modules"
+repository = "bbnf"
+pattern = "node_modules/**"
+reason = "installed dependency tree is bound by lock and tool state"
+
+[[exclusions]]
+id = "cargo-target"
+repository = "bbnf"
+pattern = "**/target/**"
+reason = "ephemeral Cargo build output"
+
+[[exclusions]]
+id = "nested-node-modules"
+repository = "bbnf"
+pattern = "**/node_modules/**"
+reason = "installed dependency tree is bound by lock and tool state"
+
+[[exclusions]]
+id = "claude-worktrees"
+repository = "bbnf"
+pattern = ".claude/worktrees/**"
+reason = "external worktree contents are represented by the worktree plane"
+
+[[exclusions]]
+id = "test-results"
+repository = "bbnf"
+pattern = "**/test-results/**"
+reason = "ephemeral browser test output"
+
+[[exclusions]]
+id = "profile-target"
+repository = "bbnf"
+pattern = ".profile-target/**"
+reason = "ephemeral profiling build output"
+
+[[exclusions]]
+id = "playwright-state"
+repository = "bbnf"
+pattern = ".playwright-mcp/**"
+reason = "ephemeral browser control state"
+
+[[exclusions]]
+id = "test-dist"
+repository = "bbnf"
+pattern = "**/.test-dist/**"
+reason = "ephemeral test build output"
+
+[[exclusions]]
+id = "parse-git-state"
+repository = "parse-that"
+pattern = ".git/**"
+reason = "git administrative state is represented by the worktree plane"
+
+[[exclusions]]
+id = "parse-node-modules"
+repository = "parse-that"
+pattern = "node_modules/**"
+reason = "installed dependency tree is bound by lock and tool state"
+
+[[exclusions]]
+id = "parse-cargo-target"
+repository = "parse-that"
+pattern = "**/target/**"
+reason = "ephemeral Cargo build output"
+
+[[exclusions]]
+id = "parse-nested-node-modules"
+repository = "parse-that"
+pattern = "**/node_modules/**"
+reason = "installed dependency tree is bound by lock and tool state"
+
+[[exclusions]]
+id = "parse-test-results"
+repository = "parse-that"
+pattern = "**/test-results/**"
+reason = "ephemeral test output"
+
+[[exclusions]]
+id = "parse-test-dist"
+repository = "parse-that"
+pattern = "**/.test-dist/**"
+reason = "ephemeral test build output"
+
+[[worktree_nominations]]
+id = "bbnf-primary"
+repository = "bbnf"
+product = "bbnf-language"
+selector = "manifest_repository_root"
+
+[[worktree_nominations]]
+id = "parse-that-primary"
+repository = "parse-that"
+product = "parse-that-language"
+selector = "manifest_repository_root"

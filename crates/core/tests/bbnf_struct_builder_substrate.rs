@@ -13,6 +13,7 @@ use bbnf::runtime::bbnf::{
 };
 use bbnf::runtime::builder::StructBuilder;
 use bbnf::runtime::handle::CompoundHandle;
+use bbnf_ir::AltBranchId;
 use bbnf_ir::registry::{LayoutKind, StructLayout};
 
 /// Construct a synthetic `StructLayout` for a rule keyed by its
@@ -48,6 +49,14 @@ fn bbnf_struct_builder_round_trips_an_int_leaf() {
     builder.push_leaf_with_i64(42);
     let doc = builder.finalise("42");
     assert_eq!(doc.root(), &BbnfValue::Int(42));
+}
+
+#[test]
+fn bbnf_struct_builder_round_trips_a_full_domain_uint_leaf() {
+    let mut builder = BbnfStructBuilder::new();
+    builder.push_leaf_with_u64(u64::MAX);
+    let doc = builder.finalise("18446744073709551615");
+    assert_eq!(doc.root(), &BbnfValue::UInt(u64::MAX));
 }
 
 #[test]
@@ -91,7 +100,7 @@ fn bbnf_struct_builder_branch_tag_records_alt_index() {
     // kind via `BbnfCompoundKind::from_layout`.
     let layout = synth_layout(37, "import_directive");
     let handle: CompoundHandle = builder.begin_compound(&layout);
-    builder.push_branch_tag(2);
+    builder.select_alt_branch(AltBranchId::new(2));
     builder.push_leaf_with_str("@import");
     builder.end_compound(handle);
     let doc = builder.finalise("@import");
@@ -116,6 +125,7 @@ fn bbnf_view_kind_classifies_leaves_and_compounds() {
         children: vec![
             BbnfValue::Span("rule_name"),
             BbnfValue::Int(7),
+            BbnfValue::UInt(u64::MAX),
             BbnfValue::Bool(false),
         ],
     });
@@ -127,7 +137,12 @@ fn bbnf_view_kind_classifies_leaves_and_compounds() {
     let children: Vec<_> = view.children().map(|v| v.kind()).collect();
     assert_eq!(
         children,
-        vec![BbnfKind::Span, BbnfKind::Int, BbnfKind::Bool]
+        vec![
+            BbnfKind::Span,
+            BbnfKind::Int,
+            BbnfKind::UInt,
+            BbnfKind::Bool,
+        ]
     );
 }
 

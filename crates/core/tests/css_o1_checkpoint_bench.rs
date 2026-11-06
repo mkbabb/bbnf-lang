@@ -24,7 +24,10 @@ fn time_one(source: &str) -> (f64, usize) {
 #[test]
 fn css_o1_checkpoint_bootstrap_single_sheet_cold() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    for rel in ["data/css/bootstrap.css", "skinny/corpora/css-l4-sk-v14/bootstrap-5.3.3.min.css"] {
+    for rel in [
+        "data/css/bootstrap.css",
+        "skinny/corpora/css-l4-sk-v14/bootstrap-5.3.3.min.css",
+    ] {
         let path = root.join(rel);
         let Ok(source) = std::fs::read_to_string(&path) else {
             eprintln!("CSS_O1_BENCH skip missing={rel}");

@@ -1,0 +1,38 @@
+[
+  {
+    "argv": ["/usr/bin/arch", "-arm64", "/tmp/bbcw0-r7-native-nooverlay.wogEcp/target/aarch64-apple-darwin/ax-iter/xtask", "regen-json"],
+    "command": "regen-json",
+    "ordinal": 1,
+    "receipt_sha256": "a1a21224f383a5901995b106d7b0f64d0c4a44782648b7342d9c0d01bc4f4278",
+    "status": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wall_ns": 507656500
+  },
+  {
+    "argv": ["/usr/bin/arch", "-arm64", "/tmp/bbcw0-r7-native-nooverlay.wogEcp/target/aarch64-apple-darwin/ax-iter/xtask", "regen-css-pretty"],
+    "command": "regen-css-pretty",
+    "ordinal": 2,
+    "receipt_sha256": "83124eb396c68bcd6edba1309cd0f4cdba65151f7b93da9f1c38a060bf53d65e",
+    "status": 0,
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wall_ns": 33973083
+  },
+  {
+    "argv": ["/usr/bin/arch", "-arm64", "/tmp/bbcw0-r7-native-nooverlay.wogEcp/target/aarch64-apple-darwin/ax-iter/xtask", "regen-google-sheets"],
+    "command": "regen-google-sheets",
+    "ordinal": 3,
+    "receipt_sha256": "db75f4f91d4baaf5377508b1715908e3a1618a3aa8e35b6f14f1f5d7cfe5af03",
+    "status": 1,
+    "stderr_bytes": 169,
+    "stderr_sha256": "84c1ca19c580f26bcf9a6e930d9008def43586809c5453ef68486ecb8678f4c0",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "wall_ns": 29936250
+  },
+  {
+    "command": "regen-css",
+    "ordinal": 4,
+    "status": "UNRUN_AFTER_FIRST_FAILURE"
+  }
+]

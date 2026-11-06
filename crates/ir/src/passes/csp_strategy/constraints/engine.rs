@@ -62,7 +62,7 @@
 //! # Integration with the per-rule `ImplicationConstraint`s
 //!
 //! The pre-existing intra-rule constraint
-//! (`csp_strategy::mod::add_token_dispatch_constraints`) wires
+//! (`csp_strategy::constraints::token::install`) wires
 //! an Alt parent's byte-dispatch decision to its child regex
 //! engines, enforcing the one-pass-eligible subset. The two
 //! constraint families compose cleanly: a byte-dispatch Alt
@@ -84,6 +84,7 @@
 
 use csp_solver::Csp;
 use csp_solver::constraint::{ImplicationConstraint, VarId};
+use csp_solver::domain::Domain;
 
 use super::ConstraintCtx;
 use crate::GrammarIR;
@@ -121,7 +122,7 @@ pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, _ir: &Gra
         .filter(|(_, v)| {
             // Exclude variables whose domain includes FamilyHelper.
             let domain = &csp.variables[**v as usize].domain;
-            !domain.values.contains(&family_helper_val)
+            !domain.contains(&family_helper_val)
         })
         .map(|(_, &v)| v)
         .collect();

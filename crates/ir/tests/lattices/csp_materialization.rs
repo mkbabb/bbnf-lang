@@ -19,7 +19,7 @@
 use std::collections::HashMap;
 
 use bbnf_ir::passes::materialization::{MaterializationClass, classify_materialization};
-use bbnf_ir::passes::solve_grammar_components;
+use bbnf_ir::passes::{GrammarSolveControl, solve_grammar_components};
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
     StringId, TypeDescInterner,
@@ -102,8 +102,9 @@ fn rule_with_meta(id: u32, name: StringId, body: IrNode, meta: RuleMeta) -> IrRu
 /// Run the joint CSP on `ir` and merge the result into
 /// `ir.materialization`. Returns the rule body's post-CSP class.
 fn solve_and_merge(ir: &mut GrammarIR) {
-    let (_decisions, mat_refined) = solve_grammar_components(ir);
-    for (node_id, class) in mat_refined {
+    let solved = solve_grammar_components(ir, &GrammarSolveControl::default())
+        .expect("component solve must be available");
+    for (node_id, class) in solved.materialization {
         ir.materialization.insert(node_id, class);
     }
 }
@@ -269,11 +270,15 @@ fn solve_returns_decision_map() {
     let strings = vec!["entry".to_string(), "x".to_string()];
     let rules = vec![rule(0, 0, IrNode::Literal(1))];
     let ir = make_ir(rules, strings);
-    let (decisions, mat) = solve_grammar_components(&ir);
+    let solved = solve_grammar_components(&ir, &GrammarSolveControl::default())
+        .expect("component solve must be available");
     // Materialization map has an entry for the rule body NodeId.
-    assert!(!mat.is_empty(), "materialization map populated");
+    assert!(
+        !solved.materialization.is_empty(),
+        "materialization map populated"
+    );
     // Decisions map may be empty for a trivial literal rule (no
     // Alt / Wrap / Regex variables) — the test is just that the
     // call doesn't panic and the materialization side fires.
-    let _ = decisions;
+    let _ = solved.decisions;
 }

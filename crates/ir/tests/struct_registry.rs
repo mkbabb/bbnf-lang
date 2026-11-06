@@ -33,13 +33,22 @@ use bbnf_ir::passes::{
     AuditCoverageReport, GrammarAuditTag, audit_payload_coverage, populate_struct_registry,
 };
 use bbnf_ir::{
-    AltBranch, CharSet128, CostConfig, FieldSource, FnDescriptor, FnId, GrammarIR, IrNode, IrRule,
-    LayoutKind, MapExpr, RuleId, RuleMeta, StringId, StructRegistry, TypeDesc, TypeDescInterner,
+    AltBranch, AltBranchId, CharSet128, CostConfig, FieldSource, FnDescriptor, FnId, GrammarIR,
+    IrNode, IrRule, LayoutKind, MapExpr, RuleId, RuleMeta, StringId, StructRegistry, SubVariant,
+    TypeDesc, TypeDescInterner,
 };
 
 // ── Fixture infrastructure (mirrors payload_coverage_audit.rs) ───────────
 
 const SENTINEL_ENTRY: u32 = u32::MAX;
+
+#[test]
+fn alt_branch_id_admits_its_exact_u16_domain() {
+    let last = AltBranchId::try_from(u32::from(u16::MAX)).expect("u16::MAX branch index");
+    assert_eq!(last.get(), u16::MAX);
+    assert_eq!(AltBranchId::MAX_COUNT, u16::MAX as usize + 1);
+    assert!(AltBranchId::try_from(u32::from(u16::MAX) + 1).is_err());
+}
 
 fn empty_ir() -> GrammarIR {
     GrammarIR {
@@ -198,22 +207,69 @@ fn single_alt_rule_produces_tagged_enum_layout() {
 
     // Field 0: branch 0, BranchTag(0).
     let f0 = &layout.fields[0];
-    assert_eq!(f0.source, FieldSource::BranchTag { branch_index: 0 });
+    assert_eq!(
+        f0.source,
+        FieldSource::BranchTag {
+            branch_index: AltBranchId::new(0),
+        }
+    );
     assert!(f0.is_branch_tag());
-    assert_eq!(f0.branch_index(), Some(0));
+    assert_eq!(f0.branch_index(), Some(AltBranchId::new(0)));
     assert_eq!(f0.name, "branch_0");
 
     // Field 1: branch 1, BranchTag(1).
     let f1 = &layout.fields[1];
-    assert_eq!(f1.source, FieldSource::BranchTag { branch_index: 1 });
-    assert_eq!(f1.branch_index(), Some(1));
+    assert_eq!(
+        f1.source,
+        FieldSource::BranchTag {
+            branch_index: AltBranchId::new(1),
+        }
+    );
+    assert_eq!(f1.branch_index(), Some(AltBranchId::new(1)));
     assert_eq!(f1.name, "branch_1");
 
     // Branches iterator returns both.
     let branches: Vec<_> = layout.branches().collect();
     assert_eq!(branches.len(), 2);
-    assert_eq!(branches[0].0, 0);
-    assert_eq!(branches[1].0, 1);
+    assert_eq!(branches[0].0, AltBranchId::new(0));
+    assert_eq!(branches[1].0, AltBranchId::new(1));
+}
+
+#[test]
+fn tagged_enum_layout_keeps_internal_sub_variant_names_private() {
+    let mut ir = empty_ir();
+    let f_true = add_fn(&mut ir, expr_typed(TypeDesc::Bool));
+    let f_one = add_fn(&mut ir, expr_typed(TypeDesc::U8));
+    let l_true = add_literal(&mut ir, "true");
+    let l_one = add_literal(&mut ir, "1");
+    let rule_id = add_rule(
+        &mut ir,
+        "value",
+        alt(vec![map_node(l_true, f_true), map_node(l_one, f_one)]),
+    );
+    let internal = intern(&mut ir, "value_scalar");
+    ir.rules[rule_id as usize].meta.sub_variants = vec![
+        SubVariant {
+            variant_name: internal,
+            ty: TypeDesc::Bool,
+            branch_index: AltBranchId::new(0),
+        },
+        SubVariant {
+            variant_name: internal,
+            ty: TypeDesc::U8,
+            branch_index: AltBranchId::new(1),
+        },
+    ];
+
+    populate_with_rule_types(&mut ir, &[(rule_id, TypeDesc::BoxedEnum)]);
+
+    let layout = ir.struct_registry.layout(rule_id).expect("value layout");
+    let names = layout
+        .fields
+        .iter()
+        .map(|field| field.name.as_str())
+        .collect::<Vec<_>>();
+    assert_eq!(names, ["branch_0", "branch_1"]);
 }
 
 #[test]

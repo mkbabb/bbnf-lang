@@ -1,0 +1,127 @@
+{
+  "delta": [
+    {
+      "path": "json/arena.rs",
+      "post": {
+        "bytes": 2509,
+        "mode": "0644",
+        "sha256": "b301c412df098f99547e511e1c4a12a3cb81659ad3d127290bc77fa5b1d822ab"
+      },
+      "pre": {
+        "bytes": 2589,
+        "mode": "0644",
+        "sha256": "df7c50fa6afb8dee2db39f9329897c51fb4a588b5217043a534451eec0953610"
+      },
+      "status": "changed"
+    },
+    {
+      "path": "json/builder.rs",
+      "post": {
+        "bytes": 8367,
+        "mode": "0644",
+        "sha256": "b6640cb92aac230317b3a726b951e3195efec24ba3aad2affed3d7dbd168a125"
+      },
+      "pre": {
+        "bytes": 8318,
+        "mode": "0644",
+        "sha256": "e633e468ccaa5f0dd1bf560d3b1d73c63afdf14a8c04867f510299474d2d1619"
+      },
+      "status": "changed"
+    },
+    {
+      "path": "json/document.rs",
+      "post": {
+        "bytes": 5441,
+        "mode": "0644",
+        "sha256": "2ba48fae453ef085e16a546a67a68441e1b55a0c193d3b273aa892b22ba32864"
+      },
+      "pre": {
+        "bytes": 5430,
+        "mode": "0644",
+        "sha256": "94142b66a92c152c95dcabe0afb25d2a369e5930ec7be678fd39d96efd75fe67"
+      },
+      "status": "changed"
+    },
+    {
+      "path": "json/parse_with.rs",
+      "post": {
+        "bytes": 2908,
+        "mode": "0644",
+        "sha256": "2f0ff34ca937ce1e0fb74289d056762b2edcf7d6b1e19a98b88d91a67a6fac17"
+      },
+      "pre": {
+        "bytes": 2756,
+        "mode": "0644",
+        "sha256": "8e44509759dea0f43c83aa7b9a268298d3e8476ee7c27aae722d856c0e52b7cf"
+      },
+      "status": "changed"
+    },
+    {
+      "path": "css_pretty/builder.rs",
+      "post": {
+        "bytes": 1751,
+        "mode": "0644",
+        "sha256": "438357247b29b0942658e3819e7abf4bac5aca715ddf9421d62ed2e2fe2e2fc0"
+      },
+      "pre": {
+        "bytes": 1686,
+        "mode": "0644",
+        "sha256": "29ad050ec8c23392dbcd60432aea03d0febd32e086734ec89ece1aa5dca25290"
+      },
+      "status": "changed"
+    },
+    {
+      "path": "css_pretty/document.rs",
+      "post": {
+        "bytes": 4676,
+        "mode": "0644",
+        "sha256": "8f47fbfae53a19b7f7f61b73976dfb5f4f3ce0417a3b8927bc87dd10074b7c27"
+      },
+      "pre": {
+        "bytes": 4625,
+        "mode": "0644",
+        "sha256": "734bfc29991ef015cc08af10cd25dbcf0b161d30cfd1fe5b54e29cf45088a86a"
+      },
+      "status": "changed"
+    },
+    {
+      "path": "css_pretty/kind.rs",
+      "post": {
+        "bytes": 1556,
+        "mode": "0644",
+        "sha256": "f4f1d71fc2e2e25cd27c01fc9e8ef91708c830b49898f0c45e709515fd36d9d1"
+      },
+      "pre": {
+        "bytes": 1556,
+        "mode": "0644",
+        "sha256": "73d74cc361de1036d19d0839c3029099811031cf01b557bb1b815454355d9363"
+      },
+      "status": "changed"
+    },
+    {
+      "path": "css_pretty/view.rs",
+      "post": {
+        "bytes": 1707,
+        "mode": "0644",
+        "sha256": "004549f162ee530a3d54b14d8431ed3d330eb827fed92c11df34912ea7502603"
+      },
+      "pre": {
+        "bytes": 1700,
+        "mode": "0644",
+        "sha256": "c3ad11cdefe21edb0554f6c431bff1537cc40cfc9c910f31e4034a527d515ade"
+      },
+      "status": "changed"
+    }
+  ],
+  "delta_count": 8,
+  "post": {
+    "bytes": 135782,
+    "members": 32,
+    "sha256": "1728f60b1a7c7b060f2266dd8e23a350653f33842e7b8f96fc66996ba7037d52"
+  },
+  "pre": {
+    "bytes": 135527,
+    "members": 32,
+    "sha256": "23b493750d0ee63d0ddda787d13800fd999ccf1e8fa4e7375ca46b200c05a9ec"
+  }
+}

@@ -213,50 +213,6 @@ pub(crate) fn dispatch_expression<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
 
 // ─── Term layer (leaf + grouped-term routing) ─────────────────────────────────
 
-/// Span-text variant of [`lower_leaf_by_span_text`] that operates
-/// on a bare `&str` (rather than a view). Used by
-/// [`wrap::lower_mapped_factor`] to recover an identifier / literal /
-/// regex that was consumed by the parser without pushing its own
-/// source leaf.
-pub(crate) fn lower_leaf_by_span_text_str<'a>(
-    raw: &'a str,
-    ctx: &mut LowerCtx<'a>,
-) -> Option<IrNode> {
-    let trimmed = raw.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
-    if trimmed.len() >= 2 && trimmed.starts_with('/') && trimmed.ends_with('/') {
-        let inner = &trimmed[1..trimmed.len() - 1];
-        let id = ctx.strings.intern(inner);
-        return Some(IrNode::Regex(id));
-    }
-    if trimmed.len() >= 2 {
-        let bytes = trimmed.as_bytes();
-        let first = bytes[0];
-        let last = bytes[bytes.len() - 1];
-        if first == last && (first == b'"' || first == b'\'' || first == b'`') {
-            let inner = &trimmed[1..trimmed.len() - 1];
-            let unescaped = crate::backend::unescape_literal(inner);
-            let id = ctx.strings.intern(&unescaped);
-            return Some(IrNode::Literal(id));
-        }
-    }
-    if trimmed == "epsilon" || trimmed == "ε" {
-        return Some(IrNode::Epsilon);
-    }
-    let id_bytes = trimmed.as_bytes();
-    if !id_bytes.is_empty()
-        && (id_bytes[0].is_ascii_alphabetic() || id_bytes[0] == b'_')
-        && id_bytes
-            .iter()
-            .all(|b| b.is_ascii_alphanumeric() || *b == b'_' || *b == b'-')
-    {
-        return Some(resolve_name(trimmed, ctx));
-    }
-    None
-}
-
 /// Search for `needle` in `haystack`, skipping over quoted strings
 /// (`"..."`, `'...'`, `` `...` ``) and regex literals (`/.../`).
 /// Returns the byte offset of the first unquoted occurrence, or `None`.
@@ -383,7 +339,7 @@ fn lower_leaf_by_span_text<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -
 ///
 /// 1. **Structural `branch_tag`** — the codegen alt_dispatch emitter
 ///    records the chosen alt branch on the Term compound via
-///    [`crate::runtime::builder::StructBuilder::push_branch_tag`].
+///    [`crate::runtime::builder::StructBuilder::select_alt_branch`].
 ///    Tags 0..=8 map directly to the eight alt branches above (with
 ///    branch 2 collapsing the optional grammar-call into the
 ///    identifier head). This is the canonical generated-parser path.
@@ -402,7 +358,7 @@ fn lower_leaf_by_span_text<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -
 /// dispatch on that span would otherwise produce the wrong branch.
 pub(crate) fn lower_term<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> IrNode {
     // Structural dispatch path (codegen alt_dispatch): the emitter
-    // records the chosen alt branch via `push_branch_tag`. When the
+    // records the chosen alt branch via `select_alt_branch`. When the
     // tag is set on a Term compound, route directly without inspecting
     // source bytes — the codegen path doesn't synthesise punctuator
     // spans for the grouped branches, so leading-byte content
@@ -416,7 +372,7 @@ pub(crate) fn lower_term<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx<'a>) -> 
     // some of those compounds carry their own branch_tag for unrelated
     // alt-dispatch grammars (e.g. expressions.bbnf's value layer).
     if node.is_compound_kind(BbnfCompoundKind::Term) {
-        match node.branch_tag() {
+        match node.branch_tag().map(bbnf_ir::AltBranchId::get) {
             Some(0) | Some(1) => return IrNode::Epsilon,
             Some(2) => return lower_identifier_with_optional_call(node, ctx),
             Some(3) => {

@@ -5,13 +5,13 @@
 //! `fold_value_chain` left-associative reducer, and the chain
 //! operand collector.
 
-use bbnf_ir::{MapBinOp, MapExpr};
+use bbnf_ir::{MapBinOp, NumericDomain};
 
 use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfKind, BbnfView};
 
 use super::super::LowerCtx;
-use super::dispatch_value_expr;
+use super::{LoweredValueExpr, dispatch_value_expr};
 
 // ─── Precedence layer descriptors ─────────────────────────────────────────────
 
@@ -76,9 +76,11 @@ pub(super) const LAYER_MUL: PrecedenceLayer = PrecedenceLayer {
 /// the layer's operator tokens at the appropriate skip-depth.
 pub(super) fn fold_value_chain<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
     layer: &PrecedenceLayer,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
+) -> LoweredValueExpr {
     let mut operands: Vec<BbnfView<'a, 'p>> = collect_chain_operands(node);
     debug_assert!(
         !operands.is_empty(),
@@ -95,15 +97,34 @@ pub(super) fn fold_value_chain<'a, 'p: 'a>(
     // dropped at parse time, so neither per-operand spans nor parent-
     // span splitting can recover anything from the empty extent.
     if operands.len() == 1 {
-        return dispatch_value_expr(operands.remove(0), ctx);
+        return dispatch_value_expr(
+            operands.remove(0),
+            source_hint,
+            expected_numeric_domain,
+            ctx,
+        );
     }
 
     // Try the per-operand span path first; fall back to parent-span
     // splitting when any operand has no recoverable span.
-    if let Some(folded) = fold_via_per_operand_spans(node, &operands, layer, ctx) {
+    if let Some(folded) = fold_via_per_operand_spans(
+        node,
+        source_hint,
+        &operands,
+        layer,
+        expected_numeric_domain,
+        ctx,
+    ) {
         return folded;
     }
-    fold_via_parent_span_split(node, operands, layer, ctx)
+    fold_via_parent_span_split(
+        node,
+        source_hint,
+        operands,
+        layer,
+        expected_numeric_domain,
+        ctx,
+    )
 }
 
 /// Per-operand span path — recover each operand's `(lo, hi)` byte
@@ -112,15 +133,23 @@ pub(super) fn fold_value_chain<'a, 'p: 'a>(
 /// span, signalling the caller to fall back to parent-span splitting.
 fn fold_via_per_operand_spans<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
     operands: &[BbnfView<'a, 'p>],
     layer: &PrecedenceLayer,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> Option<MapExpr> {
+) -> Option<LoweredValueExpr> {
     let input = RuntimeView::input(&node);
+    let expression_source = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or("");
     let mut iter = operands.iter().copied();
     let first = iter.next()?;
-    let (_, mut prev_end) = first.span_bounds()?;
-    let mut result = dispatch_value_expr(first, ctx);
+    let (first_start, mut prev_end) = first.span_bounds()?;
+    let first_source = input.get(first_start as usize..prev_end as usize)?;
+    let mut result = dispatch_value_expr(first, Some(first_source), expected_numeric_domain, ctx);
 
     for operand in iter {
         let (op_start, op_end) = operand.span_bounds()?;
@@ -131,11 +160,10 @@ fn fold_via_per_operand_spans<'a, 'p: 'a>(
             .find(|(t, _)| *t == op_text)
             .map(|(_, o)| *o)?;
         prev_end = op_end;
-        result = MapExpr::BinOp {
-            op,
-            lhs: Box::new(result),
-            rhs: Box::new(dispatch_value_expr(operand, ctx)),
-        };
+        let operand_source = input.get(op_start as usize..op_end as usize)?;
+        let rhs = dispatch_value_expr(operand, Some(operand_source), expected_numeric_domain, ctx);
+        result =
+            LoweredValueExpr::binary(op, result, rhs, expected_numeric_domain, expression_source);
     }
     Some(result)
 }
@@ -148,20 +176,26 @@ fn fold_via_per_operand_spans<'a, 'p: 'a>(
 /// document order.
 fn fold_via_parent_span_split<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
     operands: Vec<BbnfView<'a, 'p>>,
     layer: &PrecedenceLayer,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let parent_span = node.span_text_opt().unwrap_or_else(|| {
-        panic!(
-            "fold_value_chain: chain compound has no recoverable parent \
-             span — every value-expression compound's source extent must \
-             reach at least one `Span` descendant. Compound kind: {:?}",
-            node.compound_kind(),
-        )
-    });
+) -> LoweredValueExpr {
+    let parent_span = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or_else(|| {
+            panic!(
+                "fold_value_chain: chain compound has no recoverable parent \
+                 span — every value-expression compound's source extent must \
+                 reach at least one `Span` descendant. Compound kind: {:?}",
+                node.compound_kind(),
+            )
+        });
 
-    let split = split_chain_at_operators(parent_span, layer);
+    let split = split_chain_at_operators(parent_span, layer, operands.len() - 1);
 
     // Operator count must be exactly `operands - 1`.
     debug_assert_eq!(
@@ -179,9 +213,15 @@ fn fold_via_parent_span_split<'a, 'p: 'a>(
     let first = iter
         .next()
         .expect("fold_value_chain: missing first operand");
-    let mut result = dispatch_value_expr(first, ctx);
+    let mut operand_sources = split.operands.into_iter();
+    let first_source = operand_sources
+        .next()
+        .expect("fold_value_chain: missing first operand source");
+    let mut result = dispatch_value_expr(first, Some(first_source), expected_numeric_domain, ctx);
 
-    for (operand, op_text) in iter.zip(split.operators.into_iter()) {
+    for ((operand, op_text), operand_source) in
+        iter.zip(split.operators.into_iter()).zip(operand_sources)
+    {
         let op = layer
             .ops
             .iter()
@@ -194,11 +234,8 @@ fn fold_via_parent_span_split<'a, 'p: 'a>(
                     op_text,
                 )
             });
-        result = MapExpr::BinOp {
-            op,
-            lhs: Box::new(result),
-            rhs: Box::new(dispatch_value_expr(operand, ctx)),
-        };
+        let rhs = dispatch_value_expr(operand, Some(operand_source), expected_numeric_domain, ctx);
+        result = LoweredValueExpr::binary(op, result, rhs, expected_numeric_domain, parent_span);
     }
     result
 }
@@ -208,16 +245,24 @@ struct ChainSplit<'p> {
     /// Operator tokens in document order, each one of the layer's
     /// declared symbols (e.g. `"+"` / `"-"`).
     operators: Vec<&'p str>,
+    /// Exact source fragments paired with the structural operand views.
+    operands: Vec<&'p str>,
 }
 
 /// Split `text` on the precedence-layer's operator tokens at
 /// depth-zero (skipping bytes inside parens, single-quoted strings,
 /// double-quoted strings). The returned `operators` list contains
 /// each operator token in document order.
-fn split_chain_at_operators<'p>(text: &'p str, layer: &PrecedenceLayer) -> ChainSplit<'p> {
+fn split_chain_at_operators<'p>(
+    text: &'p str,
+    layer: &PrecedenceLayer,
+    expected_operators: usize,
+) -> ChainSplit<'p> {
     let bytes = text.as_bytes();
     let mut operators: Vec<&'p str> = Vec::new();
+    let mut operands: Vec<&'p str> = Vec::with_capacity(expected_operators + 1);
     let mut i = 0;
+    let mut operand_start = 0;
     let mut depth_paren: i32 = 0;
     while i < bytes.len() {
         let b = bytes[i];
@@ -262,13 +307,50 @@ fn split_chain_at_operators<'p>(text: &'p str, layer: &PrecedenceLayer) -> Chain
             }
         }
         if let Some(op) = matched {
+            let previous = text[..i]
+                .bytes()
+                .rev()
+                .find(|byte| !byte.is_ascii_whitespace());
+            let unary = matches!(op, "-" | "+")
+                && (previous.is_none()
+                    || previous.is_some_and(|byte| {
+                        matches!(
+                            byte,
+                            b'(' | b'['
+                                | b'{'
+                                | b','
+                                | b':'
+                                | b'+'
+                                | b'-'
+                                | b'*'
+                                | b'/'
+                                | b'%'
+                                | b'<'
+                                | b'>'
+                                | b'='
+                                | b'!'
+                                | b'&'
+                                | b'|'
+                        )
+                    })
+                    || previous.is_some_and(|byte| matches!(byte, b'e' | b'E')));
+            if unary || operators.len() == expected_operators {
+                i += op.len();
+                continue;
+            }
+            operands.push(&text[operand_start..i]);
             operators.push(op);
             i += op.len();
+            operand_start = i;
             continue;
         }
         i += 1;
     }
-    ChainSplit { operators }
+    operands.push(&text[operand_start..]);
+    ChainSplit {
+        operators,
+        operands,
+    }
 }
 
 /// Collect all operand views from a chain compound. The shape under

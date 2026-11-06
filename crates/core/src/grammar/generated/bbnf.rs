@@ -4895,7 +4895,8 @@ mod __bbnfbootstrap_emit_impl {
                 let stripe = unsafe {
                     ::core::slice::from_raw_parts(input.as_ptr().add(*p), 64)
                 };
-                let mask = nospace_bitmap_64(stripe);
+                let mask = ::parse_that::ASCII_WHITESPACE_CLASS
+                    .nonmember_bitmap_64(stripe);
                 state.nospace_bits = mask;
                 state.nospace_start = *p as isize;
                 if mask != 0 {
@@ -4906,197 +4907,11 @@ mod __bbnfbootstrap_emit_impl {
                 *p += 64;
             }
         }
-        /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
-        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
-        /// `{b' ', b'\t', b'\n', b'\r'}`.
-        #[inline(always)]
-        pub(crate) fn nospace_bitmap_64(stripe: &[u8]) -> u64 {
-            #[cfg(target_arch = "aarch64")]
-            unsafe {
-                return nospace_bitmap_64_neon(stripe);
-            }
-            #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-            unsafe {
-                return nospace_bitmap_64_avx2(stripe);
-            }
-            #[allow(unreachable_code)] nospace_bitmap_64_scalar(stripe)
-        }
-        #[cfg(target_arch = "aarch64")]
-        #[inline(always)]
-        unsafe fn nospace_bitmap_64_neon(stripe: &[u8]) -> u64 {
-            use core::arch::aarch64::*;
-            unsafe {
-                let ptr = stripe.as_ptr();
-                let space = vdupq_n_u8(b' ');
-                let tab = vdupq_n_u8(b'\t');
-                let nl = vdupq_n_u8(b'\n');
-                let cr = vdupq_n_u8(b'\r');
-                let bits_lo: [u8; 16] = [
-                    1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128,
-                ];
-                let bit_vec = vld1q_u8(bits_lo.as_ptr());
-                let m0 = chunk_ns_mask16(ptr, 0, space, tab, nl, cr, bit_vec);
-                let m1 = chunk_ns_mask16(ptr, 16, space, tab, nl, cr, bit_vec);
-                let m2 = chunk_ns_mask16(ptr, 32, space, tab, nl, cr, bit_vec);
-                let m3 = chunk_ns_mask16(ptr, 48, space, tab, nl, cr, bit_vec);
-                (m0 as u64) | ((m1 as u64) << 16) | ((m2 as u64) << 32)
-                    | ((m3 as u64) << 48)
-            }
-        }
-        #[cfg(target_arch = "aarch64")]
-        #[inline(always)]
-        unsafe fn chunk_ns_mask16(
-            ptr: *const u8,
-            off: usize,
-            space: core::arch::aarch64::uint8x16_t,
-            tab: core::arch::aarch64::uint8x16_t,
-            nl: core::arch::aarch64::uint8x16_t,
-            cr: core::arch::aarch64::uint8x16_t,
-            bit_vec: core::arch::aarch64::uint8x16_t,
-        ) -> u16 {
-            use core::arch::aarch64::*;
-            unsafe {
-                let chunk = vld1q_u8(ptr.add(off));
-                let ws = vorrq_u8(
-                    vorrq_u8(vceqq_u8(chunk, space), vceqq_u8(chunk, tab)),
-                    vorrq_u8(vceqq_u8(chunk, nl), vceqq_u8(chunk, cr)),
-                );
-                let ns = vmvnq_u8(ws);
-                let weighted = vandq_u8(ns, bit_vec);
-                let low = vaddv_u8(vget_low_u8(weighted)) as u16;
-                let high = vaddv_u8(vget_high_u8(weighted)) as u16;
-                low | (high << 8)
-            }
-        }
-        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-        #[inline(always)]
-        unsafe fn nospace_bitmap_64_avx2(stripe: &[u8]) -> u64 {
-            use core::arch::x86_64::*;
-            unsafe {
-                let ptr = stripe.as_ptr();
-                let space = _mm256_set1_epi8(b' ' as i8);
-                let tab = _mm256_set1_epi8(b'\t' as i8);
-                let nl = _mm256_set1_epi8(b'\n' as i8);
-                let cr = _mm256_set1_epi8(b'\r' as i8);
-                let mut out = 0u64;
-                for i in 0..2 {
-                    let v = _mm256_loadu_si256(ptr.add(i * 32) as *const __m256i);
-                    let ws = _mm256_or_si256(
-                        _mm256_or_si256(
-                            _mm256_cmpeq_epi8(v, space),
-                            _mm256_cmpeq_epi8(v, tab),
-                        ),
-                        _mm256_or_si256(
-                            _mm256_cmpeq_epi8(v, nl),
-                            _mm256_cmpeq_epi8(v, cr),
-                        ),
-                    );
-                    let ws_mask = _mm256_movemask_epi8(ws) as u32;
-                    let ns_mask = !ws_mask as u64;
-                    out |= (ns_mask & 0xFFFF_FFFF) << (i * 32);
-                }
-                out
-            }
-        }
-        #[inline(always)]
-        pub(crate) fn nospace_bitmap_64_scalar(stripe: &[u8]) -> u64 {
-            let mut out = 0u64;
-            for (i, &b) in stripe.iter().enumerate() {
-                if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
-                    out |= 1u64 << i;
-                }
-            }
-            out
-        }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`.
-        /// Mirrors `json-prototype::simd::first_quote_or_backslash`.
+        /// Scanner ownership remains in the canonical parse-that package.
         #[inline(always)]
         pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
-            #[cfg(target_arch = "aarch64")]
-            unsafe {
-                return first_quote_or_backslash_neon(bytes);
-            }
-            #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-            unsafe {
-                return first_quote_or_backslash_avx2(bytes);
-            }
-            #[allow(unreachable_code)] first_quote_or_backslash_scalar(bytes)
-        }
-        #[cfg(target_arch = "aarch64")]
-        #[inline(always)]
-        unsafe fn first_quote_or_backslash_neon(bytes: &[u8]) -> Option<(usize, u8)> {
-            use core::arch::aarch64::*;
-            unsafe {
-                let quote = vdupq_n_u8(b'"');
-                let backslash = vdupq_n_u8(b'\\');
-                let ptr = bytes.as_ptr();
-                let len = bytes.len();
-                let mut i = 0usize;
-                while i + 16 <= len {
-                    let v = vld1q_u8(ptr.add(i));
-                    let hit = vorrq_u8(vceqq_u8(v, quote), vceqq_u8(v, backslash));
-                    let packed = vshrn_n_u16::<4>(vreinterpretq_u16_u8(hit));
-                    let bits = vget_lane_u64::<0>(vreinterpret_u64_u8(packed));
-                    if bits != 0 {
-                        let off = (bits.trailing_zeros() >> 2) as usize;
-                        let byte = *ptr.add(i + off);
-                        return Some((i + off, byte));
-                    }
-                    i += 16;
-                }
-                while i < len {
-                    let b = *ptr.add(i);
-                    if b == b'"' || b == b'\\' {
-                        return Some((i, b));
-                    }
-                    i += 1;
-                }
-                None
-            }
-        }
-        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-        #[inline(always)]
-        unsafe fn first_quote_or_backslash_avx2(bytes: &[u8]) -> Option<(usize, u8)> {
-            use core::arch::x86_64::*;
-            unsafe {
-                let quote = _mm256_set1_epi8(b'"' as i8);
-                let backslash = _mm256_set1_epi8(b'\\' as i8);
-                let ptr = bytes.as_ptr();
-                let len = bytes.len();
-                let mut i = 0usize;
-                while i + 32 <= len {
-                    let v = _mm256_loadu_si256(ptr.add(i) as *const __m256i);
-                    let hit = _mm256_or_si256(
-                        _mm256_cmpeq_epi8(v, quote),
-                        _mm256_cmpeq_epi8(v, backslash),
-                    );
-                    let mask = _mm256_movemask_epi8(hit) as u32;
-                    if mask != 0 {
-                        let off = mask.trailing_zeros() as usize;
-                        return Some((i + off, *ptr.add(i + off)));
-                    }
-                    i += 32;
-                }
-                while i < len {
-                    let b = *ptr.add(i);
-                    if b == b'"' || b == b'\\' {
-                        return Some((i, b));
-                    }
-                    i += 1;
-                }
-                None
-            }
-        }
-        #[inline(always)]
-        pub(crate) fn first_quote_or_backslash_scalar(
-            bytes: &[u8],
-        ) -> Option<(usize, u8)> {
-            for (i, &b) in bytes.iter().enumerate() {
-                if b == b'"' || b == b'\\' {
-                    return Some((i, b));
-                }
-            }
-            None
+            ::parse_that::find_first_of(bytes, &[b'"', b'\\'])
         }
         /// Map a byte into one of six arms: object `{` → 0,
         /// array `[` → 1, string `"` → 2, digit/`-` (number) → 3,
@@ -7092,6 +6907,7 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let __compound_start: u32 = *p as u32;
         let __value_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 17u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_path"),
@@ -7104,6 +6920,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__value_path_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
@@ -7181,6 +7003,12 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+            builder,
+            *p as u32,
+        );
         <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_path_handle);
@@ -9038,6 +8866,7 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let __compound_start: u32 = *p as u32;
         let __value_mul_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_mul"),
@@ -9050,6 +8879,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__value_mul_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
@@ -9135,6 +8970,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+            builder,
+            *p as u32,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_mul_handle);
         __body_result?;
         ::core::result::Result::Ok(())
@@ -9179,6 +9020,7 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let __compound_start: u32 = *p as u32;
         let __value_or_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_or"),
@@ -9189,6 +9031,12 @@ mod __bbnfbootstrap_emit_impl {
         let __value_or_handle = <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__value_or_layout);
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
+        );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -9261,6 +9109,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+            builder,
+            *p as u32,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_or_handle);
         __body_result?;
         ::core::result::Result::Ok(())
@@ -9305,6 +9159,7 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let __compound_start: u32 = *p as u32;
         let __value_add_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_add"),
@@ -9317,6 +9172,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__value_add_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
@@ -9390,6 +9251,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+            builder,
+            *p as u32,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_add_handle);
         __body_result?;
         ::core::result::Result::Ok(())
@@ -9434,6 +9301,7 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let __compound_start: u32 = *p as u32;
         let __value_cmp_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 30u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_cmp"),
@@ -9446,6 +9314,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__value_cmp_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
@@ -9519,6 +9393,12 @@ mod __bbnfbootstrap_emit_impl {
         })();
         <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+            builder,
+            *p as u32,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_cmp_handle);
         __body_result?;
         ::core::result::Result::Ok(())
@@ -9563,6 +9443,7 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let __compound_start: u32 = *p as u32;
         let __value_and_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_and"),
@@ -9575,6 +9456,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__value_and_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
@@ -9646,6 +9533,12 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+            builder,
+            *p as u32,
+        );
         <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(builder, __value_and_handle);
@@ -12775,6 +12668,7 @@ mod __bbnfbootstrap_emit_impl {
     {
         let _ = cursor;
         let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
+        let __compound_start: u32 = *p as u32;
         let __binary_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 44u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("binary_factor"),
@@ -12787,6 +12681,12 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(
             builder,
             &__binary_factor_layout,
+        );
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_start(
+            builder,
+            __compound_start,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
@@ -12864,6 +12764,12 @@ mod __bbnfbootstrap_emit_impl {
             }
             ::core::result::Result::Ok(())
         })();
+        <crate::runtime::bbnf::BbnfStructBuilder<
+            '_,
+        > as crate::runtime::StructBuilder>::record_compound_bounds_end(
+            builder,
+            *p as u32,
+        );
         <crate::runtime::bbnf::BbnfStructBuilder<
             '_,
         > as crate::runtime::StructBuilder>::end_compound(
@@ -16076,69 +15982,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     static __HI_LUT: [u8; 16] = [
                                                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
-                                                    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-                                                    let __result: ::core::option::Option<usize> = 'avx2_scan: {
-                                                        use ::core::arch::x86_64::*;
-                                                        unsafe {
-                                                            let __bytes = state.src_bytes.as_slice();
-                                                            let __len = __bytes.len();
-                                                            let __ptr = __bytes.as_ptr();
-                                                            let __lo_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __hi_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __lo_mask = _mm256_set1_epi8(0x0F);
-                                                            let __zero = _mm256_setzero_si256();
-                                                            let mut __i = __start;
-                                                            while __i + 32 <= __len {
-                                                                let __chunk = _mm256_loadu_si256(
-                                                                    __ptr.add(__i) as *const __m256i,
-                                                                );
-                                                                let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
-                                                                let __hi_n = _mm256_and_si256(
-                                                                    _mm256_srli_epi16(__chunk, 4),
-                                                                    __lo_mask,
-                                                                );
-                                                                let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
-                                                                let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
-                                                                let __matched = _mm256_and_si256(__lo_r, __hi_r);
-                                                                let __nz = _mm256_cmpgt_epi8(__matched, __zero);
-                                                                let __mask = _mm256_movemask_epi8(__nz) as u32;
-                                                                if __mask != 0 {
-                                                                    let __rel = __mask.trailing_zeros() as usize;
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some((__i + __rel) - __start)
-                                                                    };
-                                                                }
-                                                                __i += 32;
-                                                            }
-                                                            let mut __byte_lut = [false; 256];
-                                                            {
-                                                                let mut __b: u16 = 0;
-                                                                while __b < 256 {
-                                                                    let __blo = __LO_LUT[(__b & 0x0F) as usize];
-                                                                    let __bhi = __HI_LUT[(__b >> 4) as usize];
-                                                                    __byte_lut[__b as usize] = (__blo & __bhi) != 0;
-                                                                    __b += 1;
-                                                                }
-                                                            }
-                                                            while __i < __len {
-                                                                let __b = *__ptr.add(__i);
-                                                                if __byte_lut[__b as usize] {
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some(__i - __start)
-                                                                    };
-                                                                }
-                                                                __i += 1;
-                                                            }
-                                                            ::core::option::Option::None
-                                                        }
-                                                    };
-                                                    #[cfg(
-                                                        not(all(target_arch = "x86_64", target_feature = "avx2"))
-                                                    )]
                                                     let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                             state.padded(),
                                                             __start,
@@ -16251,69 +16094,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     static __HI_LUT: [u8; 16] = [
                                                         1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
-                                                    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-                                                    let __result: ::core::option::Option<usize> = 'avx2_scan: {
-                                                        use ::core::arch::x86_64::*;
-                                                        unsafe {
-                                                            let __bytes = state.src_bytes.as_slice();
-                                                            let __len = __bytes.len();
-                                                            let __ptr = __bytes.as_ptr();
-                                                            let __lo_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __hi_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __lo_mask = _mm256_set1_epi8(0x0F);
-                                                            let __zero = _mm256_setzero_si256();
-                                                            let mut __i = __start;
-                                                            while __i + 32 <= __len {
-                                                                let __chunk = _mm256_loadu_si256(
-                                                                    __ptr.add(__i) as *const __m256i,
-                                                                );
-                                                                let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
-                                                                let __hi_n = _mm256_and_si256(
-                                                                    _mm256_srli_epi16(__chunk, 4),
-                                                                    __lo_mask,
-                                                                );
-                                                                let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
-                                                                let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
-                                                                let __matched = _mm256_and_si256(__lo_r, __hi_r);
-                                                                let __nz = _mm256_cmpgt_epi8(__matched, __zero);
-                                                                let __mask = _mm256_movemask_epi8(__nz) as u32;
-                                                                if __mask != 0 {
-                                                                    let __rel = __mask.trailing_zeros() as usize;
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some((__i + __rel) - __start)
-                                                                    };
-                                                                }
-                                                                __i += 32;
-                                                            }
-                                                            let mut __byte_lut = [false; 256];
-                                                            {
-                                                                let mut __b: u16 = 0;
-                                                                while __b < 256 {
-                                                                    let __blo = __LO_LUT[(__b & 0x0F) as usize];
-                                                                    let __bhi = __HI_LUT[(__b >> 4) as usize];
-                                                                    __byte_lut[__b as usize] = (__blo & __bhi) != 0;
-                                                                    __b += 1;
-                                                                }
-                                                            }
-                                                            while __i < __len {
-                                                                let __b = *__ptr.add(__i);
-                                                                if __byte_lut[__b as usize] {
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some(__i - __start)
-                                                                    };
-                                                                }
-                                                                __i += 1;
-                                                            }
-                                                            ::core::option::Option::None
-                                                        }
-                                                    };
-                                                    #[cfg(
-                                                        not(all(target_arch = "x86_64", target_feature = "avx2"))
-                                                    )]
                                                     let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                             state.padded(),
                                                             __start,
@@ -17130,69 +16910,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     static __HI_LUT: [u8; 16] = [
                                                         0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                     ];
-                                                    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-                                                    let __result: ::core::option::Option<usize> = 'avx2_scan: {
-                                                        use ::core::arch::x86_64::*;
-                                                        unsafe {
-                                                            let __bytes = state.src_bytes.as_slice();
-                                                            let __len = __bytes.len();
-                                                            let __ptr = __bytes.as_ptr();
-                                                            let __lo_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __hi_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __lo_mask = _mm256_set1_epi8(0x0F);
-                                                            let __zero = _mm256_setzero_si256();
-                                                            let mut __i = __start;
-                                                            while __i + 32 <= __len {
-                                                                let __chunk = _mm256_loadu_si256(
-                                                                    __ptr.add(__i) as *const __m256i,
-                                                                );
-                                                                let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
-                                                                let __hi_n = _mm256_and_si256(
-                                                                    _mm256_srli_epi16(__chunk, 4),
-                                                                    __lo_mask,
-                                                                );
-                                                                let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
-                                                                let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
-                                                                let __matched = _mm256_and_si256(__lo_r, __hi_r);
-                                                                let __nz = _mm256_cmpgt_epi8(__matched, __zero);
-                                                                let __mask = _mm256_movemask_epi8(__nz) as u32;
-                                                                if __mask != 0 {
-                                                                    let __rel = __mask.trailing_zeros() as usize;
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some((__i + __rel) - __start)
-                                                                    };
-                                                                }
-                                                                __i += 32;
-                                                            }
-                                                            let mut __byte_lut = [false; 256];
-                                                            {
-                                                                let mut __b: u16 = 0;
-                                                                while __b < 256 {
-                                                                    let __blo = __LO_LUT[(__b & 0x0F) as usize];
-                                                                    let __bhi = __HI_LUT[(__b >> 4) as usize];
-                                                                    __byte_lut[__b as usize] = (__blo & __bhi) != 0;
-                                                                    __b += 1;
-                                                                }
-                                                            }
-                                                            while __i < __len {
-                                                                let __b = *__ptr.add(__i);
-                                                                if __byte_lut[__b as usize] {
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some(__i - __start)
-                                                                    };
-                                                                }
-                                                                __i += 1;
-                                                            }
-                                                            ::core::option::Option::None
-                                                        }
-                                                    };
-                                                    #[cfg(
-                                                        not(all(target_arch = "x86_64", target_feature = "avx2"))
-                                                    )]
                                                     let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                             state.padded(),
                                                             __start,
@@ -21213,69 +20930,6 @@ mod __bbnfbootstrap_emit_impl {
                                                                 static __HI_LUT: [u8; 16] = [
                                                                     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                                                 ];
-                                                                #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-                                                                let __result: ::core::option::Option<usize> = 'avx2_scan: {
-                                                                    use ::core::arch::x86_64::*;
-                                                                    unsafe {
-                                                                        let __bytes = state.src_bytes.as_slice();
-                                                                        let __len = __bytes.len();
-                                                                        let __ptr = __bytes.as_ptr();
-                                                                        let __lo_v = _mm256_broadcastsi128_si256(
-                                                                            _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
-                                                                        );
-                                                                        let __hi_v = _mm256_broadcastsi128_si256(
-                                                                            _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
-                                                                        );
-                                                                        let __lo_mask = _mm256_set1_epi8(0x0F);
-                                                                        let __zero = _mm256_setzero_si256();
-                                                                        let mut __i = __start;
-                                                                        while __i + 32 <= __len {
-                                                                            let __chunk = _mm256_loadu_si256(
-                                                                                __ptr.add(__i) as *const __m256i,
-                                                                            );
-                                                                            let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
-                                                                            let __hi_n = _mm256_and_si256(
-                                                                                _mm256_srli_epi16(__chunk, 4),
-                                                                                __lo_mask,
-                                                                            );
-                                                                            let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
-                                                                            let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
-                                                                            let __matched = _mm256_and_si256(__lo_r, __hi_r);
-                                                                            let __nz = _mm256_cmpgt_epi8(__matched, __zero);
-                                                                            let __mask = _mm256_movemask_epi8(__nz) as u32;
-                                                                            if __mask != 0 {
-                                                                                let __rel = __mask.trailing_zeros() as usize;
-                                                                                break 'avx2_scan {
-                                                                                    ::core::option::Option::Some((__i + __rel) - __start)
-                                                                                };
-                                                                            }
-                                                                            __i += 32;
-                                                                        }
-                                                                        let mut __byte_lut = [false; 256];
-                                                                        {
-                                                                            let mut __b: u16 = 0;
-                                                                            while __b < 256 {
-                                                                                let __blo = __LO_LUT[(__b & 0x0F) as usize];
-                                                                                let __bhi = __HI_LUT[(__b >> 4) as usize];
-                                                                                __byte_lut[__b as usize] = (__blo & __bhi) != 0;
-                                                                                __b += 1;
-                                                                            }
-                                                                        }
-                                                                        while __i < __len {
-                                                                            let __b = *__ptr.add(__i);
-                                                                            if __byte_lut[__b as usize] {
-                                                                                break 'avx2_scan {
-                                                                                    ::core::option::Option::Some(__i - __start)
-                                                                                };
-                                                                            }
-                                                                            __i += 1;
-                                                                        }
-                                                                        ::core::option::Option::None
-                                                                    }
-                                                                };
-                                                                #[cfg(
-                                                                    not(all(target_arch = "x86_64", target_feature = "avx2"))
-                                                                )]
                                                                 let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
                                                                         state.padded(),
                                                                         __start,

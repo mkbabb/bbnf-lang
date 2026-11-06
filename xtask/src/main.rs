@@ -15,6 +15,7 @@ use std::process::Command;
 
 use anyhow::{Context, bail};
 use clap::{Parser, Subcommand};
+use xtask::architecture;
 #[cfg(feature = "grammar-regen")]
 use xtask::regen;
 use xtask::regen_css;
@@ -29,6 +30,18 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
+    /// Export a deterministic typed architecture graph for the repository
+    /// constellation.
+    Architecture {
+        /// Relocated workspace root to measure. Defaults to this xtask's
+        /// compile-time workspace root.
+        #[arg(long)]
+        root: Option<PathBuf>,
+        /// Directory that receives the graph, typed projections, inventory,
+        /// obligations, DOT, and human-readable report.
+        #[arg(long)]
+        output: PathBuf,
+    },
     /// Regenerate per-grammar source files under
     /// `crates/core/src/grammar/generated/`.
     Regen {
@@ -98,6 +111,10 @@ enum Cmd {
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     match cli.cmd {
+        Cmd::Architecture { root, output } => match root {
+            Some(root) => architecture::run_at(&root, &output),
+            None => architecture::run(&output),
+        },
         Cmd::Regen {
             grammar,
             check,

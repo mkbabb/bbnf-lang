@@ -24,8 +24,8 @@ use bbnf::runtime::{
     JsonArrayId, JsonDocument, JsonNumber, JsonObjectId, JsonStructBuilder, JsonValue,
     StructBuilder,
 };
-use bbnf_ir::TypeDesc;
 use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout};
+use bbnf_ir::{AltBranchId, TypeDesc};
 
 /// Convenience: synthesise a `StructLayout` for a Named rule.
 ///
@@ -319,17 +319,17 @@ fn wire_contract_nested_array_of_objects() {
 }
 
 #[test]
-fn wire_contract_value_alt_branch_tag_is_idempotent() {
+fn wire_contract_value_alt_selection_is_idempotent() {
     // The JSON `value = object | array | string | number | bool | null`
     // Alt-of-Refs is classified as `Wrap` post-W4; the builder
     // forwards the single branch's value to the enclosing slot
-    // regardless of `push_branch_tag` — this confirms the trait
+    // regardless of structural branch selection — this confirms the trait
     // surface is symmetric across grammars (Sheets / CSS will
     // STORE the branch tag; JSON's projection collapses it).
     let mut b = JsonStructBuilder::new();
     let value_layout = synth_layout(0, "value", LayoutKind::TaggedEnum);
     let h = b.begin_compound(&value_layout);
-    b.push_branch_tag(2);
+    b.select_alt_branch(AltBranchId::new(2));
     b.push_leaf_with_f64(2.71);
     b.end_compound(h);
     let doc = b.finalise(SYNTH_INPUT);

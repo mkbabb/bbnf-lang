@@ -1,0 +1,20 @@
+{
+  "argv": [
+    "/usr/bin/arch",
+    "-arm64",
+    "/tmp/bbcw0-r7-post3-docfreeze-build.cr1FlV/target/aarch64-apple-darwin/ax-iter/xtask",
+    "regen",
+    "--check"
+  ],
+  "command": "regen --check",
+  "cwd": "/private/tmp/bbcw0-r7-post3-fleet-candidate.ZqYYJA/bbnf-lang",
+  "end_unix_ns": 1784767879701134000,
+  "ordinal": 2,
+  "start_unix_ns": 1784767878439379000,
+  "status": 0,
+  "stderr_bytes": 7835,
+  "stderr_sha256": "85f1cda5722e798b86048f49fb11239b1c819f05f0cad1806543ba742ab66b66",
+  "stdout_bytes": 47,
+  "stdout_sha256": "b0207e9ee70b91c3f7544c8bfd1e43d8bc6214524762be6c5121dab8d13c8e5b",
+  "wall_ns": 1261754875
+}

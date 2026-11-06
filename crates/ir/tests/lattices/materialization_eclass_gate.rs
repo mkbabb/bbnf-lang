@@ -1,10 +1,10 @@
-//! Tranche AF.1 — `classify_materialization` e-graph fact gate.
+//! Tranche AF.1 — `classify_materialization` compatibility-fact gate.
 //!
 //! Covers the dormant-infrastructure activation: before AF.1,
 //! `EClassFacts::is_fixed_shape` (and the three sibling bits
 //! `elision_safe` / `closure_free` / `all_descendants_elidable`)
-//! were computed in the grammar-tier e-graph monotone lattice and
-//! never consumed anywhere in the pipeline. AF.1 wires them into
+//! originated in the research grammar-analysis lattice. AF.1 uses
+//! the same vocabulary in a direct production tree walk and wires it into
 //! `classify_materialization` as a gate on every `TransparentElide`
 //! return.
 //!
@@ -181,7 +181,7 @@ fn structural_and_facts_agree_yields_transparent_elide() {
 /// A rule whose body is structurally `TransparentElide`-eligible
 /// but whose facts map says `is_fixed_shape == false` demotes to
 /// `TapeSpanOnly`. Exercises the gate's primary purpose: preventing
-/// structurally-eligible classification when the e-graph monotone
+/// structurally-eligible classification when the compatibility
 /// lattice disagrees.
 #[test]
 fn is_fixed_shape_false_demotes_transparent_elide_to_tape_span_only() {
@@ -262,10 +262,8 @@ fn all_descendants_elidable_false_demotes_transparent_elide() {
 
 /// When the facts map has no entry for the rule body's `NodeId`,
 /// the gate is a no-op and the classifier returns the pre-AF.1
-/// structural result. This is the load-bearing invariant for
-/// structural mode — the pipeline gates `egraph_build_saturate_writeback`
-/// out in structural mode, so no facts get computed, and the
-/// classifier must still produce a usable classification.
+/// structural result. This directly tests the explicit absent-facts input;
+/// the production pipeline does not invoke grammar-tier saturation.
 #[test]
 fn empty_facts_map_falls_back_to_structural_transparent_elide() {
     let strings = vec!["test".to_string(), "entry".to_string(), "x".to_string()];

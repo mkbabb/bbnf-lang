@@ -1,0 +1,56 @@
+{
+  "bank": {
+    "adjudication_sha256": "e5a5d85f73dee62c09962b7a7f5a980dea9075c10e8425d0064d61a314e3abf8",
+    "scope_sha256": "99e2223fb686443b6e612d659115940a20d3c053014201df51bf9c2ec52be50b"
+  },
+  "excluded_comments": [
+    {"line": 3844, "spec_id": "css-color-4"},
+    {"line": 2840, "spec_id": "css-color-5"},
+    {"line": 887, "spec_id": "css-conditional-3"},
+    {"line": 1246, "spec_id": "css-display-3"},
+    {"line": 1259, "spec_id": "css-display-4"}
+  ],
+  "required_carriers": [
+    {"kind": "prod", "line": 1098, "normativity": "NORMATIVE", "spec_id": "css-color-4", "text": "<alpha-value> = <<number>> | <<percentage>>"},
+    {"kind": "prod", "line": 1365, "normativity": "NORMATIVE", "spec_id": "css-shapes-1", "text": "<<shape-box>> = <<visual-box>> | margin-box | half-border-box"},
+    {"kind": "railroad", "line": 753, "normativity": "NORMATIVE", "spec_id": "css-syntax-3", "text": "T: <!--"},
+    {"kind": "railroad", "line": 759, "normativity": "NORMATIVE", "spec_id": "css-syntax-3", "text": "T: -->"},
+    {"kind": "legacy-grammar", "line": 205, "normativity": "NORMATIVE", "spec_id": "css-animations-1"},
+    {"kind": "legacy-grammar", "line": 895, "normativity": "NORMATIVE", "spec_id": "mediaqueries-4"},
+    {"kind": "legacy-grammar", "line": 150, "normativity": "NORMATIVE", "spec_id": "css-namespaces"},
+    {"kind": "legacy-grammar", "line": 162, "normativity": "NORMATIVE", "spec_id": "css-style-attr"},
+    {"kind": "legacy-grammar", "line": 550, "normativity": "NORMATIVE", "spec_id": "css3-mediaqueries"},
+    {"kind": "legacy-grammar", "line": 2366, "normativity": "NORMATIVE", "spec_id": "selectors-3"},
+    {"kind": "legacy-grammar", "line": 16210, "normativity": "NORMATIVE", "spec_id": "CSS2"},
+    {"kind": "legacy-grammar", "line": 2149, "normativity": "NORMATIVE", "spec_id": "css-fonts-3"},
+    {"kind": "idl", "line": 311, "normativity": "NON_NORMATIVE", "spec_id": "resize-observer-1"},
+    {"kind": "prod", "line": 4021, "normativity": "HISTORICAL", "spec_id": "css-backgrounds-3"}
+  ],
+  "required_substrings": [
+    {"line": 428, "spec_id": "css-values-4", "text": "<length>"},
+    {"line": 512, "spec_id": "css-font-loading", "text": "sequence<FontFace>"}
+  ],
+  "scope": {
+    "dependency_count": 174,
+    "publication_failure": {
+      "detail": "HTTP Error 404: Not Found",
+      "error_type": "HTTPError",
+      "spec_id": "css3-mediaqueries"
+    },
+    "spec_count": 96,
+    "wpt": {
+      "file_count": 160788,
+      "revision": "37cd7ff74eb974fd41600bf7bc01d37576abf8b5",
+      "tree_manifest_sha256": "cf3aedd08cbb161aeebd3c9e19c10f855f2be0be23fa5ecbbd2035d2e31db699",
+      "tree_oid": "12fa64c9afe86e199ee0e737755b6507f363ceff"
+    }
+  },
+  "stage_counts": {
+    "carrier_records": 1468,
+    "grammar_definitions": 793,
+    "grammar_entities": 1012,
+    "grammar_expressions": 82,
+    "matrix_rows": 2102,
+    "railroad_expressions": 46
+  }
+}

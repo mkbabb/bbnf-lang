@@ -1,0 +1,3 @@
+archive_a_sha256=315acb5d78b3acbdc96af7fad17ed9fb986b470c430fa94aa4af3381145bfd82
+archive_b_sha256=315acb5d78b3acbdc96af7fad17ed9fb986b470c430fa94aa4af3381145bfd82
+equal=yes

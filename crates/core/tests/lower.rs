@@ -100,6 +100,30 @@ fn lower_skip_next() {
 }
 
 #[test]
+fn lower_repeated_mixed_binary_chain_uses_every_semantic_operator_tag() {
+    let ir = lower_grammar(r#"a = "w" << "x" >> "y" - "z" ;"#);
+    let IrNode::Minus(lhs, rhs) = &ir.rules[0].body else {
+        panic!("expected outer Minus, got {:?}", ir.rules[0].body);
+    };
+    assert!(matches!(rhs.as_ref(), IrNode::Literal(_)));
+    let IrNode::Next(lhs, rhs) = lhs.as_ref() else {
+        panic!("expected middle Next, got {lhs:?}");
+    };
+    assert!(matches!(rhs.as_ref(), IrNode::Literal(_)));
+    let IrNode::Skip(lhs, rhs) = lhs.as_ref() else {
+        panic!("expected inner Skip, got {lhs:?}");
+    };
+    assert!(matches!(lhs.as_ref(), IrNode::Literal(_)));
+    assert!(matches!(rhs.as_ref(), IrNode::Literal(_)));
+}
+
+#[test]
+fn lower_single_operand_group_does_not_require_a_pratt_tag() {
+    let ir = lower_grammar(r#"a = ("x") ;"#);
+    assert!(matches!(ir.rules[0].body, IrNode::Literal(_)));
+}
+
+#[test]
 fn lower_optional() {
     let ir = lower_grammar(r#"a = "x" ? ;"#);
     assert_eq!(ir.rules.len(), 1);

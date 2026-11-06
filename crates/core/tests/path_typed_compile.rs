@@ -24,7 +24,7 @@ use bbnf::path::{
     ir::IntoPathSegment,
 };
 use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
-use bbnf_ir::{StringId, TypeDesc};
+use bbnf_ir::{AltBranchId, StringId, TypeDesc};
 
 const ROOT_RULE: &str = "Document";
 const ROOT_NAME: StringId = 0;
@@ -97,17 +97,23 @@ fn build_registry() -> StructRegistry {
             StructField {
                 name: "string".to_string(),
                 type_desc: TypeDesc::Span,
-                source: FieldSource::BranchTag { branch_index: 0 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(0),
+                },
             },
             StructField {
                 name: "number".to_string(),
                 type_desc: TypeDesc::F64,
-                source: FieldSource::BranchTag { branch_index: 1 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(1),
+                },
             },
             StructField {
                 name: "flag".to_string(),
                 type_desc: TypeDesc::Bool,
-                source: FieldSource::BranchTag { branch_index: 2 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(2),
+                },
             },
         ],
     });

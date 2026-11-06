@@ -487,14 +487,6 @@ fn run_probe_group(
         });
     });
 
-    #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-    group.bench_function("alternate_pext_mask_plan", |b| {
-        b.iter(|| {
-            let offsets = bbnf_bench::scan::structural_offsets_scalar(black_box(&fixture.bytes));
-            black_box(offsets);
-        });
-    });
-
     group.bench_function("cold_first_parse", |b| {
         b.iter_batched(
             || fixture.bytes.clone(),

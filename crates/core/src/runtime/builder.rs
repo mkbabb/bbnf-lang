@@ -21,26 +21,28 @@
 //! `push_leaf_with_*` pushes a typed scalar field. The variant
 //! corresponds to the grammar's `->` projection: `-> f64` routes to
 //! `push_leaf_with_f64`, `-> i64` to `push_leaf_with_i64`, `-> bool`
-//! to `push_leaf_with_bool`, `-> Span` (or owned-string projection)
-//! to `push_leaf_with_str`, `-> 0u8` (null) to `push_leaf_with_unit`.
+//! to `push_leaf_with_bool`, `-> u8` to `push_leaf_with_u8`, `-> Span`
+//! (or owned-string projection) to `push_leaf_with_str`, and a unit
+//! projection to `push_leaf_with_unit`.
 //!
-//! `push_branch_tag` records the `Alt` sub-variant index for the
+//! `select_alt_branch` records the structural `Alt` sub-variant for the
 //! current open compound — Alt-typed compounds carry the tag in
-//! addition to the branch's payload pushes.
+//! addition to the branch's payload pushes. It is deliberately distinct
+//! from repeatable semantic `u8` leaves.
 //!
 //! # Wire contract
 //!
 //! Every typed `->` annotation in the grammar reaches one
 //! `push_leaf_with_*` call (`feedback_typed-materialization-invariant`).
 //! Every compound record pushes one `begin_compound` / `end_compound`
-//! pair. Every Alt sub-variant boundary pushes one `push_branch_tag`.
+//! pair. Every Alt sub-variant boundary calls one `select_alt_branch`.
 //!
 //! Speculative parse sites call `checkpoint` before trying a branch and
 //! `rollback` on failure. Checkpoints are concrete-builder values so
 //! each grammar can snapshot only its mutable stack/root state plus arena
 //! slab lengths; rollback must not clone full arenas on the hot path.
 
-use bbnf_ir::registry::StructLayout;
+use bbnf_ir::registry::{AltBranchId, StructLayout};
 
 use crate::runtime::handle::CompoundHandle;
 
@@ -49,7 +51,7 @@ use crate::runtime::handle::CompoundHandle;
 ///
 /// Implementors maintain an in-flight typed stack of partially-built
 /// compounds; `begin_compound` pushes a frame keyed on the layout's
-/// `LayoutKind`; intervening `push_leaf_with_*` / `push_branch_tag`
+/// `LayoutKind`; intervening `push_leaf_with_*` / `select_alt_branch`
 /// calls land fields on the open frame; `end_compound` pops and
 /// stores the completed compound into its parent (or, for the root
 /// compound, into the document's root slot).
@@ -80,16 +82,20 @@ pub trait StructBuilder {
     #[inline]
     fn commit(&mut self, _checkpoint: Self::Checkpoint) {}
 
-    /// Open a compound. Returns a [`CompoundHandle`] that the matching
-    /// [`Self::end_compound`] receives. `layout` describes the typed
-    /// shape the emitter believes it is building; concrete
-    /// implementations may panic on layout mismatch in debug builds.
+    /// Open a compound. Returns a linear [`CompoundHandle`] that the matching
+    /// [`Self::end_compound`] consumes. `layout` describes the typed shape the
+    /// emitter believes it is building.
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle;
 
     /// Close a compound previously opened via [`Self::begin_compound`].
-    /// `handle` must be the most recent unmatched handle the builder
-    /// produced; the trait does not enforce this — the emitter's
-    /// generation order does.
+    ///
+    /// `handle` must be the exact most-recent unmatched capability produced by
+    /// this builder, for the same layout/rule identity. Implementations must
+    /// reject stale, cross-builder, duplicate, or out-of-order capabilities
+    /// before mutating builder state. Such rejection is an internal
+    /// emitter/builder-invariant failure, not a malformed-input parse error:
+    /// malformed input must continue to use the parser's typed failure and
+    /// rollback paths.
     fn end_compound(&mut self, handle: CompoundHandle);
 
     /// Push an `f64` leaf onto the most recently opened compound.
@@ -103,6 +109,10 @@ pub trait StructBuilder {
     /// widening) projection.
     fn push_leaf_with_u64(&mut self, value: u64);
 
+    /// Push an exact semantic `u8` leaf. Unlike structural branch
+    /// selection, this operation is repeatable within one compound.
+    fn push_leaf_with_u8(&mut self, value: u8);
+
     /// Push a `bool` leaf. Corresponds to `-> true` / `-> false` /
     /// `-> bool` projection.
     fn push_leaf_with_bool(&mut self, value: bool);
@@ -113,16 +123,16 @@ pub trait StructBuilder {
     /// (arena-decoded) projections.
     fn push_leaf_with_str(&mut self, value: &str);
 
-    /// Push a unit-typed leaf. Corresponds to `-> 0u8` (null marker)
-    /// and `-> ()` projections — the field is admitted but carries no
-    /// payload byte.
+    /// Push a unit-typed leaf. Corresponds to `-> ()`; the field is
+    /// admitted but carries no payload byte. Semantic `u8` projections,
+    /// including grammar-specific null tags, use [`Self::push_leaf_with_u8`].
     fn push_leaf_with_unit(&mut self);
 
-    /// Stamp the active branch tag for an `Alt`-typed open compound.
-    /// `branch_index` corresponds to the matching
+    /// Select the active structural branch for an `Alt`-typed open compound.
+    /// `branch` corresponds to the matching
     /// [`bbnf_ir::registry::FieldSource::BranchTag`] entry on the
     /// layout passed to the enclosing [`Self::begin_compound`].
-    fn push_branch_tag(&mut self, branch_index: u32);
+    fn select_alt_branch(&mut self, branch: AltBranchId);
 
     /// AZ-IV.W1.9 — record the topmost open compound's start byte
     /// offset. Default no-op: only the BBNF builder consumes this to
@@ -133,8 +143,10 @@ pub trait StructBuilder {
     #[allow(unused_variables)]
     fn record_compound_bounds_start(&mut self, offset: u32) {}
 
-    /// AZ-IV.W1.9 — record the topmost open compound's end byte
-    /// offset. Default no-op; see [`Self::record_compound_bounds_start`].
+    /// AZ-IV.W1.9 — record the topmost open compound's end byte offset.
+    /// Implementations that consume bounds must pair each end with one start
+    /// on that exact topmost scope and reject unbalanced or cross-scope calls.
+    /// Default no-op; see [`Self::record_compound_bounds_start`].
     #[inline]
     #[allow(unused_variables)]
     fn record_compound_bounds_end(&mut self, offset: u32) {}

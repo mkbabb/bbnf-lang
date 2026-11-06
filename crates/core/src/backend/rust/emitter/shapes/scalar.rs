@@ -25,6 +25,7 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use super::alt_dispatch::branches::payload_push_from_fn;
 use super::dispatcher::{emit_ref_call_shape, shape_fn_ident};
 use bbnf_ir::registry::EmitStrategy;
 
@@ -47,114 +48,123 @@ pub fn emit_parse_scalar(
     let EmitStrategy::StructDirect { rust, .. } = strategy;
     let builder_ty: syn::Path = syn::parse_str(rust.builder_path)
         .expect("EmitStrategy::StructDirect.rust.builder_path must parse as a Rust path");
+    let body = emit_scalar_body(&rule.body, grammar_suffix, ir, &support_mod);
+    quote! {
+        /// StructDirect Scalar parser. OptionalWhitespace retains its
+        /// skip-space bookends, constant Maps replace inner builder effects,
+        /// and Ref aliases call only functions the shape driver emits.
+        #[inline]
+        #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+        pub fn #fn_ident<'p, __P>(
+            input: &'p [u8],
+            p: &mut usize,
+            state: &mut #support_mod::ScanState,
+            builder: &mut #builder_ty<'p>,
+            cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
+        ) -> ::core::result::Result<(), crate::runtime::DtaError>
+        where
+            __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+        {
+            use crate::runtime::builder::StructBuilder as _;
+            #body
+            ::core::result::Result::Ok(())
+        }
+    }
+}
 
-    let body = unwrap_trivia(&rule.body);
-    match body {
+fn emit_scalar_body(
+    node: &IrNode,
+    grammar_suffix: &str,
+    ir: &GrammarIR,
+    support_mod: &proc_macro2::Ident,
+) -> TokenStream {
+    match node {
         IrNode::Literal(sid) => {
             let bytes = ir.get_string(*sid).as_bytes();
             let len = bytes.len();
-            let byte_lits: Vec<TokenStream> = bytes
-                .iter()
-                .map(|b| {
-                    let lit = *b;
-                    quote! { #lit }
-                })
-                .collect();
-            // AZ-I.W2.RC — codegen-time literal dispatch. The
-            // emitter inspects the literal's bytes once and splices
-            // the matching builder call, or none for structural
-            // separators.
-            let builder_emit: TokenStream = match bytes {
+            let byte_lits: Vec<TokenStream> = bytes.iter().map(|byte| quote! { #byte }).collect();
+            let payload = match bytes {
                 b"null" => quote! { builder.push_leaf_with_unit(); },
                 b"true" => quote! { builder.push_leaf_with_bool(true); },
                 b"false" => quote! { builder.push_leaf_with_bool(false); },
                 _ => quote! {},
             };
             quote! {
-                /// AZ-I.W2.RC — per-grammar Scalar-shape parse
-                /// function (single-literal body, struct-direct
-                /// substrate). The literal's bytes select the
-                /// matching `builder.push_leaf_with_*` call at
-                /// codegen time; structural separators emit no
-                /// builder call.
-                #[inline(always)]
-                #[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
-                pub fn #fn_ident<'p, __P>(
-                    input: &'p [u8],
-                    p: &mut usize,
-                    _state: &mut #support_mod::ScanState,
-                    builder: &mut #builder_ty<'p>,
-                    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-                ) -> ::core::result::Result<(), crate::runtime::DtaError>
-                where
-                    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
                 {
-                    use crate::runtime::builder::StructBuilder as _;
-                    let _ = cursor;
                     let at = *p;
                     let end = at + #len;
                     if input.len() < end || input[at..end] != [#(#byte_lits),*] {
-                        return Err(crate::runtime::DtaError::Syntax {
-                            offset: at as u32,
-                        });
+                        return ::core::result::Result::Err(
+                            crate::runtime::DtaError::Syntax {
+                                offset: at as u32,
+                            },
+                        );
                     }
                     *p = end;
-                    #builder_emit
-                    Ok(())
+                    #payload
                 }
             }
         }
-        IrNode::Ref(rid) => {
-            // AX.W0a.2.b — transparent-alias Scalar. Delegate to
-            // the target rule's shape fn; no compound push — the
-            // alias shares the target's offset. The delegate call
-            // expression names `builder` as its target so the same
-            // call splice composes in the struct-builder signature.
-            let call = match emit_ref_call_shape(grammar_suffix, *rid, ir) {
-                Some(c) => c,
-                None => {
-                    // Detector should have rejected — defensive empty body.
-                    return quote! {};
-                }
-            };
+        IrNode::Ref(rule_id) => match emit_ref_call_shape(grammar_suffix, *rule_id, ir) {
+            Some(call) => quote! {
+                let _ = (#call)?;
+            },
+            None => quote! {
+                compile_error!(
+                    "Scalar Ref target has no emitted per-shape driver"
+                );
+            },
+        },
+        IrNode::OptionalWhitespace(inner) => {
+            let inner = emit_scalar_body(inner, grammar_suffix, ir, support_mod);
             quote! {
-                /// AZ-I.W2.RC — per-grammar Scalar-shape parse
-                /// function (transparent-Ref body, struct-direct
-                /// substrate). Delegates to the target's
-                /// strategy-resolved shape fn; the inner call
-                /// expression names `builder` against the concrete
-                /// struct-builder.
-                #[inline]
-                #[allow(non_snake_case, clippy::too_many_arguments)]
-                pub fn #fn_ident<'p, __P>(
-                    input: &'p [u8],
-                    p: &mut usize,
-                    state: &mut #support_mod::ScanState,
-                    builder: &mut #builder_ty<'p>,
-                    cursor: &mut crate::path::cursor::PathCursor<'_, __P>,
-                ) -> ::core::result::Result<(), crate::runtime::DtaError>
-                where
-                    __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-                {
-                    #call
-                }
+                let _ = #support_mod::skip_space(input, p, state);
+                #inner
+                let _ = #support_mod::skip_space(input, p, state);
             }
         }
-        other => {
-            unreachable!(
-                "Scalar-shape emitter invoked on unexpected body {:?} for rule {}",
-                std::mem::discriminant(other),
-                rule_name,
-            );
+        IrNode::Map { inner, fn_id } => {
+            let inner = emit_scalar_body(inner, grammar_suffix, ir, support_mod);
+            let payload = ir.fns.get(*fn_id as usize).and_then(|descriptor| {
+                match payload_push_from_fn(descriptor, ir) {
+                    Ok(payload) => payload,
+                    Err(message) => Some(quote! { compile_error!(#message); }),
+                }
+            });
+            match payload {
+                Some(payload) => quote! {
+                    {
+                        let __map_builder_checkpoint = builder.checkpoint();
+                        let __map_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            #inner
+                            ::core::result::Result::Ok(())
+                        })();
+                        match __map_result {
+                            ::core::result::Result::Ok(()) => {
+                                builder.rollback(__map_builder_checkpoint);
+                                #payload
+                            }
+                            ::core::result::Result::Err(__err) => {
+                                builder.rollback(__map_builder_checkpoint);
+                                return ::core::result::Result::Err(__err);
+                            }
+                        }
+                    }
+                },
+                None => quote! {
+                    compile_error!(
+                        "Scalar Map has no emitted constant replacement"
+                    );
+                },
+            }
         }
-    }
-}
-
-/// Strip `Map` / `OptionalWhitespace` trivia wrappers.
-fn unwrap_trivia(node: &IrNode) -> &IrNode {
-    match node {
-        IrNode::Map { inner, .. } => unwrap_trivia(inner.as_ref()),
-        IrNode::OptionalWhitespace(inner) => unwrap_trivia(inner.as_ref()),
-        _ => node,
+        _ => quote! {
+            compile_error!(
+                "Scalar shape has no emitted path for this IR node"
+            );
+        },
     }
 }

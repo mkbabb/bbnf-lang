@@ -8,6 +8,10 @@
 //!
 //! See `docs/tranches/AZ-IV/waves/W0.md` §AZ-IV.W0.5 for scope.
 
+#[cfg(not(all(target_arch = "aarch64", target_os = "macos")))]
+compile_error!("xtask requires the aarch64-apple-darwin target");
+
+pub mod architecture;
 pub mod regen;
 pub mod regen_css;
 pub mod regen_simple_runtime;

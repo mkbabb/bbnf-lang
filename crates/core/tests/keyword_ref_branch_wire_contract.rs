@@ -30,7 +30,7 @@
 //!
 //! Hard gate 1 of W0a.2.g: this test must pass.
 
-use bbnf::backend::rust::emitter::shapes::keyword::emit_parse_keyword;
+use bbnf::backend::rust::emitter::shapes::{PayloadPlanner, keyword::emit_parse_keyword};
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
@@ -97,7 +97,13 @@ fn bbnf_directive_keyword_emitter_delegates_to_ref_targets() {
         .find(|r| ir.get_string(r.name) == "directive")
         .expect("BBNF grammar must contain `directive` rule");
     let strategy = bbnf_strategy();
-    let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir, &strategy);
+    let tokens = emit_parse_keyword(
+        "BbnfGrammar",
+        directive,
+        &ir,
+        &strategy,
+        &PayloadPlanner::new(&ir),
+    );
     let emitted = tokens.to_string();
 
     // The fn signature must carry the threaded `state: &mut
@@ -150,7 +156,13 @@ fn bbnf_directive_keyword_emitter_produces_named_fn() {
         .find(|r| ir.get_string(r.name) == "directive")
         .expect("BBNF grammar must contain `directive` rule");
     let strategy = bbnf_strategy();
-    let tokens = emit_parse_keyword("BbnfGrammar", directive, &ir, &strategy);
+    let tokens = emit_parse_keyword(
+        "BbnfGrammar",
+        directive,
+        &ir,
+        &strategy,
+        &PayloadPlanner::new(&ir),
+    );
     let emitted = tokens.to_string();
     assert!(
         emitted.contains("parse_keyword_BbnfGrammar_directive"),

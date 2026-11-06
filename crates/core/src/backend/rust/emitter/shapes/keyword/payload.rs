@@ -5,8 +5,8 @@
 //! per-branch `-> <const>` payloads from the IR's `FnDescriptor` table.
 
 use bbnf_ir::{GrammarIR, IrNode};
-use proc_macro2::TokenStream;
-use quote::quote;
+
+use super::super::alt_dispatch::branches::{ScalarPayload, scalar_payload_from_fn};
 
 /// Extract a leading literal byte-sequence from a branch body.
 /// Mirrors the recognizer-side `leading_literal_rec` walk so the emitter
@@ -55,13 +55,13 @@ pub(super) fn leading_literal_bytes(node: &IrNode, ir: &GrammarIR) -> Option<Vec
 /// `unwrap_trivia` strips the Map wrapper) and walks down through
 /// trivia wrappers identical to the per-branch walk.
 ///
-/// Returns `Some(payload_tokens)` when the rule's body is
-/// `Map { fn_id }` over a recognisable typed payload (`IntLit` /
-/// `BoolLit` / `StringLit`); returns `None` for un-mapped bodies and
-/// for Map descriptors that do not project to a u32-encodable payload
-/// (`Span`, `FnCall`, etc., where the leaf push must carry the matched
-/// bytes via `push_leaf_with_str`).
-pub(super) fn rule_root_payload_value(rule_body: &IrNode, ir: &GrammarIR) -> Option<TokenStream> {
+/// Returns the width-resolved integer when the rule's body is
+/// `Map { fn_id }` over `IntLit`; returns `None` for un-mapped bodies and
+/// non-integer descriptors.
+pub(super) fn rule_root_payload_value(
+    rule_body: &IrNode,
+    ir: &GrammarIR,
+) -> Result<Option<ScalarPayload>, &'static str> {
     fn find_map_fn(node: &IrNode) -> Option<u32> {
         match node {
             IrNode::Map { fn_id, .. } => Some(*fn_id),
@@ -69,9 +69,10 @@ pub(super) fn rule_root_payload_value(rule_body: &IrNode, ir: &GrammarIR) -> Opt
             _ => None,
         }
     }
-    find_map_fn(rule_body)
-        .and_then(|fid| ir.fns.get(fid as usize))
-        .and_then(|fd| payload_from_fn(fd, ir))
+    let Some(descriptor) = find_map_fn(rule_body).and_then(|fid| ir.fns.get(fid as usize)) else {
+        return Ok(None);
+    };
+    payload_from_fn(descriptor)
 }
 
 /// Rule-root bool payload for a single-literal Keyword body wrapped in
@@ -96,19 +97,13 @@ pub(super) fn rule_root_bool_payload(rule_body: &IrNode, ir: &GrammarIR) -> Opti
     }
 }
 
-/// Per-branch payload for an Alt-of-literals. Branch index is passed
-/// so we can discriminate (e.g. `true`→1, `false`→0).
-/// AX.W0a.2.p — extract the branch's typed-byte payload (if any) from
-/// its `Map { fn_id }` annotation.
-///
-/// Returns the `u32` literal value the `-> Nu8` / `-> bool` produces,
-/// or `None` when the branch has no payload. Callers emit the arena
-/// staging + `push_leaf_with_arena_payload` when `Some`, and a raw
-/// `push_leaf_with(.., PayloadData::None)` when `None`.
+/// Extract the branch's width-resolved integer payload, if any, from its
+/// `Map { fn_id }` annotation. Structural branch identity is deliberately
+/// absent from this API.
 pub(super) fn alt_branch_payload_value(
     branch: &bbnf_ir::AltBranch,
     ir: &GrammarIR,
-) -> Option<TokenStream> {
+) -> Result<Option<ScalarPayload>, &'static str> {
     // Walk the branch body for a Map { fn_id } annotation. Descends
     // through OptionalWhitespace / Map chains; Seq branches take the
     // outermost Map — post-factoring the annotation rides the branch
@@ -121,9 +116,11 @@ pub(super) fn alt_branch_payload_value(
             _ => None,
         }
     }
-    find_map_fn(&branch.node)
-        .and_then(|fid| ir.fns.get(fid as usize))
-        .and_then(|fd| payload_from_fn(fd, ir))
+    let Some(descriptor) = find_map_fn(&branch.node).and_then(|fid| ir.fns.get(fid as usize))
+    else {
+        return Ok(None);
+    };
+    payload_from_fn(descriptor)
 }
 
 /// Return the boolean literal carried by a branch-level `-> true` /
@@ -147,33 +144,11 @@ pub(super) fn alt_branch_bool_payload(branch: &bbnf_ir::AltBranch, ir: &GrammarI
     }
 }
 
-/// Extract a `u32` payload value from a `FnDescriptor` when possible.
+/// Extract an integer payload from a `FnDescriptor` without losing its
+/// declared width.
 ///
-/// Handles the simple cases W3.2 admits (single-literal + 2-branch
-/// bool). More nuanced payload typing (F64 / U32 / Aggregate) is
-/// out-of-scope for Keyword-shape (numbers route through
-/// Number-shape; strings route through String-shape).
-fn payload_from_fn(fn_desc: &bbnf_ir::FnDescriptor, ir: &GrammarIR) -> Option<TokenStream> {
-    use bbnf_ir::{FnDescriptor, MapExpr};
-    let FnDescriptor::Expr { expr, .. } = fn_desc else {
-        return None;
-    };
-    match expr {
-        MapExpr::BoolLit(b) => {
-            let v = if *b { 1u32 } else { 0u32 };
-            Some(quote! { #v })
-        }
-        MapExpr::IntLit(n) => {
-            let v = *n as u32;
-            Some(quote! { #v })
-        }
-        MapExpr::StringLit(sid) => {
-            // `"null" -> 0u8` can also lower as IntLit; if it lowers
-            // as StringLit we conservatively pick 0.
-            let _ = sid;
-            let _ = ir;
-            Some(quote! { 0u32 })
-        }
-        _ => None,
-    }
+/// Delegates to the shared exact scalar decoder, so declared signedness and
+/// width remain identical across Keyword, Alt, Wrap, Flat, and HRegex shapes.
+fn payload_from_fn(fn_desc: &bbnf_ir::FnDescriptor) -> Result<Option<ScalarPayload>, &'static str> {
+    scalar_payload_from_fn(fn_desc)
 }

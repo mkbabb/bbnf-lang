@@ -184,7 +184,7 @@ fn struct_builder_assembles_typed_dimension() {
     let h = builder.begin_compound(&length_layout);
     builder.push_leaf_with_f64(100.0);
     // Px discriminant is 0 per `value-unit.bbnf::lengthUnit`.
-    builder.push_branch_tag(0);
+    builder.push_leaf_with_u8(0);
     builder.end_compound(h);
 
     // The dimension lands as a pending value (no enclosing frame).
@@ -201,7 +201,7 @@ fn struct_builder_threads_color_function() {
 
     let h = builder.begin_compound(&layout);
     // Rgb discriminant is 0 per `color.bbnf::colorType`.
-    builder.push_branch_tag(0);
+    builder.push_leaf_with_u8(0);
     // Three colour components
     builder.push_leaf_with_f64(255.0);
     builder.push_leaf_with_f64(0.0);

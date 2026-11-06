@@ -21,11 +21,15 @@ use bbnf::pipeline::{
 };
 use bbnf_ir::bytecode::BytecodeProgram;
 use bbnf_ir::compiler::compile as compile_bytecode;
-use bbnf_ir::interpreter::Interpreter;
+use bbnf_ir::interpreter::{Interpreter, ParseResult, Value, ValueSlice};
+
+fn run_vm_result(program: &BytecodeProgram, input: &str) -> ParseResult {
+    let mut interp = Interpreter::new(program, input);
+    interp.run()
+}
 
 fn run_vm(program: &BytecodeProgram, input: &str) -> (bool, u32) {
-    let mut interp = Interpreter::new(program, input);
-    let result = interp.run();
+    let result = run_vm_result(program, input);
     (result.success, result.offset)
 }
 
@@ -67,6 +71,16 @@ value = object | array | string | number | bool | null ;
 const LR_EXPR_GRAMMAR: &str = r#"
 term = /[0-9]+/ ;
 expr = expr, "+" >> term | term ;
+"#;
+
+const NULLABLE_ALT_GRAMMAR: &str = r#"
+start = "x" | epsilon ;
+"#;
+
+const NULLABLE_ALT_REQUIRED_CONTEXT_GRAMMAR: &str = r#"
+prefix = "!", prefix | "!" ;
+start = prefix, nullable, "z" ;
+nullable = "x" | epsilon ;
 "#;
 
 // ── Gate: JSON ─────────────────────────────────────────────────────────────
@@ -128,6 +142,74 @@ fn egraph_semantic_left_recursion_expr_chain() {
             input.len()
         );
     }
+}
+
+// ── Gate: nullable alternation keeps its empty branch ──────────────────────
+
+#[test]
+fn egraph_semantic_nullable_alt_preserves_empty_branch() {
+    let program = compile_vm_from_source(NULLABLE_ALT_GRAMMAR);
+
+    let empty = run_vm_result(&program, "");
+    assert!(empty.success, "nullable alternation rejected empty input");
+    assert_eq!(empty.offset, 0);
+    assert_eq!(
+        empty.value,
+        Some(Value::Tagged {
+            tag: 0,
+            span: (0, 0),
+            children: ValueSlice::from_vec(vec![Value::Nil]),
+        })
+    );
+    assert!(empty.diagnostics.is_empty());
+
+    let x = run_vm_result(&program, "x");
+    assert!(x.success, "nullable alternation rejected \"x\"");
+    assert_eq!(x.offset, 1);
+    assert_eq!(
+        x.value,
+        Some(Value::Tagged {
+            tag: 0,
+            span: (0, 1),
+            children: ValueSlice::from_vec(vec![Value::Span(0, 1)]),
+        })
+    );
+    assert!(x.diagnostics.is_empty());
+}
+
+#[test]
+fn egraph_semantic_nullable_alt_required_context_diagnostic() {
+    let options = PipelineOptions {
+        entry_rule: Some("start".to_string()),
+        ..PipelineOptions::default()
+    };
+    let ir = compile_grammar(NULLABLE_ALT_REQUIRED_CONTEXT_GRAMMAR, &options)
+        .expect("required-context nullable grammar should compile");
+    let program = compile_bytecode(&ir);
+    let rejected = run_vm_result(&program, "!");
+
+    assert!(!rejected.success);
+    assert_eq!(rejected.offset, 1);
+    assert_eq!(rejected.diagnostics.len(), 1);
+    let diagnostic = &rejected.diagnostics[0];
+    assert_eq!(diagnostic.offset, 1);
+    assert_eq!(diagnostic.rule_name.as_deref(), Some("prefix"));
+    assert_eq!(diagnostic.expected, vec![b'x', b'z']);
+    assert_eq!(
+        rejected.value,
+        Some(Value::Tagged {
+            tag: 4,
+            span: (0, 1),
+            children: ValueSlice::from_vec(vec![
+                Value::Tagged {
+                    tag: 0,
+                    span: (0, 1),
+                    children: ValueSlice::from_vec(vec![Value::Span(0, 1), Value::Nil]),
+                },
+                Value::Nil,
+            ]),
+        })
+    );
 }
 
 // ── Gate: CSS L4 full stylesheet ───────────────────────────────────────────

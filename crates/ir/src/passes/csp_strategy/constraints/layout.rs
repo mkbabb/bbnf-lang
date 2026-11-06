@@ -62,7 +62,13 @@ use crate::passes::patterns::RecognizerShape;
 pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &GrammarIR) -> usize {
     let mut count = 0usize;
 
-    for (&node_id, &var) in ctx.wrap_vars.iter() {
+    let mut wrap_vars: Vec<_> = ctx
+        .wrap_vars
+        .iter()
+        .map(|(&node, &var)| (node, var))
+        .collect();
+    wrap_vars.sort_unstable_by_key(|(node, _)| *node);
+    for (node_id, var) in wrap_vars {
         let target = pin_for_layout(ir, node_id);
         if let Some(mode) = target {
             // `Csp::add_equals` from the csp-solver crate is the

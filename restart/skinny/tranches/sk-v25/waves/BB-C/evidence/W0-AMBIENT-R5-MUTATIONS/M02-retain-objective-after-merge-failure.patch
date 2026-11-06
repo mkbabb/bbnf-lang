@@ -1,0 +1,11 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -291,7 +291,6 @@ pub(super) fn commit_component(
+         merge_component(&mut transaction.output, decisions, materialization)
+     {
+         report.status = SolveCompletionStatus::InvalidAssignment;
+-        report.objective = None;
+         report.failure = Some(locus);
+         transaction.output.reports.push(report);
+         return Err(take_failure(transaction, reason, locus));

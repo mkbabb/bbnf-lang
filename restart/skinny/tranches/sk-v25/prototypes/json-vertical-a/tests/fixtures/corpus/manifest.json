@@ -1,0 +1,1 @@
+{"negative":["empty.json","trailing-comma.json","leading-zero.json","bad-escape.json"],"positive":["scalars.json","nested.json","duplicates.json","unicode.json"],"scope":"prototype-evidence-only"}

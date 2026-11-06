@@ -136,11 +136,14 @@ fn emit_field_source(source: FieldSource) -> TokenStream {
         FieldSource::TypedLeaf => quote! {
             ::bbnf_ir::registry::FieldSource::TypedLeaf
         },
-        FieldSource::BranchTag { branch_index } => quote! {
-            ::bbnf_ir::registry::FieldSource::BranchTag {
-                branch_index: #branch_index,
+        FieldSource::BranchTag { branch_index } => {
+            let branch_index = branch_index.get();
+            quote! {
+                ::bbnf_ir::registry::FieldSource::BranchTag {
+                    branch_index: ::bbnf_ir::AltBranchId::new(#branch_index),
+                }
             }
-        },
+        }
         FieldSource::SeqPosition { position } => quote! {
             ::bbnf_ir::registry::FieldSource::SeqPosition {
                 position: #position,

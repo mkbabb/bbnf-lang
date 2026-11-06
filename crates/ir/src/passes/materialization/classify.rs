@@ -3,21 +3,20 @@
 //! Tranche AB.0. Walks every rule's IR tree and assigns each
 //! [`NodeId`] a [`MaterializationClass`] via four sub-passes:
 //!
-//! 1. **E-graph fact pre-seed** — walk every rule body bottom-up to
+//! 1. **Compatibility-fact pre-seed** — walk every rule body bottom-up to
 //!    compute per-[`NodeId`] [`EClassFacts`] (`is_fixed_shape`,
 //!    `elision_safe`, `closure_free`, `all_descendants_elidable`)
 //!    using the same monotone lattice rules as
 //!    [`crate::egraph::analysis::GrammarAnalysis::make`]. A fixed-
 //!    point iteration propagates facts across `Ref(target)`
 //!    boundaries so transparent aliases pick up the target rule's
-//!    body facts. When the e-graph hasn't run (structural mode,
-//!    isolated unit tests), the fact map remains empty and the
-//!    classifier falls back to pre-AF.1 structural behavior.
+//!    body facts. This is a direct tree computation; production does
+//!    not run grammar-tier saturation.
 //! 2. **Bottom-up initial classification** — post-order over each
 //!    rule body; every node gets the most aggressive class its
 //!    structural shape allows (without yet considering pins). Every
-//!    `TransparentElide` return is gated on the e-graph facts
-//!    (all four bits must agree) — a node the e-graph cannot prove
+//!    `TransparentElide` return is gated on the compatibility facts
+//!    (all four bits must agree) — a node the fact walk cannot prove
 //!    is fixed-shape, elision-safe, closure-free, and
 //!    all-descendants-elidable demotes to `TapeSpanOnly`.
 //! 3. **Consumer-pin fix-up** — walks every rule with a directive
@@ -32,13 +31,13 @@
 //! per-node classification into `ir.materialization`. It does not
 //! mutate rule bodies.
 //!
-//! # Tranche AF.1 — e-graph fact gate
+//! # Tranche AF.1 — compatibility-fact gate
 //!
 //! Before Tranche AF.1 the classifier consulted only structural
 //! shape (leaf/compound kind, nullability) when deciding
 //! `TransparentElide`. AF.1 activates the dormant
 //! [`EClassFacts`] lattice (landed in Tranches AA.2/AB.0 as the
-//! grammar-tier e-graph monotone analysis) as a pre-seed: a node is
+//! research grammar-analysis lattice) as a pre-seed: a node is
 //! a `TransparentElide` candidate only when the facts lattice
 //! agrees with the structural decision via
 //! [`facts_allow_transparent_elide`]. This wires the four dormant
@@ -61,7 +60,7 @@ use crate::{FnDescriptor, GrammarIR, IrNode, RuleId};
 use super::lattice::{MaterializationClass, mat_join};
 use super::pin_sweep::apply_consumer_pins;
 
-/// Per-`NodeId` snapshot of the e-graph monotone fact lattice,
+/// Per-`NodeId` snapshot of the compatibility fact lattice,
 /// consumed by the classifier to gate `TransparentElide` returns.
 /// Empty when the pre-seed walk was skipped (fallback to structural
 /// behavior).
@@ -93,7 +92,7 @@ pub fn classify_materialization(ir: &mut GrammarIR) {
          crates/core/src/pipeline/compile.rs::build_durable_dag"
     );
 
-    // Pass 0 — compute per-NodeId e-graph facts via a bottom-up walk
+    // Pass 0 — compute per-NodeId compatibility facts via a bottom-up walk
     // over every rule's body with a fixed-point over Ref resolution.
     // The same monotone lattice rules as
     // `GrammarAnalysis::make`, adapted to walk the owning `IrNode`
@@ -161,7 +160,7 @@ pub fn classify_materialization_with_facts(ir: &mut GrammarIR, facts: &EClassFac
 ///
 /// Tranche AF.1 — every `TransparentElide` return is routed through
 /// [`gate_transparent_elide`], which demotes the result to
-/// `TapeSpanOnly` when the pre-computed e-graph facts for this
+/// `TapeSpanOnly` when the pre-computed compatibility facts for this
 /// `NodeId` disagree. An empty `facts` map restores pre-AF.1
 /// structural behavior unconditionally.
 ///
@@ -363,7 +362,7 @@ fn classify_node(
     class
 }
 
-/// AF.1 gate: clamp a candidate class through the e-graph monotone
+/// AF.1 gate: clamp a candidate class through the compatibility
 /// fact lattice.
 ///
 /// The classifier calls this at every decision point that would
@@ -405,7 +404,7 @@ fn gate_transparent_elide(
     }
 }
 
-/// True iff all four dormant e-graph bits agree that this class is
+/// True iff all four compatibility bits agree that this class is
 /// eligible for the scalar payload tier (TypeDesc-driven value
 /// materialization).
 ///
@@ -485,21 +484,16 @@ fn assert_invariants(ir: &GrammarIR, map: &HashMap<NodeId, MaterializationClass>
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// AF.1 — per-`NodeId` e-graph fact pre-seed
+// AF.1 — per-`NodeId` compatibility-fact pre-seed
 // ═══════════════════════════════════════════════════════════════════
 //
 // Mirrors `crate::egraph::analysis::GrammarAnalysis::make` — the
-// same monotone lattice rules, adapted to walk the post-optimization
+// same monotone lattice rules, adapted to walk the normalized
 // `IrNode` tree directly via `ir.dag.node_for` instead of going
-// through the e-graph substrate. The e-graph runs earlier in the
-// pipeline (`egraph_build_saturate_writeback`, line ~497 of
-// `crates/core/src/pipeline/compile.rs`) and discards its analysis
-// data on drop; re-computing the facts here over the final IR
-// produces identical per-`NodeId` lattice values because bottom-up
-// monotone facts of an `IrNode` tree are a pure function of its
-// shape — the e-graph's merge propagation can only widen facts,
-// never contradict the bottom-up values, and a tree has no merges
-// to propagate.
+// through the e-graph substrate. Computing the facts here over the
+// incumbent IR produces per-`NodeId` lattice values as a pure
+// function of its shape; no saturation or extracted rewrite is an
+// input to this pass.
 //
 // Fixed-point iteration propagates facts across `Ref(target)`
 // boundaries: a rule body containing `Ref(r)` reads the previous

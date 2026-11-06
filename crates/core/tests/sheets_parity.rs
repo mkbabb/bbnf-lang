@@ -539,12 +539,11 @@ mod wire_contract {
     }
 
     /// `add_op = "+" -> 0u8 | "-" -> 1u8` projects to a Tag(u8) leaf.
-    /// The struct-direct path lands the discriminator via
-    /// `push_branch_tag(idx)` per the StructBuilder trait contract.
+    /// The struct-direct path lands the semantic discriminator as a U8 leaf.
     #[test]
     fn add_op_first_branch_maps_to_tag_zero() {
         let mut b = SheetsStructBuilder::new();
-        b.push_branch_tag(0);
+        b.push_leaf_with_u8(0);
         let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Tag(0));
     }
@@ -552,7 +551,7 @@ mod wire_contract {
     #[test]
     fn add_op_second_branch_maps_to_tag_one() {
         let mut b = SheetsStructBuilder::new();
-        b.push_branch_tag(1);
+        b.push_leaf_with_u8(1);
         let doc = b.finalise("");
         assert_eq!(*doc.root(), SheetsValue::Tag(1));
     }
@@ -605,7 +604,7 @@ mod wire_contract {
         let add_layout = synth_layout(27, "add_expr", LayoutKind::Struct);
         let h = b.begin_compound(&add_layout);
         b.push_leaf_with_f64(1.0);
-        b.push_branch_tag(0); // `+`
+        b.push_leaf_with_u8(0); // `+`
         b.push_leaf_with_f64(2.0);
         b.end_compound(h);
         let doc = b.finalise("");

@@ -56,8 +56,9 @@ pub fn emit_parse_alt_dispatch(
     rule: &IrRule,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &super::PayloadPlanner<'_>,
 ) -> TokenStream {
-    emit_parse_alt_dispatch_struct_direct(grammar_suffix, rule, ir, strategy)
+    emit_parse_alt_dispatch_struct_direct(grammar_suffix, rule, ir, strategy, payload_planner)
 }
 
 /// AZ-I.W2.RB — struct-direct body for the AltDispatch shape.
@@ -66,7 +67,7 @@ pub fn emit_parse_alt_dispatch(
 /// `Wrap`), so this body is reachable only when a future StructDirect
 /// grammar admits AltDispatch (CSS L4 in W3, Sheets in W2.B). The
 /// emission contract is: `begin_compound(&__layout)` opens the alt
-/// frame, the dispatch picks a branch, `push_branch_tag(idx)` records
+/// frame, the dispatch picks a branch, `select_alt_branch(idx)` records
 /// the discriminator, the branch body fires (Ref calls + builder
 /// pushes), and `end_compound(handle)` closes.
 ///
@@ -79,7 +80,18 @@ fn emit_parse_alt_dispatch_struct_direct(
     rule: &IrRule,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &super::PayloadPlanner<'_>,
 ) -> TokenStream {
+    if !payload_planner.admits_shape_path(
+        rule,
+        bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag::AltDispatch,
+    ) {
+        return quote! {
+            compile_error!(
+                "AltDispatch has no exact emitted-payload path for this rule"
+            );
+        };
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("altdispatch", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
@@ -94,8 +106,13 @@ fn emit_parse_alt_dispatch_struct_direct(
     };
 
     // Per-branch first-byte sets + struct-direct dispatch arm bodies.
-    let dispatch_arms =
-        branches::emit_dispatch_arms_struct_direct(branches, grammar_suffix, rule, ir);
+    let dispatch_arms = branches::emit_dispatch_arms_struct_direct(
+        branches,
+        grammar_suffix,
+        rule,
+        ir,
+        payload_planner,
+    );
 
     // AZ-I.W2-act.recovery — inline `StructLayout` literal mirroring
     // the per-shape pattern used by `array/struct_direct`,
@@ -140,7 +157,7 @@ fn emit_parse_alt_dispatch_struct_direct(
             // unmatched-rule-name path collapses to OpenFrame::Wrap,
             // which is the right semantics for an Alt-of-leaves
             // (every branch's scalar lands as the wrap's single
-            // child via push_branch_tag + the per-branch leaf push).
+            // child via select_alt_branch + the per-branch leaf push).
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
                     rule_id: #rule_id_lit as ::bbnf_ir::RuleId,

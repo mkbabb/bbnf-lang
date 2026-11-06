@@ -1,0 +1,50 @@
+{
+  "critic_finding_coverage": {
+    "A-F01": "unknown matrix status",
+    "A-F02": "malformed CSS VDS and false generic pre carriers",
+    "A-F03": "unknown and ill-formed railroad plus strict legacy Yacc",
+    "A-F04": "Bikeshed inset reference, current ins, deleted del, and structural normativity",
+    "A-F05": "typographic property name and New values extension edges",
+    "A-F06": "unknown HTML tag removal and reversible semantic spans",
+    "A-F07": "comment/history dependency occurrences and named CSS aliases",
+    "A-F08": "source-qualified coexistence without scalar profile priority",
+    "A-F09": "entity AST occurrence closure and deletion mutation",
+    "A-F10": "comment WPT exclusion and anchor identity relocation",
+    "A-F11": "canonical dated retained publication byte rehash",
+    "A-F12": "future-candidate forbidden authority crater",
+    "A-F13": "IDL declarations, algorithm steps, closed planes, and real owners",
+    "A-F14": "independent source-semantic mutation corpus",
+    "A-F15": "compact tree and matrix ownership tables",
+    "B-01": "equation, program, markup, and unclassified pre negatives",
+    "B-02": "reference/edit/normativity structural mutations",
+    "B-03": "strict VDS and railroad negative corpus",
+    "B-04": "total entity reference closure mutation",
+    "B-05": "source-qualified module conflicts",
+    "B-06": "exact section-anchor WPT ownership relocation",
+    "B-07": "reviewed alias and closed relevance mutation",
+    "B-08": "dated URL, response, length, and content object validation",
+    "B-09": "candidate allowlist/build-input crater",
+    "B-10": "root versus derived blocker accounting mutation"
+  },
+  "invalid_css_vds": [
+    "a &&",
+    "| a",
+    "a || || b",
+    "[]",
+    "a {wat}",
+    "a ???",
+    "a !!",
+    "a = prose",
+    "a ; prose",
+    "a : prose"
+  ],
+  "invalid_railroad": [
+    "Bogus: payload\n",
+    "Choice: 3\n  T: a\n  T: b\n",
+    "Opt:\n  T: a\n  T: b\n",
+    "N:\n"
+  ],
+  "scanner_document": "<p>This note is non-normative.</p><pre class=prod><<x>> = a <ins>| b</ins> <del>| c</del> <<inset-value>> <nobr>d</nobr></pre>",
+  "forbidden_candidate_line": "const ORACLE: &str = \"conformance/css-l4/epoch-3/data/matrix.json\";",
+  "unallowlisted_candidate_line": "const INPUT: &str = \"conformance/css-l4/epoch-3/README.md\";"
+}

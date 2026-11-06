@@ -23,6 +23,9 @@
 //!   upstream `key_dispatch_configs` / `keyword_branches` /
 //!   precomputed dispatch table. Consumer:
 //!   `backend::strategy::alt_strategy::decide_alt_strategy`.
+//! - `token` — binds byte-dispatch Alt choices to one-pass-eligible child
+//!   engine choices. It is crate-private because lifecycle and reporting stay
+//!   with the component solver.
 //!
 //! Each per-site installer adds at most one constraint per
 //! eligible NodeId, deriving the pin value from facts that the
@@ -36,6 +39,7 @@ pub mod dispatch;
 pub mod engine;
 pub mod layout;
 pub mod shape;
+pub(super) mod token;
 
 use std::collections::HashMap;
 
@@ -53,11 +57,10 @@ use crate::{GrammarIR, RuleId};
 /// can resolve a `NodeId` back to the CSP `VarId` for the relevant
 /// decision family without re-walking the IR.
 pub struct ConstraintCtx<'a> {
-    /// The component currently being wired, as a sorted list of
-    /// `RuleId`s.
+    /// The component currently being wired, in deterministic partition order.
     pub component: &'a [RuleId],
 
-    /// Per-rule materialization class. Populated upstream by
+    /// Per-NodeId materialization class. Populated upstream by
     /// `classify_materialization` into `ir.materialization` and
     /// read by constraint installers. Keyed by rule body `NodeId`.
     pub mat_classes: &'a HashMap<NodeId, MaterializationClass>,

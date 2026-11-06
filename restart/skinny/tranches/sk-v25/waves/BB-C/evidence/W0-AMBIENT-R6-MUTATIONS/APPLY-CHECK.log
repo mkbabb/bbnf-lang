@@ -1,0 +1,13 @@
+2026-07-22T23:17:28Z MODEL=gpt-5.6-sol EFFORT=ultra HOST=arm64
+COMMAND: git apply --check <each exact R6-M01..R6-M09 patch, with no M06, against its bound dirty-worktree preimage>
+PASS R6-M01 M01-widen-rhs-to-factor-boundary.patch HUNKS=1
+PASS R6-M02 M02-retain-objective-after-merge-failure.patch HUNKS=1
+PASS R6-M03 M03-delete-pre-accept-cancellation.patch HUNKS=1
+PASS R6-M04 M04-delete-before-next-cancellation.patch HUNKS=1
+PASS R6-M05 M05-delete-final-return-cancellation.patch HUNKS=1
+PASS R6-M07 M07-delete-current-token-post-solve-guard.patch HUNKS=1
+PASS R6-M08 M08-accept-incomplete-or-oversized-solution.patch HUNKS=1
+PASS R6-M09 M09-accept-foreign-variable-id.patch HUNKS=1
+FORMAT: /usr/bin/arch -arm64 rustfmt --edition 2024 <four authorized Rust owners> PASS
+DIFF: git diff --check plus untracked no-index whitespace checks PASS
+SUMMARY: 8/8 one-hunk patches apply-clean; 0 applied; 0 tests, mutants, builds, profiles, or generators executed; 0 native credit.

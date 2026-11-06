@@ -655,7 +655,7 @@ mod struct_direct_wire {
         let add_expr = synth_layout(27, "add_expr", LayoutKind::Struct);
         let h_add = b.begin_compound(&add_expr);
         b.push_leaf_with_f64(1.0);
-        b.push_branch_tag(0); // `+`
+        b.push_leaf_with_u8(0); // `+`
         b.push_leaf_with_f64(2.0);
         b.end_compound(h_add);
         b.end_compound(h_formula);

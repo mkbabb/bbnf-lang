@@ -221,12 +221,11 @@ fn rows_for_struct_field(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
 fn rows_for_tagged_branch(rule_id: RuleId, field: &StructField) -> Vec<PlanRow> {
     match field.source {
         FieldSource::BranchTag { branch_index } => {
-            let cut = u16::try_from(branch_index)
-                .expect("Branch index exceeds u16 — variant enumeration > 65535 branches");
+            let cut = branch_index.get();
             vec![PlanRow {
                 rule_id,
                 segment_kind: SegmentKindTag::VariantName,
-                field_index: branch_index,
+                field_index: u32::from(branch_index),
                 decision: Decision::ParseUntil(cut),
             }]
         }

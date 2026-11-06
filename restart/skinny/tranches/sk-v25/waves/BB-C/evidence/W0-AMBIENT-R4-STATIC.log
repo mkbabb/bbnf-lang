@@ -1,0 +1,123 @@
+BB-C.W0 ambient optimizer authority — R4 static receipt
+MODEL: gpt-5.6-sol; EFFORT: ultra; ROLE: R4 author.
+Frozen: 2026-07-22T20:46:47Z
+Repository HEAD: af15f63e0d2d3d719938c13b906a50acbb92ea3b
+Method: formatting, whitespace checks, source censuses, hashes, and read-only patch checks only.
+No Cargo command, build, test executable, benchmark, mutation execution, x86 route, package edit, or other repository was used.
+
+[RUSTFMT]
+COMMAND: rustfmt --edition 2024 --check crates/ir/src/passes/csp_strategy/mod.rs crates/ir/src/passes/csp_strategy/domain.rs crates/ir/src/passes/csp_strategy/report.rs crates/ir/src/passes/csp_strategy/site.rs crates/ir/src/passes/csp_strategy/solve.rs crates/ir/src/passes/csp_strategy/components.rs crates/ir/src/passes/csp_strategy/constraints/mod.rs crates/ir/src/passes/csp_strategy/constraints/token.rs crates/ir/src/passes/csp_strategy/constraints/engine.rs crates/ir/src/passes/csp_strategy/constraints/shape.rs crates/ir/src/passes/csp_strategy/constraints/layout.rs crates/ir/src/passes/csp_strategy/constraints/dispatch.rs crates/ir/src/passes/mod.rs crates/ir/tests/passes/csp_strategy/mod.rs crates/ir/tests/vm/cross_rule_csp.rs crates/ir/tests/vm/cost_weights_unified.rs crates/ir/tests/lattices/csp_materialization.rs crates/ir/tests/lattices/csp_authority.rs crates/core/src/lower/expression/wrap.rs crates/core/tests/lower/expression/wrap.rs crates/core/src/pipeline/compile/mod.rs crates/core/src/pipeline/compile/pipeline.rs crates/core/tests/pipeline/compile/pipeline.rs crates/lsp/src/dap/adapter.rs
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+[TRACKED WHITESPACE]
+COMMAND: git diff --check -- <the 16 tracked Rust paths in the R4 subject>
+EXIT: 0
+STDOUT+STDERR: 0 bytes
+
+[UNTRACKED WHITESPACE]
+COMMAND SHAPE: git diff --no-index --check /dev/null <path>
+SUBJECT: 20 new Rust/evidence files existing before this receipt
+RESULT: all 20 returned expected no-index difference exit 1 with 0-byte diagnostics
+
+[CANONICAL SOLVE]
+COMMAND: rg -n '^pub fn solve_grammar_components' crates/ir/src/passes/csp_strategy
+EXIT: 0
+ROWS: 1
+ROW: crates/ir/src/passes/csp_strategy/solve.rs:76:pub fn solve_grammar_components(
+
+COMMAND: rg -n 'fn (solve_grammar_components_with_config|solve_strategy_and_materialization|solve_recognizer_decisions)|\b(solve_grammar_components_with_config|solve_strategy_and_materialization|solve_recognizer_decisions)\s*\(' crates/ir/src/passes/csp_strategy crates/ir/tests/passes/csp_strategy crates/core/src/pipeline/compile
+EXIT: 1
+ROWS: 0
+
+COMMAND: rg -n 'solve_grammar_components\s*\(' crates/ir/src crates/core/src crates/ir/tests crates/core/tests --glob '*.rs' | wc -l
+EXIT: 0
+ROWS: 18
+INTERPRETATION: one definition plus seventeen two-argument call expressions.
+
+[DIRECT MOVE]
+COMMAND: rg -n '^pub use (domain|report|solve)' crates/ir/src/passes/csp_strategy/mod.rs
+EXIT: 0
+ROWS: 3
+ROWS:
+112:pub use domain::{
+116:pub use report::{
+121:pub use solve::{GrammarSolveControl, solve_grammar_components};
+
+COMMAND: rg -n '^pub (enum|struct|type) (AltMode|WrapMode|RegexEngine|RecognizerDecision|RecognizerDecisionMap|StrategyValue|StrategyDomain|GrammarSolveControl|GrammarSolveOutput|OptimizationUnavailable|ComponentReport)' crates/ir/src/passes/csp_strategy/mod.rs
+EXIT: 1
+ROWS: 0
+
+MODULE LOC:
+205 mod.rs
+456 domain.rs
+164 report.rs
+473 site.rs
+680 solve.rs
+336 components.rs
+108 constraints/mod.rs
+110 constraints/token.rs
+178 constraints/engine.rs
+136 constraints/shape.rs
+106 constraints/layout.rs
+95 constraints/dispatch.rs
+3047 total
+
+[TEST DISPLACEMENT]
+COMMAND: rg -n '^\s*#\[test\]' crates/ir/src/passes/csp_strategy/mod.rs crates/core/src/lower/expression/wrap.rs crates/core/src/pipeline/compile/pipeline.rs
+EXIT: 1
+ROWS: 0
+ATTACHMENTS: exactly three cfg(test)/path pairs at csp_strategy/mod.rs:203-204, lower/expression/wrap.rs:802-803, and pipeline/compile/pipeline.rs:464-465.
+OLD INLINE TEST FILE: crates/core/src/pipeline/compile/pipeline/tests.rs absent.
+
+[RUNTIME AND PROSE CENSUS]
+FALLBACK/COST-CORRUPTION COMMAND: rg -n 'decode_min_cost_per_variable|decode_fallback|fallback_alt|fallback_wrap|fallback_engine|costs\.push\(1\.0\)|swap_remove' crates/ir/src/passes/csp_strategy crates/ir/tests/passes/csp_strategy crates/ir/tests/vm/cross_rule_csp.rs
+EXIT: 1
+ROWS: 0
+
+ACTIVE-PROSE COMMAND: rg -n 'ParentCompatibility|TierFollowsMaterialization|per-variable trivial picks|falls back to per-variable|solve falls back|existing VM-facing API intact|parent / child variables' restart/skinny/tranches/sk-v25/waves/BB-C/W0.md crates/ir/src/passes/csp_strategy crates/core/src/pipeline/compile
+EXIT: 1
+ROWS: 0
+
+TIMEDOUT COMMAND: rg -n '\bTimedOut\b' crates/ir/src/passes/csp_strategy crates/ir/tests/passes/csp_strategy crates/ir/tests/vm/cross_rule_csp.rs
+EXIT: 1
+ROWS: 0
+
+R3-LOCAL UNUSED IMPORT COMMAND: rg -n '\b(PrettyHints|RuleDirectives)\b' crates/ir/tests/vm/cross_rule_csp.rs
+EXIT: 1
+ROWS: 0
+
+[REPORT AND CANCELLATION]
+REPORT SYMBOL COUNT: 110 rows for ComponentReport|SolveCompletionStatus|OptimizationFailureLocus|ObjectiveProof across implementation, exports, and external IR tests.
+MEMBER SORTS: solve.rs:220 and solve.rs:356.
+PARTITION PROSE: constraints/mod.rs:60 says deterministic partition order.
+CANCELLATION BOUNDARIES: solve.rs:88,134,173,194,375,512,545,616; helpers at 207,214,240.
+CONTROL: GrammarSolveControl has only node_budget and cancel; default and production both spell Some(1_000_000)/None.
+PUBLIC MIXED-COMPONENT BOUNDARY TEST: cross_rule_csp.rs:550.
+
+[LOWERER AND PUBLIC ERROR]
+wrap.rs contains find_direct_arrow at line 66 and direct_map_rhs at line 102; find_unquoted has zero rows in that owner.
+The five external grouped/direct-map tests are at wrap test lines 60,69,78,88,107.
+The four canonical compile signatures are at compile/mod.rs:44,57,91,108; Err(err.to_string()) has zero rows in the canonical surface/DAP census.
+The external compile type assertion is at pipeline test line 62; the exact optimizer error/sentinel transaction is at line 151.
+
+[MUTATION SPECIMENS]
+COMMAND SHAPE: git apply --check W0-AMBIENT-R4-MUTATIONS/M0N-*.patch
+RESULT: all seven exact patches returned exit 0 with 0-byte output.
+COMMAND: cd W0-AMBIENT-R4-MUTATIONS && shasum -a 256 -c PATCHES.sha256
+EXIT: 0
+RESULT: seven OK rows.
+COMMAND: shasum -a 256 -c W0-AMBIENT-R4-MUTATIONS/SOURCE-RESTORATION.sha256
+EXIT: 0
+RESULT: four OK rows.
+No patch was applied and no mutant was executed.
+
+[CONTENT ANCHORS]
+Cargo.lock 480ce3dcd92ed7778e5fc922cc531039e187a96258ec78f6fa6937defb6a40e9
+W0-AMBIENT-R4-RED-1.log a8a0f33765ac04956759db2ab58b577c16b5bc4b8cb412c747df9b076504899e
+W0-AMBIENT-R4-RED-2.log 7ed3e288c7c149c76f59fa798b681c2cbb98e5b76f65c3614af02899e83cb615
+W0-AMBIENT-R4-RED-3.log aec4885bd10f8ea830229ee96146638bdfaa88f1fa1ec34f833f9a244509910d
+W0-AMBIENT-R4-BORN-RED-AUTHOR.md 78af54f15e5e54813a3a0fb071304bbc894d74d41aef9c1695e7531592101d4c
+W0-AMBIENT-R4-BORN-RED-NATIVE.md 6594f0b6abdbd21d7f3a1ada75b78e507dedeacf445b773d00f08414121484a6
+
+STATIC ONLY. NO GREEN CLAIM. CREDIT 0. CLEAN COUNT 0/2. BB-C.W1 MAY NOT BEGIN.

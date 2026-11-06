@@ -17,7 +17,7 @@
 
 use rustc_hash::FxHashMap;
 
-use crate::{AltBranch, FnId, GrammarIR, IrNode, StringId};
+use crate::{AltBranch, GrammarIR, IrNode, StringId};
 
 /// Factor common prefixes out of alternation branches.
 ///
@@ -161,7 +161,7 @@ impl<'a> FactorCtx<'a> {
 
     /// Trie-style byte-level prefix factoring for Literal alternation branches.
     ///
-    /// Groups Literal (and Map(Literal, fn)) branches by their first byte and,
+    /// Groups bare Literal branches by their first byte and,
     /// for each group of 2+ members, splits them:
     ///
     /// ```text
@@ -173,8 +173,10 @@ impl<'a> FactorCtx<'a> {
     /// ])
     /// ```
     ///
-    /// Map wrappers are preserved on the continuation, not the prefix:
-    /// `Map(Literal("rem"), fn)` → prefix `Literal("r")` + continuation `Map(Literal("em"), fn)`.
+    /// Mapped literals are deliberately excluded. Relocating a `Map` from
+    /// the whole literal onto a suffix changes the bytes observed by
+    /// `MapExpr::Input`; preserving semantics is more important than this
+    /// local factoring opportunity.
     fn factor_literal_prefixes(&mut self, mut branches: Vec<AltBranch>) -> Vec<AltBranch> {
         if branches.len() < 2 {
             return branches;
@@ -216,7 +218,7 @@ impl<'a> FactorCtx<'a> {
                     // Pre-extract all remainder strings in the group while
                     // `self.strings` is still immutably borrowed; this releases
                     // the borrow before we mutate via `intern_byte` / `intern`.
-                    let group: Vec<(Box<str>, Option<FnId>)> = (i..j)
+                    let group: Vec<Box<str>> = (i..j)
                         .map(|k| {
                             let li = literal_infos[k]
                                 .as_ref()
@@ -224,7 +226,7 @@ impl<'a> FactorCtx<'a> {
                             // Safe because the first byte is ASCII (single
                             // codepoint) — see classify_literal_branch.
                             let full = &self.strings[li.literal_sid as usize];
-                            (Box::<str>::from(&full[1..]), li.map_fn)
+                            Box::<str>::from(&full[1..])
                         })
                         .collect();
 
@@ -232,7 +234,7 @@ impl<'a> FactorCtx<'a> {
                     let prefix_sid = self.intern_byte(first_byte);
 
                     let mut continuation_branches: Vec<AltBranch> = Vec::with_capacity(group.len());
-                    for (rem, map_fn) in group {
+                    for rem in group {
                         let continuation_node = if rem.is_empty() {
                             IrNode::Epsilon
                         } else {
@@ -240,17 +242,8 @@ impl<'a> FactorCtx<'a> {
                             IrNode::Literal(rem_sid)
                         };
 
-                        let wrapped = if let Some(fn_id) = map_fn {
-                            IrNode::Map {
-                                inner: Box::new(continuation_node),
-                                fn_id,
-                            }
-                        } else {
-                            continuation_node
-                        };
-
                         continuation_branches.push(AltBranch {
-                            node: wrapped,
+                            node: continuation_node,
                             first_set: None,
                         });
                     }
@@ -434,40 +427,20 @@ fn factor_branches(mut branches: Vec<AltBranch>) -> Vec<AltBranch> {
 struct LiteralBranchInfo {
     /// The string ID of the literal.
     literal_sid: StringId,
-    /// If the literal was wrapped in Map, the FnId to preserve on the continuation.
-    map_fn: Option<FnId>,
 }
 
 /// Classify a branch node as a splittable literal.
 ///
-/// Returns `Some(info)` if the node is `Literal(sid)` or
-/// `Map { inner: Literal(sid), fn_id }` AND the literal has length >= 2 AND
-/// the first byte is ASCII (so a single-byte split is a complete UTF-8
-/// codepoint).
+/// Returns `Some(info)` if the node is a bare `Literal(sid)`, the literal has
+/// length >= 2, and its first byte is ASCII (so a single-byte split is a
+/// complete UTF-8 codepoint). Mapped literals remain intact because moving a
+/// map onto the remainder changes the map's input span.
 fn classify_literal_branch(node: &IrNode, strings: &[String]) -> Option<LiteralBranchInfo> {
     match node {
         IrNode::Literal(sid) => {
             let s = &strings[*sid as usize];
             if s.len() >= 2 && s.as_bytes()[0].is_ascii() {
-                Some(LiteralBranchInfo {
-                    literal_sid: *sid,
-                    map_fn: None,
-                })
-            } else {
-                None
-            }
-        }
-        IrNode::Map { inner, fn_id } => {
-            if let IrNode::Literal(sid) = inner.as_ref() {
-                let s = &strings[*sid as usize];
-                if s.len() >= 2 && s.as_bytes()[0].is_ascii() {
-                    Some(LiteralBranchInfo {
-                        literal_sid: *sid,
-                        map_fn: Some(*fn_id),
-                    })
-                } else {
-                    None
-                }
+                Some(LiteralBranchInfo { literal_sid: *sid })
             } else {
                 None
             }

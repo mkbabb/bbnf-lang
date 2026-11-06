@@ -1,0 +1,83 @@
+{
+  "adjudication": {
+    "path": "../epoch-4/GESTALT-2-ADJUDICATION.md",
+    "sha256": "728b5929543bc754b742be151761a8b5097d0274e37587b248ebd107836759fd"
+  },
+  "candidate_roots": [
+    "candidate",
+    "candidates"
+  ],
+  "csswg_tree": {
+    "blob_count": 3204,
+    "bytes": 108745,
+    "commit": "c7573530343759ace8e46438a1fa2c44515b5554",
+    "entry_count": 3608,
+    "object_sha256": "58875994e81cfdbdbd8418d4dc8016c83fb50ffc97e967c6f7db7028985d891f",
+    "root_tree": "75bf19c016ed98126381508073de6893c9f756f5",
+    "tree_count": 404,
+    "uncompressed_bytes": 465600,
+    "uncompressed_sha256": "5595520ce780f80606808e950516e2a53a691578040ed62a2bfe600fa7c0033d"
+  },
+  "epoch4_inputs": [
+    {
+      "path": "../epoch-4/inputs/manifest.json",
+      "sha256": "a483696a8c668efb53e4a1a1efff2950d04aa28ab5823694ba44365e4d488cdb"
+    },
+    {
+      "path": "../epoch-4/inputs/policy.json",
+      "sha256": "00369522ee0763b8cbaf60c3cd7ab20ea3052ae60f0b6fd4284533efc53589ae"
+    },
+    {
+      "path": "../epoch-4/inputs/governing.json",
+      "sha256": "04d03115823ed0fd0120a278b32eb2cbaf07dd412cd4ab030b5417b5c44f6d98"
+    },
+    {
+      "path": "../epoch-4/inputs/downstream-controls.json",
+      "sha256": "7c7243f4a19b59dd1b6da8fc0de23adefa0228ab5df6eea191b131e8a835d694"
+    }
+  ],
+  "python": {
+    "binary_sha256": "2477b47fa3ae65b9574eb18a15edb364e96948eaa1875ad3f1c80d780efc9c12",
+    "dynamic_closure": [
+      {"bytes": 5438480, "path": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", "sha256": "b0cd4b1cded9b174e8e216635e10ae95168c9e4d8ac5c10c92425fd3c05ecf08"},
+      {"bytes": 188480, "path": "/opt/homebrew/Cellar/mpdecimal/4.0.1/lib/libmpdec.4.0.1.dylib", "sha256": "d247c889e1db466abbcec8fb34061a26e6f1c3aebfd66d3ec070c56e2b73ba0f"},
+      {"bytes": 4845712, "path": "/opt/homebrew/Cellar/openssl@3/3.6.2/lib/libcrypto.3.dylib", "sha256": "ef2239cec921003b54b61968f00489271e2a2805d7d1b4e69d632423f38efe1e"},
+      {"bytes": 884560, "path": "/opt/homebrew/Cellar/openssl@3/3.6.2/lib/libssl.3.dylib", "sha256": "26ecfd43c742914a142c8b414b1f308cefe0531fcc6e38b6d45021649850e758"},
+      {"bytes": 1270336, "path": "/opt/homebrew/Cellar/sqlite/3.53.1/lib/libsqlite3.3.53.1.dylib", "sha256": "e25fd720937eaeba7bc831164fb1a6d0b03430bec9524b153906189afcc09e1e"},
+      {"bytes": 184512, "path": "/opt/homebrew/Cellar/xz/5.8.3/lib/liblzma.5.dylib", "sha256": "3d5bfa2f097c31463642b1daab5e662b44368bb4da368f85e412e7f9adcbaa10"},
+      {"bytes": 649648, "path": "/opt/homebrew/Cellar/zstd/1.5.7_1/lib/libzstd.1.5.7.dylib", "sha256": "e2847c4613b386683c234913ae3b7b04299254096caf7616e3b3cd9bb97a39ab"}
+    ],
+    "environment": {
+      "LANG": "C.UTF-8",
+      "LC_ALL": "C.UTF-8",
+      "PATH": "/opt/homebrew/bin:/usr/bin:/bin",
+      "TZ": "UTC",
+      "__CF_USER_TEXT_ENCODING": "0x1F8:0x0:0x0"
+    },
+    "otool": {
+      "bytes": 118928,
+      "path": "/usr/bin/otool",
+      "sha256": "12bed4523661307059b879b9b54e77a73176e9d27d27a0e40363271d8f0668ba"
+    },
+    "implementation": "CPython",
+    "startup_flags": {
+      "dont_write_bytecode": 1,
+      "isolated": 1,
+      "no_user_site": 1,
+      "optimize": 0,
+      "safe_path": true,
+      "utf8_mode": 1,
+      "warn_default_encoding": 1
+    },
+    "stdlib": {
+      "bytes": 57077557,
+      "file_count": 2495,
+      "root": "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/lib/python3.14",
+      "selection": "ordinary non-symlink files excluding site-packages, __pycache__, *.pyc, and *.pyo; sorted UTF-8 relative paths",
+      "subject_sha256": "aef31fe2f17090924e2a7a420780ab5d3b2c0ee3dfb35411ca0ac5a67960621b"
+    },
+    "version": "3.14.5"
+  },
+  "schema_version": 1,
+  "wpt_classification_policy": "PREFIX_BLOB_ONLY; TEST_REFERENCE_SUPPORT_METADATA_CLASSIFICATION_REQUIRES_RETAINED_MANIFEST_OR_BLOB_CONTENT"
+}

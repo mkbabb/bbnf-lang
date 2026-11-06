@@ -1,0 +1,16 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -654,12 +654,6 @@ pub(super) fn solve_exact_constrained(
+     }
+     csp.finalize();
+     let solutions = csp.solve_optimized(config);
+-    if cancellation_requested(config) {
+-        return Err(SolveFailure {
+-            reason: OptimizationUnavailableReason::Cancelled,
+-            locus: OptimizationFailureLocus::Search,
+-        });
+-    }
+     if csp.stats().budget_exceeded {
+         return Err(SolveFailure {
+             reason: OptimizationUnavailableReason::BudgetExceeded,

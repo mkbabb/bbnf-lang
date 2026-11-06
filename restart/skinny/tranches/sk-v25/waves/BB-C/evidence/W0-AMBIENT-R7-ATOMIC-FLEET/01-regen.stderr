@@ -1,0 +1,69 @@
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 7.758708ms
+[xtask::regen] bbnf: generate_all done in 21.898416ms
+[xtask::regen] bbnf: prettyplease done in 132.26625ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.441916ms
+[xtask::regen] json: generate_all done in 3.458291ms
+[xtask::regen] json: prettyplease done in 16.995125ms
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `borderWidthDecl::borderWidthDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__displayDecl_cont_170::__displayDecl_cont_170_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `positionDecl::positionDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `borderStyleDecl::borderStyleDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__visibilityDecl_cont_173::__visibilityDecl_cont_173_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__alignDecl_cont_176::__alignDecl_cont_176_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__borderWidthDecl_cont_181::__borderWidthDecl_cont_181_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexWrapDecl::flexWrapDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_3` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `alignDecl::alignDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `overflowDecl::overflowDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontWeightDecl::fontWeightDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `boxSizingDecl::boxSizingDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__overflowDecl_cont_172::__overflowDecl_cont_172_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__flexDirDecl_cont_174::__flexDirDecl_cont_174_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `cursorDecl::cursorDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `displayDecl::displayDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `fontDecl::fontDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `flexDirDecl::flexDirDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__fontDecl_cont_165::__fontDecl_cont_165_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__borderStyleDecl_cont_182::__borderStyleDecl_cont_182_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `textAlignDecl::textAlignDecl_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__flexWrapDecl_cont_175::__flexWrapDecl_cont_175_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__cursorDecl_cont_187::__cursorDecl_cont_187_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__boxSizingDecl_cont_186::__boxSizingDecl_cont_186_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `anPlusB::anPlusB_1` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__positionDecl_cont_171::__positionDecl_cont_171_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__textAlignDecl_cont_185::__textAlignDecl_cont_185_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__fontWeightDecl_cont_179::__fontWeightDecl_cont_179_0` and `visibilityDecl::visibilityDecl_0` (U8). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 54.410791ms
+[xtask::regen] css_l4: generate_all done in 82.801792ms
+[xtask::regen] css_l4: prettyplease done in 588.981541ms
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 2.462916ms
+[xtask::regen] css_pretty: generate_all done in 7.312458ms
+[xtask::regen] css_pretty: prettyplease done in 42.365333ms
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 9.935875ms
+[xtask::regen] google_sheets: generate_all done in 13.786042ms
+[xtask::regen] google_sheets: prettyplease done in 83.039292ms
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 3.038709ms
+[xtask::regen] ebnf: generate_all done in 6.753833ms
+[xtask::regen] ebnf: prettyplease done in 43.777417ms
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.141375ms
+[xtask::regen] bnf: generate_all done in 3.093708ms
+[xtask::regen] bnf: prettyplease done in 18.209459ms
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 762.375µs
+[xtask::regen] csv: generate_all done in 1.737ms
+[xtask::regen] csv: prettyplease done in 9.600958ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 659.458µs
+[xtask::regen] math: generate_all done in 881.708µs
+[xtask::regen] math: prettyplease done in 4.095166ms

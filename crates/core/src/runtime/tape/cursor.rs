@@ -1,4 +1,4 @@
-//! `TapeCursor` — a zero-sized focus over `(tape records, payload arena,
+//! `TapeCursor` — a lightweight focus over `(tape records, payload arena,
 //! offset)`. Decodes a [`super::record::TapeRec`] on demand and walks the
 //! post-order child layout.
 //!
@@ -11,15 +11,33 @@
 //! to yield children in source order for positional consumers.
 
 use super::arena::PayloadArena;
-use super::record::{LeafType, TapeKind, TapeOffset, TapeRec, TAPE_NONE};
+use super::record::{LeafType, TAPE_NONE, TapeKind, TapeRec};
 
-/// Shared borrow of the flat tape: records + payload arena + the source
-/// the spans index into.
+/// Shared borrow of the flat tape: records + payload arena + the
+/// builder-owned source that compound spans index into.
 #[derive(Debug, Clone, Copy)]
 pub struct TapeRef<'t> {
-    pub records: &'t [TapeRec],
-    pub arena: &'t PayloadArena,
-    pub source: &'t str,
+    records: &'t [TapeRec],
+    rule_ids: &'t [u32],
+    arena: &'t PayloadArena,
+    source: &'t [u8],
+}
+
+impl<'t> TapeRef<'t> {
+    #[inline]
+    pub(crate) fn new(
+        records: &'t [TapeRec],
+        rule_ids: &'t [u32],
+        arena: &'t PayloadArena,
+        source: &'t [u8],
+    ) -> Self {
+        Self {
+            records,
+            rule_ids,
+            arena,
+            source,
+        }
+    }
 }
 
 /// A focus on one record of the tape.
@@ -31,13 +49,10 @@ pub struct TapeCursor<'t> {
 
 impl<'t> TapeCursor<'t> {
     #[inline]
-    pub fn new(tape: TapeRef<'t>, off: u32) -> Self {
-        Self { tape, off }
-    }
-
-    #[inline]
-    pub fn tape(&self) -> TapeRef<'t> {
-        self.tape
+    pub(crate) fn new(tape: TapeRef<'t>, off: u32) -> Option<Self> {
+        let index = off as usize;
+        (tape.records.get(index).is_some() && tape.rule_ids.len() == tape.records.len())
+            .then_some(Self { tape, off })
     }
 
     #[inline]
@@ -46,107 +61,106 @@ impl<'t> TapeCursor<'t> {
     }
 
     #[inline]
-    pub fn rec(&self) -> &'t TapeRec {
-        &self.tape.records[self.off as usize]
+    fn rec(&self) -> Option<&'t TapeRec> {
+        self.tape.records.get(self.off as usize)
     }
 
     #[inline]
-    pub fn kind(&self) -> TapeKind {
-        self.rec().kind()
+    pub fn kind(&self) -> Option<TapeKind> {
+        self.rec().map(TapeRec::kind)
+    }
+
+    /// Exact grammar rule identity for a compound. Leaf records have no
+    /// rule identity even though the parallel lane contains a placeholder.
+    #[inline]
+    pub fn rule_id(&self) -> Option<u32> {
+        (self.kind()? == TapeKind::Open)
+            .then(|| self.tape.rule_ids.get(self.off as usize).copied())
+            .flatten()
     }
 
     #[inline]
-    pub fn meta_idx(&self) -> u8 {
-        self.rec().meta_idx()
-    }
-
-    #[inline]
-    pub fn branch(&self) -> u8 {
-        self.rec().branch()
+    pub fn branch(&self) -> Option<bbnf_ir::AltBranchId> {
+        self.rec().and_then(TapeRec::branch)
     }
 
     /// The source slice this record spans.
     #[inline]
-    pub fn span(&self) -> &'t str {
-        let (lo, hi) = self.rec().span();
-        let (lo, hi) = (lo as usize, hi as usize);
-        if lo <= hi && hi <= self.tape.source.len() {
-            self.tape.source.get(lo..hi).unwrap_or("")
-        } else {
-            ""
+    pub fn span(&self) -> Option<&'t str> {
+        let rec = self.rec()?;
+        if rec.kind() != TapeKind::Open {
+            return None;
         }
+        let (lo, hi) = rec.span();
+        let (lo, hi) = (lo as usize, hi as usize);
+        (lo <= hi)
+            .then(|| self.tape.source.get(lo..hi))
+            .flatten()
+            .and_then(|bytes| core::str::from_utf8(bytes).ok())
     }
 
     // ---- leaf payload decode ---------------------------------------
 
     #[inline]
-    pub fn leaf_type(&self) -> LeafType {
-        self.rec().leaf_type()
+    pub fn leaf_type(&self) -> Option<LeafType> {
+        self.rec().and_then(TapeRec::leaf_type)
     }
 
     #[inline]
-    pub fn as_f64(&self) -> f64 {
-        let rec = self.rec();
-        debug_assert!(matches!(rec.leaf_type(), LeafType::F64));
-        if rec.child_off == TAPE_NONE {
-            0.0
-        } else {
-            self.tape.arena.read_f64(rec.child_off)
-        }
+    pub fn as_f64(&self) -> Option<f64> {
+        let rec = self.rec()?;
+        (rec.leaf_type() == Some(LeafType::F64) && rec.child_off != TAPE_NONE)
+            .then(|| self.tape.arena.read_f64(rec.child_off))
+            .flatten()
     }
 
     #[inline]
-    pub fn as_i64(&self) -> i64 {
-        let rec = self.rec();
-        if rec.child_off == TAPE_NONE {
-            0
-        } else {
-            self.tape.arena.read_i64(rec.child_off)
-        }
+    pub fn as_i64(&self) -> Option<i64> {
+        let rec = self.rec()?;
+        (rec.leaf_type() == Some(LeafType::I64) && rec.child_off != TAPE_NONE)
+            .then(|| self.tape.arena.read_i64(rec.child_off))
+            .flatten()
     }
 
     #[inline]
-    pub fn as_u64(&self) -> u64 {
-        let rec = self.rec();
-        if rec.child_off == TAPE_NONE {
-            0
-        } else if rec.span_lo == 1 {
-            // arena-resident wide magnitude (see push_leaf_with_u64).
+    pub fn as_u64(&self) -> Option<u64> {
+        let rec = self.rec()?;
+        if rec.leaf_type() != Some(LeafType::U64) || rec.child_off == TAPE_NONE {
+            None
+        } else if rec.has_u64_arena_payload() {
             self.tape.arena.read_u64(rec.child_off)
         } else {
-            // inline-packed (<= u32::MAX).
-            rec.child_off as u64
-        }
-    }
-
-    /// A `u32` payload inline-packed into `child_off` (e.g. a packed hex
-    /// color, or a bool 0/1).
-    #[inline]
-    pub fn as_u32_inline(&self) -> u32 {
-        let v = self.rec().child_off;
-        if v == TAPE_NONE {
-            0
-        } else {
-            v
+            Some(u64::from(rec.child_off))
         }
     }
 
     #[inline]
-    pub fn as_bool(&self) -> bool {
-        self.as_u32_inline() != 0
+    pub fn as_u8(&self) -> Option<u8> {
+        let rec = self.rec()?;
+        (rec.leaf_type() == Some(LeafType::U8))
+            .then(|| u8::try_from(rec.child_off).ok())
+            .flatten()
     }
 
-    /// A string leaf — zero-copy source borrow when [`TapeRec`] carries
-    /// the borrow bit, else arena-decoded bytes.
     #[inline]
-    pub fn as_str(&self) -> &'t str {
-        let rec = self.rec();
-        if rec.is_string_borrow() {
-            self.span()
+    pub fn as_bool(&self) -> Option<bool> {
+        let rec = self.rec()?;
+        (rec.leaf_type() == Some(LeafType::Bool))
+            .then_some(rec.child_off)
+            .filter(|value| *value <= 1)
+            .map(|value| value != 0)
+    }
+
+    /// An owned string leaf decoded from the payload arena.
+    #[inline]
+    pub fn as_str(&self) -> Option<&'t str> {
+        let rec = self.rec()?;
+        if rec.leaf_type() != Some(LeafType::Str) {
+            None
         } else if rec.child_off == TAPE_NONE {
-            ""
+            None
         } else {
-            // span_hi reused as arena length for non-borrow strings.
+            // `span_hi` is reused as the arena length for string leaves.
             self.tape.arena.read_str(rec.child_off, rec.span_hi)
         }
     }
@@ -158,8 +172,12 @@ impl<'t> TapeCursor<'t> {
     /// compound.
     #[inline]
     fn first_child_off(&self) -> Option<u32> {
-        let rec = self.rec();
+        let rec = self.rec()?;
         if rec.kind() != TapeKind::Open || !rec.has_children() || rec.child_off == TAPE_NONE {
+            None
+        } else if rec.child_off >= self.off
+            || self.tape.records.get(rec.child_off as usize).is_none()
+        {
             None
         } else {
             Some(rec.child_off)
@@ -174,14 +192,21 @@ impl<'t> TapeCursor<'t> {
             return 0;
         };
         let mut count = 0usize;
-        let mut idx = self.off; // exclusive upper bound
+        let mut idx = self.off;
         while idx > first {
-            // child header is at idx-1 (post-order: subtree's last record);
-            // continue the backward walk at the child's subtree start.
-            idx = self.subtree_start(idx - 1);
+            let Some(header) = idx.checked_sub(1) else {
+                return 0;
+            };
+            let Some(start) = self.subtree_start(header) else {
+                return 0;
+            };
+            if start < first || start >= idx {
+                return 0;
+            }
             count += 1;
+            idx = start;
         }
-        count
+        (idx == first).then_some(count).unwrap_or(0)
     }
 
     /// The lowest record offset of the post-order subtree rooted at
@@ -189,9 +214,9 @@ impl<'t> TapeCursor<'t> {
     /// the compound's `child_off` (its first child), which is itself the
     /// start of the whole subtree under post-order layout.
     #[inline]
-    fn subtree_start(&self, at: u32) -> u32 {
-        let rec = &self.tape.records[at as usize];
-        match rec.kind() {
+    fn subtree_start(&self, at: u32) -> Option<u32> {
+        let rec = self.tape.records.get(at as usize)?;
+        let start = match rec.kind() {
             TapeKind::Leaf => at,
             TapeKind::Open => {
                 if rec.has_children() && rec.child_off != TAPE_NONE {
@@ -200,39 +225,48 @@ impl<'t> TapeCursor<'t> {
                     at
                 }
             }
+        };
+        (start <= at && self.tape.records.get(start as usize).is_some()).then_some(start)
+    }
+
+    fn child_offsets(&self) -> Vec<u32> {
+        let Some(first) = self.first_child_off() else {
+            return Vec::new();
+        };
+        let mut offsets = Vec::new();
+        let mut idx = self.off;
+        while idx > first {
+            let Some(header) = idx.checked_sub(1) else {
+                return Vec::new();
+            };
+            let Some(start) = self.subtree_start(header) else {
+                return Vec::new();
+            };
+            if start < first || start >= idx {
+                return Vec::new();
+            }
+            offsets.push(header);
+            idx = start;
         }
+        if idx != first {
+            return Vec::new();
+        }
+        offsets.reverse();
+        offsets
     }
 
     /// The immediate children in source order (forward). Materialises one
     /// transient cursor per child; no allocation of the children
     /// themselves.
     pub fn children_forward(&self) -> impl Iterator<Item = TapeCursor<'t>> + '_ {
-        let mut offsets: Vec<u32> = Vec::new();
-        if let Some(first) = self.first_child_off() {
-            let mut idx = self.off;
-            while idx > first {
-                let header = idx - 1; // the child's own record (post-order last)
-                offsets.push(header);
-                idx = self.subtree_start(header);
-            }
-        }
-        offsets.reverse();
         let tape = self.tape;
-        offsets.into_iter().map(move |o| TapeCursor::new(tape, o))
+        self.child_offsets()
+            .into_iter()
+            .filter_map(move |off| TapeCursor::new(tape, off))
     }
 
     /// The `i`-th immediate child in source order, or `None`.
     pub fn child(&self, i: usize) -> Option<TapeCursor<'t>> {
         self.children_forward().nth(i)
-    }
-}
-
-#[inline]
-pub(crate) fn root_offset(records: &[TapeRec]) -> Option<TapeOffset> {
-    // Post-order: the root compound is the last record written.
-    if records.is_empty() {
-        None
-    } else {
-        Some((records.len() - 1) as u32)
     }
 }

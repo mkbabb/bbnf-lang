@@ -1,0 +1,21 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -626,7 +626,16 @@ pub(super) fn solve_exact_constrained(
+             locus: OptimizationFailureLocus::Search,
+         });
+     }
+-    solutions.into_iter().next().ok_or(SolveFailure {
++    solutions
++        .into_iter()
++        .next()
++        .or_else(|| {
++            csp.variables
++                .iter()
++                .map(|variable| variable.domain.values().into_iter().next())
++                .collect()
++        })
++        .ok_or(SolveFailure {
+         reason: OptimizationUnavailableReason::Unsatisfiable,
+         locus: OptimizationFailureLocus::Search,
+     })

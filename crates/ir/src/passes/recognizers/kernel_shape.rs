@@ -8,16 +8,17 @@
 //! Per `docs/tranches/AW/AW-III.md` §W5, kernel-shape selection is
 //! mechanical and grammar-name-blind:
 //!
-//! - `|singletons| ≤ 8` → nibble-LUT collapse (one `vqtbl1q_u8` per
-//!   16-byte lane on NEON; `vpshufb` per 16-byte lane on AVX2).
+//! - `|singletons| ≤ 8` → nibble-LUT collapse (`vqtbl1q_u8` on
+//!   Apple ARM NEON; `i8x16.swizzle` in wasm32 browsers; the same
+//!   tables drive scalar fallback).
 //! - `9 ≤ |singletons| ≤ 16` → wide-LUT (lifts the AU.2.7 v2 `1 << i`
 //!   membership cap; the `simd-scan::neon` wide variant matches).
 //! - `|singletons| > 16` → multi-pass cmpeq + OR-reduce.
 //! - `|digraph_pairs| > 0` → kernel folds `vextq_u8` shifted-compare
 //!   per pair, OR'd into the structural mask before compaction.
-//! - `|quote_classes| > 0` → kernel folds CLMUL/PMULL parity (x86) or
-//!   6-op shift-XOR (NEON) before compaction so inside-string bytes
-//!   are masked off.
+//! - `|quote_classes| > 0` → kernel folds PMULL parity on Apple ARM
+//!   when available, or 6-op shift-XOR on wasm32/scalar, before
+//!   compaction so inside-string bytes are masked off.
 //!
 //! The pass returns a [`KernelStrategy`] describing all four lever
 //! decisions; `simd-scan::scan_structural` reads the strategy at
@@ -41,8 +42,9 @@ use crate::passes::sets::StructuralAlphabet;
 /// architectural-lever boundaries from AW-III.W5.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KernelShape {
-    /// `|singletons| ≤ 8` — nibble-LUT collapse. One `vqtbl1q_u8` per
-    /// 16-byte lane on NEON; `vpshufb` per 16-byte lane on AVX2.
+    /// `|singletons| ≤ 8` — nibble-LUT collapse. Apple ARM uses one
+    /// `vqtbl1q_u8` per 16-byte NEON lane; wasm32 uses
+    /// `i8x16.swizzle`; scalar fallback shares the tables.
     NibbleLut,
 
     /// `9 ≤ |singletons| ≤ 16` — wide nibble-LUT with full membership

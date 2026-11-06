@@ -1,0 +1,8 @@
+9835616cc8900eb5e0e5fde769e34d149bfcdf8e2493f0aef74b958426768b5b  crates/ir/src/egraph/rules/universal.rs
+da0a7b1b9120e6d3110582254824fc6cb6509b181aadd13332c39ab80cc897c4  crates/ir/src/egraph/rules/mod.rs
+e4e9beab261c1a10a52d537f2d773e8f69c051e763918f3d35814d1252576ede  crates/ir/tests/egraph/egraph_universal.rs
+ef08223fdce747c821a0d11db54057314aaefb8a57bc41c8f14a9ba12b5aeaf2  crates/core/tests/egraph_semantic.rs
+2755c54114e25ab5d18c9f7f353926d50e56d7cfe1c09c6fb8d8efa413f91c42  /private/tmp/bbnf-g3-r3-8003fa19464878e2/historical/crates/ir/src/egraph/rules/universal.rs
+d5f6f17a9a3b460096619e75d3d637ac1008ee8c1e7c3ce892579133a00f0669  /private/tmp/bbnf-g3-r3-8003fa19464878e2/historical/crates/ir/src/egraph/rules/mod.rs
+ef08223fdce747c821a0d11db54057314aaefb8a57bc41c8f14a9ba12b5aeaf2  /private/tmp/bbnf-g3-r3-8003fa19464878e2/historical/crates/core/tests/egraph_semantic.rs
+ef08223fdce747c821a0d11db54057314aaefb8a57bc41c8f14a9ba12b5aeaf2  /private/tmp/bbnf-g3-r3-8003fa19464878e2/current/crates/core/tests/egraph_semantic.rs

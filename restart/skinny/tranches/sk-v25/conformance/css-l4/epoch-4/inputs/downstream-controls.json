@@ -1,0 +1,52 @@
+{
+  "controls": [
+    {
+      "control": "Lightning CSS",
+      "correctness_status": "UNRUN",
+      "discovery_date": "2026-07-19",
+      "domain": "CSS",
+      "head": {
+        "commit": "91bfa3fcde39e03ce33a83475f6c55e3c3e50dd2",
+        "ref": "master"
+      },
+      "matched_operations": [
+        "parse",
+        "parse/transform/serialize"
+      ],
+      "performance_status": "UNRUN",
+      "required_lower_bound_speedup": 5.0,
+      "selection_status": "UNRUN",
+      "stable": {
+        "commit": "7f8a861bdee476fe90c89a8badeb3fd33a99c51a",
+        "version": "v1.32.0"
+      },
+      "target_speedup": 6.0
+    },
+    {
+      "control": "sonic-rs",
+      "correctness_status": "UNRUN",
+      "discovery_date": "2026-07-19",
+      "domain": "JSON",
+      "head": {
+        "commit": "03545a9530346fe279b674dd496e037d94204bc5",
+        "ref": "main"
+      },
+      "matched_operations": [
+        "parse/value",
+        "query/navigation",
+        "serialization"
+      ],
+      "performance_status": "UNRUN",
+      "required_lower_bound_speedup": 1.1,
+      "selection_status": "UNRUN",
+      "stable": {
+        "commit": "e339451e37a8f2d3f9b93f155985d31fcbcb115a",
+        "version": "v0.5.8"
+      },
+      "target_speedup": 2.0
+    }
+  ],
+  "governing_wave_sha256": "745b6e821842f843a9c0485111f1dfa79f1834473d4aab78ca7ac1c959756562",
+  "policy": "Pinned discovery placeholders only; no build, correctness, selection, sample, ratio, or performance evidence exists.",
+  "schema_version": 1
+}

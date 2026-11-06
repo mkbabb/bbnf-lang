@@ -69,6 +69,7 @@ fn collect_bbnf_spans<'p>(doc: &bbnf::runtime::BbnfDocument<'p>) -> Vec<&'p str>
                 }
             }
             BbnfValue::Int(_)
+            | BbnfValue::UInt(_)
             | BbnfValue::Float(_)
             | BbnfValue::Bool(_)
             | BbnfValue::Tag(_)

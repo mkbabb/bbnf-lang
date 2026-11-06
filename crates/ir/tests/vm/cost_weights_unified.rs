@@ -31,8 +31,9 @@ use bbnf_ir::egraph::{
     GrammarAnalysis, GrammarCostModel, GrammarENode, build_and_saturate, write_back_optimized,
 };
 use bbnf_ir::passes::{
-    AltMode, MaterializationClass, RecognizerDecisionMap, classify_materialization,
-    compute_first_sets, generate_dispatch_tables, solve_grammar_components,
+    AltMode, GrammarSolveControl, MaterializationClass, RecognizerDecisionMap,
+    classify_materialization, compute_first_sets, generate_dispatch_tables,
+    solve_grammar_components,
 };
 use bbnf_ir::{
     AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId,
@@ -167,8 +168,8 @@ fn build_three_way_alt_fixture(cost_config: CostConfig) -> GrammarIR {
 }
 
 /// Build a fixture with a two-literal Alt inside a Seq, suitable for
-/// the grammar-tier e-graph extraction path. Does NOT run the full
-/// dispatch-annotation pipeline — the e-graph sees the raw Alt and
+/// the research grammar-tier e-graph extraction path. Does NOT run the full
+/// dispatch-annotation pipeline — the research builder sees the raw Alt and
 /// the cost model decides whether to reward dispatch-eligible forms
 /// via `dispatch_bonus`.
 fn build_egraph_alt_fixture(cost_config: CostConfig) -> GrammarIR {
@@ -199,11 +200,12 @@ fn build_egraph_alt_fixture(cost_config: CostConfig) -> GrammarIR {
 /// the joint entry point that merges materialization refinements back
 /// into `ir.materialization`.
 fn solve_and_merge(ir: &mut GrammarIR) -> RecognizerDecisionMap {
-    let (decisions, mat_refined) = solve_grammar_components(ir);
-    for (node_id, class) in mat_refined {
+    let solved = solve_grammar_components(ir, &GrammarSolveControl::default())
+        .expect("component solve must be available");
+    for (node_id, class) in solved.materialization {
         ir.materialization.insert(node_id, class);
     }
-    decisions
+    solved.decisions
 }
 
 /// Look up the post-solve `AltMode` decision for the rule-0 body.
@@ -333,7 +335,7 @@ fn grammar_cost_model_default_matches_cost_weights_default() {
     );
 }
 
-/// The grammar-tier e-graph extraction pipeline with a patched
+/// The research grammar-tier e-graph extraction pipeline with a patched
 /// `dispatch_bonus` must produce a different cost for a
 /// dispatch-annotated Alt than the default pipeline. This exercises
 /// the full `build_and_saturate` → extraction path — the cost model

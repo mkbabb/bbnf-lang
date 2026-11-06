@@ -7,7 +7,7 @@
 //!
 //! ```text
 //! let __wrap_handle = builder.begin_compound(&__wrap_layout);
-//! builder.push_branch_tag(__branch_idx);
+//! builder.select_alt_branch(__branch);
 //! // dispatched Ref per-shape body emits its own builder calls
 //! builder.end_compound(__wrap_handle);
 //! ```
@@ -31,10 +31,11 @@
 //! suffice.
 
 use bbnf_ir::registry::{EmitStrategy, LayoutKind};
-use bbnf_ir::{AltBranch, FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr};
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::alt_dispatch::branches::{PayloadPlanner, payload_push_from_fn};
 use super::super::cursor_param::{cursor_param, cursor_where_clause};
 use super::super::dispatcher::shape_fn_ident;
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
@@ -105,22 +106,49 @@ fn quote_layout_literal(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
 /// /\s+/ -> 0u8` Wrap-of-Map(Regex) shape (and the symmetric Literal
 /// analogue) by emitting an inline regex/literal scan + typed leaf
 /// push wrapped in an IIFE that returns `Result<(), DtaError>`. The
-/// caller's existing `__wrap_branch_idx` recording + `end_compound`
+/// caller's existing structural branch selection + `end_compound`
 /// closure are reused unchanged; only the call-shape diversifies.
 fn emit_wrap_branch_call_struct_direct(
     branch: &AltBranch,
     grammar_suffix: &str,
     ir: &GrammarIR,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> Option<(TokenStream, Vec<u8>)> {
     use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
     let inner = unwrap_outer(&branch.node);
+    let mapped_continuation = wrap_mapped_payload_push(&branch.node, ir);
+    let unmapped_fallback = if mapped_continuation.is_none() {
+        Some(wrap_unmapped_payload_fallback(
+            &branch.node,
+            payload_planner,
+        ))
+    } else {
+        None
+    };
     match inner {
         IrNode::Ref(rid) => {
             let target = ir.rules.iter().find(|r| r.id == *rid)?;
+            if !super::super::shape_driver_emits_rule(target, ir) {
+                return Some((
+                    quote! {
+                        {
+                            compile_error!(
+                                "Wrap Ref target has no emitted per-shape driver"
+                            );
+                            ::core::result::Result::Err(
+                                crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                },
+                            )
+                        }
+                    },
+                    Vec::new(),
+                ));
+            }
             let tag = ir.shape_assignments.get(*rid);
             let shape_name = shape_tag_name(tag)?;
             let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
-            let call = match tag {
+            let delegated_call = match tag {
                 ShapeTag::Number => quote! {
                     #target_fn(input, p, first, builder)
                 },
@@ -130,6 +158,25 @@ fn emit_wrap_branch_call_struct_direct(
                 _ => quote! {
                     #target_fn(input, p, state, builder, cursor)
                 },
+            };
+            let call = if mapped_continuation.is_some() {
+                quote! {
+                    (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
+                        let __map_builder_checkpoint = builder.checkpoint();
+                        let _ = (#delegated_call)?;
+                        builder.rollback(__map_builder_checkpoint);
+                        #mapped_continuation
+                        ::core::result::Result::Ok(())
+                    })()
+                }
+            } else {
+                quote! {
+                    (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
+                        let _ = (#delegated_call)?;
+                        #unmapped_fallback
+                        ::core::result::Result::Ok(())
+                    })()
+                }
             };
             let first_bytes: Vec<u8> = target.meta.first_set.iter().collect();
             if first_bytes.len() > 16 {
@@ -186,9 +233,38 @@ fn emit_wrap_branch_call_struct_direct(
             let first_bytes = branch_first_bytes(branch);
             Some((call, first_bytes))
         }
-        // Seq / Alt / Repeat / Skip / Next / TokenDispatch — Wrap-shape
-        // grammars currently route those through Ref subrules; if a
-        // future grammar inlines them, extend this match.
+        IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _) => {
+            let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+            let sequence = super::super::inline::emit_seq_branch_structural_struct_direct(
+                inner,
+                &support_mod,
+                grammar_suffix,
+                ir,
+                payload_planner,
+            );
+            let call = if mapped_continuation.is_some() {
+                quote! {
+                    (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
+                        let __map_builder_checkpoint = builder.checkpoint();
+                        #sequence
+                        builder.rollback(__map_builder_checkpoint);
+                        #mapped_continuation
+                        ::core::result::Result::Ok(())
+                    })()
+                }
+            } else {
+                quote! {
+                    (|| -> ::core::result::Result<(), crate::runtime::DtaError> {
+                        #sequence
+                        #unmapped_fallback
+                        ::core::result::Result::Ok(())
+                    })()
+                }
+            };
+            Some((call, branch_first_bytes(branch)))
+        }
+        // Alt / Repeat / TokenDispatch do not satisfy Wrap's admitted branch
+        // contract. They remain explicit misses rather than partial scans.
         _ => None,
     }
 }
@@ -219,9 +295,8 @@ fn branch_first_bytes(branch: &AltBranch) -> Vec<u8> {
 /// `OptionalWhitespace` trivia) and inspects the bound `FnDescriptor`.
 /// `FnDescriptor::Expr { expr, .. }` admits the constant-folded leaf
 /// projections the CSS L4 `combinator` rule's `-> Nu8` annotations
-/// produce; non-constant maps fall back to `push_leaf_with_unit()` so
-/// the branch still records the discriminator via `__wrap_branch_idx`
-/// without faking a typed value the grammar didn't declare.
+/// produce; non-constant maps fall back to `push_leaf_with_unit()` while
+/// structural branch selection remains a separate operation.
 fn wrap_branch_payload_push(branch_root: &IrNode, ir: &GrammarIR) -> TokenStream {
     fn find_map_fn(node: &IrNode) -> Option<u32> {
         match node {
@@ -240,38 +315,53 @@ fn wrap_branch_payload_push(branch_root: &IrNode, ir: &GrammarIR) -> TokenStream
             <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
         };
     };
-    let FnDescriptor::Expr { expr, .. } = fn_desc else {
-        return quote! {
-            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
-        };
-    };
-    match expr {
-        MapExpr::IntLit(n) => {
-            let v: u64 = *n as u64;
-            quote! {
-                <_ as crate::runtime::StructBuilder>::push_leaf_with_u64(builder, #v);
-            }
-        }
-        MapExpr::FloatLit(f) => {
-            let v: f64 = *f;
-            quote! {
-                <_ as crate::runtime::StructBuilder>::push_leaf_with_f64(builder, #v);
-            }
-        }
-        MapExpr::BoolLit(b) => {
-            let v: bool = *b;
-            quote! {
-                <_ as crate::runtime::StructBuilder>::push_leaf_with_bool(builder, #v);
-            }
-        }
-        // String literals / `Input` / `FnCall` / `BinOp` / `UnaryOp` —
-        // non-constant or non-scalar projections that the Wrap-Alt
-        // path's inline scan cannot constant-fold here. Fall back to
-        // a unit leaf so the branch still records the discriminator
-        // via `__wrap_branch_idx` without fabricating a typed payload.
-        _ => quote! {
+    match payload_push_from_fn(fn_desc, ir) {
+        Ok(Some(payload)) => payload,
+        Ok(None) => quote! {
             <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
         },
+        Err(message) => quote! { compile_error!(#message); },
+    }
+}
+
+/// Return the branch's outer scalar map as a success-only continuation.
+/// Unlike [`wrap_branch_payload_push`], absence is represented by `None` so
+/// delegated children do not acquire a synthetic unit leaf.
+fn wrap_mapped_payload_push(branch_root: &IrNode, ir: &GrammarIR) -> Option<TokenStream> {
+    fn find_map_fn(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Map { fn_id, .. } => Some(*fn_id),
+            IrNode::OptionalWhitespace(inner) => find_map_fn(inner),
+            _ => None,
+        }
+    }
+
+    let descriptor = ir.fns.get(find_map_fn(branch_root)? as usize)?;
+    match payload_push_from_fn(descriptor, ir) {
+        Ok(Some(payload)) => Some(payload),
+        Ok(None) => None,
+        Err(message) => Some(quote! { compile_error!(#message); }),
+    }
+}
+
+fn wrap_unmapped_payload_fallback(
+    branch_root: &IrNode,
+    payload_planner: &PayloadPlanner<'_>,
+) -> TokenStream {
+    let arity = payload_planner.node_arity(branch_root);
+    if arity.is_exactly(0) {
+        quote! {
+            <_ as crate::runtime::StructBuilder>::push_leaf_with_unit(builder);
+        }
+    } else if arity.is_exactly(1) {
+        quote! {}
+    } else {
+        quote! {
+            compile_error!(
+                "Wrap branch does not emit exactly one committed \
+                 semantic payload"
+            );
+        }
     }
 }
 
@@ -279,14 +369,14 @@ fn wrap_branch_payload_push(branch_root: &IrNode, ir: &GrammarIR) -> TokenStream
 /// dispatch. Saves `*p`, calls into the target shape fn; on Ok records
 /// the branch index and breaks the dispatch loop; on Err restores
 /// `*p` and falls through to the next candidate.
-fn emit_struct_branch_attempt(call: &TokenStream, branch_idx: u32) -> TokenStream {
+fn emit_struct_branch_attempt(call: &TokenStream, branch_idx: u16) -> TokenStream {
     quote! {
         {
             let attempt_p = *p;
             let attempt_builder = builder.checkpoint();
             match #call {
                 ::core::result::Result::Ok(_) => {
-                    __wrap_branch_idx = #branch_idx;
+                    __wrap_branch = ::bbnf_ir::registry::AltBranchId::new(#branch_idx);
                     builder.commit(attempt_builder);
                     break 'try_branches;
                 }
@@ -303,14 +393,25 @@ fn emit_struct_branch_attempt(call: &TokenStream, branch_idx: u32) -> TokenStrea
 /// byte-dispatch + linear-try fallback structure while routing
 /// structural emission through
 /// `builder.begin_compound(&__wrap_layout)` /
-/// `builder.push_branch_tag(__wrap_branch_idx)` /
+/// `builder.select_alt_branch(__wrap_branch)` /
 /// `builder.end_compound(__wrap_handle)`.
 pub(super) fn emit_parse_wrap_struct_direct(
     grammar_suffix: &str,
     rule: &IrRule,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> TokenStream {
+    if !payload_planner.admits_shape_path(
+        rule,
+        bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag::Wrap,
+    ) {
+        return quote! {
+            compile_error!(
+                "Wrap has no exact emitted-payload path for this rule"
+            );
+        };
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("wrap", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
@@ -337,11 +438,22 @@ pub(super) fn emit_parse_wrap_struct_direct(
             // transparent rule (the Ref's host) does not expect a
             // record for the alias itself; it expects the chosen
             // branch's record to bubble up directly.
-            emit_alt_struct_dispatch_transparent(branches, grammar_suffix, ir, strategy)
+            emit_alt_struct_dispatch_transparent(
+                branches,
+                grammar_suffix,
+                ir,
+                strategy,
+                payload_planner,
+            )
         }
-        IrNode::Alt(branches, _) => {
-            emit_alt_struct_dispatch(branches, grammar_suffix, ir, rule, strategy)
-        }
+        IrNode::Alt(branches, _) => emit_alt_struct_dispatch(
+            branches,
+            grammar_suffix,
+            ir,
+            rule,
+            strategy,
+            payload_planner,
+        ),
         IrNode::Ref(rid) => {
             // Single-Ref Wrap — emit a direct delegation. No outer
             // begin/end_compound; the target shape fn carries its own
@@ -378,7 +490,7 @@ pub(super) fn emit_parse_wrap_struct_direct(
         /// branch's shape fn (which carries its own
         /// begin_compound/end_compound for compound branches and the
         /// matching push_leaf_with_* for scalar branches), stamps the
-        /// chosen branch index via push_branch_tag, then closes the
+        /// chosen structural branch via select_alt_branch, then closes the
         /// Wrap frame. Mirrors `JsonStructBuilder::OpenFrame::Wrap`'s
         /// forward-the-single-child semantics.
         ///
@@ -455,14 +567,19 @@ fn partition_branches<'b>(
     branches: &'b [bbnf_ir::AltBranch],
     _grammar_suffix: &str,
     _ir: &GrammarIR,
-    mut lower: impl FnMut(&'b bbnf_ir::AltBranch, u32) -> Option<(TokenStream, Vec<u8>)>,
+    mut lower: impl FnMut(&'b bbnf_ir::AltBranch, u16) -> Option<(TokenStream, Vec<u8>)>,
 ) -> DispatchPartition {
     let mut per_byte: std::collections::BTreeMap<u8, Vec<TokenStream>> = Default::default();
     let mut linear_arms: Vec<TokenStream> = Vec::new();
     let mut dispatch_locked = false;
 
     for (ord, branch) in branches.iter().enumerate() {
-        let Some((attempt_body, first_bytes)) = lower(branch, ord as u32) else {
+        // The pipeline's early and final branch-count gates cap every Alt at
+        // AltBranchId::MAX_COUNT. This checked edge is the only structural
+        // ordinal conversion emitted by Wrap.
+        let branch_id =
+            u16::try_from(ord).expect("Alt branch count gate guarantees a u16 branch index");
+        let Some((attempt_body, first_bytes)) = lower(branch, branch_id) else {
             continue;
         };
         // A branch with no bounded first-byte set must run in Alt
@@ -507,6 +624,7 @@ fn emit_alt_struct_dispatch(
     ir: &GrammarIR,
     rule: &IrRule,
     strategy: &EmitStrategy,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let layout_literal = quote_layout_literal(rule, ir);
@@ -516,7 +634,7 @@ fn emit_alt_struct_dispatch(
         byte_arms,
         linear_arms,
     } = partition_branches(branches, grammar_suffix, ir, |branch, ord| {
-        emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
+        emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir, payload_planner)
             .map(|(call, first_bytes)| (emit_struct_branch_attempt(&call, ord), first_bytes))
     });
 
@@ -530,7 +648,7 @@ fn emit_alt_struct_dispatch(
         let __wrap_handle = <
             #builder_ty_e as crate::runtime::StructBuilder
         >::begin_compound(builder, &__wrap_layout);
-        let mut __wrap_branch_idx: u32 = 0;
+        let mut __wrap_branch = ::bbnf_ir::registry::AltBranchId::new(0);
         // AZ-II.cutover.K Phase 2 — wrap the leading skip_space
         // surface in an IIFE so the `?` propagation can't bypass the
         // matching `end_compound`. Pre-fix `skip_space?` returned
@@ -565,7 +683,7 @@ fn emit_alt_struct_dispatch(
             ::core::result::Result::Ok(()) => {
                 <
                     #builder_ty_e as crate::runtime::StructBuilder
-                >::push_branch_tag(builder, __wrap_branch_idx);
+                >::select_alt_branch(builder, __wrap_branch);
                 <
                     #builder_ty_e as crate::runtime::StructBuilder
                 >::end_compound(builder, __wrap_handle);
@@ -593,6 +711,7 @@ fn emit_alt_struct_dispatch_transparent(
     grammar_suffix: &str,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> TokenStream {
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let _ = strategy;
@@ -601,7 +720,7 @@ fn emit_alt_struct_dispatch_transparent(
         byte_arms,
         linear_arms,
     } = partition_branches(branches, grammar_suffix, ir, |branch, _ord| {
-        emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir)
+        emit_wrap_branch_call_struct_direct(branch, grammar_suffix, ir, payload_planner)
             .map(|(call, first_bytes)| (emit_struct_branch_attempt_transparent(&call), first_bytes))
     });
 
@@ -630,8 +749,8 @@ fn emit_alt_struct_dispatch_transparent(
 }
 
 /// Branch attempt for the transparent-rule wrap path: same shape as
-/// `emit_struct_branch_attempt` but does NOT touch `__wrap_branch_idx`
-/// since no wrap compound is open.
+/// `emit_struct_branch_attempt` but does not select a branch since no
+/// Wrap compound is open.
 fn emit_struct_branch_attempt_transparent(call: &TokenStream) -> TokenStream {
     quote! {
         {

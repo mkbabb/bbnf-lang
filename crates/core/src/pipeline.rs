@@ -70,10 +70,26 @@ pub enum CompileOutput {
 pub enum CompileError {
     Parse(String),
     Import(String),
-    UnknownPrettyHint { rule: String, hint: String },
-    UndefinedPrettyRule { rule: String },
-    UnknownNonterminal { rule: String, name: String },
-    InvalidProductionRule { rule: String },
+    UnknownPrettyHint {
+        rule: String,
+        hint: String,
+    },
+    UndefinedPrettyRule {
+        rule: String,
+    },
+    UnknownNonterminal {
+        rule: String,
+        name: String,
+    },
+    InvalidProductionRule {
+        rule: String,
+    },
+    TooManyAlternatives {
+        rule: String,
+        count: usize,
+        max: usize,
+    },
+    OptimizationUnavailable(bbnf_ir::passes::OptimizationUnavailable),
 }
 
 impl fmt::Display for CompileError {
@@ -96,6 +112,11 @@ impl fmt::Display for CompileError {
                     "rule `{rule}` contains a production rule in expression position"
                 )
             }
+            Self::TooManyAlternatives { rule, count, max } => write!(
+                f,
+                "rule `{rule}` contains an alternation with {count} branches; the structural branch domain admits at most {max}"
+            ),
+            Self::OptimizationUnavailable(error) => write!(f, "{error}"),
         }
     }
 }

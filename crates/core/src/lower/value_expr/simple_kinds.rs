@@ -5,16 +5,16 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::MapExpr;
+use bbnf_ir::{MapExpr, NumericDomain};
 
 use crate::runtime::RuntimeView;
 use crate::runtime::bbnf::{BbnfCompoundKind, BbnfValue, BbnfView};
 
 use super::super::LowerCtx;
 use super::atom::{lower_fn_call_atom, lower_input_chain, lower_path_atom, same_focus};
-use super::dispatch_value_expr;
 use super::precedence::{LAYER_OR, fold_value_chain};
 use super::view_walk::find_descendant_by_compound_kind;
+use super::{LoweredValueExpr, dispatch_value_expr};
 
 // ─── value-expression descent helpers ────────────────────────────────────────
 
@@ -73,9 +73,15 @@ pub(super) fn value_expr_head<'a, 'p: 'a>(node: BbnfView<'a, 'p>) -> Option<Bbnf
 /// [`fold_value_chain`] with the OR layer.
 pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let text = node.span_text_opt().unwrap_or("");
+) -> LoweredValueExpr {
+    let text = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or("");
     if text.as_bytes().first() == Some(&b'|') {
         // Closure — find the actual ValueClosure compound (it may
         // be `node` itself, or it may sit one wrapper deeper inside
@@ -85,7 +91,7 @@ pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
         } else {
             find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueClosure).unwrap_or(node)
         };
-        lower_value_closure(closure, ctx)
+        lower_value_closure(closure, Some(text), expected_numeric_domain, ctx)
     } else {
         // value_or chain — find the actual ValueOr compound, or fall
         // back to `node` itself when the optimizer inlined the alt.
@@ -94,7 +100,13 @@ pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
         } else {
             find_descendant_by_compound_kind(node, BbnfCompoundKind::ValueOr).unwrap_or(node)
         };
-        fold_value_chain(or_chain, &LAYER_OR, ctx)
+        fold_value_chain(
+            or_chain,
+            Some(text),
+            &LAYER_OR,
+            expected_numeric_domain,
+            ctx,
+        )
     }
 }
 
@@ -105,9 +117,15 @@ pub(super) fn lower_value_expr_or_closure<'a, 'p: 'a>(
 /// behavioural parity with `lower_input_chain`.
 pub(super) fn lower_value_input<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let span = node.span_text_opt().unwrap_or("").trim_start();
+) -> LoweredValueExpr {
+    let span = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or("")
+        .trim_start();
     lower_input_chain(node, span, ctx)
 }
 
@@ -115,19 +133,32 @@ pub(super) fn lower_value_input<'a, 'p: 'a>(
 /// source-slice walk as the inlined path-atom case.
 pub(super) fn lower_value_path<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let span = node.span_text_opt().unwrap_or("").trim_start();
+) -> LoweredValueExpr {
+    let span = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or("")
+        .trim_start();
     lower_path_atom(node, span, ctx)
 }
 
 /// Lower a `value_fn_call` rule compound (when preserved).
 pub(super) fn lower_value_fn_call<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let span = node.span_text_opt().unwrap_or("").trim_start();
-    lower_fn_call_atom(node, span, ctx)
+) -> LoweredValueExpr {
+    let span = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or("")
+        .trim_start();
+    lower_fn_call_atom(node, span, expected_numeric_domain, ctx)
 }
 
 // ─── Closures ────────────────────────────────────────────────────────────────
@@ -142,15 +173,21 @@ pub(super) fn lower_value_fn_call<'a, 'p: 'a>(
 /// stripping `,` separators and whitespace.
 pub(super) fn lower_value_closure<'a, 'p: 'a>(
     node: BbnfView<'a, 'p>,
+    source_hint: Option<&'p str>,
+    expected_numeric_domain: Option<NumericDomain>,
     ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let text: &'p str = node.span_text_opt().unwrap_or_else(|| {
-        panic!(
-            "lower_value_closure: value_closure compound has no recoverable \
+) -> LoweredValueExpr {
+    let text: &'p str = node
+        .span_text_opt()
+        .filter(|source| !source.trim().is_empty())
+        .or(source_hint)
+        .unwrap_or_else(|| {
+            panic!(
+                "lower_value_closure: value_closure compound has no recoverable \
              source span — typed-projection invariants imply at least the \
              closing `|` and body expression carry source position",
-        )
-    });
+            )
+        });
     debug_assert!(
         text.as_bytes().first() == Some(&b'|'),
         "lower_value_closure: closure span doesn't start with `|`: {:?}",
@@ -215,7 +252,7 @@ pub(super) fn lower_value_closure<'a, 'p: 'a>(
     }
 
     ctx.value_env.push(frame);
-    let result = dispatch_value_expr(body, ctx);
+    let result = dispatch_value_expr(body, body.span_text_opt(), expected_numeric_domain, ctx);
     ctx.value_env.pop();
     result
 }

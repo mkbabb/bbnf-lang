@@ -34,13 +34,13 @@ where
             let mut builder = CssStructBuilder::new();
             let mut pos: usize = 0;
             parse_CssL4Parser_stylesheet(
-                    src.as_bytes(),
-                    &mut pos,
-                    &mut state,
-                    &mut builder,
-                    cursor,
-                )
-                .ok()?;
+                src.as_bytes(),
+                &mut pos,
+                &mut state,
+                &mut builder,
+                cursor,
+            )
+            .ok()?;
             let doc: CssDocument<'_> = builder.finalise(src);
             let mut legacy: Vec<LegacySegment<'_>> = Vec::with_capacity(path.len());
             for owned in path.owned_segments() {

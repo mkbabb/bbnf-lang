@@ -1,0 +1,12 @@
+=== COMMAND historical-r3-diagnostic ===
+cd /private/tmp/bbnf-g3-r3-8003fa19464878e2/historical && env CARGO_BUILD_JOBS=1 CARGO_INCREMENTAL=0 CARGO_NET_OFFLINE=true CARGO_TERM_COLOR=never NO_COLOR=1 RUST_BACKTRACE=0 RUST_TEST_THREADS=1 SOURCE_DATE_EPOCH=0 TERM=dumb CARGO_TARGET_DIR=/private/tmp/bbnf-g3-r3-8003fa19464878e2/targets/historical cargo test --offline --locked -p bbnf --test egraph_semantic egraph_semantic_nullable_alt_required_context_diagnostic -- --exact --nocapture --test-threads=1 
+   Compiling radium v0.7.0
+   Compiling ref-cast v1.0.25
+   Compiling parcel_selectors v0.28.2
+   Compiling ptr_meta v0.1.4
+   Compiling syn v2.0.117
+error: could not compile `syn` (lib)
+
+Caused by:
+  process didn't exit successfully: `sccache /Users/mkbabb/.rustup/toolchains/nightly-2026-04-11-aarch64-apple-darwin/bin/rustc --crate-name syn --edition=2021 /Users/mkbabb/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/syn-2.0.117/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C codegen-units=16 -C debuginfo=2 -C split-debuginfo=unpacked --cfg 'feature="clone-impls"' --cfg 'feature="default"' --cfg 'feature="derive"' --cfg 'feature="full"' --cfg 'feature="parsing"' --cfg 'feature="printing"' --cfg 'feature="proc-macro"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("clone-impls", "default", "derive", "extra-traits", "fold", "full", "parsing", "printing", "proc-macro", "test", "visit", "visit-mut"))' -C metadata=5cf9e5888cc25d58 -C extra-filename=-99aceb0fa4a6d6eb --out-dir /private/tmp/bbnf-g3-r3-8003fa19464878e2/targets/historical/debug/deps -L dependency=/private/tmp/bbnf-g3-r3-8003fa19464878e2/targets/historical/debug/deps --extern proc_macro2=/private/tmp/bbnf-g3-r3-8003fa19464878e2/targets/historical/debug/deps/libproc_macro2-3e2eef3ad451551e.rmeta --extern quote=/private/tmp/bbnf-g3-r3-8003fa19464878e2/targets/historical/debug/deps/libquote-8c93a81e8f225be2.rmeta --extern unicode_ident=/private/tmp/bbnf-g3-r3-8003fa19464878e2/targets/historical/debug/deps/libunicode_ident-8f8621900394b3a9.rmeta --cap-lints allow` (signal: 9, SIGKILL: kill)
+=== EXIT historical-r3-diagnostic 101 ===

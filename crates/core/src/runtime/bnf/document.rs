@@ -114,10 +114,7 @@ pub trait BnfPathQuery: Sized {
     fn query<'p>(doc: &BnfDocument<'p>, path: Path<'_>) -> Option<Self>;
 }
 #[inline]
-fn walk_path<'a, 'p>(
-    doc: &'a BnfDocument<'p>,
-    path: Path<'_>,
-) -> Option<&'a BnfValue<'p>> {
+fn walk_path<'a, 'p>(doc: &'a BnfDocument<'p>, path: Path<'_>) -> Option<&'a BnfValue<'p>> {
     let mut current: &'a BnfValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {

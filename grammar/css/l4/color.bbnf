@@ -4,313 +4,397 @@
 // Spec: https://drafts.csswg.org/css-color-4/
 // Imports numeric primitives from the canonical base grammar.
 //
-// Design note: separator rules are designed for unambiguous dispatch-table
-// routing. The static FIRST set of each alternation branch must be disjoint
-// so the generated parser can route in O(1) by first character. In particular:
-//   sep      = comma | whitespace
-//   alphaSep = div | sep
-// If a runtime override adds .trim() to div, the parser can match " / " but
-// the dispatch table still sees ' ' to sep. To avoid this mismatch, either
-// (a) override alphaSep instead of div, or (b) avoid whitespace around "/".
+// Keyword spellings use scoped ASCII-only case folding. The `-u` is
+// normative: CSS-defined keywords are ASCII case-insensitive, so Unicode
+// simple-fold equivalents such as U+212A KELVIN SIGN must not match ASCII k.
 
 // --- Tokens ---
 
-digit      = /[0-9a-fA-F]/ ;
-comma      = "," ;
-whitespace = /\s+/ ;
-div        = "/" ;
+digit              = /[0-9a-fA-F]/ ;
+comma              = "," ;
+whitespace         = /\s+/ ;
+optionalWhitespace = whitespace ? ;
+div                = "/" ;
 
-// --- Separators ---
-// For function arguments: comma-separated or space-separated.
+// An ident continuation is either an ident code point or a valid escape.
+// A final backslash is not a valid escape: this rule requires a following
+// non-newline code point. `cssIdentBoundary` is a reusable zero-width guard
+// used by every CSS-defined keyword family in this grammar.
+cssIdentContinuation =
+      /[0-9A-Za-z_-]/
+    | /[\u{00B7}\u{00C0}-\u{00D6}\u{00D8}-\u{00F6}\u{00F8}-\u{037D}\u{037F}-\u{1FFF}\u{200C}\u{200D}\u{203F}\u{2040}\u{2070}-\u{218F}\u{2C00}-\u{2FEF}\u{3001}-\u{D7FF}\u{F900}-\u{FDCF}\u{FDF0}-\u{FFFD}\u{10000}-\u{10FFFF}]/
+    | /\\[^\n\r\f]/ ;
 
-sep      = comma | whitespace ;
-alphaSep = div | sep ;
+cssIdentBoundary = ε - cssIdentContinuation ;
+
+legacyComma = optionalWhitespace , comma , optionalWhitespace ;
 
 // --- Color value tokens ---
 
 colorPercentage = percentage ;
 colorValue      = colorPercentage | number ;
+alphaValue      = colorValue ;
+hue             = angle | number ;
+
+noneKeyword     = /(?i-u:none)/ , cssIdentBoundary ;
+modernComponent = colorValue | noneKeyword ;
+modernHue       = hue | noneKeyword ;
+modernAlpha     = alphaValue | noneKeyword ;
 
 // --- Named colors (CSS Color Level 4 §6.1, complete set) ---
 
-namedColor = "aliceblue" -> 0xF0F8FFFFu32
-           | "antiquewhite" -> 0xFAEBD7FFu32
-           | "aquamarine" -> 0x7FFFD4FFu32
-           | "aqua" -> 0x00FFFFFFu32
-           | "azure" -> 0xF0FFFFFFu32
-           | "beige" -> 0xF5F5DCFFu32
-           | "bisque" -> 0xFFE4C4FFu32
-           | "black" -> 0x000000FFu32
-           | "blanchedalmond" -> 0xFFEBCDFFu32
-           | "blueviolet" -> 0x8A2BE2FFu32
-           | "blue" -> 0x0000FFFFu32
-           | "brown" -> 0xA52A2AFFu32
-           | "burlywood" -> 0xDEB887FFu32
-           | "cadetblue" -> 0x5F9EA0FFu32
-           | "chartreuse" -> 0x7FFF00FFu32
-           | "chocolate" -> 0xD2691EFFu32
-           | "coral" -> 0xFF7F50FFu32
-           | "cornflowerblue" -> 0x6495EDFFu32
-           | "cornsilk" -> 0xFFF8DCFFu32
-           | "crimson" -> 0xDC143CFFu32
-           | "currentcolor" -> 0x000000FFu32
-           | "cyan" -> 0x00FFFFFFu32
-           | "darkblue" -> 0x00008BFFu32
-           | "darkcyan" -> 0x008B8BFFu32
-           | "darkgoldenrod" -> 0xB8860BFFu32
-           | "darkgray" -> 0xA9A9A9FFu32
-           | "darkgreen" -> 0x006400FFu32
-           | "darkgrey" -> 0xA9A9A9FFu32
-           | "darkkhaki" -> 0xBDB76BFFu32
-           | "darkmagenta" -> 0x8B008BFFu32
-           | "darkolivegreen" -> 0x556B2FFFu32
-           | "darkorange" -> 0xFF8C00FFu32
-           | "darkorchid" -> 0x9932CCFFu32
-           | "darkred" -> 0x8B0000FFu32
-           | "darksalmon" -> 0xE9967AFFu32
-           | "darkseagreen" -> 0x8FBC8FFFu32
-           | "darkslateblue" -> 0x483D8BFFu32
-           | "darkslategray" -> 0x2F4F4FFFu32
-           | "darkslategrey" -> 0x2F4F4FFFu32
-           | "darkturquoise" -> 0x00CED1FFu32
-           | "darkviolet" -> 0x9400D3FFu32
-           | "deeppink" -> 0xFF1493FFu32
-           | "deepskyblue" -> 0x00BFFFFFu32
-           | "dimgray" -> 0x696969FFu32
-           | "dimgrey" -> 0x696969FFu32
-           | "dodgerblue" -> 0x1E90FFFFu32
-           | "firebrick" -> 0xB22222FFu32
-           | "floralwhite" -> 0xFFFAF0FFu32
-           | "forestgreen" -> 0x228B22FFu32
-           | "fuchsia" -> 0xFF00FFFFu32
-           | "gainsboro" -> 0xDCDCDCFFu32
-           | "ghostwhite" -> 0xF8F8FFFFu32
-           | "goldenrod" -> 0xDAA520FFu32
-           | "gold" -> 0xFFD700FFu32
-           | "gray" -> 0x808080FFu32
-           | "greenyellow" -> 0xADFF2FFFu32
-           | "green" -> 0x008000FFu32
-           | "grey" -> 0x808080FFu32
-           | "honeydew" -> 0xF0FFF0FFu32
-           | "hotpink" -> 0xFF69B4FFu32
-           | "indianred" -> 0xCD5C5CFFu32
-           | "indigo" -> 0x4B0082FFu32
-           | "ivory" -> 0xFFFFF0FFu32
-           | "khaki" -> 0xF0E68CFFu32
-           | "lavenderblush" -> 0xFFF0F5FFu32
-           | "lavender" -> 0xE6E6FAFFu32
-           | "lawngreen" -> 0x7CFC00FFu32
-           | "lemonchiffon" -> 0xFFFACDFFu32
-           | "lightblue" -> 0xADD8E6FFu32
-           | "lightcoral" -> 0xF08080FFu32
-           | "lightcyan" -> 0xE0FFFFFFu32
-           | "lightgoldenrodyellow" -> 0xFAFAD2FFu32
-           | "lightgray" -> 0xD3D3D3FFu32
-           | "lightgreen" -> 0x90EE90FFu32
-           | "lightgrey" -> 0xD3D3D3FFu32
-           | "lightpink" -> 0xFFB6C1FFu32
-           | "lightsalmon" -> 0xFFA07AFFu32
-           | "lightseagreen" -> 0x20B2AAFFu32
-           | "lightskyblue" -> 0x87CEFAFFu32
-           | "lightslategray" -> 0x778899FFu32
-           | "lightslategrey" -> 0x778899FFu32
-           | "lightsteelblue" -> 0xB0C4DEFFu32
-           | "lightyellow" -> 0xFFFFE0FFu32
-           | "limegreen" -> 0x32CD32FFu32
-           | "lime" -> 0x00FF00FFu32
-           | "linen" -> 0xFAF0E6FFu32
-           | "magenta" -> 0xFF00FFFFu32
-           | "maroon" -> 0x800000FFu32
-           | "mediumaquamarine" -> 0x66CDAAFFu32
-           | "mediumblue" -> 0x0000CDFFu32
-           | "mediumorchid" -> 0xBA55D3FFu32
-           | "mediumpurple" -> 0x9370DBFFu32
-           | "mediumseagreen" -> 0x3CB371FFu32
-           | "mediumslateblue" -> 0x7B68EEFFu32
-           | "mediumspringgreen" -> 0x00FA9AFFu32
-           | "mediumturquoise" -> 0x48D1CCFFu32
-           | "mediumvioletred" -> 0xC71585FFu32
-           | "midnightblue" -> 0x191970FFu32
-           | "mintcream" -> 0xF5FFFAFFu32
-           | "mistyrose" -> 0xFFE4E1FFu32
-           | "moccasin" -> 0xFFE4B5FFu32
-           | "navajowhite" -> 0xFFDEADFFu32
-           | "navy" -> 0x000080FFu32
-           | "oldlace" -> 0xFDF5E6FFu32
-           | "olivedrab" -> 0x6B8E23FFu32
-           | "olive" -> 0x808000FFu32
-           | "orangered" -> 0xFF4500FFu32
-           | "orange" -> 0xFFA500FFu32
-           | "orchid" -> 0xDA70D6FFu32
-           | "palegoldenrod" -> 0xEEE8AAFFu32
-           | "palegreen" -> 0x98FB98FFu32
-           | "paleturquoise" -> 0xAFEEEEFFu32
-           | "palevioletred" -> 0xDB7093FFu32
-           | "papayawhip" -> 0xFFEFD5FFu32
-           | "peachpuff" -> 0xFFDAB9FFu32
-           | "peru" -> 0xCD853FFFu32
-           | "pink" -> 0xFFC0CBFFu32
-           | "plum" -> 0xDDA0DDFFu32
-           | "powderblue" -> 0xB0E0E6FFu32
-           | "purple" -> 0x800080FFu32
-           | "rebeccapurple" -> 0x663399FFu32
-           | "red" -> 0xFF0000FFu32
-           | "rosybrown" -> 0xBC8F8FFFu32
-           | "royalblue" -> 0x4169E1FFu32
-           | "saddlebrown" -> 0x8B4513FFu32
-           | "salmon" -> 0xFA8072FFu32
-           | "sandybrown" -> 0xF4A460FFu32
-           | "seagreen" -> 0x2E8B57FFu32
-           | "seashell" -> 0xFFF5EEFFu32
-           | "sienna" -> 0xA0522DFFu32
-           | "silver" -> 0xC0C0C0FFu32
-           | "skyblue" -> 0x87CEEBFFu32
-           | "slateblue" -> 0x6A5ACDFFu32
-           | "slategray" -> 0x708090FFu32
-           | "slategrey" -> 0x708090FFu32
-           | "snow" -> 0xFFFAFAFFu32
-           | "springgreen" -> 0x00FF7FFFu32
-           | "steelblue" -> 0x4682B4FFu32
-           | "tan" -> 0xD2B48CFFu32
-           | "teal" -> 0x008080FFu32
-           | "thistle" -> 0xD8BFD8FFu32
-           | "tomato" -> 0xFF6347FFu32
-           | "transparent" -> 0x00000000u32
-           | "turquoise" -> 0x40E0D0FFu32
-           | "violet" -> 0xEE82EEFFu32
-           | "wheat" -> 0xF5DEB3FFu32
-           | "whitesmoke" -> 0xF5F5F5FFu32
-           | "white" -> 0xFFFFFFFFu32
-           | "yellowgreen" -> 0x9ACD32FFu32
-           | "yellow" -> 0xFFFF00FFu32 ;
+namedColor = ( /(?i-u:aliceblue)/ , cssIdentBoundary ) -> 0xF0F8FFFFu32
+           | ( /(?i-u:antiquewhite)/ , cssIdentBoundary ) -> 0xFAEBD7FFu32
+           | ( /(?i-u:aquamarine)/ , cssIdentBoundary ) -> 0x7FFFD4FFu32
+           | ( /(?i-u:aqua)/ , cssIdentBoundary ) -> 0x00FFFFFFu32
+           | ( /(?i-u:azure)/ , cssIdentBoundary ) -> 0xF0FFFFFFu32
+           | ( /(?i-u:beige)/ , cssIdentBoundary ) -> 0xF5F5DCFFu32
+           | ( /(?i-u:bisque)/ , cssIdentBoundary ) -> 0xFFE4C4FFu32
+           | ( /(?i-u:black)/ , cssIdentBoundary ) -> 0x000000FFu32
+           | ( /(?i-u:blanchedalmond)/ , cssIdentBoundary ) -> 0xFFEBCDFFu32
+           | ( /(?i-u:blueviolet)/ , cssIdentBoundary ) -> 0x8A2BE2FFu32
+           | ( /(?i-u:blue)/ , cssIdentBoundary ) -> 0x0000FFFFu32
+           | ( /(?i-u:brown)/ , cssIdentBoundary ) -> 0xA52A2AFFu32
+           | ( /(?i-u:burlywood)/ , cssIdentBoundary ) -> 0xDEB887FFu32
+           | ( /(?i-u:cadetblue)/ , cssIdentBoundary ) -> 0x5F9EA0FFu32
+           | ( /(?i-u:chartreuse)/ , cssIdentBoundary ) -> 0x7FFF00FFu32
+           | ( /(?i-u:chocolate)/ , cssIdentBoundary ) -> 0xD2691EFFu32
+           | ( /(?i-u:coral)/ , cssIdentBoundary ) -> 0xFF7F50FFu32
+           | ( /(?i-u:cornflowerblue)/ , cssIdentBoundary ) -> 0x6495EDFFu32
+           | ( /(?i-u:cornsilk)/ , cssIdentBoundary ) -> 0xFFF8DCFFu32
+           | ( /(?i-u:crimson)/ , cssIdentBoundary ) -> 0xDC143CFFu32
+           | ( /(?i-u:cyan)/ , cssIdentBoundary ) -> 0x00FFFFFFu32
+           | ( /(?i-u:darkblue)/ , cssIdentBoundary ) -> 0x00008BFFu32
+           | ( /(?i-u:darkcyan)/ , cssIdentBoundary ) -> 0x008B8BFFu32
+           | ( /(?i-u:darkgoldenrod)/ , cssIdentBoundary ) -> 0xB8860BFFu32
+           | ( /(?i-u:darkgray)/ , cssIdentBoundary ) -> 0xA9A9A9FFu32
+           | ( /(?i-u:darkgreen)/ , cssIdentBoundary ) -> 0x006400FFu32
+           | ( /(?i-u:darkgrey)/ , cssIdentBoundary ) -> 0xA9A9A9FFu32
+           | ( /(?i-u:darkkhaki)/ , cssIdentBoundary ) -> 0xBDB76BFFu32
+           | ( /(?i-u:darkmagenta)/ , cssIdentBoundary ) -> 0x8B008BFFu32
+           | ( /(?i-u:darkolivegreen)/ , cssIdentBoundary ) -> 0x556B2FFFu32
+           | ( /(?i-u:darkorange)/ , cssIdentBoundary ) -> 0xFF8C00FFu32
+           | ( /(?i-u:darkorchid)/ , cssIdentBoundary ) -> 0x9932CCFFu32
+           | ( /(?i-u:darkred)/ , cssIdentBoundary ) -> 0x8B0000FFu32
+           | ( /(?i-u:darksalmon)/ , cssIdentBoundary ) -> 0xE9967AFFu32
+           | ( /(?i-u:darkseagreen)/ , cssIdentBoundary ) -> 0x8FBC8FFFu32
+           | ( /(?i-u:darkslateblue)/ , cssIdentBoundary ) -> 0x483D8BFFu32
+           | ( /(?i-u:darkslategray)/ , cssIdentBoundary ) -> 0x2F4F4FFFu32
+           | ( /(?i-u:darkslategrey)/ , cssIdentBoundary ) -> 0x2F4F4FFFu32
+           | ( /(?i-u:darkturquoise)/ , cssIdentBoundary ) -> 0x00CED1FFu32
+           | ( /(?i-u:darkviolet)/ , cssIdentBoundary ) -> 0x9400D3FFu32
+           | ( /(?i-u:deeppink)/ , cssIdentBoundary ) -> 0xFF1493FFu32
+           | ( /(?i-u:deepskyblue)/ , cssIdentBoundary ) -> 0x00BFFFFFu32
+           | ( /(?i-u:dimgray)/ , cssIdentBoundary ) -> 0x696969FFu32
+           | ( /(?i-u:dimgrey)/ , cssIdentBoundary ) -> 0x696969FFu32
+           | ( /(?i-u:dodgerblue)/ , cssIdentBoundary ) -> 0x1E90FFFFu32
+           | ( /(?i-u:firebrick)/ , cssIdentBoundary ) -> 0xB22222FFu32
+           | ( /(?i-u:floralwhite)/ , cssIdentBoundary ) -> 0xFFFAF0FFu32
+           | ( /(?i-u:forestgreen)/ , cssIdentBoundary ) -> 0x228B22FFu32
+           | ( /(?i-u:fuchsia)/ , cssIdentBoundary ) -> 0xFF00FFFFu32
+           | ( /(?i-u:gainsboro)/ , cssIdentBoundary ) -> 0xDCDCDCFFu32
+           | ( /(?i-u:ghostwhite)/ , cssIdentBoundary ) -> 0xF8F8FFFFu32
+           | ( /(?i-u:goldenrod)/ , cssIdentBoundary ) -> 0xDAA520FFu32
+           | ( /(?i-u:gold)/ , cssIdentBoundary ) -> 0xFFD700FFu32
+           | ( /(?i-u:gray)/ , cssIdentBoundary ) -> 0x808080FFu32
+           | ( /(?i-u:greenyellow)/ , cssIdentBoundary ) -> 0xADFF2FFFu32
+           | ( /(?i-u:green)/ , cssIdentBoundary ) -> 0x008000FFu32
+           | ( /(?i-u:grey)/ , cssIdentBoundary ) -> 0x808080FFu32
+           | ( /(?i-u:honeydew)/ , cssIdentBoundary ) -> 0xF0FFF0FFu32
+           | ( /(?i-u:hotpink)/ , cssIdentBoundary ) -> 0xFF69B4FFu32
+           | ( /(?i-u:indianred)/ , cssIdentBoundary ) -> 0xCD5C5CFFu32
+           | ( /(?i-u:indigo)/ , cssIdentBoundary ) -> 0x4B0082FFu32
+           | ( /(?i-u:ivory)/ , cssIdentBoundary ) -> 0xFFFFF0FFu32
+           | ( /(?i-u:khaki)/ , cssIdentBoundary ) -> 0xF0E68CFFu32
+           | ( /(?i-u:lavenderblush)/ , cssIdentBoundary ) -> 0xFFF0F5FFu32
+           | ( /(?i-u:lavender)/ , cssIdentBoundary ) -> 0xE6E6FAFFu32
+           | ( /(?i-u:lawngreen)/ , cssIdentBoundary ) -> 0x7CFC00FFu32
+           | ( /(?i-u:lemonchiffon)/ , cssIdentBoundary ) -> 0xFFFACDFFu32
+           | ( /(?i-u:lightblue)/ , cssIdentBoundary ) -> 0xADD8E6FFu32
+           | ( /(?i-u:lightcoral)/ , cssIdentBoundary ) -> 0xF08080FFu32
+           | ( /(?i-u:lightcyan)/ , cssIdentBoundary ) -> 0xE0FFFFFFu32
+           | ( /(?i-u:lightgoldenrodyellow)/ , cssIdentBoundary ) -> 0xFAFAD2FFu32
+           | ( /(?i-u:lightgray)/ , cssIdentBoundary ) -> 0xD3D3D3FFu32
+           | ( /(?i-u:lightgreen)/ , cssIdentBoundary ) -> 0x90EE90FFu32
+           | ( /(?i-u:lightgrey)/ , cssIdentBoundary ) -> 0xD3D3D3FFu32
+           | ( /(?i-u:lightpink)/ , cssIdentBoundary ) -> 0xFFB6C1FFu32
+           | ( /(?i-u:lightsalmon)/ , cssIdentBoundary ) -> 0xFFA07AFFu32
+           | ( /(?i-u:lightseagreen)/ , cssIdentBoundary ) -> 0x20B2AAFFu32
+           | ( /(?i-u:lightskyblue)/ , cssIdentBoundary ) -> 0x87CEFAFFu32
+           | ( /(?i-u:lightslategray)/ , cssIdentBoundary ) -> 0x778899FFu32
+           | ( /(?i-u:lightslategrey)/ , cssIdentBoundary ) -> 0x778899FFu32
+           | ( /(?i-u:lightsteelblue)/ , cssIdentBoundary ) -> 0xB0C4DEFFu32
+           | ( /(?i-u:lightyellow)/ , cssIdentBoundary ) -> 0xFFFFE0FFu32
+           | ( /(?i-u:limegreen)/ , cssIdentBoundary ) -> 0x32CD32FFu32
+           | ( /(?i-u:lime)/ , cssIdentBoundary ) -> 0x00FF00FFu32
+           | ( /(?i-u:linen)/ , cssIdentBoundary ) -> 0xFAF0E6FFu32
+           | ( /(?i-u:magenta)/ , cssIdentBoundary ) -> 0xFF00FFFFu32
+           | ( /(?i-u:maroon)/ , cssIdentBoundary ) -> 0x800000FFu32
+           | ( /(?i-u:mediumaquamarine)/ , cssIdentBoundary ) -> 0x66CDAAFFu32
+           | ( /(?i-u:mediumblue)/ , cssIdentBoundary ) -> 0x0000CDFFu32
+           | ( /(?i-u:mediumorchid)/ , cssIdentBoundary ) -> 0xBA55D3FFu32
+           | ( /(?i-u:mediumpurple)/ , cssIdentBoundary ) -> 0x9370DBFFu32
+           | ( /(?i-u:mediumseagreen)/ , cssIdentBoundary ) -> 0x3CB371FFu32
+           | ( /(?i-u:mediumslateblue)/ , cssIdentBoundary ) -> 0x7B68EEFFu32
+           | ( /(?i-u:mediumspringgreen)/ , cssIdentBoundary ) -> 0x00FA9AFFu32
+           | ( /(?i-u:mediumturquoise)/ , cssIdentBoundary ) -> 0x48D1CCFFu32
+           | ( /(?i-u:mediumvioletred)/ , cssIdentBoundary ) -> 0xC71585FFu32
+           | ( /(?i-u:midnightblue)/ , cssIdentBoundary ) -> 0x191970FFu32
+           | ( /(?i-u:mintcream)/ , cssIdentBoundary ) -> 0xF5FFFAFFu32
+           | ( /(?i-u:mistyrose)/ , cssIdentBoundary ) -> 0xFFE4E1FFu32
+           | ( /(?i-u:moccasin)/ , cssIdentBoundary ) -> 0xFFE4B5FFu32
+           | ( /(?i-u:navajowhite)/ , cssIdentBoundary ) -> 0xFFDEADFFu32
+           | ( /(?i-u:navy)/ , cssIdentBoundary ) -> 0x000080FFu32
+           | ( /(?i-u:oldlace)/ , cssIdentBoundary ) -> 0xFDF5E6FFu32
+           | ( /(?i-u:olivedrab)/ , cssIdentBoundary ) -> 0x6B8E23FFu32
+           | ( /(?i-u:olive)/ , cssIdentBoundary ) -> 0x808000FFu32
+           | ( /(?i-u:orangered)/ , cssIdentBoundary ) -> 0xFF4500FFu32
+           | ( /(?i-u:orange)/ , cssIdentBoundary ) -> 0xFFA500FFu32
+           | ( /(?i-u:orchid)/ , cssIdentBoundary ) -> 0xDA70D6FFu32
+           | ( /(?i-u:palegoldenrod)/ , cssIdentBoundary ) -> 0xEEE8AAFFu32
+           | ( /(?i-u:palegreen)/ , cssIdentBoundary ) -> 0x98FB98FFu32
+           | ( /(?i-u:paleturquoise)/ , cssIdentBoundary ) -> 0xAFEEEEFFu32
+           | ( /(?i-u:palevioletred)/ , cssIdentBoundary ) -> 0xDB7093FFu32
+           | ( /(?i-u:papayawhip)/ , cssIdentBoundary ) -> 0xFFEFD5FFu32
+           | ( /(?i-u:peachpuff)/ , cssIdentBoundary ) -> 0xFFDAB9FFu32
+           | ( /(?i-u:peru)/ , cssIdentBoundary ) -> 0xCD853FFFu32
+           | ( /(?i-u:pink)/ , cssIdentBoundary ) -> 0xFFC0CBFFu32
+           | ( /(?i-u:plum)/ , cssIdentBoundary ) -> 0xDDA0DDFFu32
+           | ( /(?i-u:powderblue)/ , cssIdentBoundary ) -> 0xB0E0E6FFu32
+           | ( /(?i-u:purple)/ , cssIdentBoundary ) -> 0x800080FFu32
+           | ( /(?i-u:rebeccapurple)/ , cssIdentBoundary ) -> 0x663399FFu32
+           | ( /(?i-u:red)/ , cssIdentBoundary ) -> 0xFF0000FFu32
+           | ( /(?i-u:rosybrown)/ , cssIdentBoundary ) -> 0xBC8F8FFFu32
+           | ( /(?i-u:royalblue)/ , cssIdentBoundary ) -> 0x4169E1FFu32
+           | ( /(?i-u:saddlebrown)/ , cssIdentBoundary ) -> 0x8B4513FFu32
+           | ( /(?i-u:salmon)/ , cssIdentBoundary ) -> 0xFA8072FFu32
+           | ( /(?i-u:sandybrown)/ , cssIdentBoundary ) -> 0xF4A460FFu32
+           | ( /(?i-u:seagreen)/ , cssIdentBoundary ) -> 0x2E8B57FFu32
+           | ( /(?i-u:seashell)/ , cssIdentBoundary ) -> 0xFFF5EEFFu32
+           | ( /(?i-u:sienna)/ , cssIdentBoundary ) -> 0xA0522DFFu32
+           | ( /(?i-u:silver)/ , cssIdentBoundary ) -> 0xC0C0C0FFu32
+           | ( /(?i-u:skyblue)/ , cssIdentBoundary ) -> 0x87CEEBFFu32
+           | ( /(?i-u:slateblue)/ , cssIdentBoundary ) -> 0x6A5ACDFFu32
+           | ( /(?i-u:slategray)/ , cssIdentBoundary ) -> 0x708090FFu32
+           | ( /(?i-u:slategrey)/ , cssIdentBoundary ) -> 0x708090FFu32
+           | ( /(?i-u:snow)/ , cssIdentBoundary ) -> 0xFFFAFAFFu32
+           | ( /(?i-u:springgreen)/ , cssIdentBoundary ) -> 0x00FF7FFFu32
+           | ( /(?i-u:steelblue)/ , cssIdentBoundary ) -> 0x4682B4FFu32
+           | ( /(?i-u:tan)/ , cssIdentBoundary ) -> 0xD2B48CFFu32
+           | ( /(?i-u:teal)/ , cssIdentBoundary ) -> 0x008080FFu32
+           | ( /(?i-u:thistle)/ , cssIdentBoundary ) -> 0xD8BFD8FFu32
+           | ( /(?i-u:tomato)/ , cssIdentBoundary ) -> 0xFF6347FFu32
+           | ( /(?i-u:transparent)/ , cssIdentBoundary ) -> 0x00000000u32
+           | ( /(?i-u:turquoise)/ , cssIdentBoundary ) -> 0x40E0D0FFu32
+           | ( /(?i-u:violet)/ , cssIdentBoundary ) -> 0xEE82EEFFu32
+           | ( /(?i-u:wheat)/ , cssIdentBoundary ) -> 0xF5DEB3FFu32
+           | ( /(?i-u:whitesmoke)/ , cssIdentBoundary ) -> 0xF5F5F5FFu32
+           | ( /(?i-u:white)/ , cssIdentBoundary ) -> 0xFFFFFFFFu32
+           | ( /(?i-u:yellowgreen)/ , cssIdentBoundary ) -> 0x9ACD32FFu32
+           | ( /(?i-u:yellow)/ , cssIdentBoundary ) -> 0xFFFF00FFu32 ;
 
 // --- Hex colors (#RGB, #RRGGBB, #RGBA, #RRGGBBAA) ---
 
-hex = "#" , /[0-9a-fA-F]{3,8}/
-    -> crate::css_types::parse_hex_color(input) : u32 ;
+// A <hex-color> is one complete <hash-token>, not a legal hex prefix.
+// In this tokenizer-free grammar, the excluded sequence recreates the
+// hash-token boundary: an ident code point or valid escape after the legal
+// digit run belongs to the same hash token and therefore rejects the color.
+hex = "#" , ( ( /[0-9a-fA-F]{8}/ - ( /[0-9a-fA-F]{8}/ , cssIdentContinuation ) )
+            | ( /[0-9a-fA-F]{6}/ - ( /[0-9a-fA-F]{6}/ , cssIdentContinuation ) )
+            | ( /[0-9a-fA-F]{4}/ - ( /[0-9a-fA-F]{4}/ , cssIdentContinuation ) )
+            | ( /[0-9a-fA-F]{3}/ - ( /[0-9a-fA-F]{3}/ , cssIdentContinuation ) ) )
+    -> crate::css_types::try_parse_hex_color(input) : u32 ;
 
 // --- Color function names ---
 // rgb/rgba, hsl/hsla, hwb, lab, lch, oklab, oklch.
 // u8 discriminant tags each functional-color family; lightningcss's
 // Color enum ordering is the canonical source for the numbering below.
 
-colorType = "oklch" -> 8u8 | "oklab" -> 7u8
-          | "rgba" -> 1u8 | "rgb" -> 0u8
-          | "hsla" -> 3u8 | "hsl" -> 2u8
-          | "hwb" -> 4u8
-          | "lab" -> 5u8 | "lch" -> 6u8 ;
+rgbType = ( /(?i-u:rgba)/ , cssIdentBoundary ) -> 1u8
+        | ( /(?i-u:rgb)/ , cssIdentBoundary ) -> 0u8 ;
 
-// Standard color function: type(c1 sep c2 sep c3 [alphaSep alpha]).
-//
-// AV.0.5 aggregate layout (LargeAggregate, 40-byte arena slot):
-//
-//     offset  field   width  source
-//     ──────  ─────   ─────  ──────────────────────────────
-//     0       space   1 B    colorType (u8 discriminant)
-//     1..8    —       7 B    alignment pad (zero-initialised)
-//     8       c1      8 B    colorValue #1 (f64)
-//     16      c2      8 B    colorValue #2 (f64)
-//     24      c3      8 B    colorValue #3 (f64)
-//     32      alpha   8 B    optional alpha (f64; NaN = absent)
-//     ──────                 33 payload B → 40 B slot
-//
-// The rule-level `-> input : Color` annotation declares the rule's
-// output type; the layout above is consumed by the emitter's
-// LargeAggregate routing (V0 close-out).
+hslType = ( /(?i-u:hsla)/ , cssIdentBoundary ) -> 3u8
+        | ( /(?i-u:hsl)/ , cssIdentBoundary ) -> 2u8 ;
+
+hwbType = ( /(?i-u:hwb)/ , cssIdentBoundary ) -> 4u8 ;
+
+labType = ( /(?i-u:lab)/ , cssIdentBoundary ) -> 5u8 ;
+
+lchType = ( /(?i-u:lch)/ , cssIdentBoundary ) -> 6u8 ;
+
+oklabType = ( /(?i-u:oklab)/ , cssIdentBoundary ) -> 7u8 ;
+
+oklchType = ( /(?i-u:oklch)/ , cssIdentBoundary ) -> 8u8 ;
+
+colorType = rgbType | hslType | hwbType | labType | lchType | oklabType | oklchType ;
+
+// Legacy rgb()/rgba() requires a homogeneous number or percentage triplet.
+// Its commas may have surrounding whitespace and `none` is not admitted.
+legacyRgbNumbers =
+      number , legacyComma
+    , number , legacyComma
+    , number
+    , (legacyComma , alphaValue) ? ;
+
+legacyRgbPercentages =
+      percentage , legacyComma
+    , percentage , legacyComma
+    , percentage
+    , (legacyComma , alphaValue) ? ;
+
+legacyRgbBody = legacyRgbPercentages | legacyRgbNumbers ;
+
+// Modern color syntax is whitespace-separated, freely mixes numbers and
+// percentages, and admits `none`. Its optional alpha uses a solidus.
+modernSlashAlpha =
+      optionalWhitespace , div , optionalWhitespace , modernAlpha ;
+
+modernRgbBody =
+      modernComponent , whitespace
+    , modernComponent , whitespace
+    , modernComponent
+    , modernSlashAlpha ? ;
+
+rgbFunction =
+      rgbType , "(" , optionalWhitespace
+    , (legacyRgbBody | modernRgbBody)
+    , optionalWhitespace , ")" ;
+
+// Legacy hsl()/hsla() keeps percentages for saturation/lightness and never
+// admits `none`. Both legacy spellings use the exact frozen Color 4 body.
+legacyHslBody =
+      hue , legacyComma
+    , percentage , legacyComma
+    , percentage
+    , (legacyComma , alphaValue) ? ;
+
+modernHslBody =
+      modernHue , whitespace
+    , modernComponent , whitespace
+    , modernComponent
+    , modernSlashAlpha ? ;
+
+hslFunction =
+      hslType , "(" , optionalWhitespace
+    , (legacyHslBody | modernHslBody)
+    , optionalWhitespace , ")" ;
+
+hwbFunction =
+      hwbType , "(" , optionalWhitespace
+    , modernHue , whitespace
+    , modernComponent , whitespace
+    , modernComponent
+    , modernSlashAlpha ?
+    , optionalWhitespace , ")" ;
+
+labFunction =
+      labType , "(" , optionalWhitespace
+    , modernComponent , whitespace
+    , modernComponent , whitespace
+    , modernComponent
+    , modernSlashAlpha ?
+    , optionalWhitespace , ")" ;
+
+lchFunction =
+      lchType , "(" , optionalWhitespace
+    , modernComponent , whitespace
+    , modernComponent , whitespace
+    , modernHue
+    , modernSlashAlpha ?
+    , optionalWhitespace , ")" ;
+
+oklabFunction =
+      oklabType , "(" , optionalWhitespace
+    , modernComponent , whitespace
+    , modernComponent , whitespace
+    , modernComponent
+    , modernSlashAlpha ?
+    , optionalWhitespace , ")" ;
+
+oklchFunction =
+      oklchType , "(" , optionalWhitespace
+    , modernComponent , whitespace
+    , modernComponent , whitespace
+    , modernHue
+    , modernSlashAlpha ?
+    , optionalWhitespace , ")" ;
+
+// The grammar-derived value backend must preserve the heterogeneous
+// Number/Percentage/Angle/None component variants. The legacy fixed-f64
+// runtime projection cannot represent that shape and intentionally remains
+// a regeneration RED until it is replaced by grammar-derived types.
 colorFunction = @{
-    (colorType)
-    , "(" >>
-        colorValue << sep,
-        colorValue << sep,
-        colorValue,
-        (alphaSep >> colorValue)?
-    << ")"
+      rgbFunction
+    | hslFunction
+    | hwbFunction
+    | labFunction
+    | lchFunction
+    | oklabFunction
+    | oklchFunction
 } -> input : Color ;
 
 // --- color() function (CSS Color Level 4 §10) ---
-// u8 discriminant tags the nine color() predefined spaces.
+// u8 discriminant tags the ten frozen Color 4 predefined spaces.
 
-colorSpace = "srgb-linear" -> 1u8 | "srgb" -> 0u8
-           | "display-p3" -> 2u8 | "a98-rgb" -> 3u8
-           | "prophoto-rgb" -> 4u8 | "rec2020" -> 5u8
-           | "xyz-d65" -> 7u8 | "xyz-d50" -> 6u8 | "xyz" -> 8u8 ;
+colorSpace = ( /(?i-u:srgb-linear)/ , cssIdentBoundary ) -> 1u8
+           | ( /(?i-u:srgb)/ , cssIdentBoundary ) -> 0u8
+           | ( /(?i-u:display-p3-linear)/ , cssIdentBoundary ) -> 9u8
+           | ( /(?i-u:display-p3)/ , cssIdentBoundary ) -> 2u8
+           | ( /(?i-u:a98-rgb)/ , cssIdentBoundary ) -> 3u8
+           | ( /(?i-u:prophoto-rgb)/ , cssIdentBoundary ) -> 4u8
+           | ( /(?i-u:rec2020)/ , cssIdentBoundary ) -> 5u8
+           | ( /(?i-u:xyz-d65)/ , cssIdentBoundary ) -> 7u8
+           | ( /(?i-u:xyz-d50)/ , cssIdentBoundary ) -> 6u8
+           | ( /(?i-u:xyz)/ , cssIdentBoundary ) -> 8u8 ;
 
-// color() predefined-space function.
-//
-// AV.0.5 aggregate layout (LargeAggregate, 40-byte arena slot;
-// identical shape to colorFunction — the colorSpace u8 occupies
-// the `space` slot and the remaining layout follows unchanged):
-//
-//     offset  field   width  source
-//     ──────  ─────   ─────  ──────────────────────────────
-//     0       space   1 B    colorSpace (u8 discriminant)
-//     1..8    —       7 B    alignment pad (zero-initialised)
-//     8       c1      8 B    colorValue #1 (f64)
-//     16      c2      8 B    colorValue #2 (f64)
-//     24      c3      8 B    colorValue #3 (f64)
-//     32      alpha   8 B    optional alpha (f64; NaN = absent)
-//     ──────                 33 payload B → 40 B slot
-colorFn = ( "color" , "(" >>
-    colorSpace , colorValue , colorValue , colorValue , ("/" >> colorValue)?
-    << ")" ) -> input : Color ;
+colorFunctionKeyword = /(?i-u:color)/ , cssIdentBoundary ;
 
-// --- color-mix() (CSS Color Level 5) ---
-// hue-method u8 + mix-space u8 discriminants.
-//
-// AV.0.5 aggregate layout (LargeAggregate, recursive via ColorRef).
-// Each nested `<color>` argument is NOT inlined into the parent
-// aggregate — doing so would make the worst-case width unbounded
-// (colour-mix nests arbitrarily deep). Instead each nested colour
-// becomes an 8-byte ColorRef carrying the arena offset of its own
-// aggregate plus a kind tag:
-//
-//     ColorRef { arena_offset: u32, kind_tag: u8, _pad: [u8; 3] }
-//
-// Parent layout (LargeAggregate, 40-byte arena slot):
-//
-//     offset  field          width  source
-//     ──────  ─────          ─────  ────────────────────────────
-//     0       mix_space      1 B    mixSpace (u8 discriminant)
-//     1       hue_method     1 B    hueMethodKeyword (u8; 255 = absent)
-//     2..8    —              6 B    alignment pad (zero-initialised)
-//     8       left_color     8 B    ColorRef → left nested colour
-//     16      left_pct       8 B    optional percentage (f64; NaN = absent)
-//     24      right_color    8 B    ColorRef → right nested colour
-//     32      right_pct      8 B    optional percentage (f64; NaN = absent)
-//     ──────                        40 B slot
-//
-// Readers follow each ColorRef's `arena_offset` to the nested
-// colour aggregate and dispatch on `kind_tag` to pick the nested
-// decoding path (colorFunction / colorFn / colorMix / namedColor /
-// hex). The parent + children together form a DAG rooted at the
-// top-level colour record.
+colorFn = @{
+      colorFunctionKeyword , "(" , optionalWhitespace
+    , colorSpace , whitespace
+    , modernComponent , whitespace
+    , modernComponent , whitespace
+    , modernComponent
+    , modernSlashAlpha ?
+    , optionalWhitespace , ")"
+} -> input : Color ;
 
-hueMethodKeyword = "shorter" -> 0u8 | "longer" -> 1u8
-                 | "increasing" -> 2u8 | "decreasing" -> 3u8 ;
-hueMethod = hueMethodKeyword , "hue" ;
-mixSpace  = "srgb-linear" -> 1u8 | "srgb" -> 0u8
-          | "display-p3" -> 2u8 | "a98-rgb" -> 3u8
-          | "prophoto-rgb" -> 4u8 | "rec2020" -> 5u8
-          | "oklab" -> 10u8 | "oklch" -> 11u8
-          | "lab" -> 8u8 | "lch" -> 9u8
-          | "hsl" -> 12u8 | "hwb" -> 13u8
-          | "xyz-d65" -> 7u8 | "xyz-d50" -> 6u8 | "xyz" -> 14u8 ;
+// --- Context-dependent keywords ---
 
-colorMix = ( "color-mix" , "(" >>
-    "in" , mixSpace , hueMethod? , ",",
-    color , percentage? , ",",
-    color , percentage?
-    << ")" ) -> input : Color ;
+currentColor = /(?i-u:currentcolor)/ , cssIdentBoundary ;
+
+// System colors are context-dependent and therefore remain a distinct typed
+// grammar branch rather than being reduced to an sRGB integer.
+systemColor =
+      ( /(?i-u:accentcolor)/ , cssIdentBoundary ) -> 0u8
+    | ( /(?i-u:accentcolortext)/ , cssIdentBoundary ) -> 1u8
+    | ( /(?i-u:activetext)/ , cssIdentBoundary ) -> 2u8
+    | ( /(?i-u:buttonborder)/ , cssIdentBoundary ) -> 3u8
+    | ( /(?i-u:buttonface)/ , cssIdentBoundary ) -> 4u8
+    | ( /(?i-u:buttontext)/ , cssIdentBoundary ) -> 5u8
+    | ( /(?i-u:canvas)/ , cssIdentBoundary ) -> 6u8
+    | ( /(?i-u:canvastext)/ , cssIdentBoundary ) -> 7u8
+    | ( /(?i-u:field)/ , cssIdentBoundary ) -> 8u8
+    | ( /(?i-u:fieldtext)/ , cssIdentBoundary ) -> 9u8
+    | ( /(?i-u:graytext)/ , cssIdentBoundary ) -> 10u8
+    | ( /(?i-u:highlight)/ , cssIdentBoundary ) -> 11u8
+    | ( /(?i-u:highlighttext)/ , cssIdentBoundary ) -> 12u8
+    | ( /(?i-u:linktext)/ , cssIdentBoundary ) -> 13u8
+    | ( /(?i-u:mark)/ , cssIdentBoundary ) -> 14u8
+    | ( /(?i-u:marktext)/ , cssIdentBoundary ) -> 15u8
+    | ( /(?i-u:selecteditem)/ , cssIdentBoundary ) -> 16u8
+    | ( /(?i-u:selecteditemtext)/ , cssIdentBoundary ) -> 17u8
+    | ( /(?i-u:visitedtext)/ , cssIdentBoundary ) -> 18u8 ;
 
 // --- Top-level color ---
 //
-// The five branches — colorMix, colorFn, hex, colorFunction,
-// namedColor — materialise through different payload shapes:
+// The six Level-4 branches materialise through distinct semantic owners:
 //
 //   - namedColor, hex   → InlineScalar (u32 0xRRGGBBAA)
+//   - currentColor      → context-dependent unit variant
+//   - systemColor       → context-dependent system-color tag
 //   - colorFunction,
-//     colorFn,
-//     colorMix          → LargeAggregate (40-byte arena slot)
+//     colorFn           → grammar-derived heterogeneous component aggregate
 //
 // The Alt itself is a tagged union (TypeDesc::BoxedEnum at the
 // type-inference level); each branch's record carries the payload
@@ -318,4 +402,4 @@ colorMix = ( "color-mix" , "(" >>
 // to pick the decoding path, symmetric with lightningcss's `Color`
 // tagged union.
 
-color = colorMix | colorFn | hex | colorFunction | namedColor ;
+color = currentColor | systemColor | colorFn | hex | colorFunction | namedColor ;

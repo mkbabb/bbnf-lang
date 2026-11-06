@@ -95,6 +95,7 @@ use quote::quote;
 
 use bbnf_ir::registry::EmitStrategy;
 
+pub use alt_dispatch::branches::PayloadPlanner;
 pub use dispatcher::dispatcher_fn_ident;
 
 // AZ-I.W2-act.A — `registry_observer` deleted per audit/AUDIT-2 §6.C.
@@ -151,54 +152,19 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     // inside a single emitted parse fn.
     let strategy = EmitStrategy::for_grammar(grammar_ident_str, &ir.struct_registry);
     debug_assert!(strategy.is_struct_direct());
+    // The emitted-payload fixed point is grammar-wide. Every shape rule and
+    // recursive structural branch below queries this one solved snapshot.
+    let payload_planner = PayloadPlanner::new(ir);
 
     let mut per_rule: Vec<TokenStream> = Vec::new();
 
     for rule in &ir.rules {
-        // AZ-II.cutover.H Phase 1 — transparent-rule passthrough
-        // emission. The pre-cutover.H gate
-        // `if rule.meta.is_transparent { continue; }` skipped per-rule
-        // fn emission for ALL transparent rules. The Ref-call
-        // resolver at `dispatcher::ref_call::emit_ref_call_*` resolves
-        // calls via `parse_<shape>_<grammar>_<name>` based on the
-        // target's classified shape — so cross-rule references to
-        // transparent rules fail to link when the per-shape fn isn't
-        // emitted.
-        //
-        // AZ-II.cutover.L Phase 3a — uniform transparent-rule emission
-        // for Wrap and Keyword classifications under both substrate
-        // strategies.
-        //
-        // The Ref-call resolver at `dispatcher::ref_call::emit_ref_call_*`
-        // emits calls via `parse_<shape>_<grammar>_<name>` based on the
-        // target's classified shape, regardless of whether the target is
-        // transparent. Cross-rule references to transparent rules
-        // therefore fail to link when the per-shape fn isn't emitted.
-        //
-        // - **Wrap** transparent rules: the StructDirect emitter uses
-        //   `emit_alt_struct_dispatch_transparent`, so no outer
-        //   compound is opened for alias-only rules.
-        //
-        // - **Keyword** transparent rules: CSS L4's `pseudoClass = isPseudo
-        //   | … | classicPseudo` (transparent, Alt-of-Ref-led, classifies
-        //   as Keyword via the `leading_literal` traversal). The
-        //   Keyword-shape Ref-led emission template (added in this
-        //   phase) carries dispatch + delegate to each named-pseudo
-        //   sub-rule.
-        //
-        // Other transparent shapes (Object / Array / Flat / Pratt /
-        // Unordered / ArgList / String / Number / Scalar) are not
-        // expected to appear cyclically with Alt-of-Ref bodies in any
-        // active grammar; if a future grammar lands such a rule the
-        // missing per-shape fn will surface as a regen-time link error,
-        // which the corresponding transparent-aware emitter will
-        // address.
-        if rule.meta.is_transparent {
-            let tag = ir.shape_assignments.get(rule.id);
-            let emit_transparent = matches!(tag, ShapeTag::Wrap | ShapeTag::Keyword);
-            if !emit_transparent {
-                continue;
-            }
+        // Keep driver availability identical to the Ref-call and payload-plan
+        // authorities. A classified transparent rule is callable only when its
+        // shape emitter has an explicit passthrough body; otherwise codegen
+        // fails closed instead of composing a symbol this loop never emits.
+        if !shape_driver_emits_rule(rule, ir) {
+            continue;
         }
         let tag = ir.shape_assignments.get(rule.id);
         // Emit per-shape fns for every classified shape (Object /
@@ -255,19 +221,29 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                     number::emit_parse_number(&grammar_suffix, rule, ir, &strategy)
                 }
             }
-            ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir, &strategy),
+            ShapeTag::Keyword => {
+                keyword::emit_parse_keyword(&grammar_suffix, rule, ir, &strategy, &payload_planner)
+            }
             ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir, &strategy),
             ShapeTag::Pratt => pratt::emit_parse_pratt(&strategy, &grammar_suffix, rule, ir),
             ShapeTag::Unordered => {
                 unordered::emit_parse_unordered(&strategy, &grammar_suffix, rule, ir)
             }
             ShapeTag::ArgList => arglist::emit_parse_arglist(&strategy, &grammar_suffix, rule, ir),
-            ShapeTag::Flat => flat::emit_parse_flat(&strategy, &grammar_suffix, rule, ir),
-            ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir, &strategy),
-            ShapeTag::HRegex => hregex::emit_parse_hregex(&strategy, &grammar_suffix, rule, ir),
-            ShapeTag::AltDispatch => {
-                alt_dispatch::emit_parse_alt_dispatch(&grammar_suffix, rule, ir, &strategy)
+            ShapeTag::Flat => {
+                flat::emit_parse_flat(&strategy, &grammar_suffix, rule, ir, &payload_planner)
             }
+            ShapeTag::Wrap => {
+                wrap::emit_parse_wrap(&grammar_suffix, rule, ir, &strategy, &payload_planner)
+            }
+            ShapeTag::HRegex => hregex::emit_parse_hregex(&strategy, &grammar_suffix, rule, ir),
+            ShapeTag::AltDispatch => alt_dispatch::emit_parse_alt_dispatch(
+                &grammar_suffix,
+                rule,
+                ir,
+                &strategy,
+                &payload_planner,
+            ),
             ShapeTag::None => continue,
         };
         per_rule.push(fragment);
@@ -284,6 +260,17 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         #(#per_rule)*
         #dispatcher_fn
     }
+}
+
+/// Whether the per-shape driver emits a callable function for `rule`.
+///
+/// Wrap and Keyword own explicit transparent passthrough bodies. Other
+/// transparent classifications do not, so callers must not manufacture their
+/// `parse_<shape>_*` symbol and defer the defect to a link error.
+pub(crate) fn shape_driver_emits_rule(rule: &bbnf_ir::IrRule, ir: &GrammarIR) -> bool {
+    let tag = ir.shape_assignments.get(rule.id);
+    tag.is_classified()
+        && (!rule.meta.is_transparent || matches!(tag, ShapeTag::Wrap | ShapeTag::Keyword))
 }
 
 /// Returns `true` when `ir` has at least one shape-classified rule.

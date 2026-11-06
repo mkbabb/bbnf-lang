@@ -1,0 +1,17 @@
+replay_root=/private/tmp/bbnf-g3-r3-8003fa19464878e2
+historical_dir=/private/tmp/bbnf-g3-r3-8003fa19464878e2/historical
+current_dir=/private/tmp/bbnf-g3-r3-8003fa19464878e2/current
+PATH=/Users/mkbabb/.codex/tmp/arg0/codex-arg0K677NH:/Users/mkbabb/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/mkbabb/.local/share/../bin:/Users/mkbabb/.local/bin:/Users/mkbabb/.composer/vendor/laravel/installer/bin:/opt/homebrew/opt/gcc/bin:/opt/homebrew/opt/llvm:/Users/mkbabb/.gem/ruby/2.6.0/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/pkg/env/active/bin:/opt/pmk/env/global/bin:/Library/Apple/usr/bin:/Applications/Wireshark.app/Contents/MacOS:/Users/mkbabb/.cargo/bin:/Users/mkbabb/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/fallback:/Applications/ChatGPT.app/Contents/Resources
+HOME=/Users/mkbabb
+USER=mkbabb
+SHELL=/bin/zsh
+TMPDIR=/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/
+CARGO_BUILD_JOBS=1
+CARGO_INCREMENTAL=0
+CARGO_NET_OFFLINE=true
+CARGO_TERM_COLOR=never
+NO_COLOR=1
+RUST_BACKTRACE=0
+RUST_TEST_THREADS=1
+SOURCE_DATE_EPOCH=0
+TERM=dumb

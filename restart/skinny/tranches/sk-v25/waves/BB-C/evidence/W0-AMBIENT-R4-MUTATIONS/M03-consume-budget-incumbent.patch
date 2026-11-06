@@ -1,0 +1,12 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -620,7 +620,7 @@ pub(super) fn solve_exact_constrained(
+             locus: OptimizationFailureLocus::Search,
+         });
+     }
+-    if csp.stats().budget_exceeded {
++    if csp.stats().budget_exceeded && solutions.is_empty() {
+         return Err(SolveFailure {
+             reason: OptimizationUnavailableReason::BudgetExceeded,
+             locus: OptimizationFailureLocus::Search,

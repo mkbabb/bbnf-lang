@@ -4569,7 +4569,6 @@ fn push_probe_rows(
         "host_call_eager_decode",
         "alternate_scalar_plan",
         "alternate_dispatch_table_plan",
-        "alternate_pext_mask_plan",
         "cold_first_parse",
     ] {
         if probe == "alternate_dispatch_table_plan" {

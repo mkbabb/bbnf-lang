@@ -1,0 +1,72 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.14s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 1 test
+
+thread 'passes::csp_strategy::tests::pre_cancelled_factorized_grammar_rejects_without_output' (2376289) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:243:13:
+pre-cancelled factorized grammar must not expose output: GrammarSolveOutput {
+    decisions: {},
+    materialization: {
+        n0: MustTape,
+    },
+    reports: [
+        ComponentReport {
+            root: 0,
+            members: [
+                0,
+            ],
+            variables: DecisionCounts {
+                alt: 0,
+                wrap: 0,
+                engine: 0,
+                materialization: 1,
+            },
+            sites: DecisionCounts {
+                alt: 0,
+                wrap: 0,
+                engine: 0,
+                materialization: 1,
+            },
+            domain_values: DecisionCounts {
+                alt: 0,
+                wrap: 0,
+                engine: 0,
+                materialization: 1,
+            },
+            constraints: ConstraintCounts {
+                token_dispatch: 0,
+                engine: 0,
+                shape: 0,
+                layout: 0,
+                dispatch: 0,
+            },
+            semantic_sites: 1,
+            covered_sites: 1,
+            status: FactorizedExact,
+            nodes_explored: 0,
+            node_budget: Some(
+                1000000,
+            ),
+            cancelled: false,
+            budget_exceeded: false,
+            objective: Some(
+                ObjectiveProof {
+                    bits: 4618441417868443648,
+                },
+            ),
+            failure: None,
+        },
+    ],
+}
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test passes::csp_strategy::tests::pre_cancelled_factorized_grammar_rejects_without_output ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::pre_cancelled_factorized_grammar_rejects_without_output
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

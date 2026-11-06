@@ -3,9 +3,10 @@
 //! when the structural alphabet contains characters typical inside
 //! strings (`{`, `}`, `,`, `:`, `[`, `]`).
 //!
-//! The parity contract is the same one simdjson encodes via CLMUL:
-//! a structural byte at offset `i` is real iff the prefix-XOR of
-//! quote positions at offset `i` is `0` (outside string).
+//! Apple ARM may compute the prefix with PMULL; wasm32 and scalar use
+//! shift-XOR. In every retained plane, a structural byte at offset
+//! `i` is real iff the prefix-XOR of quote positions at offset `i` is
+//! `0` (outside string).
 
 use simd_scan::{alphabet::StructuralAlphabet, parity, scalar, scan_structural};
 
@@ -120,11 +121,10 @@ fn long_string_spanning_multiple_stripes() {
 }
 
 #[test]
-fn shift_xor_matches_clmul() {
-    // Independently of the kernel: the prefix-XOR ladder produces
-    // the same output as the CLMUL-based one for arbitrary 64-bit
-    // masks. This is the contract `parity::prefix_xor_64` relies on
-    // when the CLMUL feature is active.
+fn shift_xor_matches_prefix_contract() {
+    // Independently of the kernel, verify the prefix-XOR ladder for
+    // arbitrary 64-bit masks and both carry states. This is the
+    // contract shared by Apple ARM, wasm32, and scalar execution.
     let test_masks: &[u64] = &[
         0,
         1,

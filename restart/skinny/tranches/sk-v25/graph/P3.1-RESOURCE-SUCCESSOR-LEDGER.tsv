@@ -1,0 +1,22 @@
+sha256	lines	path	successor responsibility
+8fe20ff4b9dff8d4239e6ac9ca3b841c93875e96afe44984a035baa753a8c5c8	4685	Cargo.lock	adds the direct libc edge; the already-landed sha2 edge is retained, not claimed by this successor
+151428fb2ecb29037aea4de77b12fe45e165c441adcec2acac9e79791852f3bb	69	xtask/Cargo.toml	adds libc for process resource counters; retains the earlier sha2 repair
+67589f99203a99395b97017f6bbad5aba7feef731ee5eafa4fd2c7495cd3168c	262	xtask/src/architecture/mod.rs	releases captured frontend bytes after collection and performs a hash-only final recensus
+1e0c428f5e4c2bac30090a2a1cff667676ddedd112ced2af52707d5695730dc5	75	xtask/src/architecture/resource.rs	reads process CPU, maximum RSS, and allocator statistics without changing production decisions
+bec580f70d4722938e7b356d32d159ff1656bc6a2a809297a6915eac80061611	337	xtask/src/architecture/schema/identity.rs	validates every serialized JSON key/value string with a bounded token scan instead of materializing a second Value tree
+b779468aee75a6bcfa3066a4dc258a7d567119a24b0c0108f181b5bc13d1a9b1	594	xtask/src/architecture/evidence/validate.rs	borrows validation indexes, computes each projection SCC once, and validates quotient coverage without duplicate owned graphs
+4f5cee598dd55b8b6d5b726efaff2a35888ff876e82ff4ef85567591fc5a7ddb	80	xtask/src/architecture/evidence/render.rs	renders one canonical member at a time and accounts budgets from exact byte totals
+c1b3bf17fedd6190154b9f9398c341e8f43d7b7a782411624867d41df326dddd	613	xtask/src/architecture/evidence/write.rs	publishes through an artifact sink one member at a time while retaining the pure in-memory exact-ordering gate
+62107255c0cb80d5648ca62d220388d03c6052186881fa56ea396929d5bb9b03	374	xtask/src/architecture/evidence/transaction.rs	builds inside atomic staging and verifies members through bounded streaming hashes
+a9a74d7f090a0799e2fc7a0c5ede98da6839958063ce0597e2e1e18a55552e52	547	xtask/src/architecture/evidence/binding.rs	binds the exact hash-only collector input set and preserves captured-byte verification where bytes are required
+15de410d9240d8a1750d92f3adfa7eafebfff215715c29c76183ba89f3f79fb2	652	xtask/src/architecture/inventory/filesystem.rs	separates hash-only census from frontend snapshot capture and derives canonical collector bindings
+fcfdbd435492384bce7cbb08de4c356d0e38296fe71d005e1dc86300100d8f0b	12	xtask/src/architecture/inventory/mod.rs	exports the collector binding type
+b6edd25faf8e02565c0b3a14c14b282d8eea534b9dbfd3b1643819cb9baf061c	116	xtask/src/architecture/project/scc.rs	adds a borrowed-edge SCC entrypoint while retaining the exact owned API
+8050010bea7932f02f09cd2b3ede2018900183637e3fb0a229b6e7b15018f60a	437	xtask/src/architecture/project/cycle.rs	adds borrowed component-basis derivation while retaining exact basis semantics
+ba038c33e09c7bf205a137d80561bab91c55a7124d78d2ca171597ad1e77fd00	94	xtask/tests/architecture.rs	installs test-only allocation accounting and the full-shape resource module
+48eb59e93be53aa0b30bc158c4c12dd5b7bfe64a2af57948da5e8b851de7efdd	139	xtask/tests/architecture/resource.rs	born-RED exact full-shape replay, complete validation, all-member byte comparison, and 384 MiB assertion
+1a2bdec9826bc18760ae908e1399e3763684b8735661f48cf528251b25b79dd2	91	xtask/tests/architecture/schema.rs	proves nested key/value/escape privacy validation remains total
+d524b596c7a1ad019db2b815e135d5e1aa13d1ecdf3d8dd009d56fceae41bdc1	669	xtask/tests/architecture/project.rs	proves quotient missing, duplicate, and internal-crossing mutations fail
+c8222b3c7591e32c89dcc1c815893cfd0af252cd94b7dbb38bf1facdc4b91660	189	xtask/tests/architecture/inventory.rs	proves hash-only recensus replays exact collector bindings without retained bytes
+e5e4bb49ecb64a516afd7a20f028382c8c0579e0127330e93cda3bef1aa55e3b	502	xtask/tests/architecture/evidence.rs	adapts binding/publication tests to the exact collector input contract and streamed transaction
+38137fe0eda23d708868249d5cefa12f96f2b50272a7836217659df477033bf6	446	xtask/tests/architecture/frontend.rs	adapts frontend fixtures to the exact collector input contract

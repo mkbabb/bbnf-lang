@@ -1,0 +1,166 @@
+{
+  "added": [],
+  "changed": [
+    {
+      "path": "crates/core/src/grammar/generated/bbnf.registry.json",
+      "post": {
+        "bytes": 49474,
+        "mode": "0644",
+        "sha256": "42d66c77c8b360310412df70063f88d46563060dd90c52697312c5eda9af86ce"
+      },
+      "pre": {
+        "bytes": 49354,
+        "mode": "0644",
+        "sha256": "3e7494c6664a9352e3512c691bae8bd8a446e1d9e17c88b51a2e36ae7b788021"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/bbnf.rs",
+      "post": {
+        "bytes": 1062385,
+        "mode": "0644",
+        "sha256": "f97c51499947052a236c73660901ade5dccd850fc3d614d0fde089512ae84e5f"
+      },
+      "pre": {
+        "bytes": 1062265,
+        "mode": "0644",
+        "sha256": "c8f5e6d3dc6b050c508fb1e24a08d698caf5a9b276317e8c1df8b21270efcbe2"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/css_l4.registry.json",
+      "post": {
+        "bytes": 243278,
+        "mode": "0644",
+        "sha256": "dfcf07e8b676f2153663cb2a0ea9e5985e8658c51d29e2ce13e43f06c18a5b92"
+      },
+      "pre": {
+        "bytes": 193459,
+        "mode": "0644",
+        "sha256": "77e0ecad76b34f4c5233ea76a5b90b946e7f07c411c83e05a0ca1b8d20c97289"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/css_l4.rs",
+      "post": {
+        "bytes": 7270497,
+        "mode": "0644",
+        "sha256": "8eef90120a3d6aefe5dd39f2cb544bf623a00169c2d9de161505fba3b8bb20e5"
+      },
+      "pre": {
+        "bytes": 6105898,
+        "mode": "0644",
+        "sha256": "ac08b34d26badb675ce8357b28d2f7ab596eabc74c5ffe4f9d965e3549c2182d"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/css_pretty.registry.json",
+      "post": {
+        "bytes": 11950,
+        "mode": "0644",
+        "sha256": "dd9642a59ddefe7352f977963cdb16b04890face97cc81a7bf198d8fbbb53e45"
+      },
+      "pre": {
+        "bytes": 11944,
+        "mode": "0644",
+        "sha256": "bc50b5f3efce9f0a252ebb8674768161f8ccc68246ac935ab60777ca8f0780a5"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/css_pretty.rs",
+      "post": {
+        "bytes": 305499,
+        "mode": "0644",
+        "sha256": "1f1374a3371ce3aaecbb2e3dd00faa19219e2d965cd8f1c2ae10c63de04adc14"
+      },
+      "pre": {
+        "bytes": 529141,
+        "mode": "0644",
+        "sha256": "e44d2f8c1a7d4bd649a9226b7aeb708735d28f626cb90ee06e8b9ceff7301299"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/ebnf.registry.json",
+      "post": {
+        "bytes": 28478,
+        "mode": "0644",
+        "sha256": "a9096e8e42818b5a240ee7af4c898e5598f131c344e28b1825165170cfb39d7c"
+      },
+      "pre": {
+        "bytes": 28458,
+        "mode": "0644",
+        "sha256": "7938d084ece1b33277bcc6a81a1678fd38c6a09a589b4dc431bca31a21120ba1"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/ebnf.rs",
+      "post": {
+        "bytes": 349063,
+        "mode": "0644",
+        "sha256": "290afd94da251e6aee662125a3ac0661d0f7c97951c77e0c8d9d8f170a3d4bda"
+      },
+      "pre": {
+        "bytes": 349043,
+        "mode": "0644",
+        "sha256": "eddd1aa515edf350133a1bc71ca5f1aecad079547eadfc278eea0481e3601942"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/google_sheets.registry.json",
+      "post": {
+        "bytes": 28831,
+        "mode": "0644",
+        "sha256": "6885db936c88afc8e5dfc1aa7b2f88a9a9acaab2ca0d70c923060b0781b8a736"
+      },
+      "pre": {
+        "bytes": 27211,
+        "mode": "0644",
+        "sha256": "37a2ee49d2c41b952be8d671baa33b5cc612fbe6c5db25845041bc2bd1f1cf1c"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/google_sheets.rs",
+      "post": {
+        "bytes": 653976,
+        "mode": "0644",
+        "sha256": "953de8d6581a584548131b3f243114ed9495a51b5bf2533cf1257b0adad44747"
+      },
+      "pre": {
+        "bytes": 677373,
+        "mode": "0644",
+        "sha256": "345397a562d102fefcf85908dadb9784737db0c14904c7e98e97fa1d6c9aac79"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/json.registry.json",
+      "post": {
+        "bytes": 4407,
+        "mode": "0644",
+        "sha256": "33229d745e334610cfa94f0bf3d997a1eee049ea4b27cb8378ec9166e954b89f"
+      },
+      "pre": {
+        "bytes": 4415,
+        "mode": "0644",
+        "sha256": "8a9500a99b722aa89c44703f1eb9ce6fc9bfefd02780b2d2539d91ecda62ec7e"
+      }
+    },
+    {
+      "path": "crates/core/src/grammar/generated/json.rs",
+      "post": {
+        "bytes": 119642,
+        "mode": "0644",
+        "sha256": "36da388fe4c1042a2fd3ff7812e9741ffb54025261ef7c56333673f8344bc95f"
+      },
+      "pre": {
+        "bytes": 163767,
+        "mode": "0644",
+        "sha256": "82e49add58942e9214995cc1665bc952da3da9d8d563fc25235296b310e413ef"
+      }
+    }
+  ],
+  "post_bytes": 10375978,
+  "post_members": 18,
+  "pre_bytes": 9450826,
+  "pre_members": 18,
+  "removed": []
+}

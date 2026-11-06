@@ -10,63 +10,32 @@ permissions:
 
 jobs:
   build:
-    name: Build ${{ matrix.target }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            vscode-target: linux-x64
-          - runner: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            vscode-target: linux-arm64
-            cross: true
-          - runner: macos-latest
-            target: x86_64-apple-darwin
-            vscode-target: darwin-x64
-          - runner: macos-14
-            target: aarch64-apple-darwin
-            vscode-target: darwin-arm64
-          - runner: windows-latest
-            target: x86_64-pc-windows-msvc
-            vscode-target: win32-x64
+    name: Build darwin-arm64
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Require native Apple arm64 host
+        run: test "$(uname -m)" = arm64
 
       - name: Install repository rust toolchain
         run: |
           toolchain="$(awk -F '"' '/^channel =/ { print $2 }' rust-toolchain.toml)"
           rustup toolchain install "$toolchain" --profile minimal
-          rustup target add --toolchain "$toolchain" ${{ matrix.target }}
+          rustup target add --toolchain "$toolchain" aarch64-apple-darwin
           echo "RUSTUP_TOOLCHAIN=$toolchain" >> "$GITHUB_ENV"
           rustc --version
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Install cross (for cross-compilation)
-        if: matrix.cross
-        run: cargo install cross
-
       - name: Build LSP binary
-        run: |
-          if [ "${{ matrix.cross }}" = "true" ]; then
-            cross build --release --target ${{ matrix.target }}
-          else
-            cargo build --release --target ${{ matrix.target }}
-          fi
-        shell: bash
+        run: cargo build --release --target aarch64-apple-darwin -p bbnf-lsp --bin bbnf-lsp
 
       - name: Copy binary to server/
         run: |
           mkdir -p server
-          if [ "${{ matrix.target }}" = "x86_64-pc-windows-msvc" ]; then
-            cp target/${{ matrix.target }}/release/bbnf-lsp.exe server/bbnf-lsp.exe
-          else
-            cp target/${{ matrix.target }}/release/bbnf-lsp server/bbnf-lsp
-          fi
-        shell: bash
+          cp target/aarch64-apple-darwin/release/bbnf-lsp server/bbnf-lsp
 
       - uses: actions/setup-node@v4
         with:
@@ -78,22 +47,24 @@ jobs:
 
       - name: Package VSIX
         working-directory: extension
-        run: npx vsce package --target ${{ matrix.vscode-target }} -o ../bbnf-lang-${{ matrix.vscode-target }}.vsix
+        run: npx vsce package --target darwin-arm64 -o ../bbnf-lang-darwin-arm64.vsix
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vsix-${{ matrix.vscode-target }}
-          path: "*.vsix"
+          name: vsix-darwin-arm64
+          path: bbnf-lang-darwin-arm64.vsix
 
   publish:
     name: Publish to Marketplace
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
+      - name: Require native Apple arm64 host
+        run: test "$(uname -m)" = arm64
+
       - uses: actions/download-artifact@v4
         with:
-          pattern: vsix-*
-          merge-multiple: true
+          name: vsix-darwin-arm64
 
       - uses: actions/setup-node@v4
         with:
@@ -101,6 +72,6 @@ jobs:
       - run: npm install -g @vscode/vsce
 
       - name: Publish
-        run: vsce publish --packagePath *.vsix
+        run: vsce publish --packagePath bbnf-lang-darwin-arm64.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

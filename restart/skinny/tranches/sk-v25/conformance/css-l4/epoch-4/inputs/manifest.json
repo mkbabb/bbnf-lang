@@ -1,0 +1,708 @@
+{
+  "capture": {
+    "csswg_clean": true,
+    "git": {
+      "binary": "/usr/bin/git",
+      "binary_sha256": "12bed4523661307059b879b9b54e77a73176e9d27d27a0e40363271d8f0668ba"
+    },
+    "network": "FORBIDDEN_AND_UNUSED",
+    "private_paths_retained": false,
+    "wpt_clean": true
+  },
+  "csswg": {
+    "full_source_key_catalog": {
+      "encoding": "gzip-mtime-zero(canonical-json)",
+      "entry_count": 168,
+      "object": {
+        "bytes": 11061,
+        "sha256": "0d911d3ccdd5cdb70c37c3eaef1158144ac8d3a85ab82e0be7d6338e26f1e5ee"
+      },
+      "uncompressed_bytes": 37351,
+      "uncompressed_sha256": "8bc68532a955bb7ad448d4e591851d6d96e52c4b6dbaaab9a55c2856cbb2a595"
+    },
+    "revision": "c7573530343759ace8e46438a1fa2c44515b5554",
+    "source_count": 96,
+    "sources": [
+      {
+        "bytes": 644776,
+        "path": "css2/Overview.bs",
+        "sha256": "60dc5b8df0d1b97c82998bd05016ac4ec3146a160d79017071c18df41309186e",
+        "spec_id": "CSS2"
+      },
+      {
+        "bytes": 66818,
+        "path": "compositing-1/Overview.bs",
+        "sha256": "1674031393106ef5f52ab3beb5b5f986d0c91912511dac1a7c85242b62af3213",
+        "spec_id": "compositing-1"
+      },
+      {
+        "bytes": 52105,
+        "path": "css-2026/Overview.bs",
+        "sha256": "2d2a7c2704a29e90f06b769f9f514ed03a50318743e97e9e5359879a7793d6f8",
+        "spec_id": "css-2026"
+      },
+      {
+        "bytes": 104695,
+        "path": "css-align-3/Overview.bs",
+        "sha256": "bf6a78a8aeea6b2967fa6954cc62f41f83212e418346826d9a799c0acdfd20e2",
+        "spec_id": "css-align-3"
+      },
+      {
+        "bytes": 54862,
+        "path": "css-animations-1/Overview.bs",
+        "sha256": "2addff804cce623aedb6b24eb25cafae88f0060ce758794c3daf3bb708081eb7",
+        "spec_id": "css-animations-1"
+      },
+      {
+        "bytes": 45967,
+        "path": "css-animations-2/Overview.bs",
+        "sha256": "061d6a60297c7d4b811f599b79902ee4ce0ec41daed4657dbbd4391aec826ca4",
+        "spec_id": "css-animations-2"
+      },
+      {
+        "bytes": 166998,
+        "path": "css-backgrounds-3/Overview.bs",
+        "sha256": "5119e57464695b40659e52bb19dbab978f3440c1665b63e952d158d0474ffb08",
+        "spec_id": "css-backgrounds-3"
+      },
+      {
+        "bytes": 96167,
+        "path": "css-backgrounds-4/Overview.bs",
+        "sha256": "fd378b68ab29e14da121654b722520ad17a4637575f2c71bbe8e18800d4e3178",
+        "spec_id": "css-backgrounds-4"
+      },
+      {
+        "bytes": 141225,
+        "path": "css-borders-4/Overview.bs",
+        "sha256": "90b7a646ed61a1418d4428d20638fb63612fb7006ad011933bd8be81cd836643",
+        "spec_id": "css-borders-4"
+      },
+      {
+        "bytes": 20136,
+        "path": "css-box-3/Overview.bs",
+        "sha256": "46ca6f7e5d5d787d8a1c05466e6ae994795bd90c2cdf1aa51a6db425f7c33171",
+        "spec_id": "css-box-3"
+      },
+      {
+        "bytes": 26251,
+        "path": "css-box-4/Overview.bs",
+        "sha256": "417e6eff31419711d1e29ea485f65011064fa950ac3f3dac92be8645be882fe0",
+        "spec_id": "css-box-4"
+      },
+      {
+        "bytes": 58001,
+        "path": "css-break-3/Overview.bs",
+        "sha256": "1310c4e80ba2c082a49c2b69fbb09e41e0a700ddf625c2fa652b4fd4327fbcff",
+        "spec_id": "css-break-3"
+      },
+      {
+        "bytes": 53313,
+        "path": "css-break-4/Overview.bs",
+        "sha256": "696afd498984ad4f5600e4672ef43dc3550006bee02dd1931d4931cbe1853a51",
+        "spec_id": "css-break-4"
+      },
+      {
+        "bytes": 47587,
+        "path": "css-cascade-3/Overview.bs",
+        "sha256": "80e4daab35238ccc3e00e846fc6eb6575f08b32fc73b5b5da69a39c2ef3f5fd4",
+        "spec_id": "css-cascade-3"
+      },
+      {
+        "bytes": 67047,
+        "path": "css-cascade-4/Overview.bs",
+        "sha256": "e5932127261f9cd5e0e900c9dcad978024cb44fedb77d27f53da7b17953da86f",
+        "spec_id": "css-cascade-4"
+      },
+      {
+        "bytes": 87793,
+        "path": "css-cascade-5/Overview.bs",
+        "sha256": "c2433a793927a74ae8583760ead21494de32a89a3bdd0222cbdb95f4ab900298",
+        "spec_id": "css-cascade-5"
+      },
+      {
+        "bytes": 170820,
+        "path": "css-color-3/Overview.html",
+        "sha256": "4cfdd10ea66d4c826b376cfd78f35096b7f4a27c8687bf306f8c1aae5872ec7a",
+        "spec_id": "css-color-3"
+      },
+      {
+        "bytes": 430720,
+        "path": "css-color-4/Overview.bs",
+        "sha256": "f5b6afc82d9198d130507448837e19c1b984ae9a1bebb579547822339aaf482a",
+        "spec_id": "css-color-4"
+      },
+      {
+        "bytes": 182733,
+        "path": "css-color-5/Overview.bs",
+        "sha256": "e419968b08ee2768fab0c4b667a73541e35cb8cd0b444fb2b6e2d46b1c8ddc15",
+        "spec_id": "css-color-5"
+      },
+      {
+        "bytes": 51123,
+        "path": "css-color-adjust-1/Overview.bs",
+        "sha256": "b34b7209868e0d082582dda02cab03c8a3c0dfdb430ebb37248eb68f96853bf3",
+        "spec_id": "css-color-adjust-1"
+      },
+      {
+        "bytes": 57123,
+        "path": "css-conditional-3/Overview.bs",
+        "sha256": "771816b6b976296126988d33f399d45379cc4ca67eb5f8d3e8e1486ddc318365",
+        "spec_id": "css-conditional-3"
+      },
+      {
+        "bytes": 26250,
+        "path": "css-conditional-4/Overview.bs",
+        "sha256": "7e7aae451f6b9a19090f14791c75aee8a2f4a68dcb552f830420022a8c35cc80",
+        "spec_id": "css-conditional-4"
+      },
+      {
+        "bytes": 91099,
+        "path": "css-conditional-5/Overview.bs",
+        "sha256": "b7399a570cdf5d47c0769e0cd1bb62853b3111c13871982270e72a3e2e768e32",
+        "spec_id": "css-conditional-5"
+      },
+      {
+        "bytes": 55354,
+        "path": "css-contain-1/Overview.bs",
+        "sha256": "2946bdb02b9577437edac982f3576256ac062040b0cae20e8f5c5bd88b47ad58",
+        "spec_id": "css-contain-1"
+      },
+      {
+        "bytes": 118409,
+        "path": "css-contain-2/Overview.bs",
+        "sha256": "5a8dbbd4c6a8bccd661c5bb7b66275da9cfb5a93b206f2124cc6f60cfd6ccc4d",
+        "spec_id": "css-contain-2"
+      },
+      {
+        "bytes": 141901,
+        "path": "css-counter-styles-3/Overview.bs",
+        "sha256": "296e168274385902eb77f23604c8a095ad9415e78fb089c6d1fde2891fd4c4ba",
+        "spec_id": "css-counter-styles-3"
+      },
+      {
+        "bytes": 115372,
+        "path": "css-display-3/Overview.bs",
+        "sha256": "883aa6a221a91f5ee34cab17d8df974891a08921a410901e9328e6ff982671a5",
+        "spec_id": "css-display-3"
+      },
+      {
+        "bytes": 118911,
+        "path": "css-display-4/Overview.bs",
+        "sha256": "979593ab2dff0d4557fd27ba9723a163ea81c8ee535ab4a38181d7acfd06cc17",
+        "spec_id": "css-display-4"
+      },
+      {
+        "bytes": 19774,
+        "path": "css-easing-1/Overview.bs",
+        "sha256": "92043cb3319f450dfdbbef32035324ddf66969f9fe0330514f2c2db7ca74f185",
+        "spec_id": "css-easing-1"
+      },
+      {
+        "bytes": 15854,
+        "path": "css-env-1/Overview.bs",
+        "sha256": "ded7f567bb4ad5ac14473d7ef43c8d7290b6f2ee197384d374f369c9c3ce1703",
+        "spec_id": "css-env-1"
+      },
+      {
+        "bytes": 302576,
+        "path": "css-flexbox-1/Overview.bs",
+        "sha256": "9045cf12ebac5c027cadaacab8b4e90fcc66657520eeaab140d50e51bd300ffa",
+        "spec_id": "css-flexbox-1"
+      },
+      {
+        "bytes": 58978,
+        "path": "css-font-loading-3/Overview.bs",
+        "sha256": "9c2bcb587776351dd79d050dd1eacf7d64989dcdc02662e3e81623a927b767ff",
+        "spec_id": "css-font-loading"
+      },
+      {
+        "bytes": 240516,
+        "path": "css-fonts-3/Overview.html",
+        "sha256": "b4f219d0592dd1b1a5973c15184206824cd357e6cc83ec79bbe46b8202d8fe9f",
+        "spec_id": "css-fonts-3"
+      },
+      {
+        "bytes": 406898,
+        "path": "css-fonts-4/Overview.bs",
+        "sha256": "54a92b8ad8bbf97bfd24652c38ff14b8d07be0d541b8b997fce7ed444c894755",
+        "spec_id": "css-fonts-4"
+      },
+      {
+        "bytes": 111812,
+        "path": "css-gaps-1/Overview.bs",
+        "sha256": "cd231b5954a4f361e6bc9b318b2aba808d99bdc2cf54c3049c248280d765a6fb",
+        "spec_id": "css-gaps-1"
+      },
+      {
+        "bytes": 328097,
+        "path": "css-grid-1/Overview.bs",
+        "sha256": "4b330f7c33c365dbcac4850d87e4a9e15c8a15df81968ecbba4af24643723021",
+        "spec_id": "css-grid-1"
+      },
+      {
+        "bytes": 240947,
+        "path": "css-grid-2/Overview.bs",
+        "sha256": "32eff3d4208e584dc2ebb1ce01e5b7ff23e92f7531c4cb989e8f7339127ed5e3",
+        "spec_id": "css-grid-2"
+      },
+      {
+        "bytes": 117281,
+        "path": "css-images-3/Overview.bs",
+        "sha256": "47f5caf4d08280cb244e6604515f30eaf30ad9097e014adb58ab1eec5e820b1f",
+        "spec_id": "css-images-3"
+      },
+      {
+        "bytes": 135519,
+        "path": "css-images-4/Overview.bs",
+        "sha256": "e47a6426f40f863a247271a17c400f08edd961989f94b552755ba158ef7cd844",
+        "spec_id": "css-images-4"
+      },
+      {
+        "bytes": 128700,
+        "path": "css-inline-3/Overview.bs",
+        "sha256": "833c19a607f5221f982505628c4c03069300265f25813100b30e7a11d02373bd",
+        "spec_id": "css-inline-3"
+      },
+      {
+        "bytes": 66082,
+        "path": "css-lists-3/Overview.bs",
+        "sha256": "417cec4088605d6c300de17bbac4c2be1ea4c3ce1eaf8d660672a5b91a32d902",
+        "spec_id": "css-lists-3"
+      },
+      {
+        "bytes": 39421,
+        "path": "css-logical-1/Overview.bs",
+        "sha256": "9b4a85569bcacff752f797fb6214a9eb04fca7173b93a160bcf8a47e39ed2b41",
+        "spec_id": "css-logical-1"
+      },
+      {
+        "bytes": 121961,
+        "path": "css-masking-1/Overview.bs",
+        "sha256": "7b02d1b4a71c65b78ef1420511f0427602b13d7b9f579fb15f85656c09f3e028",
+        "spec_id": "css-masking-1"
+      },
+      {
+        "bytes": 90766,
+        "path": "css-multicol-1/Overview.bs",
+        "sha256": "12e6a4f00565dbebd467d6eb1af375fd7afd4efa1df245b71cf02a3df1faa010",
+        "spec_id": "css-multicol-1"
+      },
+      {
+        "bytes": 13208,
+        "path": "css-namespaces-3/Overview.bs",
+        "sha256": "c6db689f29d34569a8b5f2268e786be7d737708d3d734690617ac111e9fe4087",
+        "spec_id": "css-namespaces"
+      },
+      {
+        "bytes": 39266,
+        "path": "css-nesting-1/Overview.bs",
+        "sha256": "2e2bb05f055d03fc02d25314741b59f00a67b3f5fa226a903c75711276a51397",
+        "spec_id": "css-nesting-1"
+      },
+      {
+        "bytes": 55446,
+        "path": "css-overflow-3/Overview.bs",
+        "sha256": "6f38afbabdeaa238c6dc7446ac4f732aaaf18c2db60ab34b20294661d133cac6",
+        "spec_id": "css-overflow-3"
+      },
+      {
+        "bytes": 79147,
+        "path": "css-overflow-4/Overview.bs",
+        "sha256": "4280a2e028211a807ac2ae02a824f6ef3533b9924711a56b79972b9a1dd86fdc",
+        "spec_id": "css-overflow-4"
+      },
+      {
+        "bytes": 97791,
+        "path": "css-page-3/Overview.bs",
+        "sha256": "92bff1b9d38c2f929ec88f50666d447ed7c23909c93ec45c306090b826295256",
+        "spec_id": "css-page-3"
+      },
+      {
+        "bytes": 66371,
+        "path": "css-position-3/Overview.bs",
+        "sha256": "fef573ef81d55d6f8565ce1c57e088e060c5c48a255620aa1eabce43bec02215",
+        "spec_id": "css-position-3"
+      },
+      {
+        "bytes": 27761,
+        "path": "css-position-4/Overview.bs",
+        "sha256": "c64d3af8ac7ea04250f9dbf2cac1541f50aeb307d57b54fc5130b2903f2e6751",
+        "spec_id": "css-position-4"
+      },
+      {
+        "bytes": 62119,
+        "path": "css-print/Overview.bs",
+        "sha256": "ff79362f6e9bdbfe19a74cb8a62cefd44c1e05eccd7d077fc9b4dd0ebabc8665",
+        "spec_id": "css-print"
+      },
+      {
+        "bytes": 87182,
+        "path": "css-pseudo-4/Overview.bs",
+        "sha256": "a821d362a7a6dce23a80e6321aee5806c57cb7ecee2abc89f7ab8d4f462709ff",
+        "spec_id": "css-pseudo-4"
+      },
+      {
+        "bytes": 115366,
+        "path": "css-ruby-1/Overview.bs",
+        "sha256": "fdafe93b5fb3758f0bbbef8eadeb6e0ce2b43b05dc733b41b81ff1bd8bf215b6",
+        "spec_id": "css-ruby-1"
+      },
+      {
+        "bytes": 15557,
+        "path": "css-scroll-anchoring-1/Overview.bs",
+        "sha256": "9d3e9d48a837f4b35cf3b6ad5302e1564539d7535b8be3e633f884da5acfd751",
+        "spec_id": "css-scroll-anchoring-1"
+      },
+      {
+        "bytes": 79610,
+        "path": "css-scroll-snap-1/Overview.bs",
+        "sha256": "fc16af57e81a30d01972867ef44ca02dd7b72a39cb352eba9787fc345ad737af",
+        "spec_id": "css-scroll-snap-1"
+      },
+      {
+        "bytes": 26136,
+        "path": "css-scroll-snap-2/Overview.bs",
+        "sha256": "c26d578a627e414db74e9b463c59e2c19e32b05321c395f31499eb4b6f5099af",
+        "spec_id": "css-scroll-snap-2"
+      },
+      {
+        "bytes": 29597,
+        "path": "css-scrollbars-1/Overview.bs",
+        "sha256": "e29bf0b59d3e4fcea8da92715b156413b2cfc31db5d2ec2199cfe8446f1f65c7",
+        "spec_id": "css-scrollbars-1"
+      },
+      {
+        "bytes": 94337,
+        "path": "css-shapes-1/Overview.bs",
+        "sha256": "4a73dc39cd2b9f5a877a11b4962a52f8c7bf85debe1860a0b26329228a81e02b",
+        "spec_id": "css-shapes-1"
+      },
+      {
+        "bytes": 94025,
+        "path": "css-sizing-3/Overview.bs",
+        "sha256": "4cd217e42d1ca9285371a479e36076ff2c339ea5066302337b9fbbbb5b2227a7",
+        "spec_id": "css-sizing-3"
+      },
+      {
+        "bytes": 82149,
+        "path": "css-sizing-4/Overview.bs",
+        "sha256": "24d00369d43342e7de67f6a997817c287de50fc62d48267a2dc979b4622a8c45",
+        "spec_id": "css-sizing-4"
+      },
+      {
+        "bytes": 79991,
+        "path": "css-speech-1/Overview.bs",
+        "sha256": "a59295dd529bf7394a17b910a5a38c58ba1a8c351e854c84850f2c95c1f1471e",
+        "spec_id": "css-speech-1"
+      },
+      {
+        "bytes": 11054,
+        "path": "css-style-attr-1/Overview.src.html",
+        "sha256": "5c1aef3d0f0d8cb8afbceda4d31c058eca3c91d2ff27825db394e2b6b17a9071",
+        "spec_id": "css-style-attr"
+      },
+      {
+        "bytes": 144427,
+        "path": "css-syntax-3/Overview.bs",
+        "sha256": "3f129d17407f9bd027291bcfb8015beb86fc229bf5efe505b49ec2dc30be4390",
+        "spec_id": "css-syntax-3"
+      },
+      {
+        "bytes": 191799,
+        "path": "css-tables-3/Overview.bs",
+        "sha256": "2ee0fdd1d7679edf42cc73a5cb366756fa6d6ddb81a35b8e25babf10c7116140",
+        "spec_id": "css-tables-3"
+      },
+      {
+        "bytes": 315372,
+        "path": "css-text-3/Overview.bs",
+        "sha256": "404b3febe09f47fe6deb3f9279448a222a8e72042a0aa7cbcdc2d46f15844af7",
+        "spec_id": "css-text-3"
+      },
+      {
+        "bytes": 505763,
+        "path": "css-text-4/Overview.bs",
+        "sha256": "bf7fd748f1e304e0fb93bb4166837824649f1e5e659e135e0765e9607d765eac",
+        "spec_id": "css-text-4"
+      },
+      {
+        "bytes": 48617,
+        "path": "css-text-decor-3/Overview.bs",
+        "sha256": "a8deabf2862ba056592f70c42ba9c678efa0a10ebbfb867c5bc881a7aa9543ab",
+        "spec_id": "css-text-decor-3"
+      },
+      {
+        "bytes": 91594,
+        "path": "css-text-decor-4/Overview.bs",
+        "sha256": "98c8ae9d2164a9f0bb778365dcd5f508d8d2514cabdaf5fe2d0ca361cc9d6026",
+        "spec_id": "css-text-decor-4"
+      },
+      {
+        "bytes": 73009,
+        "path": "css-transforms-1/Overview.bs",
+        "sha256": "efa546b47442be30a773fd60b1a236b206720ea7942d88cfd539ebc6b32c95ee",
+        "spec_id": "css-transforms-1"
+      },
+      {
+        "bytes": 79384,
+        "path": "css-transforms-2/Overview.bs",
+        "sha256": "088bd50ed41701612c3f9b6672c5092c5749991d4a54fe49d74ea9c903bdd078",
+        "spec_id": "css-transforms-2"
+      },
+      {
+        "bytes": 68790,
+        "path": "css-transitions-1/Overview.bs",
+        "sha256": "7f200e2ec8fde6b3b23c57fd3265ddacee03c74707bf7bfa4c62dcb4881c8d93",
+        "spec_id": "css-transitions-1"
+      },
+      {
+        "bytes": 160220,
+        "path": "css-ui-3/Overview.bs",
+        "sha256": "ca509b34da96afcf0bfe55204d48ca3027c4b75f60b0195643d39c24362fc7fd",
+        "spec_id": "css-ui-3"
+      },
+      {
+        "bytes": 221459,
+        "path": "css-ui-4/Overview.bs",
+        "sha256": "71fef858b95a200b1c13d8afc694ca8512522835c8d8c792928b35776831b843",
+        "spec_id": "css-ui-4"
+      },
+      {
+        "bytes": 102049,
+        "path": "css-values-3/Overview.bs",
+        "sha256": "f54249b0052b7c978100d03bab6d82a7e9812f68b688d0de0a74cd54cd3fa181",
+        "spec_id": "css-values-3"
+      },
+      {
+        "bytes": 230907,
+        "path": "css-values-4/Overview.bs",
+        "sha256": "7051146f8adf0b8c0e9243dd75dab39f18efe3e0905d86afb8abd43fe58d45bc",
+        "spec_id": "css-values-4"
+      },
+      {
+        "bytes": 198656,
+        "path": "css-values-5/Overview.bs",
+        "sha256": "1558654754407903cf70f9e6bcb3cec290de012d66e6ad2d6233335f405e0c76",
+        "spec_id": "css-values-5"
+      },
+      {
+        "bytes": 37177,
+        "path": "css-variables-1/Overview.bs",
+        "sha256": "5c451db91b361068771917b1145d3f36b40159ec46dfc3a029237cb418d668d1",
+        "spec_id": "css-variables-1"
+      },
+      {
+        "bytes": 95404,
+        "path": "css-view-transitions-1/Overview.bs",
+        "sha256": "238a506264f3f37c9657416aa8bbbd095eddc26062d8304951c70a0363c857d3",
+        "spec_id": "css-view-transitions-1"
+      },
+      {
+        "bytes": 16826,
+        "path": "css-will-change-1/Overview.bs",
+        "sha256": "5bdd2bcec919dc16c6f955220ac14c1471ec6cefe318748cac2334b922c4a24e",
+        "spec_id": "css-will-change-1"
+      },
+      {
+        "bytes": 118425,
+        "path": "css-writing-modes-3/Overview.bs",
+        "sha256": "22e710f88e34108e357372b5e76e449f93985f09277f7e59458d2b9d785bea90",
+        "spec_id": "css-writing-modes-3"
+      },
+      {
+        "bytes": 136439,
+        "path": "css-writing-modes-4/Overview.bs",
+        "sha256": "b7346127107657e86868e201cdbe3c476776d094ca4df87096932768efa5cd87",
+        "spec_id": "css-writing-modes-4"
+      },
+      {
+        "bytes": 61382,
+        "path": "mediaqueries-3/Overview.html",
+        "sha256": "b9f7857aabd29de6de7420d20abe05c2e50a7e6806b621d2d54dbf0ea6873c54",
+        "spec_id": "css3-mediaqueries"
+      },
+      {
+        "bytes": 155459,
+        "path": "cssom-1/Overview.bs",
+        "sha256": "5a0b6a2f116ad450c22a202241c997c4a64d9c13bb9e011c5a0bcc4345f89668",
+        "spec_id": "cssom-1"
+      },
+      {
+        "bytes": 161625,
+        "path": "cssom-view-1/Overview.bs",
+        "sha256": "462ce76726254774db4d7ebb35b620bab95af445872af234391a0342ac043c19",
+        "spec_id": "cssom-view-1"
+      },
+      {
+        "bytes": 140621,
+        "path": "fill-stroke-3/Overview.bs",
+        "sha256": "7fbe5b52b46edcaf01824b468f6ca0152d526259c7382911b16987f1c5d8bb22",
+        "spec_id": "fill-stroke-3"
+      },
+      {
+        "bytes": 222513,
+        "path": "filter-effects-1/Overview.bs",
+        "sha256": "16fae7f47b89a8a713e8aec70671ff7340c5c8eb3164dcdd0becf52cd095230b",
+        "spec_id": "filter-effects-1"
+      },
+      {
+        "bytes": 103624,
+        "path": "geometry-1/Overview.bs",
+        "sha256": "a5488392c96acc71c029d5ae5d98c5e0811236f93f277c18ba4e9ce2ae510dcb",
+        "spec_id": "geometry-1"
+      },
+      {
+        "bytes": 102124,
+        "path": "mediaqueries-4/Overview.bs",
+        "sha256": "5b3afc928d531e77e75ea28354fb75f28efa14f7b15597320aa506cf519ee7c3",
+        "spec_id": "mediaqueries-4"
+      },
+      {
+        "bytes": 166203,
+        "path": "mediaqueries-5/Overview.bs",
+        "sha256": "6b97ebfe27f23b103549051003ee125e4b039d91fd87cf1f6ec95bb91d912979",
+        "spec_id": "mediaqueries-5"
+      },
+      {
+        "bytes": 65249,
+        "path": "motion-1/Overview.bs",
+        "sha256": "d9043f6d2f4cfe4e4a2b7d0c7b6e13004b1a6cb8c19be0c1c26164dd1a2199b0",
+        "spec_id": "motion-1"
+      },
+      {
+        "bytes": 25757,
+        "path": "resize-observer-1/Overview.bs",
+        "sha256": "cdd7afee5ab3f7be81dc8927996d44caa43a444e5dd42bab820650bf0903562b",
+        "spec_id": "resize-observer-1"
+      },
+      {
+        "bytes": 107712,
+        "path": "selectors-3/Overview.src.html",
+        "sha256": "5bca207b0f526c33dfcf8e6d37159199320e72436584f046b28acb98a918f539",
+        "spec_id": "selectors-3"
+      },
+      {
+        "bytes": 212484,
+        "path": "selectors-4/Overview.bs",
+        "sha256": "ac800347a26eb67cff99d38c08cae2d47622dbbb64d730a531b84646cacfe84c",
+        "spec_id": "selectors-4"
+      },
+      {
+        "bytes": 283862,
+        "path": "web-animations-1/Overview.bs",
+        "sha256": "4dbbf8caec4e2ebce609a753158e2f9cfc1d4c631090e3724b0796a201372f98",
+        "spec_id": "web-animations-1"
+      },
+      {
+        "bytes": 156463,
+        "path": "web-animations-2/Overview.bs",
+        "sha256": "21ea6f54969b7aaeb0307aa99b0120ff779febecc11d62559d56ad41edc4f57e",
+        "spec_id": "web-animations-2"
+      }
+    ]
+  },
+  "inherited_obligations": {
+    "count": 8796,
+    "encoding": "gzip-mtime-zero(canonical-json)",
+    "object": {
+      "bytes": 644714,
+      "sha256": "faa548f8149a587605d3fbe5bd42409a9c6754dc938bc74e44cda40b3bc30656"
+    },
+    "uncompressed_bytes": 3279099,
+    "uncompressed_sha256": "c4c1b87cb157d8f9bd1aeaf533a1619bc313c15a450e48c5eaff504ad9074365"
+  },
+  "primary_authorities": [
+    {
+      "bytes": 621957,
+      "response_url": "https://www.w3.org/TR/2026/NOTE-css-2026-20260622/",
+      "role": "snapshot-2026",
+      "sha256": "fddc6c448e08e5eaa22a362c759a3a7c28045da1cdffad2d8421d679d49839d2",
+      "url": "https://www.w3.org/TR/2026/NOTE-css-2026-20260622/"
+    },
+    {
+      "bytes": 78453,
+      "response_url": "https://www.w3.org/Style/CSS/current-work.en.html",
+      "role": "current-work",
+      "sha256": "f85a5166c5a20a8d11bf5ef74ac8a4c0d597adc7e7b014f32e318393a3627aa5",
+      "url": "https://www.w3.org/Style/CSS/current-work.en.html"
+    },
+    {
+      "authority_key": "DOM",
+      "bytes": 3158303,
+      "response_url": "https://dom.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "cc7e0b0e931980b5b16b22e840e2b7790c2276de520fc199f080596508952055",
+      "url": "https://dom.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "ENCODING",
+      "bytes": 609688,
+      "response_url": "https://encoding.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "6dc34b5b039ed96a492ac4816fa5c9b5124edc9846fe29b52423b6fb4077eeea",
+      "url": "https://encoding.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "FETCH",
+      "bytes": 1929978,
+      "response_url": "https://fetch.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "dd9841b3598dcd79c0656a5fb996bf06aa84e33dfdebc8068d5dad1650ffc03a",
+      "url": "https://fetch.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "HTML",
+      "bytes": 15558488,
+      "response_url": "https://html.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "5c5869be6ff3dbed33594f78be38dfcdc500b059cc4ff61b51f9dfc561494068",
+      "url": "https://html.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "INFRA",
+      "bytes": 360671,
+      "response_url": "https://infra.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "66af85968c5e99d67ccb8cdf5e54c05c5f7e23760ef85ecb336c4907ad093cd8",
+      "url": "https://infra.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "URL",
+      "bytes": 729452,
+      "response_url": "https://url.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "a4295a30e0203fc5b63a83a10c04daeef8a9741ff727e9beec89d2ae0c50a0de",
+      "url": "https://url.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "WEBIDL",
+      "bytes": 2541071,
+      "response_url": "https://webidl.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "fbe16aabe0fd3e13c558daa973243197eb7a365ced606332e9731faf46047602",
+      "url": "https://webidl.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "XML-NAMES",
+      "bytes": 51390,
+      "response_url": "https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+      "role": "external-parsing-authority",
+      "sha256": "b4a649e5fdab9852d68eca21442481599164949bcdee5549f2ec7e38fb3cd3a8",
+      "url": "https://www.w3.org/TR/2009/REC-xml-names-20091208/"
+    }
+  ],
+  "schema_version": 1,
+  "wpt": {
+    "blob_content_state": "UNRETAINED_TYPED_BLOCKER_FOR_EXACT_FEATURE_OWNERSHIP",
+    "catalog_encoding": "gzip-mtime-zero(path_utf8 + NUL + blob_oid_ascii + NUL)",
+    "catalog_object": {
+      "bytes": 5041730,
+      "sha256": "6dc5a68d8835754eaca751f3c575238e6ad32557c7e967017be3d73e5700269d"
+    },
+    "catalog_uncompressed_bytes": 17997537,
+    "catalog_uncompressed_sha256": "cf3aedd08cbb161aeebd3c9e19c10f855f2be0be23fa5ecbbd2035d2e31db699",
+    "entry_count": 160788,
+    "revision": "37cd7ff74eb974fd41600bf7bc01d37576abf8b5",
+    "tree_oid": "12fa64c9afe86e199ee0e737755b6507f363ceff"
+  }
+}

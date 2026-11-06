@@ -1,0 +1,17 @@
+version = 4
+
+[[package]]
+name = "same-name"
+version = "1.0.0"
+
+[[package]]
+name = "same-name"
+version = "2.0.0"
+
+[[package]]
+name = "same-name-consumer"
+version = "0.1.0"
+dependencies = [
+ "same-name 1.0.0",
+ "same-name 2.0.0",
+]

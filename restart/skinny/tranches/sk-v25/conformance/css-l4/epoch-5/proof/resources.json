@@ -1,0 +1,64 @@
+{
+  "cache_policy": "CPython -I -B; bytecode disabled; no cache directories admitted by final manifest",
+  "generation": {
+    "artifact_bytes": 15322797,
+    "artifact_files": 8,
+    "complete_candidate_count": 0,
+    "counterexamples": 23,
+    "cycles_elapsed": 63275567591,
+    "instructions_retired": 385872512657,
+    "maximum_resident_set_bytes": 414859264,
+    "peak_memory_footprint_bytes": 404030232,
+    "real_seconds": 17.59,
+    "status": "PASS_STORED_BYTE_COMPARISON",
+    "sys_seconds": 0.52,
+    "unit_count": 2565,
+    "user_seconds": 16.89
+  },
+  "replay": {
+    "cycles_elapsed": 922180518,
+    "empty_root_count": 4,
+    "instructions_retired": 2815635933,
+    "maximum_resident_set_bytes": 412516352,
+    "pair_count": 2,
+    "peak_memory_footprint_bytes": 74072568,
+    "proof_bytes": 2096,
+    "proof_path": "proof/replay.json",
+    "proof_sha256": "3e0567ebba5095dcff79882fd104b7c2adfd652468c108d117aea563a5af49df",
+    "real_seconds": 67.47,
+    "run_count": 4,
+    "status": "PASS_TWO_COMPLETE_TWO_ROOT_REPLAY_PAIRS",
+    "sys_seconds": 1.93,
+    "user_seconds": 64.67
+  },
+  "runtime_closure": {
+    "dynamic_bytes": 13461728,
+    "dynamic_file_count": 7,
+    "environment_sha256": "97f0357e5f18459e9aa89b01c8be3c34c38a29c0e1276bd2170e5b756230c02b",
+    "python_binary_sha256": "2477b47fa3ae65b9574eb18a15edb364e96948eaa1875ad3f1c80d780efc9c12",
+    "stdlib_bytes": 57077557,
+    "stdlib_file_count": 2495,
+    "stdlib_subject_sha256": "aef31fe2f17090924e2a7a420780ab5d3b2c0ee3dfb35411ca0ac5a67960621b"
+  },
+  "runtime_mutations": [
+    {
+      "actual": "STARTUP_FLAGS_DRIFT",
+      "mutation": "CPython -O",
+      "status": "REJECTED_BEFORE_SUBJECT_IMPORT"
+    },
+    {
+      "actual": "ENVIRONMENT_NOT_ALLOWLISTED",
+      "mutation": "DYLD_INSERT_LIBRARIES",
+      "status": "REJECTED_BEFORE_SUBJECT_IMPORT"
+    }
+  ],
+  "schema_version": 1,
+  "tests": {
+    "historical_counterexample_count": 20,
+    "supplemental_counterexample_count": 3,
+    "counterexample_rejected": 23,
+    "status": "PASS",
+    "tests_run": 6,
+    "wall_seconds_reported_by_unittest": 18.728
+  }
+}

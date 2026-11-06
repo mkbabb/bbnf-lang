@@ -4,9 +4,8 @@
 //! [`StructBuilder`] surface:
 //!
 //! - `null = "null" -> 0u8` (single-literal, `TypeDesc::U8`) →
-//!   `builder.push_leaf_with_unit()` per the JsonStructBuilder
-//!   contract documented at `crates/core/src/runtime/json/builder.rs`
-//!   §wire-contract.
+//!   `builder.push_leaf_with_u8(0)`; the concrete JSON builder owns
+//!   interpretation of that semantic projection.
 //! - `bool = "true" -> true | "false" -> false` (Alt-of-literal,
 //!   `TypeDesc::Bool`) → per-branch `builder.push_leaf_with_bool(true)` /
 //!   `builder.push_leaf_with_bool(false)`.
@@ -22,6 +21,8 @@ use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::PayloadPlanner;
+use super::super::alt_dispatch::branches::ScalarPayload;
 use super::super::dispatcher::{emit_ref_call_shape, shape_fn_ident};
 use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 use super::payload::{
@@ -46,26 +47,16 @@ fn rule_type_desc(rule: &IrRule, ir: &GrammarIR) -> Option<TypeDesc> {
 }
 
 /// Per-branch StructDirect emission: pick `push_leaf_with_bool` /
-/// `push_branch_tag` / `push_leaf_with_str` (Span synthesis) /
+/// `push_leaf_with_u8` / `push_leaf_with_u64` /
+/// `push_leaf_with_str` (Span synthesis) /
 /// `push_leaf_with_unit` based on the rule's projected `TypeDesc`
 /// plus the branch payload and a literal-span capture.
 ///
 /// `TypeDesc::U8` Alt-of-literals (Sheets `add_op`, `mul_op`,
 /// `unary_prefix`, `compare_op`; CSS `dirKeyword`-style discriminators)
-/// route through `push_branch_tag(payload as u32)` so the parsed
-/// branch's typed discriminator reaches the `StructBuilder`'s
-/// per-grammar tag surface (`SheetsValue::Tag` / equivalent). The
-/// `null = "null" -> 0u8` JSON pattern, by contrast, has no usable
-/// discriminator (the rule is single-literal, payload value is
-/// `0u8`, and JSON's `JsonStructBuilder::push_branch_tag` is a no-op
-/// audit hook); JSON's `null` rule continues to land via
-/// `push_leaf_with_unit()` because there is no other branch to
-/// distinguish.
-///
-/// The discriminator between "tag emission" and "unit emission" for
-/// `TypeDesc::U8` is whether the rule has a `branch_payload` (a
-/// per-branch typed value): an Alt-of-literals carries one; JSON's
-/// single-literal `null` does not.
+/// route through repeatable semantic `push_leaf_with_u8(payload)`.
+/// Structural Alt selection is a separate operation owned by the
+/// AltDispatch and Wrap emitters.
 ///
 /// AZ-III.W2.4.u — content-only literal-led keyword branches (no
 /// `bool_payload`, no `branch_payload`, no rule-level `TypeDesc`
@@ -88,9 +79,13 @@ fn rule_type_desc(rule: &IrRule, ir: &GrammarIR) -> Option<TypeDesc> {
 fn struct_direct_leaf_emit_for(
     rule_ty: Option<&TypeDesc>,
     branch_bool_payload: Option<bool>,
-    branch_payload: Option<&TokenStream>,
+    branch_payload: Result<Option<ScalarPayload>, &'static str>,
     span_capture: Option<&TokenStream>,
 ) -> TokenStream {
+    let branch_payload = match branch_payload {
+        Ok(payload) => payload,
+        Err(message) => return quote! { compile_error!(#message); },
+    };
     if let Some(value) = branch_bool_payload {
         return quote! {
             builder.push_leaf_with_bool(#value);
@@ -104,33 +99,30 @@ fn struct_direct_leaf_emit_for(
     // unification of all branches and may be `None` / `Tuple` /
     // unsolved when the type-inference pass under-typed the rule.
     //
-    // `IntLit` payloads route through `push_branch_tag(value)` so
-    // grammar-specific `StructBuilder` implementations (Sheets's
-    // `Tag(b)` / `Error(b)` deposits, JSON's no-op audit hook) observe
-    // the declared discriminator. Bool-rule rule_ty + Bool payloads
-    // continue to route through `push_leaf_with_bool`.
+    // Integer payload width was resolved from `FnDescriptor::Expr::
+    // return_type` by `payload_from_fn`, making it impossible to route
+    // a wide named-color constant through the semantic-u8 operation.
     match (rule_ty, branch_payload) {
-        // `bool` rule branches carry `Some(0u32)` / `Some(1u32)` per
-        // `payload_from_fn`; convert to the matching `bool` literal.
-        (Some(TypeDesc::Bool), Some(payload)) => quote! {
-            builder.push_leaf_with_bool(((#payload) as u32) != 0u32);
-        },
         // Single-literal `bool` rules (no Alt) reach here without a
         // branch payload; fall back to true (the lone literal is the
         // truthy sense by W3.1's keyword classification convention).
         (Some(TypeDesc::Bool), None) => quote! {
             builder.push_leaf_with_bool(true);
         },
-        // Per-branch IntLit / typed payload — route through
-        // `push_branch_tag(payload)` regardless of rule-level type.
-        // Sheets `add_op`, `mul_op`, `compare_op`, `unary_prefix`,
-        // `error_literal`, `sheet_prefix` all land here when their
-        // branches declare `-> Nu8`. JSON's `null = "null" -> 0u8`
-        // also lands here (single-literal: per-branch payload is
-        // `0u32`); JSON's `JsonStructBuilder::push_branch_tag` is a
-        // no-op audit hook so the call is signature-compatible.
-        (_, Some(payload)) => quote! {
-            builder.push_branch_tag(#payload);
+        (_, Some(ScalarPayload::U8(payload))) => quote! {
+            builder.push_leaf_with_u8(#payload);
+        },
+        (_, Some(ScalarPayload::I64(payload))) => quote! {
+            builder.push_leaf_with_i64(#payload);
+        },
+        (_, Some(ScalarPayload::U64(payload))) => quote! {
+            builder.push_leaf_with_u64(#payload);
+        },
+        (_, Some(ScalarPayload::F64(payload))) => quote! {
+            builder.push_leaf_with_f64(#payload);
+        },
+        (_, Some(ScalarPayload::Bool(payload))) => quote! {
+            builder.push_leaf_with_bool(#payload);
         },
         // No payload, no rule-level type override — synthesise a
         // `BbnfValue::Span` carrying the matched literal slice when
@@ -158,7 +150,18 @@ pub(super) fn emit_parse_keyword_struct_direct(
     rule: &IrRule,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> TokenStream {
+    if !payload_planner.admits_shape_path(
+        rule,
+        bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag::Keyword,
+    ) {
+        return quote! {
+            compile_error!(
+                "Keyword has no exact emitted-payload path for this rule"
+            );
+        };
+    }
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("keyword", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
@@ -188,14 +191,8 @@ pub(super) fn emit_parse_keyword_struct_direct(
             // `Map { fn_id }` (e.g. JSON's `null = "null" -> 0u8`), the
             // typed payload lives at the rule root. Extract it from
             // `rule.body` (BEFORE `unwrap_trivia` strips the Map
-            // wrapper) so the leaf-emit dispatch routes to
-            // `push_leaf_with_unit` (the IntLit-as-null-marker pattern).
-            // Without this, single-literal Map'd rules fall through to
-            // `push_leaf_with_str("null")` and the runtime surfaces
-            // `JsonValue::String("null")` instead of `JsonValue::Null`.
+            // wrapper), retaining its declared width.
             let rule_bool_payload = rule_root_bool_payload(&rule.body, ir);
-            let single_literal_is_null_marker =
-                rule_bool_payload.is_none() && rule_root_payload_value(&rule.body, ir).is_some();
             // AZ-III.W2.4.u — splice the matched literal bytes into a
             // `&str` slice that `struct_direct_leaf_emit_for` routes
             // into `push_leaf_with_str` when no typed payload is set.
@@ -207,18 +204,13 @@ pub(super) fn emit_parse_keyword_struct_direct(
             let span_capture: TokenStream = quote! {
                 unsafe { ::core::str::from_utf8_unchecked(&input[at..end]) }
             };
-            // For the null-marker pattern, suppress span_capture so
-            // the catch-all routes through `push_leaf_with_unit()`.
-            let leaf_emit = if single_literal_is_null_marker {
-                struct_direct_leaf_emit_for(rule_ty.as_ref(), None, None, None)
-            } else {
-                struct_direct_leaf_emit_for(
-                    rule_ty.as_ref(),
-                    rule_bool_payload,
-                    None,
-                    Some(&span_capture),
-                )
-            };
+            let root_payload = rule_root_payload_value(&rule.body, ir);
+            let leaf_emit = struct_direct_leaf_emit_for(
+                rule_ty.as_ref(),
+                rule_bool_payload,
+                root_payload,
+                Some(&span_capture),
+            );
             quote! {
                 /// AZ-I.W2.RD — struct-direct Keyword-shape parse fn
                 /// (single-literal body).
@@ -370,7 +362,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                     let leaf_emit = struct_direct_leaf_emit_for(
                                         rule_ty.as_ref(),
                                         bool_payload,
-                                        payload.as_ref(),
+                                        payload,
                                         Some(&span_capture),
                                     );
                                     quote! {
@@ -442,6 +434,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                                             &support_mod,
                                             grammar_suffix,
                                             ir,
+                                            payload_planner,
                                         );
                                     quote! {
                                         if input.len() >= *p + #len
@@ -498,8 +491,8 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 ///
                 /// Literal branches push leaves through
                 /// `builder.push_leaf_with_bool` (TypeDesc::Bool) or
-                /// `builder.push_leaf_with_unit` (TypeDesc::U8 /
-                /// untyped). Ref branches delegate to the target shape
+                /// `builder.push_leaf_with_u8` (TypeDesc::U8), or
+                /// `builder.push_leaf_with_str` (untyped). Ref branches delegate to the target shape
                 /// fn so the target writes directly into the same
                 /// builder. Returns unit for StructDirect composition.
                 #[inline(always)]

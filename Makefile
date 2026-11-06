@@ -69,15 +69,15 @@ build-wasm:
 
 ## Full workspace test (default profile — local interactive)
 test:
-	cargo nextest run --workspace
+	cargo nextest run --workspace --features xtask/architecture-test-seams
 
 ## CI profile — retries, junit, fail-fast=false
 test-ci:
-	cargo nextest run --workspace --profile ci
+	cargo nextest run --workspace --features xtask/architecture-test-seams --profile ci
 
 ## Close-ceremony run — full suite with slow-timeout=120s; emits per-test timing
 test-close:
-	cargo nextest run --workspace --profile close
+	cargo nextest run --workspace --features xtask/architecture-test-seams --profile close
 
 # ─── Bench ───────────────────────────────────────────────────────────────────
 #

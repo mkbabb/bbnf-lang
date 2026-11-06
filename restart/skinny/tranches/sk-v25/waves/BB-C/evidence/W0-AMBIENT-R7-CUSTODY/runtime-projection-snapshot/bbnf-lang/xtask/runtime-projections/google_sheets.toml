@@ -1,0 +1,85 @@
+schema_version = 1
+grammar = "google_sheets"
+grammar_source = "grammar/google-sheets/google-sheets.bbnf"
+entry_rule = "formula"
+runtime_module = "crate::runtime::google_sheets"
+output_dir = "crates/core/src/runtime/google_sheets"
+parser_type = "GoogleSheetsParser"
+type_prefix = "Sheets"
+module_name = "google_sheets"
+runtime_style = "typed_formula"
+
+[kind]
+default = "Wrap"
+layout_mode = "rule_routes"
+variants = [
+  "Unknown",
+  "Formula",
+  "Expression",
+  "ComparisonExpr",
+  "ConcatExpr",
+  "AddExpr",
+  "MulExpr",
+  "ExpExpr",
+  "UnaryExpr",
+  "PostfixExpr",
+  "Primary",
+  "ParenExpr",
+  "FuncOpen",
+  "Arg",
+  "FuncArgs",
+  "FuncCall",
+  "LetBinding",
+  "LetArgs",
+  "LetCall",
+  "LambdaParams",
+  "LambdaCall",
+  "ArrayRow",
+  "ArrayRows",
+  "ArrayLiteral",
+  "Cell",
+  "RangeRef",
+  "RangeEnd",
+  "CellOrRange",
+  "ErrorLiteral",
+  "SheetPrefix",
+  "CompareOp",
+  "AddOp",
+  "MulOp",
+  "UnaryPrefix",
+  "Wrap",
+]
+transparent = [
+  "Wrap",
+  "Primary",
+  "Expression",
+  "RangeEnd",
+  "CellOrRange",
+]
+routes = [
+  { rule = "error_literal", kind = "ErrorLiteral" },
+  { rule = "cell", kind = "Cell" },
+  { rule = "func_open", kind = "FuncOpen" },
+  { rule = "range_ref", kind = "RangeRef" },
+  { rule = "cell_or_range", kind = "CellOrRange" },
+  { rule = "comparison_expr", kind = "ComparisonExpr" },
+  { rule = "mul_expr", kind = "MulExpr" },
+  { rule = "unary_expr", kind = "UnaryExpr" },
+  { rule = "paren_expr", kind = "ParenExpr" },
+  { rule = "arg", kind = "Arg" },
+  { rule = "func_args", kind = "FuncArgs" },
+  { rule = "let_binding", kind = "LetBinding" },
+  { rule = "lambda_params", kind = "LambdaParams" },
+  { rule = "array_row", kind = "ArrayRow" },
+  { rule = "array_rows", kind = "ArrayRows" },
+  { rule = "array_literal", kind = "ArrayLiteral" },
+  { rule = "concat_expr", kind = "ConcatExpr" },
+  { rule = "add_expr", kind = "AddExpr" },
+  { rule = "exp_expr", kind = "ExpExpr" },
+  { rule = "lambda_call", kind = "LambdaCall" },
+  { rule = "func_call", kind = "FuncCall" },
+  { rule = "let_args", kind = "LetArgs" },
+  { rule = "let_call", kind = "LetCall" },
+  { rule = "postfix_expr", kind = "PostfixExpr" },
+  { rule = "formula", kind = "Formula" },
+]

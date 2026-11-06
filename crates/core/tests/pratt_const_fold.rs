@@ -18,13 +18,14 @@
 
 use bbnf::backend::rust::emitter::precedence::{emit_precedence_lut, pack_lut_byte_for_test};
 use bbnf::pipeline::{
-    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar,
+    compile_paths_request,
 };
-use bbnf_ir::RuleId;
 use bbnf_ir::passes::{
     Associativity, OperatorArity, OperatorChainEntry, OperatorChainFacts, OperatorChainRule,
-    collect_operator_chains,
+    collect_operator_chains, recognizers::ShapeTag,
 };
+use bbnf_ir::{GrammarIR, RuleId};
 
 // ─── Bit-layout invariants ────────────────────────────────────────────
 
@@ -156,6 +157,193 @@ fn compile_and_mine(path: &str) -> OperatorChainFacts {
     collect_operator_chains(&ir, &dta)
 }
 
+fn compile_source(source: &str) -> GrammarIR {
+    let options = PipelineOptions {
+        entry_rule: Some("root".to_string()),
+        ..PipelineOptions::default()
+    };
+    compile_grammar(source, &options).expect("compile operator fixture")
+}
+
+fn mine(ir: &GrammarIR) -> OperatorChainFacts {
+    let dta = bbnf_ir::passes::lift_dta(&ir);
+    collect_operator_chains(ir, &dta)
+}
+
+fn compile_source_and_mine(source: &str) -> OperatorChainFacts {
+    mine(&compile_source(source))
+}
+
+#[test]
+fn explicit_u8_operator_maps_define_pratt_discriminants() {
+    let facts = compile_source_and_mine(
+        r#"
+atom = /[0-9]+/ ;
+add_operator = "+" -> 0u8 | "-" -> 1u8 ;
+add_expression = atom ?w , (add_operator ?w , atom ?w) * ;
+operator = "<>" -> 0u8
+         | "<=" -> 1u8
+         | ">=" -> 2u8
+         | "="  -> 3u8
+         | "<"  -> 4u8
+         | ">"  -> 5u8 ;
+expression = add_expression ?w , (operator ?w , add_expression ?w) * ;
+root = expression | "(", expression, ")" ;
+"#,
+    );
+    let expression = facts
+        .rules
+        .iter()
+        .find(|rule| rule.rule_name == "expression")
+        .unwrap_or_else(|| panic!("expression must be recognized as Pratt: {facts:#?}"));
+
+    assert_eq!(expression.entries.len(), 6);
+    let actual = expression
+        .entries
+        .iter()
+        .map(|entry| ((entry.byte, entry.second_byte), entry.op_discriminant))
+        .collect::<std::collections::HashMap<_, _>>();
+    let expected = [
+        ((b'<', Some(b'>')), 0),
+        ((b'<', Some(b'=')), 1),
+        ((b'>', Some(b'=')), 2),
+        ((b'=', None), 3),
+        ((b'<', None), 4),
+        ((b'>', None), 5),
+    ]
+    .into_iter()
+    .collect();
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn full_u8_operator_map_defines_pratt_discriminant() {
+    let ir = compile_source(
+        r#"
+atom = /[0-9]+/ ;
+add_operator = "+" -> 0u8 | "-" -> 1u8 ;
+add_expression = atom ?w , (add_operator ?w , atom ?w) * ;
+operator = "<" -> 255u8 | ">" -> 0u8 ;
+expression = add_expression ?w , (operator ?w , add_expression ?w) * ;
+root = expression | "(", expression, ")" ;
+"#,
+    );
+    let expression = ir.find_rule("expression").expect("expression rule");
+    assert_eq!(ir.shape_assignments.get(expression.id), ShapeTag::Pratt);
+
+    let facts = mine(&ir);
+    let expression = facts
+        .rules
+        .iter()
+        .find(|rule| rule.rule_name == "expression")
+        .unwrap_or_else(|| panic!("expression must be recognized as Pratt: {facts:#?}"));
+    let tags = expression
+        .entries
+        .iter()
+        .map(|entry| (entry.byte, entry.op_discriminant))
+        .collect::<std::collections::HashMap<_, _>>();
+
+    assert_eq!(tags[&b'<'], u8::MAX);
+    assert_eq!(tags[&b'>'], 0);
+}
+
+#[test]
+fn mapped_operator_tags_survive_next_and_skip_projection() {
+    for (projection, source) in [
+        (
+            "Next",
+            r#"
+atom = /[0-9]+/ ;
+product_operator = "*" -> 0u8 | "/" -> 1u8 ;
+product = atom ?w , (product_operator ?w , atom ?w) * ;
+operator = "+" -> 7u8 ;
+expression = product ?w , (operator ?w >> product ?w) * ;
+root = expression | "(", expression, ")" ;
+"#,
+        ),
+        (
+            "Skip",
+            r#"
+atom = /[0-9]+/ ;
+product_operator = "*" -> 0u8 | "/" -> 1u8 ;
+product = atom ?w , (product_operator ?w , atom ?w) * ;
+operator = "+" -> 7u8 ;
+expression = product ?w , (operator ?w << product ?w) * ;
+root = expression | "(", expression, ")" ;
+"#,
+        ),
+    ] {
+        let facts = compile_source_and_mine(source);
+        let expression = facts
+            .rules
+            .iter()
+            .find(|rule| rule.rule_name == "expression")
+            .unwrap_or_else(|| panic!("{projection} expression was not mined: {facts:#?}"));
+        let tags = expression
+            .entries
+            .iter()
+            .map(|entry| (entry.byte, entry.op_discriminant))
+            .collect::<std::collections::HashMap<_, _>>();
+        assert_eq!(tags.get(&b'+'), Some(&7), "{projection}");
+        assert_eq!(tags.len(), 1, "{projection}");
+    }
+}
+
+#[test]
+fn operators_wider_than_pratt_metadata_fall_back() {
+    let ir = compile_source(
+        r#"
+atom = /[0-9]+/ ;
+product_operator = "*" -> 0u8 | "/" -> 1u8 ;
+product = atom ?w , (product_operator ?w , atom ?w) * ;
+operator = "===" -> 0u8 | "!==" -> 1u8 ;
+expression = product ?w , (operator ?w , product ?w) * ;
+root = expression | "(", expression, ")" ;
+"#,
+    );
+    let expression = ir.find_rule("expression").expect("expression rule");
+    assert_eq!(ir.shape_assignments.get(expression.id), ShapeTag::Flat);
+    assert!(
+        mine(&ir)
+            .rules
+            .iter()
+            .all(|rule| rule.rule_name != "expression")
+    );
+}
+
+#[test]
+fn non_u8_and_mixed_operator_maps_fall_back() {
+    for source in [
+        r#"
+atom = /[0-9]+/ ;
+product_operator = "*" -> 0u8 | "/" -> 1u8 ;
+product = atom ?w , (product_operator ?w , atom ?w) * ;
+operator = "+" -> input : Span | "-" -> input : Span ;
+expression = product ?w , (operator ?w , product ?w) * ;
+root = expression | "(", expression, ")" ;
+"#,
+        r#"
+atom = /[0-9]+/ ;
+product_operator = "*" -> 0u8 | "/" -> 1u8 ;
+product = atom ?w , (product_operator ?w , atom ?w) * ;
+operator = "+" -> 0u8 | "-" ;
+expression = product ?w , (operator ?w , product ?w) * ;
+root = expression | "(", expression, ")" ;
+"#,
+    ] {
+        let ir = compile_source(source);
+        let expression = ir.find_rule("expression").expect("expression rule");
+        assert_eq!(ir.shape_assignments.get(expression.id), ShapeTag::Flat);
+        assert!(
+            mine(&ir)
+                .rules
+                .iter()
+                .all(|rule| rule.rule_name != "expression")
+        );
+    }
+}
+
 #[test]
 fn sheets_mines_operators() {
     let manifest = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -164,14 +352,32 @@ fn sheets_mines_operators() {
         .to_string_lossy()
         .into_owned();
     let facts = compile_and_mine(&sheets);
+    let comparison = facts
+        .rules
+        .iter()
+        .find(|rule| rule.rule_name == "comparison_expr")
+        .unwrap_or_else(|| panic!("Sheets comparison_expr was not mined: {facts:#?}"));
+    let comparison_tags = comparison
+        .entries
+        .iter()
+        .map(|entry| ((entry.byte, entry.second_byte), entry.op_discriminant))
+        .collect::<std::collections::HashMap<_, _>>();
+    assert_eq!(
+        comparison_tags,
+        [
+            ((b'<', Some(b'>')), 0),
+            ((b'<', Some(b'=')), 1),
+            ((b'>', Some(b'=')), 2),
+            ((b'=', None), 3),
+            ((b'<', None), 4),
+            ((b'>', None), 5),
+        ]
+        .into_iter()
+        .collect()
+    );
     // Sheets declares the full precedence tower: &, +, -, *, /, ^.
-    // Compares `<`, `>`, `=`, `<=`, `>=`, `<>` are single-rung (the
-    // comparison_expr rule's body has 1 rung) so the detector
-    // rejects them — their dispatch rides through the generic Alt.
-    // The tower mining yields 6 disjoint operators across the
-    // concat/add/mul/exp chain — plus array-literal separators
-    // `,` and `;` that the detector treats as chain operators at
-    // a lower precedence tier.
+    // The tower also carries the six mapped comparison operators and
+    // array-literal separators `,` / `;` in their own rung-local LUTs.
     assert!(
         facts.operator_count() >= 6,
         "Sheets must mine ≥ 6 operators (&, +, -, *, /, ^), got {}: {:?}",

@@ -2,13 +2,11 @@
 pub mod canonical;
 pub mod path_query;
 pub mod view;
-use crate::runtime::google_sheets::arena::{
-    SheetsArena, SheetsCompoundId, SheetsCompoundView,
-};
-use crate::runtime::google_sheets::value::SheetsValue;
-use crate::runtime::path::Path;
 pub use self::path_query::SheetsPathQuery;
 pub use self::view::{SheetsKind, SheetsView};
+use crate::runtime::google_sheets::arena::{SheetsArena, SheetsCompoundId, SheetsCompoundView};
+use crate::runtime::google_sheets::value::SheetsValue;
+use crate::runtime::path::Path;
 #[derive(Debug)]
 pub struct SheetsDocument<'p> {
     pub arena: SheetsArena<'p>,

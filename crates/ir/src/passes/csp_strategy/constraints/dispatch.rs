@@ -57,7 +57,13 @@ use crate::passes::csp_strategy::{AltMode, StrategyDomain, StrategyValue};
 pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &GrammarIR) -> usize {
     let mut count = 0usize;
 
-    for (&node_id, &var) in ctx.alt_vars.iter() {
+    let mut alt_vars: Vec<_> = ctx
+        .alt_vars
+        .iter()
+        .map(|(&node, &var)| (node, var))
+        .collect();
+    alt_vars.sort_unstable_by_key(|(node, _)| *node);
+    for (node_id, var) in alt_vars {
         let target = pin_for_dispatch(ir, node_id);
         if let Some(mode) = target {
             // Single canonical pin primitive shared with the

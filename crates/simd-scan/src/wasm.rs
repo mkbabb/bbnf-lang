@@ -9,9 +9,7 @@
 //! - `i8x16.bitmask` for mask extraction;
 //! - `parity::escape_mask_64` (shared with NEON) computes the
 //!   backslash-parity escape mask; `parity::prefix_xor_64` computes
-//!   the in-string prefix (shift-XOR fallback on WASM since CLMUL
-//!   isn't available without the dedicated `relaxed-simd` + CLMUL
-//!   proposals).
+//!   the in-string prefix with the retained shift-XOR ladder.
 //!
 //! # Quote parity parity with NEON
 //!
@@ -20,20 +18,17 @@
 //! `parity::escape_mask_64` helper (same one the NEON and scalar
 //! paths use). The WASM kernel extracts raw quote-byte and
 //! backslash-byte 64-bit masks per stripe via `i8x16.eq` +
-//! `i8x16.bitmask`, then funnels them through the arch-neutral
-//! escape + prefix-XOR pipeline — identical algorithm, identical
-//! output.
+//! `i8x16.bitmask`, then funnels them through the shared escape +
+//! prefix-XOR pipeline — identical algorithm, identical output.
 //!
 //! Multi-quote-class CSS (`"` + `'`) routes through the same
 //! `multi_class_inside` state machine the NEON path invokes; the
-//! state machine is arch-neutral scalar code so WASM reuses it
-//! verbatim.
+//! state machine is shared scalar code so WASM reuses it verbatim.
 //!
-//! Targeted at WASM execution environments (browser, wasi). Verified
-//! functional via cross-compilation; SIMD128 is the WebAssembly
-//! baseline at proposal stage 4.
+//! Targeted at the browser `wasm32-unknown-unknown` plane. Verified
+//! functionally by cross-compilation and browser execution.
 
-#![cfg(target_arch = "wasm32")]
+#![cfg(all(target_arch = "wasm32", target_os = "unknown"))]
 
 use crate::StructuralIndex;
 use crate::alphabet::{KernelShape, NibbleLut, StructuralAlphabet};
@@ -84,8 +79,11 @@ fn scan_nibble(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
         }
 
         if has_digraphs {
-            struct_mask |=
-                digraph_stripe(unsafe { input.as_ptr().add(i) }, &alphabet.digraph_pairs);
+            struct_mask |= digraph_stripe(
+                unsafe { input.as_ptr().add(i) },
+                &alphabet.digraph_pairs,
+                input.get(i + STRIPE).copied(),
+            );
         }
         if has_quotes {
             let body = quote_stripe_masked(
@@ -98,7 +96,7 @@ fn scan_nibble(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
         }
 
         if struct_mask != 0 {
-            compaction::compact_stripe_tzcnt(
+            compaction::compact_stripe(
                 struct_mask,
                 i as u32,
                 input,
@@ -173,8 +171,11 @@ fn scan_multi(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
         }
 
         if has_digraphs {
-            struct_mask |=
-                digraph_stripe(unsafe { input.as_ptr().add(i) }, &alphabet.digraph_pairs);
+            struct_mask |= digraph_stripe(
+                unsafe { input.as_ptr().add(i) },
+                &alphabet.digraph_pairs,
+                input.get(i + STRIPE).copied(),
+            );
         }
         if has_quotes {
             let body = quote_stripe_masked(
@@ -187,7 +188,7 @@ fn scan_multi(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
         }
 
         if struct_mask != 0 {
-            compaction::compact_stripe_tzcnt(
+            compaction::compact_stripe(
                 struct_mask,
                 i as u32,
                 input,
@@ -264,14 +265,28 @@ fn classify_chunk_multi(ptr: *const u8, singletons: &[u8]) -> u16 {
 }
 
 #[inline(always)]
-fn digraph_stripe(ptr: *const u8, pairs: &[(u8, u8)]) -> u64 {
+fn digraph_stripe(ptr: *const u8, pairs: &[(u8, u8)], next_byte: Option<u8>) -> u64 {
     let mut mask = 0u64;
-    // SAFETY: caller ensures ptr..ptr+65 in bounds (stripe-bound).
+    // SAFETY: caller ensures ptr..ptr+64 in bounds. Shifted vectors
+    // use those four loads plus the separately bounded successor byte.
     unsafe {
+        let chunks = [
+            v128_load(ptr.cast()),
+            v128_load(ptr.add(CHUNK).cast()),
+            v128_load(ptr.add(CHUNK * 2).cast()),
+            v128_load(ptr.add(CHUNK * 3).cast()),
+        ];
+        let mut tail = u8x16_splat(0);
+        if let Some(byte) = next_byte {
+            tail = u8x16_replace_lane::<0>(tail, byte);
+        }
         for &(first, second) in pairs {
             for k in 0..4 {
-                let chunk = v128_load(ptr.add(k * CHUNK) as *const v128);
-                let next = v128_load(ptr.add(k * CHUNK + 1) as *const v128);
+                let chunk = chunks[k];
+                let following = if k == 3 { tail } else { chunks[k + 1] };
+                let next = u8x16_shuffle::<1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16>(
+                    chunk, following,
+                );
                 let f_eq = u8x16_eq(chunk, u8x16_splat(first));
                 let s_eq = u8x16_eq(next, u8x16_splat(second));
                 let both = v128_and(f_eq, s_eq);
@@ -280,7 +295,11 @@ fn digraph_stripe(ptr: *const u8, pairs: &[(u8, u8)]) -> u64 {
             }
         }
     }
-    mask
+    if next_byte.is_some() {
+        mask
+    } else {
+        mask & !(1_u64 << 63)
+    }
 }
 
 /// Build per-class quote masks + the backslash mask for a stripe.

@@ -1,0 +1,8 @@
+# Verification input only. The subject binds its exact commit/tree/blob corpus in
+# data/scope.json and never includes checkout-internal Git/cache bytes.
+/vendor/wpt/
+
+# The repository-wide data/ rule is for runtime output; these four canonical
+# evidence artifacts are part of this frozen W0 successor input.
+!/data/
+!/data/*.json

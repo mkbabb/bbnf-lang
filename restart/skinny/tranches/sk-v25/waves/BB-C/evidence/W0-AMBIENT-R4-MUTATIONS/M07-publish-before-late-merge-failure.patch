@@ -1,0 +1,21 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -177,15 +177,11 @@ pub fn solve_grammar_components(
+                 reports: output.reports,
+             });
+         }
+-        if let Err((reason, locus)) = merge_component(&mut output, decisions, materialization) {
++        if let Err((_reason, locus)) = merge_component(&mut output, decisions, materialization) {
+             report.status = SolveCompletionStatus::InvalidAssignment;
+             report.failure = Some(locus);
+             output.reports.push(report);
+-            return Err(OptimizationUnavailable {
+-                reason,
+-                locus,
+-                reports: output.reports,
+-            });
++            return Ok(output);
+         }
+         output.reports.push(report);
+     }

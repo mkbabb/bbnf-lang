@@ -1,0 +1,28 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+warning: function `cancelled_boundary_report` is never used
+   --> crates/ir/src/passes/csp_strategy/solve.rs:168:4
+    |
+168 | fn cancelled_boundary_report(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf-ir` (lib test) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.59s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 1 test
+
+thread 'passes::csp_strategy::tests::completed_component_then_cancel_reports_completed_plus_boundary' (7044919) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:372:18:
+next component boundary must observe cancellation
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test passes::csp_strategy::tests::completed_component_then_cancel_reports_completed_plus_boundary ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::completed_component_then_cancel_reports_completed_plus_boundary
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

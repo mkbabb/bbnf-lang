@@ -1,0 +1,249 @@
+{
+  "schema": "bbnf.architecture.p31-history.v3",
+  "born_red_authority": {
+    "path": "restart/skinny/tranches/sk-v25/graph/P3-ADJUDICATION.md",
+    "sha256": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+  },
+  "repair_authorities": [
+    {
+      "path": "restart/skinny/tranches/sk-v25/graph/P3.1-GESTALT-2-ADJUDICATION.md",
+      "sha256": "d5c510fab03c8b4716d3e52e81a4e74affff8f123874792917f99c83a1c5caac"
+    },
+    {
+      "path": "restart/skinny/tranches/sk-v25/LOCK-CONSTITUTION.md",
+      "sha256": "b45d1e6aeff51539b8a6320a2b5fa96d0df9adc932c683c29d81078e04bb09c5"
+    }
+  ],
+  "historical_subject": {
+    "status": "source_and_bank_proven_binary_identity_unproven",
+    "reason": "The exact 56-file P3 source subject is recovered and its original ten-test counterexample bank reproduces the historical normalized result twice; the original release binary bytes remain unavailable, so F01-F20 historical binary execution remains unproven.",
+    "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+    "source_file_count": 56,
+    "source_line_count": 5548,
+    "source_ledger_algorithm": "SHA-256 of the exact sorted `sha256 path` ledger",
+    "recovery_base_commit": "af15f63e0d2d3d719938c13b906a50acbb92ea3b",
+    "recovery_session": "codex-session:2026/07/18/019f773c-f14f-7143-a4e7-585391a870dc",
+    "recovery_session_digest": "8a61be691881bf4f501350b2a90059ec59e239926d94fc51769f85a946c78cfa",
+    "historical_source_receipt": {
+      "path": "restart/skinny/tranches/sk-v25/graph/P3-EVIDENCE.md",
+      "sha256": "7d6a3567534420dbae4ae4007b62d5ecf0710c85bf23e0f6ffc8548afcf30191"
+    },
+    "source_bank": {
+      "command": "cargo test -p xtask --locked --test architecture_p3_counterexamples -- --test-threads=1",
+      "result": "10 passed; 0 failed; run twice",
+      "normalization": "rg '^test p3_|^test result:' | sed -E 's/finished in [0-9.]+s/finished in <elapsed>/'",
+      "normalized_digest_run_1": "265553a9ecbb78d4747979d91e1ee1bbcf39a8017554bb0f8ac57e6814ec7e18",
+      "normalized_digest_run_2": "265553a9ecbb78d4747979d91e1ee1bbcf39a8017554bb0f8ac57e6814ec7e18",
+      "raw_log_digest_run_1": "3e2ad0aa4cbfca174f502cbcaaffd7756b86c0d5d8226eae25e14113cbe6d44e",
+      "raw_log_digest_run_2": "1307c2b80fd6536e0530f35d7dab88f54f750c39c44edc741ebfb221cfe49d2e",
+      "full_suite_result": "26 passed; 0 failed",
+      "full_suite_log_digest": "487261dee1dac013f34a3f56ded18f5f0f2ec633f9f8a68474a94e2de9d488e7",
+      "format_result": "GREEN",
+      "cargo_lock_digest": "a6a75b64633dac671206b06bea3c8b8b18ccd180b04712dc04dcc4c423160908"
+    },
+    "claimed_historical_binary_digest": "a83502242adbc8336d4e21229a17c3d931a587fa67a542547904ff284e078cb8",
+    "binary_digest": null
+  },
+  "bank": [
+    {
+      "id": "F01",
+      "p31_test": "f01_required_failure_denies_movement_in_every_view",
+      "normalized_input": "f01_required_failure_denies_movement_in_every_view",
+      "expected_failure": "any required failure denies movement in every view",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f01_required_failure_denies_movement_in_every_view against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F02",
+      "p31_test": "f02_structurally_green_graph_cannot_self_authorize_movement",
+      "normalized_input": "f02_structurally_green_graph_cannot_self_authorize_movement",
+      "expected_failure": "structural GREEN cannot self-authorize movement",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f02_structurally_green_graph_cannot_self_authorize_movement against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F03",
+      "p31_test": "f03_and_f04_corrupt_existing_generations_are_verified_quarantined_and_rebuilt",
+      "normalized_input": "f03_and_f04_corrupt_existing_generations_are_verified_quarantined_and_rebuilt",
+      "expected_failure": "missing generation member rejects reuse",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f03_and_f04_corrupt_existing_generations_are_verified_quarantined_and_rebuilt against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F04",
+      "p31_test": "f03_and_f04_corrupt_existing_generations_are_verified_quarantined_and_rebuilt",
+      "normalized_input": "f03_and_f04_corrupt_existing_generations_are_verified_quarantined_and_rebuilt",
+      "expected_failure": "changed and extra generation members reject reuse",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f03_and_f04_corrupt_existing_generations_are_verified_quarantined_and_rebuilt against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F05",
+      "p31_test": "f05_canonical_repository_root_alias_fails_before_inventory",
+      "normalized_input": "f05_canonical_repository_root_alias_fails_before_inventory",
+      "expected_failure": "REPOSITORY_ROOT_ALIAS",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f05_canonical_repository_root_alias_fails_before_inventory against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F06",
+      "p31_test": "f06_relational_cross_owner_and_reciprocal_mutations_fail_exactly",
+      "normalized_input": "f06_relational_cross_owner_and_reciprocal_mutations_fail_exactly",
+      "expected_failure": "typed reciprocity mismatch",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f06_relational_cross_owner_and_reciprocal_mutations_fail_exactly against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F07",
+      "p31_test": "f07_every_declared_physical_role_requires_the_exact_kind",
+      "normalized_input": "f07_every_declared_physical_role_requires_the_exact_kind",
+      "expected_failure": "typed context and physical role mismatch",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f07_every_declared_physical_role_requires_the_exact_kind against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F08",
+      "p31_test": "f08_checked_in_policy_records_but_never_traverses_tracked_exclusion_boundary_symlink",
+      "normalized_input": "f08_checked_in_policy_records_but_never_traverses_tracked_exclusion_boundary_symlink",
+      "expected_failure": "tracked authored input cannot disappear under exclusion",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f08_checked_in_policy_records_but_never_traverses_tracked_exclusion_boundary_symlink against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F09",
+      "p31_test": "f09_nomination_resolves_exactly_one_measured_same_repository_worktree",
+      "normalized_input": "f09_nomination_resolves_exactly_one_measured_same_repository_worktree",
+      "expected_failure": "PRODUCT_WORKTREE_UNNOMINATED",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f09_nomination_resolves_exactly_one_measured_same_repository_worktree against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F10",
+      "p31_test": "f10_canonical_common_dir_identity_ignores_external_alias_spelling",
+      "normalized_input": "f10_canonical_common_dir_identity_ignores_external_alias_spelling",
+      "expected_failure": "mutable or aliased Git spelling cannot change identity",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f10_canonical_common_dir_identity_ignores_external_alias_spelling against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F11",
+      "p31_test": "f11_ignored_policy_is_explicit_and_nonignored_untracked_bytes_are_hashed",
+      "normalized_input": "f11_ignored_policy_is_explicit_and_nonignored_untracked_bytes_are_hashed",
+      "expected_failure": "declared ignored policy and byte-sensitive nonignored state",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f11_ignored_policy_is_explicit_and_nonignored_untracked_bytes_are_hashed against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F12",
+      "p31_test": "f12_semantic_symlink_policy_rejects_rust_and_frontend_escape_dangle_and_in_repo_links",
+      "normalized_input": "f12_semantic_symlink_policy_rejects_rust_and_frontend_escape_dangle_and_in_repo_links",
+      "expected_failure": "SEMANTIC_SYMLINK_REJECTED",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f12_semantic_symlink_policy_rejects_rust_and_frontend_escape_dangle_and_in_repo_links against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F13",
+      "p31_test": "f13_helper_schema_edges_and_anchors_are_rejected_before_graph_facts",
+      "normalized_input": "f13_helper_schema_edges_and_anchors_are_rejected_before_graph_facts",
+      "expected_failure": "typed context/helper/tool binding mismatch",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f13_helper_schema_edges_and_anchors_are_rejected_before_graph_facts against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F14",
+      "p31_test": "f14_final_recensus_detects_any_binding_drift",
+      "normalized_input": "f14_final_recensus_detects_any_binding_drift",
+      "expected_failure": "SOURCE_SNAPSHOT_DRIFT",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f14_final_recensus_detects_any_binding_drift against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F15",
+      "p31_test": "f15_validator_rejects_missing_scc_and_every_wrong_cut_role",
+      "normalized_input": "f15_validator_rejects_missing_scc_and_every_wrong_cut_role",
+      "expected_failure": "total SCC basis and cut incidence mismatch",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f15_validator_rejects_missing_scc_and_every_wrong_cut_role against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F16",
+      "p31_test": "f16_production_package_face_identity_is_a_hard_signature",
+      "normalized_input": "f16_production_package_face_identity_is_a_hard_signature",
+      "expected_failure": "incompatible production hard signatures cannot merge",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f16_production_package_face_identity_is_a_hard_signature against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F17",
+      "p31_test": "f17_privacy_rejects_embedded_cross_platform_and_encoded_paths_but_keeps_https",
+      "normalized_input": "f17_privacy_rejects_embedded_cross_platform_and_encoded_paths_but_keeps_https",
+      "expected_failure": "PRIVACY_VALIDATOR_INCOMPLETE",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f17_privacy_rejects_embedded_cross_platform_and_encoded_paths_but_keeps_https against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F18",
+      "p31_test": "f18_one_shot_complete_write_failure_publishes_a_clean_failure_generation",
+      "normalized_input": "f18_one_shot_complete_write_failure_publishes_a_clean_failure_generation",
+      "expected_failure": "unique operation-local injection preserves or safely clears CURRENT",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f18_one_shot_complete_write_failure_publishes_a_clean_failure_generation against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F19",
+      "p31_test": "f19_total_node_universe_uses_implicit_singletons_without_projection_expansion",
+      "normalized_input": "f19_total_node_universe_uses_implicit_singletons_without_projection_expansion",
+      "expected_failure": "total node universe without projection-fold singleton expansion",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f19_total_node_universe_uses_implicit_singletons_without_projection_expansion against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    },
+    {
+      "id": "F20",
+      "p31_test": "f20_complete_payload_publishes_hash_bound_json_dot_report_basis_quotient_and_shards",
+      "normalized_input": "f20_complete_payload_publishes_hash_bound_json_dot_report_basis_quotient_and_shards",
+      "expected_failure": "CURRENT to publication trust root binds the exact generation set",
+      "actual_historical_result": "UNPROVEN: exact historical binary unavailable; exact source and original ten-test bank proven",
+      "mutation_inversion": "executed by f20_complete_payload_publishes_hash_bound_json_dot_report_basis_quotient_and_shards against P3.1",
+      "source_digest": "eb7c8829a240025585418a566af062b3a8b699faab1c7d0881afa86a490f334b",
+      "artifact_digest": "d17f8e9645bb90904c97dc1ba42e3171b2614c4a1ffbb6b9a9b956b7bfad9f30"
+    }
+  ]
+}

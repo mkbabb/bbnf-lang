@@ -1,0 +1,4 @@
+=== COMMAND historical-r2-allowlist ===
+cd /private/tmp/bbnf-g3-r3-8003fa19464878e2/historical && env CARGO_BUILD_JOBS=1 CARGO_INCREMENTAL=0 CARGO_NET_OFFLINE=true CARGO_TERM_COLOR=never NO_COLOR=1 RUST_BACKTRACE=0 RUST_TEST_THREADS=1 SOURCE_DATE_EPOCH=0 TERM=dumb CARGO_TARGET_DIR=/private/tmp/bbnf-g3-r3-8003fa19464878e2/targets/historical cargo test --offline --locked -p bbnf-ir --test egraph egraph_universal::default_rules_match_exact_allowlist -- --exact --nocapture --test-threads=1 
+   Compiling proc-macro2 v1.0.106
+=== EXIT historical-r2-allowlist 137 ===

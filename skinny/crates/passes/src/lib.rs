@@ -367,7 +367,7 @@ pub mod recognizers {
 
     #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
     pub struct TargetFeatures {
-        pub avx512bw: bool,
+        pub simd_byte_classification: bool,
         pub collapsed_stage_author_declared: bool,
         pub direct_only_output: bool,
         pub direct_build_consumer: bool,
@@ -377,7 +377,7 @@ pub mod recognizers {
     impl TargetFeatures {
         pub fn host() -> Self {
             Self {
-                avx512bw: cfg!(all(target_arch = "x86_64", target_feature = "avx512bw")),
+                simd_byte_classification: cfg!(all(target_arch = "aarch64", target_os = "macos")),
                 collapsed_stage_author_declared: false,
                 direct_only_output: false,
                 direct_build_consumer: true,
@@ -957,7 +957,7 @@ pub mod recognizers {
     }
 
     fn admits_collapsed_stage(rule_ir: &BackendRule, target: TargetFeatures) -> bool {
-        target.avx512bw && matches!(rule_ir.expr, BackendExpr::Entry(_))
+        target.simd_byte_classification && matches!(rule_ir.expr, BackendExpr::Entry(_))
     }
 
     fn prefers_event_tape(rule_ir: &BackendRule) -> bool {
@@ -1933,7 +1933,7 @@ root = unknown | literal ;
     }
 
     #[test]
-    fn collapsed_stage_without_author_falls_back_with_diagnostic() {
+    fn collapsed_stage_with_simd_byte_classification_without_author_falls_back() {
         let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
         let output = compile(&grammar).unwrap();
         let plan = recognizers::derive_backend_shape_with_diagnostics(
@@ -1941,7 +1941,7 @@ root = unknown | literal ;
             &output.backend_ir,
             &output.layout_facts,
             recognizers::TargetFeatures {
-                avx512bw: true,
+                simd_byte_classification: true,
                 collapsed_stage_author_declared: false,
                 direct_only_output: false,
                 direct_build_consumer: true,
@@ -1957,6 +1957,37 @@ root = unknown | literal ;
         assert!(plan.diagnostics.iter().any(|diagnostic| {
             diagnostic.code() == "BBNF-COLLAPSEDSTAGE-NOT-VIABLE" && diagnostic.rule == Some(entry)
         }));
+    }
+
+    #[test]
+    fn host_simd_byte_classification_is_exact_apple_arm() {
+        assert_eq!(
+            recognizers::TargetFeatures::host().simd_byte_classification,
+            cfg!(all(target_arch = "aarch64", target_os = "macos"))
+        );
+    }
+
+    #[test]
+    fn collapsed_stage_requires_simd_byte_classification() {
+        let grammar = grammar::parse_json_grammar(JSON_GRAMMAR).unwrap();
+        let output = compile(&grammar).unwrap();
+        let entry = derive_entry_rule(&output.grammar).unwrap();
+        let plan = recognizers::derive_backend_shape_with_diagnostics(
+            &output.grammar,
+            &output.backend_ir,
+            &output.layout_facts,
+            recognizers::TargetFeatures {
+                simd_byte_classification: false,
+                collapsed_stage_author_declared: true,
+                direct_only_output: false,
+                direct_build_consumer: true,
+                retained_api_consumer: true,
+            },
+        );
+        assert_ne!(
+            plan.backend_shape.get(&entry).copied(),
+            Some(BackendShape::CollapsedStage)
+        );
     }
 
     fn contains_tape_emit_and_direct_build(expr: &BackendExpr) -> bool {

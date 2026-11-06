@@ -1,0 +1,18 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.22s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 1 test
+
+thread 'passes::csp_strategy::tests::cancellation_on_final_singleton_leaf_discards_incumbent' (2378075) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:304:26:
+cancelled final-leaf incumbent must be discarded: [Alt(Checkpoint)]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test passes::csp_strategy::tests::cancellation_on_final_singleton_leaf_discards_incumbent ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::cancellation_on_final_singleton_leaf_discards_incumbent
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

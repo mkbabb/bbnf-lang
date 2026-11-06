@@ -1,7 +1,7 @@
 use bbnf::grammar::generated::css_l4::CssL4Parser;
 use bbnf::runtime::css_l4::{
-    visit_document, CssColor, CssFunction, CssRule, CssTypedValue, CssVisitor, Declaration,
-    GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
+    CssColor, CssFunction, CssRule, CssTypedValue, CssVisitor, Declaration, GenericAtRule,
+    KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet, visit_document,
 };
 use cssparser::{
     AtRuleParser, CowRcStr, DeclarationParser, Parser, ParserInput, ParserState,

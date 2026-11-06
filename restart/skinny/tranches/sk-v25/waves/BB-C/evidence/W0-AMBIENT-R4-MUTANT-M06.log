@@ -1,0 +1,19 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.25s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 1 test
+
+thread 'passes::csp_strategy::tests::incomplete_foreign_and_malformed_assignments_are_rejected' (3444480) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:415:14:
+called `Result::unwrap_err()` on an `Ok` value: DecodedComponent { assignments: ComponentAssignments { decisions: {n0: RecognizerDecision { alt_mode: Some(Checkpoint), wrap_mode: None, regex_engine: None }}, materialization: {} }, objective: 0.0, covered: 1 }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test passes::csp_strategy::tests::incomplete_foreign_and_malformed_assignments_are_rejected ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::incomplete_foreign_and_malformed_assignments_are_rejected
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

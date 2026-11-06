@@ -1,0 +1,20 @@
+{
+  "documents": [
+    {
+      "path": "LOCK-CONSTITUTION.md",
+      "role": "lock-constitution",
+      "sha256": "b45d1e6aeff51539b8a6320a2b5fa96d0df9adc932c683c29d81078e04bb09c5"
+    },
+    {
+      "path": "waves/BB-VALUE-TAPE-P0.md",
+      "role": "governing-wave",
+      "sha256": "745b6e821842f843a9c0485111f1dfa79f1834473d4aab78ca7ac1c959756562"
+    },
+    {
+      "path": "conformance/css-l4/epoch-3/GESTALT-1-ADJUDICATION.md",
+      "role": "binding-repair",
+      "sha256": "e29fde0532d273fe1c5d730cff40555858d7a68914f461c73b0758ff75469736"
+    }
+  ],
+  "schema_version": 1
+}

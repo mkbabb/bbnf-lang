@@ -1,0 +1,18 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.21s
+     Running tests/vm/main.rs (target/aarch64-apple-darwin/debug/deps/vm-6d5c8efd8984e70e)
+
+running 11 tests
+test cost_weights_unified::grammar_cost_model_default_matches_cost_weights_default ... ok
+test cost_weights_unified::grammar_cost_model_forwards_all_weight_dimensions ... ok
+test cost_weights_unified::hir_extraction_cost_shares_weights_with_grammar_tier ... ok
+test cost_weights_unified::egraph_extraction_cost_tracks_dispatch_bonus ... ok
+test cost_weights_unified::materialization_reads_weights_not_hidden_constants ... ok
+test cost_weights_unified::default_weights_pick_byte_dispatch ... ok
+test cost_weights_unified::patched_dispatch_bonus_flips_alt_strategy_to_checkpoint ... ok
+test cost_weights_unified::dispatch_branch_scales_with_arm_count ... ok
+test cost_weights_unified::dispatch_mode_flips_under_inverted_dispatch_table ... ok
+test cost_weights_unified::tiny_dispatch_bonus_still_picks_byte_dispatch ... ok
+test cost_weights_unified::write_back_optimized_accepts_patched_weights ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 63 filtered out; finished in 0.00s
+

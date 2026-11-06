@@ -373,9 +373,11 @@ fn literal_byte_split_multiple_groups() {
 }
 
 #[test]
-fn literal_byte_split_with_map_wrapper() {
-    // Alt([Map(Literal("rem"), fn0), Map(Literal("rlh"), fn1)])
-    // → Seq(Literal("r"), Alt([Map(Literal("em"), fn0), Map(Literal("lh"), fn1)]))
+fn mapped_literal_branches_preserve_whole_match_semantics() {
+    // Moving either Map onto a factored suffix changes `input` from the
+    // complete matched literal to only that suffix. Prefix factoring may
+    // optimize bare literals, but it must leave mapped literal branches
+    // semantically whole.
     let mut ir = make_ir_with_strings(
         alt(vec![
             IrNode::Map {
@@ -390,49 +392,18 @@ fn literal_byte_split_with_map_wrapper() {
         vec!["start".into(), "rem".into(), "rlh".into()],
     );
     ir.fns.push(FnDescriptor::Expr {
-        expr: bbnf_ir::MapExpr::IntLit(0),
+        expr: bbnf_ir::MapExpr::Input,
         return_type: None,
     });
     ir.fns.push(FnDescriptor::Expr {
-        expr: bbnf_ir::MapExpr::IntLit(0),
+        expr: bbnf_ir::MapExpr::Input,
         return_type: None,
     });
+    let before = ir.rules[0].body.clone();
 
     factor_common_prefixes(&mut ir);
 
-    match &ir.rules[0].body {
-        IrNode::Seq(children) => {
-            assert_eq!(children.len(), 2);
-            // Prefix: bare Literal("r")
-            match &children[0] {
-                IrNode::Literal(sid) => assert_eq!(ir.strings[*sid as usize], "r"),
-                other => panic!("expected Literal(\"r\"), got {:?}", other),
-            }
-            // Continuation: Alt with Map-wrapped remainders
-            match &children[1] {
-                IrNode::Alt(branches, _) => {
-                    assert_eq!(branches.len(), 2);
-                    // Each branch should be Map(Literal("em"/"lh"), fn_id)
-                    for (i, expected_rem) in [("em", 0u32), ("lh", 1u32)].iter().enumerate() {
-                        match &branches[i].node {
-                            IrNode::Map { inner, fn_id } => {
-                                assert_eq!(*fn_id, expected_rem.1);
-                                match inner.as_ref() {
-                                    IrNode::Literal(sid) => {
-                                        assert_eq!(ir.strings[*sid as usize], expected_rem.0);
-                                    }
-                                    other => panic!("expected Literal inside Map, got {:?}", other),
-                                }
-                            }
-                            other => panic!("expected Map, got {:?}", other),
-                        }
-                    }
-                }
-                other => panic!("expected Alt, got {:?}", other),
-            }
-        }
-        other => panic!("expected Seq after byte split, got {:?}", other),
-    }
+    assert_eq!(ir.rules[0].body, before);
 }
 
 #[test]

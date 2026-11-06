@@ -64,7 +64,7 @@ impl TsEmitter {
         &mut self,
         inner: TsCode,
         expr: &MapExpr,
-        _return_type: Option<&TypeDesc>,
+        return_type: Option<&TypeDesc>,
         _alloc: ValuePlacement,
         ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
@@ -84,7 +84,7 @@ impl TsEmitter {
         // `__input`. Detect that case and emit the `__input`
         // declaration even though the IR pretends the expression is
         // constant.
-        let value_js = compile_map_expr_to_js(expr, ir);
+        let value_js = compile_map_expr_to_js(expr, return_type, ir);
         let needs_input_bind = !expr.is_constant() || value_js.contains("__input");
         if needs_input_bind {
             stmts.push_str(&format!(

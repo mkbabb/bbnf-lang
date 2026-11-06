@@ -1,4 +1,4 @@
-//! Common-suffix factoring rule (Tranche Y.11).
+//! Research-only common-suffix factoring rule (Tranche Y.11).
 //!
 //! Dual of the normalizer's prefix-factoring pass at
 //! `crates/ir/src/passes/prefix.rs`. Detects alternations whose
@@ -12,9 +12,8 @@
 //! where `x` is structurally identical across branches (same e-class
 //! canonical id). The rewrite is a non-destructive e-graph union —
 //! the cost model picks between the forms via `GrammarCostModel`
-//! during extraction. Post-extraction the chosen form feeds directly
-//! into the single post-normalizer saturation; no separate pass is
-//! needed.
+//! during extraction. This rule is not invoked by the production
+//! compilation pipeline.
 //!
 //! # Shape constraints
 //!

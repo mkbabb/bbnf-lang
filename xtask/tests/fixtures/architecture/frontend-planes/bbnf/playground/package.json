@@ -1,0 +1,10 @@
+{
+  "name": "fixture-playground",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/runtime.js"
+    }
+  }
+}

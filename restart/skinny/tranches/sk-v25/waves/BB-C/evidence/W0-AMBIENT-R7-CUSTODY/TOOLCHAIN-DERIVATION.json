@@ -1,0 +1,40 @@
+{
+  "algorithm_sha256": "1fa707954622584ceaaadd787d61c6c603bf2cec5101a9cad2d10e0b0251da12",
+  "inserted_row": {
+    "bytes": 2512,
+    "mode": "0644",
+    "path": "bbnf-lang/rust-toolchain.toml",
+    "sha256": "b9c6c4c8609f213d11646792b8f172d31ebb257b5f024aab8f74648b526304cc"
+  },
+  "method": "insert the identical current normalized row into the frozen PRE and POST TSVs without rereading or replacing any historical member row; UTF-8 byte sort; regenerate path streams and census summaries",
+  "original": {
+    "post": {
+      "bytes": 15309468,
+      "derived": {
+        "bytes": 15311980,
+        "ledger_file_sha256": "e006e3ea3c3a3f273b62cf75cfdfb0f68872fdadb10d2d16be6a5324cfb79922",
+        "ledger_sha256": "e006e3ea3c3a3f273b62cf75cfdfb0f68872fdadb10d2d16be6a5324cfb79922",
+        "members": 843,
+        "path_file_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba",
+        "path_set_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba"
+      },
+      "ledger_sha256": "4163ebfbb0c86a81cc27b9a9f533501d040bb9bd7fe33da100426db8e31434a1",
+      "members": 842
+    },
+    "pre": {
+      "bytes": 15309549,
+      "derived": {
+        "bytes": 15312061,
+        "ledger_file_sha256": "808580eb49b56531854ef92a101c4f18a611856872c124d3430e295cb9fd714c",
+        "ledger_sha256": "808580eb49b56531854ef92a101c4f18a611856872c124d3430e295cb9fd714c",
+        "members": 843,
+        "path_file_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba",
+        "path_set_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba"
+      },
+      "ledger_sha256": "4af9076dc773bc82721e101a3c71a24d4e98869c2e5ed51ff321812f7685e997",
+      "members": 842
+    }
+  },
+  "reason": "rust-toolchain.toml is a pinned Cargo/rustup build input omitted from the first v1 emission",
+  "schema": "bb-c.w0.r7-custody.v1-toolchain-derivation"
+}

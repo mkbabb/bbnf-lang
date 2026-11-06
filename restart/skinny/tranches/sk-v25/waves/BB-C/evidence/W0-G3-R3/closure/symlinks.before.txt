@@ -1,0 +1,9 @@
+component=/Users/mkbabb/Programming/parse-that/rust/parse_that
+symlinks=0
+component=/Users/mkbabb/Programming/parse-that/rust/regex
+symlinks=0
+component=/Users/mkbabb/Programming/pprint/rust
+symlinks=0
+component=/Users/mkbabb/Programming/pprint/rust/derive
+symlinks=0
+total_symlinks=0

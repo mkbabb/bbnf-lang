@@ -32,6 +32,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::types::{RuleId, TypeDesc};
 
+use super::AltBranchId;
+
 /// Discriminator for a registered layout's emitted shape.
 ///
 /// Projected from the originating rule's body shape during
@@ -42,14 +44,13 @@ use crate::types::{RuleId, TypeDesc};
 ///   `Map` wrapping a non-singleton body. Fields carry per-position
 ///   projected types.
 /// - [`LayoutKind::TaggedEnum`] — projects from `Alt`. Each `StructField`
-///   represents one alternation branch; the field's `name` is the
-///   sub-variant name (per `RuleMeta::sub_variants` if present, else
-///   `branch_<idx>`); the field's `type_desc` is the branch's projected
-///   type.
+///   represents one logical alternation branch; the field's stable name is
+///   `branch_<idx>` and its `type_desc` is the branch's projected type.
+///   Internal type-coercion sub-variant names never enter this registry.
 /// - [`LayoutKind::UntaggedEnum`] — `Alt` whose every branch projects to
 ///   the same `TypeDesc`. The discriminator collapses to the unitary
-///   branch type at emission time; sub-variants are still listed for
-///   audit completeness.
+///   branch type at emission time; logical branches remain listed for audit
+///   completeness.
 /// - [`LayoutKind::NewtypeWrapper`] — `Map` of a single leaf
 ///   (`Regex` / `Literal`) whose typed `->` annotation projects a
 ///   primitive (`F64`, `U32`, `Bool`, `Span`, …). The single field is
@@ -90,7 +91,7 @@ pub enum FieldSource {
     /// the `StructField` is the sub-variant name.
     BranchTag {
         /// Index of the branch within the originating `Alt` body.
-        branch_index: u32,
+        branch_index: AltBranchId,
     },
     /// Field came from one position of a `Seq` body. The companion
     /// `name` is `field_<index>` unless a more specific name is
@@ -175,7 +176,7 @@ impl StructField {
 
     /// Returns the alternation branch index when this field is a
     /// branch tag; `None` otherwise.
-    pub fn branch_index(&self) -> Option<u32> {
+    pub fn branch_index(&self) -> Option<AltBranchId> {
         match self.source {
             FieldSource::BranchTag { branch_index } => Some(branch_index),
             _ => None,
@@ -276,7 +277,7 @@ impl StructLayout {
     /// `(branch_index, &StructField)` pair for each
     /// [`FieldSource::BranchTag`] field. Empty for non-Alt-derived
     /// layouts.
-    pub fn branches(&self) -> impl Iterator<Item = (u32, &StructField)> {
+    pub fn branches(&self) -> impl Iterator<Item = (AltBranchId, &StructField)> {
         self.fields
             .iter()
             .filter_map(|f| f.branch_index().map(|idx| (idx, f)))

@@ -1,0 +1,30 @@
+{
+  "added": [],
+  "algorithm_sha256": "1fa707954622584ceaaadd787d61c6c603bf2cec5101a9cad2d10e0b0251da12",
+  "changed": [
+    {
+      "path": "bbnf-lang/xtask/src/architecture/evidence/binding/apple.rs",
+      "post": {
+        "bytes": 19855,
+        "mode": "0644",
+        "sha256": "54827145fe52f1cb0391a802031b3a7e137911fb4eab1b5bbfa304ca1c0ad0eb"
+      },
+      "pre": {
+        "bytes": 19936,
+        "mode": "0644",
+        "sha256": "ce3ae9af7d93e6066fad2ff7e0ea404405bdff29df64bd803f82fe095067fc5f"
+      }
+    }
+  ],
+  "post": {
+    "bytes": 15311980,
+    "ledger_file_sha256": "e006e3ea3c3a3f273b62cf75cfdfb0f68872fdadb10d2d16be6a5324cfb79922",
+    "ledger_sha256": "e006e3ea3c3a3f273b62cf75cfdfb0f68872fdadb10d2d16be6a5324cfb79922",
+    "members": 843,
+    "path_file_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba",
+    "path_set_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba"
+  },
+  "pre_ledger_sha256": "808580eb49b56531854ef92a101c4f18a611856872c124d3430e295cb9fd714c",
+  "removed": [],
+  "schema": "bb-c.w0.r7-custody.v1-post"
+}

@@ -19,7 +19,7 @@
 use bbnf::path::error::PathErrorReason;
 use bbnf::path::select_variant;
 use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout};
-use bbnf_ir::{StringId, TypeDesc};
+use bbnf_ir::{AltBranchId, StringId, TypeDesc};
 
 const CSS_VALUE_NAME: StringId = 100;
 const CSS_COLOR_NAME: StringId = 101;
@@ -36,17 +36,23 @@ fn css_typed_value_layout() -> StructLayout {
             StructField {
                 name: "color".to_string(),
                 type_desc: TypeDesc::Named(CSS_COLOR_NAME),
-                source: FieldSource::BranchTag { branch_index: 0 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(0),
+                },
             },
             StructField {
                 name: "length".to_string(),
                 type_desc: TypeDesc::Named(CSS_LENGTH_NAME),
-                source: FieldSource::BranchTag { branch_index: 1 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(1),
+                },
             },
             StructField {
                 name: "selector".to_string(),
                 type_desc: TypeDesc::Named(CSS_SELECTOR_NAME),
-                source: FieldSource::BranchTag { branch_index: 2 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(2),
+                },
             },
         ],
     }
@@ -79,12 +85,16 @@ fn ambiguous_layout() -> StructLayout {
             StructField {
                 name: "color".to_string(),
                 type_desc: TypeDesc::Named(CSS_COLOR_NAME),
-                source: FieldSource::BranchTag { branch_index: 0 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(0),
+                },
             },
             StructField {
                 name: "color".to_string(),
                 type_desc: TypeDesc::Named(CSS_COLOR_NAME),
-                source: FieldSource::BranchTag { branch_index: 1 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(1),
+                },
             },
         ],
     }
@@ -97,7 +107,7 @@ fn matching_variant_resolves_to_branch_field() {
         select_variant(&layout, "color", 4).expect("`color` must resolve against `CssTypedValue`");
     assert_eq!(field.name, "color");
     assert_eq!(field.type_desc, TypeDesc::Named(CSS_COLOR_NAME));
-    assert_eq!(field.branch_index(), Some(0));
+    assert_eq!(field.branch_index(), Some(AltBranchId::new(0)));
 }
 
 #[test]

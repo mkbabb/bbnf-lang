@@ -2,25 +2,24 @@
 pub mod arena;
 pub mod builder;
 pub mod document;
+pub mod host;
 pub mod parse_with;
 pub mod value;
 pub mod view;
-pub mod host;
 pub use arena::{
-    CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId,
-    CssValueListId,
+    CssArena, CssDeclListId, CssKeyframeListId, CssRuleListId, CssSelectorListId, CssValueListId,
 };
 pub use builder::CssStructBuilder;
 pub use document::{
-    CssDeclWalk, CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssVisitor,
-    CssView, visit_document,
+    CssDeclWalk, CssDocument, CssDocumentKind, CssFocus, CssPathQuery, CssView, CssVisitor,
+    visit_document,
 };
 pub use parse_with::parse_with;
 pub use value::{
     CssAngle, CssAngleUnit, CssColor, CssColorFunction, CssColorMix, CssColorPredefined,
     CssColorSpace, CssColorType, CssDimension, CssFlex, CssFrequency, CssFrequencyUnit,
-    CssFunction, CssGlobalKeyword, CssHueMethod, CssLength, CssLengthUnit,
-    CssMathOperator, CssPercentage, CssResolution, CssResolutionUnit, CssTime,
-    CssTimeUnit, CssTypedValue, CssRule, Declaration, GenericAtRule, KeyframeBlock,
-    KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
+    CssFunction, CssGlobalKeyword, CssHueMethod, CssLength, CssLengthUnit, CssMathOperator,
+    CssPercentage, CssResolution, CssResolutionUnit, CssRule, CssTime, CssTimeUnit, CssTypedValue,
+    Declaration, GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule,
+    StyleSheet,
 };

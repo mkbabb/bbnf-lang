@@ -4,12 +4,12 @@
 //! (`docs/tranches/AX/audit/next-tranche/A6-named-preservation-design.md`),
 //! `TypeDesc::Named(_)` for CSS L4's `colorFunction` / `colorFn` / `colorMix`
 //! and JSON's `string` rule collapses somewhere before reaching the Rust
-//! emit layer. A6 conjectured H1 (e-graph cost-guided extraction unwraps
-//! the outer Map) vs H2 (alias/transparent metadata stamping).
+//! emit layer. A6 conjectured H1 (an optimizer unwraps the outer Map)
+//! vs H2 (alias/transparent metadata stamping).
 //!
 //! This probe runs the full pipeline twice for each grammar:
 //!  - `structural = true` (pre-optimisation snapshot — preserve_identity
-//!    keeps every rule, normalizer and e-graph skipped).
+//!    keeps every rule and skips the structural normalizer).
 //!  - default (production path).
 //!
 //! Cross-comparing the two snapshots for each named-annotated rule
@@ -264,7 +264,6 @@ fn run_pipeline_to_vm_ir(grammar_paths: &[PathBuf]) -> GrammarIR {
 /// has `preserve_identity = true` set upstream, which:
 /// (a) skips the structural normalizer loop entirely (no inline /
 ///     fuse / prune destructive rewrites);
-/// (b) skips the e-graph saturation block (gated on `!options.structural`);
 /// so the resulting `ir.rules` is the post-lowering view BEFORE any
 /// optimisation. Comparing the structural snapshot's rule survival
 /// against the optimised snapshot's rule survival isolates the
@@ -458,7 +457,7 @@ fn print_probe_report(grammar_label: &str, probes: &[NamedRuleProbe], ir: &Gramm
     // annotation reaches IR.
     let universe = collect_lowered_named_universe(ir);
     eprintln!(
-        "Named-bearing rules surviving normalizer + e-graph (post-pipeline): {}",
+        "Named-bearing rules surviving the production normalizer (post-pipeline): {}",
         universe.len()
     );
     for (rid, name, named) in &universe {
@@ -486,8 +485,7 @@ fn print_probe_report(grammar_label: &str, probes: &[NamedRuleProbe], ir: &Gramm
 
     // Backreferences: who points at the rule? When a rule eliminated
     // from `ir.rules`, walking back through the referrers tells us
-    // whether the consumer was rewritten (e-graph extraction picked a
-    // form without the Ref) or whether the rule had no consumer
+    // whether the consumer was rewritten without the Ref or the rule had no consumer
     // (orphan).
     eprintln!("\n--- back-references ---");
     for p in probes {
@@ -529,7 +527,7 @@ fn print_probe_report(grammar_label: &str, probes: &[NamedRuleProbe], ir: &Gramm
         } else if p.flagged_as_transparent {
             "H2-shape (is_transparent stamped — Named never reaches CSP)"
         } else if !p.body_carries_named_map {
-            "H1-shape (body lost the Named-bearing Map; e-graph extraction)"
+            "H1-shape (body lost the Named-bearing Map during normalization)"
         } else if !p.body_root_is_map {
             "BODY-ROOT-NOT-MAP (Map descended but body root is non-Map; \
              MapConstraint not grounding the rule_var. Cross-check pre-opt \
@@ -622,7 +620,7 @@ fn css_l4_named_pipeline_probe() {
 
     // The `color` rule is the parent — it should reference each
     // colour function rule as `Ref(_)`. Inspect it to see whether
-    // the e-graph or post-loop rewrite eliminated those Refs.
+    // a direct rewrite eliminated those Refs.
     eprintln!("\n--- parent `color` rule shape (depth ≤ 6) ---");
     print_body_shape(&ir, "color", 6);
 

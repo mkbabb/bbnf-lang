@@ -4,8 +4,8 @@
 //! Per Q-final B2 = (a) (skeleton dedup; typed `*Value` enums survive
 //! untouched), this module factors the [`StructBuilder`] impl shared by
 //! the simple grammars whose runtime compound shape collapses onto
-//! `Compound { kind, branch_tag, children: Vec<FooValue> }` with every
-//! scalar leaf depositing either `FooValue::Span` or `FooValue::Unit`.
+//! `Compound { kind, branch, children: Vec<FooValue> }` with every
+//! scalar leaf depositing a span, semantic byte, or unit value.
 //!
 //! The genuine cohort: BNF, EBNF, CSV, CSS Pretty, Math. Five builders
 //! whose pre-W5 bodies were near-byte-identical (`diff -u` shows only
@@ -26,15 +26,15 @@
 //!
 //! # Wire contract via [`SimpleValue`] trait
 //!
-//! The five simple-cohort grammars project every leaf to one of three
-//! [`FooValue`] arms: `Span(&'p str)`, `Unit`, `Compound(FooCompoundId)`.
-//! The [`SimpleValue`] trait surfaces the three constructors so the
+//! The five simple-cohort grammars project every leaf to one of four
+//! [`FooValue`] arms: `Span(&'p str)`, `U8(u8)`, `Unit`, or
+//! `Compound(FooCompoundId)`. The [`SimpleValue`] trait surfaces those
 //! template's body deposits the matching arm without naming the
 //! per-grammar enum.
 
 use core::marker::PhantomData;
 
-use bbnf_ir::registry::StructLayout;
+use bbnf_ir::registry::{AltBranchId, StructLayout};
 
 use crate::runtime::arena_template::{CompoundEntry, CompoundSlabArena};
 use crate::runtime::builder::StructBuilder;
@@ -43,8 +43,8 @@ use crate::runtime::handle::CompoundHandle;
 /// Constructor surface for the simple-cohort `FooValue` enum.
 ///
 /// The five simple grammars (BNF / EBNF / CSV / CSS Pretty / Math) all
-/// project every leaf to one of three arms: a borrowed span, a unit
-/// marker, or an arena compound handle. The trait surfaces the three
+/// project every leaf to one of four arms: a borrowed span, an exact
+/// semantic byte, a unit marker, or an arena compound handle. The trait surfaces the
 /// arms so [`SimpleStructBuilder`]'s body deposits the matching value
 /// without naming the per-grammar typed enum directly.
 ///
@@ -55,6 +55,8 @@ use crate::runtime::handle::CompoundHandle;
 pub trait SimpleValue<'p>: Copy + core::fmt::Debug {
     /// `FooValue::Span(s)` arm constructor.
     fn from_span(s: &'p str) -> Self;
+    /// `FooValue::U8(value)` arm constructor.
+    fn from_u8(value: u8) -> Self;
     /// `FooValue::Unit` arm constructor.
     fn unit() -> Self;
     /// `FooValue::Compound(id)` arm constructor — `id_plus_one` is the
@@ -64,20 +66,20 @@ pub trait SimpleValue<'p>: Copy + core::fmt::Debug {
 
 /// Per-grammar entry payload: the typed compound entry.
 ///
-/// The trait surfaces the three setters [`SimpleStructBuilder`] needs to
-/// finalise an open frame onto a slab entry: kind from the layout,
-/// branch tag from `push_branch_tag`, children from interior leaf /
+/// The trait surfaces the state [`SimpleStructBuilder`] needs to finalise
+/// an open frame onto a slab entry: kind from the layout, structural branch
+/// from `select_alt_branch`, and children from interior leaf /
 /// compound pushes. The per-grammar `FooCompound<'p>` struct implements
 /// the trait directly — the body is mechanical (one setter per field).
 pub trait SimpleCompound<'p, V: SimpleValue<'p>>: CompoundEntry {
     /// Construct a compound entry from a [`StructLayout`] reference,
-    /// branch tag, and child slice.
-    fn new_entry(layout: &StructLayout, branch_tag: Option<u32>, children: Vec<V>) -> Self;
+    /// structural branch, and child slice.
+    fn new_entry(layout: &StructLayout, branch: Option<AltBranchId>, children: Vec<V>) -> Self;
 }
 
 /// One open compound frame on [`SimpleStructBuilder`]'s stack.
 ///
-/// Mirrors the pre-W5 per-grammar `OpenFrame { kind, branch_tag,
+/// Mirrors the pre-W5 per-grammar `OpenFrame { kind, branch,
 /// children }` shape. `layout_ref` is taken at `begin_compound` time so
 /// `end_compound` can finalise the entry without re-resolving the
 /// layout.
@@ -88,8 +90,8 @@ struct Frame<'p, V: SimpleValue<'p>> {
     /// `'ir`-lifetime; the registry's layouts are `Clone`-able.
     layout: StructLayout,
     /// Alt sub-variant index, when the rule is Alt-typed; `None`
-    /// otherwise. Recorded via [`StructBuilder::push_branch_tag`].
-    branch_tag: Option<u32>,
+    /// otherwise. Recorded via [`StructBuilder::select_alt_branch`].
+    branch: Option<AltBranchId>,
     /// Cursor into the builder's append-only `pending_children` scratch.
     /// Interior leaf / compound pushes append to the scratch top;
     /// `end_compound` drains `[children_base..]` as this frame's child
@@ -234,13 +236,14 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         // Inverse of every speculative child append since the checkpoint.
-        self.pending_children.truncate(checkpoint.pending_children_len);
+        self.pending_children
+            .truncate(checkpoint.pending_children_len);
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
         self.stack.push(Frame {
             layout: layout.clone(),
-            branch_tag: None,
+            branch: None,
             children_base: self.pending_children.len(),
             _phantom: PhantomData,
         });
@@ -254,29 +257,34 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
             .pop()
             .expect("SimpleStructBuilder::end_compound on empty stack");
         let children: Vec<V> = self.pending_children.split_off(frame.children_base);
-        let entry = C::new_entry(&frame.layout, frame.branch_tag, children);
+        let entry = C::new_entry(&frame.layout, frame.branch, children);
         let id_plus_one = self.arena.push_compound(entry);
         self.deposit(V::from_compound_index(id_plus_one));
     }
 
     #[inline]
     fn push_leaf_with_f64(&mut self, _v: f64) {
-        self.deposit(V::unit());
+        unreachable!("simple runtime scalar registry validation rejects f64 payloads")
     }
 
     #[inline]
     fn push_leaf_with_i64(&mut self, _v: i64) {
-        self.deposit(V::unit());
+        unreachable!("simple runtime scalar registry validation rejects signed integer payloads")
     }
 
     #[inline]
     fn push_leaf_with_u64(&mut self, _v: u64) {
-        self.deposit(V::unit());
+        unreachable!("simple runtime scalar registry validation rejects wide unsigned payloads")
+    }
+
+    #[inline]
+    fn push_leaf_with_u8(&mut self, value: u8) {
+        self.deposit(V::from_u8(value));
     }
 
     #[inline]
     fn push_leaf_with_bool(&mut self, _v: bool) {
-        self.deposit(V::unit());
+        unreachable!("simple runtime scalar registry validation rejects bool payloads")
     }
 
     #[inline]
@@ -298,9 +306,9 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
     }
 
     #[inline]
-    fn push_branch_tag(&mut self, branch_index: u32) {
+    fn select_alt_branch(&mut self, branch: AltBranchId) {
         if let Some(frame) = self.stack.last_mut() {
-            frame.branch_tag = Some(branch_index);
+            frame.branch = Some(branch);
         }
     }
 }

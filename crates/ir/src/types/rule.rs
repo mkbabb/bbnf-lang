@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use bbnf_regex::sets::charset::CharSet128;
 
 use super::{GrammarSpan, IrNode, RuleId, StringId, TypeDesc};
+use crate::AltBranchId;
 
 /// A single rule in the grammar IR.
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -105,7 +106,7 @@ pub struct SubVariant {
     /// The type produced by this branch.
     pub ty: TypeDesc,
     /// Which branch in the Alt this corresponds to.
-    pub branch_index: u32,
+    pub branch_index: AltBranchId,
 }
 
 /// Per-rule directives from `@` decorators in the grammar.

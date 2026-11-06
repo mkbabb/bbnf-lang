@@ -167,13 +167,11 @@ fn try_emit_lazy_literal_scan(subs: &[Hir]) -> Option<(TokenStream, usize)> {
             {
                 let __search_start = state.offset + #min;
                 // AW-IV.W4.2.a — memchr over the padded slice. The
-                // SIMD kernel inside `memchr::memchr` can safely read
-                // a full AVX2/SSE2 stripe past the logical input end
-                // into the zero pad; grammar literal needles are never
-                // `0x00`, so the NUL padding never produces a false
-                // match. The position is still clamped to
-                // `__view.len()` below — any hit in the pad would be
-                // `>= __view.len()`, triggering the miss branch.
+                // retained Apple ARM, wasm32, and scalar byte-search
+                // implementations may read into the zero pad;
+                // grammar literal needles are never `0x00`, so the
+                // padding cannot produce a false match. The position
+                // is still clamped to `__view.len()` below.
                 let __view = state.padded();
                 let __rem = __view.bytes().get(__search_start..)?;
                 let __pos = memchr::memchr(#b, __rem)?;

@@ -1,0 +1,4 @@
+status=RED
+reason=historical build SIGKILL before test execution
+completion_claim=no
+manifest_sha256=0fd12a16edafb5dfda8a5ac67a4862a85b85b408a47e1f6cad40c41a13f3c1e6

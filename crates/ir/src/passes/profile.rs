@@ -92,7 +92,8 @@ pub struct GrammarProfile {
     /// payload columns. Each descriptor lowers to a 4-lane reordered-
     /// unrolling kernel function in `generated.rs`; the kernel pattern
     /// defeats strict-IEEE `f64` non-associativity and lets LLVM
-    /// vectorise the accumulator on NEON / AVX2.
+    /// vectorise the accumulator on Apple ARM NEON or wasm32 SIMD;
+    /// other hosts retain scalar semantics.
     ///
     // ── Shape dictionary (V5, AV.5.6) ───────────────────────────────
 

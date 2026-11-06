@@ -4,17 +4,15 @@
 # Authored in Tranche B1.W0 as the successor to the 32-line patch-only file.
 # Covers:
 #   - path patches (existing crate resolutions; preserved verbatim)
-#   - compile profiles (ax-iter / ay-final / bench-ci)
+#   - compile profiles (ax-iter / ay-final)
 #   - alias surface (iteration + test + bench)
 #   - build flags (-Zthreads, -Zshare-generics; nightly-gated)
-#   - target-specific linker choice (lld on macOS arm64; ld64 fallback)
+#   - one native target: Apple arm64
 #
 # Design invariants:
 #   * Every iteration alias carries `--profile ax-iter` explicitly
 #     (feedback: iter-profile-always).
-#   * No fallback/shim profiles; if cranelift or lld is unavailable the
-#     relevant line is commented inline with its enable procedure
-#     (feedback: no-workarounds).
+#   * No fallback/shim profiles.
 #   * Bench aliases invoke a single `cargo bench` pass; they do NOT
 #     issue N serial `-p X --bench Y` commands (feedback: bench-single-run,
 #     bench-sequential-regression — divan runs its own serial regression
@@ -40,6 +38,10 @@
 
 [build]
 rustc-wrapper = "sccache"
+target = "aarch64-apple-darwin"
+
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]
 
 # ── Path patches ─────────────────────────────────────────────────────────────
 # Sibling-repo path resolution for bbnf-lang. Mirror these in any repo that
@@ -79,15 +81,6 @@ debug           = 1                   # keep samply-resolvable symbols
 strip           = false
 split-debuginfo = "packed"
 
-# bench-ci: for iai-callgrind runs under valgrind on Linux CI. Full debuginfo
-# (callgrind needs it for source attribution) and no LTO (valgrind instruments
-# the un-LTO'd IR).
-[profile.bench-ci]
-inherits        = "release"
-debug           = "full"
-lto             = "off"
-codegen-units   = 1
-
 # bench-iter: dev-loop bench profile. Inherits bench (release-level optimisation
 # semantics) but disables LTO, expands codegen-units, enables incremental, and
 # trims debuginfo to line tables. Purpose: rebuild the 5-harness AZ-III sweep
@@ -123,7 +116,7 @@ debug           = "line-tables-only"
 #   * bench surface                 — divan-backed cold-per-parse benches:
 #                                       bench-json / bench-css / bench-bbnf /
 #                                       bench-sheets / bench-compile / bench-all
-#                                       plus bench-iai (iai-callgrind, CI-only).
+#                                       on the native Apple arm64 plane.
 
 [alias]
 # Workspace tools. Keeps `cargo xtask <subcommand>` as the canonical
@@ -152,7 +145,8 @@ iter-check-full       = "check --profile ax-iter --workspace"
 
 # Iteration: nextest targets (ax-iter profile). `cargo test` is deliberately
 # absent — nextest is the required runner (feedback: build-infra-first).
-iter-test             = "nextest run --cargo-profile ax-iter --workspace"
+iter-test             = "nextest run --cargo-profile ax-iter --workspace --features xtask/architecture-test-seams"
+iter-test-architecture = "nextest run --cargo-profile ax-iter -p xtask --features xtask/architecture-test-seams --test architecture"
 iter-test-core        = "nextest run --cargo-profile ax-iter -p bbnf"
 iter-test-ir          = "nextest run --cargo-profile ax-iter -p bbnf-ir"
 iter-test-analysis    = "nextest run --cargo-profile ax-iter -p bbnf-analysis"
@@ -171,7 +165,7 @@ iter-test-leaf        = "nextest run --cargo-profile ax-iter -p bbnf-ir -p egrap
 iter-test-grammar     = "nextest run --cargo-profile ax-iter"
 
 # Iteration: clippy (matches iter-check shape).
-iter-clippy           = "clippy --profile ax-iter --workspace --all-targets -- -D warnings"
+iter-clippy           = "clippy --profile ax-iter --workspace --all-targets --features xtask/architecture-test-seams -- -D warnings"
 
 # Benches: divan harness (ay-final profile). One cargo invocation per target;
 # divan's per-sample regression check runs inside the harness.
@@ -181,9 +175,6 @@ bench-css             = "bench --profile ay-final -p bbnf --features competitor,
 bench-bbnf            = "bench --profile ay-final -p bbnf --bench bbnf_monolithic"
 bench-sheets          = "bench --profile ay-final -p bbnf --features vm --bench google_sheets_monolithic --bench google_sheets_vm"
 bench-compile         = "bench --profile ay-final -p bbnf --bench compile_pipeline"
-
-# iai-callgrind (CI-only; requires valgrind on Linux).
-bench-iai             = "bench --profile bench-ci -p bbnf --features callgrind --bench json_callgrind"
 
 # Bench-iter surface: same harness selection as `bench-*` above, but compiled
 # under `[profile.bench-iter]` (no LTO, codegen-units=16, incremental). Use
@@ -235,8 +226,6 @@ asm-bbnf              = "asm --profile ay-final -p bbnf"
 # `-Zshare-generics`'s benefit is strictly cold + cross-crate-generic;
 # warm `iter-check` is neither. `-Zthreads` adds parallel-front-end
 # overhead that dominates small-crate-set warm builds. Both removed.
-# Linux's lld linker arg stays in the target-specific block (linker
-# choice is independent of these flags).
 #
 # Cold-build re-evaluation: the gorgeous fix (B1.W0 trium) + the
 # B2 architectural transposition (proc-macro retirement) move the
@@ -247,40 +236,6 @@ asm-bbnf              = "asm --profile ay-final -p bbnf"
 
 # ── Target-specific overrides ───────────────────────────────────────────────
 
-# macOS arm64: default to Apple ld64 (the system linker). Opt-in lld
-# is available for the ~10-20% rebuild-wall win, but only when the
-# `lld` Homebrew formula is installed separately (Homebrew's `llvm`
-# package does NOT ship ld.lld — it ships lldb only; verify with
-# `ls /opt/homebrew/opt/llvm/bin/ | grep -i lld` on a host with only
-# `llvm` installed).
-#
-# To opt into lld on macOS arm64:
-#   1. `brew install lld` (separate formula; not a sub-product of llvm).
-#      Places ld.lld at /opt/homebrew/opt/lld/bin/ld.lld on Apple Silicon.
-#   2. Verify: `ls /opt/homebrew/opt/lld/bin/ld.lld` returns the binary.
-#   3. Uncomment the `[target.aarch64-apple-darwin]` block below.
-#   4. Adjust the link-arg path if your brew prefix differs (check with
-#      `brew --prefix lld`).
-#
-# `wild` (davidlattimore/wild) was Linux-only as of v0.8.0 (January 2026);
-# check wild's release notes for current macOS status before using.
-# `mold` 2.0+ requires a commercial license on macOS, so is not free.
-#
-# Default: system ld64 via clang. No extra install required. No build
-# rustflags overridden — let cargo's defaults stand. Per the §Build flags
-# audit-α retrospective above, the prior `-Zthreads=8 -Zshare-generics=y`
-# entries here regressed warm `iter-check` on small-crate sets and
-# delivered no measurable benefit on the working set this block
-# describes; both removed.
-
-# Opt-in lld (requires `brew install lld`). Uncomment after
-# verifying the path exists on your host.
-# [target.aarch64-apple-darwin]
-# linker    = "clang"
-# rustflags = [
-#     "-C", "link-arg=-fuse-ld=/opt/homebrew/opt/lld/bin/ld.lld",
-# ]
-
 # Dev-only codegen backend: cranelift. Applied via per-profile override so
 # release/bench stay on LLVM (required for "beat lightningcss" measurement).
 # Enabled by the rust-toolchain.toml component `rustc-codegen-cranelift`.
@@ -289,12 +244,3 @@ asm-bbnf              = "asm --profile ay-final -p bbnf"
 #
 # [profile.ax-iter]
 # codegen-backend = "cranelift"
-
-# Linux x86_64: lld via rust-lld (bundled with the toolchain). No extra
-# install required. Linker arg only; `-Zthreads` / `-Zshare-generics`
-# removed per the §Build flags retrospective above (warm-iter regression
-# on small crate sets).
-[target.x86_64-unknown-linux-gnu]
-rustflags = [
-    "-C", "link-arg=-fuse-ld=lld",
-]

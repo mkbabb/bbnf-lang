@@ -8,7 +8,7 @@
 
 use bbnf::backend::rust::emitter::EmitStrategy;
 use bbnf::backend::rust::emitter::shapes::{
-    alt_dispatch, array, flat, keyword, number, object, scalar, string, wrap,
+    PayloadPlanner, alt_dispatch, array, flat, keyword, number, object, scalar, string, wrap,
 };
 use bbnf_ir::registry::SubstrateBinding;
 
@@ -121,7 +121,13 @@ fn keyword_output_is_struct_direct() {
     let rule = &ir.rules[rules.bool_rule as usize];
     assert_struct_direct_output(
         "keyword",
-        keyword::emit_parse_keyword("JsonFixture", rule, &ir, &strategy),
+        keyword::emit_parse_keyword(
+            "JsonFixture",
+            rule,
+            &ir,
+            &strategy,
+            &PayloadPlanner::new(&ir),
+        ),
     );
 }
 
@@ -132,7 +138,13 @@ fn wrap_output_is_struct_direct() {
     let rule = &ir.rules[rules.value as usize];
     assert_struct_direct_output(
         "wrap",
-        wrap::emit_parse_wrap("JsonFixture", rule, &ir, &strategy),
+        wrap::emit_parse_wrap(
+            "JsonFixture",
+            rule,
+            &ir,
+            &strategy,
+            &PayloadPlanner::new(&ir),
+        ),
     );
 }
 
@@ -143,7 +155,13 @@ fn flat_output_is_struct_direct() {
     let rule = &ir.rules[rules.pair as usize];
     assert_struct_direct_output(
         "flat",
-        flat::emit_parse_flat(&strategy, "JsonFixture", rule, &ir),
+        flat::emit_parse_flat(
+            &strategy,
+            "JsonFixture",
+            rule,
+            &ir,
+            &PayloadPlanner::new(&ir),
+        ),
     );
 }
 
@@ -154,6 +172,12 @@ fn alt_dispatch_output_is_struct_direct() {
     let rule = &ir.rules[rules.value as usize];
     assert_struct_direct_output(
         "alt_dispatch",
-        alt_dispatch::emit_parse_alt_dispatch("JsonFixture", rule, &ir, &strategy),
+        alt_dispatch::emit_parse_alt_dispatch(
+            "JsonFixture",
+            rule,
+            &ir,
+            &strategy,
+            &PayloadPlanner::new(&ir),
+        ),
     );
 }

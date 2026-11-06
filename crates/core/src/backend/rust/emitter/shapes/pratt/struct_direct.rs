@@ -20,7 +20,7 @@
 //! // 1. Dispatch leftmost operand → recursive parse fn deposits its
 //! //    own value (scalar leaf or nested Compound) onto the open frame.
 //! // 2. Loop: peek byte; consult PRECEDENCE_LUT_<rule>; on a matching
-//! //    operator at this rule's precedence, push_branch_tag(op_disc)
+//! //    operator at this rule's precedence, push_leaf_with_u8(op_disc)
 //! //    and dispatch the RHS operand. Higher-precedence operators are
 //! //    consumed by the inner operand's recursive Pratt body
 //! //    (operands resolve through the per-grammar value dispatcher,
@@ -143,7 +143,7 @@ fn quote_layout_literal(rule: &IrRule, ir: &GrammarIR) -> TokenStream {
 /// routing structural emission through the grammar's concrete
 /// `StructBuilder`'s
 /// `begin_compound(&__layout)` /
-/// `push_branch_tag(op_discriminant)` /
+/// `push_leaf_with_u8(op_discriminant)` /
 /// `end_compound(handle)` calls. Per-rule operand calls thread the
 /// same `&mut <BuilderTy>` argument throughout; the call signature
 /// stays consistent because [`super::super::dispatcher::emit_ref_call_shape`]
@@ -241,12 +241,16 @@ pub(super) fn emit_parse_pratt_struct_direct(
         {
             let _ = cursor;
             let _ = #support_mod::skip_space(input, p, state);
+            let __compound_start: u32 = *p as u32;
 
             // ── Open the rule compound ──────────────────────────────
             let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
             let #handle_var = <
                 #builder_ty_e as crate::runtime::StructBuilder
             >::begin_compound(builder, &#layout_var);
+            <
+                #builder_ty_e as crate::runtime::StructBuilder
+            >::record_compound_bounds_start(builder, __compound_start);
 
             // AZ-II.cutover.K Phase 2 — wrap operand + operator-loop
             // emission in an IIFE so any `?` propagation inside the
@@ -335,13 +339,12 @@ pub(super) fn emit_parse_pratt_struct_direct(
                 }
 
                 // ── Operator tag ─────────────────────────────────
-                // Stamp the operator's discriminant on the open
-                // rule frame as a typed branch tag. Sheets routes
-                // this through `SheetsStructBuilder::push_branch_tag`
-                // (deposits as `SheetsValue::Tag(op_discriminant)`).
+                // Deposit the grammar-mapped operator discriminant as a
+                // repeatable semantic u8 leaf. This is not structural Alt
+                // selection: one Pratt compound can contain many operators.
                 <
                     #builder_ty_e as crate::runtime::StructBuilder
-                >::push_branch_tag(builder, op_discriminant as u32);
+                >::push_leaf_with_u8(builder, op_discriminant);
 
                 *p = (*p).saturating_add(op_width as usize);
 
@@ -353,6 +356,9 @@ pub(super) fn emit_parse_pratt_struct_direct(
             })();
 
             // ── Close the rule compound ─────────────────────────────
+            <
+                #builder_ty_e as crate::runtime::StructBuilder
+            >::record_compound_bounds_end(builder, *p as u32);
             <
                 #builder_ty_e as crate::runtime::StructBuilder
             >::end_compound(builder, #handle_var);

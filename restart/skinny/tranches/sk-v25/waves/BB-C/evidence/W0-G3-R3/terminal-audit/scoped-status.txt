@@ -1,0 +1,5 @@
+ M crates/core/tests/egraph_semantic.rs
+ M crates/ir/src/egraph/rules/mod.rs
+ M crates/ir/src/egraph/rules/universal.rs
+ M crates/ir/tests/egraph/egraph_universal.rs
+?? restart/skinny/tranches/sk-v25/waves/BB-C/evidence/

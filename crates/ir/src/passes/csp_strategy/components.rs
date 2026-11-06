@@ -15,10 +15,9 @@
 //! decomposition — just written as a direct iteration with no
 //! partition step.
 //!
-//! AF.3 lands the first genuine **cross-rule** constraints
-//! (`EnginePropagation`, `ParentCompatibility`,
-//! `TierFollowsMaterialization`), and at that point per-rule
-//! iteration is no longer sufficient: a cross-rule constraint binds
+//! AF.3 lands the first genuine cross-rule family,
+//! `EnginePropagation`, and at that point per-rule iteration is no longer
+//! sufficient: a cross-rule constraint binds
 //! variables in two distinct rule bodies and must be solved inside a
 //! single `csp_solver::Csp` instance, not spread across two
 //! independent solves. The new `partition_by_call_graph` function
@@ -39,8 +38,8 @@
 //! (and therefore inside a single CSP).
 //!
 //! Isolated rules (no incoming or outgoing `IrNode::Ref` edges)
-//! become trivial singleton components, and fall through the existing
-//! per-variable fast path in `decode_min_cost_per_variable`.
+//! become singleton components. With no installed constraints, their
+//! exact factorized optimum is decoded with complete domain coverage.
 //!
 //! # Component-scoped CSP solves are first-class
 //!
@@ -56,11 +55,10 @@
 //! # Node budget safety net
 //!
 //! The Y.-1 `SolveConfig::node_budget` guards every component solve.
-//! A pathological component (e.g., one where the cross-rule
-//! propagation explodes the search space) falls back to per-variable
-//! trivial picks for that component without hanging the compile. The
-//! per-component logging is preserved from the existing
-//! `BBNF_CSP_REPORT=1` path.
+//! A pathological component (for example, one whose cross-rule propagation
+//! exceeds its search budget) returns a typed unavailable result. Incumbents
+//! and per-variable picks are never published as a fallback; the returned
+//! component report records the exact stop.
 
 use std::collections::HashMap;
 
@@ -156,9 +154,8 @@ impl UnionFind {
 /// component-scoped CSP solve loop. The strategy CSP treats a
 /// component as its unit of work: every rule in the component goes
 /// into the same `csp_solver::Csp` instance, so the cross-rule
-/// constraints (`EnginePropagation`, `ParentCompatibility`,
-/// `TierFollowsMaterialization`) can bind variables across rule
-/// bodies without leaking outside the component boundary.
+/// `EnginePropagation` constraints can bind variables across rule bodies
+/// without leaking outside the component boundary.
 ///
 /// # Fields
 ///

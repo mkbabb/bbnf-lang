@@ -25,12 +25,8 @@ pub mod span;
 pub mod transform;
 pub mod types;
 
-// NOTE: The `regex` submodule (simplify_regex_algebra + merge_regex_alts)
-// was deleted in Tranche H-7. Every rewrite it performed is now handled
-// by the retained grammar-tier e-graph rules
-// (DeduplicateAltBranches, SupersetAbsorbAlt, UnionMergeAlt,
-// FuseAltRegexBranches in crate::egraph::rules::regex) plus the HIR
-// e-graph saturation in bbnf-regex. See commit message for details.
+// The deleted grammar-tier regex pass is not part of the production pipeline.
+// Regex HIR normalization remains owned by bbnf-regex.
 
 pub use audit::{
     AbsentRegistryProbe, AuditCoverageReport, GrammarAuditTag, GrammarCoverage, MarkerStatus,
@@ -38,7 +34,10 @@ pub use audit::{
     is_typed_arrow_fn, write_coverage_report,
 };
 pub use csp_strategy::{
-    AltMode, RecognizerDecision, RecognizerDecisionMap, RegexEngine, StrategyDomain, StrategyValue,
+    AltMode, ComponentReport, ConstraintCounts, DecisionCounts, DecisionFamily,
+    GrammarSolveControl, GrammarSolveOutput, ObjectiveProof, OptimizationFailureLocus,
+    OptimizationUnavailable, OptimizationUnavailableReason, RecognizerDecision,
+    RecognizerDecisionMap, RegexEngine, SolveCompletionStatus, StrategyDomain, StrategyValue,
     WrapMode,
     components::{GrammarComponents, UnionFind, partition_by_call_graph},
     extract_regex_engine_decisions, solve_grammar_components,

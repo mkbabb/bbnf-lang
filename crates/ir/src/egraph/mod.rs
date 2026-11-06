@@ -1,25 +1,11 @@
-//! Grammar e-graph — permanent secondary equivalence discoverer
-//! running on the normalized IR.
+//! Grammar e-graph research substrate.
 //!
-//! # Role in the four-layer optimizer
+//! # Production authority
 //!
-//! The structural normalizer (`passes/transform/*`, `passes/regex/*`,
-//! `passes/prefix.rs`) is the primary cross-rule optimizer. It iterates
-//! the inline→merge→factor→inline cascade to fixed point — work that
-//! one-pass equality saturation architecturally cannot express.
-//!
-//! The grammar e-graph runs **once** after the normalizer converges,
-//! catching equivalences the normalizer's fixed pass order misses via
-//! e-class canonical matching, and picking cost-cheapest canonical
-//! forms via `GrammarCostModel` (the shared cost model, also consumed
-//! by the bbnf-regex HIR e-graph in Tranche H and by CSP strategy
-//! solvers).
-//!
-//! ```text
-//!   normalized IR          EGraph<GrammarENode>          optimized IR
-//!   ─────────────►         ──────────────────►           ─────────────►
-//!       build                  saturate                 extract + write-back
-//! ```
+//! The production compile pipeline does not saturate or write an e-graph
+//! result back into `GrammarIR`. These entry points remain available to
+//! research and differential tests until a bounded rewrite language earns
+//! production re-entry with a validator and complete run report.
 //!
 //! Wraps the general-purpose `egraph` crate with a grammar-specific
 //! e-node type (`GrammarENode`), rewrite rules (`rules/`), and the

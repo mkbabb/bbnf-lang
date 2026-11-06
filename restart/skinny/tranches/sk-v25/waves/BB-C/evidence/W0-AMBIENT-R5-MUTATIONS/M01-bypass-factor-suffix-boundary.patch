@@ -1,0 +1,15 @@
+diff --git a/crates/core/src/lower/expression/wrap.rs b/crates/core/src/lower/expression/wrap.rs
+--- a/crates/core/src/lower/expression/wrap.rs
++++ b/crates/core/src/lower/expression/wrap.rs
+@@ -152,10 +152,7 @@ pub(super) fn lower_mapped_factor<'a>(
+     if factor_hi > value_lo || value_hi > mapped_hi {
+         panic!("mapped_factor: value-expression bounds overlap or escape their parent");
+     }
+-    if bounded_text(input, factor_hi, value_lo, "map arrow").trim() != "->" {
+-        panic!("mapped_factor: structural Factor/value boundary is not the fixed `->` syntax");
+-    }
+-    let rhs_text = bounded_text(input, value_lo, value_hi, "value expression").trim();
++    let rhs_text = bounded_text(input, factor_hi, value_hi, "value expression").trim();
+     if rhs_text.is_empty() {
+         panic!("mapped_factor: structurally present value expression has empty source bounds");
+     }

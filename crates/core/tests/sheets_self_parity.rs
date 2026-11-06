@@ -337,6 +337,11 @@ fn serialize_roundtrip_compare_gt() {
 }
 
 #[test]
+fn serialize_roundtrip_compare_mixed_chain() {
+    assert_serialize_fixed_point("=1<>2<=3>=4<5>6=7");
+}
+
+#[test]
 fn serialize_roundtrip_unary_plus() {
     assert_serialize_fixed_point("=+1");
 }

@@ -13,8 +13,7 @@
 //!   orchestrator) plus the backend driver-state plumbing
 //!   (`compute_call_strategies`, `install_pattern_caches`).
 //!
-//! The public API is preserved verbatim by re-exporting every
-//! previously-public item below.
+//! The public entrypoints share one structured [`CompileError`] surface.
 
 pub mod audit;
 pub mod closure_partition;
@@ -40,9 +39,9 @@ pub use self::target::finalize_compile;
 
 /// Compile a BBNF grammar source string to a VM-ready `GrammarIR`.
 ///
-/// This keeps the existing VM-facing API intact while routing through the shared
-/// request pipeline.
-pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<GrammarIR, String> {
+/// Routes through the shared request pipeline without erasing structured
+/// failures.
+pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<GrammarIR, CompileError> {
     let request = CompileRequest {
         options: options.clone(),
         target: CompileTarget::Vm,
@@ -50,7 +49,7 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
     match compile_grammar_request(source, &request) {
         Ok(CompileOutput::Vm(ir)) => Ok(ir),
         Ok(_) => unreachable!("VM wrapper received non-VM output"),
-        Err(err) => Err(err.to_string()),
+        Err(err) => Err(err),
     }
 }
 
@@ -93,7 +92,7 @@ pub fn compile_ast<'a>(
     ast: AST<'a>,
     directives: &'a DirectiveSet<'a>,
     options: &PipelineOptions,
-) -> Result<GrammarIR, String> {
+) -> Result<GrammarIR, CompileError> {
     let request = CompileRequest {
         options: options.clone(),
         target: CompileTarget::Vm,
@@ -101,7 +100,7 @@ pub fn compile_ast<'a>(
     match compile_ast_request(ast, directives, &request) {
         Ok(CompileOutput::Vm(ir)) => Ok(ir),
         Ok(_) => unreachable!("VM wrapper received non-VM output"),
-        Err(err) => Err(err.to_string()),
+        Err(err) => Err(err),
     }
 }
 

@@ -39,6 +39,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use super::super::regex_scan_adapter::regex_scan_adapter_ident;
+use super::alt_dispatch::branches::payload_push_from_fn;
 use super::dispatcher::shape_fn_ident;
 use super::sanitise_grammar;
 use bbnf_ir::registry::EmitStrategy;
@@ -131,6 +132,14 @@ fn extract_regex_pattern(node: &IrNode) -> Option<u32> {
     }
 }
 
+fn regex_path_has_optional_whitespace(node: &IrNode) -> bool {
+    match node {
+        IrNode::OptionalWhitespace(_) => true,
+        IrNode::Map { inner, .. } => regex_path_has_optional_whitespace(inner),
+        _ => false,
+    }
+}
+
 // ─────────────────────────────────────────────────────────────────────
 // AZ-I.W2-act.B3 — HRegex struct-direct bodies.
 //
@@ -144,6 +153,166 @@ fn extract_regex_pattern(node: &IrNode) -> Option<u32> {
 
 use super::substrate::builder_ty_with_lifetime;
 
+fn emit_f64_input_push(builder_ty: &TokenStream) -> TokenStream {
+    quote! {
+        let __text = match core::str::from_utf8(
+            &input[span_lo as usize..span_hi as usize]
+        ) {
+            ::core::result::Result::Ok(value) => value,
+            ::core::result::Result::Err(_) => {
+                *p = span_lo as usize;
+                return ::core::result::Result::Err(
+                    crate::runtime::DtaError::Syntax { offset: span_lo },
+                );
+            }
+        };
+        let __decoded: f64 = match __text.parse::<f64>() {
+            ::core::result::Result::Ok(value) => value,
+            ::core::result::Result::Err(_) => {
+                *p = span_lo as usize;
+                return ::core::result::Result::Err(
+                    crate::runtime::DtaError::Syntax { offset: span_lo },
+                );
+            }
+        };
+        <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_f64(
+            builder, __decoded,
+        );
+    }
+}
+
+/// Emit a suffix-aware, fallible integer decoder for an HRegex `input` map.
+/// The regex owns recognition; this continuation owns only exact scalar
+/// conversion and restores the leaf offset when conversion rejects.
+fn emit_integer_input_push(ty: &bbnf_ir::TypeDesc, builder_ty: &TokenStream) -> TokenStream {
+    use bbnf_ir::TypeDesc;
+
+    let (rust_ty, suffix, signed, push) = match ty {
+        TypeDesc::I8 => (
+            quote! { i8 },
+            "i8",
+            true,
+            format_ident!("push_leaf_with_i64"),
+        ),
+        TypeDesc::U8 => (
+            quote! { u8 },
+            "u8",
+            false,
+            format_ident!("push_leaf_with_u8"),
+        ),
+        TypeDesc::I16 => (
+            quote! { i16 },
+            "i16",
+            true,
+            format_ident!("push_leaf_with_i64"),
+        ),
+        TypeDesc::U16 => (
+            quote! { u16 },
+            "u16",
+            false,
+            format_ident!("push_leaf_with_u64"),
+        ),
+        TypeDesc::I32 => (
+            quote! { i32 },
+            "i32",
+            true,
+            format_ident!("push_leaf_with_i64"),
+        ),
+        TypeDesc::U32 => (
+            quote! { u32 },
+            "u32",
+            false,
+            format_ident!("push_leaf_with_u64"),
+        ),
+        TypeDesc::I64 => (
+            quote! { i64 },
+            "i64",
+            true,
+            format_ident!("push_leaf_with_i64"),
+        ),
+        TypeDesc::U64 => (
+            quote! { u64 },
+            "u64",
+            false,
+            format_ident!("push_leaf_with_u64"),
+        ),
+        _ => return quote! { compile_error!("non-integer HRegex decoder type"); },
+    };
+
+    let parse = if signed {
+        quote! {
+            let __parsed: ::core::result::Result<#rust_ty, ()> =
+                if let Some(hex) = __digits
+                    .strip_prefix("-0x")
+                    .or_else(|| __digits.strip_prefix("-0X"))
+                {
+                    u128::from_str_radix(hex, 16)
+                        .ok()
+                        .and_then(|magnitude| i128::try_from(magnitude).ok())
+                        .and_then(|magnitude| magnitude.checked_neg())
+                        .and_then(|value| <#rust_ty>::try_from(value).ok())
+                        .ok_or(())
+                } else if let Some(hex) = __digits
+                    .strip_prefix("0x")
+                    .or_else(|| __digits.strip_prefix("0X"))
+                {
+                    u128::from_str_radix(hex, 16)
+                        .ok()
+                        .and_then(|value| <#rust_ty>::try_from(value).ok())
+                        .ok_or(())
+                } else {
+                    __digits.parse::<#rust_ty>().map_err(|_| ())
+                };
+        }
+    } else {
+        quote! {
+            let __parsed: ::core::result::Result<#rust_ty, ()> =
+                if let Some(hex) = __digits
+                    .strip_prefix("0x")
+                    .or_else(|| __digits.strip_prefix("0X"))
+                {
+                    <#rust_ty>::from_str_radix(hex, 16).map_err(|_| ())
+                } else {
+                    __digits.parse::<#rust_ty>().map_err(|_| ())
+                };
+        }
+    };
+
+    let widened = if matches!(ty, TypeDesc::U8) {
+        quote! { __decoded }
+    } else if signed {
+        quote! { __decoded as i64 }
+    } else {
+        quote! { __decoded as u64 }
+    };
+
+    quote! {
+        let __text = match core::str::from_utf8(
+            &input[span_lo as usize..span_hi as usize]
+        ) {
+            ::core::result::Result::Ok(value) => value,
+            ::core::result::Result::Err(_) => {
+                *p = span_lo as usize;
+                return ::core::result::Result::Err(
+                    crate::runtime::DtaError::Syntax { offset: span_lo },
+                );
+            }
+        };
+        let __digits = __text.strip_suffix(#suffix).unwrap_or(__text);
+        #parse
+        let __decoded = match __parsed {
+            ::core::result::Result::Ok(value) => value,
+            ::core::result::Result::Err(()) => {
+                *p = span_lo as usize;
+                return ::core::result::Result::Err(
+                    crate::runtime::DtaError::Syntax { offset: span_lo },
+                );
+            }
+        };
+        <#builder_ty as crate::runtime::StructBuilder>::#push(builder, #widened);
+    }
+}
+
 /// Emit the struct-direct HRegex body. Routes per FnDescriptor:
 ///
 /// - `HexConvert { fn_path }` → call `<fn_path>(matched_str)` and
@@ -154,6 +323,8 @@ use super::substrate::builder_ty_with_lifetime;
 /// - `NumberConvert { .. }` → `str::parse::<f64>()` and
 ///   `builder.push_leaf_with_f64(value)`.
 /// - `Expr { Input, return_type: F64 }` → same as NumberConvert.
+/// - `Expr { Input, return_type: U8 }` → `str::parse::<u8>()` and
+///   repeatable `builder.push_leaf_with_u8(value)`.
 /// - `Expr { Input, return_type: U32 }` → `str::parse::<u32>()` and
 ///   `builder.push_leaf_with_u64(value as u64)`.
 /// - `SpanCapture` / no host fn → `builder.push_leaf_with_str(slice)`
@@ -179,156 +350,109 @@ fn emit_parse_hregex_struct_direct(
     };
     let pattern_lit = ir.get_string(sid).to_string();
     let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+    let has_optional_whitespace = regex_path_has_optional_whitespace(&rule.body);
+    let leading_whitespace = has_optional_whitespace.then(|| {
+        quote! {
+            let _ = #support_mod::skip_space(input, p, state);
+        }
+    });
+    let trailing_whitespace = has_optional_whitespace.then(|| {
+        quote! {
+            let _ = #support_mod::skip_space(input, p, state);
+        }
+    });
 
     // Walk the body for the FnDescriptor (Map { fn_id, Regex }).
     let map_fn_id = extract_map_fn_id(&rule.body);
     let descriptor = map_fn_id.and_then(|fn_id| ir.fns.get(fn_id as usize));
+    let descriptor_missing = map_fn_id.is_some() && descriptor.is_none();
+    let nested_map = map_fn_id.is_some() && !map_directly_wraps_regex(&rule.body);
+    let nested_map_is_proven_replacement = descriptor
+        .is_some_and(|descriptor| matches!(payload_push_from_fn(descriptor, ir), Ok(Some(_))));
 
-    let push_call: TokenStream = match descriptor {
-        Some(FnDescriptor::HexConvert { fn_path }) => {
-            let path_str = ir.get_string(*fn_path);
-            match syn::parse_str::<syn::Path>(path_str) {
-                Ok(host_path) => quote! {
-                    let __decoded: u32 = #host_path(
-                        core::str::from_utf8(
-                            &input[span_lo as usize..span_hi as usize]
-                        ).unwrap_or(""),
-                    );
-                    <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_u64(
-                        builder, __decoded as u64,
-                    );
-                },
-                Err(_) => quote! {
-                    <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_str(
-                        builder,
-                        core::str::from_utf8(
-                            &input[span_lo as usize..span_hi as usize]
-                        ).unwrap_or(""),
-                    );
-                },
-            }
+    let push_call: TokenStream = if descriptor_missing {
+        quote! {
+            compile_error!("HRegex Map references a missing function descriptor");
         }
-        Some(FnDescriptor::NumberConvert { .. }) => quote! {
-            let __f64: f64 = core::str::from_utf8(
-                &input[span_lo as usize..span_hi as usize]
-            )
-            .ok()
-            .and_then(|s| s.parse::<f64>().ok())
-            .unwrap_or(0.0);
-            <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_f64(
-                builder, __f64,
+    } else if nested_map && !nested_map_is_proven_replacement {
+        quote! {
+            compile_error!(
+                "nested HRegex Map is not a proven constant replacement"
             );
-        },
-        Some(FnDescriptor::Expr { expr, return_type }) if matches!(expr, MapExpr::Input) => {
-            match return_type {
-                Some(TypeDesc::F64) => quote! {
-                    let __f64: f64 = core::str::from_utf8(
-                        &input[span_lo as usize..span_hi as usize]
-                    )
-                    .ok()
-                    .and_then(|s| s.parse::<f64>().ok())
-                    .unwrap_or(0.0);
-                    <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_f64(
-                        builder, __f64,
-                    );
-                },
-                Some(TypeDesc::U32) => quote! {
-                    let __u32: u32 = core::str::from_utf8(
-                        &input[span_lo as usize..span_hi as usize]
-                    )
-                    .ok()
-                    .map(|s| {
-                        // The int_lit regex `[0-9]+\w*` captures any
-                        // trailing type suffix (`u8`, `u32`, `i64`, …);
-                        // strip it before `parse::<u32>` so `5u8` lands
-                        // as 5, not 0.
-                        let bytes = s.as_bytes();
-                        let cut = if bytes.len() > 2 && bytes[0] == b'0'
-                            && (bytes[1] == b'x' || bytes[1] == b'X')
-                        {
-                            let mut i = 2;
-                            while i < bytes.len() && bytes[i].is_ascii_hexdigit() {
-                                i += 1;
-                            }
-                            i
-                        } else {
-                            let mut i = 0;
-                            while i < bytes.len() && bytes[i].is_ascii_digit() {
-                                i += 1;
-                            }
-                            i
-                        };
-                        let digits = &s[..cut];
-                        if digits.starts_with("0x") || digits.starts_with("0X") {
-                            u32::from_str_radix(&digits[2..], 16).unwrap_or(0)
-                        } else {
-                            digits.parse::<u32>().unwrap_or(0)
-                        }
-                    })
-                    .unwrap_or(0);
-                    <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_u64(
-                        builder, __u32 as u64,
-                    );
-                },
-                Some(TypeDesc::I64) => quote! {
-                    let __i64: i64 = core::str::from_utf8(
-                        &input[span_lo as usize..span_hi as usize]
-                    )
-                    .ok()
-                    .map(|s| {
-                        // The int_lit regex `[0-9]+\w*` captures any
-                        // trailing type suffix (`u8`, `u32`, `i64`, …);
-                        // strip it before `parse::<i64>` so `5u8` lands
-                        // as 5, not 0.
-                        let bytes = s.as_bytes();
-                        let cut = if bytes.len() > 2 && bytes[0] == b'0'
-                            && (bytes[1] == b'x' || bytes[1] == b'X')
-                        {
-                            let mut i = 2;
-                            while i < bytes.len() && bytes[i].is_ascii_hexdigit() {
-                                i += 1;
-                            }
-                            i
-                        } else {
-                            let mut i = 0;
-                            while i < bytes.len() && bytes[i].is_ascii_digit() {
-                                i += 1;
-                            }
-                            i
-                        };
-                        let digits = &s[..cut];
-                        if digits.starts_with("0x") || digits.starts_with("0X") {
-                            i64::from_str_radix(&digits[2..], 16).unwrap_or(0)
-                        } else {
-                            digits.parse::<i64>().unwrap_or(0)
-                        }
-                    })
-                    .unwrap_or(0);
-                    <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_i64(
-                        builder, __i64,
-                    );
-                },
-                _ => quote! {
-                    <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_str(
-                        builder,
-                        core::str::from_utf8(
-                            &input[span_lo as usize..span_hi as usize]
-                        ).unwrap_or(""),
-                    );
-                },
-            }
         }
-        // SpanCapture / EnumWrap / BoxWrap / no descriptor — emit a
-        // borrowed-span push so the typed value path captures the
-        // matched bytes for round-trip.
-        _ => quote! {
-            <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_str(
-                builder,
-                core::str::from_utf8(
+    } else {
+        match descriptor {
+            Some(FnDescriptor::HexConvert { fn_path }) => {
+                let path_str = ir.get_string(*fn_path);
+                match syn::parse_str::<syn::Path>(path_str) {
+                    Ok(host_path) => quote! {
+                        let __text = match core::str::from_utf8(
+                            &input[span_lo as usize..span_hi as usize]
+                        ) {
+                            ::core::result::Result::Ok(value) => value,
+                            ::core::result::Result::Err(_) => {
+                                *p = span_lo as usize;
+                                return ::core::result::Result::Err(
+                                    crate::runtime::DtaError::Syntax { offset: span_lo },
+                                );
+                            }
+                        };
+                        let __decoded: u32 = #host_path(__text);
+                        <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_u64(
+                            builder, __decoded as u64,
+                        );
+                    },
+                    Err(_) => quote! { compile_error!("invalid HRegex host function path"); },
+                }
+            }
+            Some(FnDescriptor::NumberConvert { .. }) => emit_f64_input_push(&builder_ty),
+            Some(FnDescriptor::Expr { expr, return_type }) if matches!(expr, MapExpr::Input) => {
+                match return_type {
+                    Some(TypeDesc::F64) => emit_f64_input_push(&builder_ty),
+                    Some(
+                        integer @ (TypeDesc::I8
+                        | TypeDesc::U8
+                        | TypeDesc::I16
+                        | TypeDesc::U16
+                        | TypeDesc::I32
+                        | TypeDesc::U32
+                        | TypeDesc::I64
+                        | TypeDesc::U64),
+                    ) => emit_integer_input_push(integer, &builder_ty),
+                    _ => quote! {
+                        compile_error!("HRegex input map requires a supported scalar return type");
+                    },
+                }
+            }
+            Some(descriptor @ FnDescriptor::Expr { .. }) => {
+                match payload_push_from_fn(descriptor, ir) {
+                    Ok(Some(payload)) => payload,
+                    Ok(None) => quote! {
+                        compile_error!("unsupported non-scalar HRegex expression map");
+                    },
+                    Err(message) => quote! { compile_error!(#message); },
+                }
+            }
+            // SpanCapture / EnumWrap / BoxWrap / no descriptor — emit a
+            // borrowed-span push so the typed value path captures the
+            // matched bytes for round-trip.
+            _ => quote! {
+                let __text = match core::str::from_utf8(
                     &input[span_lo as usize..span_hi as usize]
-                ).unwrap_or(""),
-            );
-        },
+                ) {
+                    ::core::result::Result::Ok(value) => value,
+                    ::core::result::Result::Err(_) => {
+                        *p = span_lo as usize;
+                        return ::core::result::Result::Err(
+                            crate::runtime::DtaError::Syntax { offset: span_lo },
+                        );
+                    }
+                };
+                <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder, __text,
+                );
+            },
+        }
     };
 
     quote! {
@@ -354,6 +478,7 @@ fn emit_parse_hregex_struct_direct(
             __P: for<'__c> crate::path::schema::PathSchema<'__c>,
         {
             let _ = cursor;
+            #leading_whitespace
             let span_lo = *p as u32;
             let Some(match_len) = #regex_scan_ident(#pattern_lit, input, *p) else {
                 return Err(crate::runtime::DtaError::Syntax {
@@ -363,6 +488,7 @@ fn emit_parse_hregex_struct_direct(
             *p += match_len as usize;
             let span_hi = *p as u32;
             #push_call
+            #trailing_whitespace
             Ok(())
         }
     }
@@ -401,6 +527,7 @@ fn emit_parse_number_via_hregex_struct_direct(
     };
     let pattern_lit = ir.get_string(sid).to_string();
     let regex_scan_ident = regex_scan_adapter_ident(&sanitise_grammar(grammar_suffix));
+    let decoded_push = emit_f64_input_push(&builder_ty);
 
     quote! {
         /// AZ-I.W2-act.B3 — Number-shape parse function via HRegex,
@@ -425,15 +552,7 @@ fn emit_parse_number_via_hregex_struct_direct(
             };
             *p += match_len as usize;
             let span_hi = *p as u32;
-            let __f64: f64 = core::str::from_utf8(
-                &input[span_lo as usize..span_hi as usize]
-            )
-            .ok()
-            .and_then(|s| s.parse::<f64>().ok())
-            .unwrap_or(0.0);
-            <#builder_ty as crate::runtime::StructBuilder>::push_leaf_with_f64(
-                builder, __f64,
-            );
+            #decoded_push
             Ok(())
         }
     }
@@ -444,12 +563,23 @@ fn emit_parse_number_via_hregex_struct_direct(
 /// without a host descriptor.
 fn extract_map_fn_id(node: &IrNode) -> Option<u32> {
     match node {
-        IrNode::Map { fn_id, inner } => match inner.as_ref() {
-            IrNode::Regex(_) => Some(*fn_id),
-            _ => None,
-        },
+        IrNode::Map { fn_id, inner } if extract_regex_pattern(inner).is_some() => Some(*fn_id),
         IrNode::OptionalWhitespace(inner) => extract_map_fn_id(inner),
         _ => None,
+    }
+}
+
+fn map_directly_wraps_regex(node: &IrNode) -> bool {
+    match node {
+        IrNode::Map { inner, .. } => {
+            let mut inner = inner.as_ref();
+            while let IrNode::OptionalWhitespace(next) = inner {
+                inner = next;
+            }
+            matches!(inner, IrNode::Regex(_))
+        }
+        IrNode::OptionalWhitespace(inner) => map_directly_wraps_regex(inner),
+        _ => false,
     }
 }
 

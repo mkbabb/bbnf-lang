@@ -5,9 +5,9 @@
 //! fix-up sweep. Produces the `ir.materialization` sidecar consumed
 //! by the CSP joint solve (AB.1) and the tape-first emitter (AB.2).
 //!
-//! Tranche AF.1 — the classifier activates the dormant
+//! Tranche AF.1 — the classifier uses the
 //! [`EClassFacts`](crate::egraph::analysis::EClassFacts) lattice as
-//! a pre-seed for `TransparentElide` eligibility. `classify.rs`
+//! a compatibility vocabulary for `TransparentElide` eligibility. `classify.rs`
 //! computes per-`NodeId` facts bottom-up (mirroring
 //! `GrammarAnalysis::make`) with a fixed-point iteration for
 //! cross-rule `Ref` propagation, then gates every `TransparentElide`

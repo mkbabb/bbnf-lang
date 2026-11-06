@@ -1,8 +1,7 @@
 //! Portable scalar reference kernel.
 //!
-//! - Always available; used as the SIMD-fallback path on architectures
-//!   without intrinsics, and as the **correctness reference** for the
-//!   `tests/fuzz.rs` proptest harness.
+//! - Always available as the **correctness reference** for the
+//!   `tests/fuzz.rs` proptest harness and differential validation.
 //! - No intrinsics, no `unsafe`. Branch-free where natural;
 //!   straight-line otherwise. Optimised for clarity, not throughput.
 //! - Implements the full alphabet contract: singletons, digraphs, and
@@ -12,8 +11,8 @@ use crate::StructuralIndex;
 use crate::alphabet::StructuralAlphabet;
 
 /// Walk `input` byte-by-byte, classify against `alphabet`, and write
-/// the resulting `StructuralIndex`. Used by `simd_scan::scan_structural`
-/// when no SIMD path is available, and as the fuzz reference.
+/// the resulting `StructuralIndex`. Used as the correctness and fuzz
+/// reference; production dispatch never selects it implicitly.
 pub fn scan(input: &[u8], alphabet: &StructuralAlphabet) -> StructuralIndex {
     if alphabet.singletons.is_empty() && alphabet.digraph_pairs.is_empty() {
         return StructuralIndex::new();
@@ -80,9 +79,8 @@ pub fn build_quote_lut(quote_classes: &[u8]) -> [bool; 256] {
 /// an unescaped opening quote and the corresponding closing quote.
 ///
 /// Backslash before a quote escapes the quote; an even count of
-/// backslashes before a quote leaves the quote unescaped. This is
-/// the same parity rule simdjson encodes via CLMUL; the scalar
-/// reference computes it byte-by-byte.
+/// backslashes before a quote leaves the quote unescaped. The scalar
+/// reference computes the retained parity rule byte-by-byte.
 pub fn compute_inside_string_mask(input: &[u8], quote_lut: &[bool; 256]) -> Vec<bool> {
     let mut out = vec![false; input.len()];
     if !quote_lut.iter().any(|&b| b) {

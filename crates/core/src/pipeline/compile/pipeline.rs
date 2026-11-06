@@ -26,8 +26,8 @@ use crate::types::AST;
 ///
 /// Validates, partitions closures, runs SCC + topological order,
 /// lowers to IR, computes FIRST sets, optionally eliminates
-/// left-recursion, runs the structural normalizer + e-graph
-/// saturation, and runs the body-mutating facts/restructuring passes.
+/// left-recursion, runs the structural normalizer, and runs the
+/// body-mutating facts/restructuring passes.
 /// Profile-populating mining passes (regex_info,
 /// structural_alphabet, recognizers) run unconditionally; the
 /// codegen-decision passes (dispatch_tables, classify_materialization,
@@ -77,6 +77,7 @@ pub fn compile_ast_common<'a>(
     let mut ir = timer.span("lower_to_ir", || {
         lower_to_ir(&ast, &scc_result, directives, &closure_rules)
     });
+    crate::pipeline::validate::validate_ir_alt_width(&ir)?;
 
     // Compute FIRST sets via IR CSP pass (replaces AST-level computation).
     timer.span("compute_first_sets", || {
@@ -121,8 +122,7 @@ pub fn compile_ast_common<'a>(
         // Layer 1 — structural normalization. Primary cross-rule
         // optimizer. Destructive tree rewrites iterated to fixed
         // point: handles the inline→merge→factor→inline cascading
-        // feedback that equality saturation cannot express in a
-        // single pass.
+        // feedback to a fixed point.
         timer.span("structural_normalizer_loop", || {
             const MAX_OPT_ITER: usize = 64;
             for iteration in 0..MAX_OPT_ITER {
@@ -200,39 +200,11 @@ pub fn compile_ast_common<'a>(
         // Hoists recurring Seq/Alt sub-patterns (e.g. `ws + ':' + ws`
         // across CSS L4 declarations; `!important` across every
         // pretty-aware rule) into synthesised non-terminals, rewriting
-        // each occurrence to `Ref(__pattern_<hash>)`. Pre-egraph
-        // because the egraph saturation then operates on a simpler
-        // IR (already-factored commonality lets
-        // DeduplicateAltBranches + UnionMergeAlt converge faster).
+        // each occurrence to `Ref(__pattern_<hash>)` before later
+        // body-mutating analysis passes consume the normalized IR.
         timer.span("hoist_recurring_patterns", || {
             bbnf_ir::passes::transform::hoist_recurring_patterns(&mut ir);
         });
-
-        // Layer 1b — equivalence discovery. Single e-graph saturation
-        // on the normalized IR. Retained rules target ordering-
-        // independent equivalences and regex-algebra rewrites the
-        // normalizer's fixed pass order can miss; cost-guided
-        // extraction picks the cheapest canonical form per rule via
-        // `GrammarCostModel` (shared with bbnf-regex HIR e-graph in
-        // Tranche H).
-        timer.span("egraph_build_saturate_writeback", || {
-            let (egraph, pool, rule_body_ids) = bbnf_ir::egraph::build_and_saturate(&ir);
-            let cost = bbnf_ir::egraph::GrammarCostModel::from_config(&ir.cost_config);
-            bbnf_ir::egraph::write_back_optimized(&egraph, &mut ir, &rule_body_ids, &cost);
-            pool.write_back(&mut ir);
-            drop(egraph);
-        });
-
-        #[cfg(debug_assertions)]
-        for rule in &ir.rules {
-            if let bbnf_ir::IrNode::Ref(target) = &rule.body {
-                assert_ne!(
-                    *target, rule.id,
-                    "e-graph write-back produced self-cycle: rule {} = Ref({})",
-                    rule.id, target
-                );
-            }
-        }
 
         timer.span("sort_alt_branches", || {
             bbnf_ir::passes::sort_alt_branches(&mut ir);
@@ -241,10 +213,10 @@ pub fn compile_ast_common<'a>(
             bbnf_ir::passes::refine_span_eligibility(&mut ir);
         });
 
-        // Refresh SCC metadata: the normalizer + e-graph write-back
-        // may have restructured the rule reference graph (alias
-        // canonicalization, inlining, fusing), so `is_cyclic` and
-        // `scc_id` computed during initial lowering can be stale.
+        // Refresh SCC metadata: the normalizer may have restructured
+        // the rule reference graph (alias canonicalization, inlining,
+        // fusing), so `is_cyclic` and `scc_id` computed during initial
+        // lowering can be stale.
         // Downstream inline planning relies on these flags to break
         // mutual-recursion cycles; re-running Tarjan here ensures
         // they reflect the final optimized graph.
@@ -264,7 +236,7 @@ pub fn compile_ast_common<'a>(
         });
     }
 
-    // Durable post-extraction canonical DAG. Mandatory — the
+    // Durable post-normalization canonical DAG. Mandatory — the
     // reverse pointer map inside is the identity substrate for
     // every downstream NodeId-keyed pass (Tranches D, F, G) and
     // for `project_types` in `finalize_compile`. Built after the
@@ -350,20 +322,20 @@ pub fn compile_ast_common<'a>(
         timer.span("classify_materialization", || {
             bbnf_ir::passes::classify_materialization(&mut ir);
         });
-        // Tranche W phase 3b / AB.1 — derive per-NodeId strategy
-        // decisions from the upstream facts via a real
-        // `csp_solver::Csp` running `OptimizationMode::MinimizeCost`.
-        // Tranche AB.1 joins the materialization refinement into
-        // the same solver, overriding the bottom-up classification
-        // with the cost-optimal per-rule-root class where the CSP
-        // can prove it legal under pin constraints.
-        timer.span("solve_grammar_components", || {
-            let (decisions, mat_refined) = bbnf_ir::passes::solve_grammar_components(&ir);
-            ir.recognizer_decisions = decisions;
-            for (node_id, class) in mat_refined {
-                ir.materialization.insert(node_id, class);
-            }
+        // Tranche W phase 3b / AB.1 — derive per-NodeId strategy and
+        // materialization decisions as one all-or-nothing result. Any
+        // unavailable optimum propagates as a typed compile failure before
+        // either sidecar is installed.
+        let solved = timer.span("solve_grammar_components", || {
+            bbnf_ir::passes::solve_grammar_components(
+                &ir,
+                &bbnf_ir::passes::GrammarSolveControl {
+                    node_budget: Some(1_000_000),
+                    cancel: None,
+                },
+            )
         });
+        install_grammar_solution(&mut ir, solved)?;
         // Tranche X.8d — project the per-NodeId RegexEngine decisions
         // into a per-StringId map so `scanner_plan::plan_regex_scanner`
         // can look up the authoritative engine choice by pattern
@@ -374,11 +346,23 @@ pub fn compile_ast_common<'a>(
         });
     }
 
+    crate::pipeline::validate::validate_ir_alt_width(&ir)?;
+
     // Emit the per-pass CSV report when BBNF_PIPELINE_REPORT=1.
     let label = entry_rule_name.as_deref().unwrap_or("<unknown>");
     timer.finish(label);
 
     Ok(ir)
+}
+
+fn install_grammar_solution(
+    ir: &mut GrammarIR,
+    solved: Result<bbnf_ir::passes::GrammarSolveOutput, bbnf_ir::passes::OptimizationUnavailable>,
+) -> Result<(), CompileError> {
+    let solved = solved.map_err(CompileError::OptimizationUnavailable)?;
+    ir.recognizer_decisions = solved.decisions;
+    ir.materialization.extend(solved.materialization);
+    Ok(())
 }
 
 /// Populate the driver state's pattern caches from the authoritative
@@ -479,3 +463,7 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
 
     strategies
 }
+
+#[cfg(test)]
+#[path = "../../../tests/pipeline/compile/pipeline.rs"]
+mod tests;

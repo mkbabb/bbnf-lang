@@ -1,0 +1,57 @@
+diff --git a/xtask/src/architecture/evidence/binding/apple.rs b/xtask/src/architecture/evidence/binding/apple.rs
+--- a/xtask/src/architecture/evidence/binding/apple.rs
++++ b/xtask/src/architecture/evidence/binding/apple.rs
+@@ -15,11 +15,6 @@ use super::{canonical_child_policy, hash_file};
+ pub(super) const POLICY: &str = "bbnf.apple-arm-capability-launch.v2-direct-declared-arm64";
+ const LAUNCHER: &str = "/usr/bin/arch";
+ const REQUESTED_ARCHITECTURE: &str = "arm64";
+-const UNAME: &Path = Path::new("/usr/bin/uname");
+-const SW_VERS: &Path = Path::new("/usr/bin/sw_vers");
+-const XCODE_SELECT: &Path = Path::new("/usr/bin/xcode-select");
+-const XCRUN: &Path = Path::new("/usr/bin/xcrun");
+-const OTOOL: &Path = Path::new("/usr/bin/otool");
+ 
+ struct BinaryFrame {
+     bytes: Vec<u8>,
+@@ -156,3 +151,3 @@ impl AppleArmCaptureContext {
+         let uname_machine =
+-            runner.run("observed-arm-precondition", UNAME, &[OsStr::new("-m")], &[])?;
++            runner.run("observed-arm-precondition", Path::new("/usr/bin/uname"), &[OsStr::new("-m")], &[])?;
+         require_success(&uname_machine, "Apple ARM observed-machine precondition")?;
+@@ -167,3 +162,3 @@ impl AppleArmCaptureContext {
+ 
+-        let selector = runner.run("selector", XCODE_SELECT, &[OsStr::new("-p")], &[])?;
++        let selector = runner.run("selector", Path::new("/usr/bin/xcode-select"), &[OsStr::new("-p")], &[])?;
+         require_success(&selector, "selected Xcode developer directory")?;
+@@ -187,5 +182,5 @@ impl AppleArmCaptureContext {
+             let resolver = runner.run(
+                 "resolver",
+-                XCRUN,
++                Path::new("/usr/bin/xcrun"),
+                 &[OsStr::new("--find"), OsStr::new(payload_name)],
+                 &selection_environment,
+@@ -209,4 +204,4 @@ impl AppleArmCaptureContext {
+-        let uname_system = runner.run("host-kernel-premise", UNAME, &[OsStr::new("-srmv")], &[])?;
++        let uname_system = runner.run("host-kernel-premise", Path::new("/usr/bin/uname"), &[OsStr::new("-srmv")], &[])?;
+         require_success(&uname_system, "exact kernel premise")?;
+-        let macos_version = runner.run("macos-premise", SW_VERS, &[], &[])?;
++        let macos_version = runner.run("macos-premise", Path::new("/usr/bin/sw_vers"), &[], &[])?;
+         require_success(&macos_version, "exact macOS build premise")?;
+@@ -256,8 +251,8 @@ impl AppleArmCaptureContext {
+         let listing = self.runner.run(
+             "direct-dependency-observation",
+-            OTOOL,
++            Path::new("/usr/bin/otool"),
+             &[
+                 OsStr::new("-arch"),
+                 OsStr::new(REQUESTED_ARCHITECTURE),
+                 OsStr::new("-L"),
+                 selected.0.as_os_str(),
+@@ -385,5 +380,6 @@ fn parse_direct_dependency_listing(root: &[u8], stdout: &[u8]) -> Result<Vec<Vec
+     if stdout.is_empty() || !stdout.ends_with(b"\n") || stdout.contains(&0) {
+         anyhow::bail!("otool direct dependency listing is empty or truncated");
+     }
+-    let mut lines = stdout.split_terminator(|byte| *byte == b'\n');
++    let complete_records = &stdout[..stdout.len() - 1];
++    let mut lines = complete_records.split(|byte| *byte == b'\n');
+     let header = lines.next().context("otool dependency header is absent")?;

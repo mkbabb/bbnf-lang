@@ -1,7 +1,7 @@
 //! Tranche AA.2 — `GrammarAnalysis` activation test.
 //!
-//! Verifies that the `Analysis<GrammarENode>` substrate is live in
-//! production e-graph construction: building + saturating a real
+//! Verifies that the research `Analysis<GrammarENode>` substrate can
+//! build and saturate a real
 //! grammar produces an `EGraph<GrammarENode, GrammarAnalysis>` whose
 //! root classes carry non-trivial `EClassFacts`.
 //!
@@ -103,7 +103,7 @@ fn fixture_ir() -> GrammarIR {
 }
 
 #[test]
-fn grammar_analysis_activates_in_production_build_and_saturate() {
+fn grammar_analysis_activates_in_research_build_and_saturate() {
     let ir = fixture_ir();
 
     // The load-bearing assertion: calling `build_and_saturate` must

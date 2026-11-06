@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""Seal or verify every owned epoch-3 byte without self-reference."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any
+
+from common import ROOT, encode, fail, load, sha256, store
+
+
+MANIFEST = ROOT / "data" / "file-manifest.json"
+CACHE_DIRECTORIES = {"__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+CACHE_SUFFIXES = {".pyc", ".pyo"}
+
+
+def excluded(path: Path) -> bool:
+    relative = path.relative_to(ROOT).as_posix()
+    return relative == "data/file-manifest.json" or (path.parent == ROOT and path.name.startswith("GESTALT-") and path.suffix == ".md")
+
+
+def capture() -> dict[str, Any]:
+    files = []
+    for path in sorted(ROOT.rglob("*"), key=lambda item: item.relative_to(ROOT).as_posix()):
+        relative = path.relative_to(ROOT).as_posix()
+        if path.is_symlink():
+            fail("SUBJECT_SYMLINK_FORBIDDEN", "owned epoch subject contains a symlink", path=relative)
+        if any(part in CACHE_DIRECTORIES for part in path.relative_to(ROOT).parts) or path.suffix in CACHE_SUFFIXES or path.name == ".DS_Store":
+            fail("SUBJECT_CACHE_FORBIDDEN", "owned epoch subject contains cache or host metadata", path=relative)
+        if path.is_file() and not excluded(path):
+            data = path.read_bytes()
+            files.append({"path": relative, "bytes": len(data), "sha256": sha256(data)})
+    digest_input = bytearray()
+    for row in files:
+        digest_input.extend(row["path"].encode() + b"\0" + bytes.fromhex(row["sha256"]) + b"\0")
+    return {
+        "schema_version": 1,
+        "construction": "sorted(relative_path_utf8 + NUL + file_sha256_bytes + NUL)",
+        "excluded": ["data/file-manifest.json (self-reference)", "GESTALT-*.md (future root append-only review namespace)"],
+        "file_count": len(files),
+        "total_bytes": sum(row["bytes"] for row in files),
+        "subject_sha256": sha256(bytes(digest_input)),
+        "files": files,
+    }
+
+
+def verify(expected: dict[str, Any] | None = None) -> dict[str, Any]:
+    expected = load(MANIFEST) if expected is None else expected
+    actual = capture()
+    if encode(expected) != encode(actual):
+        expected_rows = {row["path"]: row for row in expected.get("files", [])}
+        actual_rows = {row["path"]: row for row in actual["files"]}
+        fail(
+            "FILE_MANIFEST_DRIFT",
+            "owned epoch file manifest differs from current bytes",
+            added=sorted(set(actual_rows) - set(expected_rows)),
+            removed=sorted(set(expected_rows) - set(actual_rows)),
+            changed=sorted(path for path in set(actual_rows) & set(expected_rows) if actual_rows[path] != expected_rows[path]),
+        )
+    return actual
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--write", action="store_true")
+    options = parser.parse_args()
+    document = capture()
+    if options.write:
+        store(MANIFEST, document)
+    else:
+        verify()
+    print(json.dumps({key: document[key] for key in ("file_count", "total_bytes", "subject_sha256")}, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

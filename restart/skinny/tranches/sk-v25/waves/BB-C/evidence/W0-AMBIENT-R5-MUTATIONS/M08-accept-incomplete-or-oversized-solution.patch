@@ -1,0 +1,18 @@
+diff --git a/crates/ir/src/passes/csp_strategy/site.rs b/crates/ir/src/passes/csp_strategy/site.rs
+--- a/crates/ir/src/passes/csp_strategy/site.rs
++++ b/crates/ir/src/passes/csp_strategy/site.rs
+@@ -239,14 +239,6 @@ fn decode_assignments(
+             covered: 0,
+         });
+     }
+-    if let AssignmentSource::Solution(solution) = source
+-        && solution.len() != csp.variables.len()
+-    {
+-        return Err(DecodeFailure {
+-            locus: OptimizationFailureLocus::Search,
+-            covered: 0,
+-        });
+-    }
+     let mut assignments = ComponentAssignments {
+         decisions: RecognizerDecisionMap::new(),
+         materialization: HashMap::new(),

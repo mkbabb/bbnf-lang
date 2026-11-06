@@ -1,0 +1,19 @@
+{
+  "argv": [
+    "/usr/bin/arch",
+    "-arm64",
+    "/tmp/bbcw0-r7-native-nooverlay.wogEcp/target/aarch64-apple-darwin/ax-iter/xtask",
+    "regen-google-sheets"
+  ],
+  "command": "regen-google-sheets",
+  "cwd": "/private/tmp/bbcw0-r7-programming-candidate.dyTgSs/bbnf-lang",
+  "end_unix_ns": 1784765710934662000,
+  "ordinal": 3,
+  "start_unix_ns": 1784765710904724000,
+  "status": 1,
+  "stderr_bytes": 169,
+  "stderr_sha256": "84c1ca19c580f26bcf9a6e930d9008def43586809c5453ef68486ecb8678f4c0",
+  "stdout_bytes": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "wall_ns": 29936250
+}

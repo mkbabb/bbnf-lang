@@ -9,6 +9,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, anyhow, bail};
+use bbnf_ir::TypeDesc;
 use bbnf_ir::registry::StructRegistry;
 
 #[derive(Debug, serde::Deserialize)]
@@ -107,12 +108,24 @@ pub fn check(grammar: &str) -> Result<Vec<PathBuf>> {
     Ok(files.into_iter().map(|file| file.path).collect())
 }
 
+/// Render one runtime source member without writing the generated tree.
+pub fn render_source(grammar: &str, file_name: &str) -> Result<String> {
+    render_runtime_files(grammar)?
+        .into_iter()
+        .find(|file| file.path.file_name().is_some_and(|name| name == file_name))
+        .map(|file| file.source)
+        .ok_or_else(|| anyhow!("runtime projection `{grammar}` has no source member `{file_name}`"))
+}
+
 fn render_runtime_files(grammar: &str) -> Result<Vec<RenderedRuntimeFile>> {
     let workspace_root = workspace_root()?;
     let projection = load_projection(&workspace_root, grammar)?;
     validate_workspace_grammar(&workspace_root, &projection)?;
     validate_projection(&projection)?;
     let registry = load_registry(&workspace_root, &projection)?;
+    if projection.runtime_style == RuntimeStyle::Simple {
+        validate_simple_scalar_registry(&registry)?;
+    }
     let kind_routes = resolve_kind_routes(&projection, &registry)?;
     let header = generated_header(&projection)?;
 
@@ -315,6 +328,71 @@ fn load_registry(root: &Path, projection: &RuntimeProjection) -> Result<StructRe
         );
     }
     Ok(sidecar.registry)
+}
+
+/// Reject scalar payloads the deliberately small `SimpleValue` alphabet
+/// cannot preserve.
+///
+/// The simple runtime owns spans and semantic bytes. Wider numbers and
+/// booleans require a typed runtime style; admitting them here would make the
+/// shared builder silently erase values as `Unit`.
+pub fn validate_simple_scalar_registry(registry: &StructRegistry) -> Result<()> {
+    let mut unsupported = BTreeSet::new();
+    for layout in registry.iter() {
+        collect_unsupported_simple_scalars(&layout.rule_type, &mut unsupported);
+        for field in layout.fields() {
+            collect_unsupported_simple_scalars(&field.type_desc, &mut unsupported);
+        }
+    }
+    if unsupported.is_empty() {
+        return Ok(());
+    }
+    bail!(
+        "simple runtime registry contains unsupported scalar payloads: {}; select a typed runtime style",
+        unsupported.into_iter().collect::<Vec<_>>().join(", ")
+    )
+}
+
+fn collect_unsupported_simple_scalars(ty: &TypeDesc, unsupported: &mut BTreeSet<&'static str>) {
+    match ty {
+        TypeDesc::Span | TypeDesc::U8 => {}
+        TypeDesc::F64 => {
+            unsupported.insert("f64");
+        }
+        TypeDesc::Bool => {
+            unsupported.insert("bool");
+        }
+        TypeDesc::I8 => {
+            unsupported.insert("i8");
+        }
+        TypeDesc::I16 => {
+            unsupported.insert("i16");
+        }
+        TypeDesc::U16 => {
+            unsupported.insert("u16");
+        }
+        TypeDesc::I32 => {
+            unsupported.insert("i32");
+        }
+        TypeDesc::U32 => {
+            unsupported.insert("u32");
+        }
+        TypeDesc::I64 => {
+            unsupported.insert("i64");
+        }
+        TypeDesc::U64 => {
+            unsupported.insert("u64");
+        }
+        TypeDesc::Option(inner) | TypeDesc::Vec(inner) => {
+            collect_unsupported_simple_scalars(inner, unsupported);
+        }
+        TypeDesc::Tuple(parts) | TypeDesc::HeterogeneousAltJoin(parts) => {
+            for part in parts {
+                collect_unsupported_simple_scalars(part, unsupported);
+            }
+        }
+        TypeDesc::BoxedEnum | TypeDesc::Enum | TypeDesc::Named(_) => {}
+    }
 }
 
 fn resolve_kind_routes(
@@ -597,7 +675,7 @@ pub struct __P__CompoundView<'a, 'p: 'a> {{
 fn emit_typed_formula_builder(projection: &RuntimeProjection) -> String {
     runtime_template(
         r#"
-use bbnf_ir::registry::StructLayout;
+use bbnf_ir::registry::{AltBranchId, StructLayout};
 
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
@@ -749,12 +827,17 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
 
     #[inline]
     fn push_leaf_with_i64(&mut self, value: i64) {
-        self.deposit(__P__Value::Number(value as f64));
+        self.deposit(__P__Value::Integer(value));
     }
 
     #[inline]
     fn push_leaf_with_u64(&mut self, value: u64) {
-        self.deposit(__P__Value::Number(value as f64));
+        self.deposit(__P__Value::Unsigned(value));
+    }
+
+    #[inline]
+    fn push_leaf_with_u8(&mut self, value: u8) {
+        self.deposit(__P__Value::Tag(value));
     }
 
     #[inline]
@@ -774,10 +857,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     }
 
     #[inline]
-    fn push_branch_tag(&mut self, branch_index: u32) {
-        debug_assert!(branch_index < 256);
-        self.deposit(__P__Value::Tag(branch_index as u8));
-    }
+    fn select_alt_branch(&mut self, _branch: AltBranchId) {}
 }
 
 impl<'p> __P__StructBuilder<'p> {
@@ -920,6 +1000,26 @@ impl __P__PathQuery for f64 {
     }
 }
 
+impl __P__PathQuery for i64 {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::Integer(n) => Some(*n),
+            _ => None,
+        }
+    }
+}
+
+impl __P__PathQuery for u64 {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::Unsigned(n) => Some(*n),
+            _ => None,
+        }
+    }
+}
+
 impl __P__PathQuery for bool {
     #[inline]
     fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
@@ -1020,6 +1120,8 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
     pub fn kind(&self) -> __P__Kind {
         match &self.focus {
             __P__Value::Number(_) => __P__Kind::Number,
+            __P__Value::Integer(_) => __P__Kind::Integer,
+            __P__Value::Unsigned(_) => __P__Kind::Unsigned,
             __P__Value::String(_) => __P__Kind::String,
             __P__Value::Bool(_) => __P__Kind::Bool,
             __P__Value::Error(_) => __P__Kind::Error,
@@ -1038,7 +1140,10 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
 
     #[inline]
     pub fn is_number(&self) -> bool {
-        matches!(self.focus, __P__Value::Number(_))
+        matches!(
+            self.focus,
+            __P__Value::Number(_) | __P__Value::Integer(_) | __P__Value::Unsigned(_)
+        )
     }
 
     #[inline]
@@ -1056,6 +1161,8 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum __P__Kind {
     Number,
+    Integer,
+    Unsigned,
     String,
     Bool,
     Error,
@@ -1078,6 +1185,8 @@ use __MODULE__::arena::__P__CompoundId;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum __P__Value<'p> {
     Number(f64),
+    Integer(i64),
+    Unsigned(u64),
     String(&'p str),
     Bool(bool),
     Error(u8),
@@ -1091,7 +1200,10 @@ pub enum __P__Value<'p> {
 impl<'p> __P__Value<'p> {
     #[inline]
     pub fn is_number(&self) -> bool {
-        matches!(self, __P__Value::Number(_))
+        matches!(
+            self,
+            __P__Value::Number(_) | __P__Value::Integer(_) | __P__Value::Unsigned(_)
+        )
     }
 
     #[inline]
@@ -1108,6 +1220,22 @@ impl<'p> __P__Value<'p> {
     pub fn as_f64(&self) -> Option<f64> {
         match *self {
             __P__Value::Number(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn as_i64(&self) -> Option<i64> {
+        match *self {
+            __P__Value::Integer(n) => Some(n),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn as_u64(&self) -> Option<u64> {
+        match *self {
+            __P__Value::Unsigned(n) => Some(n),
             _ => None,
         }
     }
@@ -1148,6 +1276,12 @@ impl<'p> __P__Value<'p> {
 fn emit_typed_formula_document_canonical(projection: &RuntimeProjection) -> String {
     runtime_template(
         r##"
+use crate::grammar::generated::google_sheets::{
+    PRECEDENCE_ENTRIES_add_expr, PRECEDENCE_ENTRIES_array_row,
+    PRECEDENCE_ENTRIES_array_rows, PRECEDENCE_ENTRIES_comparison_expr,
+    PRECEDENCE_ENTRIES_concat_expr, PRECEDENCE_ENTRIES_exp_expr,
+    PRECEDENCE_ENTRIES_mul_expr, PrattEntry,
+};
 use __MODULE__::arena::{__P__CompoundId, __P__CompoundKind, __P__CompoundView};
 use __MODULE__::value::__P__Value;
 
@@ -1181,13 +1315,19 @@ fn write_value<'p>(
                 write!(out, "{}", n).unwrap();
             }
         }
+        __P__Value::Integer(n) => write!(out, "{n}").unwrap(),
+        __P__Value::Unsigned(n) => write!(out, "{n}").unwrap(),
         __P__Value::String(s)
         | __P__Value::CellRef(s)
         | __P__Value::Identifier(s)
         | __P__Value::SheetPrefix { text: s, .. } => out.push_str(s),
         __P__Value::Bool(b) => out.push_str(if b { "TRUE" } else { "FALSE" }),
         __P__Value::Error(n) => out.push_str(error_lexeme(n)),
-        __P__Value::Tag(n) => out.push_str(tag_lexeme(parent_kind, n)),
+        __P__Value::Tag(n) => {
+            if let Some(entries) = operator_entries(parent_kind, n) {
+                write_pratt_operator(entries, n, out);
+            }
+        }
         __P__Value::Compound(id) => write_compound(doc, id, out),
     }
 }
@@ -1266,32 +1406,6 @@ fn write_compound<'p>(doc: &__P__Document<'p>, id: __P__CompoundId, out: &mut St
             }
             out.push('}');
         }
-        __P__CompoundKind::ArrayRows => {
-            let mut emitted = 0usize;
-            for child in entry.children {
-                if matches!(child, __P__Value::Tag(_)) {
-                    continue;
-                }
-                if emitted > 0 {
-                    out.push(';');
-                }
-                write_value(doc, child, kind, out);
-                emitted += 1;
-            }
-        }
-        __P__CompoundKind::ArrayRow => {
-            let mut emitted = 0usize;
-            for child in entry.children {
-                if matches!(child, __P__Value::Tag(_)) {
-                    continue;
-                }
-                if emitted > 0 {
-                    out.push(',');
-                }
-                write_value(doc, child, kind, out);
-                emitted += 1;
-            }
-        }
         __P__CompoundKind::RangeRef => {
             let n = entry.children.len();
             for (i, child) in entry.children.iter().enumerate() {
@@ -1309,6 +1423,8 @@ fn write_compound<'p>(doc: &__P__Document<'p>, id: __P__CompoundId, out: &mut St
         | __P__CompoundKind::ExpExpr
         | __P__CompoundKind::ConcatExpr
         | __P__CompoundKind::ComparisonExpr
+        | __P__CompoundKind::ArrayRow
+        | __P__CompoundKind::ArrayRows
         | __P__CompoundKind::CompareOp
         | __P__CompoundKind::AddOp
         | __P__CompoundKind::MulOp
@@ -1374,31 +1490,65 @@ fn error_lexeme(n: u8) -> &'static str {
     }
 }
 
-fn tag_lexeme(parent: __P__CompoundKind, n: u8) -> &'static str {
-    match (parent, n) {
-        (__P__CompoundKind::AddExpr, 0) | (__P__CompoundKind::UnaryExpr, 0) => "+",
-        (__P__CompoundKind::AddExpr, 1) | (__P__CompoundKind::UnaryExpr, 1) => "-",
-        (__P__CompoundKind::MulExpr, 0) => "*",
-        (__P__CompoundKind::MulExpr, 1) => "/",
-        (__P__CompoundKind::ExpExpr, _) => "^",
-        (__P__CompoundKind::ConcatExpr, _) => "&",
-        (__P__CompoundKind::ComparisonExpr, 0) => "<>",
-        (__P__CompoundKind::ComparisonExpr, 1) => "<=",
-        (__P__CompoundKind::ComparisonExpr, 2) => ">=",
-        (__P__CompoundKind::ComparisonExpr, 3) => "<",
-        (__P__CompoundKind::ComparisonExpr, 4) => ">",
-        (__P__CompoundKind::ComparisonExpr, 5) => "=",
-        (__P__CompoundKind::AddOp, 0) | (__P__CompoundKind::UnaryPrefix, 0) => "+",
-        (__P__CompoundKind::AddOp, 1) | (__P__CompoundKind::UnaryPrefix, 1) => "-",
-        (__P__CompoundKind::MulOp, 0) => "*",
-        (__P__CompoundKind::MulOp, 1) => "/",
-        (__P__CompoundKind::CompareOp, 0) => "<>",
-        (__P__CompoundKind::CompareOp, 1) => "<=",
-        (__P__CompoundKind::CompareOp, 2) => ">=",
-        (__P__CompoundKind::CompareOp, 3) => "=",
-        (__P__CompoundKind::CompareOp, 4) => "<",
-        (__P__CompoundKind::CompareOp, 5) => ">",
-        _ => "",
+fn write_pratt_operator(entries: &[PrattEntry], tag: u8, out: &mut String) {
+    let entry = entries
+        .iter()
+        .find(|entry| entry.op_discriminant == tag)
+        .unwrap_or_else(|| panic!("unknown Pratt operator tag {tag}"));
+    out.push(char::from(entry.byte));
+    if let Some(second) = entry.second_byte {
+        out.push(char::from(second));
+    }
+}
+
+fn operator_entries(
+    parent: __P__CompoundKind,
+    tag: u8,
+) -> Option<&'static [PrattEntry]> {
+    match parent {
+        __P__CompoundKind::ComparisonExpr | __P__CompoundKind::CompareOp => {
+            Some(PRECEDENCE_ENTRIES_comparison_expr)
+        }
+        __P__CompoundKind::ConcatExpr => Some(PRECEDENCE_ENTRIES_concat_expr),
+        __P__CompoundKind::AddExpr | __P__CompoundKind::AddOp => {
+            Some(PRECEDENCE_ENTRIES_add_expr)
+        }
+        __P__CompoundKind::MulExpr | __P__CompoundKind::MulOp => {
+            Some(PRECEDENCE_ENTRIES_mul_expr)
+        }
+        __P__CompoundKind::ExpExpr => Some(PRECEDENCE_ENTRIES_exp_expr),
+        __P__CompoundKind::ArrayRow => Some(PRECEDENCE_ENTRIES_array_row),
+        __P__CompoundKind::ArrayRows => Some(PRECEDENCE_ENTRIES_array_rows),
+        __P__CompoundKind::UnaryExpr | __P__CompoundKind::UnaryPrefix => {
+            assert!(
+                tag <= 1,
+                "unary operator tag {tag} is not present in the grammar-derived AddExpr table"
+            );
+            Some(PRECEDENCE_ENTRIES_add_expr)
+        }
+        __P__CompoundKind::Unknown
+        | __P__CompoundKind::Formula
+        | __P__CompoundKind::Expression
+        | __P__CompoundKind::PostfixExpr
+        | __P__CompoundKind::Primary
+        | __P__CompoundKind::ParenExpr
+        | __P__CompoundKind::FuncOpen
+        | __P__CompoundKind::Arg
+        | __P__CompoundKind::FuncArgs
+        | __P__CompoundKind::FuncCall
+        | __P__CompoundKind::LetBinding
+        | __P__CompoundKind::LetArgs
+        | __P__CompoundKind::LetCall
+        | __P__CompoundKind::LambdaParams
+        | __P__CompoundKind::LambdaCall
+        | __P__CompoundKind::ArrayLiteral
+        | __P__CompoundKind::Cell
+        | __P__CompoundKind::RangeRef
+        | __P__CompoundKind::RangeEnd
+        | __P__CompoundKind::CellOrRange
+        | __P__CompoundKind::ErrorLiteral
+        | __P__CompoundKind::SheetPrefix
+        | __P__CompoundKind::Wrap => None,
     }
 }
 "##,
@@ -1526,6 +1676,8 @@ impl<'a, 'p: 'a> RuntimeView<'p> for __P__View<'a, 'p> {
     fn kind(&self) -> Self::Kind {
         match self.focus {
             __P__Value::Number(_) => __P__Kind::Number,
+            __P__Value::Integer(_) => __P__Kind::Integer,
+            __P__Value::Unsigned(_) => __P__Kind::Unsigned,
             __P__Value::String(_) => __P__Kind::String,
             __P__Value::Bool(_) => __P__Kind::Bool,
             __P__Value::Error(_) => __P__Kind::Error,
@@ -1767,7 +1919,7 @@ fn emit_typed_json_builder(projection: &RuntimeProjection, routes: &[ResolvedKin
     runtime_template(
         &format!(
             r#"
-use bbnf_ir::registry::{{LayoutKind, StructLayout}};
+use bbnf_ir::registry::{{AltBranchId, LayoutKind, StructLayout}};
 
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
@@ -2022,6 +2174,15 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
     }}
 
     #[inline]
+    fn push_leaf_with_u8(&mut self, value: u8) {{
+        assert_eq!(
+            value, 0,
+            "JSON grammar emitted a nonzero semantic u8; only null owns this projection"
+        );
+        self.deposit(__P__Value::Null);
+    }}
+
+    #[inline]
     fn push_leaf_with_bool(&mut self, value: bool) {{
         self.deposit(__P__Value::Bool(value));
     }}
@@ -2038,7 +2199,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
     }}
 
     #[inline]
-    fn push_branch_tag(&mut self, _branch_index: u32) {{}}
+    fn select_alt_branch(&mut self, _branch: AltBranchId) {{}}
 }}
 "#
         ),
@@ -2547,7 +2708,7 @@ fn emit_typed_bbnf_arena(projection: &RuntimeProjection, routes: &[ResolvedKindR
         .join("\n");
     runtime_template(
         &r#"
-use bbnf_ir::registry::{StructLayout, StructRegistry};
+use bbnf_ir::registry::{AltBranchId, StructLayout, StructRegistry};
 
 use __MODULE__::value::__P__Value;
 
@@ -2568,7 +2729,7 @@ __ARMS__
 #[derive(Debug, Clone)]
 pub struct __P__Compound<'p> {
     pub kind: __P__CompoundKind,
-    pub branch_tag: Option<u32>,
+    pub branch_tag: Option<AltBranchId>,
     pub bounds: Option<(u32, u32)>,
     pub children: Vec<__P__Value<'p>>,
 }
@@ -2660,7 +2821,7 @@ impl<'p> __P__Arena<'p> {
 fn emit_typed_bbnf_builder(projection: &RuntimeProjection) -> String {
     runtime_template(
         r#"
-use bbnf_ir::registry::StructLayout;
+use bbnf_ir::registry::{AltBranchId, StructLayout};
 
 use __MODULE__::arena::{__P__Arena, __P__Compound, __P__CompoundKind};
 use __MODULE__::document::__P__Document;
@@ -2678,7 +2839,7 @@ use crate::runtime::handle::CompoundHandle;
 #[derive(Debug, Clone, Copy)]
 struct OpenFrame {
     kind: __P__CompoundKind,
-    branch_tag: Option<u32>,
+    branch_tag: Option<AltBranchId>,
     start_offset: Option<u32>,
     end_offset: Option<u32>,
     children_base: usize,
@@ -2823,7 +2984,12 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
 
     #[inline]
     fn push_leaf_with_u64(&mut self, value: u64) {
-        self.deposit(__P__Value::Int(value as i64));
+        self.deposit(__P__Value::UInt(value));
+    }
+
+    #[inline]
+    fn push_leaf_with_u8(&mut self, value: u8) {
+        self.deposit(__P__Value::Tag(value));
     }
 
     #[inline]
@@ -2843,9 +3009,9 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     }
 
     #[inline]
-    fn push_branch_tag(&mut self, branch_index: u32) {
+    fn select_alt_branch(&mut self, branch: AltBranchId) {
         if let Some(frame) = self.stack.last_mut() {
-            frame.branch_tag = Some(branch_index);
+            frame.branch_tag = Some(branch);
         }
     }
 
@@ -2876,6 +3042,7 @@ use __MODULE__::arena::__P__CompoundId;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum __P__Value<'p> {
     Int(i64),
+    UInt(u64),
     Float(f64),
     Bool(bool),
     Span(&'p str),
@@ -2904,6 +3071,7 @@ use crate::runtime::path::{Path, PathSegment};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum __P__Kind {
     Int,
+    UInt,
     Float,
     Bool,
     Span,
@@ -3005,6 +3173,7 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
     pub fn kind(&self) -> __P__Kind {
         match self.focus {
             __P__Value::Int(_) => __P__Kind::Int,
+            __P__Value::UInt(_) => __P__Kind::UInt,
             __P__Value::Float(_) => __P__Kind::Float,
             __P__Value::Bool(_) => __P__Kind::Bool,
             __P__Value::Span(_) => __P__Kind::Span,
@@ -3026,7 +3195,10 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
 
     #[inline]
     pub fn is_number(&self) -> bool {
-        matches!(self.focus, __P__Value::Int(_) | __P__Value::Float(_))
+        matches!(
+            self.focus,
+            __P__Value::Int(_) | __P__Value::UInt(_) | __P__Value::Float(_)
+        )
     }
 
     #[inline]
@@ -3193,12 +3365,21 @@ impl __P__PathQuery for i64 {
     }
 }
 
+impl __P__PathQuery for u64 {
+    #[inline]
+    fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
+        match walk_path(doc, path)? {
+            __P__Value::UInt(v) => Some(*v),
+            _ => None,
+        }
+    }
+}
+
 impl __P__PathQuery for f64 {
     #[inline]
     fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             __P__Value::Float(v) => Some(*v),
-            __P__Value::Int(v) => Some(*v as f64),
             _ => None,
         }
     }
@@ -3241,6 +3422,7 @@ fn emit_typed_bbnf_view(projection: &RuntimeProjection) -> String {
     runtime_template(
         r#"
 use crate::runtime::RuntimeView;
+use bbnf_ir::registry::AltBranchId;
 use __MODULE__::arena::{__P__Compound, __P__CompoundKind};
 use __MODULE__::document::{__P__Document, __P__Kind, __P__View};
 use __MODULE__::value::__P__Value;
@@ -3252,6 +3434,7 @@ impl<'a, 'p: 'a> RuntimeView<'p> for __P__View<'a, 'p> {
     fn kind(&self) -> Self::Kind {
         match self.focus {
             __P__Value::Int(_) => __P__Kind::Int,
+            __P__Value::UInt(_) => __P__Kind::UInt,
             __P__Value::Float(_) => __P__Kind::Float,
             __P__Value::Bool(_) => __P__Kind::Bool,
             __P__Value::Span(_) => __P__Kind::Span,
@@ -3332,9 +3515,17 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
     }
 
     #[inline]
-    pub fn branch_tag(&self) -> Option<u32> {
+    pub fn branch_tag(&self) -> Option<AltBranchId> {
         match self.focus {
             __P__Value::Compound(id) => self.doc.compound(id).branch_tag,
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn tag_value(&self) -> Option<u8> {
+        match self.focus {
+            __P__Value::Tag(value) => Some(value),
             _ => None,
         }
     }
@@ -3547,6 +3738,7 @@ fn emit_typed_bbnf_serialize(projection: &RuntimeProjection) -> String {
         r#"
 use std::fmt::Write;
 
+use crate::grammar::generated::bbnf::{PRECEDENCE_ENTRIES_binary_factor, PrattEntry};
 use __MODULE__::arena::{__P__CompoundId, __P__CompoundKind};
 use __MODULE__::document::__P__Document;
 use __MODULE__::value::__P__Value;
@@ -3561,6 +3753,7 @@ fn emit_value<'p>(doc: &__P__Document<'p>, value: &__P__Value<'p>, out: &mut Str
     match value {
         __P__Value::Span(s) => out.push_str(s),
         __P__Value::Int(i) => write!(out, "{i}").unwrap(),
+        __P__Value::UInt(i) => write!(out, "{i}").unwrap(),
         __P__Value::Float(f) => write!(out, "{f}").unwrap(),
         __P__Value::Bool(b) => out.push_str(if *b { "true" } else { "false" }),
         __P__Value::Tag(t) => write!(out, "{t}").unwrap(),
@@ -3617,11 +3810,15 @@ fn emit_compound<'p>(doc: &__P__Document<'p>, id: __P__CompoundId, out: &mut Str
             }
         }
         __P__CompoundKind::BinaryFactor => {
-            for (i, child) in compound.children.iter().enumerate() {
-                if i > 0 {
-                    out.push_str(" - ");
+            for child in &compound.children {
+                match child {
+                    __P__Value::Tag(tag) => {
+                        out.push(' ');
+                        write_pratt_operator(PRECEDENCE_ENTRIES_binary_factor, *tag, out);
+                        out.push(' ');
+                    }
+                    _ => emit_value(doc, child, out),
                 }
-                emit_value(doc, child, out);
             }
         }
         __P__CompoundKind::MappedFactor => {
@@ -3839,6 +4036,17 @@ fn emit_compound<'p>(doc: &__P__Document<'p>, id: __P__CompoundId, out: &mut Str
         }
     }
 }
+
+fn write_pratt_operator(entries: &[PrattEntry], tag: u8, out: &mut String) {
+    let entry = entries
+        .iter()
+        .find(|entry| entry.op_discriminant == tag)
+        .unwrap_or_else(|| panic!("unknown Pratt operator tag {tag}"));
+    out.push(char::from(entry.byte));
+    if let Some(second) = entry.second_byte {
+        out.push(char::from(second));
+    }
+}
 "#,
         projection,
     )
@@ -3917,7 +4125,7 @@ fn emit_builder(projection: &RuntimeProjection) -> String {
     let module = &projection.runtime_module;
     format!(
         r#"
-use bbnf_ir::registry::StructLayout;
+use bbnf_ir::registry::{{AltBranchId, StructLayout}};
 
 use crate::runtime::builder_template::{{SimpleCompound, SimpleStructBuilder, SimpleValue}};
 use {module}::arena::{{{p}Arena, {p}CompoundId}};
@@ -3937,6 +4145,11 @@ impl<'p> SimpleValue<'p> for {p}Value<'p> {{
     }}
 
     #[inline]
+    fn from_u8(value: u8) -> Self {{
+        Self::U8(value)
+    }}
+
+    #[inline]
     fn from_compound_index(id_plus_one: u32) -> Self {{
         Self::Compound({p}CompoundId::from_raw(id_plus_one))
     }}
@@ -3946,7 +4159,7 @@ impl<'p> SimpleCompound<'p, {p}Value<'p>> for {p}Compound<'p> {{
     #[inline]
     fn new_entry(
         layout: &StructLayout,
-        branch_tag: Option<u32>,
+        branch_tag: Option<AltBranchId>,
         children: Vec<{p}Value<'p>>,
     ) -> Self {{
         Self {{
@@ -3985,6 +4198,7 @@ use crate::runtime::path::{{Path, PathSegment}};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum {p}Kind {{
     Span,
+    U8,
     Unit,
     Compound,
 }}
@@ -4082,6 +4296,7 @@ impl<'a, 'p: 'a> {p}View<'a, 'p> {{
     pub fn kind(&self) -> {p}Kind {{
         match &self.focus {{
             {p}Value::Span(_) => {p}Kind::Span,
+            {p}Value::U8(_) => {p}Kind::U8,
             {p}Value::Unit => {p}Kind::Unit,
             {p}Value::Compound(_) => {p}Kind::Compound,
         }}
@@ -4095,6 +4310,11 @@ impl<'a, 'p: 'a> {p}View<'a, 'p> {{
     #[inline]
     pub fn is_span(&self) -> bool {{
         matches!(self.focus, {p}Value::Span(_))
+    }}
+
+    #[inline]
+    pub fn is_u8(&self) -> bool {{
+        matches!(self.focus, {p}Value::U8(_))
     }}
 
     #[inline]
@@ -4139,6 +4359,16 @@ impl {p}PathQuery for &str {{
                 let extended: &'p str = *s;
                 Some(unsafe {{ core::mem::transmute::<&'p str, &str>(extended) }})
             }}
+            _ => None,
+        }}
+    }}
+}}
+
+impl {p}PathQuery for u8 {{
+    #[inline]
+    fn query<'p>(doc: &{p}Document<'p>, path: Path<'_>) -> Option<Self> {{
+        match walk_path(doc, path)? {{
+            {p}Value::U8(value) => Some(*value),
             _ => None,
         }}
     }}
@@ -4195,7 +4425,7 @@ fn emit_kind(projection: &RuntimeProjection, routes: &[ResolvedKindRoute]) -> St
     };
     format!(
         r#"
-use bbnf_ir::registry::StructLayout;
+use bbnf_ir::registry::{{AltBranchId, StructLayout}};
 
 use {module}::value::{p}Value;
 
@@ -4211,7 +4441,7 @@ impl {p}CompoundKind {{
 #[derive(Debug, Clone)]
 pub struct {p}Compound<'p> {{
     pub kind: {p}CompoundKind,
-    pub branch_tag: Option<u32>,
+    pub branch_tag: Option<AltBranchId>,
     pub children: Vec<{p}Value<'p>>,
 }}
 
@@ -4259,6 +4489,7 @@ use {module}::arena::{p}CompoundId;
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum {p}Value<'p> {{
     Span(&'p str),
+    U8(u8),
     Unit,
     Compound({p}CompoundId),
 }}
@@ -4288,6 +4519,7 @@ impl<'a, 'p: 'a> RuntimeView<'p> for {p}View<'a, 'p> {{
     fn kind(&self) -> Self::Kind {{
         match self.focus {{
             {p}Value::Span(_) => {p}Kind::Span,
+            {p}Value::U8(_) => {p}Kind::U8,
             {p}Value::Unit => {p}Kind::Unit,
             {p}Value::Compound(_) => {p}Kind::Compound,
         }}

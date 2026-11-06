@@ -24,12 +24,10 @@
 //! touch shares the same entry state, the downstream DTA state count
 //! drops ≥ 100 on CSS L4 per W4.3 hard gate.
 //!
-//! # Why pre-egraph
+//! # Pipeline position
 //!
-//! The egraph pass benefits from a simpler IR with hoisted
-//! commonality already in place: common-subexpression elimination
-//! (`DeduplicateAltBranches`, `UnionMergeAlt`) converges faster on
-//! rewritten `Ref` nodes than on the original inline trees.
+//! This runs after the structural normalizer and before downstream
+//! fact mining. Grammar-tier e-graph saturation is research-only.
 //!
 //! # Algorithm
 //!

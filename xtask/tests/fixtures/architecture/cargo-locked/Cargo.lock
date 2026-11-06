@@ -1,0 +1,6 @@
+# This file is intentionally stale. The mutation gate proves metadata is locked.
+version = 4
+
+[[package]]
+name = "locked-fixture"
+version = "0.1.0"

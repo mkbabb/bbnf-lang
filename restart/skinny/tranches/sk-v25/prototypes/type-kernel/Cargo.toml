@@ -1,0 +1,12 @@
+[package]
+name = "bbnf-type-kernel-prototype"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+
+[workspace]

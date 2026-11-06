@@ -1,0 +1,9 @@
+regen bbnf: wrote 1062385 bytes to crates/core/src/grammar/generated/bbnf.rs
+regen json: wrote 119642 bytes to crates/core/src/grammar/generated/json.rs
+regen css_l4: wrote 7270497 bytes to crates/core/src/grammar/generated/css_l4.rs
+regen css_pretty: wrote 305499 bytes to crates/core/src/grammar/generated/css_pretty.rs
+regen google_sheets: wrote 653976 bytes to crates/core/src/grammar/generated/google_sheets.rs
+regen ebnf: wrote 349063 bytes to crates/core/src/grammar/generated/ebnf.rs
+regen bnf: wrote 144917 bytes to crates/core/src/grammar/generated/bnf.rs
+regen csv: wrote 68977 bytes to crates/core/src/grammar/generated/csv.rs
+regen math: wrote 28353 bytes to crates/core/src/grammar/generated/math.rs

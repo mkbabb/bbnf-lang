@@ -6,10 +6,11 @@
 //! byte `stripe_base + i` is between an unescaped opening quote and
 //! its matching closing quote.
 //!
-//! The classical simdjson trick: prefix-XOR the quote mask. With CLMUL
-//! against the all-ones polynomial, the prefix-XOR is one PMULL/CLMUL
-//! op per stripe. Without CLMUL, the same prefix can be computed via
-//! a 6-op shift-XOR ladder (Lemire's "fast parsing" §6.1):
+//! The classical simdjson trick is to prefix-XOR the quote mask. On
+//! Apple ARM with PMULL, the prefix-XOR is one carryless multiply
+//! against the all-ones polynomial. The wasm32 and scalar paths use
+//! the equivalent 6-op shift-XOR ladder (Lemire's "fast parsing"
+//! §6.1):
 //!
 //! ```text
 //! x = quote_mask
@@ -24,18 +25,18 @@
 //! Both forms produce the same 64-bit prefix-XOR; either is folded
 //! with the carried parity bit from the previous stripe (XOR).
 //!
-//! This module is arch-neutral; the AVX2 + NEON kernels call
-//! [`prefix_xor_64`] directly, which selects CLMUL or shift-XOR by
-//! `cfg!(target_feature)`. The output is the in-string mask suitable
-//! for AND-NOT'ing against the structural-byte mask before compaction.
+//! The Apple ARM NEON, wasm32 SIMD, and scalar kernels call
+//! [`prefix_xor_64`] directly. The output is the in-string mask
+//! suitable for AND-NOT'ing against the structural-byte mask before
+//! compaction.
 
 /// Compute the prefix-XOR of `mask`, folding `carry_in` (the XOR
 /// across all bits of all prior stripes' masks) into bit 0.
 ///
-/// Uses CLMUL on aarch64 (PMULL) or x86_64 (PCLMULQDQ) when those
-/// target features are statically available; falls back to the
-/// 6-op shift-XOR ladder otherwise. Both paths produce identical
-/// output; tests in `tests/quote_parity.rs` verify this.
+/// Uses PMULL on AArch64 when that target feature is statically
+/// available; wasm32 and the scalar reference use the 6-op shift-XOR ladder.
+/// Both paths produce identical output; tests in
+/// `tests/quote_parity.rs` verify this.
 #[inline]
 pub fn prefix_xor_64(mask: u64, carry_in: bool) -> u64 {
     let prefix = prefix_xor_impl(mask);
@@ -148,16 +149,12 @@ fn prefix_xor_impl(mask: u64) -> u64 {
         // gated; the shift-XOR fallback remains correct.
         return clmul_prefix_xor_aarch64(mask);
     }
-    #[cfg(all(target_arch = "x86_64", target_feature = "pclmulqdq"))]
-    {
-        return clmul_prefix_xor_x86(mask);
-    }
     #[allow(unreachable_code)]
     shift_xor_prefix(mask)
 }
 
 /// 6-op shift-XOR prefix ladder. Always correct; used as the
-/// portable fallback and as the test reference for CLMUL parity.
+/// wasm32/scalar fallback and as the test reference for PMULL parity.
 #[inline]
 pub fn shift_xor_prefix(mut x: u64) -> u64 {
     x ^= x << 1;
@@ -169,7 +166,7 @@ pub fn shift_xor_prefix(mut x: u64) -> u64 {
     x
 }
 
-/// CLMUL/PMULL prefix-XOR on aarch64.
+/// PMULL prefix-XOR on AArch64.
 #[cfg(all(target_arch = "aarch64", target_feature = "aes"))]
 #[inline]
 fn clmul_prefix_xor_aarch64(mask: u64) -> u64 {
@@ -181,21 +178,6 @@ fn clmul_prefix_xor_aarch64(mask: u64) -> u64 {
         let m = vmull_p64(mask, !0u64);
         // Low 64 bits of the 128-bit product == prefix-XOR.
         core::mem::transmute::<u128, [u64; 2]>(m)[0]
-    }
-}
-
-/// CLMUL prefix-XOR on x86_64.
-#[cfg(all(target_arch = "x86_64", target_feature = "pclmulqdq"))]
-#[inline]
-fn clmul_prefix_xor_x86(mask: u64) -> u64 {
-    use core::arch::x86_64::*;
-    // SAFETY: `_mm_clmulepi64_si128` requires the `pclmulqdq` target
-    // feature, gated by the surrounding `#[cfg]`.
-    unsafe {
-        let a = _mm_set_epi64x(0, mask as i64);
-        let b = _mm_set1_epi8(-1i8);
-        let prod = _mm_clmulepi64_si128::<0>(a, b);
-        _mm_cvtsi128_si64(prod) as u64
     }
 }
 

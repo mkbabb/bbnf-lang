@@ -265,10 +265,10 @@ fn wire_contract_compound_with_two_children() {
 }
 
 #[test]
-fn wire_contract_branch_tag_deposits_as_tag() {
+fn wire_contract_u8_leaf_deposits_as_tag() {
     // add_op = "+" -> 0u8 | "-" -> 1u8.
     let mut b = SheetsStructBuilder::new();
-    b.push_branch_tag(1);
+    b.push_leaf_with_u8(1);
     let doc = b.finalise("");
     match *doc.root() {
         SheetsValue::Tag(1) => {}
@@ -300,14 +300,14 @@ fn wire_contract_compound_kind_disambiguates_role() {
     let mut b1 = SheetsStructBuilder::new();
     let add_layout = synth_layout(27, "add_expr", LayoutKind::Struct);
     let h = b1.begin_compound(&add_layout);
-    b1.push_branch_tag(0);
+    b1.push_leaf_with_u8(0);
     b1.end_compound(h);
     let doc1 = b1.finalise("");
 
     let mut b2 = SheetsStructBuilder::new();
     let mul_layout = synth_layout(16, "mul_expr", LayoutKind::Struct);
     let h = b2.begin_compound(&mul_layout);
-    b2.push_branch_tag(0);
+    b2.push_leaf_with_u8(0);
     b2.end_compound(h);
     let doc2 = b2.finalise("");
 

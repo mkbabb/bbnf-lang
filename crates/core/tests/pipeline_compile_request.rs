@@ -265,7 +265,7 @@ fn ts_backend_emits_discriminated_union() {
     //
     // The previous `item = "x" -> 0u8 | "y" -> 1u8` shape relied on
     // `body_has_map` to keep `item` alive, but the AZ-IV.W0.3 IR
-    // pipeline strips Map annotations during egraph saturation when
+    // pipeline can strip Map annotations during direct normalization when
     // the rule body is a typed Alt of single-byte literals, so the
     // identity contract evaporated.
     let grammar = r#"

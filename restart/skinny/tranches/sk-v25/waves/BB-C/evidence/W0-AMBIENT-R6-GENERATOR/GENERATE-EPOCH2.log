@@ -1,0 +1,11 @@
+MODEL: gpt-5.6-sol; EFFORT: ultra; ROLE: R6 generator author.
+WORKDIR: /Users/mkbabb/Programming/bbnf-lang
+COMMAND: /usr/bin/arch -arm64 /tmp/bbcw0-r6-xtask-epoch2.MZVMIY/aarch64-apple-darwin/ax-iter/xtask regen --grammar bbnf --output /tmp/bbcw0-r6-output-epoch2.jBv2AI
+EXIT: 0
+
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 9.239417ms
+[xtask::regen] bbnf: generate_all done in 24.187875ms
+[xtask::regen] bbnf: prettyplease done in 157.811042ms
+

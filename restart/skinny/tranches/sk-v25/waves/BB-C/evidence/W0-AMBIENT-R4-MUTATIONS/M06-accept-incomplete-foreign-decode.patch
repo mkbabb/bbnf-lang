@@ -1,0 +1,49 @@
+diff --git a/crates/ir/src/passes/csp_strategy/site.rs b/crates/ir/src/passes/csp_strategy/site.rs
+--- a/crates/ir/src/passes/csp_strategy/site.rs
++++ b/crates/ir/src/passes/csp_strategy/site.rs
+@@ -239,14 +239,6 @@ fn decode_assignments(
+             covered: 0,
+         });
+     }
+-    if let AssignmentSource::Solution(solution) = source
+-        && solution.len() != csp.variables.len()
+-    {
+-        return Err(DecodeFailure {
+-            locus: OptimizationFailureLocus::Search,
+-            covered: 0,
+-        });
+-    }
+     let mut assignments = ComponentAssignments {
+         decisions: RecognizerDecisionMap::new(),
+         materialization: HashMap::new(),
+@@ -255,7 +248,7 @@ fn decode_assignments(
+     let mut covered_count = 0usize;
+     let mut objective = 0.0;
+     for (var_id, site) in sites {
+-        let index = *var_id as usize;
++        let index = (*var_id as usize).min(csp.variables.len().saturating_sub(1));
+         let Some(variable) = csp.variables.get(index) else {
+             return Err(DecodeFailure {
+                 locus: OptimizationFailureLocus::Variable(*var_id),
+@@ -283,13 +275,12 @@ fn decode_assignments(
+                 }
+                 best_value
+             }
+-            AssignmentSource::Solution(solution) => {
+-                let Some(value) = solution.get(index) else {
+-                    return Err(DecodeFailure {
+-                        locus: OptimizationFailureLocus::Variable(*var_id),
+-                        covered: covered_count,
+-                    });
+-                };
+-                value
+-            }
++            AssignmentSource::Solution(solution) => solution.get(index).unwrap_or_else(|| {
++                variable
++                    .domain
++                    .active_costs()
++                    .next()
++                    .expect("validated non-empty domain")
++                    .0
++            }),
+         };

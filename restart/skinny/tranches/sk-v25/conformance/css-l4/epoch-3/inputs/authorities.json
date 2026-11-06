@@ -1,0 +1,948 @@
+{
+  "authorities": [
+    {
+      "bytes": 621957,
+      "response_url": "https://www.w3.org/TR/2026/NOTE-css-2026-20260622/",
+      "role": "snapshot-2026",
+      "sha256": "fddc6c448e08e5eaa22a362c759a3a7c28045da1cdffad2d8421d679d49839d2",
+      "url": "https://www.w3.org/TR/2026/NOTE-css-2026-20260622/"
+    },
+    {
+      "bytes": 78453,
+      "response_url": "https://www.w3.org/Style/CSS/current-work.en.html",
+      "role": "current-work",
+      "sha256": "f85a5166c5a20a8d11bf5ef74ac8a4c0d597adc7e7b014f32e318393a3627aa5",
+      "url": "https://www.w3.org/Style/CSS/current-work.en.html"
+    },
+    {
+      "bytes": 127147,
+      "latest_url": "https://www.w3.org/TR/CSS2/",
+      "response_url": "https://www.w3.org/TR/2011/REC-CSS2-20110607/",
+      "role": "dated-publication",
+      "sha256": "1e43327015ed94d3e6a3bb5b3948dc5e56f54ed76cfd2ef4918ad8f8ca86c5dd",
+      "spec_id": "CSS2",
+      "url": "https://www.w3.org/TR/2011/REC-CSS2-20110607/"
+    },
+    {
+      "bytes": 234781,
+      "latest_url": "https://www.w3.org/TR/compositing-1/",
+      "response_url": "https://www.w3.org/TR/2024/CRD-compositing-1-20240321/",
+      "role": "dated-publication",
+      "sha256": "0fb91119308e706a5e4df368a91fa3b43cd5fe8cd8f192418b2df0a30ba8a62b",
+      "spec_id": "compositing-1",
+      "url": "https://www.w3.org/TR/2024/CRD-compositing-1-20240321/"
+    },
+    {
+      "bytes": 621957,
+      "latest_url": "https://www.w3.org/TR/css-2026/",
+      "response_url": "https://www.w3.org/TR/2026/NOTE-css-2026-20260622/",
+      "role": "dated-publication",
+      "sha256": "fddc6c448e08e5eaa22a362c759a3a7c28045da1cdffad2d8421d679d49839d2",
+      "spec_id": "css-2026",
+      "url": "https://www.w3.org/TR/2026/NOTE-css-2026-20260622/"
+    },
+    {
+      "bytes": 574165,
+      "latest_url": "https://www.w3.org/TR/css-align-3/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-align-3-20260130/",
+      "role": "dated-publication",
+      "sha256": "7361249cbb73d90e811e6eb7f8cd5bc4de5bbb81c2a7add6d1cbcb9dfd800d37",
+      "spec_id": "css-align-3",
+      "url": "https://www.w3.org/TR/2026/WD-css-align-3-20260130/"
+    },
+    {
+      "bytes": 278425,
+      "latest_url": "https://www.w3.org/TR/css-animations-1/",
+      "response_url": "https://www.w3.org/TR/2023/WD-css-animations-1-20230302/",
+      "role": "dated-publication",
+      "sha256": "f725ad790abbf87f7f53b00f383b8c206a95decb27cd5c257a9725646abb4d98",
+      "spec_id": "css-animations-1",
+      "url": "https://www.w3.org/TR/2023/WD-css-animations-1-20230302/"
+    },
+    {
+      "bytes": 228199,
+      "latest_url": "https://www.w3.org/TR/css-animations-2/",
+      "response_url": "https://www.w3.org/TR/2023/WD-css-animations-2-20230602/",
+      "role": "dated-publication",
+      "sha256": "2f744135417a83bc904be3bfe75885b90752b6a018ab1dc147c17980de57c44a",
+      "spec_id": "css-animations-2",
+      "url": "https://www.w3.org/TR/2023/WD-css-animations-2-20230602/"
+    },
+    {
+      "bytes": 544031,
+      "latest_url": "https://www.w3.org/TR/css-backgrounds-3/",
+      "response_url": "https://www.w3.org/TR/2024/CRD-css-backgrounds-3-20240311/",
+      "role": "dated-publication",
+      "sha256": "8a291792b2fd351eee443df466626d02b889d890f5d80e315bf80181b408712a",
+      "spec_id": "css-backgrounds-3",
+      "url": "https://www.w3.org/TR/2024/CRD-css-backgrounds-3-20240311/"
+    },
+    {
+      "bytes": 679528,
+      "latest_url": "https://www.w3.org/TR/css-backgrounds-4/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-backgrounds-4-20251125/",
+      "role": "dated-publication",
+      "sha256": "d43de55e6211647cf4ec9815989b28250c65870ae98737046b080c7523630fe6",
+      "spec_id": "css-backgrounds-4",
+      "url": "https://www.w3.org/TR/2025/WD-css-backgrounds-4-20251125/"
+    },
+    {
+      "bytes": 861757,
+      "latest_url": "https://www.w3.org/TR/css-borders-4/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-borders-4-20251216/",
+      "role": "dated-publication",
+      "sha256": "49c70cb460051eadf74aacc76ec41e9e87c2cc909efce80b2274c68185829ac7",
+      "spec_id": "css-borders-4",
+      "url": "https://www.w3.org/TR/2025/WD-css-borders-4-20251216/"
+    },
+    {
+      "bytes": 162853,
+      "latest_url": "https://www.w3.org/TR/css-box-3/",
+      "response_url": "https://www.w3.org/TR/2024/REC-css-box-3-20240411/",
+      "role": "dated-publication",
+      "sha256": "5330ef95e4b8ae6ee3f87ea24f52b2b23092fb0dd0f9011736e1878db96c702e",
+      "spec_id": "css-box-3",
+      "url": "https://www.w3.org/TR/2024/REC-css-box-3-20240411/"
+    },
+    {
+      "bytes": 198225,
+      "latest_url": "https://www.w3.org/TR/css-box-4/",
+      "response_url": "https://www.w3.org/TR/2024/WD-css-box-4-20240804/",
+      "role": "dated-publication",
+      "sha256": "78e1c76887f19b2f1a73a38fc12e7f36c1dec49bc77650cd10b59b9bca07b05c",
+      "spec_id": "css-box-4",
+      "url": "https://www.w3.org/TR/2024/WD-css-box-4-20240804/"
+    },
+    {
+      "bytes": 171462,
+      "latest_url": "https://www.w3.org/TR/css-break-3/",
+      "response_url": "https://www.w3.org/TR/2018/CR-css-break-3-20181204/",
+      "role": "dated-publication",
+      "sha256": "4d47d4b2dd36a28e2b0275833b9734b1d5a0b18299a3f278e238bed8e2ecd509",
+      "spec_id": "css-break-3",
+      "url": "https://www.w3.org/TR/2018/CR-css-break-3-20181204/"
+    },
+    {
+      "bytes": 190007,
+      "latest_url": "https://www.w3.org/TR/css-break-4/",
+      "response_url": "https://www.w3.org/TR/2018/WD-css-break-4-20181218/",
+      "role": "dated-publication",
+      "sha256": "a20bdf859956eebf82ef1e66b1943cafa5ef58f15d02f221cc0cb2a6259a2ba4",
+      "spec_id": "css-break-4",
+      "url": "https://www.w3.org/TR/2018/WD-css-break-4-20181218/"
+    },
+    {
+      "bytes": 192597,
+      "latest_url": "https://www.w3.org/TR/css-cascade-3/",
+      "response_url": "https://www.w3.org/TR/2021/REC-css-cascade-3-20210211/",
+      "role": "dated-publication",
+      "sha256": "c7d3dad1c7a0dbdbe67c5604ed392158ea16014760e0ed94f06c0fe721aaca32",
+      "spec_id": "css-cascade-3",
+      "url": "https://www.w3.org/TR/2021/REC-css-cascade-3-20210211/"
+    },
+    {
+      "bytes": 269589,
+      "latest_url": "https://www.w3.org/TR/css-cascade-4/",
+      "response_url": "https://www.w3.org/TR/2022/CR-css-cascade-4-20220113/",
+      "role": "dated-publication",
+      "sha256": "7787bd75c1f7187fdfdfdf9e7b5b8391faeac0e7c80dd19461de8426931138e5",
+      "spec_id": "css-cascade-4",
+      "url": "https://www.w3.org/TR/2022/CR-css-cascade-4-20220113/"
+    },
+    {
+      "bytes": 328235,
+      "latest_url": "https://www.w3.org/TR/css-cascade-5/",
+      "response_url": "https://www.w3.org/TR/2022/CR-css-cascade-5-20220113/",
+      "role": "dated-publication",
+      "sha256": "1fe27cdb69e4990a801bdad630d4bea755b4d472ff9aa23bf07f743056a3a2a1",
+      "spec_id": "css-cascade-5",
+      "url": "https://www.w3.org/TR/2022/CR-css-cascade-5-20220113/"
+    },
+    {
+      "bytes": 170304,
+      "latest_url": "https://www.w3.org/TR/css-color-3/",
+      "response_url": "https://www.w3.org/TR/2022/REC-css-color-3-20220118/",
+      "role": "dated-publication",
+      "sha256": "5961922f98ea1e713bfceb41d252ed9cc1c9431c7acf5e185044fdd9ad660185",
+      "spec_id": "css-color-3",
+      "url": "https://www.w3.org/TR/2022/REC-css-color-3-20220118/"
+    },
+    {
+      "bytes": 1175294,
+      "latest_url": "https://www.w3.org/TR/css-color-4/",
+      "response_url": "https://www.w3.org/TR/2026/CRD-css-color-4-20260717/",
+      "role": "dated-publication",
+      "sha256": "21be4939c45b23cc30db856a32cd8f40423e2d7b4faa2a7dba25fb04e4e13acb",
+      "spec_id": "css-color-4",
+      "url": "https://www.w3.org/TR/2026/CRD-css-color-4-20260717/"
+    },
+    {
+      "bytes": 565291,
+      "latest_url": "https://www.w3.org/TR/css-color-5/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-color-5-20260618/",
+      "role": "dated-publication",
+      "sha256": "cf6c99230e933f378a1055d22b1b52076652473ae5752fd6955665d188232aa5",
+      "spec_id": "css-color-5",
+      "url": "https://www.w3.org/TR/2026/WD-css-color-5-20260618/"
+    },
+    {
+      "bytes": 282841,
+      "latest_url": "https://www.w3.org/TR/css-color-adjust-1/",
+      "response_url": "https://www.w3.org/TR/2025/CR-css-color-adjust-1-20251216/",
+      "role": "dated-publication",
+      "sha256": "588c2672bb45911303f78a0590fa587f593234ef80d60b0f7a7af48afc91517c",
+      "spec_id": "css-color-adjust-1",
+      "url": "https://www.w3.org/TR/2025/CR-css-color-adjust-1-20251216/"
+    },
+    {
+      "bytes": 260197,
+      "latest_url": "https://www.w3.org/TR/css-conditional-3/",
+      "response_url": "https://www.w3.org/TR/2024/CRD-css-conditional-3-20240815/",
+      "role": "dated-publication",
+      "sha256": "672eb79c78c53b9c92a460ffcfd8718af3c1e38ecf317566d955ffa1df470b35",
+      "spec_id": "css-conditional-3",
+      "url": "https://www.w3.org/TR/2024/CRD-css-conditional-3-20240815/"
+    },
+    {
+      "bytes": 98907,
+      "latest_url": "https://www.w3.org/TR/css-conditional-4/",
+      "response_url": "https://www.w3.org/TR/2025/CRD-css-conditional-4-20250904/",
+      "role": "dated-publication",
+      "sha256": "59e3eaee1e7311d7c1c295ae5f27d30abf64c424d21ed007b74849aec7ab000f",
+      "spec_id": "css-conditional-4",
+      "url": "https://www.w3.org/TR/2025/CRD-css-conditional-4-20250904/"
+    },
+    {
+      "bytes": 634104,
+      "latest_url": "https://www.w3.org/TR/css-conditional-5/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-conditional-5-20251030/",
+      "role": "dated-publication",
+      "sha256": "272548f0468544b6834bce6b5bbdb1203d3dade2b3480edfc7aed40b066d0f4a",
+      "spec_id": "css-conditional-5",
+      "url": "https://www.w3.org/TR/2025/WD-css-conditional-5-20251030/"
+    },
+    {
+      "bytes": 183585,
+      "latest_url": "https://www.w3.org/TR/css-contain-1/",
+      "response_url": "https://www.w3.org/TR/2024/REC-css-contain-1-20240625/",
+      "role": "dated-publication",
+      "sha256": "eb6ea8d5435697776878bee6f58e0284c73f4ecd682ee43381d99f97bc69f56b",
+      "spec_id": "css-contain-1",
+      "url": "https://www.w3.org/TR/2024/REC-css-contain-1-20240625/"
+    },
+    {
+      "bytes": 242847,
+      "latest_url": "https://www.w3.org/TR/css-contain-2/",
+      "response_url": "https://www.w3.org/TR/2022/WD-css-contain-2-20220917/",
+      "role": "dated-publication",
+      "sha256": "d26c8b725efe73df0f4ec215f44903d5128b3d61e74654f92f0d37be3631bfb9",
+      "spec_id": "css-contain-2",
+      "url": "https://www.w3.org/TR/2022/WD-css-contain-2-20220917/"
+    },
+    {
+      "bytes": 343799,
+      "latest_url": "https://www.w3.org/TR/css-counter-styles-3/",
+      "response_url": "https://www.w3.org/TR/2021/CR-css-counter-styles-3-20210727/",
+      "role": "dated-publication",
+      "sha256": "7d697581c3eb238c3e8d18bcf0c03aa889380041fa208c8bf06c51dd07be9807",
+      "spec_id": "css-counter-styles-3",
+      "url": "https://www.w3.org/TR/2021/CR-css-counter-styles-3-20210727/"
+    },
+    {
+      "bytes": 581657,
+      "latest_url": "https://www.w3.org/TR/css-display-3/",
+      "response_url": "https://www.w3.org/TR/2026/CRD-css-display-3-20260605/",
+      "role": "dated-publication",
+      "sha256": "872cdd7c49fdbfba1ff7ea5b6689145c168b17d09542f11af717a55bc16ab9ed",
+      "spec_id": "css-display-3",
+      "url": "https://www.w3.org/TR/2026/CRD-css-display-3-20260605/"
+    },
+    {
+      "bytes": 680319,
+      "latest_url": "https://www.w3.org/TR/css-display-4/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-display-4-20251106/",
+      "role": "dated-publication",
+      "sha256": "a300af130d2dad6a639302a16f8831f080af0087cdf1ee306a94abdf95de4139",
+      "spec_id": "css-display-4",
+      "url": "https://www.w3.org/TR/2025/WD-css-display-4-20251106/"
+    },
+    {
+      "bytes": 94324,
+      "latest_url": "https://www.w3.org/TR/css-easing-1/",
+      "response_url": "https://www.w3.org/TR/2023/CRD-css-easing-1-20230213/",
+      "role": "dated-publication",
+      "sha256": "ea2901fc46cb032cd659c8024c0ef82ccad9009e4abb945615d59ce4fe506925",
+      "spec_id": "css-easing-1",
+      "url": "https://www.w3.org/TR/2023/CRD-css-easing-1-20230213/"
+    },
+    {
+      "bytes": 113268,
+      "latest_url": "https://www.w3.org/TR/css-env-1",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-env-1-20250923/",
+      "role": "dated-publication",
+      "sha256": "38edef44e4f698039cebdfca3614dd3aec0ed15e1d61ded3383b88796d4c10ba",
+      "spec_id": "css-env-1",
+      "url": "https://www.w3.org/TR/2025/WD-css-env-1-20250923/"
+    },
+    {
+      "bytes": 1525929,
+      "latest_url": "https://www.w3.org/TR/css-flexbox-1/",
+      "response_url": "https://www.w3.org/TR/2025/CRD-css-flexbox-1-20251014/",
+      "role": "dated-publication",
+      "sha256": "b0e3b097bc6db0688d4712968c290cda280f8f750eb998bc358c28df490ff3f5",
+      "spec_id": "css-flexbox-1",
+      "url": "https://www.w3.org/TR/2025/CRD-css-flexbox-1-20251014/"
+    },
+    {
+      "bytes": 288547,
+      "latest_url": "https://www.w3.org/TR/css-font-loading/",
+      "response_url": "https://www.w3.org/TR/2023/WD-css-font-loading-3-20230406/",
+      "role": "dated-publication",
+      "sha256": "1a443ea0a7f67bab99daac264808df5268d652f0abbd63989c2a31b1d489a340",
+      "spec_id": "css-font-loading",
+      "url": "https://www.w3.org/TR/2023/WD-css-font-loading-3-20230406/"
+    },
+    {
+      "bytes": 240662,
+      "latest_url": "https://www.w3.org/TR/css-fonts-3/",
+      "response_url": "https://www.w3.org/TR/2018/REC-css-fonts-3-20180920/",
+      "role": "dated-publication",
+      "sha256": "e3982d57e3992dfa7c0e56c1ff39977bd71d807731247decc794c61d2eacd63b",
+      "spec_id": "css-fonts-3",
+      "url": "https://www.w3.org/TR/2018/REC-css-fonts-3-20180920/"
+    },
+    {
+      "bytes": 1362060,
+      "latest_url": "https://www.w3.org/TR/css-fonts-4/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-fonts-4-20260422/",
+      "role": "dated-publication",
+      "sha256": "fbcd4e298b4ce7d0a0d2deda620df8a12acdc23cbb71691823a99379516644ee",
+      "spec_id": "css-fonts-4",
+      "url": "https://www.w3.org/TR/2026/WD-css-fonts-4-20260422/"
+    },
+    {
+      "bytes": 688713,
+      "latest_url": "https://www.w3.org/TR/css-gaps-1/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-gaps-1-20260624/",
+      "role": "dated-publication",
+      "sha256": "4f5f29611894af8eb2b5fe40f0eb75c5d815062b623fef982ee766cc4584277d",
+      "spec_id": "css-gaps-1",
+      "url": "https://www.w3.org/TR/2026/WD-css-gaps-1-20260624/"
+    },
+    {
+      "bytes": 957488,
+      "latest_url": "https://www.w3.org/TR/css-grid-1/",
+      "response_url": "https://www.w3.org/TR/2025/CRD-css-grid-1-20250326/",
+      "role": "dated-publication",
+      "sha256": "53a47980a217f0b976e1ab8fa0b56944421f7e6311deef96a6aa591ddc693317",
+      "spec_id": "css-grid-1",
+      "url": "https://www.w3.org/TR/2025/CRD-css-grid-1-20250326/"
+    },
+    {
+      "bytes": 885659,
+      "latest_url": "https://www.w3.org/TR/css-grid-2/",
+      "response_url": "https://www.w3.org/TR/2025/CRD-css-grid-2-20250326/",
+      "role": "dated-publication",
+      "sha256": "05aa64853c4428146973943b35caf121e44c1076bdf5b8c29f8896dba9b778e2",
+      "spec_id": "css-grid-2",
+      "url": "https://www.w3.org/TR/2025/CRD-css-grid-2-20250326/"
+    },
+    {
+      "bytes": 353703,
+      "latest_url": "https://www.w3.org/TR/css-images-3/",
+      "response_url": "https://www.w3.org/TR/2023/CRD-css-images-3-20231218/",
+      "role": "dated-publication",
+      "sha256": "74eb4b475aa0845a50ebedb4bbb3ba7bf3966f975817d1c5cf8e3d512f53447e",
+      "spec_id": "css-images-3",
+      "url": "https://www.w3.org/TR/2023/CRD-css-images-3-20231218/"
+    },
+    {
+      "bytes": 664942,
+      "latest_url": "https://www.w3.org/TR/css-images-4/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-images-4-20250930/",
+      "role": "dated-publication",
+      "sha256": "2784dc56db1089852bddff8fff55c18a66b409310a9b99d36a20a42bf702fb0f",
+      "spec_id": "css-images-4",
+      "url": "https://www.w3.org/TR/2025/WD-css-images-4-20250930/"
+    },
+    {
+      "bytes": 653465,
+      "latest_url": "https://www.w3.org/TR/css-inline-3/",
+      "response_url": "https://www.w3.org/TR/2024/WD-css-inline-3-20241218/",
+      "role": "dated-publication",
+      "sha256": "a73a73a45bf591c5964c5d49212de94066a2e4aeda245c7eb1f984c5fd3bb152",
+      "spec_id": "css-inline-3",
+      "url": "https://www.w3.org/TR/2024/WD-css-inline-3-20241218/"
+    },
+    {
+      "bytes": 251726,
+      "latest_url": "https://www.w3.org/TR/css-lists-3/",
+      "response_url": "https://www.w3.org/TR/2020/WD-css-lists-3-20201117/",
+      "role": "dated-publication",
+      "sha256": "f898eb5b58818862a598d23d225da2ca3a58396b7bb32c9515c2cc8e31470ccf",
+      "spec_id": "css-lists-3",
+      "url": "https://www.w3.org/TR/2020/WD-css-lists-3-20201117/"
+    },
+    {
+      "bytes": 411946,
+      "latest_url": "https://www.w3.org/TR/css-logical-1/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-logical-1-20251204/",
+      "role": "dated-publication",
+      "sha256": "4c0f9fbefd2c66a86f220d5daa1514facca3ad7dbae68a4c1a82b569de370edc",
+      "spec_id": "css-logical-1",
+      "url": "https://www.w3.org/TR/2025/WD-css-logical-1-20251204/"
+    },
+    {
+      "bytes": 489424,
+      "latest_url": "https://www.w3.org/TR/css-masking-1/",
+      "response_url": "https://www.w3.org/TR/2021/CRD-css-masking-1-20210805/",
+      "role": "dated-publication",
+      "sha256": "79ff953b47472ae5bc1eace14c0c470d7bd75d128e933806c97c50b640194671",
+      "spec_id": "css-masking-1",
+      "url": "https://www.w3.org/TR/2021/CRD-css-masking-1-20210805/"
+    },
+    {
+      "bytes": 580366,
+      "latest_url": "https://www.w3.org/TR/css-multicol-1/",
+      "response_url": "https://www.w3.org/TR/2024/CR-css-multicol-1-20240516/",
+      "role": "dated-publication",
+      "sha256": "0768f4526ac5b4be220169db13f1db9fb617c81c8112062a9df4883078220d09",
+      "spec_id": "css-multicol-1",
+      "url": "https://www.w3.org/TR/2024/CR-css-multicol-1-20240516/"
+    },
+    {
+      "bytes": 27439,
+      "latest_url": "https://www.w3.org/TR/css3-namespace/",
+      "response_url": "https://www.w3.org/TR/2014/REC-css-namespaces-3-20140320/",
+      "role": "dated-publication",
+      "sha256": "a23b00b30e8e3c550f35f85291cd514e0907c00899e12802569b7f977207daa8",
+      "spec_id": "css-namespaces",
+      "url": "https://www.w3.org/TR/2014/REC-css-namespaces-3-20140320/"
+    },
+    {
+      "bytes": 213027,
+      "latest_url": "https://www.w3.org/TR/css-nesting-1/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-nesting-1-20260122/",
+      "role": "dated-publication",
+      "sha256": "b29b0db74b96af295efcd7cd94f34366dd099ebb905dc5529c61409184f6fa9c",
+      "spec_id": "css-nesting-1",
+      "url": "https://www.w3.org/TR/2026/WD-css-nesting-1-20260122/"
+    },
+    {
+      "bytes": 281370,
+      "latest_url": "https://www.w3.org/TR/css-overflow-3/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-overflow-3-20251007/",
+      "role": "dated-publication",
+      "sha256": "1b59ae503fd88cdaeb07ae2a1c6b5ff344baead236ce4e1b55425f880eed85fb",
+      "spec_id": "css-overflow-3",
+      "url": "https://www.w3.org/TR/2025/WD-css-overflow-3-20251007/"
+    },
+    {
+      "bytes": 367498,
+      "latest_url": "https://www.w3.org/TR/css-overflow-4/",
+      "response_url": "https://www.w3.org/TR/2023/WD-css-overflow-4-20230321/",
+      "role": "dated-publication",
+      "sha256": "a67d978f45fd0e179916cb532f186426948bedbee5c28d5fde23009537514583",
+      "spec_id": "css-overflow-4",
+      "url": "https://www.w3.org/TR/2023/WD-css-overflow-4-20230321/"
+    },
+    {
+      "bytes": 314610,
+      "latest_url": "https://www.w3.org/TR/css-page-3/",
+      "response_url": "https://www.w3.org/TR/2023/WD-css-page-3-20230914/",
+      "role": "dated-publication",
+      "sha256": "6051274a159df3f315c0e6474faf5c7b595b9e0f8c23e1402dc956b765812f57",
+      "spec_id": "css-page-3",
+      "url": "https://www.w3.org/TR/2023/WD-css-page-3-20230914/"
+    },
+    {
+      "bytes": 413143,
+      "latest_url": "https://www.w3.org/TR/css-position-3/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-position-3-20251007/",
+      "role": "dated-publication",
+      "sha256": "3c8a8120af2c32d9259eb2feb80506cadffb29c716dbf571b9c1154ab06079a6",
+      "spec_id": "css-position-3",
+      "url": "https://www.w3.org/TR/2025/WD-css-position-3-20251007/"
+    },
+    {
+      "bytes": 203147,
+      "latest_url": "https://www.w3.org/TR/css-position-4/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-position-4-20251007/",
+      "role": "dated-publication",
+      "sha256": "7ac90cc3d25e38d054d28f5899774eb3eb7ce50b8a930fee6530681cab043412",
+      "spec_id": "css-position-4",
+      "url": "https://www.w3.org/TR/2025/WD-css-position-4-20251007/"
+    },
+    {
+      "bytes": 76030,
+      "latest_url": "http://www.w3.org/TR/css-print/",
+      "response_url": "https://www.w3.org/TR/2013/NOTE-css-print-20130314/",
+      "role": "dated-publication",
+      "sha256": "ecebf364568db171daf9d406719231c46af49d1d462c2175b156f4a03b36857e",
+      "spec_id": "css-print",
+      "url": "https://www.w3.org/TR/2013/NOTE-css-print-20130314/"
+    },
+    {
+      "bytes": 552074,
+      "latest_url": "https://www.w3.org/TR/css-pseudo-4/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-pseudo-4-20250627/",
+      "role": "dated-publication",
+      "sha256": "f983c087cb9e408fe0696976eeba6d5bc36120b62019e77114ee6b274b74db2e",
+      "spec_id": "css-pseudo-4",
+      "url": "https://www.w3.org/TR/2025/WD-css-pseudo-4-20250627/"
+    },
+    {
+      "bytes": 357906,
+      "latest_url": "https://www.w3.org/TR/css-ruby-1/",
+      "response_url": "https://www.w3.org/TR/2022/WD-css-ruby-1-20221231/",
+      "role": "dated-publication",
+      "sha256": "a88a39e6600c022698c414e9bb2a66b138801fda2d974fbd684d1f1c43e6ab50",
+      "spec_id": "css-ruby-1",
+      "url": "https://www.w3.org/TR/2022/WD-css-ruby-1-20221231/"
+    },
+    {
+      "bytes": 83475,
+      "latest_url": "https://www.w3.org/TR/css-scroll-anchoring-1/",
+      "response_url": "https://www.w3.org/TR/2020/WD-css-scroll-anchoring-1-20201111/",
+      "role": "dated-publication",
+      "sha256": "19072694d9cb63f46fcb122d020452401218f4c5e5c9ef576f56bc3ff205455b",
+      "spec_id": "css-scroll-anchoring-1",
+      "url": "https://www.w3.org/TR/2020/WD-css-scroll-anchoring-1-20201111/"
+    },
+    {
+      "bytes": 241617,
+      "latest_url": "https://www.w3.org/TR/css-scroll-snap-1/",
+      "response_url": "https://www.w3.org/TR/2021/CR-css-scroll-snap-1-20210311/",
+      "role": "dated-publication",
+      "sha256": "9e5f5353d73d6df89aedafb11258fb44b8e00cd2b37332a658f417093a3b1e64",
+      "spec_id": "css-scroll-snap-1",
+      "url": "https://www.w3.org/TR/2021/CR-css-scroll-snap-1-20210311/"
+    },
+    {
+      "bytes": 178012,
+      "latest_url": "https://www.w3.org/TR/css-scroll-snap-2/",
+      "response_url": "https://www.w3.org/TR/2024/WD-css-scroll-snap-2-20240723/",
+      "role": "dated-publication",
+      "sha256": "b49bf2421cec40d1a15705d37484e4bf5a0c57f0c9e1dd854be38bbef607fe3f",
+      "spec_id": "css-scroll-snap-2",
+      "url": "https://www.w3.org/TR/2024/WD-css-scroll-snap-2-20240723/"
+    },
+    {
+      "bytes": 76960,
+      "latest_url": "https://www.w3.org/TR/css-scrollbars-1/",
+      "response_url": "https://www.w3.org/TR/2021/CR-css-scrollbars-1-20211209/",
+      "role": "dated-publication",
+      "sha256": "bc4dd22757fd674e717b025d9826a95bd5674ed3ae4d0e5bb137e2ef1f6533af",
+      "spec_id": "css-scrollbars-1",
+      "url": "https://www.w3.org/TR/2021/CR-css-scrollbars-1-20211209/"
+    },
+    {
+      "bytes": 609115,
+      "latest_url": "https://www.w3.org/TR/css-shapes/",
+      "response_url": "https://www.w3.org/TR/2025/CRD-css-shapes-1-20250612/",
+      "role": "dated-publication",
+      "sha256": "f7e528fad3094f91fb9591ba6f849e2453353d50d0f136ca9e0749371fc31763",
+      "spec_id": "css-shapes-1",
+      "url": "https://www.w3.org/TR/2025/CRD-css-shapes-1-20250612/"
+    },
+    {
+      "bytes": 253305,
+      "latest_url": "https://www.w3.org/TR/css-sizing-3/",
+      "response_url": "https://www.w3.org/TR/2021/WD-css-sizing-3-20211217/",
+      "role": "dated-publication",
+      "sha256": "88e7fb4fefc1ab7ec3f75b1058e6d9e003c937eb3c8049294adf113fdf3a4fc5",
+      "spec_id": "css-sizing-3",
+      "url": "https://www.w3.org/TR/2021/WD-css-sizing-3-20211217/"
+    },
+    {
+      "bytes": 188020,
+      "latest_url": "https://www.w3.org/TR/css-sizing-4/",
+      "response_url": "https://www.w3.org/TR/2021/WD-css-sizing-4-20210520/",
+      "role": "dated-publication",
+      "sha256": "febb0814cb6dd7ad343daea040f3aac9d3c56520bd20e64c6a8cf43ecc722e25",
+      "spec_id": "css-sizing-4",
+      "url": "https://www.w3.org/TR/2021/WD-css-sizing-4-20210520/"
+    },
+    {
+      "bytes": 261800,
+      "latest_url": "https://www.w3.org/TR/css-speech-1/",
+      "response_url": "https://www.w3.org/TR/2023/CRD-css-speech-1-20230214/",
+      "role": "dated-publication",
+      "sha256": "bb7b59c925640f089f19196a9d72f0c381bdcb10cec8ec411ba99cb9bc9b5c9a",
+      "spec_id": "css-speech-1",
+      "url": "https://www.w3.org/TR/2023/CRD-css-speech-1-20230214/"
+    },
+    {
+      "bytes": 17513,
+      "latest_url": "https://www.w3.org/TR/css-style-attr/",
+      "response_url": "https://www.w3.org/TR/2013/REC-css-style-attr-20131107/",
+      "role": "dated-publication",
+      "sha256": "711c9a43978ff186225d21d7a7bff580037bc032ba70a7ba33c4fab16e396746",
+      "spec_id": "css-style-attr",
+      "url": "https://www.w3.org/TR/2013/REC-css-style-attr-20131107/"
+    },
+    {
+      "bytes": 511620,
+      "latest_url": "https://www.w3.org/TR/css-syntax-3/",
+      "response_url": "https://www.w3.org/TR/2021/CRD-css-syntax-3-20211224/",
+      "role": "dated-publication",
+      "sha256": "413b27acb4e16721d28b487456359ecbcecba472c4310bd2f6a4939ad393738b",
+      "spec_id": "css-syntax-3",
+      "url": "https://www.w3.org/TR/2021/CRD-css-syntax-3-20211224/"
+    },
+    {
+      "bytes": 576353,
+      "latest_url": "https://www.w3.org/TR/css-tables-3/",
+      "response_url": "https://www.w3.org/TR/2025/WD-css-tables-3-20251216/",
+      "role": "dated-publication",
+      "sha256": "67dba822e3940a9f95fe29b93d6b71f6b365b37d7a1db6a5c3c4763d38e0697f",
+      "spec_id": "css-tables-3",
+      "url": "https://www.w3.org/TR/2025/WD-css-tables-3-20251216/"
+    },
+    {
+      "bytes": 539838,
+      "latest_url": "https://www.w3.org/TR/css-text-3/",
+      "response_url": "https://www.w3.org/TR/2026/CRD-css-text-3-20260608/",
+      "role": "dated-publication",
+      "sha256": "0a30a475ba5097dbdd1282dc75906d0295e66738f947423bb768b9f122d9ebbe",
+      "spec_id": "css-text-3",
+      "url": "https://www.w3.org/TR/2026/CRD-css-text-3-20260608/"
+    },
+    {
+      "bytes": 885886,
+      "latest_url": "https://www.w3.org/TR/css-text-4/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-text-4-20260608/",
+      "role": "dated-publication",
+      "sha256": "c71b27ee9ae3a615667468e0af4128706df2d0799221aedc9ddc304124f77b4f",
+      "spec_id": "css-text-4",
+      "url": "https://www.w3.org/TR/2026/WD-css-text-4-20260608/"
+    },
+    {
+      "bytes": 179502,
+      "latest_url": "https://www.w3.org/TR/css-text-decor-3/",
+      "response_url": "https://www.w3.org/TR/2022/CRD-css-text-decor-3-20220505/",
+      "role": "dated-publication",
+      "sha256": "feebf9327271a19fdffe0d6e70fb8d01e3f3c1fca78abd3b7f223646ac3b6b95",
+      "spec_id": "css-text-decor-3",
+      "url": "https://www.w3.org/TR/2022/CRD-css-text-decor-3-20220505/"
+    },
+    {
+      "bytes": 288319,
+      "latest_url": "https://www.w3.org/TR/css-text-decor-4/",
+      "response_url": "https://www.w3.org/TR/2022/WD-css-text-decor-4-20220504/",
+      "role": "dated-publication",
+      "sha256": "be6b9a7763ec76ae648f527cca1866ddf107f8f1dc3a607d5aeb24911252c421",
+      "spec_id": "css-text-decor-4",
+      "url": "https://www.w3.org/TR/2022/WD-css-text-decor-4-20220504/"
+    },
+    {
+      "bytes": 310421,
+      "latest_url": "https://www.w3.org/TR/css-transforms-1/",
+      "response_url": "https://www.w3.org/TR/2019/CR-css-transforms-1-20190214/",
+      "role": "dated-publication",
+      "sha256": "4672e86844bfbe7af670c6702e873a36aee5a925d7fa30f374b79e88a1e18351",
+      "spec_id": "css-transforms-1",
+      "url": "https://www.w3.org/TR/2019/CR-css-transforms-1-20190214/"
+    },
+    {
+      "bytes": 270532,
+      "latest_url": "https://www.w3.org/TR/css-transforms-2/",
+      "response_url": "https://www.w3.org/TR/2021/WD-css-transforms-2-20211109/",
+      "role": "dated-publication",
+      "sha256": "f1ada25106706968fc7b12ecb83bebc437de6ef309ee9dce1d990bd5fe8eead8",
+      "spec_id": "css-transforms-2",
+      "url": "https://www.w3.org/TR/2021/WD-css-transforms-2-20211109/"
+    },
+    {
+      "bytes": 346601,
+      "latest_url": "https://www.w3.org/TR/css-transitions-1/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-transitions-1-20260108/",
+      "role": "dated-publication",
+      "sha256": "969d35d13ee4e4248421ebf991156a1af6b577d17a1be2565ffeaa94a012ec80",
+      "spec_id": "css-transitions-1",
+      "url": "https://www.w3.org/TR/2026/WD-css-transitions-1-20260108/"
+    },
+    {
+      "bytes": 293306,
+      "latest_url": "https://www.w3.org/TR/css-ui-3/",
+      "response_url": "https://www.w3.org/TR/2026/REC-css-ui-3-20260407/",
+      "role": "dated-publication",
+      "sha256": "6dfbf85a9d9c6d682d9c0621872021e8a57216737acacd5dee31c2936d7da67e",
+      "spec_id": "css-ui-3",
+      "url": "https://www.w3.org/TR/2026/REC-css-ui-3-20260407/"
+    },
+    {
+      "bytes": 560379,
+      "latest_url": "https://www.w3.org/TR/css-ui-4/",
+      "response_url": "https://www.w3.org/TR/2026/WD-css-ui-4-20260120/",
+      "role": "dated-publication",
+      "sha256": "42d9c51404fbef8121215b0a098ce436f89f0b57798fb499e342b4dfc7740f8f",
+      "spec_id": "css-ui-4",
+      "url": "https://www.w3.org/TR/2026/WD-css-ui-4-20260120/"
+    },
+    {
+      "bytes": 371644,
+      "latest_url": "https://www.w3.org/TR/css-values-3/",
+      "response_url": "https://www.w3.org/TR/2024/CRD-css-values-3-20240322/",
+      "role": "dated-publication",
+      "sha256": "dcce1f2ff24d66a05373696e07dda59727303a421ee4593eb433092029df0094",
+      "spec_id": "css-values-3",
+      "url": "https://www.w3.org/TR/2024/CRD-css-values-3-20240322/"
+    },
+    {
+      "bytes": 823488,
+      "latest_url": "https://www.w3.org/TR/css-values-4/",
+      "response_url": "https://www.w3.org/TR/2024/WD-css-values-4-20240312/",
+      "role": "dated-publication",
+      "sha256": "7b6b68c34d00d7f6945e66e4e2efa913266299f597d5825393cae85dac1cc78c",
+      "spec_id": "css-values-4",
+      "url": "https://www.w3.org/TR/2024/WD-css-values-4-20240312/"
+    },
+    {
+      "bytes": 661889,
+      "latest_url": "https://www.w3.org/TR/css-values-5/",
+      "response_url": "https://www.w3.org/TR/2024/WD-css-values-5-20241111/",
+      "role": "dated-publication",
+      "sha256": "af984ef26b3954143b0f270253e3373f06b5255a5ac00aad919a4cb1b334a8ad",
+      "spec_id": "css-values-5",
+      "url": "https://www.w3.org/TR/2024/WD-css-values-5-20241111/"
+    },
+    {
+      "bytes": 267867,
+      "latest_url": "https://www.w3.org/TR/css-variables-1/",
+      "response_url": "https://www.w3.org/TR/2022/CR-css-variables-1-20220616/",
+      "role": "dated-publication",
+      "sha256": "5ce7b2c106af576328f222dd622598f847881f2ba9a64d53d6681d27d07ea0db",
+      "spec_id": "css-variables-1",
+      "url": "https://www.w3.org/TR/2022/CR-css-variables-1-20220616/"
+    },
+    {
+      "bytes": 508125,
+      "latest_url": "https://www.w3.org/TR/css-view-transitions-1/",
+      "response_url": "https://www.w3.org/TR/2024/CRD-css-view-transitions-1-20240328/",
+      "role": "dated-publication",
+      "sha256": "7f8e537956b6c0fb0259d0e9231395ea985b35ee8f690e5d9e05e226110fc044",
+      "spec_id": "css-view-transitions-1",
+      "url": "https://www.w3.org/TR/2024/CRD-css-view-transitions-1-20240328/"
+    },
+    {
+      "bytes": 67364,
+      "latest_url": "https://www.w3.org/TR/css-will-change/",
+      "response_url": "https://www.w3.org/TR/2022/CRD-css-will-change-1-20220505/",
+      "role": "dated-publication",
+      "sha256": "66d3e479cd2b49c5998afa78cb8a571235c04fa42c3a47a053494d296b1bd9f4",
+      "spec_id": "css-will-change-1",
+      "url": "https://www.w3.org/TR/2022/CRD-css-will-change-1-20220505/"
+    },
+    {
+      "bytes": 355883,
+      "latest_url": "https://www.w3.org/TR/css-writing-modes-3/",
+      "response_url": "https://www.w3.org/TR/2019/REC-css-writing-modes-3-20191210/",
+      "role": "dated-publication",
+      "sha256": "39564c2366c0d46ad5cb4bf9363f232667e2d0b6833ac79931117baa24873aec",
+      "spec_id": "css-writing-modes-3",
+      "url": "https://www.w3.org/TR/2019/REC-css-writing-modes-3-20191210/"
+    },
+    {
+      "bytes": 379734,
+      "latest_url": "https://www.w3.org/TR/css-writing-modes-4/",
+      "response_url": "https://www.w3.org/TR/2019/CR-css-writing-modes-4-20190730/",
+      "role": "dated-publication",
+      "sha256": "30a59de49343d984c8570e2c1a5fa5bda511dda4f2e83841c862caa99d155fcd",
+      "spec_id": "css-writing-modes-4",
+      "url": "https://www.w3.org/TR/2019/CR-css-writing-modes-4-20190730/"
+    },
+    {
+      "bytes": 61605,
+      "latest_url": "https://www.w3.org/TR/css3-mediaqueries/",
+      "response_url": "https://www.w3.org/TR/2024/REC-mediaqueries-3-20240521/",
+      "role": "dated-publication",
+      "sha256": "5223a2f53fbcd9b85ee78c81d7db9ea9508624eec403241944c3324d7fdf851e",
+      "spec_id": "css3-mediaqueries",
+      "url": "https://www.w3.org/TR/2024/REC-mediaqueries-3-20240521/"
+    },
+    {
+      "bytes": 635594,
+      "latest_url": "https://www.w3.org/TR/cssom-1/",
+      "response_url": "https://www.w3.org/TR/2021/WD-cssom-1-20210826/",
+      "role": "dated-publication",
+      "sha256": "24d77393e4ea56b04570066701d42c9ff6546a6d5e97d433a18cc1deaf6c9cd4",
+      "spec_id": "cssom-1",
+      "url": "https://www.w3.org/TR/2021/WD-cssom-1-20210826/"
+    },
+    {
+      "bytes": 932214,
+      "latest_url": "https://www.w3.org/TR/cssom-view-1/",
+      "response_url": "https://www.w3.org/TR/2025/WD-cssom-view-1-20250916/",
+      "role": "dated-publication",
+      "sha256": "693b1c1fe7f72274217cc5c690bd15fe290adc78f080578fb6718e830c4c83b6",
+      "spec_id": "cssom-view-1",
+      "url": "https://www.w3.org/TR/2025/WD-cssom-view-1-20250916/"
+    },
+    {
+      "bytes": 331365,
+      "latest_url": "https://www.w3.org/TR/fill-stroke-3/",
+      "response_url": "https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/",
+      "role": "dated-publication",
+      "sha256": "a4a77f618042ad9a3adbf975ee00ad425621153d5a963a689a9709da8f448ad8",
+      "spec_id": "fill-stroke-3",
+      "url": "https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/"
+    },
+    {
+      "bytes": 1600081,
+      "latest_url": "https://www.w3.org/TR/filter-effects-1/",
+      "response_url": "https://www.w3.org/TR/2018/WD-filter-effects-1-20181218/",
+      "role": "dated-publication",
+      "sha256": "b73408da406802d4aa405c8ab1c0591732ff1403bae74f7267d53dc74b0dfb3d",
+      "spec_id": "filter-effects-1",
+      "url": "https://www.w3.org/TR/2018/WD-filter-effects-1-20181218/"
+    },
+    {
+      "bytes": 764853,
+      "latest_url": "https://www.w3.org/TR/geometry-1/",
+      "response_url": "https://www.w3.org/TR/2025/CRD-geometry-1-20251204/",
+      "role": "dated-publication",
+      "sha256": "2d406c87fb2580570c6f46b458e347de464d963fd196e4797a1c19c1a4d95c09",
+      "spec_id": "geometry-1",
+      "url": "https://www.w3.org/TR/2025/CRD-geometry-1-20251204/"
+    },
+    {
+      "bytes": 409001,
+      "latest_url": "https://www.w3.org/TR/mediaqueries-4/",
+      "response_url": "https://www.w3.org/TR/2026/CRD-mediaqueries-4-20260219/",
+      "role": "dated-publication",
+      "sha256": "41310724809c30304b674442d35e09ec59b0b7b74ba6104bb1d90334953522e0",
+      "spec_id": "mediaqueries-4",
+      "url": "https://www.w3.org/TR/2026/CRD-mediaqueries-4-20260219/"
+    },
+    {
+      "bytes": 697033,
+      "latest_url": "https://www.w3.org/TR/mediaqueries-5/",
+      "response_url": "https://www.w3.org/TR/2026/WD-mediaqueries-5-20260219/",
+      "role": "dated-publication",
+      "sha256": "9e761f96f6a9935591264b470bdf5e4c1b5b15874c376b9de70e670171671c95",
+      "spec_id": "mediaqueries-5",
+      "url": "https://www.w3.org/TR/2026/WD-mediaqueries-5-20260219/"
+    },
+    {
+      "bytes": 361381,
+      "latest_url": "https://www.w3.org/TR/motion-1/",
+      "response_url": "https://www.w3.org/TR/2024/WD-motion-1-20241105/",
+      "role": "dated-publication",
+      "sha256": "5f3e94be9b120ab48065ecc17cf4a57b47af3fd2859a79c464c406d9996891c5",
+      "spec_id": "motion-1",
+      "url": "https://www.w3.org/TR/2024/WD-motion-1-20241105/"
+    },
+    {
+      "bytes": 135169,
+      "latest_url": "https://www.w3.org/TR/resize-observer/",
+      "response_url": "https://www.w3.org/TR/2020/WD-resize-observer-1-20200211/",
+      "role": "dated-publication",
+      "sha256": "7bed69027b1b3bb7d406c73ebee4f34deb693885c77f8db38259438492240528",
+      "spec_id": "resize-observer-1",
+      "url": "https://www.w3.org/TR/2020/WD-resize-observer-1-20200211/"
+    },
+    {
+      "bytes": 134902,
+      "latest_url": "https://www.w3.org/TR/selectors-3/",
+      "response_url": "https://www.w3.org/TR/2018/REC-selectors-3-20181106/",
+      "role": "dated-publication",
+      "sha256": "a30f0c0bd31b599b3163f8759b66536b7cc274fdc0b27e14046122afe3418183",
+      "spec_id": "selectors-3",
+      "url": "https://www.w3.org/TR/2018/REC-selectors-3-20181106/"
+    },
+    {
+      "bytes": 978757,
+      "latest_url": "https://www.w3.org/TR/selectors-4/",
+      "response_url": "https://www.w3.org/TR/2026/WD-selectors-4-20260122/",
+      "role": "dated-publication",
+      "sha256": "5d3b3f7e1fcc562dcec1a01ad2c5651e9f0bac294b255a75352e9df202604e6d",
+      "spec_id": "selectors-4",
+      "url": "https://www.w3.org/TR/2026/WD-selectors-4-20260122/"
+    },
+    {
+      "bytes": 1000120,
+      "latest_url": "https://www.w3.org/TR/web-animations-1/",
+      "response_url": "https://www.w3.org/TR/2023/WD-web-animations-1-20230605/",
+      "role": "dated-publication",
+      "sha256": "e814a799ef2442a6c2f5bb783307080054441215ae75921349c018aaef3a2e55",
+      "spec_id": "web-animations-1",
+      "url": "https://www.w3.org/TR/2023/WD-web-animations-1-20230605/"
+    },
+    {
+      "bytes": 777776,
+      "latest_url": "https://www.w3.org/TR/web-animations-2/",
+      "response_url": "https://www.w3.org/TR/2025/WD-web-animations-2-20251120/",
+      "role": "dated-publication",
+      "sha256": "46309593a6447cc36fa2e2f1655e458d220244a8a1385261449a86056205de10",
+      "spec_id": "web-animations-2",
+      "url": "https://www.w3.org/TR/2025/WD-web-animations-2-20251120/"
+    },
+    {
+      "authority_key": "DOM",
+      "bytes": 3158303,
+      "response_url": "https://dom.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "cc7e0b0e931980b5b16b22e840e2b7790c2276de520fc199f080596508952055",
+      "url": "https://dom.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "ENCODING",
+      "bytes": 609688,
+      "response_url": "https://encoding.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "6dc34b5b039ed96a492ac4816fa5c9b5124edc9846fe29b52423b6fb4077eeea",
+      "url": "https://encoding.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "FETCH",
+      "bytes": 1929978,
+      "response_url": "https://fetch.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "dd9841b3598dcd79c0656a5fb996bf06aa84e33dfdebc8068d5dad1650ffc03a",
+      "url": "https://fetch.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "HTML",
+      "bytes": 15558488,
+      "response_url": "https://html.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "5c5869be6ff3dbed33594f78be38dfcdc500b059cc4ff61b51f9dfc561494068",
+      "url": "https://html.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "INFRA",
+      "bytes": 360671,
+      "response_url": "https://infra.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "66af85968c5e99d67ccb8cdf5e54c05c5f7e23760ef85ecb336c4907ad093cd8",
+      "url": "https://infra.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "URL",
+      "bytes": 729452,
+      "response_url": "https://url.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "a4295a30e0203fc5b63a83a10c04daeef8a9741ff727e9beec89d2ae0c50a0de",
+      "url": "https://url.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "WEBIDL",
+      "bytes": 2541071,
+      "response_url": "https://webidl.spec.whatwg.org/",
+      "role": "external-parsing-authority",
+      "sha256": "fbe16aabe0fd3e13c558daa973243197eb7a365ced606332e9731faf46047602",
+      "url": "https://webidl.spec.whatwg.org/"
+    },
+    {
+      "authority_key": "XML-NAMES",
+      "bytes": 51390,
+      "response_url": "https://www.w3.org/TR/2009/REC-xml-names-20091208/",
+      "role": "external-parsing-authority",
+      "sha256": "b4a649e5fdab9852d68eca21442481599164949bcdee5549f2ec7e38fb3cd3a8",
+      "url": "https://www.w3.org/TR/2009/REC-xml-names-20091208/"
+    }
+  ],
+  "capture_policy": "CURL_ONE_REQUEST_PER_CANONICAL_URL_NO_RETRY_400MS_W3C_INTERVAL_OFFICIAL_PRIMARY_HOSTS_ONLY",
+  "schema_version": 1
+}

@@ -64,7 +64,7 @@ impl DapAdapter {
             ..PipelineOptions::default()
         };
 
-        let ir = compile_grammar(&grammar_source, &options)?;
+        let ir = compile_grammar(&grammar_source, &options).map_err(|error| error.to_string())?;
         let program = compile_with_debug(&ir, true);
         let line_index = LineIndex::new(&grammar_source);
 

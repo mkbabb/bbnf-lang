@@ -41,7 +41,9 @@
 
 use std::collections::HashMap;
 
-use crate::{FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, RuleId, StringId, TypeDesc};
+use crate::{
+    FnDescriptor, GrammarIR, IrNode, IrRule, MapExpr, NumericDomain, RuleId, StringId, TypeDesc,
+};
 
 // ── State identifiers ───────────────────────────────────────────────
 
@@ -92,23 +94,23 @@ pub enum SeqPromote {
 }
 
 /// AW-III.W1 — typed-leaf payload classification for `Map { Literal,
-/// MapExpr::IntLit/BoolLit/FloatLit }` projections.
+/// MapExpr::IntLit/UIntLit/BoolLit/FloatLit }` projections.
 ///
 /// The lifter resolves the enclosing `Map { Literal,
-/// MapExpr::IntLit/BoolLit/FloatLit }` into one of these variants;
+/// MapExpr::IntLit/UIntLit/BoolLit/FloatLit }` into one of these variants;
 /// the emitter lowers each variant 1:1 to the runtime payload kind.
 /// `None` is the structural-only sentinel.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum LiteralPayload {
     /// No `->` annotation; emit the legacy structural Literal arm.
     None,
-    /// `Map { Literal, IntLit }` projecting to `u8`.
+    /// `Map { Literal, IntLit/UIntLit }` projecting to `u8`.
     U8(u8),
     /// `Map { Literal, BoolLit }`.
     Bool(bool),
-    /// `Map { Literal, IntLit }` projecting to `u32`.
+    /// `Map { Literal, IntLit/UIntLit }` projecting to `u32`.
     U32(u32),
-    /// `Map { Literal, IntLit }` projecting to `i64`/`u64`.
+    /// `Map { Literal, IntLit/UIntLit }` projecting to `i64`/`u64`.
     U64(u64),
     /// `Map { Literal, FloatLit }` projecting to `f64`.
     F64(f64),
@@ -137,7 +139,7 @@ pub enum DtaState {
     Literal {
         text: StringId,
         /// AW-III.W1 — typed-leaf payload threaded from the enclosing
-        /// `Map { Literal, MapExpr::IntLit/BoolLit/FloatLit }`. The
+        /// `Map { Literal, MapExpr::IntLit/UIntLit/BoolLit/FloatLit }`. The
         /// emitter lowers this 1:1 into the runtime literal-payload
         /// constant emitted at the leaf site.
         payload: LiteralPayload,
@@ -1060,7 +1062,7 @@ pub(super) fn match_operator_chain_rule(
     };
 
     // Inner is `Seq(op, operand)` or with `?w` interleave.
-    let inner_children = match strip_transparent_owned(&inner) {
+    let inner_children = match strip_chain_pair_owned(&inner) {
         IrNode::Seq(c) => c,
         _ => return None,
     };
@@ -1103,28 +1105,14 @@ fn extract_operator_set(
     node: &IrNode,
     owning_rule_id: RuleId,
 ) -> Option<Vec<PrecedenceEntry>> {
-    let stripped = strip_transparent_owned(node);
-    match stripped {
+    match node {
+        IrNode::OptionalWhitespace(inner) => extract_operator_set(ir, inner, owning_rule_id),
         IrNode::Ref(rid) => {
-            let op_rule = ir.rules.iter().find(|r| r.id == rid)?;
-            collect_operator_alternatives(ir, op_rule, rid, owning_rule_id)
+            let op_rule = ir.rules.iter().find(|r| r.id == *rid)?;
+            collect_operator_alternatives(ir, op_rule, *rid, owning_rule_id)
         }
-        IrNode::Alt(_, _) => collect_inlined_alt_operators(ir, &stripped, owning_rule_id),
-        IrNode::Literal(sid) => {
-            let literal = ir.get_string(sid).to_string();
-            let bytes = literal.as_bytes();
-            if bytes.is_empty() {
-                return None;
-            }
-            Some(vec![PrecedenceEntry {
-                byte: bytes[0],
-                second_byte: bytes.get(1).copied(),
-                precedence: 0,
-                associativity: infer_associativity(&literal),
-                op_rule: owning_rule_id,
-                rung_rule: owning_rule_id,
-                op_discriminant: 0,
-            }])
+        IrNode::Alt(_, _) | IrNode::Literal(_) | IrNode::Map { .. } => {
+            collect_inlined_alt_operators(ir, node, owning_rule_id)
         }
         _ => None,
     }
@@ -1138,39 +1126,15 @@ fn extract_operator_set(
 /// AX.W0a.2.o: Sheets `comparison_expr`'s inlined `compare_op`
 /// surfaces a prefix-factored branch (`Seq(Literal("<"),
 /// Alt(Literal(">") | Literal("=")))` → `["<>", "<="]`); handle it
-/// via [`extract_literal_set`] so the admission sees every operator
-/// literal the rule admits.
+/// via [`extract_operator_alternatives`] so the admission sees every
+/// operator literal the rule admits.
 fn collect_inlined_alt_operators(
     ir: &GrammarIR,
     node: &IrNode,
     owning_rule_id: RuleId,
 ) -> Option<Vec<PrecedenceEntry>> {
-    let branches = match node {
-        IrNode::Alt(branches, _) => branches,
-        _ => return None,
-    };
-    let mut out = Vec::new();
-    let mut discriminant: usize = 0;
-    for branch in branches.iter() {
-        let literals = extract_literal_set(&branch.node, ir)?;
-        for literal in literals {
-            let bytes = literal.as_bytes();
-            if bytes.is_empty() {
-                return None;
-            }
-            out.push(PrecedenceEntry {
-                byte: bytes[0],
-                second_byte: bytes.get(1).copied(),
-                precedence: 0,
-                associativity: infer_associativity(&literal),
-                op_rule: owning_rule_id,
-                rung_rule: owning_rule_id,
-                op_discriminant: discriminant.min(u8::MAX as usize) as u8,
-            });
-            discriminant += 1;
-        }
-    }
-    Some(out)
+    let alternatives = extract_operator_alternatives(node, ir)?;
+    precedence_entries(alternatives, owning_rule_id, owning_rule_id)
 }
 
 /// AW-III.W1 — resolve a `Map { inner, fn_id }` into the typed-leaf
@@ -1266,15 +1230,19 @@ fn literal_payload_from_expr(
     return_type: Option<&TypeDesc>,
 ) -> Option<LiteralPayload> {
     match expr {
-        MapExpr::IntLit(v) => Some(int_literal_payload(*v, return_type)),
+        MapExpr::IntLit(v) => int_literal_payload(*v, return_type),
+        MapExpr::UIntLit(v) => uint_literal_payload(*v, return_type),
         MapExpr::BoolLit(b) => Some(LiteralPayload::Bool(*b)),
         MapExpr::FloatLit(v) => Some(LiteralPayload::F64(*v)),
         // Constant-foldable subtree — fold then re-classify.
         _ => {
             let mut folded = expr.clone();
-            folded.constant_fold();
+            folded
+                .checked_fold(return_type.and_then(NumericDomain::from_type_desc))
+                .ok()?;
             match folded {
-                MapExpr::IntLit(v) => Some(int_literal_payload(v, return_type)),
+                MapExpr::IntLit(v) => int_literal_payload(v, return_type),
+                MapExpr::UIntLit(v) => uint_literal_payload(v, return_type),
                 MapExpr::BoolLit(b) => Some(LiteralPayload::Bool(b)),
                 MapExpr::FloatLit(v) => Some(LiteralPayload::F64(v)),
                 _ => None,
@@ -1283,28 +1251,50 @@ fn literal_payload_from_expr(
     }
 }
 
-/// Map an `IntLit(i64)` to its narrow payload variant per the
-/// declared `return_type`. When unannotated, the lifter chooses the
-/// narrowest variant that holds the value.
-fn int_literal_payload(value: i64, return_type: Option<&TypeDesc>) -> LiteralPayload {
-    let by_type = return_type.and_then(|td| match td {
-        TypeDesc::U8 | TypeDesc::I8 => Some(LiteralPayload::U8(value as u8)),
-        TypeDesc::U16 | TypeDesc::I16 => Some(LiteralPayload::U32(value as u32)),
-        TypeDesc::U32 | TypeDesc::I32 => Some(LiteralPayload::U32(value as u32)),
-        TypeDesc::U64 | TypeDesc::I64 => Some(LiteralPayload::U64(value as u64)),
-        TypeDesc::F64 => Some(LiteralPayload::F64(value as f64)),
-        TypeDesc::Bool => Some(LiteralPayload::Bool(value != 0)),
-        _ => None,
-    });
-    by_type.unwrap_or_else(|| {
-        if (0..=255).contains(&value) {
-            LiteralPayload::U8(value as u8)
-        } else if (i32::MIN as i64..=u32::MAX as i64).contains(&value) {
-            LiteralPayload::U32(value as u32)
+/// Map an exact unsigned literal to a lossless payload variant.
+///
+/// Explicit unsigned annotations are authoritative. Signed, floating, boolean,
+/// and structural return types are contradictions and remain unclassified
+/// rather than being narrowed or reinterpreted.
+fn uint_literal_payload(value: u64, return_type: Option<&TypeDesc>) -> Option<LiteralPayload> {
+    match return_type {
+        Some(TypeDesc::U8) => u8::try_from(value).ok().map(LiteralPayload::U8),
+        Some(TypeDesc::U16 | TypeDesc::U32) => u32::try_from(value).ok().map(LiteralPayload::U32),
+        Some(TypeDesc::U64) => Some(LiteralPayload::U64(value)),
+        Some(_) => None,
+        None => Some(if let Ok(value) = u8::try_from(value) {
+            LiteralPayload::U8(value)
+        } else if let Ok(value) = u32::try_from(value) {
+            LiteralPayload::U32(value)
         } else {
-            LiteralPayload::U64(value as u64)
+            LiteralPayload::U64(value)
+        }),
+    }
+}
+
+/// Map a signed integer to an unsigned literal-payload slot only when the
+/// value and declared type are both exactly representable.
+///
+/// `LiteralPayload` has no signed variant. Signed annotations and negative
+/// unannotated values therefore remain unclassified instead of being
+/// reinterpreted through an unsigned cast.
+fn int_literal_payload(value: i64, return_type: Option<&TypeDesc>) -> Option<LiteralPayload> {
+    match return_type {
+        Some(TypeDesc::U8) => u8::try_from(value).ok().map(LiteralPayload::U8),
+        Some(TypeDesc::U16 | TypeDesc::U32) => u32::try_from(value).ok().map(LiteralPayload::U32),
+        Some(TypeDesc::U64) => u64::try_from(value).ok().map(LiteralPayload::U64),
+        Some(_) => None,
+        None => {
+            let value = u64::try_from(value).ok()?;
+            Some(if let Ok(value) = u8::try_from(value) {
+                LiteralPayload::U8(value)
+            } else if let Ok(value) = u32::try_from(value) {
+                LiteralPayload::U32(value)
+            } else {
+                LiteralPayload::U64(value)
+            })
         }
-    })
+    }
 }
 
 /// Map an explicit return-type annotation on `Map { Regex, Expr }`
@@ -1378,68 +1368,90 @@ fn strip_transparent_owned(node: &IrNode) -> IrNode {
     }
 }
 
+/// Project a chain repeat body to its structural `(operator, rhs)` pair
+/// without erasing a mapped operator's semantic discriminant.
+fn strip_chain_pair_owned(node: &IrNode) -> IrNode {
+    match node {
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            strip_chain_pair_owned(inner)
+        }
+        IrNode::Next(operator, rhs) | IrNode::Skip(operator, rhs) => {
+            IrNode::Seq(vec![(**operator).clone(), (**rhs).clone()])
+        }
+        _ => node.clone(),
+    }
+}
+
 fn collect_operator_alternatives(
     ir: &GrammarIR,
     op_rule: &IrRule,
     op_rule_id: RuleId,
     rung_rule_id: RuleId,
 ) -> Option<Vec<PrecedenceEntry>> {
-    let body = strip_transparent_owned(&op_rule.body);
-
-    // Single-Literal op-rule body — `op = "+" -> Plus` and friends
-    // — projects to a one-entry chain. The Alt-of-Literal path
-    // below subsumes the n>=2 cases; the n=1 degenerate is the
-    // sibling fall-through. Without this projection the Pratt
-    // detector rejects every Ref-headed single-operator chain
-    // (`w4_pratt_detector_admits_skip_based_operator_chain` fixture
-    // and any grammar whose op-rule reduces to a single literal
-    // post-Map-strip).
-    let literals = match body {
-        IrNode::Alt(branches, _) => {
-            let mut out = Vec::new();
-            for branch in branches.iter() {
-                let lits = extract_literal_set(&branch.node, ir)?;
-                out.extend(lits);
-            }
-            out
-        }
-        _ => extract_literal_set(&body, ir)?,
-    };
-
-    let mut out = Vec::with_capacity(literals.len());
-    let mut discriminant: usize = 0;
-    for literal in literals {
-        let bytes = literal.as_bytes();
-        if bytes.is_empty() {
-            return None;
-        }
-        out.push(PrecedenceEntry {
-            byte: bytes[0],
-            second_byte: bytes.get(1).copied(),
-            precedence: 0, // filled in by caller
-            associativity: infer_associativity(&literal),
-            op_rule: op_rule_id,
-            rung_rule: rung_rule_id,
-            op_discriminant: discriminant.min(u8::MAX as usize) as u8,
-        });
-        discriminant += 1;
-    }
-    Some(out)
+    let alternatives = extract_operator_alternatives(&op_rule.body, ir)?;
+    precedence_entries(alternatives, op_rule_id, rung_rule_id)
 }
 
-fn extract_literal(node: &IrNode, ir: &GrammarIR) -> Option<String> {
-    match strip_transparent_owned(node) {
-        IrNode::Literal(sid) => Some(ir.get_string(sid).to_string()),
-        IrNode::Map { inner, .. } => extract_literal(&inner, ir),
+#[derive(Debug)]
+struct OperatorAlternative {
+    literal: String,
+    explicit_discriminant: Option<u8>,
+}
+
+fn precedence_entries(
+    alternatives: Vec<OperatorAlternative>,
+    op_rule: RuleId,
+    rung_rule: RuleId,
+) -> Option<Vec<PrecedenceEntry>> {
+    let mapped = alternatives.first()?.explicit_discriminant.is_some();
+    if alternatives
+        .iter()
+        .any(|alternative| alternative.explicit_discriminant.is_some() != mapped)
+    {
+        return None;
+    }
+    alternatives
+        .into_iter()
+        .enumerate()
+        .map(|(ordinal, alternative)| {
+            let bytes = alternative.literal.as_bytes();
+            if !(1..=2).contains(&bytes.len()) {
+                return None;
+            }
+            Some(PrecedenceEntry {
+                byte: bytes[0],
+                second_byte: bytes.get(1).copied(),
+                precedence: 0,
+                associativity: infer_associativity(&alternative.literal),
+                op_rule,
+                rung_rule,
+                op_discriminant: alternative
+                    .explicit_discriminant
+                    .or_else(|| u8::try_from(ordinal).ok())?,
+            })
+        })
+        .collect()
+}
+
+fn mapped_u8_discriminant(ir: &GrammarIR, fn_id: u32) -> Option<u8> {
+    match ir.fns.get(fn_id as usize) {
+        Some(FnDescriptor::Expr {
+            expr: MapExpr::IntLit(value),
+            return_type: Some(TypeDesc::U8),
+        }) => u8::try_from(*value).ok(),
+        Some(FnDescriptor::Expr {
+            expr: MapExpr::UIntLit(value),
+            return_type: Some(TypeDesc::U8),
+        }) => u8::try_from(*value).ok(),
         _ => None,
     }
 }
 
-/// Extract the set of literal strings an operator-branch node admits.
+/// Extract the literal strings and explicit `u8` projections an
+/// operator-branch node admits.
 ///
-/// Extends [`extract_literal`] to handle prefix-factored Alt branches
-/// produced by the optimizer's prefix-tree factoring on literal-led
-/// Alts. The factoring rewrites
+/// Handles prefix-factored Alt branches produced by the optimizer's
+/// prefix-tree factoring on bare literal-led Alts. The factoring rewrites
 /// `Alt(Literal("<>") | Literal("<=") | Literal("<") | …)` as
 /// `Alt(Seq(Literal("<"), Alt(Literal(">") | Literal("="))) | Literal("<") | …)`
 /// — the Seq-factored branch expands to `["<>", "<="]` via the
@@ -1448,16 +1460,30 @@ fn extract_literal(node: &IrNode, ir: &GrammarIR) -> Option<String> {
 /// AX.W0a.2.o: Sheets `compare_op`'s post-factor body surfaces one
 /// Seq-factored branch; single-literal `collect_operator_alternatives`
 /// rejected the entire Alt when that branch failed `extract_literal`.
-/// Factoring-aware expansion admits the miner's seven-literal chain.
+/// Factoring-aware expansion admits the miner's six-literal chain.
 ///
 /// Returns `None` when a branch is not literal-derivable (Seq with
 /// non-literal head, Ref chain, Regex leaf, etc.) — those shapes are
 /// not operator alternatives and the miner must not invent a
 /// single-byte projection for them.
-fn extract_literal_set(node: &IrNode, ir: &GrammarIR) -> Option<Vec<String>> {
-    match strip_transparent_owned(node) {
-        IrNode::Literal(sid) => Some(vec![ir.get_string(sid).to_string()]),
-        IrNode::Map { inner, .. } => extract_literal_set(&inner, ir),
+fn extract_operator_alternatives(
+    node: &IrNode,
+    ir: &GrammarIR,
+) -> Option<Vec<OperatorAlternative>> {
+    match node {
+        IrNode::OptionalWhitespace(inner) => extract_operator_alternatives(inner, ir),
+        IrNode::Map { inner, fn_id } => {
+            let discriminant = mapped_u8_discriminant(ir, *fn_id)?;
+            let mut alternatives = extract_operator_alternatives(inner, ir)?;
+            for alternative in &mut alternatives {
+                alternative.explicit_discriminant = Some(discriminant);
+            }
+            Some(alternatives)
+        }
+        IrNode::Literal(sid) => Some(vec![OperatorAlternative {
+            literal: ir.get_string(*sid).to_string(),
+            explicit_discriminant: None,
+        }]),
         IrNode::Seq(children) => {
             // Prefix-factored branch: `Seq([Literal(prefix), Alt(suffixes)])`
             // — expand the Cartesian product of the prefix with each
@@ -1466,29 +1492,35 @@ fn extract_literal_set(node: &IrNode, ir: &GrammarIR) -> Option<Vec<String>> {
             // operator alternative and we reject.
             let substantive: Vec<&IrNode> = children
                 .iter()
-                .filter(|c| {
-                    !matches!(
-                        strip_transparent_owned(c),
-                        IrNode::Epsilon | IrNode::OptionalWhitespace(_)
-                    )
-                })
+                .filter(|child| !matches!(child, IrNode::Epsilon))
                 .collect();
             if substantive.len() != 2 {
                 return None;
             }
-            let prefix = extract_literal(substantive[0], ir)?;
-            let suffix_alt = strip_transparent_owned(substantive[1]);
-            let suffix_branches = match suffix_alt {
-                IrNode::Alt(b, _) => b,
+            let prefixes = extract_operator_alternatives(substantive[0], ir)?;
+            let [prefix] = prefixes.as_slice() else {
+                return None;
+            };
+            if prefix.explicit_discriminant.is_some() {
+                return None;
+            }
+            let suffix_branches = match substantive[1] {
+                IrNode::Alt(branches, _) => branches,
                 _ => return None,
             };
             let mut out = Vec::new();
-            for suffix_branch in &suffix_branches {
-                let suffix_literals = extract_literal_set(&suffix_branch.node, ir)?;
-                for suffix in suffix_literals {
-                    let mut combined = prefix.clone();
-                    combined.push_str(&suffix);
-                    out.push(combined);
+            for suffix_branch in suffix_branches {
+                let suffixes = extract_operator_alternatives(&suffix_branch.node, ir)?;
+                for suffix in suffixes {
+                    if suffix.explicit_discriminant.is_some() {
+                        return None;
+                    }
+                    let mut literal = prefix.literal.clone();
+                    literal.push_str(&suffix.literal);
+                    out.push(OperatorAlternative {
+                        literal,
+                        explicit_discriminant: None,
+                    });
                 }
             }
             if out.is_empty() {
@@ -1499,9 +1531,8 @@ fn extract_literal_set(node: &IrNode, ir: &GrammarIR) -> Option<Vec<String>> {
         IrNode::Alt(branches, _) => {
             // Nested Alt — flatten each branch's literal set.
             let mut out = Vec::new();
-            for branch in &branches {
-                let literals = extract_literal_set(&branch.node, ir)?;
-                out.extend(literals);
+            for branch in branches {
+                out.extend(extract_operator_alternatives(&branch.node, ir)?);
             }
             if out.is_empty() {
                 return None;

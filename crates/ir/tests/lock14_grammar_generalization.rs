@@ -83,7 +83,10 @@ fn collect_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
 fn generic_crate_src_roots() -> Vec<PathBuf> {
     let ir_crate = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let crates_dir = ir_crate.parent().expect("crates/ir has a parent");
-    vec![ir_crate.join("src"), crates_dir.join("analysis").join("src")]
+    vec![
+        ir_crate.join("src"),
+        crates_dir.join("analysis").join("src"),
+    ]
 }
 
 #[test]

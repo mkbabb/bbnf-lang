@@ -55,7 +55,13 @@ pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &Gram
     // (→ KeyDispatch), pin the Alt variable. The shape facts come
     // from `ir.node_facts[id].recognizer.shape`, populated by
     // `mine_recognizers` upstream.
-    for (&node_id, &var) in ctx.alt_vars.iter() {
+    let mut alt_vars: Vec<_> = ctx
+        .alt_vars
+        .iter()
+        .map(|(&node, &var)| (node, var))
+        .collect();
+    alt_vars.sort_unstable_by_key(|(node, _)| *node);
+    for (node_id, var) in alt_vars {
         // Only pin Alt vars owned by rules in this component. The
         // alt_vars map is component-wide because `solve_component`
         // walks every member rule's body.
@@ -83,7 +89,13 @@ pub fn install(ctx: &ConstraintCtx<'_>, csp: &mut Csp<StrategyDomain>, ir: &Gram
     // Recognizer shape `SeparatorList` → SepBy follows the same
     // structure — separator-list facts come from the recognizer
     // miner.
-    for (&node_id, &var) in ctx.wrap_vars.iter() {
+    let mut wrap_vars: Vec<_> = ctx
+        .wrap_vars
+        .iter()
+        .map(|(&node, &var)| (node, var))
+        .collect();
+    wrap_vars.sort_unstable_by_key(|(node, _)| *node);
+    for (node_id, var) in wrap_vars {
         let pinned = pin_for_wrap(ir, node_id);
         if let Some(target) = pinned {
             csp.add_equals(var, StrategyValue::Wrap(target));

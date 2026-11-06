@@ -1,8 +1,8 @@
 //! AY.W3a — runtime handles for the Value API substrate.
 //!
-//! Two `Copy` handle types underpin the `to_value` + `get_by_path`
-//! lanes emitted in AY.W3b. They are intentionally schema-free — the
-//! per-grammar `<Grammar>Value` enum interprets them in context.
+//! Two handles underpin the runtime builder and value lanes. [`StringHandle`]
+//! is a copyable value address. [`CompoundHandle`] is instead a linear,
+//! builder-issued capability for closing one in-flight compound scope.
 //!
 //! # `StringHandle`
 //!
@@ -18,12 +18,10 @@
 //!
 //! # `CompoundHandle`
 //!
-//! Compound (object / array / struct) values point into the
-//! grammar-specific struct arena. `record_offset` is the absolute
-//! arena record offset; `record_count` is the compound's record span.
-//!
-//! Both handles are `Copy`, 16-or-fewer bytes, and ABI-stable — the
-//! emitter plants them directly into `<Grammar>Value` variants.
+//! A compound handle pairs one `begin_compound` call with its exact
+//! `end_compound` call. Its fields and constructor are crate-private, and the
+//! type is neither `Copy` nor `Clone`, so safe external code cannot forge or
+//! duplicate one.
 //!
 //! [`raw_offset`]: StringHandle::raw_offset
 
@@ -43,18 +41,35 @@ pub struct StringHandle {
     pub len: u32,
 }
 
-/// Handle pointing at a compound record span inside a parsed
-/// grammar-specific arena.
+/// Linear capability for closing one in-flight compound.
 ///
-/// `record_offset` is the absolute record offset of the compound's
-/// header record; `record_count` spans the entire subtree.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// The scope token identifies one exact begin/end pair; `rule_id` binds that
+/// pair to the layout used to open it. Construction and field access remain
+/// crate-private.
+///
+/// External construction is intentionally rejected:
+///
+/// ```compile_fail
+/// use bbnf::runtime::handle::CompoundHandle;
+///
+/// let _forged = CompoundHandle::new(1, 7);
+/// ```
+///
+/// The handle is linear, so a second close cannot be expressed in safe Rust:
+///
+/// ```compile_fail
+/// use bbnf::runtime::handle::CompoundHandle;
+///
+/// fn duplicate(handle: CompoundHandle) {
+///     let consumed = handle;
+///     let duplicate = handle;
+///     drop((consumed, duplicate));
+/// }
+/// ```
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct CompoundHandle {
-    /// Absolute record offset of the compound's header record.
-    pub record_offset: u64,
-    /// Number of arena records the compound spans, inclusive of the
-    /// header.
-    pub record_count: u32,
+    scope_token: u64,
+    rule_id: u32,
 }
 
 impl StringHandle {
@@ -116,24 +131,22 @@ impl StringHandle {
 }
 
 impl CompoundHandle {
-    /// Construct a compound handle.
+    /// Construct one crate-owned begin/end capability.
     #[inline]
-    pub const fn new(record_offset: u64, record_count: u32) -> Self {
+    pub(crate) const fn new(scope_token: u64, rule_id: u32) -> Self {
         Self {
-            record_offset,
-            record_count,
+            scope_token,
+            rule_id,
         }
     }
 
-    /// Absolute record offset of the compound's header.
     #[inline]
-    pub const fn record_offset(&self) -> u64 {
-        self.record_offset
+    pub(crate) const fn scope_token(&self) -> u64 {
+        self.scope_token
     }
 
-    /// Record count of the compound subtree (header inclusive).
     #[inline]
-    pub const fn record_count(&self) -> u32 {
-        self.record_count
+    pub(crate) const fn rule_id(&self) -> u32 {
+        self.rule_id
     }
 }

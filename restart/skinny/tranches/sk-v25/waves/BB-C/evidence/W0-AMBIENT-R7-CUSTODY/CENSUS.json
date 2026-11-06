@@ -1,0 +1,41 @@
+{
+  "algorithm": "census.py",
+  "algorithm_sha256": "1fa707954622584ceaaadd787d61c6c603bf2cec5101a9cad2d10e0b0251da12",
+  "atomic_candidate": {
+    "bytes": 9082868,
+    "ledger_file_sha256": "089bc000aaca7120190fa0724e0e080379adacb1bca8e9db86d1a5db919ff227",
+    "ledger_sha256": "089bc000aaca7120190fa0724e0e080379adacb1bca8e9db86d1a5db919ff227",
+    "members": 18,
+    "path_file_sha256": "b24a36930159074c94aadd44779a9c607786ab7078f7fcb749ec2104fc6b5315",
+    "path_set_sha256": "b24a36930159074c94aadd44779a9c607786ab7078f7fcb749ec2104fc6b5315"
+  },
+  "atomic_candidate_root": "/private/tmp/bbcw0-r7-atomic-candidate.CrYkNb",
+  "build_inputs": {
+    "bytes": 15312061,
+    "ledger_file_sha256": "808580eb49b56531854ef92a101c4f18a611856872c124d3430e295cb9fd714c",
+    "ledger_sha256": "808580eb49b56531854ef92a101c4f18a611856872c124d3430e295cb9fd714c",
+    "members": 843,
+    "path_file_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba",
+    "path_set_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba"
+  },
+  "runtime_projection": {
+    "bytes": 601237,
+    "ledger_file_sha256": "fc5f43e678bafeb42065fc18d94cd69ab387f72a693c2d4d4a92fdd25b9bb0b2",
+    "ledger_sha256": "fc5f43e678bafeb42065fc18d94cd69ab387f72a693c2d4d4a92fdd25b9bb0b2",
+    "members": 44,
+    "path_file_sha256": "51d873446e7bab0ee16f35689c0554d6c6d12451a40f7724681cba2fbd146a96",
+    "path_set_sha256": "51d873446e7bab0ee16f35689c0554d6c6d12451a40f7724681cba2fbd146a96"
+  },
+  "schema": "bb-c.w0.r7-custody.v1",
+  "sealed_fleet": {
+    "bytes": 9082868,
+    "ledger_file_sha256": "089bc000aaca7120190fa0724e0e080379adacb1bca8e9db86d1a5db919ff227",
+    "ledger_sha256": "089bc000aaca7120190fa0724e0e080379adacb1bca8e9db86d1a5db919ff227",
+    "members": 18,
+    "path_file_sha256": "b24a36930159074c94aadd44779a9c607786ab7078f7fcb749ec2104fc6b5315",
+    "path_set_sha256": "b24a36930159074c94aadd44779a9c607786ab7078f7fcb749ec2104fc6b5315"
+  },
+  "sealed_fleet_source": "/private/tmp/bbcw0-r6-output-fleet.TwgDag",
+  "source_custody_candidate_equal": true,
+  "workspace": "/Users/mkbabb/Programming/bbnf-lang"
+}

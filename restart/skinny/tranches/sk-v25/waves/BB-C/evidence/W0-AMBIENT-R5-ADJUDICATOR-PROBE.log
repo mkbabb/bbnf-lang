@@ -1,0 +1,29 @@
+MODEL: gpt-5.6-sol; EFFORT: ultra; ROLE: fresh BB-C.W0 R5 adjudicator.
+
+# W0 ambient R5 adjudicator read-only first-epoch generator probe
+
+COMMAND: /usr/bin/arch -arm64 /tmp/bbcw0-r5-xtask-target.VhwlDR/aarch64-apple-darwin/ax-iter/xtask regen --check --grammar google_sheets
+EXIT: 101
+PREIMAGE binary SHA-256: a92c8785501cb2b28d891505f713c8d66b3e4ec1dabb83392db51100ac34ac8b
+PREIMAGE Cargo.toml SHA-256: 389e326c0e3f7a5ceabfecb33ecf6d59a61506506a15153482c3d1ff11d90bde
+PREIMAGE bbnf.bbnf SHA-256: eef788e29119b7eb88444e1dd0675bc744a1802468914e9cb402d78c9c267a57
+PREIMAGE expressions.bbnf SHA-256: f7740762b03790c3ba45ed6839e8ba9bc2a50b5f1eb353f1206195b2e06baf14
+PREIMAGE types.bbnf SHA-256: db3503921bec484807d231095be8306eb4d9e231d5771eff2da8ad3caca4f008
+PREIMAGE json.bbnf SHA-256: ab8d21218b2a5f49d9231af6f71503a9949782fdc0a50d81a845fc69054f2604
+PREIMAGE lowerer SHA-256: 10fccfa027a205294991a3e3a05e6e14777f13f6d5746db39e28ade74582a39c
+PREIMAGE checked BBNF SHA-256: c8f5e6d3dc6b050c508fb1e24a08d698caf5a9b276317e8c1df8b21270efcbe2
+PREIMAGE emitter SHA-256: bfc2dff4727d11dcf62bbb3f423cd0c0f3f52e7c888c9e15112cdf6d43f288d2
+
+```text
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 6.550666ms
+[xtask::regen] bbnf: generate_all done in 21.221792ms
+[xtask::regen] bbnf: prettyplease done in 141.147625ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+
+thread 'main' (7637409) panicked at crates/core/src/lower/expression/wrap.rs:66:28:
+mapped_factor: value expression has no structural source bounds
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+

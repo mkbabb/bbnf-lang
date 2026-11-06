@@ -60,6 +60,7 @@ use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
+use super::super::alt_dispatch::branches::{PayloadPlanner, payload_push_from_fn};
 use super::super::cursor_param::{cursor_param, cursor_where_clause};
 use super::super::dispatcher::{emit_ref_call_shape, shape_fn_ident};
 use super::super::root_rule_name;
@@ -67,88 +68,6 @@ use super::super::substrate::{builder_ty_elided, builder_ty_with_lifetime};
 use super::PositionedNode;
 use super::collect_positions;
 use bbnf_ir::registry::EmitStrategy;
-
-/// Codegen-time predicate: does this IR node contain any sub-rule
-/// reference (`Ref` or `TokenDispatch`) that would deposit a typed
-/// child onto the surrounding compound's open frame?
-///
-/// Returns `true` if the body's emission flow reaches at least one
-/// `Ref` / `TokenDispatch` site; returns `false` for content-only
-/// flat bodies (Literal / Regex / Epsilon plus their structural
-/// wrappers) that consume bytes without pushing typed values.
-///
-/// AZ-III.W2.4.r — the synthesis condition for content-only flat
-/// compounds. When this predicate returns `false`, the emitted body
-/// captures `*p` before and after the per-position emission and
-/// pushes a synthetic `BbnfValue::Span` leaf carrying the consumed
-/// source slice. This mirrors `bootstrap_parser::parse_literal` /
-/// `parse_regex` (lines 174-224 in the pre-redress
-/// `bootstrap_parser.rs`), which capture `lo = self.pos` before the
-/// scan body and call `push_span(lo, hi)` after — producing one
-/// span child whose range is the rule's full consumed slice.
-///
-/// Without the synthesis, `BbnfView::byte_span` (`compute_byte_span`
-/// in `crates/core/src/runtime/bbnf/view.rs:206`) returns `None`
-/// for the child-less compound and `BbnfView::span_text` returns
-/// `""` — the W2.4 first-pass research bug surfaced as
-/// `bbnf_parses_directive` / `bbnf_parses_multiple_directives`
-/// failures and `import_path` projecting empty.
-///
-/// `Negate` is treated as inert because it rolls back any builder
-/// state on success or failure (the inner is purely a guard); a
-/// rule body whose only "emission" is a Negate guard contributes
-/// no children to the open frame.
-fn body_emits_to_builder(node: &IrNode) -> bool {
-    body_emits_to_builder_with(node, None)
-}
-
-/// Same predicate as [`body_emits_to_builder`], but with access to
-/// the [`GrammarIR`] so `Map { fn_id }` annotations can be inspected
-/// for their payload class. Constant-folded payloads
-/// (`MapExpr::IntLit` / `BoolLit` / `FloatLit` / `StringLit`) DO emit
-/// to the builder via the per-shape emitter's `payload_push`; the
-/// inert `Span` synthesis must not run alongside them or the rule's
-/// compound captures both the typed leaf and a duplicate Span slice
-/// of the consumed source bytes.
-fn body_emits_to_builder_with(node: &IrNode, ir: Option<&GrammarIR>) -> bool {
-    match node {
-        IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
-        IrNode::Ref(_) | IrNode::TokenDispatch { .. } => true,
-        IrNode::Map { inner, fn_id } => {
-            // A `Map { fn_id }` whose `FnDescriptor` resolves to a
-            // constant payload (`IntLit` / `BoolLit` / `FloatLit` /
-            // `StringLit`) emits the typed leaf via `map_payload_push`
-            // — that counts as a builder emission. Non-constant
-            // descriptors and `MapExpr::Input` fall through to the
-            // inner's emission contribution.
-            if let Some(ir) = ir {
-                use bbnf_ir::{FnDescriptor, MapExpr};
-                if let Some(FnDescriptor::Expr { expr, .. }) = ir.fns.get(*fn_id as usize) {
-                    if matches!(
-                        expr,
-                        MapExpr::IntLit(_)
-                            | MapExpr::BoolLit(_)
-                            | MapExpr::FloatLit(_)
-                            | MapExpr::StringLit(_),
-                    ) {
-                        return true;
-                    }
-                }
-            }
-            body_emits_to_builder_with(inner, ir)
-        }
-        IrNode::Seq(children) => children.iter().any(|c| body_emits_to_builder_with(c, ir)),
-        IrNode::Alt(branches, _) => branches
-            .iter()
-            .any(|b| body_emits_to_builder_with(&b.node, ir)),
-        IrNode::Repeat { inner, .. } => body_emits_to_builder_with(inner, ir),
-        IrNode::Skip(l, r) | IrNode::Next(l, r) | IrNode::Minus(l, r) => {
-            body_emits_to_builder_with(l, ir) || body_emits_to_builder_with(r, ir)
-        }
-        IrNode::Negate(_) => false,
-        IrNode::OptionalWhitespace(inner) => body_emits_to_builder_with(inner, ir),
-    }
-}
 
 /// Codegen-time inspection of the rule's registered layout. Returns the
 /// registry entry's `(kind, rule_name)` when present; otherwise the
@@ -187,38 +106,23 @@ fn quote_layout_kind(kind: LayoutKind) -> TokenStream {
 /// Resolve a `Map { fn_id }` annotation to the matching
 /// `StructBuilder` push call.
 ///
-/// Sheets / CSS `-> Nu8` declarations lower to `MapExpr::IntLit(n)`;
-/// the per-branch discriminator routes through `push_branch_tag(n)`
-/// so the grammar's tag surface (`SheetsValue::Tag(b)` /
-/// `SheetsValue::Error(b)` via per-rule specialised builder entries,
-/// or the no-op JSON audit hook) observes the declared variant
-/// index. `MapExpr::BoolLit(b)` routes through
+/// Sheets / CSS `-> Nu8` declarations lower to `MapExpr::IntLit(n)`
+/// with `return_type: U8`; those semantic values route through the
+/// repeatable `push_leaf_with_u8(n)` operation. Wider integer maps stay
+/// on `push_leaf_with_u64`, and structural Alt selection is owned by
+/// AltDispatch/Wrap. `MapExpr::BoolLit(b)` routes through
 /// `push_leaf_with_bool(b)`.
 ///
-/// Returns `quote! {}` for any other `MapExpr` (StringLit / Span /
-/// Aggregate / F64 / U32 / U64 / etc.); the corresponding payload
-/// surfaces are owned by the per-rule shape emitter (HRegex / String
-/// / Number) — the Flat path's Map descent is purely structural
-/// when the inner is itself a typed sub-rule call.
+/// Real folded scalar and StringLit payloads share the central payload
+/// resolver. Dynamic maps return no push and retain their inner emission.
 fn map_payload_push(fn_id: u32, ir: &GrammarIR) -> TokenStream {
-    use bbnf_ir::{FnDescriptor, MapExpr};
-    let Some(FnDescriptor::Expr { expr, .. }) = ir.fns.get(fn_id as usize) else {
+    let Some(descriptor) = ir.fns.get(fn_id as usize) else {
         return quote! {};
     };
-    match expr {
-        MapExpr::IntLit(n) => {
-            let v = *n as u32;
-            quote! {
-                builder.push_branch_tag(#v);
-            }
-        }
-        MapExpr::BoolLit(b) => {
-            let v = *b;
-            quote! {
-                builder.push_leaf_with_bool(#v);
-            }
-        }
-        _ => quote! {},
+    match payload_push_from_fn(descriptor, ir) {
+        Ok(Some(payload)) => payload,
+        Ok(None) => quote! {},
+        Err(message) => quote! { compile_error!(#message); },
     }
 }
 
@@ -255,6 +159,7 @@ pub(super) fn emit_parse_flat_struct_direct(
     rule: &IrRule,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &PayloadPlanner<'_>,
 ) -> TokenStream {
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("flat", grammar_suffix, rule_name);
@@ -329,14 +234,26 @@ pub(super) fn emit_parse_flat_struct_direct(
     // parse_literal` / `parse_regex` lines 174-224) compensated by
     // capturing `lo = self.pos` before the body and pushing
     // `push_leaf_with_str(&self.src[lo..hi])` after. The codegen
-    // path now does the same: when `body_emits_to_builder` returns
-    // `false`, the emitted body wraps the per-position emission with
+    // path now does the same: when the grammar-wide cardinality solver
+    // proves exactly zero committed payloads, the emitted body wraps
+    // the per-position emission with
     // span-bracket capture and pushes one synthetic `Span` leaf
     // carrying the rule's consumed source slice before
     // `end_compound`. Affected BBNF rules are `regex`,
     // `big_comment`, `comment`, `literal` (all `-> Span`), and
     // `import_path` (whose host walker also reads via `byte_span()`).
-    let needs_span_synthesis = !body_emits_to_builder_with(&rule.body, Some(ir));
+    let payload_layout = payload_planner.flat_layout_plan(rule);
+    let needs_span_synthesis = payload_layout.synthesize_span;
+    let ambiguous_payload_guard = if payload_layout.admitted {
+        quote! {}
+    } else {
+        quote! {
+            compile_error!(
+                "Flat emitted payload arity does not exactly agree with its \
+                 solved layout"
+            );
+        }
+    };
     let span_capture_pre = if needs_span_synthesis {
         quote! { let __span_lo: usize = *p; }
     } else {
@@ -382,9 +299,9 @@ pub(super) fn emit_parse_flat_struct_direct(
         /// collapses plain `#[inline]` candidates only when
         /// profitable and bails cleanly on detected recursion.
         ///
-        /// AZ-III.W2.4.r — content-only bodies (no Ref /
-        /// TokenDispatch in the IR) capture `*p` before and after
-        /// the per-position emission and push one synthetic Span
+        /// AZ-III.W2.4.r — bodies proven to commit zero payloads
+        /// capture `*p` before and after the per-position emission
+        /// and push one synthetic Span
         /// leaf carrying the consumed source slice; this restores
         /// the contract `bootstrap_parser` met for `regex` /
         /// `literal` / `comment` / `big_comment` / `import_path`
@@ -408,6 +325,7 @@ pub(super) fn emit_parse_flat_struct_direct(
             // positional emission below honours the `ParseUntil(idx)`
             // cut where applicable; the consult primes the cache.
             let __decision: __Decision = cursor.decide(#rule_id_lit as u32);
+            #ambiguous_payload_guard
 
             // AZ-I.W2.RF — open the Flat compound. The layout literal is
             // built inline from the rule's registered metadata; the
@@ -516,7 +434,8 @@ fn emit_position_struct_direct(
 ///   differs and is threaded transparently).
 /// - `OptionalWhitespace(inner)` — leading + trailing ws-skip around
 ///   the inner's core emission.
-/// - `Next(lhs, rhs)` / `Skip(lhs, rhs)` — recurse into both children.
+/// - `Next(lhs, rhs)` / `Skip(lhs, rhs)` — parse both children while
+///   transactionally suppressing builder effects from the discarded side.
 /// - `Seq(children)` — recurse into each child.
 /// - `Epsilon` — empty.
 ///
@@ -547,11 +466,10 @@ fn emit_position_core_struct_direct(
             if let Some(call) = emit_ref_call_shape(grammar_suffix, *rid, ir) {
                 quote! { let _ = (#call)?; }
             } else {
-                // Unclassified target — fall back to the dispatcher.
-                // Under StructDirect the dispatcher takes the same
-                // builder argument; the call is signature-compatible.
                 quote! {
-                    let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
+                    compile_error!(
+                        "Flat Ref target has no emitted per-shape driver"
+                    );
                 }
             }
         }
@@ -569,22 +487,67 @@ fn emit_position_core_struct_direct(
                 let _ = #support_mod::skip_space(input, p, state);
             }
         }
-        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            let l = emit_position_core_struct_direct(
-                lhs,
+        IrNode::Skip(kept, discarded) => {
+            let kept_emit = emit_position_core_struct_direct(
+                kept,
                 support_mod,
                 dispatcher_ident,
                 grammar_suffix,
                 ir,
             );
-            let r = emit_position_core_struct_direct(
-                rhs,
+            let discarded_emit = emit_position_core_struct_direct(
+                discarded,
                 support_mod,
                 dispatcher_ident,
                 grammar_suffix,
                 ir,
             );
-            quote! { #l #r }
+            quote! {
+                #kept_emit
+                {
+                    let __discarded_builder_checkpoint = builder.checkpoint();
+                    let __discarded_result: ::core::result::Result<
+                        (),
+                        crate::runtime::DtaError,
+                    > = (|| {
+                        #discarded_emit
+                        ::core::result::Result::Ok(())
+                    })();
+                    builder.rollback(__discarded_builder_checkpoint);
+                    __discarded_result?;
+                }
+            }
+        }
+        IrNode::Next(discarded, kept) => {
+            let discarded_emit = emit_position_core_struct_direct(
+                discarded,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
+            );
+            let kept_emit = emit_position_core_struct_direct(
+                kept,
+                support_mod,
+                dispatcher_ident,
+                grammar_suffix,
+                ir,
+            );
+            quote! {
+                {
+                    let __discarded_builder_checkpoint = builder.checkpoint();
+                    let __discarded_result: ::core::result::Result<
+                        (),
+                        crate::runtime::DtaError,
+                    > = (|| {
+                        #discarded_emit
+                        ::core::result::Result::Ok(())
+                    })();
+                    builder.rollback(__discarded_builder_checkpoint);
+                    __discarded_result?;
+                }
+                #kept_emit
+            }
         }
         IrNode::Seq(children) => {
             let mut out = Vec::with_capacity(children.len());
@@ -605,15 +568,9 @@ fn emit_position_core_struct_direct(
         // first (byte match advances `*p`); on success we emit the
         // matching `StructBuilder` push for the typed payload value.
         //
-        // For `IntLit` payloads (Sheets `error_literal -> Nu8`,
-        // `add_op -> Nu8`, etc. when the rule's body is Flat /
-        // factored Alt) the discriminator routes through
-        // `push_branch_tag(value)` so the grammar's tag surface
-        // (`SheetsValue::Tag(b)` / `SheetsValue::Error(b)` via the
-        // builder's per-rule specialised entry point) observes the
-        // declared variant index. JSON's `JsonStructBuilder::
-        // push_branch_tag` is a no-op audit hook; the call is
-        // signature-compatible across grammars.
+        // Typed `u8` payloads (Sheets `error_literal -> Nu8`,
+        // `add_op -> Nu8`, etc.) route through the repeatable semantic
+        // leaf operation. They are not structural Alt branch IDs.
         //
         // `BoolLit` payloads route through `push_leaf_with_bool`
         // (the canonical bool projection). Other payload shapes
@@ -629,9 +586,17 @@ fn emit_position_core_struct_direct(
                 ir,
             );
             let payload_push = map_payload_push(*fn_id, ir);
-            quote! {
-                #inner_emit
-                #payload_push
+            if payload_push.is_empty() {
+                quote! { #inner_emit }
+            } else {
+                quote! {
+                    {
+                        let __map_builder_checkpoint = builder.checkpoint();
+                        #inner_emit
+                        builder.rollback(__map_builder_checkpoint);
+                        #payload_push
+                    }
+                }
             }
         }
         IrNode::Epsilon => quote! {},
@@ -759,15 +724,11 @@ fn emit_position_core_struct_direct(
                 }
             }
         }
-        // TokenDispatch — out of cutover.F scope; remains routed
-        // through the dispatcher fallback. Activating TokenDispatch
-        // under StructDirect is a follow-up tranche concern (see
-        // cutover.G plan).
-        IrNode::TokenDispatch { .. } => {
-            quote! {
-                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
-            }
-        }
+        IrNode::TokenDispatch { .. } => quote! {
+            compile_error!(
+                "TokenDispatch has no exact StructDirect emission path"
+            );
+        },
     }
 }
 
@@ -932,8 +893,9 @@ fn emit_inline_repeat_struct_direct(
     let inner_emit =
         emit_position_core_struct_direct(inner, support_mod, dispatcher_ident, grammar_suffix, ir);
     let lo_lit = lo as u32;
-    // `hi == 0` represents unbounded iteration in the IR convention.
-    let hi_check = if hi == 0 {
+    // Lowering represents an unbounded repeat with `u32::MAX`; `hi == 0`
+    // is the exact zero-iteration range and must break before parsing.
+    let hi_check = if hi == u32::MAX {
         quote! {}
     } else {
         let n_lit = hi as u32;

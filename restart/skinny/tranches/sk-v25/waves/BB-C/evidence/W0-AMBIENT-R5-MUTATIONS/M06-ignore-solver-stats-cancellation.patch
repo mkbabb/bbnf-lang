@@ -1,0 +1,10 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -675,5 +675,5 @@ pub(super) fn cancellation_observed(
+     solver_stats_cancelled: bool,
+     current_token_cancelled: bool,
+ ) -> bool {
+-    solver_stats_cancelled || current_token_cancelled
++    current_token_cancelled
+ }

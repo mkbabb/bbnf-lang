@@ -31,7 +31,7 @@ mod universal;
 
 pub use regex::{DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt};
 pub use suffix::CommonSuffixFactor;
-pub use universal::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
+pub use universal::{AltOfSingle, ConcatLiterals, RepeatOfSingle};
 
 use rustc_hash::FxHashMap;
 
@@ -39,13 +39,13 @@ use egraph::{Analysis, Id, RewriteFn};
 
 use super::interner::SharedStrings;
 use super::node::GrammarENode;
-use crate::{GrammarIR, RuleId, TypeDesc};
+use crate::{GrammarIR, RuleId};
 
 /// Default rule set.
 ///
 /// Regex-algebra + structural equivalences that the structural
 /// normalizer cannot express in its fixed pass order, plus the
-/// AY.W2.3 universal canonicalisations (G1-G2 so far).
+/// AY.W2.3 universal canonicalisations (G1, G2, and G4).
 ///
 /// Regex-algebra family:
 /// - [`DeduplicateAltBranches`] — collapse structurally-equal branches
@@ -66,24 +66,13 @@ use crate::{GrammarIR, RuleId, TypeDesc};
 /// Universal family (AY.W2.3):
 /// - [`AltOfSingle`] — `Alt([x]) ≡ x` (G1).
 /// - [`RepeatOfSingle`] — `Repeat { lo: 1, hi: 1 } ≡ inner` (G2).
-/// - [`WrapOfEpsilonScalar`] — `Alt([leaf, ε]) ≡ leaf` when `leaf`'s
-///   projection is scalar (G3; **PRIMARY LEVER** per AY.md prop 2 for
-///   JSON wrap-compound elision).
 /// - [`ConcatLiterals`] — `Seq([.., Literal(a), Literal(b), ..])
 ///   ≡ Seq([.., Literal(ab), ..])` (G4).
 pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
-    ir: &GrammarIR,
+    _ir: &GrammarIR,
     pool: &SharedStrings,
     _rule_body_ids: FxHashMap<RuleId, Id>,
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, A>>> {
-    // AY.W2.3 G3 — snapshot the per-rule `TypeDesc` side-table so the
-    // rewrite's search path can resolve a `Ref` branch's projection
-    // without holding a live IR borrow.
-    let rule_types: FxHashMap<RuleId, TypeDesc> = ir
-        .types
-        .iter()
-        .map(|(rid, ty)| (*rid, ty.clone()))
-        .collect();
     vec![
         Box::new(DeduplicateAltBranches),
         Box::new(SupersetAbsorbAlt::new(pool.clone())),
@@ -92,7 +81,6 @@ pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
         Box::new(CommonSuffixFactor),
         Box::new(AltOfSingle),
         Box::new(RepeatOfSingle),
-        Box::new(WrapOfEpsilonScalar::new(rule_types)),
         Box::new(ConcatLiterals::new(pool.clone())),
     ]
 }

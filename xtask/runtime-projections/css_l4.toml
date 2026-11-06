@@ -35,7 +35,6 @@ value_exports = [
   "CssAngleUnit",
   "CssColor",
   "CssColorFunction",
-  "CssColorMix",
   "CssColorPredefined",
   "CssColorSpace",
   "CssColorType",
@@ -45,7 +44,6 @@ value_exports = [
   "CssFrequencyUnit",
   "CssFunction",
   "CssGlobalKeyword",
-  "CssHueMethod",
   "CssLength",
   "CssLengthUnit",
   "CssMathOperator",
@@ -97,6 +95,28 @@ variants = [
   { name = "Cqi", value = 24 },
   { name = "Cqb", value = 25 },
   { name = "Q", value = 26 },
+  { name = "Vb", value = 27 },
+  { name = "Vi", value = 28 },
+  { name = "Svmin", value = 29 },
+  { name = "Svmax", value = 30 },
+  { name = "Svb", value = 31 },
+  { name = "Svi", value = 32 },
+  { name = "Lvmin", value = 33 },
+  { name = "Lvmax", value = 34 },
+  { name = "Lvb", value = 35 },
+  { name = "Lvi", value = 36 },
+  { name = "Dvmin", value = 37 },
+  { name = "Dvmax", value = 38 },
+  { name = "Dvb", value = 39 },
+  { name = "Dvi", value = 40 },
+  { name = "Cqmin", value = 41 },
+  { name = "Cqmax", value = 42 },
+  { name = "Cap", value = 43 },
+  { name = "Ic", value = 44 },
+  { name = "Rcap", value = 45 },
+  { name = "Rex", value = 46 },
+  { name = "Rch", value = 47 },
+  { name = "Ric", value = 48 },
 ]
 
 [[repr_enums]]
@@ -163,22 +183,6 @@ variants = [
   { name = "XyzD50", value = 6 },
   { name = "XyzD65", value = 7 },
   { name = "Xyz", value = 8 },
-  { name = "Lch", value = 9 },
-  { name = "Lab", value = 10 },
-  { name = "Oklab", value = 11 },
-  { name = "Oklch", value = 12 },
-  { name = "Hsl", value = 13 },
-  { name = "Hwb", value = 14 },
-]
-
-[[repr_enums]]
-name = "CssHueMethod"
-decode = "option"
-variants = [
-  { name = "Shorter", value = 0 },
-  { name = "Longer", value = 1 },
-  { name = "Increasing", value = 2 },
-  { name = "Decreasing", value = 3 },
 ]
 
 [[repr_enums]]
@@ -266,18 +270,6 @@ fields = [
 ]
 
 [[records]]
-name = "CssColorMix"
-lifetime = true
-fields = [
-  { name = "mix_space", ty = "CssColorSpace" },
-  { name = "hue_method", ty = "Option<CssHueMethod>" },
-  { name = "left", ty = "&'p CssColor<'p>" },
-  { name = "left_pct", ty = "Option<f64>" },
-  { name = "right", ty = "&'p CssColor<'p>" },
-  { name = "right_pct", ty = "Option<f64>" },
-]
-
-[[records]]
 name = "Declaration"
 lifetime = true
 fields = [
@@ -347,13 +339,12 @@ variants = [
 
 [[sum_enums]]
 name = "CssColor"
-lifetime = true
 variants = [
   { name = "Hex", payload = "u32" },
-  { name = "Named", fields = [{ name = "name", ty = "&'p str" }, { name = "packed", ty = "u32" }] },
+  { name = "Named", payload = "u32" },
+  { name = "CurrentColor" },
   { name = "Function", payload = "CssColorFunction" },
   { name = "Predefined", payload = "CssColorPredefined" },
-  { name = "Mix", payload = "CssColorMix<'p>" },
 ]
 
 [[sum_enums]]
@@ -403,10 +394,12 @@ variants = [
   { name = "Dimension", payload = "CssDimension" },
   { name = "Number", payload = "f64" },
   { name = "Integer", payload = "i64" },
+  { name = "Unsigned", payload = "u64" },
+  { name = "U8", payload = "u8" },
   { name = "String", payload = "&'p str" },
   { name = "Ident", payload = "&'p str" },
   { name = "GlobalKeyword", payload = "CssGlobalKeyword" },
-  { name = "Color", payload = "CssColor<'p>" },
+  { name = "Color", payload = "CssColor" },
   { name = "Function", payload = "CssFunction<'p>" },
   { name = "List", payload = "CssValueListId" },
   { name = "Span", payload = "&'p str" },
@@ -457,12 +450,6 @@ resolve = "keyframes"
 count = "keyframe_slab_count"
 capacity_arg = "keyframes"
 
-[arena.colors]
-field = "colors"
-item = "CssColor<'p>"
-push = "push_color"
-count = "color_count"
-
 [builder]
 declaration_rules = [
   "customPropertyDecl",
@@ -504,6 +491,14 @@ frame = "StyleSheet"
 [[builder.aggregate_routes]]
 rule = "hex"
 frame = "HexColor"
+
+[[builder.aggregate_routes]]
+rule = "namedColor"
+frame = "NamedColor"
+
+[[builder.aggregate_routes]]
+rule = "currentColor"
+frame = "CurrentColor"
 
 [[builder.aggregate_routes]]
 rule = "qualifiedRule"
@@ -590,5 +585,9 @@ rule = "genericFunction"
 kind = "Generic"
 
 [[builder.color_routes]]
-rule = "colorFn"
+rule = "colorFunction"
 frame = "ColorFunction"
+
+[[builder.color_routes]]
+rule = "colorFn"
+frame = "ColorPredefined"

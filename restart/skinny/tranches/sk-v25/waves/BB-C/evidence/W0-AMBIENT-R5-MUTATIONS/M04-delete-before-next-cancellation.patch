@@ -1,0 +1,23 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -229,19 +229,6 @@ pub(super) fn enter_component(
+     component_root: RuleId,
+     member_rules: &[RuleId],
+ ) -> Result<ComponentOutput, OptimizationUnavailable> {
+-    if cancellation_requested(&transaction.config) {
+-        transaction.output.reports.push(cancelled_boundary_report(
+-            component_root,
+-            member_rules,
+-            transaction.config.node_budget,
+-        ));
+-        return Err(take_failure(
+-            transaction,
+-            OptimizationUnavailableReason::Cancelled,
+-            OptimizationFailureLocus::Search,
+-        ));
+-    }
+-
+     let ir = transaction.ir;
+     let dag = ir
+         .dag

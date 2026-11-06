@@ -12,8 +12,8 @@
 //! - `Alt(branches, _)` → [`LayoutKind::TaggedEnum`] (or
 //!   [`LayoutKind::UntaggedEnum`] when every branch projects to the
 //!   same `TypeDesc`). One `BranchTag` field per branch; field name is
-//!   the sub-variant name when `RuleMeta::sub_variants` carries one,
-//!   else `branch_<idx>`.
+//!   the stable logical name `branch_<idx>`. Internal coercion
+//!   sub-variant names do not leak into the registry or path API.
 //! - `Seq(children)` → [`LayoutKind::Struct`]. One `SeqPosition` field
 //!   per child; field name is `field_<position>`.
 //! - `Map { inner, .. }` of a single typed leaf — wrapping
@@ -44,7 +44,7 @@ use rustc_hash::FxHashMap;
 
 use crate::dag::GrammarDag;
 use crate::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
-use crate::types::{FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, SubVariant, TypeDesc};
+use crate::types::{FnDescriptor, GrammarIR, IrNode, IrRule, RuleId, TypeDesc};
 
 use super::type_map::TypeMap;
 
@@ -116,7 +116,6 @@ fn build_layout_for_rule(
     let (kind, fields) = classify_body(
         &rule.body,
         rule_type.clone(),
-        &rule.meta.sub_variants,
         type_map,
         rule_names,
         dag,
@@ -140,7 +139,6 @@ fn build_layout_for_rule(
 fn classify_body(
     body: &IrNode,
     rule_type: TypeDesc,
-    sub_variants: &[SubVariant],
     type_map: &TypeMap,
     rule_names: &FxHashMap<RuleId, String>,
     dag: Option<&GrammarDag>,
@@ -152,14 +150,13 @@ fn classify_body(
         IrNode::Alt(branches, _) => {
             let mut fields = Vec::with_capacity(branches.len());
             for (idx, branch) in branches.iter().enumerate() {
-                let branch_idx = idx as u32;
+                let branch_idx = crate::AltBranchId::try_from(idx)
+                    .expect("Alt width must be validated before type projection");
                 let branch_type =
                     branch_projected_type(&branch.node, type_map, dag, fns, rule_types)
                         .unwrap_or_else(|| rule_type.clone());
-                let name = sub_variant_name_for_branch(sub_variants, branch_idx)
-                    .unwrap_or_else(|| format!("branch_{}", branch_idx));
                 fields.push(StructField {
-                    name,
+                    name: format!("branch_{}", branch_idx.get()),
                     type_desc: branch_type,
                     source: FieldSource::BranchTag {
                         branch_index: branch_idx,
@@ -216,16 +213,7 @@ fn classify_body(
                 // Composite body: classify the inner and lift its
                 // discriminator. The single typed annotation flows
                 // through to the inner's outermost field.
-                classify_body(
-                    inner,
-                    rule_type,
-                    sub_variants,
-                    type_map,
-                    rule_names,
-                    dag,
-                    fns,
-                    rule_types,
-                )
+                classify_body(inner, rule_type, type_map, rule_names, dag, fns, rule_types)
             }
         }
 
@@ -234,16 +222,7 @@ fn classify_body(
             // Optional/single-shot Repeat (lo=0, hi=1) collapses to
             // its inner's shape.
             if *lo == 0 && *hi == 1 {
-                return classify_body(
-                    inner,
-                    rule_type,
-                    sub_variants,
-                    type_map,
-                    rule_names,
-                    dag,
-                    fns,
-                    rule_types,
-                );
+                return classify_body(inner, rule_type, type_map, rule_names, dag, fns, rule_types);
             }
             let elem_type = branch_projected_type(inner, type_map, dag, fns, rule_types)
                 .unwrap_or(TypeDesc::Span);
@@ -272,50 +251,22 @@ fn classify_body(
         }
 
         // ── Skip / Next: keep the kept side, project as a single field ──
-        IrNode::Skip(kept, _discard) => classify_body(
-            kept,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
-        IrNode::Next(_discard, kept) => classify_body(
-            kept,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
+        IrNode::Skip(kept, _discard) => {
+            classify_body(kept, rule_type, type_map, rule_names, dag, fns, rule_types)
+        }
+        IrNode::Next(_discard, kept) => {
+            classify_body(kept, rule_type, type_map, rule_names, dag, fns, rule_types)
+        }
 
         // ── Minus: dominant side is the lhs (the matched operand) ──
-        IrNode::Minus(lhs, _rhs) => classify_body(
-            lhs,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
+        IrNode::Minus(lhs, _rhs) => {
+            classify_body(lhs, rule_type, type_map, rule_names, dag, fns, rule_types)
+        }
 
         // ── Negate / OptionalWhitespace unwrap to inner ──
-        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => classify_body(
-            inner,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
+            classify_body(inner, rule_type, type_map, rule_names, dag, fns, rule_types)
+        }
 
         // ── TokenDispatch: token + arm continuations + fallback flatten to struct ──
         IrNode::TokenDispatch {
@@ -479,19 +430,6 @@ fn is_single_leaf_body(body: &IrNode) -> bool {
         body,
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon
     )
-}
-
-/// Resolve a sub-variant name for `branch_idx` if `RuleMeta::sub_variants`
-/// carries one; `None` if no entry maps the branch.
-///
-/// The sub-variant collector populates this map for heterogeneous
-/// alternations only; homogeneous Alt branches return `None` and the
-/// caller falls back to `branch_<idx>`.
-fn sub_variant_name_for_branch(sub_variants: &[SubVariant], branch_idx: u32) -> Option<String> {
-    sub_variants
-        .iter()
-        .find(|sv| sv.branch_index == branch_idx)
-        .map(|sv| sv.variant_name.to_string())
 }
 
 /// Resolve a stable field name for a Seq child. `Ref` projects to the

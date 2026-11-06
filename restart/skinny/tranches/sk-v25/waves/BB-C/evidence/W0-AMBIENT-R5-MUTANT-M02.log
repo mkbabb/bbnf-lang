@@ -1,0 +1,21 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.14s
+     Running tests/vm/main.rs (target/aarch64-apple-darwin/debug/deps/vm-6d5c8efd8984e70e)
+
+running 1 test
+
+thread 'cross_rule_csp::conflicting_disconnected_shared_node_is_not_published' (6935436) panicked at crates/ir/tests/vm/cross_rule_csp.rs:653:9:
+assertion `left == right` failed
+  left: Some(ObjectiveProof { bits: 13840687554816376832 })
+ right: None
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test cross_rule_csp::conflicting_disconnected_shared_node_is_not_published ... FAILED
+
+failures:
+
+failures:
+    cross_rule_csp::conflicting_disconnected_shared_node_is_not_published
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 73 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --test vm`

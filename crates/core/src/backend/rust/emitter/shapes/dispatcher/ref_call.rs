@@ -42,6 +42,9 @@ pub fn emit_ref_call_shape(
     ir: &GrammarIR,
 ) -> Option<TokenStream> {
     let target = ir.rules.iter().find(|r| r.id == target_rid)?;
+    if !super::super::shape_driver_emits_rule(target, ir) {
+        return None;
+    }
     let tag = ir.shape_assignments.get(target_rid);
     let shape_name = match tag {
         ShapeTag::Object => "object",

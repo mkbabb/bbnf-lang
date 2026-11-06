@@ -9,7 +9,9 @@
 use std::fs;
 
 use bbnf::backend::rust::emitter::EmitStrategy;
-use bbnf::backend::rust::emitter::shapes::{array, keyword, number, object, scalar, string};
+use bbnf::backend::rust::emitter::shapes::{
+    PayloadPlanner, array, keyword, number, object, scalar, string,
+};
 use bbnf_ir::registry::SubstrateBinding;
 
 #[path = "shape_dispatch_emission/fixtures.rs"]
@@ -146,6 +148,7 @@ fn regen_shape_goldens() {
         &ir.rules[rules.bool_rule as usize],
         &ir,
         &strategy,
+        &PayloadPlanner::new(&ir),
     );
     let scalar_ts = scalar::emit_parse_scalar(
         "JsonFixture",

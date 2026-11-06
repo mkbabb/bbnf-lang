@@ -9,7 +9,7 @@ on:
 jobs:
   rust:
     name: Rust — preflight + workspace close (shard ${{ matrix.partition }}/${{ matrix.total }})
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     # ── Nextest partitioning (AZ-III.W0p.5) ────────────────────────────
     # The workspace test step runs as a 3-shard matrix via
     # `cargo nextest --partition count:N/M`; nextest deterministically
@@ -27,6 +27,8 @@ jobs:
         total: [3]
     steps:
       - uses: actions/checkout@v4
+      - name: require native Apple arm64 host
+        run: test "$(uname -m)" = arm64
       # Pinned toolchain lives in rust-toolchain.toml (B1.W0.a).
       # rustup honours the committed file automatically; no explicit
       # channel override here — the pin is the source of truth.
@@ -75,7 +77,7 @@ jobs:
       # gates; they pay the full release cost and are explicitly
       # separated from the preflight block above.
       - name: heavy — workspace tests (nextest, ci profile, shard ${{ matrix.partition }}/${{ matrix.total }})
-        run: cargo nextest run --workspace --profile ci --partition count:${{ matrix.partition }}/${{ matrix.total }}
+        run: cargo nextest run --workspace --features xtask/architecture-test-seams --profile ci --partition count:${{ matrix.partition }}/${{ matrix.total }}
       - name: heavy — sonic-rs JSON parity
         if: matrix.partition == 1
         run: cargo nextest run -p bbnf --test sonic_rs_parity --profile ci --cargo-profile release
@@ -92,12 +94,14 @@ jobs:
 
   extension:
     name: Extension — lint + build
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     defaults:
       run:
         working-directory: extension
     steps:
       - uses: actions/checkout@v4
+      - name: require native Apple arm64 host
+        run: test "$(uname -m)" = arm64
       - uses: actions/setup-node@v4
         with:
           node-version: 22

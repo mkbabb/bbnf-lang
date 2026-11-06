@@ -4,10 +4,9 @@
 //! When the resolver lands on a tagged-enum [`StructLayout`] and the
 //! current path step is a [`PathSegment::VariantName(name)`],
 //! [`select_variant`] looks up the branch whose `StructField::name`
-//! matches `name`. The match drives the `->` annotation in the
-//! grammar source: a typed-enum branch projects its annotation as the
-//! field name on the layout, so the path step's name aligns with
-//! whatever the grammar author wrote on the right-hand side of `->`.
+//! matches `name`. Registry names identify logical source alternatives as
+//! `branch_<idx>`; internal type-coercion variants remain an implementation
+//! detail of generated value code.
 //!
 //! Two error modes flow through:
 //!

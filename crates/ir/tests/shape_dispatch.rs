@@ -645,7 +645,7 @@ fn w4_pratt_detector_admits_skip_based_operator_chain() {
     let mut ir = base_ir();
     let operand_body = mapped(regex(&mut ir, r"[0-9]+"));
     let operand_rule = push_rule(&mut ir, "operand", operand_body);
-    let op_body = mapped(lit(&mut ir, "+"));
+    let op_body = lit(&mut ir, "+");
     let op_rule = push_rule(&mut ir, "op", op_body);
     let repeat_inner = IrNode::Skip(
         Box::new(IrNode::Ref(op_rule)),

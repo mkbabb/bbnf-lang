@@ -1,0 +1,45 @@
+{
+  "architecture": "arm64",
+  "atomic_candidate_root": "/private/tmp/bbcw0-r7-programming-candidate.dyTgSs",
+  "binary": {
+    "bytes": 45180344,
+    "format": "Mach-O 64-bit executable arm64",
+    "mode": "0755",
+    "path": "/tmp/bbcw0-r7-native-nooverlay.wogEcp/target/aarch64-apple-darwin/ax-iter/xtask",
+    "sha256": "aba131bd616ff0a70c7d288af2b0b204b44a4d4606140b12ab0b64bc7ce03dc2"
+  },
+  "fleet_install": {
+    "bytes": 9082868,
+    "ledger_sha256": "089bc000aaca7120190fa0724e0e080379adacb1bca8e9db86d1a5db919ff227",
+    "members": 18,
+    "mod_rs": {
+      "bytes": 1414,
+      "mode": "0644",
+      "sha256": "37f64b07a8a6b6681c26e6dd46ab0384b0436363a9ef36b82f17747a00fd7a96"
+    },
+    "source_custody_candidate_equal": true
+  },
+  "model_truth": {
+    "effort": "ultra",
+    "model": "gpt-5.6-sol",
+    "role": "R7 atomic candidate assembler"
+  },
+  "post_copy": {
+    "bytes": 15311980,
+    "ledger_sha256": "e006e3ea3c3a3f273b62cf75cfdfb0f68872fdadb10d2d16be6a5324cfb79922",
+    "members": 843,
+    "path_set_sha256": "9cd484942b9ee3f676ae150871f664bce5cc5dc9d8ef6b5dca791958be92c2ba",
+    "verified_before_fleet_install": true
+  },
+  "runtime": {
+    "changed_files": 8,
+    "post_bytes": 135782,
+    "post_ledger_sha256": "1728f60b1a7c7b060f2266dd8e23a350653f33842e7b8f96fc66996ba7037d52",
+    "post_members": 32,
+    "pre_bytes": 135527,
+    "pre_ledger_sha256": "23b493750d0ee63d0ddda787d13800fd999ccf1e8fa4e7375ca46b200c05a9ec",
+    "pre_members": 32
+  },
+  "schema": "bb-c.w0.r7-atomic-candidate.v1",
+  "status": "RED_REGEN_GOOGLE_SHEETS_EXIT_1"
+}

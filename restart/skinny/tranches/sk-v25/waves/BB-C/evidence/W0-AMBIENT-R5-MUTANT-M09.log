@@ -1,0 +1,21 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.56s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 1 test
+
+thread 'passes::csp_strategy::tests::decoder_rejects_foreign_var_and_missing_value' (7315221) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:616:5:
+assertion `left == right` failed
+  left: (None, Some(Search))
+ right: (Some(Variable(1)), Some(Search))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test passes::csp_strategy::tests::decoder_rejects_foreign_var_and_missing_value ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::decoder_rejects_foreign_var_and_missing_value
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

@@ -381,15 +381,37 @@ pub enum CssColor<'p> {
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CssFunction<'p> {
-    Calc { args: CssValueListId },
-    Min { args: CssValueListId },
-    Max { args: CssValueListId },
-    Clamp { args: CssValueListId },
-    Var { name: &'p str, fallback: CssValueListId },
-    Env { name: &'p str, fallback: CssValueListId },
-    Url { raw: &'p str },
-    Gradient { name: &'p str, args: CssValueListId },
-    Generic { name: &'p str, args: CssValueListId },
+    Calc {
+        args: CssValueListId,
+    },
+    Min {
+        args: CssValueListId,
+    },
+    Max {
+        args: CssValueListId,
+    },
+    Clamp {
+        args: CssValueListId,
+    },
+    Var {
+        name: &'p str,
+        fallback: CssValueListId,
+    },
+    Env {
+        name: &'p str,
+        fallback: CssValueListId,
+    },
+    Url {
+        raw: &'p str,
+    },
+    Gradient {
+        name: &'p str,
+        args: CssValueListId,
+    },
+    Generic {
+        name: &'p str,
+        args: CssValueListId,
+    },
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Selector<'p> {

@@ -1,0 +1,13 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.20s
+     Running tests/lattices/main.rs (target/aarch64-apple-darwin/debug/deps/lattices-8606a6a4c40b3d2d)
+
+running 5 tests
+test csp_authority::shape_constraint_disconnect_falls_back_to_checkpoint ... ok
+test csp_authority::layout_constraint_disconnect_picks_generic_without_fact ... ok
+test csp_authority::layout_constraint_pins_wrap_mode_when_delim_scan_present ... ok
+test csp_authority::shape_constraint_pins_alt_mode_for_keyword_prefix ... ok
+test csp_authority::dispatch_constraint_pins_alt_mode_when_key_dispatch_config_present ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 76 filtered out; finished in 0.00s
+

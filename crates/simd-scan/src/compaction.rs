@@ -6,25 +6,16 @@
 //! per-stripe dense `Vec<u32>` of byte offsets + per-stripe `Vec<u8>`
 //! of byte values. Compaction is the bridge.
 //!
-//! Two strategies:
-//!
-//! 1. **`tzcnt`-loop** (default, arch-neutral) — bit-by-bit pop;
-//!    `mask &= mask - 1` clears the low bit. One CTZ + one push per
-//!    structural byte. Branch-predicted well at low density (JSON
-//!    citm ~7%). Always available.
-//!
-//! 2. **PEXT** (`bmi2` cfg-gated) — `_pext_u64(continuous_bits, mask)`
-//!    + scatter-store. Compacts the bit positions in one operation.
-//!    Faster at high density (CSS bootstrap ~12%). Optional.
-//!
-//! The scanner picks the strategy per call via `cfg!`-detected feature
-//! availability; both paths produce byte-identical indices.
+//! Compaction uses one portable trailing-zero loop: `mask &= mask - 1`
+//! clears the low bit, then one position and kind are pushed. The same
+//! implementation serves the retained NEON, wasm32 SIMD, and scalar
+//! scanners.
 
 /// Compact one 64-bit `mask` into `out_positions` + `out_kinds`,
 /// reading the source bytes from `bytes[stripe_base..]`. Default
-/// `tzcnt`-loop; arch-neutral.
+/// trailing-zero loop; shared by every retained scanner.
 #[inline]
-pub fn compact_stripe_tzcnt(
+pub fn compact_stripe(
     mask: u64,
     stripe_base: u32,
     bytes: &[u8],
@@ -62,42 +53,6 @@ pub fn compact_stripe_synthetic(
         let bit = m.trailing_zeros();
         out_positions.push(stripe_base + bit);
         out_kinds.push(synthetic_kind);
-        m &= m - 1;
-    }
-}
-
-/// PEXT-specialised compaction. Available when the runtime supports
-/// BMI2; produces byte-identical output to `compact_stripe_tzcnt`.
-///
-/// The trick: PEXT extracts the bits set in `mask` from a constant
-/// pattern of bit-indices. Combined with a small compress-store
-/// pattern, you avoid the per-bit CTZ loop and write up to 8
-/// compacted positions per chunk.
-///
-/// We expose this as a separate fn that the AVX2 kernel calls only
-/// when `is_x86_feature_detected!("bmi2")` returns true. The
-/// `tzcnt`-loop above is the default everywhere else.
-#[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
-#[inline]
-pub fn compact_stripe_pext(
-    mask: u64,
-    stripe_base: u32,
-    bytes: &[u8],
-    out_positions: &mut Vec<u32>,
-    out_kinds: &mut Vec<u8>,
-) {
-    // Process 16-bit chunks of mask at a time; PEXT each chunk over
-    // a constant base-index pattern, scatter-store. For correctness
-    // parity with the tzcnt-loop, we still iterate over set bits;
-    // the PEXT here is the per-chunk position decode rather than a
-    // bulk compress-store (which requires AVX-512).
-    let mut m = mask;
-    while m != 0 {
-        let bit = m.trailing_zeros();
-        let pos = stripe_base + bit;
-        let kind = unsafe { *bytes.get_unchecked(pos as usize) };
-        out_positions.push(pos);
-        out_kinds.push(kind);
         m &= m - 1;
     }
 }

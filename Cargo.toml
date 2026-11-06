@@ -133,6 +133,9 @@ opt-level = 1
 [profile.dev.package.parse_that]
 opt-level = 1
 
+[profile.test.package.sha2]
+opt-level = 1
+
 # `[profile.ax-iter]` lives in `.cargo/config.toml` as the workspace's
 # single source of truth (debug = "line-tables-only", codegen-units = 256,
 # incremental = true, opt-level = 0). AZ-III.W0p.2 consolidated the two

@@ -24,7 +24,7 @@ pub mod vm;
 
 pub use cost_config::CostConfig;
 pub use registry::{
-    EmitStrategy, FieldSource, LayoutKind, StructField, StructLayout, StructRegistry,
+    AltBranchId, EmitStrategy, FieldSource, LayoutKind, StructField, StructLayout, StructRegistry,
     SubstrateBinding,
 };
 
@@ -44,9 +44,9 @@ pub use vm::interpreter;
 pub use types::{
     AltBranch, AltDispatch, DelimScanConfig, DetectedBranch, DispatchHint, FnDescriptor, FnId,
     GrammarIR, GrammarSpan, IrNode, IrRule, KeyClass, KeyDispatchConfig, KeyDispatchMatch,
-    MapBinOp, MapExpr, MapUnaryOp, MemoStrategy, PrettyHints, RuleDirectives, RuleId, RuleMeta,
-    StringId, SubVariant, TokenDispatchArm, TypeDesc, TypeDescId, TypeDescInterner,
-    key_class_regex_pattern, parse_sep_hint, parse_split_hint,
+    MapBinOp, MapExpr, MapUnaryOp, MemoStrategy, NumericDomain, NumericExprError, PrettyHints,
+    RuleDirectives, RuleId, RuleMeta, StringId, SubVariant, TokenDispatchArm, TypeDesc, TypeDescId,
+    TypeDescInterner, key_class_regex_pattern, parse_sep_hint, parse_split_hint,
 };
 
 // AZ-III.W3a — type obligation surface re-export so consumers

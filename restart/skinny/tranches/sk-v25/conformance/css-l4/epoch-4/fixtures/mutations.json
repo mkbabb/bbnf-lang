@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "mutations": [
+    {"id": "A-01", "test": "positive_state_requires_evidence", "expected": "POSITIVE_STATE_WITHOUT_EVIDENCE", "invariant": "positive matrix states resolve to checked evidence"},
+    {"id": "A-02", "test": "rendered_dependencies_and_collisions_are_total", "expected": "BLOCKED_COLLISION", "invariant": "rendered bibliography forms and colliding source keys cannot choose a first winner"},
+    {"id": "A-03", "test": "malformed_dialects_are_rejected", "expected": "DialectError", "invariant": "CSS VDS, Yacc, Lex, and WebIDL consume their complete languages"},
+    {"id": "A-04", "test": "railroad_envelope_covers_descendants", "expected": "DESCENDANT_MAX", "invariant": "railroad semantic span covers its maximum descendant"},
+    {"id": "A-05", "test": "wpt_membership_is_not_cartesian_ownership", "expected": "ZERO_FANOUT", "invariant": "WPT membership and exact feature ownership are separate proofs"},
+    {"id": "A-06", "test": "independent_census_deletion_fails", "expected": "SOURCE_CENSUS_NOT_TOTAL", "invariant": "matrix obligations cannot validate against their own recognizer"},
+    {"id": "A-07", "test": "crater_rejects_split_and_binary_oracles", "expected": "FORBIDDEN_ORACLE_AUTHORITY", "invariant": "candidate crater resolves source, macro, binary, and generated inputs"},
+    {"id": "A-08", "test": "content_object_drift_fails", "expected": "OBJECT_DRIFT", "invariant": "clean-root replay uses exact epoch-owned bytes and pinned tools"},
+    {"id": "A-09", "test": "mutation_registry_is_executable", "expected": "EXECUTED_20", "invariant": "finding coverage is executable rather than prose keys"},
+    {"id": "A-10", "test": "normalized_artifact_beats_expanded_control", "expected": "SMALLER", "invariant": "atomic identities survive without cloned field/status/source payloads"},
+    {"id": "B-F01", "test": "lex_rules_and_macro_edges_are_consumed", "expected": "RULES_AND_EDGES", "invariant": "Lex definitions, separator, rules, actions, and macro references all survive"},
+    {"id": "B-F02", "test": "normativity_is_inherited_once", "expected": "NON_NORMATIVE", "invariant": "own and ancestor note/example/informative state controls all occurrence families"},
+    {"id": "B-F03", "test": "named_algorithms_enter_denominator", "expected": "NAMED_ALGORITHM", "invariant": "named algorithms outside algorithm-class carriers enter the independent census"},
+    {"id": "B-F04", "test": "wpt_rest_is_expanded", "expected": "WPT_REST", "invariant": "every supported WPT directive is interpreted before ownership"},
+    {"id": "B-F05", "test": "unicode_authorities_block_per_occurrence", "expected": "BLOCKED_EXTERNAL_AUTHORITY_UNSEALED", "invariant": "parsing relevance is source-occurrence-qualified"},
+    {"id": "B-F06", "test": "local_blocker_cannot_be_laundered", "expected": "LOCAL_SEMANTIC_LAUNDERED", "invariant": "byte, local semantic, downstream, and product states are disjoint"},
+    {"id": "B-F07", "test": "empty_root_replay_uses_no_private_path", "expected": "NO_PRIVATE_PATH", "invariant": "two empty-root regenerations use only content-addressed epoch inputs"},
+    {"id": "B-F08", "test": "crater_requires_resolved_graph_and_digests", "expected": "RESOLVED_GRAPH_MISSING", "invariant": "future boundary is a digest-qualified resolved-input graph"},
+    {"id": "B-F09", "test": "final_receipt_must_match_manifest", "expected": "VERIFICATION_MANIFEST_DISAGREEMENT", "invariant": "final proof receipt and manifest agree under an explicit self-reference rule"},
+    {"id": "B-F10", "test": "intern_tables_retain_reverse_links", "expected": "INTERNED", "invariant": "source, plane, terminal, and blocker evidence is normalized with exact reverse links"}
+  ]
+}

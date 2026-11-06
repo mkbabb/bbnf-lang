@@ -1,0 +1,16 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.21s
+     Running tests/lattices/main.rs (target/aarch64-apple-darwin/debug/deps/lattices-8606a6a4c40b3d2d)
+
+running 9 tests
+test csp_materialization::cost_weights_default_shape ... ok
+test csp_materialization::debug_pinned_rule_stays_must_tape_after_csp ... ok
+test csp_materialization::epsilon_rule_stays_transparent_elide_after_csp ... ok
+test csp_materialization::debug_all_pins_every_rule_after_csp ... ok
+test csp_materialization::alt_rule_stays_must_tape_after_csp ... ok
+test csp_materialization::preserve_identity_stays_must_tape_after_csp ... ok
+test csp_materialization::solve_returns_decision_map ... ok
+test csp_materialization::pretty_pinned_rule_stays_must_tape_after_csp ... ok
+test csp_materialization::literal_rule_stays_tape_span_only_after_csp ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 72 filtered out; finished in 0.00s
+

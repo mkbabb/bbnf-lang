@@ -1,0 +1,23 @@
+   Compiling csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/csp-solver)
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/egraph)
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/parse-that/rust/regex)
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that/rust/parse_that)
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 54.95s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 1 test
+
+thread 'passes::csp_strategy::tests::budget_after_an_incumbent_discards_best_so_far' (3439733) panicked at crates/ir/src/passes/csp_strategy/../../../tests/passes/csp_strategy/mod.rs:391:6:
+called `Result::unwrap_err()` on an `Ok` value: [Alt(Checkpoint), Alt(Checkpoint)]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test passes::csp_strategy::tests::budget_after_an_incumbent_discards_best_so_far ... FAILED
+
+failures:
+
+failures:
+    passes::csp_strategy::tests::budget_after_an_incumbent_discards_best_so_far
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-ir --lib`

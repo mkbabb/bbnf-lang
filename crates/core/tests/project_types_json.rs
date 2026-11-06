@@ -42,7 +42,7 @@ use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
 use bbnf_ir::passes::{GrammarAuditTag, audit_payload_coverage};
-use bbnf_ir::{GrammarIR, StructLayout, TypeDesc};
+use bbnf_ir::{AltBranchId, GrammarIR, StructLayout, TypeDesc};
 
 /// Resolve the JSON grammar path from `CARGO_MANIFEST_DIR`. The crate
 /// manifest lives at `crates/core/`, so `../../grammar/json/json.bbnf`
@@ -187,7 +187,10 @@ fn value_rule_layout_is_tagged_enum_with_six_branches() {
              {:?})",
             field.source
         );
-        assert_eq!(field.branch_index(), Some(idx as u32));
+        assert_eq!(
+            field.branch_index(),
+            Some(AltBranchId::try_from(idx).expect("six JSON branches fit"))
+        );
     }
 }
 

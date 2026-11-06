@@ -1,0 +1,18 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -306,14 +306,4 @@ pub(super) fn finish_grammar_transaction(
+     mut transaction: GrammarTransaction<'_>,
+ ) -> Result<GrammarSolveOutput, OptimizationUnavailable> {
+-    if cancellation_requested(&transaction.config) {
+-        if let Some(report) = transaction.output.reports.last_mut() {
+-            mark_report_cancelled(report);
+-        }
+-        return Err(take_failure(
+-            &mut transaction,
+-            OptimizationUnavailableReason::Cancelled,
+-            OptimizationFailureLocus::Search,
+-        ));
+-    }
+     Ok(transaction.output)
+ }

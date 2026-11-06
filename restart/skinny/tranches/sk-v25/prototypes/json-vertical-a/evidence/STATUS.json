@@ -1,0 +1,11 @@
+{
+  "architecture_selected": false,
+  "family": "A",
+  "movement_authorized": false,
+  "production_transpose_authorized": false,
+  "review_passes_credited": 0,
+  "scope": "prototype-evidence-only",
+  "prototype_complete": false,
+  "status": "INCOMPLETE_ASSAY",
+  "waves": {"W0": "IMPLEMENTED", "W1": "PARTIAL", "W2": "RED_HARD_STOP"}
+}

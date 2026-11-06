@@ -1,0 +1,28 @@
+{
+  "counterexamples": [
+    {"expected": "POSITIVE_STATE_WITHOUT_EVIDENCE", "gate": "document", "id": "A-01", "payload": {"mutation": "drop_positive_evidence"}},
+    {"expected": "EVIDENCE_DIGEST_INVALID", "gate": "document", "id": "A-02", "payload": {"mutation": "uppercase_evidence_digest"}},
+    {"expected": "SPAN_MAP_MISMATCH", "gate": "span-map", "id": "A-03", "payload": {"claimed_sha256": "0000000000000000000000000000000000000000000000000000000000000000", "source": "<dfn><<length>></dfn> | <<percentage>> | auto | inherit", "text": "<<length>> | <<percentage>> | auto | inherit"}},
+    {"expected": "CSS_TOKEN_UNSUPPORTED", "gate": "css-vds", "id": "A-04", "payload": {"source": "{"}},
+    {"expected": "YACC_TOKEN_UNSUPPORTED", "gate": "yacc", "id": "A-05", "payload": {"source": "a: @@@ ;"}},
+    {"expected": "LEX_POSTFIX_DOUBLED", "gate": "lex", "id": "A-06", "payload": {"source": "%option case-insensitive\na a\n%%\na** return TOKEN\n"}},
+    {"expected": "LEX_OPTION_UNSUPPORTED", "gate": "lex", "id": "A-07", "payload": {"source": "%option utterly_bogus\na a\n%%\na return TOKEN\n"}},
+    {"expected": "WEBIDL_MEMBER_UNSUPPORTED", "gate": "webidl", "id": "A-08", "payload": {"source": "interface A { ???; };"}},
+    {"expected": "WEBIDL_HEAD_GARBAGE", "gate": "webidl", "id": "A-09", "payload": {"source": "interface A @@@ { attribute DOMString x; };"}},
+    {"expected": "DENOMINATOR_NOT_SOURCE_TOTAL", "gate": "denominator", "id": "A-10", "payload": {"mutation": "coordinated_unit_deletion"}},
+    {"expected": "BLOCKED_DETECTOR_FAILURE", "gate": "source-detector", "id": "B-F01", "payload": {"source": "<table class=propdef><tr><th>Name:<td>top"}},
+    {"expected": "UNIT_REVERSE_LINK_DRIFT", "gate": "denominator", "id": "B-F02", "payload": {"mutation": "erase_one_unit_reverse_links"}},
+    {"expected": "DENOMINATOR_DIGEST_DRIFT", "gate": "denominator", "id": "B-F03", "payload": {"mutation": "forge_unit_digest"}},
+    {"expected": "WPT_PREFIX_CLASSIFICATION_DRIFT", "gate": "wpt", "id": "B-F04", "payload": {"mutation": "promote_prefix_blob_to_test"}},
+    {"expected": "WPT_PREFIX_CLASSIFICATION_DRIFT", "gate": "wpt", "id": "B-F05", "payload": {"mutation": "classify_metadata_as_test"}},
+    {"expected": "LOCAL_SEMANTIC_LAUNDERED", "gate": "document", "id": "B-F06", "payload": {"mutation": "launder_blocker_counts"}},
+    {"expected": "CANDIDATE_PRESENT", "gate": "candidate", "id": "B-F07", "payload": {"root": "candidate"}},
+    {"expected": "TREE_ROOT_MISMATCH", "gate": "tree", "id": "B-F08", "payload": {"entries": [{"mode": "040000", "path": "foo", "sha": "4b825dc642cb6eb9a060e54bf8d69288fbee4904", "type": "tree"}, {"mode": "100644", "path": "foo.ext", "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391", "type": "blob"}], "plain_sort_root": "280064119ee50343501322abda70fbe1a364498e"}},
+    {"expected": "TREE_PATH_NOT_UTF8", "gate": "tree", "id": "B-F09", "payload": {"entries": [{"mode": "100644", "path": "bad\udcff", "sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391", "type": "blob"}], "plain_sort_root": "0000000000000000000000000000000000000000"}},
+    {"expected": "VERIFICATION_MANIFEST_DISAGREEMENT", "gate": "receipt", "id": "B-F10", "payload": {"mutation": "forge_subject_digest"}},
+    {"expected": "WPT_PREFIX_CLASSIFICATION_DRIFT", "gate": "wpt", "id": "E5-WPT-DROPPED", "payload": {"mutation": "drop_declared_route"}},
+    {"expected": "WPT_PREFIX_CLASSIFICATION_DRIFT", "gate": "wpt", "id": "E5-WPT-DUPLICATED", "payload": {"mutation": "duplicate_declared_route"}},
+    {"expected": "WPT_PREFIX_CLASSIFICATION_DRIFT", "gate": "wpt", "id": "E5-WPT-UNKNOWN", "payload": {"mutation": "append_unknown_route"}}
+  ],
+  "schema_version": 1
+}

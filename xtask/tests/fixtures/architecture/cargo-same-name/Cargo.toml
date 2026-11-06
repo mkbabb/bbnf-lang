@@ -1,0 +1,11 @@
+[package]
+name = "same-name-consumer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+same_v1 = { package = "same-name", path = "same-v1", version = "1" }
+same_v2 = { package = "same-name", path = "same-v2", version = "2" }
+
+[workspace]
+exclude = ["same-v1", "same-v2"]

@@ -1,8 +1,8 @@
 //! Read-only e-graph firing probe (AY-audit-3).
 //!
-//! Compiles each production grammar under `BBNF_EGRAPH_REPORT=1` +
-//! `BBNF_HIR_EGRAPH_REPORT=1` and prints the scheduler's per-rule fire
-//! counts for both the grammar-tier e-graph and the HIR e-graph.
+//! Compiles each production grammar under `BBNF_HIR_EGRAPH_REPORT=1` and
+//! prints the regex-HIR scheduler report. The grammar-tier e-graph is a
+//! separate research surface and is not invoked here.
 //!
 //! Invocation: `cargo run --example egraph_fire_probe --release`.
 //!
@@ -29,9 +29,7 @@ fn vm_request() -> CompileRequest {
 }
 
 fn main() {
-    // Force-emit per-rule reports from both tiers.
-    // Each compile prints one "egraph saturation:" line + N
-    // "  rule=<name> work=<n>" lines. The CSS L4 compile is the
+    // Force-emit regex-HIR reports. The CSS L4 compile is the
     // stress case (15 files, 973 lines); JSON and BBNF are the
     // small end; EBNF and BNF are toy scales.
 

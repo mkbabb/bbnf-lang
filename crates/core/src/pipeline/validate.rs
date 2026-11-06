@@ -4,6 +4,42 @@ use crate::graph::deps::collect_nonterminal_refs;
 use crate::pipeline::CompileError;
 use crate::types::AST;
 
+pub(crate) fn validate_ir_alt_width(ir: &bbnf_ir::GrammarIR) -> Result<(), CompileError> {
+    for rule in &ir.rules {
+        let name = ir.get_string(rule.name);
+        validate_node_alt_width(&rule.body, name, bbnf_ir::AltBranchId::MAX_COUNT)?;
+        if let Some(recover) = &rule.meta.directives.recover {
+            validate_node_alt_width(recover, name, bbnf_ir::AltBranchId::MAX_COUNT)?;
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn validate_node_alt_width(
+    node: &bbnf_ir::IrNode,
+    rule: &str,
+    max: usize,
+) -> Result<(), CompileError> {
+    if let bbnf_ir::IrNode::Alt(branches, _) = node {
+        let count = branches.len();
+        if count > max {
+            return Err(CompileError::TooManyAlternatives {
+                rule: rule.to_string(),
+                count,
+                max,
+            });
+        }
+    }
+
+    let mut result = Ok(());
+    node.for_each_child(&mut |child| {
+        if result.is_ok() {
+            result = validate_node_alt_width(child, rule, max);
+        }
+    });
+    result
+}
+
 pub(crate) fn validate_pretty_directives<'a>(
     ast: &AST<'a>,
     pretties: Option<&std::collections::HashMap<String, Vec<String>>>,

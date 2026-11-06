@@ -28,7 +28,8 @@
 
 use bbnf::backend::rust::emitter::EmitStrategy;
 use bbnf::backend::rust::emitter::shapes::{
-    arglist, array, flat, hregex, keyword, number, object, pratt, scalar, string, unordered, wrap,
+    PayloadPlanner, arglist, array, flat, hregex, keyword, number, object, pratt, scalar, string,
+    unordered, wrap,
 };
 use bbnf_ir::passes::recognizers::shape_dispatch::{
     ShapeTag, scalar as scalar_detect, shape_dispatch,
@@ -186,7 +187,13 @@ fn keyword_shape_emit_matches_golden() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.bool_rule as usize];
     let strategy = json_strategy();
-    let ts = keyword::emit_parse_keyword("JsonFixture", rule, &ir, &strategy);
+    let ts = keyword::emit_parse_keyword(
+        "JsonFixture",
+        rule,
+        &ir,
+        &strategy,
+        &PayloadPlanner::new(&ir),
+    );
     let actual = format_tokens(&ts);
     let expected = include_str!("fixtures/shape_dispatch_emission/keyword.rs.expected");
     assert_matches_golden(&actual, expected, "keyword.rs");
@@ -349,7 +356,13 @@ fn w4_flat_emitter_produces_parsable_tokens() {
     let strategy = json_strategy();
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.pair as usize];
-    let ts = flat::emit_parse_flat(&strategy, "JsonFixture", rule, &ir);
+    let ts = flat::emit_parse_flat(
+        &strategy,
+        "JsonFixture",
+        rule,
+        &ir,
+        &PayloadPlanner::new(&ir),
+    );
     let _ = format_tokens(&ts);
 }
 
@@ -358,7 +371,13 @@ fn w4_wrap_emitter_produces_parsable_tokens() {
     let (ir, rules) = build_json_ir();
     let rule = &ir.rules[rules.value as usize];
     let strategy = json_strategy();
-    let ts = wrap::emit_parse_wrap("JsonFixture", rule, &ir, &strategy);
+    let ts = wrap::emit_parse_wrap(
+        "JsonFixture",
+        rule,
+        &ir,
+        &strategy,
+        &PayloadPlanner::new(&ir),
+    );
     let _ = format_tokens(&ts);
 }
 

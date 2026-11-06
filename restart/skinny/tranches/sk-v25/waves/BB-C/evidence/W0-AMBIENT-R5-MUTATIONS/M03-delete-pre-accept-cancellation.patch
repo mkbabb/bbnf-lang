@@ -1,0 +1,19 @@
+diff --git a/crates/ir/src/passes/csp_strategy/solve.rs b/crates/ir/src/passes/csp_strategy/solve.rs
+--- a/crates/ir/src/passes/csp_strategy/solve.rs
++++ b/crates/ir/src/passes/csp_strategy/solve.rs
+@@ -278,15 +278,6 @@ pub(super) fn commit_component(
+         materialization,
+         mut report,
+     } = component;
+-    if cancellation_requested(&transaction.config) {
+-        mark_report_cancelled(&mut report);
+-        transaction.output.reports.push(report);
+-        return Err(take_failure(
+-            transaction,
+-            OptimizationUnavailableReason::Cancelled,
+-            OptimizationFailureLocus::Search,
+-        ));
+-    }
+     if let Err((reason, locus)) =
+         merge_component(&mut transaction.output, decisions, materialization)
+     {

@@ -106,7 +106,7 @@ case "$TIER" in
     workspace)
         cargo nextest run \
             ${NEXTEST_PROFILE_ARGS[@]+"${NEXTEST_PROFILE_ARGS[@]}"} \
-            --workspace \
+            --workspace --features xtask/architecture-test-seams \
             ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} > "$OUT" 2>&1
         ;;
     *)

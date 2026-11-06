@@ -24,8 +24,8 @@ use bbnf::path::{
     Json, PathError, PathErrorReason, PathSegment, TypedPath, check_path_against_registry,
     ir::IntoPathSegment,
 };
-use bbnf_ir::TypeDesc;
 use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
+use bbnf_ir::{AltBranchId, TypeDesc};
 
 const DOC_RULE: &str = "Document";
 const ENUM_RULE: &str = "Choice";
@@ -63,12 +63,16 @@ fn registry_with_one_struct_and_one_enum() -> StructRegistry {
             StructField {
                 name: "left".to_string(),
                 type_desc: TypeDesc::Span,
-                source: FieldSource::BranchTag { branch_index: 0 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(0),
+                },
             },
             StructField {
                 name: "right".to_string(),
                 type_desc: TypeDesc::F64,
-                source: FieldSource::BranchTag { branch_index: 1 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(1),
+                },
             },
         ],
     });
@@ -87,12 +91,16 @@ fn registry_with_ambiguous_enum() -> StructRegistry {
             StructField {
                 name: "shared".to_string(),
                 type_desc: TypeDesc::Span,
-                source: FieldSource::BranchTag { branch_index: 0 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(0),
+                },
             },
             StructField {
                 name: "shared".to_string(),
                 type_desc: TypeDesc::F64,
-                source: FieldSource::BranchTag { branch_index: 1 },
+                source: FieldSource::BranchTag {
+                    branch_index: AltBranchId::new(1),
+                },
             },
         ],
     });

@@ -144,10 +144,10 @@ pub struct GrammarIR {
     #[serde(skip)]
     pub regex_engine_decisions: HashMap<StringId, passes::csp_strategy::RegexEngine>,
 
-    /// Durable post-extraction canonical DAG over the optimized IR tree.
+    /// Durable post-normalization canonical DAG over the optimized IR tree.
     ///
-    /// Populated after the intra-rule e-graph optimization + post-extraction
-    /// inline/fuse loop finalizes `rules[*].body`. Downstream passes that
+    /// Populated after the direct structural rewrite loop finalizes
+    /// `rules[*].body`. Downstream passes that
     /// need stable sub-expression identity (e.g., `NodeFacts`, type
     /// projection, alt strategy solving) query this via
     /// [`dag::GrammarDag::node_for`] to obtain a `NodeId` instead of

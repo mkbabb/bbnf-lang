@@ -1,0 +1,45 @@
+{
+  "compare_op_sidecar": {
+    "branch_sources": true,
+    "field_types_u8": true,
+    "no_tuple_span_u8": true,
+    "rule_type_u8": true,
+    "six_fields": true,
+    "unique_logical_names": true
+  },
+  "direct_mapping": {
+    "<": 4,
+    "<=": 1,
+    "<>": 0,
+    "=": 3,
+    ">": 5,
+    ">=": 2
+  },
+  "direct_mapping_pass": true,
+  "error_literal_sidecar": {
+    "field_types_u8": true,
+    "no_factored_span_artifact": true,
+    "rule_type_u8": true
+  },
+  "expected_mapping": {
+    "<": 4,
+    "<=": 1,
+    "<>": 0,
+    "=": 3,
+    ">": 5,
+    ">=": 2
+  },
+  "parser_sha256": "953de8d6581a584548131b3f243114ed9495a51b5bf2533cf1257b0adad44747",
+  "pass": false,
+  "pratt_mapping": {
+    "<": 3,
+    "<=": 1,
+    "<>": 0,
+    "=": 5,
+    ">": 4,
+    ">=": 2
+  },
+  "pratt_mapping_pass": false,
+  "schema": "bb-c.w0.r7.google-sheets-semantic-gate.v1",
+  "sidecar_sha256": "6885db936c88afc8e5dfc1aa7b2f88a9a9acaab2ca0d70c923060b0781b8a736"
+}

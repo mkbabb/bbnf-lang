@@ -103,12 +103,8 @@ fn body_can_reach_u32_max(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<R
 
 fn map_expr_can_reach_u32_max(expr: &MapExpr) -> bool {
     match expr {
-        MapExpr::IntLit(v) => {
-            // i64 → u32 reinterpretation: `as u32` keeps the low 32 bits.
-            // u32::MAX is 0xFFFFFFFFu32 == -1i32 == 4294967295i64.
-            let as_u32 = (*v as u64) as u32;
-            as_u32 == u32::MAX
-        }
+        MapExpr::IntLit(v) => u32::try_from(*v).is_ok_and(|value| value == u32::MAX),
+        MapExpr::UIntLit(v) => *v == u32::MAX as u64,
         MapExpr::FloatLit(_) | MapExpr::BoolLit(_) | MapExpr::StringLit(_) => false,
         MapExpr::Input | MapExpr::InputProp { .. } => {
             // Parse-result input can be any value; conservative.

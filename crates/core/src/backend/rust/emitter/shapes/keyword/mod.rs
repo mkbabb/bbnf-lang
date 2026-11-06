@@ -45,8 +45,15 @@ pub fn emit_parse_keyword(
     rule: &IrRule,
     ir: &GrammarIR,
     strategy: &EmitStrategy,
+    payload_planner: &super::PayloadPlanner<'_>,
 ) -> TokenStream {
-    struct_direct::emit_parse_keyword_struct_direct(grammar_suffix, rule, ir, strategy)
+    struct_direct::emit_parse_keyword_struct_direct(
+        grammar_suffix,
+        rule,
+        ir,
+        strategy,
+        payload_planner,
+    )
 }
 
 /// Strip `Map` / `OptionalWhitespace` trivia wrappers.

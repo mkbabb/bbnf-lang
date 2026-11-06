@@ -1,0 +1,9 @@
+diff --git a/crates/csp-solver/src/csp/mod.rs b/crates/csp-solver/src/csp/mod.rs
+--- a/crates/csp-solver/src/csp/mod.rs
++++ b/crates/csp-solver/src/csp/mod.rs
+@@ -43,4 +43,4 @@ impl<D: Domain> Csp<D> {
+     /// Add a custom constraint (wrapped in the `Custom` enum variant).
+     pub fn add_constraint(&mut self, c: impl Constraint<D> + 'static) {
+-        self.constraints.push(ConstraintEnum::Custom(Box::new(c)));
++        let _ = c;
+     }

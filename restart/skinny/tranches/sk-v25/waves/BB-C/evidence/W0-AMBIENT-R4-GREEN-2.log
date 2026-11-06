@@ -1,0 +1,29 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+warning: unused import: `crate::dag::NodeId`
+   --> crates/ir/src/passes/csp_strategy/mod.rs:125:5
+    |
+125 | use crate::dag::NodeId;
+    |     ^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf-ir` (lib) generated 1 warning (run `cargo fix --lib -p bbnf-ir` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.29s
+     Running tests/vm/main.rs (target/aarch64-apple-darwin/debug/deps/vm-6d5c8efd8984e70e)
+
+running 12 tests
+test cross_rule_csp::component_partition_is_symmetric ... ok
+test cross_rule_csp::missing_dag_is_typed_unavailable ... ok
+test cross_rule_csp::configured_public_mixed_components_cancel_at_the_first_boundary ... ok
+test cross_rule_csp::component_report_members_are_sorted_and_complete ... ok
+test cross_rule_csp::reference_partition_is_deterministic ... ok
+test cross_rule_csp::reference_partition_disconnected_graph ... ok
+test cross_rule_csp::bbnf_grammar_forms_expected_components ... ok
+test cross_rule_csp::component_partition_is_transitive ... ok
+test cross_rule_csp::conflicting_disconnected_shared_node_is_not_published ... ok
+test cross_rule_csp::connected_shared_rule_roots_reuse_one_site_and_ignore_ref_order ... ok
+test cross_rule_csp::engine_propagation_unifies_component_regex_engines ... ok
+test cross_rule_csp::repeated_same_rule_node_has_one_family_authority ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 62 filtered out; finished in 0.00s
+

@@ -1,0 +1,178 @@
+{
+  "entry_rule": "grammar",
+  "registry": {
+    "layouts": {
+      "0": {
+        "rule_id": 0,
+        "rule_name": "terminal",
+        "kind": "Struct",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          }
+        ]
+      },
+      "1": {
+        "rule_id": 1,
+        "rule_name": "nonterminal",
+        "kind": "NewtypeWrapper",
+        "rule_type": "Span",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "Span",
+            "source": "TypedLeaf"
+          }
+        ]
+      },
+      "2": {
+        "rule_id": 2,
+        "rule_name": "alternation",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "field_0",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          }
+        ]
+      },
+      "3": {
+        "rule_id": 3,
+        "rule_name": "rule",
+        "kind": "Struct",
+        "rule_type": {
+          "Tuple": [
+            "Span",
+            "BoxedEnum",
+            "Span"
+          ]
+        },
+        "fields": [
+          {
+            "name": "nonterminal",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
+          },
+          {
+            "name": "field_2",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 2
+              }
+            }
+          },
+          {
+            "name": "field_3",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 3
+              }
+            }
+          },
+          {
+            "name": "alternation",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "SeqPosition": {
+                "position": 4
+              }
+            }
+          },
+          {
+            "name": "field_5",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 5
+              }
+            }
+          },
+          {
+            "name": "field_6",
+            "type_desc": "Span",
+            "source": {
+              "SeqPosition": {
+                "position": 6
+              }
+            }
+          }
+        ]
+      },
+      "4": {
+        "rule_id": 4,
+        "rule_name": "grammar",
+        "kind": "Struct",
+        "rule_type": {
+          "Vec": "Enum"
+        },
+        "fields": [
+          {
+            "name": "element",
+            "type_desc": "BoxedEnum",
+            "source": "RepeatElement"
+          }
+        ]
+      }
+    }
+  }
+}

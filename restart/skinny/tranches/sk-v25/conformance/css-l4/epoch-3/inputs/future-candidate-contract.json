@@ -1,0 +1,17 @@
+{
+  "allowed_external_inputs": [
+    "grammar/css/l4/",
+    "tests/fixtures/css/",
+    "conformance/css-l4/epoch-3/data/observations.json"
+  ],
+  "candidate_present": false,
+  "contract": "Each future VT candidate must independently crater its resolved source, package, generated-artifact, and build-input graphs. Any epoch-3 grammar AST, module/profile decision, closure table, matrix, expectation, owner table, or generated type/schema input is forbidden. Read-only observations may be copied only through the explicit observations path after their statuses and source receipts are checked.",
+  "forbidden_authority_classes": [
+    "generated grammar or AST",
+    "module/profile/prelude/closure decision",
+    "semantic matrix or BBNF expectation",
+    "owner table",
+    "schema/type declaration"
+  ],
+  "schema_version": 1
+}

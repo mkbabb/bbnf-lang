@@ -1,0 +1,29 @@
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.16s
+     Running unittests src/lib.rs (target/aarch64-apple-darwin/debug/deps/bbnf_ir-a750e9b2d674a63d)
+
+running 21 tests
+test passes::csp_strategy::tests::current_token_cancellation_is_not_publishable ... ok
+test passes::csp_strategy::tests::decoder_rejects_incomplete_and_oversized_assignments ... ok
+test passes::csp_strategy::tests::decoder_rejects_a_value_from_the_wrong_decision_family ... ok
+test passes::csp_strategy::tests::factorized_decoder_rejects_non_finite_and_overflowing_objectives ... ok
+test passes::csp_strategy::tests::decoder_rejects_foreign_var_and_missing_value ... ok
+test passes::csp_strategy::tests::decoder_rejects_duplicate_semantic_writes ... ok
+test passes::csp_strategy::tests::factorized_ties_keep_canonical_order_and_report_exact_objective ... ok
+test passes::csp_strategy::tests::site_registry_joins_legality_and_rejects_cost_disagreement ... ok
+test passes::csp_strategy::tests::cancellation_before_search_discards_every_solution ... ok
+test passes::csp_strategy::tests::pre_cancelled_factorized_grammar_rejects_without_output ... ok
+test passes::csp_strategy::tests::cancellation_after_first_incumbent_discards_best_so_far ... ok
+test passes::csp_strategy::tests::budget_after_an_incumbent_discards_best_so_far ... ok
+test passes::csp_strategy::tests::completed_component_then_cancel_reports_completed_plus_boundary ... ok
+test passes::csp_strategy::tests::prune_restore_preserves_canonical_cost_and_order ... ok
+test passes::csp_strategy::tests::factorized_acceptance_observes_boundary_cancellation ... ok
+test passes::csp_strategy::tests::cancellation_on_final_singleton_leaf_discards_incumbent ... ok
+test passes::csp_strategy::tests::constrained_acceptance_observes_boundary_cancellation ... ok
+test passes::csp_strategy::tests::final_return_observes_boundary_cancellation ... ok
+test passes::csp_strategy::tests::implication_matches_exhaustive_immutable_optimum_across_orderings ... ok
+test passes::csp_strategy::tests::solver_stats_cancellation_is_not_publishable ... ok
+test passes::csp_strategy::tests::unsatisfiable_problem_has_no_per_variable_fallback ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

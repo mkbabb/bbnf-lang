@@ -1,6 +1,7 @@
 //! Correctness gate: every kernel must produce identical
 //! `StructuralIndex` on the canonical corpus. Scalar path is the
-//! reference; per-arch paths must match byte-for-byte.
+//! reference; Apple ARM NEON and wasm32 SIMD must match it
+//! byte-for-byte.
 
 use simd_scan::{StructuralIndex, alphabet::StructuralAlphabet, scalar, scan_structural};
 

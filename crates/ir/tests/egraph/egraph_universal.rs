@@ -1,25 +1,19 @@
-//! Per-rule unit tests for the AY.W2.3 universal rewrites (G1-G4).
+//! Per-rule unit tests for the AY.W2.3 universal rewrites (G1, G2, and G4).
 //!
 //! - [`alt_of_single_collapses_to_inner`] — G1 `Alt([x]) ≡ x`.
 //! - [`alt_of_single_abstains_on_multi_branch`] — G1 negative case.
 //! - [`repeat_of_single_collapses_to_inner`] — G2 `Repeat{1,1} ≡ inner`.
 //! - [`repeat_of_single_abstains_on_bounds`] — G2 negative case.
-//! - [`wrap_of_epsilon_scalar_collapses_to_leaf`] — G3 PRIMARY LEVER.
-//! - [`wrap_of_epsilon_with_ref_scalar_collapses`] — G3 via Ref +
-//!   TypeDesc side-table.
-//! - [`wrap_of_epsilon_non_scalar_abstains`] — G3 composite-type
-//!   negative case.
-//! - [`wrap_of_epsilon_three_branch_abstains`] — G3 shape guard.
 //! - [`concat_literals_fuses_adjacent_run`] — G4 fuses a run.
 //! - [`concat_literals_leaves_non_adjacent_alone`] — G4 negative case.
 //! - [`concat_literals_fuses_multi_run`] — G4 multi-run fusion.
 
-use rustc_hash::FxHashMap;
-
-use bbnf_ir::egraph::SharedStrings;
 use bbnf_ir::egraph::node::GrammarENode;
-use bbnf_ir::egraph::rules::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
-use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
+use bbnf_ir::egraph::rules::{AltOfSingle, ConcatLiterals, RepeatOfSingle};
+use bbnf_ir::egraph::{
+    GrammarCostModel, SharedStrings, build_and_saturate, default_rules, write_back_optimized,
+};
+use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 use egraph::{EGraph, NoAnalysis, Rewrite};
 
 // ── G1 ───────────────────────────────────────────────────────────────────────
@@ -123,109 +117,99 @@ fn repeat_of_single_abstains_on_bounds() {
     );
 }
 
-// ── G3 ───────────────────────────────────────────────────────────────────────
+// ── Default-route absence ───────────────────────────────────────────────────
 
 #[test]
-fn wrap_of_epsilon_scalar_collapses_to_leaf() {
-    // Alt([Literal("a"), Epsilon]) → Literal("a").
-    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
-    let leaf = eg.add(GrammarENode::Literal(0));
-    let eps = eg.add(GrammarENode::Epsilon);
-    let alt = eg.add(GrammarENode::Alt(Box::new([leaf, eps]), None));
-    eg.rebuild();
-
-    // Literal branches are scalar by construction — empty TypeDesc
-    // table suffices.
-    let rule = WrapOfEpsilonScalar::new(FxHashMap::default());
-    let matches = rule.search(&eg);
-    assert_eq!(
-        matches.len(),
-        1,
-        "G3 expected to match Alt([leaf, ε]) with scalar leaf"
-    );
-    for (class_id, m) in matches {
-        rule.apply(&mut eg, class_id, m);
-    }
-    eg.rebuild();
+fn default_rules_match_exact_allowlist() {
+    let (ir, pool) = make_pool();
+    let rules = default_rules::<NoAnalysis>(&ir, &pool, Default::default());
+    let names: Vec<_> = rules.iter().map(|rule| rule.name()).collect();
 
     assert_eq!(
-        eg.find_ref(alt),
-        eg.find_ref(leaf),
-        "G3: Alt([leaf, ε]) class should unify with leaf"
+        names,
+        vec![
+            "deduplicate-alt-branches",
+            "superset-absorb-alt",
+            "union-merge-alt",
+            "fuse-alt-regex-branches",
+            "common-suffix-factor",
+            "alt-of-single",
+            "repeat-of-single",
+            "concat-literals",
+        ]
     );
 }
 
 #[test]
-fn wrap_of_epsilon_with_ref_scalar_collapses() {
-    // Alt([Ref(rule_id), Epsilon]) with rule_id → TypeDesc::F64.
-    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
-    let rid: RuleId = 42;
-    let leaf = eg.add(GrammarENode::Ref(rid));
-    let eps = eg.add(GrammarENode::Epsilon);
-    let alt = eg.add(GrammarENode::Alt(Box::new([leaf, eps]), None));
-    eg.rebuild();
+fn default_saturation_keeps_nullable_alt_distinct_from_literal() {
+    let mut ir = nullable_alt_ir();
+    let (egraph, pool, rule_body_ids) = build_and_saturate(&ir);
+    let root = rule_body_ids[&0];
+    let literal = egraph
+        .classes()
+        .find(|class| {
+            class
+                .iter()
+                .any(|node| matches!(node, GrammarENode::Literal(0)))
+        })
+        .expect("literal class must exist")
+        .id;
 
-    let mut rule_types = FxHashMap::default();
-    rule_types.insert(rid, TypeDesc::F64);
-    let rule = WrapOfEpsilonScalar::new(rule_types);
-    let matches = rule.search(&eg);
+    assert_ne!(
+        egraph.find_ref(root),
+        egraph.find_ref(literal),
+        "default saturation must not equate Alt([x, epsilon]) with x"
+    );
+
+    let cost = GrammarCostModel::from_config(&ir.cost_config);
+    write_back_optimized(&egraph, &mut ir, &rule_body_ids, &cost);
+    pool.write_back(&mut ir);
     assert_eq!(
-        matches.len(),
-        1,
-        "G3 expected to match Alt([Ref, ε]) with scalar-typed target"
-    );
-    for (class_id, m) in matches {
-        rule.apply(&mut eg, class_id, m);
-    }
-    eg.rebuild();
-    assert_eq!(
-        eg.find_ref(alt),
-        eg.find_ref(leaf),
-        "G3: Alt([scalar Ref, ε]) class should unify with the Ref branch"
-    );
-}
-
-#[test]
-fn wrap_of_epsilon_non_scalar_abstains() {
-    // Alt([Ref(rule_id), Epsilon]) with rule_id → TypeDesc::Vec(Span)
-    // (composite, not scalar). G3 must abstain.
-    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
-    let rid: RuleId = 42;
-    let _leaf = eg.add(GrammarENode::Ref(rid));
-    let _eps = eg.add(GrammarENode::Epsilon);
-    let _alt = eg.add(GrammarENode::Alt(Box::new([_leaf, _eps]), None));
-    eg.rebuild();
-
-    let mut rule_types = FxHashMap::default();
-    rule_types.insert(rid, TypeDesc::Vec(Box::new(TypeDesc::Span)));
-    let rule = WrapOfEpsilonScalar::new(rule_types);
-    let matches = rule.search(&eg);
-    assert!(
-        matches.is_empty(),
-        "G3 should abstain on non-scalar projection, got {} matches",
-        matches.len()
-    );
-}
-
-#[test]
-fn wrap_of_epsilon_three_branch_abstains() {
-    // Alt with 3 branches — G3 only fires on exactly 2.
-    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
-    let a = eg.add(GrammarENode::Literal(0));
-    let b = eg.add(GrammarENode::Literal(1));
-    let eps = eg.add(GrammarENode::Epsilon);
-    let _alt = eg.add(GrammarENode::Alt(Box::new([a, b, eps]), None));
-    eg.rebuild();
-
-    let matches = WrapOfEpsilonScalar::new(FxHashMap::default()).search(&eg);
-    assert!(
-        matches.is_empty(),
-        "G3 should abstain on 3-branch Alt, got {} matches",
-        matches.len()
+        ir.rules[0].body,
+        IrNode::Alt(
+            vec![
+                AltBranch {
+                    node: IrNode::Literal(0),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Epsilon,
+                    first_set: None,
+                },
+            ],
+            None,
+        ),
+        "default extraction must preserve both nullable alternatives"
     );
 }
 
 // ── G4 ───────────────────────────────────────────────────────────────────────
+
+fn nullable_alt_ir() -> GrammarIR {
+    let (mut ir, _) = make_pool();
+    let name = ir.strings.len() as u32;
+    ir.strings.push("start".to_string());
+    ir.rules.push(IrRule {
+        id: 0,
+        name,
+        body: IrNode::Alt(
+            vec![
+                AltBranch {
+                    node: IrNode::Literal(0),
+                    first_set: None,
+                },
+                AltBranch {
+                    node: IrNode::Epsilon,
+                    first_set: None,
+                },
+            ],
+            None,
+        ),
+        meta: RuleMeta::default(),
+        source_span: None,
+    });
+    ir
+}
 
 fn make_pool() -> (GrammarIR, SharedStrings) {
     let ir = GrammarIR {

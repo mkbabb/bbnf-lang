@@ -1,0 +1,12 @@
+diff --git a/crates/ir/src/passes/csp_strategy/site.rs b/crates/ir/src/passes/csp_strategy/site.rs
+--- a/crates/ir/src/passes/csp_strategy/site.rs
++++ b/crates/ir/src/passes/csp_strategy/site.rs
+@@ -255,7 +255,7 @@ fn decode_assignments(
+     let mut covered_count = 0usize;
+     let mut objective = 0.0;
+     for (var_id, site) in sites {
+-        let index = *var_id as usize;
++        let index = (*var_id as usize).min(csp.variables.len().saturating_sub(1));
+         let Some(variable) = csp.variables.get(index) else {
+             return Err(DecodeFailure {
+                 locus: OptimizationFailureLocus::Variable(*var_id),

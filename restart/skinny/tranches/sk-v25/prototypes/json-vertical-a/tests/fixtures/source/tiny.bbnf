@@ -1,0 +1,4 @@
+zero = "nil" ;
+truth = "yes" | "no" ;
+collection = "(" >> (root << ";")* << ")" ;
+root = collection | truth | zero ;

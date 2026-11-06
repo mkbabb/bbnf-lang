@@ -29,8 +29,8 @@ use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
 
 use arena::PayloadArena;
-use cursor::{root_offset, TapeCursor, TapeRef};
-use record::{LeafType, TapeOffset, TapeRec, TAPE_NONE};
+use cursor::{TapeCursor, TapeRef, root_offset};
+use record::{LeafType, TAPE_NONE, TapeOffset, TapeRec};
 
 /// An in-flight open compound: where its first child sits, the source
 /// span start, the rule's layout id (`meta_idx`), and the branch tag
@@ -163,10 +163,10 @@ impl<'p> StructBuilder for TapeStructBuilder<'p> {
     #[inline]
     fn record_compound_bounds_start(&mut self, offset: u32) {
         self.span_starts.push(offset);
-        if let Some(scope) = self.scopes.last_mut() {
-            if scope.span_lo == TAPE_NONE {
-                scope.span_lo = offset;
-            }
+        if let Some(scope) = self.scopes.last_mut()
+            && scope.span_lo == TAPE_NONE
+        {
+            scope.span_lo = offset;
         }
     }
 

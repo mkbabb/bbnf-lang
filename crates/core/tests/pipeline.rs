@@ -1,7 +1,4 @@
-use bbnf::calculate_ast_deps;
 use bbnf::grammar;
-use bbnf::graph::{tarjan_scc, topological_sort_scc};
-use bbnf::lower::{DirectiveSet, lower_to_ir};
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::GrammarIR;
 use bbnf_ir::bytecode::BytecodeProgram;

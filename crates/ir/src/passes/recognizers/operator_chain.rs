@@ -360,14 +360,14 @@ pub fn collect_operator_chains(ir: &GrammarIR, table: &DtaTable) -> OperatorChai
                         return None;
                     }
                     let triplet = (pe.precedence, pe.associativity);
-                    if let Some(existing) = first_byte_triplet.insert(pe.byte, triplet) {
-                        if existing != triplet {
-                            // First-byte entries disagree on
-                            // (precedence, associativity) — the
-                            // single LUT byte cannot encode both;
-                            // reject.
-                            return None;
-                        }
+                    if let Some(existing) = first_byte_triplet.insert(pe.byte, triplet)
+                        && existing != triplet
+                    {
+                        // First-byte entries disagree on
+                        // (precedence, associativity) — the
+                        // single LUT byte cannot encode both;
+                        // reject.
+                        return None;
                     }
                 }
                 Some(

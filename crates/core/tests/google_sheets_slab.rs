@@ -283,12 +283,12 @@ fn wire_contract_wrap_with_one_child_collapses() {
     let mut b = SheetsStructBuilder::new();
     let wrap_layout = synth_layout(0, "primary", LayoutKind::TaggedEnum);
     let h = b.begin_compound(&wrap_layout);
-    b.push_leaf_with_f64(3.14);
+    b.push_leaf_with_f64(1.25);
     b.end_compound(h);
     let doc = b.finalise("");
     // Primary -> Wrap path: collapses to the single child.
     match *doc.root() {
-        SheetsValue::Number(n) => assert!((n - 3.14).abs() < f64::EPSILON),
+        SheetsValue::Number(n) => assert!((n - 1.25).abs() < f64::EPSILON),
         ref other => panic!("expected Wrap-collapsed Number, got {:?}", other),
     }
 }

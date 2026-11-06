@@ -193,9 +193,7 @@ fn strip_cfg_test(src: &str) -> String {
             match c {
                 '{' => depth += 1,
                 '}' => {
-                    if depth > 0 {
-                        depth -= 1;
-                    }
+                    depth = depth.saturating_sub(1);
                     if in_cfg_test && depth < cfg_test_brace_depth {
                         in_cfg_test = false;
                         cfg_test_brace_depth = 0;

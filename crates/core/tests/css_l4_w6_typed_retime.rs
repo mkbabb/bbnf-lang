@@ -1,7 +1,7 @@
 use bbnf::grammar::generated::css_l4::CssL4Parser;
 use bbnf::runtime::css_l4::{
-    visit_document, CssColor, CssFunction, CssRule, CssTypedValue, CssVisitor, Declaration,
-    GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
+    CssColor, CssFunction, CssRule, CssTypedValue, CssVisitor, Declaration, GenericAtRule,
+    KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet, visit_document,
 };
 use cssparser::{
     AtRuleParser, CowRcStr, DeclarationParser, Parser, ParserInput, ParserState,
@@ -588,10 +588,10 @@ impl<'p> CssVisitor<'p> for Track1SummaryVisitor {
         // at-rule prelude, except for the at-rules its stylesheet parser
         // consumes specially (@charset/@import/@namespace). Mirror that:
         // skip those at the `rules` counter so the typed total matches.
-        if let CssRule::GenericAt(generic) = rule {
-            if is_cssparser_skipped_at_rule(generic.name) {
-                return;
-            }
+        if let CssRule::GenericAt(generic) = rule
+            && is_cssparser_skipped_at_rule(generic.name)
+        {
+            return;
         }
         self.summary.rules += 1;
     }

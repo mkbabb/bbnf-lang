@@ -133,13 +133,13 @@ fn mine_branches(branches: &[AltBranch], ctx: &RecognizerMineCtx) -> Vec<Keyword
             // than silently truncating so the emitter can diagnose.
             break;
         }
-        if let Some(bytes) = leading_literal(&branch.node, ctx) {
-            if !bytes.is_empty() {
-                out.push(KeywordBranch {
-                    bytes,
-                    branch_idx: idx as u8,
-                });
-            }
+        if let Some(bytes) = leading_literal(&branch.node, ctx)
+            && !bytes.is_empty()
+        {
+            out.push(KeywordBranch {
+                bytes,
+                branch_idx: idx as u8,
+            });
         }
     }
     out

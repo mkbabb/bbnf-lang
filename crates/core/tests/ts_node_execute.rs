@@ -143,14 +143,13 @@ fn sanitise_ts_to_js(ts: &str) -> String {
         // Strip `): RetType | null {` → `) {` (only when the line
         // contains a final `{` opening a function body). Mirrors the
         // existing strip helper.
-        if let Some(idx) = cleaned.find("): ") {
-            if let Some(last_brace) = cleaned.rfind('{') {
-                if last_brace > idx {
-                    let before = &cleaned[..idx + 1];
-                    let after = &cleaned[last_brace..];
-                    cleaned = format!("{before} {after}");
-                }
-            }
+        if let Some(idx) = cleaned.find("): ")
+            && let Some(last_brace) = cleaned.rfind('{')
+            && last_brace > idx
+        {
+            let before = &cleaned[..idx + 1];
+            let after = &cleaned[last_brace..];
+            cleaned = format!("{before} {after}");
         }
 
         // Strip ` as <Ident>` and ` as unknown as <Ident>` casts that

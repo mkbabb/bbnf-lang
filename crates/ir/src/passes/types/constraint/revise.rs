@@ -124,13 +124,12 @@ pub(super) fn join_types(branch_types: &[&TypeDesc]) -> TypeDesc {
 
     // AU.2.5: cross-shape homogeneity for factored-prefix branches.
     let first_effective = effective_payload_type(first);
-    if let Some(common) = first_effective {
-        if branch_types
+    if let Some(common) = first_effective
+        && branch_types
             .iter()
             .all(|t| effective_payload_type(t).as_ref() == Some(&common))
-        {
-            return common;
-        }
+    {
+        return common;
     }
 
     // AZ-III.W3a.3 — named obligation in place of the silent
@@ -167,10 +166,11 @@ fn effective_payload_type(ty: &TypeDesc) -> Option<TypeDesc> {
     if ty.needs_payload_slot() {
         return Some(ty.clone());
     }
-    if let TypeDesc::Tuple(elems) = ty {
-        if elems.len() == 2 && elems[0] == TypeDesc::Span {
-            return effective_payload_type(&elems[1]);
-        }
+    if let TypeDesc::Tuple(elems) = ty
+        && elems.len() == 2
+        && elems[0] == TypeDesc::Span
+    {
+        return effective_payload_type(&elems[1]);
     }
     None
 }

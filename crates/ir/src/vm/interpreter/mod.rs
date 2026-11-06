@@ -356,7 +356,7 @@ impl<'prog> Interpreter<'prog> {
     }
 }
 
-impl<'prog> fmt::Debug for ParseResult {
+impl fmt::Debug for ParseResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ParseResult")
             .field("value", &self.value)

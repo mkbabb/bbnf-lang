@@ -47,7 +47,7 @@ fn compile_bbnf_ir() -> GrammarIR {
     let out = compile_paths_request(std::slice::from_ref(&entry), &request)
         .expect("compile_paths_request failed for grammar/bbnf/bbnf.bbnf");
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("expected VM output for BBNF, got {other:?}"),
     }
 }

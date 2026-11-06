@@ -13,6 +13,17 @@ pub(super) struct DispatchPatchPlan {
     success_jumps: Vec<usize>,
 }
 
+/// The tail a backtracking dispatch lowers to after its branches: the
+/// restore and drop offsets, the fallback and end jumps to patch, and
+/// the offset just past the dispatch.
+pub(super) struct DispatchTail {
+    restore_offset: u32,
+    drop_offset: u32,
+    fallback_jump: usize,
+    end_jump: usize,
+    after_offset: u32,
+}
+
 impl DispatchPatchPlan {
     fn with_capacity(capacity: usize) -> Self {
         Self {
@@ -138,23 +149,19 @@ impl Compiler {
     fn finalize_dispatch_backtracking(
         &mut self,
         plan: DispatchPatchPlan,
-        restore_offset: u32,
-        drop_offset: u32,
-        fallback_jump: usize,
-        end_jump: usize,
-        after_offset: u32,
+        tail: DispatchTail,
         patch_table: impl FnOnce(&mut Self, Vec<u32>, u32),
     ) {
-        patch_table(self, plan.branch_offsets, restore_offset);
+        patch_table(self, plan.branch_offsets, tail.restore_offset);
 
         for idx in plan.fail_jumps {
-            self.patch(idx, Op::JumpIfFail(restore_offset));
+            self.patch(idx, Op::JumpIfFail(tail.restore_offset));
         }
         for idx in plan.success_jumps {
-            self.patch(idx, Op::Jump(drop_offset));
+            self.patch(idx, Op::Jump(tail.drop_offset));
         }
-        self.patch(fallback_jump, Op::Jump(after_offset));
-        self.patch(end_jump, Op::Jump(after_offset));
+        self.patch(tail.fallback_jump, Op::Jump(tail.after_offset));
+        self.patch(tail.end_jump, Op::Jump(tail.after_offset));
     }
 
     /// Emit a Dispatch instruction using a pre-computed table from the dispatch pass.
@@ -205,11 +212,13 @@ impl Compiler {
 
         self.finalize_dispatch_backtracking(
             plan,
-            restore_offset,
-            drop_offset,
-            fallback_jump,
-            end_jump,
-            after,
+            DispatchTail {
+                restore_offset,
+                drop_offset,
+                fallback_jump,
+                end_jump,
+                after_offset: after,
+            },
             |this, branch_offsets, fallback| {
                 this.dispatch_tables[table_idx as usize] = DispatchData {
                     table: dispatch.table.clone(),
@@ -265,11 +274,13 @@ impl Compiler {
         self.patch(token_fail, Op::JumpIfFail(restore_offset));
         self.finalize_dispatch_backtracking(
             plan,
-            restore_offset,
-            drop_offset,
-            fallback_jump,
-            end_jump,
-            after,
+            DispatchTail {
+                restore_offset,
+                drop_offset,
+                fallback_jump,
+                end_jump,
+                after_offset: after,
+            },
             |this, arm_offsets, fallback| {
                 this.token_dispatch_tables[table_idx as usize] = TokenDispatchData {
                     arms: arms

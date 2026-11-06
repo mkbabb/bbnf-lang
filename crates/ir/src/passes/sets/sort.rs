@@ -28,7 +28,7 @@ pub fn sort_alt_branches(ir: &mut GrammarIR) {
     let rule_metas: Vec<(CharSet128, bool)> = ir
         .rules
         .iter()
-        .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
+        .map(|r| (r.meta.first_set, r.meta.nullable))
         .collect();
 
     let GrammarIR { rules, strings, .. } = &mut *ir;
@@ -196,11 +196,7 @@ fn branch_first_set(
         }
         IrNode::Ref(rule_id) => {
             let (ref first_set, nullable) = rule_metas[*rule_id as usize];
-            if nullable {
-                None
-            } else {
-                Some(first_set.clone())
-            }
+            if nullable { None } else { Some(*first_set) }
         }
         IrNode::Seq(children) => children
             .first()

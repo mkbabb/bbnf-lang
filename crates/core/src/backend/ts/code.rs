@@ -55,18 +55,10 @@ pub struct TsEmitter {
 }
 
 /// Mutable context for TS emission.
+#[derive(Default)]
 pub struct TsEmitCtx {
     counter: usize,
     pub hoisted_regexes: Vec<String>,
-}
-
-impl Default for TsEmitCtx {
-    fn default() -> Self {
-        Self {
-            counter: 0,
-            hoisted_regexes: Vec::new(),
-        }
-    }
 }
 
 impl TsEmitCtx {

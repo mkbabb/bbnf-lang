@@ -41,7 +41,7 @@ pub fn finalize_compile(
             // analyze_grammar. `prepared.ir` carries the populated
             // struct_registry the audit pass reads.
             write_audit_coverage_artefact(&prepared.ir);
-            Ok(CompileOutput::Rust(prepared))
+            Ok(CompileOutput::Rust(Box::new(prepared)))
         }
         CompileTarget::Vm => {
             bbnf_ir::passes::project_types(&mut ir);
@@ -53,7 +53,7 @@ pub fn finalize_compile(
             ir.payload_layouts = bbnf_ir::passes::compute_payload_layouts(&ir);
             // AZ-I.W2-act.A — emit the audit-coverage artefact.
             write_audit_coverage_artefact(&ir);
-            Ok(CompileOutput::Vm(ir))
+            Ok(CompileOutput::Vm(Box::new(ir)))
         }
         CompileTarget::Ts => {
             bbnf_ir::passes::compute_sp_method_rules(&mut ir);

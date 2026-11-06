@@ -2,8 +2,8 @@
 //! cursor post-order child navigation, and O(1) checkpoint/rollback.
 
 use bbnf::runtime::builder::StructBuilder;
-use bbnf::runtime::tape::record::{LeafType, TapeKind, TapeRec};
 use bbnf::runtime::tape::TapeStructBuilder;
+use bbnf::runtime::tape::record::{LeafType, TapeKind, TapeRec};
 use bbnf_ir::registry::{LayoutKind, StructLayout};
 use bbnf_ir::types::TypeDesc;
 
@@ -156,7 +156,7 @@ fn checkpoint_rollback_truncates() {
     let cp = b.checkpoint();
     // speculative work, then rollback.
     let inner = b.begin_compound(&layout(8));
-    b.push_leaf_with_f64(3.14);
+    b.push_leaf_with_f64(1.25);
     b.push_leaf_with_f64(2.71);
     b.end_compound(inner);
     assert!(b.records().len() > 2);

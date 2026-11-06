@@ -41,7 +41,7 @@ fn compile_json_ir() -> GrammarIR {
     let out = compile_paths_request(std::slice::from_ref(&entry), &request)
         .expect("compile_paths_request failed for grammar/json/json.bbnf");
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("expected VM output for JSON, got {other:?}"),
     }
 }

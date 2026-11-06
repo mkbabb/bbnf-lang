@@ -19,11 +19,20 @@ use crate::backend::{Emitter, SepByConfig, ValuePlacement};
 /// pattern. `wrap_root` is the outer Skip/Next node — used to look
 /// up the pre-solved delim-scan configuration from the DriverState
 /// cache.
+/// The three parts of a delimited `open >> middle << close` node.
+pub(super) struct Delimited<'n> {
+    pub open: &'n IrNode,
+    pub middle: &'n IrNode,
+    pub close: &'n IrNode,
+}
+
 pub(super) fn compile_wrap<E: Emitter>(
     wrap_root: &IrNode,
-    open: &IrNode,
-    middle: &IrNode,
-    close: &IrNode,
+    Delimited {
+        open,
+        middle,
+        close,
+    }: Delimited<'_>,
     alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
@@ -33,55 +42,50 @@ pub(super) fn compile_wrap<E: Emitter>(
     // Delimited sep_by with terminator:
     // `open >> OW(Repeat(Skip(element, Optional(separator)))) << close`
     // where close is a single-byte Literal.
-    if let Some((inner_repeat, is_ow)) = unwrap_ow(middle) {
-        if let IrNode::Repeat {
+    if let Some((inner_repeat, is_ow)) = unwrap_ow(middle)
+        && let IrNode::Repeat {
             inner,
             lo,
             hi: u32::MAX,
         } = inner_repeat
-        {
-            if let Some((element, separator)) = decisions::detect_sep_by(inner) {
-                let terminator_bytes = if let IrNode::Literal(sid) = close {
-                    let raw = ir.get_string(*sid);
-                    Some(raw.to_string().into_bytes())
-                } else {
-                    None
-                };
+        && let Some((element, separator)) = decisions::detect_sep_by(inner)
+    {
+        let terminator_bytes = if let IrNode::Literal(sid) = close {
+            let raw = ir.get_string(*sid);
+            Some(raw.to_string().into_bytes())
+        } else {
+            None
+        };
 
-                let elem_type = derive_vec_elem_type(ir, element);
+        let elem_type = derive_vec_elem_type(ir, element);
 
-                let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
-                    ValuePlacement::Alloc
-                } else {
-                    ValuePlacement::Inline
-                };
-                let open_out = compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-                let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
-                let sep_out =
-                    compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-                let close_out =
-                    compile_node(close, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+        let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
+            ValuePlacement::Alloc
+        } else {
+            ValuePlacement::Inline
+        };
+        let open_out = compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+        let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
+        let sep_out = compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+        let close_out = compile_node(close, ValuePlacement::Inline, ir, dstate, emitter, ctx);
 
-                let config = SepByConfig {
-                    ws: is_ow,
-                    lo: *lo,
-                    terminator_bytes,
-                };
+        let config = SepByConfig {
+            ws: is_ow,
+            lo: *lo,
+            terminator_bytes,
+        };
 
-                let ws_pattern = ir.ws_pattern.map(|sid| ir.get_string(sid));
-                let sep_by_out =
-                    emitter.emit_sep_by(element_out, sep_out, &config, &elem_type, ctx);
+        let ws_pattern = ir.ws_pattern.map(|sid| ir.get_string(sid));
+        let sep_by_out = emitter.emit_sep_by(element_out, sep_out, &config, &elem_type, ctx);
 
-                // open >> ws_trim(sep_by) << close
-                let middle_out = if is_ow {
-                    emitter.emit_with_ws_trim(sep_by_out, ws_pattern, ctx)
-                } else {
-                    sep_by_out
-                };
-                let after_open = emitter.emit_next(open_out, middle_out, ctx);
-                return emitter.emit_skip(after_open, close_out, ctx);
-            }
-        }
+        // open >> ws_trim(sep_by) << close
+        let middle_out = if is_ow {
+            emitter.emit_with_ws_trim(sep_by_out, ws_pattern, ctx)
+        } else {
+            sep_by_out
+        };
+        let after_open = emitter.emit_next(open_out, middle_out, ctx);
+        return emitter.emit_skip(after_open, close_out, ctx);
     }
 
     // Delimiter-scan optimization (Tranche X.8c AOT consumption).
@@ -100,29 +104,27 @@ pub(super) fn compile_wrap<E: Emitter>(
     // If the CSP decided against DelimScan the backend honors the
     // decision and falls through to the generic wrap emitter — this
     // is the single data path the §8c gate asserts.
-    if alloc == ValuePlacement::Inline {
-        if let Some(config) = dstate.delim_scan_config(wrap_root, ir) {
-            let csp_wrap_mode = ir
-                .dag
-                .as_ref()
-                .and_then(|dag| dag.node_for(wrap_root))
-                .and_then(|id| ir.recognizer_decisions.get(&id))
-                .and_then(|d| d.wrap_mode.as_ref());
-            let csp_allows_delim_scan = match csp_wrap_mode {
-                // CSP explicitly chose BalancedScan or left the
-                // decision to the backend (no WrapMode var). The
-                // upstream `delim_scan_configs` sidecar gates the
-                // actual emission; the WrapMode here is just a
-                // veto channel.
-                Some(WrapMode::BalancedScan) | None => true,
-                // CSP chose Generic or SepBy — honor the decision.
-                Some(WrapMode::Generic) | Some(WrapMode::SepBy) => false,
-            };
-            if csp_allows_delim_scan {
-                if let Some(output) = emitter.emit_delim_scan(config, ctx) {
-                    return output;
-                }
-            }
+    if alloc == ValuePlacement::Inline
+        && let Some(config) = dstate.delim_scan_config(wrap_root, ir)
+    {
+        let csp_wrap_mode = ir
+            .dag
+            .as_ref()
+            .and_then(|dag| dag.node_for(wrap_root))
+            .and_then(|id| ir.recognizer_decisions.get(&id))
+            .and_then(|d| d.wrap_mode.as_ref());
+        let csp_allows_delim_scan = match csp_wrap_mode {
+            // CSP explicitly chose BalancedScan or left the
+            // decision to the backend (no WrapMode var). The
+            // upstream `delim_scan_configs` sidecar gates the
+            // actual emission; the WrapMode here is just a
+            // veto channel.
+            Some(WrapMode::BalancedScan) | None => true,
+            // CSP chose Generic or SepBy — honor the decision.
+            Some(WrapMode::Generic) | Some(WrapMode::SepBy) => false,
+        };
+        if csp_allows_delim_scan && let Some(output) = emitter.emit_delim_scan(config, ctx) {
+            return output;
         }
     }
 

@@ -47,7 +47,7 @@ fn compile_sheets_ir() -> GrammarIR {
     let out = compile_paths_request(std::slice::from_ref(&entry), &request)
         .unwrap_or_else(|err| panic!("project_types_sheets: compile failed: {err:?}"));
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("expected Vm output for sheets, got {:?}", other),
     }
 }

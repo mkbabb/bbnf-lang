@@ -322,7 +322,7 @@ fn selector_parses_without_payload_loss() {
     let input = ".foo#bar > baz.qux:hover { color: red; }";
     let doc = CssL4Parser::parse(input).expect("parse");
     assert!(
-        doc.rules(doc.root().rules).len() > 0,
+        !doc.rules(doc.root().rules).is_empty(),
         "selector parse must produce a non-empty CssDocument rule list"
     );
 }

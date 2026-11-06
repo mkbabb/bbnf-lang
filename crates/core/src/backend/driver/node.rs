@@ -5,12 +5,12 @@ use bbnf_ir::passes::patterns::RecognizerShape;
 use bbnf_ir::{GrammarIR, IrNode};
 
 use super::DriverState;
-use super::alt::compile_alt;
+use super::alt::{AltParts, compile_alt};
 use super::map::compile_map;
 use super::reference::compile_ref;
-use super::repeat::compile_repeat;
+use super::repeat::{RepeatBounds, compile_repeat};
 use super::seq::compile_seq;
-use super::wrap::compile_wrap;
+use super::wrap::{Delimited, compile_wrap};
 use crate::backend::{Emitter, TokenDispatchArmCompiled, ValuePlacement};
 
 /// Check whether `node` has a recognizer fact carrying a Tranche
@@ -101,8 +101,10 @@ pub(crate) fn compile_node<E: Emitter>(
 
         IrNode::Alt(branches, dispatch) => compile_alt(
             node,
-            branches,
-            dispatch.as_ref(),
+            AltParts {
+                branches,
+                dispatch: dispatch.as_ref(),
+            },
             alloc,
             ir,
             dstate,
@@ -111,7 +113,8 @@ pub(crate) fn compile_node<E: Emitter>(
         ),
 
         IrNode::Repeat { inner, lo, hi } => {
-            compile_repeat(inner, *lo, *hi, alloc, ir, dstate, emitter, ctx)
+            let bounds = RepeatBounds { lo: *lo, hi: *hi };
+            compile_repeat(inner, bounds, alloc, ir, dstate, emitter, ctx)
         }
 
         IrNode::Ref(rule_id) => compile_ref(*rule_id, alloc, ir, dstate, emitter, ctx),
@@ -120,7 +123,12 @@ pub(crate) fn compile_node<E: Emitter>(
         // `Next(open, Skip(middle, close))` match the Wrap pattern.
         IrNode::Skip(left, right) => {
             if let IrNode::Next(open, middle) = left.as_ref() {
-                compile_wrap(node, open, middle, right, alloc, ir, dstate, emitter, ctx)
+                let parts = Delimited {
+                    open,
+                    middle,
+                    close: right,
+                };
+                compile_wrap(node, parts, alloc, ir, dstate, emitter, ctx)
             } else {
                 let kept = compile_node(left, alloc, ir, dstate, emitter, ctx);
                 let discarded =
@@ -131,7 +139,12 @@ pub(crate) fn compile_node<E: Emitter>(
 
         IrNode::Next(left, right) => {
             if let IrNode::Skip(middle, close) = right.as_ref() {
-                compile_wrap(node, left, middle, close, alloc, ir, dstate, emitter, ctx)
+                let parts = Delimited {
+                    open: left,
+                    middle,
+                    close,
+                };
+                compile_wrap(node, parts, alloc, ir, dstate, emitter, ctx)
             } else {
                 let discarded =
                     compile_node(left, ValuePlacement::Inline, ir, dstate, emitter, ctx);
@@ -203,13 +216,12 @@ pub(crate) fn compile_node<E: Emitter>(
 /// guaranteed byte, consumes the guarantee and returns `Some(byte)`.
 fn check_guaranteed_byte(raw_literal: &str, dstate: &mut DriverState) -> Option<u8> {
     let bytes = raw_literal.as_bytes();
-    if bytes.len() == 1 {
-        if let Some(guaranteed) = dstate.dispatch_guaranteed_byte {
-            if guaranteed == bytes[0] {
-                dstate.dispatch_guaranteed_byte = None;
-                return Some(guaranteed);
-            }
-        }
+    if bytes.len() == 1
+        && let Some(guaranteed) = dstate.dispatch_guaranteed_byte
+        && guaranteed == bytes[0]
+    {
+        dstate.dispatch_guaranteed_byte = None;
+        return Some(guaranteed);
     }
     None
 }

@@ -575,14 +575,15 @@ fn lower_map_arrow<'a>(
     });
 
     // Type-shorthand: bare type name like `-> f64`.
-    if let Some(name) = unwrap_value_ident_str(value_expr) {
-        if is_type_name(name) && return_type.is_none() {
-            let td = resolve_type_name(name, ctx);
-            return ctx.fns.push(FnDescriptor::Expr {
-                expr: MapExpr::Input,
-                return_type: Some(td),
-            });
-        }
+    if let Some(name) = unwrap_value_ident_str(value_expr)
+        && is_type_name(name)
+        && return_type.is_none()
+    {
+        let td = resolve_type_name(name, ctx);
+        return ctx.fns.push(FnDescriptor::Expr {
+            expr: MapExpr::Input,
+            return_type: Some(td),
+        });
     }
 
     // Numeric literal suffix → scalar type.
@@ -631,7 +632,7 @@ fn lower_map_arrow<'a>(
     });
 
     let map_expr = lower_value_expr(value_expr, ctx);
-    let return_type = return_type.or_else(|| match &map_expr {
+    let return_type = return_type.or(match &map_expr {
         MapExpr::BoolLit(_) => Some(TypeDesc::Bool),
         _ => None,
     });
@@ -672,15 +673,14 @@ fn try_specialize_map_fn(inner: &IrNode, fn_id: FnId, ctx: &mut LowerCtx<'_>) ->
                 return fn_id;
             };
             let pattern = ctx.strings.resolve(*sid).to_owned();
-            if let MapExpr::FnCall { name, args } = expr {
-                if args.len() == 1
-                    && matches!(args[0], MapExpr::Input | MapExpr::InputProp { .. })
-                    && matches!(classify_regex(&pattern), RegexClass::HexDigits)
-                {
-                    let fn_path_str = ctx.strings.resolve(*name).to_owned();
-                    let path_sid = ctx.strings.intern(&fn_path_str);
-                    return ctx.fns.push(FnDescriptor::HexConvert { fn_path: path_sid });
-                }
+            if let MapExpr::FnCall { name, args } = expr
+                && args.len() == 1
+                && matches!(args[0], MapExpr::Input | MapExpr::InputProp { .. })
+                && matches!(classify_regex(&pattern), RegexClass::HexDigits)
+            {
+                let fn_path_str = ctx.strings.resolve(*name).to_owned();
+                let path_sid = ctx.strings.intern(&fn_path_str);
+                return ctx.fns.push(FnDescriptor::HexConvert { fn_path: path_sid });
             }
             return fn_id;
         }

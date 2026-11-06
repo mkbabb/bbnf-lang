@@ -65,10 +65,10 @@ fn walk(dir: &std::path::Path, acc: &mut Vec<String>) {
             let path = entry.path();
             if path.is_dir() {
                 walk(&path, acc);
-            } else if path.extension().and_then(|e| e.to_str()) == Some("rs") {
-                if let Ok(content) = fs::read_to_string(&path) {
-                    acc.push(content);
-                }
+            } else if path.extension().and_then(|e| e.to_str()) == Some("rs")
+                && let Ok(content) = fs::read_to_string(&path)
+            {
+                acc.push(content);
             }
         }
     }

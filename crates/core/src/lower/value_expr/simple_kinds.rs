@@ -185,10 +185,10 @@ pub(super) fn lower_value_closure<'a, 'p: 'a>(
             // Defensive fallback — descend through any value-layer
             // wrapper to find the body when direct-child scan fails.
             for &kind in VALUE_HEAD_KINDS {
-                if let Some(v) = find_descendant_by_compound_kind(node, kind) {
-                    if !same_focus(v, node) {
-                        return Some(v);
-                    }
+                if let Some(v) = find_descendant_by_compound_kind(node, kind)
+                    && !same_focus(v, node)
+                {
+                    return Some(v);
                 }
             }
             // Last resort: any descendant ValueExpr that isn't the

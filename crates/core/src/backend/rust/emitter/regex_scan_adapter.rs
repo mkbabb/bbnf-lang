@@ -115,21 +115,6 @@ fn ir_regex_static_ident(idx: usize) -> proc_macro2::Ident {
     format_ident!("__DTA_HREGEX_{}", idx)
 }
 
-/// Resolve the pattern string for a regex-bearing state at `idx` in
-/// `table.states`. Returns `None` if the state at that index is not a
-/// `Regex` variant or a `WsTrim` with a pattern — the caller should
-/// already know it is requesting a pattern-bearing state.
-fn pattern_for_state<'a>(ir: &'a GrammarIR, table: &'a DtaTable, idx: usize) -> Option<&'a str> {
-    let state = table.states.get(idx)?;
-    match state {
-        DtaState::Regex { pattern, .. } => Some(ir.get_string(*pattern)),
-        DtaState::WsTrim {
-            pattern: Some(pattern),
-        } => Some(ir.get_string(*pattern)),
-        _ => None,
-    }
-}
-
 /// Collect every regex pattern the per-grammar `__regex_scan_` adapter
 /// must dispatch on. Two sources merge:
 ///
@@ -482,7 +467,7 @@ fn emit_hoisted_dfa_tables(
     }
 
     // Accept-state bitset.
-    let num_words = (num_states + 63) / 64;
+    let num_words = num_states.div_ceil(64);
     let mut accept_words = vec![0u64; num_words];
     for (i, s) in dfa.states.iter().enumerate() {
         if s.is_accept {

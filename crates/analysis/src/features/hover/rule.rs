@@ -25,17 +25,18 @@ pub(super) fn build_rule_definition_hover(state: &DocumentState, rule: &RuleInfo
     {
         let mut parts: Vec<String> = Vec::new();
 
-        if let Some(first_label) = state.info.first_set_labels.get(&rule.name) {
-            if first_label != "∅" && !first_label.is_empty() {
-                parts.push(format!("FIRST {}", first_label));
-            }
+        if let Some(first_label) = state.info.first_set_labels.get(&rule.name)
+            && first_label != "∅"
+            && !first_label.is_empty()
+        {
+            parts.push(format!("FIRST {}", first_label));
         }
-        if let Some(ir_meta) = state.info.ir_meta.get(&rule.name) {
-            if let Some(ref follow) = ir_meta.follow_set_label {
-                if follow != "∅" && !follow.is_empty() {
-                    parts.push(format!("FOLLOW {}", follow));
-                }
-            }
+        if let Some(ir_meta) = state.info.ir_meta.get(&rule.name)
+            && let Some(ref follow) = ir_meta.follow_set_label
+            && follow != "∅"
+            && !follow.is_empty()
+        {
+            parts.push(format!("FOLLOW {}", follow));
         }
         if state.info.nullable_rules.contains(&rule.name) {
             parts.push("nullable".into());
@@ -112,17 +113,18 @@ pub(super) fn build_rule_reference_hover(state: &DocumentState, name: &str) -> H
 
         // Compact summary — same format as RuleDefinition.
         let mut parts: Vec<String> = Vec::new();
-        if let Some(first_label) = state.info.first_set_labels.get(&def.name) {
-            if first_label != "∅" && !first_label.is_empty() {
-                parts.push(format!("FIRST {}", first_label));
-            }
+        if let Some(first_label) = state.info.first_set_labels.get(&def.name)
+            && first_label != "∅"
+            && !first_label.is_empty()
+        {
+            parts.push(format!("FIRST {}", first_label));
         }
-        if let Some(ir_meta) = state.info.ir_meta.get(&def.name) {
-            if let Some(ref follow) = ir_meta.follow_set_label {
-                if follow != "∅" && !follow.is_empty() {
-                    parts.push(format!("FOLLOW {}", follow));
-                }
-            }
+        if let Some(ir_meta) = state.info.ir_meta.get(&def.name)
+            && let Some(ref follow) = ir_meta.follow_set_label
+            && follow != "∅"
+            && !follow.is_empty()
+        {
+            parts.push(format!("FOLLOW {}", follow));
         }
         if state.info.nullable_rules.contains(&def.name) {
             parts.push("nullable".into());

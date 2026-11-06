@@ -29,22 +29,17 @@ pub struct PipelineOptions {
 }
 
 /// Backend-specific compilation target.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum CompileTarget {
     /// Prepare the grammar for Rust codegen (monolithic recursive descent).
     Rust { requested_prettify: bool },
     /// Produce a VM-ready `GrammarIR`.
+    #[default]
     Vm,
     /// Emit TypeScript source code (direct recursive descent).
     Ts,
     /// Emit a WASM module directly via wasm-encoder.
     Wasm,
-}
-
-impl Default for CompileTarget {
-    fn default() -> Self {
-        Self::Vm
-    }
 }
 
 /// Shared compilation request.
@@ -57,8 +52,8 @@ pub struct CompileRequest {
 /// Output of a compilation request.
 #[derive(Debug)]
 pub enum CompileOutput {
-    Rust(crate::backend::PreparedGrammar),
-    Vm(GrammarIR),
+    Rust(Box<crate::backend::PreparedGrammar>),
+    Vm(Box<GrammarIR>),
     /// Generated TypeScript source code.
     Ts(String),
     /// Generated WASM module bytes.

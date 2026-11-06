@@ -196,7 +196,7 @@ pub(crate) fn expand(input: TokenStream) -> Result<TokenStream> {
     }
 
     // Validate the segment sequence against the per-grammar fixture.
-    validate_against_fixture(&segments, &fixture)?;
+    validate_against_fixture(&segments, fixture)?;
 
     // Emit the typed-path expression literal.
     let grammar_path = &parsed.grammar;

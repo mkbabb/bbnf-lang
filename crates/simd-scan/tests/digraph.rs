@@ -8,14 +8,11 @@
 
 use simd_scan::{alphabet::StructuralAlphabet, scalar, scan_structural};
 
-const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b','],
-    &[(b'/', b'*'), (b'*', b'/')],
-    &[b'"', b'\''],
-);
+const CSS_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
 
 const BBNF_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b','],
+    b"{}();:,",
     &[
         (b'/', b'*'),
         (b'*', b'/'),
@@ -23,7 +20,7 @@ const BBNF_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
         (b'(', b'*'),
         (b'*', b')'),
     ],
-    &[b'"'],
+    b"\"",
 );
 
 #[test]
@@ -49,11 +46,7 @@ fn css_block_comment_open_close() {
 fn css_no_digraph_no_extra_hits() {
     // No `/*` or `*/`; structural set should match the singleton-only path.
     let input = b"a { color: red; }";
-    let alphabet_no_digraph = StructuralAlphabet::from_parts(
-        &[b'{', b'}', b'(', b')', b';', b':', b','],
-        &[],
-        &[b'"', b'\''],
-    );
+    let alphabet_no_digraph = StructuralAlphabet::from_parts(b"{}();:,", &[], b"\"'");
     let scalar_idx = scalar::scan(input, &alphabet_no_digraph);
     let simd_idx = scan_structural(input, &alphabet_no_digraph);
     assert_eq!(scalar_idx.positions, simd_idx.positions);

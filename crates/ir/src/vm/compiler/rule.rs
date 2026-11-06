@@ -13,14 +13,14 @@ impl Compiler {
         self.entries[rule.id as usize] = entry;
 
         // Emit source map entry when debug info is requested.
-        if self.debug {
-            if let Some(ref span) = rule.source_span {
-                self.source_map.push(SourceMapEntry {
-                    pc: entry,
-                    rule_id: rule.id,
-                    span: span.clone(),
-                });
-            }
+        if self.debug
+            && let Some(ref span) = rule.source_span
+        {
+            self.source_map.push(SourceMapEntry {
+                pc: entry,
+                rule_id: rule.id,
+                span: span.clone(),
+            });
         }
 
         // Emit debug breakpoint at rule entry for @debug-annotated rules.
@@ -67,10 +67,10 @@ impl Compiler {
 
         // Patch memo check to jump to the Return instruction on cache hit.
         // The Return is needed to pop the call frame when we entered via Call.
-        if let Some(idx) = memo_check_idx {
-            if let Op::MemoCheck { hit_offset, .. } = &mut self.code[idx] {
-                *hit_offset = return_idx as u32;
-            }
+        if let Some(idx) = memo_check_idx
+            && let Op::MemoCheck { hit_offset, .. } = &mut self.code[idx]
+        {
+            *hit_offset = return_idx as u32;
         }
     }
 }

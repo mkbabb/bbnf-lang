@@ -122,7 +122,7 @@ fn unknown_field_names_segment_and_alternatives() {
     assert_eq!(err.segment_index, 0);
     assert_eq!(err.segment_str, "nope");
     assert_eq!(err.struct_name, DOC_RULE);
-    let alts: Vec<&str> = err.alternatives.iter().copied().collect();
+    let alts: Vec<&str> = err.alternatives.to_vec();
     assert!(
         alts.contains(&"title") && alts.contains(&"score"),
         "alternatives must include the registered fields: got {alts:?}"
@@ -166,7 +166,7 @@ fn unknown_variant_lists_branch_alternatives() {
     assert_eq!(err.reason, PathErrorReason::UnknownVariant);
     assert_eq!(err.segment_str, "@middle");
     assert_eq!(err.struct_name, ENUM_RULE);
-    let alts: Vec<&str> = err.alternatives.iter().copied().collect();
+    let alts: Vec<&str> = err.alternatives.to_vec();
     assert!(
         alts.contains(&"left") && alts.contains(&"right"),
         "alternatives must include both branch names: got {alts:?}"
@@ -189,7 +189,7 @@ fn unregistered_entry_rule_is_diagnosed() {
     let err = check_for_error(&segments, &registry, "MissingRule");
 
     assert_eq!(err.reason, PathErrorReason::UnregisteredRule);
-    let alts: Vec<&str> = err.alternatives.iter().copied().collect();
+    let alts: Vec<&str> = err.alternatives.to_vec();
     assert!(
         alts.contains(&DOC_RULE) && alts.contains(&ENUM_RULE),
         "alternatives must enumerate every registered rule: got {alts:?}"

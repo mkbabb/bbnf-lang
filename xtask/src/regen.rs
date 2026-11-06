@@ -366,7 +366,7 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
     let t0 = std::time::Instant::now();
 
     let prepared = match compile_paths_request(&parser_attrs.paths, &request) {
-        Ok(CompileOutput::Rust(prepared)) => prepared,
+        Ok(CompileOutput::Rust(prepared)) => *prepared,
         Ok(_) => bail!("Rust target produced non-Rust pipeline output"),
         Err(err) => bail!("compile_paths_request for `{}`: {err}", entry.ident),
     };

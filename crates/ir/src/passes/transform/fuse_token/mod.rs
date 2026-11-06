@@ -52,7 +52,7 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
                 || matches!(&r.body, IrNode::Alt(branches, _) if branches.iter().all(|b| matches!(&b.node, IrNode::Literal(_))));
             is_scannable && (2..=80).contains(&fs_len)
         })
-        .map(|r| (r.id, r.meta.first_set.clone(), r.name))
+        .map(|r| (r.id, r.meta.first_set, r.name))
         .collect();
 
     if token_rules.is_empty() {
@@ -66,7 +66,7 @@ pub fn fuse_token_dispatch(ir: &mut GrammarIR) {
     let mut rule_first_sets: Vec<CharSet128> = vec![CharSet128::new(); max_rule_id + 1];
     for r in &ir.rules {
         if (r.id as usize) < rule_first_sets.len() {
-            rule_first_sets[r.id as usize] = r.meta.first_set.clone();
+            rule_first_sets[r.id as usize] = r.meta.first_set;
         }
     }
 

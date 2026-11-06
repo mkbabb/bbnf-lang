@@ -17,11 +17,7 @@ pub struct CssPrettyDocument<'p> {
 }
 impl<'p> CssPrettyDocument<'p> {
     #[inline]
-    pub fn new(
-        arena: CssPrettyArena<'p>,
-        root: CssPrettyValue<'p>,
-        input: &'p str,
-    ) -> Self {
+    pub fn new(arena: CssPrettyArena<'p>, root: CssPrettyValue<'p>, input: &'p str) -> Self {
         Self { arena, root, input }
     }
     #[inline]
@@ -140,7 +136,7 @@ impl CssPrettyPathQuery for &str {
     fn query<'p>(doc: &CssPrettyDocument<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             CssPrettyValue::Span(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
@@ -152,8 +148,6 @@ impl CssPrettyPathQuery for CssPrettyValue<'_> {
     fn query<'p>(doc: &CssPrettyDocument<'p>, path: Path<'_>) -> Option<Self> {
         let value = walk_path(doc, path)?;
         let copied: CssPrettyValue<'p> = *value;
-        Some(unsafe {
-            core::mem::transmute::<CssPrettyValue<'p>, CssPrettyValue<'_>>(copied)
-        })
+        Some(unsafe { core::mem::transmute::<CssPrettyValue<'p>, CssPrettyValue<'_>>(copied) })
     }
 }

@@ -12,26 +12,14 @@
 
 use simd_scan::{StructuralAlphabet, Tier, compiled_tiers, scalar, scan_with, selected_tier};
 
-const JSON: StructuralAlphabet =
-    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
-const CSS: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b','],
-    &[(b'/', b'*'), (b'*', b'/')],
-    &[b'"', b'\''],
-);
+const JSON: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\"");
+const CSS: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
 /// Eight singletons: the nibble LUT's bit 7 (0x80) is in use.
-const BBNF: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b',', b'='],
-    &[(b'-', b'>')],
-    &[b'"'],
-);
-const WIDE: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[
-        b'{', b'}', b'(', b')', b';', b':', b',', b'=', b'|', b'<', b'>', b'[', b']', b'?',
-    ],
-    &[(b'-', b'>')],
-    &[b'"'],
-);
+const BBNF: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,=", &[(b'-', b'>')], b"\"");
+const WIDE: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,=|<>[]?", &[(b'-', b'>')], b"\"");
 
 #[test]
 fn every_isa_tier_of_the_target_is_compiled() {
@@ -96,7 +84,7 @@ fn corpus() -> Vec<Vec<u8>> {
                     s ^= s << 13;
                     s ^= s >> 7;
                     s ^= s << 17;
-                    if s % 5 == 0 {
+                    if s.is_multiple_of(5) {
                         (s >> 32) as u8
                     } else {
                         POOL[(s >> 40) as usize % POOL.len()]

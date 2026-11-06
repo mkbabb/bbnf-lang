@@ -161,72 +161,72 @@ impl CostConfig {
             ..Self::default()
         };
 
-        if let Ok(s) = std::env::var("BBNF_COST_LITERAL") {
-            if let Ok(v) = s.parse() {
-                c.literal_cost = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_LITERAL")
+            && let Ok(v) = s.parse()
+        {
+            c.literal_cost = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_REGEX") {
-            if let Ok(v) = s.parse() {
-                c.regex_cost = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_REGEX")
+            && let Ok(v) = s.parse()
+        {
+            c.regex_cost = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_REF") {
-            if let Ok(v) = s.parse() {
-                c.ref_cost = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_REF")
+            && let Ok(v) = s.parse()
+        {
+            c.ref_cost = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_SEQ_PER_CHILD") {
-            if let Ok(v) = s.parse() {
-                c.seq_per_child = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_SEQ_PER_CHILD")
+            && let Ok(v) = s.parse()
+        {
+            c.seq_per_child = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_HIR_LITERAL_PER_BYTE") {
-            if let Ok(v) = s.parse() {
-                c.hir_literal_per_byte = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_HIR_LITERAL_PER_BYTE")
+            && let Ok(v) = s.parse()
+        {
+            c.hir_literal_per_byte = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_HIR_CLASS") {
-            if let Ok(v) = s.parse() {
-                c.hir_class_cost = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_HIR_CLASS")
+            && let Ok(v) = s.parse()
+        {
+            c.hir_class_cost = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_HIR_REPEAT") {
-            if let Ok(v) = s.parse() {
-                c.hir_repeat_cost = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_HIR_REPEAT")
+            && let Ok(v) = s.parse()
+        {
+            c.hir_repeat_cost = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_HIR_MERGED_BONUS") {
-            if let Ok(v) = s.parse() {
-                c.hir_merged_bonus = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_HIR_MERGED_BONUS")
+            && let Ok(v) = s.parse()
+        {
+            c.hir_merged_bonus = v;
         }
 
         // Tranche AB.1 — materialization weight overrides.
-        if let Ok(s) = std::env::var("BBNF_COST_MAT_MUST_TAPE") {
-            if let Ok(v) = s.parse() {
-                c.mat_must_tape = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_MUST_TAPE")
+            && let Ok(v) = s.parse()
+        {
+            c.mat_must_tape = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_MAT_TAPE_SPAN_ONLY") {
-            if let Ok(v) = s.parse() {
-                c.mat_tape_span_only = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_TAPE_SPAN_ONLY")
+            && let Ok(v) = s.parse()
+        {
+            c.mat_tape_span_only = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_MAT_TRANSPARENT_ELIDE") {
-            if let Ok(v) = s.parse() {
-                c.mat_transparent_elide = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_TRANSPARENT_ELIDE")
+            && let Ok(v) = s.parse()
+        {
+            c.mat_transparent_elide = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_MAT_PRETTIFY_PIN_PENALTY") {
-            if let Ok(v) = s.parse() {
-                c.mat_prettify_pin_penalty = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_PRETTIFY_PIN_PENALTY")
+            && let Ok(v) = s.parse()
+        {
+            c.mat_prettify_pin_penalty = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_MAT_DEBUG_PIN_PENALTY") {
-            if let Ok(v) = s.parse() {
-                c.mat_debug_pin_penalty = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_MAT_DEBUG_PIN_PENALTY")
+            && let Ok(v) = s.parse()
+        {
+            c.mat_debug_pin_penalty = v;
         }
 
         c

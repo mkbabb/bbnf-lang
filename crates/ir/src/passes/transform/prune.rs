@@ -64,10 +64,10 @@ pub fn prune_unreachable(ir: &mut GrammarIR) {
         if let Some(ref mut recover) = rule.meta.directives.recover {
             remap_refs(recover, &old_to_new);
         }
-        if let Some(ref mut alias_id) = rule.meta.is_alias {
-            if let Some(&new_id) = old_to_new.get(alias_id) {
-                *alias_id = new_id;
-            }
+        if let Some(ref mut alias_id) = rule.meta.is_alias
+            && let Some(&new_id) = old_to_new.get(alias_id)
+        {
+            *alias_id = new_id;
         }
     }
 

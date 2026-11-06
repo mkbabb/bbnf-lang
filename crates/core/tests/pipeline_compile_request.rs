@@ -27,7 +27,7 @@ fn source_aot_enables_prettify_for_pretty_directive() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(false)).unwrap() {
-        CompileOutput::Rust(prepared) => prepared,
+        CompileOutput::Rust(prepared) => *prepared,
         _ => panic!("expected Rust output"),
     };
 
@@ -46,7 +46,7 @@ fn source_aot_respects_explicit_prettify_without_directives() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(true)).unwrap() {
-        CompileOutput::Rust(prepared) => prepared,
+        CompileOutput::Rust(prepared) => *prepared,
         _ => panic!("expected Rust output"),
     };
 
@@ -65,7 +65,7 @@ fn source_aot_skips_prettify_without_flag_or_directive() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(false)).unwrap() {
-        CompileOutput::Rust(prepared) => prepared,
+        CompileOutput::Rust(prepared) => *prepared,
         _ => panic!("expected Rust output"),
     };
 
@@ -100,7 +100,7 @@ fn compile_request_preserves_split_pretty_hint_for_codegen_error() {
     "#;
 
     let prepared = match compile_grammar_request(grammar, &aot_request(false)).unwrap() {
-        CompileOutput::Rust(prepared) => prepared,
+        CompileOutput::Rust(prepared) => *prepared,
         _ => panic!("expected Rust output"),
     };
 
@@ -163,7 +163,7 @@ fn compile_paths_preserves_pretty_directives_across_multiple_explicit_paths() {
 
     let paths = vec![first.clone(), second.clone()];
     let prepared = match compile_paths_request(&paths, &aot_request(false)).unwrap() {
-        CompileOutput::Rust(prepared) => prepared,
+        CompileOutput::Rust(prepared) => *prepared,
         _ => panic!("expected Rust output"),
     };
 
@@ -201,7 +201,7 @@ fn compile_paths_preserves_pretty_directives_through_import_resolution() {
 
     let paths = vec![entry.clone()];
     let prepared = match compile_paths_request(&paths, &aot_request(false)).unwrap() {
-        CompileOutput::Rust(prepared) => prepared,
+        CompileOutput::Rust(prepared) => *prepared,
         _ => panic!("expected Rust output"),
     };
 

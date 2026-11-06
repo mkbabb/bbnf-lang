@@ -83,35 +83,35 @@ impl CostConfig {
     pub fn from_env() -> Self {
         let mut c = Self::default();
 
-        if let Ok(s) = std::env::var("BBNF_COST_PARALLELISM_THRESHOLD") {
-            if let Ok(v) = s.parse() {
-                c.parallelism_threshold = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_PARALLELISM_THRESHOLD")
+            && let Ok(v) = s.parse()
+        {
+            c.parallelism_threshold = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_ITER_LIMIT") {
-            if let Ok(v) = s.parse() {
-                c.egraph_iter_limit = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_ITER_LIMIT")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph_iter_limit = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_NODE_LIMIT") {
-            if let Ok(v) = s.parse() {
-                c.egraph_node_limit = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_NODE_LIMIT")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph_node_limit = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_ALT_PER_BRANCH") {
-            if let Ok(v) = s.parse() {
-                c.weights.alt_per_branch = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_ALT_PER_BRANCH")
+            && let Ok(v) = s.parse()
+        {
+            c.weights.alt_per_branch = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_DISPATCH_BONUS") {
-            if let Ok(v) = s.parse() {
-                c.weights.dispatch_bonus = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_DISPATCH_BONUS")
+            && let Ok(v) = s.parse()
+        {
+            c.weights.dispatch_bonus = v;
         }
-        if let Ok(s) = std::env::var("BBNF_COST_STRUCTURAL") {
-            if let Ok(v) = s.parse() {
-                c.weights.structural = v;
-            }
+        if let Ok(s) = std::env::var("BBNF_COST_STRUCTURAL")
+            && let Ok(v) = s.parse()
+        {
+            c.weights.structural = v;
         }
 
         c

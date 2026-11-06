@@ -177,7 +177,7 @@ fn scan_tree(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> (u
 /// Next trivia or bridged through a single Ref.
 fn is_single_byte_literal_rule(body: &IrNode, ir: &GrammarIR) -> bool {
     match unwrap_map_ow(body) {
-        IrNode::Literal(sid) => ir.get_string(*sid).as_bytes().len() == 1,
+        IrNode::Literal(sid) => ir.get_string(*sid).len() == 1,
         IrNode::Skip(lhs, _) | IrNode::Next(lhs, _) => is_single_byte_literal_rule(lhs, ir),
         _ => false,
     }

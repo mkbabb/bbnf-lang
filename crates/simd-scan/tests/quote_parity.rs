@@ -9,8 +9,7 @@
 
 use simd_scan::{alphabet::StructuralAlphabet, parity, scalar, scan_structural};
 
-const JSON_ALPHABET: StructuralAlphabet =
-    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
+const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\"");
 
 #[test]
 fn quote_filters_braces_inside_string() {
@@ -96,9 +95,9 @@ fn many_strings_in_array() {
 fn long_string_spanning_multiple_stripes() {
     // Build a single string of 200 bytes with `,` and `}` inside.
     let mut input = b"{\"k\":\"".to_vec();
-    input.extend(std::iter::repeat(b',').take(150));
+    input.extend(std::iter::repeat_n(b',', 150));
     input.extend(b"}");
-    input.extend(std::iter::repeat(b']').take(50));
+    input.extend(std::iter::repeat_n(b']', 50));
     input.extend(b"\",\"end\":1}");
     let scalar_idx = scalar::scan(&input, &JSON_ALPHABET);
     let simd_idx = scan_structural(&input, &JSON_ALPHABET);
@@ -169,7 +168,7 @@ fn quote_carry_across_64_byte_stripes() {
     // Verify the parity carry propagates correctly.
     let mut input = vec![b' '; 30];
     input.push(b'"');
-    input.extend(std::iter::repeat(b',').take(50)); // 50 commas inside string
+    input.extend(std::iter::repeat_n(b',', 50)); // 50 commas inside string
     input.push(b'"');
     input.push(b',');
     input.push(b'1');

@@ -126,14 +126,13 @@ impl BbnfLanguageServer {
             .into_iter()
             .filter(|d| {
                 // Suppress "Undefined rule: `name`" if `name` is imported.
-                if d.message.starts_with("Undefined rule: `") {
-                    if let Some(name) = d
+                if d.message.starts_with("Undefined rule: `")
+                    && let Some(name) = d
                         .message
                         .strip_prefix("Undefined rule: `")
                         .and_then(|s| s.strip_suffix('`'))
-                    {
-                        return !available_rules.contains(name);
-                    }
+                {
+                    return !available_rules.contains(name);
                 }
                 true
             })

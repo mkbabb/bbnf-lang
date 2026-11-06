@@ -139,8 +139,7 @@ pub fn rank(rules: &mut [Rule], cfg: &RankConfig) {
     let mut slot_of: Vec<usize> = (0..n).collect();
     // `target[i]` = the original index that should end up at slot i.
     let target = placed;
-    for i in 0..n {
-        let want = target[i];
+    for (i, &want) in target.iter().enumerate() {
         // Find the current slot of `want`; swap whatever's there into i.
         let cur = slot_of
             .iter()
@@ -157,7 +156,7 @@ pub fn rank(rules: &mut [Rule], cfg: &RankConfig) {
 /// Top-k selection by [`rank`] score *without* mutating the input.
 /// Equivalent to ranking a copy and taking the first `k` references,
 /// but skips the placeholder dance.
-pub fn select_top_k<'a>(rules: &'a [Rule], k: usize) -> Vec<&'a Rule> {
+pub fn select_top_k(rules: &[Rule], k: usize) -> Vec<&Rule> {
     if rules.is_empty() || k == 0 {
         return Vec::new();
     }

@@ -50,7 +50,7 @@ fn compiled_wasm() -> WasmBundle {
     )
     .unwrap()
     {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => unreachable!(),
     };
     bbnf_ir::passes::compute_sp_method_rules(&mut ir);

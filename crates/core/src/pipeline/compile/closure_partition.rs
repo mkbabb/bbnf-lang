@@ -120,15 +120,13 @@ pub(super) fn collect_closure_param_names<'a>(
     match view.compound_kind() {
         Some(BbnfCompoundKind::Closure) => {
             for child in view.children_iter() {
-                if !child.is_compound() {
-                    if child.is_span() {
-                        // The Span text comes from the document's input
-                        // slice; re-borrow against `view.input()` so
-                        // the lifetime matches the param-set's `'a`.
-                        let text = child.span_text();
-                        if !text.is_empty() {
-                            params.insert(slice_in_input(view.input(), text));
-                        }
+                if !child.is_compound() && child.is_span() {
+                    // The Span text comes from the document's input
+                    // slice; re-borrow against `view.input()` so
+                    // the lifetime matches the param-set's `'a`.
+                    let text = child.span_text();
+                    if !text.is_empty() {
+                        params.insert(slice_in_input(view.input(), text));
                     }
                 }
                 // Compound children (the rhs body) don't contribute
@@ -141,18 +139,18 @@ pub(super) fn collect_closure_param_names<'a>(
         // Unwrap single-branch structural wrappers.
         Some(BbnfCompoundKind::Alternation) | Some(BbnfCompoundKind::CallArg) => {
             let mut iter = view.children_iter();
-            if let Some(first) = iter.next() {
-                if iter.next().is_none() {
-                    collect_closure_param_names(first, params);
-                }
+            if let Some(first) = iter.next()
+                && iter.next().is_none()
+            {
+                collect_closure_param_names(first, params);
             }
         }
         Some(BbnfCompoundKind::Concatenation) => {
             let mut iter = view.children_iter();
-            if let Some(first) = iter.next() {
-                if iter.next().is_none() {
-                    collect_closure_param_names(first, params);
-                }
+            if let Some(first) = iter.next()
+                && iter.next().is_none()
+            {
+                collect_closure_param_names(first, params);
             }
         }
         Some(BbnfCompoundKind::BinaryFactor) => {

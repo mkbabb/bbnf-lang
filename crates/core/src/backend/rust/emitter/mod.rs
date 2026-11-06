@@ -102,10 +102,11 @@ fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
 fn collect_alt_payload_types(branches: &[AltBranch], ir: &GrammarIR) -> Vec<TypeDesc> {
     let mut types = Vec::new();
     for b in branches {
-        if let Some(td) = resolve_branch_type(&b.node, ir) {
-            if td.needs_payload_slot() && !types.contains(&td) {
-                types.push(td);
-            }
+        if let Some(td) = resolve_branch_type(&b.node, ir)
+            && td.needs_payload_slot()
+            && !types.contains(&td)
+        {
+            types.push(td);
         }
     }
     types

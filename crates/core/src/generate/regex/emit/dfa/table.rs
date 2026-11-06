@@ -35,7 +35,7 @@ pub(super) fn emit_tier_b(dfa: &Dfa) -> TokenStream {
     let trans_len_lit = proc_macro2::Literal::usize_unsuffixed(num_states * num_cls);
 
     // Build accept bitset -- one u64 per 64 states. No arbitrary limit.
-    let num_words = (num_states + 63) / 64;
+    let num_words = num_states.div_ceil(64);
     let mut accept_words = vec![0u64; num_words];
     for (i, s) in dfa.states.iter().enumerate() {
         if s.is_accept {

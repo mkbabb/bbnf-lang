@@ -46,12 +46,11 @@ fn is_operator_chain(children: &[IrNode]) -> bool {
 }
 
 fn is_operator_chain_tail(tail: &IrNode) -> bool {
-    if let IrNode::Repeat { inner, lo: 0, hi } = tail {
-        if *hi == u32::MAX {
-            if let IrNode::Seq(inner_children) = inner.as_ref() {
-                return inner_children.len() == 2;
-            }
-        }
+    if let IrNode::Repeat { inner, lo: 0, hi } = tail
+        && *hi == u32::MAX
+        && let IrNode::Seq(inner_children) = inner.as_ref()
+    {
+        return inner_children.len() == 2;
     }
     if let IrNode::OptionalWhitespace(inner) = tail {
         return is_operator_chain_tail(inner);

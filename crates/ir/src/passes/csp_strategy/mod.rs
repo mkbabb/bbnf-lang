@@ -828,13 +828,11 @@ fn collect_sites(
                 sites.push((var, Site::Alt(node_id)));
                 by_node.entry(node_id).or_default().0 = Some(var);
             }
-            IrNode::Skip(_, _) | IrNode::Next(_, _) => {
-                if is_wrap_shape(node) {
-                    let domain = build_wrap_domain(fact, cfg);
-                    let var = csp.add_variable(domain);
-                    sites.push((var, Site::Wrap(node_id)));
-                    by_node.entry(node_id).or_default().1 = Some(var);
-                }
+            IrNode::Skip(_, _) | IrNode::Next(_, _) if is_wrap_shape(node) => {
+                let domain = build_wrap_domain(fact, cfg);
+                let var = csp.add_variable(domain);
+                sites.push((var, Site::Wrap(node_id)));
+                by_node.entry(node_id).or_default().1 = Some(var);
             }
             IrNode::Regex(sid) => {
                 let info = ir.regex_info.get(sid);
@@ -895,29 +893,28 @@ fn walk_token_dispatch(
     one_pass_engines: &[StrategyValue],
     count: &mut usize,
 ) {
-    if let IrNode::Alt(branches, _) = node {
-        if let Some(parent_id) = dag.node_for(node) {
-            if let Some((Some(alt_var), _, _)) = by_node.get(&parent_id) {
-                // For each child Regex within the Alt branches, emit
-                // "Alt = ByteDispatch → child Engine ∈ one_pass". The
-                // implication models the constraint that a dispatch-
-                // style Alt requires one-pass-eligible child regex
-                // engines; Y.3 folded TokenDispatch into ByteDispatch
-                // so this is now the single trigger value.
-                let mut child_engine_vars = Vec::new();
-                for branch in branches {
-                    collect_engine_vars_in(&branch.node, dag, by_node, &mut child_engine_vars);
-                }
-                for child_var in child_engine_vars {
-                    csp.add_constraint(ImplicationConstraint::new(
-                        *alt_var,
-                        child_var,
-                        StrategyValue::Alt(AltMode::ByteDispatch),
-                        one_pass_engines.to_vec(),
-                    ));
-                    *count += 1;
-                }
-            }
+    if let IrNode::Alt(branches, _) = node
+        && let Some(parent_id) = dag.node_for(node)
+        && let Some((Some(alt_var), _, _)) = by_node.get(&parent_id)
+    {
+        // For each child Regex within the Alt branches, emit
+        // "Alt = ByteDispatch → child Engine ∈ one_pass". The
+        // implication models the constraint that a dispatch-
+        // style Alt requires one-pass-eligible child regex
+        // engines; Y.3 folded TokenDispatch into ByteDispatch
+        // so this is now the single trigger value.
+        let mut child_engine_vars = Vec::new();
+        for branch in branches {
+            collect_engine_vars_in(&branch.node, dag, by_node, &mut child_engine_vars);
+        }
+        for child_var in child_engine_vars {
+            csp.add_constraint(ImplicationConstraint::new(
+                *alt_var,
+                child_var,
+                StrategyValue::Alt(AltMode::ByteDispatch),
+                one_pass_engines.to_vec(),
+            ));
+            *count += 1;
         }
     }
     visit_children_alt(node, |child| {
@@ -931,10 +928,10 @@ fn collect_engine_vars_in(
     by_node: &ByNodeVars,
     out: &mut Vec<VarId>,
 ) {
-    if let Some(nid) = dag.node_for(node) {
-        if let Some((_, _, Some(engine_var))) = by_node.get(&nid) {
-            out.push(*engine_var);
-        }
+    if let Some(nid) = dag.node_for(node)
+        && let Some((_, _, Some(engine_var))) = by_node.get(&nid)
+    {
+        out.push(*engine_var);
     }
     visit_children_alt(node, |child| {
         collect_engine_vars_in(child, dag, by_node, out)
@@ -1208,10 +1205,8 @@ fn decode_fallback(
                     || ir.keyword_branches.contains_key(&node_id);
                 dec.alt_mode = Some(fallback_alt_mode(fact, dispatch.is_some(), sidecar_keys));
             }
-            IrNode::Skip(_, _) | IrNode::Next(_, _) => {
-                if is_wrap_shape(node) {
-                    dec.wrap_mode = Some(fallback_wrap_mode(fact));
-                }
+            IrNode::Skip(_, _) | IrNode::Next(_, _) if is_wrap_shape(node) => {
+                dec.wrap_mode = Some(fallback_wrap_mode(fact));
             }
             IrNode::Regex(sid) => {
                 let feasible = ir
@@ -1313,7 +1308,7 @@ pub fn extract_regex_engine_decisions(
     };
 
     for rule in &ir.rules {
-        project_regex_decisions(&rule.body, ir, dag, decisions, &mut out);
+        project_regex_decisions(&rule.body, dag, decisions, &mut out);
     }
 
     out
@@ -1321,28 +1316,26 @@ pub fn extract_regex_engine_decisions(
 
 fn project_regex_decisions(
     node: &IrNode,
-    ir: &GrammarIR,
     dag: &crate::dag::GrammarDag,
     decisions: &RecognizerDecisionMap,
     out: &mut HashMap<crate::StringId, RegexEngine>,
 ) {
-    if let IrNode::Regex(sid) = node {
-        if let Some(nid) = dag.node_for(node) {
-            if let Some(engine) = decisions.get(&nid).and_then(|d| d.regex_engine.as_ref()) {
-                // Prefer the lowest-tier (fastest) engine when the
-                // same pattern has multiple per-NodeId decisions.
-                match out.get(sid) {
-                    Some(existing) if engine_tier(existing) <= engine_tier(engine) => {}
-                    _ => {
-                        out.insert(*sid, engine.clone());
-                    }
-                }
+    if let IrNode::Regex(sid) = node
+        && let Some(nid) = dag.node_for(node)
+        && let Some(engine) = decisions.get(&nid).and_then(|d| d.regex_engine.as_ref())
+    {
+        // Prefer the lowest-tier (fastest) engine when the
+        // same pattern has multiple per-NodeId decisions.
+        match out.get(sid) {
+            Some(existing) if engine_tier(existing) <= engine_tier(engine) => {}
+            _ => {
+                out.insert(*sid, engine.clone());
             }
         }
     }
 
     visit_children_alt(node, |child| {
-        project_regex_decisions(child, ir, dag, decisions, out)
+        project_regex_decisions(child, dag, decisions, out)
     });
 }
 

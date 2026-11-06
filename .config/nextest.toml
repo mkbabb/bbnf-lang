@@ -88,6 +88,14 @@ failure-output = "immediate-final"
 success-output = "final"
 
 # Emit junit.xml for CI report aggregation. Path is store-dir-relative.
+# Whole-grammar pipeline tests: each compiles css_l4 (or every grammar)
+# unoptimised. 26–46 s on an 18-core dev host, 60–118 s on a 2-core
+# ubuntu-latest runner (sk-v27 LG-1, run 42178165108), where the ci
+# profile's 2 × 60 s budget ends them before they finish.
+[[profile.ci.overrides]]
+filter       = "binary(ax_w0a2b_probe) | binary(named_type_preservation) | binary(payload_layouts) | binary(path_macro_errors)"
+slow-timeout = { period = "60s", terminate-after = 4 }
+
 [profile.ci.junit]
 path = "junit.xml"
 report-name = "bbnf-lang"

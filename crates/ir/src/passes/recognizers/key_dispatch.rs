@@ -180,18 +180,19 @@ fn detect_separator(
 ) -> Option<String> {
     // Strategy 1: Fused suffix — all literals share a trailing non-alphanumeric byte.
     let first_lits = &all_literals[0].1;
-    if let Some(first_lit) = first_lits.first() {
-        if let Some(&last_byte) = first_lit.as_bytes().last() {
-            if !last_byte.is_ascii_alphanumeric() && last_byte != b'_' && last_byte != b'-' {
-                let suffix = String::from_utf8(vec![last_byte]).ok()?;
-                let all_have_suffix = all_literals.iter().all(|(_, lits)| {
-                    lits.iter()
-                        .all(|l| l.as_bytes().last().copied() == Some(last_byte))
-                });
-                if all_have_suffix {
-                    return Some(suffix);
-                }
-            }
+    if let Some(first_lit) = first_lits.first()
+        && let Some(&last_byte) = first_lit.as_bytes().last()
+        && !last_byte.is_ascii_alphanumeric()
+        && last_byte != b'_'
+        && last_byte != b'-'
+    {
+        let suffix = String::from_utf8(vec![last_byte]).ok()?;
+        let all_have_suffix = all_literals.iter().all(|(_, lits)| {
+            lits.iter()
+                .all(|l| l.as_bytes().last().copied() == Some(last_byte))
+        });
+        if all_have_suffix {
+            return Some(suffix);
         }
     }
 
@@ -213,20 +214,19 @@ fn extract_seq_separator(
     for (idx, _) in all_literals {
         let branch = &branches[*idx];
         let mut visited = HashSet::new();
-        if let Some(children) = resolve_to_seq(&branch.node, ir, &mut visited) {
-            if children.len() >= 2 {
-                if let IrNode::Literal(sid) = &children[1] {
-                    let sep = ir.get_string(*sid).to_string();
-                    if let Some(ref cs) = common_sep {
-                        if *cs != sep {
-                            return None;
-                        }
-                    } else {
-                        common_sep = Some(sep);
-                    }
-                    continue;
+        if let Some(children) = resolve_to_seq(&branch.node, ir, &mut visited)
+            && children.len() >= 2
+            && let IrNode::Literal(sid) = &children[1]
+        {
+            let sep = ir.get_string(*sid).to_string();
+            if let Some(ref cs) = common_sep {
+                if *cs != sep {
+                    return None;
                 }
+            } else {
+                common_sep = Some(sep);
             }
+            continue;
         }
         return None;
     }

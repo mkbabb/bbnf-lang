@@ -142,10 +142,10 @@ impl Constraint<TypeDomain> for AltInVecConstraint {
                 // Fall back to standard Alt projection. One clone for
                 // the owned `std_ty` we pass into `assign`.
                 let std_ty = vars[self.standard_var as usize].domain.solved.clone();
-                if let Some(std_ty) = std_ty {
-                    if assign(vars, self.var, std_ty) {
-                        return Revision::Changed;
-                    }
+                if let Some(std_ty) = std_ty
+                    && assign(vars, self.var, std_ty)
+                {
+                    return Revision::Changed;
                 }
                 // Standard var not yet solved -- wait.
             }

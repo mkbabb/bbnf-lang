@@ -24,10 +24,10 @@ pub fn canonicalize_aliases(ir: &mut GrammarIR) {
 
     // Phase 2: Update is_alias to point to canonical targets.
     for rule in &mut ir.rules {
-        if let Some(ref mut alias_id) = rule.meta.is_alias {
-            if let Some(&canon) = canonical.get(&rule.id) {
-                *alias_id = canon;
-            }
+        if let Some(ref mut alias_id) = rule.meta.is_alias
+            && let Some(&canon) = canonical.get(&rule.id)
+        {
+            *alias_id = canon;
         }
     }
 

@@ -40,12 +40,11 @@ fn rule_materialization(ir: &GrammarIR, rule: &IrRule) -> MaterializationClass {
     if rule.meta.preserve_identity {
         return MaterializationClass::MustTape;
     }
-    if let Some(dag) = ir.dag.as_ref() {
-        if let Some(node_id) = dag.node_for(&rule.body) {
-            if let Some(class) = ir.materialization.get(&node_id) {
-                return *class;
-            }
-        }
+    if let Some(dag) = ir.dag.as_ref()
+        && let Some(node_id) = dag.node_for(&rule.body)
+        && let Some(class) = ir.materialization.get(&node_id)
+    {
+        return *class;
     }
     MaterializationClass::MustTape
 }

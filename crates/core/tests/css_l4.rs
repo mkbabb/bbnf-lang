@@ -190,10 +190,10 @@ fn find_hex_payload_u32(css_input: &str, target: u32) -> Option<u32> {
 
     let doc = CssL4Parser::parse(css_input).ok()?;
     for (_property, value) in doc.walk_values() {
-        if let CssTypedValue::Color(CssColor::Hex(packed)) = value {
-            if *packed == target {
-                return Some(*packed);
-            }
+        if let CssTypedValue::Color(CssColor::Hex(packed)) = value
+            && *packed == target
+        {
+            return Some(*packed);
         }
     }
     None

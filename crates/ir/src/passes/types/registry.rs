@@ -89,40 +89,45 @@ pub fn populate_struct_registry(
     let fns = ir.fns.as_slice();
 
     for rule in &ir.rules {
-        let layout = build_layout_for_rule(rule, rule_types, type_map, &rule_names, dag, fns);
+        let cx = LayoutCtx {
+            rule_types,
+            type_map,
+            rule_names: &rule_names,
+            dag,
+            fns,
+        };
+        let layout = build_layout_for_rule(rule, &cx);
         registry.insert(layout);
     }
 
     ir.struct_registry = registry;
 }
 
+/// The grammar-wide facts every layout classification reads.
+struct LayoutCtx<'a> {
+    rule_types: &'a FxHashMap<RuleId, TypeDesc>,
+    type_map: &'a TypeMap,
+    rule_names: &'a FxHashMap<RuleId, String>,
+    dag: Option<&'a GrammarDag>,
+    fns: &'a [FnDescriptor],
+}
+
 /// Build the [`StructLayout`] for a single rule.
 ///
 /// The body shape decides [`LayoutKind`] and field provenance.
-fn build_layout_for_rule(
-    rule: &IrRule,
-    rule_types: &FxHashMap<RuleId, TypeDesc>,
-    type_map: &TypeMap,
-    rule_names: &FxHashMap<RuleId, String>,
-    dag: Option<&GrammarDag>,
-    fns: &[FnDescriptor],
-) -> StructLayout {
-    let rule_name = rule_names
+fn build_layout_for_rule(rule: &IrRule, cx: &LayoutCtx<'_>) -> StructLayout {
+    let rule_name = cx
+        .rule_names
         .get(&rule.id)
         .cloned()
         .expect("rule.id present in rule_names map");
-    let rule_type = rule_types.get(&rule.id).cloned().unwrap_or(TypeDesc::Span);
+    let rule_type = cx
+        .rule_types
+        .get(&rule.id)
+        .cloned()
+        .unwrap_or(TypeDesc::Span);
 
-    let (kind, fields) = classify_body(
-        &rule.body,
-        rule_type.clone(),
-        &rule.meta.sub_variants,
-        type_map,
-        rule_names,
-        dag,
-        fns,
-        rule_types,
-    );
+    let (kind, fields) = classify_body(&rule.body, rule_type.clone(), &rule.meta.sub_variants, cx);
 
     StructLayout {
         rule_id: rule.id,
@@ -141,11 +146,7 @@ fn classify_body(
     body: &IrNode,
     rule_type: TypeDesc,
     sub_variants: &[SubVariant],
-    type_map: &TypeMap,
-    rule_names: &FxHashMap<RuleId, String>,
-    dag: Option<&GrammarDag>,
-    fns: &[FnDescriptor],
-    rule_types: &FxHashMap<RuleId, TypeDesc>,
+    cx: &LayoutCtx<'_>,
 ) -> (LayoutKind, Vec<StructField>) {
     match body {
         // ── Alternation → tagged enum (or untagged when all branches share type) ──
@@ -154,7 +155,7 @@ fn classify_body(
             for (idx, branch) in branches.iter().enumerate() {
                 let branch_idx = idx as u32;
                 let branch_type =
-                    branch_projected_type(&branch.node, type_map, dag, fns, rule_types)
+                    branch_projected_type(&branch.node, cx.type_map, cx.dag, cx.fns, cx.rule_types)
                         .unwrap_or_else(|| rule_type.clone());
                 let name = sub_variant_name_for_branch(sub_variants, branch_idx)
                     .unwrap_or_else(|| format!("branch_{}", branch_idx));
@@ -183,9 +184,10 @@ fn classify_body(
                 .enumerate()
                 .map(|(pos, child)| {
                     let position = pos as u32;
-                    let ty = branch_projected_type(child, type_map, dag, fns, rule_types)
-                        .unwrap_or(TypeDesc::Span);
-                    let name = field_name_for_seq_child(child, position, rule_names);
+                    let ty =
+                        branch_projected_type(child, cx.type_map, cx.dag, cx.fns, cx.rule_types)
+                            .unwrap_or(TypeDesc::Span);
+                    let name = field_name_for_seq_child(child, position, cx.rule_names);
                     StructField {
                         name,
                         type_desc: ty,
@@ -216,16 +218,7 @@ fn classify_body(
                 // Composite body: classify the inner and lift its
                 // discriminator. The single typed annotation flows
                 // through to the inner's outermost field.
-                classify_body(
-                    inner,
-                    rule_type,
-                    sub_variants,
-                    type_map,
-                    rule_names,
-                    dag,
-                    fns,
-                    rule_types,
-                )
+                classify_body(inner, rule_type, sub_variants, cx)
             }
         }
 
@@ -234,19 +227,11 @@ fn classify_body(
             // Optional/single-shot Repeat (lo=0, hi=1) collapses to
             // its inner's shape.
             if *lo == 0 && *hi == 1 {
-                return classify_body(
-                    inner,
-                    rule_type,
-                    sub_variants,
-                    type_map,
-                    rule_names,
-                    dag,
-                    fns,
-                    rule_types,
-                );
+                return classify_body(inner, rule_type, sub_variants, cx);
             }
-            let elem_type = branch_projected_type(inner, type_map, dag, fns, rule_types)
-                .unwrap_or(TypeDesc::Span);
+            let elem_type =
+                branch_projected_type(inner, cx.type_map, cx.dag, cx.fns, cx.rule_types)
+                    .unwrap_or(TypeDesc::Span);
             let field = StructField {
                 name: "element".to_string(),
                 type_desc: elem_type,
@@ -257,7 +242,8 @@ fn classify_body(
 
         // ── Ref → single rule-reference field ──
         IrNode::Ref(target_rule) => {
-            let target_name = rule_names
+            let target_name = cx
+                .rule_names
                 .get(target_rule)
                 .cloned()
                 .unwrap_or_else(|| format!("rule_{}", target_rule));
@@ -272,50 +258,16 @@ fn classify_body(
         }
 
         // ── Skip / Next: keep the kept side, project as a single field ──
-        IrNode::Skip(kept, _discard) => classify_body(
-            kept,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
-        IrNode::Next(_discard, kept) => classify_body(
-            kept,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
+        IrNode::Skip(kept, _discard) => classify_body(kept, rule_type, sub_variants, cx),
+        IrNode::Next(_discard, kept) => classify_body(kept, rule_type, sub_variants, cx),
 
         // ── Minus: dominant side is the lhs (the matched operand) ──
-        IrNode::Minus(lhs, _rhs) => classify_body(
-            lhs,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
+        IrNode::Minus(lhs, _rhs) => classify_body(lhs, rule_type, sub_variants, cx),
 
         // ── Negate / OptionalWhitespace unwrap to inner ──
-        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => classify_body(
-            inner,
-            rule_type,
-            sub_variants,
-            type_map,
-            rule_names,
-            dag,
-            fns,
-            rule_types,
-        ),
+        IrNode::Negate(inner) | IrNode::OptionalWhitespace(inner) => {
+            classify_body(inner, rule_type, sub_variants, cx)
+        }
 
         // ── TokenDispatch: token + arm continuations + fallback flatten to struct ──
         IrNode::TokenDispatch {
@@ -328,7 +280,7 @@ fn classify_body(
             // - per-arm continuation
             // - fallback continuation
             let mut fields: Vec<StructField> = Vec::with_capacity(arms.len() + 2);
-            let token_ty = branch_projected_type(token, type_map, dag, fns, rule_types)
+            let token_ty = branch_projected_type(token, cx.type_map, cx.dag, cx.fns, cx.rule_types)
                 .unwrap_or(TypeDesc::Span);
             fields.push(StructField {
                 name: "token".to_string(),
@@ -337,8 +289,14 @@ fn classify_body(
             });
             for (idx, arm) in arms.iter().enumerate() {
                 let position = (idx + 1) as u32;
-                let ty = branch_projected_type(&arm.continuation, type_map, dag, fns, rule_types)
-                    .unwrap_or(TypeDesc::Span);
+                let ty = branch_projected_type(
+                    &arm.continuation,
+                    cx.type_map,
+                    cx.dag,
+                    cx.fns,
+                    cx.rule_types,
+                )
+                .unwrap_or(TypeDesc::Span);
                 fields.push(StructField {
                     name: format!("arm_{}", idx),
                     type_desc: ty,
@@ -346,8 +304,9 @@ fn classify_body(
                 });
             }
             let fallback_position = (arms.len() + 1) as u32;
-            let fallback_ty = branch_projected_type(fallback, type_map, dag, fns, rule_types)
-                .unwrap_or(TypeDesc::Span);
+            let fallback_ty =
+                branch_projected_type(fallback, cx.type_map, cx.dag, cx.fns, cx.rule_types)
+                    .unwrap_or(TypeDesc::Span);
             fields.push(StructField {
                 name: "fallback".to_string(),
                 type_desc: fallback_ty,
@@ -407,21 +366,20 @@ fn branch_projected_type(
     rule_types: &FxHashMap<RuleId, TypeDesc>,
 ) -> Option<TypeDesc> {
     // 1. DAG-keyed precise per-node type.
-    if let Some(dag) = dag {
-        if let Some(id) = dag.node_for(node) {
-            if let Some(ty) = type_map.node_type(id) {
-                return Some(ty.clone());
-            }
-        }
+    if let Some(dag) = dag
+        && let Some(id) = dag.node_for(node)
+        && let Some(ty) = type_map.node_type(id)
+    {
+        return Some(ty.clone());
     }
 
     // 2. & 3. & 4. — structure-driven fallbacks.
     match node {
         IrNode::Map { fn_id, inner } => {
-            if let Some(fd) = fns.get(*fn_id as usize) {
-                if let Some(ty) = fn_descriptor_return_type(fd) {
-                    return Some(ty);
-                }
+            if let Some(fd) = fns.get(*fn_id as usize)
+                && let Some(ty) = fn_descriptor_return_type(fd)
+            {
+                return Some(ty);
             }
             // Map with no explicit return type — descend into inner.
             branch_projected_type(inner, type_map, dag, fns, rule_types)
@@ -501,10 +459,10 @@ fn field_name_for_seq_child(
     position: u32,
     rule_names: &FxHashMap<RuleId, String>,
 ) -> String {
-    if let IrNode::Ref(target) = child {
-        if let Some(name) = rule_names.get(target) {
-            return name.clone();
-        }
+    if let IrNode::Ref(target) = child
+        && let Some(name) = rule_names.get(target)
+    {
+        return name.clone();
     }
     format!("field_{}", position)
 }

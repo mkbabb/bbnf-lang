@@ -120,7 +120,6 @@ fn collect_alts(
                     .iter()
                     .map(|b| {
                         b.first_set
-                            .clone()
                             .or_else(|| node_first_set(&b.node, rule_metas, strings))
                     })
                     .collect();

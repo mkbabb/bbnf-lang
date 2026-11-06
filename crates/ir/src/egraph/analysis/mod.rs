@@ -149,7 +149,7 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
                 // is variable and the shape is not fixed.
                 let fixed_shape = *lo == *hi && child.is_fixed_shape;
                 EClassFacts {
-                    first_set: child.first_set.clone(),
+                    first_set: child.first_set,
                     nullable,
                     width: WidthBound {
                         min: min_width,
@@ -177,7 +177,7 @@ impl Analysis<GrammarENode> for GrammarAnalysis {
                     _ => None,
                 };
                 let nullable = left.nullable && right.nullable;
-                let mut first_set = left.first_set.clone();
+                let mut first_set = left.first_set;
                 if left.nullable {
                     first_set.union(&right.first_set);
                 }

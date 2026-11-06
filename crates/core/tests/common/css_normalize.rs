@@ -41,9 +41,8 @@ fn push_one(out: &mut String, bytes: &[u8], i: &mut usize) {
 
 #[inline]
 fn utf8_char_len(first: u8) -> usize {
-    if first < 0x80 {
-        1
-    } else if first < 0xC0 {
+    // ASCII and stray continuation bytes both advance one byte.
+    if first < 0xC0 {
         1
     } else if first < 0xE0 {
         2
@@ -474,10 +473,7 @@ fn lowercase_hex_colors(s: &str) -> String {
             // Consume up to 8 hex digits (covers #RGB, #RGBA, #RRGGBB,
             // #RRGGBBAA).
             let mut count = 0;
-            while i < bytes.len()
-                && count < 8
-                && matches!(bytes[i], b'0'..=b'9' | b'a'..=b'f' | b'A'..=b'F')
-            {
+            while i < bytes.len() && count < 8 && bytes[i].is_ascii_hexdigit() {
                 let c = bytes[i];
                 let lower = if c.is_ascii_uppercase() {
                     c.to_ascii_lowercase()
@@ -611,10 +607,7 @@ fn canonicalize_colors_to_hex8(s: &str) -> String {
         if bytes[i] == b'#' {
             let start = i + 1;
             let mut end = start;
-            while end < bytes.len()
-                && end - start < 8
-                && matches!(bytes[end], b'0'..=b'9' | b'a'..=b'f' | b'A'..=b'F')
-            {
+            while end < bytes.len() && end - start < 8 && bytes[end].is_ascii_hexdigit() {
                 end += 1;
             }
             let n = end - start;
@@ -1214,10 +1207,10 @@ fn strip_prefix_ident<'a>(s: &'a str, ident: &str) -> Option<&'a str> {
         return None;
     }
     // Must not be followed by an ident-continuation byte.
-    if let Some(nb) = tail.as_bytes().first() {
-        if matches!(*nb, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_' | b'-') {
-            return None;
-        }
+    if let Some(nb) = tail.as_bytes().first()
+        && matches!(*nb, b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'_' | b'-')
+    {
+        return None;
     }
     Some(tail)
 }

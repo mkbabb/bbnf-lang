@@ -29,10 +29,10 @@ pub fn find_aliases<'a>(
             continue;
         }
 
-        if let Some(target) = extract_alias_target(entry.rhs) {
-            if ast.contains_key(target) {
-                aliases.insert(name, target);
-            }
+        if let Some(target) = extract_alias_target(entry.rhs)
+            && ast.contains_key(target)
+        {
+            aliases.insert(name, target);
         }
     }
 

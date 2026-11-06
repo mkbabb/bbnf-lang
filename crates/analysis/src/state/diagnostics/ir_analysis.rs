@@ -157,16 +157,15 @@ pub(super) fn try_compile_ir(cached: &CachedParseResult<'_>) -> IrAnalysis {
                 for j in (i + 1)..branches.len() {
                     if let (Some(fs_i), Some(fs_j)) =
                         (&branches[i].first_set, &branches[j].first_set)
+                        && !fs_i.is_disjoint(fs_j)
                     {
-                        if !fs_i.is_disjoint(fs_j) {
-                            let overlap = fs_i.intersection(fs_j);
-                            conflicts.push(format!(
-                                "branches {} and {} overlap on {}",
-                                i,
-                                j,
-                                format_charset_iter(overlap.iter())
-                            ));
-                        }
+                        let overlap = fs_i.intersection(fs_j);
+                        conflicts.push(format!(
+                            "branches {} and {} overlap on {}",
+                            i,
+                            j,
+                            format_charset_iter(overlap.iter())
+                        ));
                     }
                 }
             }

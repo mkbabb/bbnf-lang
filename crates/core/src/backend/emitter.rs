@@ -195,12 +195,9 @@ pub trait Emitter {
         head: Self::Output,
         op: Self::Output,
         rhs: Self::Output,
-        head_type: &TypeDesc,
-        link_elem_type: &TypeDesc,
-        ir: &GrammarIR,
         ctx: &mut Self::Ctx,
     ) -> Option<Self::Output> {
-        let _ = (head, op, rhs, head_type, link_elem_type, ir, ctx);
+        let _ = (head, op, rhs, ctx);
         None
     }
 

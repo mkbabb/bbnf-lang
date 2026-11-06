@@ -627,7 +627,7 @@ mod wire_contract {
         let mut b = SheetsStructBuilder::new();
         let formula_layout = synth_layout(36, "formula", LayoutKind::Struct);
         let h = b.begin_compound(&formula_layout);
-        b.push_leaf_with_f64(3.14);
+        b.push_leaf_with_f64(1.25);
         b.end_compound(h);
         let doc = b.finalise("");
         match *doc.root() {
@@ -635,7 +635,7 @@ mod wire_contract {
                 let view = doc.compound(id);
                 assert_eq!(view.kind, SheetsCompoundKind::Formula);
                 assert_eq!(view.children.len(), 1);
-                assert_eq!(view.children[0], SheetsValue::Number(3.14));
+                assert_eq!(view.children[0], SheetsValue::Number(1.25));
             }
             ref other => panic!("expected Formula Compound, got {:?}", other),
         }

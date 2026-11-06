@@ -88,11 +88,9 @@ pub(super) fn compile_ref<E: Emitter>(
             // side cursor advances because there are none to lose.
             let threaded = thread_inline_payload(ctx, ir, &rule.id, dstate, emitter);
             let body = compile_node(&rule.body, ValuePlacement::Alloc, ir, dstate, emitter, ctx);
-            if threaded {
-                if let Some(outer_id) = dstate.current_rule_id {
-                    let outer = ir.get_rule(outer_id);
-                    emitter.pre_compile_rule_body(outer, ir, ctx);
-                }
+            if threaded && let Some(outer_id) = dstate.current_rule_id {
+                let outer = ir.get_rule(outer_id);
+                emitter.pre_compile_rule_body(outer, ir, ctx);
             }
             dstate.inline_in_progress.remove(&rule_id);
             let variant_name = if rule.meta.is_transparent {

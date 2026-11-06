@@ -99,13 +99,18 @@ fn branch_info(pushes_children: bool) -> AltBranchInfo {
     }
 }
 
+/// The branches of an `IrNode::Alt` and its pre-computed dispatch.
+pub(super) struct AltParts<'n> {
+    pub branches: &'n [AltBranch],
+    pub dispatch: Option<&'n AltDispatch>,
+}
+
 /// Compile an Alt node, dispatching on the pre-solved `AltStrategy`
 /// (if any) and falling back to inline detection for the not-yet-
 /// solved cases.
 pub(super) fn compile_alt<E: Emitter>(
     alt_node: &IrNode,
-    branches: &[AltBranch],
-    dispatch: Option<&AltDispatch>,
+    AltParts { branches, dispatch }: AltParts<'_>,
     alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,

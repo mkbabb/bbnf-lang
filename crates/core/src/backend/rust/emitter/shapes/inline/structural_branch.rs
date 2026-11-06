@@ -131,10 +131,8 @@ fn emit_branch_position_core_struct_direct(
         IrNode::Repeat { inner, lo, hi } => {
             let inner_emit =
                 emit_branch_position_core_struct_direct(inner, support_mod, grammar_suffix, ir);
-            let lo_lit = *lo;
-            let hi_is_finite = *hi != u32::MAX;
             let hi_lit = *hi;
-            let bound_check = if hi_is_finite {
+            let bound_check = if hi_lit != u32::MAX {
                 quote! {
                     if __iter_count >= #hi_lit {
                         break;
@@ -142,6 +140,21 @@ fn emit_branch_position_core_struct_direct(
                 }
             } else {
                 quote! {}
+            };
+            // A zero lower bound is always met, so it emits no check.
+            let lo_lit = *lo;
+            let lo_check = if lo_lit == 0 {
+                quote! {}
+            } else {
+                quote! {
+                    if __iter_count < #lo_lit {
+                        return ::core::result::Result::Err(
+                            crate::runtime::DtaError::Syntax {
+                                offset: *p as u32,
+                            },
+                        );
+                    }
+                }
             };
             quote! {
                 {
@@ -176,13 +189,7 @@ fn emit_branch_position_core_struct_direct(
                             }
                         }
                     }
-                    if __iter_count < #lo_lit {
-                        return ::core::result::Result::Err(
-                            crate::runtime::DtaError::Syntax {
-                                offset: *p as u32,
-                            },
-                        );
-                    }
+                    #lo_check
                 }
             }
         }

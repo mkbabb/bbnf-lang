@@ -136,7 +136,7 @@ impl MathPathQuery for &str {
     fn query<'p>(doc: &MathDocument<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             MathValue::Span(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,

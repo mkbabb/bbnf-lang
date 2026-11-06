@@ -4,7 +4,7 @@
 //! from `NodeView` tape cursors.  Every per-rule function takes a
 //! `NodeView<'a>` and emits text via `::bbnf_ser::Serializer`.
 
-mod serialize;
+mod tape;
 
 use bbnf_ir::GrammarIR;
 use proc_macro2::TokenStream;
@@ -24,7 +24,7 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
     // The Alt dispatch provides structural branching; within each
     // rule, span_text() gives exact round-trip output.
     for rule in &ir.rules {
-        if rule.meta.is_transparent || !serialize::rule_pushes_tape_record(ir, rule) {
+        if rule.meta.is_transparent || !tape::rule_pushes_tape_record(ir, rule) {
             continue;
         }
         let rule_name = ir.get_string(rule.name);
@@ -42,7 +42,7 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
 
     // __dispatch_serialize: variant_idx-based dispatch.
     {
-        let arms = serialize::generate_dispatch_arms(ir, ctx);
+        let arms = tape::generate_dispatch_arms(ir, ctx);
         methods.push(quote! {
             fn __dispatch_serialize<'a, __S: ::bbnf_ser::Serializer<'a>>(
                 __v: #node_view,
@@ -69,7 +69,7 @@ pub fn generate_serialize_methods(ir: &GrammarIR, ctx: &IrCodegenCtx) -> TokenSt
         // and non-TransparentElide). If it does, call it directly. Otherwise,
         // use __dispatch_serialize which routes on variant_idx.
         let entry_has_method =
-            !entry_rule.meta.is_transparent && serialize::rule_pushes_tape_record(ir, entry_rule);
+            !entry_rule.meta.is_transparent && tape::rule_pushes_tape_record(ir, entry_rule);
 
         if entry_has_method {
             methods.push(quote! {

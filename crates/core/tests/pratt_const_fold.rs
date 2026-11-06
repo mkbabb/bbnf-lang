@@ -149,7 +149,7 @@ fn compile_and_mine(path: &str) -> OperatorChainFacts {
     };
     let out = compile_paths_request(&[grammar], &request).expect("compile");
     let ir = match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     };
     let dta = bbnf_ir::passes::lift_dta(&ir);
@@ -182,7 +182,7 @@ fn sheets_mines_operators() {
             .collect::<Vec<_>>(),
     );
     // Verify the key arithmetic operators are captured.
-    for expected in &[b'+', b'-', b'*', b'/', b'^', b'&'] {
+    for expected in b"+-*/^&" {
         assert!(
             facts.entries_flat().any(|e| e.byte == *expected),
             "Sheets must mine operator {:?}",
@@ -222,7 +222,7 @@ fn bbnf_mines_operators() {
             .map(|e| e.byte as char)
             .collect::<Vec<_>>(),
     );
-    for expected in &[b'+', b'-', b'*', b'/'] {
+    for expected in b"+-*/" {
         assert!(
             facts.entries_flat().any(|e| e.byte == *expected),
             "BBNF must mine operator {:?}",
@@ -254,7 +254,7 @@ fn css_l4_mines_math_expr_operators() {
             .map(|e| e.byte as char)
             .collect::<Vec<_>>(),
     );
-    for expected in &[b'+', b'-', b'*', b'/'] {
+    for expected in b"+-*/" {
         assert!(
             facts.entries_flat().any(|e| e.byte == *expected),
             "CSS must mine operator {:?}",

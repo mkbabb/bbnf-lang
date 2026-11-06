@@ -171,11 +171,7 @@ fn test_4_queens() {
         for i in 0..n as usize {
             for j in (i + 1)..n as usize {
                 assert_ne!(sol[i], sol[j], "Same row");
-                let row_diff = if sol[i] > sol[j] {
-                    sol[i] - sol[j]
-                } else {
-                    sol[j] - sol[i]
-                };
+                let row_diff = sol[i].abs_diff(sol[j]);
                 let col_diff = (j - i) as u32;
                 assert_ne!(row_diff, col_diff, "Same diagonal");
             }

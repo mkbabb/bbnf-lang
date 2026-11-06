@@ -84,10 +84,10 @@ pub fn compile_ast_common<'a>(
     });
 
     // Set the correct entry rule (last rule in original source order).
-    if let Some(ref name) = entry_rule_name {
-        if let Some(rule) = ir.find_rule(name) {
-            ir.entry = rule.id;
-        }
+    if let Some(ref name) = entry_rule_name
+        && let Some(rule) = ir.find_rule(name)
+    {
+        ir.entry = rule.id;
     }
 
     // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
@@ -470,10 +470,10 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
         } else {
             MaterializationClass::MustTape
         };
-        if class == MaterializationClass::TransparentElide {
-            if let Some(strat) = strategies.get_mut(rule.id as usize) {
-                *strat = CallStrategy::InlineBody;
-            }
+        if class == MaterializationClass::TransparentElide
+            && let Some(strat) = strategies.get_mut(rule.id as usize)
+        {
+            *strat = CallStrategy::InlineBody;
         }
     }
 

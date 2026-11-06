@@ -23,7 +23,7 @@
 //!
 //! Events appear in stable insertion order (outer rule iteration by
 //! `RuleId` ascending, then per-pass call order). The same grammar IR
-//! + same pass sequence produces a byte-identical trace, which the
+//! and the same pass sequence produces a byte-identical trace, which the
 //! W2.2 golden test exercises. The trace is **additive**: re-running
 //! the passes on the same IR appends new events without mutating prior
 //! ones; consumers should clear the trace between independent compile

@@ -548,10 +548,12 @@ fn materialization_reads_weights_not_hidden_constants() {
     // sweep does not currently consult these values (the decision is
     // structural), so the classification should be stable — which is
     // the AF.1 invariant: "the gate is additive, not a new cost knob."
-    let mut cfg_b = CostConfig::default();
-    cfg_b.mat_must_tape = 0.0;
-    cfg_b.mat_tape_span_only = 0.0;
-    cfg_b.mat_transparent_elide = 0.0;
+    let cfg_b = CostConfig {
+        mat_must_tape: 0.0,
+        mat_tape_span_only: 0.0,
+        mat_transparent_elide: 0.0,
+        ..CostConfig::default()
+    };
     let mut ir_b = empty_ir();
     ir_b.strings = strings;
     ir_b.cost_config = cfg_b;

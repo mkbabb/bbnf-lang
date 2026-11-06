@@ -19,21 +19,19 @@ fn test_negated_patterns_that_trigger_bug() {
             parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
                 .unwrap();
 
-        if let Hir::Repetition(ref rep) = hir {
-            if let Hir::Class(CharClass::Bytes {
+        if let Hir::Repetition(ref rep) = hir
+            && let Hir::Class(CharClass::Bytes {
                 ref ranges,
                 negated,
             }) = *rep.sub
-            {
-                let total_bytes: usize =
-                    ranges.iter().map(|r| (r.end - r.start + 1) as usize).sum();
-                println!(
-                    "  -> {} ranges, {} bytes covered, negated={}",
-                    ranges.len(),
-                    total_bytes,
-                    negated,
-                );
-            }
+        {
+            let total_bytes: usize = ranges.iter().map(|r| (r.end - r.start + 1) as usize).sum();
+            println!(
+                "  -> {} ranges, {} bytes covered, negated={}",
+                ranges.len(),
+                total_bytes,
+                negated,
+            );
         }
     }
 }
@@ -56,21 +54,19 @@ fn test_positive_patterns() {
             parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
                 .unwrap();
 
-        if let Hir::Repetition(ref rep) = hir {
-            if let Hir::Class(CharClass::Bytes {
+        if let Hir::Repetition(ref rep) = hir
+            && let Hir::Class(CharClass::Bytes {
                 ref ranges,
                 negated,
             }) = *rep.sub
-            {
-                let total_bytes: usize =
-                    ranges.iter().map(|r| (r.end - r.start + 1) as usize).sum();
-                println!(
-                    "  -> {} ranges, {} bytes covered, negated={}",
-                    ranges.len(),
-                    total_bytes,
-                    negated,
-                );
-            }
+        {
+            let total_bytes: usize = ranges.iter().map(|r| (r.end - r.start + 1) as usize).sum();
+            println!(
+                "  -> {} ranges, {} bytes covered, negated={}",
+                ranges.len(),
+                total_bytes,
+                negated,
+            );
         }
     }
 }

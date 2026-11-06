@@ -100,6 +100,6 @@ fn test_mixed_singleton_and_multi() {
 #[test]
 fn gac_compiles_without_value_index() {
     use csp_solver::domain::finite::FiniteDomain;
-    let _: fn(&[VarId], &mut [Variable<FiniteDomain<String>>], usize) -> Revision =
-        propagate_gac_alldiff::<FiniteDomain<String>>;
+    type Propagator = fn(&[VarId], &mut [Variable<FiniteDomain<String>>], usize) -> Revision;
+    let _: Propagator = propagate_gac_alldiff::<FiniteDomain<String>>;
 }

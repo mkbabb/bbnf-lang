@@ -6,7 +6,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use divan::black_box;
 
 use ::bbnf::grammar::generated::json::*;
-use ::bbnf::runtime::{JsonKind, RuntimeView};
+use ::bbnf::runtime::JsonKind;
 
 #[path = "../common/timeout.rs"]
 mod timeout;

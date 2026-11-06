@@ -287,7 +287,7 @@ pub(super) fn looks_like_pratt_flat<'a>(view: BbnfView<'a, 'a>) -> bool {
 /// a literal like `"<<"` inside a string doesn't shadow a real
 /// operator). Two-character operators are tried first so `-` doesn't
 /// shadow `->` or `<<` doesn't shadow `<`.
-fn recover_binary_op<'a>(input: &'a str, lhs_end: u32, rhs_start: u32) -> Option<&'a str> {
+fn recover_binary_op(input: &str, lhs_end: u32, rhs_start: u32) -> Option<&str> {
     if rhs_start < lhs_end {
         return None;
     }

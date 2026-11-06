@@ -1290,9 +1290,6 @@ mod __csvparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -1396,11 +1393,6 @@ mod __csvparser_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             ::core::result::Result::Ok(())
@@ -1500,9 +1492,6 @@ mod __csvparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -1551,11 +1540,6 @@ mod __csvparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }

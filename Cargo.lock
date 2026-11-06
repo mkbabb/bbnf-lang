@@ -314,6 +314,7 @@ dependencies = [
 [[package]]
 name = "bbnf-regex"
 version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=47e928acca0e73ab1a5e7e3f802ca8090ebc4722#47e928acca0e73ab1a5e7e3f802ca8090ebc4722"
 dependencies = [
  "csp-solver",
  "egraph",
@@ -2237,6 +2238,7 @@ dependencies = [
 [[package]]
 name = "parse_that"
 version = "0.4.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=47e928acca0e73ab1a5e7e3f802ca8090ebc4722#47e928acca0e73ab1a5e7e3f802ca8090ebc4722"
 dependencies = [
  "aho-corasick",
  "bbnf-regex",
@@ -2410,6 +2412,7 @@ dependencies = [
 [[package]]
 name = "pprint"
 version = "0.3.6"
+source = "git+https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4"
 dependencies = [
  "itoap",
  "pprint_derive",
@@ -2419,6 +2422,7 @@ dependencies = [
 [[package]]
 name = "pprint_derive"
 version = "0.2.2"
+source = "git+https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3236,6 +3240,7 @@ name = "simd-scan"
 version = "0.1.0"
 dependencies = [
  "divan",
+ "libc",
  "proc-macro2",
  "proptest",
  "quote",

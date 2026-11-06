@@ -61,7 +61,7 @@ pub fn generate_dispatch_tables(ir: &mut GrammarIR) {
     let rule_metas: Vec<(CharSet128, bool)> = ir
         .rules
         .iter()
-        .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
+        .map(|r| (r.meta.first_set, r.meta.nullable))
         .collect();
 
     // Pre-compute dispatch eligibility for all Alt nodes via CSP.

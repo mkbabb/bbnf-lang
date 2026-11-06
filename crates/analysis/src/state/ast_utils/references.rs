@@ -24,18 +24,20 @@ pub fn collect_references(node: BbnfView<'_, '_>, refs: &mut Vec<ReferenceInfo>)
     if !node.is_compound() {
         if let Some(text) = node.span_text_opt() {
             let trimmed = text.trim();
-            if !trimmed.is_empty() && is_ident(trimmed) && !is_reserved_word(trimmed) {
-                if let Some((raw_lo, raw_hi)) = node.span_range() {
-                    let raw = text;
-                    let lead_ws = raw.len() - raw.trim_start().len();
-                    let trail_ws = raw.len() - raw.trim_end().len();
-                    let lo = raw_lo + lead_ws;
-                    let hi = raw_hi - trail_ws;
-                    refs.push(ReferenceInfo {
-                        name: trimmed.to_string(),
-                        span: (lo, hi),
-                    });
-                }
+            if !trimmed.is_empty()
+                && is_ident(trimmed)
+                && !is_reserved_word(trimmed)
+                && let Some((raw_lo, raw_hi)) = node.span_range()
+            {
+                let raw = text;
+                let lead_ws = raw.len() - raw.trim_start().len();
+                let trail_ws = raw.len() - raw.trim_end().len();
+                let lo = raw_lo + lead_ws;
+                let hi = raw_hi - trail_ws;
+                refs.push(ReferenceInfo {
+                    name: trimmed.to_string(),
+                    span: (lo, hi),
+                });
             }
         }
         return;
@@ -57,19 +59,18 @@ pub fn collect_references(node: BbnfView<'_, '_>, refs: &mut Vec<ReferenceInfo>)
             match node.branch_tag() {
                 Some(2) => {
                     // Identifier with optional call-args.
-                    if let Some(ident) = node.child(0) {
-                        if let (Some(text), Some((lo, hi))) =
+                    if let Some(ident) = node.child(0)
+                        && let (Some(text), Some((lo, hi))) =
                             (ident.span_text_opt(), ident.span_range())
-                        {
-                            let trimmed = text.trim();
-                            if !trimmed.is_empty() && is_ident(trimmed) {
-                                let lead_ws = text.len() - text.trim_start().len();
-                                let trail_ws = text.len() - text.trim_end().len();
-                                refs.push(ReferenceInfo {
-                                    name: trimmed.to_string(),
-                                    span: (lo + lead_ws, hi - trail_ws),
-                                });
-                            }
+                    {
+                        let trimmed = text.trim();
+                        if !trimmed.is_empty() && is_ident(trimmed) {
+                            let lead_ws = text.len() - text.trim_start().len();
+                            let trail_ws = text.len() - text.trim_end().len();
+                            refs.push(ReferenceInfo {
+                                name: trimmed.to_string(),
+                                span: (lo + lead_ws, hi - trail_ws),
+                            });
                         }
                     }
                     // Recurse into call_arg children — they may carry

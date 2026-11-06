@@ -29,19 +29,19 @@ pub(super) fn recognize_tree(
             let is_op_chain = check_operator_chain(children);
             let all_span = ir.collapse_simple_spans && children.iter().all(is_span_leaf);
 
-            if let Some(id) = node_id {
-                if is_op_chain || all_span {
-                    facts.insert(
-                        id,
-                        NodeFacts {
-                            node_kind: NodeKind::Seq,
-                            operator_chain: is_op_chain,
-                            sep_by: false,
-                            all_span_collapse: all_span,
-                            recognizer: None,
-                        },
-                    );
-                }
+            if let Some(id) = node_id
+                && (is_op_chain || all_span)
+            {
+                facts.insert(
+                    id,
+                    NodeFacts {
+                        node_kind: NodeKind::Seq,
+                        operator_chain: is_op_chain,
+                        sep_by: false,
+                        all_span_collapse: all_span,
+                        recognizer: None,
+                    },
+                );
             }
 
             for child in children {
@@ -58,19 +58,19 @@ pub(super) fn recognize_tree(
         IrNode::Skip(element, opt_sep) => {
             let is_sep_by = check_sep_by(opt_sep);
 
-            if let Some(id) = node_id {
-                if is_sep_by {
-                    facts.insert(
-                        id,
-                        NodeFacts {
-                            node_kind: NodeKind::Skip,
-                            operator_chain: false,
-                            sep_by: true,
-                            all_span_collapse: false,
-                            recognizer: None,
-                        },
-                    );
-                }
+            if let Some(id) = node_id
+                && is_sep_by
+            {
+                facts.insert(
+                    id,
+                    NodeFacts {
+                        node_kind: NodeKind::Skip,
+                        operator_chain: false,
+                        sep_by: true,
+                        all_span_collapse: false,
+                        recognizer: None,
+                    },
+                );
             }
 
             recognize_tree(element, facts, ir, dag);
@@ -126,10 +126,10 @@ fn check_operator_chain(children: &[IrNode]) -> bool {
 }
 
 fn is_operator_chain_tail(tail: &IrNode) -> bool {
-    if let IrNode::Repeat { inner, lo: 0, hi } = tail {
-        if *hi == u32::MAX {
-            return is_operator_chain_repeat_body(inner);
-        }
+    if let IrNode::Repeat { inner, lo: 0, hi } = tail
+        && *hi == u32::MAX
+    {
+        return is_operator_chain_repeat_body(inner);
     }
     // Also check through OptionalWhitespace wrapper.
     if let IrNode::OptionalWhitespace(inner) = tail {

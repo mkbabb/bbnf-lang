@@ -329,6 +329,6 @@ impl ManifestStrategyEntry {
     /// covers.
     #[inline]
     pub fn matches_ident(&self, ident: &str) -> bool {
-        self.idents.iter().any(|alias| *alias == ident)
+        self.idents.contains(&ident)
     }
 }

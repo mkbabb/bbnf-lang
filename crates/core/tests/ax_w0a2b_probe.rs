@@ -32,7 +32,7 @@ fn compile(rel: &str, structural: bool) -> GrammarIR {
     let out = compile_paths_request(std::slice::from_ref(&p), &request)
         .unwrap_or_else(|e| panic!("grammar {rel} compile: {e:?}"));
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("expected Vm for {rel}, got {other:?}"),
     }
 }

@@ -37,7 +37,7 @@ fn compile(rel_entry: &str) -> GrammarIR {
     let out = compile_paths_request(std::slice::from_ref(&entry), &req)
         .unwrap_or_else(|e| panic!("compile {rel_entry}: {e}"));
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("expected Vm output, got {other:?}"),
     }
 }

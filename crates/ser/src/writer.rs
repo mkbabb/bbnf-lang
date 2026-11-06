@@ -32,10 +32,10 @@ impl<W: Write> WriterSerializer<W> {
 
     #[inline]
     fn write(&mut self, bytes: &[u8]) {
-        if self.error.is_none() {
-            if let Err(e) = self.writer.write_all(bytes) {
-                self.error = Some(e);
-            }
+        if self.error.is_none()
+            && let Err(e) = self.writer.write_all(bytes)
+        {
+            self.error = Some(e);
         }
     }
 }
@@ -88,19 +88,19 @@ impl<'a, W: Write> Serializer<'a> for WriterSerializer<W> {
 
     #[inline]
     fn i128(&mut self, v: i128) {
-        if self.error.is_none() {
-            if let Err(e) = write!(self.writer, "{v}") {
-                self.error = Some(e);
-            }
+        if self.error.is_none()
+            && let Err(e) = write!(self.writer, "{v}")
+        {
+            self.error = Some(e);
         }
     }
 
     #[inline]
     fn u128(&mut self, v: u128) {
-        if self.error.is_none() {
-            if let Err(e) = write!(self.writer, "{v}") {
-                self.error = Some(e);
-            }
+        if self.error.is_none()
+            && let Err(e) = write!(self.writer, "{v}")
+        {
+            self.error = Some(e);
         }
     }
 

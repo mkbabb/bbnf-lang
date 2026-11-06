@@ -105,10 +105,10 @@ pub fn tarjan_scc<'a>(deps: &'a Dependencies<'a>) -> SccResult<'a> {
             }
         } else {
             let name = scc[0];
-            if let Some(successors) = deps.get(name) {
-                if successors.contains(name) {
-                    cyclic_rules.insert(name);
-                }
+            if let Some(successors) = deps.get(name)
+                && successors.contains(name)
+            {
+                cyclic_rules.insert(name);
             }
         }
     }
@@ -145,10 +145,11 @@ pub fn topological_sort_scc<'a>(
     for (&node, successors) in deps {
         if let Some(&src_scc) = scc_result.scc_index.get(node) {
             for &succ in successors {
-                if let Some(&dst_scc) = scc_result.scc_index.get(succ) {
-                    if src_scc != dst_scc && scc_dependents[dst_scc].insert(src_scc) {
-                        in_degree[src_scc] += 1;
-                    }
+                if let Some(&dst_scc) = scc_result.scc_index.get(succ)
+                    && src_scc != dst_scc
+                    && scc_dependents[dst_scc].insert(src_scc)
+                {
+                    in_degree[src_scc] += 1;
                 }
             }
         }
@@ -191,14 +192,14 @@ pub fn topological_sort_scc<'a>(
         scc_entries.sort_by_key(|(key, _)| depth_score.get(*key).copied().unwrap_or(0));
 
         for (key, val) in scc_entries {
-            new_ast.insert(*key, val.clone());
+            new_ast.insert(*key, *val);
         }
     }
 
     // Any rules not in the SCC index (shouldn't happen, but safety net).
     for (lhs, rhs) in ast {
         if !new_ast.contains_key(*lhs) {
-            new_ast.insert(*lhs, rhs.clone());
+            new_ast.insert(*lhs, *rhs);
         }
     }
 

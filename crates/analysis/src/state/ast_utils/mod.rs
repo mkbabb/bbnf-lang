@@ -190,18 +190,15 @@ pub(crate) fn iter_iteration_views<'a, 'p>(
 ) -> impl Iterator<Item = BbnfView<'a, 'p>> {
     let kept: Vec<BbnfView<'a, 'p>> = node
         .children()
-        .filter_map(|child| {
+        .filter(|child| {
             // Drop separator-only / whitespace-only Span children —
             // the analysis layer is interested in the substantive
             // operand compounds, not the delimiters.
-            if !child.is_compound() {
-                let text = child.span_text_opt().unwrap_or("").trim();
-                if text.is_empty() || text == "|" || text == "," {
-                    return None;
-                }
-                return Some(child);
+            if child.is_compound() {
+                return true;
             }
-            Some(child)
+            let text = child.span_text_opt().unwrap_or("").trim();
+            !(text.is_empty() || text == "|" || text == ",")
         })
         .collect();
     kept.into_iter()

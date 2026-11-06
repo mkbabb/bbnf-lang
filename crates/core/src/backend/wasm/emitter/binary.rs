@@ -3,7 +3,7 @@
 //! Each method is `pub(super)` so the trait impl in `mod.rs` can delegate
 //! to it via `self.emit_xxx_impl(...)`.
 
-use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
+use bbnf_ir::RuleId;
 
 use super::{WasmEmitCtx, WasmEmitter};
 use crate::backend::ValuePlacement;
@@ -34,9 +34,6 @@ impl WasmEmitter {
         head: String,
         op: String,
         rhs: String,
-        _head_type: &TypeDesc,
-        _link_elem_type: &TypeDesc,
-        _ir: &GrammarIR,
         ctx: &mut WasmEmitCtx,
     ) -> Option<String> {
         let head_var = ctx.fresh("oc_head");

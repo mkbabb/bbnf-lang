@@ -91,14 +91,13 @@ fn strip_ts_types(ts: &str) -> String {
         // Strip return type: `): RetType | null {` → `) {`
         // For object return types like `): { result: ...; offset: ... } {`,
         // find the LAST `{` on the line as the function body start.
-        if let Some(idx) = cleaned.find("): ") {
-            if let Some(last_brace) = cleaned.rfind('{') {
-                if last_brace > idx {
-                    let before = &cleaned[..idx + 1];
-                    let after = &cleaned[last_brace..];
-                    cleaned = format!("{before} {after}");
-                }
-            }
+        if let Some(idx) = cleaned.find("): ")
+            && let Some(last_brace) = cleaned.rfind('{')
+            && last_brace > idx
+        {
+            let before = &cleaned[..idx + 1];
+            let after = &cleaned[last_brace..];
+            cleaned = format!("{before} {after}");
         }
 
         lines.push(cleaned);

@@ -59,7 +59,7 @@ impl SheetsPathQuery for &str {
             | SheetsValue::CellRef(s)
             | SheetsValue::Identifier(s)
             | SheetsValue::SheetPrefix { text: s, .. } => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,

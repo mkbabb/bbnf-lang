@@ -300,7 +300,7 @@ fn color_named_type_admission_or_no_color_rules() {
     let out =
         compile_paths_request(&[stylesheet], &request).expect("CSS L4 compile for admission gate");
     let ir = match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     };
 

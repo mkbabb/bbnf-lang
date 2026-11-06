@@ -556,13 +556,12 @@ fn pretty_hint_text<'a>(node: BbnfView<'a, 'a>) -> Cow<'a, str> {
         let name = ident.span_text().trim();
         // Path A: the parser surfaced the optional arg group as a
         // dedicated child compound (legacy bootstrap_parser shape).
-        if let Some(arg_group) = node.child(1) {
-            if let Some((lo, hi)) = arg_group.byte_span() {
-                if hi > lo {
-                    let arg = &arg_group.input()[lo as usize..hi as usize];
-                    return Cow::Owned(format!("{}{}", name, arg.trim()));
-                }
-            }
+        if let Some(arg_group) = node.child(1)
+            && let Some((lo, hi)) = arg_group.byte_span()
+            && hi > lo
+        {
+            let arg = &arg_group.input()[lo as usize..hi as usize];
+            return Cow::Owned(format!("{}{}", name, arg.trim()));
         }
         // Path B: the alt_dispatch codegen path consumed `( ... )`
         // without pushing a separate compound. Scan forward from the
@@ -571,11 +570,11 @@ fn pretty_hint_text<'a>(node: BbnfView<'a, 'a>) -> Cow<'a, str> {
             let input = ident.input();
             let after = &input[ident_hi as usize..];
             let trimmed = after.trim_start();
-            if trimmed.starts_with('(') {
-                if let Some(close) = trimmed.find(')') {
-                    let arg = &trimmed[..=close];
-                    return Cow::Owned(format!("{}{}", name, arg.trim()));
-                }
+            if trimmed.starts_with('(')
+                && let Some(close) = trimmed.find(')')
+            {
+                let arg = &trimmed[..=close];
+                return Cow::Owned(format!("{}{}", name, arg.trim()));
             }
         }
         return Cow::Owned(name.to_string());

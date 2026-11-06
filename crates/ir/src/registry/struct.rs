@@ -385,7 +385,7 @@ impl StructRegistry {
     /// arenas project from the registry rather than re-deriving the
     /// id-keyed mapping.
     #[inline]
-    pub fn compound_kind_for_layout<'a>(layout: &'a StructLayout) -> &'a str {
+    pub fn compound_kind_for_layout(layout: &StructLayout) -> &str {
         layout.rule_name.as_str()
     }
 }

@@ -103,10 +103,10 @@ pub(crate) fn dispatch_expression<'a>(node: BbnfView<'a, 'a>, ctx: &mut LowerCtx
     // (whether kind-enumerated, anonymous-`Other`, or otherwise)
     // always route through compound dispatch so wrapping compounds
     // carrying modifier / Map / Repeat content are descended into.
-    if matches!(node.kind(), BbnfKind::Span) {
-        if let Some(leaf) = lower_leaf_by_span_text(node, ctx) {
-            return leaf;
-        }
+    if matches!(node.kind(), BbnfKind::Span)
+        && let Some(leaf) = lower_leaf_by_span_text(node, ctx)
+    {
+        return leaf;
     }
 
     // Anonymous-wrapper compounds — compounds whose `BbnfCompoundKind`

@@ -20,16 +20,14 @@ pub fn references(
     let mut locations = Vec::new();
 
     // Include the definition location.
-    if include_declaration {
-        if let Some(&idx) = state.info.rule_index.get(name.as_str()) {
-            let rule = &state.info.rules[idx];
-            locations.push(Location {
-                uri: uri.clone(),
-                range: state
-                    .line_index
-                    .span_to_range(rule.name_span.0, rule.name_span.1),
-            });
-        }
+    if include_declaration && let Some(&idx) = state.info.rule_index.get(name.as_str()) {
+        let rule = &state.info.rules[idx];
+        locations.push(Location {
+            uri: uri.clone(),
+            range: state
+                .line_index
+                .span_to_range(rule.name_span.0, rule.name_span.1),
+        });
     }
 
     // All references across all rules.

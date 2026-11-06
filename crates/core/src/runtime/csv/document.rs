@@ -136,7 +136,7 @@ impl CsvPathQuery for &str {
     fn query<'p>(doc: &CsvDocument<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             CsvValue::Span(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,

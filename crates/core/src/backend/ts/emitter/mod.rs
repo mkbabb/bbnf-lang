@@ -190,12 +190,9 @@ impl Emitter for TsEmitter {
         head: TsCode,
         op: TsCode,
         rhs: TsCode,
-        head_type: &TypeDesc,
-        link_elem_type: &TypeDesc,
-        ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
     ) -> Option<TsCode> {
-        self.emit_operator_chain_impl(head, op, rhs, head_type, link_elem_type, ir, ctx)
+        self.emit_operator_chain_impl(head, op, rhs, ctx)
     }
 
     // ── Binary operators ────────────────────────────────────────────────

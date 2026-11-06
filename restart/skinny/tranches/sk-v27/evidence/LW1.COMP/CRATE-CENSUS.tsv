@@ -1,0 +1,47 @@
+tree	path	crate	version	src_loc	role	fate	owning_unit	basis
+root	crates/core	bbnf	0.2.11	216968	root pipeline: lower, CSP inline plan, e-graph wiring, Rust/TS/WASM backends, generated runtimes	quarry: re-admitted only as LW2 trial winners, then delete	LW2.COMP-1; LW7.COMP	X-1 default (sk-v26 spine is the carrier; a root trial can only delete, C2-5)
+root	crates/ir	bbnf-ir	0.1.6	33804	GrammarIR, passes (FIRST/FOLLOW, span, dispatch, csp_strategy), StructRegistry	quarry: inline plan and CSP move to passes (LW2.COMP-3); consumers leave it (CB-10b); then delete	LW2.COMP-3; LW4.COMP-2; LW7.COMP	X-1; CB-10b falsifier `cargo tree -i bbnf-ir` empty
+root	crates/analysis	bbnf-analysis	0.1.1	4975	LSP and WASM analysis over GrammarIR	keep, rewired to Program/Facts/Plan	LW4.COMP-2	CB-10b
+root	crates/lsp	bbnf-lsp	0.1.0	1772	language server	keep, rewired to Program/Facts/Plan	LW4.COMP-2	CB-10b
+root	wasm	bbnf-wasm	0.1.0	1423	WASM bindings for analysis and gorgeous (excluded workspace)	keep, rewired; joins the hermetic build	LW4.COMP-2; LW2.TOPO	CB-10b; CB-1a
+root	crates/ser	bbnf-ser	0.1.0	530	grammar-guided Serializer/Deserializer traits	keep: direct-to-struct layouts for the plan-driven emitter	LW4.COMP-1	CB-10
+root	crates/gorgeous	gorgeous	0.1.10	604	grammar-driven pretty printers	keep under PP; `vm` feature judged by PP	LW4.PP-1	PP lane
+root	crates/egraph	egraph	0.1.0	1885	general e-graph (saturation, extraction)	move: standalone general crate in the parse-that workspace	LW2.TOPO-1	X-5 default (programme R-8)
+root	crates/egraph-derive	egraph-derive	0.1.0	343	#[derive(Language)]	move with egraph	LW2.TOPO-1	X-5 default
+root	crates/csp-solver	csp-solver	0.1.0	5882	CSP/COP substrate; mirror of csc411 b7009867	move: standalone general crate in the parse-that workspace; csc411 mirror relation re-stated there	LW2.TOPO-1; LW2.COMP-2	X-5 default; Unsat cure lands in callers, not the mirror
+root	crates/simd-scan	simd-scan	0.1.0	2607	SIMD structural-bitmap kernel	absorb into parse-that-simd	LW2.PERF-1	X-3 default
+root	crates/bbnf-path	bbnf-path	0.1.0	918	path! proc-macro over StructRegistry	keep if StructRegistry has a Plan-side home, else delete	LW4.COMP-2	depends on bbnf-ir (CB-10b)
+root	crates/bbnf-path-ts	bbnf-path-ts	0.1.0	1012	TS/wasm binding for path!	follows bbnf-path	LW4.COMP-2	depends on bbnf-ir and bbnf
+root	crates/bootstrap	bbnf-bootstrap	0.1.0	465	self-hosted BBNF parser via cargo expand of the root pipeline	delete once the carrier self-hosts	LW3.COMP-1; LW7.COMP	X-1
+root	xtask	xtask	0.1.0	7463	regen, manifest checks	keep, rewired to the carrier	LW3.COMP-1	workspace tooling
+skinny	skinny/crates/ir	ir	0.1.0	993	lab IR	candidate: admitted only by trial row	LW2.COMP-1	X-1 (skinny is a lab)
+skinny	skinny/crates/passes	passes	0.1.0	2674	lab optimisation passes	candidate: admitted only by trial row	LW2.COMP-1; LW5	X-1
+skinny	skinny/crates/codegen	codegen	0.1.0	7453	lab code generator	candidate for the plan-driven emitter; else delete	LW4.COMP-1	X-1; CB-10 parity gate
+skinny	skinny/crates/runtime	runtime	0.1.0	4894	lab runtime and generated grammars	candidate kernels; else delete	LW4.COMP-1; LW4.PERF-1	X-1
+skinny	skinny/crates/grammar	grammar	0.1.0	2052	lab grammar frontend	delete: the carrier frontend (compiler/frontend.rs, syntax.rs) supersedes it	LW7.COMP	X-1
+skinny	skinny/crates/bbnf	bbnf	0.1.0	111	lab facade (name collides with root bbnf)	delete	LW7.COMP	X-1
+skinny	skinny/crates/bbnf-simd	bbnf-simd	0.1.0	2037	lab SIMD kernels	absorb into parse-that-simd	LW2.PERF-1	X-3 default
+skinny	skinny/crates/parse-that-regex	parse-that-regex	0.1.0	3022	lab regex engine	absorb into the one parse-that-regex package	LW2.RX	X-2 default
+skinny	skinny/crates/bbnf-regex	bbnf-regex	0.1.0	322	lab regex shim (name collides with parse-that's bbnf-regex)	delete; facts move to bbnf-regex-facts	LW2.RX	X-2 default
+skinny	skinny/crates/bbnf-bench	bbnf-bench	0.1.0	35830	lab bench harness and competitor drivers	absorb into the CB-B0 harness; else delete	LW1.CON-1; LW2.CON	competition lane
+skinny	skinny/crates/test-fixtures	test-fixtures	0.1.0	404	lab corpora	absorb into the bench corpora	LW1.CON-1	competition lane
+skinny	skinny/xtask	xtask	0.1.0	5147	lab regen and profiling	delete; regen absorbed by root xtask	LW7.COMP	X-1
+sk-v26	crates/core	bbnf	0.4.0	10624	the carrier: deterministic BBNF source-to-direct-Rust compiler over parse_that 0.5.0 ABI 3 (only workspace member; lib.rs compiles only compiler/ and bin/; the other 216,790 tracked lines under src/ are inherited root modules that are not compiled)	keep: compiler of record	LW3.COMP-1	X-1 default (compiler R1, programme R-4)
+sk-v26	crates/core/src/compiler/mod.rs	bbnf::compiler	0.4.0	165	module root and public surface	keep	LW3.COMP-1	X-1
+sk-v26	crates/core/src/compiler/source.rs	bbnf::compiler::source	0.4.0	263	source identity	keep	LW3.COMP-1	X-1
+sk-v26	crates/core/src/compiler/syntax.rs	bbnf::compiler::syntax	0.4.0	1119	action-free syntax union	keep	LW3.COMP-1	X-1
+sk-v26	crates/core/src/compiler/frontend.rs	bbnf::compiler::frontend	0.4.0	1410	frontend (Syntax → Program)	keep	LW3.COMP-1	X-1
+sk-v26	crates/core/src/compiler/instance.rs	bbnf::compiler::instance	0.4.0	484	strict five-field grammar instance	keep	LW3.COMP-1	X-1
+sk-v26	crates/core/src/compiler/dependency.rs	bbnf::compiler::dependency	0.4.0	363	dependency graph and SCC (Graph)	keep	LW3.COMP-1	X-1
+sk-v26	crates/core/src/compiler/typecheck.rs	bbnf::compiler::typecheck	0.4.0	1634	first-order structural types (TypeSolution)	keep	LW3.COMP-1	X-1
+sk-v26	crates/core/src/compiler/analysis.rs	bbnf::compiler::analysis	0.4.0	1736	AnalysisFacts; host of the LW2 trial winners (CSP, e-graph)	keep; receives the LW2 winners	LW3.COMP-1; LW2.COMP-1	X-1
+sk-v26	crates/core/src/compiler/pratt.rs	bbnf::compiler::pratt	0.4.0	296	data-driven Pratt semantics	keep; extended by R3 left recursion	LW3.COMP-2	compiler R3
+sk-v26	crates/core/src/compiler/lower.rs	bbnf::compiler::lower	0.4.0	895	lowering to the sealed plan	keep	LW3.COMP-1; LW4.COMP-1	X-1
+sk-v26	crates/core/src/compiler/event.rs	bbnf::compiler::event	0.4.0	348	scalar-event schema	keep	LW4.COMP-1	X-1
+sk-v26	crates/core/src/compiler/emit.rs	bbnf::compiler::emit	0.4.0	1110	direct static Rust emission	keep; grows into the CB-10 plan-driven emitter	LW4.COMP-1	CB-10
+sk-v26	crates/core/src/compiler/replay.rs	bbnf::compiler::replay	0.4.0	509	edit replay (stateful full invalidation)	keep; consumed by LSP and playground	LW4.COMP-2	CB-10b
+sk-v26	crates/core/src/compiler/budget.rs	bbnf::compiler::budget	0.4.0	95	work and depth budgets	keep; I9 depth and failure contract	LW3.COMP-4	I9
+sk-v26	crates/core/src/compiler/diagnostic.rs	bbnf::compiler::diagnostic	0.4.0	139	diagnostics; receives the Unsat route	keep	LW3.COMP-4; LW2.COMP-2	I9; consumers O-2
+sk-v26	crates/{analysis,bbnf-path,bbnf-path-ts,bootstrap,csp-solver,egraph,egraph-derive,gorgeous,ir,lsp,ser,simd-scan}	(inherited from af15f63e0)	-	-	tracked but not workspace members at b5fd0ca98; same fate as the root rows	as the root rows	LW1.TOPO-5; LW3.COMP-1	the merge brings one copy
+sk-v26	skinny/crates/*	(inherited from af15f63e0)	-	-	tracked lab tree, identical crate set to the skinny rows	as the skinny rows	LW1.TOPO-5	the merge brings one copy
+sk-v26	crates/core/src/{backend,generate,grammar,graph,imports,lower,path,pipeline,runtime}	(inherited, uncompiled)	-	216790	tracked under the carrier's src/ but not declared by lib.rs	delete from the carrier tree when the spine merges (they are the root rows' code)	LW3.COMP-1	no compatibility path (sk-v26 W3 law)

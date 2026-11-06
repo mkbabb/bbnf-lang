@@ -1,0 +1,306 @@
+{
+  "rx2-c1-1-neg-lookahead": {
+    "id": "rx2-c1-1-neg-lookahead",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "rx2-c1-1-neg-lookahead-u": {
+    "id": "rx2-c1-1-neg-lookahead-u",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "rx2-c1-1-int": {
+    "id": "rx2-c1-1-int",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 2,
+    "len8": 2
+  },
+  "rx2-alt-a-ab": {
+    "id": "rx2-alt-a-ab",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "rx2-alt-a-ab-u": {
+    "id": "rx2-alt-a-ab-u",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "rx2-alt-ab-a": {
+    "id": "rx2-alt-ab-a",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 2,
+    "len8": 2
+  },
+  "rx2-absorb-e-acute-in-e-acute": {
+    "id": "rx2-absorb-e-acute-in-e-acute",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 2,
+    "len8": 2
+  },
+  "rx2-absorb-e-acute-in-greek": {
+    "id": "rx2-absorb-e-acute-in-greek",
+    "status": "NO_MATCH"
+  },
+  "rx2-absorb-beta-in-e-acute": {
+    "id": "rx2-absorb-beta-in-e-acute",
+    "status": "NO_MATCH"
+  },
+  "rx2-absorb-alt-e-greek-on-e": {
+    "id": "rx2-absorb-alt-e-greek-on-e",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 2,
+    "len8": 2
+  },
+  "rx2-absorb-byte-collision": {
+    "id": "rx2-absorb-byte-collision",
+    "status": "NO_MATCH"
+  },
+  "rx2-union-greek-on-beta": {
+    "id": "rx2-union-greek-on-beta",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 2,
+    "len8": 2
+  },
+  "rx2-union-alt-on-A-tilde": {
+    "id": "rx2-union-alt-on-A-tilde",
+    "status": "NO_MATCH"
+  },
+  "rx2-absorb-order-run-first": {
+    "id": "rx2-absorb-order-run-first",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "rx2-absorb-order-class-first": {
+    "id": "rx2-absorb-order-class-first",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "rx2-kelvin-k-i": {
+    "id": "rx2-kelvin-k-i",
+    "status": "NO_MATCH"
+  },
+  "rx2-kelvin-k-iu": {
+    "id": "rx2-kelvin-k-iu",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 3,
+    "len8": 3
+  },
+  "rx2-kelvin-K-iu": {
+    "id": "rx2-kelvin-K-iu",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 3,
+    "len8": 3
+  },
+  "rx2-kelvin-sign-i-on-k": {
+    "id": "rx2-kelvin-sign-i-on-k",
+    "status": "NO_MATCH"
+  },
+  "rx2-kelvin-sign-iu-on-k": {
+    "id": "rx2-kelvin-sign-iu-on-k",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "rx2-long-s-iu-on-s": {
+    "id": "rx2-long-s-iu-on-s",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  },
+  "rx2-long-s-i-on-s": {
+    "id": "rx2-long-s-i-on-s",
+    "status": "NO_MATCH"
+  },
+  "rx2-e-acute-i-on-E-acute": {
+    "id": "rx2-e-acute-i-on-E-acute",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 2,
+    "len8": 2
+  },
+  "rx2-e-acute-iu-on-E-acute": {
+    "id": "rx2-e-acute-iu-on-E-acute",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 2,
+    "len8": 2
+  },
+  "probe-dollar-mid": {
+    "id": "probe-dollar-mid",
+    "status": "NO_MATCH"
+  },
+  "probe-dollar-end": {
+    "id": "probe-dollar-end",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "probe-lazy-star": {
+    "id": "probe-lazy-star",
+    "status": "MATCH",
+    "end16": 0,
+    "len16": 0,
+    "end8": 0,
+    "len8": 0
+  },
+  "probe-word-boundary": {
+    "id": "probe-word-boundary",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "probe-group-alt": {
+    "id": "probe-group-alt",
+    "status": "MATCH",
+    "end16": 4,
+    "len16": 4,
+    "end8": 4,
+    "len8": 4
+  },
+  "enc-dot-astral-non-u": {
+    "id": "enc-dot-astral-non-u",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": null,
+    "split": true
+  },
+  "enc-dot-astral-u": {
+    "id": "enc-dot-astral-u",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 4,
+    "len8": 4
+  },
+  "enc-negclass-astral-non-u": {
+    "id": "enc-negclass-astral-non-u",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": null,
+    "split": true
+  },
+  "enc-negclass-astral-u": {
+    "id": "enc-negclass-astral-u",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 4,
+    "len8": 4
+  },
+  "enc-offset-after-2byte": {
+    "id": "enc-offset-after-2byte",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 2,
+    "end8": 4,
+    "len8": 2
+  },
+  "enc-offset-after-astral": {
+    "id": "enc-offset-after-astral",
+    "status": "MATCH",
+    "end16": 4,
+    "len16": 2,
+    "end8": 6,
+    "len8": 2
+  },
+  "enc-word-e-acute-non-u": {
+    "id": "enc-word-e-acute-non-u",
+    "status": "NO_MATCH"
+  },
+  "enc-word-e-acute-iu": {
+    "id": "enc-word-e-acute-iu",
+    "status": "NO_MATCH"
+  },
+  "v-class-difference": {
+    "id": "v-class-difference",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 2,
+    "len8": 2
+  },
+  "v-class-difference-ascii": {
+    "id": "v-class-difference-ascii",
+    "status": "NO_MATCH"
+  },
+  "u-property-letter": {
+    "id": "u-property-letter",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 6,
+    "len8": 6
+  },
+  "css-hex-lookahead": {
+    "id": "css-hex-lookahead",
+    "status": "MATCH",
+    "end16": 4,
+    "len16": 4,
+    "end8": 4,
+    "len8": 4
+  },
+  "css-hex-lookahead-reject": {
+    "id": "css-hex-lookahead-reject",
+    "status": "NO_MATCH"
+  },
+  "css-func-lookahead": {
+    "id": "css-func-lookahead",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "css-lookbehind": {
+    "id": "css-lookbehind",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 0,
+    "end8": 1,
+    "len8": 0
+  }
+}

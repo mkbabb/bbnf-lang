@@ -1,0 +1,9 @@
+test tests::test_json_file ... FAILED
+test tests::test_equivalence_apache ... FAILED
+test tests::test_equivalence_canada ... FAILED
+test tests::test_equivalence_citm_catalog ... FAILED
+test tests::test_equivalence_data ... FAILED
+test tests::test_equivalence_data_xl ... FAILED
+test tests::test_equivalence_twitter ... FAILED
+test tests::test_json_file_print ... FAILED
+test result: FAILED. 29 passed; 8 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

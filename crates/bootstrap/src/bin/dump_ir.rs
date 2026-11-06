@@ -119,7 +119,7 @@ fn main() {
         },
     };
 
-    let output = match compile_paths_request(&[path.clone()], &request) {
+    let output = match compile_paths_request(std::slice::from_ref(&path), &request) {
         Ok(o) => o,
         Err(e) => {
             eprintln!("pipeline error: {e}");
@@ -128,7 +128,7 @@ fn main() {
     };
 
     let ir = match output {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => {
             eprintln!("expected Vm target");
             std::process::exit(1);

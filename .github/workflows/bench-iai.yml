@@ -48,6 +48,11 @@ jobs:
         with:
           tool: nextest
 
+      # The bench harness execs iai-callgrind-runner, which must match the
+      # iai-callgrind library version in Cargo.lock.
+      - name: install iai-callgrind-runner
+        run: cargo install iai-callgrind-runner --version 0.12.3 --locked
+
       # tee, not a redirect then cat: under `bash -e` a failing bench
       # exits before the cat, so its error never reached the log.
       - name: run iai-callgrind bench on PR branch

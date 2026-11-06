@@ -10,11 +10,7 @@ impl CssRuleListId {
         self.0 == 0
     }
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 {
-            None
-        } else {
-            Some((self.0 - 1) as usize)
-        }
+        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -25,11 +21,7 @@ impl CssDeclListId {
         self.0 == 0
     }
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 {
-            None
-        } else {
-            Some((self.0 - 1) as usize)
-        }
+        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -40,11 +32,7 @@ impl CssSelectorListId {
         self.0 == 0
     }
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 {
-            None
-        } else {
-            Some((self.0 - 1) as usize)
-        }
+        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -55,11 +43,7 @@ impl CssValueListId {
         self.0 == 0
     }
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 {
-            None
-        } else {
-            Some((self.0 - 1) as usize)
-        }
+        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -70,11 +54,7 @@ impl CssKeyframeListId {
         self.0 == 0
     }
     fn slab_index(self) -> Option<usize> {
-        if self.0 == 0 {
-            None
-        } else {
-            Some((self.0 - 1) as usize)
-        }
+        if self.0 == 0 { None } else { Some((self.0 - 1) as usize) }
     }
 }
 #[derive(Debug, Default)]
@@ -84,8 +64,6 @@ pub struct CssArena<'p> {
     selectors: Vec<Vec<Selector<'p>>>,
     values: Vec<Vec<CssTypedValue<'p>>>,
     keyframes: Vec<Vec<KeyframeBlock<'p>>>,
-    // `push_color` hands each colour out as `&'p CssColor<'p>`; the box
-    // keeps that address fixed when the Vec reallocates.
     #[expect(
         clippy::vec_box,
         reason = "boxed for address stability of handed-out &'p refs"
@@ -140,7 +118,10 @@ impl<'p> CssArena<'p> {
         self.values.push(items);
         CssValueListId(self.values.len() as u32)
     }
-    pub fn push_keyframes(&mut self, items: Vec<KeyframeBlock<'p>>) -> CssKeyframeListId {
+    pub fn push_keyframes(
+        &mut self,
+        items: Vec<KeyframeBlock<'p>>,
+    ) -> CssKeyframeListId {
         if items.is_empty() {
             return CssKeyframeListId::EMPTY;
         }

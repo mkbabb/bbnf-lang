@@ -1,0 +1,923 @@
+diff --git a/crates/csp-solver/examples/scan_plan_solve.rs b/crates/csp-solver/examples/scan_plan_solve.rs
+new file mode 100644
+index 000000000..14a02fe09
+--- /dev/null
++++ b/crates/csp-solver/examples/scan_plan_solve.rs
+@@ -0,0 +1,542 @@
++//! PROTO-2 probe: PBQP vs generic B&B on the near-tree scan-plan graph.
++//!
++//! Model (both solvers, identical feasible set):
++//!   node   = scan site, domain {Exact=0, Prefilter=1}
++//!   unary  = runtime cost (Exact=10, Prefilter=1) + per-site epsilon tie-break
++//!   edge   = HARD coherence "sites sharing a dispatch table emit the same tier"
++//!            (representable in BOTH: PBQP ∞ off-diagonal, B&B binary constraint)
++//!   budget = Σ static_size_cost(tier) ≤ B   (Exact=100 LOC, Prefilter=300 LOC)
++//!
++//! Route A: PBQP R0/R1/R2 reductions + Lagrangian dual of the budget.
++//! Route B: the crate's real B&B (solve_optimized / search.rs) with the budget
++//!          as BoundedSumConstraint and coherence as a hard binary constraint.
++//! Reference: brute force over all feasible tier tuples (optimality oracle).
++//!
++//! Run: cargo run -p csp-solver --example scan_plan_solve --release
++
++use std::time::Instant;
++
++use csp_solver::constraint::traits::{Constraint, VarId};
++use csp_solver::constraint::BoundedSumConstraint;
++use csp_solver::domain::CostFiniteDomain;
++use csp_solver::{Csp, OptimizationMode, Pruning, SolveConfig};
++use csp_solver::ordering::Ordering;
++
++const EXACT: i32 = 0;
++const PREFILTER: i32 = 1;
++const RUNTIME: [f64; 2] = [10.0, 1.0]; // Exact slower, Prefilter faster (objective)
++const LOC: [f64; 2] = [100.0, 300.0]; // Exact cheap code, Prefilter heavy code (budget)
++const INF: f64 = 1.0e9;
++
++/// A scan-plan instance: N sites + coherence edges + a size budget.
++struct Instance {
++    name: &'static str,
++    n: usize,
++    /// hard coherence edges (a,b): the two sites must emit the same tier.
++    edges: Vec<(usize, usize)>,
++    budget: f64,
++}
++
++/// Per-site unary cost with a deterministic, TIER-DEPENDENT epsilon tie-break
++/// so the global optimum is UNIQUE (an identical-assignment claim is meaningless
++/// under ties). The epsilon rides only on Exact so different Exact/Prefilter
++/// partitions have distinct totals; it is < 0.02 total, far below the 9.0
++/// runtime deltas, so it breaks ties without altering the coupling structure.
++fn unary(site: usize, tier: usize) -> f64 {
++    RUNTIME[tier] + if tier == EXACT as usize { (site as f64) * 1e-3 } else { 0.0 }
++}
++
++// ── Route A: PBQP ───────────────────────────────────────────────────────────
++
++#[derive(Clone)]
++struct Pbqp {
++    n: usize,
++    k: usize,
++    unary: Vec<Vec<f64>>,
++    /// edge[(i,j)] with i<j: k×k matrix indexed [val_i][val_j].
++    edges: std::collections::BTreeMap<(usize, usize), Vec<Vec<f64>>>,
++}
++
++#[derive(Default)]
++struct PbqpStats {
++    r0: usize,
++    r1: usize,
++    r2: usize,
++    rn: usize, // heuristic fallbacks (loses exactness)
++    max_stack_depth: usize,
++}
++
++enum Removed {
++    R0 { m: usize, u: Vec<f64> },
++    R1 { m: usize, u: Vec<f64>, nbr: usize, mat: Vec<Vec<f64>> },
++    R2 { m: usize, u: Vec<f64>, p: usize, q: usize, mp: Vec<Vec<f64>>, mq: Vec<Vec<f64>> },
++    Rn { m: usize, val: usize },
++}
++
++impl Pbqp {
++    fn new(n: usize, k: usize) -> Self {
++        Pbqp { n, k, unary: vec![vec![0.0; k]; n], edges: Default::default() }
++    }
++
++    /// oriented matrix [val_a][val_b] for the edge between a and b.
++    fn edge_oriented(&self, a: usize, b: usize) -> Option<Vec<Vec<f64>>> {
++        if a < b {
++            self.edges.get(&(a, b)).cloned()
++        } else {
++            self.edges.get(&(b, a)).map(|m| {
++                // transpose
++                let mut t = vec![vec![0.0; self.k]; self.k];
++                for i in 0..self.k {
++                    for j in 0..self.k {
++                        t[i][j] = m[j][i];
++                    }
++                }
++                t
++            })
++        }
++    }
++
++    fn neighbors(&self, m: usize, alive: &[bool]) -> Vec<usize> {
++        let mut ns = Vec::new();
++        for &(a, b) in self.edges.keys() {
++            if a == m && alive[b] {
++                ns.push(b);
++            } else if b == m && alive[a] {
++                ns.push(a);
++            }
++        }
++        ns
++    }
++
++    fn add_edge(&mut self, a: usize, b: usize, mat: Vec<Vec<f64>>) {
++        let (lo, hi, m) = if a < b {
++            (a, b, mat)
++        } else {
++            // transpose so storage key stays (lo,hi) = [val_lo][val_hi]
++            let mut t = vec![vec![0.0; self.k]; self.k];
++            for i in 0..self.k {
++                for j in 0..self.k {
++                    t[i][j] = mat[j][i];
++                }
++            }
++            (b, a, t)
++        };
++        self.edges
++            .entry((lo, hi))
++            .and_modify(|e| {
++                for i in 0..self.k {
++                    for j in 0..self.k {
++                        e[i][j] += m[i][j];
++                    }
++                }
++            })
++            .or_insert(m);
++    }
++
++    fn remove_edges_of(&mut self, m: usize) {
++        let keys: Vec<_> = self.edges.keys().cloned().filter(|&(a, b)| a == m || b == m).collect();
++        for k in keys {
++            self.edges.remove(&k);
++        }
++    }
++
++    /// Solve via R0/R1/R2 reductions, RN heuristic only if forced.
++    /// Returns (assignment, cost, stats).
++    fn solve(mut self) -> (Vec<usize>, f64, PbqpStats) {
++        let mut alive = vec![true; self.n];
++        let mut stack: Vec<Removed> = Vec::new();
++        let mut stats = PbqpStats::default();
++        let mut remaining = self.n;
++
++        while remaining > 0 {
++            // find a node by lowest applicable reduction rule
++            let mut did = false;
++            // R0
++            for m in 0..self.n {
++                if alive[m] && self.neighbors(m, &alive).is_empty() {
++                    let u = self.unary[m].clone();
++                    stack.push(Removed::R0 { m, u });
++                    alive[m] = false;
++                    remaining -= 1;
++                    stats.r0 += 1;
++                    did = true;
++                    break;
++                }
++            }
++            if did {
++                stats.max_stack_depth = stats.max_stack_depth.max(stack.len());
++                continue;
++            }
++            // R1
++            for m in 0..self.n {
++                if !alive[m] {
++                    continue;
++                }
++                let ns = self.neighbors(m, &alive);
++                if ns.len() == 1 {
++                    let nbr = ns[0];
++                    let mat = self.edge_oriented(m, nbr).unwrap(); // [val_m][val_nbr]
++                    let u = self.unary[m].clone();
++                    // fold: unary[nbr][b] += min_a (u[a] + mat[a][b])
++                    for b in 0..self.k {
++                        let mut best = f64::INFINITY;
++                        for a in 0..self.k {
++                            best = best.min(u[a] + mat[a][b]);
++                        }
++                        self.unary[nbr][b] += best;
++                    }
++                    self.remove_edges_of(m);
++                    stack.push(Removed::R1 { m, u, nbr, mat });
++                    alive[m] = false;
++                    remaining -= 1;
++                    stats.r1 += 1;
++                    did = true;
++                    break;
++                }
++            }
++            if did {
++                stats.max_stack_depth = stats.max_stack_depth.max(stack.len());
++                continue;
++            }
++            // R2
++            for m in 0..self.n {
++                if !alive[m] {
++                    continue;
++                }
++                let ns = self.neighbors(m, &alive);
++                if ns.len() == 2 {
++                    let (p, q) = (ns[0], ns[1]);
++                    let mp = self.edge_oriented(m, p).unwrap(); // [val_m][val_p]
++                    let mq = self.edge_oriented(m, q).unwrap(); // [val_m][val_q]
++                    let u = self.unary[m].clone();
++                    // new edge N[bp][bq] = min_a (u[a] + mp[a][bp] + mq[a][bq])
++                    let mut nmat = vec![vec![0.0; self.k]; self.k];
++                    for bp in 0..self.k {
++                        for bq in 0..self.k {
++                            let mut best = f64::INFINITY;
++                            for a in 0..self.k {
++                                best = best.min(u[a] + mp[a][bp] + mq[a][bq]);
++                            }
++                            nmat[bp][bq] = best;
++                        }
++                    }
++                    self.remove_edges_of(m);
++                    self.add_edge(p, q, nmat); // p,q oriented; add_edge handles order
++                    stack.push(Removed::R2 { m, u, p, q, mp, mq });
++                    alive[m] = false;
++                    remaining -= 1;
++                    stats.r2 += 1;
++                    did = true;
++                    break;
++                }
++            }
++            if did {
++                stats.max_stack_depth = stats.max_stack_depth.max(stack.len());
++                continue;
++            }
++            // RN heuristic fallback: every remaining node has degree >= 3.
++            // Pick lowest-index alive node, greedily fix its locally-best value.
++            let m = (0..self.n).find(|&i| alive[i]).unwrap();
++            let ns = self.neighbors(m, &alive);
++            let mut best_val = 0;
++            let mut best_cost = f64::INFINITY;
++            for a in 0..self.k {
++                let mut c = self.unary[m][a];
++                for &nb in &ns {
++                    let mat = self.edge_oriented(m, nb).unwrap();
++                    let mut lo = f64::INFINITY;
++                    for b in 0..self.k {
++                        lo = lo.min(mat[a][b]);
++                    }
++                    c += lo;
++                }
++                if c < best_cost {
++                    best_cost = c;
++                    best_val = a;
++                }
++            }
++            for &nb in &ns {
++                let mat = self.edge_oriented(m, nb).unwrap();
++                for b in 0..self.k {
++                    self.unary[nb][b] += mat[best_val][b];
++                }
++            }
++            self.remove_edges_of(m);
++            stack.push(Removed::Rn { m, val: best_val });
++            alive[m] = false;
++            remaining -= 1;
++            stats.rn += 1;
++            stats.max_stack_depth = stats.max_stack_depth.max(stack.len());
++        }
++
++        // back-substitution
++        let mut sol = vec![0usize; self.n];
++        while let Some(r) = stack.pop() {
++            match r {
++                Removed::R0 { m, u } => {
++                    sol[m] = argmin(&u);
++                }
++                Removed::R1 { m, u, nbr, mat } => {
++                    let bn = sol[nbr];
++                    let mut best = 0;
++                    let mut bc = f64::INFINITY;
++                    for a in 0..self.k {
++                        let c = u[a] + mat[a][bn];
++                        if c < bc {
++                            bc = c;
++                            best = a;
++                        }
++                    }
++                    sol[m] = best;
++                }
++                Removed::R2 { m, u, p, q, mp, mq } => {
++                    let (bp, bq) = (sol[p], sol[q]);
++                    let mut best = 0;
++                    let mut bc = f64::INFINITY;
++                    for a in 0..self.k {
++                        let c = u[a] + mp[a][bp] + mq[a][bq];
++                        if c < bc {
++                            bc = c;
++                            best = a;
++                        }
++                    }
++                    sol[m] = best;
++                }
++                Removed::Rn { m, val } => {
++                    sol[m] = val;
++                }
++            }
++        }
++        let cost = self.raw_cost(&sol);
++        (sol, cost, stats)
++    }
++
++    fn raw_cost(&self, sol: &[usize]) -> f64 {
++        // NB: uses the ORIGINAL unary/edges; call on a fresh clone.
++        let mut c = 0.0;
++        for i in 0..self.n {
++            c += self.unary[i][sol[i]];
++        }
++        for (&(a, b), m) in &self.edges {
++            c += m[sol[a]][sol[b]];
++        }
++        c
++    }
++}
++
++fn argmin(v: &[f64]) -> usize {
++    let mut best = 0;
++    let mut bc = f64::INFINITY;
++    for (i, &x) in v.iter().enumerate() {
++        if x < bc {
++            bc = x;
++            best = i;
++        }
++    }
++    best
++}
++
++/// Build a fresh PBQP for a Lagrangian multiplier lambda (budget relaxed into unary).
++fn build_pbqp(inst: &Instance, lambda: f64) -> Pbqp {
++    let mut p = Pbqp::new(inst.n, 2);
++    for i in 0..inst.n {
++        for t in 0..2 {
++            p.unary[i][t] = unary(i, t) + lambda * LOC[t];
++        }
++    }
++    for &(a, b) in &inst.edges {
++        // hard coherence: 0 on diagonal, INF off-diagonal
++        let mut mat = vec![vec![INF; 2]; 2];
++        mat[0][0] = 0.0;
++        mat[1][1] = 0.0;
++        let (lo, hi) = if a < b { (a, b) } else { (b, a) };
++        p.edges.insert((lo, hi), mat);
++    }
++    p
++}
++
++fn loc_of(inst: &Instance, sol: &[usize]) -> f64 {
++    (0..inst.n).map(|i| LOC[sol[i]]).sum()
++}
++
++fn true_obj(inst: &Instance, sol: &[usize]) -> f64 {
++    // runtime + coherence (coherence is 0 when feasible/all-satisfied)
++    let mut c = 0.0;
++    for i in 0..inst.n {
++        c += unary(i, sol[i]);
++    }
++    for &(a, b) in &inst.edges {
++        if sol[a] != sol[b] {
++            c += INF;
++        }
++    }
++    c
++}
++
++/// PBQP + Lagrangian dual: sweep lambda, collect budget-feasible assignments,
++/// return the min true-objective one. Returns (assignment, obj, stats, sweeps).
++fn solve_pbqp_lagrangian(inst: &Instance) -> (Vec<usize>, f64, PbqpStats, usize) {
++    let mut best: Option<(Vec<usize>, f64)> = None;
++    let mut last_stats = PbqpStats::default();
++    let mut sweeps = 0;
++    // lambda breakpoints: a coherence-component flips Prefilter->Exact when
++    // lambda*(LOC[pre]-LOC[exact]) > runtime[exact]-runtime[pre] ≈ 9/200 ≈ 0.045.
++    // The per-component breakpoints are eps-separated by ~5e-6, so the grid step
++    // must be << that to trace EVERY relaxation breakpoint — otherwise a coarse
++    // grid jumps the whole transition band and confounds grid-coarseness with the
++    // Lagrangian integrality gap. 250k steps over [0,0.125] => step 5e-7.
++    let steps = 250_000;
++    for s in 0..=steps {
++        let lambda = (s as f64) * 5e-7; // 0 .. 0.125
++        let (sol, _relaxed, st) = build_pbqp(inst, lambda).solve();
++        last_stats = st;
++        sweeps += 1;
++        if loc_of(inst, &sol) <= inst.budget + 1e-6 {
++            let obj = true_obj(inst, &sol);
++            if best.as_ref().map_or(true, |(_, bc)| obj < *bc) {
++                best = Some((sol, obj));
++            }
++        }
++    }
++    let (sol, obj) = best.expect("no budget-feasible PBQP assignment found");
++    (sol, obj, last_stats, sweeps)
++}
++
++// ── Route B: the crate's real B&B ────────────────────────────────────────────
++
++/// Hard coherence constraint for B&B: two sites must emit the same tier.
++#[derive(Debug)]
++struct SameTier {
++    scope: Vec<VarId>,
++}
++impl Constraint<CostFiniteDomain> for SameTier {
++    fn scope(&self) -> &[VarId] {
++        &self.scope
++    }
++    fn check(&self, assignment: &[Option<i32>]) -> bool {
++        match (assignment[self.scope[0] as usize], assignment[self.scope[1] as usize]) {
++            (Some(x), Some(y)) => x == y,
++            _ => true, // partial: not yet violated
++        }
++    }
++    // revise: use the trait's binary default (drives AC off check()).
++}
++
++fn bb_config() -> SolveConfig {
++    SolveConfig {
++        pruning: Pruning::Ac3,
++        ordering: Ordering::FailFirst,
++        max_solutions: 1,
++        optimization_mode: OptimizationMode::MinimizeCost,
++        node_budget: Some(1_000_000),
++        cancel: None,
++    }
++}
++
++fn solve_bb(inst: &Instance) -> (Option<Vec<usize>>, u64, u64) {
++    let mut csp = Csp::new();
++    let vars: Vec<_> = (0..inst.n)
++        .map(|i| {
++            csp.add_variable(CostFiniteDomain::new(
++                vec![EXACT, PREFILTER],
++                vec![unary(i, 0), unary(i, 1)],
++            ))
++        })
++        .collect();
++    // budget
++    let loc_table = vec![(EXACT, LOC[0]), (PREFILTER, LOC[1])];
++    csp.add_constraint(BoundedSumConstraint::new(
++        vars.clone(),
++        vec![loc_table; inst.n],
++        inst.budget,
++    ));
++    // coherence
++    for &(a, b) in &inst.edges {
++        csp.add_constraint(SameTier { scope: vec![vars[a], vars[b]] });
++    }
++    csp.finalize();
++    let sols = csp.solve_optimized(&bb_config());
++    let st = csp.stats();
++    let out = sols.first().map(|s| (0..inst.n).map(|i| s[i] as usize).collect());
++    (out, st.nodes_explored, st.backtracks)
++}
++
++// ── Reference: brute force ────────────────────────────────────────────────────
++
++fn brute_force(inst: &Instance) -> Option<(Vec<usize>, f64)> {
++    let mut best: Option<(Vec<usize>, f64)> = None;
++    for mask in 0u32..(1u32 << inst.n) {
++        let sol: Vec<usize> = (0..inst.n).map(|i| ((mask >> i) & 1) as usize).collect();
++        if loc_of(inst, &sol) > inst.budget + 1e-6 {
++            continue;
++        }
++        if inst.edges.iter().any(|&(a, b)| sol[a] != sol[b]) {
++            continue;
++        }
++        let obj: f64 = (0..inst.n).map(|i| unary(i, sol[i])).sum();
++        if best.as_ref().map_or(true, |(_, bc)| obj < *bc) {
++            best = Some((sol, obj));
++        }
++    }
++    best
++}
++
++// ── Driver ───────────────────────────────────────────────────────────────────
++
++fn run(inst: &Instance) {
++    println!("\n=== instance: {} | n={} | edges={} | budget={} ===", inst.name, inst.n, inst.edges.len(), inst.budget);
++
++    // reference
++    let reference = brute_force(inst);
++
++    // Route A: PBQP
++    let t = Instant::now();
++    let (a_sol, a_obj, a_stats, sweeps) = solve_pbqp_lagrangian(inst);
++    let a_us = t.elapsed().as_secs_f64() * 1e6;
++
++    // Route B: B&B
++    let t = Instant::now();
++    let (b_sol, b_nodes, b_backtracks) = solve_bb(inst);
++    let b_us = t.elapsed().as_secs_f64() * 1e6;
++
++    let ref_sol = reference.as_ref().map(|(s, _)| s.clone());
++    println!("  reference (brute): {:?}", ref_sol);
++    println!("  PBQP  assignment : {:?}  obj={:.3}  solve={:.1}us  (lambda sweeps={})", a_sol, a_obj, a_us, sweeps);
++    println!("        reductions : R0={} R1={} R2={} RN={} (max_stack_depth={})", a_stats.r0, a_stats.r1, a_stats.r2, a_stats.rn, a_stats.max_stack_depth);
++    println!("  B&B   assignment : {:?}  solve={:.1}us  nodes_explored={} backtracks={}", b_sol, b_us, b_nodes, b_backtracks);
++
++    let agree_ab = Some(&a_sol) == b_sol.as_ref();
++    let agree_ref = ref_sol.as_ref() == Some(&a_sol) && ref_sol == b_sol;
++    println!("  IDENTICAL(PBQP==B&B)={}  MATCHES_REF={}  RN_fallbacks={}", agree_ab, agree_ref, a_stats.rn);
++}
++
++fn main() {
++    // JSON: 3 real self-loop sites (string-scan, escape-scan, number-scan).
++    // Coherence: string 0 — escape 1 share the char-class table (edge 0-1);
++    //            number 2 shares the digit-class with string's 0 (edge 0-2).
++    //            => node 0 has degree 2 (exercises R2).
++    let json_slack = Instance { name: "json (slack budget)", n: 3, edges: vec![(0, 1), (0, 2)], budget: 900.0 };
++    let json_tight = Instance { name: "json (tight budget)", n: 3, edges: vec![(0, 1), (0, 2)], budget: 500.0 };
++
++    // CSS-L4: 12 self-loop sites. Coherence graph = a FOREST of small
++    // components (near-tree): a path, an edge, a small tree with a degree-3
++    // hub, another edge, and two isolated sites.
++    let css_edges = vec![
++        (0, 1), (1, 2),          // path 0-1-2  (node 1 deg2 -> R2)
++        (3, 4),                  // edge
++        (5, 6), (6, 7), (6, 8),  // tree, hub 6 deg3 (R1 peels leaves -> R0)
++        (9, 10),                 // edge
++        // 11 isolated -> R0
++    ];
++    let css_slack = Instance { name: "css-l4 (slack budget)", n: 12, edges: css_edges.clone(), budget: 3400.0 };
++    let css_tight = Instance { name: "css-l4 (tight budget)", n: 12, edges: css_edges.clone(), budget: 1800.0 };
++
++    // Boundary control: a K4 coherence clique (treewidth 3) — the shape that
++    // FORCES an RN fallback. Proves the reducible/dense boundary is real and
++    // that scan-plan (forest / treewidth<=2) sits on the reducible side.
++    let k4 = Instance { name: "K4 clique (dense control)", n: 4, edges: vec![(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)], budget: 900.0 };
++
++    for inst in [&json_slack, &json_tight, &css_slack, &css_tight, &k4] {
++        run(inst);
++    }
++}
+diff --git a/crates/csp-solver/src/constraint/bounded_sum.rs b/crates/csp-solver/src/constraint/bounded_sum.rs
+new file mode 100644
+index 000000000..e7bc86a3c
+--- /dev/null
++++ b/crates/csp-solver/src/constraint/bounded_sum.rs
+@@ -0,0 +1,178 @@
++//! Bounded-sum (knapsack) constraint: `Σ weight(var_i = value) ≤ capacity`.
++//!
++//! The existing constraint zoo carries `all_different`, `not_equal`,
++//! `implication`, `cardinality`, and `lambda` — every one of them is a
++//! *relational* predicate over discrete values. None of them can express a
++//! **linear resource bound**: the sum of a per-value weight across a set of
++//! variables must not exceed a fixed capacity. That is the one primitive a
++//! *global* generated-size budget needs — one scarce pool (`generated_loc`)
++//! shared across N independent scan-site decisions, where each site's chosen
++//! shape spends a different number of lines.
++//!
++//! # Model
++//!
++//! Each variable in `scope` carries a per-value weight table
++//! `weights[pos] : value → static_size_cost`. The constraint is satisfied by
++//! an assignment iff `Σ_pos weight(pos, assigned_value) ≤ capacity`.
++//!
++//! # Propagation (the knapsack lower bound)
++//!
++//! `revise` performs bound-consistency filtering. Let the **floor** be the
++//! minimum sum still reachable from the current domains:
++//!
++//! ```text
++//! floor = Σ_pos  min over live domain of  weight(pos, ·)      // Σ min-cost residuals
++//! ```
++//!
++//! For an unassigned variable `p` and a candidate `val`, replacing `p`'s
++//! residual contribution with `weight(p, val)` yields the tightest lower bound
++//! achievable if `p := val`:
++//!
++//! ```text
++//! floor_if(p := val) = floor − min_residual(p) + weight(p, val)
++//! ```
++//!
++//! Any `val` with `floor_if(p := val) > capacity` cannot participate in a
++//! feasible completion and is pruned. When a domain wipes out the constraint
++//! is `Unsatisfiable`. Weights are `≥ 0`, so the floor is monotone under domain
++//! shrinkage and the filtering is sound.
++
++use crate::domain::Domain;
++use crate::variable::Variable;
++
++use super::traits::{Constraint, Revision, VarId};
++
++/// `Σ weight(var_i = value) ≤ capacity` over `scope`.
++///
++/// `weights[i]` is the value→weight table for `scope[i]`; `min_weight[i]` is
++/// the minimum weight over that table (the residual floor used by `check` for
++/// still-unassigned variables). Weights must be non-negative.
++#[derive(Debug, Clone)]
++pub struct BoundedSumConstraint<V: Clone + PartialEq + std::fmt::Debug> {
++    pub(crate) scope: Vec<VarId>,
++    pub(crate) weights: Vec<Vec<(V, f64)>>,
++    pub(crate) min_weight: Vec<f64>,
++    pub(crate) capacity: f64,
++}
++
++impl<V: Clone + PartialEq + std::fmt::Debug> BoundedSumConstraint<V> {
++    /// Build a bounded-sum constraint.
++    ///
++    /// `scope` and `weights` are parallel: `weights[i]` prices every legal
++    /// value of `scope[i]`. `capacity` is the hard upper bound on the summed
++    /// weight of any satisfying assignment.
++    ///
++    /// # Panics
++    ///
++    /// Panics if `scope.len() != weights.len()`, if any weight table is empty,
++    /// or if any weight is negative (the floor argument requires `w ≥ 0`).
++    pub fn new(scope: Vec<VarId>, weights: Vec<Vec<(V, f64)>>, capacity: f64) -> Self {
++        assert_eq!(
++            scope.len(),
++            weights.len(),
++            "BoundedSumConstraint: scope and weights length mismatch ({} vs {})",
++            scope.len(),
++            weights.len(),
++        );
++        let min_weight = weights
++            .iter()
++            .map(|table| {
++                assert!(!table.is_empty(), "BoundedSumConstraint: empty weight table");
++                table.iter().fold(f64::INFINITY, |acc, (_, w)| {
++                    assert!(*w >= 0.0, "BoundedSumConstraint: negative weight {w}");
++                    acc.min(*w)
++                })
++            })
++            .collect();
++        Self {
++            scope,
++            weights,
++            min_weight,
++            capacity,
++        }
++    }
++
++    /// Weight of `val` at scope position `pos`. Unregistered values fence to
++    /// `+∞` so an out-of-contract value is rejected rather than counted as free.
++    fn weight_at(&self, pos: usize, val: &V) -> f64 {
++        self.weights[pos]
++            .iter()
++            .find(|(v, _)| v == val)
++            .map(|(_, w)| *w)
++            .unwrap_or(f64::INFINITY)
++    }
++
++    /// Minimum weight over the *current* live domain at scope position `pos`.
++    fn live_min<D>(&self, var: &Variable<D>, pos: usize) -> f64
++    where
++        D: Domain<Value = V>,
++    {
++        var.domain
++            .values()
++            .iter()
++            .map(|v| self.weight_at(pos, v))
++            .fold(f64::INFINITY, f64::min)
++    }
++}
++
++impl<D: Domain> Constraint<D> for BoundedSumConstraint<D::Value>
++where
++    D::Value: PartialEq,
++{
++    fn scope(&self) -> &[VarId] {
++        &self.scope
++    }
++
++    /// Feasibility of a partial assignment: assigned weights plus the static
++    /// per-variable minimum for the unassigned tail must not exceed capacity.
++    fn check(&self, assignment: &[Option<D::Value>]) -> bool {
++        let mut floor = 0.0;
++        for (pos, &v) in self.scope.iter().enumerate() {
++            floor += match &assignment[v as usize] {
++                Some(val) => self.weight_at(pos, val),
++                None => self.min_weight[pos],
++            };
++        }
++        floor <= self.capacity
++    }
++
++    /// Knapsack bound-consistency: prune every value whose selection would
++    /// force the summed weight over `capacity`.
++    fn revise(&self, vars: &mut [Variable<D>], depth: usize) -> Revision {
++        // Residual floor per scope position over the current live domains.
++        let residual: Vec<f64> = self
++            .scope
++            .iter()
++            .enumerate()
++            .map(|(pos, &v)| self.live_min(&vars[v as usize], pos))
++            .collect();
++        let floor: f64 = residual.iter().sum();
++
++        let mut changed = false;
++        for (pos, &v) in self.scope.iter().enumerate() {
++            // Budget available to this variable once every *other* variable
++            // spends at least its residual minimum.
++            let slack = self.capacity - (floor - residual[pos]);
++            let doomed: Vec<D::Value> = vars[v as usize]
++                .domain
++                .values()
++                .into_iter()
++                .filter(|val| self.weight_at(pos, val) > slack)
++                .collect();
++            for val in &doomed {
++                if vars[v as usize].prune(val, depth) {
++                    changed = true;
++                }
++            }
++            if vars[v as usize].domain.is_empty() {
++                return Revision::Unsatisfiable;
++            }
++        }
++
++        if changed {
++            Revision::Changed
++        } else {
++            Revision::Unchanged
++        }
++    }
++}
+diff --git a/crates/csp-solver/src/constraint/mod.rs b/crates/csp-solver/src/constraint/mod.rs
+index f7f54d341..71f886fad 100644
+--- a/crates/csp-solver/src/constraint/mod.rs
++++ b/crates/csp-solver/src/constraint/mod.rs
+@@ -2,6 +2,7 @@
+ 
+ pub mod all_different;
+ pub mod all_different_except;
++pub mod bounded_sum;
+ pub mod dispatch;
+ pub mod implication;
+ pub mod lambda;
+@@ -11,6 +12,7 @@ pub mod traits;
+ 
+ pub use all_different::AllDifferent;
+ pub use all_different_except::AllDifferentExcept;
++pub use bounded_sum::BoundedSumConstraint;
+ pub use dispatch::ConstraintEnum;
+ pub use implication::ImplicationConstraint;
+ pub use lambda::LambdaConstraint;
+diff --git a/crates/csp-solver/tests/bounded_sum.rs b/crates/csp-solver/tests/bounded_sum.rs
+new file mode 100644
+index 000000000..025154765
+--- /dev/null
++++ b/crates/csp-solver/tests/bounded_sum.rs
+@@ -0,0 +1,165 @@
++//! Bounded-sum (knapsack) constraint tests.
++//!
++//! Two axes are exercised:
++//!
++//!   1. The propagator in isolation — `revise` prunes individually-infeasible
++//!      values and `check` rejects over-budget full assignments.
++//!
++//!   2. The decision the *rigged 1-variable* decision CSP structurally cannot
++//!      make: a **global** `Csp<CostFiniteDomain>` over ≥2 competing scan
++//!      sites, each `{Exact, Prefilter}`, under one shared
++//!      `Σ static_size_cost ≤ budget` constraint. Under a slack budget the
++//!      global optimum equals the per-site greedy pick (parity floor); under a
++//!      tight budget the budget *binds* and forces the expensive shape off at
++//!      least one site — a cross-site coupling no per-rule solve can express.
++
++use csp_solver::constraint::BoundedSumConstraint;
++use csp_solver::domain::CostFiniteDomain;
++use csp_solver::domain::traits::Domain;
++use csp_solver::ordering::Ordering;
++use csp_solver::{Csp, OptimizationMode, Pruning, SolveConfig};
++
++// Shape encoding for a scan site.
++const EXACT: i32 = 0; // cheap to generate, slower at runtime
++const PREFILTER: i32 = 1; // expensive to generate, faster at runtime
++
++// Objective (runtime) cost — lower is better; drives MinimizeCost.
++const EXACT_RUNTIME: f64 = 10.0;
++const PREFILTER_RUNTIME: f64 = 1.0;
++
++// Generated-LOC cost — the scarce pool the budget bounds.
++const EXACT_LOC: f64 = 100.0;
++const PREFILTER_LOC: f64 = 300.0;
++
++/// One scan-site variable: domain {Exact, Prefilter} priced by runtime cost.
++fn site_domain() -> CostFiniteDomain {
++    CostFiniteDomain::new(
++        vec![EXACT, PREFILTER],
++        vec![EXACT_RUNTIME, PREFILTER_RUNTIME],
++    )
++}
++
++/// LOC weight table for a scan site (used by the bounded-sum budget).
++fn site_loc_table() -> Vec<(i32, f64)> {
++    vec![(EXACT, EXACT_LOC), (PREFILTER, PREFILTER_LOC)]
++}
++
++fn min_cost_config() -> SolveConfig {
++    SolveConfig {
++        pruning: Pruning::ForwardChecking,
++        ordering: Ordering::FailFirst,
++        max_solutions: 1,
++        optimization_mode: OptimizationMode::MinimizeCost,
++        node_budget: Some(10_000),
++        cancel: None,
++    }
++}
++
++/// Solve N competing scan sites under a shared generated-LOC budget.
++/// Returns the chosen shape per site (index == site).
++fn solve_plan(num_sites: usize, budget: f64) -> Vec<i32> {
++    let mut csp = Csp::new();
++    let vars: Vec<_> = (0..num_sites).map(|_| csp.add_variable(site_domain())).collect();
++    csp.add_constraint(BoundedSumConstraint::new(
++        vars.clone(),
++        vec![site_loc_table(); num_sites],
++        budget,
++    ));
++    csp.finalize();
++    let solutions = csp.solve_optimized(&min_cost_config());
++    let solution = solutions.first().expect("feasible plan");
++    (0..num_sites).map(|i| solution[i]).collect()
++}
++
++// ---------------------------------------------------------------------------
++// 1. Propagator in isolation.
++// ---------------------------------------------------------------------------
++
++#[test]
++fn bounded_sum_prunes_individually_infeasible_value() {
++    // One site, budget 250. Prefilter (300 LOC) alone busts it → pruned.
++    let mut csp = Csp::new();
++    let v = csp.add_variable(site_domain());
++    csp.add_constraint(BoundedSumConstraint::new(
++        vec![v],
++        vec![site_loc_table()],
++        250.0,
++    ));
++    csp.finalize();
++    csp.propagate().expect("still satisfiable");
++    let live = csp.variables[v as usize].domain.values();
++    assert_eq!(live, vec![EXACT], "Prefilter must be pruned under a 250-LOC budget");
++}
++
++#[test]
++fn bounded_sum_check_rejects_over_budget_full_assignment() {
++    let c = BoundedSumConstraint::new(
++        vec![0, 1],
++        vec![site_loc_table(), site_loc_table()],
++        500.0,
++    );
++    use csp_solver::constraint::Constraint;
++    // {Prefilter, Prefilter} = 600 LOC > 500 → rejected.
++    let over = [Some(PREFILTER), Some(PREFILTER)];
++    assert!(!Constraint::<CostFiniteDomain>::check(&c, &over));
++    // {Prefilter, Exact} = 400 LOC ≤ 500 → accepted.
++    let ok = [Some(PREFILTER), Some(EXACT)];
++    assert!(Constraint::<CostFiniteDomain>::check(&c, &ok));
++}
++
++#[test]
++fn bounded_sum_unsat_when_even_cheapest_busts_budget() {
++    // Two sites, budget 150. Cheapest combo {Exact,Exact} = 200 > 150 → unsat.
++    let mut csp = Csp::new();
++    let a = csp.add_variable(site_domain());
++    let b = csp.add_variable(site_domain());
++    csp.add_constraint(BoundedSumConstraint::new(
++        vec![a, b],
++        vec![site_loc_table(), site_loc_table()],
++        150.0,
++    ));
++    csp.finalize();
++    // Propagation wipes out a domain because floor (200) already exceeds 150.
++    assert!(csp.propagate().is_err(), "must be unsatisfiable under a 150-LOC budget");
++}
++
++// ---------------------------------------------------------------------------
++// 2. The global budget decision the 1-variable CSP cannot make.
++// ---------------------------------------------------------------------------
++
++#[test]
++fn slack_budget_equals_per_site_greedy_pick() {
++    // Budget 1000 ≥ 2×300: every site independently affords its runtime-best
++    // shape. Global optimum == per-site greedy == Prefilter everywhere.
++    let plan = solve_plan(2, 1000.0);
++    assert_eq!(plan, vec![PREFILTER, PREFILTER], "slack budget must reproduce the per-site pick");
++}
++
++#[test]
++fn tight_budget_forces_exact_on_at_least_one_site() {
++    // Budget 500 < 2×300: cannot afford Prefilter on both. The global CSP
++    // must down-shift ≥1 site to the code-cheap Exact shape — a coupling no
++    // per-rule (single-variable) solve can represent.
++    let plan = solve_plan(2, 500.0);
++    let exact_count = plan.iter().filter(|&&s| s == EXACT).count();
++    let prefilter_count = plan.iter().filter(|&&s| s == PREFILTER).count();
++    assert_eq!(exact_count, 1, "exactly one site forced to Exact under the tight budget");
++    assert_eq!(prefilter_count, 1, "the other site keeps its runtime-best Prefilter");
++    // And the plan genuinely differs from the slack/greedy plan.
++    assert_ne!(plan, vec![PREFILTER, PREFILTER], "the budget must change the plan");
++}
++
++#[test]
++fn budget_binds_monotonically_across_the_threshold() {
++    // Sweep the budget across the 600-LOC greedy demand. Above it: 0 forced.
++    // Straddling it: exactly 1 forced. Below 2×Exact: infeasible.
++    let loc = |plan: &[i32]| plan.iter().map(|&s| if s == EXACT { EXACT_LOC } else { PREFILTER_LOC }).sum::<f64>();
++
++    let slack = solve_plan(2, 700.0);
++    assert!(loc(&slack) <= 700.0);
++    assert_eq!(slack.iter().filter(|&&s| s == EXACT).count(), 0);
++
++    let tight = solve_plan(2, 550.0);
++    assert!(loc(&tight) <= 550.0);
++    assert_eq!(tight.iter().filter(|&&s| s == EXACT).count(), 1);
++}

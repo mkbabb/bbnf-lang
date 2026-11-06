@@ -1,0 +1,10 @@
+### BASELINE 0.7.1 — vue-tsc --noEmit -p tsconfig.forcescope.json (skipLibCheck:false) ###
+src/grammar/compile.ts(12,25): error TS2307: Cannot find module '../../grammar/bibtex.bbnf' or its corresponding type declarations.
+src/grammar/compile.ts(13,31): error TS2307: Cannot find module '../../grammar/latex-tokens.bbnf' or its corresponding type declarations.
+src/grammar/compile.ts(76,5): error TS2322: Type 'import("/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/lp-scratch-8D/node_modules/@mkbabb/bbnf-lang/dist/src/types").Nonterminals' is not assignable to type 'import("/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/lp-scratch-8D/src/grammar/compile").Nonterminals'.
+  'string' index signatures are incompatible.
+    Type 'Parser<any>' is missing the following properties from type 'Parser<any>': flags, minus, call, recover
+src/grammar/compile.ts(124,5): error TS2322: Type 'import("/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/lp-scratch-8D/node_modules/@mkbabb/bbnf-lang/dist/src/types").Nonterminals' is not assignable to type 'import("/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/lp-scratch-8D/src/grammar/compile").Nonterminals'.
+  'string' index signatures are incompatible.
+    Type 'Parser<any>' is missing the following properties from type 'Parser<any>': flags, minus, call, recover
+VUETSC_EXIT=2

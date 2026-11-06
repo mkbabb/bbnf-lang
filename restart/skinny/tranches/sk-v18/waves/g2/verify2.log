@@ -1,0 +1,15 @@
+### G2 TARGETED VERIFY v2 (skip bbnf) ###
+### codegen tests (34/34?) ###
+CODEGEN_EXIT=0
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### runtime tests (JSON 51/51 + CSS) ###
+RUNTIME_EXIT=0
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+### css 9-field parity ###
+CSSPARITY_EXIT=101
+### regen-clean (css + json) ###
+CHECK_CSS=0
+CHECK_JSON=0
+### DONE ###

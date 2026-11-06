@@ -1,0 +1,956 @@
+# PROTO-2 (family 5C, reference control) — scratch-copy diff vs parse-that READ-ONLY original
+# base: parse-that HEAD (XL-H); applied inside pt-scratch, CARGO_TARGET_DIR isolated.
+
+## MODIFIED: rust/regex/Cargo.toml
+--- a/parse-that/rust/regex/Cargo.toml	2026-05-02 02:58:47
++++ b/pt-scratch/rust/regex/Cargo.toml	2026-07-16 16:03:38
+@@ -57,3 +57,7 @@
+ [[bench]]
+ name = "regex_dfa_compile"
+ harness = false
++
++[[bench]]
++name = "regex_min_race"
++harness = false
+
+## MODIFIED: rust/regex/benches/regex_dfa_compile.rs (corpus 26 → 56, tagged)
+--- a/parse-that/rust/regex/benches/regex_dfa_compile.rs	2026-04-27 16:32:06
++++ b/pt-scratch/rust/regex/benches/regex_dfa_compile.rs	2026-07-16 16:03:59
+@@ -18,22 +18,23 @@
+ 
+ use bbnf_regex::Dfa;
+ 
++// ≥50 patterns. Each carries an acyclic/cyclic hint (`A`/`C`); the authoritative
++// tag is recomputed at runtime by a back-edge DFS in the `regex_min_race` bench.
++// Acyclic = finite language (no unbounded */+ run ⇒ DFA is a DAG).
+ const COMPILE_PATTERNS: &[&str] = &[
++    // ── cyclic (C): unbounded run ──
+     r"\d+",
+     r"\s+",
+     r"\w+",
+     r"[a-z]+",
++    r"[A-Z]+",
+     r"[a-zA-Z_]\w*",
+     r"[0-9a-fA-F]+",
+-    r"[0-9a-fA-F]{3,8}",
+     r"-?\d+",
+     r"-?(0|[1-9]\d*)(\.\d+)?",
+     r"[-+]?\d+",
+     r"[-+]?(\d+(\.\d+)?|\.\d+)",
+     r"https?://[a-zA-Z0-9./-]+",
+-    r"#[0-9a-fA-F]{3,6}",
+-    r"\d{4}-\d{2}-\d{2}",
+-    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
+     r"0x[0-9a-fA-F]+",
+     r"\d+px",
+     r"\d+(?:px|em|rem|vh|vw)",
+@@ -45,6 +46,40 @@
+     r"[a-zA-Z_][\w-]*",
+     r"\d+(?:_\d+)*",
+     r"\w+(?:[-_]\w+)*",
++    r"a*b*c*",
++    r"(ab)+",
++    r"[a-z]+@[a-z]+\.[a-z]+",
++    r"\d+\.\d+",
++    r"[^\x00]*x",
++    r"[a-z]*[0-9]+",
++    r"(?:foo|bar)*",
++    r"\w+\s*=\s*\w+",
++    r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]+",
++    r"\$[a-zA-Z_][a-zA-Z0-9_]*",
++    r"//[^\n]*",
++    r"/\*.*\*/",
++    r"[ \t]+",
++    r"[a-fA-F0-9]{2}(?::[a-fA-F0-9]{2})+",
++    r"\d+(,\d{3})*",
++    r"[A-Za-z]+(?:'[A-Za-z]+)*",
++    r"<[a-zA-Z][a-zA-Z0-9]*>",
++    r"\+?\d[\d -]{6,}\d",
++    r"%[0-9a-fA-F][0-9a-fA-F]|[^%]+",
++    r"[a-z]+(-[a-z]+)*",
++    r"(?:[A-Z][a-z]+)+",
++    // ── acyclic (A): finite language ──
++    r"\d{4}-\d{2}-\d{2}",
++    r"#[0-9a-fA-F]{3,6}",
++    r"[0-9a-fA-F]{3,8}",
++    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
++    r"[tT][rR][uU][eE]",
++    r"\d{2}:\d{2}:\d{2}",
++    r"(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)",
++    r"v\d\.\d\.\d",
++    r"[A-Z]{3}-\d{4}",
++    r"[01]{8}",
++    r"(?:GET|POST|PUT|DELETE|HEAD)",
++    r"\d{5}(?:-\d{4})?",
+ ];
+ 
+ const MATCH_INPUT: &str = "the quick brown fox 12345 jumped over 3.14159 lazy \
+
+## NEW FILE: rust/regex/benches/regex_min_race.rs
+--- /dev/null
++++ b/pt-scratch/rust/regex/benches/regex_min_race.rs
++//! LOCK-5 · pass-3 · PROTO-2 — the 5C reference control.
++//!
++//! Four (+incumbent) minimizers on ONE unminimized DFA per pattern:
++//!   L0 incumbent  : dfa.rs:291 Moore-refinement + FULL RESTART on every split (the strawman).
++//!   L1 null       : incumbent MINUS the :358 restart (fall through to next block; loop to fixpoint).
++//!   L2 valmari    : correct control — Hopcroft worklist O(n·k·log n) with an explicit virtual
++//!                   DEAD sink (makes the partial DFA total ⇒ classical-Hopcroft is unambiguous;
++//!                   this is Valmari's partial-DFA handling made concrete for this engine's DEAD edges).
++//!   L3 revuz      : acyclic single reverse-topological congruence pass, O(n·k). Acyclic tag ONLY.
++//!   L4 congruence : DfaSig{accept,targets} hashcons rebuild to fixpoint (the e-graph centerpiece),
++//!                   passes-to-fixpoint counted; O(passes·n·k).
++//!
++//! Correctness ORACLE first (byte-identical minimal canonical form), THEN cold-paired timing.
++
++use std::collections::HashMap;
++use std::hint::black_box;
++use std::time::Instant;
++
++use bbnf_regex::{DEAD, Dfa, DfaOptions, DfaState, StateId};
++
++// (a) grown corpus: ≥50 patterns. `acyclic` is COMPUTED at runtime by back-edge DFS;
++// the hint column is only for corpus curation / cross-check.
++const PATTERNS: &[&str] = &[
++    // ── cyclic (unbounded * / +) ────────────────────────────────────────
++    r"\d+",
++    r"\s+",
++    r"\w+",
++    r"[a-z]+",
++    r"[A-Z]+",
++    r"[a-zA-Z_]\w*",
++    r"[0-9a-fA-F]+",
++    r"-?\d+",
++    r"-?(0|[1-9]\d*)(\.\d+)?",
++    r"[-+]?\d+",
++    r"[-+]?(\d+(\.\d+)?|\.\d+)",
++    r"https?://[a-zA-Z0-9./-]+",
++    r"0x[0-9a-fA-F]+",
++    r"\d+px",
++    r"\d+(?:px|em|rem|vh|vw)",
++    r"(?:foo|bar|baz)+",
++    r"[A-Za-z0-9+/]+",
++    r"[a-zA-Z][a-zA-Z0-9]*",
++    r"(?:0|[1-9][0-9]*)",
++    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
++    r"[a-zA-Z_][\w-]*",
++    r"\d+(?:_\d+)*",
++    r"\w+(?:[-_]\w+)*",
++    r"a*b*c*",
++    r"(ab)+",
++    r"[a-z]+@[a-z]+\.[a-z]+",
++    r"\d+\.\d+",
++    r"[^\x00]*x",
++    r"[a-z]*[0-9]+",
++    r"(?:foo|bar)*",
++    r"\w+\s*=\s*\w+",
++    r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]+",
++    r"\$[a-zA-Z_][a-zA-Z0-9_]*",
++    r"//[^\n]*",
++    r"/\*.*\*/",
++    r"[ \t]+",
++    r"[a-fA-F0-9]{2}(?::[a-fA-F0-9]{2})+",
++    r"\d+(,\d{3})*",
++    r"[A-Za-z]+(?:'[A-Za-z]+)*",
++    r"<[a-zA-Z][a-zA-Z0-9]*>",
++    r"\+?\d[\d -]{6,}\d",
++    r"%[0-9a-fA-F][0-9a-fA-F]|[^%]+",
++    r"[a-z]+(-[a-z]+)*",
++    r"(?:[A-Z][a-z]+)+",
++    // ── acyclic (bounded / finite language: no unbounded run) ───────────
++    r"\d{4}-\d{2}-\d{2}",
++    r"#[0-9a-fA-F]{3,6}",
++    r"[0-9a-fA-F]{3,8}",
++    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
++    r"[tT][rR][uU][eE]",
++    r"\d{2}:\d{2}:\d{2}",
++    r"(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)",
++    r"v\d\.\d\.\d",
++    r"[A-Z]{3}-\d{4}",
++    r"[01]{8}",
++    r"(?:GET|POST|PUT|DELETE|HEAD)",
++    r"\d{5}(?:-\d{4})?",
++];
++
++// ── unminimized DFA build ───────────────────────────────────────────────
++fn build_unmin(pattern: &str) -> Option<Dfa> {
++    let opts = DfaOptions {
++        state_limit: 8192,
++        minimize: false,
++        unicode: true,
++    };
++    Dfa::compile_with(pattern, &opts)
++}
++
++// ── (a) back-edge DFS tag ───────────────────────────────────────────────
++fn is_acyclic(dfa: &Dfa) -> bool {
++    let n = dfa.states.len();
++    let k = dfa.num_classes as usize;
++    let mut color = vec![0u8; n]; // 0 white, 1 gray, 2 black
++    // iterative DFS
++    let mut stack: Vec<(usize, usize)> = vec![(0, 0)]; // (state, next class idx)
++    color[0] = 1;
++    while let Some(&(s, ci)) = stack.last() {
++        if ci >= k {
++            color[s] = 2;
++            stack.pop();
++            continue;
++        }
++        stack.last_mut().unwrap().1 += 1;
++        let t = dfa.states[s].transitions[ci];
++        if t == DEAD {
++            continue;
++        }
++        let t = t as usize;
++        match color[t] {
++            1 => return false, // back edge → cycle
++            0 => {
++                color[t] = 1;
++                stack.push((t, 0));
++            }
++            _ => {}
++        }
++    }
++    true
++}
++
++// ── shared partition → minimal DFA rebuild (mirrors dfa.rs:368-438) ──────
++fn build_from_partition(dfa: &Dfa, block_of: &[usize], num_blocks: usize) -> Dfa {
++    let n = dfa.states.len();
++    let num_cls = dfa.num_classes as usize;
++    let mut block_rep: Vec<Option<usize>> = vec![None; num_blocks];
++    for (s, &b) in block_of.iter().enumerate() {
++        if block_rep[b].is_none() {
++            block_rep[b] = Some(s);
++        }
++    }
++    let mut block_to_new = vec![DEAD; num_blocks];
++    let start_block = block_of[0];
++    block_to_new[start_block] = 0;
++    let mut new_states: Vec<DfaState> = Vec::with_capacity(num_blocks);
++    let rep0 = block_rep[start_block].unwrap();
++    new_states.push(DfaState {
++        transitions: vec![DEAD; num_cls],
++        is_accept: dfa.states[rep0].is_accept,
++    });
++    let mut next_id: u32 = 1;
++    for b in 0..num_blocks {
++        if block_to_new[b] != DEAD {
++            continue;
++        }
++        if let Some(rep) = block_rep[b] {
++            block_to_new[b] = next_id;
++            new_states.push(DfaState {
++                transitions: vec![DEAD; num_cls],
++                is_accept: dfa.states[rep].is_accept,
++            });
++            next_id += 1;
++        }
++    }
++    let mut old_to_new = vec![DEAD; n];
++    for (s, &b) in block_of.iter().enumerate() {
++        old_to_new[s] = block_to_new[b];
++    }
++    for b in 0..num_blocks {
++        let Some(rep) = block_rep[b] else { continue };
++        let new_id = block_to_new[b];
++        if new_id == DEAD {
++            continue;
++        }
++        for cls in 0..num_cls {
++            let ot = dfa.states[rep].transitions[cls];
++            new_states[new_id as usize].transitions[cls] = if ot == DEAD {
++                DEAD
++            } else {
++                old_to_new[ot as usize]
++            };
++        }
++    }
++    Dfa {
++        states: new_states,
++        flat_transitions: vec![],
++        byte_classes: dfa.byte_classes,
++        num_classes: dfa.num_classes,
++    }
++}
++
++// ── L0 incumbent (verbatim dfa.rs:291) ──────────────────────────────────
++fn min_incumbent(dfa: &Dfa) -> Dfa {
++    let n = dfa.states.len();
++    let num_cls = dfa.num_classes as usize;
++    if n <= 1 {
++        return clone_dfa(dfa);
++    }
++    let mut partition: Vec<usize> = vec![0; n];
++    let mut num_blocks: usize = 1;
++    let has_accept = dfa.states.iter().any(|s| s.is_accept);
++    let has_non = dfa.states.iter().any(|s| !s.is_accept);
++    if has_accept && has_non {
++        num_blocks = 2;
++        for (i, st) in dfa.states.iter().enumerate() {
++            partition[i] = if st.is_accept { 0 } else { 1 };
++        }
++    }
++    let mut changed = true;
++    while changed {
++        changed = false;
++        for block_id in 0..num_blocks {
++            let members: Vec<usize> = (0..n).filter(|&s| partition[s] == block_id).collect();
++            if members.len() <= 1 {
++                continue;
++            }
++            for cls in 0..num_cls {
++                let first = members[0];
++                let ft = dfa.states[first].transitions[cls];
++                let ftb = if ft == DEAD { usize::MAX } else { partition[ft as usize] };
++                let mut splitters: Vec<usize> = Vec::new();
++                for &m in &members[1..] {
++                    let t = dfa.states[m].transitions[cls];
++                    let tb = if t == DEAD { usize::MAX } else { partition[t as usize] };
++                    if tb != ftb {
++                        splitters.push(m);
++                    }
++                }
++                if !splitters.is_empty() {
++                    let nb = num_blocks;
++                    num_blocks += 1;
++                    for &s in &splitters {
++                        partition[s] = nb;
++                    }
++                    changed = true;
++                    break; // restart refinement from the beginning
++                }
++            }
++            if changed {
++                break;
++            }
++        }
++    }
++    build_from_partition(dfa, &partition, num_blocks)
++}
++
++// ── L1 null: incumbent MINUS the :358 restart ───────────────────────────
++// The only edit vs L0: after a split, do NOT `break` to restart from block 0;
++// fall through to the next block, and loop the outer `while` to a clean fixpoint pass.
++fn min_null(dfa: &Dfa) -> Dfa {
++    let n = dfa.states.len();
++    let num_cls = dfa.num_classes as usize;
++    if n <= 1 {
++        return clone_dfa(dfa);
++    }
++    let mut partition: Vec<usize> = vec![0; n];
++    let mut num_blocks: usize = 1;
++    let has_accept = dfa.states.iter().any(|s| s.is_accept);
++    let has_non = dfa.states.iter().any(|s| !s.is_accept);
++    if has_accept && has_non {
++        num_blocks = 2;
++        for (i, st) in dfa.states.iter().enumerate() {
++            partition[i] = if st.is_accept { 0 } else { 1 };
++        }
++    }
++    let mut changed = true;
++    while changed {
++        changed = false;
++        let mut block_id = 0;
++        while block_id < num_blocks {
++            let members: Vec<usize> = (0..n).filter(|&s| partition[s] == block_id).collect();
++            if members.len() <= 1 {
++                block_id += 1;
++                continue;
++            }
++            for cls in 0..num_cls {
++                let first = members[0];
++                let ft = dfa.states[first].transitions[cls];
++                let ftb = if ft == DEAD { usize::MAX } else { partition[ft as usize] };
++                let mut splitters: Vec<usize> = Vec::new();
++                for &m in &members[1..] {
++                    let t = dfa.states[m].transitions[cls];
++                    let tb = if t == DEAD { usize::MAX } else { partition[t as usize] };
++                    if tb != ftb {
++                        splitters.push(m);
++                    }
++                }
++                if !splitters.is_empty() {
++                    let nb = num_blocks;
++                    num_blocks += 1;
++                    for &s in &splitters {
++                        partition[s] = nb;
++                    }
++                    changed = true;
++                    break; // next block (NOT restart-from-beginning)
++                }
++            }
++            block_id += 1;
++        }
++    }
++    build_from_partition(dfa, &partition, num_blocks)
++}
++
++// ── L2 valmari: correct Hopcroft worklist w/ explicit virtual DEAD sink ──
++fn min_valmari(dfa: &Dfa) -> Dfa {
++    let n = dfa.states.len();
++    let k = dfa.num_classes as usize;
++    if n <= 1 {
++        return clone_dfa(dfa);
++    }
++    let d = n; // virtual DEAD sink index
++    let m = n + 1; // total states incl. sink
++    // total transition function delta[s*k + c]
++    let mut delta = vec![d; m * k];
++    for s in 0..n {
++        for c in 0..k {
++            let t = dfa.states[s].transitions[c];
++            delta[s * k + c] = if t == DEAD { d } else { t as usize };
++        }
++    }
++    // sink loops to itself on all classes (already d by init).
++    // inverse: inv[c][target] = sources
++    let mut inv: Vec<Vec<Vec<u32>>> = vec![vec![Vec::new(); m]; k];
++    for s in 0..m {
++        for c in 0..k {
++            let t = delta[s * k + c];
++            inv[c][t].push(s as u32);
++        }
++    }
++    // initial partition: F vs (Q\F); sink d is non-accepting.
++    let accept = |s: usize| s != d && dfa.states[s].is_accept;
++    let mut block_of = vec![0usize; m];
++    let mut members: Vec<Vec<u32>> = Vec::new();
++    let mut f = Vec::new();
++    let mut nf = Vec::new();
++    for s in 0..m {
++        if accept(s) {
++            f.push(s as u32);
++        } else {
++            nf.push(s as u32);
++        }
++    }
++    let mut worklist: Vec<(usize, usize)> = Vec::new();
++    if f.is_empty() || nf.is_empty() {
++        // single block; still must isolate sink — but sink is non-accepting so if F empty
++        // then everything incl real states are non-accepting: one block {all}. With a real
++        // sink present, F empty means no accepts ⇒ language empty ⇒ minimal is trivial.
++        for s in 0..m {
++            block_of[s] = 0;
++        }
++        members.push((0..m as u32).collect());
++    } else {
++        for &s in &f {
++            block_of[s as usize] = 0;
++        }
++        for &s in &nf {
++            block_of[s as usize] = 1;
++        }
++        members.push(f.clone());
++        members.push(nf.clone());
++        let smaller = if f.len() <= nf.len() { 0 } else { 1 };
++        for c in 0..k {
++            worklist.push((smaller, c));
++        }
++    }
++    // Hopcroft refinement
++    while let Some((a, c)) = worklist.pop() {
++        // X = predecessors of block a on class c
++        let mut inx = vec![false; m];
++        let mut xs: Vec<u32> = Vec::new();
++        for &t in &members[a] {
++            for &s in &inv[c][t as usize] {
++                if !inx[s as usize] {
++                    inx[s as usize] = true;
++                    xs.push(s);
++                }
++            }
++        }
++        if xs.is_empty() {
++            continue;
++        }
++        // group X states by their current block
++        let mut hit: HashMap<usize, Vec<u32>> = HashMap::new();
++        for &s in &xs {
++            hit.entry(block_of[s as usize]).or_default().push(s);
++        }
++        for (y, x_in_y) in hit {
++            if x_in_y.len() == members[y].len() {
++                continue; // Y fully inside X: no split
++            }
++            // split Y into (Y∩X)=x_in_y and (Y\X)
++            let ny = members.len();
++            let ny_vec: Vec<u32> = x_in_y;
++            for &s in &ny_vec {
++                block_of[s as usize] = ny;
++            }
++            // remove those from members[y]
++            members[y].retain(|&s| block_of[s as usize] == y);
++            members.push(ny_vec);
++            // update worklist
++            for cc in 0..k {
++                if let Some(pos) = worklist.iter().position(|&(bb, c2)| bb == y && c2 == cc) {
++                    worklist[pos] = (y, cc);
++                    worklist.push((ny, cc));
++                } else {
++                    let smaller = if members[y].len() <= members[ny].len() { y } else { ny };
++                    worklist.push((smaller, cc));
++                }
++            }
++        }
++    }
++    // rebuild over REAL states, dropping the sink's block.
++    let dead_block = block_of[d];
++    let num_blocks = members.len();
++    // Remap: block ids that are NOT the dead block get compacted; real states in dead block dropped.
++    let real_block_of: Vec<usize> = (0..n).map(|s| block_of[s]).collect();
++    // If any real state landed in dead_block it is a genuine trap; rebuild handles by DEAD edges,
++    // but such a state would be DROPPED (matches partial-DFA minimal form). Guard via oracle.
++    build_from_partition_dropping(dfa, &real_block_of, num_blocks, dead_block)
++}
++
++// rebuild that treats `dead_block` as DEAD (drops it, edges to it → DEAD).
++fn build_from_partition_dropping(
++    dfa: &Dfa,
++    block_of: &[usize],
++    num_blocks: usize,
++    dead_block: usize,
++) -> Dfa {
++    let n = dfa.states.len();
++    let num_cls = dfa.num_classes as usize;
++    let mut block_rep: Vec<Option<usize>> = vec![None; num_blocks];
++    for (s, &b) in block_of.iter().enumerate() {
++        if b != dead_block && block_rep[b].is_none() {
++            block_rep[b] = Some(s);
++        }
++    }
++    let mut block_to_new = vec![DEAD; num_blocks];
++    let start_block = block_of[0];
++    let mut new_states: Vec<DfaState> = Vec::new();
++    // start must be new 0 (start is never the dead block for a valid accept-reachable DFA)
++    block_to_new[start_block] = 0;
++    let rep0 = block_rep[start_block].expect("start in dead block");
++    new_states.push(DfaState {
++        transitions: vec![DEAD; num_cls],
++        is_accept: dfa.states[rep0].is_accept,
++    });
++    let mut next_id: u32 = 1;
++    for b in 0..num_blocks {
++        if b == dead_block || block_to_new[b] != DEAD {
++            continue;
++        }
++        if let Some(rep) = block_rep[b] {
++            block_to_new[b] = next_id;
++            new_states.push(DfaState {
++                transitions: vec![DEAD; num_cls],
++                is_accept: dfa.states[rep].is_accept,
++            });
++            next_id += 1;
++        }
++    }
++    let mut old_to_new = vec![DEAD; n];
++    for (s, &b) in block_of.iter().enumerate() {
++        old_to_new[s] = block_to_new[b];
++    }
++    for b in 0..num_blocks {
++        if b == dead_block {
++            continue;
++        }
++        let Some(rep) = block_rep[b] else { continue };
++        let new_id = block_to_new[b];
++        if new_id == DEAD {
++            continue;
++        }
++        for cls in 0..num_cls {
++            let ot = dfa.states[rep].transitions[cls];
++            new_states[new_id as usize].transitions[cls] = if ot == DEAD {
++                DEAD
++            } else {
++                old_to_new[ot as usize]
++            };
++        }
++    }
++    Dfa {
++        states: new_states,
++        flat_transitions: vec![],
++        byte_classes: dfa.byte_classes,
++        num_classes: dfa.num_classes,
++    }
++}
++
++// ── L3 revuz: acyclic single reverse-topological congruence pass ─────────
++// Returns None if not acyclic. DEAD handled via sentinel id -1.
++fn min_revuz(dfa: &Dfa) -> Option<Dfa> {
++    let n = dfa.states.len();
++    let k = dfa.num_classes as usize;
++    if n <= 1 {
++        return Some(clone_dfa(dfa));
++    }
++    // reverse-topological (sinks first) via DFS finish order; bail if cycle.
++    let mut color = vec![0u8; n];
++    let mut order: Vec<usize> = Vec::with_capacity(n); // finish order (post-order)
++    let mut stack: Vec<(usize, usize)> = vec![(0, 0)];
++    color[0] = 1;
++    while let Some(&(s, ci)) = stack.last() {
++        if ci >= k {
++            color[s] = 2;
++            order.push(s);
++            stack.pop();
++            continue;
++        }
++        stack.last_mut().unwrap().1 += 1;
++        let t = dfa.states[s].transitions[ci];
++        if t == DEAD {
++            continue;
++        }
++        let t = t as usize;
++        match color[t] {
++            1 => return None, // cycle
++            0 => {
++                color[t] = 1;
++                stack.push((t, 0));
++            }
++            _ => {}
++        }
++    }
++    // post-order = children before parent ⇒ processing in `order` sequence visits
++    // every successor before its predecessor. Single pass, assign congruence ids.
++    let mut sig_id: HashMap<(bool, Vec<i64>), usize> = HashMap::new();
++    let mut assigned: Vec<usize> = vec![usize::MAX; n];
++    let mut next = 0usize;
++    for &s in &order {
++        let mut row: Vec<i64> = Vec::with_capacity(k);
++        for c in 0..k {
++            let t = dfa.states[s].transitions[c];
++            row.push(if t == DEAD {
++                -1
++            } else {
++                // successor already assigned (post-order)
++                assigned[t as usize] as i64
++            });
++        }
++        let key = (dfa.states[s].is_accept, row);
++        let id = *sig_id.entry(key).or_insert_with(|| {
++            let v = next;
++            next += 1;
++            v
++        });
++        assigned[s] = id;
++    }
++    // `assigned` is a valid congruence partition. Reachable states only (order covers reachable).
++    // Build block_of over all n (unreachable get their own — but subset-construction has none).
++    Some(build_from_partition(dfa, &assigned, next))
++}
++
++// ── L4 congruence: DfaSig hashcons rebuild to fixpoint (returns passes) ──
++fn min_congruence(dfa: &Dfa) -> (Dfa, usize) {
++    let n = dfa.states.len();
++    let k = dfa.num_classes as usize;
++    if n <= 1 {
++        return (clone_dfa(dfa), 0);
++    }
++    // id_of: initial partition by accept.
++    let mut id_of: Vec<usize> = (0..n)
++        .map(|s| if dfa.states[s].is_accept { 1 } else { 0 })
++        .collect();
++    let mut num = id_of.iter().copied().max().unwrap() + 1;
++    let mut passes = 0usize;
++    loop {
++        passes += 1;
++        // DfaSig{accept, targets: id_of[target] or -1 for DEAD}
++        let mut table: HashMap<(usize, Vec<i64>), usize> = HashMap::new();
++        let mut new_id = vec![0usize; n];
++        let mut nn = 0usize;
++        for s in 0..n {
++            let mut tg: Vec<i64> = Vec::with_capacity(k);
++            for c in 0..k {
++                let t = dfa.states[s].transitions[c];
++                tg.push(if t == DEAD { -1 } else { id_of[t as usize] as i64 });
++            }
++            let key = (id_of[s], tg);
++            let id = *table.entry(key).or_insert_with(|| {
++                let v = nn;
++                nn += 1;
++                v
++            });
++            new_id[s] = id;
++        }
++        if nn == num {
++            break; // fixpoint: no refinement
++        }
++        id_of = new_id;
++        num = nn;
++    }
++    (build_from_partition(dfa, &id_of, num), passes)
++}
++
++fn clone_dfa(dfa: &Dfa) -> Dfa {
++    Dfa {
++        states: dfa.states.clone(),
++        flat_transitions: vec![],
++        byte_classes: dfa.byte_classes,
++        num_classes: dfa.num_classes,
++    }
++}
++
++// ── oracle: BFS canonical form (state-renumbering invariant) ─────────────
++fn canonical(dfa: &Dfa) -> Vec<(bool, Vec<i64>)> {
++    let k = dfa.num_classes as usize;
++    let n = dfa.states.len();
++    let mut canon = vec![usize::MAX; n];
++    let mut rows: Vec<(bool, Vec<i64>)> = Vec::new();
++    let mut queue: Vec<usize> = vec![0];
++    canon[0] = 0;
++    let mut next = 1usize;
++    let mut head = 0;
++    while head < queue.len() {
++        let s = queue[head];
++        head += 1;
++        let mut row: Vec<i64> = Vec::with_capacity(k);
++        for c in 0..k {
++            let t = dfa.states[s].transitions[c];
++            if t == DEAD {
++                row.push(-1);
++            } else {
++                let t = t as usize;
++                if canon[t] == usize::MAX {
++                    canon[t] = next;
++                    next += 1;
++                    queue.push(t);
++                }
++                row.push(canon[t] as i64);
++            }
++        }
++        rows.push((dfa.states[s].is_accept, row));
++    }
++    rows
++}
++
++// ── cold-paired timing ───────────────────────────────────────────────────
++fn time_lane<F: FnMut(&Dfa)>(dfa: &Dfa, reps: usize, mut f: F) -> (f64, f64) {
++    // warm
++    f(dfa);
++    let mut samples: Vec<u64> = Vec::with_capacity(reps);
++    for _ in 0..reps {
++        let fresh = clone_dfa(dfa); // fresh input each sample (cold), clone excluded from timer
++        let t0 = Instant::now();
++        f(&fresh);
++        samples.push(t0.elapsed().as_nanos() as u64);
++    }
++    samples.sort_unstable();
++    let min = samples[0] as f64;
++    let median = samples[reps / 2] as f64;
++    (min, median)
++}
++
++fn loadavg() -> f64 {
++    // macOS: `sysctl -n vm.loadavg` → "{ 4.71 5.02 5.00 }"
++    std::process::Command::new("sysctl")
++        .args(["-n", "vm.loadavg"])
++        .output()
++        .ok()
++        .and_then(|o| String::from_utf8(o.stdout).ok())
++        .and_then(|s| {
++            s.split_whitespace()
++                .find(|t| t.parse::<f64>().is_ok())
++                .and_then(|t| t.parse().ok())
++        })
++        .unwrap_or(-1.0)
++}
++
++fn main() {
++    const REPS: usize = 401;
++    println!("# PROTO-2 · 5C reference control — minimizer race");
++    println!("# loadavg(start)={:.2}  reps={}", loadavg(), REPS);
++
++    // build + tag + oracle
++    struct Row {
++        pat: String,
++        n: usize,
++        k: usize,
++        acyclic: bool,
++        min_states: usize,
++        cong_passes: usize,
++        t_incumbent: f64,
++        t_null: f64,
++        t_valmari: f64,
++        t_revuz: Option<f64>,
++        t_cong: f64,
++        t_dispatch: f64,
++        diverged: bool,
++    }
++    let mut table: Vec<Row> = Vec::new();
++    let mut n_diverge = 0;
++
++    for &pat in PATTERNS {
++        let Some(dfa) = build_unmin(pat) else {
++            println!("# SKIP (compile None): {}", pat);
++            continue;
++        };
++        let n = dfa.states.len();
++        let k = dfa.num_classes as usize;
++        let acyclic = is_acyclic(&dfa);
++
++        // run all lanes once for the oracle
++        let d_inc = min_incumbent(&dfa);
++        let d_null = min_null(&dfa);
++        let d_val = min_valmari(&dfa);
++        let (d_cong, passes) = min_congruence(&dfa);
++        let d_rev = min_revuz(&dfa);
++
++        let c_inc = canonical(&d_inc);
++        let c_null = canonical(&d_null);
++        let c_val = canonical(&d_val);
++        let c_cong = canonical(&d_cong);
++        let mut diverged = false;
++        if c_null != c_inc {
++            println!("# DIVERGE null vs incumbent: {} ({} vs {} states)", pat, d_null.states.len(), d_inc.states.len());
++            diverged = true;
++        }
++        if c_val != c_inc {
++            println!("# DIVERGE valmari vs incumbent: {} ({} vs {} states)", pat, d_val.states.len(), d_inc.states.len());
++            diverged = true;
++        }
++        if c_cong != c_inc {
++            println!("# DIVERGE congruence vs incumbent: {} ({} vs {} states)", pat, d_cong.states.len(), d_inc.states.len());
++            diverged = true;
++        }
++        if let Some(ref dr) = d_rev {
++            if canonical(dr) != c_inc {
++                println!("# DIVERGE revuz vs incumbent: {} ({} vs {} states)", pat, dr.states.len(), d_inc.states.len());
++                diverged = true;
++            }
++        } else if acyclic {
++            println!("# DIVERGE revuz=None but tagged acyclic: {}", pat);
++            diverged = true;
++        }
++        if diverged {
++            n_diverge += 1;
++        }
++
++        let min_states = d_inc.states.len();
++
++        // timing (cold paired)
++        let (_, t_inc) = time_lane(&dfa, REPS, |d| { black_box(min_incumbent(d)); });
++        let (_, t_null) = time_lane(&dfa, REPS, |d| { black_box(min_null(d)); });
++        let (_, t_val) = time_lane(&dfa, REPS, |d| { black_box(min_valmari(d)); });
++        let (_, t_cong) = time_lane(&dfa, REPS, |d| { black_box(min_congruence(d)); });
++        let t_rev = if acyclic {
++            let (_, t) = time_lane(&dfa, REPS, |d| { black_box(min_revuz(d)); });
++            Some(t)
++        } else {
++            None
++        };
++        // dispatch cost = back-edge DFS
++        let (_, t_disp) = time_lane(&dfa, REPS, |d| { black_box(is_acyclic(d)); });
++
++        table.push(Row {
++            pat: pat.to_string(),
++            n,
++            k,
++            acyclic,
++            min_states,
++            cong_passes: passes,
++            t_incumbent: t_inc,
++            t_null: t_null,
++            t_valmari: t_val,
++            t_revuz: t_rev,
++            t_cong,
++            t_dispatch: t_disp,
++            diverged,
++        });
++    }
++
++    // ── report ──
++    println!("\n## per-pattern (median ns)");
++    println!(
++        "{:<44} {:>4} {:>3} {:>4} {:>4} {:>5} {:>9} {:>9} {:>9} {:>9} {:>9} {:>7}",
++        "pattern", "n", "k", "min", "tag", "cgP", "incumb", "null", "valmari", "revuz", "cong", "disp"
++    );
++    for r in &table {
++        println!(
++            "{:<44} {:>4} {:>3} {:>4} {:>4} {:>5} {:>9.0} {:>9.0} {:>9.0} {:>9} {:>9.0} {:>7.0}",
++            trunc(&r.pat, 44),
++            r.n,
++            r.k,
++            r.min_states,
++            if r.acyclic { "ACY" } else { "cyc" },
++            r.cong_passes,
++            r.t_incumbent,
++            r.t_null,
++            r.t_valmari,
++            r.t_revuz.map(|v| format!("{:.0}", v)).unwrap_or_else(|| "-".into()),
++            r.t_cong,
++            r.t_dispatch,
++        );
++    }
++
++    // aggregates
++    let acy: Vec<&Row> = table.iter().filter(|r| r.acyclic).collect();
++    let cyc: Vec<&Row> = table.iter().filter(|r| !r.acyclic).collect();
++    let sum = |xs: &[&Row], f: &dyn Fn(&Row) -> f64| -> f64 { xs.iter().map(|r| f(r)).sum() };
++    let med = |mut xs: Vec<f64>| -> f64 {
++        if xs.is_empty() { return 0.0; }
++        xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
++        xs[xs.len() / 2]
++    };
++
++    println!("\n## corpus: {} patterns  acyclic={}  cyclic={}  divergences={}",
++        table.len(), acy.len(), cyc.len(), n_diverge);
++
++    // acyclic slice: revuz vs valmari
++    let acy_val = sum(&acy, &|r| r.t_valmari);
++    let acy_rev = sum(&acy, &|r| r.t_revuz.unwrap_or(0.0));
++    let acy_null = sum(&acy, &|r| r.t_null);
++    let acy_inc = sum(&acy, &|r| r.t_incumbent);
++    let acy_cong = sum(&acy, &|r| r.t_cong);
++    println!("\n## ACYCLIC slice (sum median ns over {} pats)", acy.len());
++    println!("   incumbent={:.0}  null={:.0}  valmari={:.0}  revuz={:.0}  cong={:.0}",
++        acy_inc, acy_null, acy_val, acy_rev, acy_cong);
++    let rev_vs_val = if acy_rev > 0.0 { acy_val / acy_rev } else { 0.0 };
++    let null_vs_rev = if acy_rev > 0.0 { acy_null / acy_rev } else { 0.0 };
++    let val_vs_null = if acy_null > 0.0 { acy_val / acy_null } else { 0.0 };
++    println!("   revuz beats valmari:  valmari/revuz = {:.2}x   (PASS gate ≥1.30)", rev_vs_val);
++    println!("   null   vs revuz:      null/revuz    = {:.2}x   (>1 ⇒ revuz faster than the :358-fix)", null_vs_rev);
++    println!("   valmari vs null:      valmari/null  = {:.2}x", val_vs_null);
++    // per-pattern medians too
++    println!("   per-pat valmari/revuz median = {:.2}x",
++        med(acy.iter().filter_map(|r| r.t_revuz.map(|rv| r.t_valmari / rv)).collect()));
++
++    // cyclic slice
++    println!("\n## CYCLIC slice (sum median ns over {} pats)", cyc.len());
++    println!("   incumbent={:.0}  null={:.0}  valmari={:.0}  cong={:.0}",
++        sum(&cyc, &|r| r.t_incumbent), sum(&cyc, &|r| r.t_null),
++        sum(&cyc, &|r| r.t_valmari), sum(&cyc, &|r| r.t_cong));
++
++    // congruence passes-to-fixpoint vs log2(n)
++    println!("\n## congruence rebuild: passes-to-fixpoint vs ceil(log2 n)");
++    let mut worst_ratio = 0.0f64;
++    let mut max_passes = 0usize;
++    let mut max_passes_n = 0usize;
++    for r in &table {
++        let logn = (r.n as f64).log2().ceil().max(1.0);
++        let ratio = r.cong_passes as f64 / logn;
++        if ratio > worst_ratio { worst_ratio = ratio; }
++        if r.cong_passes > max_passes { max_passes = r.cong_passes; max_passes_n = r.n; }
++    }
++    println!("   max passes={} (at n={})  worst passes/log2(n)={:.2}", max_passes, max_passes_n, worst_ratio);
++    // Is it O(n·k·log n)? check passes grows ~ log n not ~ n: correlate passes vs n
++    let big: Vec<&Row> = { let mut v: Vec<&Row> = table.iter().collect(); v.sort_by_key(|r| r.n); v };
++    if let (Some(small), Some(large)) = (big.first(), big.last()) {
++        println!("   smallest n={} passes={}   largest n={} passes={}   (passes~logn ⇒ ratio~const)",
++            small.n, small.cong_passes, large.n, large.cong_passes);
++    }
++
++    // dispatch net-positivity: acyclic savings (valmari-revuz over acyclic) vs dispatch on ALL patterns
++    let acy_savings = sum(&acy, &|r| (r.t_valmari - r.t_revuz.unwrap_or(r.t_valmari)).max(0.0));
++    let total_dispatch = sum(&table.iter().collect::<Vec<_>>(), &|r| r.t_dispatch);
++    println!("\n## dispatch net-positivity (fold is_acyclic across ALL {} patterns)", table.len());
++    println!("   acyclic-slice savings (Σ valmari-revuz) = {:.0} ns", acy_savings);
++    println!("   total dispatch cost   (Σ is_acyclic all)= {:.0} ns", total_dispatch);
++    println!("   NET = savings - dispatch = {:.0} ns  ({})",
++        acy_savings - total_dispatch,
++        if acy_savings > total_dispatch { "NET-POSITIVE" } else { "NET-NEGATIVE" });
++
++    println!("\n# loadavg(end)={:.2}", loadavg());
++    println!("# n_divergences={}", n_diverge);
++}
++
++fn trunc(s: &str, w: usize) -> String {
++    if s.len() <= w { s.to_string() } else { format!("{}…", &s[..w - 1]) }
++}

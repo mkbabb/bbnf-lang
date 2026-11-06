@@ -1,0 +1,532 @@
+# PROTO-2 4B COMPTIME-FUSION probe — scratch-copy diff vs parse-that read-only original
+# (1) new bench file: benches/proto2_fusion.rs
+# (2) Cargo.toml: register [[bench]] proto2_fusion
+
+--- a/benches/proto2_fusion.rs	2026-07-16 04:52:27
++++ b/benches/proto2_fusion.rs	2026-07-16 04:51:37
+@@ -0,0 +1,510 @@
++// PROTO-2 — LOCK-4 family 4B COMPTIME-FUSION probe.
++//
++// Question: does cross-combinator inlining (monomorphized Seq2/Seq3/Alt2 structs
++// implementing ParserFn directly) beat the SmallBox<dyn> closure core (seq!/alt!/lazy)
++// on the JSON combinator grammar's hot chains, cold-paired, with the vtable `blr` gone?
++//
++// Both arms parse the SAME real corpora into the SAME Json tree with the SAME leaf
++// scanners (scan_quoted_string_strict, scan_number_strict_f64, trim_leading_whitespace_mut).
++// The ONLY difference is the combinator layer: fused monomorphic structs vs boxed closures.
++
++#[global_allocator]
++static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
++
++use std::path::Path;
++
++use divan::counter::BytesCount;
++use divan::{Bencher, black_box};
++
++use parse_that::parse::{Parser, ParserFn, ParserResult};
++use parse_that::parsers::scan::{scan_number_strict_f64, scan_quoted_string_strict};
++use parse_that::scanners::trim_leading_whitespace_mut;
++use parse_that::state::ParserState;
++
++// ── Shared value tree ─────────────────────────────────────────
++#[derive(Debug, PartialEq)]
++pub enum Json<'a> {
++    Null,
++    Bool(bool),
++    Num(f64),
++    Str(&'a str),
++    Arr(Box<Vec<Json<'a>>>),
++    Obj(Box<Vec<(&'a str, Json<'a>)>>),
++}
++
++fn data_dir() -> std::path::PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
++}
++
++// ── Shared leaf semantics (identical bytes consumed on both arms) ──
++#[inline(always)]
++fn ws(s: &mut ParserState) {
++    trim_leading_whitespace_mut(s);
++}
++#[inline(always)]
++fn qstr<'a>(s: &mut ParserState<'a>) -> Option<&'a str> {
++    let span = scan_quoted_string_strict(s)?;
++    let raw = span.as_str();
++    // strip the surrounding quotes to mirror a Cow::Borrowed content view
++    Some(&raw[1..raw.len() - 1])
++}
++#[inline(always)]
++fn lit(s: &mut ParserState, b: u8) -> Option<()> {
++    if s.offset < s.end && s.src_bytes[s.offset] == b {
++        s.offset += 1;
++        Some(())
++    } else {
++        None
++    }
++}
++#[inline(always)]
++fn kw(s: &mut ParserState, word: &[u8]) -> Option<()> {
++    let end = s.offset + word.len();
++    if end <= s.end && &s.src_bytes[s.offset..end] == word {
++        s.offset = end;
++        Some(())
++    } else {
++        None
++    }
++}
++
++// ══════════════════════════════════════════════════════════════
++// ARM A — FUSED: monomorphized Seq/Alt structs implementing ParserFn directly.
++// Blanket-impl hook at parse.rs:41-53 covers Fn; here we impl the trait on
++// concrete structs, so composition monomorphizes and inlines with zero vtable.
++// ══════════════════════════════════════════════════════════════
++mod fused {
++    use super::*;
++
++    // ── Concrete leaf parsers (ParserFn impls, no boxing) ─────
++    pub struct QStr;
++    impl<'a> ParserFn<'a, &'a str> for QStr {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, &'a str> {
++            qstr(s)
++        }
++    }
++    pub struct Lit(pub u8);
++    impl<'a> ParserFn<'a, ()> for Lit {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, ()> {
++            lit(s, self.0)
++        }
++    }
++
++    // ── Generic Seq2 / Seq3 combinators (impl ParserFn directly) ──
++    pub struct Seq2<P0, P1>(pub P0, pub P1);
++    impl<'a, O0, O1, P0, P1> ParserFn<'a, (O0, O1)> for Seq2<P0, P1>
++    where
++        P0: ParserFn<'a, O0>,
++        P1: ParserFn<'a, O1>,
++    {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, (O0, O1)> {
++            let v0 = self.0.call(s)?;
++            let v1 = self.1.call(s)?;
++            Some((v0, v1))
++        }
++    }
++    pub struct Seq3<P0, P1, P2>(pub P0, pub P1, pub P2);
++    impl<'a, O0, O1, O2, P0, P1, P2> ParserFn<'a, (O0, O1, O2)> for Seq3<P0, P1, P2>
++    where
++        P0: ParserFn<'a, O0>,
++        P1: ParserFn<'a, O1>,
++        P2: ParserFn<'a, O2>,
++    {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, (O0, O1, O2)> {
++            let v0 = self.0.call(s)?;
++            let v1 = self.1.call(s)?;
++            let v2 = self.2.call(s)?;
++            Some((v0, v1, v2))
++        }
++    }
++
++    // ── Generic Alt2 combinator (ordered choice, checkpoint restore) ──
++    pub struct Alt2<P0, P1>(pub P0, pub P1);
++    impl<'a, O, P0, P1> ParserFn<'a, O> for Alt2<P0, P1>
++    where
++        P0: ParserFn<'a, O>,
++        P1: ParserFn<'a, O>,
++    {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, O> {
++            let cp = s.offset;
++            if let Some(v) = self.0.call(s) {
++                return Some(v);
++            }
++            s.offset = cp;
++            if let Some(v) = self.1.call(s) {
++                return Some(v);
++            }
++            s.offset = cp;
++            None
++        }
++    }
++
++    // ── Scalar-keyword leaves as concrete parsers (feed Alt2) ──
++    pub struct KwTrue;
++    impl<'a> ParserFn<'a, Json<'a>> for KwTrue {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, Json<'a>> {
++            kw(s, b"true").map(|_| Json::Bool(true))
++        }
++    }
++    pub struct KwFalse;
++    impl<'a> ParserFn<'a, Json<'a>> for KwFalse {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, Json<'a>> {
++            kw(s, b"false").map(|_| Json::Bool(false))
++        }
++    }
++    pub struct KwNull;
++    impl<'a> ParserFn<'a, Json<'a>> for KwNull {
++        #[inline(always)]
++        fn call(&self, s: &mut ParserState<'a>) -> ParserResult<'a, Json<'a>> {
++            kw(s, b"null").map(|_| Json::Null)
++        }
++    }
++
++    // ── DISASM-GATE SYMBOL: a fully non-recursive fused chain. ──
++    // Seq3<QStr, Lit(:), QStr> — the object member key/colon/string-value chain.
++    // otool -tv over this symbol must show ZERO `blr` (all leaves inlined).
++    #[inline(never)]
++    #[unsafe(no_mangle)]
++    #[allow(improper_ctypes_definitions)]
++    pub extern "C" fn PROTO2_FUSED_CHAIN<'a>(s: &mut ParserState<'a>) -> Option<(&'a str, (), &'a str)> {
++        let chain = Seq3(QStr, Lit(b':'), QStr);
++        chain.call(s)
++    }
++
++    // Scalar alternation gate: Alt2<KwTrue, Alt2<KwFalse, KwNull>>.
++    #[inline(never)]
++    #[unsafe(no_mangle)]
++    #[allow(improper_ctypes_definitions)]
++    pub extern "C" fn PROTO2_FUSED_ALT<'a>(s: &mut ParserState<'a>) -> Option<Json<'a>> {
++        let chain = Alt2(KwTrue, Alt2(KwFalse, KwNull));
++        chain.call(s)
++    }
++
++    // ── Recursive descent: value dispatch. Recursion is monomorphic
++    //    (direct `bl` calls), so no vtable box is required at all. ──
++    #[inline(never)]
++    pub fn value<'a>(s: &mut ParserState<'a>) -> Option<Json<'a>> {
++        ws(s);
++        if s.offset >= s.end {
++            return None;
++        }
++        match s.src_bytes[s.offset] {
++            b'{' => object(s),
++            b'[' => array(s),
++            b'"' => QStr.call(s).map(Json::Str),
++            b't' | b'f' | b'n' => Alt2(KwTrue, Alt2(KwFalse, KwNull)).call(s),
++            _ => scan_number_strict_f64(s).map(Json::Num),
++        }
++    }
++
++    #[inline(never)]
++    fn array<'a>(s: &mut ParserState<'a>) -> Option<Json<'a>> {
++        lit(s, b'[')?;
++        ws(s);
++        if lit(s, b']').is_some() {
++            return Some(Json::Arr(Box::new(Vec::new())));
++        }
++        let mut items = Vec::with_capacity(4);
++        loop {
++            ws(s);
++            items.push(value(s)?);
++            ws(s);
++            if lit(s, b',').is_none() {
++                break;
++            }
++        }
++        lit(s, b']')?;
++        Some(Json::Arr(Box::new(items)))
++    }
++
++    #[inline(never)]
++    fn object<'a>(s: &mut ParserState<'a>) -> Option<Json<'a>> {
++        lit(s, b'{')?;
++        ws(s);
++        if lit(s, b'}').is_some() {
++            return Some(Json::Obj(Box::new(Vec::new())));
++        }
++        let mut entries = Vec::with_capacity(4);
++        // member = Seq2<QStr, Lit(:)> fused; value recursion is a direct call.
++        let member_head = Seq2(QStr, Lit(b':'));
++        loop {
++            ws(s);
++            let (k, ()) = member_head.call(s)?;
++            ws(s);
++            let v = value(s)?;
++            entries.push((k, v));
++            ws(s);
++            if lit(s, b',').is_none() {
++                break;
++            }
++        }
++        lit(s, b'}')?;
++        Some(Json::Obj(Box::new(entries)))
++    }
++
++    pub fn parse<'a>(src: &'a str) -> Option<Json<'a>> {
++        let mut s = ParserState::new(src);
++        ws(&mut s);
++        value(&mut s)
++    }
++}
++
++// ══════════════════════════════════════════════════════════════
++// ARM B — CLOSURE CORE (incumbent): parse_that::Parser (SmallBox<dyn ParserFn>)
++// + seq!/alt! macros + lazy() recursion box. Every .call() is a vtable `blr`.
++// ══════════════════════════════════════════════════════════════
++mod closure {
++    use super::*;
++    use parse_that::lazy::lazy;
++
++    // Leaf parsers as boxed closures (the closure core's natural form).
++    fn p_qstr<'a>() -> Parser<'a, &'a str> {
++        Parser::new(move |s: &mut ParserState<'a>| qstr(s))
++    }
++    fn p_lit<'a>(b: u8) -> Parser<'a, ()> {
++        Parser::new(move |s: &mut ParserState<'a>| lit(s, b))
++    }
++    fn p_kw<'a>(word: &'static [u8], v: fn() -> Json<'a>) -> Parser<'a, Json<'a>> {
++        Parser::new(move |s: &mut ParserState<'a>| kw(s, word).map(|_| v()))
++    }
++
++    pub fn value<'a>() -> Parser<'a, Json<'a>> {
++        lazy(|| {
++            // scalar alternation — the closure-core analogue of Alt2 (this is exactly the
++            // `alt!` macro expansion, written out because `alt!`'s untyped closure arg trips
++            // an E0282 inference wart on nightly-2026-04-11 in this position).
++            let s_true = p_kw(b"true", || Json::Bool(true));
++            let s_false = p_kw(b"false", || Json::Bool(false));
++            let s_null = p_kw(b"null", || Json::Null);
++            let scalar: Parser<'a, Json<'a>> = Parser::new(move |s: &mut ParserState<'a>| {
++                let cp = s.offset;
++                if let Some(v) = s_true.call(s) {
++                    return Some(v);
++                }
++                s.offset = cp;
++                if let Some(v) = s_false.call(s) {
++                    return Some(v);
++                }
++                s.offset = cp;
++                if let Some(v) = s_null.call(s) {
++                    return Some(v);
++                }
++                s.offset = cp;
++                None
++            });
++            let string = Parser::new(move |s: &mut ParserState<'a>| qstr(s).map(Json::Str));
++            let number =
++                Parser::new(move |s: &mut ParserState<'a>| scan_number_strict_f64(s).map(Json::Num));
++
++            let val = value();
++            let open_a = p_lit(b'[');
++            let close_a = p_lit(b']');
++            let comma_a = p_lit(b',');
++            let array = Parser::new(move |s: &mut ParserState<'a>| {
++                open_a.call(s)?;
++                ws(s);
++                if close_a.call(s).is_some() {
++                    return Some(Json::Arr(Box::new(Vec::new())));
++                }
++                let mut items = Vec::with_capacity(4);
++                loop {
++                    ws(s);
++                    items.push(val.call(s)?);
++                    ws(s);
++                    if comma_a.call(s).is_none() {
++                        break;
++                    }
++                }
++                close_a.call(s)?;
++                Some(Json::Arr(Box::new(items)))
++            });
++
++            let valo = value();
++            let open_o = p_lit(b'{');
++            let close_o = p_lit(b'}');
++            let comma_o = p_lit(b',');
++            // member head = boxed key + boxed colon, each a SmallBox<dyn ParserFn> called
++            // via the vtable — exactly the incumbent json.rs hot-loop form. (The `seq!`/`.then()`
++            // macro produces the same boxed runtime but tripped an HRTB `FnOnce is not general
++            // enough` wart on nightly-2026-04-11 in this synthetic position; the direct boxed
++            // `.call()` pair is the identical closure-core substrate under test.)
++            let key_o = p_qstr();
++            let colon_o = p_lit(b':');
++            let object = Parser::new(move |s: &mut ParserState<'a>| {
++                open_o.call(s)?;
++                ws(s);
++                if close_o.call(s).is_some() {
++                    return Some(Json::Obj(Box::new(Vec::new())));
++                }
++                let mut entries = Vec::with_capacity(4);
++                loop {
++                    ws(s);
++                    let k = key_o.call(s)?;
++                    colon_o.call(s)?;
++                    ws(s);
++                    let v = valo.call(s)?;
++                    entries.push((k, v));
++                    ws(s);
++                    if comma_o.call(s).is_none() {
++                        break;
++                    }
++                }
++                close_o.call(s)?;
++                Some(Json::Obj(Box::new(entries)))
++            });
++
++            Parser::new(move |s: &mut ParserState<'a>| {
++                ws(s);
++                if s.offset >= s.end {
++                    return None;
++                }
++                match s.src_bytes[s.offset] {
++                    b'{' => object.call(s),
++                    b'[' => array.call(s),
++                    b'"' => string.call(s),
++                    b't' | b'f' | b'n' => scalar.call(s),
++                    _ => number.call(s),
++                }
++            })
++        })
++    }
++
++    pub fn parse<'a>(p: &Parser<'a, Json<'a>>, src: &'a str) -> Option<Json<'a>> {
++        let mut s = ParserState::new(src);
++        ws(&mut s);
++        p.call(&mut s)
++    }
++}
++
++fn load(name: &str) -> String {
++    let fp = data_dir().join(name);
++    std::fs::read_to_string(&fp).unwrap_or_else(|e| panic!("read {}: {}", fp.display(), e))
++}
++
++// ── Interleaved bench fns: fused/closure per corpus ───────────
++#[divan::bench(name = "twitter_A_fused")]
++fn twitter_fused(b: Bencher) {
++    let d = load("twitter.json");
++    b.counter(BytesCount::new(d.len()))
++        .bench_local(|| fused::parse(black_box(&d)).unwrap());
++}
++#[divan::bench(name = "twitter_B_closure")]
++fn twitter_closure(b: Bencher) {
++    let d = load("twitter.json");
++    let p = closure::value();
++    b.counter(BytesCount::new(d.len()))
++        .bench_local(|| closure::parse(&p, black_box(&d)).unwrap());
++}
++#[divan::bench(name = "citm_A_fused")]
++fn citm_fused(b: Bencher) {
++    let d = load("citm_catalog.json");
++    b.counter(BytesCount::new(d.len()))
++        .bench_local(|| fused::parse(black_box(&d)).unwrap());
++}
++#[divan::bench(name = "citm_B_closure")]
++fn citm_closure(b: Bencher) {
++    let d = load("citm_catalog.json");
++    let p = closure::value();
++    b.counter(BytesCount::new(d.len()))
++        .bench_local(|| closure::parse(&p, black_box(&d)).unwrap());
++}
++#[divan::bench(name = "canada_A_fused")]
++fn canada_fused(b: Bencher) {
++    let d = load("canada.json");
++    b.counter(BytesCount::new(d.len()))
++        .bench_local(|| fused::parse(black_box(&d)).unwrap());
++}
++#[divan::bench(name = "canada_B_closure")]
++fn canada_closure(b: Bencher) {
++    let d = load("canada.json");
++    let p = closure::value();
++    b.counter(BytesCount::new(d.len()))
++        .bench_local(|| closure::parse(&p, black_box(&d)).unwrap());
++}
++
++fn median_ns<F: FnMut()>(mut f: F, n: usize) -> f64 {
++    let mut xs = Vec::with_capacity(n);
++    for _ in 0..n {
++        let t = std::time::Instant::now();
++        f();
++        xs.push(t.elapsed().as_nanos() as f64);
++    }
++    xs.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    xs[n / 2]
++}
++
++// Cold-paired A/B/A/B interleave: alternate arms every rep so load drift hits both
++// symmetrically. `order_ab` picks which arm goes first (opposite-order guard).
++fn paired(d: &str, n: usize, order_ab: bool) -> (f64, f64) {
++    let p = closure::value();
++    let mut fused_ns = Vec::with_capacity(n);
++    let mut clos_ns = Vec::with_capacity(n);
++    for _ in 0..n {
++        if order_ab {
++            let t = std::time::Instant::now();
++            black_box(fused::parse(black_box(d)).unwrap());
++            fused_ns.push(t.elapsed().as_nanos() as f64);
++            let t = std::time::Instant::now();
++            black_box(closure::parse(&p, black_box(d)).unwrap());
++            clos_ns.push(t.elapsed().as_nanos() as f64);
++        } else {
++            let t = std::time::Instant::now();
++            black_box(closure::parse(&p, black_box(d)).unwrap());
++            clos_ns.push(t.elapsed().as_nanos() as f64);
++            let t = std::time::Instant::now();
++            black_box(fused::parse(black_box(d)).unwrap());
++            fused_ns.push(t.elapsed().as_nanos() as f64);
++        }
++    }
++    fused_ns.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    clos_ns.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    (fused_ns[n / 2], clos_ns[n / 2])
++}
++
++fn mbs(len: usize, ns: f64) -> f64 {
++    (len as f64) / (ns / 1e9) / 1e6
++}
++
++fn manual() {
++    let n: usize = std::env::var("PROTO2_N").ok().and_then(|s| s.parse().ok()).unwrap_or(250);
++    println!("# PROTO-2 manual cold-paired timing  (N={n} per arm, median ns/parse)");
++    println!("# {:<14} {:>10} {:>13} {:>13} {:>10}  {}", "corpus", "bytes", "fused MB/s", "closure MB/s", "ratio", "order");
++    for name in ["twitter.json", "citm_catalog.json", "canada.json"] {
++        let d = load(name);
++        // warm both arms once (fill caches / branch predictors) — measurement is cold per-parse.
++        let _ = median_ns(|| { black_box(fused::parse(black_box(&d)).unwrap()); }, 3);
++        for &ab in &[true, false] {
++            let (f_ns, c_ns) = paired(&d, n, ab);
++            let (f_mbs, c_mbs) = (mbs(d.len(), f_ns), mbs(d.len(), c_ns));
++            println!(
++                "  {:<14} {:>10} {:>13.1} {:>13.1} {:>9.3}x  {}",
++                name, d.len(), f_mbs, c_mbs, f_mbs / c_mbs,
++                if ab { "A=fused,B=closure" } else { "A=closure,B=fused" }
++            );
++        }
++    }
++}
++
++fn main() {
++    // Equivalence gate: both arms must produce identical trees on every corpus.
++    for name in ["twitter.json", "citm_catalog.json", "canada.json"] {
++        let d = load(name);
++        let a = fused::parse(&d).expect("fused parse");
++        let p = closure::value();
++        let b = closure::parse(&p, &d).expect("closure parse");
++        assert!(a == b, "arm divergence on {name}");
++        eprintln!("[equiv] {name}: fused == closure OK");
++    }
++    if std::env::var("PROTO2_MANUAL").is_ok() {
++        manual();
++        return;
++    }
++    divan::main();
++}
+
+--- a/Cargo.toml	2026-04-27 16:38:17
++++ b/Cargo.toml	2026-07-16 04:41:18
+@@ -84,6 +84,11 @@
+ path = "benches/competitors/cssparser.rs"
+ harness = false
+ 
++[[bench]]
++name = "proto2_fusion"
++path = "benches/proto2_fusion.rs"
++harness = false
++
+ # ── dependencies ────────────────────────────────────────────
+ 
+ [dependencies]

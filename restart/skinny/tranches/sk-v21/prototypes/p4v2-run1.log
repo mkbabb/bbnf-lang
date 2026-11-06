@@ -1,0 +1,33 @@
+# PROTO-A2 P4-v2 LIVE LADDER  uarch=AppleM5Max  iters=5000  blocks=4096(64B)
+# LIVE kernels verbatim from crates/simd-scan/src/neon.rs {nibble:193,wide:317,multi:435,movemask:690}
+# PMU ri_cycles min-of-7; density=12%
+
+# PARITY: live nibble/wide/multi byte-exact vs scalar over sweep. OK
+
+# LIVE constant-cost kernels (cyc/64B)
+KERNEL live_nibble_lut  cyc/64B=13.838  (O(1) in N; the KernelShape::NibbleLut path)
+KERNEL live_wide_lut    cyc/64B=18.222  (O(1) in N; the KernelShape::WideLut path)
+
+# LIVE MultiCmp(N) cyc/64B vs N — crossover against nibble/wide constants
+MULTI N=1  cyc/64B=10.107  vs_nibble=0.730x[multi<=nibble]  vs_wide=0.555x[multi<=wide]
+MULTI N=2  cyc/64B=13.300  vs_nibble=0.961x[multi<=nibble]  vs_wide=0.730x[multi<=wide]
+MULTI N=3  cyc/64B=17.926  vs_nibble=1.295x[nibble<multi]  vs_wide=0.984x[multi<=wide]
+MULTI N=4  cyc/64B=21.605  vs_nibble=1.561x[nibble<multi]  vs_wide=1.186x[wide<multi]
+MULTI N=5  cyc/64B=25.295  vs_nibble=1.828x[nibble<multi]  vs_wide=1.388x[wide<multi]
+MULTI N=6  cyc/64B=32.642  vs_nibble=2.359x[nibble<multi]  vs_wide=1.791x[wide<multi]
+MULTI N=8  cyc/64B=31.985  vs_nibble=2.311x[nibble<multi]  vs_wide=1.755x[wide<multi]
+MULTI N=10 cyc/64B=32.735  vs_nibble=2.366x[nibble<multi]  vs_wide=1.796x[wide<multi]
+MULTI N=12 cyc/64B=33.266  vs_nibble=2.404x[nibble<multi]  vs_wide=1.826x[wide<multi]
+MULTI N=16 cyc/64B=33.077  vs_nibble=2.390x[nibble<multi]  vs_wide=1.815x[wide<multi]
+MULTI N=24 cyc/64B=31.889  vs_nibble=2.304x[nibble<multi]  vs_wide=1.750x[wide<multi]
+MULTI N=32 cyc/64B=31.358  vs_nibble=2.266x[nibble<multi]  vs_wide=1.721x[wide<multi]
+
+# ---- LIVE LADDER FLIP ANALYSIS ----
+# ladder (alphabet.rs:118-124): 1..=8 NibbleLut / 9..=16 WideLut / _ MultiCmp
+# nibble/multi crossover N*=3: MultiCmp cheaper for N<3, NibbleLut cheaper for N>=3
+# FLIP-LOW: for N in [1,2] the ladder picks NibbleLut but LIVE MultiCmp is measured cheaper.
+# wide/multi crossover N*=4 (informational; ladder never routes N<=16 to MultiCmp).
+
+# FLEET CHECK: JSON structural |S|~6-7 => NibbleLut; CSS => NibbleLut/WideLut.
+# Both have |S|>= nibble/multi crossover, so NO current-fleet selection flips.
+# The only flip is |S|<crossover (single/double delimiter) => the THIRD language (CSV).

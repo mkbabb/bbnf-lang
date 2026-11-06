@@ -1,0 +1,9 @@
+### PROBE 1 — mapState map-identity (Object.create vs fixed record)
+     captured 2 views; %HaveSameMap(v0,v1) = false   [expect FALSE]
+     shipped  Object.create(state):  %HaveSameMap = false   [expect FALSE]
+     fixed    new StateView(...):     %HaveSameMap = true   [expect TRUE]
+     shipped view vs ParserState:     %HaveSameMap = false   (view != base class)
+PROBE1: PASS
+### PROBE 2 — inlining child .parser (arity-3 constant-capture vs general index)
+### PROBE 3 — deopt sweep (steady-state jsonParser + synthetic CSS-value triple)
+RESULT grammar_shipped_same=false mech_shipped_same=false mech_fixed_same=true PROBE1_PASS=true

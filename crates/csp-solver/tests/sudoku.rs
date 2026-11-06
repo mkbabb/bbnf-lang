@@ -107,7 +107,6 @@ fn test_solve_4x4() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -137,7 +136,6 @@ fn test_solve_9x9() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -195,7 +193,6 @@ fn test_generate_4x4() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 

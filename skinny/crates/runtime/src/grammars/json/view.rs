@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 use parse_that_regex::{match_string, unescape_string, StringMode};
 
-use crate::tape::{DocumentView, Tape, TapeId, ValueRef};
+use crate::tape::{Cursor, DocumentView, Tape, TapeId, ValueRef};
 
 use super::config;
 use super::value::{value_from_ref, JsonNodeKind, JsonToken, JsonValue};
@@ -458,3 +458,31 @@ pub enum StringKind {}
 pub enum NumberKind {}
 pub enum BoolKind {}
 pub enum NullKind {}
+
+/// The shared lazy-cursor seam over the single tape — the `(tape, cursor,
+/// offset, kind)` primitive every JSON `ValueRef<K>` is built on. The rich tree
+/// navigation (`get`/`pairs`/`values`/`JsonValue`/the recursive visitor) lives
+/// ENTIRELY outside this trait and is untouched by it.
+impl<'doc, 'input: 'doc, K> Cursor<'doc, 'input> for ValueRef<'doc, 'input, K> {
+    type Kind = JsonNodeKind;
+
+    #[inline]
+    fn tape(&self) -> &'doc Tape<'input> {
+        ValueRef::tape(self)
+    }
+
+    #[inline]
+    fn cursor(&self) -> u32 {
+        ValueRef::cursor(self)
+    }
+
+    #[inline]
+    fn offset(&self) -> usize {
+        ValueRef::offset(self)
+    }
+
+    #[inline]
+    fn kind(&self) -> JsonNodeKind {
+        JsonNodeKind::at_cursor(ValueRef::tape(self), ValueRef::cursor(self))
+    }
+}

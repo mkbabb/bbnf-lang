@@ -205,7 +205,20 @@ pub fn check() -> Result<Vec<PathBuf>> {
                 .join("\n")
         );
     }
-    Ok(files.into_iter().map(|file| file.path).collect())
+
+    let mut paths: Vec<PathBuf> = files.into_iter().map(|file| file.path).collect();
+
+    // `host.rs` is a hand-authored CSS L4 host shim (`parse_hex_color`),
+    // not a projection output — so it carries no drift check — but it IS
+    // a sanctioned sibling under `runtime/css_l4/`. The runtime
+    // projection-set validator globs every `.rs` in the dir; declare
+    // `host.rs` here so the expected set matches the on-disk set
+    // (otherwise the gate flags it as an unexpected extra file).
+    if let Some(output_dir) = paths.first().and_then(|p| p.parent()) {
+        paths.push(output_dir.join("host.rs"));
+    }
+
+    Ok(paths)
 }
 
 fn render_runtime_files() -> Result<Vec<RenderedRuntimeFile>> {
@@ -639,6 +652,12 @@ fn emit_mod(projection: &RuntimeProjection) -> Result<String> {
     for module in &projection.module.modules {
         out.push_str(&format!("pub mod {module};\n"));
     }
+    // Hand-authored CSS L4 host shims (`parse_hex_color`) — the grammar's
+    // `-> crate::...::parse_hex_color(...)` map annotation resolves here.
+    // `host.rs` is not a projection output; it is a checked-in sibling, so
+    // its `mod` declaration is emitted unconditionally next to the grammar
+    // that references it (Lock 14: no host shim in the generic crate root).
+    out.push_str("pub mod host;\n");
     out.push_str("pub use arena::{");
     out.push_str(&projection.module.arena_exports.join(", "));
     out.push_str("};\n");
@@ -1314,7 +1333,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 let packed = hex_span
                     .map(|s| {{
                         let digits = s.strip_prefix('#').unwrap_or(s);
-                        crate::css_types::parse_hex_color(digits)
+                        crate::runtime::css_l4::host::parse_hex_color(digits)
                     }})
                     .unwrap_or(0);
                 self.deposit_value(CssTypedValue::Color(CssColor::Hex(packed)));

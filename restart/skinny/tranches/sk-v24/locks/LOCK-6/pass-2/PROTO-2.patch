@@ -1,0 +1,148 @@
+diff --git a/crates/core/tests/backend_ts_schema_dump.rs b/crates/core/tests/backend_ts_schema_dump.rs
+new file mode 100644
+index 000000000..cae5ec096
+--- /dev/null
++++ b/crates/core/tests/backend_ts_schema_dump.rs
+@@ -0,0 +1,142 @@
++//! PROTO-2 (LOCK-6 pass-2, probe 6B) measurement harness.
++//!
++//! Emits the TS schema face for representative grammars to a persistent
++//! scratch directory and typechecks each via the system `tsc`
++//! (`--noEmit --strict`), reusing the same invocation the production
++//! `backend_ts_typecheck` harness uses. The dumped files are left in
++//! place so the probe can `wc -l` the emitted schema block against a
++//! hand-authored baseline.
++//!
++//! Not part of the durable suite — a throwaway measurement rig.
++
++use bbnf::pipeline::{
++    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
++};
++use std::path::{Path, PathBuf};
++use std::process::Command;
++
++fn ts_request() -> CompileRequest {
++    CompileRequest {
++        options: PipelineOptions::default(),
++        target: CompileTarget::Ts,
++    }
++}
++
++fn compile_grammar_to_ts(entry: &Path) -> String {
++    let paths = vec![entry.to_path_buf()];
++    match compile_paths_request(&paths, &ts_request()).expect("ts compile") {
++        CompileOutput::Ts(source) => source,
++        other => panic!("expected TS output, got {other:?}"),
++    }
++}
++
++fn locate_tsc() -> Option<PathBuf> {
++    let probe = Command::new("tsc").arg("--version").output().ok()?;
++    probe.status.success().then(|| PathBuf::from("tsc"))
++}
++
++fn run_tsc(tsc: &Path, file: &Path) -> bool {
++    let output = Command::new(tsc)
++        .args([
++            "--noEmit",
++            "--strict",
++            "--target",
++            "es2020",
++            "--lib",
++            "es2020,dom",
++            "--moduleDetection",
++            "force",
++            "--skipLibCheck",
++        ])
++        .arg(file)
++        .output()
++        .expect("invoke tsc");
++    if !output.status.success() {
++        eprintln!(
++            "tsc REJECTED {}:\n{}\n{}",
++            file.display(),
++            String::from_utf8_lossy(&output.stdout),
++            String::from_utf8_lossy(&output.stderr),
++        );
++    }
++    output.status.success()
++}
++
++/// Extract the emitted "schema face" — everything from the
++/// `// ── Grammar types` header through the end of the top-level
++/// discriminated-union `type <Name> = …;` declaration, plus the
++/// preceding named-host-type alias block. This is the portion a
++/// downstream TS consumer would otherwise author by hand to describe
++/// the parse result.
++fn extract_schema_block(ts: &str) -> String {
++    let mut out = Vec::new();
++    let mut in_named = false;
++    let mut in_grammar = false;
++    for line in ts.lines() {
++        if line.contains("Named host types") {
++            in_named = true;
++        }
++        if line.contains("Grammar types") {
++            in_grammar = true;
++        }
++        if in_named || in_grammar {
++            out.push(line);
++        }
++        // The grammar-types block ends at the terminating `;` of the
++        // union declaration (first line that is exactly ";").
++        if in_grammar && line.trim() == ";" {
++            break;
++        }
++    }
++    out.join("\n")
++}
++
++#[test]
++fn dump_and_typecheck_schema_faces() {
++    let Some(tsc) = locate_tsc() else {
++        eprintln!("tsc not found; skipping");
++        return;
++    };
++    let workspace = workspace_root();
++    let out_dir = PathBuf::from(
++        "/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/\
++         67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/proto2",
++    );
++    std::fs::create_dir_all(&out_dir).expect("mkdir scratch");
++
++    let grammars: &[(&str, &str)] = &[
++        ("json", "grammar/json/json.bbnf"),
++        ("google_sheets", "grammar/google-sheets/google-sheets.bbnf"),
++        ("css_l4", "grammar/css/l4/stylesheet.bbnf"),
++    ];
++
++    let mut all_ok = true;
++    for (ident, rel) in grammars {
++        let entry = workspace.join(rel);
++        let ts = compile_grammar_to_ts(&entry);
++        let full = out_dir.join(format!("{ident}.ts"));
++        std::fs::write(&full, &ts).expect("write full ts");
++
++        let schema = extract_schema_block(&ts);
++        let schema_path = out_dir.join(format!("{ident}.schema.ts"));
++        std::fs::write(&schema_path, &schema).expect("write schema block");
++
++        let ok = run_tsc(&tsc, &full);
++        eprintln!(
++            "GRAMMAR {ident}: full_ts_lines={} schema_block_lines={} tsc_strict_ok={ok}",
++            ts.lines().count(),
++            schema.lines().count(),
++        );
++        all_ok &= ok;
++    }
++    assert!(all_ok, "one or more emitted TS modules failed tsc --strict");
++}
++
++fn workspace_root() -> PathBuf {
++    let manifest_dir = env!("CARGO_MANIFEST_DIR");
++    PathBuf::from(manifest_dir)
++        .parent()
++        .and_then(|p| p.parent())
++        .map(Path::to_path_buf)
++        .expect("workspace root")
++}

@@ -1,0 +1,51 @@
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 0133bcc64..749284caa 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -1367,16 +1367,12 @@ pub mod extract {
+         let Some(descriptor) = materialization.descriptors.get(&rule_id) else {
+             return body;
+         };
++        // PROTO-2 G-3B-1 E1: drop the two pure-decoration markers (SpanMark
++        // start/end, Return) — they have zero output-byte consumers in any
++        // codegen walker. Keep TapeEmit (sniffed by contains_tape_kind for
++        // shape selection) + DirectBuild (feeds direct_shapes + mark()).
+         BackendExpr::Seq(vec![
+-            BackendExpr::SpanMark {
+-                kind: SpanMarkKind::Start,
+-                label: descriptor.label.clone(),
+-            },
+             body,
+-            BackendExpr::SpanMark {
+-                kind: SpanMarkKind::End,
+-                label: descriptor.label.clone(),
+-            },
+             BackendExpr::TapeEmit {
+                 kind: descriptor.kind,
+             },
+@@ -1384,7 +1380,6 @@ pub mod extract {
+                 shape: descriptor.shape.clone(),
+                 fields: descriptor.fields.clone(),
+             },
+-            BackendExpr::Return,
+         ])
+     }
+ 
+diff --git a/skinny/crates/runtime/src/grammars/sheets/generated.rs b/skinny/crates/runtime/src/grammars/sheets/generated.rs
+index 022730b8c..0c38ee993 100644
+--- a/skinny/crates/runtime/src/grammars/sheets/generated.rs
++++ b/skinny/crates/runtime/src/grammars/sheets/generated.rs
+@@ -217,13 +217,10 @@ fn parse_string<'i>(
+     *cursor = skip_ws(bytes, *cursor);
+     let _node_start = *cursor;
+     let _ = (2u8, &mark);
+-    *cursor = skip_ws(bytes, *cursor);
+     match_leaf(bytes, cursor, tape, b"\"", 2u8, false)?;
+     *cursor = skip_ws(bytes, *cursor);
+     *cursor = skip_ws(bytes, *cursor);
+-    *cursor = skip_ws(bytes, *cursor);
+     mark(tape, _node_start, 2u8);
+-    *cursor = skip_ws(bytes, *cursor);
+     Ok(())
+ }
+ 

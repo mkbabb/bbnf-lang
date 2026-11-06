@@ -1,4 +1,6 @@
 //! LatticeDomain — wrapper for monotonic CSP (types, FIRST/FOLLOW sets).
+//!
+//! Tests: `tests/lattice.rs`.
 
 use super::bitset::BitsetDomain;
 use super::traits::{Domain, LatticeDomain};
@@ -60,7 +62,7 @@ impl Domain for BitsetLatticeDomain {
         vec![self.value.clone()]
     }
 
-    fn iter(&self) -> impl Iterator<Item = BitsetDomain> {
+    fn iter(&self) -> impl Iterator<Item = BitsetDomain> + use<> {
         std::iter::once(self.value.clone())
     }
 }

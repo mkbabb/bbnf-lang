@@ -1,0 +1,23 @@
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 0133bcc64..f7f3620b9 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -793,10 +793,14 @@ pub mod recognizers {
+ 
+     fn has_parse_time_host_decode(grammar: &GrammarIr, expr_id: ExprId) -> bool {
+         match &grammar.expr(expr_id).kind {
+-            ExprKind::Annotation { name, value } => {
+-                let value = value.as_deref().unwrap_or_default();
+-                name.contains("host") && (value.contains("decode") || value.contains("parse"))
+-            }
++            // Structural predicate: a parse-time host decode is denoted by an
++            // annotation node that carries a directive payload. The IR's only
++            // payload-free annotation is the `?w` whitespace marker
++            // (`value: None`); a host directive attaches its decode/parse
++            // instruction as the annotation's value. Keying on the presence of
++            // that payload slot inspects the node's shape rather than sniffing
++            // the name/value string contents.
++            ExprKind::Annotation { value, .. } => value.is_some(),
+             ExprKind::Seq(children)
+             | ExprKind::Alt {
+                 branches: children, ..

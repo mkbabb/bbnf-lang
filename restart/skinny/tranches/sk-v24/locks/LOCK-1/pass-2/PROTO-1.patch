@@ -1,0 +1,16 @@
+diff --git a/grammar/json/json.bbnf b/grammar/json/json.bbnf
+index 010d1d4a7..244e4951d 100644
+--- a/grammar/json/json.bbnf
++++ b/grammar/json/json.bbnf
+@@ -8,9 +8,10 @@ colon = ":" ?w ;
+ 
+ string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/
+        -> decode_json_string_to_arena(input) : String ;
++keystr = /"[^"]*"/ -> input : key ;
+ array = "[" >> (( value << comma ? ) *)?w << "]" ;
+ 
+-pair = string, colon >> value ;
++pair = keystr, colon >> value ;
+ object = "{" >> (( pair << comma ? ) *)?w << "}" ;
+ 
+ value = object | array | string | number | bool | null ;

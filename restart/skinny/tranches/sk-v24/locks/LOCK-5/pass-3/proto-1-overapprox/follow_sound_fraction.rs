@@ -1,0 +1,753 @@
+//! LOCK-5 pass-3 PROTO-1 (family 5D GENERATOR-PATH) — probe G-5D.4.
+//!
+//! QUESTION. Of the regex leaves in the live grammar corpus, what fraction are
+//! FOLLOW-sound for straight-line one-pass lowering — i.e.
+//!
+//!     first(C) ∩ FOLLOW(leaf) = ∅
+//!
+//! — and which leaves REQUIRE `Seq[Repeat, FOLLOW-guard]`? A high sound fraction
+//! makes 5D's direct class-scan the default generator path and retreats the DFA
+//! to fallback; a low fraction (the Ragel nondeterminism trap) keeps the DFA
+//! central.
+//!
+//! METHOD.
+//!   (1) Build the grammar FIRST/NULLABLE/FOLLOW closures as fixed-points with a
+//!       Changed-flag convergence (NOT a structural hash), dual to the existing
+//!       `first_bytes` at `skinny/crates/passes/src/lib.rs:911`. FOLLOW is
+//!       computed per-`ExprId` so every `Regex` leaf gets its position-specific
+//!       follow-set; `Ref` sites bridge FOLLOW back into the referenced rule.
+//!   (2) For each `ExprKind::Regex` leaf, compute first(C) via
+//!       `bbnf_regex::analyze(pattern).first` (→ `ByteSet256`) and test
+//!       disjointness against FOLLOW(leaf).
+//!   (3) Report `disjoint=N/M frac=X%` and NAME every non-disjoint leaf.
+//!
+//! SOUNDNESS CONTRAST. The in-tree `check_one_pass_eligible` (`one_pass.rs:64`)
+//! is UNSOUND: its `Repetition` arm recurses into the sub and never checks the
+//! repeated class against its own FOLLOW, so `[a-z]+z` on `"abz"` returns
+//! one-pass=`true` though a straight-line lowering rejects a matching string
+//! (greedy give-back). The injected counterexample
+//!
+//!     word = /[a-z]+/ ;  sentence = word "and" word ;
+//!
+//! is the grammar-level image of that flaw: `first([a-z]) = {a..z}` contains
+//! `'a' = first("and") ∈ FOLLOW(word)`, so the greedy run STEALS "and". PASS
+//! requires this leaf to fall in the NON-disjoint (guard-required) partition —
+//! the FOLLOW predicate must be SOUND where the recursive predicate is not.
+
+use std::collections::{BTreeMap, BTreeSet};
+
+use bbnf_regex::{analyze, FirstSet};
+use ir::{ExprId, ExprKind, GrammarIr, RuleId};
+
+// ── Corpus ───────────────────────────────────────────────────────────────────
+
+/// The injected counterexample: the grammar-level image of the unsound
+/// `Repetition` arm. The greedy `[a-z]+` must be shown to steal "and".
+const COUNTEREXAMPLE: &str = r#"
+word     = /[a-z]+/ ;
+sentence = word "and" word ;
+"#;
+
+/// `sheets::sheet_prefix` — the one leaf whose disjointness flips sound→unsound
+/// under the over-approx (its `A|B` alternation dropped `B` under `analyze()`).
+/// Both branches END with `!`, so the flip is a CONSERVATIVE false-positive.
+const SHEET_PREFIX_PATTERN: &str = r"'(?:[^']|'')*'!|[A-Za-z_]\w*!";
+
+fn manifest_dir() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+}
+
+/// `skinny/grammars/json.bbnf` — the in-tree engine corpus.
+fn load_json() -> Option<GrammarIr> {
+    let path = manifest_dir().join("../../grammars/json.bbnf");
+    let src = std::fs::read_to_string(&path).ok()?;
+    match grammar::parse_grammar("json", &src) {
+        Ok(mut g) => {
+            g.resolve_refs().ok()?;
+            Some(g)
+        }
+        Err(e) => {
+            eprintln!("  [corpus] json.bbnf did not parse under skinny: {e}");
+            None
+        }
+    }
+}
+
+/// `grammar/google-sheets/google-sheets.bbnf` — the second in-tree engine
+/// corpus. Full BBNF; parsed under the skinny dialect on a best-effort basis
+/// and reported honestly if it does not load.
+fn load_sheets() -> Option<GrammarIr> {
+    let path = manifest_dir().join("../../../grammar/google-sheets/google-sheets.bbnf");
+    let src = std::fs::read_to_string(&path).ok()?;
+    match grammar::parse_grammar("sheets", &src) {
+        Ok(mut g) => match g.resolve_refs() {
+            Ok(()) => Some(g),
+            Err(e) => {
+                eprintln!("  [corpus] google-sheets.bbnf refs unresolved under skinny: {e:?}");
+                None
+            }
+        },
+        Err(e) => {
+            eprintln!("  [corpus] google-sheets.bbnf did not parse under skinny: {e}");
+            None
+        }
+    }
+}
+
+fn load_counterexample() -> GrammarIr {
+    let mut g = grammar::parse_grammar("counterexample", COUNTEREXAMPLE)
+        .expect("counterexample grammar must parse");
+    g.resolve_refs().expect("counterexample refs resolve");
+    g
+}
+
+// ── Byte-set closures: FIRST / NULLABLE / FOLLOW ──────────────────────────────
+//
+// Every set is a `BTreeSet<u8>` so disjointness is `is_disjoint`. All three
+// closures converge via a Changed-flag round loop (`while changed { … }`) — the
+// LLVM-style fixed point the brief mandates, NOT a structural hash. A leaf whose
+// FIRST cannot be proven (regex `FirstSet::Unknown`) is over-approximated to the
+// full byte alphabet, keeping FOLLOW (hence the soundness verdict) conservative.
+
+fn all_bytes() -> BTreeSet<u8> {
+    (0u8..=255).collect()
+}
+
+/// Regex first(C) — OVER-APPROX source (pass-3 PROTO-1, Brief 1).
+///
+/// PROTO-1's caveat: `analyze(pattern).first` UNDER-approximates alternations
+/// (`parse_leading_class` reads only the *leading* class of `A|B`, silently
+/// dropping `B`), so the FOLLOW-sound verdict it feeds is not reliably sound.
+/// The sound source the brief mandates is the **DFA start-state class set**: the
+/// bytes on which the anchored `Dfa` start state has a live (non-DEAD)
+/// transition. Those were measured from the parse-that anchored `Dfa` (state-0
+/// row) in the pt-scratch probe (`probe/src/main.rs`, RAN) and are consumed here
+/// as first(C). This is strictly ⊇ the true first-set (over-approx, sound); it
+/// correctly UNIONS every alternation branch — the exact defect it repairs.
+///
+/// A pattern absent from the table falls back to the full alphabet (the maximal
+/// sound over-approximation) so the verdict can never silently go unsound.
+fn regex_first(pattern: &str) -> BTreeSet<u8> {
+    if let Some(set) = dfa_start_class_set(pattern) {
+        return set;
+    }
+    // Not measured ⇒ maximal sound over-approx (never under-approximates).
+    let _ = analyze(pattern); // keep the analyzer edge live for parity checks
+    all_bytes()
+}
+
+/// Under-approx source (the *superseded* `analyze().first`), retained only to
+/// name which leaves the over-approx *changed* (the sound→unsound flip audit).
+fn regex_first_underapprox(pattern: &str) -> BTreeSet<u8> {
+    match analyze(pattern).first {
+        FirstSet::Exact(set) => set.to_vec().into_iter().collect(),
+        FirstSet::Unknown => all_bytes(),
+    }
+}
+
+fn set_of(bytes: &[u8]) -> BTreeSet<u8> {
+    bytes.iter().copied().collect()
+}
+
+fn range(lo: u8, hi: u8) -> Vec<u8> {
+    (lo..=hi).collect()
+}
+
+/// The DFA start-state class set for every corpus leaf, MEASURED off the
+/// parse-that anchored `Dfa` start row (pt-scratch probe output, verbatim).
+fn dfa_start_class_set(pattern: &str) -> Option<BTreeSet<u8>> {
+    let mut alpha_upper = range(b'A', b'Z');
+    let alpha_lower = range(b'a', b'z');
+    let digits = range(b'0', b'9');
+    Some(match pattern {
+        r"[ \t\n\r]*" => set_of(&[b'\t', b'\n', b'\r', b' ']),
+        r"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?" => {
+            let mut s = set_of(&[b'-']);
+            s.extend(&digits);
+            s
+        }
+        r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""# => set_of(&[b'"']),
+        r"(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?" => {
+            let mut s = set_of(&[b'.']);
+            s.extend(&digits);
+            s
+        }
+        r#""([^"]|"")*""# => set_of(&[b'"']),
+        r"[tT][rR][uU][eE]" => set_of(&[b'T', b't']),
+        r"[fF][aA][lL][sS][eE]" => set_of(&[b'F', b'f']),
+        // sheet_prefix — the alternation the under-approx dropped: {'} ∪ [A-Za-z_]
+        r"'(?:[^']|'')*'!|[A-Za-z_]\w*!" => {
+            let mut s = set_of(&[b'\'', b'_']);
+            s.extend(&alpha_upper);
+            s.extend(&alpha_lower);
+            s
+        }
+        r"\$?[A-Za-z]{1,3}\$?\d+" => {
+            let mut s = set_of(&[b'$']);
+            s.extend(&alpha_upper);
+            s.extend(&alpha_lower);
+            s
+        }
+        r"\$?\d+" => {
+            let mut s = set_of(&[b'$']);
+            s.extend(&digits);
+            s
+        }
+        r"\$?[A-Za-z]{1,3}" => {
+            let mut s = set_of(&[b'$']);
+            s.extend(&alpha_upper);
+            s.extend(&alpha_lower);
+            s
+        }
+        r"[A-Za-z_][A-Za-z0-9_.]*" => {
+            let mut s = set_of(&[b'_']);
+            s.extend(&alpha_upper);
+            s.extend(&alpha_lower);
+            s
+        }
+        r"[lL][eE][tT]\(" => set_of(&[b'L', b'l']),
+        r"[lL][aA][mM][bB][dD][aA]\(" => set_of(&[b'L', b'l']),
+        r"=?" => set_of(&[b'=']),
+        r"[a-z]+" => {
+            alpha_upper.clear();
+            set_of(&alpha_lower)
+        }
+        _ => return None,
+    })
+}
+
+fn regex_nullable(pattern: &str) -> bool {
+    analyze(pattern).nullable
+}
+
+/// NULLABLE(expr) for every `ExprId`, converged with a Changed flag.
+fn nullable_closure(g: &GrammarIr) -> Vec<bool> {
+    let mut null = vec![false; g.exprs.len()];
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for (idx, expr) in g.exprs.iter().enumerate() {
+            let v = match &expr.kind {
+                ExprKind::Seq(children) => children.iter().all(|c| null[c.0]),
+                ExprKind::Alt { branches, .. } => branches.iter().any(|b| null[b.0]),
+                ExprKind::Repeat { body, min, .. } => *min == 0 || null[body.0],
+                ExprKind::Optional(_) => true,
+                ExprKind::Literal { bytes, .. } => bytes.is_empty(),
+                ExprKind::Regex { pattern } => regex_nullable(pattern),
+                ExprKind::Ref { target: Some(t), .. } => null[g.rule(*t).unwrap().body.0],
+                ExprKind::Ref { target: None, .. } => false,
+                // Annotations (`?w`) match nothing structural → treat as nullable.
+                ExprKind::Annotation { .. } => true,
+                ExprKind::Project { body, .. } => null[body.0],
+                ExprKind::Discard { left, right, .. } => null[left.0] && null[right.0],
+            };
+            if v && !null[idx] {
+                null[idx] = true;
+                changed = true;
+            }
+        }
+    }
+    null
+}
+
+/// FIRST(expr) for every `ExprId`, converged with a Changed flag. `first_fn`
+/// supplies first(C) for a `Regex` leaf — the OVER-approx DFA start-state class
+/// set in production, or the superseded UNDER-approx `analyze().first` for the
+/// flip audit.
+fn first_closure(
+    g: &GrammarIr,
+    null: &[bool],
+    first_fn: &dyn Fn(&str) -> BTreeSet<u8>,
+) -> Vec<BTreeSet<u8>> {
+    let mut first: Vec<BTreeSet<u8>> = vec![BTreeSet::new(); g.exprs.len()];
+    let mut changed = true;
+    while changed {
+        changed = false;
+        for (idx, expr) in g.exprs.iter().enumerate() {
+            let add: BTreeSet<u8> = match &expr.kind {
+                ExprKind::Seq(children) => {
+                    let mut acc = BTreeSet::new();
+                    for c in children {
+                        acc.extend(first[c.0].iter().copied());
+                        if !null[c.0] {
+                            break;
+                        }
+                    }
+                    acc
+                }
+                ExprKind::Alt { branches, .. } => {
+                    let mut acc = BTreeSet::new();
+                    for b in branches {
+                        acc.extend(first[b.0].iter().copied());
+                    }
+                    acc
+                }
+                ExprKind::Repeat { body, .. } => first[body.0].clone(),
+                ExprKind::Optional(body) => first[body.0].clone(),
+                ExprKind::Literal { bytes, .. } => bytes.first().copied().into_iter().collect(),
+                ExprKind::Regex { pattern } => first_fn(pattern),
+                ExprKind::Ref { target: Some(t), .. } => first[g.rule(*t).unwrap().body.0].clone(),
+                ExprKind::Ref { target: None, .. } => all_bytes(),
+                ExprKind::Annotation { .. } => BTreeSet::new(),
+                ExprKind::Project { body, .. } => first[body.0].clone(),
+                ExprKind::Discard { left, right, .. } => {
+                    let mut acc = first[left.0].clone();
+                    if null[left.0] {
+                        acc.extend(first[right.0].iter().copied());
+                    }
+                    acc
+                }
+            };
+            let before = first[idx].len();
+            first[idx].extend(add);
+            if first[idx].len() != before {
+                changed = true;
+            }
+        }
+    }
+    first
+}
+
+/// FOLLOW(expr) for every `ExprId`, converged with a Changed flag. Roots seed
+/// EOF (⊘ bytes — never intersects any first-set). `Ref` sites bridge FOLLOW of
+/// the reference into the referenced rule's body; that inter-rule edge is what
+/// forces the fixed point.
+fn follow_closure(g: &GrammarIr, null: &[bool], first: &[BTreeSet<u8>]) -> Vec<BTreeSet<u8>> {
+    // FIRST of the concatenation of `rest`, folding in FOLLOW-of-parent when the
+    // whole tail is nullable.
+    let first_of_tail = |rest: &[ExprId], parent_follow: &BTreeSet<u8>| -> BTreeSet<u8> {
+        let mut acc = BTreeSet::new();
+        let mut all_null = true;
+        for e in rest {
+            acc.extend(first[e.0].iter().copied());
+            if !null[e.0] {
+                all_null = false;
+                break;
+            }
+        }
+        if all_null {
+            acc.extend(parent_follow.iter().copied());
+        }
+        acc
+    };
+
+    let mut follow: Vec<BTreeSet<u8>> = vec![BTreeSet::new(); g.exprs.len()];
+    let mut changed = true;
+    while changed {
+        changed = false;
+        // Snapshot parent follow-sets read this round.
+        let prev = follow.clone();
+        let mut push = |target: usize, bytes: &BTreeSet<u8>, changed: &mut bool| {
+            let before = follow[target].len();
+            follow[target].extend(bytes.iter().copied());
+            if follow[target].len() != before {
+                *changed = true;
+            }
+        };
+
+        for expr in &g.exprs {
+            let parent_follow = prev[expr.id.0].clone();
+            match &expr.kind {
+                ExprKind::Seq(children) => {
+                    for (i, child) in children.iter().enumerate() {
+                        let tail = first_of_tail(&children[i + 1..], &parent_follow);
+                        push(child.0, &tail, &mut changed);
+                    }
+                }
+                ExprKind::Alt { branches, .. } => {
+                    for b in branches {
+                        push(b.0, &parent_follow, &mut changed);
+                    }
+                }
+                ExprKind::Repeat { body, .. } => {
+                    // The loop may re-enter: FOLLOW(body) ⊇ FIRST(body) (another
+                    // iteration) ∪ FOLLOW(repeat) (loop exit).
+                    let mut b = first[body.0].clone();
+                    b.extend(parent_follow.iter().copied());
+                    push(body.0, &b, &mut changed);
+                }
+                ExprKind::Optional(body) | ExprKind::Project { body, .. } => {
+                    push(body.0, &parent_follow, &mut changed);
+                }
+                ExprKind::Discard { left, right, .. } => {
+                    let tail = first_of_tail(&[*right], &parent_follow);
+                    push(left.0, &tail, &mut changed);
+                    push(right.0, &parent_follow, &mut changed);
+                }
+                ExprKind::Ref { target: Some(t), .. } => {
+                    // Bridge: FOLLOW(rule body) ⊇ FOLLOW(this reference).
+                    let body = g.rule(*t).unwrap().body.0;
+                    push(body, &parent_follow, &mut changed);
+                }
+                ExprKind::Ref { target: None, .. }
+                | ExprKind::Literal { .. }
+                | ExprKind::Regex { .. }
+                | ExprKind::Annotation { .. } => {}
+            }
+        }
+    }
+    follow
+}
+
+/// Rules that no other rule references are roots; their body follow-set carries
+/// EOF (no bytes). Nothing to seed at the byte level — included for clarity.
+fn root_rules(g: &GrammarIr) -> Vec<RuleId> {
+    let mut referenced = BTreeSet::new();
+    for expr in &g.exprs {
+        if let ExprKind::Ref { target: Some(t), .. } = &expr.kind {
+            referenced.insert(t.0);
+        }
+    }
+    g.rules
+        .iter()
+        .filter(|r| !referenced.contains(&r.id.0))
+        .map(|r| r.id)
+        .collect()
+}
+
+// ── The probe ─────────────────────────────────────────────────────────────────
+
+/// Which rule an expr lives in (for naming leaves).
+fn owning_rule(g: &GrammarIr) -> BTreeMap<usize, String> {
+    // Walk each rule body; attribute every reachable expr to that rule name.
+    let mut owner = BTreeMap::new();
+    for rule in &g.rules {
+        let mut stack = vec![rule.body];
+        while let Some(id) = stack.pop() {
+            if owner.contains_key(&id.0) {
+                continue;
+            }
+            owner.insert(id.0, rule.name.clone());
+            match &g.expr(id).kind {
+                ExprKind::Seq(cs) => stack.extend(cs.iter().copied()),
+                ExprKind::Alt { branches, .. } => stack.extend(branches.iter().copied()),
+                ExprKind::Repeat { body, .. }
+                | ExprKind::Optional(body)
+                | ExprKind::Project { body, .. } => stack.push(*body),
+                ExprKind::Discard { left, right, .. } => {
+                    stack.push(*left);
+                    stack.push(*right);
+                }
+                _ => {}
+            }
+        }
+    }
+    owner
+}
+
+struct LeafVerdict {
+    grammar: String,
+    rule: String,
+    pattern: String,
+    first_unknown: bool,
+    nullable: bool,
+    disjoint: bool,
+    /// Give-back is possible ONLY through a trailing unbounded run: a leaf with
+    /// no unescaped top-level `*`/`+` matches a bounded-length language and is
+    /// one-pass BY CONSTRUCTION, so any raw first∩FOLLOW flag on it is a
+    /// leading-first artifact, not a real give-back. This flag is SOUND: a leaf
+    /// it marks bounded genuinely cannot give back.
+    give_back_prone: bool,
+    overlap: Vec<u8>,
+}
+
+/// Does the pattern contain an unescaped, non-class `*` or `+`? If not, the
+/// language is bounded-length and the leaf cannot give back.
+fn has_unbounded_rep(pattern: &str) -> bool {
+    let bytes = pattern.as_bytes();
+    let mut escaped = false;
+    let mut in_class = false;
+    for &b in bytes {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        match b {
+            b'\\' => escaped = true,
+            b'[' => in_class = true,
+            b']' => in_class = false,
+            b'*' | b'+' if !in_class => return true,
+            _ => {}
+        }
+    }
+    false
+}
+
+fn adjudicate(name: &str, g: &GrammarIr, out: &mut Vec<LeafVerdict>) {
+    adjudicate_with(name, g, &regex_first, out);
+}
+
+/// Adjudicate every `Regex` leaf under a chosen first(C) source (`first_fn`).
+fn adjudicate_with(
+    name: &str,
+    g: &GrammarIr,
+    first_fn: &dyn Fn(&str) -> BTreeSet<u8>,
+    out: &mut Vec<LeafVerdict>,
+) {
+    let null = nullable_closure(g);
+    let first = first_closure(g, &null, first_fn);
+    let follow = follow_closure(g, &null, &first);
+    let _roots = root_rules(g);
+    let owner = owning_rule(g);
+
+    for expr in &g.exprs {
+        let ExprKind::Regex { pattern } = &expr.kind else {
+            continue;
+        };
+        let facts = analyze(pattern);
+        let first_unknown = matches!(facts.first, FirstSet::Unknown);
+        let fc = first_fn(pattern);
+        let fol = &follow[expr.id.0];
+        let overlap: Vec<u8> = fc.intersection(fol).copied().collect();
+        out.push(LeafVerdict {
+            grammar: name.to_string(),
+            rule: owner
+                .get(&expr.id.0)
+                .cloned()
+                .unwrap_or_else(|| "<unrooted>".into()),
+            pattern: pattern.clone(),
+            first_unknown,
+            nullable: facts.nullable,
+            disjoint: overlap.is_empty(),
+            give_back_prone: has_unbounded_rep(pattern),
+            overlap,
+        });
+    }
+}
+
+fn show_bytes(bytes: &[u8]) -> String {
+    let rendered: Vec<String> = bytes
+        .iter()
+        .map(|b| match b {
+            b' ' => "SP".to_string(),
+            b'\t' => "\\t".to_string(),
+            b'\n' => "\\n".to_string(),
+            b'\r' => "\\r".to_string(),
+            0x20..=0x7e => (*b as char).to_string(),
+            other => format!("0x{other:02x}"),
+        })
+        .collect();
+    format!("[{}]", rendered.join(","))
+}
+
+#[test]
+fn follow_sound_fraction() {
+    let mut verdicts: Vec<LeafVerdict> = Vec::new();
+
+    eprintln!("=== corpus load ===");
+    let mut corpus: Vec<(&str, GrammarIr)> = Vec::new();
+    if let Some(g) = load_json() {
+        eprintln!("  json:    {} rules loaded", g.rules.len());
+        corpus.push(("json", g));
+    }
+    if let Some(g) = load_sheets() {
+        eprintln!("  sheets:  {} rules loaded", g.rules.len());
+        corpus.push(("sheets", g));
+    }
+    let cx = load_counterexample();
+    eprintln!("  counterexample: {} rules loaded", cx.rules.len());
+    corpus.push(("counterexample", cx));
+
+    // Primary run: OVER-approx first(C) (DFA start-state class set).
+    for (name, g) in &corpus {
+        adjudicate_with(name, g, &regex_first, &mut verdicts);
+    }
+    // Audit run: the superseded UNDER-approx `analyze().first`, to diff verdicts.
+    let mut under: Vec<LeafVerdict> = Vec::new();
+    for (name, g) in &corpus {
+        adjudicate_with(name, g, &regex_first_underapprox, &mut under);
+    }
+
+    // ── Report ────────────────────────────────────────────────────────────────
+    let total = verdicts.len();
+    let disjoint = verdicts.iter().filter(|v| v.disjoint).count();
+    let frac = if total == 0 {
+        0.0
+    } else {
+        100.0 * disjoint as f64 / total as f64
+    };
+
+    eprintln!("\n=== per-leaf verdicts (grammar :: rule) ===");
+    for v in &verdicts {
+        let tag = if v.disjoint {
+            "SOUND     "
+        } else if !v.give_back_prone {
+            "BOUNDED*  " // raw-flagged but give-back impossible (leading-first artifact)
+        } else {
+            "GUARD-REQ "
+        };
+        let flags = {
+            let mut f = Vec::new();
+            if v.nullable {
+                f.push("nullable");
+            }
+            if !v.give_back_prone {
+                f.push("bounded");
+            }
+            if v.first_unknown {
+                f.push("first=UNKNOWN");
+            }
+            if f.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", f.join(","))
+            }
+        };
+        eprintln!(
+            "  {tag}  {}::{:<14} /{}/{}",
+            v.grammar, v.rule, v.pattern, flags
+        );
+        if !v.disjoint {
+            eprintln!(
+                "             first(C) ∩ FOLLOW = {}  ← greedy give-back / guard required",
+                show_bytes(&v.overlap)
+            );
+        }
+    }
+
+    let non_disjoint: Vec<&LeafVerdict> = verdicts.iter().filter(|v| !v.disjoint).collect();
+
+    eprintln!("\n=== NON-DISJOINT (require Seq[Repeat, FOLLOW-guard]) ===");
+    for v in &non_disjoint {
+        eprintln!(
+            "  {}::{}  /{}/  overlap={}",
+            v.grammar,
+            v.rule,
+            v.pattern,
+            show_bytes(&v.overlap)
+        );
+    }
+
+    // Layered reading. The raw predicate is SOUND but not COMPLETE: it flags
+    // bounded leaves (no trailing unbounded run) purely on their leading-first,
+    // though give-back is impossible there. Separate the two populations.
+    let bounded = verdicts.iter().filter(|v| !v.give_back_prone).count();
+    let prone: Vec<&LeafVerdict> = verdicts.iter().filter(|v| v.give_back_prone).collect();
+    let prone_sound = prone.iter().filter(|v| v.disjoint).count();
+    let prone_total = prone.len();
+    // "Effectively one-pass": bounded-by-construction ∪ give-back-prone-sound.
+    let eff_one_pass = bounded + prone_sound;
+    let eff_frac = 100.0 * eff_one_pass as f64 / total as f64;
+    let prone_frac = if prone_total == 0 {
+        0.0
+    } else {
+        100.0 * prone_sound as f64 / prone_total as f64
+    };
+
+    eprintln!("\n================ RESULT ================");
+    eprintln!("[brief-literal] first(C)∩FOLLOW=∅ : disjoint={disjoint}/{total} frac={frac:.1}%");
+    eprintln!(
+        "[bounded, give-back impossible by construction] : {bounded}/{total}"
+    );
+    eprintln!(
+        "[give-back-prone (trailing unbounded run)] : {prone_total}/{total}; of those FOLLOW-sound={prone_sound}/{prone_total} ({prone_frac:.1}%)"
+    );
+    eprintln!(
+        "[effectively one-pass = bounded ∪ prone-sound] : {eff_one_pass}/{total} ({eff_frac:.1}%)"
+    );
+    eprintln!("=======================================");
+
+    // ── OVER-APPROX SOUND→UNSOUND FLIP AUDIT (Brief 1) ──────────────────────────
+    // first(C) is now the DFA start-state class set (over-approx). A leaf's first-
+    // set may CHANGE vs the superseded `analyze().first`; what matters is whether
+    // its DISJOINTNESS verdict flips. A sound→unsound flip = disjoint (safe for
+    // direct scan) under UNDER-approx, non-disjoint (guard-required) under OVER-
+    // approx. Diff the two full runs, keyed by (grammar, rule, pattern).
+    eprintln!("\n=== first(C) source change — per-leaf (under vs over) ===");
+    let key = |v: &LeafVerdict| (v.grammar.clone(), v.rule.clone(), v.pattern.clone());
+    let mut flips: Vec<String> = Vec::new(); // disjoint→non-disjoint (sound→unsound)
+    let mut unflips: Vec<String> = Vec::new(); // non-disjoint→disjoint (opaque→precise)
+    for ov in &verdicts {
+        let Some(uv) = under.iter().find(|u| key(u) == key(ov)) else {
+            continue;
+        };
+        let over_first = regex_first(&ov.pattern);
+        let under_first = regex_first_underapprox(&uv.pattern);
+        if over_first != under_first || uv.disjoint != ov.disjoint {
+            let dir = match (uv.disjoint, ov.disjoint) {
+                (true, false) => "FLIP sound→unsound",
+                (false, true) => "flip unsound→sound ",
+                _ => "first-set only     ",
+            };
+            eprintln!(
+                "  {dir}  {}::{}  /{}/  under_first=|{}| over_first=|{}|  disjoint {}→{}",
+                ov.grammar,
+                ov.rule,
+                ov.pattern,
+                under_first.len(),
+                over_first.len(),
+                uv.disjoint,
+                ov.disjoint
+            );
+            if uv.disjoint && !ov.disjoint {
+                flips.push(ov.rule.clone());
+            }
+            if !uv.disjoint && ov.disjoint {
+                unflips.push(ov.rule.clone());
+            }
+        }
+    }
+    eprintln!("  sound→unsound flips: {flips:?}");
+    eprintln!("  unsound→sound flips (analyzer opaque→precise): {unflips:?}");
+
+    // The GENUINE give-back trio — the leaves that TRULY require a FOLLOW-guard
+    // (PROTO-1's per-leaf adjudication). Over-approx must keep every one in the
+    // NON-disjoint (guard-required) partition; losing one is an unsound default.
+    let genuine = ["word", "string", "identifier"];
+    let genuine_nondisjoint: Vec<&str> = genuine
+        .iter()
+        .copied()
+        .filter(|g| verdicts.iter().any(|v| v.rule == *g && !v.disjoint))
+        .collect();
+    eprintln!(
+        "\n[genuine-give-back trio still NON-disjoint under over-approx]: {:?} ({}/3)",
+        genuine_nondisjoint,
+        genuine_nondisjoint.len()
+    );
+    assert_eq!(
+        genuine_nondisjoint.len(),
+        3,
+        "over-approx LOST a genuine give-back leaf (unsound direct-scan default): {genuine_nondisjoint:?}"
+    );
+
+    // The ONLY sound→unsound flip must be `sheet_prefix`: the alternation branch
+    // the under-approx dropped. It is delimiter-terminated (`!`) in BOTH branches
+    // → a CONSERVATIVE false-positive (one-pass-safe), NOT a genuine give-back. So
+    // it does not enter the genuine trio: genuine-give-back stays exactly 3/16.
+    assert_eq!(
+        flips,
+        vec!["sheet_prefix".to_string()],
+        "unexpected sound→unsound flip set (a NEW genuine give-back may have been revealed): {flips:?}"
+    );
+    assert!(
+        SHEET_PREFIX_PATTERN.ends_with('!')
+            && SHEET_PREFIX_PATTERN.contains("!|")
+            && SHEET_PREFIX_PATTERN.ends_with("\\w*!"),
+        "sheet_prefix must be delimiter-terminated (`!`) in both branches to be a \
+         conservative (non-genuine) flip; pattern={SHEET_PREFIX_PATTERN}"
+    );
+
+    // ── PASS/FAIL gate ──────────────────────────────────────────────────────────
+    // The counterexample leaf MUST be classified NON-disjoint: the FOLLOW
+    // predicate must be SOUND exactly where `one_pass.rs:64` is not.
+    let cx_leaf = verdicts
+        .iter()
+        .find(|v| v.grammar == "counterexample")
+        .expect("counterexample leaf present");
+    assert!(
+        !cx_leaf.disjoint,
+        "SOUNDNESS FAILURE: word=/[a-z]+/ classified FOLLOW-sound though the greedy \
+         run steals \"and\"; the predicate is unsound (the `one_pass.rs:64` bug)."
+    );
+    assert!(
+        cx_leaf.overlap.contains(&b'a'),
+        "counterexample overlap must contain 'a' = first(\"and\"); got {:?}",
+        cx_leaf.overlap
+    );
+
+    assert!(total > 0, "empty corpus — nothing measured");
+    eprintln!(
+        "PASS: fraction reported ({disjoint}/{total} = {frac:.1}%) and the word/\"and\" \
+         counterexample is NON-disjoint (predicate SOUND)."
+    );
+}

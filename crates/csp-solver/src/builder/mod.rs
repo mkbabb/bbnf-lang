@@ -9,5 +9,6 @@
 //! re-deriving the wiring at every consumer.
 
 pub mod assignment;
+mod kuhn_munkres;
 
 pub use assignment::{AssignmentBuilder, AssignmentError, AssignmentSolution, assignment};

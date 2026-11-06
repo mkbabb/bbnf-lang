@@ -201,6 +201,12 @@ pub mod layout {
                         Type::Rule(rule_id)
                     }
                     ExprKind::Annotation { .. } => Type::Builtin(BuiltinTy::Unit),
+                    ExprKind::Project { body, .. } => self.infer_expr(*body)?,
+                    ExprKind::Discard { left, right, .. } => {
+                        // Both operands are matched; type is Seq-like over the
+                        // pair (mirrors transparent Seq lowering).
+                        Type::Seq(self.infer_many([*left, *right].into_iter())?)
+                    }
                 };
 
                 self.facts.node_types.insert(expr_id, ty.clone());
@@ -775,8 +781,11 @@ pub mod recognizers {
                 .iter()
                 .copied()
                 .any(|child| has_recovery_annotation(grammar, child)),
-            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
-                has_recovery_annotation(grammar, *body)
+            ExprKind::Repeat { body, .. }
+            | ExprKind::Optional(body)
+            | ExprKind::Project { body, .. } => has_recovery_annotation(grammar, *body),
+            ExprKind::Discard { left, right, .. } => {
+                has_recovery_annotation(grammar, *left) || has_recovery_annotation(grammar, *right)
             }
             ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. } => false,
         }
@@ -795,8 +804,12 @@ pub mod recognizers {
                 .iter()
                 .copied()
                 .any(|child| has_parse_time_host_decode(grammar, child)),
-            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
-                has_parse_time_host_decode(grammar, *body)
+            ExprKind::Repeat { body, .. }
+            | ExprKind::Optional(body)
+            | ExprKind::Project { body, .. } => has_parse_time_host_decode(grammar, *body),
+            ExprKind::Discard { left, right, .. } => {
+                has_parse_time_host_decode(grammar, *left)
+                    || has_parse_time_host_decode(grammar, *right)
             }
             ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. } => false,
         }
@@ -813,8 +826,11 @@ pub mod recognizers {
                 .iter()
                 .copied()
                 .any(|child| has_dispatch_overlap(grammar, child)),
-            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
-                has_dispatch_overlap(grammar, *body)
+            ExprKind::Repeat { body, .. }
+            | ExprKind::Optional(body)
+            | ExprKind::Project { body, .. } => has_dispatch_overlap(grammar, *body),
+            ExprKind::Discard { left, right, .. } => {
+                has_dispatch_overlap(grammar, *left) || has_dispatch_overlap(grammar, *right)
             }
             ExprKind::Literal { .. }
             | ExprKind::Regex { .. }
@@ -904,6 +920,23 @@ pub mod recognizers {
                 bytes: HashSet::new(),
                 nullable: true,
             }),
+            ExprKind::Project { body, .. } => first_bytes(grammar, *body, depth + 1),
+            ExprKind::Discard { left, right, .. } => {
+                // Both operands are matched in left-then-right order (Seq-like);
+                // left dominates the first-set, right joins only if left is
+                // nullable.
+                let left_first = first_bytes(grammar, *left, depth + 1)?;
+                if !left_first.nullable {
+                    return Some(left_first);
+                }
+                let right_first = first_bytes(grammar, *right, depth + 1)?;
+                let mut bytes = left_first.bytes;
+                bytes.extend(right_first.bytes);
+                Some(FirstBytes {
+                    bytes,
+                    nullable: right_first.nullable,
+                })
+            }
         }
     }
 
@@ -936,7 +969,8 @@ pub mod recognizers {
             BackendExpr::DirectBuild { .. } => true,
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => contains_direct_build(inner),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => contains_direct_build(inner),
             BackendExpr::Seq(children)
             | BackendExpr::Alt {
                 branches: children, ..
@@ -946,7 +980,6 @@ pub mod recognizers {
             | BackendExpr::CallRule { .. }
             | BackendExpr::SpanMark { .. }
             | BackendExpr::TapeEmit { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => false,
         }
     }
@@ -956,7 +989,8 @@ pub mod recognizers {
             BackendExpr::TapeEmit { kind } => *kind == needle,
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => contains_tape_kind(inner, needle),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => contains_tape_kind(inner, needle),
             BackendExpr::Seq(children)
             | BackendExpr::Alt {
                 branches: children, ..
@@ -968,7 +1002,6 @@ pub mod recognizers {
             | BackendExpr::CallRule { .. }
             | BackendExpr::SpanMark { .. }
             | BackendExpr::DirectBuild { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => false,
         }
     }
@@ -978,7 +1011,8 @@ pub mod recognizers {
             BackendExpr::Alt { branches, .. } => branches.len(),
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => alt_branch_count(inner),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => alt_branch_count(inner),
             BackendExpr::Seq(children) => children.iter().map(alt_branch_count).max().unwrap_or(0),
             BackendExpr::ByteLiteral(_)
             | BackendExpr::RegexProgram { .. }
@@ -986,7 +1020,6 @@ pub mod recognizers {
             | BackendExpr::SpanMark { .. }
             | BackendExpr::TapeEmit { .. }
             | BackendExpr::DirectBuild { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => 0,
         }
     }
@@ -1058,8 +1091,14 @@ pub mod recognizers {
                         mark_expr(grammar_ir, *branch, depth, hot);
                     }
                 }
-                ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                ExprKind::Repeat { body, .. }
+                | ExprKind::Optional(body)
+                | ExprKind::Project { body, .. } => {
                     mark_expr(grammar_ir, *body, depth, hot);
+                }
+                ExprKind::Discard { left, right, .. } => {
+                    mark_expr(grammar_ir, *left, depth, hot);
+                    mark_expr(grammar_ir, *right, depth, hot);
                 }
                 ExprKind::Ref {
                     target: Some(target),
@@ -1307,6 +1346,16 @@ pub mod extract {
                 callee: name.clone(),
             },
             ExprKind::Annotation { .. } => BackendExpr::Seq(Vec::new()),
+            ExprKind::Project { body, target, ty } => BackendExpr::ValueProject {
+                body: Box::new(lower_expr(grammar, *body)),
+                target: target.clone(),
+                ty: ty.clone(),
+            },
+            ExprKind::Discard { left, right, .. } => {
+                // Phase 1: lower transparently — both operands are matched. The
+                // keep_left discard-semantic is metadata for a later phase.
+                BackendExpr::Seq(vec![lower_expr(grammar, *left), lower_expr(grammar, *right)])
+            }
         }
     }
 
@@ -1453,8 +1502,12 @@ pub mod extract {
             ExprKind::Alt { branches, .. } => branches
                 .iter()
                 .any(|branch| expr_has_regex_kind(grammar, *branch, kind)),
-            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
-                expr_has_regex_kind(grammar, *body, kind)
+            ExprKind::Repeat { body, .. }
+            | ExprKind::Optional(body)
+            | ExprKind::Project { body, .. } => expr_has_regex_kind(grammar, *body, kind),
+            ExprKind::Discard { left, right, .. } => {
+                expr_has_regex_kind(grammar, *left, kind)
+                    || expr_has_regex_kind(grammar, *right, kind)
             }
             ExprKind::Regex { pattern } => span_kind(pattern).is_some_and(|span| span == kind),
             ExprKind::Literal { .. } | ExprKind::Ref { .. } | ExprKind::Annotation { .. } => false,
@@ -1485,8 +1538,14 @@ pub mod extract {
             ExprKind::Alt { branches, .. } => branches
                 .iter()
                 .any(|branch| expr_has_literal(grammar, *branch, literal, visited_rules)),
-            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+            ExprKind::Repeat { body, .. }
+            | ExprKind::Optional(body)
+            | ExprKind::Project { body, .. } => {
                 expr_has_literal(grammar, *body, literal, visited_rules)
+            }
+            ExprKind::Discard { left, right, .. } => {
+                expr_has_literal(grammar, *left, literal, visited_rules)
+                    || expr_has_literal(grammar, *right, literal, visited_rules)
             }
             ExprKind::Literal { bytes, .. } => bytes == literal,
             ExprKind::Ref {
@@ -1527,8 +1586,14 @@ pub mod extract {
                     collect_direct_rule_refs(grammar, *branch, refs);
                 }
             }
-            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+            ExprKind::Repeat { body, .. }
+            | ExprKind::Optional(body)
+            | ExprKind::Project { body, .. } => {
                 collect_direct_rule_refs(grammar, *body, refs);
+            }
+            ExprKind::Discard { left, right, .. } => {
+                collect_direct_rule_refs(grammar, *left, refs);
+                collect_direct_rule_refs(grammar, *right, refs);
             }
             ExprKind::Ref {
                 target: Some(rule), ..
@@ -1560,8 +1625,14 @@ pub mod extract {
                     collect_direct_literals(grammar, *branch, literals);
                 }
             }
-            ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+            ExprKind::Repeat { body, .. }
+            | ExprKind::Optional(body)
+            | ExprKind::Project { body, .. } => {
                 collect_direct_literals(grammar, *body, literals);
+            }
+            ExprKind::Discard { left, right, .. } => {
+                collect_direct_literals(grammar, *left, literals);
+                collect_direct_literals(grammar, *right, literals);
             }
             ExprKind::Literal { bytes, .. } => literals.push(bytes.clone()),
             ExprKind::Ref { .. } | ExprKind::Regex { .. } | ExprKind::Annotation { .. } => {}

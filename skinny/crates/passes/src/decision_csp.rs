@@ -86,9 +86,14 @@ fn solve_rule(
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         optimization_mode: OptimizationMode::MinimizeCost,
         node_budget: Some(NODE_BUDGET),
+        // csc411 W1 deleted `SolveConfig::backjumping` and added `restarts`/`cancel`
+        // (constraint-trait-bound-spike §7, B2). The `..Default::default()` spread
+        // absorbs the new fields and the dropped one — the only downstream fix, since
+        // no csp-side change rescues an exhaustive literal (`#[non_exhaustive]` breaks
+        // it harder). restarts→false, cancel→None preserve the original behavior.
+        ..Default::default()
     };
     let solutions = csp.solve_optimized(&config);
     let elapsed = start.elapsed();

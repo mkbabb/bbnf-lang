@@ -1,0 +1,253 @@
+Concurrent maglev has been disabled for tracing.
+[optimization status (budget from INTERPRETED_FUNCTION) getNewKey !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) copyAccessor !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x3dcee8225a31) !feedback]
+[optimization status (budget from BASELINE) getNewKey BASELINE]
+[optimization status (^MAGLEV) getNewKey BASELINE]
+[optimization status (^MAGLEV) getNewKey BASELINE]
+  cannot inline 0x98b0accd8 {0x0d18e7f46fa9 <SharedFunctionInfo get description>}: it has not been compiled/run with feedback yet
+  cannot inline 0x98b0aeaf0 {0x0d18e7f46d21 <SharedFunctionInfo toUpperCase>}: it has not been compiled/run with feedback yet
+  cannot inline 0x98b0accd8 {0x0d18e7f46fa9 <SharedFunctionInfo get description>}: it has not been compiled/run with feedback yet
+  cannot inline 0x98b191238 {0x0d18e7f46859 <SharedFunctionInfo slice>}: it has not been compiled/run with feedback yet
+  cannot inline 0x98b0aeaf0 {0x0d18e7f46d21 <SharedFunctionInfo toUpperCase>}: it has not been compiled/run with feedback yet
+  cannot inline 0x98b191238 {0x0d18e7f46859 <SharedFunctionInfo slice>}: it has not been compiled/run with feedback yet
+[optimization status (budget from MAGLEV) getNewKey MAGLEV]
+[optimization status (^TURBOFAN_JS) getNewKey MAGLEV]
+[optimization status (^TURBOFAN_JS) getNewKey MAGLEV]
+Cannot consider 0x98b0f8bd8 {0x14b1e00491d9 <FeedbackCell[many closures]>} for inlining (no feedback vector)
+Cannot consider 0x98b0f8bd8 {0x14b1e00491d9 <FeedbackCell[many closures]>} for inlining (no feedback vector)
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x21375a53f471) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x146d33a046b9) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) createSafeIterator !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) copyProps !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x146d33a25c59) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x146d33a26481) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x146d33a29fe1) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) BuiltinModule !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x146d33a2c001) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) getExpectedArgumentLength !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) makeNodeErrorWithCode !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) E !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) makeSystemErrorWithCode !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) makeNodeErrorForHideStackFrame !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) internalBinding !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) SafeSet !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) requireBuiltin !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) hideStackFrames !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) compileForInternalLoader !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x21375a504aa1) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) defineColorAlias !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x21375a531e49) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x21375a531e49) INTERPRETED_FUNCTION]
+[optimization status (^MAGLEV) (anonymous 0x21375a531e49) INTERPRETED_FUNCTION]
+[optimization status (^MAGLEV) (anonymous 0x21375a531e49) INTERPRETED_FUNCTION]
+  cannot inline 0x98b0afcc8 {0x0d18e7f444a1 <SharedFunctionInfo freeze>}: it has not been compiled/run with feedback yet
+[optimization status (budget from MAGLEV) (anonymous 0x21375a531e49) MAGLEV]
+[optimization status (^TURBOFAN_JS) (anonymous 0x21375a531e49) MAGLEV]
+[optimization status (^TURBOFAN_JS) (anonymous 0x21375a531e49) MAGLEV]
+Cannot consider 0x98b1066c0 {0x14b1e00491d9 <FeedbackCell[many closures]>} for inlining (no feedback vector)
+[optimization status (budget from INTERPRETED_FUNCTION) next !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) SafeIterator !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) it !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) e !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x947c07178d9) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) next INTERPRETED_FUNCTION]
+[optimization status (^MAGLEV) next INTERPRETED_FUNCTION]
+[optimization status (^MAGLEV) next INTERPRETED_FUNCTION]
+[optimization status (budget from MAGLEV) next MAGLEV]
+[optimization status (^TURBOFAN_JS) next MAGLEV]
+[optimization status (^TURBOFAN_JS) next MAGLEV]
+Cannot consider 0x98b10d120 {0x14b1e00491d9 <FeedbackCell[many closures]>} for inlining (no feedback vector)
+Cannot consider 0x98b10d120 {0x14b1e00491d9 [optimization status (budget from MAGLEV) next MAGLEV]
+<FeedbackCell[many closures]>} for inlining (no feedback vector)
+[optimization status (budget from INTERPRETED_FUNCTION) SafeMap !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) exposeLazyInterfaces !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) getLazy !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) get !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) WeakReference !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) SafeWeakRef !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) WeakReference !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) set !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) Channel !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) channel !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) isPosixPathSeparator !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) getCLIOptionsFromBinding !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) getOptionValue !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) addReadOnlyProcessAlias !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0xe43f77b5459) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x37e013733859) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) resolve !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) wrappedFn !feedback]
+[optimization status (budget from BASELINE) isPosixPathSeparator BASELINE]
+[optimization status (^MAGLEV) isPosixPathSeparator BASELINE]
+[optimization status (^MAGLEV) isPosixPathSeparator BASELINE]
+[optimization status (budget from MAGLEV) isPosixPathSeparator MAGLEV]
+[optimization status (^TURBOFAN_JS) isPosixPathSeparator MAGLEV]
+[optimization status (^TURBOFAN_JS) isPosixPathSeparator MAGLEV]
+[optimization status (budget from INTERPRETED_FUNCTION) nextPart !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) isFileType !feedback]
+[optimization status (^MAGLEV) normalizeString BASELINE .]
+[optimization status (^MAGLEV) normalizeString BASELINE .]
+  greedy inlining 0x98b22eeb0 {0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>}: small function, skipping max-depth
+== Inlining 0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>
+  greedy inlining 0x98b22eeb0 {0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>}: small function, skipping max-depth
+== Inlining 0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>
+[optimization status (budget from MAGLEV) normalizeString MAGLEV .]
+[optimization status (budget from INTERPRETED_FUNCTION) debuglog !feedback]
+[optimization status (^TURBOFAN_JS) normalizeString MAGLEV .]
+[optimization status (^TURBOFAN_JS) normalizeString MAGLEV .]
+Cannot consider 0x98b113e38 {0x14b1e00491d9 <FeedbackCell[many closures]>} for inlining (no feedback vector)
+Cannot consider 0x98b113e38 {0x14b1e00491d9 <FeedbackCell[many closures]>} for inlining (no feedback vector)
+Considering 0x98b112c98 {0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>} for inlining with 0x98b2705f8 {0x008ba65d5ca9 <FeedbackVector[0]>}
+Inlining small function(s) at call site #84:JSCall
+Inlining 0x98b112c98 {0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>} into 0x98b1124a0 {0x2b965f8afd71 <SharedFunctionInfo normalizeString>}
+Considering 0x98b112c98 {0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>} for inlining with 0x98b2705f8 {0x008ba65d5ca9 <FeedbackVector[0]>}
+Inlining small function(s) at call site #119:JSCall
+Inlining 0x98b112c98 {0x2b965f8afc99 <SharedFunctionInfo isPosixPathSeparator>} into 0x98b1124a0 {0x2b965f8afd71 <SharedFunctionInfo normalizeString>}
+Cannot consider 0x98b113e38 {0x14b1e00491d9 <FeedbackCell[many closures]>} for inlining (no feedback vector)
+[optimization status (budget from INTERPRETED_FUNCTION) #ensureSearchParamsUpdated !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) get protocol !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) assert !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) #updateContext !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) get href !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) URLContext !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) URLContext !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) URL !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) markTransferMode !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) URL !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) get hasSearch !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) get hasHash !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) isURL !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) noop !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) makeBitMapDescriptor !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) makeBitMapDescriptor !feedback]
+
+===== TEMPORAL · SITE A · arity-3 UNROLLED (fuseAll p0,p1,p2) =====
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x37e01372d7b9) !feedback]
+>>> WARM-BEGIN site A: warming fused closure 2000000x over "(42)"
+[optimization status (budget from INTERPRETED_FUNCTION) checkListener !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) unsafeSetValue !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) stringParser !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) _ParserState !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) _ParserState !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) ok !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x2cf2749cab79) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) regexParser !feedback]
+[optimization status (budget from BASELINE) unsafeSetValue BASELINE]
+[optimization status (^MAGLEV) unsafeSetValue BASELINE]
+[optimization status (^MAGLEV) unsafeSetValue BASELINE]
+[optimization status (budget from MAGLEV) unsafeSetValue MAGLEV]
+[optimization status (^TURBOFAN_JS) unsafeSetValue MAGLEV]
+[optimization status (^TURBOFAN_JS) unsafeSetValue MAGLEV]
+[optimization status (budget from BASELINE) stringParser BASELINE]
+[optimization status (^MAGLEV) stringParser BASELINE]
+[optimization status (^MAGLEV) stringParser BASELINE]
+  greedy inlining 0x98b22a060 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>}: small function, skipping max-depth
+== Inlining 0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>
+[optimization status (budget from MAGLEV) stringParser MAGLEV]
+[optimization status (^TURBOFAN_JS) stringParser MAGLEV]
+[optimization status (^TURBOFAN_JS) stringParser MAGLEV]
+[optimization status (budget from BASELINE) _ParserState BASELINE]
+[optimization status (budget from BASELINE) _ParserState BASELINE]
+[optimization status (budget from BASELINE) ok BASELINE]
+[optimization status (budget from BASELINE) (anonymous 0x2cf2749cab79) BASELINE]
+Considering 0x98b39cd00 {0x008ba65eadb9 [optimization status (^MAGLEV) _ParserState BASELINE]
+[optimization status (^MAGLEV) _ParserState BASELINE]
+<SharedFunctionInfo unsafeSetValue>} for inlining with 0x98b275cd8 {0x3dc21254e2e1 <FeedbackVector[2]>}
+  greedy inlining 0x98b2822c8 {0x008ba65eaff9 <SharedFunctionInfo _ParserState>}: small function, skipping max-depth
+== Inlining 0x008ba65eaff9 Inlining small function(s) at call site #69<SharedFunctionInfo _ParserState>
+:JSCall
+Inlining 0x98b39cd00 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} into 0x98b39c408 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>}
+[optimization status (^MAGLEV) (anonymous 0x2cf2749cab79) BASELINE]
+[optimization status (^MAGLEV) (anonymous 0x2cf2749cab79) BASELINE]
+  cannot inline 0x98b22f150 {0x3dc21254ae21 <SharedFunctionInfo regexParser>}: big function, size (248) >= max-size (100)
+== Inlining 0x008ba65eac51 <SharedFunctionInfo ok>
+  greedy inlining 0x98b29db70 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>}: small function, skipping max-depth
+== Inlining 0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>
+[optimization status (budget from MAGLEV) (anonymous 0x2cf2749cab79) MAGLEV]
+[optimization status (budget from MAGLEV) _ParserState MAGLEV]
+[optimization status (^TURBOFAN_JS) (anonymous 0x2cf2749cab79) MAGLEV]
+[optimization status (^TURBOFAN_JS) (anonymous 0x2cf2749cab79) MAGLEV]
+[optimization status (^TURBOFAN_JS) _ParserState MAGLEV]
+[optimization status (^TURBOFAN_JS) _ParserState MAGLEV]
+[optimization status (budget from BASELINE) regexParser BASELINE]
+[optimization status (^MAGLEV) regexParser BASELINE]
+[optimization status (^MAGLEV) regexParser BASELINE]
+Considering 0x98b3b46d8 {0x008ba65eaff9 <SharedFunctionInfo _ParserState>} for inlining with 0x98b3b5d70 {0x3dc21254e429 <FeedbackVector[8]>}
+Inlining small function(s) at call site #30:JSCall
+Considering 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>} for inlining with 0x98b27f580 {0x3dc21254e321 <FeedbackVector[19]>}
+  cannot inline 0x98b29dd50 {0x0d18e7f485e1 <SharedFunctionInfo test>}: it has not been compiled/run with feedback yet
+Inlining 0x98b3b46d8 {0x008ba65eaff9 <SharedFunctionInfo _ParserState>} into 0x98b3b44a8 {0x008ba65eac09 <SharedFunctionInfo _ParserState>}
+Considering 0x98b3b0d30 {0x3dc21254ae21 <SharedFunctionInfo regexParser>} for inlining with 0x98b281428 {0x3dc21254e849 <FeedbackVector[43]>}
+  cannot inline 0x98b2a3038 {0x0d18e7f46a09 <SharedFunctionInfo substring>}: it has not been compiled/run with feedback yet
+  greedy inlining 0x98b2a16d0 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>}: small function, skipping max-depth
+== Inlining 0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>
+Considering 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>} for inlining with 0x98b27f580 {0x3dc21254e321 <FeedbackVector[19]>}
+Considering 0x98b3b19d0 {0x008ba65eac51 <SharedFunctionInfo ok>} for inlining with 0x98b281f58 {0x3dc21254e539 <FeedbackVector[11]>}
+Budget used: 0/920 -- 4 candidate(s) for inlining:
+- candidate: JSCall node #228 with frequency 0.998008, has_heapnum_param:0, 1 target(s):[optimization status (budget from MAGLEV) regexParser MAGLEV]
+
+  - target: 0x98b3b19d0 {0x008ba65eac51 <SharedFunctionInfo ok>}, bytecode size: 45[optimization status (^TURBOFAN_JS) regexParser MAGLEV]
+[optimization status (^TURBOFAN_JS) regexParser MAGLEV]
+
+- candidate: JSCall node #170 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>}, bytecode size: 90, existing opt code's inlined bytecode size: 8
+- candidate: JSCall node #59 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>}, bytecode size: 90, existing opt code's inlined bytecode size: 8
+- candidate: JSCall node #115 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0d30 {0x3dc21254ae21 <SharedFunctionInfo regexParser>}, bytecode size: 248, existing opt code's inlined bytecode size: 8
+[optimization status (budget from MAGLEV)Inlining 0x98b3b19d0 {0x008ba65eac51 <SharedFunctionInfo ok>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+ (anonymous 0x2cf2749cab79) MAGLEV]
+Considering 0x98b39f3e8 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} for inlining with 0x98b45a708 {0x3dc21254e2e1 <FeedbackVector[2]>}
+[optimization status (budget from MAGLEV) regexParser MAGLEV]
+Inlining small function(s) at call site #140:JSCall
+Inlining 0x98b39f3e8 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} into 0x98b39e408 {0x3dc21254ae21 <SharedFunctionInfo regexParser>}
+Considering 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} for inlining with 0x98b282998 {0x3dc21254e2e1 <FeedbackVector[2]>}
+Inlining small function(s) at call site #334:JSCall
+Inlining 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+Budget used: 45/920 -- 3 candidate(s) for inlining:
+- candidate: JSCall node #170 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>}, bytecode size: 90, existing opt code's inlined bytecode size: 8
+- candidate: JSCall node #59 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>}, bytecode size: 90, existing opt code's inlined bytecode size: 8
+- candidate: JSCall node #115 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0d30 {0x3dc21254ae21 <SharedFunctionInfo regexParser>}, bytecode size: 248, existing opt code's inlined bytecode size: 8
+Inlining 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+Considering 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} for inlining with 0x98b282998 {0x3dc21254e2e1 <FeedbackVector[2]>}
+Inlining small function(s) at call site #439:JSCall
+Inlining 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+Budget used: 135/920 -- 2 candidate(s) for inlining:
+- candidate: JSCall node #59 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>}, bytecode size: 90, existing opt code's inlined bytecode size: 8
+- candidate: JSCall node #115 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0d30 {0x3dc21254ae21 <SharedFunctionInfo regexParser>}, bytecode size: 248, existing opt code's inlined bytecode size: 8
+Inlining 0x98b3b0be8 {0x3dc21254bcc1 <SharedFunctionInfo stringParser>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+Considering 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} for inlining with 0x98b282998 {0x3dc21254e2e1 <FeedbackVector[2]>}
+Inlining small function(s) at call site #574:JSCall
+Inlining 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+Budget used: 225/920 -- 1 candidate(s) for inlining:
+- candidate: JSCall node #115 with frequency 0.998008, has_heapnum_param:0, 1 target(s):
+  - target: 0x98b3b0d30 {0x3dc21254ae21 <SharedFunctionInfo regexParser>}, bytecode size: 248
+Inlining 0x98b3b0d30 {0x3dc21254ae21 <SharedFunctionInfo regexParser>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+Considering 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} for inlining with 0x98b282998 {0x3dc21254e2e1 <FeedbackVector[2]>}
+Inlining small function(s) at call site #779:JSCall
+Inlining 0x98b282048 {0x008ba65eadb9 <SharedFunctionInfo unsafeSetValue>} into 0x98b3b0488 {0x3dc21254c139 <SharedFunctionInfo>}
+[optimization status (budget from INTERPRETED_FUNCTION) FastBuffer !feedback]
+>>> WARM-END site A: ok=2000000/2000000
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x21375a5030f9) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) get hasSubscribers !feedback]
+TIER fused[site A]     : isFunction | maybeDeopted | MAGLEV  (0x29)
+[optimization status (budget from INTERPRETED_FUNCTION) set !feedback]
+TIER leaf[0] site A     : isFunction | maybeDeopted | MAGLEV  (0x29)
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x21375a505179) !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) _addListener !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) addListener !feedback]
+TIER leaf[1] site A     : isFunction | maybeDeopted | MAGLEV  (0x29)
+[optimization status (budget from INTERPRETED_FUNCTION) (anonymous 0x28cfc6893999) !feedback]
+TIER leaf[2] site A     : isFunction | maybeDeopted | MAGLEV  (0x29)
+[optimization status (budget from INTERPRETED_FUNCTION) utf8Write !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) alignPool !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) fromStringFast !feedback]
+[optimization status (budget from INTERPRETED_FUNCTION) fromString !feedback]
+CHECK site A: value=["(","42",")"] isError=false
+[optimization status (budget from INTERPRETED_FUNCTION) get !feedback]

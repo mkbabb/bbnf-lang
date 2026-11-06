@@ -1,0 +1,340 @@
+{
+  "cells": [
+    {
+      "cell": "eager-initial",
+      "run": 0,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 122.19999998807907,
+      "appStartToDoubleRafMs": 207.39999997615814,
+      "domNodes": 1939,
+      "sectionsInDom": 8,
+      "totalFlat": 8,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 264,
+      "longtaskMaxMs": 129,
+      "longtaskTotalMs": 232,
+      "longtasks": [
+        {
+          "start": 28,
+          "dur": 129
+        },
+        {
+          "start": 157,
+          "dur": 103
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 1,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 109.30000001192093,
+      "appStartToDoubleRafMs": 189.20000004768372,
+      "domNodes": 1939,
+      "sectionsInDom": 8,
+      "totalFlat": 8,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 240,
+      "longtaskMaxMs": 117,
+      "longtaskTotalMs": 208,
+      "longtasks": [
+        {
+          "start": 25,
+          "dur": 117
+        },
+        {
+          "start": 142,
+          "dur": 91
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 2,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 114.60000002384186,
+      "appStartToDoubleRafMs": 199.10000002384186,
+      "domNodes": 1939,
+      "sectionsInDom": 8,
+      "totalFlat": 8,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 252,
+      "longtaskMaxMs": 125,
+      "longtaskTotalMs": 219,
+      "longtasks": [
+        {
+          "start": 27,
+          "dur": 125
+        },
+        {
+          "start": 152,
+          "dur": 94
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 0,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 110,
+      "appStartToDoubleRafMs": 222.39999997615814,
+      "domNodes": 4636,
+      "sectionsInDom": 16,
+      "totalFlat": 16,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 276,
+      "longtaskMaxMs": 154,
+      "longtaskTotalMs": 245,
+      "longtasks": [
+        {
+          "start": 27,
+          "dur": 154
+        },
+        {
+          "start": 181,
+          "dur": 91
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 1,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 108.90000003576279,
+      "appStartToDoubleRafMs": 216.4000000357628,
+      "domNodes": 4636,
+      "sectionsInDom": 16,
+      "totalFlat": 16,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 272,
+      "longtaskMaxMs": 148,
+      "longtaskTotalMs": 239,
+      "longtasks": [
+        {
+          "start": 27,
+          "dur": 148
+        },
+        {
+          "start": 175,
+          "dur": 91
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 2,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 104,
+      "appStartToDoubleRafMs": 211.19999998807907,
+      "domNodes": 4636,
+      "sectionsInDom": 16,
+      "totalFlat": 16,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 264,
+      "longtaskMaxMs": 148,
+      "longtaskTotalMs": 232,
+      "longtasks": [
+        {
+          "start": 25,
+          "dur": 148
+        },
+        {
+          "start": 174,
+          "dur": 84
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 0,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 117.40000003576279,
+      "appStartToDoubleRafMs": 245.5,
+      "domNodes": 7378,
+      "sectionsInDom": 24,
+      "totalFlat": 24,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 300,
+      "longtaskMaxMs": 171,
+      "longtaskTotalMs": 269,
+      "longtasks": [
+        {
+          "start": 24,
+          "dur": 171
+        },
+        {
+          "start": 196,
+          "dur": 98
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 1,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 109.5,
+      "appStartToDoubleRafMs": 237,
+      "domNodes": 7378,
+      "sectionsInDom": 24,
+      "totalFlat": 24,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 292,
+      "longtaskMaxMs": 170,
+      "longtaskTotalMs": 260,
+      "longtasks": [
+        {
+          "start": 25,
+          "dur": 170
+        },
+        {
+          "start": 196,
+          "dur": 90
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 2,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 108.60000002384186,
+      "appStartToDoubleRafMs": 241.39999997615814,
+      "domNodes": 7378,
+      "sectionsInDom": 24,
+      "totalFlat": 24,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 300,
+      "longtaskMaxMs": 177,
+      "longtaskTotalMs": 266,
+      "longtasks": [
+        {
+          "start": 27,
+          "dur": 177
+        },
+        {
+          "start": 204,
+          "dur": 89
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 0,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 103.5,
+      "appStartToDoubleRafMs": 246.39999997615814,
+      "domNodes": 9293,
+      "sectionsInDom": 32,
+      "totalFlat": 32,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 300,
+      "longtaskMaxMs": 185,
+      "longtaskTotalMs": 269,
+      "longtasks": [
+        {
+          "start": 27,
+          "dur": 185
+        },
+        {
+          "start": 212,
+          "dur": 84
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 1,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 117.19999998807907,
+      "appStartToDoubleRafMs": 270,
+      "domNodes": 9293,
+      "sectionsInDom": 32,
+      "totalFlat": 32,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 328,
+      "longtaskMaxMs": 198,
+      "longtaskTotalMs": 295,
+      "longtasks": [
+        {
+          "start": 27,
+          "dur": 198
+        },
+        {
+          "start": 226,
+          "dur": 97
+        }
+      ]
+    },
+    {
+      "cell": "eager-initial",
+      "run": 2,
+      "mode": "native",
+      "fixture": "stress",
+      "batch": 4,
+      "idleEnabled": true,
+      "roEnabled": true,
+      "mountToDoubleRafMs": 98,
+      "appStartToDoubleRafMs": 244.19999998807907,
+      "domNodes": 9293,
+      "sectionsInDom": 32,
+      "totalFlat": 32,
+      "frontierAtDoubleRaf": null,
+      "fcpMs": 308,
+      "longtaskMaxMs": 189,
+      "longtaskTotalMs": 274,
+      "longtasks": [
+        {
+          "start": 27,
+          "dur": 189
+        },
+        {
+          "start": 216,
+          "dur": 85
+        }
+      ]
+    }
+  ]
+}

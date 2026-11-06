@@ -1,5 +1,7 @@
 //! N-ary all-different constraint with a sentinel escape value.
 //!
+//! Tests: `tests/all_different_except.rs`.
+//!
 //! Parallel to [`AllDifferent`](super::all_different::AllDifferent) but permits
 //! arbitrarily many variables to share a single *sentinel* value — useful for
 //! modelling partial bipartite assignment, where a dedicated "unmatched" token
@@ -36,13 +38,19 @@ use super::traits::{Constraint, Revision, VarId};
 pub struct AllDifferentExcept<V: Clone + PartialEq + std::fmt::Debug> {
     pub(crate) scope: Vec<VarId>,
     pub(crate) sentinel: V,
+    /// Stable per-constraint id keying the GAC matching warm-start cache.
+    gac_id: u32,
 }
 
 impl<V: Clone + PartialEq + std::fmt::Debug> AllDifferentExcept<V> {
     /// Create a new all-different-except constraint over `vars`, treating
     /// `sentinel` as the escape value that may be reused without conflict.
     pub fn new(vars: Vec<VarId>, sentinel: V) -> Self {
-        Self { scope: vars, sentinel }
+        Self {
+            scope: vars,
+            sentinel,
+            gac_id: crate::solver::gac::next_gac_id(),
+        }
     }
 
     pub(crate) fn check_impl(&self, assignment: &[Option<V>]) -> bool {
@@ -72,54 +80,80 @@ impl<V: Clone + PartialEq + std::fmt::Debug> AllDifferentExcept<V> {
     /// behave exactly like [`AllDifferent`](super::all_different::AllDifferent).
     ///
     /// For larger scopes (≥ 4), delegates to Régin's GAC algorithm
-    /// ([`propagate_gac_alldiff_except`](crate::solver::gac_alldiff_except::propagate_gac_alldiff_except)),
-    /// which achieves generalized arc consistency by building a bipartite
-    /// matching graph over non-sentinel values and pruning values that
-    /// cannot participate in any maximum matching.
+    /// ([`propagate_gac_core`](crate::solver::gac::propagate_gac_core) with
+    /// the sentinel supplied), which achieves generalized arc consistency by
+    /// building a bipartite matching graph over non-sentinel values and
+    /// pruning values that cannot participate in any maximum matching.
     pub(crate) fn revise_impl<D>(&self, vars: &mut [Variable<D>], depth: usize) -> Revision
     where
         D: Domain<Value = V>,
+        V: 'static,
     {
         // For larger scopes, GAC provides strictly stronger pruning than
         // singleton removal — it detects Hall sets and matching failures
-        // that pairwise checks miss.
+        // that pairwise checks miss. The matching is warm-started across calls
+        // via the constraint's cache id.
         if self.scope.len() >= 4 {
-            return crate::solver::gac_alldiff_except::propagate_gac_alldiff_except(
+            return crate::solver::gac::propagate_gac_core(
                 &self.scope,
-                &self.sentinel,
+                Some(&self.sentinel),
                 vars,
                 depth,
+                Some(self.gac_id),
             );
         }
 
-        // Small scope: singleton removal is fast and sufficient.
+        // Small scope: singleton removal is fast and sufficient. Snapshot into
+        // the pooled thread-local buffer (Beat 2), preserving the exact prior
+        // semantics — non-sentinel singletons only, collected before pruning.
         let mut changed = false;
-        let singletons: Vec<(VarId, D::Value)> = self
-            .scope
-            .iter()
-            .filter_map(|&v| vars[v as usize].domain.singleton_value().map(|val| (v, val)))
-            .filter(|(_, val)| *val != self.sentinel)
-            .collect();
-
-        for (sv, sval) in &singletons {
-            for &other in &self.scope {
-                if other == *sv { continue; }
-                if vars[other as usize].prune(sval, depth) { changed = true; }
-                if vars[other as usize].domain.is_empty() { return Revision::Unsatisfiable; }
+        let sentinel = &self.sentinel;
+        let unsat = super::scratch::with_singleton_buf::<D::Value, _>(|singletons| {
+            for &v in &self.scope {
+                if let Some(val) = vars[v as usize].domain.singleton_value()
+                    && val != *sentinel
+                {
+                    singletons.push((v, val));
+                }
             }
+            for (sv, sval) in singletons.iter() {
+                for &other in &self.scope {
+                    if other == *sv {
+                        continue;
+                    }
+                    if vars[other as usize].prune(sval, depth) {
+                        changed = true;
+                    }
+                    if vars[other as usize].domain.is_empty() {
+                        return true;
+                    }
+                }
+            }
+            false
+        });
+        if unsat {
+            return Revision::Unsatisfiable;
         }
 
-        if changed { Revision::Changed } else { Revision::Unchanged }
+        if changed {
+            Revision::Changed
+        } else {
+            Revision::Unchanged
+        }
     }
 }
 
 impl<D> Constraint<D> for AllDifferentExcept<D::Value>
 where
     D: Domain,
-    D::Value: PartialEq,
+    D::Value: PartialEq + 'static + Send + Sync,
 {
-    fn scope(&self) -> &[VarId] { &self.scope }
-    fn check(&self, assignment: &[Option<D::Value>]) -> bool { self.check_impl(assignment) }
+    fn scope(&self) -> &[VarId] {
+        &self.scope
+    }
+    fn check(&self, assignment: &[Option<D::Value>]) -> bool {
+        self.check_impl(assignment)
+    }
     fn revise(&self, vars: &mut [Variable<D>], depth: usize) -> Revision {
         self.revise_impl(vars, depth)
     }

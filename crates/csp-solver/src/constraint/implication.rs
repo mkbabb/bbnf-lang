@@ -60,13 +60,13 @@ impl<V: Clone + PartialEq + std::fmt::Debug> ImplicationConstraint<V> {
             return Revision::Unchanged;
         }
 
-        // Antecedent is the trigger value — filter the consequent.
+        // Antecedent is the trigger value — filter the consequent. Iterates
+        // the domain's owned snapshot directly (no `Vec` collect): `iter()`'s
+        // `+ use<Self>` bound decouples the returned iterator from `vars[ci]`,
+        // so mutating it via `prune` inside the loop borrow-checks cleanly.
         let mut changed = false;
-        let consequent_values: Vec<V> = vars[ci].domain.iter().collect();
-        for v in &consequent_values {
-            if !self.allowed.contains(v)
-                && vars[ci].prune(v, depth)
-            {
+        for v in vars[ci].domain.iter() {
+            if !self.allowed.contains(&v) && vars[ci].prune(&v, depth) {
                 changed = true;
             }
         }
@@ -85,7 +85,7 @@ impl<V: Clone + PartialEq + std::fmt::Debug> ImplicationConstraint<V> {
 
 impl<D: Domain> Constraint<D> for ImplicationConstraint<D::Value>
 where
-    D::Value: PartialEq,
+    D::Value: PartialEq + Send + Sync,
 {
     fn scope(&self) -> &[VarId] {
         &self.scope

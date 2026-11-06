@@ -1,0 +1,1313 @@
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:16111:69
+      |
+16111 | / ...                   break 'avx2_scan {
+16112 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+16113 | | ...                   };
+      | |_______________________^
+      |
+      = note: `#[warn(break_with_label_and_loop)]` on by default
+help: wrap this expression in parentheses
+      |
+16111 ~                                                                     break 'avx2_scan ({
+16112 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+16113 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:16130:69
+      |
+16130 | / ...                   break 'avx2_scan {
+16131 | | ...                       ::core::option::Option::Some(__i - __start)
+16132 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+16130 ~                                                                     break 'avx2_scan ({
+16131 |                                                                         ::core::option::Option::Some(__i - __start)
+16132 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:16286:69
+      |
+16286 | / ...                   break 'avx2_scan {
+16287 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+16288 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+16286 ~                                                                     break 'avx2_scan ({
+16287 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+16288 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:16305:69
+      |
+16305 | / ...                   break 'avx2_scan {
+16306 | | ...                       ::core::option::Option::Some(__i - __start)
+16307 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+16305 ~                                                                     break 'avx2_scan ({
+16306 |                                                                         ::core::option::Option::Some(__i - __start)
+16307 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:17165:69
+      |
+17165 | / ...                   break 'avx2_scan {
+17166 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+17167 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+17165 ~                                                                     break 'avx2_scan ({
+17166 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+17167 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:17184:69
+      |
+17184 | / ...                   break 'avx2_scan {
+17185 | | ...                       ::core::option::Option::Some(__i - __start)
+17186 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+17184 ~                                                                     break 'avx2_scan ({
+17185 |                                                                         ::core::option::Option::Some(__i - __start)
+17186 ~                                                                     });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:21248:81
+      |
+21248 | / ...                   break 'avx2_scan {
+21249 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+21250 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+21248 ~                                                                                 break 'avx2_scan ({
+21249 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
+21250 ~                                                                                 });
+      |
+
+warning: this labeled break expression is easy to confuse with an unlabeled break with a labeled value expression
+     --> crates/core/src/grammar/generated/bbnf.rs:21267:81
+      |
+21267 | / ...                   break 'avx2_scan {
+21268 | | ...                       ::core::option::Option::Some(__i - __start)
+21269 | | ...                   };
+      | |_______________________^
+      |
+help: wrap this expression in parentheses
+      |
+21267 ~                                                                                 break 'avx2_scan ({
+21268 |                                                                                     ::core::option::Option::Some(__i - __start)
+21269 ~                                                                                 });
+      |
+
+warning: unused import: `StructRegistry`
+  --> crates/core/src/backend/rust/emitter/registry_emit.rs:27:77
+   |
+27 | use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
+   |                                                                             ^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `pattern_for_state` is never used
+   --> crates/core/src/backend/rust/emitter/regex_scan_adapter.rs:122:4
+    |
+122 | fn pattern_for_state<'a>(ir: &'a GrammarIR, table: &'a DtaTable, idx: usize) -> Option<&'a str> {
+    |    ^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `body_emits_to_builder` is never used
+   --> crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs:101:4
+    |
+101 | fn body_emits_to_builder(node: &IrNode) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `lower_string_lit` is never used
+   --> crates/core/src/lower/value_expr/atom.rs:569:15
+    |
+569 | pub(super) fn lower_string_lit<'a, 'p: 'a>(
+    |               ^^^^^^^^^^^^^^^^
+
+warning: variant `ColorMix` is never constructed
+  --> crates/core/src/runtime/css_l4/builder.rs:32:5
+   |
+16 | enum OpenFrame<'p> {
+   |      --------- variant in this enum
+...
+32 |     ColorMix {
+   |     ^^^^^^^^
+   |
+   = note: `OpenFrame` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7326:24
+     |
+7326 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_comparisons)]` on by default
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7657:24
+     |
+7657 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:7842:24
+     |
+7842 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8088:24
+     |
+8088 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8403:24
+     |
+8403 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8606:24
+     |
+8606 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8732:24
+     |
+8732 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:8970:24
+     |
+8970 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bbnf.rs:9811:24
+     |
+9811 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:10926:24
+      |
+10926 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:11306:24
+      |
+11306 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:11486:36
+      |
+11486 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:11690:36
+      |
+11690 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:11894:36
+      |
+11894 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:12102:24
+      |
+12102 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:12361:44
+      |
+12361 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:12395:32
+      |
+12395 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:13079:24
+      |
+13079 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:13152:24
+      |
+13152 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:13207:24
+      |
+13207 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:13407:36
+      |
+13407 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:13431:24
+      |
+13431 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/bbnf.rs:13887:24
+      |
+13887 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bnf.rs:1930:24
+     |
+1930 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/bnf.rs:2130:24
+     |
+2130 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:31672:24
+      |
+31672 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:39401:24
+      |
+39401 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:40619:24
+      |
+40619 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:40835:24
+      |
+40835 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:41034:24
+      |
+41034 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:42142:24
+      |
+42142 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:43399:24
+      |
+43399 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:43878:36
+      |
+43878 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:43902:24
+      |
+43902 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44462:24
+      |
+44462 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44521:24
+      |
+44521 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44600:24
+      |
+44600 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:44742:32
+      |
+44742 | ...                   if __iter_count < 0u32 {
+      |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47741:24
+      |
+47741 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:47893:24
+      |
+47893 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48077:24
+      |
+48077 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48249:24
+      |
+48249 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:48651:24
+      |
+48651 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:49441:24
+      |
+49441 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51002:24
+      |
+51002 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51063:24
+      |
+51063 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51252:24
+      |
+51252 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51313:24
+      |
+51313 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51502:24
+      |
+51502 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51563:24
+      |
+51563 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51815:24
+      |
+51815 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:51876:24
+      |
+51876 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52048:24
+      |
+52048 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52109:24
+      |
+52109 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52298:24
+      |
+52298 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52359:24
+      |
+52359 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52548:24
+      |
+52548 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52609:24
+      |
+52609 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52798:24
+      |
+52798 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:52859:24
+      |
+52859 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:53103:24
+      |
+53103 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:53164:24
+      |
+53164 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:53409:24
+      |
+53409 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:53470:24
+      |
+53470 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:53920:24
+      |
+53920 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:53981:24
+      |
+53981 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:54229:24
+      |
+54229 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:54290:24
+      |
+54290 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:54538:24
+      |
+54538 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:54599:24
+      |
+54599 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:54844:24
+      |
+54844 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:54905:24
+      |
+54905 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:55563:24
+      |
+55563 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:55624:24
+      |
+55624 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56035:24
+      |
+56035 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56096:24
+      |
+56096 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56278:24
+      |
+56278 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56339:24
+      |
+56339 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56587:24
+      |
+56587 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56648:24
+      |
+56648 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56833:24
+      |
+56833 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:56894:24
+      |
+56894 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:57428:24
+      |
+57428 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:57489:24
+      |
+57489 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:58023:24
+      |
+58023 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:58084:24
+      |
+58084 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:58695:24
+      |
+58695 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:58756:24
+      |
+58756 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:58937:24
+      |
+58937 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:58998:24
+      |
+58998 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:59246:24
+      |
+59246 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:59307:24
+      |
+59307 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:59555:24
+      |
+59555 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:59616:24
+      |
+59616 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:59860:24
+      |
+59860 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:59921:24
+      |
+59921 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:61494:24
+      |
+61494 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:61698:24
+      |
+61698 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:62908:24
+      |
+62908 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:63065:24
+      |
+63065 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:64547:24
+      |
+64547 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:64737:24
+      |
+64737 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:64927:24
+      |
+64927 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:65540:24
+      |
+65540 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:65601:24
+      |
+65601 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:65770:24
+      |
+65770 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:65831:24
+      |
+65831 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66000:24
+      |
+66000 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66061:24
+      |
+66061 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66293:24
+      |
+66293 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66354:24
+      |
+66354 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66523:24
+      |
+66523 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66584:24
+      |
+66584 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66753:24
+      |
+66753 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66814:24
+      |
+66814 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:66983:24
+      |
+66983 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:67044:24
+      |
+67044 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:67213:24
+      |
+67213 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:67274:24
+      |
+67274 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:67506:24
+      |
+67506 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:67567:24
+      |
+67567 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:67799:24
+      |
+67799 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:67860:24
+      |
+67860 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:68092:24
+      |
+68092 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:68153:24
+      |
+68153 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:68385:24
+      |
+68385 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:68446:24
+      |
+68446 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:68678:24
+      |
+68678 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:68739:24
+      |
+68739 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:68971:24
+      |
+68971 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:69032:24
+      |
+69032 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:69264:24
+      |
+69264 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:69325:24
+      |
+69325 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:69494:24
+      |
+69494 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:69555:24
+      |
+69555 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:69724:24
+      |
+69724 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:69785:24
+      |
+69785 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70017:24
+      |
+70017 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70078:24
+      |
+70078 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70247:24
+      |
+70247 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70308:24
+      |
+70308 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70540:24
+      |
+70540 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70601:24
+      |
+70601 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70833:24
+      |
+70833 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:70894:24
+      |
+70894 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71063:24
+      |
+71063 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71124:24
+      |
+71124 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71293:24
+      |
+71293 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71354:24
+      |
+71354 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71586:24
+      |
+71586 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71647:24
+      |
+71647 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71879:24
+      |
+71879 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:71940:24
+      |
+71940 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:72172:24
+      |
+72172 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+     --> crates/core/src/grammar/generated/css_l4.rs:72233:24
+      |
+72233 |                     if __iter_count < 0u32 {
+      |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:2679:24
+     |
+2679 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:2950:36
+     |
+2950 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:2974:24
+     |
+2974 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:3029:24
+     |
+3029 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:3078:24
+     |
+3078 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:4215:24
+     |
+4215 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/css_pretty.rs:4612:24
+     |
+4612 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/csv.rs:1399:24
+     |
+1399 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/csv.rs:1555:24
+     |
+1555 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:3245:24
+     |
+3245 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:3583:32
+     |
+3583 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:3744:32
+     |
+3744 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:3957:36
+     |
+3957 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/ebnf.rs:4172:36
+     |
+4172 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:5397:24
+     |
+5397 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:5678:24
+     |
+5678 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:6525:24
+     |
+6525 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:6814:24
+     |
+6814 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:6991:36
+     |
+6991 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:7331:36
+     |
+7331 | ...                   if __iter_count < 0u32 {
+     |                          ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:8583:24
+     |
+8583 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: comparison is useless due to type limits
+    --> crates/core/src/grammar/generated/google_sheets.rs:9147:24
+     |
+9147 |                     if __iter_count < 0u32 {
+     |                        ^^^^^^^^^^^^^^^^^^^
+
+warning: `bbnf` (lib) generated 190 warnings (run `cargo fix --lib -p bbnf` to apply 9 suggestions)
+warning: variable `structural_nonEq_all` should have a snake case name
+   --> crates/core/tests/lock1_residue_census.rs:325:9
+    |
+325 |     let structural_nonEq_all = c.get_all("width")
+    |         ^^^^^^^^^^^^^^^^^^^^ help: convert the identifier to snake case: `structural_non_eq_all`
+    |
+    = note: `#[warn(non_snake_case)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: `bbnf` (test "lock1_residue_census") generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.71s
+     Running tests/lock1_residue_census.rs (target/debug/deps/lock1_residue_census-4f073343def2a012)
+
+running 1 test
+
+================ LOCK-1 pass-1 · residue census ================
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `__pattern_84ec116c24edccbc::__pattern_84ec116c24edccbc_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `__pattern_84ec116c24edccbc::__pattern_84ec116c24edccbc_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_1` and `__pattern_84ec116c24edccbc::__pattern_84ec116c24edccbc_0` (F64). Codegen will resolve by rule-scoped lookup.
+
+### JSON   (rules=8, propagators: all=100, primary=54)
+kind                ALL       %    PRIMARY       %
+equality             78   78.0%         38   70.4%
+sum-homo              2    2.0%          1    1.9%
+sum-hetero            2    2.0%          1    1.9%
+width                 1    1.0%          1    1.9%
+capacity              2    2.0%          2    3.7%
+decode-class         15   15.0%         11   20.4%
+overload              0    0.0%          0    0.0%
+  equality+sum-shape: ALL 82.0%   PRIMARY 74.1%
+  genuine multi-valued residue (hetero-alt): ALL 2.0%   PRIMARY 1.9%
+  structural non-eq (width+cap+decode+overload): ALL 18  |  hetero-alt rules: 1
+  max alternation arity: 6 (rule `value`)
+
+### CSS L4 [properties+gradients+color+selectors]   (rules=191, propagators: all=9359, primary=4775)
+kind                ALL       %    PRIMARY       %
+equality           7481   79.9%       3339   69.9%
+sum-homo            834    8.9%        417    8.7%
+sum-hetero           24    0.3%         12    0.3%
+width               827    8.8%        827   17.3%
+capacity             38    0.4%         38    0.8%
+decode-class        155    1.7%        142    3.0%
+overload              0    0.0%          0    0.0%
+  equality+sum-shape: ALL 89.1%   PRIMARY 78.9%
+  genuine multi-valued residue (hetero-alt): ALL 0.3%   PRIMARY 0.3%
+  structural non-eq (width+cap+decode+overload): ALL 1020  |  hetero-alt rules: 12
+  max alternation arity: 28 (rule `declaration`)
+
+### Sheets   (rules=37, propagators: all=493, primary=265)
+kind                ALL       %    PRIMARY       %
+equality            416   84.4%        203   76.6%
+sum-homo             24    4.9%         12    4.5%
+sum-hetero            0    0.0%          0    0.0%
+width                30    6.1%         30   11.3%
+capacity             12    2.4%         12    4.5%
+decode-class         11    2.2%          8    3.0%
+overload              0    0.0%          0    0.0%
+  equality+sum-shape: ALL 89.2%   PRIMARY 81.1%
+  genuine multi-valued residue (hetero-alt): ALL 0.0%   PRIMARY 0.0%
+  structural non-eq (width+cap+decode+overload): ALL 53  |  hetero-alt rules: 0
+  max alternation arity: 11 (rule `primary`)
+
+### BBNF   (rules=46, propagators: all=824, primary=435)
+kind                ALL       %    PRIMARY       %
+equality            691   83.9%        327   75.2%
+sum-homo             46    5.6%         23    5.3%
+sum-hetero            0    0.0%          0    0.0%
+width                64    7.8%         64   14.7%
+capacity             18    2.2%         18    4.1%
+decode-class          5    0.6%          3    0.7%
+overload              0    0.0%          0    0.0%
+  equality+sum-shape: ALL 89.4%   PRIMARY 80.5%
+  genuine multi-valued residue (hetero-alt): ALL 0.0%   PRIMARY 0.0%
+  structural non-eq (width+cap+decode+overload): ALL 87  |  hetero-alt rules: 0
+  max alternation arity: 9 (rule `term`)
+
+================ VERDICT ================
+JSON             eq+sum= 82.0%  hetero-residue=  2.0%  structural-nonEq=18    thin_strict=false
+CSS L4 [properties+gradients+color+selectors] eq+sum= 89.1%  hetero-residue=  0.3%  structural-nonEq=1020  thin_strict=false
+Sheets           eq+sum= 89.2%  hetero-residue=  0.0%  structural-nonEq=53    thin_strict=false
+BBNF             eq+sum= 89.4%  hetero-residue=  0.0%  structural-nonEq=87    thin_strict=false
+
+all_thin_strict = false   any_rich(≥15% hetero) = false
+=> THIN: residue collapses toward 1A + ordered defaulting lattice; CSP/e-graph thesis fails on evidence.
+test census ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+

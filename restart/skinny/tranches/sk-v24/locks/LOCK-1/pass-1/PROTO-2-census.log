@@ -1,0 +1,38 @@
+=== PROTO-2 census — cargo test evidence (loadavg recorded per run) ===
+
+### cargo test -p egraph --test type_injectivity (probe target)
+ 4:05  up 2 days, 15:56, 1 user, load averages: 10.98 12.20 12.01
+running 4 tests
+test width_join_and_injectivity_converge_bounded ... ok
+test injectivity_unifies_positional_children ... ok
+test recursive_value_extracts_six_arms_finitely ... ok
+test extraction_is_order_independent_and_idempotent ... ok
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+### instrumented run (numbers, -- --nocapture) — instrumentation reverted after
+ 4:06  up 2 days, 15:57, 1 user, load averages: 11.59 12.27 12.05
+PROBE(e): passes=2 total_classes=5 bound=10 joined=WidthBound { min: 200, max: 70000 } width=U32
+PROBE(b): tree_nodes=7 total_classes=10 best_cost=Some(9)
+PROBE(c): sexpr_len=63 sexpr=@0:Sum(@1:Null|@2:Bool|@3:Int(0)|@4:Str|@5:List(#0)|@6:Row(#0))
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+### cargo test -p egraph (full suite — no regression from union amendment)
+ 4:06  up 2 days, 15:58, 1 user, load averages: 9.00 11.50 11.78
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/csp_scheduler.rs (target/debug/deps/csp_scheduler-f31537634dbdcc99)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/derive_language.rs (target/debug/deps/derive_language-07ed86a4706f55dc)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/egraph_basic.rs (target/debug/deps/egraph_basic-2585f1f71fe73b3a)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/saturation.rs (target/debug/deps/saturation-8e0f6283c5e28d1d)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/type_injectivity.rs (target/debug/deps/type_injectivity-46facbaf0cfcb07f)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/unionfind.rs (target/debug/deps/unionfind-3667006ea72f02c0)
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+### cargo test -p bbnf-ir --test egraph (GrammarAnalysis consumer of amended union)
+ 4:08  up 2 days, 15:59, 1 user, load averages: 10.53 11.03 11.55
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

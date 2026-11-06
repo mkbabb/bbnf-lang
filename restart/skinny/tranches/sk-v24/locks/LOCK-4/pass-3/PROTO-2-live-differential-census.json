@@ -1,0 +1,91 @@
+{
+  "divergences": 0,
+  "probe": "LOCK-4 PROTO-2 pass-3 probe-2 — VM ApplyFn vs parse-that live .map",
+  "rows": [
+    {
+      "clause": "number_convert",
+      "equal": true,
+      "input": "3.5",
+      "pt": "3.5",
+      "vm": "3.5"
+    },
+    {
+      "clause": "number_convert",
+      "equal": true,
+      "input": "42",
+      "pt": "42",
+      "vm": "42"
+    },
+    {
+      "clause": "number_convert",
+      "equal": true,
+      "input": "255",
+      "pt": "255",
+      "vm": "255"
+    },
+    {
+      "clause": "hex_convert",
+      "equal": true,
+      "input": "ff",
+      "pt": "255",
+      "vm": "255"
+    },
+    {
+      "clause": "hex_convert",
+      "equal": true,
+      "input": "1a",
+      "pt": "26",
+      "vm": "26"
+    },
+    {
+      "clause": "hex_convert",
+      "equal": true,
+      "input": "80",
+      "pt": "128",
+      "vm": "128"
+    },
+    {
+      "clause": "hostclosure_lerp",
+      "equal": true,
+      "input": "0.5",
+      "pt": "127.5",
+      "vm": "127.5"
+    },
+    {
+      "clause": "hostclosure_lerp",
+      "equal": true,
+      "input": "0.25",
+      "pt": "63.75",
+      "vm": "63.75"
+    },
+    {
+      "clause": "hostclosure_lerp",
+      "equal": true,
+      "input": "0.8",
+      "pt": "204",
+      "vm": "204"
+    },
+    {
+      "clause": "hostclosure_channel_scale",
+      "equal": true,
+      "input": "200",
+      "pt": "100",
+      "vm": "100"
+    },
+    {
+      "clause": "hostclosure_channel_scale",
+      "equal": true,
+      "input": "600",
+      "pt": "255",
+      "vm": "255"
+    },
+    {
+      "clause": "hostclosure_channel_scale",
+      "equal": true,
+      "input": "17",
+      "pt": "9",
+      "vm": "9"
+    }
+  ],
+  "total_pairs": 12
+}

@@ -48,7 +48,6 @@ const TARGETS: &[RuntimeTarget] = &[RuntimeTarget {
     check_command: "check-css-l4-declaration-values",
     source_inputs: CSS_L4_SOURCES,
     metadata_inputs: WORKSPACE_METADATA,
-    emitter: codegen::RuntimeEmitterKind::RequestFacts,
     expected_files: REQUEST_FACTS_RUNTIME_FILES,
     frontend_requirements: REQUEST_FACTS_REQUIREMENTS,
     output_labels: Some(codegen::RuntimeOutputLabels {

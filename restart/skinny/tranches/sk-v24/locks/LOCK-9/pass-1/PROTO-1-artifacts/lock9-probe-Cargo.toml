@@ -1,0 +1,17 @@
+[package]
+name = "lock9-probe"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+bbnf-simd = { path = "/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/bbnf-simd-scratch" }
+
+[profile.bench-like]
+inherits = "release"
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
+[[bin]]
+name = "lock9probe"
+path = "src/main.rs"

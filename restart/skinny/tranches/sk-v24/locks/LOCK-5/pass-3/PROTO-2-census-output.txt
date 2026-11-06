@@ -1,0 +1,37 @@
+test backend_egraph_fire_census ... egraph saturation: rules=9 iters=2 applied=63 initial_nodes=125 final_nodes=125 final_classes=86 saturated=true iter_hit=false growth_hit=false
+  rule=deduplicate-alt-branches work=3
+  rule=superset-absorb-alt work=11
+  rule=union-merge-alt work=19
+  rule=fuse-alt-regex-branches work=30
+  rule=common-suffix-factor work=0
+  rule=alt-of-single work=0
+  rule=repeat-of-single work=0
+  rule=wrap-of-epsilon-scalar work=0
+  rule=concat-literals work=0
+egraph saturation: rules=9 iters=1 applied=0 initial_nodes=184 final_nodes=184 final_classes=184 saturated=true iter_hit=false growth_hit=false
+  rule=deduplicate-alt-branches work=0
+  rule=superset-absorb-alt work=0
+  rule=union-merge-alt work=0
+  rule=fuse-alt-regex-branches work=0
+  rule=common-suffix-factor work=0
+  rule=alt-of-single work=0
+  rule=repeat-of-single work=0
+  rule=wrap-of-epsilon-scalar work=0
+  rule=concat-literals work=0
+
+=== PROTO-2 GRAMMAR-TIER REGEX E-GRAPH FIRE CENSUS ===
+corpus: 33 Alt-of-regex patterns, bare vs -> Tag projected
+bare saturation:      iters=2 total_applied=63 saturated=true
+projected saturation: iters=1 total_applied=0 saturated=true
+
+  rule                          bare.work    proj.work
+  ---------------------------- ---------- ------------
+  deduplicate-alt-branches              3            0
+  superset-absorb-alt                  11            0
+  union-merge-alt                      19            0
+  fuse-alt-regex-branches              30            0
+
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

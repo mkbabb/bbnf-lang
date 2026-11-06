@@ -1,0 +1,118 @@
+{
+  "method": "Chromium CDP 4x throttle, 1280x900, mode=native n=220, storms every 40 frames (8 sections +/-120px), 500 frames down + 250 up, GT every 5th frame",
+  "mechA_offsetTop": {
+    "setup": {
+      "nSections": 220,
+      "scrollHeight": 201410
+    },
+    "avgFrameMs": 8.84,
+    "p95FrameMs": 16.3,
+    "framesOver33ms": 2,
+    "longtasks": [
+      113,
+      57
+    ],
+    "scrollSamples": 150,
+    "transientMismatches": 0,
+    "transientMismatchRate": 0,
+    "maxLagDistance": 0,
+    "meanLagDistanceOnMismatch": 0,
+    "steadyState": [
+      {
+        "frac": 0,
+        "gt": "sec-0",
+        "mech": "sec-0",
+        "ok": true
+      },
+      {
+        "frac": 0.13,
+        "gt": "sec-22",
+        "mech": "sec-22",
+        "ok": true
+      },
+      {
+        "frac": 0.37,
+        "gt": "sec-62",
+        "mech": "sec-62",
+        "ok": true
+      },
+      {
+        "frac": 0.62,
+        "gt": "sec-104",
+        "mech": "sec-104",
+        "ok": true
+      },
+      {
+        "frac": 0.88,
+        "gt": "sec-148",
+        "mech": "sec-148",
+        "ok": true
+      },
+      {
+        "frac": 1,
+        "gt": "sec-168",
+        "mech": "sec-168",
+        "ok": true
+      }
+    ],
+    "rebuilds": 172,
+    "ioCallbacks": null
+  },
+  "mechB_io": {
+    "setup": {
+      "nSections": 220,
+      "scrollHeight": 201410
+    },
+    "avgFrameMs": 9.01,
+    "p95FrameMs": 18.6,
+    "framesOver33ms": 0,
+    "longtasks": [
+      112
+    ],
+    "scrollSamples": 150,
+    "transientMismatches": 34,
+    "transientMismatchRate": 0.227,
+    "maxLagDistance": 1,
+    "meanLagDistanceOnMismatch": 1,
+    "steadyState": [
+      {
+        "frac": 0,
+        "gt": "sec-0",
+        "mech": "sec-0",
+        "ok": true
+      },
+      {
+        "frac": 0.13,
+        "gt": "sec-22",
+        "mech": "sec-22",
+        "ok": true
+      },
+      {
+        "frac": 0.37,
+        "gt": "sec-62",
+        "mech": "sec-62",
+        "ok": true
+      },
+      {
+        "frac": 0.62,
+        "gt": "sec-104",
+        "mech": "sec-104",
+        "ok": true
+      },
+      {
+        "frac": 0.88,
+        "gt": "sec-148",
+        "mech": "sec-148",
+        "ok": true
+      },
+      {
+        "frac": 1,
+        "gt": "sec-168",
+        "mech": "sec-168",
+        "ok": true
+      }
+    ],
+    "rebuilds": null,
+    "ioCallbacks": 552
+  }
+}

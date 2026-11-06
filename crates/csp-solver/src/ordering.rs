@@ -11,8 +11,10 @@ pub enum Ordering {
     Chronological,
     /// Fail-first (MRV): pick the variable with the smallest domain.
     FailFirst,
-    /// dom/wdeg: pick the variable with the smallest domain/weighted-degree ratio.
-    DomWdeg,
+    /// Mrv: pick the variable minimizing `domain-size / Σ constraint-weights`.
+    /// The weights are frozen at 1.0 (no dom/wdeg bumping is wired to the
+    /// kernel), so this is a static heuristic.
+    Mrv,
 }
 
 /// Select the next unassigned variable from the stack according to the ordering heuristic.
@@ -45,7 +47,8 @@ pub fn select_variable<D: Domain>(
             Some(best_idx)
         }
 
-        Ordering::DomWdeg => {
+        // Mrv branches on `dom / Σ weights`; the weights are frozen at 1.0.
+        Ordering::Mrv => {
             let mut best_idx = 0;
             let mut best_score = f64::MAX;
             for (i, &var) in stack.iter().enumerate() {

@@ -1,0 +1,24 @@
+### G4 VERIFY @ b5ab2e17c ###
+### build runtime+codegen (phantom delete + cursor trait compile?) ###
+BUILD_EXIT=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 57.33s
+### phantom grep (production runtime, test-excluded; want 0) ###
+G-param/EventGrammar/PhantomData-G in runtime/src (non-test): 0
+### regen round-trip (codegen-emitted view/projection changes) ###
+REGEN_JSON=0
+REGEN_CSS=0
+### regen-clean gates ###
+CHECK_JSON=0
+CHECK_CSS=0
+### tests: runtime (JSON 51/51 + CSS) + codegen + rich_cssom + lock14 ###
+RUNTIME=0
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+CODEGEN=0
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+RICH=0
+test nonjson_css_l4::tests::rich_cssom_matches_cssparser_on_fixture ... ok
+test nonjson_css_l4::tests::rich_cssom_matches_cssparser_on_real_corpora ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 263 filtered out; finished in 0.30s
+### DONE ###

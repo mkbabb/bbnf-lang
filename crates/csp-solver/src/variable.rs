@@ -61,16 +61,16 @@ impl<D: Domain> Variable<D> {
     /// Restrict domain to a single value, recording all other removals at `depth`.
     /// This is the fast path for backtracking assignment — avoids collecting
     /// domain values into a Vec just to prune them.
+    ///
+    /// Delegates the actual domain mutation to `Domain::restrict_to`, which
+    /// for `BitsetDomain` clears every bit but `val`'s in one bitwise AND
+    /// (O(1)) instead of this method's previous per-value iterate-and-remove
+    /// loop (O(domain size) bit ops, on top of the `Vec` collect it used to
+    /// allocate). This method's own job shrinks to what only it can do:
+    /// recording each removed value on the depth-keyed undo log.
     pub fn restrict_to(&mut self, val: &D::Value, depth: usize) {
-        // Snapshot current values, then prune non-matching.
-        // For BitsetDomain (u128), values() is just bit iteration — cheap.
-        // The undo log records each removal for restore(depth).
-        let vals: Vec<_> = self.domain.iter().collect();
-        for v in &vals {
-            if v != val {
-                self.domain.remove(v);
-                self.pruned.push((depth, v.clone()));
-            }
+        for v in self.domain.restrict_to(val) {
+            self.pruned.push((depth, v));
         }
     }
 }

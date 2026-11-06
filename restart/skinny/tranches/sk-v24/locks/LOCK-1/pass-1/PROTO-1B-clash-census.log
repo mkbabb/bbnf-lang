@@ -1,0 +1,58 @@
+ 4:46  up 2 days, 16:38, 1 user, load averages: 6.97 7.36 7.96
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling crossbeam-utils v0.8.21
+   Compiling autocfg v1.5.0
+   Compiling zmij v1.0.21
+   Compiling memchr v2.8.0
+   Compiling smallvec v1.15.1
+   Compiling csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-25/crates/csp-solver)
+   Compiling smallbox v0.8.8
+   Compiling rustc-hash v2.1.2
+   Compiling typeid v1.0.3
+   Compiling serde_json v1.0.149
+   Compiling rayon-core v1.13.0
+   Compiling ryu v1.0.23
+   Compiling itoa v1.0.18
+   Compiling itoap v1.0.1
+   Compiling num-traits v0.2.19
+   Compiling camino v1.2.2
+   Compiling thiserror v1.0.69
+   Compiling fast-float2 v0.2.3
+   Compiling aho-corasick v1.1.4
+   Compiling once_cell v1.21.4
+   Compiling either v1.15.0
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-25/crates/egraph)
+   Compiling crossbeam-epoch v0.9.18
+   Compiling crossbeam-deque v0.8.6
+   Compiling rayon v1.11.0
+   Compiling syn v2.0.117
+   Compiling rmp v0.8.15
+   Compiling bitflags v2.11.0
+   Compiling semver v1.0.27
+   Compiling serde_derive v1.0.228
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-25/crates/egraph-derive)
+   Compiling pprint_derive v0.2.2 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust/derive)
+   Compiling thiserror-impl v1.0.69
+   Compiling pprint v0.3.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust)
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/regex)
+   Compiling rmp-serde v1.3.1
+   Compiling ron v0.12.1
+   Compiling cargo-platform v0.1.9
+   Compiling cargo_metadata v0.18.1
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/parse_that)
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-25/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 51.79s
+     Running tests/lattices/main.rs (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/clash-target/debug/deps/lattices-c8c28810b2115ab3)
+
+running 2 tests
+test clash::type_domain_join_is_last_writer_wins_on_clash ... ok
+[probe] ir.types[rule 0] = HeterogeneousAltJoin([Bool, F64])
+[probe] ir.type_obligations = [HeterogeneousAltJoin { rule: Some(0), node: Some(n2), branches: [Bool, F64] }]
+test clash::heterogeneous_scalar_alt_bool_f64_raises_obligation ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s
+

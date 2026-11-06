@@ -1,0 +1,59 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling crossbeam-utils v0.8.21
+   Compiling autocfg v1.5.0
+   Compiling memchr v2.8.0
+   Compiling zmij v1.0.21
+   Compiling csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-22/crates/csp-solver)
+   Compiling smallbox v0.8.8
+   Compiling serde_json v1.0.149
+   Compiling smallvec v1.15.1
+   Compiling rayon-core v1.13.0
+   Compiling rustc-hash v2.1.2
+   Compiling typeid v1.0.3
+   Compiling camino v1.2.2
+   Compiling itoap v1.0.1
+   Compiling ryu v1.0.23
+   Compiling itoa v1.0.18
+   Compiling num-traits v0.2.19
+   Compiling thiserror v1.0.69
+   Compiling aho-corasick v1.1.4
+   Compiling fast-float2 v0.2.3
+   Compiling either v1.15.0
+   Compiling once_cell v1.21.4
+   Compiling egraph v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-22/crates/egraph)
+   Compiling rmp v0.8.15
+   Compiling crossbeam-epoch v0.9.18
+   Compiling crossbeam-deque v0.8.6
+   Compiling rayon v1.11.0
+   Compiling syn v2.0.117
+   Compiling serde_derive v1.0.228
+   Compiling pprint_derive v0.2.2 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust/derive)
+   Compiling egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-22/crates/egraph-derive)
+   Compiling thiserror-impl v1.0.69
+   Compiling pprint v0.3.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust)
+   Compiling bitflags v2.11.0
+   Compiling semver v1.0.27
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/regex)
+   Compiling cargo-platform v0.1.9
+   Compiling rmp-serde v1.3.1
+   Compiling ron v0.12.1
+   Compiling cargo_metadata v0.18.1
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/parse_that)
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-22/crates/ir)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 07s
+     Running tests/lattices/main.rs (target/debug/deps/lattices-c8c28810b2115ab3)
+
+running 2 tests
+test clash::type_domain_join_is_silent_last_writer_wins ... ok
+[clash-probe] solved TypeDesc for rule 0 (`clash`): HeterogeneousAltJoin([Bool, F64])
+[clash-probe] total type_obligations: 1
+[clash-probe] clash obligations naming rule 0: 1
+[clash-probe] is_single_silently_chosen_ground_leaf: false
+test clash::heterogeneous_arrows_into_one_var_via_live_pass ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 81 filtered out; finished in 0.00s
+

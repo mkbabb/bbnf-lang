@@ -1,0 +1,131 @@
+# LOCK-8 pass-2 probe t1 — tightened typed-algebra diff (parse-that/typescript READ-ONLY; changes shown against original src)
+
+### src/parse/parser.ts
+--- a/src/parse/parser.ts	2026-07-03 16:45:35
++++ b/src/parse/parser.ts	2026-07-16 09:59:40
+@@ -6,10 +6,6 @@
+ import { trimStateWhitespace, eof, all, _initWhitespace, whitespace } from "./leaf.js";
+ import { packratEnter, packratExit } from "./packrat.js";
+ 
+-type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
+-    [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
+-};
+-
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any -- type-erased function pointer; `any` required for variance
+ export type ParserFunction<T = string> = (
+     val: ParserState<any>,
+@@ -78,7 +74,7 @@
+         return this.parseState(val).value;
+     }
+ 
+-    then<S>(next: Parser<S | T>) {
++    then<S>(next: Parser<S>) {
+         const then = (state: ParserState<T>) => {
+             const savedOffset = state.offset;
+             this.parser(state);
+@@ -102,7 +98,7 @@
+         );
+     }
+ 
+-    or<S>(other: Parser<S | T>) {
++    or<S>(other: Parser<S>) {
+         const or = (state: ParserState<T>) => {
+             const savedOffset = state.offset;
+             this.parser(state);
+@@ -121,7 +117,7 @@
+         );
+     }
+ 
+-    chain<S>(fn: (value: T) => Parser<S | T>) {
++    chain<S>(fn: (value: T) => Parser<S>) {
+         // C-16 Option A (fold row 50): on a SUCCESSFUL parse, always thread the
+         // value into the continuation. The pre-1.0.0 code gated the continuation
+         // on `state.value || chainError`, so a falsy-but-valid seed (0 / '' /
+
+### src/parse/leaf.ts
+--- a/src/parse/leaf.ts	2026-07-03 16:45:35
++++ b/src/parse/leaf.ts	2026-07-16 10:00:12
+@@ -1,5 +1,6 @@
+ import { Parser } from "./parser.js";
+ import type { ParserFunction } from "./parser.js";
++import type { AllValue, AnyValue } from "./types.js";
+ import type { ParserState, ParserContext, Span } from "./state.js";
+ import { createParserContext } from "./state.js";
+ import { mergeErrorState } from "./utils.js";
+@@ -25,8 +26,8 @@
+ }
+ 
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+-export function any<T extends Array<Parser<any>>>(...parsers: T) {
+-    type Result = T[number] extends Parser<infer V> ? V : never;
++export function any<T extends Array<Parser<unknown>>>(...parsers: T) {
++    type Result = AnyValue<T>;
+     const n = parsers.length;
+ 
+     // PT-B3 fusion (semantics-preserving): indexed `for` (no `for…of` iterator
+@@ -151,14 +152,11 @@
+ }
+ 
+ // eslint-disable-next-line @typescript-eslint/no-explicit-any
+-export function all<T extends Array<Parser<any>>>(...parsers: T) {
+-    type ExtractValue<T extends ReadonlyArray<Parser<unknown>>> = {
+-        [K in keyof T]: T[K] extends Parser<infer V> ? V : never;
+-    };
+-    type Result = ExtractValue<T>;
++export function all<T extends Array<Parser<unknown>>>(...parsers: T) {
++    type Result = AllValue<T>;
+ 
+     return makeParser(
+-        parsers.length === 1 ? parsers[0].parser : fuseAll<Result>(parsers),
++        parsers.length === 1 ? parsers[0].parser : fuseAll<Result>(parsers as unknown as Parser<unknown>[]),
+         createParserContext("all", undefined, ...parsers),
+     ) as Parser<Result>;
+ }
+
+### src/parse/types.ts  (NEW — 8B-G3 type home)
+```ts
+/**
+ * Typed-algebra utilities (LOCK-8 8B-G3 home).
+ *
+ * Homes the type machinery the combinator algebra shares, killing the two
+ * duplicate `ExtractValue` definitions (`parser.ts:9-11`, `leaf.ts:155-157`).
+ *
+ * The two erasures that LAWFULLY STAY are NOT here (research-B §3):
+ *   - `ParserFunction<T>` — the invariant IC function-pointer (`parser.ts`);
+ *   - `MemoCell.value: unknown` — the heterogeneous packrat memo table.
+ * Everything else that carried `any` on the INPUT side is tightened to `unknown`.
+ */
+import type { Parser } from "./parser.js";
+
+/** The sound value-tuple of a static parser list (the single `ExtractValue`). */
+export type Values<Ps extends readonly Parser<unknown>[]> = {
+    [K in keyof Ps]: Ps[K] extends Parser<infer V> ? V : never;
+};
+
+/**
+ * Strip `undefined` from each member of a value tuple.
+ *
+ * `all()` DROPS undefined VALUES at runtime (`leaf.ts` fuseAll:
+ * `if (state.value !== undefined) out[w++] = …; out.length = w`), so
+ * `all(a, opt(b), c)` yields a length-VARIABLE array. A static tuple type cannot
+ * express runtime length-variance, so the algebra ADOPTS the documented widening
+ * (8B-G2 resolution): keep every position, strip `undefined` from the arm type.
+ *
+ * SOUND when every `opt()` member is present; a DOCUMENTED WIDENING when an
+ * `opt()` arm is absent (the position shifts at runtime). Shippable precisely
+ * because no surviving consumer exercises the length-variable case (research-B §2;
+ * latex has zero `all`, its 11 `.opt()` are all outside `all`). The parse-that-side
+ * self-test differential (gate 8B-#5) records the widening honestly.
+ */
+export type DropUndefined<T extends readonly unknown[]> = {
+    [K in keyof T]: Exclude<T[K], undefined>;
+};
+
+/** The tightened public `all()` result type. */
+export type AllValue<Ps extends readonly Parser<unknown>[]> =
+    DropUndefined<Values<Ps>>;
+
+/** The tightened public `any()` result type (ordered-choice union). */
+export type AnyValue<Ps extends readonly Parser<unknown>[]> =
+    Ps[number] extends Parser<infer V> ? V : never;
+```

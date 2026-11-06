@@ -1,0 +1,364 @@
+diff --git a/crates/core/tests/proto_4a_ga1.rs b/crates/core/tests/proto_4a_ga1.rs
+new file mode 100644
+index 000000000..f6b151538
+--- /dev/null
++++ b/crates/core/tests/proto_4a_ga1.rs
+@@ -0,0 +1,358 @@
++//! PROTO-1: LOCK-4 pass-3 probe 4A G-A1 — fuse(Graph)→Graph byte-identity
++//! on a COMBINATOR-CONSTRUCTED graph (family 4A CLOSURE-TO-GRAPH).
++//!
++//! QUESTION: do the extant fuse passes, run over an IrNode built by a
++//! combinator-style smart-constructor builder (NOT grammar text), produce
++//! a graph structurally byte-identical to the grammar-text-built reference,
++//! and parse at parity?
++//!
++//! Reference front  = parse+lower `json` grammar text -> GrammarIR.
++//! Combinator front = ~80-LOC smart-constructor builder emitting IrNode
++//!                    directly (lit/rgx/seq/alt/skip/next/many/opt/ows/rref).
++//!
++//! Both fronts run the IDENTICAL analysis+fuse pipeline; the oracle asserts
++//! byte-identical serialized IrNode AND identical DAG NodeId sequences, then
++//! parses both at parity.
++
++use std::collections::HashMap;
++use std::time::Instant;
++
++use bbnf::graph::{calculate_ast_deps, tarjan_scc};
++use bbnf::lower::{DirectiveSet, lower_to_ir};
++use bbnf_ir::passes::{
++    NoopTraceSink, compute_aliases, compute_first_sets, compute_scc, compute_transparent,
++    fuse_single_use, fuse_token_dispatch, refine_span_eligibility,
++};
++use bbnf_ir::{AltBranch, GrammarIR, IrNode, RuleId, RuleMeta, StringId};
++
++const JSON_SRC: &str = r#"
++    null = "null" ;
++    bool = "true" | "false" ;
++    number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ ;
++    comma = "," ?w ;
++    colon = ":" ?w ;
++    string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ;
++    array = "[" >> (( value << comma ? ) *)?w << "]" ;
++    pair = string, colon >> value ;
++    object = "{" >> (( pair << comma ? ) *)?w << "}" ;
++    value = object | array | string | number | bool | null ;
++"#;
++
++// ── Reference front (grammar text -> analyzed GrammarIR) ─────────────────
++
++fn analyze(ir: &mut GrammarIR) {
++    compute_first_sets(ir);
++    compute_scc(ir);
++    compute_aliases(ir);
++    compute_transparent(ir);
++    refine_span_eligibility(ir);
++}
++
++fn lower_grammar(source: &str) -> GrammarIR {
++    let ast = bbnf::grammar::parse(source).expect("parse grammar").rules;
++    let deps = calculate_ast_deps(&ast);
++    let scc = tarjan_scc(&deps);
++    let directives = DirectiveSet::empty();
++    let mut ir = lower_to_ir(&ast, &scc, &directives, &[]);
++    analyze(&mut ir);
++    ir
++}
++
++// ── Combinator front (~80 LOC smart-constructor builder) ─────────────────
++
++struct Cb {
++    strings: Vec<String>,
++    name_to_id: HashMap<String, RuleId>,
++}
++impl Cb {
++    fn intern(&mut self, s: &str) -> StringId {
++        if let Some(i) = self.strings.iter().position(|x| x == s) {
++            return i as StringId;
++        }
++        self.strings.push(s.to_string());
++        (self.strings.len() - 1) as StringId
++    }
++    fn lit(&mut self, s: &str) -> IrNode {
++        IrNode::Literal(self.intern(s))
++    }
++    fn rgx(&mut self, s: &str) -> IrNode {
++        IrNode::Regex(self.intern(s))
++    }
++    fn rref(&self, name: &str) -> IrNode {
++        IrNode::Ref(self.name_to_id[name])
++    }
++    fn seq(v: Vec<IrNode>) -> IrNode {
++        IrNode::Seq(v)
++    }
++    fn alt(v: Vec<IrNode>) -> IrNode {
++        IrNode::Alt(
++            v.into_iter()
++                .map(|node| AltBranch { node, first_set: None })
++                .collect(),
++            None,
++        )
++    }
++    fn skip(a: IrNode, b: IrNode) -> IrNode {
++        IrNode::Skip(Box::new(a), Box::new(b))
++    }
++    fn next(a: IrNode, b: IrNode) -> IrNode {
++        IrNode::Next(Box::new(a), Box::new(b))
++    }
++    fn many(x: IrNode) -> IrNode {
++        IrNode::Repeat { inner: Box::new(x), lo: 0, hi: u32::MAX }
++    }
++    fn opt(x: IrNode) -> IrNode {
++        IrNode::Repeat { inner: Box::new(x), lo: 0, hi: 1 }
++    }
++    fn ows(x: IrNode) -> IrNode {
++        IrNode::OptionalWhitespace(Box::new(x))
++    }
++}
++
++/// Build the json grammar's rule bodies purely via combinator smart
++/// constructors. Returns (name -> body). Shares the reference's string
++/// pool + rule-id map so the structural graph is the object under test
++/// (StringId/RuleId bookkeeping is neutralized, not the shape).
++fn combinator_bodies(cb: &mut Cb) -> Vec<(&'static str, IrNode)> {
++    let val = |cb: &Cb| cb.rref("value");
++    let comma = |cb: &Cb| cb.rref("comma");
++    let pair = |cb: &Cb| cb.rref("pair");
++
++    let number_re = r#"-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?"#;
++    let string_re = r#""(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*""#;
++
++    let null = cb.lit("null");
++    let bool_ = Cb::alt(vec![cb.lit("true"), cb.lit("false")]);
++    let number = cb.rgx(number_re);
++    let comma_b = Cb::ows(cb.lit(","));
++    let colon_b = Cb::ows(cb.lit(":"));
++    let string = cb.rgx(string_re);
++
++    // array = "[" >> (( value << comma ? ) *)?w << "]"
++    let arr_inner = Cb::ows(Cb::many(Cb::skip(val(cb), Cb::opt(comma(cb)))));
++    let array = Cb::skip(Cb::next(cb.lit("["), arr_inner), cb.lit("]"));
++
++    // pair = string, colon >> value   ->  Seq(string, Next(colon, value))
++    let pair_b = Cb::seq(vec![cb.rref("string"), Cb::next(cb.rref("colon"), val(cb))]);
++
++    // object = "{" >> (( pair << comma ? ) *)?w << "}"
++    let obj_inner = Cb::ows(Cb::many(Cb::skip(pair(cb), Cb::opt(comma(cb)))));
++    let object = Cb::skip(Cb::next(cb.lit("{"), obj_inner), cb.lit("}"));
++
++    // value = object | array | string | number | bool | null
++    let value = Cb::alt(vec![
++        cb.rref("object"),
++        cb.rref("array"),
++        cb.rref("string"),
++        cb.rref("number"),
++        cb.rref("bool"),
++        cb.rref("null"),
++    ]);
++
++    vec![
++        ("null", null),
++        ("bool", bool_),
++        ("number", number),
++        ("comma", comma_b),
++        ("colon", colon_b),
++        ("string", string),
++        ("array", array),
++        ("pair", pair_b),
++        ("object", object),
++        ("value", value),
++    ]
++}
++
++/// Build the combinator-front GrammarIR: clone the reference skeleton
++/// (rule ids/names/order/entry + string pool), overwrite every body with
++/// a combinator-built body, reset meta, then run the IDENTICAL analysis.
++fn build_combinator_ir(reference: &GrammarIR) -> GrammarIR {
++    let mut name_to_id = HashMap::new();
++    for r in &reference.rules {
++        name_to_id.insert(reference.get_string(r.name).to_string(), r.id);
++    }
++    let mut cb = Cb { strings: reference.strings.clone(), name_to_id };
++    let bodies = combinator_bodies(&mut cb);
++    let by_name: HashMap<&str, IrNode> = bodies.into_iter().collect();
++
++    let mut ir = reference.clone();
++    ir.strings = cb.strings;
++    for rule in &mut ir.rules {
++        let name = reference.get_string(rule.name).to_string();
++        rule.body = by_name
++            .get(name.as_str())
++            .unwrap_or_else(|| panic!("no combinator body for rule {name}"))
++            .clone();
++        rule.meta = RuleMeta::default();
++    }
++    // Clear all cached analysis sidecars so we re-derive from scratch.
++    ir.follow_sets.clear();
++    ir.dag = None;
++    ir.string_index.clear();
++    analyze(&mut ir);
++    ir
++}
++
++// ── Structural oracle ────────────────────────────────────────────────────
++
++fn body_bytes(ir: &GrammarIR) -> Vec<(String, Vec<u8>)> {
++    ir.rules
++        .iter()
++        .map(|r| {
++            (
++                ir.get_string(r.name).to_string(),
++                serde_json::to_vec(&r.body).unwrap(),
++            )
++        })
++        .collect()
++}
++
++fn dag_nodes(ir: &GrammarIR) -> Vec<bbnf_ir::dag::DagNode> {
++    let mut ir = ir.clone();
++    bbnf_ir::dag::ensure_dag(&mut ir);
++    let dag = ir.dag.as_ref().unwrap();
++    dag.iter().map(|(_, n)| n.clone()).collect()
++}
++
++fn run_fuse(ir: &mut GrammarIR) {
++    let mut sink = NoopTraceSink;
++    fuse_single_use(ir, &mut sink);
++    fuse_token_dispatch(ir);
++}
++
++/// count structural divergences between two IRs (per-rule serialized body)
++fn diverge_report(a: &GrammarIR, b: &GrammarIR, phase: &str) -> usize {
++    let ba = body_bytes(a);
++    let bb = body_bytes(b);
++    let mut n = 0;
++    if ba.len() != bb.len() {
++        println!("[{phase}] RULE COUNT MISMATCH: ref={} comb={}", ba.len(), bb.len());
++        return ba.len().max(bb.len());
++    }
++    for ((na, va), (nb, vb)) in ba.iter().zip(bb.iter()) {
++        if na != nb || va != vb {
++            n += 1;
++            println!("[{phase}] DIVERGE rule '{na}' vs '{nb}':");
++            println!("    ref : {}", String::from_utf8_lossy(va));
++            println!("    comb: {}", String::from_utf8_lossy(vb));
++        }
++    }
++    if n == 0 {
++        println!("[{phase}] all {} rule bodies BYTE-IDENTICAL", ba.len());
++    }
++    n
++}
++
++// ── Parse parity + cold-paired timing ────────────────────────────────────
++
++fn value_entry(ir: &GrammarIR) -> RuleId {
++    ir.rules
++        .iter()
++        .find(|r| ir.get_string(r.name) == "value")
++        .map(|r| r.id)
++        .expect("value rule")
++}
++
++fn prep_parse(ir: &GrammarIR) -> GrammarIR {
++    let mut ir = ir.clone();
++    ir.entry = value_entry(&ir);
++    ir.build_string_index();
++    ir
++}
++
++const SMALL_DOC: &str = r#"{"a":[1,2.5,-3e2,true,false,null],"b":{"c":"x\ny","d":[{}]},"e":123}"#;
++
++#[test]
++fn proto_4a_ga1_combinator_fuse_byte_identity() {
++    println!("\n=== PROTO-1 4A G-A1: combinator-vs-grammar-text fuse byte-identity ===");
++
++    // (1) Two fronts.
++    let mut reference = lower_grammar(JSON_SRC);
++    let mut combinator = build_combinator_ir(&reference);
++
++    // (2) Pre-fuse structural check (does the combinator front reproduce
++    //     the lowering at all?).
++    let pre = diverge_report(&reference, &combinator, "PRE-FUSE");
++
++    // (3) IDENTICAL pipeline: fuse_single_use + fuse_token_dispatch.
++    run_fuse(&mut reference);
++    run_fuse(&mut combinator);
++
++    // (4) Post-fuse structural oracle: serialized IrNode byte-identity.
++    let post = diverge_report(&reference, &combinator, "POST-FUSE");
++
++    // (5) DAG NodeId-sequence oracle.
++    let da = dag_nodes(&reference);
++    let db = dag_nodes(&combinator);
++    let dag_equal = da == db;
++    println!(
++        "[DAG] ref nodes={} comb nodes={} sequence_identical={}",
++        da.len(),
++        db.len(),
++        dag_equal
++    );
++
++    // (6) Parse parity on real corpus + small doc; cold-paired timing.
++    let ref_p = prep_parse(&reference);
++    let comb_p = prep_parse(&combinator);
++
++    let twitter = std::fs::read_to_string(
++        "../../skinny/crates/test-fixtures/corpus/json/twitter.json",
++    )
++    .ok();
++
++    let mut parity_ok = true;
++    for (label, input) in [("small", Some(SMALL_DOC.to_string())), ("twitter", twitter.clone())] {
++        let Some(input) = input else { continue };
++        let ra = bbnf_ir::vm::interpreter::parse_with_ir(&ref_p, &input);
++        let rb = bbnf_ir::vm::interpreter::parse_with_ir(&comb_p, &input);
++        let ok = ra.success == rb.success && ra.offset == rb.offset;
++        parity_ok &= ok;
++        println!(
++            "[PARSE {label}] ref(success={},off={}) comb(success={},off={}) parity={}",
++            ra.success, ra.offset, rb.success, rb.offset, ok
++        );
++    }
++
++    // Cold-paired timing on SMALL_DOC (interpreter throughput bars full
++    // twitter at N>=200). Two windows, both orders, fastest-sample ratio.
++    let n = 200usize;
++    let bench = |ir: &GrammarIR| -> u128 {
++        let mut best = u128::MAX;
++        for _ in 0..n {
++            let t = Instant::now();
++            let r = bbnf_ir::vm::interpreter::parse_with_ir(ir, SMALL_DOC);
++            std::hint::black_box(&r);
++            best = best.min(t.elapsed().as_nanos());
++        }
++        best
++    };
++    // window 1: ref then comb; window 2: comb then ref
++    let r1 = bench(&ref_p);
++    let c1 = bench(&comb_p);
++    let c2 = bench(&comb_p);
++    let r2 = bench(&ref_p);
++    let ref_best = r1.min(r2) as f64;
++    let comb_best = c1.min(c2) as f64;
++    let ratio = comb_best / ref_best;
++    println!(
++        "[TIMING] ref_best={ref_best:.0}ns comb_best={comb_best:.0}ns ratio(comb/ref)={ratio:.4}"
++    );
++
++    // ── Verdict ──────────────────────────────────────────────────────────
++    let byte_identical = post == 0;
++    let ratio_in_band = (0.98..=1.02).contains(&ratio);
++    println!("\n=== VERDICT ===");
++    println!("pre_fuse_divergences  = {pre}");
++    println!("post_fuse_divergences = {post}  (byte_identical={byte_identical})");
++    println!("dag_sequence_identical = {dag_equal}");
++    println!("parse_parity_ok        = {parity_ok}");
++    println!("timing_ratio           = {ratio:.4} (band[0.98,1.02]={ratio_in_band})");
++    let pass = byte_identical && dag_equal && parity_ok && ratio_in_band;
++    println!("PROTO-1 4A G-A1: {}", if pass { "PASS" } else { "FAIL/REFUTE" });
++
++    assert!(byte_identical, "post-fuse serialized IrNode NOT byte-identical (see DIVERGE lines)");
++    assert!(dag_equal, "DAG NodeId sequences differ");
++    assert!(parity_ok, "parse parity failed");
++    assert!(ratio_in_band, "timing ratio {ratio:.4} outside [0.98,1.02]");
++}

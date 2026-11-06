@@ -8,7 +8,7 @@
 // `LengthUnit` / `AngleUnit` / `TimeUnit` / `CssColor` /
 // `parse_rgb_color` symbols with zero references — is retired.
 #[allow(unused_imports)]
-use bbnf::css_types as _css_types_link;
+use bbnf::runtime::css_l4::host as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 

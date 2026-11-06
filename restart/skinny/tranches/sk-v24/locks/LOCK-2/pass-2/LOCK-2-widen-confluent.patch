@@ -1,0 +1,433 @@
+diff --git a/crates/ir/src/egraph/rules/mod.rs b/crates/ir/src/egraph/rules/mod.rs
+index 37e1b0c3e..31e625570 100644
+--- a/crates/ir/src/egraph/rules/mod.rs
++++ b/crates/ir/src/egraph/rules/mod.rs
+@@ -28,10 +28,12 @@
+ mod regex;
+ mod suffix;
+ mod universal;
++mod widen;
+ 
+ pub use regex::{DeduplicateAltBranches, FuseAltRegexBranches, SupersetAbsorbAlt, UnionMergeAlt};
+ pub use suffix::CommonSuffixFactor;
+ pub use universal::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
++pub use widen::ManufactureDispatchAlt;
+ 
+ use rustc_hash::FxHashMap;
+ 
+diff --git a/crates/ir/src/egraph/rules/widen.rs b/crates/ir/src/egraph/rules/widen.rs
+new file mode 100644
+index 000000000..02394c3f4
+--- /dev/null
++++ b/crates/ir/src/egraph/rules/widen.rs
+@@ -0,0 +1,154 @@
++//! Widening rewrite: `ManufactureDispatchAlt`.
++//!
++//! Every other grammar-tier rule in this crate is *narrowing* — it
++//! shrinks an `Alt` (branch dedup, superset absorption, char-class
++//! union, regex fusion, suffix factoring). None of them ever adds a
++//! second, semantically-distinct child-bearing form to a class, so the
++//! cost model has nothing to choose between (documented null of the
++//! 54-config weight sweep in `egraph::cost_weights::CALIBRATED_WEIGHTS`).
++//!
++//! `ManufactureDispatchAlt` is the missing *widening* dual: for an
++//! `Alt(children, None)` whose branches have pairwise-disjoint FIRST
++//! bytes, it installs the equivalent `Alt(children, Some(dispatch))` —
++//! the constant-time dispatch-table form — *alongside* the original
++//! sequential-trial form. The class then holds two distinct e-nodes
++//! that are semantically identical but structurally different, which is
++//! exactly the precondition a cost-guided extractor needs to discriminate.
++//!
++//! # Confluence with the narrowing set
++//!
++//! `DeduplicateAltBranches` collapses duplicate *branches within one
++//! Alt*; it keys on the branch child set, not on the presence of a
++//! dispatch table. `Alt(cs, None)` and `Alt(cs, Some(d))` share the
++//! same branch set, so dedup never fires between them — the twin
++//! survives. `FuseAltRegexBranches` explicitly skips any Alt already
++//! carrying a dispatch table, and abstains when branches are not all
++//! Regex/Literal leaves.
++//!
++//! # Termination
++//!
++//! `search` matches only the `None` form. Applying it re-adds the
++//! `Some(dispatch)` form, which the hash-cons interns to the same Id on
++//! every subsequent iteration — zero node growth, zero new unions, so
++//! the scheduler reports saturation with margin.
++
++use egraph::{Analysis, EGraph, Id, Rewrite};
++
++use crate::egraph::interner::SharedStrings;
++use crate::egraph::node::GrammarENode;
++use crate::AltDispatch;
++
++/// Widening rule: manufacture a disjoint-FIRST-set dispatch-table form
++/// beside the sequential-trial `Alt`, so the e-class carries both.
++pub struct ManufactureDispatchAlt {
++    pool: SharedStrings,
++}
++
++impl ManufactureDispatchAlt {
++    pub fn new(pool: SharedStrings) -> Self {
++        Self { pool }
++    }
++
++    /// The FIRST byte a branch dispatches on, if it is statically
++    /// determinable and ASCII (`< 128`, the dispatch table's width).
++    ///
++    /// A branch's guard byte is the first byte of its leading literal:
++    /// a bare `Literal("...")`, or a `Seq([Literal("..."), ..])` whose
++    /// leading child class exposes a literal. Mirrors the real dispatch
++    /// pass's FIRST-set derivation for the sentinel-prefixed value
++    /// branches that JSON / CSS-L4 alternations are built from.
++    fn branch_guard_byte<A: Analysis<GrammarENode>>(
++        &self,
++        egraph: &EGraph<GrammarENode, A>,
++        id: Id,
++    ) -> Option<u8> {
++        let leading_literal = |cid: Id| -> Option<u8> {
++            egraph.class(cid).iter().find_map(|n| match n {
++                GrammarENode::Literal(sid) => {
++                    let s = self.pool.get(*sid);
++                    s.bytes().next().filter(|b| *b < 128)
++                }
++                _ => None,
++            })
++        };
++        // Direct literal branch, or Seq whose first child is a literal.
++        egraph.class(id).iter().find_map(|n| match n {
++            GrammarENode::Literal(_) => leading_literal(id),
++            GrammarENode::Seq(children) => children.first().copied().and_then(leading_literal),
++            _ => None,
++        })
++    }
++}
++
++/// Carries the manufactured dispatch table and the branch list it
++/// dispatches over from `search` to `apply`.
++#[derive(Clone, Debug)]
++pub struct DispatchMatch {
++    pub children: Box<[Id]>,
++    pub dispatch: AltDispatch,
++}
++
++impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for ManufactureDispatchAlt {
++    type Match = DispatchMatch;
++
++    fn name(&self) -> &str {
++        "manufacture-dispatch-alt"
++    }
++
++    fn search(&self, egraph: &EGraph<GrammarENode, A>) -> Vec<(Id, Self::Match)> {
++        let mut matches = Vec::new();
++        for class in egraph.classes() {
++            for node in class.iter() {
++                // Only the sequential-trial form is a candidate. Matching
++                // the `Some` form too would re-fire forever — this guard
++                // is what makes the rule terminate.
++                let GrammarENode::Alt(children, None) = node else {
++                    continue;
++                };
++                if children.len() < 2 {
++                    continue;
++                }
++
++                // Every branch must expose a guard byte, and the bytes
++                // must be pairwise-disjoint (a real FIRST-set partition).
++                let mut table = vec![255u8; 128];
++                let mut ok = true;
++                for (idx, &branch) in children.iter().enumerate() {
++                    let Some(byte) = self.branch_guard_byte(egraph, branch) else {
++                        ok = false;
++                        break;
++                    };
++                    let slot = &mut table[byte as usize];
++                    if *slot != 255 {
++                        // Two branches share a FIRST byte — not disjoint,
++                        // dispatch is unsound. Abstain.
++                        ok = false;
++                        break;
++                    }
++                    *slot = idx as u8;
++                }
++                if !ok {
++                    continue;
++                }
++
++                matches.push((
++                    class.id,
++                    DispatchMatch {
++                        children: children.clone(),
++                        dispatch: AltDispatch {
++                            table,
++                            fallback_idx: None,
++                        },
++                    },
++                ));
++                break;
++            }
++        }
++        matches
++    }
++
++    fn apply(&self, egraph: &mut EGraph<GrammarENode, A>, class_id: Id, m: Self::Match) {
++        let dispatched = egraph.add(GrammarENode::Alt(m.children, Some(m.dispatch)));
++        egraph.union(class_id, dispatched);
++    }
++}
+diff --git a/crates/ir/tests/egraph/main.rs b/crates/ir/tests/egraph/main.rs
+index 8500e3e20..dd97ca832 100644
+--- a/crates/ir/tests/egraph/main.rs
++++ b/crates/ir/tests/egraph/main.rs
+@@ -13,3 +13,4 @@ mod egraph_roundtrip;
+ mod egraph_suffix;
+ mod egraph_universal;
+ mod type_desc_interner;
++mod widen_confluent;
+diff --git a/crates/ir/tests/egraph/widen_confluent.rs b/crates/ir/tests/egraph/widen_confluent.rs
+new file mode 100644
+index 000000000..a227ded48
+--- /dev/null
++++ b/crates/ir/tests/egraph/widen_confluent.rs
+@@ -0,0 +1,241 @@
++//! LOCK-2 pass-2 PROVE-2-WIDEN-CONFLUENT probe.
++//!
++//! The master gate the whole graph-engine lock hangs on: does a
++//! *registered* widening rewrite (`ManufactureDispatchAlt`), fired
++//! through `CspScheduler` alongside the shipping all-narrowing rule
++//! set, manufacture ≥2 semantically-distinct survivors at a
++//! child-bearing node, stay confluent (the narrowing set does not
++//! collapse the twin), terminate, and let cost-guided extraction pick
++//! differently under two weight vectors?
++//!
++//! Built on a JSON-`value`-shaped alternation — six sentinel-prefixed
++//! branches `Seq([Literal(b), Ref(rule)])` with pairwise-disjoint FIRST
++//! bytes `{ [ " t f n`, exactly the dispatch scenario a real fleet
++//! grammar presents.
++
++use bbnf_ir::egraph::node::GrammarENode;
++use bbnf_ir::egraph::rules::{
++    CommonSuffixFactor, DeduplicateAltBranches, FuseAltRegexBranches, ManufactureDispatchAlt,
++    SupersetAbsorbAlt, UnionMergeAlt,
++};
++use bbnf_ir::egraph::{GrammarCostModel, SharedStrings};
++use bbnf_ir::GrammarIR;
++use egraph::{
++    CostWeights, CspScheduler, EGraph, Extractor, Id, NoAnalysis, RewriteFn, Scheduler,
++    CALIBRATED_WEIGHTS,
++};
++
++/// Build the JSON-`value` alternation and return `(egraph, pool, root)`.
++fn build_value_alt() -> (EGraph<GrammarENode, NoAnalysis>, SharedStrings, Id) {
++    let pool = SharedStrings::from_ir(&GrammarIR::default());
++    let mut eg: EGraph<GrammarENode, NoAnalysis> = EGraph::new();
++
++    // Six sentinel bytes with pairwise-disjoint FIRST sets.
++    let sentinels = ["{", "[", "\"", "t", "f", "n"];
++    let mut branches: Vec<Id> = Vec::new();
++    for (i, s) in sentinels.iter().enumerate() {
++        let sid = pool.intern(s);
++        let lit = eg.add(GrammarENode::Literal(sid));
++        // Distinct downstream rule per branch (object/array/string/…).
++        let rest = eg.add(GrammarENode::Ref(i as u32 + 1));
++        let seq = eg.add(GrammarENode::Seq(Box::new([lit, rest])));
++        branches.push(seq);
++    }
++    let root = eg.add(GrammarENode::Alt(branches.into_boxed_slice(), None));
++    eg.rebuild();
++    (eg, pool, root)
++}
++
++/// The shipping all-narrowing set plus the widening rule under test.
++/// Ownership is held by the caller; the returned trait-object refs
++/// borrow from the boxes.
++fn rule_boxes(pool: &SharedStrings) -> Vec<Box<dyn RewriteFn<GrammarENode, NoAnalysis>>> {
++    vec![
++        Box::new(DeduplicateAltBranches),
++        Box::new(SupersetAbsorbAlt::new(pool.clone())),
++        Box::new(UnionMergeAlt::new(pool.clone())),
++        Box::new(FuseAltRegexBranches::new(pool.clone())),
++        Box::new(CommonSuffixFactor),
++        // The widening dual — registered LAST so the narrowing set gets
++        // first crack at collapsing anything it can each iteration.
++        Box::new(ManufactureDispatchAlt::new(pool.clone())),
++    ]
++}
++
++/// Count the distinct `Alt` e-nodes carried by `root`'s class, split by
++/// dispatch presence.
++fn alt_forms(eg: &EGraph<GrammarENode, NoAnalysis>, root: Id) -> (usize, usize) {
++    let canon = eg.find_ref(root);
++    let mut none_forms = 0;
++    let mut some_forms = 0;
++    for n in eg.class(canon).iter() {
++        if let GrammarENode::Alt(_, dispatch) = n {
++            if dispatch.is_some() {
++                some_forms += 1;
++            } else {
++                none_forms += 1;
++            }
++        }
++    }
++    (none_forms, some_forms)
++}
++
++/// (a) ≥2 distinct survivors, (b) confluence, (c) termination — one run.
++#[test]
++fn widen_confluent_manufactures_confluent_terminating_twin() {
++    let (mut eg, pool, root) = build_value_alt();
++
++    let boxes = rule_boxes(&pool);
++    let rules: Vec<&dyn RewriteFn<GrammarENode, NoAnalysis>> =
++        boxes.iter().map(|b| b.as_ref()).collect();
++
++    let scheduler = CspScheduler::default();
++    let report = scheduler.run(&mut eg, &rules);
++
++    eprintln!(
++        "[PROBE] saturated={} iters={}/{} final_nodes={}/{} final_classes={} total_applied={}",
++        report.saturated,
++        report.iterations,
++        scheduler.iter_limit,
++        report.final_nodes,
++        scheduler.node_limit,
++        report.final_classes,
++        report.total_applied,
++    );
++    eprintln!("[PROBE] per_rule = {:?}", report.per_rule);
++
++    // ── (c) termination — fixpoint with margin ─────────────────────
++    assert!(
++        report.saturated,
++        "widening rule must saturate, not hit a limit: {report:?}"
++    );
++    assert!(
++        !report.iter_limit_hit && !report.growth_limit_hit,
++        "must terminate under both limits with margin: {report:?}"
++    );
++    assert!(
++        report.iterations + 2 <= scheduler.iter_limit,
++        "iteration margin too thin: {} of {}",
++        report.iterations,
++        scheduler.iter_limit
++    );
++    assert!(
++        report.final_nodes * 2 < scheduler.node_limit,
++        "node margin too thin: {} of {}",
++        report.final_nodes,
++        scheduler.node_limit
++    );
++
++    // ── (a) ≥2 semantically-distinct survivors at a child-bearing node ─
++    let (none_forms, some_forms) = alt_forms(&eg, root);
++    assert_eq!(
++        none_forms, 1,
++        "the original sequential-trial Alt must survive"
++    );
++    assert_eq!(
++        some_forms, 1,
++        "the manufactured dispatch-table Alt must survive"
++    );
++    assert!(
++        none_forms + some_forms >= 2,
++        "child-bearing Alt class must hold ≥2 distinct forms"
++    );
++
++    // The widening rule reported real work through the scheduler
++    // (it was fired, not hand-unioned).
++    let widen_work = report
++        .per_rule
++        .iter()
++        .find(|(name, _)| name == "manufacture-dispatch-alt")
++        .map(|(_, w)| *w)
++        .unwrap_or(0);
++    assert!(
++        widen_work > 0,
++        "ManufactureDispatchAlt must have done work via CspScheduler: {:?}",
++        report.per_rule
++    );
++
++    // ── (b) confluence — the narrowing set did NOT delete the twin ──
++    // DeduplicateAltBranches is in the set and ran every iteration; the
++    // dispatch-carrying Alt is still present. Prove the branch set was
++    // untouched (dedup keys on branches, not dispatch presence).
++    let canon = eg.find_ref(root);
++    let some_branch_len = eg.class(canon).iter().find_map(|n| match n {
++        GrammarENode::Alt(cs, Some(_)) => Some(cs.len()),
++        _ => None,
++    });
++    assert_eq!(
++        some_branch_len,
++        Some(6),
++        "confluence: dedup must not have collapsed the 6-branch dispatch twin"
++    );
++}
++
++/// Build a `GrammarCostModel` with the given shared weights.
++fn cost_model(weights: CostWeights) -> GrammarCostModel {
++    let mut cm = GrammarCostModel::default();
++    cm.weights = weights;
++    cm
++}
++
++/// Extraction discrimination: W1 (calibrated) vs every non-sign-flip
++/// calibrated variant vs the forbidden sign-flip.
++#[test]
++fn widen_confluent_extraction_discriminates_only_on_dispatch_bonus_sign() {
++    let (mut eg, pool, root) = build_value_alt();
++    let boxes = rule_boxes(&pool);
++    let rules: Vec<&dyn RewriteFn<GrammarENode, NoAnalysis>> =
++        boxes.iter().map(|b| b.as_ref()).collect();
++    CspScheduler::default().run(&mut eg, &rules);
++
++    // Pick the extracted root form under a full grammar cost model.
++    let picks_dispatch = |cm: GrammarCostModel| -> bool {
++        let ext = Extractor::new(&eg, &cm);
++        let root_cost = ext.best_cost(root);
++        let picked_some =
++            matches!(ext.best_node(root), Some(GrammarENode::Alt(_, Some(_))));
++        eprintln!(
++            "[PROBE-EXTRACT] dispatch_bonus={:+.1} alt_per_branch={} -> picked={} best_cost={:?}",
++            cm.weights.dispatch_bonus,
++            cm.weights.alt_per_branch,
++            if picked_some { "DISPATCH" } else { "SEQUENTIAL" },
++            root_cost,
++        );
++        picked_some
++    };
++
++    // W1 — the project's shipping calibrated vector. dispatch_bonus =
++    // -2.0 rewards the dispatch form.
++    assert!(
++        picks_dispatch(cost_model(CALIBRATED_WEIGHTS)),
++        "W1 (CALIBRATED_WEIGHTS) must extract the dispatch-table form"
++    );
++
++    // W2-family — vary EVERY other knob hard (shared weights AND the
++    // grammar-specific ref_cost / seq_per_child), but keep the
++    // dispatch_bonus sign fixed. None of these flips the pick: the
++    // dispatch bonus is the model's ONLY lever that distinguishes the
++    // two Alt forms (both share children, branch count, alt penalty).
++    let mut w2 = CALIBRATED_WEIGHTS;
++    w2.alt_per_branch = 8.0;
++    w2.structural = 5.0;
++    w2.dispatch_table = 100.0; // GrammarCostModel::cost ignores this for Alt
++    w2.dispatch_branch = 50.0; // …and this too
++    let mut cm2 = cost_model(w2);
++    cm2.ref_cost = 25.0;
++    cm2.seq_per_child = 12.0;
++    cm2.literal_cost = 30.0;
++    assert!(
++        picks_dispatch(cm2),
++        "W2 (all non-bonus knobs maxed, bonus sign kept) must STILL pick dispatch"
++    );
++
++    // The ONLY way to flip the pick is to cross dispatch_bonus through
++    // zero — the synthetic sign-flip the brief forbids as evidence.
++    let mut w_flip = CALIBRATED_WEIGHTS;
++    w_flip.dispatch_bonus = 2.0;
++    assert!(
++        !picks_dispatch(cost_model(w_flip)),
++        "sign-flipped bonus (+2.0) picks sequential — the forbidden move"
++    );
++}

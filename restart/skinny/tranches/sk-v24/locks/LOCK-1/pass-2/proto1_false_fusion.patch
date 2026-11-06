@@ -1,0 +1,82 @@
+diff --git a/crates/core/tests/proto1_false_fusion.rs b/crates/core/tests/proto1_false_fusion.rs
+new file mode 100644
+index 000000000..dad76b3ef
+--- /dev/null
++++ b/crates/core/tests/proto1_false_fusion.rs
+@@ -0,0 +1,76 @@
++//! PROTO-1 (LOCK-1 pass-2 probe): false-fusion / let-generalization probe.
++//!
++//! Question: does the running carrier (crates/ir/src/passes/types) fuse a
++//! shared helper rule reused at two sites into one monotype, or does it
++//! keep per-use instantiation? And is there any place in the CSP where a
++//! rule type is polymorphic (has free variables filled per call site)?
++//!
++//! This test RUNS the real `project_types` pass via `compile_grammar` and
++//! prints `ir.types` keyed by rule name so the verdict is anchored on
++//! measured output. `structural: true` preserves rule identity so the
++//! single-use helper rules are not inlined away before we can observe
++//! their projected types.
++
++use bbnf::pipeline::{PipelineOptions, compile_grammar};
++use bbnf_ir::{GrammarIR, TypeDesc};
++
++fn structural_opts() -> PipelineOptions {
++    PipelineOptions {
++        structural: true,
++        ..PipelineOptions::default()
++    }
++}
++
++fn types_by_name(ir: &GrammarIR) -> Vec<(String, TypeDesc)> {
++    let mut out = Vec::new();
++    for (rid, ty) in &ir.types {
++        let name = ir.get_string(ir.rules[*rid as usize].name).to_string();
++        out.push((name, ty.clone()));
++    }
++    out.sort_by(|a, b| a.0.cmp(&b.0));
++    out
++}
++
++#[test]
++fn proto1_shared_helper_reused_at_two_sites() {
++    // `pair` is a shared helper referenced from BOTH `a` and `b`. In an
++    // HM setting `pair` would be the let-bound helper whose scheme is
++    // instantiated at each use. We observe what the carrier does.
++    let src = "\
++top = a b ;
++a = pair pair ;
++b = pair pair ;
++pair = k v ;
++k = /[a-z]+/ -> f64 ;
++v = /[0-9]+/ -> u8 ;
++";
++    let ir = compile_grammar(src, &structural_opts())
++        .expect("compile_grammar should succeed on the fixture");
++
++    let types = types_by_name(&ir);
++    eprintln!("=== PROTO-1 ir.types (rule -> TypeDesc), structural mode ===");
++    for (name, ty) in &types {
++        eprintln!("  {name:<8} -> {ty:?}");
++    }
++
++    // INVARIANT 1: exactly one type entry per rule (one RuleId ->
++    // one TypeDesc). A polymorphic scheme would need per-use vars.
++    let n_pair = ir
++        .types
++        .iter()
++        .filter(|(rid, _)| ir.get_string(ir.rules[*rid as usize].name) == "pair")
++        .count();
++    eprintln!("pair entry count in ir.types = {n_pair}");
++    assert_eq!(n_pair, 1, "carrier assigns exactly one type per rule");
++
++    // INVARIANT 2: both use sites `a` and `b` resolve to the SAME type
++    // (pair's body-derived monotype). This is monomorphic reuse: the
++    // two uses cannot diverge because the Ref->rule bridge is
++    // unidirectional and pair has one CSP type var.
++    let get = |n: &str| types.iter().find(|(k, _)| k == n).map(|(_, t)| t.clone());
++    eprintln!("a = {:?}", get("a"));
++    eprintln!("b = {:?}", get("b"));
++    if let (Some(a), Some(b)) = (get("a"), get("b")) {
++        assert_eq!(a, b, "a and b share pair's body-derived type (no per-use scheme)");
++    }
++}

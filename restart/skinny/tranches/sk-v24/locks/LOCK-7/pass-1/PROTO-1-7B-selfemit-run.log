@@ -1,0 +1,20 @@
+=== LOCK-7 pass-1 bbnf self-emit probe ===
+corpus: grammar/bbnf/bbnf.bbnf + grammar/bbnf/expressions.bbnf + grammar/bbnf/types.bbnf
+--- variant: compiled-lowering (emitter=CompiledLowering) ---
+GATE_A: FAIL (emit did not return Ok)
+GATE_C: (determinism of error) 3x-identical=true
+FIRST_UNSUPPORTED_OR_ERROR: emit_runtime_from_request: BBNF-UNSUPPORTED-PROJECTION: grammar/bbnf/bbnf.bbnf@421 source_hash=43588a9522a4d59b
+--- variant: request-facts (emitter=RequestFacts) ---
+GATE_A: OK (emit returned Ok)
+GATE_C: PASS (3x byte-identical=true)
+TOTAL_LOC: 998
+RATIO_VS_HAND_2142: 0.466
+RATIO_VS_LEGACY_21557: 0.046
+GATE_B: PASS (<= 8568 == 4x hand)
+  file: config.rs (9 LOC)
+  file: generated.rs (910 LOC)
+  file: mod.rs (12 LOC)
+  file: parser.rs (51 LOC)
+  file: sink.rs (16 LOC)
+WROTE_TO: /Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/skinny/crates/runtime/src/grammars/bbnf_probe
+=== end probe ===

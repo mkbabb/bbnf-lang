@@ -1,0 +1,135 @@
+diff --git a/skinny/xtask/src/main.rs b/skinny/xtask/src/main.rs
+index 2f8a34f59..802b22eb6 100644
+--- a/skinny/xtask/src/main.rs
++++ b/skinny/xtask/src/main.rs
+@@ -48,6 +48,7 @@ fn main() -> Result<()> {
+         "bench-json" => bench_json(&root, args.collect()),
+         "gate-json" => gate_json(&root, args.collect()),
+         "primitive-checkasm" => primitive_checkasm(&root),
++        "regen-bbnf-probe" => regen_bbnf_probe(&root),
+         "help" | "--help" | "-h" => {
+             eprintln!("{USAGE}");
+             Ok(())
+@@ -200,6 +201,122 @@ fn check_json(root: &Path) -> Result<()> {
+         .context("generated JSON runtime is stale; run `cargo xtask regen-json`")
+ }
+ 
++// ─── LOCK-7 pass-1 probe: bbnf self-emit ────────────────────────────────────
++// Throwaway probe. Mirrors JSON_TARGET but points at grammar/bbnf/{bbnf,
++// expressions,types}.bbnf with entry_rule="grammar". Imports resolve through the
++// existing grammar_provider frontend closure inside emit_runtime_from_request —
++// never a manual concat. Two emitter variants are exercised:
++//   * CompiledLowering — the exact JSON wiring (structural runtime).
++//   * RequestFacts     — the richer CSS-L4 wiring, requirements relaxed to
++//     none() so the fact-emitter is not gated on typed-projection/@token which
++//     bbnf.bbnf does not itself USE.
++const BBNF_SOURCES: &[&str] = &[
++    "grammar/bbnf/bbnf.bbnf",
++    "grammar/bbnf/expressions.bbnf",
++    "grammar/bbnf/types.bbnf",
++];
++const BBNF_ROOTS: &[&str] = &["grammar/bbnf/bbnf.bbnf"];
++const REQUEST_FACTS_RUNTIME_FILES: &[&str] =
++    &["config.rs", "generated.rs", "mod.rs", "parser.rs", "sink.rs"];
++
++const BBNF_TARGET_COMPILED: regen::RuntimeTarget = regen::RuntimeTarget {
++    grammar_name: "bbnf",
++    profile: "bbnf_probe_compiled",
++    entry_rule: "grammar",
++    source_roots: BBNF_ROOTS,
++    output_dir: "crates/runtime/src/grammars/bbnf_probe",
++    check_command: "check-bbnf-probe",
++    source_inputs: BBNF_SOURCES,
++    metadata_inputs: WORKSPACE_METADATA,
++    emitter: codegen::RuntimeEmitterKind::CompiledLowering,
++    expected_files: COMPILED_RUNTIME_FILES,
++    frontend_requirements: codegen::RuntimeFrontendRequirements::none(),
++    output_labels: None,
++};
++
++const BBNF_TARGET_FACTS: regen::RuntimeTarget = regen::RuntimeTarget {
++    grammar_name: "bbnf",
++    profile: "bbnf_probe_facts",
++    entry_rule: "grammar",
++    source_roots: BBNF_ROOTS,
++    output_dir: "crates/runtime/src/grammars/bbnf_probe",
++    check_command: "check-bbnf-probe-facts",
++    source_inputs: BBNF_SOURCES,
++    metadata_inputs: WORKSPACE_METADATA,
++    emitter: codegen::RuntimeEmitterKind::RequestFacts,
++    expected_files: REQUEST_FACTS_RUNTIME_FILES,
++    frontend_requirements: codegen::RuntimeFrontendRequirements::none(),
++    output_labels: Some(codegen::RuntimeOutputLabels {
++        fact_schema: "bbnf-self-emit-probe-facts-v1",
++        row_id: "bbnf/self_emit_probe/main",
++        output_plane: "bbnf_self_emit_probe_fact_stream",
++    }),
++};
++
++fn probe_variant(root: &Path, label: &str, target: &regen::RuntimeTarget) {
++    println!("--- variant: {label} (emitter={:?}) ---", target.emitter);
++    // Determinism: emit three times in-process, compare EmittedSource by value.
++    let mut runs = Vec::new();
++    for _ in 0..3 {
++        let result = regen::runtime_request(root, target)
++            .map_err(|err| format!("runtime_request: {err:#}"))
++            .and_then(|request| {
++                codegen::emit_runtime_from_request(request)
++                    .map_err(|err| format!("emit_runtime_from_request: {err}"))
++            });
++        runs.push(result);
++    }
++    match (&runs[0], &runs[1], &runs[2]) {
++        (Ok(a), Ok(b), Ok(c)) => {
++            let deterministic = a == b && b == c;
++            let mut total_loc = 0usize;
++            let mut per_file = Vec::new();
++            for (name, source) in a.files() {
++                let loc = source.lines().count();
++                total_loc += loc;
++                per_file.push((name.to_string(), loc));
++            }
++            println!("GATE_A: OK (emit returned Ok)");
++            println!("GATE_C: {} (3x byte-identical={deterministic})", if deterministic { "PASS" } else { "FAIL" });
++            println!("TOTAL_LOC: {total_loc}");
++            println!("RATIO_VS_HAND_2142: {:.3}", total_loc as f64 / 2142.0);
++            println!("RATIO_VS_LEGACY_21557: {:.3}", total_loc as f64 / 21557.0);
++            println!("GATE_B: {} (<= 8568 == 4x hand)", if total_loc <= 8568 { "PASS" } else { "FAIL" });
++            for (name, loc) in &per_file {
++                println!("  file: {name} ({loc} LOC)");
++            }
++            // Persist emitted files for the cold-build measurement.
++            let out = root.join(target.output_dir);
++            if let Err(err) = a.write_to_dir(&out) {
++                println!("WRITE_ERR: {err}");
++            } else {
++                println!("WROTE_TO: {}", out.display());
++            }
++        }
++        _ => {
++            let deterministic = runs[0] == runs[1] && runs[1] == runs[2];
++            println!("GATE_A: FAIL (emit did not return Ok)");
++            println!("GATE_C: (determinism of error) 3x-identical={deterministic}");
++            match &runs[0] {
++                Err(err) => println!("FIRST_UNSUPPORTED_OR_ERROR: {err}"),
++                Ok(_) => println!("FIRST_UNSUPPORTED_OR_ERROR: <non-deterministic: run0 Ok>"),
++            }
++        }
++    }
++}
++
++fn regen_bbnf_probe(root: &Path) -> Result<()> {
++    println!("=== LOCK-7 pass-1 bbnf self-emit probe ===");
++    println!(
++        "corpus: {} + {} + {}",
++        BBNF_SOURCES[0], BBNF_SOURCES[1], BBNF_SOURCES[2]
++    );
++    probe_variant(root, "compiled-lowering", &BBNF_TARGET_COMPILED);
++    probe_variant(root, "request-facts", &BBNF_TARGET_FACTS);
++    println!("=== end probe ===");
++    Ok(())
++}
++
+ fn regen_real_typed(root: &Path) -> Result<()> {
+     let source = std::fs::read_to_string(root.join("grammars/json.bbnf"))?;
+     let schema = real_typed_schema::schema();

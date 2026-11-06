@@ -65,7 +65,7 @@ fn compile_css_l4_ir() -> GrammarIR {
             )
         });
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("project_types_css_l4: expected Vm output, got {:?}", other),
     }
 }

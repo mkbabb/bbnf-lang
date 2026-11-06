@@ -40,7 +40,7 @@ fn json_regex_decisions_are_populated() {
     let source = std::fs::read_to_string(grammar_path("json/json.bbnf")).unwrap();
     let out = compile_grammar_request(&source, &vm_request()).unwrap();
     let ir = match out {
-        bbnf::pipeline::CompileOutput::Vm(ir) => ir,
+        bbnf::pipeline::CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     };
     let ir = &ir;
@@ -49,7 +49,7 @@ fn json_regex_decisions_are_populated() {
     // body and the number body. Both must have CSP-decided engines.
     let mut seen_patterns = 0usize;
     let mut with_decision = 0usize;
-    for (sid, _info) in &ir.regex_info {
+    for sid in ir.regex_info.keys() {
         seen_patterns += 1;
         if ir.regex_engine_decisions.contains_key(sid) {
             with_decision += 1;
@@ -75,14 +75,14 @@ fn css_l4_regex_decisions_are_populated() {
     let path = grammar_path("css/l4/stylesheet.bbnf");
     let out = compile_paths_request(&[path], &vm_request()).unwrap();
     let ir = match out {
-        bbnf::pipeline::CompileOutput::Vm(ir) => ir,
+        bbnf::pipeline::CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     };
     let ir = &ir;
 
     let mut seen_patterns = 0usize;
     let mut with_decision = 0usize;
-    for (sid, _info) in &ir.regex_info {
+    for sid in ir.regex_info.keys() {
         seen_patterns += 1;
         if ir.regex_engine_decisions.contains_key(sid) {
             with_decision += 1;

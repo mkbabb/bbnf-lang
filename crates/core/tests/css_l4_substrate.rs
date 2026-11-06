@@ -275,7 +275,7 @@ fn typed_value_alternation_admits_every_branch() {
         value: 10.0,
         unit: CssLengthUnit::Px,
     }));
-    let num = CssTypedValue::Number(3.14);
+    let num = CssTypedValue::Number(1.25);
     let int = CssTypedValue::Integer(42);
     let s = CssTypedValue::String("hello");
     let id = CssTypedValue::Ident("foo");

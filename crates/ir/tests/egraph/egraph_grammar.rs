@@ -13,8 +13,7 @@ use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 use egraph::{Extractor, Language};
 
 fn make_ir_with(body: IrNode) -> GrammarIR {
-    let mut strings = Vec::new();
-    strings.push("r".to_string());
+    let strings = vec!["r".to_string()];
     let rules = vec![IrRule {
         id: 0,
         name: 0,
@@ -87,7 +86,7 @@ fn e_node_language_impl() {
     use egraph::Id;
     // Sanity-check that GrammarENode::children() returns the expected slice.
     let seq = GrammarENode::Seq(vec![Id(1), Id(2), Id(3)].into_boxed_slice());
-    let children: Vec<Id> = seq.children().iter().copied().collect();
+    let children: Vec<Id> = seq.children().to_vec();
     assert_eq!(children, vec![Id(1), Id(2), Id(3)]);
 
     let rep = GrammarENode::Repeat {
@@ -95,11 +94,11 @@ fn e_node_language_impl() {
         lo: 0,
         hi: u32::MAX,
     };
-    let children: Vec<Id> = rep.children().iter().copied().collect();
+    let children: Vec<Id> = rep.children().to_vec();
     assert_eq!(children, vec![Id(5)]);
 
     let skip = GrammarENode::Skip([Id(7), Id(9)]);
-    let children: Vec<Id> = skip.children().iter().copied().collect();
+    let children: Vec<Id> = skip.children().to_vec();
     assert_eq!(children, vec![Id(7), Id(9)]);
 }
 
@@ -134,11 +133,11 @@ fn rule_deduplicate_alt_branches() {
 
     let mut found_single = false;
     for class in egraph.classes() {
-        if let Some(best) = extractor.best_node(class.id) {
-            if matches!(best, GrammarENode::Literal(sid) if *sid == x_sid) {
-                found_single = true;
-                break;
-            }
+        if let Some(best) = extractor.best_node(class.id)
+            && matches!(best, GrammarENode::Literal(sid) if *sid == x_sid)
+        {
+            found_single = true;
+            break;
         }
     }
     assert!(
@@ -179,11 +178,11 @@ fn rule_superset_absorb_alt() {
 
     let mut found_wide_only = false;
     for class in egraph.classes() {
-        if let Some(best) = extractor.best_node(class.id) {
-            if matches!(best, GrammarENode::Regex(sid) if *sid == wide_sid) {
-                found_wide_only = true;
-                break;
-            }
+        if let Some(best) = extractor.best_node(class.id)
+            && matches!(best, GrammarENode::Regex(sid) if *sid == wide_sid)
+        {
+            found_wide_only = true;
+            break;
         }
     }
     assert!(
@@ -245,13 +244,12 @@ fn rule_union_merge_alt() {
 
     let mut found_merged = false;
     for class in egraph.classes() {
-        if let Some(best) = extractor.best_node(class.id) {
-            if let GrammarENode::Regex(sid) = best {
-                if merged_sids.contains(sid) {
-                    found_merged = true;
-                    break;
-                }
-            }
+        if let Some(best) = extractor.best_node(class.id)
+            && let GrammarENode::Regex(sid) = best
+            && merged_sids.contains(sid)
+        {
+            found_merged = true;
+            break;
         }
     }
     assert!(
@@ -306,11 +304,11 @@ fn rule_fuse_alt_regex_branches() {
 
     let mut found_fused = false;
     for class in egraph.classes() {
-        if let Some(best) = extractor.best_node(class.id) {
-            if matches!(best, GrammarENode::Regex(sid) if *sid == fused_sid) {
-                found_fused = true;
-                break;
-            }
+        if let Some(best) = extractor.best_node(class.id)
+            && matches!(best, GrammarENode::Regex(sid) if *sid == fused_sid)
+        {
+            found_fused = true;
+            break;
         }
     }
     assert!(

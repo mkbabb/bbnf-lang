@@ -29,7 +29,9 @@ use super::constraints::{ForceCallMode, InlineDecision, InlineDomain};
 use super::plan::CallMode;
 
 /// One law the sample set breaks, with the operands that break it.
+// Read only through `Debug`, in the assertion message.
 #[derive(Debug)]
+#[allow(dead_code)]
 struct LawViolation<D> {
     law: &'static str,
     operands: Vec<D>,
@@ -67,7 +69,10 @@ fn lattice_law_violations<D: LatticeDomain>(samples: &[D]) -> Vec<LawViolation<D
                 fail("commutative: a ⊔ b = b ⊔ a", &[a, b]);
             }
             if changed != (ab != *a) {
-                fail("change flag: join reports true iff the value changed", &[a, b]);
+                fail(
+                    "change flag: join reports true iff the value changed",
+                    &[a, b],
+                );
             }
             if joined(a, &ab).0 != ab || joined(b, &ab).0 != ab {
                 fail("extensive: a ⊑ a ⊔ b and b ⊑ a ⊔ b", &[a, b]);

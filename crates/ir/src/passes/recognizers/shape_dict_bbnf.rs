@@ -77,25 +77,21 @@ pub fn mine_bbnf_shape_templates(ir: &GrammarIR) -> Vec<BbnfShapeTemplate> {
         let rule_name = ir.get_string(rule.name);
 
         match rule_name {
-            "big_comment" => {
-                if is_big_comment_shape(&rule.body) {
-                    templates.push(BbnfShapeTemplate {
-                        rule_name: "big_comment".to_string(),
-                        kind: BbnfShapeKind::BigComment,
-                        shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::BigComment),
-                        payload_bytes: 8, // u32 lo + u32 hi
-                    });
-                }
+            "big_comment" if is_big_comment_shape(&rule.body) => {
+                templates.push(BbnfShapeTemplate {
+                    rule_name: "big_comment".to_string(),
+                    kind: BbnfShapeKind::BigComment,
+                    shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::BigComment),
+                    payload_bytes: 8, // u32 lo + u32 hi
+                });
             }
-            "mapped_factor" => {
-                if is_mapped_factor_empty_shape(&rule.body) {
-                    templates.push(BbnfShapeTemplate {
-                        rule_name: "mapped_factor".to_string(),
-                        kind: BbnfShapeKind::MappedFactorEmpty,
-                        shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::MappedFactorEmpty),
-                        payload_bytes: 0, // empty payload
-                    });
-                }
+            "mapped_factor" if is_mapped_factor_empty_shape(&rule.body) => {
+                templates.push(BbnfShapeTemplate {
+                    rule_name: "mapped_factor".to_string(),
+                    kind: BbnfShapeKind::MappedFactorEmpty,
+                    shape_hash: compute_bbnf_shape_hash(BbnfShapeKind::MappedFactorEmpty),
+                    payload_bytes: 0, // empty payload
+                });
             }
             _ => {}
         }

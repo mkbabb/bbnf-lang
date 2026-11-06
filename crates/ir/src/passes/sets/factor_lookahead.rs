@@ -23,7 +23,7 @@ pub fn factor_regex_with_lookahead(ir: &mut GrammarIR) {
     let rule_metas: Vec<(CharSet128, bool)> = ir
         .rules
         .iter()
-        .map(|r| (r.meta.first_set.clone(), r.meta.nullable))
+        .map(|r| (r.meta.first_set, r.meta.nullable))
         .collect();
 
     let GrammarIR { rules, strings, .. } = &mut *ir;
@@ -144,7 +144,7 @@ fn first_set_of(
             if nullable || fs.is_empty() {
                 None
             } else {
-                Some(fs.clone())
+                Some(*fs)
             }
         }
         IrNode::Seq(children) => {

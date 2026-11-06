@@ -63,11 +63,17 @@ impl RepeatElemKind {
     }
 }
 
+/// The `lo..=hi` iteration bounds of an `IrNode::Repeat`
+/// (`hi == u32::MAX` is unbounded).
+pub(super) struct RepeatBounds {
+    pub lo: u32,
+    pub hi: u32,
+}
+
 /// Compile a Repeat node.
 pub(super) fn compile_repeat<E: Emitter>(
     inner: &IrNode,
-    lo: u32,
-    hi: u32,
+    RepeatBounds { lo, hi }: RepeatBounds,
     alloc: ValuePlacement,
     ir: &GrammarIR,
     dstate: &mut DriverState,
@@ -75,43 +81,43 @@ pub(super) fn compile_repeat<E: Emitter>(
     ctx: &mut E::Ctx,
 ) -> E::Output {
     // sep_by: Repeat(Skip(element, Repeat(separator, 0, 1)), lo, MAX).
-    if hi == u32::MAX {
-        if let Some((element, separator)) = decisions::detect_sep_by(inner) {
-            // Derive the element-kind tag without cloning. Mirrors
-            // the prior `derive_vec_elem_type` helper, but stays in
-            // variant-tag space:
-            //   1. Prefer `vec_elem_type` (the explicit Vec-context
-            //      type when `project_types` populated it).
-            //   2. Otherwise fall back to `node_type`, mapping
-            //      `BoxedEnum` → `Enum` because the Vec context
-            //      stores unboxed values (the heap indirection comes
-            //      from the Vec itself).
-            //   3. Default to `Span` when both are absent.
-            let elem_kind = match ir.vec_elem_type(element) {
+    if hi == u32::MAX
+        && let Some((element, separator)) = decisions::detect_sep_by(inner)
+    {
+        // Derive the element-kind tag without cloning. Mirrors
+        // the prior `derive_vec_elem_type` helper, but stays in
+        // variant-tag space:
+        //   1. Prefer `vec_elem_type` (the explicit Vec-context
+        //      type when `project_types` populated it).
+        //   2. Otherwise fall back to `node_type`, mapping
+        //      `BoxedEnum` → `Enum` because the Vec context
+        //      stores unboxed values (the heap indirection comes
+        //      from the Vec itself).
+        //   3. Default to `Span` when both are absent.
+        let elem_kind = match ir.vec_elem_type(element) {
+            Some(t) => RepeatElemKind::from_type(t),
+            None => match ir.node_type(element) {
+                Some(t) if *t == TypeDesc::BoxedEnum => RepeatElemKind::Enum,
                 Some(t) => RepeatElemKind::from_type(t),
-                None => match ir.node_type(element) {
-                    Some(t) if *t == TypeDesc::BoxedEnum => RepeatElemKind::Enum,
-                    Some(t) => RepeatElemKind::from_type(t),
-                    None => RepeatElemKind::Span,
-                },
-            };
+                None => RepeatElemKind::Span,
+            },
+        };
 
-            let elem_alloc = if elem_kind == RepeatElemKind::BoxedEnum {
-                ValuePlacement::Alloc
-            } else {
-                ValuePlacement::Inline
-            };
-            let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
-            let sep_out = compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+        let elem_alloc = if elem_kind == RepeatElemKind::BoxedEnum {
+            ValuePlacement::Alloc
+        } else {
+            ValuePlacement::Inline
+        };
+        let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
+        let sep_out = compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
 
-            let config = SepByConfig {
-                ws: false,
-                lo,
-                terminator_bytes: None,
-            };
+        let config = SepByConfig {
+            ws: false,
+            lo,
+            terminator_bytes: None,
+        };
 
-            return emitter.emit_sep_by(element_out, sep_out, &config, &PLACEHOLDER_TY, ctx);
-        }
+        return emitter.emit_sep_by(element_out, sep_out, &config, &PLACEHOLDER_TY, ctx);
     }
 
     // Optional (0..1) vs many.

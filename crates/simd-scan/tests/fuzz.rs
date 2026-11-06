@@ -7,23 +7,15 @@
 use proptest::prelude::*;
 use simd_scan::{alphabet::StructuralAlphabet, scalar, scan_structural};
 
-const JSON_ALPHABET: StructuralAlphabet =
-    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
+const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\"");
 
-const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b','],
-    &[(b'/', b'*'), (b'*', b'/')],
-    &[b'"', b'\''],
-);
+const CSS_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
 
-const BBNF_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b',', b'='],
-    &[(b'-', b'>')],
-    &[b'"'],
-);
+const BBNF_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,=", &[(b'-', b'>')], b"\"");
 
-const NO_QUOTE_ALPHABET: StructuralAlphabet =
-    StructuralAlphabet::from_parts(&[b'a', b'b', b'c'], &[], &[]);
+const NO_QUOTE_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(b"abc", &[], &[]);
 
 fn assert_parity(input: &[u8], alphabet: &StructuralAlphabet) {
     let scalar_idx = scalar::scan(input, alphabet);

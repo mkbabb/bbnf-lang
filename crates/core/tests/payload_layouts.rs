@@ -54,7 +54,7 @@ fn compile_grammar_ir(rel_entry: &str) -> GrammarIR {
             )
         });
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!(
             "payload_layouts: expected Vm output for {}, got {:?}",
             rel_entry, other

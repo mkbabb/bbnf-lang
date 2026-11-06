@@ -15,7 +15,7 @@ impl WasmEmitter {
             .map(|&b| format!("(i32.eq (local.get {byte_var}) (i32.const {b}))"))
             .collect();
         while parts.len() > 1 {
-            let mut next = Vec::with_capacity((parts.len() + 1) / 2);
+            let mut next = Vec::with_capacity(parts.len().div_ceil(2));
             let mut i = 0;
             while i + 1 < parts.len() {
                 next.push(format!("(i32.or {} {})", parts[i], parts[i + 1]));

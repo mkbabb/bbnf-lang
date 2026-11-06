@@ -154,12 +154,9 @@ impl Emitter for WasmEmitter {
         head: String,
         op: String,
         rhs: String,
-        head_type: &TypeDesc,
-        link_elem_type: &TypeDesc,
-        ir: &GrammarIR,
         ctx: &mut WasmEmitCtx,
     ) -> Option<String> {
-        self.emit_operator_chain_impl(head, op, rhs, head_type, link_elem_type, ir, ctx)
+        self.emit_operator_chain_impl(head, op, rhs, ctx)
     }
 
     fn emit_skip(&mut self, kept: String, discarded: String, ctx: &mut WasmEmitCtx) -> String {

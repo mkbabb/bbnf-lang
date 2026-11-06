@@ -290,7 +290,7 @@ impl Domain for CharSetDomain {
     }
 
     fn singleton_value(&self) -> Option<Self::Value> {
-        Some(self.solved.clone())
+        Some(self.solved)
     }
 
     fn contains(&self, val: &Self::Value) -> bool {
@@ -304,7 +304,7 @@ impl Domain for CharSetDomain {
     fn add(&mut self, _val: &Self::Value) {}
 
     fn values(&self) -> Vec<Self::Value> {
-        vec![self.solved.clone()]
+        vec![self.solved]
     }
 }
 
@@ -386,7 +386,7 @@ impl Constraint<CharSetDomain> for CharSetUnionConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<CharSetDomain>], _depth: usize) -> Revision {
-        let source_cs = vars[self.source as usize].domain.solved.clone();
+        let source_cs = vars[self.source as usize].domain.solved;
         if charset_union(vars, self.target, &source_cs) {
             Revision::Changed
         } else {

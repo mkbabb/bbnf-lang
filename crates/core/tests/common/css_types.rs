@@ -8,8 +8,6 @@
 //! `lightningcss_parity.rs`, etc.); factoring the logic here keeps
 //! the tests hermetic without duplication.
 
-#![allow(dead_code)]
-
 pub fn parse_hex_color(s: &str) -> u32 {
     let hex = s.as_bytes();
     match hex.len() {

@@ -181,7 +181,7 @@ fn fold_via_parent_span_split<'a, 'p: 'a>(
         .expect("fold_value_chain: missing first operand");
     let mut result = dispatch_value_expr(first, ctx);
 
-    for (operand, op_text) in iter.zip(split.operators.into_iter()) {
+    for (operand, op_text) in iter.zip(split.operators) {
         let op = layer
             .ops
             .iter()
@@ -331,10 +331,10 @@ fn recover_op_between<'a>(
 ) -> Option<&'a str> {
     let gap = input.get(lhs_end as usize..rhs_start as usize)?;
     let trimmed = gap.trim_start();
-    for &(op, _) in layer.ops {
-        if trimmed.starts_with(op) {
-            return Some(op);
-        }
-    }
-    None
+    layer
+        .ops
+        .iter()
+        .map(|&(op, _)| op)
+        .find(|&op| trimmed.starts_with(op))
+        .map(|v| v as _)
 }

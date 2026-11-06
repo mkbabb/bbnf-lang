@@ -14,7 +14,7 @@
 //!    citm ~7%). Always available.
 //!
 //! 2. **PEXT** (`bmi2` cfg-gated) — `_pext_u64(continuous_bits, mask)`
-//!    + scatter-store. Compacts the bit positions in one operation.
+//!    plus a scatter-store. Compacts the bit positions in one operation.
 //!    Faster at high density (CSS bootstrap ~12%). Optional.
 //!
 //! The scanner picks the strategy per call via `cfg!`-detected feature

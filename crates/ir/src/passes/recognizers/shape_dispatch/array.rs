@@ -38,12 +38,13 @@ pub fn detect_array(rule_id: RuleId, ir: &GrammarIR) -> bool {
     let body = unwrap_map_ow(&rule.body);
 
     // Shape 1 — wrapped homogeneous repeat.
-    if let Some((open, middle, close)) = unwrap_wrap(body) {
-        if single_byte_literal(open, ir).is_some() && single_byte_literal(close, ir).is_some() {
-            let mut visited = HashSet::new();
-            if inner_is_homogeneous_repeat(middle, ir, &mut visited) {
-                return true;
-            }
+    if let Some((open, middle, close)) = unwrap_wrap(body)
+        && single_byte_literal(open, ir).is_some()
+        && single_byte_literal(close, ir).is_some()
+    {
+        let mut visited = HashSet::new();
+        if inner_is_homogeneous_repeat(middle, ir, &mut visited) {
+            return true;
         }
     }
 
@@ -54,7 +55,7 @@ pub fn detect_array(rule_id: RuleId, ir: &GrammarIR) -> bool {
 /// Whether `rule_id` matches the entry-rule list shape per
 /// [`mine_list_rules`].
 pub(crate) fn list_rule_entry_matches(rule_id: RuleId, ir: &GrammarIR) -> bool {
-    mine_list_rules(ir).iter().any(|&id| id == rule_id)
+    mine_list_rules(ir).contains(&rule_id)
 }
 
 /// Walk the wrap's middle looking for a `Repeat` whose inner resolves

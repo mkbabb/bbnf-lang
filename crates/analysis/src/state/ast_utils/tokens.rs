@@ -39,13 +39,13 @@ pub fn collect_semantic_tokens(node: BbnfView<'_, '_>, tokens: &mut Vec<Semantic
                 }
                 Some(1) => {
                     // Identifier with optional call-args.
-                    if let Some(ident) = node.child(0) {
-                        if let Some((lo, hi)) = ident.span_range() {
-                            tokens.push(SemanticTokenInfo {
-                                span: (lo, hi),
-                                token_type: token_types::RULE_REFERENCE,
-                            });
-                        }
+                    if let Some(ident) = node.child(0)
+                        && let Some((lo, hi)) = ident.span_range()
+                    {
+                        tokens.push(SemanticTokenInfo {
+                            span: (lo, hi),
+                            token_type: token_types::RULE_REFERENCE,
+                        });
                     }
                     // Recurse into call-arg children.
                     for c in node

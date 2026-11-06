@@ -39,10 +39,11 @@ pub(super) fn emit_class_quantified(info: &ClassRangeInfo) -> Option<TokenStream
     // Tranche X phase 1: kernel routing short-circuit.
     // The kernel collapses `[0-9]+`, `[0-9]*`, `[a-zA-Z0-9]+`,
     // `[0-9a-fA-F]+` onto the hoisted `parse_that::scan_*_mut` helpers.
-    if max.is_none() && (*min == 0 || *min == 1) {
-        if let Some(call) = kernels::charclass::emit_call_opt(chars, *negated, *min, *max) {
-            return Some(quote! { { #call } });
-        }
+    if max.is_none()
+        && (*min == 0 || *min == 1)
+        && let Some(call) = kernels::charclass::emit_call_opt(chars, *negated, *min, *max)
+    {
+        return Some(quote! { { #call } });
     }
 
     // Build a byte predicate from the CharSet128 bitset.
@@ -162,10 +163,11 @@ pub(super) fn emit_prefix_then_class(prefix: &[u8], tail: &ClassRangeInfo) -> Op
     }
 
     // Tranche X.9a: kernel routing for common `prefix[class]+` shapes.
-    if *min == 1 && max.is_none() {
-        if let Some(call) = kernels::prefix_class::emit_call_opt(prefix, chars) {
-            return Some(call);
-        }
+    if *min == 1
+        && max.is_none()
+        && let Some(call) = kernels::prefix_class::emit_call_opt(prefix, chars)
+    {
+        return Some(call);
     }
 
     // Build inline emission from the classifier data.

@@ -9,17 +9,18 @@ pub(super) fn hover_pretty(state: &DocumentState, offset: usize) -> Option<Hover
     for pretty in &state.info.pretties {
         // Check hint keywords.
         for (i, hint) in pretty.hints.iter().enumerate() {
-            if let Some(&(start, end)) = pretty.hint_spans.get(i) {
-                if offset >= start && offset <= end {
-                    let content = build_hint_hover(hint, &pretty.rule_name, &pretty.hints);
-                    return Some(Hover {
-                        contents: HoverContents::Markup(MarkupContent {
-                            kind: MarkupKind::Markdown,
-                            value: content,
-                        }),
-                        range: Some(state.line_index.span_to_range(start, end)),
-                    });
-                }
+            if let Some(&(start, end)) = pretty.hint_spans.get(i)
+                && offset >= start
+                && offset <= end
+            {
+                let content = build_hint_hover(hint, &pretty.rule_name, &pretty.hints);
+                return Some(Hover {
+                    contents: HoverContents::Markup(MarkupContent {
+                        kind: MarkupKind::Markdown,
+                        value: content,
+                    }),
+                    range: Some(state.line_index.span_to_range(start, end)),
+                });
             }
         }
 

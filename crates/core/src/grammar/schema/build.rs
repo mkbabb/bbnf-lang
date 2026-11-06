@@ -313,10 +313,10 @@ fn derive_field_role(
             // AZ-III.W3a.3 — `HeterogeneousAltJoin` is the named-obligation
             // counterpart to `BoxedEnum`; both share the boxed-enum codegen
             // layout for downstream consumers.
-            if let Some(IrNode::Ref(rid)) = body_node.map(unwrap_body_node) {
-                if Some(*rid) == identifier_rule_id {
-                    return FieldRole::IdentifierCarrier;
-                }
+            if let Some(IrNode::Ref(rid)) = body_node.map(unwrap_body_node)
+                && Some(*rid) == identifier_rule_id
+            {
+                return FieldRole::IdentifierCarrier;
             }
             FieldRole::PrimaryChild
         }

@@ -189,15 +189,15 @@ impl TypeMap {
 /// is `Vec<T>`. Only flattens same-type pairs `(A, Vec<A>)` or
 /// `(Vec<A>, A)`.
 pub fn try_flatten_pair(a: &TypeDesc, b: &TypeDesc) -> Option<TypeDesc> {
-    if let TypeDesc::Vec(inner) = b {
-        if **inner == *a {
-            return Some(b.clone());
-        }
+    if let TypeDesc::Vec(inner) = b
+        && **inner == *a
+    {
+        return Some(b.clone());
     }
-    if let TypeDesc::Vec(inner) = a {
-        if **inner == *b {
-            return Some(a.clone());
-        }
+    if let TypeDesc::Vec(inner) = a
+        && **inner == *b
+    {
+        return Some(a.clone());
     }
     None
 }

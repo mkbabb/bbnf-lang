@@ -346,7 +346,7 @@ impl<'ir> StructRegistryProbe for PayloadLayoutsProbe<'ir> {
 ///   `Mapped` when any layout field admits the same `TypeDesc`,
 ///   else `Mapped` when the layout has any field at all (mirrors
 ///   the default-impl's non-scalar admission).
-impl<'r> StructRegistryProbe for &'r StructRegistry {
+impl StructRegistryProbe for &StructRegistry {
     fn layout(&self, _rule_id: RuleId) -> Option<&PayloadLayout> {
         // The registry's native layout is `StructLayout`, not
         // `PayloadLayout`. The classify override below routes

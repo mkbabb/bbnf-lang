@@ -11,13 +11,9 @@
 
 use simd_scan::{StructuralAlphabet, compiled_tiers, scalar, scan_with};
 
-const CSS: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b','],
-    &[(b'/', b'*'), (b'*', b'/')],
-    &[b'"', b'\''],
-);
-const JSON: StructuralAlphabet =
-    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
+const CSS: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
+const JSON: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\"");
 
 struct Guarded {
     base: *mut u8,

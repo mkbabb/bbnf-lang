@@ -114,11 +114,11 @@ fn grammar_analysis_activates_in_production_build_and_saturate() {
     let (egraph, _pool, rule_body_ids) = build_and_saturate(&ir);
 
     // Every rule root has a canonical class with attached data.
-    for (_rid, &root) in &rule_body_ids {
+    for &root in rule_body_ids.values() {
         let class = egraph.class(root);
         // `class.data` is `EClassFacts` — access triggers a field
         // read, which fails to compile if the substrate is wrong.
-        let _first_set = class.data.first_set.clone();
+        let _first_set = class.data.first_set;
         let _nullable = class.data.nullable;
         let _width_min = class.data.width.min;
     }

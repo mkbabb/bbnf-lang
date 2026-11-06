@@ -119,15 +119,14 @@ pub fn decide_seq(seq_node: &IrNode, ir: &GrammarIR) -> SeqDecision {
 
 /// Detect sep_by pattern: `Skip(element, Repeat(separator, 0, 1))`.
 pub fn detect_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
-    if let IrNode::Skip(element, opt_sep) = inner {
-        if let IrNode::Repeat {
+    if let IrNode::Skip(element, opt_sep) = inner
+        && let IrNode::Repeat {
             inner: separator,
             lo: 0,
             hi: 1,
         } = opt_sep.as_ref()
-        {
-            return Some((element.as_ref(), separator.as_ref()));
-        }
+    {
+        return Some((element.as_ref(), separator.as_ref()));
     }
     None
 }

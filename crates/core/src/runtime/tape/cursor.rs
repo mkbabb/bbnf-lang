@@ -11,7 +11,7 @@
 //! to yield children in source order for positional consumers.
 
 use super::arena::PayloadArena;
-use super::record::{LeafType, TapeKind, TapeOffset, TapeRec, TAPE_NONE};
+use super::record::{LeafType, TAPE_NONE, TapeKind, TapeOffset, TapeRec};
 
 /// Shared borrow of the flat tape: records + payload arena + the source
 /// the spans index into.
@@ -124,11 +124,7 @@ impl<'t> TapeCursor<'t> {
     #[inline]
     pub fn as_u32_inline(&self) -> u32 {
         let v = self.rec().child_off;
-        if v == TAPE_NONE {
-            0
-        } else {
-            v
-        }
+        if v == TAPE_NONE { 0 } else { v }
     }
 
     #[inline]

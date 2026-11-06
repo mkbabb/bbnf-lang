@@ -244,10 +244,10 @@ pub fn compute_structural_alphabet(ir: &mut GrammarIR) {
     // mining boundary.
     let mut quote_classes: BTreeSet<u8> = BTreeSet::new();
     for sid in &regex_sids {
-        if let Some(info) = ir.regex_info.get(sid) {
-            if let bbnf_regex::RegexClass::QuotedString { quote_char, .. } = info.classification {
-                quote_classes.insert(quote_char);
-            }
+        if let Some(info) = ir.regex_info.get(sid)
+            && let bbnf_regex::RegexClass::QuotedString { quote_char, .. } = info.classification
+        {
+            quote_classes.insert(quote_char);
         }
     }
 

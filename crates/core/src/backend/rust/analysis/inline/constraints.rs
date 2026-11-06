@@ -170,18 +170,13 @@ impl Constraint<InlineDomain> for CostBudgetConstraint {
         // Shape-based force-to-DirectCall (same logic as
         // `should_force_direct_call`).
         let b = &self.budgets;
-        let force_direct = if self.shape_control_nodes == 0 {
-            false
-        } else if self.shape_refs > 2 && self.local_cost > b.high_ref_local_cost {
-            true
-        } else if self.shape_wrapper_heavy
-            && self.shape_refs > 1
-            && self.total_budget > b.wrapper_heavy_total_budget
-        {
-            true
-        } else {
-            self.shape_control_nodes > 2 && self.total_budget > b.control_heavy_total_budget
-        };
+        let force_direct = self.shape_control_nodes != 0
+            && ((self.shape_refs > 2 && self.local_cost > b.high_ref_local_cost)
+                || (self.shape_wrapper_heavy
+                    && self.shape_refs > 1
+                    && self.total_budget > b.wrapper_heavy_total_budget)
+                || (self.shape_control_nodes > 2
+                    && self.total_budget > b.control_heavy_total_budget));
 
         let mode = if force_direct {
             CallMode::DirectCall

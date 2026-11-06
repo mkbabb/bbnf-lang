@@ -470,122 +470,121 @@ fn emit_typed_formula_arena(
         )
     };
     runtime_template(
-        &format!(
-            r#"
+        &r#"
 use bbnf_ir::registry::StructLayout;
 
 use __MODULE__::value::__P__Value;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum __P__CompoundKind {{
+pub enum __P__CompoundKind {
 __VARIANTS__
-}}
+}
 
-impl __P__CompoundKind {{
+impl __P__CompoundKind {
     #[inline]
-    pub fn is_transparent_wrap(self) -> bool {{
+    pub fn is_transparent_wrap(self) -> bool {
         __TRANSPARENT__
-    }}
+    }
 
     #[inline]
-    pub fn from_layout(layout: &StructLayout) -> Self {{
-        match layout.rule_id {{
+    pub fn from_layout(layout: &StructLayout) -> Self {
+        match layout.rule_id {
 __ARMS__
             _ => Self::__DEFAULT__,
-        }}
-    }}
-}}
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
-pub struct __P__Compound<'p> {{
+pub struct __P__Compound<'p> {
     pub kind: __P__CompoundKind,
     pub children: Vec<__P__Value<'p>>,
-}}
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct __P__CompoundId(u32);
 
-impl __P__CompoundId {{
+impl __P__CompoundId {
     pub const EMPTY: Self = Self(0);
 
     #[inline]
-    pub const fn is_empty(self) -> bool {{
+    pub const fn is_empty(self) -> bool {
         self.0 == 0
-    }}
+    }
 
     #[inline]
-    fn slab_index(self) -> Option<usize> {{
-        if self.0 == 0 {{
+    fn slab_index(self) -> Option<usize> {
+        if self.0 == 0 {
             None
-        }} else {{
+        } else {
             Some((self.0 - 1) as usize)
-        }}
-    }}
-}}
+        }
+    }
+}
 
 #[derive(Debug, Default)]
-pub struct __P__Arena<'p> {{
+pub struct __P__Arena<'p> {
     compounds: Vec<__P__Compound<'p>>,
-}}
+}
 
-impl<'p> __P__Arena<'p> {{
+impl<'p> __P__Arena<'p> {
     #[inline]
-    pub fn new() -> Self {{
+    pub fn new() -> Self {
         Self::default()
-    }}
+    }
 
     #[inline]
-    pub fn with_capacity(compounds: usize) -> Self {{
-        Self {{
+    pub fn with_capacity(compounds: usize) -> Self {
+        Self {
             compounds: Vec::with_capacity(compounds),
-        }}
-    }}
+        }
+    }
 
     #[inline]
     pub fn push_compound(
         &mut self,
         kind: __P__CompoundKind,
         children: Vec<__P__Value<'p>>,
-    ) -> __P__CompoundId {{
-        self.compounds.push(__P__Compound {{ kind, children }});
+    ) -> __P__CompoundId {
+        self.compounds.push(__P__Compound { kind, children });
         __P__CompoundId(self.compounds.len() as u32)
-    }}
+    }
 
     #[inline]
-    pub fn compound(&self, id: __P__CompoundId) -> __P__CompoundView<'_, 'p> {{
-        match id.slab_index() {{
-            None => __P__CompoundView {{
+    pub fn compound(&self, id: __P__CompoundId) -> __P__CompoundView<'_, 'p> {
+        match id.slab_index() {
+            None => __P__CompoundView {
                 kind: __P__CompoundKind::Wrap,
                 children: &[],
-            }},
-            Some(i) => {{
+            },
+            Some(i) => {
                 let entry = &self.compounds[i];
-                __P__CompoundView {{
+                __P__CompoundView {
                     kind: entry.kind,
                     children: entry.children.as_slice(),
-                }}
-            }}
-        }}
-    }}
+                }
+            }
+        }
+    }
 
     #[inline]
-    pub fn compound_count(&self) -> usize {{
+    pub fn compound_count(&self) -> usize {
         self.compounds.len()
-    }}
+    }
 
     #[inline]
-    pub fn truncate(&mut self, compounds: usize) {{
+    pub fn truncate(&mut self, compounds: usize) {
         self.compounds.truncate(compounds);
-    }}
-}}
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
-pub struct __P__CompoundView<'a, 'p: 'a> {{
+pub struct __P__CompoundView<'a, 'p: 'a> {
     pub kind: __P__CompoundKind,
     pub children: &'a [__P__Value<'p>],
-}}
-"#,
-        )
+}
+"#
+        .to_string()
         .replace("__VARIANTS__", &variants)
         .replace("__ARMS__", &arms)
         .replace("__DEFAULT__", &projection.kind.default)

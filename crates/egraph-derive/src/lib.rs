@@ -279,10 +279,10 @@ fn infer_field_kind(ty: &Type) -> FieldKind {
 /// Match the last path segment — accept fully-qualified (`::egraph::Id`,
 /// `egraph::Id`) or bare (`Id`) forms.
 fn path_tail_is(ty: &Type, want: &str) -> bool {
-    if let Type::Path(tp) = ty {
-        if let Some(last) = tp.path.segments.last() {
-            return last.ident == want;
-        }
+    if let Type::Path(tp) = ty
+        && let Some(last) = tp.path.segments.last()
+    {
+        return last.ident == want;
     }
     false
 }

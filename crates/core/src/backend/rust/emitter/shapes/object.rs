@@ -395,7 +395,7 @@ fn extract_value_ref_from_pair_body(
             Some(r) => r,
             None => return false,
         };
-        fn unwrap<'a>(n: &'a IrNode) -> &'a IrNode {
+        fn unwrap(n: &IrNode) -> &IrNode {
             match n {
                 IrNode::OptionalWhitespace(i) | IrNode::Map { inner: i, .. } => unwrap(i),
                 _ => n,

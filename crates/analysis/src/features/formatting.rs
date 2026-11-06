@@ -385,12 +385,12 @@ fn find_type_annotation_child<'a, 'p>(node: BbnfView<'a, 'p>) -> Option<BbnfView
     let mut prev_end: Option<usize> = None;
     for c in node.children() {
         let span = c.span_range()?;
-        if let Some(end) = prev_end {
-            if end < span.0 {
-                let gap = input[end..span.0].trim_start();
-                if gap.starts_with(':') {
-                    return Some(c);
-                }
+        if let Some(end) = prev_end
+            && end < span.0
+        {
+            let gap = input[end..span.0].trim_start();
+            if gap.starts_with(':') {
+                return Some(c);
             }
         }
         prev_end = Some(span.1);

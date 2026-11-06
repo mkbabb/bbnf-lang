@@ -71,10 +71,9 @@ pub fn write_back_optimized(
             rule_id,
             &root_to_rule,
             &mut visiting,
-        ) {
-            if let Some(rule) = ir.rules.iter_mut().find(|r| r.id == rule_id) {
-                rule.body = body;
-            }
+        ) && let Some(rule) = ir.rules.iter_mut().find(|r| r.id == rule_id)
+        {
+            rule.body = body;
         }
     }
 }
@@ -167,7 +166,7 @@ fn rebuild(
     visiting.insert(canonical, ());
     let result = materialize_best(egraph, extractor, canonical, root_to_rule, visiting);
     visiting.remove(&canonical);
-    return result;
+    result
 }
 
 /// Shared body of the reconstruction: given a canonical e-class that
@@ -204,7 +203,7 @@ fn materialize_node(
 ) -> IrNode {
     let current_rule: Option<RuleId> = None;
 
-    let result = match best {
+    match best {
         GrammarENode::Literal(sid) => IrNode::Literal(sid as StringId),
         GrammarENode::Regex(sid) => IrNode::Regex(sid as StringId),
         GrammarENode::Epsilon => IrNode::Epsilon,
@@ -372,7 +371,5 @@ fn materialize_node(
                 fallback: Box::new(fallback),
             }
         }
-    };
-
-    result
+    }
 }

@@ -8,7 +8,7 @@
 //!   state machine. LLVM sees every transition and can optimize
 //!   aggressively.
 //! - **Tier B** (> `decision_tree_max_states`): Static transition table
-//!   + driver loop. Compact, cache-friendly, with SIMD acceleration for
+//!   and a driver loop. Compact, cache-friendly, with SIMD acceleration for
 //!   self-loop states.
 //!
 //! All tiers emit code that evaluates to `Option<Span<'a>>`, reading from
@@ -189,10 +189,10 @@ fn emit_tier_a(dfa: &Dfa) -> TokenStream {
     }
 
     // Detect simple patterns: single accepting self-loop state (e.g., [a-z]+).
-    if num_states == 2 {
-        if let Some(ts) = try_emit_simple_loop(dfa, &accels, &state_transitions) {
-            return ts;
-        }
+    if num_states == 2
+        && let Some(ts) = try_emit_simple_loop(dfa, &accels, &state_transitions)
+    {
+        return ts;
     }
 
     // General case: emit a state machine loop.

@@ -203,11 +203,13 @@ impl CspScheduler {
 
 impl<N: Language, A: Analysis<N>> Scheduler<N, A> for CspScheduler {
     fn run(&self, egraph: &mut EGraph<N, A>, rules: &[&dyn RewriteFn<N, A>]) -> RunReport {
-        let mut report = RunReport::default();
-        report.per_rule = rules
-            .iter()
-            .map(|r| (r.name().to_string(), 0usize))
-            .collect();
+        let mut report = RunReport {
+            per_rule: rules
+                .iter()
+                .map(|r| (r.name().to_string(), 0usize))
+                .collect(),
+            ..RunReport::default()
+        };
 
         // Snapshot per-class node counts so we can detect "grew since
         // last iteration" between applies. Classes that grow get
@@ -352,10 +354,10 @@ fn build_csp<N: Language, A: Analysis<N>>(
         let mut seen: FxIdSet = FxIdSet::default();
         for (_, parent_id) in &class.parents {
             let canonical = egraph.find_ref(*parent_id);
-            if seen.insert(canonical) {
-                if let Some(&v) = class_var.get(&canonical) {
-                    parent_vars.push(v);
-                }
+            if seen.insert(canonical)
+                && let Some(&v) = class_var.get(&canonical)
+            {
+                parent_vars.push(v);
             }
         }
         if parent_vars.is_empty() {

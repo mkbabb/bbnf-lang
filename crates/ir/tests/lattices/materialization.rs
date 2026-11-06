@@ -280,12 +280,14 @@ fn seq_of_literals_collapses_to_tape_span_only() {
 fn pretty_pinned_rule_must_tape() {
     // entry → "a" | "b", but @pretty pinned.
     let strings = vec!["entry".to_string(), "a".to_string(), "b".to_string()];
-    let mut meta = RuleMeta::default();
-    meta.directives = RuleDirectives {
-        pretty: Some(PrettyHints::default()),
-        recover: None,
-        token: false,
-        debug: false,
+    let meta = RuleMeta {
+        directives: RuleDirectives {
+            pretty: Some(PrettyHints::default()),
+            recover: None,
+            token: false,
+            debug: false,
+        },
+        ..RuleMeta::default()
     };
     let body = IrNode::Alt(
         vec![
@@ -323,12 +325,14 @@ fn pretty_pinned_rule_must_tape() {
 #[test]
 fn debug_pinned_rule_must_tape() {
     let strings = vec!["entry".to_string(), "tok".to_string()];
-    let mut meta = RuleMeta::default();
-    meta.directives = RuleDirectives {
-        pretty: None,
-        recover: None,
-        token: false,
-        debug: true,
+    let meta = RuleMeta {
+        directives: RuleDirectives {
+            pretty: None,
+            recover: None,
+            token: false,
+            debug: true,
+        },
+        ..RuleMeta::default()
     };
     let rules = vec![rule_with_meta(0, 0, IrNode::Literal(1), meta)];
     let mut ir = make_ir(rules, strings);
@@ -362,8 +366,10 @@ fn debug_all_pins_every_rule() {
 #[test]
 fn preserve_identity_forces_must_tape() {
     let strings = vec!["entry".to_string(), "x".to_string()];
-    let mut meta = RuleMeta::default();
-    meta.preserve_identity = true;
+    let meta = RuleMeta {
+        preserve_identity: true,
+        ..RuleMeta::default()
+    };
     let rules = vec![rule_with_meta(0, 0, IrNode::Literal(1), meta)];
     let mut ir = make_ir(rules, strings);
     classify_materialization(&mut ir);

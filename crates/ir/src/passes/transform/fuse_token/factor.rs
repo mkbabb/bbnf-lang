@@ -208,7 +208,7 @@ fn factor_with_token(
         ctx.strings.push(cont_name);
 
         let cont_meta = RuleMeta {
-            first_set: cont_first.clone().unwrap_or_default(),
+            first_set: cont_first.unwrap_or_default(),
             ..Default::default()
         };
 
@@ -274,7 +274,7 @@ fn factor_with_token(
             .iter()
             .map(|c| AltBranch {
                 node: c.cont_ref.clone(),
-                first_set: c.cont_first.clone(),
+                first_set: c.cont_first,
             })
             .collect();
         IrNode::Seq(vec![
@@ -302,7 +302,7 @@ fn factor_with_token(
             if i == last_overlap_pos {
                 new_branches.push(AltBranch {
                     node: fused,
-                    first_set: fused_first.clone(),
+                    first_set: fused_first,
                 });
                 return Some(IrNode::Alt(
                     new_branches_with_rest(new_branches, branches, &actual_overlap, i + 1),

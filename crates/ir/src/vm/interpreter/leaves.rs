@@ -67,10 +67,10 @@ impl<'prog> Interpreter<'prog> {
             if !matched {
                 continue;
             }
-            if let Some(guard) = arm.guard_byte {
-                if self.input_bytes.get(self.offset as usize).copied() != Some(guard) {
-                    continue;
-                }
+            if let Some(guard) = arm.guard_byte
+                && self.input_bytes.get(self.offset as usize).copied() != Some(guard)
+            {
+                continue;
             }
 
             self.values.pop();

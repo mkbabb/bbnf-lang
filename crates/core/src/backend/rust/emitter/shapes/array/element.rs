@@ -19,7 +19,7 @@ pub(super) fn extract_array_value_ref(
     ir: &GrammarIR,
 ) -> Option<bbnf_ir::RuleId> {
     use bbnf_ir::IrNode;
-    fn find_repeat_inner<'a>(n: &'a IrNode) -> Option<&'a IrNode> {
+    fn find_repeat_inner(n: &IrNode) -> Option<&IrNode> {
         match n {
             IrNode::Repeat { inner, .. } => Some(inner),
             IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
@@ -39,7 +39,7 @@ pub(super) fn extract_array_value_ref(
                 Some(r) => r,
                 None => return false,
             };
-            fn unwrap<'a>(n: &'a IrNode) -> &'a IrNode {
+            fn unwrap(n: &IrNode) -> &IrNode {
                 match n {
                     IrNode::OptionalWhitespace(i) | IrNode::Map { inner: i, .. } => unwrap(i),
                     _ => n,

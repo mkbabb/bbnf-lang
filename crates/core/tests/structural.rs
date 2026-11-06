@@ -321,10 +321,10 @@ fn structural_scalar_number_integer() {
 
 #[test]
 fn structural_scalar_number_negative_float() {
-    let input = "-3.14";
+    let input = "-1.25";
     let doc = JsonParser::parse(input).unwrap_or_else(|e| panic!("parse failed: {:?}", e));
     match doc.root {
-        JsonValue::Number(n) => assert!((n.as_f64() - (-3.14)).abs() < 1e-9),
+        JsonValue::Number(n) => assert!((n.as_f64() - (-1.25)).abs() < 1e-9),
         ref other => panic!("expected number, got {:?}", other),
     }
 }

@@ -335,15 +335,15 @@ fn next_ident_byte(text: &str, idx: usize) -> bool {
 pub(super) fn scan_ident_len(text: &str) -> usize {
     let bytes = text.as_bytes();
     let mut i = 0;
-    if let Some(b) = bytes.first() {
-        if b.is_ascii_alphabetic() || *b == b'_' {
-            i += 1;
-            while let Some(b) = bytes.get(i) {
-                if b.is_ascii_alphanumeric() || *b == b'_' {
-                    i += 1;
-                } else {
-                    break;
-                }
+    if let Some(b) = bytes.first()
+        && (b.is_ascii_alphabetic() || *b == b'_')
+    {
+        i += 1;
+        while let Some(b) = bytes.get(i) {
+            if b.is_ascii_alphanumeric() || *b == b'_' {
+                i += 1;
+            } else {
+                break;
             }
         }
     }
@@ -494,11 +494,9 @@ fn collect_value_expr_args_rec<'a, 'p: 'a>(
     ctx: &mut LowerCtx<'p>,
     skip_self: bool,
 ) {
-    if !skip_self {
-        if node.compound_kind() == Some(BbnfCompoundKind::ValueExpr) {
-            args.push(dispatch_value_expr(node, ctx));
-            return;
-        }
+    if !skip_self && node.compound_kind() == Some(BbnfCompoundKind::ValueExpr) {
+        args.push(dispatch_value_expr(node, ctx));
+        return;
     }
     if node.kind() != BbnfKind::Compound {
         return;
@@ -565,17 +563,6 @@ pub(super) fn lower_bare_ident<'p>(name: &str, ctx: &mut LowerCtx<'p>) -> MapExp
 }
 
 // ─── String literal ──────────────────────────────────────────────────────────
-
-pub(super) fn lower_string_lit<'a, 'p: 'a>(
-    node: BbnfView<'a, 'p>,
-    ctx: &mut LowerCtx<'p>,
-) -> MapExpr {
-    let text = match node.focus() {
-        BbnfValue::Span(s) => s,
-        _ => node.span_text_opt().unwrap_or(""),
-    };
-    MapExpr::StringLit(intern_string_lit_inner(text, ctx))
-}
 
 /// Strip the surrounding quote characters from a string-literal
 /// span and intern the inner text. The grammar permits `"..."` and

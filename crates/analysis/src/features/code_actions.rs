@@ -17,48 +17,46 @@ pub fn code_actions(state: &DocumentState, uri: &Uri, range: Range) -> CodeActio
                     .message
                     .strip_prefix("Unused rule: `")
                     .and_then(|s| s.strip_suffix('`'));
-                if let Some(name) = name {
-                    if let Some(&idx) = state.info.rule_index.get(name) {
-                        let rule = &state.info.rules[idx];
+                if let Some(name) = name
+                    && let Some(&idx) = state.info.rule_index.get(name)
+                {
+                    let rule = &state.info.rules[idx];
 
-                        // Extend full_span to include trailing whitespace/newline.
-                        let mut delete_end = rule.full_span.1;
-                        // Skip past the terminator (`;` or `.`) and any trailing whitespace.
-                        while delete_end < state.text.len() {
-                            let ch = state.text.as_bytes()[delete_end];
-                            if ch == b';' || ch == b'.' {
-                                delete_end += 1;
-                                break;
-                            }
+                    // Extend full_span to include trailing whitespace/newline.
+                    let mut delete_end = rule.full_span.1;
+                    // Skip past the terminator (`;` or `.`) and any trailing whitespace.
+                    while delete_end < state.text.len() {
+                        let ch = state.text.as_bytes()[delete_end];
+                        if ch == b';' || ch == b'.' {
                             delete_end += 1;
+                            break;
                         }
-                        // Also consume trailing newline.
-                        if delete_end < state.text.len()
-                            && state.text.as_bytes()[delete_end] == b'\n'
-                        {
-                            delete_end += 1;
-                        }
-
-                        let mut changes = HashMap::new();
-                        changes.insert(
-                            uri.clone(),
-                            vec![TextEdit {
-                                range: state.line_index.span_to_range(rule.full_span.0, delete_end),
-                                new_text: String::new(),
-                            }],
-                        );
-
-                        actions.push(CodeActionOrCommand::CodeAction(CodeAction {
-                            title: format!("Remove unused rule `{}`", name),
-                            kind: Some(CodeActionKind::QUICKFIX),
-                            diagnostics: Some(vec![diag.clone()]),
-                            edit: Some(WorkspaceEdit {
-                                changes: Some(changes),
-                                ..Default::default()
-                            }),
-                            ..Default::default()
-                        }));
+                        delete_end += 1;
                     }
+                    // Also consume trailing newline.
+                    if delete_end < state.text.len() && state.text.as_bytes()[delete_end] == b'\n' {
+                        delete_end += 1;
+                    }
+
+                    let mut changes = HashMap::new();
+                    changes.insert(
+                        uri.clone(),
+                        vec![TextEdit {
+                            range: state.line_index.span_to_range(rule.full_span.0, delete_end),
+                            new_text: String::new(),
+                        }],
+                    );
+
+                    actions.push(CodeActionOrCommand::CodeAction(CodeAction {
+                        title: format!("Remove unused rule `{}`", name),
+                        kind: Some(CodeActionKind::QUICKFIX),
+                        diagnostics: Some(vec![diag.clone()]),
+                        edit: Some(WorkspaceEdit {
+                            changes: Some(changes),
+                            ..Default::default()
+                        }),
+                        ..Default::default()
+                    }));
                 }
             }
         }

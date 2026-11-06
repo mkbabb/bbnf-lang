@@ -109,7 +109,7 @@ fn unknown_variant_fails_with_alternatives() {
     assert_eq!(err.segment_index, 2);
     assert_eq!(err.struct_name, "CssTypedValue");
     assert_eq!(err.segment_str, "@border");
-    let alts: Vec<&str> = err.alternatives.iter().copied().collect();
+    let alts: Vec<&str> = err.alternatives.to_vec();
     assert!(alts.contains(&"color"));
     assert!(alts.contains(&"length"));
     assert!(alts.contains(&"selector"));

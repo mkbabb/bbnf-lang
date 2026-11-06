@@ -114,10 +114,7 @@ pub trait MathPathQuery: Sized {
     fn query<'p>(doc: &MathDocument<'p>, path: Path<'_>) -> Option<Self>;
 }
 #[inline]
-fn walk_path<'a, 'p>(
-    doc: &'a MathDocument<'p>,
-    path: Path<'_>,
-) -> Option<&'a MathValue<'p>> {
+fn walk_path<'a, 'p>(doc: &'a MathDocument<'p>, path: Path<'_>) -> Option<&'a MathValue<'p>> {
     let mut current: &'a MathValue<'p> = &doc.root;
     for segment in path.iter() {
         current = match (current, segment) {
@@ -136,7 +133,7 @@ impl MathPathQuery for &str {
     fn query<'p>(doc: &MathDocument<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             MathValue::Span(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,

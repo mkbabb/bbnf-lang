@@ -62,7 +62,7 @@ pub fn emit_dispatcher(
         return quote! {};
     };
 
-    let entry_rule_id_lit = entry as u32;
+    let entry_rule_id_lit = entry;
     let dispatcher_ident = dispatcher_fn_ident(grammar_suffix, &root_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
 

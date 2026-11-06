@@ -239,7 +239,7 @@ pub fn compute_inside_string_bytes(input: &[u8], quote_classes: &[u8]) -> Vec<bo
                 bs += 1;
                 j -= 1;
             }
-            if bs % 2 == 0 {
+            if bs.is_multiple_of(2) {
                 inside = false;
             }
         }

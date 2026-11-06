@@ -16,14 +16,10 @@ use divan::counter::BytesCount;
 use simd_scan::{alphabet::StructuralAlphabet, scan_structural};
 use std::hint::black_box;
 
-const JSON_ALPHABET: StructuralAlphabet =
-    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[b'"']);
+const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:,", &[], b"\"");
 
-const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b','],
-    &[(b'/', b'*'), (b'*', b'/')],
-    &[b'"', b'\''],
-);
+const CSS_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
 
 /// (display name, repo-relative path, kind).
 ///

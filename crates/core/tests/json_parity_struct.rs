@@ -92,10 +92,10 @@ fn wire_contract_bool_is_typed_bool() {
 #[test]
 fn wire_contract_number_is_typed_f64() {
     let mut b = JsonStructBuilder::new();
-    b.push_leaf_with_f64(3.14);
+    b.push_leaf_with_f64(1.25);
     let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
-        JsonValue::Number(JsonNumber::Float(v)) => assert_eq!(v, 3.14),
+        JsonValue::Number(JsonNumber::Float(v)) => assert_eq!(v, 1.25),
         other => panic!("unexpected root variant: {:?}", other),
     }
 }

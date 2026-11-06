@@ -48,11 +48,14 @@ jobs:
         with:
           tool: nextest
 
+      # tee, not a redirect then cat: under `bash -e` a failing bench
+      # exits before the cat, so its error never reached the log.
       - name: run iai-callgrind bench on PR branch
+        shell: bash
         run: |
+          set -o pipefail
           cargo bench -p bbnf --bench json_callgrind --features callgrind --profile bench-ci \
-            > /tmp/iai-pr.txt 2>&1
-          cat /tmp/iai-pr.txt
+            2>&1 | tee /tmp/iai-pr.txt
 
       - name: checkout master baseline
         run: |

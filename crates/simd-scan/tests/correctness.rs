@@ -4,20 +4,12 @@
 
 use simd_scan::{StructuralIndex, alphabet::StructuralAlphabet, scalar, scan_structural};
 
-const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'[', b']', b':', b',', b'"', b'\\'],
-    &[],
-    &[b'"'],
-);
+const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:,\"\\", &[], b"\"");
 
-const JSON_NO_QUOTES: StructuralAlphabet =
-    StructuralAlphabet::from_parts(&[b'{', b'}', b'[', b']', b':', b','], &[], &[]);
+const JSON_NO_QUOTES: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:,", &[], &[]);
 
-const CSS_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(
-    &[b'{', b'}', b'(', b')', b';', b':', b','],
-    &[(b'/', b'*'), (b'*', b'/')],
-    &[b'"', b'\''],
-);
+const CSS_ALPHABET: StructuralAlphabet =
+    StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
 
 fn read_corpus(name: &str) -> Vec<u8> {
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -89,7 +81,7 @@ fn json_twitter_canonical() {
     let scalar_idx = scalar::scan(&input, &JSON_ALPHABET);
     let simd_idx = scan_structural(&input, &JSON_ALPHABET);
     assert_indices_equal(&scalar_idx, &simd_idx, "twitter.json");
-    assert!(scalar_idx.len() > 0, "twitter must have structural bytes");
+    assert!(!scalar_idx.is_empty(), "twitter must have structural bytes");
 }
 
 #[test]
@@ -126,14 +118,7 @@ fn css_tailwind_canonical() {
 
 #[test]
 fn wide_lut_alphabet_15_singletons() {
-    let alphabet: StructuralAlphabet = StructuralAlphabet::from_parts(
-        &[
-            b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i', b'j', b'k', b'l', b'm', b'n',
-            b'o',
-        ],
-        &[],
-        &[],
-    );
+    let alphabet: StructuralAlphabet = StructuralAlphabet::from_parts(b"abcdefghijklmno", &[], &[]);
     let input = b"the quick brown fox jumps over the lazy dog";
     let scalar_idx = scalar::scan(input, &alphabet);
     let simd_idx = scan_structural(input, &alphabet);
@@ -142,14 +127,8 @@ fn wide_lut_alphabet_15_singletons() {
 
 #[test]
 fn multi_cmp_alphabet_20_singletons() {
-    let alphabet: StructuralAlphabet = StructuralAlphabet::from_parts(
-        &[
-            b'a', b'b', b'c', b'd', b'e', b'f', b'g', b'h', b'i', b'j', b'k', b'l', b'm', b'n',
-            b'o', b'p', b'q', b'r', b's', b't',
-        ],
-        &[],
-        &[],
-    );
+    let alphabet: StructuralAlphabet =
+        StructuralAlphabet::from_parts(b"abcdefghijklmnopqrst", &[], &[]);
     let input = b"the quick brown fox jumps over the lazy dog";
     let scalar_idx = scalar::scan(input, &alphabet);
     let simd_idx = scan_structural(input, &alphabet);

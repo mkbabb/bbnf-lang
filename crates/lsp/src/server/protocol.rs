@@ -164,18 +164,17 @@ impl LanguageServer for BbnfLanguageServer {
             let global = self.global_rules.read().await;
             if let Some(entries) = global.get(&name) {
                 for entry in entries {
-                    if entry.uri != uri {
-                        if let Some(target_state) = docs.get(&entry.uri) {
-                            if let Some(rule) = target_state.info.rules.get(entry.rule_index) {
-                                let range = target_state
-                                    .line_index
-                                    .span_to_range(rule.name_span.0, rule.name_span.1);
-                                return Ok(Some(GotoDefinitionResponse::Scalar(Location {
-                                    uri: entry.uri.clone(),
-                                    range,
-                                })));
-                            }
-                        }
+                    if entry.uri != uri
+                        && let Some(target_state) = docs.get(&entry.uri)
+                        && let Some(rule) = target_state.info.rules.get(entry.rule_index)
+                    {
+                        let range = target_state
+                            .line_index
+                            .span_to_range(rule.name_span.0, rule.name_span.1);
+                        return Ok(Some(GotoDefinitionResponse::Scalar(Location {
+                            uri: entry.uri.clone(),
+                            range,
+                        })));
                     }
                 }
             }
@@ -269,39 +268,23 @@ impl LanguageServer for BbnfLanguageServer {
 
         // Add imported rules to completion.
         for import_info in &state.info.imports {
-            if let Some(import_uri) = Self::resolve_import_uri(&uri, &import_info.path) {
-                if let Some(target_state) = docs.get(&import_uri) {
-                    let source_file = Path::new(&import_info.path)
-                        .file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or_else(|| {
-                            panic!(
-                                "invalid import path for completion label: `{}`",
-                                import_info.path
-                            )
-                        });
-                    if let Some(ref items) = import_info.items {
-                        // Selective: only listed names.
-                        for item in items {
-                            if let Some(&idx) = target_state.info.rule_index.get(item.name.as_str())
-                            {
-                                let rule = &target_state.info.rules[idx];
-                                if let CompletionResponse::Array(ref mut arr) = response {
-                                    arr.push(CompletionItem {
-                                        label: rule.name.clone(),
-                                        kind: Some(CompletionItemKind::FUNCTION),
-                                        detail: Some(format!(
-                                            "{} (from {})",
-                                            rule.rhs_text, source_file
-                                        )),
-                                        ..Default::default()
-                                    });
-                                }
-                            }
-                        }
-                    } else {
-                        // Glob: all rules.
-                        for rule in &target_state.info.rules {
+            if let Some(import_uri) = Self::resolve_import_uri(&uri, &import_info.path)
+                && let Some(target_state) = docs.get(&import_uri)
+            {
+                let source_file = Path::new(&import_info.path)
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "invalid import path for completion label: `{}`",
+                            import_info.path
+                        )
+                    });
+                if let Some(ref items) = import_info.items {
+                    // Selective: only listed names.
+                    for item in items {
+                        if let Some(&idx) = target_state.info.rule_index.get(item.name.as_str()) {
+                            let rule = &target_state.info.rules[idx];
                             if let CompletionResponse::Array(ref mut arr) = response {
                                 arr.push(CompletionItem {
                                     label: rule.name.clone(),
@@ -313,6 +296,18 @@ impl LanguageServer for BbnfLanguageServer {
                                     ..Default::default()
                                 });
                             }
+                        }
+                    }
+                } else {
+                    // Glob: all rules.
+                    for rule in &target_state.info.rules {
+                        if let CompletionResponse::Array(ref mut arr) = response {
+                            arr.push(CompletionItem {
+                                label: rule.name.clone(),
+                                kind: Some(CompletionItemKind::FUNCTION),
+                                detail: Some(format!("{} (from {})", rule.rhs_text, source_file)),
+                                ..Default::default()
+                            });
                         }
                     }
                 }

@@ -117,12 +117,11 @@ fn probe_named_rule(ir: &GrammarIR, rule_name: &str, expected_named: &str) -> Na
 fn body_carries_named_map(node: &IrNode, ir: &GrammarIR, expected_named: &str) -> bool {
     match node {
         IrNode::Map { inner, fn_id } => {
-            if let FnDescriptor::Expr { return_type, .. } = &ir.fns[*fn_id as usize] {
-                if let Some(TypeDesc::Named(sid)) = return_type {
-                    if ir.get_string(*sid) == expected_named {
-                        return true;
-                    }
-                }
+            if let FnDescriptor::Expr { return_type, .. } = &ir.fns[*fn_id as usize]
+                && let Some(TypeDesc::Named(sid)) = return_type
+                && ir.get_string(*sid) == expected_named
+            {
+                return true;
             }
             body_carries_named_map(inner, ir, expected_named)
         }
@@ -149,10 +148,10 @@ fn body_carries_named_map(node: &IrNode, ir: &GrammarIR, expected_named: &str) -
                 || arms.iter().any(|a| {
                     body_carries_named_map(&a.continuation, ir, expected_named)
                         || a.map_fn.is_some_and(|mf| {
-                            if let FnDescriptor::Expr { return_type, .. } = &ir.fns[mf as usize] {
-                                if let Some(TypeDesc::Named(sid)) = return_type {
-                                    return ir.get_string(*sid) == expected_named;
-                                }
+                            if let FnDescriptor::Expr { return_type, .. } = &ir.fns[mf as usize]
+                                && let Some(TypeDesc::Named(sid)) = return_type
+                            {
+                                return ir.get_string(*sid) == expected_named;
                             }
                             false
                         })
@@ -184,11 +183,11 @@ fn walk_collect_named(node: &IrNode, ir: &GrammarIR, found: &mut Option<String>)
     }
     match node {
         IrNode::Map { inner, fn_id } => {
-            if let FnDescriptor::Expr { return_type, .. } = &ir.fns[*fn_id as usize] {
-                if let Some(TypeDesc::Named(sid)) = return_type {
-                    *found = Some(ir.get_string(*sid).to_string());
-                    return;
-                }
+            if let FnDescriptor::Expr { return_type, .. } = &ir.fns[*fn_id as usize]
+                && let Some(TypeDesc::Named(sid)) = return_type
+            {
+                *found = Some(ir.get_string(*sid).to_string());
+                return;
             }
             walk_collect_named(inner, ir, found);
         }
@@ -201,7 +200,7 @@ fn walk_collect_named(node: &IrNode, ir: &GrammarIR, found: &mut Option<String>)
             }
         }
         IrNode::Alt(branches, _) => {
-            for b in &*branches {
+            for b in branches {
                 walk_collect_named(&b.node, ir, found);
                 if found.is_some() {
                     return;
@@ -232,13 +231,12 @@ fn walk_collect_named(node: &IrNode, ir: &GrammarIR, found: &mut Option<String>)
                 if found.is_some() {
                     return;
                 }
-                if let Some(mf) = arm.map_fn {
-                    if let FnDescriptor::Expr { return_type, .. } = &ir.fns[mf as usize] {
-                        if let Some(TypeDesc::Named(sid)) = return_type {
-                            *found = Some(ir.get_string(*sid).to_string());
-                            return;
-                        }
-                    }
+                if let Some(mf) = arm.map_fn
+                    && let FnDescriptor::Expr { return_type, .. } = &ir.fns[mf as usize]
+                    && let Some(TypeDesc::Named(sid)) = return_type
+                {
+                    *found = Some(ir.get_string(*sid).to_string());
+                    return;
                 }
             }
             walk_collect_named(fallback, ir, found);
@@ -255,7 +253,7 @@ fn run_pipeline_to_vm_ir(grammar_paths: &[PathBuf]) -> GrammarIR {
     let out = compile_paths_request(grammar_paths, &request)
         .expect("pipeline must succeed for the probe");
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     }
 }
@@ -280,7 +278,7 @@ fn run_pipeline_structural(grammar_paths: &[PathBuf]) -> GrammarIR {
     let out = compile_paths_request(grammar_paths, &request)
         .expect("structural-mode pipeline must succeed for the probe");
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     }
 }
@@ -343,25 +341,22 @@ fn count_refs_to(node: &IrNode, target: RuleId) -> usize {
 /// summary. For `Map` nodes, shows the resolved `FnDescriptor` discriminator.
 fn node_kind_summary(node: &IrNode, ir: &GrammarIR) -> String {
     match node {
-        IrNode::Map { fn_id, .. } => {
-            let kind = match &ir.fns[*fn_id as usize] {
-                FnDescriptor::EnumWrap { variant } => {
-                    format!("Map[EnumWrap({})]", ir.get_string(*variant))
+        IrNode::Map { fn_id, .. } => match &ir.fns[*fn_id as usize] {
+            FnDescriptor::EnumWrap { variant } => {
+                format!("Map[EnumWrap({})]", ir.get_string(*variant))
+            }
+            FnDescriptor::BoxWrap => "Map[BoxWrap]".to_string(),
+            FnDescriptor::NumberConvert { .. } => "Map[NumberConvert]".to_string(),
+            FnDescriptor::HexConvert { .. } => "Map[HexConvert]".to_string(),
+            FnDescriptor::SpanCapture => "Map[SpanCapture]".to_string(),
+            FnDescriptor::Expr { return_type, .. } => match return_type {
+                Some(TypeDesc::Named(sid)) => {
+                    format!("Map[Expr → Named(\"{}\")]", ir.get_string(*sid))
                 }
-                FnDescriptor::BoxWrap => "Map[BoxWrap]".to_string(),
-                FnDescriptor::NumberConvert { .. } => "Map[NumberConvert]".to_string(),
-                FnDescriptor::HexConvert { .. } => "Map[HexConvert]".to_string(),
-                FnDescriptor::SpanCapture => "Map[SpanCapture]".to_string(),
-                FnDescriptor::Expr { return_type, .. } => match return_type {
-                    Some(TypeDesc::Named(sid)) => {
-                        format!("Map[Expr → Named(\"{}\")]", ir.get_string(*sid))
-                    }
-                    Some(td) => format!("Map[Expr → {td:?}]"),
-                    None => "Map[Expr → <none>]".to_string(),
-                },
-            };
-            kind
-        }
+                Some(td) => format!("Map[Expr → {td:?}]"),
+                None => "Map[Expr → <none>]".to_string(),
+            },
+        },
         IrNode::Seq(_) => "Seq".to_string(),
         IrNode::Alt(branches, _) => format!("Alt[{}]", branches.len()),
         IrNode::Repeat { lo, hi, .. } => format!("Repeat[{lo}..={hi}]"),
@@ -467,8 +462,8 @@ fn print_probe_report(grammar_label: &str, probes: &[NamedRuleProbe], ir: &Gramm
 
     eprintln!("\n--- per-rule probe ---");
     eprintln!(
-        "{:<16}  {:<10}  {:<8}  {:<8}  {:<10}  {:<10}  {:<8}  {}",
-        "rule", "expected", "survive", "alias", "transparent", "body_root", "any_map", "ir.types"
+        "{:<16}  {:<10}  {:<8}  {:<8}  {:<10}  {:<10}  {:<8}  ir.types",
+        "rule", "expected", "survive", "alias", "transparent", "body_root", "any_map"
     );
     for p in probes {
         eprintln!(
@@ -559,7 +554,7 @@ fn css_l4_named_pipeline_probe() {
     // `structural = true`, then capture the post-optimiser snapshot
     // via the production path. Diffing the two surfaces the exact
     // pass(es) that drop the Named-bearing rules.
-    let structural_ir = run_pipeline_structural(&[stylesheet.clone()]);
+    let structural_ir = run_pipeline_structural(std::slice::from_ref(&stylesheet));
     eprintln!("\n========== AY.W2.1 PRE-OPT (structural) snapshot — CSS L4 ==========");
     eprintln!(
         "ir.rules.len() (structural)    = {}",

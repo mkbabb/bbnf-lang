@@ -931,13 +931,26 @@ fn emit_inline_repeat_struct_direct(
 ) -> TokenStream {
     let inner_emit =
         emit_position_core_struct_direct(inner, support_mod, dispatcher_ident, grammar_suffix, ir);
-    let lo_lit = lo as u32;
-    // `hi == 0` represents unbounded iteration in the IR convention.
-    let hi_check = if hi == 0 {
+    // `hi == u32::MAX` is unbounded iteration in the IR convention
+    // (`IrNode::Repeat`), so it carries no upper-bound check.
+    let hi_check = if hi == u32::MAX {
         quote! {}
     } else {
-        let n_lit = hi as u32;
-        quote! { if __iter_count >= #n_lit { break; } }
+        quote! { if __iter_count >= #hi { break; } }
+    };
+    // A zero lower bound is always met, so it emits no check.
+    let lo_check = if lo == 0 {
+        quote! {}
+    } else {
+        quote! {
+            if __iter_count < #lo {
+                return ::core::result::Result::Err(
+                    crate::runtime::DtaError::Syntax {
+                        offset: *p as u32,
+                    },
+                );
+            }
+        }
     };
     quote! {
         {
@@ -972,13 +985,7 @@ fn emit_inline_repeat_struct_direct(
                     }
                 }
             }
-            if __iter_count < #lo_lit {
-                return ::core::result::Result::Err(
-                    crate::runtime::DtaError::Syntax {
-                        offset: *p as u32,
-                    },
-                );
-            }
+            #lo_check
         }
     }
 }

@@ -1,0 +1,14 @@
+test tests::test_equivalence_data ... FAILED
+test tests::test_json_file ... FAILED
+test tests::test_equivalence_canada ... FAILED
+test tests::test_equivalence_twitter ... FAILED
+test tests::test_long_string ... FAILED
+test tests::test_equivalence_data_xl ... FAILED
+test tests::test_json_file_print ... FAILED
+test tests::test_equivalence_apache ... FAILED
+test tests::test_json ... FAILED
+test tests::test_equivalence_citm_catalog ... FAILED
+test tests::test_string_empty ... FAILED
+test tests::test_single_element_containers ... FAILED
+test tests::test_string_unicode_escape ... FAILED
+test result: FAILED. 24 passed; 13 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

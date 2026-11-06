@@ -1,0 +1,17 @@
+parse-that css_parse_test::test_nested_media — SIGABRT stack overflow in debug (default 2 MiB test thread).
+Probe (parse-that-stack-probe.rs, debug, aarch64-apple-darwin, sk-v27-lg1 957bf74): stack needed to parse, binary search to 8 KiB:
+  construct css_parser() only                     23 KiB
+  .a{}                                           439 KiB
+  .sm { display: block; }                        503 KiB
+  @media screen { }                             1543 KiB
+  @media screen { .a{} }                        1815 KiB
+  @media screen { @media print { } }            2903 KiB
+  @media screen { @media print { .a{} } }       3175 KiB   (= the test's shape)
+  @supports / generic at-rule, same nesting     3175 KiB
+  nesting depth 0..4 over `.sm{display:block;}`  503 / 1863 / 3239 / 4598 / 5974 KiB  (~1.36 MiB per at-rule level)
+Release: passes at the default stack. RUST_MIN_STACK >= 4 MiB: passes in debug.
+Ruled out (measured, reverted): CssNode size (816 -> 240 B by heap-backing AtKeyframes/AtImport: no change);
+debug-only inline(never) on the 14 recursive SpanParser combinators (frames 25-38 KiB -> 6-7 KiB: no change).
+So the per-level cost is neither node size nor combinator frame size; the first call into each nesting
+level's fresh lazy() tree (css_at_rule's lazy builds a new css_rule(), a new css_declaration_block(), ...)
+is the open suspect. Not cured in LG-1.

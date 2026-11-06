@@ -53,10 +53,13 @@ rustc-wrapper = "sccache"
 # a sibling path.
 #
 # pprint is pinned to 2b4d2d48, the commit this lockfile was built against
-# (FmtBuilder and the emit surface exist only from there). It is not yet on
-# a branch of the pprint remote; LW1.TOPO-3's custody push of pprint's local
-# master to sk-lineage/pprint-local makes it fetchable. Until then a clean
-# clone fails at the pprint fetch, and nowhere else.
+# (FmtBuilder and the emit surface exist only from there). It is reachable on
+# the pprint remote through `sk-lineage/pprint-local`.
+#
+# scripts/check-hermetic-build.sh reads all of this from cargo's own
+# resolution (no path package outside the repository, every git package
+# pinned by rev, `cargo check --workspace --all-targets --locked`), and CI
+# runs it on a fresh checkout with no siblings and no credentials.
 #
 # bbnf-regex (in parse-that) depends on csp-solver, egraph and egraph-derive,
 # which live here. This table resolves them to the local crates for the whole

@@ -90,6 +90,30 @@ jobs:
           path: target/nextest/ci/junit.xml
           if-no-files-found: warn
 
+  hermetic:
+    # CB-1a: a fresh checkout, with no sibling repositories and no
+    # credentials, builds the whole workspace from its pinned git edges.
+    # The script also fails on any path package outside the repository
+    # and on any git package not pinned by rev.
+    name: Rust — hermetic clean-clone build
+    runs-on: ubuntu-latest
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: show toolchain resolution
+        run: |
+          rustup show
+          rustc --version
+          cargo --version
+      # .cargo/config.toml mandates sccache as the rustc wrapper.
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+      - name: hermetic build
+        run: sh scripts/check-hermetic-build.sh
+
   extension:
     name: Extension — lint + build
     runs-on: ubuntu-latest

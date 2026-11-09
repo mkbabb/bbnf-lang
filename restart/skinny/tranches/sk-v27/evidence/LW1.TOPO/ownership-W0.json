@@ -1,0 +1,307 @@
+{
+ "taken": "2026-11-06T00:04:46-05:00",
+ "close_record": {
+  "workflow": "wf_d837f96c",
+  "label": "xp-w9-w10-continue",
+  "repo": "value.js",
+  "commit": "4ad2ca653a354c7c87cdc7e487dbae42c3713f3a",
+  "subject": "docs(X\u00b7\u00a70hy): ESC-W10-1 ruled \u2014 E-6 ceilings 15,200/6,100 gz (correctness over ceiling; still 438 B under pre-W9); 4.3.0 cleared",
+  "on_origin": [
+   "origin/HEAD -> origin/master",
+   "origin/master",
+   "origin/o1105-perf",
+   "origin/o1105-transitions-value",
+   "origin/tranche-u"
+  ],
+  "file": "docs/tranches/X/COHESION.md",
+  "line": "**The xp-w9-w10-continue workflow is DONE.** bbnf-lang 0.3.0 and value.js 4.2.1 are on npm, both with SLSA provenance; parse-that and bbnf-lang now have their own publish workflows.",
+  "journal": "~/.claude/projects/-Users-mkbabb-Programming-value-js/6614e90c-8bd6-434f-b017-5ad4277c6e5e/subagents/workflows/wf_d837f96c-cb4/journal.jsonl",
+  "seats_started": 4,
+  "seats_resolved": 4,
+  "last_write": "2026-11-05T10:43:35-05:00"
+ },
+ "holds": [
+  {
+   "repo": "bbnf-lang",
+   "plan_glob": "bbnf-lang/typescript/**",
+   "glob": "typescript/**",
+   "read_at": "c9b93adb4",
+   "holder_until_close": "wf_d837f96c",
+   "status": "released by the wf_d837f96c close (4ad2ca653); no contest/ci route needed",
+   "matches": [
+    "typescript/CHANGELOG.md",
+    "typescript/CLAUDE.md",
+    "typescript/README.md",
+    "typescript/VALUE-SEMANTICS.md",
+    "typescript/package-lock.json",
+    "typescript/package.json",
+    "typescript/src/analysis/bulk.ts",
+    "typescript/src/analysis/deps.ts",
+    "typescript/src/analysis/first.ts",
+    "typescript/src/analysis/index.ts",
+    "typescript/src/analysis/metadata.ts",
+    "typescript/src/analysis/reentry.ts",
+    "typescript/src/analysis/regex.ts",
+    "typescript/src/analysis/scc.ts",
+    "typescript/src/cli.ts",
+    "typescript/src/compile.ts",
+    "typescript/src/emit.ts",
+    "typescript/src/facade.ts",
+    "typescript/src/gen.ts",
+    "typescript/src/generate.ts",
+    "typescript/src/grammar.ts",
+    "typescript/src/imports-loader.ts",
+    "typescript/src/imports.ts",
+    "typescript/src/index.ts",
+    "typescript/src/optimize.ts",
+    "typescript/src/parse.ts",
+    "typescript/src/posix-path.ts",
+    "typescript/src/raw.d.ts",
+    "typescript/src/types.ts",
+    "typescript/test/analysis.test.ts",
+    "typescript/test/bbnf.test.ts",
+    "typescript/test/benchmarks/google-sheets.bench.ts",
+    "typescript/test/bulk.test.ts",
+    "typescript/test/conformance.test.ts",
+    "typescript/test/conformance/freeze-grammars.ts",
+    "typescript/test/conformance/grammar-cases.ts",
+    "typescript/test/conformance/grammars.addendum-2026-09-23.json",
+    "typescript/test/conformance/grammars.json",
+    "typescript/test/conformance/semantics.json",
+    "typescript/test/css-stylesheet.test.ts",
+    "typescript/test/depth.test.ts",
+    "typescript/test/first-sets.test.ts",
+    "typescript/test/first.test.ts",
+    "typescript/test/fixtures/data/json/data.json",
+    "typescript/test/fixtures/grammar/css/css-color.bbnf",
+    "typescript/test/fixtures/grammar/css/css-keyframes.bbnf",
+    "typescript/test/fixtures/grammar/css/css-selectors.bbnf",
+    "typescript/test/fixtures/grammar/css/css-stylesheet.bbnf",
+    "typescript/test/fixtures/grammar/css/css-tokens.bbnf",
+    "typescript/test/fixtures/grammar/css/css-value-unit.bbnf",
+    "typescript/test/fixtures/grammar/css/css-values.bbnf",
+    "typescript/test/fixtures/grammar/lang/bbnf.bbnf",
+    "typescript/test/fixtures/grammar/lang/bnf.bbnf",
+    "typescript/test/fixtures/grammar/lang/csv.bbnf",
+    "typescript/test/fixtures/grammar/lang/ebnf.bbnf",
+    "typescript/test/fixtures/grammar/lang/emoji.bbnf",
+    "typescript/test/fixtures/grammar/lang/g4.bbnf",
+    "typescript/test/fixtures/grammar/lang/google-sheets.bbnf",
+    "typescript/test/fixtures/grammar/lang/json-commented.bbnf",
+    "typescript/test/fixtures/grammar/lang/json.bbnf",
+    "typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf",
+    "typescript/test/fixtures/grammar/lang/math.bbnf",
+    "typescript/test/fixtures/grammar/lang/regex.bbnf",
+    "typescript/test/fixtures/grammar/tests/css/complex-errors.css",
+    "typescript/test/fixtures/value-js/F-b-4.json",
+    "typescript/test/fixtures/value-js/ast-0.1.4.json",
+    "typescript/test/fixtures/value-js/color.bbnf",
+    "typescript/test/fixtures/value-js/css.bbnf",
+    "typescript/test/fixtures/value-js/freeze-ast-0.1.4.mjs",
+    "typescript/test/fixtures/value-js/freeze-verdicts-0.1.4.mjs",
+    "typescript/test/fixtures/value-js/math.bbnf",
+    "typescript/test/fixtures/value-js/stylesheet.bbnf",
+    "typescript/test/fixtures/value-js/tokens.bbnf",
+    "typescript/test/fixtures/value-js/value.bbnf",
+    "typescript/test/fixtures/value-js/verdicts-0.1.4.json",
+    "typescript/test/gen.test.ts",
+    "typescript/test/google-sheets.test.ts",
+    "typescript/test/groups.test.ts",
+    "typescript/test/helpers/ast-builders.ts",
+    "typescript/test/helpers/bbnf-0.1.4/charset.ts",
+    "typescript/test/helpers/bbnf-0.1.4/dispatch.ts",
+    "typescript/test/helpers/bbnf-0.1.4/first-sets.ts",
+    "typescript/test/helpers/bbnf-0.1.4/index.ts",
+    "typescript/test/helpers/bbnf-0.1.4/regex-first.ts",
+    "typescript/test/imports.test.ts",
+    "typescript/test/instrument.test.ts",
+    "typescript/test/modules.test.ts",
+    "typescript/test/optimize.test.ts",
+    "typescript/test/recover.test.ts",
+    "typescript/test/reentry.test.ts",
+    "typescript/test/size.test.ts",
+    "typescript/test/stock-ascii.test.ts",
+    "typescript/test/types.test.ts",
+    "typescript/test/unroll.test.ts",
+    "typescript/test/utils.ts",
+    "typescript/test/value-js-modules.test.ts",
+    "typescript/tsconfig.json",
+    "typescript/vite.config.ts"
+   ],
+   "note": null
+  },
+  {
+   "repo": "bbnf-lang",
+   "plan_glob": "bbnf-lang/.github/workflows/*release*",
+   "glob": ".github/workflows/*release*",
+   "read_at": "c9b93adb4",
+   "holder_until_close": "wf_d837f96c",
+   "status": "released by the wf_d837f96c close (4ad2ca653); no contest/ci route needed",
+   "matches": [
+    ".github/workflows/release-npm.yml",
+    ".github/workflows/release.yml"
+   ],
+   "note": null
+  },
+  {
+   "repo": "parse-that",
+   "plan_glob": "parse-that/.github/workflows/**",
+   "glob": ".github/workflows/**",
+   "read_at": "origin/master",
+   "holder_until_close": "wf_d837f96c",
+   "status": "released by the wf_d837f96c close (4ad2ca653); no contest/ci route needed",
+   "matches": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/release-npm.yml"
+   ],
+   "note": null
+  },
+  {
+   "repo": "parse-that",
+   "plan_glob": "parse-that/typescript/package.json",
+   "glob": "typescript/package.json",
+   "read_at": "origin/master",
+   "holder_until_close": "wf_d837f96c",
+   "status": "released by the wf_d837f96c close (4ad2ca653); no contest/ci route needed",
+   "matches": [
+    "typescript/package.json"
+   ],
+   "note": null
+  },
+  {
+   "repo": "parse-that",
+   "plan_glob": "parse-that/CHANGELOG.md",
+   "glob": "CHANGELOG.md",
+   "read_at": "origin/master",
+   "holder_until_close": "wf_d837f96c",
+   "status": "released by the wf_d837f96c close (4ad2ca653); no contest/ci route needed",
+   "matches": [],
+   "note": "no path matches at origin/master (the hold is vacuous today; it binds a future file)"
+  },
+  {
+   "repo": "value.js",
+   "plan_glob": "package.json",
+   "glob": "package.json",
+   "read_at": "origin/tranche-u",
+   "holder_until_close": "wf_d837f96c",
+   "status": "value.js app-work hold (megatranche-realization / owner-1105-eve); value.js makes and releases the edit (LW1.USE-5)",
+   "matches": [
+    "package.json"
+   ],
+   "note": null
+  },
+  {
+   "repo": "value.js",
+   "plan_glob": "pnpm-lock.yaml",
+   "glob": "package-lock.json",
+   "read_at": "origin/tranche-u",
+   "holder_until_close": "wf_d837f96c",
+   "status": "value.js app-work hold (megatranche-realization / owner-1105-eve); value.js makes and releases the edit (LW1.USE-5)",
+   "matches": [
+    "package-lock.json"
+   ],
+   "note": "value.js has no pnpm-lock.yaml; its lockfile is package-lock.json (the PLAN name is corrected here)"
+  },
+  {
+   "repo": "value.js",
+   "plan_glob": "gen-grammar.mjs",
+   "glob": "scripts/gen-grammar.mjs",
+   "read_at": "origin/tranche-u",
+   "holder_until_close": "wf_d837f96c",
+   "status": "value.js app-work hold (megatranche-realization / owner-1105-eve); value.js makes and releases the edit (LW1.USE-5)",
+   "matches": [
+    "scripts/gen-grammar.mjs"
+   ],
+   "note": null
+  },
+  {
+   "repo": "value.js",
+   "plan_glob": "generated grammar modules",
+   "glob": "src/css/bbnf/generated/**",
+   "read_at": "origin/tranche-u",
+   "holder_until_close": "wf_d837f96c",
+   "status": "value.js app-work hold (megatranche-realization / owner-1105-eve); value.js makes and releases the edit (LW1.USE-5)",
+   "matches": [
+    "src/css/bbnf/generated/color.d.ts",
+    "src/css/bbnf/generated/color.js",
+    "src/css/bbnf/generated/grammar.d.ts",
+    "src/css/bbnf/generated/grammar.js"
+   ],
+   "note": null
+  }
+ ],
+ "app_work_holds": {
+  "value.js": [
+   "megatranche-realization",
+   "x-0hr-residuals-2",
+   "owner-1105-eve"
+  ],
+  "daraksha": [
+   "daraksha-v3-repair",
+   "owner-1105-eve"
+  ],
+  "keyframes.js": [
+   "owner-1105-eve"
+  ],
+  "fourier-analysis": [
+   "owner-1105-eve"
+  ],
+  "never": [
+   "value.js scripts/dev/dev.sh"
+  ]
+ },
+ "workflows": {
+  "wf_d837f96c": "CLOSED (close_record)",
+  "wf_fce2ec2b": {
+   "journal": "~/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/subagents/workflows/wf_fce2ec2b-53a/journal.jsonl",
+   "seats_started": 140,
+   "seats_resolved": 115,
+   "last_write": "2026-07-16T23:33:16-04:00",
+   "state": "DORMANT: no journal write since 2026-07-16; 25 seats never resolved; holds nothing in this programme"
+  }
+ },
+ "bbnf_lang_claude_worktrees": {
+  "entries": 63,
+  "registered_worktrees": 61,
+  "symlinks": [
+   {
+    "name": "parse-that",
+    "target": "/Users/mkbabb/Programming/parse-that"
+   },
+   {
+    "name": "pprint",
+    "target": "/Users/mkbabb/Programming/pprint"
+   }
+  ],
+  "dirty": 59,
+  "head_in_local_master": 58,
+  "commits_on_no_origin_ref_and_not_in_local_master": [
+   {
+    "worktree": "wf_2eae8a12-4f4-2",
+    "branch": "worktree-wf_2eae8a12-4f4-2",
+    "head": "5729cbf5ffaf81ad90ab8a371593e567239b89a3",
+    "commits_off_origin": 1,
+    "dirty": 0,
+    "date": "2026-05-30"
+   },
+   {
+    "worktree": "wf_bb9dbdf6-c5b-5",
+    "branch": "worktree-wf_bb9dbdf6-c5b-5",
+    "head": "f2fe49bbcf4879ca9f5b50dd9e060af6e467ceb0",
+    "commits_off_origin": 1,
+    "dirty": 3,
+    "date": "2026-05-29"
+   },
+   {
+    "worktree": "wf_cbf0ca6c-833-2",
+    "branch": "worktree-wf_cbf0ca6c-833-2",
+    "head": "85b4edd88e736fff51b9b90ed52338f99af53738",
+    "commits_off_origin": 1,
+    "dirty": 0,
+    "date": "2026-05-29"
+   }
+  ],
+  "fate": "untouched (read-only); per-entry fate at LW7 with the dirty tree (X-6)",
+  "table": "claude-worktrees.tsv"
+ }
+}

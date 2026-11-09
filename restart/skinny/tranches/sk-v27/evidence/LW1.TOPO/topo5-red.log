@@ -1,0 +1,4 @@
+is-ancestor rc=1 (1=false)
+is-ancestor rc=1 (1=false)
+is-ancestor(af15f63e0, origin/master) rc=1
+is-ancestor(af15f63e0, origin/master) rc=1

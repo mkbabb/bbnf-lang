@@ -1,0 +1,1562 @@
+{
+ "repos": {
+  "bbnf-lang": {
+   "local": {
+    "refs/heads/au4-bootstrap-regen": "f3747ba8c7398f6ce1977a860c0aabfd4d4d184e",
+    "refs/heads/aw5-w1-1": "c3e4a16569e00b40553fa24bac1f2084aba70fa7",
+    "refs/heads/ax-w1r-1": "fcb64d5f02898d05681bcbcf46cebca287973225",
+    "refs/heads/ax-w1r-2": "fb9c242551a0368b03f4f9103ed7f41ffda0bffe",
+    "refs/heads/ax-w1r-3": "42f20192c346bc91c8152598a9c587fa928b59ab",
+    "refs/heads/ax-w1r-3a": "2861e3eb9fdda5357a8d7a09ec7aa76f4c611a28",
+    "refs/heads/ax-w1r-6": "5464b352cfd5201ae42b322a09684ec69ac6687a",
+    "refs/heads/ax-w1r-7": "017e6284956bca6e023eab6d97be5430646152d4",
+    "refs/heads/ax/w1r.5": "f0fa9e86a9053c2bfae29783302772f80a5ca237",
+    "refs/heads/ay-a10-value-refinement": "0dd3d4c568c09dab29b12a4ef276222448d56815",
+    "refs/heads/ay-a7-ax-w2-w15-absorption": "8eb7775a6243046ff58755c7c01c96f643732ed3",
+    "refs/heads/ay-a9-structural-pratt": "ed836de31973d7d5574003c0ccea5cd6ef7a46ad",
+    "refs/heads/ay-ii-w0e": "c25d1baefd6271b11b9d71d1c8a60afa40e9f195",
+    "refs/heads/ay-w4-regex": "e5e3433f8e10ff74c555a5d2f533156946a89a9c",
+    "refs/heads/az-a1": "cde1ee34c3809877da8206b793d5306e959e701b",
+    "refs/heads/az-a2-css-l4-parse-fresh": "3b101753b670a019b272e78576205597227c7866",
+    "refs/heads/az-a3-sheets-bbnf": "4b5745f3e439237d9487e21a60c5875537103603",
+    "refs/heads/az-a3-value-api": "1769b42853cfcfd92f1b9a92ade12dd8a7e43ad9",
+    "refs/heads/az-a4": "ededfc7c4c4bfd1f31086025bb371c77e9b11e17",
+    "refs/heads/az-a4-compile-fresh": "59aa1d44d0e6d98b8cb9ef5d824bab4829c7a189",
+    "refs/heads/az-a5": "a28dbc7fceed91ec61859bdf23666f365f2c2ba1",
+    "refs/heads/az-a6-named-preservation": "c60f6133a1cb5c1e667c9f15b81b5f89f7fe1ffe",
+    "refs/heads/aziv-w2-ascent": "83a5d560dcfcd94315452922d095539eaaef9c1b",
+    "refs/heads/aziv-w2-macro": "45512d67747487c334205ef4f0817853df2d0d90",
+    "refs/heads/aziv-w2-pass": "40a2f46b3092b0300549a21319f68e7b80ef1aa2",
+    "refs/heads/codex/az-history-before-reword-20260430-114057": "ce919411cb925e37fd0d8d65c7aa50e362b9c614",
+    "refs/heads/codex/azii-o3-d1-runtime": "0c3e450d18d2c0a8cb4f9b69e05ba500678e8c28",
+    "refs/heads/codex/azii-o3-g1-emitter": "94620aaaa125be3d71bf3f695277abedf25a5412",
+    "refs/heads/codex/azii-o3-s1-schema-scan": "45dca8b7f1c8b56434c518b464b7be1af1b10048",
+    "refs/heads/codex/azii-o3-t1-projection-tests": "0febb0c769eb697f10352aee091a0059709c4fb8",
+    "refs/heads/codex/azii-o3-t2-accessor-tests": "00169adb60cbbaf694d1f3d590bd00e118573852",
+    "refs/heads/codex/azii-o3-v1-view": "20f1618738a3b886008a76713d3b3fc47c516b2e",
+    "refs/heads/codex/azii-o3a-a1-plan": "05d3f52998e0a71239d5e18f6df872526a318256",
+    "refs/heads/codex/azii-o3a-a1-redress": "9abbe3884d89371fb897a91f92387ff7ea63d971",
+    "refs/heads/codex/azii-o3a-a1-research": "16802dc89b40d2e60d142c791a1d57b4359f094a",
+    "refs/heads/codex/azii-o3a-c1-plan": "db75210dd6c2959c79a6995289f9c2dc437c3382",
+    "refs/heads/codex/azii-o3a-c1-redress": "9f0566212fe8e7a54b1f1d099497a9ca375fbe1a",
+    "refs/heads/codex/azii-o3a-c1-research": "b6ec87d70a59a12a027b91d901abce649a48edf1",
+    "refs/heads/codex/azii-o3a-j1-plan": "b5755ef91913557197609cce2dc3d3a687111fae",
+    "refs/heads/codex/azii-o3a-j1-redress": "fb20de9f12e9f2a89508ef4c29e53b61d2cb7b51",
+    "refs/heads/codex/azii-o3a-j1-research": "dbbf898281bc339f2851c8d84fd52e3ed91aedc1",
+    "refs/heads/codex/azii-o3a-p1-plan": "02df8f16dd2e49994909689a7d6bf969d7d8c50d",
+    "refs/heads/codex/azii-o3a-p1-redress": "c5a2ef4f5e3801d1aab75fe69ea577ce3fb4bd82",
+    "refs/heads/codex/azii-o3a-p1-research": "610b8d6f181a0758c578d1bc39cb0e1e4bce2338",
+    "refs/heads/codex/azii-o3a-s1-plan": "3c6f93ecce618522cebf25e543eec757c16abb8d",
+    "refs/heads/codex/azii-o3a-s1-redress": "3900b558a55859a08a684f5fc9afa005ae8d48a4",
+    "refs/heads/codex/azii-o3a-s1-research": "3f804e68b2fd6ecbaf9aca0f1c3e9dd47833eccd",
+    "refs/heads/codex/bbnf-memo-bench": "6e76b85902fccc40caeb78d1d330d45f25696ffd",
+    "refs/heads/codex/sk-v26-bbnf": "b5fd0ca9897d70e8a2d28b63a9bf2a92b1ad5ba6",
+    "refs/heads/fix/at-7-css-attr-selector-ident": "83b41405e97303e6fba266e67e71a52bfdd31985",
+    "refs/heads/fix/engine-propagation-family-helper": "c722a581d639112df7f53c0786c53dd08a3a2f23",
+    "refs/heads/master": "af15f63e0d2d3d719938c13b906a50acbb92ea3b",
+    "refs/heads/sk-v16-W6-o1-checkpoint": "8153236e82300a8f8ebdaebb7707543f96aa9947",
+    "refs/heads/sk-v27": "0c0a8b2a0d4ee10008b3aaa120ac4d553293e456",
+    "refs/heads/sk-v27-competition": "214b43cd19364a1711e2218cd344231a9231a92a",
+    "refs/heads/sk-v27-compiler": "70e9f4317cafe61474880ab5687973d22eca2d2c",
+    "refs/heads/sk-v27-consumers": "9afc2a1a0bbc50064c47f366bffd64ca5b227c3f",
+    "refs/heads/sk-v27-lw1-gate": "4f2c5772d7fa9f9c0b49f656309e34634c3eedcc",
+    "refs/heads/sk-v27-regex": "3af771630817be3f3f560531c7c009c33a007c42",
+    "refs/heads/sk-v27-rust-perf": "7ee85ae0db91724953b9b6c32802914268228ed1",
+    "refs/heads/sk-v27-topo": "ea4842a9fea47d184bd9847a771e6ca7de3a0fe5",
+    "refs/heads/worktree-agent-a0f4a883": "1949cc84ac2216f3cac121eed7f14715157f80e8",
+    "refs/heads/worktree-agent-a1a3c87b": "f768f50d8db55302a00a4d92e644ddca0ec419d2",
+    "refs/heads/worktree-agent-a1fb1a4b246d5781d": "1c5bd7a25250640f3a6fcfc00abed11f556f674f",
+    "refs/heads/worktree-agent-a27879e1": "b825675fd4383b2f3912567ec9bbce5f5b9b51af",
+    "refs/heads/worktree-agent-a2886122": "256347a06d7e76625f48f45d8785aa673d0c6673",
+    "refs/heads/worktree-agent-a2f74346": "5a56215554a87befcd7b01f71f22a26a8975b1b7",
+    "refs/heads/worktree-agent-a4a3b2a9": "bf4d49c27046f4d3f76b241aea7afb0ffb04a9e6",
+    "refs/heads/worktree-agent-a4f5557c": "5bddd03d6ffef75457b3c9dc3a51a3ef54d962f5",
+    "refs/heads/worktree-agent-a516dfd6": "8c52218d66937d34f9ec802cc772c052130bf2c1",
+    "refs/heads/worktree-agent-a5c20622": "d97b4f7ab7e838ee7358ff9521fcb4a3b6565725",
+    "refs/heads/worktree-agent-a617d422": "6e76b85902fccc40caeb78d1d330d45f25696ffd",
+    "refs/heads/worktree-agent-a6b6c137": "6c889d5e827435154f471ecbf34744b15ef62a7d",
+    "refs/heads/worktree-agent-a70f35f6": "9a718199b252493f4c8e2d105fe2697fd8e3a2d9",
+    "refs/heads/worktree-agent-a733d396ee76badc4": "6dad81fb940a72519c929600fed8f5916f237130",
+    "refs/heads/worktree-agent-a7680382": "6e76b85902fccc40caeb78d1d330d45f25696ffd",
+    "refs/heads/worktree-agent-a806106d": "6e76b85902fccc40caeb78d1d330d45f25696ffd",
+    "refs/heads/worktree-agent-a815f39c": "bf14ee06e03342d78826d1494e3b821387bb62f2",
+    "refs/heads/worktree-agent-a81c2daf": "9a1cb524311d284faf646dd88f3ba12d4212fa29",
+    "refs/heads/worktree-agent-a83b8aeb": "a5d4bed9f72023d0a9016e317cb6930df82aa2a1",
+    "refs/heads/worktree-agent-a87f6b3a8884ed04f": "f6a38445bbb4a218200a887e01e4e7a71118e9dd",
+    "refs/heads/worktree-agent-a8d55630": "aaf4974dabe2ae4c74643655253139494f02d320",
+    "refs/heads/worktree-agent-a8ff4509": "08ce9fad988929d06da355fbb095de8689ab837a",
+    "refs/heads/worktree-agent-a928501c": "6e76b85902fccc40caeb78d1d330d45f25696ffd",
+    "refs/heads/worktree-agent-a9a97564": "410d868e62c0ef973fc344f12c237a980fe7a2a4",
+    "refs/heads/worktree-agent-aa48a15f7563f2406": "f4b6f757cbb7382c8272dd3a9b53c71310f0ef1d",
+    "refs/heads/worktree-agent-aa4a0764fa8a833af": "6bb4b2a6cabcabac4585e9d1bb4f301d8d140590",
+    "refs/heads/worktree-agent-aa806912": "08ce9fad988929d06da355fbb095de8689ab837a",
+    "refs/heads/worktree-agent-ab392c907b9ffe1e3": "c2a48fcbbc08a525f4a5c34c9e067aa8a818df60",
+    "refs/heads/worktree-agent-abc1da53": "d413d25f7b627e59f9285f2ee70ce63f12c42459",
+    "refs/heads/worktree-agent-abda14c8": "6e76b85902fccc40caeb78d1d330d45f25696ffd",
+    "refs/heads/worktree-agent-ac26ebde": "1c788ee2631831ea9b5e62582c2b3ff4bfffa210",
+    "refs/heads/worktree-agent-ad955e5c": "ab4d937864ad263a55742ddc27b871dce0c93b06",
+    "refs/heads/worktree-agent-af5e5d17": "6c9f20e9bc87e548558de645d0fffb555a34aec0",
+    "refs/heads/worktree-agent-afc171a6": "7c982199dac32e562d3c2458175df84fd1ce5bc7",
+    "refs/heads/worktree-agent-ax-w1-b": "82bda9aaba2606138229175315b19c639eec0967",
+    "refs/heads/worktree-wf_00380e1c-406-1": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_2eae8a12-4f4-2": "5729cbf5ffaf81ad90ab8a371593e567239b89a3",
+    "refs/heads/worktree-wf_386900ed-462-1": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-12": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-13": "7f3be27c2063df9e77a6240511375052824a6b36",
+    "refs/heads/worktree-wf_386900ed-462-14": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-2": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-3": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-4": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-5": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-6": "7f3be27c2063df9e77a6240511375052824a6b36",
+    "refs/heads/worktree-wf_386900ed-462-7": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_386900ed-462-8": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_3c4462f0-a73-5": "8153236e82300a8f8ebdaebb7707543f96aa9947",
+    "refs/heads/worktree-wf_50d1252c-5ea-19": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_50d1252c-5ea-23": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_55cb3d1f-cb8-10": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_55cb3d1f-cb8-11": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_55cb3d1f-cb8-12": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_55cb3d1f-cb8-14": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-22": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-23": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-25": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-26": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-27": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-28": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-29": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-30": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_63419230-36d-32": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_8a1054e7-971-6": "366d88a7f1447aa448d0fa18cc698ea8f52cc3a7",
+    "refs/heads/worktree-wf_a6d7a39f-623-36": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+    "refs/heads/worktree-wf_a6d7a39f-623-38": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+    "refs/heads/worktree-wf_a6d7a39f-623-39": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+    "refs/heads/worktree-wf_a6d7a39f-623-40": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+    "refs/heads/worktree-wf_a6d7a39f-623-41": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+    "refs/heads/worktree-wf_acfc23d2-04b-32": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-33": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-36": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-37": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-38": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-39": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-40": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-42": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-43": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-44": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_acfc23d2-04b-45": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_b72ce82c-db4-1": "ec12016c8ee95c864a48106519c5f25824d722ca",
+    "refs/heads/worktree-wf_b8c2d0dc-08c-1": "1c5bd7a25250640f3a6fcfc00abed11f556f674f",
+    "refs/heads/worktree-wf_bb9dbdf6-c5b-5": "f2fe49bbcf4879ca9f5b50dd9e060af6e467ceb0",
+    "refs/heads/worktree-wf_bdd2b86b-8a6-1": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_bdd2b86b-8a6-2": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_bdd2b86b-8a6-3": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_bdd2b86b-8a6-4": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_bdd2b86b-8a6-6": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-1": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-10": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-11": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-12": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-13": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-7": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-8": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_be85d0ab-073-9": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_cbf0ca6c-833-2": "85b4edd88e736fff51b9b90ed52338f99af53738",
+    "refs/heads/worktree-wf_cda43cd1-5d0-2": "f4b6f757cbb7382c8272dd3a9b53c71310f0ef1d",
+    "refs/heads/worktree-wf_e940452a-431-7": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+    "refs/heads/worktree-wf_fbfc84ec-1eb-2": "1c5bd7a25250640f3a6fcfc00abed11f556f674f",
+    "refs/heads/worktree-wf_fce2ec2b-53a-26": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-27": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-29": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-30": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-31": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-32": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-33": "c93fc43143743ffaf54855c526f6aeab79227352",
+    "refs/heads/worktree-wf_fce2ec2b-53a-34": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-35": "c93fc43143743ffaf54855c526f6aeab79227352",
+    "refs/heads/worktree-wf_fce2ec2b-53a-36": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-37": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/worktree-wf_fce2ec2b-53a-38": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+    "refs/heads/x-p-w7-typescript": "5c7411f2c6111b5ad3e599943ca76b76e4774454",
+    "refs/heads/x-p-w9-emitter-size": "3a2e03671a6fc4fd67764e091292a320d9515941",
+    "refs/heads/x-p-w9-rel": "8721e045f94ca3c31c27f5a15b9ea6b4985e2eb9"
+   },
+   "origin": "https://github.com/mkbabb/bbnf-lang.git",
+   "remote": {
+    "HEAD": "c9b93adb4e4c2ec793af881f390f997cd4e11696",
+    "refs/heads/codex/sk-v26-bbnf": "b5fd0ca9897d70e8a2d28b63a9bf2a92b1ad5ba6",
+    "refs/heads/master": "c9b93adb4e4c2ec793af881f390f997cd4e11696",
+    "refs/heads/sk-lineage/local-master": "af15f63e0d2d3d719938c13b906a50acbb92ea3b",
+    "refs/heads/sk-v27": "0c0a8b2a0d4ee10008b3aaa120ac4d553293e456",
+    "refs/heads/sk-v27-competition": "214b43cd19364a1711e2218cd344231a9231a92a",
+    "refs/heads/sk-v27-compiler": "70e9f4317cafe61474880ab5687973d22eca2d2c",
+    "refs/heads/sk-v27-consumers": "9afc2a1a0bbc50064c47f366bffd64ca5b227c3f",
+    "refs/heads/sk-v27-lw1-gate": "4f2c5772d7fa9f9c0b49f656309e34634c3eedcc",
+    "refs/heads/sk-v27-regex": "3af771630817be3f3f560531c7c009c33a007c42",
+    "refs/heads/sk-v27-rust-perf": "7ee85ae0db91724953b9b6c32802914268228ed1",
+    "refs/heads/x-p-w7-typescript": "5c7411f2c6111b5ad3e599943ca76b76e4774454",
+    "refs/heads/x-p-w9-emitter-size": "3a2e03671a6fc4fd67764e091292a320d9515941",
+    "refs/heads/x-p-w9-rel": "8721e045f94ca3c31c27f5a15b9ea6b4985e2eb9",
+    "refs/pull/1/head": "5c7411f2c6111b5ad3e599943ca76b76e4774454",
+    "refs/pull/3/head": "3a2e03671a6fc4fd67764e091292a320d9515941",
+    "refs/pull/4/head": "8feeabf4d5a8361e0e06971247a4ec3f29383e71",
+    "refs/pull/5/head": "391afb1c92999a8c8fda367525a4c57d101190ae",
+    "refs/pull/6/head": "f02b72a2d2d1c2cbea063b73c15885620aef9647",
+    "refs/pull/7/head": "8721e045f94ca3c31c27f5a15b9ea6b4985e2eb9",
+    "refs/pull/8/head": "4f2c5772d7fa9f9c0b49f656309e34634c3eedcc",
+    "refs/pull/8/merge": "66421df21bbdaa8b80c379e265adb5a9c2c8a56c",
+    "refs/tags/typescript-v0.3.0": "363c37552fba40b6822e7f14badf8aecebe74112",
+    "refs/tags/v0.2.0": "b0292a5da36a3c0b7a8a48f4a83e2e6cfdc85f86"
+   },
+   "role": "core",
+   "worktrees": [
+    {
+     "branch": "refs/heads/master",
+     "head": "af15f63e0d2d3d719938c13b906a50acbb92ea3b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang"
+    },
+    {
+     "branch": "refs/heads/codex/sk-v26-bbnf",
+     "head": "b5fd0ca9897d70e8a2d28b63a9bf2a92b1ad5ba6",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-skv26"
+    },
+    {
+     "branch": null,
+     "head": "b4e635d3e25b4581f55ab3819eb121f779cb11ec",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/perf-base"
+    },
+    {
+     "branch": "refs/heads/sk-v27",
+     "head": "0c0a8b2a0d4ee10008b3aaa120ac4d553293e456",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27"
+    },
+    {
+     "branch": "refs/heads/sk-v27-competition",
+     "head": "214b43cd19364a1711e2218cd344231a9231a92a",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-competition"
+    },
+    {
+     "branch": "refs/heads/sk-v27-compiler",
+     "head": "70e9f4317cafe61474880ab5687973d22eca2d2c",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-compiler"
+    },
+    {
+     "branch": "refs/heads/sk-v27-consumers",
+     "head": "9afc2a1a0bbc50064c47f366bffd64ca5b227c3f",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-consumers"
+    },
+    {
+     "branch": "refs/heads/sk-v27-lw1-gate",
+     "head": "4f2c5772d7fa9f9c0b49f656309e34634c3eedcc",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw1-gate"
+    },
+    {
+     "branch": "refs/heads/sk-v27-regex",
+     "head": "3af771630817be3f3f560531c7c009c33a007c42",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-regex"
+    },
+    {
+     "branch": "refs/heads/sk-v27-rust-perf",
+     "head": "7ee85ae0db91724953b9b6c32802914268228ed1",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-rust-perf"
+    },
+    {
+     "branch": "refs/heads/sk-v27-topo",
+     "head": "ea4842a9fea47d184bd9847a771e6ca7de3a0fe5",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-topo"
+    },
+    {
+     "branch": "refs/heads/x-p-w9-emitter-size",
+     "head": "3a2e03671a6fc4fd67764e091292a320d9515941",
+     "path": "/Users/mkbabb/Programming/bbnf-lang-x-p-w7-typescript"
+    },
+    {
+     "branch": "refs/heads/worktree-agent-aa48a15f7563f2406",
+     "head": "f4b6f757cbb7382c8272dd3a9b53c71310f0ef1d",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/agent-aa48a15f7563f2406"
+    },
+    {
+     "branch": "refs/heads/worktree-agent-aa4a0764fa8a833af",
+     "head": "6bb4b2a6cabcabac4585e9d1bb4f301d8d140590",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/agent-aa4a0764fa8a833af"
+    },
+    {
+     "branch": "refs/heads/worktree-agent-ab392c907b9ffe1e3",
+     "head": "c2a48fcbbc08a525f4a5c34c9e067aa8a818df60",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/agent-ab392c907b9ffe1e3"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_00380e1c-406-1",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_00380e1c-406-1"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_2eae8a12-4f4-2",
+     "head": "5729cbf5ffaf81ad90ab8a371593e567239b89a3",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_2eae8a12-4f4-2"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-1",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-1"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-12",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-12"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-13",
+     "head": "7f3be27c2063df9e77a6240511375052824a6b36",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-13"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-14",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-14"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-2",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-2"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-3",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-3"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-4",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-4"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-5",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-5"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-6",
+     "head": "7f3be27c2063df9e77a6240511375052824a6b36",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-6"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-7",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-7"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_386900ed-462-8",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-8"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_3c4462f0-a73-5",
+     "head": "8153236e82300a8f8ebdaebb7707543f96aa9947",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_3c4462f0-a73-5"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_50d1252c-5ea-19",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_50d1252c-5ea-19"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_55cb3d1f-cb8-10",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_55cb3d1f-cb8-10"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_55cb3d1f-cb8-11",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_55cb3d1f-cb8-11"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_55cb3d1f-cb8-12",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_55cb3d1f-cb8-12"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_55cb3d1f-cb8-14",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_55cb3d1f-cb8-14"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-22",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-22"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-23",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-23"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-25",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-25"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-26",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-26"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-27",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-27"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-28",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-28"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-29",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-30",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-30"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_63419230-36d-32",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-32"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_a6d7a39f-623-36",
+     "head": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-36"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_a6d7a39f-623-38",
+     "head": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-38"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_a6d7a39f-623-39",
+     "head": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-39"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_a6d7a39f-623-40",
+     "head": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-40"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_a6d7a39f-623-41",
+     "head": "7cdbff4ef411154dd9bf4b80731c0616b1579d22",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_a6d7a39f-623-41"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-32",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-32"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-33",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-33"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-36",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-36"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-37",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-37"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-38",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-39",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-39"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-40",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-42",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-42"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-43",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-43"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_acfc23d2-04b-45",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-45"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_bb9dbdf6-c5b-5",
+     "head": "f2fe49bbcf4879ca9f5b50dd9e060af6e467ceb0",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_bb9dbdf6-c5b-5"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_cbf0ca6c-833-2",
+     "head": "85b4edd88e736fff51b9b90ed52338f99af53738",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_cbf0ca6c-833-2"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_e940452a-431-7",
+     "head": "d2b32f6e38b9fbc366efe19193a68ccc4980c9ac",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_e940452a-431-7"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fbfc84ec-1eb-2",
+     "head": "1c5bd7a25250640f3a6fcfc00abed11f556f674f",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fbfc84ec-1eb-2"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-26",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-26"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-27",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-27"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-29",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-29"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-30",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-30"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-31",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-31"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-32",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-32"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-33",
+     "head": "c93fc43143743ffaf54855c526f6aeab79227352",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-33"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-34",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-34"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-35",
+     "head": "c93fc43143743ffaf54855c526f6aeab79227352",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-35"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-36",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-36"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_fce2ec2b-53a-38",
+     "head": "ce51c36fcbdf5108eb028005586672d9a6d2ca1b",
+     "path": "/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_fce2ec2b-53a-38"
+    }
+   ]
+  },
+  "fourier-analysis": {
+   "local": {
+    "refs/heads/codex/contour-rebaseline": "e23433ac24546dafc72a14de25243fa2cf54f877",
+    "refs/heads/f-ct2/A": "79a370dd51cf9ef452dde13ab4535735895a4af2",
+    "refs/heads/f-ct2/B": "5d6f9e9be2f26b31849d5acb82373177ea073acc",
+    "refs/heads/f-ct2/C": "907d8a8880ef6fdb7ade35a563681842d5feed06",
+    "refs/heads/f-ct3": "bf16b1e8a821b2cc36776c285293977751677769",
+    "refs/heads/fix/api-compute-limiter": "db90775d715d4d5e0436687a28b36e54b0d67a3e",
+    "refs/heads/fix/compute-cache-wire-form": "f7e5f84da6eb00ff5d80686c3094f9f98174cce9",
+    "refs/heads/fix/paper-flash": "5ac382a921d8de334f384110f6c0186d6b764df2",
+    "refs/heads/fix/post-green-deploy-trigger": "70cbb361cf77f0220af1d829c234049ed3037870",
+    "refs/heads/fix/prod-defects-2026-11-02": "c17245a3d197b2fd10a205ec04338c77fe9768f1",
+    "refs/heads/hotfix/pages-api-base": "9eed6aeec0a9df73860777ac92b2862476da9355",
+    "refs/heads/m/w1-bump-migration": "3bb9da585bea750efd2431d1a4beb619e0a75933",
+    "refs/heads/master": "5001d2f181e3bf8d2d99cbd84df8951f7e0bb402",
+    "refs/heads/o1105-fourier-dock": "daee0cef94d11f0fb0b58cf5ff8eea92f118f85b",
+    "refs/heads/paper/major-revision": "96fc13c815c3ad39b9c8959e651fe1f8202b9c25",
+    "refs/heads/x-f-w3-b": "b9995b3a8667ff6a301081eba70590b78803b580",
+    "refs/heads/x/f3d": "74084fa1acb52eb88b4c14d1bac9bb491d0fed94",
+    "refs/heads/x/f3e": "8aa92527f7df3fe1e753ea971fa02feb0f63ae55",
+    "refs/heads/x/realize-f": "de0c3d91b0797deaab7d8dc20e6c926ea5742042",
+    "refs/heads/x/realize-f2": "697247e98d82f3ff2605ea68e012e8260be0bfc8",
+    "refs/heads/x/repair-f": "c048390cebf5418a1da2acbc8a73eeefa35970cc"
+   },
+   "origin": "git@github.com:mkbabb/fourier-analysis.git",
+   "remote": {
+    "HEAD": "5ac382a921d8de334f384110f6c0186d6b764df2",
+    "refs/heads/f-ct2/A": "79a370dd51cf9ef452dde13ab4535735895a4af2",
+    "refs/heads/f-ct2/B": "5d6f9e9be2f26b31849d5acb82373177ea073acc",
+    "refs/heads/f-ct2/C": "907d8a8880ef6fdb7ade35a563681842d5feed06",
+    "refs/heads/f-ct3": "bf16b1e8a821b2cc36776c285293977751677769",
+    "refs/heads/fix/api-compute-limiter": "db90775d715d4d5e0436687a28b36e54b0d67a3e",
+    "refs/heads/fix/compute-cache-wire-form": "f7e5f84da6eb00ff5d80686c3094f9f98174cce9",
+    "refs/heads/fix/post-green-deploy-trigger": "70cbb361cf77f0220af1d829c234049ed3037870",
+    "refs/heads/fix/prod-defects-2026-11-02": "c17245a3d197b2fd10a205ec04338c77fe9768f1",
+    "refs/heads/hotfix/pages-api-base": "9eed6aeec0a9df73860777ac92b2862476da9355",
+    "refs/heads/m/w1-bump-migration": "3bb9da585bea750efd2431d1a4beb619e0a75933",
+    "refs/heads/master": "5ac382a921d8de334f384110f6c0186d6b764df2",
+    "refs/heads/x/realize-f2": "697247e98d82f3ff2605ea68e012e8260be0bfc8",
+    "refs/heads/x/repair-f": "c048390cebf5418a1da2acbc8a73eeefa35970cc",
+    "refs/pull/4/head": "04983743a0b10c86db1782709760364802026d36",
+    "refs/pull/5/head": "697247e98d82f3ff2605ea68e012e8260be0bfc8",
+    "refs/pull/6/head": "c048390cebf5418a1da2acbc8a73eeefa35970cc",
+    "refs/tags/models-2026-10": "c4b6a0f1121b57bba9d6c51864812e88de25c60f"
+   },
+   "role": "consumer",
+   "worktrees": [
+    {
+     "branch": "refs/heads/m/w1-bump-migration",
+     "head": "3bb9da585bea750efd2431d1a4beb619e0a75933",
+     "path": "/Users/mkbabb/Programming/fourier-analysis"
+    },
+    {
+     "branch": null,
+     "head": "cd26c6533adc32dfe1453d74117d3cb73b89ea16",
+     "path": "/Users/mkbabb/.codex/worktrees/d0be/fourier-analysis"
+    },
+    {
+     "branch": "refs/heads/fix/paper-flash",
+     "head": "5ac382a921d8de334f384110f6c0186d6b764df2",
+     "path": "/Users/mkbabb/.dev-logs/fourier-paper-flash/wt"
+    },
+    {
+     "branch": null,
+     "head": "66eea911b4f8943483cd1d605cdb07aed1909056",
+     "path": "/Users/mkbabb/.dev-logs/o1105/fourier-dock/base"
+    },
+    {
+     "branch": "refs/heads/master",
+     "head": "5001d2f181e3bf8d2d99cbd84df8951f7e0bb402",
+     "path": "/Users/mkbabb/.dev-logs/x-0hm-cures/fourier/wt"
+    },
+    {
+     "branch": "refs/heads/x/realize-f2",
+     "head": "697247e98d82f3ff2605ea68e012e8260be0bfc8",
+     "path": "/Users/mkbabb/.dev-logs/x-realize-fourier-r2/wt"
+    },
+    {
+     "branch": "refs/heads/x/realize-f",
+     "head": "de0c3d91b0797deaab7d8dc20e6c926ea5742042",
+     "path": "/Users/mkbabb/.dev-logs/x-realize-fourier/wt"
+    },
+    {
+     "branch": "refs/heads/x/repair-f",
+     "head": "c048390cebf5418a1da2acbc8a73eeefa35970cc",
+     "path": "/Users/mkbabb/.dev-logs/x-repair-fourier/wt"
+    },
+    {
+     "branch": "refs/heads/o1105-fourier-dock",
+     "head": "daee0cef94d11f0fb0b58cf5ff8eea92f118f85b",
+     "path": "/Users/mkbabb/.worktrees-1105/fourier-dock"
+    },
+    {
+     "branch": "refs/heads/f-ct2/A",
+     "head": "79a370dd51cf9ef452dde13ab4535735895a4af2",
+     "path": "/Users/mkbabb/Programming/fourier-analysis/.worktrees/ct2-A"
+    },
+    {
+     "branch": "refs/heads/f-ct2/B",
+     "head": "5d6f9e9be2f26b31849d5acb82373177ea073acc",
+     "path": "/Users/mkbabb/Programming/fourier-analysis/.worktrees/ct2-B"
+    },
+    {
+     "branch": "refs/heads/f-ct2/C",
+     "head": "907d8a8880ef6fdb7ade35a563681842d5feed06",
+     "path": "/Users/mkbabb/Programming/fourier-analysis/.worktrees/ct2-C"
+    }
+   ]
+  },
+  "keyframes.js": {
+   "local": {
+    "refs/heads/al-w9-alpha-springprogress": "d89274dd0a2d6f02b82b55644376872a65900f65",
+    "refs/heads/codex/u-b1-step1": "199db81aefba9fe4d6d6095b8bfc3463334606fb",
+    "refs/heads/codex/u-b1-step2": "4d862719b10f237e0eb792d63f34b05fefda9ec8",
+    "refs/heads/codex/u-b1-step3": "d64abd1564ffb0e3899a0afe8654ab1a77109e3f",
+    "refs/heads/codex/u-b2-controls": "065da18c98fb68cc0620c405c11ae87a0e23589d",
+    "refs/heads/codex/u-b2-gates": "226a0facc4c186ddb41001a1d3ad9244831a4955",
+    "refs/heads/codex/u-b2-transport": "629363f191cdab5ea10051f414e9917c7e6728d6",
+    "refs/heads/codex/u-b3-blend": "85a5a09369818fc378cbe56f3a5e75d16b81b0b9",
+    "refs/heads/codex/u-b3-hoist": "6d0d02ee0cda74ddcd4dc7509abde33147c4c13f",
+    "refs/heads/codex/u-b3-ticker": "b0c446ce52fe991abc0e011596ede9e22e238b53",
+    "refs/heads/codex/u-b4-brush": "1d640296180e785d4a26f81ca3fce98875f2053b",
+    "refs/heads/codex/u-b4-core": "dad07b242af2c5af7451d47c0a26065e101374fd",
+    "refs/heads/codex/u-b4-store": "8deb9f588c3c14ef041bf6103067a262d1bf19c8",
+    "refs/heads/codex/u-b6-facility": "8af3fa4d240bc557fc7eece6d8058696c53867a8",
+    "refs/heads/codex/u-b6-state": "036e96a2ab9948442cce8b3ca85c5249c829d8c0",
+    "refs/heads/codex/u-b8-dogfood": "ca1c940405757aa645d11d8b13abc9c308bacdcd",
+    "refs/heads/codex/u-b8-loops": "11e818f984c020aaef0f6b54fce23664e94bba83",
+    "refs/heads/codex/u-b8-painters": "874f644bad2c4134565bea4b68a3e32c3d1bff9d",
+    "refs/heads/codex/u-c-backward": "fe27ca452f65974cdbc13c93992fcef38358948b",
+    "refs/heads/codex/u-c-compile": "2d344706bece68f1cc28069032a8636cc45be979",
+    "refs/heads/codex/u-c-compositor": "32003d9c182a35bf0392fe2954ecb880290b6f21",
+    "refs/heads/codex/u-c-engine": "e45079c326e1cd35547bf7b905a6faa0f6fddd54",
+    "refs/heads/codex/u-c-presets": "768e78a8bbba127fce6b6e46d21a0743219cb4f7",
+    "refs/heads/codex/u-c-smooth": "9356943904e62179a5638f6df2bde995e15cc31c",
+    "refs/heads/codex/u-c-spring": "2be1dbbe4a5c87218ebc946a6ba576f0c6f53e6b",
+    "refs/heads/codex/u-c-springcarve": "067c21d263342ce22efe3d8c5e0ea4181cf7ace3",
+    "refs/heads/codex/u-c-transport": "07fb0188a4c14a2a2405a7435810c6a942a38548",
+    "refs/heads/codex/u-c10-consume": "143d245e4f9d4127219efcd76ec16a5474d18be8",
+    "refs/heads/codex/u-c11-scroll": "7b1c629a34c7ca494263245c77b2a6ecc673da2d",
+    "refs/heads/codex/u-c13-surface": "880fcf47706947f571a3876ae67bca84dc3a8fb9",
+    "refs/heads/codex/u-c15-operator": "8c5956f2d99f25d269551998af9c918fb400f901",
+    "refs/heads/codex/u-c16-lifecycle": "afada0a996ebda74cb715407a1484099a7087780",
+    "refs/heads/codex/u-c3-redesign": "4575a42e8c08c58a0ee0163ca2e7ae319ba8c9b6",
+    "refs/heads/codex/u-d3-waapi": "74f2567ae7eebf3e2621865c53ab501a4925b740",
+    "refs/heads/codex/u-e7-claude": "1e5d47e293d194219f1c004a31ac0bac265f58a5",
+    "refs/heads/codex/u-e9-recon": "8bd1c1e668761307fb414077923f6edf37dc465c",
+    "refs/heads/codex/u-g-codex": "45fb600cf54ff09700358809a314c16b5e7e8bae",
+    "refs/heads/codex/u-h-characterization": "51cc3d0d55b0dc5627f3179f25a503e7b5eccefb",
+    "refs/heads/codex/u-h-mirror": "140b94174a8a1b8b04aefd3a5db33b6067e5e238",
+    "refs/heads/codex/u-h-projects": "c500ae79745e248104ac6dc5641a51f061916f5a",
+    "refs/heads/development": "3f1fb296662530fa1c10358552de892a53631242",
+    "refs/heads/gh-pages": "642239fef43e920293196378c526cbcca910d4ff",
+    "refs/heads/grouping": "4993757f9e92abea2994c49686ce060da4926f76",
+    "refs/heads/kf-sacred-snapshot-2026-09-17": "24a323a9be38ca808b11cffe351d1e3656b6bc8d",
+    "refs/heads/master": "e5c12919bc521702b83d97a7e0c1be68d5a49849",
+    "refs/heads/modernize": "54424ee0d258c58ab9cdd96fbbc347bea9822e05",
+    "refs/heads/n-stage-impl": "e2375b8256a6d2f7a5517c1e3b6054e881bc191d",
+    "refs/heads/o1105-kf-cube": "fdb5987f1454fc481b66240c2f75c9fe4897ea64",
+    "refs/heads/o1105-kf-load": "d9d086445de24c1de368de12c5b452386c641125",
+    "refs/heads/perf": "cc4f1eafceee3b6b2f8880026e881e7575352f89",
+    "refs/heads/scene-stage-proto-s": "63ccab06cfde2798cbc3c2416bb45fbaa6649975",
+    "refs/heads/tmp": "9157d40d38872a0c7482501c176c74bd6bc83902",
+    "refs/heads/tranche-c-impl": "d51d03ae5f7601295058ec353fed5938451eea20",
+    "refs/heads/tranche-d-dev": "9044ce9a7d455a636154441151452ea5e60b473b",
+    "refs/heads/tranche-d-impl": "25334b59e57cdade34d1e0a426a8174b4986d4fd",
+    "refs/heads/tranche-e-impl": "7db1550ca7b3e1ba0129907816394b3310208eba",
+    "refs/heads/tranche-f-impl": "8fea80c044b1bc9be2fd1cec82db354ac5350c86",
+    "refs/heads/tranche-g-dev": "a8b618b0c8e8232e297adcbcf3e49aa7fb195c9a",
+    "refs/heads/tranche-g-impl": "3ce23c7b89c38c2397ae306874cfc3c0d1e5cc0d",
+    "refs/heads/tranche-h-dev": "fddc66591631bcdc1903a8a16b1ca3b27b7482db",
+    "refs/heads/tranche-h-impl": "b934a08be983383ae24074f6489002e031f81f48",
+    "refs/heads/tranche-i-dev": "74b16096c2459dffb68105e9a6f1e682d8bea5b9",
+    "refs/heads/tranche-j-dev": "4f1fc4cf0376f223d1ecfc7797e2d56dab280087",
+    "refs/heads/tranche-k-dev": "9bbc227e21125ea84089168d839a8f8115738be4",
+    "refs/heads/tranche-l-dev": "5d047ac924c00524e34376df4c8bdb4d098729e5",
+    "refs/heads/tranche-m": "74b7305a69fe6151b493a24c42e3d0a1c7254c91",
+    "refs/heads/tranche-o-dev": "44e7fae6f16e7a58485c73a07e16fdaabb78cf20",
+    "refs/heads/tranche-p-dev": "42f661acee82597a635fd45ce5e5c66a9b14a4ff",
+    "refs/heads/tranche-q-impl": "a15cd487bd2a9444369fd94ad3500047ce99b2f3",
+    "refs/heads/tranche-r-dev": "5a5f7db6c99ad7c7bbb3ea1c22477337cc8fdefc",
+    "refs/heads/tranche-s-dev": "c6eef7885d9d6ec3231d5811d5096faa44da9138",
+    "refs/heads/tranche-s-impl": "76d4278b1e104fc8561325f8c8fe7c56b21c2d0d",
+    "refs/heads/tranche-t-impl": "eeb9449ac27a4cda0c15d6d39213172f91f99835",
+    "refs/heads/tranche-u-dev": "f0c9f9985b3adba79cf2ca6244b7e6eb9058fb50",
+    "refs/heads/tranche-u-impl": "ed431ab06e787e9fed233bf8d031fb05e02cf91f",
+    "refs/heads/ui-refresh": "d92287032e6552ab4a5b585673bd95026477eee4",
+    "refs/heads/worktree-wf_1c80dc8e-b6e-1": "4749e318a7b6d5dc31d51979baf1f5f6370a440c",
+    "refs/heads/worktree-wf_1c80dc8e-b6e-2": "f0d4ec1185fa93c0db2c93931da628827342c85b",
+    "refs/heads/worktree-wf_1c80dc8e-b6e-3": "6151d10611475dc3f2fedfe1a9b64e110d39f496",
+    "refs/heads/worktree-wf_1e744f4d-2bb-1": "88bde5504a39f8fad1f1942fcb3d6a67642426c9",
+    "refs/heads/worktree-wf_1e744f4d-2bb-2": "031fd1e9b558c431d0ba8c2be3c08ae49c3aaf40",
+    "refs/heads/worktree-wf_1e744f4d-2bb-3": "cc3e64d4d801ebc870c7f51a8f98b9dcaf4ab68d",
+    "refs/heads/worktree-wf_2721b835-641-1": "2fd91d261c579486cb1337afdd7119da7bbb82c8",
+    "refs/heads/worktree-wf_2721b835-641-2": "5f1be755a6d83ce50b724223e76b749b5557e638",
+    "refs/heads/worktree-wf_2721b835-641-3": "7036758ae46ea25e943008cf6375fbb7288f22a5",
+    "refs/heads/worktree-wf_398e8b0b-448-1": "3d952f828ed4975b5eb61b099b979bf96295a584",
+    "refs/heads/worktree-wf_398e8b0b-448-2": "440e5c30a424083491bee50d114f5146eb2749d1",
+    "refs/heads/worktree-wf_398e8b0b-448-3": "18e2d2a70c5d6a55081bb01e4cdf0f717c9cd549",
+    "refs/heads/worktree-wf_49d0a8e6-b95-1": "ca9dd7c939ba66e975a7ed4f1dab3e1d01461f3c",
+    "refs/heads/worktree-wf_49d0a8e6-b95-2": "2b9ce679f68cbe16e45949e21c6ded38d5b9725e",
+    "refs/heads/worktree-wf_49d0a8e6-b95-3": "12cfee6c5a3c5612197b019e7653aa63799c411c",
+    "refs/heads/worktree-wf_558e7859-5ca-3": "8414cb57c812b6ac0f2a0b9b598e9b33268e0c9c",
+    "refs/heads/worktree-wf_57728bb0-caf-1": "f8aacdcf7048220dd6bdb36c07711e84dc565d56",
+    "refs/heads/worktree-wf_57728bb0-caf-2": "a15445be8686f1d6f1aa8686d5301711b9743057",
+    "refs/heads/worktree-wf_57728bb0-caf-3": "48da657087b96b50c483dfb3b2faaf7c7a252873",
+    "refs/heads/worktree-wf_5941b8e7-b3e-1": "2bcec6799249a569def394228820daced6bd776e",
+    "refs/heads/worktree-wf_5941b8e7-b3e-2": "1fec763170385a69530af3ca78e7f509143c4d04",
+    "refs/heads/worktree-wf_5941b8e7-b3e-3": "212ef22126c629a5086b77b85654d9424d9d9476",
+    "refs/heads/worktree-wf_645e7d37-d7f-11": "3ab439874ba1889f4d00b2d15cc3eafa690db8e9",
+    "refs/heads/worktree-wf_645e7d37-d7f-12": "03ec67584a1f0756f793fce4bbeae7a07ffb40a7",
+    "refs/heads/worktree-wf_645e7d37-d7f-13": "0512a505b384c006d80b33cfdb02ceb2066634ac",
+    "refs/heads/worktree-wf_8707486a-c47-1": "8a7cfc5863f80061f7f8177ec170f489fab2b171",
+    "refs/heads/worktree-wf_8707486a-c47-2": "4746c1d8cb0f12419e7aa04dc59501294ecd6175",
+    "refs/heads/worktree-wf_8707486a-c47-3": "ec4457b1046114973f9fcf8eeffcce432fe5b4d0",
+    "refs/heads/worktree-wf_ca7d0632-287-10": "e3994e0baffc3e41e5ba81a31ecfc63242c16700",
+    "refs/heads/worktree-wf_ca7d0632-287-11": "db0232ec79a2e72b830c1ff4568a327e4b304688",
+    "refs/heads/worktree-wf_ca7d0632-287-12": "55d24298cc77c6b7bbc7a9420bdd2545456c6a74",
+    "refs/heads/worktree-wf_ca7d0632-287-13": "e0eaf86356b7f7101c014cc4a7d9d52e2b788519",
+    "refs/heads/worktree-wf_ca7d0632-287-14": "e0eaf86356b7f7101c014cc4a7d9d52e2b788519",
+    "refs/heads/worktree-wf_ca7d0632-287-15": "e0eaf86356b7f7101c014cc4a7d9d52e2b788519",
+    "refs/heads/worktree-wf_ca7d0632-287-16": "4ffe713ca8719c3e5ca199167d6fd2c6e90fa940",
+    "refs/heads/worktree-wf_ca7d0632-287-17": "a09bd06ff7859e31560722634128e93d12c82887",
+    "refs/heads/worktree-wf_ca7d0632-287-18": "8a60f6400d5d5680d9f224d5edcdcf44999b2226",
+    "refs/heads/worktree-wf_d08afce7-ec1-1": "4e5b575af5126b853694dd255ca697df74dafc09",
+    "refs/heads/worktree-wf_d08afce7-ec1-2": "0b10c118655cf20f0731da1d98531e7b3103f0ec",
+    "refs/heads/worktree-wf_d08afce7-ec1-3": "270df0932f84c5937cde657590c415d93a8f0b9c",
+    "refs/heads/worktree-wf_d51e4972-cc7-1": "aed363edf81899ba543222b50bc571d7efd6f469",
+    "refs/heads/worktree-wf_d51e4972-cc7-2": "232ec742fa1d9f9964040177793a04b7aaad7328",
+    "refs/heads/worktree-wf_d51e4972-cc7-3": "d54543a32cf21a524b6492d63613ad998836c9bd"
+   },
+   "origin": "git@github.com:mkbabb/keyframes.js.git",
+   "remote": {
+    "HEAD": "fdb5987f1454fc481b66240c2f75c9fe4897ea64",
+    "refs/heads/development": "3f1fb296662530fa1c10358552de892a53631242",
+    "refs/heads/gh-pages": "57555008fedf8845efefb1c604f7a8c1bc2a9e3b",
+    "refs/heads/grouping": "1acf25c65f2c6ad7b2f9de24d9ffa23291092c56",
+    "refs/heads/master": "fdb5987f1454fc481b66240c2f75c9fe4897ea64",
+    "refs/heads/new": "d973f4da54379620daacdd9d4aebcd6e4356e162",
+    "refs/heads/o1105-kf-load": "d9d086445de24c1de368de12c5b452386c641125",
+    "refs/heads/scene-stage-proto-s": "63ccab06cfde2798cbc3c2416bb45fbaa6649975",
+    "refs/heads/tranche-b": "5fa76b4554d8c13c059edab4dba310955c73774c",
+    "refs/heads/tranche-c-impl": "d51d03ae5f7601295058ec353fed5938451eea20",
+    "refs/heads/tranche-f-impl": "8fea80c044b1bc9be2fd1cec82db354ac5350c86",
+    "refs/heads/tranche-g-impl": "98dab540d186aec8ca868497964b93cfbdb1fc67",
+    "refs/heads/tranche-j-dev": "4f1fc4cf0376f223d1ecfc7797e2d56dab280087",
+    "refs/heads/tranche-k-dev": "9bbc227e21125ea84089168d839a8f8115738be4",
+    "refs/heads/tranche-l-dev": "3dd6335c8dbfa41b649a178c05d9e231f8b564d9",
+    "refs/heads/tranche-m": "74b7305a69fe6151b493a24c42e3d0a1c7254c91",
+    "refs/heads/tranche-p-dev": "42f661acee82597a635fd45ce5e5c66a9b14a4ff",
+    "refs/heads/tranche-q-impl": "7c06d3e18ba3bfc73d0bf9eae741874167e2f75d",
+    "refs/heads/tranche-s-dev": "c6eef7885d9d6ec3231d5811d5096faa44da9138",
+    "refs/heads/tranche-s-impl": "76d4278b1e104fc8561325f8c8fe7c56b21c2d0d",
+    "refs/heads/tranche-t-impl": "eeb9449ac27a4cda0c15d6d39213172f91f99835",
+    "refs/heads/tranche-u-dev": "f0c9f9985b3adba79cf2ca6244b7e6eb9058fb50",
+    "refs/heads/tranche-u-impl": "ed431ab06e787e9fed233bf8d031fb05e02cf91f",
+    "refs/heads/ui-refresh": "d92287032e6552ab4a5b585673bd95026477eee4",
+    "refs/heads/v/w10-canon": "4afeb6cbc43aefc8093b097a631e4f3de87d2b87",
+    "refs/heads/v/w1b-harness": "c43bb0b484efec4d46b256421bdf1c273ad8a7fd",
+    "refs/heads/v/w4a-structure-gate": "617cbd9fedca9dd8d5eb8d12e9811a3e1c0b751a",
+    "refs/heads/v/w4b-openers": "7e9ddf49bb86e77ddf381cfa4e25138eb08efb31",
+    "refs/heads/v/w5-carves": "96bed20a942e0cf255189429cd5a17e5ac148f6b",
+    "refs/heads/v/w9-staging": "b920b1902b4854c1bc7c5778d1674436dd51dce6",
+    "refs/pull/10/head": "b6fab863f0a89ff36c340e3e9a4731c2f933c249",
+    "refs/pull/11/head": "c3dbe6923c5158873a1a7852815835057befce21",
+    "refs/pull/12/head": "ed431ab06e787e9fed233bf8d031fb05e02cf91f",
+    "refs/pull/2/head": "5fa76b4554d8c13c059edab4dba310955c73774c",
+    "refs/pull/3/head": "d51d03ae5f7601295058ec353fed5938451eea20",
+    "refs/pull/4/head": "76d4278b1e104fc8561325f8c8fe7c56b21c2d0d",
+    "refs/pull/5/head": "eeb9449ac27a4cda0c15d6d39213172f91f99835",
+    "refs/pull/7/head": "85a4826e46b0ffbb8c44f837ef7a7aa738868979",
+    "refs/pull/8/head": "ad9da4340a9c98fa8a40df892d8b294318f8027a",
+    "refs/pull/9/head": "13530f7030d898f5a916f89a29032ac500199221",
+    "refs/tags/last-demo-green": "fdb5987f1454fc481b66240c2f75c9fe4897ea64",
+    "refs/tags/pre-modernization": "4993757f9e92abea2994c49686ce060da4926f76",
+    "refs/tags/v1.0.0": "7a5401738fba88f44f029727c08f276c1c593d10",
+    "refs/tags/v2.1.0": "49dfcbca9b44431ae8e55c685896adf098a087be",
+    "refs/tags/v2.2.0": "dbae14884f37b7b092ef889181b4f121f9b71f9c",
+    "refs/tags/v3.0.0": "3161fecdb86951839548efe79d6bfaf1807097f9",
+    "refs/tags/v4.0.0": "d2640533641eb9ea17f6d56ee7d18584ccc9823e",
+    "refs/tags/v4.1.0": "ea9d5a0dff954e7f1446808b0ab8de70ac50a01f",
+    "refs/tags/v4.2.0": "eabe61aa8669bd63df1baa045038cc752dad07fa",
+    "refs/tags/v4.3.0": "788d68db83ab50712718cf7f2ae4fe3cdf154113",
+    "refs/tags/v4.4.0": "c69bbb0f2092e44e478f4a925b846d7e8fa22e4e",
+    "refs/tags/v5.0.0": "186acec549b34adeeb34be91c2078b82ce0d0a93",
+    "refs/tags/v5.1.0": "62401caaaa8deb0299de6b9798734f0f4732a04b",
+    "refs/tags/v5.2.0": "cf9b268e20628a9ab17e446702a51af5999479db",
+    "refs/tags/v5.3.0": "0bb77c174256e82d7e246e910a9b342acc85cfb1",
+    "refs/tags/v5.3.1": "d6e6e039d3b2dd780534ca2c59afe8a5fe19392f",
+    "refs/tags/v5.3.2": "3da985a84bb334ee8de7f9cf06210d58aa31b0f6",
+    "refs/tags/v5.3.3": "884badf23fd1e3bbb7fdda84aa66d43c3cbf6cab",
+    "refs/tags/v5.3.4": "38050f767711ccceb23cca4e860a766956275b7a",
+    "refs/tags/v5.3.5": "e6ee77dfdb675193ba16a57ca9378cc5d120aedd",
+    "refs/tags/v6.0.0": "26190755ce1e57c54cb14ef0a454ae02ed2b3da0",
+    "refs/tags/v6.1.0": "c68e419f9c20b4352af1467a253c2911c591b7dd",
+    "refs/tags/v6.2.0": "317c036059150496fca08dbd9e590cf5bc924fd4",
+    "refs/tags/v6.2.1": "36c4d67eda5fc51048c5d56d7ec56b57358f1dfb",
+    "refs/tags/v6.2.2": "896e9c228170a01285754d595cd59aaa16ca216c",
+    "refs/tags/v6.3.0": "a167210cc470973ef4698ed46c5a870e8eca0c09"
+   },
+   "role": "consumer",
+   "worktrees": [
+    {
+     "branch": "refs/heads/master",
+     "head": "e5c12919bc521702b83d97a7e0c1be68d5a49849",
+     "path": "/Users/mkbabb/Programming/keyframes.js"
+    },
+    {
+     "branch": null,
+     "head": "8281638c0ac4ac8c54a67a018ca5bf6a9117174f",
+     "path": "/Users/mkbabb/.codex/worktrees/9167/keyframes.js"
+    },
+    {
+     "branch": "refs/heads/o1105-kf-cube",
+     "head": "fdb5987f1454fc481b66240c2f75c9fe4897ea64",
+     "path": "/Users/mkbabb/.worktrees-1105/kf-cube"
+    },
+    {
+     "branch": null,
+     "head": "fdb5987f1454fc481b66240c2f75c9fe4897ea64",
+     "path": "/Users/mkbabb/.worktrees-1105/kf-cube-base"
+    },
+    {
+     "branch": "refs/heads/o1105-kf-load",
+     "head": "d9d086445de24c1de368de12c5b452386c641125",
+     "path": "/Users/mkbabb/.worktrees-1105/kf-load"
+    },
+    {
+     "branch": null,
+     "head": "f8d6077bad52df87e7c068a0d213e74e2de0d9f9",
+     "path": "/Users/mkbabb/Programming/.kf-residue-wt"
+    },
+    {
+     "branch": "refs/heads/codex/u-b1-step1",
+     "head": "199db81aefba9fe4d6d6095b8bfc3463334606fb",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b1-step1"
+    },
+    {
+     "branch": "refs/heads/codex/u-b1-step2",
+     "head": "4d862719b10f237e0eb792d63f34b05fefda9ec8",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b1-step2"
+    },
+    {
+     "branch": "refs/heads/codex/u-b1-step3",
+     "head": "d64abd1564ffb0e3899a0afe8654ab1a77109e3f",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b1-step3"
+    },
+    {
+     "branch": "refs/heads/codex/u-b2-controls",
+     "head": "065da18c98fb68cc0620c405c11ae87a0e23589d",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b2-controls"
+    },
+    {
+     "branch": "refs/heads/codex/u-b2-gates",
+     "head": "226a0facc4c186ddb41001a1d3ad9244831a4955",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b2-gates"
+    },
+    {
+     "branch": "refs/heads/codex/u-b2-transport",
+     "head": "629363f191cdab5ea10051f414e9917c7e6728d6",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b2-transport"
+    },
+    {
+     "branch": "refs/heads/codex/u-b3-blend",
+     "head": "85a5a09369818fc378cbe56f3a5e75d16b81b0b9",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b3-blend"
+    },
+    {
+     "branch": "refs/heads/codex/u-b3-hoist",
+     "head": "6d0d02ee0cda74ddcd4dc7509abde33147c4c13f",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b3-hoist"
+    },
+    {
+     "branch": "refs/heads/codex/u-b3-ticker",
+     "head": "b0c446ce52fe991abc0e011596ede9e22e238b53",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b3-ticker"
+    },
+    {
+     "branch": "refs/heads/codex/u-b4-brush",
+     "head": "1d640296180e785d4a26f81ca3fce98875f2053b",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b4-brush"
+    },
+    {
+     "branch": "refs/heads/codex/u-b4-core",
+     "head": "dad07b242af2c5af7451d47c0a26065e101374fd",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b4-core"
+    },
+    {
+     "branch": "refs/heads/codex/u-b4-store",
+     "head": "8deb9f588c3c14ef041bf6103067a262d1bf19c8",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b4-store"
+    },
+    {
+     "branch": "refs/heads/codex/u-b6-facility",
+     "head": "8af3fa4d240bc557fc7eece6d8058696c53867a8",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b6-facility"
+    },
+    {
+     "branch": "refs/heads/codex/u-b6-state",
+     "head": "036e96a2ab9948442cce8b3ca85c5249c829d8c0",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b6-state"
+    },
+    {
+     "branch": "refs/heads/codex/u-b8-dogfood",
+     "head": "ca1c940405757aa645d11d8b13abc9c308bacdcd",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b8-dogfood"
+    },
+    {
+     "branch": "refs/heads/codex/u-b8-loops",
+     "head": "11e818f984c020aaef0f6b54fce23664e94bba83",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b8-loops"
+    },
+    {
+     "branch": "refs/heads/codex/u-b8-painters",
+     "head": "874f644bad2c4134565bea4b68a3e32c3d1bff9d",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/b8-painters"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-backward",
+     "head": "fe27ca452f65974cdbc13c93992fcef38358948b",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-backward"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-compile",
+     "head": "2d344706bece68f1cc28069032a8636cc45be979",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-compile"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-compositor",
+     "head": "32003d9c182a35bf0392fe2954ecb880290b6f21",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-compositor"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-engine",
+     "head": "e45079c326e1cd35547bf7b905a6faa0f6fddd54",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-engine"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-presets",
+     "head": "768e78a8bbba127fce6b6e46d21a0743219cb4f7",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-presets"
+    },
+    {
+     "branch": "refs/heads/codex/u-c11-scroll",
+     "head": "7b1c629a34c7ca494263245c77b2a6ecc673da2d",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-scroll"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-smooth",
+     "head": "9356943904e62179a5638f6df2bde995e15cc31c",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-smooth"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-spring",
+     "head": "2be1dbbe4a5c87218ebc946a6ba576f0c6f53e6b",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-spring"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-springcarve",
+     "head": "067c21d263342ce22efe3d8c5e0ea4181cf7ace3",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-springcarve"
+    },
+    {
+     "branch": "refs/heads/codex/u-c-transport",
+     "head": "07fb0188a4c14a2a2405a7435810c6a942a38548",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c-transport"
+    },
+    {
+     "branch": "refs/heads/codex/u-c10-consume",
+     "head": "143d245e4f9d4127219efcd76ec16a5474d18be8",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c10-consume"
+    },
+    {
+     "branch": "refs/heads/codex/u-c13-surface",
+     "head": "880fcf47706947f571a3876ae67bca84dc3a8fb9",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c13-surface"
+    },
+    {
+     "branch": "refs/heads/codex/u-c15-operator",
+     "head": "8c5956f2d99f25d269551998af9c918fb400f901",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c15-operator"
+    },
+    {
+     "branch": "refs/heads/codex/u-c16-lifecycle",
+     "head": "afada0a996ebda74cb715407a1484099a7087780",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c16-lifecycle"
+    },
+    {
+     "branch": "refs/heads/codex/u-c3-redesign",
+     "head": "4575a42e8c08c58a0ee0163ca2e7ae319ba8c9b6",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/c3-redesign"
+    },
+    {
+     "branch": "refs/heads/codex/u-d3-waapi",
+     "head": "74f2567ae7eebf3e2621865c53ab501a4925b740",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/d3-waapi"
+    },
+    {
+     "branch": "refs/heads/codex/u-e7-claude",
+     "head": "1e5d47e293d194219f1c004a31ac0bac265f58a5",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/e7-claude"
+    },
+    {
+     "branch": "refs/heads/codex/u-e9-recon",
+     "head": "8bd1c1e668761307fb414077923f6edf37dc465c",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/e9-recon"
+    },
+    {
+     "branch": "refs/heads/codex/u-g-codex",
+     "head": "45fb600cf54ff09700358809a314c16b5e7e8bae",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/g-codex"
+    },
+    {
+     "branch": "refs/heads/codex/u-h-characterization",
+     "head": "51cc3d0d55b0dc5627f3179f25a503e7b5eccefb",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/h-characterization"
+    },
+    {
+     "branch": "refs/heads/codex/u-h-mirror",
+     "head": "140b94174a8a1b8b04aefd3a5db33b6067e5e238",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/h-mirror"
+    },
+    {
+     "branch": "refs/heads/codex/u-h-projects",
+     "head": "c500ae79745e248104ac6dc5641a51f061916f5a",
+     "path": "/Users/mkbabb/Programming/keyframes-u-worktrees/h-projects"
+    },
+    {
+     "branch": null,
+     "head": "af369ea4fa6ea631b0a43351a139eb3ec1890ae0",
+     "path": "/Users/mkbabb/Programming/keyframes-wt-H-W2-verify"
+    },
+    {
+     "branch": null,
+     "head": "099a162776bcaf2d8652111c2068f36bfc5508ae",
+     "path": "/Users/mkbabb/Programming/keyframes-wt-W13X-close3"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_1e744f4d-2bb-1",
+     "head": "88bde5504a39f8fad1f1942fcb3d6a67642426c9",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_1e744f4d-2bb-1"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_1e744f4d-2bb-2",
+     "head": "031fd1e9b558c431d0ba8c2be3c08ae49c3aaf40",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_1e744f4d-2bb-2"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_1e744f4d-2bb-3",
+     "head": "cc3e64d4d801ebc870c7f51a8f98b9dcaf4ab68d",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_1e744f4d-2bb-3"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_558e7859-5ca-3",
+     "head": "8414cb57c812b6ac0f2a0b9b598e9b33268e0c9c",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_558e7859-5ca-3"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_645e7d37-d7f-11",
+     "head": "3ab439874ba1889f4d00b2d15cc3eafa690db8e9",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_645e7d37-d7f-11"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_645e7d37-d7f-12",
+     "head": "03ec67584a1f0756f793fce4bbeae7a07ffb40a7",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_645e7d37-d7f-12"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_645e7d37-d7f-13",
+     "head": "0512a505b384c006d80b33cfdb02ceb2066634ac",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_645e7d37-d7f-13"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_ca7d0632-287-10",
+     "head": "e3994e0baffc3e41e5ba81a31ecfc63242c16700",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_ca7d0632-287-10"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_ca7d0632-287-11",
+     "head": "db0232ec79a2e72b830c1ff4568a327e4b304688",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_ca7d0632-287-11"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_ca7d0632-287-12",
+     "head": "55d24298cc77c6b7bbc7a9420bdd2545456c6a74",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_ca7d0632-287-12"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_ca7d0632-287-16",
+     "head": "4ffe713ca8719c3e5ca199167d6fd2c6e90fa940",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_ca7d0632-287-16"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_ca7d0632-287-17",
+     "head": "a09bd06ff7859e31560722634128e93d12c82887",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_ca7d0632-287-17"
+    },
+    {
+     "branch": "refs/heads/worktree-wf_ca7d0632-287-18",
+     "head": "8a60f6400d5d5680d9f224d5edcdcf44999b2226",
+     "path": "/Users/mkbabb/Programming/keyframes.js/.claude/worktrees/wf_ca7d0632-287-18"
+    },
+    {
+     "branch": null,
+     "head": "fdb5987f1454fc481b66240c2f75c9fe4897ea64",
+     "path": "/Users/mkbabb/Programming/kf-embed-slice"
+    }
+   ]
+  },
+  "parse-that": {
+   "local": {
+    "refs/heads/codex/css-totality-combinators-20260729": "f5757082ca160dd5f25fcf437e692c9df8f7e78d",
+    "refs/heads/codex/css-totality-p1-e": "35fd252de28fecf8d443cf73841a929d829474a6",
+    "refs/heads/codex/css-totality-p1-r": "417532596fec6a28577dfe839cdb56f6c1687d85",
+    "refs/heads/codex/css-totality-p1-vk": "a0f122fa72999e6f87b94283b3e141badd42f890",
+    "refs/heads/codex/runtime-kernel-probes-20260729": "99e986281feead01f0561c8ad90e1706bc91dff3",
+    "refs/heads/codex/sk-v26-parse-that": "e31fbfedc24adcb9110a84b93ff1520cb213912d",
+    "refs/heads/development": "a38c4ee695f6a6b08c3398163a868dfdbb09e401",
+    "refs/heads/inline": "d51a111c2e01a5969f578e90a699e1a254b17202",
+    "refs/heads/inline-v2": "999f03e4a355d81939c679b7fc91c6a4a7ff7c7b",
+    "refs/heads/inline-v3": "ce333312ae101106e20d68f2164565244b0631be",
+    "refs/heads/master": "47e928acca0e73ab1a5e7e3f802ca8090ebc4722",
+    "refs/heads/modernize": "b862723bf46ae9d389ad3a54abe80087c9c58fb4",
+    "refs/heads/rust": "54237a8c4b21f405da869d3bbfc9a169812a8987",
+    "refs/heads/rust-tmp": "d1ddadd4a75c70ce63f747e178cc187fa99f9c47",
+    "refs/heads/sk-v27": "29fbdd24c65e754f1a7a1886c06b95ee09d87021",
+    "refs/heads/sk-v27-regex": "770a350f97d8789ff0044a38f2f2dbf6fb178729",
+    "refs/heads/temp/lsp-analysis": "bb669c058f710f15a8afd6b20c4e1e6a1118ad1d",
+    "refs/heads/tranche-a": "6487219e3c358f879f7d13c904a3f95c1ba354b4",
+    "refs/heads/tranche-b": "7901314b4e2dd89191eecdfaf3811d6e59d8ea0c",
+    "refs/heads/tranche-f-handoff": "6fb9de25900d56a269fa6bb309cbc2f19aa98a8c",
+    "refs/heads/tranche-q": "2c806fb7e3a4d26d7bc8f1b6fdf4568453f026a1",
+    "refs/heads/tranche-s-kf-dispatch": "7eab78c89961001a689952c091fdbbf64af735da",
+    "refs/heads/typescript": "b821104cb2bf49aa4bb82aaf175ed097ce79d430",
+    "refs/heads/worktree-f1-perf-optimizations": "f95f85c701456b17b35d4dd5439ada42d2396a55",
+    "refs/heads/worktree-f2-rust-perf": "63800242a9682df19ed408355879d4a8abb3645d",
+    "refs/heads/x-p-w7": "398996757c6bf667c2079cf0d90aaa2add8c67dd",
+    "refs/heads/x-p-w9-rel": "d8c7f6558b3795e0ab744e0086be712637c05a86"
+   },
+   "origin": "https://github.com/mkbabb/parse-that.git",
+   "remote": {
+    "HEAD": "47e928acca0e73ab1a5e7e3f802ca8090ebc4722",
+    "refs/heads/codex/sk-v26-parse-that": "e31fbfedc24adcb9110a84b93ff1520cb213912d",
+    "refs/heads/development": "5ca79e076cf458a380356ee40f1c5dd708bd06d3",
+    "refs/heads/master": "47e928acca0e73ab1a5e7e3f802ca8090ebc4722",
+    "refs/heads/rust": "b1b995a3ccb100d226d0524cc9d6236ae3b75575",
+    "refs/heads/sk-v27": "29fbdd24c65e754f1a7a1886c06b95ee09d87021",
+    "refs/heads/sk-v27-regex": "770a350f97d8789ff0044a38f2f2dbf6fb178729",
+    "refs/heads/tranche-a": "6487219e3c358f879f7d13c904a3f95c1ba354b4",
+    "refs/heads/tranche-b": "7901314b4e2dd89191eecdfaf3811d6e59d8ea0c",
+    "refs/heads/tranche-f-handoff": "6fb9de25900d56a269fa6bb309cbc2f19aa98a8c",
+    "refs/heads/tranche-q": "2c806fb7e3a4d26d7bc8f1b6fdf4568453f026a1",
+    "refs/heads/tranche-s-kf-dispatch": "7eab78c89961001a689952c091fdbbf64af735da",
+    "refs/heads/x-p-w7": "398996757c6bf667c2079cf0d90aaa2add8c67dd",
+    "refs/heads/x-p-w9-rel": "d8c7f6558b3795e0ab744e0086be712637c05a86",
+    "refs/pull/1/head": "398996757c6bf667c2079cf0d90aaa2add8c67dd",
+    "refs/pull/2/head": "d8c7f6558b3795e0ab744e0086be712637c05a86",
+    "refs/pull/3/head": "29fbdd24c65e754f1a7a1886c06b95ee09d87021",
+    "refs/pull/3/merge": "a6ed94a9b483a7802438af35f2bb06b485fda984",
+    "refs/tags/v0.12.0": "7901314b4e2dd89191eecdfaf3811d6e59d8ea0c",
+    "refs/tags/v0.13.0": "2c806fb7e3a4d26d7bc8f1b6fdf4568453f026a1",
+    "refs/tags/v0.9.0": "6fb9de25900d56a269fa6bb309cbc2f19aa98a8c",
+    "refs/tags/v1.0.0": "7eab78c89961001a689952c091fdbbf64af735da",
+    "refs/tags/v2.0.0": "fb4f5f6021aa9f16f784aa4e387c4ff577bec520"
+   },
+   "role": "core",
+   "worktrees": [
+    {
+     "branch": "refs/heads/master",
+     "head": "47e928acca0e73ab1a5e7e3f802ca8090ebc4722",
+     "path": "/Users/mkbabb/Programming/parse-that"
+    },
+    {
+     "branch": "refs/heads/codex/css-totality-combinators-20260729",
+     "head": "f5757082ca160dd5f25fcf437e692c9df8f7e78d",
+     "path": "/Users/mkbabb/Programming/parse-that-css-totality"
+    },
+    {
+     "branch": "refs/heads/codex/css-totality-p1-e",
+     "head": "35fd252de28fecf8d443cf73841a929d829474a6",
+     "path": "/Users/mkbabb/Programming/parse-that-css-totality-p1-e"
+    },
+    {
+     "branch": "refs/heads/codex/css-totality-p1-r",
+     "head": "417532596fec6a28577dfe839cdb56f6c1687d85",
+     "path": "/Users/mkbabb/Programming/parse-that-css-totality-p1-r"
+    },
+    {
+     "branch": "refs/heads/codex/css-totality-p1-vk",
+     "head": "a0f122fa72999e6f87b94283b3e141badd42f890",
+     "path": "/Users/mkbabb/Programming/parse-that-css-totality-p1-vk"
+    },
+    {
+     "branch": "refs/heads/codex/runtime-kernel-probes-20260729",
+     "head": "99e986281feead01f0561c8ad90e1706bc91dff3",
+     "path": "/Users/mkbabb/Programming/parse-that-runtime-probes"
+    },
+    {
+     "branch": "refs/heads/codex/sk-v26-parse-that",
+     "head": "e31fbfedc24adcb9110a84b93ff1520cb213912d",
+     "path": "/Users/mkbabb/Programming/parse-that-skv26"
+    },
+    {
+     "branch": "refs/heads/sk-v27",
+     "head": "29fbdd24c65e754f1a7a1886c06b95ee09d87021",
+     "path": "/Users/mkbabb/Programming/parse-that-wt/sk-v27"
+    },
+    {
+     "branch": "refs/heads/sk-v27-regex",
+     "head": "770a350f97d8789ff0044a38f2f2dbf6fb178729",
+     "path": "/Users/mkbabb/Programming/parse-that-wt/sk-v27-regex"
+    },
+    {
+     "branch": "refs/heads/x-p-w7",
+     "head": "398996757c6bf667c2079cf0d90aaa2add8c67dd",
+     "path": "/Users/mkbabb/Programming/parse-that-x-p-w7"
+    }
+   ]
+  },
+  "pprint": {
+   "local": {
+    "refs/heads/master": "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4",
+    "refs/heads/modernize": "63ee999f89ebbc91994106a3afaa7a08500a7a63",
+    "refs/heads/perf": "d71146bbc3dfecc1ef09da7d48060cb7f3689ad8",
+    "refs/heads/sk-v27-pprint": "cf83853804697d02998491232981784480abd071"
+   },
+   "origin": "https://github.com/mkbabb/pretty.git",
+   "remote": {
+    "HEAD": "dbbd301728ede70e27556a6f14d3f0c483662a24",
+    "refs/heads/master": "dbbd301728ede70e27556a6f14d3f0c483662a24",
+    "refs/heads/perf": "d71146bbc3dfecc1ef09da7d48060cb7f3689ad8",
+    "refs/heads/sk-lineage/pprint-local": "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4",
+    "refs/heads/sk-v27-pprint": "cf83853804697d02998491232981784480abd071",
+    "refs/pull/2/head": "cf83853804697d02998491232981784480abd071",
+    "refs/pull/2/merge": "b79d82652ac6195d3c03318e3cd26eb52e2b2eb8"
+   },
+   "role": "core",
+   "worktrees": [
+    {
+     "branch": "refs/heads/master",
+     "head": "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4",
+     "path": "/Users/mkbabb/Programming/pprint"
+    },
+    {
+     "branch": null,
+     "head": "2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4",
+     "path": "/Users/mkbabb/Programming/pprint-skv26"
+    },
+    {
+     "branch": "refs/heads/sk-v27-pprint",
+     "head": "cf83853804697d02998491232981784480abd071",
+     "path": "/Users/mkbabb/Programming/pprint-wt/sk-v27-pprint"
+    }
+   ]
+  },
+  "value.js": {
+   "local": {
+    "refs/heads/codex/css-totality-prototype-20260729": "dea7a93c92823a05e2ad99f9f82b82edb8d6b822",
+    "refs/heads/codex/parser-css-totality-audit-20260729": "1175a4dee63026cc9a853c37ce1aef3d96645b7b",
+    "refs/heads/codex/xw1-demo-boot-20260729": "d19da6d31589747420c3379efefce11a7b5fd43d",
+    "refs/heads/feat/cvd-4.2.0": "96e685b0fa6ade19a764786c8ac41ffcdab335dc",
+    "refs/heads/master": "fe4f44157e8448654e729d700132b914e26fe6f4",
+    "refs/heads/o1105-aurora": "cbdb7edc66ed7330e8f7e02154a2c6e6a031154a",
+    "refs/heads/o1105-blob": "9e359b039c25eee705de71878a7e08d4d12daaac",
+    "refs/heads/o1105-kf-load-inbox": "fcea05b470c3c8471021790c61be508ceeebca85",
+    "refs/heads/o1105-perf": "0c752f2a84015976705d5307331b891bb3d5dc5a",
+    "refs/heads/o1105-transitions-value": "379289fe8e8d452eeae682a01760db83b09c663d",
+    "refs/heads/post-refactor": "fafb40309fcfb262c441d6c344153d1be0970205",
+    "refs/heads/tranche-f-handoff": "9fce504a5764258c8e56b0ce77cd656c725a4907",
+    "refs/heads/tranche-o": "15b0382f158c02737aff1d90717e372968613e9e",
+    "refs/heads/tranche-p": "23d1a91e4e0f63b596b92b43a68a1a98185748ff",
+    "refs/heads/tranche-q": "4a166c929382e7fa7d4601753e4f3e3d998bb21e",
+    "refs/heads/tranche-t": "bf564c7085e1e99d64473936c59c11794cc3d1ba",
+    "refs/heads/tranche-u": "6849c0601ff5e44110a58c27dd50353c89336f82",
+    "refs/heads/w.w2.1-value-js-prebuild": "70e61e9ae1d913da2eb676e6d2eb5af40b617942",
+    "refs/heads/worktree-wf_1112d3db-442-3": "94230945c623a045186e9734ef4d870d368dcf5d",
+    "refs/heads/worktree-wf_1112d3db-442-4": "94230945c623a045186e9734ef4d870d368dcf5d",
+    "refs/heads/worktree-wf_1112d3db-442-5": "94230945c623a045186e9734ef4d870d368dcf5d",
+    "refs/heads/worktree-wf_c072f8ee-d1e-3": "b3f4f76e30b5707da24800e6f5bdd81a17c9719b",
+    "refs/heads/worktree-wf_cb377abc-406-10": "6abef8005fe94e06c33843c067bfe9e74f870161",
+    "refs/heads/worktree-wf_cb377abc-406-11": "6abef8005fe94e06c33843c067bfe9e74f870161",
+    "refs/heads/worktree-wf_cb377abc-406-12": "6abef8005fe94e06c33843c067bfe9e74f870161",
+    "refs/heads/worktree-wf_cb377abc-406-13": "0feb0f46a34b33df04fe015a8a2f902f7824ce5a",
+    "refs/heads/worktree-wf_cb377abc-406-14": "6abef8005fe94e06c33843c067bfe9e74f870161",
+    "refs/heads/worktree-wf_cb377abc-406-15": "8a28b4a1a0ad086801be4a6330583fe9cd7855e8",
+    "refs/heads/worktree-wf_cc1a5634-d01-1": "7b554e44916ca72332430468aeca27af8dcee432",
+    "refs/heads/worktree-wf_cc1a5634-d01-2": "7b554e44916ca72332430468aeca27af8dcee432",
+    "refs/heads/worktree-wf_cc1a5634-d01-3": "6abef8005fe94e06c33843c067bfe9e74f870161",
+    "refs/heads/worktree-wf_d1113dbe-da7-1": "07bf61dd0eebd1f74003cfca9f563c26e4059a18",
+    "refs/heads/worktree-wf_d1113dbe-da7-2": "07bf61dd0eebd1f74003cfca9f563c26e4059a18",
+    "refs/heads/worktree-wf_d1113dbe-da7-3": "07bf61dd0eebd1f74003cfca9f563c26e4059a18",
+    "refs/heads/x-w1-falsifier-g7": "6021105a5b29ea0dad5a57facf97e630aae14baf",
+    "refs/heads/x-w1-g7-falsifier": "3d029e444d8fca2f36c0e6d898bf9b244e9fa0f8"
+   },
+   "origin": "https://github.com/mkbabb/value.js.git",
+   "remote": {
+    "HEAD": "5dc972b3aa03751d295f668492dc99f37713792e",
+    "refs/heads/feat/cvd-4.2.0": "96e685b0fa6ade19a764786c8ac41ffcdab335dc",
+    "refs/heads/gh-pages": "17c10267f86504c76d050ff1e4b2500b09cb25b2",
+    "refs/heads/master": "5dc972b3aa03751d295f668492dc99f37713792e",
+    "refs/heads/modernize": "dd986d90afb45351a47f9bdf48366c70eba19b1f",
+    "refs/heads/o1105-perf": "0c752f2a84015976705d5307331b891bb3d5dc5a",
+    "refs/heads/o1105-transitions-value": "379289fe8e8d452eeae682a01760db83b09c663d",
+    "refs/heads/tranche-f-handoff": "9fce504a5764258c8e56b0ce77cd656c725a4907",
+    "refs/heads/tranche-o": "15b0382f158c02737aff1d90717e372968613e9e",
+    "refs/heads/tranche-p": "23d1a91e4e0f63b596b92b43a68a1a98185748ff",
+    "refs/heads/tranche-q": "4a166c929382e7fa7d4601753e4f3e3d998bb21e",
+    "refs/heads/tranche-t": "bf564c7085e1e99d64473936c59c11794cc3d1ba",
+    "refs/heads/tranche-u": "c93df4b3fe2830f29cdfdba6a497275b06325418",
+    "refs/heads/w.w2.1-value-js-prebuild": "31ace7673a22eac97b16c0cd01c5f629aef11dd4",
+    "refs/heads/x-w1-falsifier-g7": "139bca9bc9168a1309867af0410ed8179ae1c363",
+    "refs/heads/x-w1-g7-falsifier": "3d029e444d8fca2f36c0e6d898bf9b244e9fa0f8",
+    "refs/heads/x-w11-v1c-measure": "99e39a37ddfc1e20c0d549a435316b8c9580322b",
+    "refs/pull/1/head": "7183085b24eb22d914dca9422b5028cccc49c2b4",
+    "refs/tags/pre-modernization": "7d742d8b17c810f5e622544f97b4e6dea4d71ccf",
+    "refs/tags/tranche-r-close": "757f3f44b8c520215325113e136b360f2b404d58",
+    "refs/tags/tranche-s-close": "5bb2d59f6d2ce6c6ff5abac6377f0a4c508a5908",
+    "refs/tags/tranche-t-close": "e3f3adcc6846d91f2e3f543f1b2bc64de6d2d50b",
+    "refs/tags/v0.10.0": "c0b1dc879433a3970fad87f15b752f29af9ec8a7",
+    "refs/tags/v0.11.0": "e8cc1fbf660c6887ef7e78b7b905e4d76d4569b7",
+    "refs/tags/v0.11.1": "c337d58f54ba2ef271779651fdf2c219d10d1184",
+    "refs/tags/v0.11.2": "c3561a37621204511c62700918954e82fb83081e",
+    "refs/tags/v0.12.0": "a8f2beea9c256e55c9b3ba1ce374992f1918d488",
+    "refs/tags/v0.13.0": "0dbfcdaa4afa1b34eb4acf872c8a75dcc6f7f2a7",
+    "refs/tags/v0.13.1": "9193bcfcffa35b28e941098b1c6452d18c2f8887",
+    "refs/tags/v0.14.0": "7b2cb95d2772ad804c0dfd427b749e1b0c6c65bd",
+    "refs/tags/v0.15.0": "f4ef5c35430f0e449568e2a4ca874be256a3f638",
+    "refs/tags/v0.16.0": "abd63c065597fbefdb5bbe96208229e668362450",
+    "refs/tags/v0.6.0": "c1e00fbca665acb9b101416a0c30c6da83d88f10",
+    "refs/tags/v0.7.0": "8e8c742c3719a0b3967f8196c40508d5fb054351",
+    "refs/tags/v0.8.0": "9771889ea783bd8fcdf4cfc99e3c9f7d0c4897c7",
+    "refs/tags/v0.9.0": "26fe44e8838cb1862b1780e4267c91947c24af7f",
+    "refs/tags/v1.0.0": "cad4dfe14592a35ade85ebc6d16306552010b60d",
+    "refs/tags/v1.0.1": "db749b892079541ed0074c7970dbc1a326d62d0e",
+    "refs/tags/v1.0.2": "437a8710176f8a2c0b9fe33c50a97af1c89546db",
+    "refs/tags/v1.1.0": "23d1a91e4e0f63b596b92b43a68a1a98185748ff",
+    "refs/tags/v1.1.1": "fd3c7cefff9454bc9f3d54494b32409cb5723dad",
+    "refs/tags/v1.2.0": "e80b359c1a38012e7653d2ae8dafe761cd6132bb",
+    "refs/tags/v2.0.0": "fb4573ee5b594cdb26e20440ff2ed50d7e31bd91",
+    "refs/tags/v2.0.1": "a7eabcc7c5116d67f7bc610ced94976847ddee5f",
+    "refs/tags/v3.0.0": "19723a3e49384ddd4763bfde9e45366cb0f88526",
+    "refs/tags/v3.1.0": "f2f9652755845e4dd42f75d52538cbad15e9b16b",
+    "refs/tags/v4.0.0": "62ff6e1d62d25b9fa43c6384fcbe5c566fd724db",
+    "refs/tags/v4.1.0": "2780775c2e878452f6afcf0791a6fd21c22b2b23",
+    "refs/tags/v4.2.0": "f3b48363a239c06e33eae5f3e61abe36a94ddfd6",
+    "refs/tags/v4.2.1": "c27699e35f646c4199bff126f35342879c3aae83"
+   },
+   "role": "consumer",
+   "worktrees": [
+    {
+     "branch": "refs/heads/tranche-u",
+     "head": "6849c0601ff5e44110a58c27dd50353c89336f82",
+     "path": "/Users/mkbabb/Programming/value.js"
+    },
+    {
+     "branch": null,
+     "head": "e01d0065fa6c7c80282280566af2b9a4add809bf",
+     "path": "/Users/mkbabb/.codex/worktrees/7e28/value.js"
+    },
+    {
+     "branch": null,
+     "head": "cbf59ebe8e34ab6ee8a132456aa3ab05611dc0e0",
+     "path": "/Users/mkbabb/.dev-logs/x-0hw-repair/wt/base"
+    },
+    {
+     "branch": null,
+     "head": "b290662b48f6dff2282ea97c131aef386079401a",
+     "path": "/Users/mkbabb/.dev-logs/x-0hw-repair/wt/head"
+    },
+    {
+     "branch": null,
+     "head": "cbf59ebe8e34ab6ee8a132456aa3ab05611dc0e0",
+     "path": "/Users/mkbabb/.dev-logs/x-0hw-repair/wt/mine"
+    },
+    {
+     "branch": null,
+     "head": "ff125234fa039759a5589472975355414ddaaa6e",
+     "path": "/Users/mkbabb/.dev-logs/x-0hw-repair/wt/pre-vd4"
+    },
+    {
+     "branch": "refs/heads/o1105-aurora",
+     "head": "cbdb7edc66ed7330e8f7e02154a2c6e6a031154a",
+     "path": "/Users/mkbabb/.worktrees-1105/aurora"
+    },
+    {
+     "branch": "refs/heads/o1105-blob",
+     "head": "9e359b039c25eee705de71878a7e08d4d12daaac",
+     "path": "/Users/mkbabb/.worktrees-1105/blob"
+    },
+    {
+     "branch": null,
+     "head": "9e359b039c25eee705de71878a7e08d4d12daaac",
+     "path": "/Users/mkbabb/.worktrees-1105/blob-base"
+    },
+    {
+     "branch": "refs/heads/o1105-kf-load-inbox",
+     "head": "fcea05b470c3c8471021790c61be508ceeebca85",
+     "path": "/Users/mkbabb/.worktrees-1105/kf-load-inbox"
+    },
+    {
+     "branch": "refs/heads/o1105-perf",
+     "head": "0c752f2a84015976705d5307331b891bb3d5dc5a",
+     "path": "/Users/mkbabb/.worktrees-1105/perf"
+    },
+    {
+     "branch": "refs/heads/o1105-transitions-value",
+     "head": "379289fe8e8d452eeae682a01760db83b09c663d",
+     "path": "/Users/mkbabb/.worktrees-1105/transitions-value"
+    },
+    {
+     "branch": "refs/heads/codex/css-totality-prototype-20260729",
+     "head": "dea7a93c92823a05e2ad99f9f82b82edb8d6b822",
+     "path": "/Users/mkbabb/Programming/value-css-totality-audit"
+    },
+    {
+     "branch": null,
+     "head": "48c2009c5610432b5c333e88f394e348281438fd",
+     "path": "/Users/mkbabb/Programming/value-js-lhci-seat"
+    },
+    {
+     "branch": "refs/heads/codex/xw1-demo-boot-20260729",
+     "head": "d19da6d31589747420c3379efefce11a7b5fd43d",
+     "path": "/Users/mkbabb/Programming/value-xw1-demo-boot"
+    },
+    {
+     "branch": null,
+     "head": "65d1f400d3f7769f0fd19c4ac8354ab38b13a7b9",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/embed-master"
+    },
+    {
+     "branch": null,
+     "head": "f4fd2d8259bbcc9391cc13938be28cc92a61e602",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/embed-slice"
+    },
+    {
+     "branch": null,
+     "head": "0b2a912edab56a6be3efb9f855bdfd4f8bc582b0",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/od19-mint"
+    },
+    {
+     "branch": null,
+     "head": "0c98ab2cc0c46b19cad973669e12a956e6d9621b",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/p2-work"
+    },
+    {
+     "branch": null,
+     "head": "0ece76333a1eca2d89399b03c08677b2c2842866",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/ss8r"
+    },
+    {
+     "branch": null,
+     "head": "4e13d39d2c100f46c03b56a583e0e6c9847a96dc",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/v1"
+    },
+    {
+     "branch": null,
+     "head": "3c47daaa247293a66d7204c9892026222f081505",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/v1-bis"
+    },
+    {
+     "branch": null,
+     "head": "99e39a37ddfc1e20c0d549a435316b8c9580322b",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/v1c-wt"
+    },
+    {
+     "branch": null,
+     "head": "961cf807e6077be14d0f8990d3529ef239216bd9",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/v1e-wt"
+    },
+    {
+     "branch": null,
+     "head": "7edbfc05cfb949e418465288b948ee929d0993ae",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/v1f-wt"
+    },
+    {
+     "branch": null,
+     "head": "fb4abf5e8086961d55a326eebd2c1bf2052474a8",
+     "path": "/Users/mkbabb/Programming/value.js/.worktrees/x0ht-merge"
+    }
+   ]
+  }
+ },
+ "taken": "2026-11-05T23:59:34-05:00"
+}

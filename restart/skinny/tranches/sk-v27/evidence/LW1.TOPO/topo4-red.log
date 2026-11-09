@@ -1,0 +1,14 @@
+RED
+  grammar/MANIFEST absent
+  DIVERGENCE.tsv absent
+rc=1
+RED
+  grammar/MANIFEST absent
+  DIVERGENCE.tsv absent
+rc=1
+RED
+  local-only: 71 classified vs 70 in git
+rc=1
+RED
+  local-only: 71 classified vs 70 in git
+rc=1

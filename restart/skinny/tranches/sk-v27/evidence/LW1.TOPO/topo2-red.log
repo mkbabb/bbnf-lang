@@ -1,0 +1,22 @@
+RED
+  no ownership record at /Users/mkbabb/.dev-logs/bbnf-lockstep/ownership-W0.json
+rc=1
+RED
+  no ownership record at /Users/mkbabb/.dev-logs/bbnf-lockstep/ownership-W0.json
+rc=1
+RED
+  10 planned globs, 8 listed; close 4ad2ca653a
+  held glob not listed: parse-that/CHANGELOG.md
+rc=1
+RED
+  10 planned globs, 8 listed; close 4ad2ca653a
+  held glob not listed: parse-that/CHANGELOG.md
+rc=1
+RED
+  10 planned globs, 9 listed; close 99b0cef46
+  close commit 99b0cef46 does not add the close line
+rc=1
+RED
+  10 planned globs, 9 listed; close 99b0cef46
+  close commit 99b0cef46 does not add the close line
+rc=1

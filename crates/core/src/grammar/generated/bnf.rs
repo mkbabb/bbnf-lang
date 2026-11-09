@@ -2411,45 +2411,10 @@ mod __bnfparser_emit_impl {
                         };
                         {
                             let __start = state.offset;
-                            if {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                            || (__b >= b'a' && __b <= b'z')))
-                                        {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = state.offset;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                || (__b >= b'a' && __b <= b'z'))
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                    }
-                                    Some(())
-                                })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
-                                }
-                            }
+                            if ::parse_that::scan_ident(
+                                    state,
+                                    &::parse_that::DEFAULT_IDENT_CONFIG,
+                                )
                                 .is_none()
                             {
                                 return false;
@@ -2525,45 +2490,10 @@ mod __bnfparser_emit_impl {
                                                                 };
                                                                 {
                                                                     let __start = state.offset;
-                                                                    if {
-                                                                        let __start = state.offset;
-                                                                        let __result: Option<()> = (|| {
-                                                                            {
-                                                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                    || (__b >= b'a' && __b <= b'z')))
-                                                                                {
-                                                                                    return None;
-                                                                                }
-                                                                                state.offset += 1;
-                                                                            }
-                                                                            {
-                                                                                let __end = state.src_bytes.len();
-                                                                                let mut __pos = state.offset;
-                                                                                while __pos < __end {
-                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                        || (__b >= b'a' && __b <= b'z'))
-                                                                                    {
-                                                                                        __pos += 1;
-                                                                                    } else {
-                                                                                        break;
-                                                                                    }
-                                                                                }
-                                                                                state.offset = __pos;
-                                                                            }
-                                                                            Some(())
-                                                                        })();
-                                                                        if __result.is_some() && state.offset > __start {
-                                                                            Some(
-                                                                                ::parse_that::Span::new(__start, state.offset, state.src),
-                                                                            )
-                                                                        } else {
-                                                                            state.offset = __start;
-                                                                            None
-                                                                        }
-                                                                    }
+                                                                    if ::parse_that::scan_ident(
+                                                                            state,
+                                                                            &::parse_that::DEFAULT_IDENT_CONFIG,
+                                                                        )
                                                                         .is_none()
                                                                     {
                                                                         return false;
@@ -2742,45 +2672,10 @@ mod __bnfparser_emit_impl {
                                                                                     };
                                                                                     {
                                                                                         let __start = state.offset;
-                                                                                        if {
-                                                                                            let __start = state.offset;
-                                                                                            let __result: Option<()> = (|| {
-                                                                                                {
-                                                                                                    let __b = *state.src_bytes.get(state.offset)?;
-                                                                                                    if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                                        || (__b >= b'a' && __b <= b'z')))
-                                                                                                    {
-                                                                                                        return None;
-                                                                                                    }
-                                                                                                    state.offset += 1;
-                                                                                                }
-                                                                                                {
-                                                                                                    let __end = state.src_bytes.len();
-                                                                                                    let mut __pos = state.offset;
-                                                                                                    while __pos < __end {
-                                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                                                        if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                                                                            || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                                            || (__b >= b'a' && __b <= b'z'))
-                                                                                                        {
-                                                                                                            __pos += 1;
-                                                                                                        } else {
-                                                                                                            break;
-                                                                                                        }
-                                                                                                    }
-                                                                                                    state.offset = __pos;
-                                                                                                }
-                                                                                                Some(())
-                                                                                            })();
-                                                                                            if __result.is_some() && state.offset > __start {
-                                                                                                Some(
-                                                                                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                                                                                )
-                                                                                            } else {
-                                                                                                state.offset = __start;
-                                                                                                None
-                                                                                            }
-                                                                                        }
+                                                                                        if ::parse_that::scan_ident(
+                                                                                                state,
+                                                                                                &::parse_that::DEFAULT_IDENT_CONFIG,
+                                                                                            )
                                                                                             .is_none()
                                                                                         {
                                                                                             return false;
@@ -2911,45 +2806,10 @@ mod __bnfparser_emit_impl {
                                 };
                                 {
                                     let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __result: Option<()> = (|| {
-                                            {
-                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                    || (__b >= b'a' && __b <= b'z')))
-                                                {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                            }
-                                            {
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = state.offset;
-                                                while __pos < __end {
-                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                        || (__b >= b'a' && __b <= b'z'))
-                                                    {
-                                                        __pos += 1;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                }
-                                                state.offset = __pos;
-                                            }
-                                            Some(())
-                                        })();
-                                        if __result.is_some() && state.offset > __start {
-                                            Some(
-                                                ::parse_that::Span::new(__start, state.offset, state.src),
-                                            )
-                                        } else {
-                                            state.offset = __start;
-                                            None
-                                        }
-                                    }
+                                    if ::parse_that::scan_ident(
+                                            state,
+                                            &::parse_that::DEFAULT_IDENT_CONFIG,
+                                        )
                                         .is_none()
                                     {
                                         return false;

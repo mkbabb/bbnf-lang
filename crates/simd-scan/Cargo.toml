@@ -13,6 +13,7 @@ syn = { version = "2", features = ["full", "parsing"] }
 quote = "1"
 
 [dev-dependencies]
+bbnf-corpus = { path = "../corpus" }
 proptest = "1"
 divan = "0.1"
 

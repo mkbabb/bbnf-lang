@@ -1,0 +1,11 @@
+[package]
+name = "bbnf-corpus"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "The one resolver for bbnf-lang's test, bench and example corpus (sk-v27 LW2.TOPO-6)."
+
+# No dependencies: every test, bench and example that reads the corpus
+# resolves it through `bbnf_corpus::path`, and `cargo xtask corpus
+# fetch|verify` materialises and checks the same directory.
+[dependencies]

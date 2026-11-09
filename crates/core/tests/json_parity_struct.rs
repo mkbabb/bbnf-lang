@@ -455,7 +455,7 @@ fn assert_doc_eq_serde(
 }
 
 fn parity_serde(fixture: &str) {
-    let path = format!("../../data/json/{}", fixture);
+    let path = bbnf_corpus::path(&format!("json/{}", fixture)).display().to_string();
     let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
     let doc =
         JsonParser::parse(&src).unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));

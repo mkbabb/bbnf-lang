@@ -203,7 +203,7 @@ fn assert_value_eq(bbnf: &RefValue, sonic: &RefValue, path: &str) {
 }
 
 fn run_parity(fixture: &str) {
-    let path = format!("../../data/json/{}", fixture);
+    let path = bbnf_corpus::path(&format!("json/{}", fixture)).display().to_string();
     let input =
         std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
     let bbnf_value = bbnf_project(&input);

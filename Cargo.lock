@@ -187,6 +187,7 @@ dependencies = [
 name = "bbnf"
 version = "0.2.11"
 dependencies = [
+ "bbnf-corpus",
  "bbnf-ir",
  "bbnf-path",
  "bbnf-ser",
@@ -245,6 +246,10 @@ dependencies = [
  "bbnf",
  "bbnf-ir",
 ]
+
+[[package]]
+name = "bbnf-corpus"
+version = "0.0.0"
 
 [[package]]
 name = "bbnf-ir"
@@ -3262,6 +3267,7 @@ dependencies = [
 name = "simd-scan"
 version = "0.1.0"
 dependencies = [
+ "bbnf-corpus",
  "divan",
  "libc",
  "proc-macro2",
@@ -4618,6 +4624,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bbnf",
+ "bbnf-corpus",
  "bbnf-ir",
  "cargo_metadata",
  "clap",
@@ -4628,6 +4635,7 @@ dependencies = [
  "quote",
  "serde",
  "serde_json",
+ "sha2",
  "syn 2.0.117",
  "tempfile",
  "toml 0.8.23",

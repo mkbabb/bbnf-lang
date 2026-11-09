@@ -21,7 +21,7 @@ const JSON_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_parts(b"{}[]:
 const CSS_ALPHABET: StructuralAlphabet =
     StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
 
-/// (display name, repo-relative path, kind).
+/// (display name, corpus-relative path, kind).
 ///
 /// Encoded as a `&'static str` discriminant rather than a reference
 /// to `StructuralAlphabet` so the array is `const`-constructible
@@ -57,39 +57,33 @@ impl std::fmt::Display for Fixture {
 const FIXTURES: &[Fixture] = &[
     Fixture {
         name: "twitter.json",
-        path: "data/json/twitter.json",
+        path: "json/twitter.json",
         kind: Kind::Json,
     },
     Fixture {
         name: "citm_catalog.json",
-        path: "data/json/citm_catalog.json",
+        path: "json/citm_catalog.json",
         kind: Kind::Json,
     },
     Fixture {
         name: "canada.json",
-        path: "data/json/canada.json",
+        path: "json/canada.json",
         kind: Kind::Json,
     },
     Fixture {
         name: "bootstrap.css",
-        path: "data/css/bootstrap.css",
+        path: "css/bootstrap.css",
         kind: Kind::Css,
     },
     Fixture {
         name: "tailwind.css",
-        path: "data/css/tailwind.css",
+        path: "css/tailwind.css",
         kind: Kind::Css,
     },
 ];
 
-fn repo_root() -> std::path::PathBuf {
-    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-    manifest.parent().unwrap().parent().unwrap().to_path_buf()
-}
-
 fn read_corpus(rel: &str) -> Vec<u8> {
-    let path = repo_root().join(rel);
-    std::fs::read(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()))
+    bbnf_corpus::read(rel)
 }
 
 #[divan::bench(args = FIXTURES)]

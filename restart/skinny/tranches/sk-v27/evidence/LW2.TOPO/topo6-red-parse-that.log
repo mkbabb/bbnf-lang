@@ -1,0 +1,6 @@
+help: view all installed commands with `cargo --list`
+help: find a package to install `xtask` with `cargo search cargo-xtask`
+rc=101
+help: view all installed commands with `cargo --list`
+help: find a package to install `xtask` with `cargo search cargo-xtask`
+rc=101

@@ -5,15 +5,11 @@ use ::bbnf::grammar::generated::json::*;
 
 /// `json_check [CORPUS_DIR]`: with a directory, inputs are read from it only (a record names its
 /// input by content hash, so the harness passes a tracked, hashed corpus); without one, the
-/// legacy relative `data/json` lookups apply.
+/// corpus resolver (`bbnf_corpus`, provided by `cargo xtask corpus fetch`) applies.
 fn bench_file(dir: Option<&str>, name: &str) {
     let candidates: Vec<String> = match dir {
         Some(d) => vec![format!("{}/{}", d.trim_end_matches('/'), name)],
-        None => vec![
-            format!("../../data/json/{}", name),
-            format!("../data/json/{}", name),
-            format!("data/json/{}", name),
-        ],
+        None => vec![bbnf_corpus::path(&format!("json/{}", name)).display().to_string()],
     };
     let path = match candidates.iter().find(|p| std::path::Path::new(p).exists()) {
         Some(p) => p.clone(),

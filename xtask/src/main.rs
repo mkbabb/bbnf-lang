@@ -17,6 +17,7 @@ use anyhow::{Context, bail};
 use clap::{Parser, Subcommand};
 #[cfg(feature = "grammar-regen")]
 use xtask::regen;
+use xtask::corpus;
 use xtask::regen_css;
 use xtask::regen_simple_runtime;
 
@@ -25,6 +26,27 @@ use xtask::regen_simple_runtime;
 struct Cli {
     #[command(subcommand)]
     cmd: Cmd,
+}
+
+#[derive(Subcommand)]
+enum CorpusVerb {
+    /// Download the manifest's release asset, check its sha256, unpack it
+    /// into the corpus directory and check every file.
+    Fetch {
+        /// Read the asset from this local file instead of the release URL.
+        #[arg(long)]
+        asset: Option<PathBuf>,
+    },
+    /// Check every corpus file against the manifest.
+    Verify,
+    /// Pack the verified corpus into a new asset and print its sha256.
+    Pack {
+        #[arg(long)]
+        out: PathBuf,
+    },
+    /// Print the corpus directory the one resolver names (for non-Rust
+    /// readers, such as `crates/core/benches/ts/json_bench.mjs`).
+    Dir,
 }
 
 #[derive(Subcommand)]
@@ -86,6 +108,12 @@ enum Cmd {
     /// Regenerate the root JSON runtime projection under
     /// `crates/core/src/runtime/json/`.
     RegenJson,
+    /// Corpus custody: fetch, verify or pack the release-asset corpus that
+    /// tests, benches and examples read (`corpus/MANIFEST.sha256`).
+    Corpus {
+        #[command(subcommand)]
+        verb: CorpusVerb,
+    },
     /// Check root runtime projections without writing generated files.
     CheckRuntime {
         /// Check only one runtime projection. The full no-arg command is the
@@ -113,6 +141,18 @@ fn main() -> anyhow::Result<()> {
         Cmd::RegenCssPretty => regen_simple_runtime::run("css_pretty"),
         Cmd::RegenGoogleSheets => regen_simple_runtime::run("google_sheets"),
         Cmd::RegenJson => regen_simple_runtime::run("json"),
+        Cmd::Corpus { verb } => {
+            let root = workspace_root()?;
+            match verb {
+                CorpusVerb::Fetch { asset } => corpus::fetch(&root, asset.as_deref()),
+                CorpusVerb::Verify => corpus::verify(&root),
+                CorpusVerb::Pack { out } => corpus::pack(&root, &out),
+                CorpusVerb::Dir => {
+                    println!("{}", bbnf_corpus::dir().display());
+                    Ok(())
+                }
+            }
+        }
         Cmd::CheckRuntime { grammar } => run_check_runtime(grammar.as_deref()),
     }
 }

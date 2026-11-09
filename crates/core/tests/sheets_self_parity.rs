@@ -503,9 +503,9 @@ fn prettify_idempotent_postfix_percent() {
     assert_prettify_idempotent("=50%");
 }
 
-// ── Fixture corpus: data/sheets/*.txt line-by-line ────────────────
+// ── Fixture corpus: tests/fixtures/sheets/*.txt line-by-line ────────────────
 //
-// `data/sheets/simple.txt`, `nested.txt`, and `stress.txt` carry a
+// `tests/fixtures/sheets/simple.txt`, `nested.txt`, and `stress.txt` carry a
 // hand-curated corpus of live-world formulas. Each non-empty line is
 // an independent formula; we loop both assertions over every line.
 
@@ -537,18 +537,18 @@ fn loop_corpus(corpus: &str, tag: &str) {
 
 #[test]
 fn corpus_simple() {
-    let corpus = include_str!("../../../data/sheets/simple.txt");
+    let corpus = include_str!("fixtures/sheets/simple.txt");
     loop_corpus(corpus, "simple");
 }
 
 #[test]
 fn corpus_nested() {
-    let corpus = include_str!("../../../data/sheets/nested.txt");
+    let corpus = include_str!("fixtures/sheets/nested.txt");
     loop_corpus(corpus, "nested");
 }
 
 #[test]
 fn corpus_stress() {
-    let corpus = include_str!("../../../data/sheets/stress.txt");
+    let corpus = include_str!("fixtures/sheets/stress.txt");
     loop_corpus(corpus, "stress");
 }

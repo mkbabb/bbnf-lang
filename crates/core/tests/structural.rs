@@ -89,9 +89,7 @@ fn tree_contains_number<'p>(view: &JsonView<'_, 'p>, value: &JsonValue<'p>, targ
 /// Try to load a data file from standard candidate locations.
 fn load_data(name: &str) -> Option<String> {
     let candidates = [
-        format!("../../data/{}", name),
-        format!("../data/{}", name),
-        format!("data/{}", name),
+        bbnf_corpus::path(name).display().to_string(),
     ];
     candidates
         .iter()

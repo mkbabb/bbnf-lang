@@ -126,8 +126,8 @@ fn bracket_constant_fills() {
 
 #[test]
 fn bracket_corpus_parity() {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../data/css/bootstrap.css");
-    let bytes = match std::fs::read(path) {
+    let path = bbnf_corpus::path("css/bootstrap.css");
+    let bytes = match std::fs::read(&path) {
         Ok(b) => b,
         Err(error) => {
             eprintln!("bracket corpus parity: fixture unavailable ({error}); skipping");

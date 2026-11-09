@@ -17,8 +17,7 @@ use bbnf::runtime::json::JsonKind;
 
 fn load(name: &str) -> String {
     let candidates = [
-        format!("../../data/json/{}", name),
-        format!("../data/json/{}", name),
+        bbnf_corpus::path(&format!("json/{}", name)).display().to_string(),
     ];
     for path in &candidates {
         if let Ok(contents) = std::fs::read_to_string(path) {

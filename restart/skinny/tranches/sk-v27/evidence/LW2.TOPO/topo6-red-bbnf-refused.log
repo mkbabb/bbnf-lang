@@ -1,0 +1,4 @@
+[guarded] REFUSED: kernel zone data.kalloc.1024 at 8.06M (panics near 20.8M; heavy and browser runs stop at 8M): reboot the Mac
+rc=75
+[guarded] REFUSED: kernel zone data.kalloc.1024 at 8.06M (panics near 20.8M; heavy and browser runs stop at 8M): reboot the Mac
+rc=75

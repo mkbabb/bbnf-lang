@@ -6,7 +6,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use divan::black_box;
 
 fn load(name: &str) -> String {
-    let path = format!("../../data/json/{}", name);
+    let path = bbnf_corpus::path(&format!("json/{}", name)).display().to_string();
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
 }
 

@@ -50,7 +50,7 @@ use bbnf::runtime::{SheetsCompoundKind, SheetsDocument, SheetsValue};
 /// records. The struct-tree walker uses an iterative `Vec` worklist
 /// over the arena's compound slabs — deeply-nested formulae
 /// (`=IF(A1>10, SUM(B1:B10), 0)`, the nested LET / LAMBDA chains in
-/// `data/sheets/stress.txt`) cannot overflow the host stack. The
+/// `tests/fixtures/sheets/stress.txt`) cannot overflow the host stack. The
 /// worklist visits the same pre-order sequence: pop, visit, push
 /// children in reverse so LIFO yields source order.
 fn walk_value_tree<'p, F: FnMut(&SheetsValue<'p>, SheetsCompoundKind)>(

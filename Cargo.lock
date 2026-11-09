@@ -336,6 +336,7 @@ name = "bbnf-ser"
 version = "0.1.0"
 dependencies = [
  "itoa",
+ "pprint",
  "ryu",
 ]
 

@@ -1,0 +1,6 @@
+drift: `generated/css_l4.rs` differs from `cargo xtask regen --grammar css_l4` output
+drift: `generated/google_sheets.rs` differs from `cargo xtask regen --grammar google_sheets` output
+drift: `generated/bnf.rs` differs from `cargo xtask regen --grammar bnf` output
+Error: regen --check: 3 of 9 grammars drifted
+Error: grammar-regeneration xtask exited with exit status: 1
+rc read from s1-heavy.out

@@ -1,0 +1,50 @@
+== clean checkout parse-that 07d1039b13db1143def2993f05a60e6506dc71b9; data/ present: no
+== RED verify #1 (corpus not fetched)
+  css/bootstrap.css: absent (No such file or directory (os error 2))
+  css/normalize.css: absent (No such file or directory (os error 2))
+  css/tailwind-output.css: absent (No such file or directory (os error 2))
+  csv/active_charter_schools_report.csv: absent (No such file or directory (os error 2))
+  csv/data.csv: absent (No such file or directory (os error 2))
+  json/apache-builds.json: absent (No such file or directory (os error 2))
+  json/canada.json: absent (No such file or directory (os error 2))
+  json/citm_catalog.json: absent (No such file or directory (os error 2))
+  json/data.json: absent (No such file or directory (os error 2))
+  json/data-l.json: absent (No such file or directory (os error 2))
+  json/data-xl.json: absent (No such file or directory (os error 2))
+  json/twitter.json: absent (No such file or directory (os error 2))
+error: corpus verify: 12 of 12 files fail against ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-parse-that/corpus/MANIFEST.sha256 in ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-parse-that/data; run `cargo xtask corpus fetch`
+rc=1
+== RED verify #2 (corpus not fetched)
+  css/bootstrap.css: absent (No such file or directory (os error 2))
+  css/normalize.css: absent (No such file or directory (os error 2))
+  css/tailwind-output.css: absent (No such file or directory (os error 2))
+  csv/active_charter_schools_report.csv: absent (No such file or directory (os error 2))
+  csv/data.csv: absent (No such file or directory (os error 2))
+  json/apache-builds.json: absent (No such file or directory (os error 2))
+  json/canada.json: absent (No such file or directory (os error 2))
+  json/citm_catalog.json: absent (No such file or directory (os error 2))
+  json/data.json: absent (No such file or directory (os error 2))
+  json/data-l.json: absent (No such file or directory (os error 2))
+  json/data-xl.json: absent (No such file or directory (os error 2))
+  json/twitter.json: absent (No such file or directory (os error 2))
+error: corpus verify: 12 of 12 files fail against ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-parse-that/corpus/MANIFEST.sha256 in ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-parse-that/data; run `cargo xtask corpus fetch`
+rc=1
+== RED tamper #1 (one byte flipped)
+error: corpus fetch: asset ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/tamper-parse-that/tampered.tar.gz sha256 6a38c27d9f9eb818e9eff81cb6792451b08745bb306e99190ab8cfafb201a193 != manifest 15d165a43b3758832422034651803452fe864638674cd468ed8a223b0225974f; refused, nothing unpacked
+rc=1
+data/ files after refusal:        0
+== RED tamper #2 (one byte flipped)
+error: corpus fetch: asset ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/tamper-parse-that/tampered.tar.gz sha256 6a38c27d9f9eb818e9eff81cb6792451b08745bb306e99190ab8cfafb201a193 != manifest 15d165a43b3758832422034651803452fe864638674cd468ed8a223b0225974f; refused, nothing unpacked
+rc=1
+data/ files after refusal:        0
+== GREEN fetch (public URL, no token, no credentials)
+corpus fetch: https://github.com/mkbabb/parse-that/releases/download/corpus-v1/corpus-v1.tar.gz
+corpus fetch: 12 files verified in ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-parse-that/data
+rc=0
+== GREEN verify #1
+corpus verify: 12/12 files match (corpus-v1)
+rc=0
+== GREEN verify #2
+corpus verify: 12/12 files match (corpus-v1)
+rc=0
+== twitter.json: 30721e496a8d73cfc50658923c34eb2c0fbe15ee6835005e43ee624d8dedf200

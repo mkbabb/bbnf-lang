@@ -1,0 +1,42 @@
+== clean checkout bbnf-lang d6b43416793ded6d250e79bdd28449ce429e1657; data/ present: no
+== RED verify #1 (corpus not fetched)
+  css/bootstrap.css: absent (No such file or directory (os error 2))
+  css/normalize.css: absent (No such file or directory (os error 2))
+  css/tailwind.css: absent (No such file or directory (os error 2))
+  json/canada.json: absent (No such file or directory (os error 2))
+  json/citm_catalog.json: absent (No such file or directory (os error 2))
+  json/data.json: absent (No such file or directory (os error 2))
+  json/data_xl.json: absent (No such file or directory (os error 2))
+  json/twitter.json: absent (No such file or directory (os error 2))
+Error: corpus verify: 8 of 8 files fail against ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-bbnf-lang/corpus/MANIFEST.sha256 in ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-bbnf-lang/data; run `cargo xtask corpus fetch`
+rc=1
+== RED verify #2 (corpus not fetched)
+  css/bootstrap.css: absent (No such file or directory (os error 2))
+  css/normalize.css: absent (No such file or directory (os error 2))
+  css/tailwind.css: absent (No such file or directory (os error 2))
+  json/canada.json: absent (No such file or directory (os error 2))
+  json/citm_catalog.json: absent (No such file or directory (os error 2))
+  json/data.json: absent (No such file or directory (os error 2))
+  json/data_xl.json: absent (No such file or directory (os error 2))
+  json/twitter.json: absent (No such file or directory (os error 2))
+Error: corpus verify: 8 of 8 files fail against ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-bbnf-lang/corpus/MANIFEST.sha256 in ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-bbnf-lang/data; run `cargo xtask corpus fetch`
+rc=1
+== RED tamper #1 (one byte flipped)
+Error: corpus fetch: asset ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/tamper-bbnf-lang/tampered.tar.gz sha256 5f524d92833ef48fb1798c6843e7a2689a8383ef8e2972222aa3a8c27931b8d1 != manifest 310e4d48477cd45169dc18e749ca10f65286c7b21abd3523363ba616aa7fab3f; refused, nothing unpacked
+rc=1
+data/ files after refusal:        0
+== RED tamper #2 (one byte flipped)
+Error: corpus fetch: asset ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/tamper-bbnf-lang/tampered.tar.gz sha256 5f524d92833ef48fb1798c6843e7a2689a8383ef8e2972222aa3a8c27931b8d1 != manifest 310e4d48477cd45169dc18e749ca10f65286c7b21abd3523363ba616aa7fab3f; refused, nothing unpacked
+rc=1
+data/ files after refusal:        0
+== GREEN fetch (public URL, no token, no credentials)
+corpus fetch: https://github.com/mkbabb/bbnf-lang/releases/download/corpus-v1/corpus-v1.tar.gz
+corpus fetch: 8 files verified in ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6/clean-bbnf-lang/data
+rc=0
+== GREEN verify #1
+corpus verify: 8/8 files match (corpus-v1)
+rc=0
+== GREEN verify #2
+corpus verify: 8/8 files match (corpus-v1)
+rc=0
+== twitter.json: 30721e496a8d73cfc50658923c34eb2c0fbe15ee6835005e43ee624d8dedf200

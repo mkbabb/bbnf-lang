@@ -1,6 +1,6 @@
 # Instructions
 
-Read `docs/precepts/instructions/` first. Local bbnf-lang rules:
+Read `instructions/` in the [precepts] repo first. Local bbnf-lang rules:
 
 - Rust toolchain is pinned by `rust-toolchain.toml`; do not change nightly,
   components, or workspace resolver policy as a side effect of tranche work.
@@ -24,6 +24,8 @@ Read `docs/precepts/instructions/` first. Local bbnf-lang rules:
 - Workspace crates are owned and modifiable within declared tranche scope.
   Sibling repos `../parse-that` and `../pprint` are also owned when a tranche
   explicitly names them.
-- `crates/csp-solver` is the local CSP/COP substrate. It inherits shared
-  precepts through the bbnf-lang top-level `docs/precepts`; see
+- `crates/csp-solver` is the local CSP/COP substrate. It inherits the shared
+  [precepts] like the rest of bbnf-lang; see
   `crates/csp-solver/docs/instructions/README.md` for its local note.
+
+[precepts]: https://github.com/mkbabb/precepts

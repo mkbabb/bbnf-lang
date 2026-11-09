@@ -80,7 +80,7 @@ Methodological exemplar: `docs/tranches/meta-audit/01-session-friction.md`. Mine
 
 - `/Users/mkbabb/.claude/projects/-Users-mkbabb-Programming-bbnf-lang/*.jsonl` (most recent two long sessions).
 - `docs/tranches/meta-audit/01-session-friction.md`.
-- `docs/precepts/instructions/ORCHESTRATION.md` §Long-Running Commands, §Status-Tick Cadence.
+- [precepts] `instructions/ORCHESTRATION.md` §Long-Running Commands, §Status-Tick Cadence.
 
 ### Deliverable shape
 
@@ -92,12 +92,12 @@ Methodological exemplar: `docs/tranches/meta-audit/01-session-friction.md`. Mine
 
 ### Audit purview
 
-Methodological exemplar: `docs/tranches/meta-audit/02-instruction-adherence.md`. For every edict in `docs/precepts/instructions/`, audit the audit subjects for adherence. Specific items: heavy-surface routine defaults; agent-cap per wave (≤ 6); triumvirate auto-trigger thresholds; status-tick cadence; substrate-with-consumer; deletion bias; six-agent ceiling; KISS. Verbatim quote each edict + cite the audit-subject line that adheres or violates.
+Methodological exemplar: `docs/tranches/meta-audit/02-instruction-adherence.md`. For every edict in [precepts] `instructions/`, audit the audit subjects for adherence. Specific items: heavy-surface routine defaults; agent-cap per wave (≤ 6); triumvirate auto-trigger thresholds; status-tick cadence; substrate-with-consumer; deletion bias; six-agent ceiling; KISS. Verbatim quote each edict + cite the audit-subject line that adheres or violates.
 
 ### Sources the auditor consults
 
-- `docs/precepts/instructions/{README.md,STYLE.md,ORCHESTRATION.md,CONSUMING.md,LESSONS-LEARNED.md}`.
-- `docs/precepts/instructions/tranche/{SPEC.md,WAVE_SPEC.md,AGENT_DISPATCH_TEMPLATE.md,RESEARCH.md,CHALLENGE.md,DOC_UPDATE_WAVE.md,START.md}`.
+- [precepts] `instructions/{README.md,STYLE.md,ORCHESTRATION.md,CONSUMING.md,LESSONS-LEARNED.md}`.
+- [precepts] `instructions/tranche/{SPEC.md,WAVE_SPEC.md,AGENT_DISPATCH_TEMPLATE.md,RESEARCH.md,CHALLENGE.md,DOC_UPDATE_WAVE.md,START.md}`.
 - `docs/tranches/meta-audit/02-instruction-adherence.md`.
 - Audit-subject top-level + wave specs.
 
@@ -186,7 +186,7 @@ Methodological exemplar: `docs/tranches/meta-audit/06-commit-archaeology.md`. Fo
 
 ### Audit purview
 
-Methodological exemplar: `docs/tranches/meta-audit/07-appurtenant-assay.md`. Re-assay the appurtenant ring (parse-that, pprint, csp-solver/csc411 sibling, wasm/, gorgeous, bbnf-buddy, precepts submodule, ffuzzy) against the audited cycle's mechanism. Specific questions: does the cycle's emitter cross-pollute parse-that's combinator surface? Does the cycle introduce new sibling-repo dependencies (which version, where pinned, does it cross with siblings)? Verdict per repo: **READY** / **PRE-CYCLE TOUCH** / **POST-CYCLE TOUCH** / **OUT-OF-SCOPE-FOREVER**.
+Methodological exemplar: `docs/tranches/meta-audit/07-appurtenant-assay.md`. Re-assay the appurtenant ring (parse-that, pprint, csp-solver/csc411 sibling, wasm/, gorgeous, bbnf-buddy, the [precepts] repo, ffuzzy) against the audited cycle's mechanism. Specific questions: does the cycle's emitter cross-pollute parse-that's combinator surface? Does the cycle introduce new sibling-repo dependencies (which version, where pinned, does it cross with siblings)? Verdict per repo: **READY** / **PRE-CYCLE TOUCH** / **POST-CYCLE TOUCH** / **OUT-OF-SCOPE-FOREVER**.
 
 ### Sources the auditor consults
 
@@ -525,8 +525,8 @@ Declaring a hard gate MET when the substrate exists but no production caller doe
 
 ### Instructions — orchestration edicts
 
-- `docs/precepts/instructions/{README.md,STYLE.md,ORCHESTRATION.md,CONSUMING.md,LESSONS-LEARNED.md}`.
-- `docs/precepts/instructions/tranche/{SPEC.md,WAVE_SPEC.md,AGENT_DISPATCH_TEMPLATE.md,RESEARCH.md,CHALLENGE.md,DOC_UPDATE_WAVE.md,START.md}`.
+- [precepts] `instructions/{README.md,STYLE.md,ORCHESTRATION.md,CONSUMING.md,LESSONS-LEARNED.md}`.
+- [precepts] `instructions/tranche/{SPEC.md,WAVE_SPEC.md,AGENT_DISPATCH_TEMPLATE.md,RESEARCH.md,CHALLENGE.md,DOC_UPDATE_WAVE.md,START.md}`.
 - `docs/instructions/PROFILING.md` — samply 7-artefact contract canon.
 
 ### Tranche archaeology (for context)
@@ -656,3 +656,5 @@ Non-negotiables (per §ED1..§ED11):
 ## §Provenance
 
 The 8 methodological lanes are the canonical pattern at `docs/tranches/meta-audit/01..08-*.md` (2026-04-22 bundle; cited live by AZ-IV.W0). The structural shape (audit-only contract; scaffolded vs reference sections; numbered invariants / discipline rules / exhortations / failure modes; reading list; methodology; self-contained brief) follows `docs/audit/archives/META-AUDIT-PROMPT.md` (the 2026-04-23 audit-only prompt that fed B1, B7, AZ-I, AZ-II planning; archived 2026-05-01). The current cycle's audit subjects, predecessor cohort, and baseline commit are recorded in §Audit subjects at the top of this brief. Subsequent cycles update §Audit subjects and the predecessor-cohort references in §Reading list; structure and reference sections are reusable verbatim.
+
+[precepts]: https://github.com/mkbabb/precepts

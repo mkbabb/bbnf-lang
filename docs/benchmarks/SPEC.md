@@ -164,7 +164,7 @@ A bench row's `status` field uses one of:
 
 `status` is omitted when the row is `MEASURED` and all required fields are present (the canonical default). `WATCHDOG_HALT` and `NAMED-BLOCKER` rows MUST carry the `note` field with a routing destination.
 
-A close that lands with any `NAMED-BLOCKER` row in a non-routable carry context (per the owning tranche's §Non-Routable Carries section) is invalid — see `docs/precepts/instructions/tranche/SPEC.md` §Hard Gates.
+A close that lands with any `NAMED-BLOCKER` row in a non-routable carry context (per the owning tranche's §Non-Routable Carries section) is invalid — see [precepts] `instructions/tranche/SPEC.md` §Hard Gates.
 
 ## Cross-Profile Comparison Rule
 
@@ -197,4 +197,6 @@ If an archived file is needed for an active tranche claim, the active tranche mu
 
 ## Precept Reference
 
-This spec is repo-local. The cross-repo `docs/precepts/instructions/tranche/SPEC.md` and `WAVE_SPEC.md` define how tranche/wave docs cite benchmark evidence; this file defines the bench-matrix file format itself. Wave specs that touch benchmarks (`AZ-IV/waves/W3.md` and equivalents) cite `docs/benchmarks/SPEC.md` in their §Verification Artefacts section.
+This spec is repo-local. The cross-repo [precepts] `instructions/tranche/SPEC.md` and `WAVE_SPEC.md` define how tranche/wave docs cite benchmark evidence; this file defines the bench-matrix file format itself. Wave specs that touch benchmarks (`AZ-IV/waves/W3.md` and equivalents) cite `docs/benchmarks/SPEC.md` in their §Verification Artefacts section.
+
+[precepts]: https://github.com/mkbabb/precepts

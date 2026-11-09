@@ -149,7 +149,7 @@ Every claim in a profiling sub-agent's report cites a saved file. Inference-only
 
 ## 7. The instruction-layer discipline
 
-The orchestrator and sub-agents share a rule set carved from real incidents. These are not decorative; they are the protocol that made the meta-audit archaeology possible and the parallel waves tractable. The canonical edicts live in `docs/precepts/instructions/{README,ORCHESTRATION,LESSONS-LEARNED,tranche/SPEC,tranche/WAVE_SPEC,tranche/AGENT_DISPATCH_TEMPLATE}.md`. A summary of the load-bearing items:
+The orchestrator and sub-agents share a rule set carved from real incidents. These are not decorative; they are the protocol that made the meta-audit archaeology possible and the parallel waves tractable. The canonical edicts live in the [precepts] repo at `instructions/{README,ORCHESTRATION,LESSONS-LEARNED,tranche/SPEC,tranche/WAVE_SPEC,tranche/AGENT_DISPATCH_TEMPLATE}.md`. A summary of the load-bearing items:
 
 **Hard-cap on every dispatch.** `HARD CAP: N min. At 0.9N commit, at N halt`. Defaults: research 20, plan 15, redress 30, audit 25. HARD CAP expands on overrun (no pre-allocated triumvirate budget; expand cap and record reason in PROGRESS.md).
 
@@ -188,3 +188,5 @@ The orchestrator and sub-agents share a rule set carved from real incidents. The
 **Failing-test discipline.** Workspace nextest is 100 % pass. Every `#[ignore]` carries an owner + deadline-commit + reason + ticket. Tests deleted in a wave carry per-test commit-body justification (test name, file:line, why, replacement).
 
 **Non-routable carries.** The chronic-deferral pattern ends at AZ-IV: items that have been deferred ≥ 3 tranches are non-routable in AZ-IV. AZ-IV cannot close by routing them to a successor letter. A non-routable item that cannot land inside AZ-IV without changing the AZ-IV thesis triggers a triumvirate scope-reveal review of the thesis itself, not a new tranche letter.
+
+[precepts]: https://github.com/mkbabb/precepts

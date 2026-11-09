@@ -3,20 +3,33 @@
 against the heads receipt, i.e. it is a commit in one of the receipted repos
 and is reachable from a head that heads-W0.json records for that repo.
 
-usage: topo1_check.py <heads-W0.json> [record.md ...]  (default: PLAN, LEDGER, RULINGS)
+usage: topo1_check.py <heads-W0.json> [--mutants <mutant.log>] [record.md ...]
+       (default records: PLAN, LEDGER, RULINGS)
 
 LW2.TOPO-0 adds two verified resolutions for tokens that are not programme
 commits (both are lookups that can fail, not exemptions):
 - an all-decimal token is a GitHub Actions run id, resolved by
   `gh api repos/<owner>/<repo>/actions/runs/<id>` against a receipted origin;
 - a third-party pin is resolved by `git ls-remote <url> <ref>` through
-  upstream-pins.tsv (token, url, ref), and must equal the token's prefix."""
+  upstream-pins.tsv (token, url, ref), and must equal the token's prefix.
+
+LW2 S14 (sustaining S12 finding 1): a record that reports a falsifier's
+mutant tokens cites them, and those tokens are unresolvable by design, so the
+check could never be re-read GREEN over the record that reports it. With
+`--mutants <log>`, every token a committed mutant log lists as refused
+("<tok>: not a commit or object in any receipted repo") is re-checked here
+and must still be refused by every resolution above; a mutant token that
+resolves is RED. Only those tokens leave the cited set, and only by being
+refused again."""
 import json, pathlib, re, subprocess, sys
 
 HOME = pathlib.Path.home() / "Programming"
 TR = pathlib.Path(__file__).resolve().parent.parent
 receipt_path = pathlib.Path(sys.argv[1])
-records = [pathlib.Path(p) for p in sys.argv[2:]] or [TR / n for n in ("PLAN.md", "LEDGER.md", "RULINGS.md")]
+args, mutant_logs = sys.argv[2:], []
+while "--mutants" in args:
+    i = args.index("--mutants"); mutant_logs.append(pathlib.Path(args[i + 1])); del args[i:i + 2]
+records = [pathlib.Path(p) for p in args] or [TR / n for n in ("PLAN.md", "LEDGER.md", "RULINGS.md")]
 if not receipt_path.is_file():
     print(f"RED\n  no heads receipt at {receipt_path}"); sys.exit(1)
 receipt = json.loads(receipt_path.read_text())["repos"]
@@ -55,20 +68,40 @@ def upstream(tok):
     out = subprocess.run(["git", "ls-remote", url, ref], capture_output=True, text=True).stdout
     return url if any(l.split("\t")[0].startswith(tok) for l in out.splitlines()) else None
 
+def resolves(tok):
+    """The one resolution order every cited token goes through."""
+    if any(git(repo, "rev-parse", "--verify", "-q", tok + "^{commit}").returncode == 0 for repo in receipt):
+        return "commit"
+    if any(git(repo, "cat-file", "-e", tok).returncode == 0 for repo in receipt):
+        return "object"
+    if tok.isdigit() and ci_run(tok):
+        return "run"
+    if upstream(tok):
+        return "pin"
+    return None
+
+REFUSED = re.compile(r"^\s+([0-9a-f]{7,40}): not a commit or object in any receipted repo$", re.M)
+mutants = sorted({t for log in mutant_logs for t in REFUSED.findall(log.read_text())})
 bad, ok, objs, runs, ups = [], 0, 0, 0, 0
+for tok in mutants:
+    if (kind := resolves(tok)):
+        bad.append(f"{tok}: listed as a refused mutant but resolves ({kind})")
+mbad = len(bad)
+cited = [t for t in cited if t not in mutants]
 for tok in cited:
     home = [repo for repo in receipt if git(repo, "rev-parse", "--verify", "-q", tok + "^{commit}").returncode == 0]
     if not home:
-        if any(git(repo, "cat-file", "-e", tok).returncode == 0 for repo in receipt):
+        kind = resolves(tok)
+        if kind == "object":
             objs += 1; continue  # a tree or blob id, not a commit
-        if tok.isdigit() and ci_run(tok):
+        if kind == "run":
             runs += 1; continue  # a GitHub Actions run id, verified by the API
-        if upstream(tok):
+        if kind == "pin":
             ups += 1; continue  # a third-party pin, verified by ls-remote
         bad.append(f"{tok}: not a commit or object in any receipted repo"); continue
     reach = [repo for repo in home if git(repo, "rev-list", "--count", tok, "--stdin",
                                           stdin="".join(f"^{h}\n" for h in heads[repo])).stdout.strip() == "0"]
     if reach: ok += 1
     else: bad.append(f"{tok}: commit in {home} but reachable from no receipted head")
-print("RED" if bad else "GREEN", f"{ok}/{len(cited) - objs - runs - ups} cited commits resolve ({objs} non-commit object ids, {runs} CI run ids, {ups} upstream pins verified)", *bad, sep="\n  ")
+print("RED" if bad else "GREEN", f"{ok}/{len(cited) - objs - runs - ups} cited commits resolve ({objs} non-commit object ids, {runs} CI run ids, {ups} upstream pins verified; {len(mutants) - mbad} of {len(mutants)} listed mutant tokens re-refused)", *bad, sep="\n  ")
 sys.exit(1 if bad else 0)

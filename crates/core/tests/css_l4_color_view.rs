@@ -23,7 +23,7 @@ use common::legacy_color_payload::{COLOR_PAYLOAD_BYTES, Color, ColorSpace};
 // `grammar/css/l4/color.bbnf` lives in `bbnf::css_types` (the canonical
 // shim).
 #[allow(unused_imports)]
-use bbnf::css_types as _css_types_link;
+use bbnf::runtime::css_l4::host as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 

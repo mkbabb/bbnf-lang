@@ -1,0 +1,64 @@
+diff --git a/skinny/crates/grammar/src/lib.rs b/skinny/crates/grammar/src/lib.rs
+index f8fe23128..ce19de444 100644
+--- a/skinny/crates/grammar/src/lib.rs
++++ b/skinny/crates/grammar/src/lib.rs
+@@ -1301,12 +1301,11 @@ impl<'a> Parser<'a> {
+         }
+ 
+         match name.as_str() {
+-            "import" | "token" => Ok(()),
+-            _ => Err(self.error_at(
+-                "BBNF-DIRECTIVE-NOT-IN-SKINNY",
+-                start,
+-                format!("directive @{name} is not available in the skinny compiler"),
+-            )),
++            // PROTO-1 cascade-peel: accept every directive as recognise-only no-op.
++            _ => {
++                let _ = start;
++                Ok(())
++            }
+         }
+     }
+ 
+@@ -1344,6 +1343,24 @@ impl<'a> Parser<'a> {
+         let mut children = Vec::new();
+         loop {
+             self.skip_inline_trivia();
++            // LOCK-7 PROTO-1 cascade-peel (throwaway): recognise-only skip of the
++            // constructs the JSON-subset hand seed lacks, to expose the NEXT wall.
++            if self.source[self.cursor..].starts_with("->") {
++                self.bump_char();
++                self.bump_char();
++                self.skip_inline_trivia();
++                let _ = self.parse_ident()?; // target ident (Span/i64/f64 in corpus)
++                continue;
++            }
++            if self.peek_char() == Some(',') {
++                self.bump_char();
++                continue;
++            }
++            if self.source[self.cursor..].starts_with("?w") {
++                self.bump_char();
++                self.bump_char();
++                continue;
++            }
+             match self.peek_char() {
+                 None | Some(';') | Some(')') | Some('|') => break,
+                 _ => children.push(self.parse_postfix()?),
+@@ -1384,12 +1401,10 @@ impl<'a> Parser<'a> {
+                 }
+                 '?' => {
+                     if self.source[self.cursor..].starts_with("?w") {
+-                        return Err(self.error_at(
+-                            "BBNF-DIRECTIVE-NOT-IN-SKINNY",
+-                            self.cursor,
+-                            "whitespace modifier ?w is not available in the skinny compiler"
+-                                .to_string(),
+-                        ));
++                        // PROTO-1 cascade-peel: consume ?w as recognise-only no-op.
++                        self.bump_char();
++                        self.bump_char();
++                        continue;
+                     }
+                     self.bump_char();
+                     expr = self.grammar.add_expr(

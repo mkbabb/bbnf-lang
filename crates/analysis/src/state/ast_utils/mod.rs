@@ -1,15 +1,15 @@
 //! AST helper functions over the struct-direct [`BbnfView`] surface.
 //!
 //! AZ-II.cutover.D4 — every analysis-side ast walker migrates from
-//! the tape-cursor `BbnfBootstrapNodeView` to the struct-direct
+//! the legacy tape-cursor node view to the struct-direct
 //! [`bbnf::runtime::bbnf::BbnfView`] (a [`bbnf::runtime::RuntimeView`]
 //! impl). Pure functions consumed by `state/diagnostics.rs` and
 //! `features/*.rs`.
 //!
 //! # Discriminator translation
 //!
-//! Pre-cutover.D the helpers dispatched on `BbnfBootstrapRuleKind`,
-//! whose alphabet included sub-variant tokens (`term_0`, `term_1`,
+//! Pre-cutover.D the helpers dispatched on the legacy tape-first
+//! rule-kind enum, whose alphabet included sub-variant tokens (`term_0`, `term_1`,
 //! `term_2`) emitted by the tape-first generator. The struct-direct
 //! `BbnfCompoundKind` alphabet collapses every Alt sub-variant onto
 //! the parent `term` arm and exposes the branch index via

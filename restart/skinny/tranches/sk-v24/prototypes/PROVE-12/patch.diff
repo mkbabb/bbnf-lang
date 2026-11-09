@@ -1,0 +1,184 @@
+diff --git a/skinny/crates/codegen/src/runtime_generator.rs b/skinny/crates/codegen/src/runtime_generator.rs
+index 8f00cc9bf..1b1495bd8 100644
+--- a/skinny/crates/codegen/src/runtime_generator.rs
++++ b/skinny/crates/codegen/src/runtime_generator.rs
+@@ -1190,7 +1190,7 @@ const CSS_GENERATED_RS: &str = r#"
+                 return Err(css_full_error(name_start, "expected at-rule name"));
+             }
+ 
+-            match self.find_component_delim(self.pos, b";{}")? {
++            match self.find_component_delim::<{ delim_mask(b";{}") }>(self.pos)? {
+                 Some((b';', end)) => {
+                     self.push_rule(end, true);
+                     self.pos = end + 1;
+@@ -1209,7 +1209,7 @@ const CSS_GENERATED_RS: &str = r#"
+ 
+         fn parse_qualified_rule(&mut self) -> Result<(), CssFactError> {
+             let start = self.pos;
+-            match self.find_component_delim(self.pos, b"{};")? {
++            match self.find_component_delim::<{ delim_mask(b"{};") }>(self.pos)? {
+                 Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                     self.push_rule(end, false);
+                     self.pos = end + 1;
+@@ -1247,7 +1247,7 @@ const CSS_GENERATED_RS: &str = r#"
+ 
+         fn parse_block_item(&mut self) -> Result<(), CssFactError> {
+             let start = self.pos;
+-            match self.find_component_delim(self.pos, b"{};")? {
++            match self.find_component_delim::<{ delim_mask(b"{};") }>(self.pos)? {
+                 Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                     self.push_rule(end, false);
+                     self.pos = end + 1;
+@@ -1282,7 +1282,7 @@ const CSS_GENERATED_RS: &str = r#"
+                 return Err(css_full_error(start, "expected declaration name"));
+             }
+             self.pos = colon + 1;
+-            match self.find_component_delim(self.pos, b";}")? {
++            match self.find_component_delim::<{ delim_mask(b";}") }>(self.pos)? {
+                 Some((b';', end)) => {
+                     self.push_declaration(colon);
+                     self.pos = end + 1;
+@@ -1354,14 +1354,17 @@ const CSS_GENERATED_RS: &str = r#"
+             }
+         }
+ 
+-        fn find_component_delim(
++        fn find_component_delim<const DELIMS: u128>(
+             &self,
+             mut pos: usize,
+-            delimiters: &[u8],
+         ) -> Result<Option<(u8, usize)>, CssFactError> {
+             while pos < self.bytes.len() {
+                 let byte = self.bytes[pos];
+-                if delimiters.contains(&byte) {
++                // Residualized delimiter membership. The grammar delimiter set
++                // is const-folded to an ASCII bitmask at generation time, so the
++                // per-byte test is a single const shift-and-test — no runtime
++                // slice load, no length guard, no `contains` loop.
++                if byte < 128 && (DELIMS >> byte) & 1 != 0 {
+                     return Ok(Some((byte, pos)));
+                 }
+                 pos = match byte {
+@@ -1384,7 +1387,7 @@ const CSS_GENERATED_RS: &str = r#"
+             start: usize,
+             end: usize,
+         ) -> Result<Option<usize>, CssFactError> {
+-            match self.find_component_delim(start, b":{};")? {
++            match self.find_component_delim::<{ delim_mask(b":{};") }>(start)? {
+                 Some((b':', colon)) if colon < end => Ok(Some(colon)),
+                 _ => Ok(None),
+             }
+@@ -1475,6 +1478,21 @@ const CSS_GENERATED_RS: &str = r#"
+         byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'\\') || byte >= 0x80
+     }
+ 
++    /// Const-fold a grammar delimiter set into an ASCII membership bitmask at
++    /// generation time. Consumed as a `const` generic by `find_component_delim`,
++    /// which residualizes the per-byte `contains` scan into one shift-and-test.
++    /// Every CSS component delimiter (`:`;`{`}`) is ASCII (< 128), so each bit
++    /// index is in range for the `u128`.
++    const fn delim_mask<const N: usize>(bytes: &[u8; N]) -> u128 {
++        let mut mask = 0u128;
++        let mut i = 0;
++        while i < N {
++            mask |= 1u128 << bytes[i];
++            i += 1;
++        }
++        mask
++    }
++
+     /// Trim leading/trailing ASCII whitespace from a span — the lazy span readers
+     /// normalise prelude/property/value boundaries without allocating.
+     #[inline]
+diff --git a/skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs b/skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs
+index 5596da90c..dd26445a3 100644
+--- a/skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs
++++ b/skinny/crates/runtime/src/grammars/css_l4_declaration_values/generated.rs
+@@ -490,7 +490,7 @@ impl<'i, 'b, 'input> CssFullParser<'i, 'b, 'input> {
+             return Err(css_full_error(name_start, "expected at-rule name"));
+         }
+ 
+-        match self.find_component_delim(self.pos, b";{}")? {
++        match self.find_component_delim::<{ delim_mask(b";{}") }>(self.pos)? {
+             Some((b';', end)) => {
+                 self.push_rule(end, true);
+                 self.pos = end + 1;
+@@ -509,7 +509,7 @@ impl<'i, 'b, 'input> CssFullParser<'i, 'b, 'input> {
+ 
+     fn parse_qualified_rule(&mut self) -> Result<(), CssFactError> {
+         let start = self.pos;
+-        match self.find_component_delim(self.pos, b"{};")? {
++        match self.find_component_delim::<{ delim_mask(b"{};") }>(self.pos)? {
+             Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                 self.push_rule(end, false);
+                 self.pos = end + 1;
+@@ -547,7 +547,7 @@ impl<'i, 'b, 'input> CssFullParser<'i, 'b, 'input> {
+ 
+     fn parse_block_item(&mut self) -> Result<(), CssFactError> {
+         let start = self.pos;
+-        match self.find_component_delim(self.pos, b"{};")? {
++        match self.find_component_delim::<{ delim_mask(b"{};") }>(self.pos)? {
+             Some((b'{', end)) if has_non_ws(self.bytes, start, end) => {
+                 self.push_rule(end, false);
+                 self.pos = end + 1;
+@@ -582,7 +582,7 @@ impl<'i, 'b, 'input> CssFullParser<'i, 'b, 'input> {
+             return Err(css_full_error(start, "expected declaration name"));
+         }
+         self.pos = colon + 1;
+-        match self.find_component_delim(self.pos, b";}")? {
++        match self.find_component_delim::<{ delim_mask(b";}") }>(self.pos)? {
+             Some((b';', end)) => {
+                 self.push_declaration(colon);
+                 self.pos = end + 1;
+@@ -654,14 +654,17 @@ impl<'i, 'b, 'input> CssFullParser<'i, 'b, 'input> {
+         }
+     }
+ 
+-    fn find_component_delim(
++    fn find_component_delim<const DELIMS: u128>(
+         &self,
+         mut pos: usize,
+-        delimiters: &[u8],
+     ) -> Result<Option<(u8, usize)>, CssFactError> {
+         while pos < self.bytes.len() {
+             let byte = self.bytes[pos];
+-            if delimiters.contains(&byte) {
++            // Residualized delimiter membership. The grammar delimiter set
++            // is const-folded to an ASCII bitmask at generation time, so the
++            // per-byte test is a single const shift-and-test — no runtime
++            // slice load, no length guard, no `contains` loop.
++            if byte < 128 && (DELIMS >> byte) & 1 != 0 {
+                 return Ok(Some((byte, pos)));
+             }
+             pos = match byte {
+@@ -684,7 +687,7 @@ impl<'i, 'b, 'input> CssFullParser<'i, 'b, 'input> {
+         start: usize,
+         end: usize,
+     ) -> Result<Option<usize>, CssFactError> {
+-        match self.find_component_delim(start, b":{};")? {
++        match self.find_component_delim::<{ delim_mask(b":{};") }>(start)? {
+             Some((b':', colon)) if colon < end => Ok(Some(colon)),
+             _ => Ok(None),
+         }
+@@ -775,6 +778,21 @@ fn is_name_byte(byte: u8) -> bool {
+     byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'\\') || byte >= 0x80
+ }
+ 
++/// Const-fold a grammar delimiter set into an ASCII membership bitmask at
++/// generation time. Consumed as a `const` generic by `find_component_delim`,
++/// which residualizes the per-byte `contains` scan into one shift-and-test.
++/// Every CSS component delimiter (`:`;`{`}`) is ASCII (< 128), so each bit
++/// index is in range for the `u128`.
++const fn delim_mask<const N: usize>(bytes: &[u8; N]) -> u128 {
++    let mut mask = 0u128;
++    let mut i = 0;
++    while i < N {
++        mask |= 1u128 << bytes[i];
++        i += 1;
++    }
++    mask
++}
++
+ /// Trim leading/trailing ASCII whitespace from a span — the lazy span readers
+ /// normalise prelude/property/value boundaries without allocating.
+ #[inline]

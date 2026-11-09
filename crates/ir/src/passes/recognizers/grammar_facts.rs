@@ -796,7 +796,7 @@ impl<'ir> DtaBuilder<'ir> {
                 // pair (`bbnf_ir::vm::compiler::node::compile_node`).
                 // Pre-W4γ the lifter silently returned the inner state,
                 // stripping every whitespace-trim site from the DTA and
-                // breaking `BbnfBootstrap::parse` on any grammar with
+                // breaking the self-host parser on any grammar with
                 // `?w` between atoms.
                 //
                 // The ws regex is carried on each `WsTrim` state so the

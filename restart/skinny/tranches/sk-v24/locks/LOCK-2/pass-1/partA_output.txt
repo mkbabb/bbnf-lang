@@ -1,0 +1,16 @@
+======== PART A: extraction divergence (real GrammarCostModel/Extractor) ========
+e-class e7 holds 2 distinct Alt candidate forms (expect 2)
+
+W1 (dispatch_bonus=-2.0, favor table):
+   picked = dispatch-table  Alt(_, Some(AltDispatch))
+   best_cost = 13.000
+W2 (dispatch_bonus=+2.0, favor sequential):
+   picked = sequential-trial Alt(_, None)
+   best_cost = 15.000
+
+── VERDICT (Part A) ──
+picks differ under W1 vs W2: true
+W1 chose table: true   W2 chose table: false
+PASS: two weight vectors extract DIFFERENT nodes from the same real Alt e-class.
+
+uname: Darwin 25.4.0 arm64

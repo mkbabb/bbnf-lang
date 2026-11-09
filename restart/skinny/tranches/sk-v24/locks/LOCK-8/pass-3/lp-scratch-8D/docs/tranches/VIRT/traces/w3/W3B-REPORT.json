@@ -1,0 +1,279 @@
+{
+  "when": "2026-07-02T09:20:36.745Z",
+  "sectionCount": 60,
+  "ssrHtmlSections": 60,
+  "hydration": {
+    "chromiumVersion": "149.0.7827.55",
+    "chromiumHydrateGoverned": {
+      "mode": "hydrate-governed",
+      "ssrSections": 60,
+      "sectionCount": 60,
+      "tocLinkCount": 60,
+      "sentinelTextContent": true,
+      "sampler": {
+        "samples": 25,
+        "minSectionCountObserved": 60,
+        "everBelowSsrCount": false
+      },
+      "hydrationMismatches": [],
+      "guardWarnings": [
+        "warning: [latex-paper] usePaperViewport: governed mount over server-rendered HTML would truncate it (VR-25). Forcing mount: 'eager' — governed mount is client-render-only."
+      ],
+      "errors": []
+    },
+    "chromiumHydrateDamage": {
+      "mode": "hydrate-damage",
+      "ssrSections": 60,
+      "sectionCount": 8,
+      "tocLinkCount": 60,
+      "sentinelTextContent": false,
+      "sampler": {
+        "samples": 25,
+        "minSectionCountObserved": 4,
+        "everBelowSsrCount": true
+      },
+      "hydrationMismatches": [
+        "warning: [Vue warn]: Hydration attribute mismatch on JSHandle@node \n  - rendered on server: id=\"sec-0-ssr\"\n  - expected on client: id=\"sec-0\"\n  Note: this mismatch is check-only. The DOM will not be rectified in production due to performance overhead.\n  You should fix the source of the mismatch. \n  at <PaperSection id=\"sec-0\" number=\"1\" title=\"Section 1\"  ... > \n  at <App>",
+        "error: Hydration completed but contains mismatches.",
+        "warning: [Vue warn]: Hydration children mismatch on JSHandle@node \nServer rendered element contains more child nodes than client vdom. \n  at <App>"
+      ],
+      "guardWarnings": [],
+      "errors": []
+    },
+    "chromiumGovernedIdle": {
+      "mountedAtReady": 8,
+      "governedAtReady": true,
+      "sectionCountAfterIdle": 60,
+      "sentinelTextContent": true,
+      "errors": []
+    },
+    "webkitVersion": "26.5",
+    "webkitHydrateGoverned": {
+      "mode": "hydrate-governed",
+      "ssrSections": 60,
+      "sectionCount": 60,
+      "tocLinkCount": 60,
+      "sentinelTextContent": true,
+      "sampler": {
+        "samples": 23,
+        "minSectionCountObserved": 60,
+        "everBelowSsrCount": false
+      },
+      "hydrationMismatches": [],
+      "guardWarnings": [
+        "warning: [latex-paper] usePaperViewport: governed mount over server-rendered HTML would truncate it (VR-25). Forcing mount: 'eager' — governed mount is client-render-only."
+      ],
+      "errors": []
+    },
+    "webkitGovernedIdle": {
+      "mountedAtReady": 8,
+      "governedAtReady": true,
+      "sectionCountAfterIdle": 60,
+      "sentinelTextContent": true,
+      "errors": []
+    }
+  },
+  "a11y": {
+    "axeChromium": {
+      "axeVersion": {
+        "name": "axe-core",
+        "version": "4.12.1"
+      },
+      "violationCount": 1,
+      "criticalOrSerious": [],
+      "pass": true,
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "nodes": 1,
+          "sampleTargets": [
+            [
+              "html"
+            ]
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 170
+        }
+      ],
+      "errors": []
+    },
+    "keyboardChromium": {
+      "tabSequence": [
+        "sec-0",
+        "sec-1",
+        "sec-2",
+        "sec-3",
+        "sec-4",
+        "sec-5"
+      ],
+      "tabOrderPass": true,
+      "mountedBeforeEnter": 8,
+      "farTargetBeyondFrontier": true,
+      "enter": {
+        "landing": {
+          "landed": true,
+          "reason": "done",
+          "errorPx": 0.53125,
+          "travelFrames": 1,
+          "settleFrames": 3,
+          "corrections": 1,
+          "behavior": "instant"
+        },
+        "focused": "sec-50",
+        "mounted": 59,
+        "landingErrorPx": 0.53125,
+        "focusOnTarget": true
+      },
+      "afterRevealTo": {
+        "focused": "sec-50",
+        "mounted": 60,
+        "focusRetained": true
+      },
+      "afterRevealAll": {
+        "focused": "sec-50",
+        "mounted": 60,
+        "focusRetained": true,
+        "fullMount": true
+      },
+      "tabAfterReveal": "sec-0",
+      "focusNeverBody": true,
+      "errors": []
+    },
+    "prmChromiumReduce": {
+      "reducedMotion": "reduce",
+      "mediaMatches": true,
+      "explicitSmooth": {
+        "behaviorIssued": "instant",
+        "errorPx": 0.046875,
+        "frames": 4,
+        "startY": 1809,
+        "endY": 1809,
+        "distinctIntermediatePositions": 0
+      },
+      "adapterDefault": {
+        "behaviorIssued": "instant",
+        "errorPx": 0.296875,
+        "frames": 4,
+        "startY": 1537,
+        "endY": 1537,
+        "distinctIntermediatePositions": 0
+      },
+      "pass": true,
+      "errors": []
+    },
+    "prmChromiumControl": {
+      "reducedMotion": "no-preference",
+      "mediaMatches": false,
+      "explicitSmooth": {
+        "behaviorIssued": "smooth",
+        "errorPx": 0.046875,
+        "frames": 99,
+        "startY": 0,
+        "endY": 1809,
+        "distinctIntermediatePositions": 91
+      },
+      "adapterDefault": {
+        "behaviorIssued": "smooth",
+        "errorPx": 0.296875,
+        "frames": 90,
+        "startY": 0,
+        "endY": 1537,
+        "distinctIntermediatePositions": 82
+      },
+      "pass": true,
+      "errors": []
+    },
+    "axeWebkit": {
+      "axeVersion": {
+        "name": "axe-core",
+        "version": "4.12.1"
+      },
+      "violationCount": 1,
+      "criticalOrSerious": [],
+      "pass": true,
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+          "nodes": 1,
+          "sampleTargets": [
+            [
+              "html"
+            ]
+          ]
+        }
+      ],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 170
+        }
+      ],
+      "errors": []
+    },
+    "prmWebkitReduce": {
+      "reducedMotion": "reduce",
+      "mediaMatches": true,
+      "explicitSmooth": {
+        "behaviorIssued": "instant",
+        "errorPx": 0.34375,
+        "frames": 6,
+        "startY": 2012,
+        "endY": 1932,
+        "distinctIntermediatePositions": 1
+      },
+      "adapterDefault": {
+        "behaviorIssued": "instant",
+        "errorPx": 0.84375,
+        "frames": 5,
+        "startY": 1660,
+        "endY": 1584,
+        "distinctIntermediatePositions": 0
+      },
+      "pass": true,
+      "errors": [
+        "pageerror: ResizeObserver loop completed with undelivered notifications."
+      ]
+    },
+    "firefoxVersion": "151.0",
+    "readerFirefox": {
+      "reference": {
+        "readerable": true,
+        "parsed": true,
+        "title": "W3B eager — Fourier fixture paper",
+        "textLength": 14071,
+        "sentinelInArticle": true,
+        "missingTitleCount": 60,
+        "renamedClassMissingTitleCount": 0,
+        "renamedClassTextLength": 14833
+      },
+      "governed": {
+        "readerable": true,
+        "parsed": true,
+        "title": "W3B governed-idle — Fourier fixture paper",
+        "textLength": 14071,
+        "sentinelInArticle": true,
+        "missingTitleCount": 60,
+        "renamedClassMissingTitleCount": 0,
+        "renamedClassTextLength": 14833
+      },
+      "extractionRatio": 1,
+      "pass": true,
+      "headingStripFinding": {
+        "missingTitlesShippedClass": 60,
+        "missingTitlesRenamedClass": 0,
+        "mechanismConfirmed": true
+      },
+      "errors": []
+    }
+  }
+}

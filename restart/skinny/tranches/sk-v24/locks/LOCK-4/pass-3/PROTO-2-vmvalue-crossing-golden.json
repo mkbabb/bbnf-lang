@@ -1,0 +1,200 @@
+[
+  {
+    "desc": {
+      "NumberConvert": {
+        "allow_leading_dot": false
+      }
+    },
+    "input": "3.5",
+    "label": "NumberConvert",
+    "result": {
+      "F64": 3.5
+    },
+    "strings": [
+      "r",
+      "3.5"
+    ]
+  },
+  {
+    "desc": {
+      "NumberConvert": {
+        "allow_leading_dot": false
+      }
+    },
+    "input": "42",
+    "label": "NumberConvert_int",
+    "result": {
+      "F64": 42.0
+    },
+    "strings": [
+      "r",
+      "42"
+    ]
+  },
+  {
+    "desc": {
+      "HexConvert": {
+        "fn_path": 0
+      }
+    },
+    "input": "ff",
+    "label": "HexConvert",
+    "result": {
+      "U32": 255
+    },
+    "strings": [
+      "r",
+      "ff"
+    ]
+  },
+  {
+    "desc": {
+      "EnumWrap": {
+        "variant": 2
+      }
+    },
+    "input": "px",
+    "label": "EnumWrap",
+    "result": {
+      "Variant": {
+        "child": {
+          "Span": [
+            0,
+            2
+          ]
+        },
+        "tag": 2
+      }
+    },
+    "strings": [
+      "r",
+      "px",
+      "Unit"
+    ]
+  },
+  {
+    "desc": {
+      "Expr": {
+        "expr": {
+          "BinOp": {
+            "lhs": {
+              "BinOp": {
+                "lhs": "Input",
+                "op": "Mul",
+                "rhs": {
+                  "IntLit": 2
+                }
+              }
+            },
+            "op": "Add",
+            "rhs": {
+              "IntLit": 1
+            }
+          }
+        },
+        "return_type": null
+      }
+    },
+    "input": "10",
+    "label": "Expr_arith",
+    "result": {
+      "U32": 21
+    },
+    "strings": [
+      "r",
+      "10"
+    ]
+  },
+  {
+    "desc": {
+      "Expr": {
+        "expr": {
+          "BinOp": {
+            "lhs": "Input",
+            "op": "Mul",
+            "rhs": {
+              "FloatLit": 1.5
+            }
+          }
+        },
+        "return_type": null
+      }
+    },
+    "input": "4",
+    "label": "Expr_floatmul",
+    "result": {
+      "F64": 6.0
+    },
+    "strings": [
+      "r",
+      "4"
+    ]
+  },
+  {
+    "desc": {
+      "Expr": {
+        "expr": {
+          "StringLit": 2
+        },
+        "return_type": null
+      }
+    },
+    "input": "hi",
+    "label": "Expr_stringlit",
+    "result": {
+      "Str": "HELLO"
+    },
+    "strings": [
+      "r",
+      "hi",
+      "HELLO"
+    ]
+  },
+  {
+    "desc": {
+      "Expr": {
+        "expr": {
+          "FnCall": {
+            "args": [
+              "Input"
+            ],
+            "name": 2
+          }
+        },
+        "return_type": null
+      }
+    },
+    "input": "1a",
+    "label": "Expr_fncall_hex",
+    "result": {
+      "U32": 26
+    },
+    "strings": [
+      "r",
+      "1a",
+      "parse_hex"
+    ]
+  },
+  {
+    "desc": {
+      "Expr": {
+        "expr": {
+          "InputProp": {
+            "prop": 2
+          }
+        },
+        "return_type": null
+      }
+    },
+    "input": "hello",
+    "label": "Expr_inputlen",
+    "result": {
+      "U32": 5
+    },
+    "strings": [
+      "r",
+      "hello",
+      "len"
+    ]
+  }
+]

@@ -1,0 +1,182 @@
+diff --git a/skinny/crates/passes/tests/proj_witness.rs b/skinny/crates/passes/tests/proj_witness.rs
+new file mode 100644
+index 000000000..c374782fa
+--- /dev/null
++++ b/skinny/crates/passes/tests/proj_witness.rs
+@@ -0,0 +1,176 @@
++//! PROTO-2 / LOCK-3 3A non-vacuity witness.
++//!
++//! Question: does the 3A per-edge contract (verify_project_types: for each
++//! `Project{ty:Some}`, node_types[project] == resolved(ty) AND != node_types[body])
++//! have MEANING, or is it vacuously-true-until-LOCK-1?
++//!
++//! The organ verifies declared-vs-inferred CONSISTENCY only if some projection's
++//! declared target is genuinely NOT recoverable from `infer_expr(body)` alone.
++//! `infer_expr` (passes lib.rs:204) is `Project{body,..} => infer_expr(body)` —
++//! it DISCARDS the declared target/ty and returns the body's structural Type.
++//!
++//! This test parses the only fleet grammar with `->` (google-sheets.bbnf),
++//! walks every `ExprKind::Project`, and prints
++//!   (span, target, ty, infer_expr(body))
++//! then decides non-vacuity: if two projections share the SAME structural body
++//! type but carry DIFFERENT declared targets, the declared target carries
++//! information the structural body cannot recover -> contract non-vacuous.
++
++use ir::{ExprKind, GrammarIr};
++use passes::{layout, Type};
++
++const SHEETS: &str =
++    concat!(env!("CARGO_MANIFEST_DIR"), "/../../../grammar/google-sheets/google-sheets.bbnf");
++
++/// The four value categories a projection's declared (target, ty) text resolves
++/// to — a faithful mirror of codegen general_descent/view.rs:35-46
++/// `classify_projection`, which folds PURELY from the projection strings and
++/// never touches the body.
++#[derive(Debug, PartialEq, Eq, Clone, Copy)]
++enum DeclaredKind {
++    Float,
++    Bool,
++    Tag,
++    Span,
++}
++
++fn classify(target: &str, ty: Option<&str>) -> DeclaredKind {
++    if matches!(ty, Some("Span")) {
++        return DeclaredKind::Span;
++    }
++    match target {
++        "f64" | "f32" => DeclaredKind::Float,
++        "true" | "false" => DeclaredKind::Bool,
++        other
++            if other.ends_with("u8")
++                && other[..other.len() - 2].chars().all(|c| c.is_ascii_digit())
++                && other.len() > 2 =>
++        {
++            DeclaredKind::Tag
++        }
++        _ => DeclaredKind::Span,
++    }
++}
++
++/// Coarse structural signature of a `Type` for equality bucketing in the report.
++fn structural_sig(ty: &Type) -> String {
++    match ty {
++        Type::Builtin(b) => format!("Builtin({b:?})"),
++        Type::Var(_) => "Var".into(),
++        Type::Seq(_) => "Seq".into(),
++        Type::Alt(_) => "Alt".into(),
++        Type::List(_) => "List".into(),
++        Type::Option(_) => "Option".into(),
++        Type::Rule(_) => "Rule".into(),
++    }
++}
++
++#[test]
++fn proj_witness() {
++    let src = std::fs::read_to_string(SHEETS)
++        .unwrap_or_else(|e| panic!("read {SHEETS}: {e}"));
++    let grammar: GrammarIr =
++        grammar::parse_grammar("google_sheets", &src).expect("parse google-sheets.bbnf");
++
++    // Run the REAL inference organ. node_types is keyed by ExprId and is
++    // populated for every visited expr, including each Project body.
++    let facts = layout::types::infer(&grammar).expect("infer types");
++
++    println!("\n=== 3A PROJECTION WITNESS (google-sheets.bbnf) ===");
++    println!(
++        "{:<14} {:<10} {:<8} {:<20} {:<8}",
++        "byte-span", "target", "ty", "infer_expr(body)", "declared"
++    );
++
++    // Buckets: structural body signature -> set of declared kinds observed.
++    use std::collections::{BTreeMap, BTreeSet};
++    let mut by_body: BTreeMap<String, BTreeSet<DeclaredKind_Ord>> = BTreeMap::new();
++    // Also track: does the declared kind ever DIVERGE from what the structural
++    // body would itself imply (Bytes/Span -> Span is the structural default)?
++    let mut divergent = 0usize;
++    let mut total = 0usize;
++
++    for expr in &grammar.exprs {
++        if let ExprKind::Project { body, target, ty } = &expr.kind {
++            total += 1;
++            let body_ty = facts
++                .node_types
++                .get(body)
++                .cloned()
++                .unwrap_or(Type::Builtin(ir_builtin_unit()));
++            let sig = structural_sig(&body_ty);
++            let declared = classify(target, ty.as_deref());
++            println!(
++                "{:<14} {:<10} {:<8} {:<20} {:<8?}",
++                format!("{}..{}", expr.span.start, expr.span.end),
++                target,
++                ty.as_deref().unwrap_or("-"),
++                sig,
++                declared,
++            );
++            by_body
++                .entry(sig.clone())
++                .or_default()
++                .insert(DeclaredKind_Ord(declared));
++
++            // Structural inference collapses Regex->Span and Literal->Bytes.
++            // Neither Span nor Bytes structurally implies Float/Bool/Tag; only
++            // `Span` declared over a Span body is structurally recovered.
++            let structurally_recovered = matches!(
++                (sig.as_str(), declared),
++                ("Builtin(Span)", DeclaredKind::Span)
++            );
++            if !structurally_recovered {
++                divergent += 1;
++            }
++        }
++    }
++
++    println!("\n--- body-type buckets: structural body -> {{declared kinds}} ---");
++    let mut multi_bucket = false;
++    for (sig, kinds) in &by_body {
++        let ks: Vec<DeclaredKind> = kinds.iter().map(|k| k.0).collect();
++        println!("  {sig:<18} -> {ks:?}");
++        if ks.len() > 1 {
++            multi_bucket = true;
++        }
++    }
++
++    println!("\ntotal projections: {total}");
++    println!("declared kind NOT structurally recovered from body: {divergent}");
++    println!("some structural body maps to >1 declared kind: {multi_bucket}");
++
++    // NON-VACUITY: the declared target carries information beyond infer_expr(body)
++    // iff at least one structural body type carries >1 distinct declared kind
++    // (identical structural inference, divergent declared meaning), OR any
++    // declared kind is not structurally recovered.
++    let non_vacuous = multi_bucket || divergent > 0;
++    println!(
++        "\nVERDICT: 3A contract non-vacuity = {}",
++        if non_vacuous { "NON-VACUOUS (PASS)" } else { "VACUOUS (FAIL)" }
++    );
++
++    assert!(
++        non_vacuous,
++        "every projection's declared target was structurally recoverable — 3A contract would be vacuous"
++    );
++}
++
++// Newtype so DeclaredKind can live in a BTreeSet without deriving Ord on the
++// public-mirror enum (keeps the mirror minimal + faithful to view.rs).
++#[derive(PartialEq, Eq, Clone, Copy)]
++struct DeclaredKind_Ord(DeclaredKind);
++impl PartialOrd for DeclaredKind_Ord {
++    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
++        Some(self.cmp(other))
++    }
++}
++impl Ord for DeclaredKind_Ord {
++    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
++        (self.0 as u8).cmp(&(other.0 as u8))
++    }
++}
++
++fn ir_builtin_unit() -> passes::BuiltinTy {
++    passes::BuiltinTy::Unit
++}

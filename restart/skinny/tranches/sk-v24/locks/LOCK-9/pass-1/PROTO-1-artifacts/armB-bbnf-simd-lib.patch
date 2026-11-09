@@ -1,0 +1,27 @@
+--- /Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/src/lib.rs	2026-06-02 20:07:24
++++ /private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/bbnf-simd-scratch/src/lib.rs	2026-07-16 04:09:40
+@@ -168,6 +168,24 @@
+ #[inline]
+ pub fn prefix_xor_64(mask: u64, carry_in: bool) -> u64 {
+     prim::bitmap_prefix_xor_64(mask, carry_in)
++}
++
++/// LOCK-9 probe arm B (counterfactual): direct #[cfg]-selected entry to the
++/// same kernel body, WITHOUT the `dispatch::primitive_kernels()` OnceLock
++/// fn-pointer table. On aarch64 this calls the NEON body directly (which in
++/// this crate delegates to the scalar bit-twiddle); the point is that the
++/// callee is statically known, so a cross-crate LTO caller can inline it and
++/// emit zero indirect branches.
++#[inline(always)]
++pub fn prefix_xor_64_direct(mask: u64, carry_in: bool) -> u64 {
++    #[cfg(target_arch = "aarch64")]
++    {
++        return crate::aarch64::bitmap_prefix_xor_64::bitmap_prefix_xor_64_neon(mask, carry_in);
++    }
++    #[allow(unreachable_code)]
++    {
++        crate::scalar::bitmap_prefix_xor_64::bitmap_prefix_xor_64_scalar(mask, carry_in)
++    }
+ }
+ 
+ #[inline]

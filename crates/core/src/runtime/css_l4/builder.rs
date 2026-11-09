@@ -730,7 +730,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 let packed = hex_span
                     .map(|s| {
                         let digits = s.strip_prefix('#').unwrap_or(s);
-                        crate::css_types::parse_hex_color(digits)
+                        crate::runtime::css_l4::host::parse_hex_color(digits)
                     })
                     .unwrap_or(0);
                 self.deposit_value(CssTypedValue::Color(CssColor::Hex(packed)));

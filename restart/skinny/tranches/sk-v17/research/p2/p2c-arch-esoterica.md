@@ -315,14 +315,14 @@ selection and the REDRESS-block flagging.
   (`trailing_zeros` → `rbit`+`clz`); carries NO grammar datum. Identical across every grammar's
   classify mask. Ships folded into C1/C2; the bulk-consumer form remains REDRESS-89 blocked for
   all grammars equally (§3 item 2), so the neutrality is uniform.
-- **C5 (UDOT 4-digit) — VERDICT: grammar-neutral IN SHAPE, but CSS-ORPHAN (deferred to P2-F CF-4a).**
+- **C5 (UDOT 4-digit) — VERDICT: grammar-neutral IN SHAPE, but CSS-ORPHAN (grammar-neutral SHAPE per §C5; P2-F CF-4a carries the cross-grammar digit-run verdict in-pass).**
   The digit-run decode shape is grammar-neutral (JSON numbers, CSS dimensions, Sheets numerics all
   decode a 4-digit run through one `parse_4_digits`); the parameter is the digit run, never a
   grammar role. The block is NOT a neutrality failure — it is a *missing-antecedent* failure (CH1:
   no named CSS hot leaf — P1-E §2.5 "no number leaf is hot"). Disposition is therefore DEFERRED, not
   rejected-for-overfit: it admits only through the P2-F CF-4a typed-path re-profile gate.
 - **C6 (i8mm batch decode) — VERDICT: grammar-neutral IN SHAPE, but CSS-ORPHAN + kernel-absent
-  (deferred to P2-F CF-4b).** Same neutral digit-run shape as C5; same missing-antecedent block,
+  (grammar-neutral SHAPE per §C5; P2-F CF-4b carries the cross-grammar digit-run verdict in-pass).** Same neutral digit-run shape as C5; same missing-antecedent block,
   plus the kernel does not exist. Disposition is a gated contingency (P2-F CF-4b), NOT an active
   candidate; it admits only if the CF-4b re-profile gate fires. Reuses C5's `parse_4_digits` scalar
   twin as its parity oracle.

@@ -1,0 +1,105 @@
+diff --git a/crates/ir/tests/egraph/egraph_grammar.rs b/crates/ir/tests/egraph/egraph_grammar.rs
+index 5ae1c180f..443dd1539 100644
+--- a/crates/ir/tests/egraph/egraph_grammar.rs
++++ b/crates/ir/tests/egraph/egraph_grammar.rs
+@@ -260,6 +260,100 @@ fn rule_union_merge_alt() {
+     );
+ }
+ 
++// ─────────────────────────────────────────────────────────────────────────
++// LOCK-5 pass-2 PROTO-1 (family 5B LAWFUL-FUNCTOR) — probe (c):
++// projection-soundness of the CURRENT string-bridge rules.
++//
++// Question: does `[a-c]->A | [d-f]->B` merge-and-drop (dropping the
++// distinct projections A/B by fusing the char-classes into `[a-f]`)
++// under today's string bridge?
++//
++// Representation: `[a-c]->A` lowers to `Map { inner: Regex([a-c]),
++// fn_id: A }`, so the Alt's children are the Map e-classes. The
++// string-bridge rules (SupersetAbsorbAlt / UnionMergeAlt /
++// FuseAltRegexBranches) all locate a branch's regex via
++// `class_regex(child)` / a Regex|Literal finder over the CHILD's
++// e-class — a `Map`-wrapped branch's e-class holds no bare `Regex`
++// node, so every one of those rules is structurally inert on
++// projected branches. This test proves that empirically.
++// ─────────────────────────────────────────────────────────────────────────
++#[test]
++fn projection_union_merge_is_already_safe_under_string_bridge() {
++    // Alt([ [a-c]->fn0 , [d-f]->fn1 ]) — distinct projections per branch.
++    let mut ir = make_ir_with(IrNode::Epsilon);
++    let left_sid = ir.strings.len() as u32;
++    ir.strings.push("[a-c]".to_string());
++    let right_sid = ir.strings.len() as u32;
++    ir.strings.push("[d-f]".to_string());
++
++    let alt = IrNode::Alt(
++        vec![
++            AltBranch {
++                node: IrNode::Map {
++                    inner: Box::new(IrNode::Regex(left_sid)),
++                    fn_id: 0,
++                },
++                first_set: None,
++            },
++            AltBranch {
++                node: IrNode::Map {
++                    inner: Box::new(IrNode::Regex(right_sid)),
++                    fn_id: 1,
++                },
++                first_set: None,
++            },
++        ],
++        None,
++    );
++    ir.rules[0].body = alt;
++
++    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
++    let strings = pool.into_vec();
++
++    // (1) No merged `[a-f]`-style char-class was ever interned — the
++    // union/superset/fuse rules did not fire across the projected
++    // branches. This is the merge-and-drop the brief hypothesised would
++    // happen "today under the string bridge".
++    let merged: Vec<&String> = strings
++        .iter()
++        .filter(|s| {
++            s.contains('a') && s.contains('f') && s.starts_with('[') && s.ends_with(']')
++        })
++        .collect();
++    assert!(
++        merged.is_empty(),
++        "string bridge MERGED projected branches (merge-and-drop bug present): {:?}",
++        merged
++    );
++    // Also assert no fused `a|f` pipe pattern appeared.
++    assert!(
++        !strings.iter().any(|s| s.contains('|')),
++        "string bridge FUSED projected branches into a pipe pattern: {:?}",
++        strings
++    );
++
++    // (2) Both projected branches survive: the saturated graph still
++    // carries two Map wrappers with the distinct fn_ids 0 and 1.
++    let mut fn0 = false;
++    let mut fn1 = false;
++    for class in egraph.classes() {
++        for n in class.iter() {
++            if let GrammarENode::Map { fn_id, .. } = n {
++                if *fn_id == 0 {
++                    fn0 = true;
++                }
++                if *fn_id == 1 {
++                    fn1 = true;
++                }
++            }
++        }
++    }
++    assert!(
++        fn0 && fn1,
++        "a projected branch's Map wrapper was dropped (fn0={fn0}, fn1={fn1})"
++    );
++}
++
+ #[test]
+ fn rule_fuse_alt_regex_branches() {
+     // Alt([Regex("foo"), Regex("bar"), Literal("baz")]) without a

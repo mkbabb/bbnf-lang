@@ -1,0 +1,29 @@
+
+> @mkbabb/parse-that@1.0.0 build
+> vite build
+
+vite v7.3.1 building client environment for production...
+transforming...
+✓ 18 modules transformed.
+rendering chunks...
+
+[vite:dts] Start generate declaration files...
+computing gzip size...
+dist/packrat.js                  0.16 kB │ gzip: 0.15 kB │ map:   0.09 kB
+dist/diagnostics.js              0.28 kB │ gzip: 0.18 kB │ map:   0.10 kB
+dist/parse.js                    1.11 kB │ gzip: 0.52 kB │ map:   0.09 kB
+dist/core.js                     1.34 kB │ gzip: 0.60 kB │ map:   2.70 kB
+dist/utils.js                    2.04 kB │ gzip: 0.88 kB │ map:   4.93 kB
+dist/diagnostics-DDazRHgl.js     3.52 kB │ gzip: 1.11 kB │ map:   9.01 kB
+dist/packrat-entry-CS1td-8B.js  40.58 kB │ gzip: 9.05 kB │ map: 115.14 kB
+[vite:dts] Declaration files built in 478ms.
+
+dist/packrat.cjs                  0.30 kB │ gzip: 0.21 kB │ map:   0.10 kB
+dist/diagnostics.cjs              0.57 kB │ gzip: 0.25 kB │ map:   0.11 kB
+dist/core.cjs                     1.83 kB │ gzip: 0.70 kB │ map:   2.72 kB
+dist/parse.cjs                    1.92 kB │ gzip: 0.60 kB │ map:   0.13 kB
+dist/utils.cjs                    2.47 kB │ gzip: 0.93 kB │ map:   5.15 kB
+dist/diagnostics-DpUY87_d.cjs     3.79 kB │ gzip: 1.13 kB │ map:   9.02 kB
+dist/packrat-entry-46NYx4_U.cjs  41.04 kB │ gzip: 9.02 kB │ map: 115.53 kB
+✓ built in 599ms
+EXIT=0

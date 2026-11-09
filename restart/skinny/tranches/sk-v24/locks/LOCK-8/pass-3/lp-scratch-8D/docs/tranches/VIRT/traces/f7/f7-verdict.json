@@ -1,0 +1,350 @@
+{
+  "when": "2026-07-02T09:03:54.452Z",
+  "f7a": {
+    "lanes": 48,
+    "referenceStickySane": true,
+    "arms": {
+      "i": {
+        "lanes": 12,
+        "stickyFailLanes": [],
+        "bandFailLanes": [
+          "chromium/mobile/fourier:0.023161",
+          "chromium/mobile/nested:0.006599",
+          "chromium/laptop/fourier:0.008368",
+          "chromium/laptop/nested:0.007364",
+          "chromium/desktop/fourier:0.008368",
+          "chromium/desktop/nested:0.007364"
+        ],
+        "worstBand": 0.023161,
+        "worstStickyDeltaPx": 0,
+        "heightDeltas": [
+          0.94,
+          0.12,
+          1.23,
+          0.18,
+          1.23,
+          0.18,
+          0.94,
+          0.12,
+          1.23,
+          0.18,
+          1.23,
+          0.18
+        ],
+        "stickyPassAll": true,
+        "bandPassAll": false,
+        "passF7a": false
+      },
+      "ii": {
+        "lanes": 12,
+        "stickyFailLanes": [],
+        "bandFailLanes": [],
+        "worstBand": 0.003821,
+        "worstStickyDeltaPx": 0,
+        "heightDeltas": [
+          1.85,
+          0.25,
+          2.44,
+          0.39,
+          2.44,
+          0.39,
+          1.85,
+          0.25,
+          2.44,
+          0.39,
+          2.44,
+          0.39
+        ],
+        "stickyPassAll": true,
+        "bandPassAll": true,
+        "passF7a": true
+      },
+      "iii": {
+        "lanes": 12,
+        "stickyFailLanes": [],
+        "bandFailLanes": [],
+        "worstBand": 0.003821,
+        "worstStickyDeltaPx": 0,
+        "heightDeltas": [
+          -0.86,
+          -0.13,
+          -0.92,
+          -0.16,
+          -0.92,
+          -0.16,
+          -0.86,
+          -0.13,
+          -0.92,
+          -0.16,
+          -0.92,
+          -0.16
+        ],
+        "stickyPassAll": true,
+        "bandPassAll": true,
+        "passF7a": true
+      }
+    },
+    "decisionOrder": [
+      "ii",
+      "iii",
+      "i"
+    ],
+    "winner": "ii"
+  },
+  "f7b": {
+    "arms": {
+      "A-ii": {
+        "lanes": 12,
+        "fails": {
+          "rest": [
+            "chromium/mobile/nested:0.016864",
+            "chromium/mobile/fourierN:0.027452",
+            "chromium/laptop/nested:0.008086",
+            "chromium/laptop/fourierN:0.012018",
+            "chromium/desktop/nested:0.005257",
+            "chromium/desktop/fourierN:0.008185"
+          ],
+          "honesty": [
+            "chromium/mobile/nested:0.508",
+            "chromium/mobile/fourierN:0.759",
+            "chromium/laptop/nested:0.699",
+            "chromium/desktop/nested:0.7",
+            "webkit/mobile/nested:0.508",
+            "webkit/mobile/fourierN:0.759",
+            "webkit/laptop/nested:0.699",
+            "webkit/desktop/nested:0.7"
+          ],
+          "landing": [],
+          "gap": []
+        },
+        "worst": {
+          "rest": 0.027452,
+          "gap": 0,
+          "landing": 0.828125,
+          "honestyRatioMin": 0.508
+        },
+        "passAllClauses": false
+      },
+      "B-ii": {
+        "lanes": 12,
+        "fails": {
+          "rest": [
+            "chromium/mobile/nested:0.03351",
+            "chromium/mobile/fourierN:0.027452",
+            "chromium/laptop/nested:0.012329",
+            "chromium/laptop/fourierN:0.017822",
+            "chromium/desktop/nested:0.007171",
+            "chromium/desktop/fourierN:0.017078",
+            "webkit/mobile/nested:0.031131",
+            "webkit/mobile/fourierN:0.03618",
+            "webkit/laptop/nested:0.010997",
+            "webkit/laptop/fourierN:0.013716",
+            "webkit/desktop/nested:0.006504",
+            "webkit/desktop/fourierN:0.049674"
+          ],
+          "honesty": [
+            "chromium/mobile/nested:0.098",
+            "chromium/mobile/fourierN:0.072",
+            "chromium/laptop/nested:0.131",
+            "chromium/laptop/fourierN:0.085",
+            "chromium/desktop/nested:0.132",
+            "chromium/desktop/fourierN:0.085",
+            "webkit/mobile/nested:0.098",
+            "webkit/mobile/fourierN:0.072",
+            "webkit/laptop/nested:0.131",
+            "webkit/laptop/fourierN:0.085",
+            "webkit/desktop/nested:0.132",
+            "webkit/desktop/fourierN:0.085"
+          ],
+          "landing": [],
+          "gap": []
+        },
+        "worst": {
+          "rest": 0.049674,
+          "gap": 0,
+          "landing": 0.953125,
+          "honestyRatioMin": 0.072
+        },
+        "passAllClauses": false
+      },
+      "A-i": {
+        "lanes": 12,
+        "fails": {
+          "rest": [
+            "chromium/mobile/nested:0.02078",
+            "chromium/mobile/fourierN:0.015628",
+            "chromium/laptop/nested:0.008052",
+            "chromium/laptop/fourierN:0.00845",
+            "chromium/desktop/fourierN:0.005722"
+          ],
+          "honesty": [
+            "chromium/mobile/nested:0.496",
+            "chromium/mobile/fourierN:0.75",
+            "chromium/laptop/nested:0.686",
+            "chromium/desktop/nested:0.687",
+            "webkit/mobile/nested:0.496",
+            "webkit/mobile/fourierN:0.75",
+            "webkit/laptop/nested:0.686",
+            "webkit/desktop/nested:0.687"
+          ],
+          "landing": [],
+          "gap": []
+        },
+        "worst": {
+          "rest": 0.02078,
+          "gap": 0,
+          "landing": 0.828125,
+          "honestyRatioMin": 0.496
+        },
+        "passAllClauses": false
+      },
+      "B-i": {
+        "lanes": 12,
+        "fails": {
+          "rest": [
+            "chromium/mobile/nested:0.037693",
+            "chromium/mobile/fourierN:0.028658",
+            "chromium/laptop/nested:0.012329",
+            "chromium/laptop/fourierN:0.017822",
+            "chromium/desktop/nested:0.007171",
+            "chromium/desktop/fourierN:0.017288",
+            "webkit/mobile/nested:0.031131",
+            "webkit/mobile/fourierN:0.069131",
+            "webkit/laptop/nested:0.010997",
+            "webkit/laptop/fourierN:0.024404",
+            "webkit/desktop/nested:0.006504",
+            "webkit/desktop/fourierN:0.065364"
+          ],
+          "honesty": [
+            "chromium/mobile/nested:0.086",
+            "chromium/mobile/fourierN:0.063",
+            "chromium/laptop/nested:0.118",
+            "chromium/laptop/fourierN:0.075",
+            "chromium/desktop/nested:0.119",
+            "chromium/desktop/fourierN:0.076",
+            "webkit/mobile/nested:0.086",
+            "webkit/mobile/fourierN:0.063",
+            "webkit/laptop/nested:0.118",
+            "webkit/laptop/fourierN:0.075",
+            "webkit/desktop/nested:0.119",
+            "webkit/desktop/fourierN:0.076"
+          ],
+          "landing": [],
+          "gap": []
+        },
+        "worst": {
+          "rest": 0.069131,
+          "gap": 0,
+          "landing": 0.828125,
+          "honestyRatioMin": 0.063
+        },
+        "passAllClauses": false
+      }
+    },
+    "rule": "A ships if it passes all four; B only if A fails a clause B passes",
+    "winner": "ESCALATE"
+  },
+  "gf": {
+    "arm": "ii",
+    "idle": [
+      {
+        "lane": "chromium/mobile",
+        "stripPass": true,
+        "stripWorstErrPct": 0,
+        "cls": 0.0002,
+        "clsSupported": true,
+        "clsPass": true,
+        "flashFree": true
+      },
+      {
+        "lane": "chromium/laptop",
+        "stripPass": true,
+        "stripWorstErrPct": 0,
+        "cls": 0.0052,
+        "clsSupported": true,
+        "clsPass": true,
+        "flashFree": true
+      },
+      {
+        "lane": "chromium/desktop",
+        "stripPass": true,
+        "stripWorstErrPct": 0,
+        "cls": 0.0017,
+        "clsSupported": true,
+        "clsPass": true,
+        "flashFree": true
+      },
+      {
+        "lane": "webkit/mobile",
+        "stripPass": true,
+        "stripWorstErrPct": 0,
+        "cls": 0,
+        "clsSupported": false,
+        "clsPass": true,
+        "flashFree": true
+      },
+      {
+        "lane": "webkit/laptop",
+        "stripPass": true,
+        "stripWorstErrPct": 0,
+        "cls": 0,
+        "clsSupported": false,
+        "clsPass": true,
+        "flashFree": true
+      },
+      {
+        "lane": "webkit/desktop",
+        "stripPass": true,
+        "stripWorstErrPct": 0,
+        "cls": 0,
+        "clsSupported": false,
+        "clsPass": true,
+        "flashFree": true
+      }
+    ],
+    "chase": [
+      {
+        "lane": "chromium/mobile",
+        "cls": 0.0002,
+        "framesWithVisibleStrip": 0,
+        "framesTracked": 5,
+        "revealsInViewport": 0
+      },
+      {
+        "lane": "chromium/laptop",
+        "cls": 0.0052,
+        "framesWithVisibleStrip": 0,
+        "framesTracked": 6,
+        "revealsInViewport": 0
+      },
+      {
+        "lane": "chromium/desktop",
+        "cls": 0.0017,
+        "framesWithVisibleStrip": 0,
+        "framesTracked": 6,
+        "revealsInViewport": 0
+      },
+      {
+        "lane": "webkit/mobile",
+        "cls": 0,
+        "framesWithVisibleStrip": 0,
+        "framesTracked": 17,
+        "revealsInViewport": 0
+      },
+      {
+        "lane": "webkit/laptop",
+        "cls": 0,
+        "framesWithVisibleStrip": 0,
+        "framesTracked": 17,
+        "revealsInViewport": 0
+      },
+      {
+        "lane": "webkit/desktop",
+        "cls": 0,
+        "framesWithVisibleStrip": 0,
+        "framesTracked": 17,
+        "revealsInViewport": 0
+      }
+    ]
+  }
+}

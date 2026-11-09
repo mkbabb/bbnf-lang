@@ -1,0 +1,45 @@
+# 6D ORACLE-ISOMORPHISM — the in/out-of-contract partition (checked-in data file).
+# The differential digest gates ONLY the `in` set. The `out` set is free per language.
+# Freeze DAG: this file is authored only AFTER LOCK-1 freezes the alphabet (variant set)
+# and LOCK-7 freezes the tie-breaker (grammar-defined reference parser). See [dag].
+
+[meta]
+digest = "u64"            # two u32 lanes; u32 fp has ~77k-input birthday floor — widen
+counter_channel = ["objects","arrays","strings","numbers","bools","nulls","codeUnits"]
+mul = "wrapping_mul(u32) == Math.imul"   # the cross-language discipline that makes it bit-exact
+codeunits = "UTF-16"     # both sides count UTF-16 code units; Rust folds encode_utf16()
+
+# ---- IN CONTRACT (gated; digest MUST match Rust<->V8) --------------------
+[in]
+values          = "the folded value tree (every `->` projection reaching the Value surface)"
+accept_reject   = "the boolean verdict: both engines accept, or both reject"
+error_class     = "small enum: UnexpectedChar|UnterminatedString|TrailingData|DepthLimit|BadEscape|BadNumber"
+number_fold     = "f64 LE-byte mix; correctly-rounded parse makes it a pure fn of the decimal string"
+string_fold     = "FNV-1a over UTF-16 code units incl. surrogate pairs (astral)"
+member_fold     = "order-independent XOR of member_mix(keyHash,valHash) + count salt"
+
+# ---- OUT OF CONTRACT (free; never gated) --------------------------------
+[out]
+error_message   = "wording is idiom — V8 and Rust never phrase identically; do not gate"
+error_span      = "byte offset is layout — a block-scanner may report boundary vs exact byte"
+member_iter_order = "physical key order is per-engine; the fold is order-independent by design"
+internal_layout = "tape SoA vs native JS objects vs typed arrays — all free"
+
+# ---- CANONICALIZATION RULES (spec-closed, NOT corpus-reachable) ----------
+# These classes cannot appear in valid JSON; a corpus can never exercise them.
+# They are closed by a compile-time rule + one golden vector each, per §Q2-residue.
+[canonicalize]
+nan        = "is_nan() -> fixed sentinel 0x9E3779B1 BEFORE the byte fold (else astral of NaN payloads diverges)"
+signed_zero = "x == 0.0 -> fold +0.0 (JSON == treats -0 and 0 equal); PROVEN identical this pass"
+infinity   = "1e400 overflows to +inf identically on both sides — PROVEN this pass, no rule needed"
+
+# ---- must-accept / must-reject / may-either (the strict-flag partition) --
+[verdict_classes]
+must_accept = "valid-corpus + fuzzer-valid; digest RED on mismatch"
+must_reject = "malformed; both engines must error at the SAME error_class (not message, not span)"
+may_either  = "duplicate-key resolution, number canonical text form — RECORDED, not gated"
+
+[dag]
+after = ["LOCK-1 (alphabet = grammar-derived Value ADT / DirectTypeKind sum variants)",
+         "LOCK-7 (tie-breaker = bbnf-in-bbnf reference parser; the N+1th version that adjudicates both-wrong)"]
+note = "A 2-version differential detects disagreement only; LOCK-7's reference decides WHICH value is correct."

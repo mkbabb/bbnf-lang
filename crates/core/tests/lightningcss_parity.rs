@@ -33,13 +33,13 @@ use lightningcss::rules::CssRule;
 use lightningcss::stylesheet::{ParserOptions, StyleSheet};
 
 // Host function referenced by `grammar/css/l4/color.bbnf` resolves to
-// `bbnf::css_types::parse_hex_color`; the bbnf library crate carries
-// the canonical shim, so this test reaches the function via the
-// already-`pub`-exposed module path. The pre-AZ-III in-test
-// `mod css_types {…}` shadow is retired per REAUDIT-2026-04-30 lane 3
-// §5.1 (single source of truth).
+// `bbnf::runtime::css_l4::host::parse_hex_color`; the CSS L4 runtime
+// carries the canonical shim next to the grammar that references it, so
+// this test reaches the function via the already-`pub`-exposed module
+// path. The pre-AZ-III in-test host-shim shadow is retired per
+// REAUDIT-2026-04-30 lane 3 §5.1 (single source of truth).
 #[allow(unused_imports)]
-use bbnf::css_types as _css_types_link;
+use bbnf::runtime::css_l4::host as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 

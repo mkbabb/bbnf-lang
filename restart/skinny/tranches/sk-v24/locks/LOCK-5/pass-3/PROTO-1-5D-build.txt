@@ -1,0 +1,27 @@
+warning: /Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/Cargo.toml: `panic` setting is ignored for `bench` profile
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/crates/core)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/bbnf
+warning: patch `bbnf-regex v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/regex)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/bbnf-regex
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/crates/ser)` was not used in the crate graph
+warning: patch `egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/crates/egraph-derive)` was not used in the crate graph
+warning: patch `gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/crates/gorgeous)` was not used in the crate graph
+warning: patch `parse_that v0.4.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/parse_that)` was not used in the crate graph
+warning: patch `pprint v0.3.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust)` was not used in the crate graph
+warning: patch `pprint_derive v0.2.2 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust/derive)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling ir v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/ir)
+   Compiling grammar v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/grammar)
+   Compiling passes v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/passes)
+   Compiling codegen v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/codegen)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.54s
+EXIT=0
+22:48  up  8:42, 1 user, load averages: 4.64 7.03 7.21

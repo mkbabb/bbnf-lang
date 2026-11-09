@@ -1,0 +1,109 @@
+warning: /Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/skinny/Cargo.toml: `panic` setting is ignored for `bench` profile
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/crates/core)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/skinny/crates/bbnf
+warning: patch `bbnf-regex v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/regex)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/skinny/crates/bbnf-regex
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/crates/ser)` was not used in the crate graph
+warning: patch `egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/crates/egraph-derive)` was not used in the crate graph
+warning: patch `gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/crates/gorgeous)` was not used in the crate graph
+warning: patch `parse_that v0.4.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/parse_that)` was not used in the crate graph
+warning: patch `pprint v0.3.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust)` was not used in the crate graph
+warning: patch `pprint_derive v0.2.2 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust/derive)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling passes v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-40/skinny/crates/passes)
+warning: function `adjudicate` is never used
+   --> crates/passes/tests/follow_sound_fraction.rs:476:4
+    |
+476 | fn adjudicate(name: &str, g: &GrammarIr, out: &mut Vec<LeafVerdict>) {
+    |    ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `passes` (test "follow_sound_fraction") generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.23s
+     Running tests/follow_sound_fraction.rs (target/debug/deps/follow_sound_fraction-079e2190aaa1710b)
+
+running 1 test
+=== corpus load ===
+  json:    15 rules loaded
+  sheets:  39 rules loaded
+  counterexample: 2 rules loaded
+
+=== per-leaf verdicts (grammar :: rule) ===
+  SOUND       json::number         /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/
+  SOUND       json::string         /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/
+  GUARD-REQ   json::ws             /[ \t\n\r]*/ (nullable)
+             first(C) ∩ FOLLOW = [\t,\n,\r,SP]  ← greedy give-back / guard required
+  GUARD-REQ   sheets::number         /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/ (nullable,first=UNKNOWN)
+             first(C) ∩ FOLLOW = [.,0,1,2,3,4,5,6,7,8,9]  ← greedy give-back / guard required
+  GUARD-REQ   sheets::string         /"([^"]|"")*"/
+             first(C) ∩ FOLLOW = ["]  ← greedy give-back / guard required
+  BOUNDED*    sheets::boolean        /[tT][rR][uU][eE]/ (bounded)
+             first(C) ∩ FOLLOW = [T,t]  ← greedy give-back / guard required
+  BOUNDED*    sheets::boolean        /[fF][aA][lL][sS][eE]/ (bounded)
+             first(C) ∩ FOLLOW = [F,f]  ← greedy give-back / guard required
+  GUARD-REQ   sheets::sheet_prefix   /'(?:[^']|'')*'!|[A-Za-z_]\w*!/
+             first(C) ∩ FOLLOW = [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]  ← greedy give-back / guard required
+  GUARD-REQ   sheets::cell_ref       /\$?[A-Za-z]{1,3}\$?\d+/
+             first(C) ∩ FOLLOW = [$,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]  ← greedy give-back / guard required
+  BOUNDED*    sheets::range_end      /\$?[A-Za-z]{1,3}/ (bounded)
+             first(C) ∩ FOLLOW = [$,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]  ← greedy give-back / guard required
+  GUARD-REQ   sheets::range_end      /\$?\d+/
+             first(C) ∩ FOLLOW = [$,0,1,2,3,4,5,6,7,8,9]  ← greedy give-back / guard required
+  GUARD-REQ   sheets::identifier     /[A-Za-z_][A-Za-z0-9_.]*/
+             first(C) ∩ FOLLOW = [A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,_,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]  ← greedy give-back / guard required
+  BOUNDED*    sheets::let_call       /[lL][eE][tT]\(/ (bounded)
+             first(C) ∩ FOLLOW = [L,l]  ← greedy give-back / guard required
+  BOUNDED*    sheets::lambda_call    /[lL][aA][mM][bB][dD][aA]\(/ (bounded)
+             first(C) ∩ FOLLOW = [L,l]  ← greedy give-back / guard required
+  BOUNDED*    sheets::formula        /=?/ (nullable,bounded)
+             first(C) ∩ FOLLOW = [=]  ← greedy give-back / guard required
+  GUARD-REQ   counterexample::word           /[a-z]+/
+             first(C) ∩ FOLLOW = [a]  ← greedy give-back / guard required
+
+=== NON-DISJOINT (require Seq[Repeat, FOLLOW-guard]) ===
+  json::ws  /[ \t\n\r]*/  overlap=[\t,\n,\r,SP]
+  sheets::number  /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/  overlap=[.,0,1,2,3,4,5,6,7,8,9]
+  sheets::string  /"([^"]|"")*"/  overlap=["]
+  sheets::boolean  /[tT][rR][uU][eE]/  overlap=[T,t]
+  sheets::boolean  /[fF][aA][lL][sS][eE]/  overlap=[F,f]
+  sheets::sheet_prefix  /'(?:[^']|'')*'!|[A-Za-z_]\w*!/  overlap=[A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]
+  sheets::cell_ref  /\$?[A-Za-z]{1,3}\$?\d+/  overlap=[$,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]
+  sheets::range_end  /\$?[A-Za-z]{1,3}/  overlap=[$,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]
+  sheets::range_end  /\$?\d+/  overlap=[$,0,1,2,3,4,5,6,7,8,9]
+  sheets::identifier  /[A-Za-z_][A-Za-z0-9_.]*/  overlap=[A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,_,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]
+  sheets::let_call  /[lL][eE][tT]\(/  overlap=[L,l]
+  sheets::lambda_call  /[lL][aA][mM][bB][dD][aA]\(/  overlap=[L,l]
+  sheets::formula  /=?/  overlap=[=]
+  counterexample::word  /[a-z]+/  overlap=[a]
+
+================ RESULT ================
+[brief-literal] first(C)∩FOLLOW=∅ : disjoint=2/16 frac=12.5%
+[bounded, give-back impossible by construction] : 6/16
+[give-back-prone (trailing unbounded run)] : 10/16; of those FOLLOW-sound=2/10 (20.0%)
+[effectively one-pass = bounded ∪ prone-sound] : 8/16 (50.0%)
+=======================================
+
+=== first(C) source change — per-leaf (under vs over) ===
+  first-set only       sheets::number  /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/  under_first=|256| over_first=|11|  disjoint false→false
+  FLIP sound→unsound  sheets::sheet_prefix  /'(?:[^']|'')*'!|[A-Za-z_]\w*!/  under_first=|1| over_first=|54|  disjoint true→false
+  first-set only       sheets::cell_ref  /\$?[A-Za-z]{1,3}\$?\d+/  under_first=|1| over_first=|53|  disjoint false→false
+  first-set only       sheets::range_end  /\$?[A-Za-z]{1,3}/  under_first=|1| over_first=|53|  disjoint false→false
+  first-set only       sheets::range_end  /\$?\d+/  under_first=|1| over_first=|11|  disjoint false→false
+  sound→unsound flips: ["sheet_prefix"]
+  unsound→sound flips (analyzer opaque→precise): []
+
+[genuine-give-back trio still NON-disjoint under over-approx]: ["word", "string", "identifier"] (3/3)
+PASS: fraction reported (2/16 = 12.5%) and the word/"and" counterexample is NON-disjoint (predicate SOUND).
+test follow_sound_fraction ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.44s
+

@@ -1,0 +1,105 @@
+--- a/bbnf-simd/src/aarch64/structural_classify_64.rs	2026-06-02 20:06:55
++++ b/bbnf-simd/src/aarch64/structural_classify_64.rs	2026-07-16 23:19:38
+@@ -131,25 +131,20 @@
+ #[inline(always)]
+ unsafe fn pack4(m0: uint8x16_t, m1: uint8x16_t, m2: uint8x16_t, m3: uint8x16_t) -> u64 {
+     unsafe {
+-        let lo0 = movemask_u8x16(m0) as u64;
+-        let lo1 = movemask_u8x16(m1) as u64;
+-        let lo2 = movemask_u8x16(m2) as u64;
+-        let lo3 = movemask_u8x16(m3) as u64;
+-        lo0 | (lo1 << 16) | (lo2 << 32) | (lo3 << 48)
++        // CANONICAL DENSE-64 producer (simdjson neon_movemask_bulk): vpaddq bit-weight
++        // tree, LLVM-lowered to uzp/orr, ZERO horizontal reduction. Purges the refuted
++        // double-`vaddv` (LOCK-9 §0 iv). Bit-identical to the prior form (checkasm parity).
++        let bit_mask: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
++        let bm = vld1q_u8(bit_mask.as_ptr());
++        let t0 = vandq_u8(m0, bm);
++        let t1 = vandq_u8(m1, bm);
++        let t2 = vandq_u8(m2, bm);
++        let t3 = vandq_u8(m3, bm);
++        let s0 = vpaddq_u8(t0, t1);
++        let s1 = vpaddq_u8(t2, t3);
++        let s = vpaddq_u8(s0, s1);
++        let s = vpaddq_u8(s, s);
++        vgetq_lane_u64(vreinterpretq_u64_u8(s), 0)
+     }
+ }
+ 
+-/// Pack a 16-lane comparison vector (each lane 0xFF or 0x00) into a 16-bit mask.
+-/// Mirrors the `movemask_u8x16` convention already in
+-/// `aarch64/byte_class_from_eq_set_64.rs` (multiply-by-bit-weight, sum halves).
+-#[cfg(target_arch = "aarch64")]
+-#[inline(always)]
+-unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
+-    unsafe {
+-        let pattern: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
+-        let bits = vandq_u8(value, vld1q_u8(pattern.as_ptr()));
+-        let lo = vaddv_u8(vget_low_u8(bits)) as u16;
+-        let hi = vaddv_u8(vget_high_u8(bits)) as u16;
+-        lo | (hi << 8)
+-    }
+-}
+--- a/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs	2026-05-14 07:03:55
++++ b/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs	2026-07-16 23:21:52
+@@ -78,10 +78,16 @@
+ #[inline(always)]
+ unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
+     unsafe {
++        // CANONICAL single-stripe DENSE producer: 3 `vpaddq` folds (16->8->4->2),
++        // byte0 = lanes 0-7 mask, byte1 = lanes 8-15 mask. Purges the refuted double-
++        // `vaddv` (LOCK-9 §0 iv); bit-identical (checkasm parity), zero horizontal reduction.
+         let pattern: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
+         let bits = vandq_u8(value, vld1q_u8(pattern.as_ptr()));
+-        let lo = vaddv_u8(vget_low_u8(bits)) as u16;
+-        let hi = vaddv_u8(vget_high_u8(bits)) as u16;
++        let p = vpaddq_u8(bits, bits);
++        let p = vpaddq_u8(p, p);
++        let p = vpaddq_u8(p, p);
++        let lo = vgetq_lane_u8::<0>(p) as u16;
++        let hi = vgetq_lane_u8::<1>(p) as u16;
+         lo | (hi << 8)
+     }
+ }
+--- a/bbnf-simd/src/aarch64/comment_body_mask_64.rs	2026-05-30 16:54:13
++++ b/bbnf-simd/src/aarch64/comment_body_mask_64.rs	2026-07-16 23:21:52
+@@ -67,10 +67,16 @@
+ #[inline(always)]
+ unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
+     unsafe {
++        // CANONICAL single-stripe DENSE producer: 3 `vpaddq` folds (16->8->4->2),
++        // byte0 = lanes 0-7 mask, byte1 = lanes 8-15 mask. Purges the refuted double-
++        // `vaddv` (LOCK-9 §0 iv); bit-identical (checkasm parity), zero horizontal reduction.
+         let pattern: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
+         let bits = vandq_u8(value, vld1q_u8(pattern.as_ptr()));
+-        let lo = vaddv_u8(vget_low_u8(bits)) as u16;
+-        let hi = vaddv_u8(vget_high_u8(bits)) as u16;
++        let p = vpaddq_u8(bits, bits);
++        let p = vpaddq_u8(p, p);
++        let p = vpaddq_u8(p, p);
++        let lo = vgetq_lane_u8::<0>(p) as u16;
++        let hi = vgetq_lane_u8::<1>(p) as u16;
+         lo | (hi << 8)
+     }
+ }
+--- a/bbnf-simd/src/aarch64/bracket_depth_mask_64.rs	2026-05-30 16:54:13
++++ b/bbnf-simd/src/aarch64/bracket_depth_mask_64.rs	2026-07-16 23:21:52
+@@ -73,10 +73,16 @@
+ #[inline(always)]
+ unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
+     unsafe {
++        // CANONICAL single-stripe DENSE producer: 3 `vpaddq` folds (16->8->4->2),
++        // byte0 = lanes 0-7 mask, byte1 = lanes 8-15 mask. Purges the refuted double-
++        // `vaddv` (LOCK-9 §0 iv); bit-identical (checkasm parity), zero horizontal reduction.
+         let pattern: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
+         let bits = vandq_u8(value, vld1q_u8(pattern.as_ptr()));
+-        let lo = vaddv_u8(vget_low_u8(bits)) as u16;
+-        let hi = vaddv_u8(vget_high_u8(bits)) as u16;
++        let p = vpaddq_u8(bits, bits);
++        let p = vpaddq_u8(p, p);
++        let p = vpaddq_u8(p, p);
++        let lo = vgetq_lane_u8::<0>(p) as u16;
++        let hi = vgetq_lane_u8::<1>(p) as u16;
+         lo | (hi << 8)
+     }
+ }

@@ -1,0 +1,18 @@
+diff --git a/crates/ir/src/types/node.rs b/crates/ir/src/types/node.rs
+index e0a9eab3b..8d38140ab 100644
+--- a/crates/ir/src/types/node.rs
++++ b/crates/ir/src/types/node.rs
+@@ -38,6 +38,13 @@ pub enum IrNode {
+     /// Matches the empty string.
+     Epsilon,
+ 
++    // ── LOCK-5 5A merge probe: regex HIR leaves folded into IrNode ───────
++    /// A regex character class leaf (merged from `bbnf_regex` HIR).
++    Class(bbnf_regex::CharClass),
++
++    /// A zero-width look assertion leaf (merged from `bbnf_regex` HIR).
++    Look(bbnf_regex::Look),
++
+     // ── Combinators (N-ary flat) ────────────────────────────────────────
+     /// Sequential concatenation: all children must match in order.
+     Seq(Vec<IrNode>),

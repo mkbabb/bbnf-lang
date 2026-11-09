@@ -1,0 +1,59 @@
+warning: /Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/skinny/Cargo.toml: `panic` setting is ignored for `bench` profile
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/crates/core)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/skinny/crates/bbnf
+warning: patch `bbnf-regex v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/regex)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/skinny/crates/bbnf-regex
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/crates/ser)` was not used in the crate graph
+warning: patch `egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/crates/egraph-derive)` was not used in the crate graph
+warning: patch `gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/crates/gorgeous)` was not used in the crate graph
+warning: patch `parse_that v0.4.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/parse-that/rust/parse_that)` was not used in the crate graph
+warning: patch `pprint v0.3.6 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust)` was not used in the crate graph
+warning: patch `pprint_derive v0.2.2 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/pprint/rust/derive)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling thiserror v1.0.69
+   Compiling bbnf-regex v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/skinny/crates/bbnf-regex)
+   Compiling syn v2.0.117
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v1.0.69
+   Compiling ir v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/skinny/crates/ir)
+   Compiling grammar v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_63419230-36d-29/skinny/crates/grammar)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 5.02s
+     Running tests/probe_bbnf_selfhost.rs (target/ax-iter/deps/probe_bbnf_selfhost-abd752f7c8f09967)
+
+running 3 tests
+test probe_a_literal_gate_single_source ... PROBE[A/literal-single-source] bbnf.bbnf: REJECT @ byte 421 (line 9, col 40)
+PROBE[A/literal-single-source]   err: BBNF-PARSE: unexpected token `-` at byte 421
+PROBE[A/literal-single-source]   line: "identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;"
+PROBE[A/literal-single-source]   ctx: …"_a-zA-Z][_a-zA-Z0-9-]*/ "⟨HERE⟩"-> Span ;\n\nliteral = ( \""…
+ok
+test probe_b_self_contained_closure ... PROBE[B/self-contained] bbnf∪expr∪types: REJECT @ byte 323 (line 7, col 40)
+PROBE[B/self-contained]   err: BBNF-PARSE: unexpected token `-` at byte 323
+PROBE[B/self-contained]   line: "identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;"
+PROBE[B/self-contained]   ctx: …"_a-zA-Z][_a-zA-Z0-9-]*/ "⟨HERE⟩"-> Span ;\n\nliteral = ( \""…
+ok
+test probe_c_each_file_standalone ... PROBE[C/standalone] types.bbnf: PARSE OK — 1 rules accepted
+PROBE[C/standalone] expressions.bbnf: REJECT @ byte 115 (line 5, col 44)
+PROBE[C/standalone]   err: BBNF-PARSE: unexpected token `-` at byte 115
+PROBE[C/standalone]   line: "int_lit = /0[xX][0-9a-fA-F]+\\w*|[0-9]+\\w*/ -> i64 ;"
+PROBE[C/standalone]   ctx: …"9a-fA-F]+\\w*|[0-9]+\\w*/ "⟨HERE⟩"-> i64 ;\nfloat_lit = /[0"…
+PROBE[C/standalone] bbnf.bbnf: REJECT @ byte 323 (line 7, col 40)
+PROBE[C/standalone]   err: BBNF-PARSE: unexpected token `-` at byte 323
+PROBE[C/standalone]   line: "identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;"
+PROBE[C/standalone]   ctx: …"_a-zA-Z][_a-zA-Z0-9-]*/ "⟨HERE⟩"-> Span ;\n\nliteral = ( \""…
+ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

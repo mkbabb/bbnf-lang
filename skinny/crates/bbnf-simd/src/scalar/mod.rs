@@ -6,6 +6,7 @@ pub mod byte_class_from_eq_set_64;
 pub mod byte_class_from_table_64;
 pub mod comment_body_mask_64;
 pub mod eob_pad_clamp;
+pub mod structural_classify_64;
 pub mod swar_8byte;
 
 pub use swar_8byte::classify_chunk;

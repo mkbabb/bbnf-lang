@@ -1,0 +1,61 @@
+--- a/typescript/src/parse/state.ts	2026-07-16 01:27:24
++++ b/typescript/src/parse/state.ts	2026-07-16 04:16:00
+@@ -138,6 +138,23 @@
+     }
+ }
+ 
++/**
++ * Fixed-shape snapshot view used by `.mapState` for the pre-parse state. Built
++ * by ONE constructor so every view shares a single hidden class (monomorphic),
++ * unlike `Object.create(state)` which roots each view at a different prototype
++ * (the per-parse `ParserState` instance) and yields a distinct hidden class per
++ * parse. Carries exactly the fields a `mapState` fn reads.
++ */
++export class StateView {
++    constructor(
++        public src: string,
++        public value: unknown,
++        public offset: number,
++        public isError: boolean,
++        public furthest: number,
++    ) {}
++}
++
+ export const parserNames = [
+     "string",
+     "regex",
+--- a/typescript/src/parse/parser.ts	2026-07-03 16:45:35
++++ b/typescript/src/parse/parser.ts	2026-07-16 04:16:09
+@@ -1,4 +1,4 @@
+-import { createParserContext, ParserState } from "./state.js";
++import { createParserContext, ParserState, StateView } from "./state.js";
+ import type { ParserContext, Span } from "./state.js";
+ import { parserDebug, parserPrint } from "./debug.js";
+ import { mergeErrorState, addSuggestion, isDiagnosticsEnabled, collectDiagnostic, popLastDiagnostic, reportUnclosedDelimiter } from "./utils.js";
+@@ -173,11 +173,21 @@
+             if (state.isError) {
+                 return state;
+             }
+-            // Build a lightweight view for the old state
+-            const oldView = Object.create(state);
+-            oldView.offset = oldOffset;
+-            oldView.value = oldValue;
+-            return fn(state, oldView);
++            // Build a fixed-shape view for the old state. A `{src, value,
++            // offset, isError, furthest}` record built by one constructor keeps
++            // every view on ONE hidden class (monomorphic), so a `.mapState` fn
++            // and every downstream read see a stable map. `Object.create(state)`
++            // rooted each view at a *different* prototype (the per-parse
++            // ParserState instance) → a distinct hidden class per parse → the
++            // consuming `fn` and its callers go polymorphic and de-opt.
++            const oldView = new StateView(
++                state.src,
++                oldValue,
++                oldOffset,
++                state.isError,
++                state.furthest,
++            );
++            return fn(state, oldView as unknown as ParserState<T>);
+         };
+ 
+         return new Parser(

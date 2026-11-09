@@ -1,0 +1,25 @@
+### TIGHTENED-1.0.0 — npx vitest run ###
+
+ RUN  v3.2.4 /Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/lp-scratch-8D
+
+ ✓ tests/virtualSectionLayout.test.ts (2 tests) 2ms
+ ✓ tests/labels.test.ts (4 tests) 2ms
+ ✓ tests/compiled-metadata.test.ts (3 tests) 3ms
+ ✓ tests/flattenPaperSections.test.ts (2 tests) 2ms
+ ✓ tests/grammar/math.test.ts (4 tests) 2ms
+ ✓ tests/bibtex.test.ts (12 tests) 3ms
+ ✓ tests/grammar/text.test.ts (11 tests) 3ms
+ ✓ tests/grammar/document.test.ts (19 tests) 4ms
+ ✓ tests/grammar/commands.test.ts (11 tests) 4ms
+ ✓ tests/grammar/environments.test.ts (10 tests) 4ms
+ ✓ tests/paper.test.ts (19 tests | 9 skipped) 4ms
+ ✓ tests/integration.test.ts (8 tests) 13ms
+ ✓ tests/transformer.test.ts (20 tests) 13ms
+ ✓ tests/vite-pages.test.ts (2 tests) 9ms
+
+ Test Files  14 passed (14)
+      Tests  118 passed | 9 skipped (127)
+   Start at  23:10:07
+   Duration  337ms (transform 422ms, setup 0ms, collect 1.14s, tests 68ms, environment 1ms, prepare 643ms)
+
+VITEST_EXIT=0

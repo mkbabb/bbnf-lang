@@ -1,0 +1,278 @@
+{
+  "chromium": {
+    "immediate": {
+      "prep": {
+        "targetInDom": true,
+        "hostCv": "auto",
+        "highlight": {
+          "supported": true,
+          "rangeConstructed": true,
+          "rectWhileSkipped": {
+            "w": 113,
+            "h": 22
+          }
+        }
+      },
+      "mode": "immediate",
+      "revealMs": null,
+      "rangeBuiltPostReveal": null,
+      "unskipLatencyMs": 1.9,
+      "cvEvents": 1,
+      "landingErrPx": {
+        "atFrame0": 0.3,
+        "atFrame5": 0.6,
+        "final": 0.6
+      },
+      "maxAbsErrAfterFrame0": 0.6,
+      "corrections": 0,
+      "stableAtFrame": 0,
+      "msToStable": 194,
+      "framesSampled": 21,
+      "firstTen": [
+        0.3,
+        0.3,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "highlightAfter": {
+        "top": 521.8,
+        "w": 113,
+        "h": 22,
+        "inViewport": true
+      }
+    },
+    "settleLoop": {
+      "prep": {
+        "targetInDom": true,
+        "hostCv": "auto",
+        "highlight": {
+          "supported": true,
+          "rangeConstructed": true,
+          "rectWhileSkipped": {
+            "w": 113,
+            "h": 22
+          }
+        }
+      },
+      "mode": "settle-loop",
+      "revealMs": null,
+      "rangeBuiltPostReveal": null,
+      "unskipLatencyMs": 1.1,
+      "cvEvents": 1,
+      "landingErrPx": {
+        "atFrame0": 0.3,
+        "atFrame5": 0.6,
+        "final": 0.6
+      },
+      "maxAbsErrAfterFrame0": 0.6,
+      "corrections": 0,
+      "stableAtFrame": 0,
+      "msToStable": 194,
+      "framesSampled": 21,
+      "firstTen": [
+        0.3,
+        0.3,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "highlightAfter": {
+        "top": 521.8,
+        "w": 113,
+        "h": 22,
+        "inViewport": true
+      }
+    },
+    "governedRevealTo": {
+      "prep": {
+        "targetInDom": false,
+        "hostCv": null,
+        "highlight": {
+          "supported": true
+        }
+      },
+      "mode": "governed-revealTo",
+      "revealMs": 387,
+      "rangeBuiltPostReveal": true,
+      "unskipLatencyMs": null,
+      "cvEvents": 0,
+      "landingErrPx": {
+        "atFrame0": 0.3,
+        "atFrame5": 0.6,
+        "final": 0.6
+      },
+      "maxAbsErrAfterFrame0": 0.6,
+      "corrections": 0,
+      "stableAtFrame": 0,
+      "msToStable": 590,
+      "framesSampled": 21,
+      "firstTen": [
+        0.3,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6,
+        0.6
+      ],
+      "highlightAfter": {
+        "top": 521.8,
+        "w": 113,
+        "h": 22,
+        "inViewport": true
+      }
+    }
+  },
+  "webkit": {
+    "immediate": {
+      "prep": {
+        "targetInDom": true,
+        "hostCv": "auto",
+        "highlight": {
+          "supported": true,
+          "rangeConstructed": true,
+          "rectWhileSkipped": {
+            "w": 0,
+            "h": 0
+          }
+        }
+      },
+      "mode": "immediate",
+      "revealMs": null,
+      "rangeBuiltPostReveal": null,
+      "unskipLatencyMs": 5,
+      "cvEvents": 1,
+      "landingErrPx": {
+        "atFrame0": -0.1,
+        "atFrame5": 257.4,
+        "final": 257.4
+      },
+      "maxAbsErrAfterFrame0": 257.4,
+      "corrections": 0,
+      "stableAtFrame": 0,
+      "msToStable": 355,
+      "framesSampled": 21,
+      "firstTen": [
+        -0.1,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4
+      ],
+      "highlightAfter": {
+        "top": 779.3,
+        "w": 114,
+        "h": 21,
+        "inViewport": true
+      }
+    },
+    "settleLoop": {
+      "prep": {
+        "targetInDom": true,
+        "hostCv": "auto",
+        "highlight": {
+          "supported": true,
+          "rangeConstructed": true,
+          "rectWhileSkipped": {
+            "w": 0,
+            "h": 0
+          }
+        }
+      },
+      "mode": "settle-loop",
+      "revealMs": null,
+      "rangeBuiltPostReveal": null,
+      "unskipLatencyMs": 5,
+      "cvEvents": 1,
+      "landingErrPx": {
+        "atFrame0": -0.1,
+        "atFrame5": 0.4,
+        "final": 0.4
+      },
+      "maxAbsErrAfterFrame0": 257.4,
+      "corrections": 1,
+      "stableAtFrame": 2,
+      "msToStable": 378,
+      "framesSampled": 23,
+      "firstTen": [
+        -0.1,
+        257.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4,
+        0.4
+      ],
+      "highlightAfter": {
+        "top": 522.3,
+        "w": 114,
+        "h": 21,
+        "inViewport": true
+      }
+    },
+    "governedRevealTo": {
+      "prep": {
+        "targetInDom": false,
+        "hostCv": null,
+        "highlight": {
+          "supported": true
+        }
+      },
+      "mode": "governed-revealTo",
+      "revealMs": 436,
+      "rangeBuiltPostReveal": true,
+      "unskipLatencyMs": null,
+      "cvEvents": 0,
+      "landingErrPx": {
+        "atFrame0": 257.4,
+        "atFrame5": 257.4,
+        "final": 257.4
+      },
+      "maxAbsErrAfterFrame0": 257.4,
+      "corrections": 0,
+      "stableAtFrame": null,
+      "msToStable": null,
+      "framesSampled": 90,
+      "firstTen": [
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4,
+        257.4
+      ],
+      "highlightAfter": {
+        "top": 779.3,
+        "w": 114,
+        "h": 21,
+        "inViewport": true
+      }
+    }
+  }
+}

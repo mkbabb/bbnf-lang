@@ -1,0 +1,71 @@
+=== BUILD+TEST START 19:58:41 loadavg=7.44 6.21 7.18 ===
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang/crates/core)` was not used in the crate graph
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/crates/ser)` was not used in the crate graph
+warning: patch `csp-solver v0.6.0 (/Users/mkbabb/Programming/csc411/CSC411_HW2_ProgrammingQuestion/csp-solver)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling parse_that v0.4.0 (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/rust/parse_that)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.47s
+     Running tests/grammar_driven_regex.rs (/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/target/debug/deps/grammar_driven_regex-3db2d8d196c7604c)
+
+running 1 test
+  RAW  DIVERGE  [^\x00]*x                                 hand_states=2 gen_states=2
+        hand HIR: Concat([Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 0, end: 0 }], negated: true }), min: 0, max: None, greedy: true }), Literal([120])])
+        gen  HIR: Concat([Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 48, end: 48 }], negated: true }), min: 0, max: None, greedy: true }), Literal([120])])
+  BRDG DIVERGE  [^\x00]*x                                 hand_states=2 gen_states=2
+        simplify(hand) HIR: Concat([Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 0, end: 0 }], negated: true }), min: 0, max: None, greedy: true }), Literal([120])])
+        simplify(gen)  HIR: Concat([Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 48, end: 48 }], negated: true }), min: 0, max: None, greedy: true }), Literal([120])])
+  RAW  DIVERGE  /\*.*\*/                                  hand_states=5 gen_states=5
+        hand HIR: Concat([Literal([47]), Literal([42]), Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 10, end: 10 }], negated: true }), min: 0, max: None, greedy: true }), Literal([42]), Literal([47])])
+        gen  HIR: Concat([Literal([47]), Literal([42]), Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 46, end: 46 }], negated: false }), min: 0, max: None, greedy: true }), Literal([42]), Literal([47])])
+  BRDG DIVERGE  /\*.*\*/                                  hand_states=5 gen_states=5
+        simplify(hand) HIR: Concat([Literal([47]), Literal([42]), Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 10, end: 10 }], negated: true }), min: 0, max: None, greedy: true }), Literal([42]), Literal([47])])
+        simplify(gen)  HIR: Concat([Literal([47]), Literal([42]), Repetition(Repetition { sub: Class(Bytes { ranges: [ByteRange { start: 46, end: 46 }], negated: false }), min: 0, max: None, greedy: true }), Literal([42]), Literal([47])])
+
+===== GRAMMAR-DRIVEN REGEX PARITY ORACLE =====
+corpus                : 56 patterns
+hand parser rejects   : 0
+generated rejects     : 11  (LOCK-7A bootstrap-parity gap)
+    GEN-REJECT   [a-fA-F0-9]{2}(?::[a-fA-F0-9]{2})+        invalid repetition bound
+    GEN-REJECT   \d+(,\d{3})*                              invalid repetition bound
+    GEN-REJECT   \+?\d[\d -]{6,}\d                         invalid repetition bound
+    GEN-REJECT   \d{4}-\d{2}-\d{2}                         invalid repetition bound
+    GEN-REJECT   #[0-9a-fA-F]{3,6}                         invalid repetition bound
+    GEN-REJECT   [0-9a-fA-F]{3,8}                          invalid repetition bound
+    GEN-REJECT   \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}        invalid repetition bound
+    GEN-REJECT   \d{2}:\d{2}:\d{2}                         invalid repetition bound
+    GEN-REJECT   [A-Z]{3}-\d{4}                            invalid repetition bound
+    GEN-REJECT   [01]{8}                                   invalid repetition bound
+    GEN-REJECT   \d{5}(?:-\d{4})?                          invalid repetition bound
+RAW    DFA-equivalent : 43/45  (both-parsed pairs)
+BRIDGE DFA-equivalent : 43/45  (both threaded through simplify_hir)
+raw divergences       : 2
+bridge divergences    : 2
+==============================================
+
+
+thread 'grammar_driven_regex_parity' (1413319) panicked at parse_that/tests/grammar_driven_regex.rs:224:5:
+generated parser rejected 11 pattern(s) the hand parser accepts: [("[a-fA-F0-9]{2}(?::[a-fA-F0-9]{2})+", "invalid repetition bound"), ("\\d+(,\\d{3})*", "invalid repetition bound"), ("\\+?\\d[\\d -]{6,}\\d", "invalid repetition bound"), ("\\d{4}-\\d{2}-\\d{2}", "invalid repetition bound"), ("#[0-9a-fA-F]{3,6}", "invalid repetition bound"), ("[0-9a-fA-F]{3,8}", "invalid repetition bound"), ("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}", "invalid repetition bound"), ("\\d{2}:\\d{2}:\\d{2}", "invalid repetition bound"), ("[A-Z]{3}-\\d{4}", "invalid repetition bound"), ("[01]{8}", "invalid repetition bound"), ("\\d{5}(?:-\\d{4})?", "invalid repetition bound")]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test grammar_driven_regex_parity ... FAILED
+
+failures:
+
+failures:
+    grammar_driven_regex_parity
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p parse_that --test grammar_driven_regex`
+=== END 19:58:42 exit=0 loadavg=7.44 6.21 7.18 ===
+
+===== RAW GENERATED AST (root-cause attribution) =====
+PATTERN "."          => consumed=1/1  AST=regex(alternation((concat([quantified((atom(class_atom_0(Span { start: 0, end: 1, src: "." })), None))]), [])))
+PATTERN "\\d{4}"     => consumed=5/5  AST=regex(alternation((concat([quantified((atom(escape(Span { start: 1, end: 2, src: "\\d{4}" })), Some(quantifier(Span { start: 2, end: 5, src: "\\d{4}" }))))]), [])))
+PATTERN "[^\\x00]"   => consumed=7/7  AST=regex(alternation((concat([quantified((atom(char_class((Span { start: 0, end: 2, src: "[^\\x00]" }, [class_item(class_escape(Span { start: 4, end: 6, src: "[^\\x00]" }))]))), None))]), [])))
+PATTERN "\\x41"      => consumed=4/4  AST=regex(alternation((concat([quantified((atom(escape(Span { start: 2, end: 4, src: "\\x41" })), None))]), [])))
+PATTERN "a{2,3}"     => consumed=6/6  AST=regex(alternation((concat([quantified((atom(literal(Span { start: 0, end: 1, src: "a{2,3}" })), Some(quantifier(Span { start: 1, end: 6, src: "a{2,3}" }))))]), [])))
+PATTERN "a."         => consumed=2/2  AST=regex(alternation((concat([quantified((atom(literal(Span { start: 0, end: 1, src: "a." })), None)), quantified((atom(class_atom_0(Span { start: 1, end: 2, src: "a." })), None))]), [])))

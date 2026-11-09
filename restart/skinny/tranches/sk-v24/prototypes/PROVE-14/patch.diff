@@ -1,0 +1,745 @@
+diff --git a/skinny/crates/bbnf-bench/src/bin/tape_dump.rs b/skinny/crates/bbnf-bench/src/bin/tape_dump.rs
+new file mode 100644
+index 000000000..b167d688d
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/src/bin/tape_dump.rs
+@@ -0,0 +1,78 @@
++// PROVE-14 (F4 tape-in-TS): dump the live offset-tape SoA layout to disk so a
++// TypeScript decoder can walk the identical bytes. Parses twitter.json with the
++// production `parse_tape` product (runtime::generated_json::parse) and writes the
++// four SoA planes + source bytes as raw little-endian files:
++//
++//   offsets.u32       Vec<u32> LE  -- one src byte-offset per structural token
++//   flag_cursors.u32  Vec<u32> LE  -- sparse: cursors that carry a flag byte
++//   flag_values.u8    Vec<u8>      -- parallel to flag_cursors (STRING_NEEDS_DECODE=0x01)
++//   source.bin        &[u8]        -- borrowed input (== twitter.json bytes)
++//   meta.json         counts       -- sanity header for the TS side
++//
++// The payload arena is UNUSED on the live JSON path (proved by runtime asserts) so
++// it is not dumped; its emptiness is recorded in meta.json.
++//
++// usage: tape_dump <out_dir> [corpus.json]
++
++use std::io::Write;
++use std::path::PathBuf;
++
++fn main() {
++    let mut args = std::env::args().skip(1);
++    let out_dir = PathBuf::from(args.next().expect("usage: tape_dump <out_dir> [corpus.json]"));
++    let corpus = args.next().map(PathBuf::from).unwrap_or_else(|| {
++        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
++            .join("../test-fixtures/corpus/json/twitter.json")
++    });
++
++    std::fs::create_dir_all(&out_dir).expect("create out dir");
++    let input = std::fs::read_to_string(&corpus).expect("read corpus");
++
++    let root = runtime::generated_json::parse(&input).expect("parse_tape twitter.json");
++    let tape = root.tape();
++
++    let offsets = tape.offsets();
++    let flag_cursors = tape.flag_cursors();
++    let flag_values = tape.flag_values();
++    let source = tape.source();
++
++    write_u32(&out_dir.join("offsets.u32"), offsets);
++    write_u32(&out_dir.join("flag_cursors.u32"), flag_cursors);
++    write_bytes(&out_dir.join("flag_values.u8"), flag_values);
++    write_bytes(&out_dir.join("source.bin"), source);
++
++    // meta: counts the TS side asserts against, plus the payload-arena emptiness proof.
++    let meta = format!(
++        "{{\n  \"corpus\": \"{}\",\n  \"source_bytes\": {},\n  \"offset_count\": {},\n  \"flag_count\": {},\n  \"payload_bytes\": {},\n  \"offset_plane_bytes\": {},\n  \"flag_plane_bytes\": {}\n}}\n",
++        corpus.display(),
++        source.len(),
++        offsets.len(),
++        flag_cursors.len(),
++        tape.payloads().len(),
++        tape.offset_bytes(),
++        tape.flag_bytes(),
++    );
++    std::fs::write(out_dir.join("meta.json"), &meta).expect("write meta");
++
++    println!(
++        "dumped {}: {} offsets, {} flagged strings, {} payload bytes, {} source bytes",
++        corpus.display(),
++        offsets.len(),
++        flag_cursors.len(),
++        tape.payloads().len(),
++        source.len(),
++    );
++}
++
++fn write_u32(path: &std::path::Path, values: &[u32]) {
++    let mut buf = Vec::with_capacity(values.len() * 4);
++    for v in values {
++        buf.extend_from_slice(&v.to_le_bytes());
++    }
++    let mut f = std::fs::File::create(path).expect("create u32 file");
++    f.write_all(&buf).expect("write u32 file");
++}
++
++fn write_bytes(path: &std::path::Path, bytes: &[u8]) {
++    std::fs::write(path, bytes).expect("write bytes file");
++}
+diff --git a/skinny/crates/bbnf-bench/ts-tape/bench.mjs b/skinny/crates/bbnf-bench/ts-tape/bench.mjs
+new file mode 100644
+index 000000000..46b72d552
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/ts-tape/bench.mjs
+@@ -0,0 +1,86 @@
++// PROVE-14 (F4): cold, paired micro-bench. For each of N samples we spawn a FRESH
++// `node` child per lane (cold JIT, one timed op each), interleaved tape/json so
++// system load hits both sides of every paired ratio. Reports best-of-N (min),
++// median, and the paired ratio json/tape with a 95% CI.
++//
++// usage: node bench.mjs [N]   (env TAPE_DIR points at the dump)
++
++import { execFileSync } from "node:child_process";
++import { fileURLToPath } from "node:url";
++import { dirname, join } from "node:path";
++import { loadavg } from "node:os";
++import { digestsEqual } from "./tape.mjs";
++
++const here = dirname(fileURLToPath(import.meta.url));
++const childPath = join(here, "child.mjs");
++// usage: node bench.mjs [mode=full] [N=50]   mode in {full, partial}
++const mode = process.argv[2] === "partial" ? "partial" : "full";
++const N = parseInt(process.argv[3] || "50", 10);
++const laneA = mode === "partial" ? "tape-get" : "tape";
++const laneB = mode === "partial" ? "json-get" : "json";
++const labelA = mode === "partial" ? "tape decode+get " : "tape decode+walk";
++const labelB = mode === "partial" ? "JSON.parse+get  " : "JSON.parse+walk ";
++const dir = process.env.TAPE_DIR;
++if (!dir) {
++  console.error("set TAPE_DIR");
++  process.exit(1);
++}
++
++function runChild(lane) {
++  const out = execFileSync(process.execPath, [childPath, lane], {
++    env: { ...process.env, TAPE_DIR: dir },
++    encoding: "utf8",
++  });
++  return JSON.parse(out);
++}
++
++const tapeNs = [];
++const jsonNs = [];
++const ratios = [];
++let refDigest = null;
++let digestOk = true;
++
++const load0 = loadavg();
++for (let i = 0; i < N; i++) {
++  // interleave to pair: same-sample tape then json (load affects both).
++  const t = runChild(laneA);
++  const j = runChild(laneB);
++  tapeNs.push(t.ns);
++  jsonNs.push(j.ns);
++  ratios.push(j.ns / t.ns);
++  if (refDigest === null) refDigest = t.digest;
++  if (!digestsEqual(t.digest, refDigest) || !digestsEqual(j.digest, refDigest)) digestOk = false;
++}
++const load1 = loadavg();
++
++function stats(xs) {
++  const s = [...xs].sort((a, b) => a - b);
++  const n = s.length;
++  const median = n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
++  return { min: s[0], median, max: s[n - 1] };
++}
++function mean(xs) {
++  return xs.reduce((a, b) => a + b, 0) / xs.length;
++}
++
++const ts = stats(tapeNs);
++const js = stats(jsonNs);
++const rMean = mean(ratios);
++const rVar = ratios.reduce((a, r) => a + (r - rMean) ** 2, 0) / (ratios.length - 1);
++const ci = 1.96 * Math.sqrt(rVar / ratios.length);
++
++const toMs = (ns) => (ns / 1e6).toFixed(3);
++
++console.log(`PROVE-14 tape-in-TS [${mode}]  corpus=twitter.json  N=${N}  node=${process.version}`);
++console.log(`loadavg start=${load0.map((x) => x.toFixed(2)).join("/")}  end=${load1.map((x) => x.toFixed(2)).join("/")}`);
++console.log("");
++console.log("lane               min(ms)   median(ms)   max(ms)");
++console.log(`${labelA}   ${toMs(ts.min).padStart(7)}   ${toMs(ts.median).padStart(9)}   ${toMs(ts.max).padStart(7)}`);
++console.log(`${labelB}   ${toMs(js.min).padStart(7)}   ${toMs(js.median).padStart(9)}   ${toMs(js.max).padStart(7)}`);
++console.log("");
++console.log(`speedup (median json / median tape) = ${(js.median / ts.median).toFixed(3)}x`);
++console.log(`speedup (best/min  json / min  tape) = ${(js.min / ts.min).toFixed(3)}x`);
++console.log(`paired ratio json/tape mean = ${rMean.toFixed(3)}x  95% CI [${(rMean - ci).toFixed(3)}, ${(rMean + ci).toFixed(3)}]`);
++console.log("");
++console.log(`digest parity across all ${N * 2} cold children: ${digestOk ? "PASS" : "FAIL"}`);
++console.log(`GATE (>=2x faster, byte-exact): ${digestOk && rMean >= 2 ? "GO" : "check"}`);
+diff --git a/skinny/crates/bbnf-bench/ts-tape/child.mjs b/skinny/crates/bbnf-bench/ts-tape/child.mjs
+new file mode 100644
+index 000000000..8a9bc5dbc
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/ts-tape/child.mjs
+@@ -0,0 +1,52 @@
++// PROVE-14 (F4): ONE cold single-shot sample. A fresh `node` process runs exactly
++// one timed op (no warmup, cold JIT) and prints {lane, ns, digest}. The bench
++// orchestrator spawns N of these per lane -> cold per-parse discipline.
++//
++// usage: node child.mjs <tape|json>   (env TAPE_DIR points at the dump)
++
++import { readRaw, decodeTape } from "./load.mjs";
++import { walkJs, emptyDigest, finalizeDigest } from "./tape.mjs";
++import { tapeGet, jsonGet } from "./pointer.mjs";
++
++const lane = process.argv[2];
++const dir = process.env.TAPE_DIR;
++const raw = readRaw(dir); // untimed setup: planes in memory as Buffers
++
++let ns, digest;
++if (lane === "tape") {
++  // FULL WALK: decode SoA planes -> typed arrays, then lazy structural walk.
++  const t0 = process.hrtime.bigint();
++  const doc = decodeTape(raw);
++  const d = emptyDigest();
++  finalizeDigest(d, doc.walk(0, d));
++  const t1 = process.hrtime.bigint();
++  ns = Number(t1 - t0);
++  digest = d;
++} else if (lane === "json") {
++  // FULL WALK reference: source bytes -> string -> eager parse -> walk tree.
++  const t0 = process.hrtime.bigint();
++  const v = JSON.parse(raw.sourceBuf.toString("utf8"));
++  const d = emptyDigest();
++  finalizeDigest(d, walkJs(v, d));
++  const t1 = process.hrtime.bigint();
++  ns = Number(t1 - t0);
++  digest = d;
++} else if (lane === "tape-get") {
++  // STOP-EARLY: decode + navigate to statuses[0]'s three leaves; skip the rest.
++  const t0 = process.hrtime.bigint();
++  const doc = decodeTape(raw);
++  const g = tapeGet(doc);
++  const t1 = process.hrtime.bigint();
++  ns = Number(t1 - t0);
++  digest = { objects: 0, arrays: 0, strings: 3, numbers: 0, bools: 0, nulls: 0, codeUnits: g.codeUnits, fp: g.fp };
++} else {
++  // STOP-EARLY reference: JSON.parse must parse the WHOLE doc to reach the fields.
++  const t0 = process.hrtime.bigint();
++  const v = JSON.parse(raw.sourceBuf.toString("utf8"));
++  const g = jsonGet(v);
++  const t1 = process.hrtime.bigint();
++  ns = Number(t1 - t0);
++  digest = { objects: 0, arrays: 0, strings: 3, numbers: 0, bools: 0, nulls: 0, codeUnits: g.codeUnits, fp: g.fp };
++}
++
++process.stdout.write(JSON.stringify({ lane, ns, digest }));
+diff --git a/skinny/crates/bbnf-bench/ts-tape/load.mjs b/skinny/crates/bbnf-bench/ts-tape/load.mjs
+new file mode 100644
+index 000000000..684f21752
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/ts-tape/load.mjs
+@@ -0,0 +1,34 @@
++// PROVE-14 (F4): load the dumped SoA planes and decode them into a TapeDoc.
++//
++// readRaw   = untimed setup (read the four planes into Node Buffers, as a real TS
++//             backend would receive them from wasm memory / a fetch / a file).
++// decodeTape = the TIMED "layout decode": materialize the offset/flag planes as
++//             aligned typed arrays (Uint32Array). Included in the tape lane's
++//             timed region so the gate measures decode + walk, not walk alone.
++
++import { readFileSync } from "node:fs";
++import { join } from "node:path";
++import { TapeDoc } from "./tape.mjs";
++
++export function readRaw(dir) {
++  return {
++    sourceBuf: readFileSync(join(dir, "source.bin")),
++    offsetsBuf: readFileSync(join(dir, "offsets.u32")),
++    flagCursorsBuf: readFileSync(join(dir, "flag_cursors.u32")),
++    flagValuesBuf: readFileSync(join(dir, "flag_values.u8")),
++    meta: JSON.parse(readFileSync(join(dir, "meta.json"), "utf8")),
++  };
++}
++
++// copy a Buffer's bytes into a fresh 0-aligned ArrayBuffer, then view as u32.
++function toU32(buf) {
++  const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
++  return new Uint32Array(ab);
++}
++
++export function decodeTape(raw) {
++  const offsets = toU32(raw.offsetsBuf);
++  const flagCursors = toU32(raw.flagCursorsBuf);
++  const flagValues = raw.flagValuesBuf; // Buffer is already a Uint8Array
++  return new TapeDoc(raw.sourceBuf, offsets, flagCursors, flagValues);
++}
+diff --git a/skinny/crates/bbnf-bench/ts-tape/pointer.mjs b/skinny/crates/bbnf-bench/ts-tape/pointer.mjs
+new file mode 100644
+index 000000000..bfe47030d
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/ts-tape/pointer.mjs
+@@ -0,0 +1,34 @@
++// PROVE-14 (F4): the stop-early / partial-access workload -- the On-Demand thesis
++// (simdjson On-Demand, sonic-rs get_from_str). Extract three leaves from
++// statuses[0] (id_str, text, user.screen_name) and STOP: the tape never touches
++// statuses[1..99], while JSON.parse is forced to parse the whole document to hand
++// back any field. Both lanes fold the SAME extracted values -> identical digest.
++
++import { nodeString, nodeStringFromHash } from "./tape.mjs";
++
++const mix = (h, x) => Math.imul(h ^ x, 0x01000193) >>> 0;
++
++export function tapeGet(doc) {
++  const statuses = doc.getKey(0, "statuses");
++  const s0 = doc.indexArray(statuses, 0);
++  const idStr = doc.stringLeaf(doc.getKey(s0, "id_str"));
++  const text = doc.stringLeaf(doc.getKey(s0, "text"));
++  const screen = doc.stringLeaf(doc.getKey(doc.getKey(s0, "user"), "screen_name"));
++  let h = 0x811c9dc5;
++  h = mix(h, nodeStringFromHash(idStr.h));
++  h = mix(h, nodeStringFromHash(text.h));
++  h = mix(h, nodeStringFromHash(screen.h));
++  return { fp: h, codeUnits: idStr.len + text.len + screen.len };
++}
++
++export function jsonGet(v) {
++  const s0 = v.statuses[0];
++  const idStr = s0.id_str;
++  const text = s0.text;
++  const screen = s0.user.screen_name;
++  let h = 0x811c9dc5;
++  h = mix(h, nodeString(idStr));
++  h = mix(h, nodeString(text));
++  h = mix(h, nodeString(screen));
++  return { fp: h, codeUnits: idStr.length + text.length + screen.length };
++}
+diff --git a/skinny/crates/bbnf-bench/ts-tape/tape.mjs b/skinny/crates/bbnf-bench/ts-tape/tape.mjs
+new file mode 100644
+index 000000000..b09198f1c
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/ts-tape/tape.mjs
+@@ -0,0 +1,364 @@
++// PROVE-14 (F4): TypeScript-side decoder for skinny's offset-tape SoA layout.
++//
++// The tape is Structure-of-Arrays, decoded identically to the Rust view:
++//   offsets[cursor]  -> byte offset in `source` of a structural token
++//   kind             -> re-derived from source[offset] (NO stored discriminator)
++//   flags            -> sparse (flagCursors sorted + flagValues), binary-searched
++// A "node" is a u32 cursor index into offsets; there is no packed node record and
++// no intermediate object tree. Leaves (strings/numbers) materialize lazily at the
++// moment of visit. Separators (`,` `:`) never receive a tape offset, exactly as the
++// Rust tape-builder emits (generated.rs: consume_delimiter advances without emit).
++//
++// V8 discipline (R7 §11): ONE monomorphic hidden class `TapeDoc` whose four typed
++// fields are set in a fixed order in the constructor and never mutated afterward;
++// the walk is allocation-free (recurses over integer cursors, returns u32 hashes),
++// so there are no per-node Maps to transition and no megamorphic sites.
++
++// --- node kinds (first source byte) ---
++const K_OBJ_OPEN = 1;
++const K_OBJ_CLOSE = 2;
++const K_ARR_OPEN = 3;
++const K_ARR_CLOSE = 4;
++const K_STRING = 6;
++const K_NUMBER = 7;
++const K_TRUE = 8;
++const K_FALSE = 9;
++const K_NULL = 10;
++
++const STRING_NEEDS_DECODE = 0x01; // OffsetFlags::GRAMMAR_BIT0
++
++// ---------------------------------------------------------------------------
++// Shared node-hash primitives. walkTape and walkJs both call THESE, so identical
++// structure => identical hash by construction (u32 arithmetic, deterministic).
++// ---------------------------------------------------------------------------
++export function strHash(s) {
++  let h = 0x811c9dc5;
++  for (let i = 0; i < s.length; i++) {
++    h = Math.imul(h ^ s.charCodeAt(i), 0x01000193);
++  }
++  return h >>> 0;
++}
++
++const _numDV = new DataView(new ArrayBuffer(8));
++export function numHash(n) {
++  _numDV.setFloat64(0, n, true);
++  const a = _numDV.getUint32(0, true);
++  const b = _numDV.getUint32(4, true);
++  return (Math.imul(a, 0x85ebca77) ^ Math.imul(b, 0xc2b2ae3d)) >>> 0;
++}
++
++const rotl = (x, r) => ((x << r) | (x >>> (32 - r))) >>> 0;
++
++export const nodeStringFromHash = (h) => (h ^ 0x51ed2701) >>> 0;
++export const nodeString = (s) => nodeStringFromHash(strHash(s));
++export const nodeNumber = (n) => (numHash(n) ^ 0x2f6e1a3b) >>> 0;
++export const nodeBool = (b) => (b ? 0x9a1c3f77 : 0x4b7d2e05) >>> 0;
++export const nodeNull = () => 0x0d15ea5e >>> 0;
++
++// object members: order-independent (XOR of per-member mixes) + member count.
++export const memberMix = (keyHash, childHash) =>
++  (Math.imul(keyHash, 0x9e3779b1) ^ rotl(childHash, 15)) >>> 0;
++export const finishObject = (xorAcc, count) =>
++  ((xorAcc ^ Math.imul(count + 1, 0x27d4eb2f)) ^ 0x100000) >>> 0;
++
++// array elements: order-sensitive FNV chain, length mixed at finish (single pass,
++// no length needed up front -> allocation-free walk).
++export const arrayStart = () => 0x9e3779b1 >>> 0;
++export const arrayStep = (h, childHash) => Math.imul(h ^ childHash, 0x01000193) >>> 0;
++export const finishArray = (h, len) => ((Math.imul(h, 0x85ebca77) ^ len) ^ 0x200000) >>> 0;
++
++export function emptyDigest() {
++  return { objects: 0, arrays: 0, strings: 0, numbers: 0, bools: 0, nulls: 0, codeUnits: 0, fp: 0 };
++}
++
++export function digestsEqual(a, b) {
++  return (
++    a.objects === b.objects &&
++    a.arrays === b.arrays &&
++    a.strings === b.strings &&
++    a.numbers === b.numbers &&
++    a.bools === b.bools &&
++    a.nulls === b.nulls &&
++    a.codeUnits === b.codeUnits &&
++    a.fp === b.fp
++  );
++}
++
++// ---------------------------------------------------------------------------
++// The monomorphic decoder over the SoA tape.
++// ---------------------------------------------------------------------------
++export class TapeDoc {
++  constructor(source, offsets, flagCursors, flagValues) {
++    // fixed field order, never mutated post-construction (single hidden class).
++    this.source = source; // Node Buffer (bytes)
++    this.offsets = offsets; // Uint32Array
++    this.flagCursors = flagCursors; // Uint32Array (sorted)
++    this.flagValues = flagValues; // Uint8Array
++  }
++
++  // kind := classify(source[offsets[cursor]])  (JsonNodeKind::at_cursor)
++  classify(cursor) {
++    const b = this.source[this.offsets[cursor]];
++    switch (b) {
++      case 0x7b: return K_OBJ_OPEN;
++      case 0x7d: return K_OBJ_CLOSE;
++      case 0x5b: return K_ARR_OPEN;
++      case 0x5d: return K_ARR_CLOSE;
++      case 0x22: return K_STRING;
++      case 0x74: return K_TRUE;
++      case 0x66: return K_FALSE;
++      case 0x6e: return K_NULL;
++      default: return K_NUMBER; // '-' | '0'..'9'
++    }
++  }
++
++  // sparse flag lookup by binary search (Tape::flags_at).
++  needsDecode(cursor) {
++    let lo = 0;
++    let hi = this.flagCursors.length - 1;
++    while (lo <= hi) {
++      const mid = (lo + hi) >>> 1;
++      const c = this.flagCursors[mid];
++      if (c === cursor) return (this.flagValues[mid] & STRING_NEEDS_DECODE) !== 0;
++      if (c < cursor) lo = mid + 1;
++      else hi = mid - 1;
++    }
++    return false;
++  }
++
++  // materialize a string leaf lazily, returning ONLY the digest inputs {hash,len}.
++  // Fast path: a pure-ASCII, escape-free body is folded byte-by-byte (each byte ==
++  // its UTF-16 code unit) with NO JS-string allocation -- this is the byte-level
++  // advantage the layout enables. Only escaped / non-ASCII strings (the flagged
++  // minority) fall back to toString + unescape, decoded through the sparse flag
++  // channel exactly as the Rust `as_str` does. Byte-exact parity holds either way.
++  stringLeaf(cursor) {
++    const open = this.offsets[cursor];
++    const src = this.source;
++    let i = open + 1;
++    let h = 0x811c9dc5;
++    let clean = true;
++    for (;;) {
++      const c = src[i];
++      if (c === 0x22) break; // closing quote
++      if (c === 0x5c) { clean = false; i += 2; continue; } // escape: skip pair
++      if (c >= 0x80) clean = false; // multi-byte UTF-8: needs real decode
++      h = Math.imul(h ^ c, 0x01000193);
++      i += 1;
++    }
++    if (clean) return { h: h >>> 0, len: i - (open + 1) };
++    const raw = src.toString("utf8", open + 1, i);
++    const s = this.needsDecode(cursor) ? unescapeJson(raw) : raw;
++    return { h: strHash(s), len: s.length };
++  }
++
++  // full string materialization (used by the eager-parity lane / consumers).
++  decodeString(cursor) {
++    const open = this.offsets[cursor];
++    const src = this.source;
++    let i = open + 1;
++    for (;;) {
++      const c = src[i];
++      if (c === 0x22) break;
++      if (c === 0x5c) i += 2;
++      else i += 1;
++    }
++    const raw = src.toString("utf8", open + 1, i);
++    return this.needsDecode(cursor) ? unescapeJson(raw) : raw;
++  }
++
++  // materialize a number leaf lazily (view.rs scalar_span): scan to a delimiter.
++  decodeNumber(cursor) {
++    const start = this.offsets[cursor];
++    const src = this.source;
++    const n = src.length;
++    let end = start;
++    while (end < n) {
++      const c = src[end];
++      if (c === 0x2c || c === 0x5d || c === 0x7d || c === 0x20 || c === 0x09 || c === 0x0a || c === 0x0d) break;
++      end += 1;
++    }
++    return Number(src.toString("latin1", start, end));
++  }
++
++  // lazy structural walk: recurse over cursors, materialize leaves on visit,
++  // return this node's u32 hash. `d` accumulates the structural digest counts.
++  walk(cursor, d) {
++    switch (this.classify(cursor)) {
++      case K_OBJ_OPEN: {
++        d.objects++;
++        let xorAcc = 0;
++        let count = 0;
++        let c = cursor + 1; // first key (or ObjectClose)
++        while (this.classify(c) !== K_OBJ_CLOSE) {
++          // key: a String token; value lives at key+1 (no separator tokens)
++          const key = this.stringLeaf(c);
++          d.strings++;
++          d.codeUnits += key.len;
++          const kh = nodeStringFromHash(key.h);
++          c += 1; // value cursor
++          const vh = this.walk(c, d);
++          c = this.nextSibling(c);
++          xorAcc = (xorAcc ^ memberMix(kh, vh)) >>> 0;
++          count++;
++        }
++        return finishObject(xorAcc, count);
++      }
++      case K_ARR_OPEN: {
++        d.arrays++;
++        let h = arrayStart();
++        let len = 0;
++        let c = cursor + 1;
++        while (this.classify(c) !== K_ARR_CLOSE) {
++          h = arrayStep(h, this.walk(c, d));
++          c = this.nextSibling(c);
++          len++;
++        }
++        return finishArray(h, len);
++      }
++      case K_STRING: {
++        const leaf = this.stringLeaf(cursor);
++        d.strings++;
++        d.codeUnits += leaf.len;
++        return nodeStringFromHash(leaf.h);
++      }
++      case K_NUMBER: {
++        const n = this.decodeNumber(cursor);
++        d.numbers++;
++        return nodeNumber(n);
++      }
++      case K_TRUE:
++        d.bools++;
++        return nodeBool(true);
++      case K_FALSE:
++        d.bools++;
++        return nodeBool(false);
++      default: // K_NULL
++        d.nulls++;
++        return nodeNull();
++    }
++  }
++
++  // pointer navigation (view.rs JsonObject::get / JsonArray nth). Linear member
++  // scan; unaccessed values are skipped by nextSibling WITHOUT materializing them.
++  getKey(objCursor, key) {
++    let c = objCursor + 1;
++    while (this.classify(c) !== K_OBJ_CLOSE) {
++      const valCur = c + 1;
++      if (this.decodeString(c) === key) return valCur;
++      c = this.nextSibling(valCur);
++    }
++    return -1;
++  }
++
++  indexArray(arrCursor, idx) {
++    let c = arrCursor + 1;
++    let i = 0;
++    while (this.classify(c) !== K_ARR_CLOSE) {
++      if (i === idx) return c;
++      c = this.nextSibling(c);
++      i++;
++    }
++    return -1;
++  }
++
++  // next_sibling_cursor: containers depth-scan to their matching close +1;
++  // scalars/strings are a single token.
++  nextSibling(cursor) {
++    const k = this.classify(cursor);
++    if (k === K_OBJ_OPEN || k === K_ARR_OPEN) {
++      let depth = 1;
++      let scan = cursor + 1;
++      while (depth > 0) {
++        const kk = this.classify(scan);
++        if (kk === K_OBJ_OPEN || kk === K_ARR_OPEN) depth++;
++        else if (kk === K_OBJ_CLOSE || kk === K_ARR_CLOSE) depth--;
++        scan++;
++      }
++      return scan;
++    }
++    return cursor + 1;
++  }
++}
++
++// JSON string unescape at the JS-string level (mirrors as_str -> unescape_string).
++// Surrogate halves via \uXXXX converge to the same UTF-16 units JSON.parse yields.
++export function unescapeJson(s) {
++  let out = "";
++  const n = s.length;
++  let i = 0;
++  let run = 0;
++  while (i < n) {
++    if (s.charCodeAt(i) === 0x5c) {
++      if (run > 0) { out += s.substring(i - run, i); run = 0; }
++      const e = s[i + 1];
++      switch (e) {
++        case '"': out += '"'; i += 2; break;
++        case "\\": out += "\\"; i += 2; break;
++        case "/": out += "/"; i += 2; break;
++        case "b": out += "\b"; i += 2; break;
++        case "f": out += "\f"; i += 2; break;
++        case "n": out += "\n"; i += 2; break;
++        case "r": out += "\r"; i += 2; break;
++        case "t": out += "\t"; i += 2; break;
++        case "u":
++          out += String.fromCharCode(parseInt(s.substr(i + 2, 4), 16));
++          i += 6;
++          break;
++        default: out += e; i += 2;
++      }
++    } else {
++      run++;
++      i++;
++    }
++  }
++  if (run > 0) out += s.substring(n - run, n);
++  return out;
++}
++
++// The reference lane: JSON.parse then a recursive walk producing the SAME digest.
++export function walkJs(v, d) {
++  if (Array.isArray(v)) {
++    d.arrays++;
++    let h = arrayStart();
++    for (let i = 0; i < v.length; i++) h = arrayStep(h, walkJs(v[i], d));
++    return finishArray(h, v.length);
++  }
++  const t = typeof v;
++  if (t === "object") {
++    if (v === null) {
++      d.nulls++;
++      return nodeNull();
++    }
++    d.objects++;
++    let xorAcc = 0;
++    let count = 0;
++    for (const key in v) {
++      if (!Object.prototype.hasOwnProperty.call(v, key)) continue;
++      d.strings++;
++      d.codeUnits += key.length;
++      const kh = nodeString(key);
++      const vh = walkJs(v[key], d);
++      xorAcc = (xorAcc ^ memberMix(kh, vh)) >>> 0;
++      count++;
++    }
++    return finishObject(xorAcc, count);
++  }
++  if (t === "string") {
++    d.strings++;
++    d.codeUnits += v.length;
++    return nodeString(v);
++  }
++  if (t === "number") {
++    d.numbers++;
++    return nodeNumber(v);
++  }
++  // boolean
++  d.bools++;
++  return nodeBool(v);
++}
++
++export function finalizeDigest(d, rootHash) {
++  d.fp = rootHash >>> 0;
++  return d;
++}
+diff --git a/skinny/crates/bbnf-bench/ts-tape/verify.mjs b/skinny/crates/bbnf-bench/ts-tape/verify.mjs
+new file mode 100644
+index 000000000..9f268302f
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/ts-tape/verify.mjs
+@@ -0,0 +1,55 @@
++// PROVE-14 (F4): byte-exact layout parity. Walk the decoded tape and a JSON.parse
++// tree node-for-node; both produce the SAME structural digest via shared hash
++// primitives (tape.mjs). Also cross-check the digest counts against the Rust-side
++// meta and assert the payload arena stayed empty (offset-only tape invariant).
++//
++// usage: node verify.mjs   (env TAPE_DIR points at the dump)
++
++import { readRaw, decodeTape } from "./load.mjs";
++import { walkJs, emptyDigest, finalizeDigest, digestsEqual } from "./tape.mjs";
++import { tapeGet, jsonGet } from "./pointer.mjs";
++
++const dir = process.env.TAPE_DIR;
++const raw = readRaw(dir);
++
++// tape lane
++const doc = decodeTape(raw);
++const dt = emptyDigest();
++finalizeDigest(dt, doc.walk(0, dt));
++
++// reference lane
++const v = JSON.parse(raw.sourceBuf.toString("utf8"));
++const dj = emptyDigest();
++finalizeDigest(dj, walkJs(v, dj));
++
++const fields = ["objects", "arrays", "strings", "numbers", "bools", "nulls", "codeUnits", "fp"];
++console.log("field         tape            json.parse");
++for (const f of fields) {
++  const a = dt[f] >>> 0;
++  const b = dj[f] >>> 0;
++  const mark = a === b ? "  ok" : "  MISMATCH";
++  console.log(`${f.padEnd(12)}  ${String(dt[f]).padEnd(14)}  ${String(dj[f]).padEnd(14)}${mark}`);
++}
++
++const ok = digestsEqual(dt, dj);
++
++// partial-access (stop-early) parity: statuses[0]'s three leaves
++const pt = tapeGet(doc);
++const pj = jsonGet(v);
++const partialOk = pt.fp === pj.fp && pt.codeUnits === pj.codeUnits;
++console.log("");
++console.log(`partial get (statuses[0]): tape fp=${pt.fp >>> 0} json fp=${pj.fp >>> 0} codeUnits ${pt.codeUnits}/${pj.codeUnits} -> ${partialOk ? "PASS" : "FAIL"}`);
++
++// cross-checks vs the Rust dumper meta
++const m = raw.meta;
++const payloadEmpty = m.payload_bytes === 0;
++const srcMatches = m.source_bytes === raw.sourceBuf.length;
++const flagMatches = m.flag_count === raw.flagValuesBuf.length;
++console.log("");
++console.log(`meta: source_bytes=${m.source_bytes} offset_count=${m.offset_count} flag_count=${m.flag_count} payload_bytes=${m.payload_bytes}`);
++console.log(`offset_plane_bytes=${m.offset_plane_bytes} flag_plane_bytes=${m.flag_plane_bytes} (tape total=${m.offset_plane_bytes + m.flag_plane_bytes}, source=${m.source_bytes})`);
++console.log(`payload arena empty: ${payloadEmpty}   source size match: ${srcMatches}   flag plane paired: ${flagMatches}`);
++console.log("");
++console.log(`DIGEST PARITY: ${ok ? "PASS" : "FAIL"} (node-for-node structural walk equivalence)`);
++
++if (!(ok && partialOk && payloadEmpty && srcMatches && flagMatches)) process.exit(1);

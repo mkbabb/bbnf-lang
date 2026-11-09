@@ -1,0 +1,1403 @@
+diff --git a/grammar/misc/csv.bbnf b/grammar/misc/csv.bbnf
+index 781b05082..197b91ed9 100644
+--- a/grammar/misc/csv.bbnf
++++ b/grammar/misc/csv.bbnf
+@@ -1,11 +1,16 @@
+-// CSV grammar (simplified RFC 4180)
++// CSV grammar (RFC 4180).
++//
++// A quoted field is a single regex leaf so the emitter's balanced-quote scan
++// consumes it whole — honouring embedded commas / CRLF and doubled-quote (`""`)
++// escapes. An unquoted field is the maximal run of non-delimiter bytes (a
++// negated character class, possibly empty). Records are separated by a run of
++// newline bytes (CR / LF / CRLF).
+ 
+-DQUOTE = "\"" ;
+-escaped = DQUOTE >> /[^"]*/ << DQUOTE ;
+-textdata = /[^,"\r\n]+/ ;
++quoted   = /"(?:[^"]|"")*"/ ;
++textdata = /[^,"\r\n]*/ ;
+ 
+-field = escaped | textdata ;
++field = quoted | textdata ;
+ 
+ record = field, ( "," >> field ) * ;
+ 
+-csv = record, ( /\r?\n/ >> record ) * ;
++csv = record, ( /[\r\n]+/ >> record ) * ;
+diff --git a/skinny/Cargo.lock b/skinny/Cargo.lock
+index 61aaf4bae..31ada795b 100644
+--- a/skinny/Cargo.lock
++++ b/skinny/Cargo.lock
+@@ -441,6 +441,37 @@ dependencies = [
+  "syn 2.0.117",
+ ]
+ 
++[[package]]
++name = "csv"
++version = "1.4.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "52cd9d68cf7efc6ddfaaee42e7288d3a99d613d4b50f76ce9827ae0c6e14f938"
++dependencies = [
++ "csv-core",
++ "itoa",
++ "ryu",
++ "serde_core",
++]
++
++[[package]]
++name = "csv-core"
++version = "0.1.13"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "704a3c26996a80471189265814dbc2c257598b96b8a7feae2d31ace646bb9782"
++dependencies = [
++ "memchr",
++]
++
++[[package]]
++name = "csv-prove"
++version = "0.1.0"
++dependencies = [
++ "csv",
++ "csv-core",
++ "libc",
++ "runtime",
++]
++
+ [[package]]
+ name = "data-encoding"
+ version = "2.11.0"
+diff --git a/skinny/Cargo.toml b/skinny/Cargo.toml
+index f95c4e6e9..bc8fc06d0 100644
+--- a/skinny/Cargo.toml
++++ b/skinny/Cargo.toml
+@@ -11,6 +11,7 @@ members = [
+   "crates/bbnf-regex",
+   "crates/bbnf-simd",
+   "crates/bbnf-bench",
++  "crates/csv-prove",
+   "crates/test-fixtures",
+   "xtask",
+ ]
+diff --git a/skinny/crates/codegen/src/general_descent/emit.rs b/skinny/crates/codegen/src/general_descent/emit.rs
+index f0c481043..d1e43479c 100644
+--- a/skinny/crates/codegen/src/general_descent/emit.rs
++++ b/skinny/crates/codegen/src/general_descent/emit.rs
+@@ -81,6 +81,12 @@ impl std::error::Error for ParseError<'_> {}
+ /// scan helpers. `prefix` names the grammar-derived `{prefix}Document` handle.
+ fn render_prelude(program: &SinkOnlyProgram, prefix: &str, out: &mut String) {
+     let entry = rule_ident(&program.entry_rule);
++    // WALL A cure: is any newline byte a SIGNIFICANT token of this grammar (a
++    // leaf that positively matches `\r`/`\n`, e.g. CSV's `[\r\n]+` record
++    // separator)? If so the grammar is whitespace-significant — a blanket
++    // ws-skip would eat its record separators and intra-field spaces. `skip_ws`
++    // becomes a no-op in that mode. Derived structurally from the leaf classes.
++    let newline_significant = newline_significant(program);
+     // The leaf continuation-stop alphabet: every distinct first byte of the
+     // program's structural ByteLiterals. The delimiter scan halts a leaf span at
+     // the first byte in this set (or ASCII whitespace) — the grammar-derived
+@@ -120,10 +126,19 @@ fn structural_reserve(byte_len: usize) -> usize {{
+     (byte_len / 4).max(16)
+ }}
+ 
+-/// Skip ASCII whitespace (the grammar's optional `?w` markers, uniform between
+-/// sequence elements in this whitespace-insensitive grammar).
++/// Whether newline bytes are significant tokens of this grammar. When true the
++/// grammar is fully whitespace-significant (CSV: record separators and
++/// intra-field spaces alike) and `skip_ws` must skip nothing.
++const NEWLINE_SIGNIFICANT: bool = {newline_significant};
++
++/// Skip ASCII whitespace between sequence elements. In a whitespace-insensitive
++/// grammar (`NEWLINE_SIGNIFICANT == false`) this is a uniform blanket skip; in a
++/// whitespace-significant grammar it is the identity (const-folded to a no-op).
+ #[inline]
+ fn skip_ws(bytes: &[u8], mut cursor: usize) -> usize {{
++    if NEWLINE_SIGNIFICANT {{
++        return cursor;
++    }}
+     while let Some(&byte) = bytes.get(cursor) {{
+         if byte.is_ascii_whitespace() {{
+             cursor += 1;
+@@ -283,6 +298,84 @@ fn indent(level: usize) -> String {
+     "    ".repeat(level)
+ }
+ 
++/// Emit a tight inline scan for a `[class]+`/`[class]*` leaf (WALL B): consume
++/// the maximal run of bytes matching the class, enforce the `+` minimum, and
++/// record the leaf offset on the tape. `_b`, `bytes`, `cursor`, `tape` are all
++/// live in both the direct and the probe (`&mut _probe`) walks.
++fn emit_class_run(run: &regex_first::ClassRun, out: &mut String, level: usize, node_kind: u8) {
++    let pad = indent(level);
++    let arms = run
++        .ranges
++        .iter()
++        .map(|(lo, hi)| {
++            if lo == hi {
++                format!("{lo}u8")
++            } else {
++                format!("{lo}u8..={hi}u8")
++            }
++        })
++        .collect::<Vec<_>>()
++        .join(" | ");
++    let test = if run.negated {
++        format!("!matches!(_b, {arms})")
++    } else {
++        format!("matches!(_b, {arms})")
++    };
++    let _ = writeln!(out, "{pad}{{");
++    let _ = writeln!(out, "{pad}    let _leaf_start = *cursor;");
++    let _ = writeln!(out, "{pad}    while let Some(&_b) = bytes.get(*cursor) {{");
++    let _ = writeln!(
++        out,
++        "{pad}        if {test} {{ *cursor += 1; }} else {{ break; }}"
++    );
++    let _ = writeln!(out, "{pad}    }}");
++    if run.min > 0 {
++        let _ = writeln!(
++            out,
++            "{pad}    if *cursor - _leaf_start < {} {{ return Err(ParseError::at(_leaf_start, \"expected class run\")); }}",
++            run.min
++        );
++    }
++    let _ = writeln!(
++        out,
++        "{pad}    tape.push_offset(_leaf_start, OffsetFlags({node_kind}u8));"
++    );
++    let _ = writeln!(out, "{pad}}}");
++}
++
++/// Whether any leaf of the program positively matches a newline byte (`\r`/`\n`)
++/// — the WALL A signal that the grammar is whitespace-significant. Derived from
++/// each `RegexProgram` leaf's leading-byte set and each `ByteLiteral`; a NEGATED
++/// class (`[^,"\r\n]`) contributes nothing (it excludes newline, not matches it).
++fn newline_significant(program: &SinkOnlyProgram) -> bool {
++    fn expr_has_newline_leaf(expr: &SinkOnlyExpr) -> bool {
++        match expr {
++            SinkOnlyExpr::RegexProgram { pattern, .. } => {
++                let first = regex_first::first_bytes(pattern);
++                first.contains(&b'\r') || first.contains(&b'\n')
++            }
++            SinkOnlyExpr::ByteLiteral(bytes) => {
++                bytes.contains(&b'\r') || bytes.contains(&b'\n')
++            }
++            SinkOnlyExpr::Entry(inner)
++            | SinkOnlyExpr::OptionalBranch(inner)
++            | SinkOnlyExpr::RepeatLoop { body: inner, .. }
++            | SinkOnlyExpr::ValueProject { body: inner, .. } => expr_has_newline_leaf(inner),
++            SinkOnlyExpr::Seq(children) => children.iter().any(expr_has_newline_leaf),
++            SinkOnlyExpr::Alt { branches, .. } => branches.iter().any(expr_has_newline_leaf),
++            SinkOnlyExpr::CallRule { .. }
++            | SinkOnlyExpr::SpanMark { .. }
++            | SinkOnlyExpr::TapeEmit
++            | SinkOnlyExpr::DirectBuild(_)
++            | SinkOnlyExpr::Return => false,
++        }
++    }
++    program
++        .rules
++        .iter()
++        .any(|rule| expr_has_newline_leaf(&rule.expr))
++}
++
+ /// Emit the recognizer code for one `SinkOnlyExpr`. `node_kind` is the enclosing
+ /// rule's tape kind tag.
+ fn emit_expr(
+@@ -363,15 +456,25 @@ fn emit_expr(
+             let _ = writeln!(out, "{pad}match_literal(bytes, cursor, {lit})?;");
+         }
+         SinkOnlyExpr::RegexProgram { pattern, .. } => {
+-            let first = regex_first::first_bytes(pattern);
+-            let first_lit = byte_string_literal(&first.into_iter().collect::<Vec<_>>());
+-            // A nullable leaf pattern (e.g. `=?`, `\w*`) may match the empty
+-            // string — `match_leaf` must accept a zero-length span there.
+-            let nullable = regex_first::is_nullable(pattern);
+-            let _ = writeln!(
+-                out,
+-                "{pad}match_leaf(bytes, cursor, tape, {first_lit}, {node_kind}u8, {nullable})?;"
+-            );
++            // WALL B cure: a pure `[class]+`/`[class]*` leaf (CSV `textdata`, the
++            // record separator) lowers to a tight inline byte-run scan honouring
++            // the ACTUAL class — correct where the generic `is_text_byte`
++            // delimiter-scan truncated, and csv-core-shaped (one branchy loop).
++            // Everything else (quoted spans, Sheets identifier/number leaves)
++            // keeps the `match_leaf` delimiter-scan fallback.
++            if let Some(run) = regex_first::class_run(pattern) {
++                emit_class_run(&run, out, level, node_kind);
++            } else {
++                let first = regex_first::first_bytes(pattern);
++                let first_lit = byte_string_literal(&first.into_iter().collect::<Vec<_>>());
++                // A nullable leaf pattern (e.g. `=?`, `\w*`) may match the empty
++                // string — `match_leaf` must accept a zero-length span there.
++                let nullable = regex_first::is_nullable(pattern);
++                let _ = writeln!(
++                    out,
++                    "{pad}match_leaf(bytes, cursor, tape, {first_lit}, {node_kind}u8, {nullable})?;"
++                );
++            }
+         }
+         SinkOnlyExpr::ValueProject { body, .. } => {
+             // The projection (target/ty) is consumed by the VIEW, not the
+diff --git a/skinny/crates/codegen/src/general_descent/regex_first.rs b/skinny/crates/codegen/src/general_descent/regex_first.rs
+index 87576a91f..a46a25339 100644
+--- a/skinny/crates/codegen/src/general_descent/regex_first.rs
++++ b/skinny/crates/codegen/src/general_descent/regex_first.rs
+@@ -11,6 +11,67 @@
+ 
+ use std::collections::BTreeSet;
+ 
++/// A whole-pattern character-class run: `[class]+` or `[class]*` (optionally
++/// negated). This is the leaf shape line-oriented formats (CSV `[^,"\r\n]+`,
++/// the quoted-body `[^"]*`) use; the emitter lowers it to a tight inline scan
++/// loop rather than the generic delimiter-scan `match_leaf`, which is both
++/// correct (honours the actual class) and fast (a single byte-run loop).
++#[derive(Clone, Debug, PartialEq, Eq)]
++pub(crate) struct ClassRun {
++    pub(crate) negated: bool,
++    /// Inclusive byte ranges comprising the class (unnegated set membership).
++    pub(crate) ranges: Vec<(u8, u8)>,
++    /// Minimum matched bytes: `0` for `*`, `1` for `+`.
++    pub(crate) min: u32,
++}
++
++/// Parse `pattern` iff it is EXACTLY a single character class followed by a
++/// whole-pattern `*` or `+` quantifier (`[..]*` / `[..]+` / `[^..]+`). Returns
++/// `None` for anything else (literals, alternations, quoted spans) so the caller
++/// falls back to `match_leaf`.
++pub(crate) fn class_run(pattern: &str) -> Option<ClassRun> {
++    let trimmed = pattern.trim();
++    let (class, min) = match trimmed.as_bytes().last()? {
++        b'+' => (&trimmed[..trimmed.len() - 1], 1),
++        b'*' => (&trimmed[..trimmed.len() - 1], 0),
++        _ => return None,
++    };
++    let bytes = class.as_bytes();
++    if bytes.first().copied() != Some(b'[') {
++        return None;
++    }
++    // The class must span the entire (pre-quantifier) pattern.
++    if closing_class_index(bytes) != Some(bytes.len() - 1) {
++        return None;
++    }
++    let negated = bytes.get(1).copied() == Some(b'^');
++    let start = if negated { 2 } else { 1 };
++    let end = bytes.len() - 1;
++    let mut ranges = Vec::new();
++    let mut index = start;
++    while index < end {
++        let lo = class_byte(bytes, &mut index, end)?;
++        if index + 1 < end && bytes[index] == b'-' {
++            index += 1;
++            let hi = class_byte(bytes, &mut index, end)?;
++            if lo > hi {
++                return None;
++            }
++            ranges.push((lo, hi));
++        } else {
++            ranges.push((lo, lo));
++        }
++    }
++    if ranges.is_empty() {
++        return None;
++    }
++    Some(ClassRun {
++        negated,
++        ranges,
++        min,
++    })
++}
++
+ /// Whether `pattern` can match the empty string. A whole-pattern trailing `*` or
+ /// `?` over a single atom is nullable (`=?`, `\w*`, `[A-Za-z]*`); a leading group
+ /// whose entire body is optional likewise. Conservative: anything not clearly
+diff --git a/skinny/crates/codegen/src/lower/sink_only.rs b/skinny/crates/codegen/src/lower/sink_only.rs
+index fb5904f97..27f1cfab4 100644
+--- a/skinny/crates/codegen/src/lower/sink_only.rs
++++ b/skinny/crates/codegen/src/lower/sink_only.rs
+@@ -156,9 +156,20 @@ pub fn lower_program(backend: &BackendIr, ctx: &LowerCtx<'_>) -> Option<SinkOnly
+         });
+     }
+ 
+-    if program_facts.direct_shapes.is_empty() {
+-        return None;
+-    }
++    // A grammar with no JSON materialization role (CSV, and any structural-only
++    // grammar) yields no `direct_shapes` — it still lowers to a pure-recognizer
++    // sink program. The former `direct_shapes.is_empty() -> None` bail was a
++    // JSON-shape assumption, not a lowerability requirement; `general_descent`
++    // emits a recognizer + offset tape from the rule tower with no shapes at all.
++    // Derive the runtime policy from the entry rule in that case.
++    let policy_summary = policy_summary
++        .or_else(|| policy_for_rule(backend, ctx, &backend.entry_rule))
++        .or_else(|| {
++            backend
++                .rules
++                .iter()
++                .find_map(|rule| policy_for_rule(backend, ctx, &rule.name))
++        })?;
+ 
+     Some(SinkOnlyProgram {
+         entry_rule: backend.entry_rule.clone(),
+@@ -167,7 +178,30 @@ pub fn lower_program(backend: &BackendIr, ctx: &LowerCtx<'_>) -> Option<SinkOnly
+         span_kinds: program_facts.span_kinds,
+         literals: program_facts.literals,
+         dispatch_alt_count: program_facts.dispatch_alt_count,
+-        policy_summary: policy_summary?,
++        policy_summary,
++    })
++}
++
++/// Build the runtime policy summary for a named rule from its per-grammar policy
++/// facts. Used to give a shape-less recognizer program (CSV) a policy anchor.
++fn policy_for_rule(
++    backend: &BackendIr,
++    ctx: &LowerCtx<'_>,
++    name: &str,
++) -> Option<RuntimePolicySummary> {
++    let index = backend.rules.iter().position(|rule| rule.name == name)?;
++    let rule_id = ir::RuleId(index);
++    let policy = ctx.per_grammar_policy.get(&rule_id)?;
++    Some(RuntimePolicySummary {
++        backend_shape: policy.selected_shape,
++        substrate_target: policy.triad.substrate_target,
++        retention_lifetime: policy.triad.retention_lifetime,
++        policy_owner: policy.triad.policy_owner,
++        same_substrate_union: ctx
++            .same_substrate_union
++            .get(&rule_id)
++            .map(|union| union.enforcement_status.clone())
++            .unwrap_or_else(|| "missing".to_string()),
+     })
+ }
+ 
+diff --git a/skinny/crates/codegen/src/runtime_generator.rs b/skinny/crates/codegen/src/runtime_generator.rs
+index dbf82f733..3de4410fc 100644
+--- a/skinny/crates/codegen/src/runtime_generator.rs
++++ b/skinny/crates/codegen/src/runtime_generator.rs
+@@ -90,12 +90,20 @@ pub(crate) fn emit_sink_only(
+     profile_id: &str,
+     sink_only: &lower::sink_only::SinkOnlyProgram,
+ ) -> Result<EmittedSource, CodegenError> {
+-    // Shape dispatch: a sink-only program carrying a `value` rule is the JSON
+-    // family — `json_sink_direct` keys its recursive-descent dispatch off the
+-    // `value`-Alt. A program WITHOUT a `value` rule (Google Sheets, the operator
+-    // tower has no single `value` dispatch) routes to the GENERAL
+-    // recursive-descent emitter. Shape-based, never a grammar name.
+-    if !sink_only.has_rule("value") {
++    // Shape dispatch (structural, never a grammar name): the `json_sink_direct`
++    // family is a first-byte-dispatch alternation over a MULTI-SHAPE recursive
++    // value taxonomy. Structurally that is exactly: the program carries at least
++    // one `Alt{Dispatch}` rule (`dispatch_alt_count > 0`) AND materializes >= 2
++    // distinct value shapes (`direct_shapes.len() >= 2`). This holds for JSON
++    // (8 dispatch branches / 7 shapes) and fails for both Google Sheets (39
++    // dispatch branches but a single leaf shape — an operator tower, not a value
++    // taxonomy) and CSV (a 2-branch field dispatch, zero materialized shapes) —
++    // both of which route to the GENERAL recursive-descent emitter. Residue: the
++    // JSON emitter still locates its dispatch rule by the name `value` internally
++    // (`json_sink_direct` mod.rs / dispatch.rs); deriving THAT rule by shape is
++    // the remaining un-fork, out of this prover's cap.
++    let json_value_family = sink_only.dispatch_alt_count > 0 && sink_only.direct_shapes.len() >= 2;
++    if !json_value_family {
+         return emit_general_descent(profile_id, sink_only);
+     }
+     let mut generated = include_str!("json_templates/generated.rs").to_string();
+diff --git a/skinny/crates/csv-prove/Cargo.toml b/skinny/crates/csv-prove/Cargo.toml
+new file mode 100644
+index 000000000..270d33bee
+--- /dev/null
++++ b/skinny/crates/csv-prove/Cargo.toml
+@@ -0,0 +1,20 @@
++[package]
++name = "csv-prove"
++version = "0.1.0"
++edition.workspace = true
++license.workspace = true
++rust-version.workspace = true
++publish = false
++
++# PROVE-13 standalone CSV bench: the generated runtime plus the csv / csv-core
++# baselines only — deliberately free of bbnf-bench's heavy JSON/CSS deps so the
++# optimized build is fast.
++[dependencies]
++runtime = { workspace = true }
++libc = "0.2"
++csv = "1.3"
++csv-core = "0.1"
++
++[[bin]]
++name = "csv_parity"
++path = "src/main.rs"
+diff --git a/skinny/crates/csv-prove/src/main.rs b/skinny/crates/csv-prove/src/main.rs
+new file mode 100644
+index 000000000..854de5506
+--- /dev/null
++++ b/skinny/crates/csv-prove/src/main.rs
+@@ -0,0 +1,295 @@
++//! PROVE-13 — CSV generality bench.
++//!
++//! Cold per-parse (one full-corpus parse per sample), paired per-round
++//! interleaving across three lanes, PMU cycles/byte (min-of-N certified),
++//! loadavg recorded. Lanes:
++//!   * bbnf  — `runtime::grammars::csv::recognize` (generated general-descent
++//!             recognizer building the offset tape, then discarding the doc).
++//!   * csv-core — the zero-alloc pull state machine (`read_field` into a reused
++//!             buffer — it copies + unquotes each field).
++//!   * csv   — the high-level `csv::Reader` (`StringRecord` per row, allocating).
++//!
++//! Usage: csv_parity [N] [corpus_path]  (defaults N=200, generated 50MB corpus).
++
++use runtime::tape::Cursor;
++use std::hint::black_box;
++use std::path::PathBuf;
++use std::time::Instant;
++
++#[repr(C)]
++#[derive(Default, Clone, Copy)]
++struct RusageInfoV5 {
++    ri_uuid: [u8; 16],
++    ri_user_time: u64,
++    ri_system_time: u64,
++    ri_pkg_idle_wkups: u64,
++    ri_interrupt_wkups: u64,
++    ri_pageins: u64,
++    ri_wired_size: u64,
++    ri_resident_size: u64,
++    ri_phys_footprint: u64,
++    ri_proc_start_abstime: u64,
++    ri_proc_exit_abstime: u64,
++    ri_child_user_time: u64,
++    ri_child_system_time: u64,
++    ri_child_pkg_idle_wkups: u64,
++    ri_child_interrupt_wkups: u64,
++    ri_child_pageins: u64,
++    ri_child_elapsed_abstime: u64,
++    ri_diskio_bytesread: u64,
++    ri_diskio_byteswritten: u64,
++    ri_cpu_time_qos_default: u64,
++    ri_cpu_time_qos_maintenance: u64,
++    ri_cpu_time_qos_background: u64,
++    ri_cpu_time_qos_utility: u64,
++    ri_cpu_time_qos_legacy: u64,
++    ri_cpu_time_qos_user_initiated: u64,
++    ri_cpu_time_qos_user_interactive: u64,
++    ri_billed_system_time: u64,
++    ri_serviced_system_time: u64,
++    ri_logical_writes: u64,
++    ri_lifetime_max_phys_footprint: u64,
++    ri_instructions: u64,
++    ri_cycles: u64,
++    ri_billed_energy: u64,
++    ri_serviced_energy: u64,
++    ri_interval_max_phys_footprint: u64,
++    ri_runnable_time: u64,
++    ri_flags: u64,
++}
++
++const RUSAGE_INFO_V5: i32 = 5;
++
++extern "C" {
++    fn proc_pid_rusage(pid: libc::pid_t, flavor: i32, buffer: *mut u8) -> i32;
++}
++
++#[inline]
++fn cycles_now() -> u64 {
++    let mut ri = RusageInfoV5::default();
++    let rc = unsafe {
++        proc_pid_rusage(
++            libc::getpid(),
++            RUSAGE_INFO_V5,
++            (&mut ri) as *mut RusageInfoV5 as *mut u8,
++        )
++    };
++    if rc != 0 {
++        panic!("proc_pid_rusage failed rc={rc}");
++    }
++    ri.ri_cycles
++}
++
++fn loadavg() -> f64 {
++    let mut avg = [0f64; 3];
++    unsafe { libc::getloadavg(avg.as_mut_ptr(), 3) };
++    avg[0]
++}
++
++// ---- lanes -----------------------------------------------------------------
++
++#[inline]
++fn lane_bbnf(input: &str) -> u64 {
++    runtime::grammars::csv::recognize(black_box(input)).expect("bbnf csv parse");
++    input.len() as u64
++}
++
++#[inline]
++fn lane_csv_core(data: &[u8], out: &mut [u8]) -> u64 {
++    use csv_core::{ReadFieldResult, Reader};
++    let mut rdr = Reader::new();
++    let mut input = data;
++    let mut fields = 0u64;
++    loop {
++        let (res, nin, nout) = rdr.read_field(input, out);
++        input = &input[nin..];
++        let _ = nout;
++        match res {
++            ReadFieldResult::InputEmpty => {
++                if input.is_empty() {
++                    break;
++                }
++            }
++            ReadFieldResult::OutputFull => {}
++            ReadFieldResult::Field { .. } => fields += 1,
++            ReadFieldResult::End => break,
++        }
++    }
++    black_box(fields);
++    data.len() as u64
++}
++
++#[inline]
++fn lane_csv(data: &[u8]) -> u64 {
++    let mut rdr = csv::ReaderBuilder::new()
++        .has_headers(false)
++        .flexible(true)
++        .from_reader(data);
++    let mut rec = csv::ByteRecord::new();
++    let mut rows = 0u64;
++    while rdr.read_byte_record(&mut rec).expect("csv parse") {
++        rows += 1;
++    }
++    black_box(rows);
++    data.len() as u64
++}
++
++// ---- corpus ----------------------------------------------------------------
++
++/// Deterministic RFC4180 corpus: 10 columns, CRLF line endings, a mix of plain
++/// text / numbers / quoted fields carrying embedded commas, CRLF, and doubled
++/// (`""`) quote escapes. No trailing newline (exact record-count parity).
++fn generate_corpus(target: usize) -> String {
++    let mut s = String::with_capacity(target + 4096);
++    let mut seed = 0x9e3779b97f4a7c15u64;
++    let mut next = || {
++        seed ^= seed << 13;
++        seed ^= seed >> 7;
++        seed ^= seed << 17;
++        seed
++    };
++    let mut first = true;
++    while s.len() < target {
++        if !first {
++            s.push_str("\r\n");
++        }
++        first = false;
++        for col in 0..10 {
++            if col > 0 {
++                s.push(',');
++            }
++            match next() % 5 {
++                0 => s.push_str(&format!("{}", next() % 1_000_000)),
++                1 => s.push_str("plain text field"),
++                2 => s.push_str(&format!("id-{:x}", next() & 0xffff)),
++                3 => s.push_str("\"quoted, with comma\""),
++                _ => s.push_str("\"he said \"\"hi\"\"\r\nnext\""),
++            }
++        }
++    }
++    s
++}
++
++fn locate_or_make(target: usize) -> PathBuf {
++    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../data/csv");
++    let path = dir.join("rfc4180_50mb.csv");
++    if path.exists() && std::fs::metadata(&path).map(|m| m.len() as usize).unwrap_or(0) >= target {
++        return path;
++    }
++    std::fs::create_dir_all(&dir).expect("mkdir data/csv");
++    let corpus = generate_corpus(target);
++    std::fs::write(&path, corpus.as_bytes()).expect("write corpus");
++    path
++}
++
++// ---- correctness gate ------------------------------------------------------
++
++fn correctness_gate() {
++    // Quoted fields, embedded comma, CRLF-in-field, doubled-quote escape, empty
++    // field, and a plain CRLF record separator.
++    let sample = "a,\"b,c\",d\r\n\"line1\r\nline2\",\"say \"\"hi\"\"\",\r\nx,y,z";
++    // bbnf recognizes the whole document.
++    runtime::grammars::csv::recognize(sample).expect("bbnf rejects valid RFC4180");
++    // csv-crate structural truth: 3 rows, 3 cols each.
++    let mut rdr = csv::ReaderBuilder::new()
++        .has_headers(false)
++        .flexible(true)
++        .from_reader(sample.as_bytes());
++    let mut rows = 0;
++    for rec in rdr.byte_records() {
++        let rec = rec.expect("csv parse sample");
++        assert_eq!(rec.len(), 3, "row {rows} field count");
++        rows += 1;
++    }
++    assert_eq!(rows, 3, "row count");
++    // A field with an embedded doubled quote round-trips through csv correctly.
++    let mut rdr2 = csv::ReaderBuilder::new()
++        .has_headers(false)
++        .from_reader("\"say \"\"hi\"\"\"\r\n".as_bytes());
++    let rec = rdr2.byte_records().next().unwrap().unwrap();
++    assert_eq!(&rec[0], b"say \"hi\"");
++    eprintln!("correctness gate: PASS (quoted/escaped-quote/CRLF-in-field/empty-field)");
++}
++
++fn main() {
++    let args: Vec<String> = std::env::args().collect();
++    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(200);
++    let target: usize = 50 * 1024 * 1024;
++
++    correctness_gate();
++
++    let path = args.get(2).map(PathBuf::from).unwrap_or_else(|| locate_or_make(target));
++    let data = std::fs::read(&path).expect("read corpus");
++    let input = std::str::from_utf8(&data).expect("utf8 corpus");
++    let bytes_len = data.len();
++    eprintln!("corpus: {} ({} bytes = {:.1} MiB)", path.display(), bytes_len, bytes_len as f64 / 1048576.0);
++
++    // Field-count parity on the full corpus: each CSV field is one leaf offset
++    // (Quoted or Textdata) on the bbnf tape; that must equal csv's total field
++    // count across all records.
++    use runtime::grammars::csv::CsvKind;
++    let bbnf_doc = runtime::grammars::csv::parse(input).expect("bbnf full corpus");
++    let bbnf_fields = bbnf_doc
++        .nodes()
++        .filter(|n| matches!(n.kind(), Some(CsvKind::Quoted | CsvKind::Textdata)))
++        .count();
++    let mut rdr = csv::ReaderBuilder::new().has_headers(false).flexible(true).from_reader(&data[..]);
++    let mut csv_records = 0usize;
++    let mut csv_fields = 0usize;
++    let mut rec = csv::ByteRecord::new();
++    while rdr.read_byte_record(&mut rec).expect("csv parse") {
++        csv_records += 1;
++        csv_fields += rec.len();
++    }
++    eprintln!("field parity: bbnf_field_offsets={bbnf_fields} csv_fields={csv_fields} csv_records={csv_records} (match={})", bbnf_fields == csv_fields);
++
++    let mut scratch = vec![0u8; 1 << 20];
++
++    // Warm each lane once (page-in, branch predictors) BEFORE the cold samples —
++    // cold here = one full-corpus parse per sample (never a warm inner loop).
++    let _ = lane_bbnf(input);
++    let _ = lane_csv_core(&data, &mut scratch);
++    let _ = lane_csv(&data);
++
++    let mut min_bbnf = u64::MAX;
++    let mut min_core = u64::MAX;
++    let mut min_csv = u64::MAX;
++    let mut sum_bbnf = 0u64;
++    let mut sum_core = 0u64;
++    let mut sum_csv = 0u64;
++
++    let load_start = loadavg();
++    let wall = Instant::now();
++    for _ in 0..n {
++        // paired per-round interleaving
++        let c0 = cycles_now();
++        let _ = lane_bbnf(input);
++        let c1 = cycles_now();
++        let _ = lane_csv_core(&data, &mut scratch);
++        let c2 = cycles_now();
++        let _ = lane_csv(&data);
++        let c3 = cycles_now();
++        let (b, co, cv) = (c1 - c0, c2 - c1, c3 - c2);
++        min_bbnf = min_bbnf.min(b);
++        min_core = min_core.min(co);
++        min_csv = min_csv.min(cv);
++        sum_bbnf += b;
++        sum_core += co;
++        sum_csv += cv;
++    }
++    let load_end = loadavg();
++    let secs = wall.elapsed().as_secs_f64();
++
++    let cb = |c: u64| c as f64 / bytes_len as f64;
++    let cb_bbnf = cb(min_bbnf);
++    let cb_core = cb(min_core);
++    let cb_csv = cb(min_csv);
++    println!("\n=== PROVE-13 CSV parse-only, N={n}, cold per-parse, min-of-N cyc/B ===");
++    println!("corpus_bytes={bytes_len} wall={secs:.1}s loadavg_start={load_start:.2} loadavg_end={load_end:.2}");
++    println!("lane        min_cyc/B    mean_cyc/B   ratio_vs_core");
++    println!("bbnf        {:>9.3}    {:>9.3}    {:.3}x", cb_bbnf, cb(sum_bbnf / n as u64), cb_bbnf / cb_core);
++    println!("csv-core    {:>9.3}    {:>9.3}    {:.3}x", cb_core, cb(sum_core / n as u64), 1.0);
++    println!("csv         {:>9.3}    {:>9.3}    {:.3}x", cb_csv, cb(sum_csv / n as u64), cb_csv / cb_core);
++    println!("\nGATE (bbnf within 2x of csv-core): {}", if cb_bbnf <= 2.0 * cb_core { "MET" } else { "UNMET" });
++    println!("bbnf vs csv-core: {:.3}x   bbnf vs csv(high-level): {:.3}x", cb_bbnf / cb_core, cb_bbnf / cb_csv);
++}
+diff --git a/skinny/crates/runtime/src/grammars/csv/config.rs b/skinny/crates/runtime/src/grammars/csv/config.rs
+new file mode 100644
+index 000000000..54ab123ae
+--- /dev/null
++++ b/skinny/crates/runtime/src/grammars/csv/config.rs
+@@ -0,0 +1,4 @@
++// @generated by skinny bbnf-codegen; do not edit by hand.
++pub(crate) const ENTRY_RULE: &str = "csv";
++pub(crate) const BACKEND_SHAPE: &str = "SinkOnly";
++pub(crate) const SUBSTRATE_TARGET: &str = "direct_sink";
+diff --git a/skinny/crates/runtime/src/grammars/csv/generated.rs b/skinny/crates/runtime/src/grammars/csv/generated.rs
+new file mode 100644
+index 000000000..fe2f7097a
+--- /dev/null
++++ b/skinny/crates/runtime/src/grammars/csv/generated.rs
+@@ -0,0 +1,364 @@
++// @generated by skinny bbnf-codegen; do not edit by hand.
++// general recursive descent lowered from sink-only program: entry=csv rules=5
++use crate::tape::{OffsetFlags, TapeBuilder};
++use super::view::CsvDocument;
++
++/// A position-only recognition error.
++#[derive(Copy, Clone, Eq, PartialEq, Debug)]
++pub struct ParseError<'i> {
++    pub offset: usize,
++    pub message: &'static str,
++    #[doc(hidden)]
++    pub(crate) _marker: core::marker::PhantomData<&'i ()>,
++}
++
++impl<'i> ParseError<'i> {
++    #[inline]
++    fn at(offset: usize, message: &'static str) -> Self {
++        ParseError {
++            offset,
++            message,
++            _marker: core::marker::PhantomData,
++        }
++    }
++
++    /// Construct an error with a caller-supplied offset + message (the parser
++    /// front-door uses this for the UTF-8 boundary error).
++    #[inline]
++    pub fn new(offset: usize, message: &'static str) -> Self {
++        ParseError::at(offset, message)
++    }
++}
++
++impl std::fmt::Display for ParseError<'_> {
++    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
++        write!(f, "{} at byte {}", self.message, self.offset)
++    }
++}
++
++impl std::error::Error for ParseError<'_> {}
++
++/// The grammar-derived structural-boundary alphabet: the first byte of every
++/// `ByteLiteral` the program carries. A leaf span (the delimiter-scan fallback)
++/// stops at the first structural byte — it cannot cross a grammar delimiter.
++const LEAF_STOP: &[u8] = b",";
++
++/// Track-1 entry: recognize the formula into the existing offset tape and return
++/// the lazy tape-backed document.
++pub fn parse_into_tape(input: &str) -> Result<CsvDocument<'_>, ParseError<'_>> {
++    let bytes = input.as_bytes();
++    let mut tape = TapeBuilder::new(bytes, structural_reserve(bytes.len()));
++    let mut cursor = 0usize;
++    parse_csv(bytes, &mut cursor, &mut tape)?;
++    let cursor = skip_ws(bytes, cursor);
++    if cursor != bytes.len() {
++        return Err(ParseError::at(cursor, "trailing characters"));
++    }
++    Ok(CsvDocument::from_tape(tape.finish()))
++}
++
++/// Conservative byte-proportional structural capacity bound.
++#[inline]
++fn structural_reserve(byte_len: usize) -> usize {
++    (byte_len / 4).max(16)
++}
++
++/// Whether newline bytes are significant tokens of this grammar. When true the
++/// grammar is fully whitespace-significant (CSV: record separators and
++/// intra-field spaces alike) and `skip_ws` must skip nothing.
++const NEWLINE_SIGNIFICANT: bool = true;
++
++/// Skip ASCII whitespace between sequence elements. In a whitespace-insensitive
++/// grammar (`NEWLINE_SIGNIFICANT == false`) this is a uniform blanket skip; in a
++/// whitespace-significant grammar it is the identity (const-folded to a no-op).
++#[inline]
++fn skip_ws(bytes: &[u8], mut cursor: usize) -> usize {
++    if NEWLINE_SIGNIFICANT {
++        return cursor;
++    }
++    while let Some(&byte) = bytes.get(cursor) {
++        if byte.is_ascii_whitespace() {
++            cursor += 1;
++        } else {
++            break;
++        }
++    }
++    cursor
++}
++
++/// Match an exact byte-literal at `cursor`, advancing past it on success.
++#[inline]
++fn match_literal<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    literal: &[u8],
++) -> Result<(), ParseError<'i>> {
++    if bytes[*cursor..].starts_with(literal) {
++        *cursor += literal.len();
++        Ok(())
++    } else {
++        Err(ParseError::at(*cursor, "expected literal"))
++    }
++}
++
++/// Match a regex leaf via the grammar-sanctioned delimiter-scan fallback: the
++/// leaf head must be in `first`, then the body is the maximal run of bytes that
++/// are neither ASCII whitespace nor a structural `LEAF_STOP` byte. A `'`-quoted
++/// leaf (sheet name / string) consumes its balanced quote span first so an inner
++/// delimiter does not truncate it. Records the leaf's start offset on the tape.
++#[inline]
++fn match_leaf<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    tape: &mut TapeBuilder,
++    first: &[u8],
++    kind: u8,
++    nullable: bool,
++) -> Result<(), ParseError<'i>> {
++    let start = *cursor;
++    let Some(&head) = bytes.get(start) else {
++        // End of input: a nullable leaf matches the empty string here.
++        return if nullable {
++            Ok(())
++        } else {
++            Err(ParseError::at(start, "expected leaf"))
++        };
++    };
++    if !first.is_empty() && !first.contains(&head) {
++        // The head is not in the leaf's first set: a nullable leaf still matches
++        // (the empty alternative), consuming nothing.
++        return if nullable {
++            Ok(())
++        } else {
++            Err(ParseError::at(start, "unexpected leaf head"))
++        };
++    }
++    // The leaf's leading byte IS part of the leaf. The continuation class depends
++    // on the head category:
++    //  - TEXT head (alnum / `_` / `$` / quote): consume the maximal text-class
++    //    run (`[A-Za-z0-9_.$]`, or a balanced quoted span) — identifiers, cell
++    //    refs, numbers, strings, sheet prefixes.
++    //  - PUNCT head (an operator byte, e.g. the entry `=?`): consume only the
++    //    maximal run of bytes in the leaf's own first set — so a punctuation leaf
++    //    does not swallow the text that follows it.
++    // This is the grammar-sanctioned Span delimiter-scan (typed leaves deferred).
++    let pos = if matches!(head, b'\'' | b'"') {
++        consume_quoted(bytes, start)
++    } else if is_text_byte(head) {
++        let mut p = start + 1;
++        while let Some(&byte) = bytes.get(p) {
++            if is_text_byte(byte) {
++                p += 1;
++            } else if matches!(byte, b'\'' | b'"') {
++                p = consume_quoted(bytes, p);
++            } else {
++                break;
++            }
++        }
++        p
++    } else {
++        let mut p = start + 1;
++        while let Some(&byte) = bytes.get(p) {
++            if !first.is_empty() && first.contains(&byte) {
++                p += 1;
++            } else {
++                break;
++            }
++        }
++        p
++    };
++    tape.push_offset(start, OffsetFlags(kind));
++    *cursor = pos;
++    Ok(())
++}
++
++/// Whether `byte` is a leaf text-class byte (`[A-Za-z0-9_.$]`) — the continuation
++/// alphabet of identifier / cell-ref / number / sheet-prefix leaves.
++#[inline]
++fn is_text_byte(byte: u8) -> bool {
++    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'$')
++}
++
++/// Consume a balanced quoted span beginning at a quote byte, honouring doubled
++/// quotes (`''` / `""`) as escapes. Returns the index past the closing quote.
++#[inline]
++fn consume_quoted(bytes: &[u8], start: usize) -> usize {
++    let quote = bytes[start];
++    let mut pos = start + 1;
++    while pos < bytes.len() {
++        if bytes[pos] == quote {
++            if bytes.get(pos + 1).copied() == Some(quote) {
++                pos += 2;
++                continue;
++            }
++            return pos + 1;
++        }
++        pos += 1;
++    }
++    bytes.len()
++}
++
++/// Record a node boundary (a rule's structural marker) at `offset`.
++#[inline]
++fn mark(tape: &mut TapeBuilder, offset: usize, kind: u8) {
++    tape.push_offset(offset, OffsetFlags(kind));
++}
++
++#[allow(clippy::needless_lifetimes, unused_variables)]
++fn parse_quoted<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    tape: &mut TapeBuilder,
++) -> Result<(), ParseError<'i>> {
++    *cursor = skip_ws(bytes, *cursor);
++    let _node_start = *cursor;
++    let _ = (1u8, &mark);
++    *cursor = skip_ws(bytes, *cursor);
++    match_leaf(bytes, cursor, tape, b"\"", 1u8, false)?;
++    *cursor = skip_ws(bytes, *cursor);
++    *cursor = skip_ws(bytes, *cursor);
++    *cursor = skip_ws(bytes, *cursor);
++    mark(tape, _node_start, 1u8);
++    *cursor = skip_ws(bytes, *cursor);
++    Ok(())
++}
++
++#[allow(clippy::needless_lifetimes, unused_variables)]
++fn parse_textdata<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    tape: &mut TapeBuilder,
++) -> Result<(), ParseError<'i>> {
++    *cursor = skip_ws(bytes, *cursor);
++    let _node_start = *cursor;
++    let _ = (2u8, &mark);
++    {
++        let _leaf_start = *cursor;
++        while let Some(&_b) = bytes.get(*cursor) {
++            if !matches!(_b, 44u8 | 34u8 | 13u8 | 10u8) { *cursor += 1; } else { break; }
++        }
++        tape.push_offset(_leaf_start, OffsetFlags(2u8));
++    }
++    Ok(())
++}
++
++#[allow(clippy::needless_lifetimes, unused_variables)]
++fn parse_field<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    tape: &mut TapeBuilder,
++) -> Result<(), ParseError<'i>> {
++    *cursor = skip_ws(bytes, *cursor);
++    let _node_start = *cursor;
++    let _ = (3u8, &mark);
++    {
++        let _alt_start = *cursor;
++        let mut _matched = false;
++        if !_matched {
++            let mut _probe = _alt_start;
++            let _r: Result<(), ParseError<'i>> = (|| {
++                let cursor = &mut _probe;
++                parse_quoted(bytes, cursor, tape)?;
++                Ok(())
++            })();
++            if _r.is_ok() {
++                *cursor = _probe;
++                _matched = true;
++            }
++        }
++        if !_matched {
++            let mut _probe = _alt_start;
++            let _r: Result<(), ParseError<'i>> = (|| {
++                let cursor = &mut _probe;
++                parse_textdata(bytes, cursor, tape)?;
++                Ok(())
++            })();
++            if _r.is_ok() {
++                *cursor = _probe;
++                _matched = true;
++            }
++        }
++        if !_matched { return Err(ParseError::at(_alt_start, "no alternative matched")); }
++    }
++    Ok(())
++}
++
++#[allow(clippy::needless_lifetimes, unused_variables)]
++fn parse_record<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    tape: &mut TapeBuilder,
++) -> Result<(), ParseError<'i>> {
++    *cursor = skip_ws(bytes, *cursor);
++    let _node_start = *cursor;
++    let _ = (4u8, &mark);
++    parse_field(bytes, cursor, tape)?;
++    *cursor = skip_ws(bytes, *cursor);
++    {
++        let mut _count: u32 = 0;
++        loop {
++            let _before = *cursor;
++            let mut _probe = *cursor;
++            let _r: Result<(), ParseError<'i>> = (|| {
++                let cursor = &mut _probe;
++                match_literal(bytes, cursor, b",")?;
++                *cursor = skip_ws(bytes, *cursor);
++                parse_field(bytes, cursor, tape)?;
++                Ok(())
++            })();
++            match _r {
++                Ok(()) => {
++                    if _probe == _before { break; }
++                    *cursor = _probe;
++                    _count += 1;
++                }
++                Err(_) => break,
++            }
++        }
++    }
++    Ok(())
++}
++
++#[allow(clippy::needless_lifetimes, unused_variables)]
++fn parse_csv<'i>(
++    bytes: &'i [u8],
++    cursor: &mut usize,
++    tape: &mut TapeBuilder,
++) -> Result<(), ParseError<'i>> {
++    *cursor = skip_ws(bytes, *cursor);
++    let _node_start = *cursor;
++    let _ = (5u8, &mark);
++    parse_record(bytes, cursor, tape)?;
++    *cursor = skip_ws(bytes, *cursor);
++    {
++        let mut _count: u32 = 0;
++        loop {
++            let _before = *cursor;
++            let mut _probe = *cursor;
++            let _r: Result<(), ParseError<'i>> = (|| {
++                let cursor = &mut _probe;
++                {
++                    let _leaf_start = *cursor;
++                    while let Some(&_b) = bytes.get(*cursor) {
++                        if matches!(_b, 13u8 | 10u8) { *cursor += 1; } else { break; }
++                    }
++                    if *cursor - _leaf_start < 1 { return Err(ParseError::at(_leaf_start, "expected class run")); }
++                    tape.push_offset(_leaf_start, OffsetFlags(5u8));
++                }
++                *cursor = skip_ws(bytes, *cursor);
++                parse_record(bytes, cursor, tape)?;
++                Ok(())
++            })();
++            match _r {
++                Ok(()) => {
++                    if _probe == _before { break; }
++                    *cursor = _probe;
++                    _count += 1;
++                }
++                Err(_) => break,
++            }
++        }
++    }
++    Ok(())
++}
++
+diff --git a/skinny/crates/runtime/src/grammars/csv/mod.rs b/skinny/crates/runtime/src/grammars/csv/mod.rs
+new file mode 100644
+index 000000000..a68d827eb
+--- /dev/null
++++ b/skinny/crates/runtime/src/grammars/csv/mod.rs
+@@ -0,0 +1,9 @@
++// @generated by skinny bbnf-codegen; do not edit by hand.
++pub(crate) mod config;
++pub mod generated;
++pub mod parser;
++pub mod view;
++
++pub use generated::ParseError;
++pub use parser::{parse, parse_bytes, recognize, recognize_bytes};
++pub use view::{CsvDocument, CsvKind, CsvNode};
+diff --git a/skinny/crates/runtime/src/grammars/csv/parser.rs b/skinny/crates/runtime/src/grammars/csv/parser.rs
+new file mode 100644
+index 000000000..5de964ebf
+--- /dev/null
++++ b/skinny/crates/runtime/src/grammars/csv/parser.rs
+@@ -0,0 +1,25 @@
++// @generated by skinny bbnf-codegen; do not edit by hand.
++use super::generated::{self, ParseError};
++use super::view::CsvDocument;
++
++/// Recognize the formula directly into the existing offset tape and return
++/// the lazy tape-backed document (the general recursive-descent analogue of
++/// JSON's `parse` / CSS's `parse_into_tape`).
++pub fn parse(input: &str) -> Result<CsvDocument<'_>, ParseError<'_>> {
++    generated::parse_into_tape(input)
++}
++
++pub fn parse_bytes(input: &[u8]) -> Result<CsvDocument<'_>, ParseError<'_>> {
++    let input = std::str::from_utf8(input)
++        .map_err(|error| ParseError::new(error.valid_up_to(), "invalid UTF-8"))?;
++    parse(input)
++}
++
++/// Recognize-only entry: parse the formula and discard the document.
++pub fn recognize(input: &str) -> Result<(), ParseError<'_>> {
++    parse(input).map(|_| ())
++}
++
++pub fn recognize_bytes(input: &[u8]) -> Result<(), ParseError<'_>> {
++    parse_bytes(input).map(|_| ())
++}
+diff --git a/skinny/crates/runtime/src/grammars/csv/view.rs b/skinny/crates/runtime/src/grammars/csv/view.rs
+new file mode 100644
+index 000000000..e01273ed3
+--- /dev/null
++++ b/skinny/crates/runtime/src/grammars/csv/view.rs
+@@ -0,0 +1,146 @@
++// @generated by skinny bbnf-codegen; do not edit by hand.
++use crate::tape::{Cursor, DocumentView, Tape, TapeId};
++
++/// The structural kind a tape cursor projects to, recovered lazily from the
++/// sparse flag plane at the cursor's offset. One variant per grammar rule —
++/// derived from the program's rule names, no shared structural vocabulary.
++#[derive(Copy, Clone, Eq, PartialEq, Debug)]
++pub enum CsvKind {
++    Quoted,
++    Textdata,
++    Field,
++    Record,
++    Csv,
++}
++
++/// The 1-based tag table: a recorded tape flag value decodes to its rule
++/// kind by this table (`tag - 1` indexes the rule order).
++const KIND_TABLE: &[CsvKind] = &[
++    CsvKind::Quoted,
++    CsvKind::Textdata,
++    CsvKind::Field,
++    CsvKind::Record,
++    CsvKind::Csv,
++];
++
++impl CsvKind {
++    /// Decode the kind at a tape cursor from the sparse flag plane. A cursor with
++    /// no flag (tag 0) — a bare structural offset — has no rule kind.
++    #[inline]
++    pub fn at_cursor(tape: &Tape<'_>, cursor: u32) -> Option<CsvKind> {
++        let tag = tape.flags_at(cursor)?.bits();
++        if tag == 0 {
++            return None;
++        }
++        KIND_TABLE.get((tag - 1) as usize).copied()
++    }
++}
++
++/// A lazy view over one recorded node on the tape — 8 bytes of cursor; the kind
++/// is decoded on demand from the flag plane, never stored.
++#[derive(Copy, Clone)]
++pub struct CsvNode<'doc, 'input> {
++    tape: &'doc Tape<'input>,
++    cursor: u32,
++}
++
++impl<'doc, 'input> CsvNode<'doc, 'input> {
++    #[inline]
++    pub fn new(tape: &'doc Tape<'input>, cursor: u32) -> Self {
++        CsvNode { tape, cursor }
++    }
++
++    /// The decoded rule kind of this node (`None` for an unflagged offset).
++    #[inline]
++    pub fn rule_kind(&self) -> Option<CsvKind> {
++        CsvKind::at_cursor(self.tape, self.cursor)
++    }
++
++    /// The source span of this node from its offset to the next recorded node's
++    /// offset (or end of input) — the leaf/structural text, lazily recovered.
++    #[inline]
++    pub fn span(&self) -> &'input [u8] {
++        let source = self.tape.source();
++        let start = self.offset();
++        let end = self
++            .tape
++            .offset_at(self.cursor + 1)
++            .unwrap_or(source.len());
++        &source[start..end.min(source.len())]
++    }
++}
++
++/// The shared lazy-cursor seam over the single tape — the `(tape, cursor, offset,
++/// kind)` primitive. The flat node sweep lives ENTIRELY outside this trait.
++impl<'doc, 'input> Cursor<'doc, 'input> for CsvNode<'doc, 'input> {
++    type Kind = Option<CsvKind>;
++
++    #[inline]
++    fn tape(&self) -> &'doc Tape<'input> {
++        self.tape
++    }
++
++    #[inline]
++    fn cursor(&self) -> u32 {
++        self.cursor
++    }
++
++    #[inline]
++    fn offset(&self) -> usize {
++        self.tape
++            .offset_at(self.cursor)
++            .expect("CsvNode cursor must point into the sealed offset tape")
++    }
++
++    #[inline]
++    fn kind(&self) -> Option<CsvKind> {
++        CsvKind::at_cursor(self.tape, self.cursor)
++    }
++}
++
++/// The sealed tape-backed document: the retained product of a parse. Holds
++/// exactly the existing `Tape` — no second substrate.
++pub struct CsvDocument<'input> {
++    tape: Tape<'input>,
++}
++
++impl<'input> CsvDocument<'input> {
++    #[inline]
++    pub fn from_tape(tape: Tape<'input>) -> Self {
++        CsvDocument { tape }
++    }
++
++    #[inline]
++    pub fn tape(&self) -> &Tape<'input> {
++        &self.tape
++    }
++
++    /// Iterate the recorded structural nodes as lazy cursor views.
++    pub fn nodes(&self) -> impl Iterator<Item = CsvNode<'_, 'input>> + '_ {
++        (0..self.tape.offsets().len() as u32)
++            .map(move |cursor| CsvNode::new(&self.tape, cursor))
++    }
++
++    /// The count of recorded nodes carrying a decodable rule kind.
++    pub fn node_count(&self) -> usize {
++        self.nodes().filter(|node| node.rule_kind().is_some()).count()
++    }
++}
++
++/// The document-level seam shared with every grammar's handle: root cursor +
++/// tape-id + source bytes over the single tape. Carries NO navigation.
++impl<'input> DocumentView<'input> for CsvDocument<'input> {
++    type Root = CsvNode<'input, 'input>;
++
++    fn root_value(&'input self) -> Self::Root {
++        CsvNode::new(&self.tape, 0)
++    }
++
++    fn tape_id(&self) -> TapeId {
++        self.tape.id()
++    }
++
++    fn source(&'input self) -> &'input [u8] {
++        self.tape.source()
++    }
++}
+diff --git a/skinny/crates/runtime/src/grammars/sheets/generated.rs b/skinny/crates/runtime/src/grammars/sheets/generated.rs
+index 022730b8c..dad7d8fd6 100644
+--- a/skinny/crates/runtime/src/grammars/sheets/generated.rs
++++ b/skinny/crates/runtime/src/grammars/sheets/generated.rs
+@@ -63,10 +63,19 @@ fn structural_reserve(byte_len: usize) -> usize {
+     (byte_len / 4).max(16)
+ }
+ 
+-/// Skip ASCII whitespace (the grammar's optional `?w` markers, uniform between
+-/// sequence elements in this whitespace-insensitive grammar).
++/// Whether newline bytes are significant tokens of this grammar. When true the
++/// grammar is fully whitespace-significant (CSV: record separators and
++/// intra-field spaces alike) and `skip_ws` must skip nothing.
++const NEWLINE_SIGNIFICANT: bool = false;
++
++/// Skip ASCII whitespace between sequence elements. In a whitespace-insensitive
++/// grammar (`NEWLINE_SIGNIFICANT == false`) this is a uniform blanket skip; in a
++/// whitespace-significant grammar it is the identity (const-folded to a no-op).
+ #[inline]
+ fn skip_ws(bytes: &[u8], mut cursor: usize) -> usize {
++    if NEWLINE_SIGNIFICANT {
++        return cursor;
++    }
+     while let Some(&byte) = bytes.get(cursor) {
+         if byte.is_ascii_whitespace() {
+             cursor += 1;
+diff --git a/skinny/crates/runtime/src/lib.rs b/skinny/crates/runtime/src/lib.rs
+index e41b5e7b1..a0c2d4663 100644
+--- a/skinny/crates/runtime/src/lib.rs
++++ b/skinny/crates/runtime/src/lib.rs
+@@ -23,7 +23,11 @@ pub mod generated_css_l4_declaration_values;
+ #[path = "grammars/sheets/mod.rs"]
+ pub mod generated_sheets;
+ 
++#[path = "grammars/csv/mod.rs"]
++pub mod generated_csv;
++
+ pub mod grammars {
++    pub use crate::generated_csv as csv;
+     pub use crate::generated_css_l4_declaration_values as css_l4_declaration_values;
+     pub use crate::generated_json as json;
+     pub use crate::generated_sheets as sheets;
+diff --git a/skinny/xtask/src/main.rs b/skinny/xtask/src/main.rs
+index 932e88711..b97e992f5 100644
+--- a/skinny/xtask/src/main.rs
++++ b/skinny/xtask/src/main.rs
+@@ -41,6 +41,8 @@ fn main() -> Result<()> {
+         "check-json" => check_json(&root),
+         "regen-sheets" => regen_sheets(&root),
+         "check-sheets" => check_sheets(&root),
++        "regen-csv" => regen_csv(&root),
++        "check-csv" => check_csv(&root),
+         "regen-css" => regen_css::regen_css(&root),
+         "check-css-l4-declaration-values" => regen_css::check_declaration_values(&root),
+         "regen-real-typed" => regen_real_typed(&root),
+@@ -211,6 +213,39 @@ const SHEETS_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
+     output_labels: None,
+ };
+ 
++// CSV (RFC 4180) rides the SAME general recursive-descent path as Sheets — a
++// non-`value` grammar routes to `general_descent`, producing the 5-file roster.
++// No name gate: the router keys on the sink program's shape (a Dispatch alt over
++// >= 2 materialized shapes is the JSON family; CSV is neither).
++const CSV_SOURCES: &[&str] = &["grammar/misc/csv.bbnf"];
++const CSV_ROOTS: &[&str] = &["grammar/misc/csv.bbnf"];
++const CSV_TARGET: regen::RuntimeTarget = regen::RuntimeTarget {
++    grammar_name: "csv",
++    profile: "csv",
++    entry_rule: "csv",
++    source_roots: CSV_ROOTS,
++    output_dir: "crates/runtime/src/grammars/csv",
++    check_command: "check-csv",
++    source_inputs: CSV_SOURCES,
++    metadata_inputs: WORKSPACE_METADATA,
++    expected_files: GENERAL_DESCENT_RUNTIME_FILES,
++    frontend_requirements: codegen::RuntimeFrontendRequirements::none(),
++    output_labels: None,
++};
++
++fn regen_csv(root: &Path) -> Result<()> {
++    let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &CSV_TARGET)?)?;
++    emitted.write_to_dir(root.join("crates/runtime/src/grammars/csv"))?;
++    Ok(())
++}
++
++fn check_csv(root: &Path) -> Result<()> {
++    let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &CSV_TARGET)?)?;
++    emitted
++        .check_dir(root.join("crates/runtime/src/grammars/csv"))
++        .context("generated CSV runtime is stale; run `cargo xtask regen-csv`")
++}
++
+ fn regen_sheets(root: &Path) -> Result<()> {
+     let emitted = codegen::emit_runtime_from_request(regen::runtime_request(root, &SHEETS_TARGET)?)?;
+     emitted.write_to_dir(root.join("crates/runtime/src/grammars/sheets"))?;

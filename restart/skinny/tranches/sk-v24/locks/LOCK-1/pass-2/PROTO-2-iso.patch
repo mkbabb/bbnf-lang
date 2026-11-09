@@ -1,0 +1,202 @@
+diff --git a/crates/core/tests/carrier_iso_ts.rs b/crates/core/tests/carrier_iso_ts.rs
+new file mode 100644
+index 000000000..ed9f0eb8d
+--- /dev/null
++++ b/crates/core/tests/carrier_iso_ts.rs
+@@ -0,0 +1,196 @@
++//! LOCK-1 / PROTO-2 — the carrier's iso floor.
++//!
++//! QUESTION: does the winning carrier's type-of-record (a Row-bearing
++//! Sum — a two-arm tagged alternation, each arm a keyed record) cross
++//! to TypeScript with a well-formed *parallel* type? This is the
++//! Constitution-iii isomorphism floor that decides the family carrier
++//! axis (1A ⊥ 1B). Carrier 1B is the `TypeDesc` widening carrier: it
++//! seats on iso iff the record vocabulary (`TypeDesc::Row`,
++//! `TypeDesc::HeterogeneousAltJoin`) has a `type_desc_to_ts` path that
++//! names the same record shape the Rust sink names.
++//!
++//! The two production projection sinks under test:
++//!   * Rust  — `backend::rust::ir_types::type_desc_to_syn`
++//!             (`Row(T)` → `Vec<(Span<'a>, T)>`; Sum → boxed-enum view)
++//!   * TS    — `backend::ts::projection::type_desc_to_ts`
++//!             (`Row(T)` → `Record<string, T>`;  Sum → union name)
++//!
++//! Both consume the `TypeDesc` that `passes::project_types` writes into
++//! `ir.types` — the exact value the LOCK-3 sinks (`TypeAnalysis::from_ir`,
++//! `RustNamedTypes::from_ir`) clone. `project_types` produces `Row`
++//! (`passes::types::constraint::shape::TypeShapeAnalysis`, Fact 3:
++//! declared key role → `ShapeClass::Row`) and the Sum obligation
++//! (`passes::types::constraint::revise::join_types` →
++//! `HeterogeneousAltJoin`) already at this base, so the vocabulary is
++//! inference-reachable; these tests project that vocabulary through
++//! both backends and assert the shapes are parallel.
++
++use bbnf::backend::rust::ir_types::{IrCodegenCtx, ParserAttributes, type_desc_to_syn};
++use bbnf::backend::ts::projection::type_desc_to_ts;
++use bbnf_ir::{GrammarIR, TypeDesc};
++
++/// Whitespace-insensitive normalisation for `syn`/`quote` token
++/// stringification (which inserts spaces around every token).
++fn norm(s: &str) -> String {
++    s.chars().filter(|c| !c.is_whitespace()).collect()
++}
++
++fn rust_type_string(td: &TypeDesc, ir: &GrammarIR, marker: &str) -> String {
++    let ident = quote::format_ident!("{marker}");
++    let attrs = ParserAttributes::default();
++    let ctx = IrCodegenCtx::new(ir, &ident, &attrs, false);
++    let ty = type_desc_to_syn(td, &ctx);
++    quote::quote!(#ty).to_string()
++}
++
++/// The Row leg: a keyed record of a homogeneous value type crosses to
++/// a well-formed *parallel* type on both backends.
++///
++///   Rust:  Row(T) → Vec<(Span<'a>, T)>   (span-keyed association list)
++///   TS:    Row(T) → Record<string, T>    (native keyed object)
++///
++/// Both name key→value with the SAME value leg. That is the iso floor
++/// the carrier fork turns on.
++#[test]
++fn carrier_row_crosses_to_ts_parallel() {
++    let ir = GrammarIR::default();
++
++    // Row over an f64 value leg.
++    let row_f64 = TypeDesc::Row(Box::new(TypeDesc::F64));
++    let ts = type_desc_to_ts(&row_f64, "CarrierNode", &ir);
++    let rust = rust_type_string(&row_f64, &ir, "Carrier");
++    assert_eq!(ts, "Record<string, number>", "TS Row(f64) shape");
++    assert_eq!(
++        norm(&rust),
++        "Vec<(::parse_that::Span<'a>,f64)>",
++        "Rust Row(f64) shape"
++    );
++    // Parallel: both are key→value records with the SAME value leg.
++    assert!(ts.starts_with("Record<string,"), "TS Row is a keyed record");
++    assert!(
++        norm(&rust).starts_with("Vec<(::parse_that::Span<'a>,"),
++        "Rust Row is a span-keyed association list"
++    );
++
++    // Row over a Span value leg (the record vocabulary must carry any
++    // homogeneous value type, not just numerics).
++    let row_span = TypeDesc::Row(Box::new(TypeDesc::Span));
++    assert_eq!(
++        type_desc_to_ts(&row_span, "CarrierNode", &ir),
++        "Record<string, Span>"
++    );
++    assert_eq!(
++        norm(&rust_type_string(&row_span, &ir, "Carrier")),
++        "Vec<(::parse_that::Span<'a>,::parse_that::Span<'a>)>"
++    );
++}
++
++/// The Sum leg: a two-arm tagged alternation whose arms are each a
++/// keyed record. `HeterogeneousAltJoin([Row, Row])` is the existing
++/// Sum vocabulary. Both backends collapse the Sum to a *name
++/// reference* to a separately-declared discriminated union — Rust to
++/// the boxed-enum node view, TS to the union type name. The crossing
++/// is iso-*symmetric*: neither backend inlines the arms at the type
++/// slot; both defer the union body to a named declaration. That parity
++/// is precisely what makes the carrier's Sum well-formed on the TS
++/// side.
++#[test]
++fn carrier_sum_of_rows_crosses_to_ts_parallel() {
++    let ir = GrammarIR::default();
++
++    let sum = TypeDesc::HeterogeneousAltJoin(vec![
++        TypeDesc::Row(Box::new(TypeDesc::Span)),
++        TypeDesc::Row(Box::new(TypeDesc::F64)),
++    ]);
++
++    let ts = type_desc_to_ts(&sum, "CarrierNode", &ir);
++    let rust = rust_type_string(&sum, &ir, "Carrier");
++
++    // TS names the union type; Rust names the boxed-enum node view.
++    assert_eq!(ts, "CarrierNode", "TS Sum → union name reference");
++    assert_eq!(
++        norm(&rust),
++        "CarrierNodeView<'a>",
++        "Rust Sum → boxed-enum node-view reference"
++    );
++
++    // Iso-symmetry: both are bare name references, not inlined arms.
++    // TS: a plain identifier. Rust: a path + lifetime, no `Vec`/`(`.
++    assert!(
++        ts.chars().all(|c| c.is_alphanumeric() || c == '_'),
++        "TS Sum is a bare union-name reference, arms declared elsewhere: {ts}"
++    );
++    assert!(
++        !norm(&rust).contains("Vec<") && !norm(&rust).contains('('),
++        "Rust Sum is a bare node-view reference, arms declared elsewhere: {rust}"
++    );
++}
++
++/// A Row *nested inside* a Vec still crosses parallel — the record
++/// vocabulary composes under the list constructor on both backends.
++#[test]
++fn carrier_row_composes_under_vec() {
++    let ir = GrammarIR::default();
++    let vec_of_row = TypeDesc::Vec(Box::new(TypeDesc::Row(Box::new(TypeDesc::F64))));
++
++    // TS: `Row(f64)[]`. Rust (use_slices at rule level): borrowed slice
++    // of the association-list record.
++    let ts = type_desc_to_ts(&vec_of_row, "CarrierNode", &ir);
++    assert_eq!(ts, "Record<string, number>[]");
++
++    let rust = norm(&rust_type_string(&vec_of_row, &ir, "Carrier"));
++    assert_eq!(rust, "&'a[Vec<(::parse_that::Span<'a>,f64)>]");
++}
++
++/// End-to-end reachability + iso-safety: the real pipeline compiles the
++/// canonical cross-backend grammar to BOTH backends. project_types runs
++/// inside `analyze_grammar` for the Rust prep; the TS backend re-derives
++/// the same type surface. Both must succeed, and the TS surface must
++/// carry a discriminated union — the Sum vocabulary crossing end-to-end.
++#[test]
++fn carrier_type_surface_reaches_both_backends() {
++    use bbnf::pipeline::{
++        CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
++    };
++
++    // A two-arm alternation of keyed structures — the shape the carrier
++    // must carry. Both branches keep their identity (non-transparent),
++    // so the TS backend emits a discriminated union over them.
++    let grammar = r#"
++        item = "x", { "y" } ;
++        list = item, { item } ;
++    "#;
++
++    let ts = match compile_grammar_request(
++        grammar,
++        &CompileRequest {
++            options: PipelineOptions::default(),
++            target: CompileTarget::Ts,
++        },
++    )
++    .expect("TS compile")
++    {
++        CompileOutput::Ts(src) => src,
++        _ => panic!("expected TS output"),
++    };
++    // The Sum crosses end-to-end: a discriminated union with both arms.
++    assert!(ts.contains("tag: \"item\""), "missing item arm: {ts}");
++    assert!(ts.contains("tag: \"list\""), "missing list arm: {ts}");
++
++    // Same grammar realises a Rust type surface without error — the two
++    // sinks agree on a shape.
++    let rust_ok = matches!(
++        compile_grammar_request(
++            grammar,
++            &CompileRequest {
++                options: PipelineOptions::default(),
++                target: CompileTarget::Rust {
++                    requested_prettify: false
++                },
++            },
++        )
++        .expect("Rust compile"),
++        CompileOutput::Rust(_)
++    );
++    assert!(rust_ok, "Rust backend realised the same grammar's type surface");
++}

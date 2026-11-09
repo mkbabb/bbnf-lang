@@ -1,0 +1,594 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index 96105813c..92cedb715 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -255,7 +255,6 @@ dependencies = [
+  "csp-solver",
+  "egraph",
+  "egraph-derive",
+- "parse_that",
+  "proc-macro2",
+  "rayon",
+  "rmp-serde",
+diff --git a/crates/ir/Cargo.toml b/crates/ir/Cargo.toml
+index 9bc3c91c7..b99064d81 100644
+--- a/crates/ir/Cargo.toml
++++ b/crates/ir/Cargo.toml
+@@ -10,7 +10,6 @@ repository = "https://github.com/mkbabb/bbnf-lang"
+ serde = { version = "1", features = ["derive", "rc"] }
+ serde_json = "1"
+ rmp-serde = "1"
+-parse_that = "0.4"
+ bbnf-regex = { version = "0.1", features = ["serde"] }
+ rustc-hash = "2"
+ rayon = "1"
+diff --git a/crates/ir/src/passes/inspect/leading.rs b/crates/ir/src/passes/inspect/leading.rs
+index b0e114a2a..108162ea4 100644
+--- a/crates/ir/src/passes/inspect/leading.rs
++++ b/crates/ir/src/passes/inspect/leading.rs
+@@ -12,7 +12,7 @@
+ 
+ use std::collections::HashSet;
+ 
+-use parse_that::regex::classify::{RegexClass, classify_regex};
++use bbnf_regex::classify::{RegexClass, classify_regex};
+ 
+ use crate::{GrammarIR, IrNode, RuleId};
+ 
+diff --git a/crates/ir/src/passes/recognizers/key_dispatch.rs b/crates/ir/src/passes/recognizers/key_dispatch.rs
+index d7388c6ec..7efdb5c8f 100644
+--- a/crates/ir/src/passes/recognizers/key_dispatch.rs
++++ b/crates/ir/src/passes/recognizers/key_dispatch.rs
+@@ -17,7 +17,7 @@
+ 
+ use std::collections::HashSet;
+ 
+-use parse_that::regex::classify::{RegexClass, classify_regex};
++use bbnf_regex::classify::{RegexClass, classify_regex};
+ 
+ use crate::dag::NodeId;
+ use crate::passes::inspect::{
+diff --git a/crates/ir/src/vm/bytecode.rs b/crates/ir/src/vm/bytecode.rs
+index f81fe8b67..32e487797 100644
+--- a/crates/ir/src/vm/bytecode.rs
++++ b/crates/ir/src/vm/bytecode.rs
+@@ -7,7 +7,7 @@ use std::collections::HashMap;
+ 
+ use serde::{Deserialize, Serialize};
+ 
+-use crate::{CharSet128, GrammarSpan, RuleId, StringId};
++use crate::{CharSet128, FnDescriptor, FnId, GrammarSpan, RuleId, StringId};
+ 
+ /// Dispatch table data stored in a side table, referenced by index.
+ #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+@@ -130,6 +130,15 @@ pub enum Op {
+     /// Tag the top value with a rule name (for AST construction).
+     MakeTagged(StringId),
+ 
++    // ── Value Projection ────────────────────────────────────────────────
++    /// Apply a host function (`FnId` into `BytecodeProgram::fns`) to the
++    /// top value, replacing it with the projected result. This is the
++    /// value-plane completion of the `IrNode::Map { inner, fn_id }` site:
++    /// the recognizer tape runs `inner`, then `ApplyFn` folds the matched
++    /// span into a typed scalar/variant `Value` via a small `MapExpr`
++    /// evaluator.
++    ApplyFn(FnId),
++
+     // ── Memoization ─────────────────────────────────────────────────────
+     /// Check memo table for this rule at current offset.
+     /// If cached: restore state from cache, jump to `hit_offset`.
+@@ -181,7 +190,7 @@ pub struct BytecodeProgram {
+     /// Pre-compiled DFA patterns, indexed by StringId.
+     /// `None` for string IDs that are not regex patterns (or DFA compilation failed).
+     #[serde(skip)]
+-    pub compiled_regexes: Vec<Option<parse_that::regex::Dfa>>,
++    pub compiled_regexes: Vec<Option<bbnf_regex::Dfa>>,
+ 
+     /// FOLLOW sets per rule, for error recovery and expected-token reporting.
+     /// Populated from `GrammarIR::follow_sets` during compilation.
+@@ -196,6 +205,12 @@ pub struct BytecodeProgram {
+     /// Only populated when compiled with debug info.
+     #[serde(default)]
+     pub source_map: Vec<SourceMapEntry>,
++
++    /// Host function table, cloned from `GrammarIR::fns`. Every `FnId`
++    /// carried by an `Op::ApplyFn` indexes into this vector. Empty for
++    /// recognizer-only programs (the free-tape case).
++    #[serde(default)]
++    pub fns: Vec<FnDescriptor>,
+ }
+ 
+ /// Maps a bytecode program counter to a grammar source location.
+@@ -235,7 +250,7 @@ impl BytecodeProgram {
+ 
+         for sid in regex_sids {
+             let pattern = &self.strings[sid as usize];
+-            let dfa = parse_that::regex::Dfa::compile(pattern)
++            let dfa = bbnf_regex::Dfa::compile(pattern)
+                 .unwrap_or_else(|| panic!("DFA compilation failed for regex: {}", pattern));
+             self.compiled_regexes[sid as usize] = Some(dfa);
+         }
+diff --git a/crates/ir/src/vm/compiler/mod.rs b/crates/ir/src/vm/compiler/mod.rs
+index 006dcd245..ebf06fbc4 100644
+--- a/crates/ir/src/vm/compiler/mod.rs
++++ b/crates/ir/src/vm/compiler/mod.rs
+@@ -71,6 +71,7 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
+         follow_sets: ir.follow_sets.clone(),
+         rule_names,
+         source_map: compiler.source_map,
++        fns: ir.fns.clone(),
+     };
+ 
+     // Pre-compile all regex patterns referenced by MatchRegex opcodes.
+diff --git a/crates/ir/src/vm/compiler/node.rs b/crates/ir/src/vm/compiler/node.rs
+index 5a71ac9dc..ed55fecae 100644
+--- a/crates/ir/src/vm/compiler/node.rs
++++ b/crates/ir/src/vm/compiler/node.rs
+@@ -28,7 +28,12 @@ impl Compiler {
+             IrNode::Next(left, right) => self.compile_binary_backtrack(left, right, false, ir),
+             IrNode::Minus(left, right) => self.compile_minus(left, right, ir),
+             IrNode::Negate(inner) => self.compile_negate(inner, ir),
+-            IrNode::Map { inner, .. } => self.compile_node(inner, ir),
++            IrNode::Map { inner, fn_id } => {
++                // Recognizer tape runs `inner`, then the value-plane
++                // `ApplyFn` folds the matched span into a typed `Value`.
++                self.compile_node(inner, ir);
++                self.emit(Op::ApplyFn(*fn_id));
++            }
+             IrNode::OptionalWhitespace(inner) => {
+                 // Use custom @ws pattern if available; otherwise basic ASCII whitespace.
+                 if let Some(ws_sid) = ir.ws_pattern {
+diff --git a/crates/ir/src/vm/interpreter/apply_fn.rs b/crates/ir/src/vm/interpreter/apply_fn.rs
+new file mode 100644
+index 000000000..264591593
+--- /dev/null
++++ b/crates/ir/src/vm/interpreter/apply_fn.rs
+@@ -0,0 +1,165 @@
++//! `Op::ApplyFn` — the value-plane fold at each `IrNode::Map` site.
++//!
++//! The recognizer tape produces a `Value::Span` for the matched input; this
++//! op replaces it with a typed scalar/variant `Value` by evaluating the
++//! `FnDescriptor` (and its `MapExpr` tree) referenced by the `FnId`. This is
++//! the completion of the value plane the recognizer tape leaves open — a
++//! small tree-walk evaluator, not a codegen re-projection.
++
++use super::Interpreter;
++use super::value::Value;
++use crate::{FnDescriptor, MapBinOp, MapExpr, MapUnaryOp};
++
++impl<'prog> Interpreter<'prog> {
++    #[inline]
++    pub(super) fn exec_apply_fn(&mut self, fn_id: u32) {
++        // The recognizer result the projection folds over.
++        let orig = self.values.pop().unwrap_or(Value::Nil);
++        let text: &str = match &orig {
++            Value::Span(s, e) => {
++                let (s, e) = (*s as usize, *e as usize);
++                if e <= self.input.len() { &self.input[s..e] } else { "" }
++            }
++            _ => "",
++        };
++
++        let result = {
++            let desc = &self.program.fns[fn_id as usize];
++            self.eval_descriptor(desc, text, &orig)
++        };
++        self.values.push(result);
++        self.pc += 1;
++    }
++
++    fn eval_descriptor(&self, desc: &FnDescriptor, text: &str, orig: &Value) -> Value {
++        match desc {
++            FnDescriptor::EnumWrap { variant } => Value::Variant {
++                tag: *variant,
++                inner: Box::new(orig.clone()),
++            },
++            FnDescriptor::BoxWrap | FnDescriptor::SpanCapture => orig.clone(),
++            FnDescriptor::NumberConvert { .. } => {
++                Value::F64(text.trim().parse::<f64>().unwrap_or(f64::NAN))
++            }
++            FnDescriptor::HexConvert { .. } => Value::U32(
++                u32::from_str_radix(text.trim_start_matches('#'), 16).unwrap_or(0),
++            ),
++            FnDescriptor::Expr { expr, .. } => self.eval_map_expr(expr, text, orig),
++        }
++    }
++
++    fn eval_map_expr(&self, expr: &MapExpr, text: &str, orig: &Value) -> Value {
++        match expr {
++            MapExpr::IntLit(i) => Value::U32(*i as u32),
++            MapExpr::FloatLit(f) => Value::F64(*f),
++            MapExpr::BoolLit(b) => Value::U32(*b as u32),
++            MapExpr::StringLit(sid) => Value::Str(self.program.strings[*sid as usize].clone()),
++            MapExpr::Input => orig.clone(),
++            MapExpr::InputProp { prop } => {
++                match self.program.strings[*prop as usize].as_str() {
++                    "len" => Value::U32(text.len() as u32),
++                    "as_str" | "str" => Value::Str(text.to_string()),
++                    _ => orig.clone(),
++                }
++            }
++            MapExpr::FnCall { name, args } => {
++                let fname = &self.program.strings[*name as usize];
++                let argv: Vec<Value> =
++                    args.iter().map(|a| self.eval_map_expr(a, text, orig)).collect();
++                eval_builtin(fname, &argv, text)
++            }
++            MapExpr::BinOp { op, lhs, rhs } => {
++                let l = self.eval_map_expr(lhs, text, orig);
++                let r = self.eval_map_expr(rhs, text, orig);
++                eval_binop(*op, &l, &r)
++            }
++            MapExpr::UnaryOp { op, inner } => {
++                let v = self.eval_map_expr(inner, text, orig);
++                eval_unop(*op, &v)
++            }
++        }
++    }
++}
++
++/// Coerce a `Value` to `f64` for numeric ops.
++fn as_f64(v: &Value) -> f64 {
++    match v {
++        Value::F64(f) => *f,
++        Value::U32(u) => *u as f64,
++        Value::Str(s) => s.trim().parse().unwrap_or(f64::NAN),
++        Value::Span(_, _) | Value::Nil | Value::Array(_) | Value::Tagged { .. } => f64::NAN,
++        Value::Variant { inner, .. } => as_f64(inner),
++    }
++}
++
++/// Coerce a `Value` to `u32` for integer/bit ops.
++fn as_u32(v: &Value) -> u32 {
++    match v {
++        Value::U32(u) => *u,
++        Value::F64(f) => *f as u32,
++        Value::Str(s) => s.trim().parse().unwrap_or(0),
++        Value::Variant { inner, .. } => as_u32(inner),
++        _ => 0,
++    }
++}
++
++/// Built-in host functions referenced by `MapExpr::FnCall`.
++fn eval_builtin(name: &str, args: &[Value], text: &str) -> Value {
++    match name {
++        "parse_hex" | "hex" | "from_hex" => {
++            let s = args.first().and_then(str_of).unwrap_or(text);
++            Value::U32(u32::from_str_radix(s.trim().trim_start_matches('#'), 16).unwrap_or(0))
++        }
++        "parse_f64" | "parse_number" | "number" | "to_f64" => {
++            let s = args.first().and_then(str_of).unwrap_or(text);
++            Value::F64(s.trim().parse().unwrap_or(f64::NAN))
++        }
++        "parse_u32" | "to_u32" | "int" => {
++            let s = args.first().and_then(str_of).unwrap_or(text);
++            Value::U32(s.trim().parse().unwrap_or(0))
++        }
++        "to_str" | "str" | "trim" | "ident" => {
++            Value::Str(args.first().and_then(str_of).unwrap_or(text).trim().to_string())
++        }
++        "len" => Value::U32(text.len() as u32),
++        _ => args.first().cloned().unwrap_or(Value::Str(text.to_string())),
++    }
++}
++
++/// Borrow the string payload of a `Value` if it is a `Str`.
++fn str_of(v: &Value) -> Option<&str> {
++    match v {
++        Value::Str(s) => Some(s.as_str()),
++        _ => None,
++    }
++}
++
++fn eval_binop(op: MapBinOp, l: &Value, r: &Value) -> Value {
++    use MapBinOp::*;
++    match op {
++        Add => Value::F64(as_f64(l) + as_f64(r)),
++        Sub => Value::F64(as_f64(l) - as_f64(r)),
++        Mul => Value::F64(as_f64(l) * as_f64(r)),
++        Div => Value::F64(as_f64(l) / as_f64(r)),
++        Mod => Value::F64(as_f64(l) % as_f64(r)),
++        Eq => Value::U32((as_f64(l) == as_f64(r)) as u32),
++        Ne => Value::U32((as_f64(l) != as_f64(r)) as u32),
++        Lt => Value::U32((as_f64(l) < as_f64(r)) as u32),
++        Gt => Value::U32((as_f64(l) > as_f64(r)) as u32),
++        Le => Value::U32((as_f64(l) <= as_f64(r)) as u32),
++        Ge => Value::U32((as_f64(l) >= as_f64(r)) as u32),
++        And => Value::U32(((as_u32(l) != 0) && (as_u32(r) != 0)) as u32),
++        Or => Value::U32(((as_u32(l) != 0) || (as_u32(r) != 0)) as u32),
++        BitAnd => Value::U32(as_u32(l) & as_u32(r)),
++        BitOr => Value::U32(as_u32(l) | as_u32(r)),
++        Shl => Value::U32(as_u32(l) << as_u32(r)),
++        Shr => Value::U32(as_u32(l) >> as_u32(r)),
++    }
++}
++
++fn eval_unop(op: MapUnaryOp, v: &Value) -> Value {
++    match op {
++        MapUnaryOp::Neg => Value::F64(-as_f64(v)),
++        MapUnaryOp::Not => Value::U32((as_u32(v) == 0) as u32),
++    }
++}
+diff --git a/crates/ir/src/vm/interpreter/mod.rs b/crates/ir/src/vm/interpreter/mod.rs
+index d9eb46d13..963ce07e3 100644
+--- a/crates/ir/src/vm/interpreter/mod.rs
++++ b/crates/ir/src/vm/interpreter/mod.rs
+@@ -20,6 +20,7 @@
+ //! helpers (`collect_values_from`, `track_furthest`,
+ //! `emit_furthest_diagnostic`), and the public `parse_with_ir` convenience.
+ 
++mod apply_fn;
+ mod construct;
+ mod control;
+ mod leaves;
+@@ -225,6 +226,7 @@ impl<'prog> Interpreter<'prog> {
+                 }
+                 Op::MakeArray(count) => self.exec_make_array(count),
+                 Op::MakeTagged(tag) => self.exec_make_tagged(tag),
++                Op::ApplyFn(fn_id) => self.exec_apply_fn(fn_id),
+                 Op::MemoCheck {
+                     rule_id,
+                     hit_offset,
+diff --git a/crates/ir/src/vm/interpreter/value.rs b/crates/ir/src/vm/interpreter/value.rs
+index bbac3189b..5b42ea2ae 100644
+--- a/crates/ir/src/vm/interpreter/value.rs
++++ b/crates/ir/src/vm/interpreter/value.rs
+@@ -7,7 +7,7 @@
+ 
+ use std::{fmt, ops::Deref};
+ 
+-use crate::RuleId;
++use crate::{RuleId, StringId};
+ 
+ /// An owned slice of values.
+ #[derive(Clone)]
+@@ -62,6 +62,16 @@ pub enum Value {
+     Array(ValueSlice),
+     /// Nothing matched (Epsilon).
+     Nil,
++
++    // ── Value-plane scalars (LOCK-4 pass-2: `Op::ApplyFn` projection) ─────
++    /// A 64-bit float scalar (e.g. `NumberConvert`, numeric `->` projections).
++    F64(f64),
++    /// A 32-bit unsigned scalar (e.g. `HexConvert`, hex-color `->` projections).
++    U32(u32),
++    /// An owned string scalar (string-literal / to-str projections).
++    Str(String),
++    /// A tagged variant wrapper (`EnumWrap`): `Tag(inner)`.
++    Variant { tag: StringId, inner: Box<Value> },
+ }
+ 
+ /// A diagnostic message from the interpreter (parse error with context).
+diff --git a/crates/ir/tests/lock4_value_plane_probe.rs b/crates/ir/tests/lock4_value_plane_probe.rs
+new file mode 100644
+index 000000000..1ba25b479
+--- /dev/null
++++ b/crates/ir/tests/lock4_value_plane_probe.rs
+@@ -0,0 +1,227 @@
++//! LOCK-4 pass-2 probe: value-completed shared VM (`Op::ApplyFn`) vs the
++//! parse-that closure core, on (a) a projection-dense shape (hex-color →
++//! `U32`, the value.js `->` projection shape) and (b) a recognizer-only
++//! shape (JSON free-tape: `Span` push, no projection).
++//!
++//! Method: byte-identical scalar oracle first, then cold paired A,B,A,B
++//! timing — fresh `Interpreter`/closure state per parse (cold per-parse,
++//! no warm reuse), N=400 samples, two windows, both orders, median + IQR.
++
++use std::hint::black_box;
++use std::time::Instant;
++
++use bbnf_ir::vm::bytecode::{BytecodeProgram, Op};
++use bbnf_ir::vm::interpreter::{Interpreter, Value};
++use bbnf_ir::FnDescriptor;
++
++// ── Program builders ─────────────────────────────────────────────────────────
++
++/// Projection-dense: `MatchRegex(hex) ; ApplyFn(HexConvert)` → `Value::U32`.
++fn projection_program() -> BytecodeProgram {
++    let mut p = BytecodeProgram {
++        code: vec![Op::MatchRegex(0), Op::ApplyFn(0), Op::Halt],
++        entries: vec![0],
++        strings: vec!["[0-9a-fA-F]+".to_string()],
++        entry: 0,
++        memo_enabled: false,
++        dispatch_tables: Vec::new(),
++        token_dispatch_tables: Vec::new(),
++        compiled_regexes: Vec::new(),
++        follow_sets: Default::default(),
++        rule_names: vec![0],
++        source_map: Vec::new(),
++        fns: vec![FnDescriptor::HexConvert { fn_path: 0 }],
++    };
++    p.prepare_regexes();
++    p
++}
++
++/// Recognizer-only (free-tape): `MatchRegex(hex)` → `Value::Span`, no ApplyFn.
++fn recognizer_program() -> BytecodeProgram {
++    let mut p = BytecodeProgram {
++        code: vec![Op::MatchRegex(0), Op::Halt],
++        entries: vec![0],
++        strings: vec!["[0-9a-fA-F]+".to_string()],
++        entry: 0,
++        memo_enabled: false,
++        dispatch_tables: Vec::new(),
++        token_dispatch_tables: Vec::new(),
++        compiled_regexes: Vec::new(),
++        follow_sets: Default::default(),
++        rule_names: vec![0],
++        source_map: Vec::new(),
++        fns: Vec::new(),
++    };
++    p.prepare_regexes();
++    p
++}
++
++// ── Closure core (parse-that-shaped hand-written combinator) ──────────────────
++
++/// Recognize a run of hex digits at offset 0; returns the matched span end.
++#[inline]
++fn closure_recognize(input: &[u8]) -> Option<usize> {
++    let mut i = 0;
++    while i < input.len() && input[i].is_ascii_hexdigit() {
++        i += 1;
++    }
++    if i > 0 { Some(i) } else { None }
++}
++
++/// Closure core with the value projection: recognize `|> map(parse_hex)`.
++#[inline]
++fn closure_project(input: &str) -> Option<u32> {
++    let end = closure_recognize(input.as_bytes())?;
++    u32::from_str_radix(&input[..end], 16).ok()
++}
++
++// ── Timing harness ────────────────────────────────────────────────────────────
++
++fn median(mut v: Vec<u64>) -> u64 {
++    v.sort_unstable();
++    v[v.len() / 2]
++}
++
++fn iqr(mut v: Vec<u64>) -> u64 {
++    v.sort_unstable();
++    let q1 = v[v.len() / 4];
++    let q3 = v[(3 * v.len()) / 4];
++    q3 - q1
++}
++
++/// One cold parse of the VM program → projected scalar (or Span for recognizer).
++#[inline]
++fn vm_run(prog: &BytecodeProgram, input: &str) -> Option<Value> {
++    let mut interp = Interpreter::new(prog, input);
++    interp.run().value
++}
++
++const N: usize = 400;
++
++/// Cold paired timing for one shape: two windows (A,B then B,A), median + IQR.
++fn run_case(label: &str, prog: &BytecodeProgram, tokens: &[String], closure_time: impl Fn() -> u64) {
++    let time_vm = || -> u64 {
++        let t0 = Instant::now();
++        for t in tokens {
++            black_box(vm_run(prog, black_box(t)));
++        }
++        t0.elapsed().as_nanos() as u64
++    };
++    let mut vm_samples = Vec::with_capacity(2 * N);
++    let mut cl_samples = Vec::with_capacity(2 * N);
++    for _ in 0..N {
++        vm_samples.push(time_vm()); // window 1: order A,B
++        cl_samples.push(closure_time());
++    }
++    for _ in 0..N {
++        cl_samples.push(closure_time()); // window 2: order B,A
++        vm_samples.push(time_vm());
++    }
++    let vm_med = median(vm_samples.clone());
++    let cl_med = median(cl_samples.clone());
++    let vm_iqr = iqr(vm_samples);
++    let cl_iqr = iqr(cl_samples);
++    let ratio = cl_med as f64 / vm_med as f64;
++    println!("--- {label} ---");
++    println!("  VM(A)      median={vm_med:>8}ns  iqr={vm_iqr:>7}ns  ({} tok/pass)", tokens.len());
++    println!("  CLOSURE(B) median={cl_med:>8}ns  iqr={cl_iqr:>7}ns");
++    println!("  ratio(closure/vm) = {ratio:.4}x  (>=0.98 => shared VM viable)");
++}
++
++#[test]
++fn lock4_value_plane_probe() {
++    // A projection-dense corpus: value.js-shaped hex-color tokens.
++    let tokens: Vec<String> = (0..64u32)
++        .map(|k| format!("{:06x}", (k.wrapping_mul(0x9E3779B1)) & 0xFF_FFFF))
++        .collect();
++
++    let proj = projection_program();
++    let recog = recognizer_program();
++
++    // ── Oracle: byte-identical scalar output ─────────────────────────────────
++    let mut oracle_ok = true;
++    for t in &tokens {
++        let vm = vm_run(&proj, t);
++        let cl = closure_project(t);
++        let vm_u = match vm {
++            Some(Value::U32(u)) => Some(u),
++            _ => None,
++        };
++        if vm_u != cl {
++            oracle_ok = false;
++            eprintln!("ORACLE MISMATCH token={t} vm={vm_u:?} closure={cl:?}");
++        }
++        // recognizer free-tape oracle: same matched span length.
++        let rspan = match vm_run(&recog, t) {
++            Some(Value::Span(s, e)) => Some((e - s) as usize),
++            _ => None,
++        };
++        let cspan = closure_recognize(t.as_bytes());
++        if rspan != cspan {
++            oracle_ok = false;
++            eprintln!("RECOG ORACLE MISMATCH token={t} vm={rspan:?} closure={cspan:?}");
++        }
++    }
++    println!("ORACLE byte_identical_scalar={oracle_ok}");
++    assert!(oracle_ok, "value-output oracle must be byte-identical");
++
++    // ── Cold paired timing: two windows, both orders, median + IQR ───────────
++    run_case(
++        "PROJECTION-DENSE (value.js hex->U32, ApplyFn)",
++        &proj,
++        &tokens,
++        || {
++            let t0 = Instant::now();
++            for t in &tokens {
++                black_box(closure_project(black_box(t)));
++            }
++            t0.elapsed().as_nanos() as u64
++        },
++    );
++    run_case(
++        "RECOGNIZER-ONLY  (JSON free-tape, no ApplyFn)",
++        &recog,
++        &tokens,
++        || {
++            let t0 = Instant::now();
++            for t in &tokens {
++                black_box(closure_recognize(black_box(t).as_bytes()));
++            }
++            t0.elapsed().as_nanos() as u64
++        },
++    );
++
++    // ── Amortized single-parse: ONE interpreter over a long input ────────────
++    // Isolates per-parse SETUP allocation (8 Vecs + memo map in
++    // `Interpreter::new`) from interpret/value-plane throughput. One big hex
++    // token: setup is paid once, the DFA match + ApplyFn run over 384 bytes.
++    let big: String = tokens.concat();
++    let mut vm_amort = Vec::with_capacity(2 * N);
++    let mut cl_amort = Vec::with_capacity(2 * N);
++    for w in 0..(2 * N) {
++        if w % 2 == 0 {
++            let t0 = Instant::now();
++            black_box(vm_run(&proj, black_box(&big)));
++            vm_amort.push(t0.elapsed().as_nanos() as u64);
++            let t1 = Instant::now();
++            black_box(closure_project(black_box(&big)));
++            cl_amort.push(t1.elapsed().as_nanos() as u64);
++        } else {
++            let t1 = Instant::now();
++            black_box(closure_project(black_box(&big)));
++            cl_amort.push(t1.elapsed().as_nanos() as u64);
++            let t0 = Instant::now();
++            black_box(vm_run(&proj, black_box(&big)));
++            vm_amort.push(t0.elapsed().as_nanos() as u64);
++        }
++    }
++    let vm_med = median(vm_amort.clone());
++    let cl_med = median(cl_amort.clone());
++    println!("--- AMORTIZED single-parse ({} bytes, 1 interpreter) ---", big.len());
++    println!("  VM(A)      median={vm_med:>8}ns  iqr={:>7}ns", iqr(vm_amort));
++    println!("  CLOSURE(B) median={cl_med:>8}ns  iqr={:>7}ns", iqr(cl_amort));
++    println!(
++        "  ratio(closure/vm) = {:.4}x  | VM per-parse setup dominates the per-token cases",
++        cl_med as f64 / vm_med as f64
++    );
++}

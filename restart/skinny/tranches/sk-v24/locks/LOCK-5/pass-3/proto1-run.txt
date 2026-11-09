@@ -1,0 +1,55 @@
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+   Compiling passes v0.1.0 (/Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_acfc23d2-04b-38/skinny/crates/passes)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s
+     Running tests/follow_sound_fraction.rs (target/debug/deps/follow_sound_fraction-25ced59cc1b6cfa1)
+
+running 1 test
+=== corpus load ===
+  json:    15 rules loaded
+  sheets:  39 rules loaded
+  counterexample: 2 rules loaded
+
+=== per-leaf verdicts (grammar :: rule) ===
+  SOUND       json::number         /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/
+  SOUND       json::string         /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/
+  GUARD-REQ   json::ws             /[ \t\n\r]*/ (nullable)
+  GUARD-REQ   sheets::number         /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/ (nullable,first=UNKNOWN)
+  GUARD-REQ   sheets::string         /"([^"]|"")*"/
+  BOUNDED*    sheets::boolean        /[tT][rR][uU][eE]/ (bounded)
+  BOUNDED*    sheets::boolean        /[fF][aA][lL][sS][eE]/ (bounded)
+  SOUND       sheets::sheet_prefix   /'(?:[^']|'')*'!|[A-Za-z_]\w*!/
+  GUARD-REQ   sheets::cell_ref       /\$?[A-Za-z]{1,3}\$?\d+/
+  BOUNDED*    sheets::range_end      /\$?[A-Za-z]{1,3}/ (bounded)
+  GUARD-REQ   sheets::range_end      /\$?\d+/
+  GUARD-REQ   sheets::identifier     /[A-Za-z_][A-Za-z0-9_.]*/
+  BOUNDED*    sheets::let_call       /[lL][eE][tT]\(/ (bounded)
+  BOUNDED*    sheets::lambda_call    /[lL][aA][mM][bB][dD][aA]\(/ (bounded)
+  BOUNDED*    sheets::formula        /=?/ (nullable,bounded)
+  GUARD-REQ   counterexample::word           /[a-z]+/
+
+=== NON-DISJOINT (require Seq[Repeat, FOLLOW-guard]) ===
+  json::ws  /[ \t\n\r]*/  overlap=[\t,\n,\r,SP]
+  sheets::string  /"([^"]|"")*"/  overlap=["]
+  sheets::boolean  /[tT][rR][uU][eE]/  overlap=[T,t]
+  sheets::boolean  /[fF][aA][lL][sS][eE]/  overlap=[F,f]
+  sheets::cell_ref  /\$?[A-Za-z]{1,3}\$?\d+/  overlap=[$]
+  sheets::range_end  /\$?[A-Za-z]{1,3}/  overlap=[$]
+  sheets::range_end  /\$?\d+/  overlap=[$]
+  sheets::identifier  /[A-Za-z_][A-Za-z0-9_.]*/  overlap=[A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,_,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z]
+  sheets::let_call  /[lL][eE][tT]\(/  overlap=[L,l]
+  sheets::lambda_call  /[lL][aA][mM][bB][dD][aA]\(/  overlap=[L,l]
+  sheets::formula  /=?/  overlap=[=]
+  counterexample::word  /[a-z]+/  overlap=[a]
+
+================ RESULT ================
+[brief-literal] first(C)∩FOLLOW=∅ : disjoint=3/16 frac=18.8%
+[bounded, give-back impossible by construction] : 6/16
+[give-back-prone (trailing unbounded run)] : 10/16; of those FOLLOW-sound=3/10 (30.0%)
+[effectively one-pass = bounded ∪ prone-sound] : 9/16 (56.2%)
+=======================================
+PASS: fraction reported (3/16 = 18.8%) and the word/"and" counterexample is NON-disjoint (predicate SOUND).
+test follow_sound_fraction ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.32s
+

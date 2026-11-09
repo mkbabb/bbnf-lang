@@ -1,0 +1,15 @@
+# PROTO-A2 P5-DOORS  uarch=AppleM5Max  iters=8000  blocks=4096 (64B)
+# PMU: proc_pid_rusage RUSAGE_INFO_V5 ri_cycles; min-of-7
+# PARITY: intrin, door-a(vshrn implied-bits), door-b(barrier), asm all byte-exact vs scalar. OK
+
+# cyc/64B  (crossings/block: intrin=8 vaddv, door-a=4 vget_lane, door-b=8 vaddv, asm=8 vaddv)
+VARIANT intrin_baseline   cyc/64B=16.870  crossings=8  classify=De-Morgan(40 ops)
+VARIANT door_a_vshrn      cyc/64B=12.538  crossings=4  reduction=vshrn(nibble)
+VARIANT door_b_barrier    cyc/64B=15.130  crossings=8  classify=orr+bic(32 ops, forced)
+VARIANT hand_asm          cyc/64B=15.284  crossings=8  classify=orr+bic(32 ops)
+
+# ratios vs intrin baseline (>1.0 = variant faster)
+RATIO door_a_vshrn/intrin   1.3455  (speedup 34.6%)
+RATIO door_b_barrier/intrin 1.1149  (speedup 11.5%)
+RATIO hand_asm/intrin       1.1037  (speedup 10.4%)
+RATIO hand_asm/door_a       0.8203

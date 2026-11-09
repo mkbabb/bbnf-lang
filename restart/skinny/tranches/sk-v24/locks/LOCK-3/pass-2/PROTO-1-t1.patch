@@ -1,0 +1,144 @@
+diff --git a/skinny/crates/codegen/src/lower/sink_only.rs b/skinny/crates/codegen/src/lower/sink_only.rs
+index fb5904f97..7b58595f7 100644
+--- a/skinny/crates/codegen/src/lower/sink_only.rs
++++ b/skinny/crates/codegen/src/lower/sink_only.rs
+@@ -32,6 +32,20 @@ impl SinkOnlyProgram {
+         self.rules.iter().any(|rule| rule.name == name)
+     }
+ 
++    /// Structural discriminator that RETIRES the `has_rule("value")` name-gate.
++    /// Faithful sink-only port of `derive_materialization_roles.value`: the value
++    /// rule is one whose direct `CallRule` callees cover >= 4 of the six value
++    /// CATEGORIES (container/sequence/string/number/bool/null). A mere
++    /// `Alt{Dispatch}` is NOT sufficient — Sheets also carries dispatch alts
++    /// (`dispatch_alt_count > 0`), so the discriminator must count category
++    /// coverage, exactly as `roles.value` counts >= 4 value-target refs.
++    /// Structural, never a rule NAME.
++    pub fn has_value_dispatch(&self) -> bool {
++        self.rules
++            .iter()
++            .any(|rule| value_category_coverage(self, &rule.expr) >= 4)
++    }
++
+     #[cfg(test)]
+     pub fn has_shape(&self, shape: &str) -> bool {
+         self.direct_shapes.contains(shape)
+@@ -43,6 +57,93 @@ impl SinkOnlyProgram {
+     }
+ }
+ 
++/// Count how many of the six value CATEGORIES the direct `CallRule` callees of
++/// `expr` cover (each callee resolved to its own rule in `program`). The
++/// sink-only mirror of `derive_materialization_roles`' `value_targets` census:
++/// `>= 4` marks the value-dispatch rule. Callees not resolving to a category
++/// rule contribute nothing; recursion does NOT follow `CallRule` (categories are
++/// judged on a rule's OWN body, matching the passes-side `direct_*` predicates).
++fn value_category_coverage(program: &SinkOnlyProgram, expr: &SinkOnlyExpr) -> usize {
++    let mut callees = Vec::new();
++    collect_call_callees(expr, &mut callees);
++    let mut covered = [false; 6];
++    for callee in callees {
++        if let Some(rule) = program.rules.iter().find(|rule| rule.name == callee) {
++            if let Some(category) = value_category(&rule.expr) {
++                covered[category] = true;
++            }
++        }
++    }
++    covered.iter().filter(|&&hit| hit).count()
++}
++
++/// Classify a rule body into a value category (first match wins), mirroring the
++/// `container/sequence/string/number/bool/null` predicates of
++/// `derive_materialization_roles`. `None` = not a value-category rule.
++fn value_category(expr: &SinkOnlyExpr) -> Option<usize> {
++    if expr_has_byte(expr, b'{') && expr_has_byte(expr, b'}') {
++        Some(0)
++    } else if expr_has_byte(expr, b'[') && expr_has_byte(expr, b']') {
++        Some(1)
++    } else if expr_has_span(expr, SinkOnlySpanKind::String) {
++        Some(2)
++    } else if expr_has_span(expr, SinkOnlySpanKind::Number) {
++        Some(3)
++    } else if expr_has_literal(expr, b"true") && expr_has_literal(expr, b"false") {
++        Some(4)
++    } else if expr_has_literal(expr, b"null") {
++        Some(5)
++    } else {
++        None
++    }
++}
++
++/// Collect the callees of every `CallRule` reachable in `expr` WITHOUT crossing a
++/// `CallRule` boundary (direct references only — the sink-only analogue of the
++/// passes-side `direct_rule_refs`).
++fn collect_call_callees(expr: &SinkOnlyExpr, out: &mut Vec<String>) {
++    match expr {
++        SinkOnlyExpr::CallRule { callee } => out.push(callee.clone()),
++        SinkOnlyExpr::Entry(inner)
++        | SinkOnlyExpr::OptionalBranch(inner)
++        | SinkOnlyExpr::RepeatLoop { body: inner, .. }
++        | SinkOnlyExpr::ValueProject { body: inner, .. } => collect_call_callees(inner, out),
++        SinkOnlyExpr::Seq(items) => items.iter().for_each(|e| collect_call_callees(e, out)),
++        SinkOnlyExpr::Alt { branches, .. } => {
++            branches.iter().for_each(|e| collect_call_callees(e, out))
++        }
++        _ => {}
++    }
++}
++
++fn expr_has_byte(expr: &SinkOnlyExpr, byte: u8) -> bool {
++    expr_leaf_any(expr, &mut |leaf| matches!(leaf, SinkOnlyExpr::ByteLiteral(bytes) if bytes.contains(&byte)))
++}
++
++fn expr_has_literal(expr: &SinkOnlyExpr, literal: &[u8]) -> bool {
++    expr_leaf_any(expr, &mut |leaf| matches!(leaf, SinkOnlyExpr::ByteLiteral(bytes) if bytes.as_slice() == literal))
++}
++
++fn expr_has_span(expr: &SinkOnlyExpr, kind: SinkOnlySpanKind) -> bool {
++    expr_leaf_any(expr, &mut |leaf| matches!(leaf, SinkOnlyExpr::RegexProgram { span_kind, .. } if *span_kind == kind))
++}
++
++/// Recurse a rule body (NOT crossing `CallRule`) testing `pred` on every node.
++fn expr_leaf_any(expr: &SinkOnlyExpr, pred: &mut impl FnMut(&SinkOnlyExpr) -> bool) -> bool {
++    if pred(expr) {
++        return true;
++    }
++    match expr {
++        SinkOnlyExpr::Entry(inner)
++        | SinkOnlyExpr::OptionalBranch(inner)
++        | SinkOnlyExpr::RepeatLoop { body: inner, .. }
++        | SinkOnlyExpr::ValueProject { body: inner, .. } => expr_leaf_any(inner, pred),
++        SinkOnlyExpr::Seq(items) => items.iter().any(|e| expr_leaf_any(e, pred)),
++        SinkOnlyExpr::Alt { branches, .. } => branches.iter().any(|e| expr_leaf_any(e, pred)),
++        _ => false,
++    }
++}
++
+ #[derive(Clone, Debug, PartialEq, Eq)]
+ pub struct RuntimePolicySummary {
+     pub backend_shape: BackendShape,
+diff --git a/skinny/crates/codegen/src/runtime_generator.rs b/skinny/crates/codegen/src/runtime_generator.rs
+index dbf82f733..3e526ee9b 100644
+--- a/skinny/crates/codegen/src/runtime_generator.rs
++++ b/skinny/crates/codegen/src/runtime_generator.rs
+@@ -90,12 +90,14 @@ pub(crate) fn emit_sink_only(
+     profile_id: &str,
+     sink_only: &lower::sink_only::SinkOnlyProgram,
+ ) -> Result<EmittedSource, CodegenError> {
+-    // Shape dispatch: a sink-only program carrying a `value` rule is the JSON
+-    // family — `json_sink_direct` keys its recursive-descent dispatch off the
+-    // `value`-Alt. A program WITHOUT a `value` rule (Google Sheets, the operator
+-    // tower has no single `value` dispatch) routes to the GENERAL
+-    // recursive-descent emitter. Shape-based, never a grammar name.
+-    if !sink_only.has_rule("value") {
++    // Shape dispatch: a sink-only program carrying a value-dispatch rule — an
++    // `Alt { mode: Dispatch }` first-byte tower — is the JSON family;
++    // `json_sink_direct` keys its recursive-descent dispatch off that Alt. A
++    // program WITHOUT a dispatch Alt (Google Sheets, the operator tower has no
++    // single value dispatch) routes to the GENERAL recursive-descent emitter.
++    // Keyed off the STRUCTURAL dispatch fact, never a rule name (`has_rule
++    // ("value")` name-gate RETIRED, LOCK-3 3B G-3B-2).
++    if !sink_only.has_value_dispatch() {
+         return emit_general_descent(profile_id, sink_only);
+     }
+     let mut generated = include_str!("json_templates/generated.rs").to_string();

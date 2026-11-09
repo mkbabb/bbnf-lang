@@ -1,0 +1,10 @@
+{
+  "_note": "LOCK-8 pass-3 8C PROTO-2 hazard corpus. Each triple: the hazard class, an anchored regex, an input, and the JS RegExp leftmost-first oracle result. Columns: JS RegExp (col1), longest-DFA (col2), priority-DFA (col3).",
+  "triples": [
+    { "hazard": "H1", "desc": "ordered-alternation shorter-first", "pattern": "a|ab", "input": "ab", "js_expected": "a" },
+    { "hazard": "H2", "desc": "greedy-extent", "pattern": "\\d+", "input": "123", "js_expected": "123" },
+    { "hazard": "H3", "desc": "lazy", "pattern": "\\d+?", "input": "123", "js_expected": "1" },
+    { "hazard": "H4", "desc": "backreference", "pattern": "(a)\\1", "input": "aa", "js_expected": "aa" },
+    { "hazard": "H5", "desc": "lookaround", "pattern": "a(?=b)", "input": "ab", "js_expected": "a" }
+  ]
+}

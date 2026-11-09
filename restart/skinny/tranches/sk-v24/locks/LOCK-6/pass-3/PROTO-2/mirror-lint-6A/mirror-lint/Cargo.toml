@@ -1,0 +1,17 @@
+[package]
+name = "mirror-lint"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Detached from the bbnf-lang workspace: this xtask is a self-contained
+# structural linter for the 6A MIRROR-TREE, built in its own target dir
+# so it never contends with the crate builds it inspects.
+[workspace]
+
+[[bin]]
+name = "mirror-lint"
+path = "src/main.rs"
+
+[dependencies]
+syn = { version = "2", features = ["full", "parsing", "extra-traits"] }

@@ -2,16 +2,35 @@
 name = "csp-solver"
 version = "0.1.0"
 edition = "2024"
-description = "Generalized CSP/COP substrate; bench home of bbnf-lang. Source-of-truth tracked at csc411 commit b70098676f2fc09979f1969341f5115bd774cbd5 — `diff -rq` against that sibling tree closes AZ-IV.W0.2.b. The `py` feature is declared for cfg-recognition only; the PyO3 surface in `src/py.rs` is csc411-only and unused by bbnf-lang."
+description = "Generalized CSP/COP substrate; bench home of bbnf-lang. Source-of-truth tracked at csc411 commit 02965a56cfe78f0c498f34095a9f88e1ff69974d — `scripts/sync-csp-solver-vendor.sh --check` byte-diffs src/+data/ against that sibling rev and `--verify` proves the pinned code still builds every consumer. bbnf-lang's own build never enables `py`; the PyO3 surface lives in src/py/ (csc411 territory)."
 
 [features]
 default = []
-# Declared so `#[cfg(feature = "py")]` in src/lib.rs and src/py.rs is
-# recognised under cfg-check. bbnf-lang never enables this feature; the
-# PyO3 binding is csc411's algorithm-evolution territory.
+# Declared for cfg-recognition only, and DELIBERATELY does NOT pull `dep:pyo3`
+# here. bbnf-lang's own `bbnf` crate depends on `jiter`, which already links
+# pyo3 0.23 (`links = "python"`); csc411's crate wants pyo3 0.24, and cargo
+# forbids two packages linking the same native lib in one graph. So pyo3 must
+# never enter bbnf's workspace resolution. The PyO3 cfg branch (src/py/) is
+# instead compiled in ISOLATION by `scripts/sync-csp-solver-vendor.sh --verify`
+# (a detached single-crate workspace, pyo3 0.24) — that is where the cfg-gated
+# `ThreadSafe` supertrait's `Csp<D>: Send` property is proven (spike §8.1).
+# Under default features `ThreadSafe` is a vacuous blanket marker, so the
+# effective `Constraint` bound is exactly `Debug` — byte-semantically the
+# pristine pre-rewrite bound, which is why bbnf's !Send `RefConstraint` compiles.
 py = []
 
 [dependencies]
+# Compile-time embed of the crate-owned sudoku template bank
+# (`data/sudoku_puzzles/`, vendored alongside src/) via `include_dir!` in
+# `src/puzzles/sudoku/generate.rs`. Required for the default build to compile at
+# all — the macro reads the directory at build time, so `data/` is part of the
+# vendored surface and is byte-diffed by `--check`.
+include_dir = "0.7.4"
+# NOTE: the `hungarian = "1"` mirror (added at the tranche-2 sync when the LAP call
+# lived in lib source) was REMOVED at the csc411 T3-W5 re-vendor (b8af49d2): upstream
+# excised the `hungarian` crate for a hand-rolled `src/builder/kuhn_munkres.rs`, so
+# the dep is genuinely gone (only doc-comment mentions of the name remain). The sync
+# gate diffs src/+data/, never Cargo.toml, so this stale mirror is removed by hand.
 
 [lib]
 crate-type = ["lib"]

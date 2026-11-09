@@ -1,0 +1,647 @@
+diff --git a/crates/ir/src/vm/bytecode.rs b/crates/ir/src/vm/bytecode.rs
+index f81fe8b67..141d9cf2a 100644
+--- a/crates/ir/src/vm/bytecode.rs
++++ b/crates/ir/src/vm/bytecode.rs
+@@ -7,7 +7,7 @@ use std::collections::HashMap;
+ 
+ use serde::{Deserialize, Serialize};
+ 
+-use crate::{CharSet128, GrammarSpan, RuleId, StringId};
++use crate::{CharSet128, FnDescriptor, FnId, GrammarSpan, RuleId, StringId};
+ 
+ /// Dispatch table data stored in a side table, referenced by index.
+ #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+@@ -130,6 +130,13 @@ pub enum Op {
+     /// Tag the top value with a rule name (for AST construction).
+     MakeTagged(StringId),
+ 
++    // ── Value Projection ────────────────────────────────────────────────
++    /// Apply the host-fn descriptor `fns[FnId]` to the top value, replacing
++    /// it with the projected scalar/variant. This is the VM's `.map` — the
++    /// value plane that turns the recognizer into a combinator core.
++    /// Lowered from `IrNode::Map { inner, fn_id }` after `inner` compiles.
++    ApplyFn(FnId),
++
+     // ── Memoization ─────────────────────────────────────────────────────
+     /// Check memo table for this rule at current offset.
+     /// If cached: restore state from cache, jump to `hit_offset`.
+@@ -196,6 +203,13 @@ pub struct BytecodeProgram {
+     /// Only populated when compiled with debug info.
+     #[serde(default)]
+     pub source_map: Vec<SourceMapEntry>,
++
++    /// Host-function descriptor table. `Op::ApplyFn(fn_id)` indexes this.
++    /// Cloned from `GrammarIR::fns` at compile time. Serializes as data
++    /// (`FnDescriptor` / `MapExpr` already derive Serialize), so the value
++    /// plane crosses the language boundary alongside the opcode stream.
++    #[serde(default)]
++    pub fns: Vec<FnDescriptor>,
+ }
+ 
+ /// Maps a bytecode program counter to a grammar source location.
+diff --git a/crates/ir/src/vm/compiler/mod.rs b/crates/ir/src/vm/compiler/mod.rs
+index 006dcd245..ebf06fbc4 100644
+--- a/crates/ir/src/vm/compiler/mod.rs
++++ b/crates/ir/src/vm/compiler/mod.rs
+@@ -71,6 +71,7 @@ pub fn compile_with_debug(ir: &GrammarIR, debug: bool) -> BytecodeProgram {
+         follow_sets: ir.follow_sets.clone(),
+         rule_names,
+         source_map: compiler.source_map,
++        fns: ir.fns.clone(),
+     };
+ 
+     // Pre-compile all regex patterns referenced by MatchRegex opcodes.
+diff --git a/crates/ir/src/vm/compiler/node.rs b/crates/ir/src/vm/compiler/node.rs
+index 5a71ac9dc..82fe52219 100644
+--- a/crates/ir/src/vm/compiler/node.rs
++++ b/crates/ir/src/vm/compiler/node.rs
+@@ -28,7 +28,13 @@ impl Compiler {
+             IrNode::Next(left, right) => self.compile_binary_backtrack(left, right, false, ir),
+             IrNode::Minus(left, right) => self.compile_minus(left, right, ir),
+             IrNode::Negate(inner) => self.compile_negate(inner, ir),
+-            IrNode::Map { inner, .. } => self.compile_node(inner, ir),
++            IrNode::Map { inner, fn_id } => {
++                // Compile the recognizer subtree, THEN emit the projection.
++                // The `fn_id` is no longer dropped — it indexes the serialized
++                // `fns` side table the interpreter's ApplyFn handler reads.
++                self.compile_node(inner, ir);
++                self.emit(Op::ApplyFn(*fn_id));
++            }
+             IrNode::OptionalWhitespace(inner) => {
+                 // Use custom @ws pattern if available; otherwise basic ASCII whitespace.
+                 if let Some(ws_sid) = ir.ws_pattern {
+diff --git a/crates/ir/src/vm/interpreter/apply_fn.rs b/crates/ir/src/vm/interpreter/apply_fn.rs
+new file mode 100644
+index 000000000..a85a8c17d
+--- /dev/null
++++ b/crates/ir/src/vm/interpreter/apply_fn.rs
+@@ -0,0 +1,193 @@
++//! `Op::ApplyFn` — the VM value plane (`.map`).
++//!
++//! Turns the recognizer into a *combinator core*: after the inner subtree
++//! matches and leaves a value on the stack, `ApplyFn(fn_id)` pops that value,
++//! evaluates `program.fns[fn_id]` (a [`FnDescriptor`]) against it, and pushes
++//! the projected scalar/variant. The descriptor — including any `MapExpr`
++//! tree — is data serialized inside the `BytecodeProgram`, so the identical
++//! evaluation runs on both the Rust and the TS interpreter from the same
++//! bytes. This is the point at which `->` projections stop being dropped.
++
++use super::Interpreter;
++use super::value::Value;
++use crate::{FnDescriptor, MapBinOp, MapExpr, MapUnaryOp};
++
++/// Intermediate numeric/textual value during `MapExpr` evaluation.
++#[derive(Clone, Debug)]
++enum Eval {
++    F(f64),
++    I(i64),
++    B(bool),
++    S(String),
++}
++
++impl Eval {
++    fn as_f64(&self) -> f64 {
++        match self {
++            Eval::F(f) => *f,
++            Eval::I(i) => *i as f64,
++            Eval::B(b) => *b as i64 as f64,
++            Eval::S(s) => s.parse::<f64>().unwrap_or(f64::NAN),
++        }
++    }
++    fn as_i64(&self) -> i64 {
++        match self {
++            Eval::F(f) => *f as i64,
++            Eval::I(i) => *i,
++            Eval::B(b) => *b as i64,
++            Eval::S(s) => s.parse::<i64>().unwrap_or(0),
++        }
++    }
++    fn is_float(&self) -> bool {
++        matches!(self, Eval::F(_))
++    }
++    fn into_value(self) -> Value {
++        match self {
++            Eval::F(f) => Value::F64(f),
++            Eval::I(i) => Value::U32(i as u32),
++            Eval::B(b) => Value::U32(b as u32),
++            Eval::S(s) => Value::Str(s.into_boxed_str()),
++        }
++    }
++}
++
++impl<'prog> Interpreter<'prog> {
++    /// Execute `Op::ApplyFn(fn_id)`: project the top value through `fns[fn_id]`.
++    pub(super) fn exec_apply_fn(&mut self, fn_id: u32) {
++        // A failed inner subtree leaves nothing to project — propagate.
++        if self.is_error {
++            self.pc += 1;
++            return;
++        }
++
++        // `program` is a shared `&'prog` reference (Copy) — decouples the
++        // side-table borrow from the `&mut self` value-stack mutation.
++        let program = self.program;
++        let Some(child) = self.values.pop() else {
++            self.is_error = true;
++            self.pc += 1;
++            return;
++        };
++
++        let projected = match program.fns.get(fn_id as usize) {
++            Some(FnDescriptor::Expr { expr, .. }) => {
++                self.eval_map_expr(expr, &child).into_value()
++            }
++            Some(FnDescriptor::NumberConvert { .. }) => {
++                Value::F64(self.value_text(&child).and_then(|t| t.parse().ok()).unwrap_or(f64::NAN))
++            }
++            Some(FnDescriptor::HexConvert { .. }) => {
++                let n = self
++                    .value_text(&child)
++                    .and_then(|t| u32::from_str_radix(t.trim_start_matches("0x"), 16).ok())
++                    .unwrap_or(0);
++                Value::U32(n)
++            }
++            Some(FnDescriptor::EnumWrap { variant }) => Value::Variant {
++                tag: *variant,
++                child: Box::new(child),
++            },
++            // Box is a codegen concept; SpanCapture already yields a span;
++            // HostClosure's body is opaque to the VM (LOCK-7 territory) —
++            // all three pass the child value through unchanged.
++            Some(FnDescriptor::BoxWrap)
++            | Some(FnDescriptor::SpanCapture)
++            | Some(FnDescriptor::HostClosure { .. }) => child,
++            None => child,
++        };
++
++        self.values.push(projected);
++        self.pc += 1;
++    }
++
++    /// Resolve a value's textual form (span slice of the input) if it has one.
++    fn value_text(&self, v: &Value) -> Option<String> {
++        match v {
++            Value::Span(s, e) => Some(self.input[*s as usize..*e as usize].to_string()),
++            Value::Str(s) => Some(s.to_string()),
++            _ => None,
++        }
++    }
++
++    /// Evaluate a `MapExpr` tree against the child value (`input`).
++    fn eval_map_expr(&self, expr: &MapExpr, input: &Value) -> Eval {
++        match expr {
++            MapExpr::IntLit(i) => Eval::I(*i),
++            MapExpr::FloatLit(f) => Eval::F(*f),
++            MapExpr::BoolLit(b) => Eval::B(*b),
++            MapExpr::StringLit(sid) => Eval::S(self.program.strings[*sid as usize].clone()),
++            MapExpr::Input => match self.value_text(input) {
++                Some(t) => Eval::S(t),
++                None => match input {
++                    Value::F64(f) => Eval::F(*f),
++                    Value::U32(u) => Eval::I(*u as i64),
++                    _ => Eval::I(0),
++                },
++            },
++            MapExpr::InputProp { prop } => {
++                let name = &self.program.strings[*prop as usize];
++                match name.as_str() {
++                    "len" => Eval::I(self.value_text(input).map_or(0, |t| t.len() as i64)),
++                    _ => Eval::I(0),
++                }
++            }
++            MapExpr::FnCall { name, args } => {
++                let fname = &self.program.strings[*name as usize];
++                let a0 = args.first().map(|a| self.eval_map_expr(a, input));
++                match (fname.as_str(), a0) {
++                    ("parse_int" | "int", Some(v)) => Eval::I(v.as_i64()),
++                    ("parse_float" | "float", Some(v)) => Eval::F(v.as_f64()),
++                    ("parse_hex", Some(v)) => {
++                        let s = if let Eval::S(s) = &v { s.clone() } else { String::new() };
++                        Eval::I(u32::from_str_radix(s.trim_start_matches("0x"), 16).unwrap_or(0) as i64)
++                    }
++                    ("len", Some(Eval::S(s))) => Eval::I(s.len() as i64),
++                    // Unknown host fn: identity on first arg (VM cannot inline
++                    // an opaque body — LOCK-7 resolution required).
++                    (_, Some(v)) => v,
++                    (_, None) => Eval::I(0),
++                }
++            }
++            MapExpr::BinOp { op, lhs, rhs } => {
++                let l = self.eval_map_expr(lhs, input);
++                let r = self.eval_map_expr(rhs, input);
++                self.eval_binop(*op, l, r)
++            }
++            MapExpr::UnaryOp { op, inner } => {
++                let v = self.eval_map_expr(inner, input);
++                match op {
++                    MapUnaryOp::Neg if v.is_float() => Eval::F(-v.as_f64()),
++                    MapUnaryOp::Neg => Eval::I(-v.as_i64()),
++                    MapUnaryOp::Not => Eval::B(v.as_i64() == 0),
++                }
++            }
++        }
++    }
++
++    fn eval_binop(&self, op: MapBinOp, l: Eval, r: Eval) -> Eval {
++        let float = l.is_float() || r.is_float();
++        match op {
++            MapBinOp::Add if float => Eval::F(l.as_f64() + r.as_f64()),
++            MapBinOp::Sub if float => Eval::F(l.as_f64() - r.as_f64()),
++            MapBinOp::Mul if float => Eval::F(l.as_f64() * r.as_f64()),
++            MapBinOp::Div if float => Eval::F(l.as_f64() / r.as_f64()),
++            MapBinOp::Add => Eval::I(l.as_i64().wrapping_add(r.as_i64())),
++            MapBinOp::Sub => Eval::I(l.as_i64().wrapping_sub(r.as_i64())),
++            MapBinOp::Mul => Eval::I(l.as_i64().wrapping_mul(r.as_i64())),
++            MapBinOp::Div => Eval::I(l.as_i64().checked_div(r.as_i64()).unwrap_or(0)),
++            MapBinOp::Mod => Eval::I(l.as_i64().checked_rem(r.as_i64()).unwrap_or(0)),
++            MapBinOp::Eq => Eval::B((l.as_f64() - r.as_f64()).abs() < f64::EPSILON),
++            MapBinOp::Ne => Eval::B((l.as_f64() - r.as_f64()).abs() >= f64::EPSILON),
++            MapBinOp::Lt => Eval::B(l.as_f64() < r.as_f64()),
++            MapBinOp::Gt => Eval::B(l.as_f64() > r.as_f64()),
++            MapBinOp::Le => Eval::B(l.as_f64() <= r.as_f64()),
++            MapBinOp::Ge => Eval::B(l.as_f64() >= r.as_f64()),
++            MapBinOp::And => Eval::B(l.as_i64() != 0 && r.as_i64() != 0),
++            MapBinOp::Or => Eval::B(l.as_i64() != 0 || r.as_i64() != 0),
++            MapBinOp::BitAnd => Eval::I(l.as_i64() & r.as_i64()),
++            MapBinOp::BitOr => Eval::I(l.as_i64() | r.as_i64()),
++            MapBinOp::Shl => Eval::I(l.as_i64() << r.as_i64()),
++            MapBinOp::Shr => Eval::I(l.as_i64() >> r.as_i64()),
++        }
++    }
++}
+diff --git a/crates/ir/src/vm/interpreter/mod.rs b/crates/ir/src/vm/interpreter/mod.rs
+index d9eb46d13..963ce07e3 100644
+--- a/crates/ir/src/vm/interpreter/mod.rs
++++ b/crates/ir/src/vm/interpreter/mod.rs
+@@ -20,6 +20,7 @@
+ //! helpers (`collect_values_from`, `track_furthest`,
+ //! `emit_furthest_diagnostic`), and the public `parse_with_ir` convenience.
+ 
++mod apply_fn;
+ mod construct;
+ mod control;
+ mod leaves;
+@@ -225,6 +226,7 @@ impl<'prog> Interpreter<'prog> {
+                 }
+                 Op::MakeArray(count) => self.exec_make_array(count),
+                 Op::MakeTagged(tag) => self.exec_make_tagged(tag),
++                Op::ApplyFn(fn_id) => self.exec_apply_fn(fn_id),
+                 Op::MemoCheck {
+                     rule_id,
+                     hit_offset,
+diff --git a/crates/ir/src/vm/interpreter/value.rs b/crates/ir/src/vm/interpreter/value.rs
+index bbac3189b..81f2b5f05 100644
+--- a/crates/ir/src/vm/interpreter/value.rs
++++ b/crates/ir/src/vm/interpreter/value.rs
+@@ -7,7 +7,7 @@
+ 
+ use std::{fmt, ops::Deref};
+ 
+-use crate::RuleId;
++use crate::{RuleId, StringId};
+ 
+ /// An owned slice of values.
+ #[derive(Clone)]
+@@ -62,6 +62,16 @@ pub enum Value {
+     Array(ValueSlice),
+     /// Nothing matched (Epsilon).
+     Nil,
++
++    // ── Projected scalars (produced by `Op::ApplyFn`) ────────────────────
++    /// A 64-bit float — `NumberConvert`, `MapExpr::FloatLit`, float arithmetic.
++    F64(f64),
++    /// A 32-bit unsigned integer — `HexConvert`, `MapExpr::IntLit`, int arithmetic.
++    U32(u32),
++    /// A projected string — `MapExpr::StringLit` / `SpanCapture` text.
++    Str(Box<str>),
++    /// An enum-variant wrap — `EnumWrap { variant }` around a child value.
++    Variant { tag: StringId, child: Box<Value> },
+ }
+ 
+ /// A diagnostic message from the interpreter (parse error with context).
+diff --git a/crates/ir/tests/vm/apply_fn_oracle.rs b/crates/ir/tests/vm/apply_fn_oracle.rs
+new file mode 100644
+index 000000000..2ac160d1a
+--- /dev/null
++++ b/crates/ir/tests/vm/apply_fn_oracle.rs
+@@ -0,0 +1,308 @@
++//! LOCK-4 PROTO-2 — the 4C VM value plane (`Op::ApplyFn`) oracle.
++//!
++//! Oracle A (value plane): a hand-built projection-dense GrammarIR is compiled
++//! to bytecode and run; the VM's projected `Value` tree is asserted
++//! byte-identical to an independently specified golden. Exercises all four new
++//! `Value` arms (F64 / U32 / Str / Variant) and every `FnDescriptor` evaluator
++//! path (NumberConvert, HexConvert, EnumWrap, Expr{MapExpr arithmetic/FnCall}).
++//!
++//! Also emits the cross-language crossing artifacts (Oracle B, clause A + the
++//! projection-grammar Value tree) to the scratch dir for the TS decoder, and
++//! checks encode∘decode∘encode idempotence on the live `BytecodeProgram`.
++
++use bbnf_ir::bytecode::{BytecodeProgram, Op};
++use bbnf_ir::compiler::compile;
++use bbnf_ir::interpreter::{Interpreter, Value};
++use bbnf_ir::{FnDescriptor, GrammarIR, IrNode, IrRule, MapBinOp, MapExpr, RuleMeta};
++
++fn rule(id: u32, name: u32, body: IrNode) -> IrRule {
++    IrRule { id, name, body, meta: RuleMeta::default(), source_span: None }
++}
++
++/// Build a single-rule projection grammar: entry rule 0 maps `inner` through
++/// `fns[0]`. `strings` holds the interned table.
++fn ir1(inner: IrNode, fns: Vec<FnDescriptor>, strings: Vec<String>) -> GrammarIR {
++    GrammarIR {
++        entry: 0,
++        rules: vec![rule(0, 0, IrNode::Map { inner: Box::new(inner), fn_id: 0 })],
++        strings,
++        fns,
++        ..Default::default()
++    }
++}
++
++/// Strip the rule's `MakeTagged` wrapper, returning the single projected child.
++fn projected(v: &Value) -> &Value {
++    match v {
++        Value::Tagged { children, .. } => {
++            assert_eq!(children.len(), 1, "expected exactly one projected child");
++            &children[0]
++        }
++        other => other,
++    }
++}
++
++fn run(ir: &GrammarIR, input: &str) -> Value {
++    let program = compile(ir);
++    let mut interp = Interpreter::new(&program, input);
++    let r = interp.run();
++    assert!(r.success, "parse failed for {input:?}");
++    r.value.expect("no value produced")
++}
++
++// ── Oracle A: byte-identical projected Value trees ──────────────────────────
++
++#[test]
++fn oracle_a_number_convert_f64() {
++    // "3.5" -> f64
++    let ir = ir1(IrNode::Literal(1), vec![FnDescriptor::NumberConvert { allow_leading_dot: false }],
++        vec!["root".into(), "3.5".into()]);
++    let v = run(&ir, "3.5");
++    assert_eq!(*projected(&v), Value::F64(3.5), "NumberConvert must yield F64(3.5)");
++}
++
++#[test]
++fn oracle_a_hex_convert_u32() {
++    // "ff" -> parse_hex : u32
++    let ir = ir1(IrNode::Literal(1), vec![FnDescriptor::HexConvert { fn_path: 0 }],
++        vec!["root".into(), "ff".into()]);
++    let v = run(&ir, "ff");
++    assert_eq!(*projected(&v), Value::U32(255), "HexConvert must yield U32(255)");
++}
++
++#[test]
++fn oracle_a_enum_wrap_variant() {
++    // "px" -> Unit::wrap
++    let ir = ir1(IrNode::Literal(1), vec![FnDescriptor::EnumWrap { variant: 2 }],
++        vec!["root".into(), "px".into(), "Unit".into()]);
++    let v = run(&ir, "px");
++    let expected = Value::Variant { tag: 2, child: Box::new(Value::Span(0, 2)) };
++    assert_eq!(*projected(&v), expected, "EnumWrap must yield Variant wrapping the span");
++}
++
++#[test]
++fn oracle_a_mapexpr_arithmetic_u32() {
++    // "10" -> (input * 2) + 1  == 21
++    let expr = MapExpr::BinOp {
++        op: MapBinOp::Add,
++        lhs: Box::new(MapExpr::BinOp {
++            op: MapBinOp::Mul,
++            lhs: Box::new(MapExpr::Input),
++            rhs: Box::new(MapExpr::IntLit(2)),
++        }),
++        rhs: Box::new(MapExpr::IntLit(1)),
++    };
++    let ir = ir1(IrNode::Literal(1), vec![FnDescriptor::Expr { expr, return_type: None }],
++        vec!["root".into(), "10".into()]);
++    let v = run(&ir, "10");
++    assert_eq!(*projected(&v), Value::U32(21), "MapExpr (input*2)+1 must yield U32(21)");
++}
++
++#[test]
++fn oracle_a_mapexpr_floatlit_f64() {
++    // "x" -> input * 1.5  (input coerces "2" ... but here literal * float)
++    let expr = MapExpr::BinOp {
++        op: MapBinOp::Mul,
++        lhs: Box::new(MapExpr::Input),
++        rhs: Box::new(MapExpr::FloatLit(1.5)),
++    };
++    let ir = ir1(IrNode::Literal(1), vec![FnDescriptor::Expr { expr, return_type: None }],
++        vec!["root".into(), "4".into()]);
++    let v = run(&ir, "4");
++    assert_eq!(*projected(&v), Value::F64(6.0), "input(4)*1.5 must yield F64(6.0)");
++}
++
++#[test]
++fn oracle_a_mapexpr_stringlit_str() {
++    // "hi" -> "HELLO"  (constant string projection)
++    let ir = ir1(IrNode::Literal(1), vec![FnDescriptor::Expr { expr: MapExpr::StringLit(2), return_type: None }],
++        vec!["root".into(), "hi".into(), "HELLO".into()]);
++    let v = run(&ir, "hi");
++    assert_eq!(*projected(&v), Value::Str("HELLO".into()), "StringLit must yield Str(HELLO)");
++}
++
++// ── Idempotence: encode ∘ decode ∘ encode == encode, Op tags pinned ─────────
++
++#[test]
++fn oracle_b_serde_idempotence() {
++    let expr = MapExpr::BinOp {
++        op: MapBinOp::Add,
++        lhs: Box::new(MapExpr::Input),
++        rhs: Box::new(MapExpr::IntLit(1)),
++    };
++    let ir = ir1(IrNode::Literal(1), vec![FnDescriptor::Expr { expr, return_type: None }],
++        vec!["root".into(), "9".into()]);
++    let program = compile(&ir);
++
++    // encode
++    let json1 = serde_json::to_string(&program).unwrap();
++    // decode
++    let decoded: BytecodeProgram = serde_json::from_str(&json1).unwrap();
++    // re-encode
++    let json2 = serde_json::to_string(&decoded).unwrap();
++    assert_eq!(json1, json2, "encode∘decode∘encode must be identical (wire idempotence)");
++
++    // Op tag pin: ApplyFn must be present and externally tagged.
++    assert!(json1.contains("\"ApplyFn\""), "ApplyFn opcode must be in the wire stream");
++
++    // Decoded program still runs and still projects.
++    let mut interp = Interpreter::new(&decoded, "9");
++    let r = interp.run();
++    assert!(r.success);
++    assert_eq!(*projected(&r.value.unwrap()), Value::U32(10), "decoded program must still project");
++}
++
++// ── Oracle B artifact emission for the TS decoder ───────────────────────────
++
++/// Canonicalize a `Value` tree to the JSON shape the TS interpreter emits,
++/// so node-for-node identity is a string compare.
++fn value_json(v: &Value) -> serde_json::Value {
++    use serde_json::json;
++    match v {
++        Value::Span(s, e) => json!({"Span": [s, e]}),
++        Value::Nil => json!("Nil"),
++        Value::F64(f) => json!({"F64": f}),
++        Value::U32(u) => json!({"U32": u}),
++        Value::Str(s) => json!({"Str": s.as_ref()}),
++        Value::Variant { tag, child } => json!({"Variant": {"tag": tag, "child": value_json(child)}}),
++        Value::Array(items) => json!({"Array": items.iter().map(value_json).collect::<Vec<_>>()}),
++        Value::Tagged { tag, span, children } => json!({
++            "Tagged": {"tag": tag, "span": [span.0, span.1],
++                       "children": children.iter().map(value_json).collect::<Vec<_>>()}
++        }),
++    }
++}
++
++#[test]
++fn emit_ts_crossing_artifacts() {
++    let dir = std::path::Path::new(
++        "/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/xlang",
++    );
++    std::fs::create_dir_all(dir).unwrap();
++
++    // A no-regex projection grammar the TS interpreter can run byte-for-byte:
++    // entry `pair` = num ("," num)?  where num = /digit-literal/ -> (input+100)
++    // Built by hand so the bytecode uses only MatchString/ApplyFn/Repeat/MakeArray/MakeTagged.
++    // rule 0 = entry `doc`: Repeat { num, 1.. }
++    // rule 1 = `num`: Alt over fixed digit literals, each -> input + 100
++    let plus100 = |sid_unused: u32| FnDescriptor::Expr {
++        expr: MapExpr::BinOp {
++            op: MapBinOp::Add,
++            lhs: Box::new(MapExpr::Input),
++            rhs: Box::new(MapExpr::IntLit(100)),
++        },
++        return_type: None,
++    };
++    let _ = plus100;
++
++    // strings: 0 doc, 1 num, 2 "1", 3 "2", 4 "3"
++    let strings: Vec<String> = ["doc", "num", "1", "2", "3"].iter().map(|s| s.to_string()).collect();
++    let num_body = IrNode::Map {
++        inner: Box::new(IrNode::Alt(
++            vec![
++                bbnf_ir::AltBranch { node: IrNode::Literal(2), first_set: None },
++                bbnf_ir::AltBranch { node: IrNode::Literal(3), first_set: None },
++                bbnf_ir::AltBranch { node: IrNode::Literal(4), first_set: None },
++            ],
++            None,
++        )),
++        fn_id: 0,
++    };
++    let doc_body = IrNode::Repeat { inner: Box::new(IrNode::Ref(1)), lo: 1, hi: u32::MAX };
++    let ir = GrammarIR {
++        entry: 0,
++        rules: vec![rule(0, 0, doc_body), rule(1, 1, num_body)],
++        strings,
++        fns: vec![FnDescriptor::Expr {
++            expr: MapExpr::BinOp {
++                op: MapBinOp::Add,
++                lhs: Box::new(MapExpr::Input),
++                rhs: Box::new(MapExpr::IntLit(100)),
++            },
++            return_type: None,
++        }],
++        ..Default::default()
++    };
++    let program = compile(&ir);
++
++    // Clause A: live golden opcode stream (externally-tagged serde JSON).
++    let prog_json = serde_json::to_string_pretty(&program).unwrap();
++    std::fs::write(dir.join("projection_program.json"), &prog_json).unwrap();
++
++    // Clause B: run six varied inputs, dump input + Rust Value tree JSON.
++    let inputs = ["1", "12", "123", "321", "231", "132"];
++    let mut cases = Vec::new();
++    for inp in inputs {
++        let mut interp = Interpreter::new(&program, inp);
++        let r = interp.run();
++        assert!(r.success, "projection grammar failed on {inp:?}");
++        cases.push(serde_json::json!({
++            "input": inp,
++            "value": value_json(&r.value.unwrap()),
++        }));
++    }
++    std::fs::write(dir.join("projection_cases.json"),
++        serde_json::to_string_pretty(&cases).unwrap()).unwrap();
++
++    eprintln!("EMITTED xlang artifacts to {}", dir.display());
++    eprintln!("projection program opcodes: {}", program.code.len());
++}
++
++#[test]
++fn emit_valueplane_crossing() {
++    // The value-plane crossing (4C/4D): the SAME serialized `FnDescriptor`
++    // (+ interned strings + input span) is evaluated on both sides; the
++    // projected `Value` must be node-for-node identical. This is the axis
++    // with zero prior running evidence. Each case is authored, run through
++    // the live Rust VM, and dumped with its exact projected result.
++    let dir = std::path::Path::new(
++        "/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/xlang",
++    );
++    std::fs::create_dir_all(dir).unwrap();
++
++    // (label, FnDescriptor, strings, input)
++    let cases: Vec<(&str, FnDescriptor, Vec<String>, &str)> = vec![
++        ("NumberConvert", FnDescriptor::NumberConvert { allow_leading_dot: false },
++            vec!["r".into(), "3.5".into()], "3.5"),
++        ("NumberConvert_int", FnDescriptor::NumberConvert { allow_leading_dot: false },
++            vec!["r".into(), "42".into()], "42"),
++        ("HexConvert", FnDescriptor::HexConvert { fn_path: 0 },
++            vec!["r".into(), "ff".into()], "ff"),
++        ("EnumWrap", FnDescriptor::EnumWrap { variant: 2 },
++            vec!["r".into(), "px".into(), "Unit".into()], "px"),
++        ("Expr_arith", FnDescriptor::Expr {
++            expr: MapExpr::BinOp { op: MapBinOp::Add,
++                lhs: Box::new(MapExpr::BinOp { op: MapBinOp::Mul,
++                    lhs: Box::new(MapExpr::Input), rhs: Box::new(MapExpr::IntLit(2)) }),
++                rhs: Box::new(MapExpr::IntLit(1)) },
++            return_type: None }, vec!["r".into(), "10".into()], "10"),
++        ("Expr_floatmul", FnDescriptor::Expr {
++            expr: MapExpr::BinOp { op: MapBinOp::Mul,
++                lhs: Box::new(MapExpr::Input), rhs: Box::new(MapExpr::FloatLit(1.5)) },
++            return_type: None }, vec!["r".into(), "4".into()], "4"),
++        ("Expr_stringlit", FnDescriptor::Expr { expr: MapExpr::StringLit(2), return_type: None },
++            vec!["r".into(), "hi".into(), "HELLO".into()], "hi"),
++        ("Expr_fncall_hex", FnDescriptor::Expr {
++            expr: MapExpr::FnCall { name: 2, args: vec![MapExpr::Input] }, return_type: None },
++            vec!["r".into(), "1a".into(), "parse_hex".into()], "1a"),
++        ("Expr_inputlen", FnDescriptor::Expr {
++            expr: MapExpr::InputProp { prop: 2 }, return_type: None },
++            vec!["r".into(), "hello".into(), "len".into()], "hello"),
++    ];
++
++    let mut out = Vec::new();
++    for (label, desc, strings, input) in cases {
++        let ir = ir1(IrNode::Literal(1), vec![desc.clone()], strings.clone());
++        let v = run(&ir, input);
++        out.push(serde_json::json!({
++            "label": label,
++            "desc": desc,
++            "strings": strings,
++            "input": input,
++            "result": value_json(projected(&v)),
++        }));
++    }
++    std::fs::write(dir.join("valueplane_crossing.json"),
++        serde_json::to_string_pretty(&out).unwrap()).unwrap();
++    eprintln!("EMITTED valueplane_crossing.json ({} cases)", out.len());
++}
+diff --git a/crates/ir/tests/vm/main.rs b/crates/ir/tests/vm/main.rs
+index a3dd639a1..f37c2aa72 100644
+--- a/crates/ir/tests/vm/main.rs
++++ b/crates/ir/tests/vm/main.rs
+@@ -6,6 +6,7 @@
+ //! test semantics. Add new VM-adjacent tests as additional `mod ...;`
+ //! declarations here, with the actual test bodies under `tests/vm/`.
+ 
++mod apply_fn_oracle;
+ mod compiler;
+ mod cost_weights_unified;
+ mod cross_rule_csp;

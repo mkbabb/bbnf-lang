@@ -1,0 +1,35 @@
+=== LOCK-9 SHORT Brief 2 · PROTO-2b · byte_classes-DIRECT emit vs REAL bbnf-regex DFA ===
+
+── leaf `ws`  pattern [ \t\n\r]+
+   DFA: num_classes=2 states=2  (ceilings: 255 classes / 4096 states)
+   DIRECT member classes [1]  → members[4]: ·(0x09) ·(0x0A) ·(0x0D) ·(0x20)
+   byte_classes-DIRECT set == find_at-oracle set : true  [AGREE]
+   separable(lo6)=true  → emit tier = NeonTbl4
+   PARITY (emit-from-byte_classes vs find_at scan): 8129 blocks, mismatches = 0  [BIT-IDENTICAL]
+   INJECT_BUG (drop 0x09): 8122/8122 containing-blocks = 100.0%  [TEETH]
+
+── leaf `json_structural`  pattern [{}\[\]:,"\\]
+   DFA: num_classes=2 states=2  (ceilings: 255 classes / 4096 states)
+   DIRECT member classes [1]  → members[8]: "(0x22) ,(0x2C) :(0x3A) [(0x5B) \(0x5C) ](0x5D) {(0x7B) }(0x7D)
+   byte_classes-DIRECT set == find_at-oracle set : true  [AGREE]
+   separable(lo6)=true  → emit tier = NeonTbl4
+   PARITY (emit-from-byte_classes vs find_at scan): 8129 blocks, mismatches = 0  [BIT-IDENTICAL]
+   INJECT_BUG (drop 0x22): 7930/7930 containing-blocks = 100.0%  [TEETH]
+
+── leaf `css_colliding`  pattern [;{}:]
+   DFA: num_classes=2 states=2  (ceilings: 255 classes / 4096 states)
+   DIRECT member classes [1]  → members[4]: :(0x3A) ;(0x3B) {(0x7B) }(0x7D)
+   byte_classes-DIRECT set == find_at-oracle set : true  [AGREE]
+   separable(lo6)=false  → emit tier = FullTable
+   PARITY (emit-from-byte_classes vs find_at scan): 8129 blocks, mismatches = 0  [BIT-IDENTICAL]
+   INJECT_BUG (drop 0x3A): 8105/8105 containing-blocks = 100.0%  [TEETH]
+
+── GATE 4 · lo6-collision silent-drop proof (CSS `;{}:`) ──
+   contains ;(0x3B)=true {(0x7B)=true  lo6(0x3B)=0x3B lo6(0x7B)=0x3B  separable=false (expect false)
+   naive lo6 table[0x3B]=0x7B → 0x3B SILENTLY DROPPED; naive=0x0000010000100400 scalar=0x0000010000100408 differ=true [NAIVE MISCLASSIFIES — required]
+   gate routes off vqtbl4q → FullTable: 0x0000010000100408 bit-identical=true [NO SILENT DROP]
+
+── CENSUS · Tier-X `\p{L}` (unicode) ──
+   \p{L} compiled: num_classes=41 states=21 (vs 255/4096 ceilings) — Tier-X by class-count over SIMD membership ceiling, NOT None
+
+VERDICT: PASS — byte_classes-DIRECT emit == find_at oracle for all leaves; emitted-from-partition classifier bit-identical to the DFA scan; colliding set routed off the nibble tier with no silent drop; INJECT_BUG bites.

@@ -1,0 +1,4 @@
+=== tsc --noEmit (tightened, fixed) ===
+TSC_EXIT=0
+=== vite build ===
+BUILD_EXIT=0

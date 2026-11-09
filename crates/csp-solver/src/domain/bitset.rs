@@ -1,6 +1,7 @@
 //! BitsetDomain — O(1) domain for non-negative integers, isomorphic to Python's BitsetDomain.
 
 use super::traits::Domain;
+use crate::bitscan::pop_lowest_bit;
 
 /// A domain backed by a 128-bit bitmask.
 ///
@@ -21,10 +22,20 @@ impl std::fmt::Debug for BitsetDomain {
 
 impl BitsetDomain {
     /// Create a new bitset domain from an iterator of values.
+    ///
+    /// # Panics
+    /// Panics if any value is `>= 128`. This is a **release-mode** `assert!`,
+    /// not a `debug_assert!` (R7): a bare `1u128 << v` with `v >= 128` does not
+    /// fault in release — Rust masks the shift to `v % 128`, silently aliasing
+    /// out-of-range values onto valid bits. Since `new`/`range` are reachable
+    /// from the published py/wasm bindings with caller-supplied values, the
+    /// `0..128` invariant must fail loudly in every build. Both are
+    /// construction-time (not hot), so the branch is free; see `add` for the
+    /// hot-path rationale.
     pub fn new(values: impl IntoIterator<Item = u32>) -> Self {
         let mut bits: u128 = 0;
         for v in values {
-            debug_assert!(v < 128, "BitsetDomain supports values 0..128");
+            assert!(v < 128, "BitsetDomain supports values 0..128, got {v}");
             bits |= 1u128 << v;
         }
         Self { bits }
@@ -36,9 +47,18 @@ impl BitsetDomain {
     }
 
     /// Create a domain containing `0..n`.
+    ///
+    /// # Panics
+    /// Panics if `n > 128` (release-mode; see [`BitsetDomain::new`] for the R7
+    /// rationale — `(1u128 << n) - 1` masks `n` to `n % 128` in release,
+    /// silently truncating the range).
     pub fn range(n: u32) -> Self {
-        debug_assert!(n <= 128);
-        let bits = if n == 128 { u128::MAX } else { (1u128 << n) - 1 };
+        assert!(n <= 128, "BitsetDomain::range supports 0..=128, got {n}");
+        let bits = if n == 128 {
+            u128::MAX
+        } else {
+            (1u128 << n) - 1
+        };
         Self { bits }
     }
 
@@ -93,7 +113,12 @@ impl Domain for BitsetDomain {
     }
 
     fn add(&mut self, val: &u32) {
-        debug_assert!(*val < 128, "BitsetDomain supports values 0..128");
+        // Release-mode check (R7): even on the hot restore path, `add` must not
+        // silently alias `val >= 128` onto `val % 128`. The branch is perfectly
+        // predicted — every internal caller restores a value that was itself in
+        // `0..128` — and is dwarfed by the bit write, so no unchecked fast path
+        // is warranted; profiling does not justify splitting the API.
+        assert!(*val < 128, "BitsetDomain supports values 0..128, got {val}");
         self.bits |= 1u128 << val;
     }
 
@@ -101,7 +126,7 @@ impl Domain for BitsetDomain {
         self.iter().collect()
     }
 
-    fn iter(&self) -> impl Iterator<Item = u32> {
+    fn iter(&self) -> impl Iterator<Item = u32> + use<> {
         BitsetIter { bits: self.bits }
     }
 
@@ -111,6 +136,20 @@ impl Domain for BitsetDomain {
         } else {
             None
         }
+    }
+
+    /// O(1) restrict: clear every bit but `val`'s in one bitwise AND,
+    /// instead of the trait default's O(domain size) iterate-and-clear
+    /// loop. Returns a `BitsetIter` (zero-alloc) over the cleared bits.
+    fn restrict_to(&mut self, val: &u32) -> impl Iterator<Item = u32> + use<> {
+        // Release-mode check (R7): same shift-aliasing hazard as `add` — a
+        // masked `1u128 << (*val % 128)` would keep the wrong bit. Well-
+        // predicted hot-path branch (callers restrict to an in-domain value).
+        assert!(*val < 128, "BitsetDomain supports values 0..128, got {val}");
+        let keep_mask = 1u128 << *val;
+        let pruned = self.bits & !keep_mask;
+        self.bits &= keep_mask;
+        BitsetIter { bits: pruned }
     }
 }
 
@@ -123,13 +162,7 @@ impl Iterator for BitsetIter {
     type Item = u32;
 
     fn next(&mut self) -> Option<u32> {
-        if self.bits == 0 {
-            None
-        } else {
-            let lowest = self.bits.trailing_zeros();
-            self.bits &= self.bits - 1; // clear lowest set bit
-            Some(lowest)
-        }
+        pop_lowest_bit(&mut self.bits).map(|idx| idx as u32)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {

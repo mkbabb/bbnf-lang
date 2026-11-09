@@ -1,0 +1,417 @@
+--- a/rust/parse_that/src/parsers/mod.rs
++++ b/rust/parse_that/src/parsers/mod.rs
+@@ -1,4 +1,5 @@
+ pub mod json;
++pub mod json_graph;
+ 
+ pub mod css;
+ 
+--- a/rust/parse_that/Cargo.toml
++++ b/rust/parse_that/Cargo.toml
+@@ -23,6 +23,11 @@
+ harness = false
+ 
+ [[bench]]
++name = "value_plane"
++path = "benches/parse_that/value_plane.rs"
++harness = false
++
++[[bench]]
+ name = "micro_parse_that"
+ path = "benches/parse_that/micro.rs"
+ harness = false
+--- a/rust/parse_that/src/parsers/json_graph.rs
++++ b/rust/parse_that/src/parsers/json_graph.rs
+@@ -0,0 +1,199 @@
++//! Runtime-analyzable JSON value graph (LOCK-4 pass-1 probe).
++//!
++//! A single enum-dispatched node arena that PRODUCES `JsonValue` (the "value
++//! plane"), retiring the closure tier of `json_value()`. The graph stays
++//! inspectable at runtime — every construct is an enum variant, and value
++//! construction happens through one `Map { f: Box<dyn Fn(Span) -> V> }` node
++//! whose indirect call is exactly the cost this probe measures.
++//!
++//! `nodes[0]` is the value dispatch root; `Array`/`Object` recurse back to it
++//! by index, giving a cyclic value grammar in a flat, analyzable arena.
++
++use std::borrow::Cow;
++
++use crate::span_parser::*;
++use crate::state::{ParserState, Span};
++
++use super::json::JsonValue;
++use super::scan::{STRICT_QUOTED_STRING_CONFIG, scan_number_strict_f64};
++
++type MapFn<'a> = Box<dyn Fn(Span<'a>) -> JsonValue<'a> + 'a>;
++
++pub(crate) enum JsonNode<'a> {
++    /// The value plane: match a span leaf, transform Span -> JsonValue through
++    /// a boxed fn. This is the ONE node the probe adds atop the span core.
++    Map {
++        inner: SpanParser<'a>,
++        f: MapFn<'a>,
++    },
++    /// Number scalar via the strict f64 scanner (span -> f64 -> value).
++    Number,
++    /// `[ value (, value)* ]`; `value` indexes back into the arena.
++    Array {
++        open: SpanParser<'a>,
++        close: SpanParser<'a>,
++        comma: SpanParser<'a>,
++        value: usize,
++    },
++    /// `{ key : value (, key : value)* }`; `value` indexes back into the arena.
++    Object {
++        open: SpanParser<'a>,
++        close: SpanParser<'a>,
++        colon: SpanParser<'a>,
++        comma: SpanParser<'a>,
++        key: SpanParser<'a>,
++        value: usize,
++    },
++    /// First-byte dispatch: byte -> node index (-1 = fail).
++    Dispatch {
++        table: Box<[i16; 256]>,
++    },
++}
++
++pub struct JsonGraph<'a> {
++    nodes: Vec<JsonNode<'a>>,
++}
++
++impl<'a> JsonGraph<'a> {
++    #[inline]
++    fn call(&self, i: usize, state: &mut ParserState<'a>) -> Option<JsonValue<'a>> {
++        match &self.nodes[i] {
++            JsonNode::Map { inner, f } => inner.call(state).map(|s| f(s)),
++
++            JsonNode::Number => scan_number_strict_f64(state).map(JsonValue::Number),
++
++            JsonNode::Array {
++                open,
++                close,
++                comma,
++                value,
++            } => {
++                open.call(state)?;
++                crate::scanners::trim_leading_whitespace_mut(state);
++
++                if close.call(state).is_some() {
++                    return Some(JsonValue::Array(Box::new(Vec::new())));
++                }
++
++                let mut items = Vec::with_capacity(4);
++                loop {
++                    crate::scanners::trim_leading_whitespace_mut(state);
++                    items.push(self.call(*value, state)?);
++                    crate::scanners::trim_leading_whitespace_mut(state);
++                    if comma.call(state).is_none() {
++                        break;
++                    }
++                }
++
++                close.call(state)?;
++                Some(JsonValue::Array(Box::new(items)))
++            }
++
++            JsonNode::Object {
++                open,
++                close,
++                colon,
++                comma,
++                key,
++                value,
++            } => {
++                open.call(state)?;
++                crate::scanners::trim_leading_whitespace_mut(state);
++
++                if close.call(state).is_some() {
++                    return Some(JsonValue::Object(Box::new(Vec::new())));
++                }
++
++                let mut entries = Vec::with_capacity(4);
++                loop {
++                    crate::scanners::trim_leading_whitespace_mut(state);
++                    let k = Cow::Borrowed(key.call(state)?.as_str());
++                    colon.call(state)?;
++                    let v = self.call(*value, state)?;
++                    entries.push((k, v));
++                    crate::scanners::trim_leading_whitespace_mut(state);
++                    if comma.call(state).is_none() {
++                        break;
++                    }
++                }
++
++                close.call(state)?;
++                Some(JsonValue::Object(Box::new(entries)))
++            }
++
++            JsonNode::Dispatch { table } => {
++                let byte = *state.src_bytes.get(state.offset)?;
++                let idx = table[byte as usize];
++                if idx < 0 {
++                    return None;
++                }
++                self.call(idx as usize, state)
++            }
++        }
++    }
++
++    /// Mirror of `json_parser()`: trim leading/trailing whitespace around the
++    /// value dispatch root. No EOF gate (same as the closure `json_parser`).
++    #[inline]
++    pub fn parse(&self, src: &'a str) -> Option<JsonValue<'a>> {
++        let mut state = ParserState::new(src);
++        crate::scanners::trim_leading_whitespace_mut(&mut state);
++        let result = self.call(0, &mut state);
++        if result.is_some() {
++            crate::scanners::trim_leading_whitespace_mut(&mut state);
++        }
++        result
++    }
++}
++
++/// Build the JSON value graph. Node layout (index -> variant):
++/// 0 Dispatch · 1 Object · 2 Array · 3 String · 4 true · 5 false · 6 null · 7 Number.
++pub fn json_graph<'a>() -> JsonGraph<'a> {
++    let mut table = Box::new([-1i16; 256]);
++    table[b'{' as usize] = 1;
++    table[b'[' as usize] = 2;
++    table[b'"' as usize] = 3;
++    table[b't' as usize] = 4;
++    table[b'f' as usize] = 5;
++    table[b'n' as usize] = 6;
++    for &b in b"-0123456789" {
++        table[b as usize] = 7;
++    }
++
++    let nodes = vec![
++        JsonNode::Dispatch { table },
++        JsonNode::Object {
++            open: sp_string("{"),
++            close: sp_string("}"),
++            colon: sp_string(":").trim_whitespace(),
++            comma: sp_string(",").trim_whitespace(),
++            key: sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG),
++            value: 0,
++        },
++        JsonNode::Array {
++            open: sp_string("["),
++            close: sp_string("]"),
++            comma: sp_string(",").trim_whitespace(),
++            value: 0,
++        },
++        JsonNode::Map {
++            inner: sp_quoted_string(&STRICT_QUOTED_STRING_CONFIG),
++            f: Box::new(|s: Span<'a>| JsonValue::String(Cow::Borrowed(s.as_str()))),
++        },
++        JsonNode::Map {
++            inner: sp_string("true"),
++            f: Box::new(|_| JsonValue::Bool(true)),
++        },
++        JsonNode::Map {
++            inner: sp_string("false"),
++            f: Box::new(|_| JsonValue::Bool(false)),
++        },
++        JsonNode::Map {
++            inner: sp_string("null"),
++            f: Box::new(|_| JsonValue::Null),
++        },
++        JsonNode::Number,
++    ];
++
++    JsonGraph { nodes }
++}
+--- a/rust/parse_that/benches/parse_that/value_plane.rs
++++ b/rust/parse_that/benches/parse_that/value_plane.rs
+@@ -0,0 +1,110 @@
++//! LOCK-4 pass-1 VALUE-PLANE-SURVIVAL probe.
++//!
++//! Paired-interleaved cold per-parse bench: the closure value core
++//! (`json_parser` -> `Parser<JsonValue>`) vs the runtime-analyzable value
++//! graph (`json_graph` -> enum-dispatched arena producing `JsonValue`).
++//! Two adjacent benches per corpus so both arms see the same machine state;
++//! divan medians over many cold samples cancel adjacency ordering bias.
++
++#[global_allocator]
++static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
++
++use std::path::Path;
++
++use divan::counter::BytesCount;
++use divan::{Bencher, black_box};
++
++use parse_that::json::json_parser;
++use parse_that::json_graph::json_graph;
++
++fn data_dir() -> std::path::PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json")
++}
++
++fn read(filepath: &str) -> String {
++    let filepath = data_dir().join(filepath);
++    std::fs::read_to_string(&filepath)
++        .unwrap_or_else(|e| panic!("Failed to read {}: {}", filepath.display(), e))
++}
++
++fn bench_closure(b: Bencher, filepath: &str) {
++    let data = read(filepath);
++    let parser = json_parser();
++    b.counter(BytesCount::new(data.len())).bench_local(|| {
++        let buf = black_box(&data);
++        parser.parse(buf).unwrap()
++    });
++}
++
++fn bench_graph(b: Bencher, filepath: &str) {
++    let data = read(filepath);
++    let graph = json_graph();
++    b.counter(BytesCount::new(data.len())).bench_local(|| {
++        let buf = black_box(&data);
++        graph.parse(buf).unwrap()
++    });
++}
++
++// ── apache-builds ──────────────────────────────────────────────
++#[divan::bench]
++fn apache_builds_closure(b: Bencher) {
++    bench_closure(b, "apache-builds.json")
++}
++#[divan::bench]
++fn apache_builds_graph(b: Bencher) {
++    bench_graph(b, "apache-builds.json")
++}
++
++// ── canada ─────────────────────────────────────────────────────
++#[divan::bench]
++fn canada_closure(b: Bencher) {
++    bench_closure(b, "canada.json")
++}
++#[divan::bench]
++fn canada_graph(b: Bencher) {
++    bench_graph(b, "canada.json")
++}
++
++// ── citm_catalog ───────────────────────────────────────────────
++#[divan::bench]
++fn citm_catalog_closure(b: Bencher) {
++    bench_closure(b, "citm_catalog.json")
++}
++#[divan::bench]
++fn citm_catalog_graph(b: Bencher) {
++    bench_graph(b, "citm_catalog.json")
++}
++
++// ── data ───────────────────────────────────────────────────────
++#[divan::bench]
++fn data_closure(b: Bencher) {
++    bench_closure(b, "data.json")
++}
++#[divan::bench]
++fn data_graph(b: Bencher) {
++    bench_graph(b, "data.json")
++}
++
++// ── data_xl ────────────────────────────────────────────────────
++#[divan::bench]
++fn data_xl_closure(b: Bencher) {
++    bench_closure(b, "data-xl.json")
++}
++#[divan::bench]
++fn data_xl_graph(b: Bencher) {
++    bench_graph(b, "data-xl.json")
++}
++
++// ── twitter ────────────────────────────────────────────────────
++#[divan::bench]
++fn twitter_closure(b: Bencher) {
++    bench_closure(b, "twitter.json")
++}
++#[divan::bench]
++fn twitter_graph(b: Bencher) {
++    bench_graph(b, "twitter.json")
++}
++
++fn main() {
++    divan::main();
++}
+--- a/rust/parse_that/tests/json_graph_parity_test.rs
++++ b/rust/parse_that/tests/json_graph_parity_test.rs
+@@ -0,0 +1,77 @@
++//! LOCK-4 pass-1 hard gate: byte-identical typed output.
++//!
++//! The value graph (`json_graph`) must produce a `JsonValue` structurally
++//! equal (`PartialEq`) to the closure core (`json_parser`) on every corpus and
++//! on the edge inputs the 37 JSON tests exercise. If the closure passes those
++//! tests and graph == closure here, the graph inherits parity.
++
++use std::path::Path;
++
++use parse_that::json::json_parser;
++use parse_that::json_graph::json_graph;
++
++fn data_path(name: &str) -> std::path::PathBuf {
++    Path::new(env!("CARGO_MANIFEST_DIR"))
++        .join("../../data/json")
++        .join(name)
++}
++
++fn assert_parity(src: &str, ctx: &str) {
++    let closure = json_parser().parse(src);
++    let graph = json_graph().parse(src);
++    assert_eq!(
++        closure, graph,
++        "value-plane divergence on {ctx}: closure != graph"
++    );
++}
++
++#[test]
++fn parity_corpora() {
++    for name in [
++        "apache-builds.json",
++        "canada.json",
++        "citm_catalog.json",
++        "data.json",
++        "data-xl.json",
++        "twitter.json",
++    ] {
++        let src = std::fs::read_to_string(data_path(name))
++            .unwrap_or_else(|e| panic!("read {name}: {e}"));
++        // Both must succeed AND be equal.
++        let closure = json_parser().parse(&src);
++        let graph = json_graph().parse(&src);
++        assert!(closure.is_some(), "closure failed on {name}");
++        assert!(graph.is_some(), "graph failed on {name}");
++        assert_eq!(closure, graph, "value-plane divergence on {name}");
++    }
++}
++
++#[test]
++fn parity_edges() {
++    // Mirrors the shapes the 37 json_test cases probe: escapes, unicode,
++    // empties, nesting, numbers, literals, whitespace.
++    let cases = [
++        r#"{"a": 1, "b": 2, "c": 3}"#,
++        r#""hello\nworld""#,
++        r#""A""#,
++        r#""""#,
++        r#""a\"b\\c\/d""#,
++        r#""\t\n\r\b\f""#,
++        r#"[]"#,
++        r#"{}"#,
++        r#"[1, 2, [3, [4, 5]], {"x": [null, true, false]}]"#,
++        r#"-0.5e10"#,
++        r#"123456789"#,
++        r#"1.5E-3"#,
++        r#"true"#,
++        r#"false"#,
++        r#"null"#,
++        "  \n\t [ 1 , 2 ,\n 3 ]  \n",
++        r#"{"nested": {"deep": {"deeper": [1, {"k": "v"}]}}}"#,
++        r#"[-1, -2.5, 0, 100, 3.14159]"#,
++        r#"{"unicode": "éè", "mix": "a\tb"}"#,
++    ];
++    for (i, c) in cases.iter().enumerate() {
++        assert_parity(c, &format!("edge#{i}: {c}"));
++    }
++}

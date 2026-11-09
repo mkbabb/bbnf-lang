@@ -1,0 +1,263 @@
+diff --git a/crates/bbnf-path-ts/tests/floor_probe.rs b/crates/bbnf-path-ts/tests/floor_probe.rs
+new file mode 100644
+index 000000000..758fe2d72
+--- /dev/null
++++ b/crates/bbnf-path-ts/tests/floor_probe.rs
+@@ -0,0 +1,257 @@
++//! LOCK-6 / pass-2 / PROTO-1 — the mandatory-floor decider.
++//!
++//! Q: Is 6D a mandatory floor — are the structural caps (6A/6B) that
++//! prove *name-set* isomorphism NECESSARY-BUT-NOT-SUFFICIENT for
++//! Rust<->TS behavioral parity?
++//!
++//! This probe converts the LIVE `$.statuses[0].nope` asymmetry (seeded
++//! in `tests/isomorphic_path_error.rs:129-150`) into a measured
++//! green-structural / red-behavioral PAIR:
++//!
++//! (1) STRUCTURAL — the `PathErrorReason` Rust-enum variant name-set is
++//!     set-equal to the TS union member-set parsed live from
++//!     `ts/path.ts`. This is the T1/T2 name-map tier. MUST PASS GREEN.
++//!
++//! (2) BEHAVIORAL — the DEEP case `$.statuses[0].nope` (not the shallow
++//!     `$.nope`, which agrees) is driven through BOTH the canonical
++//!     offline checker `check_path_against_registry` AND the cdylib
++//!     `compile_path_native`. The two surfaced reason payloads are
++//!     asserted EQUAL. MUST GO RED.
++//!
++//! If (1) is GREEN and (2) observes `UnregisteredRule != UnknownField`,
++//! then structure is proven necessary-but-not-sufficient: names agree,
++//! behavior diverges -> 6D-as-mandatory-floor CONFIRMED. If (2) matches
++//! instead, the floor thesis is refuted for this case.
++//!
++//! This file does NOT mutate the tracked test; it replicates the
++//! `json_registry` fixture + `ts_payload` helper at file scope.
++
++use bbnf::path::{PathError, PathErrorReason, PathSegment, check_path_against_registry};
++use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
++use bbnf_ir::{StringId, TypeDesc};
++use bbnf_path_ts::{PathErrorPayload, PathErrorReasonPayload, compile_path_native};
++use std::collections::BTreeSet;
++
++const JSON_DOC_RULE: &str = "Document";
++const JSON_DOC_ID: StringId = 0;
++const JSON_STATUS_RULE: &str = "Status";
++const JSON_STATUS_ID: StringId = 1;
++
++/// Canonical JSON fixture — byte-identical to the tracked test's
++/// `json_registry` and `crates/bbnf-path-ts/src/fixture.rs`. Both the
++/// offline checker and the cdylib validate against this shape, so any
++/// diagnostic divergence on a shared input is purely behavioral.
++fn json_registry() -> StructRegistry {
++    let mut r = StructRegistry::new();
++
++    r.insert(StructLayout {
++        rule_id: JSON_DOC_ID,
++        rule_name: JSON_DOC_RULE.to_string(),
++        kind: LayoutKind::Struct,
++        rule_type: TypeDesc::Tuple(vec![
++            TypeDesc::F64,
++            TypeDesc::Vec(Box::new(TypeDesc::Named(JSON_STATUS_ID))),
++        ]),
++        fields: vec![
++            StructField {
++                name: "id".to_string(),
++                type_desc: TypeDesc::F64,
++                source: FieldSource::SeqPosition { position: 0 },
++            },
++            StructField {
++                name: "statuses".to_string(),
++                type_desc: TypeDesc::Vec(Box::new(TypeDesc::Named(JSON_STATUS_ID))),
++                source: FieldSource::SeqPosition { position: 1 },
++            },
++        ],
++    });
++
++    r.insert(StructLayout {
++        rule_id: JSON_STATUS_ID,
++        rule_name: JSON_STATUS_RULE.to_string(),
++        kind: LayoutKind::Struct,
++        rule_type: TypeDesc::Tuple(vec![TypeDesc::Span, TypeDesc::F64, TypeDesc::Bool]),
++        fields: vec![
++            StructField {
++                name: "text".to_string(),
++                type_desc: TypeDesc::Span,
++                source: FieldSource::SeqPosition { position: 0 },
++            },
++            StructField {
++                name: "retweets".to_string(),
++                type_desc: TypeDesc::F64,
++                source: FieldSource::SeqPosition { position: 1 },
++            },
++            StructField {
++                name: "sensitive".to_string(),
++                type_desc: TypeDesc::Bool,
++                source: FieldSource::SeqPosition { position: 2 },
++            },
++        ],
++    });
++
++    r
++}
++
++/// Drive the cdylib's native compile entry and recover the payload —
++/// the same shape the wasm-bindgen export serializes.
++fn ts_payload(path_str: &str, grammar: &str) -> PathErrorPayload {
++    compile_path_native(path_str, grammar).expect_err("expected compile to fail")
++}
++
++/// Total map canonical reason -> payload mirror. Exhaustive by
++/// construction: adding a variant on either side breaks compilation.
++fn rust_reason_to_payload(reason: &PathErrorReason) -> PathErrorReasonPayload {
++    match reason {
++        PathErrorReason::UnknownField => PathErrorReasonPayload::UnknownField,
++        PathErrorReason::UnknownVariant => PathErrorReasonPayload::UnknownVariant,
++        PathErrorReason::IndexIntoNonList => PathErrorReasonPayload::IndexIntoNonList,
++        PathErrorReason::FieldOnScalar => PathErrorReasonPayload::FieldOnScalar,
++        PathErrorReason::EmptyPath => PathErrorReasonPayload::EmptyPath,
++        PathErrorReason::UnregisteredRule => PathErrorReasonPayload::UnregisteredRule,
++        PathErrorReason::AmbiguousVariant => PathErrorReasonPayload::AmbiguousVariant,
++        PathErrorReason::WildcardOverflow => PathErrorReasonPayload::WildcardOverflow,
++    }
++}
++
++/// Every `PathErrorReason` variant, enumerated explicitly. The
++/// exhaustive match below forces any newly-added variant to be listed
++/// here (compile error otherwise), keeping the Rust name-set faithful.
++const ALL_RUST_REASONS: &[PathErrorReason] = &[
++    PathErrorReason::UnknownField,
++    PathErrorReason::UnknownVariant,
++    PathErrorReason::IndexIntoNonList,
++    PathErrorReason::FieldOnScalar,
++    PathErrorReason::EmptyPath,
++    PathErrorReason::UnregisteredRule,
++    PathErrorReason::AmbiguousVariant,
++    PathErrorReason::WildcardOverflow,
++];
++
++/// Exhaustiveness pin: no wildcard arm. A new enum variant fails to
++/// compile here, forcing `ALL_RUST_REASONS` to be updated in lockstep.
++#[allow(dead_code)]
++fn _exhaustiveness_guard(r: &PathErrorReason) {
++    match r {
++        PathErrorReason::UnknownField
++        | PathErrorReason::UnknownVariant
++        | PathErrorReason::IndexIntoNonList
++        | PathErrorReason::FieldOnScalar
++        | PathErrorReason::EmptyPath
++        | PathErrorReason::UnregisteredRule
++        | PathErrorReason::AmbiguousVariant
++        | PathErrorReason::WildcardOverflow => {}
++    }
++}
++
++/// Rust variant name-set, derived from the live enum via Debug (the
++/// variants are fieldless, so `{:?}` renders the bare variant name).
++fn rust_reason_names() -> BTreeSet<String> {
++    ALL_RUST_REASONS
++        .iter()
++        .map(|r| format!("{r:?}"))
++        .collect()
++}
++
++/// TS union member-set, parsed live from `ts/path.ts`. Locates the
++/// `export type PathErrorReason =` block, slices to the terminating
++/// `;`, and collects every double-quoted member literal.
++fn ts_union_members() -> BTreeSet<String> {
++    const SRC: &str = include_str!("../ts/path.ts");
++    let marker = "export type PathErrorReason =";
++    let start = SRC
++        .find(marker)
++        .expect("PathErrorReason union not found in ts/path.ts");
++    let rest = &SRC[start + marker.len()..];
++    let end = rest.find(';').expect("union has no terminating ';'");
++    let block = &rest[..end];
++
++    let mut out = BTreeSet::new();
++    let mut chars = block.char_indices().peekable();
++    while let Some((i, c)) = chars.next() {
++        if c == '"' {
++            // Consume until the closing quote.
++            let lit_start = i + 1;
++            let mut lit_end = lit_start;
++            for (j, d) in block[lit_start..].char_indices() {
++                if d == '"' {
++                    lit_end = lit_start + j;
++                    break;
++                }
++            }
++            out.insert(block[lit_start..lit_end].to_string());
++            // Advance the outer iterator past the literal.
++            while let Some(&(k, _)) = chars.peek() {
++                if k <= lit_end {
++                    chars.next();
++                } else {
++                    break;
++                }
++            }
++        }
++    }
++    out
++}
++
++// ---------------------------------------------------------------------
++// (1) STRUCTURAL — must PASS GREEN (T1/T2 name-map tier).
++// ---------------------------------------------------------------------
++#[test]
++fn structural_variant_names_are_set_equal() {
++    let rust = rust_reason_names();
++    let ts = ts_union_members();
++
++    assert_eq!(
++        rust, ts,
++        "PathErrorReason name-set divergence:\n  rust-only = {:?}\n  ts-only   = {:?}",
++        rust.difference(&ts).collect::<Vec<_>>(),
++        ts.difference(&rust).collect::<Vec<_>>(),
++    );
++    // Sanity: the seed asserted 8 variants on each side.
++    assert_eq!(rust.len(), 8, "expected 8 Rust variants");
++    assert_eq!(ts.len(), 8, "expected 8 TS union members");
++}
++
++// ---------------------------------------------------------------------
++// (2) BEHAVIORAL — must GO RED. The DEEP case `$.statuses[0].nope`
++// drives both surfaces; asserting the reasons EQUAL fails on the LIVE
++// `UnregisteredRule != UnknownField` asymmetry, proving names-agree /
++// behavior-diverges: structure is necessary-but-not-sufficient.
++// ---------------------------------------------------------------------
++#[test]
++fn behavioral_deep_case_reasons_are_equal() {
++    let registry = json_registry();
++
++    // Canonical offline checker: leaves `TypeDesc::Named(Status)` intact
++    // (strings-table lookup lives on the IR `path_check` pass), so the
++    // `.nope` step onto a `Named(_)` surfaces `UnregisteredRule`.
++    let segments = [
++        PathSegment::Field("statuses"),
++        PathSegment::Index(0),
++        PathSegment::Field("nope"),
++    ];
++    let rust_err: PathError =
++        check_path_against_registry::<bbnf::path::Json, ()>(&segments, &registry, JSON_DOC_RULE)
++            .expect_err("expected the deep path to fail against the canonical checker");
++    let canonical_reason = rust_reason_to_payload(&rust_err.reason);
++
++    // cdylib: resolves `Named(Status)` eagerly through the in-registry
++    // `layout(_)` entry, so `.nope` on the resolved Status layout
++    // surfaces `UnknownField`.
++    let ts = ts_payload("$.statuses[0].nope", "Json");
++    let cdylib_reason = ts.reason;
++
++    // Observation — visible under `--nocapture` and echoed in the panic.
++    eprintln!(
++        "[PROTO-1 deep-case] canonical={canonical_reason:?}  cdylib={cdylib_reason:?}"
++    );
++
++    assert_eq!(
++        canonical_reason, cdylib_reason,
++        "DEEP-CASE behavioral divergence on `$.statuses[0].nope`: \
++         canonical checker surfaced {canonical_reason:?} but the cdylib \
++         surfaced {cdylib_reason:?} for the SAME input against the SAME \
++         registry -> structure (name-set parity) is necessary-but-not-\
++         sufficient; 6D is a mandatory floor",
++    );
++}

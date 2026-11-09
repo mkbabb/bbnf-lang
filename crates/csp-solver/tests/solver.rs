@@ -44,7 +44,6 @@ fn test_australia_map_coloring() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -97,7 +96,6 @@ fn test_australia_all_pruning() {
             pruning,
             ordering: Ordering::Chronological,
             max_solutions: 1,
-            backjumping: false,
             ..Default::default()
         };
 
@@ -154,7 +152,6 @@ fn test_4_queens() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -232,7 +229,6 @@ fn test_4x4_sudoku() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -302,7 +298,6 @@ fn test_finite_domain_strings() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -318,11 +313,11 @@ fn test_finite_domain_strings() {
 }
 
 // -----------------------------------------------------------------------
-// 6. Backjumping
+// 6. Map coloring (forward checking + fail-first)
 // -----------------------------------------------------------------------
 #[test]
-fn test_backjumping() {
-    // Same as map coloring, but with backjumping enabled
+fn test_map_coloring_fc_failfirst() {
+    // Australia-style map coloring solved with forward checking + fail-first.
     let mut csp = Csp::new();
     let domain = BitsetDomain::new(0..3);
     let _vars = csp.add_variables(&domain, 7);
@@ -347,12 +342,11 @@ fn test_backjumping() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: true,
         ..Default::default()
     };
 
     let solutions = csp.solve(&config);
-    assert!(!solutions.is_empty(), "Backjumping should find a solution");
+    assert!(!solutions.is_empty(), "map coloring should find a solution");
 
     // Verify solution
     let sol = &solutions[0];
@@ -362,10 +356,10 @@ fn test_backjumping() {
 }
 
 // -----------------------------------------------------------------------
-// 7. DomWdeg ordering
+// 7. Mrv ordering
 // -----------------------------------------------------------------------
 #[test]
-fn test_dom_wdeg_ordering() {
+fn test_mrv_ordering() {
     let mut csp = Csp::new();
     let domain = BitsetDomain::new(0..3);
     let _vars = csp.add_variables(&domain, 7);
@@ -388,14 +382,13 @@ fn test_dom_wdeg_ordering() {
 
     let config = SolveConfig {
         pruning: Pruning::ForwardChecking,
-        ordering: Ordering::DomWdeg,
+        ordering: Ordering::Mrv,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
     let solutions = csp.solve(&config);
-    assert!(!solutions.is_empty(), "DomWdeg should find a solution");
+    assert!(!solutions.is_empty(), "Mrv should find a solution");
 }
 
 // -----------------------------------------------------------------------
@@ -439,7 +432,6 @@ fn test_8_queens() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 92,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -468,7 +460,6 @@ fn test_unsatisfiable() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -531,7 +522,6 @@ fn test_stats() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -556,7 +546,6 @@ fn test_multiple_solutions() {
         pruning: Pruning::None,
         ordering: Ordering::Chronological,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -582,7 +571,6 @@ fn test_simple_2var_csp() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -642,7 +630,6 @@ fn test_forward_check_dwo() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -665,7 +652,6 @@ fn test_unsolvable_pigeonhole_backtracks() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -689,7 +675,6 @@ fn test_all_permutations_3var() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -712,7 +697,6 @@ fn test_ac3_full_solve() {
         pruning: Pruning::Ac3,
         ordering: Ordering::Chronological,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -764,7 +748,6 @@ fn test_initial_ac3_propagation() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -901,7 +884,6 @@ fn test_simple_4var() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -926,11 +908,7 @@ fn test_cross_config_correctness_map_coloring() {
         Pruning::Ac3,
         Pruning::AcFc,
     ];
-    let orderings = [
-        Ordering::Chronological,
-        Ordering::FailFirst,
-        Ordering::DomWdeg,
-    ];
+    let orderings = [Ordering::Chronological, Ordering::FailFirst, Ordering::Mrv];
 
     for pruning in &prunings {
         for ordering in &orderings {
@@ -958,7 +936,6 @@ fn test_cross_config_correctness_map_coloring() {
                 pruning: *pruning,
                 ordering: *ordering,
                 max_solutions: 1,
-                backjumping: false,
                 ..Default::default()
             };
 
@@ -996,7 +973,6 @@ fn test_cross_config_8queens() {
             pruning,
             ordering: Ordering::FailFirst,
             max_solutions: 1,
-            backjumping: false,
             ..Default::default()
         };
 
@@ -1020,7 +996,6 @@ fn test_max_solutions_limit() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 5,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1043,7 +1018,6 @@ fn test_ac_fc_hybrid_solve() {
         pruning: Pruning::AcFc,
         ordering: Ordering::FailFirst,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1082,9 +1056,8 @@ fn test_ac_fc_map_coloring() {
 
     let config = SolveConfig {
         pruning: Pruning::AcFc,
-        ordering: Ordering::DomWdeg,
+        ordering: Ordering::Mrv,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1113,7 +1086,6 @@ fn test_domain_wipeout_all_pruning() {
             pruning,
             ordering: Ordering::Chronological,
             max_solutions: 1,
-            backjumping: false,
             ..Default::default()
         };
 
@@ -1151,7 +1123,6 @@ fn test_single_variable() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 10,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1174,7 +1145,6 @@ fn test_no_constraints() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1184,10 +1154,10 @@ fn test_no_constraints() {
 }
 
 // -----------------------------------------------------------------------
-// 33. Backjumping on unsatisfiable problem
+// 33. Unsatisfiable AllDifferent (3 vars over domain 0..2)
 // -----------------------------------------------------------------------
 #[test]
-fn test_backjumping_unsatisfiable() {
+fn test_unsatisfiable_alldifferent() {
     let mut csp = Csp::new();
     let domain = BitsetDomain::new(0..2);
     let vars = csp.add_variables(&domain, 3);
@@ -1198,22 +1168,21 @@ fn test_backjumping_unsatisfiable() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: true,
         ..Default::default()
     };
 
     let solutions = csp.solve(&config);
     assert!(
         solutions.is_empty(),
-        "Backjumping on unsolvable should return empty"
+        "unsatisfiable AllDifferent should return empty"
     );
 }
 
 // -----------------------------------------------------------------------
-// 34. Backjumping reduces backtracks vs chronological (regression test)
+// 34. Forward-checking backtrack counts are deterministic (regression test)
 // -----------------------------------------------------------------------
 #[test]
-fn test_backjumping_fewer_backtracks() {
+fn test_forward_checking_backtracks_deterministic() {
     let build_map = || {
         let mut csp = Csp::new();
         let domain = BitsetDomain::new(0..3);
@@ -1241,27 +1210,25 @@ fn test_backjumping_fewer_backtracks() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let _sol = csp_chrono.solve(&config_chrono);
     let bt_chrono = csp_chrono.stats().backtracks;
 
-    let mut csp_bj = build_map();
-    let config_bj = SolveConfig {
+    let mut csp_b = build_map();
+    let config_b = SolveConfig {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: true,
         ..Default::default()
     };
-    let _sol = csp_bj.solve(&config_bj);
-    let bt_bj = csp_bj.stats().backtracks;
+    let _sol = csp_b.solve(&config_b);
+    let bt_b = csp_b.stats().backtracks;
 
-    // Backjumping should not be worse (it may be equal or better)
-    assert!(
-        bt_bj <= bt_chrono,
-        "Backjumping ({bt_bj}) should have <= backtracks than chronological ({bt_chrono})"
+    // Two runs of the same config must report identical backtrack counts.
+    assert_eq!(
+        bt_b, bt_chrono,
+        "run B ({bt_b}) must match run A ({bt_chrono}) — search is deterministic"
     );
 }
 
@@ -1326,7 +1293,6 @@ fn test_stats_propagations() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1351,7 +1317,6 @@ fn test_solve_resets_state() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1422,7 +1387,6 @@ fn test_9x9_sudoku_medium() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1442,7 +1406,6 @@ fn test_hard_sudoku_al_escargot() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let solutions = csp.solve_with_given(&config, &given);
@@ -1458,7 +1421,6 @@ fn test_hard_sudoku_inkala_2010() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let solutions = csp.solve_with_given(&config, &given);
@@ -1474,7 +1436,6 @@ fn test_hard_sudoku_golden_nugget() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let solutions = csp.solve_with_given(&config, &given);
@@ -1490,7 +1451,6 @@ fn test_hard_sudoku_platinum_blonde() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let solutions = csp.solve_with_given(&config, &given);
@@ -1506,7 +1466,6 @@ fn test_hard_sudoku_minimal_17() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let solutions = csp.solve_with_given(&config, &given);
@@ -1521,30 +1480,27 @@ fn test_hard_sudoku_minimal_17() {
 #[ignore = "requires GAC alldiff — too slow with binary FC"]
 fn test_hard_sudoku_all_configs() {
     let configs = [
-        (Pruning::ForwardChecking, Ordering::FailFirst, false),
-        (Pruning::ForwardChecking, Ordering::DomWdeg, false),
-        (Pruning::Ac3, Ordering::FailFirst, false),
-        (Pruning::ForwardChecking, Ordering::FailFirst, true), // backjumping
+        (Pruning::ForwardChecking, Ordering::FailFirst),
+        (Pruning::ForwardChecking, Ordering::Mrv),
+        (Pruning::Ac3, Ordering::FailFirst),
     ];
 
-    for (pruning, ordering, backjumping) in &configs {
+    for (pruning, ordering) in &configs {
         let (mut csp, given) = build_sudoku_9x9(&AL_ESCARGOT);
 
         let config = SolveConfig {
             pruning: *pruning,
             ordering: *ordering,
             max_solutions: 1,
-            backjumping: *backjumping,
             ..Default::default()
         };
 
         let solutions = csp.solve_with_given(&config, &given);
         assert!(
             !solutions.is_empty(),
-            "Al Escargot failed with pruning={:?}, ordering={:?}, bj={:?}",
+            "Al Escargot failed with pruning={:?}, ordering={:?}",
             pruning,
-            ordering,
-            backjumping
+            ordering
         );
         validate_sudoku_solution(&solutions[0]);
     }
@@ -1567,7 +1523,6 @@ fn test_fail_first_fewer_backtracks_sudoku() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::Chronological,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let _sol = csp_chrono.solve_with_given(&config_chrono, &given_chrono);
@@ -1578,7 +1533,6 @@ fn test_fail_first_fewer_backtracks_sudoku() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 1,
-        backjumping: false,
         ..Default::default()
     };
     let _sol = csp_ff.solve_with_given(&config_ff, &given_ff);
@@ -1627,7 +1581,6 @@ fn test_5_queens() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 
@@ -1650,7 +1603,6 @@ fn test_6_queens() {
         pruning: Pruning::ForwardChecking,
         ordering: Ordering::FailFirst,
         max_solutions: 100,
-        backjumping: false,
         ..Default::default()
     };
 

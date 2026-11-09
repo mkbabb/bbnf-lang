@@ -1,0 +1,144 @@
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 0133bcc64..d40772ad2 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -156,6 +156,42 @@ pub mod layout {
+             Ok(infer.facts)
+         }
+ 
++        /// Per-pass parity predicate: every `Project` node that carries a
++        /// declared `->` type (`Project.ty == Some(_)`) must have that
++        /// declaration threaded into `node_types`, and the threaded type must
++        /// differ from the bare body type (proving the arrow was CONSUMED, not
++        /// silently re-derived away). Returns the spans of every projection
++        /// that fails the contract; `Ok(())` iff all declared projections carry
++        /// their type. RED before the `:204` thread, GREEN after.
++        pub fn verify_project_types(
++            grammar: &GrammarIr,
++            facts: &TypeFacts,
++        ) -> Result<(), Vec<SourceSpan>> {
++            let mut offenders = Vec::new();
++            for expr in &grammar.exprs {
++                let ExprKind::Project {
++                    body,
++                    ty: Some(declared),
++                    ..
++                } = &expr.kind
++                else {
++                    continue;
++                };
++                let carries_declared =
++                    matches!(facts.node_types.get(&expr.id), Some(Type::Declared(t)) if t == declared);
++                let differs_from_body = facts.node_types.get(&expr.id)
++                    != facts.node_types.get(body);
++                if !(carries_declared && differs_from_body) {
++                    offenders.push(expr.span);
++                }
++            }
++            if offenders.is_empty() {
++                Ok(())
++            } else {
++                Err(offenders)
++            }
++        }
++
+         struct Infer<'a> {
+             grammar: &'a GrammarIr,
+             facts: TypeFacts,
+@@ -201,7 +237,17 @@ pub mod layout {
+                         Type::Rule(rule_id)
+                     }
+                     ExprKind::Annotation { .. } => Type::Builtin(BuiltinTy::Unit),
+-                    ExprKind::Project { body, .. } => self.infer_expr(*body)?,
++                    ExprKind::Project { body, ty, .. } => {
++                        // CONSUME the declared `->` type. The body is still
++                        // inferred so its own node_types entry is populated, but
++                        // the projected node's type is the author's declaration
++                        // when present — the arrow is threaded, not dropped.
++                        let body_ty = self.infer_expr(*body)?;
++                        match ty {
++                            Some(declared) => Type::Declared(declared.clone()),
++                            None => body_ty,
++                        }
++                    }
+                     ExprKind::Discard { left, right, .. } => {
+                         // Both operands are matched; type is Seq-like over the
+                         // pair (mirrors transparent Seq lowering).
+@@ -240,6 +286,10 @@ pub enum Type {
+     List(Box<Type>),
+     Option(Box<Type>),
+     Rule(ir::RuleId),
++    /// A declared `->` projection type carried verbatim from the grammar
++    /// (`Project.ty`). This is the CONSUME seam: the projected node's type is
++    /// the author's declaration, not a re-derivation of the bare body type.
++    Declared(String),
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+diff --git a/skinny/crates/passes/tests/verify_project_types_probe.rs b/skinny/crates/passes/tests/verify_project_types_probe.rs
+new file mode 100644
+index 000000000..641386b68
+--- /dev/null
++++ b/skinny/crates/passes/tests/verify_project_types_probe.rs
+@@ -0,0 +1,61 @@
++//! LOCK-3 pass-2 probe 1: the CONSUME contract on `Project.ty`.
++//!
++//! Parses the sole `->` witness (google-sheets.bbnf), runs type inference, and
++//! prints whether `verify_project_types` reads RED or GREEN. Run with
++//! `--nocapture` to see the verdict + offending spans. The sheets grammar is
++//! the only corpus carrying declared `-> _ : Span` projections; json.bbnf has
++//! none, so the predicate is vacuously GREEN there (asserted below).
++
++use passes::layout::types::{infer, verify_project_types};
++
++fn sheets_source() -> String {
++    let path = concat!(
++        env!("CARGO_MANIFEST_DIR"),
++        "/../../../grammar/google-sheets/google-sheets.bbnf"
++    );
++    std::fs::read_to_string(path).expect("read sheets grammar")
++}
++
++fn json_source() -> String {
++    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammars/json.bbnf");
++    std::fs::read_to_string(path).expect("read json grammar")
++}
++
++#[test]
++fn sheets_projection_types_verdict() {
++    let source = sheets_source();
++    let grammar = grammar::parse_grammar("google_sheets", &source).expect("parse sheets");
++    let facts = infer(&grammar).expect("infer sheets");
++
++    // Count the declared-ty projections in the corpus for the record.
++    let declared: usize = grammar
++        .exprs
++        .iter()
++        .filter(|e| {
++            matches!(
++                &e.kind,
++                ir::ExprKind::Project { ty: Some(_), .. }
++            )
++        })
++        .count();
++
++    match verify_project_types(&grammar, &facts) {
++        Ok(()) => println!(
++            "VERIFY-PROJECT-TYPES: GREEN (all {declared} declared projections carry their type)"
++        ),
++        Err(spans) => println!(
++            "VERIFY-PROJECT-TYPES: RED ({} of {declared} declared projections drop their type; spans={:?})",
++            spans.len(),
++            spans
++        ),
++    }
++
++    // json.bbnf has zero declared projections -> vacuously GREEN, always.
++    let json = json_source();
++    let jg = grammar::parse_grammar("json", &json).expect("parse json");
++    let jf = infer(&jg).expect("infer json");
++    assert!(
++        verify_project_types(&jg, &jf).is_ok(),
++        "json has no declared projections; must be vacuously GREEN"
++    );
++}

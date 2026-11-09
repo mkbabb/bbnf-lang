@@ -1,0 +1,411 @@
+diff --git a/crates/csp-solver/src/csp/mod.rs b/crates/csp-solver/src/csp/mod.rs
+index bf330ea6a..1d6909fb2 100644
+--- a/crates/csp-solver/src/csp/mod.rs
++++ b/crates/csp-solver/src/csp/mod.rs
+@@ -26,6 +26,13 @@ impl<D: Domain> Csp<D> {
+         }
+     }
+ 
++    /// Borrow the solved variable array (read-only). Callers inspect a
++    /// variable's post-propagation domain — e.g. a diagnostic harvest
++    /// that reads side-channel state a domain stashed during `revise`.
++    pub fn variables(&self) -> &[Variable<D>] {
++        &self.variables
++    }
++
+     /// Add a variable with the given domain. Returns its VarId.
+     pub fn add_variable(&mut self, domain: D) -> VarId {
+         let id = self.variables.len() as VarId;
+diff --git a/crates/ir/src/passes/types/constraint/domain.rs b/crates/ir/src/passes/types/constraint/domain.rs
+index d33c9afd5..51ebf496d 100644
+--- a/crates/ir/src/passes/types/constraint/domain.rs
++++ b/crates/ir/src/passes/types/constraint/domain.rs
+@@ -12,15 +12,32 @@ use crate::TypeDesc;
+ #[derive(Clone, Debug, PartialEq)]
+ pub struct TypeDomain {
+     pub solved: Option<TypeDesc>,
++    /// Refinement-clash side channel (X8). When [`super::revise::assign`]
++    /// is asked to overwrite a *fully-ground* type with a *different*
++    /// fully-ground type — two settled concretes that disagree — it
++    /// refuses the overwrite (keeping the incumbent so the fixed point
++    /// stays stable) and stashes the disagreement here: `(incumbent,
++    /// rejected)`. The projection driver harvests these into
++    /// `TypeObligation::TypeClash` once propagation converges, so the
++    /// refusal is a NAMED diagnostic rather than a silent freeze (per
++    /// AZ-III invariant 7). Boxed to keep the common no-clash domain at
++    /// pointer width in the CSP's per-node variable array.
++    pub clash: Option<Box<(TypeDesc, TypeDesc)>>,
+ }
+ 
+ impl TypeDomain {
+     pub fn unsolved() -> Self {
+-        Self { solved: None }
++        Self {
++            solved: None,
++            clash: None,
++        }
+     }
+ 
+     pub fn ground(ty: TypeDesc) -> Self {
+-        Self { solved: Some(ty) }
++        Self {
++            solved: Some(ty),
++            clash: None,
++        }
+     }
+ }
+ 
+@@ -60,7 +77,10 @@ impl Domain for TypeDomain {
+ 
+ impl LatticeDomain for TypeDomain {
+     fn bottom() -> Self {
+-        Self { solved: None }
++        Self {
++            solved: None,
++            clash: None,
++        }
+     }
+ 
+     fn join(&mut self, other: &Self) -> bool {
+diff --git a/crates/ir/src/passes/types/constraint/revise.rs b/crates/ir/src/passes/types/constraint/revise.rs
+index ca3db1b22..20ed5b3bd 100644
+--- a/crates/ir/src/passes/types/constraint/revise.rs
++++ b/crates/ir/src/passes/types/constraint/revise.rs
+@@ -17,20 +17,102 @@
+ use csp_solver::variable::Variable;
+ 
+ use crate::TypeDesc;
+-use crate::passes::types::obligation::dedup_branch_types;
++use crate::dag::NodeId;
++use crate::passes::types::obligation::{ObligationSink, TypeObligation, dedup_branch_types};
+ use crate::passes::types::type_map::try_flatten_pair;
+ 
+ use super::TypeVarId;
+ use super::domain::TypeDomain;
+ 
+ /// Assign a type to a variable's domain. Returns true if the type changed.
++///
++/// X8 — refinement-aware overwrite. The projection CSP converges by
++/// letting a variable's domain move *down* the type lattice: an
++/// under-narrowed placeholder (`BoxedEnum`, `HeterogeneousAltJoin`, or
++/// a compound still carrying one of those inside it) legitimately
++/// refines to a more specific structural type as the target rules and
++/// child nodes resolve — that is the ~69 `BoxedEnum → structural`
++/// refinements the four production grammars depend on, and every such
++/// move is permitted unconditionally.
++///
++/// The one transition that is *not* a refinement is two **fully-ground**
++/// types that disagree: both sides are settled concretes (no
++/// under-narrowed layout anywhere inside them) yet differ. A naive
++/// "refuse every overwrite" rule would freeze the legal refinements
++/// along with the genuine clashes; instead this arm refuses *only* the
++/// fully-ground disagreement, keeps the incumbent so the fixed point
++/// stays stable, and stashes the pair on the domain's `clash`
++/// side-channel. The driver harvests those into
++/// [`TypeObligation::TypeClash`] after propagation converges, so the
++/// refusal surfaces as a named diagnostic instead of a silent freeze.
+ pub(super) fn assign(vars: &mut [Variable<TypeDomain>], var: TypeVarId, ty: TypeDesc) -> bool {
+-    let slot = &mut vars[var as usize].domain.solved;
+-    if slot.as_ref() == Some(&ty) {
+-        false
+-    } else {
+-        *slot = Some(ty);
+-        true
++    let domain = &mut vars[var as usize].domain;
++    match &domain.solved {
++        Some(existing) if *existing == ty => false,
++        Some(existing) if is_fully_ground(existing) && is_fully_ground(&ty) => {
++            // Two settled concretes that disagree: a genuine clash, not
++            // a refinement. Refuse the overwrite (keep the incumbent so
++            // the fixed point does not oscillate) and record the pair
++            // for the post-propagation obligation harvest.
++            domain.clash = Some(Box::new((existing.clone(), ty)));
++            false
++        }
++        _ => {
++            // First assignment, or a refinement (the incumbent or the
++            // newcomer still carries an under-narrowed layout). Permit —
++            // this is byte-for-byte the historical last-writer-wins move.
++            domain.solved = Some(ty);
++            true
++        }
++    }
++}
++
++/// True when a type is a *settled concrete*: it carries no
++/// `BoxedEnum` / `HeterogeneousAltJoin` under-narrowed layout at any
++/// nesting depth, so the projection CSP can never refine it further.
++///
++/// `Enum` and `Named` are deliberately treated as **non**-ground: the
++/// solver assigns `Enum` to vec-context Ref slots and `Named` to custom
++/// map results, and those slots are bridged by `EqualConstraint` to
++/// variables that may legitimately settle on a scalar. Excluding them
++/// keeps the clash arm from misreading those legal bridges as
++/// disagreements — only pure scalar / `Span` grounds (and tuples /
++/// options / vecs built entirely from them) participate in clash
++/// detection.
++fn is_fully_ground(ty: &TypeDesc) -> bool {
++    match ty {
++        TypeDesc::BoxedEnum
++        | TypeDesc::HeterogeneousAltJoin(_)
++        | TypeDesc::Enum
++        | TypeDesc::Named(_) => false,
++        TypeDesc::Option(inner) | TypeDesc::Vec(inner) => is_fully_ground(inner),
++        TypeDesc::Tuple(elems) => !elems.is_empty() && elems.iter().all(is_fully_ground),
++        // Scalars and Span: settled, non-refinable.
++        _ => true,
++    }
++}
++
++/// Harvest every stashed refinement clash into the shared obligation
++/// sink once propagation has converged. `node_of` recovers the owning
++/// `NodeId` for a type variable (the projection driver inverts its
++/// `NodeId → TypeVarId` map; callers with no tree context pass `|_|
++/// None`). One obligation per clashing variable — the domain stash
++/// already collapses repeated refusals on the same variable to a single
++/// pair, so no additional dedup is needed here.
++pub fn record_domain_clashes(
++    vars: &[Variable<TypeDomain>],
++    sink: &ObligationSink,
++    node_of: impl Fn(TypeVarId) -> Option<NodeId>,
++) {
++    for (idx, v) in vars.iter().enumerate() {
++        if let Some(pair) = &v.domain.clash {
++            let (lhs, rhs) = pair.as_ref();
++            sink.record(TypeObligation::TypeClash {
++                node: node_of(idx as TypeVarId),
++                lhs: lhs.clone(),
++                rhs: rhs.clone(),
++            });
++        }
+     }
+ }
+ 
+diff --git a/crates/ir/src/passes/types/mod.rs b/crates/ir/src/passes/types/mod.rs
+index c2d84396b..4b98ba823 100644
+--- a/crates/ir/src/passes/types/mod.rs
++++ b/crates/ir/src/passes/types/mod.rs
+@@ -466,6 +466,31 @@ pub fn project_types(ir: &mut GrammarIR) {
+     //     with its owning rule + Alt NodeId so consumers (audit,
+     //     diagnostics) can locate the source site.
+     //
++    // X8 — harvest any refinement clash the assignment arm stashed
++    // during propagation. `assign` refuses to overwrite one fully-ground
++    // type with a different fully-ground type (a genuine disagreement,
++    // not a lattice refinement) and records the pair on the variable's
++    // domain; here that pair becomes a named `TypeObligation::TypeClash`
++    // routed through the same sink + dedup as every other obligation.
++    // Node attribution inverts the primary + vec-context node maps so
++    // the clash points at the owning tree position when one exists.
++    {
++        let mut var_to_node: FxHashMap<constraint::TypeVarId, NodeId> =
++            FxHashMap::default();
++        for (nid, var) in system
++            .node_vars
++            .iter()
++            .chain(system.vec_context_vars.iter())
++        {
++            var_to_node.entry(*var).or_insert(*nid);
++        }
++        constraint::revise::record_domain_clashes(
++            system.csp.variables(),
++            &system.obligation_sink,
++            |var| var_to_node.get(&var).copied(),
++        );
++    }
++
+     // Stable order: the sink preserves insertion order, the walker
+     // visits rules in topological order, dedup-while-preserving-order
+     // produces a deterministic obligation list across runs.
+diff --git a/crates/ir/src/passes/types/obligation.rs b/crates/ir/src/passes/types/obligation.rs
+index 0a0d6becb..b880c4eaa 100644
+--- a/crates/ir/src/passes/types/obligation.rs
++++ b/crates/ir/src/passes/types/obligation.rs
+@@ -94,6 +94,25 @@ pub enum TypeObligation {
+         node: Option<NodeId>,
+         branches: Vec<TypeDesc>,
+     },
++    /// A refinement clash surfaced by the assignment arm (X8). Two
++    /// *fully-ground* types — both settled concretes with no
++    /// under-narrowed layout inside — were asked to occupy the same
++    /// type variable and disagreed. The projection CSP refuses the
++    /// overwrite (the incumbent `lhs` stays projected) and records the
++    /// disagreement here so it is a named diagnostic rather than a
++    /// silent freeze: the `1C` bridge lowers this to an
++    /// `lsp_types::Diagnostic` anchored at `node`.
++    ///
++    /// `lhs` is the incumbent type the variable already held; `rhs` is
++    /// the rejected type the solver tried to overwrite it with. `node`
++    /// is the owning `NodeId` when the clashing variable maps to a tree
++    /// position (`None` for internal rule/vec-context variables outside
++    /// the node map).
++    TypeClash {
++        node: Option<NodeId>,
++        lhs: TypeDesc,
++        rhs: TypeDesc,
++    },
+ }
+ 
+ impl TypeObligation {
+@@ -104,6 +123,7 @@ impl TypeObligation {
+         match self {
+             Self::UnresolvedCompoundRef { .. } => "UnresolvedCompoundRef",
+             Self::HeterogeneousAltJoin { .. } => "HeterogeneousAltJoin",
++            Self::TypeClash { .. } => "TypeClash",
+         }
+     }
+ 
+@@ -150,6 +170,16 @@ impl TypeObligation {
+                      (lifted to TypeDesc::HeterogeneousAltJoin; lowers to Box<Enum>)"
+                 )
+             }
++            Self::TypeClash { node, lhs, rhs } => {
++                let node_str = match node {
++                    Some(nid) => format!("node {nid}"),
++                    None => "<internal var>".to_string(),
++                };
++                format!(
++                    "type clash: {node_str} :: incumbent {lhs:?} vs rejected {rhs:?} \
++                     (overwrite refused; incumbent kept)"
++                )
++            }
+         }
+     }
+ }
+diff --git a/crates/ir/tests/type_clash_arm.rs b/crates/ir/tests/type_clash_arm.rs
+new file mode 100644
+index 000000000..15b728d44
+--- /dev/null
++++ b/crates/ir/tests/type_clash_arm.rs
+@@ -0,0 +1,131 @@
++//! X8 — the refinement-aware assignment clash arm.
++//!
++//! Proves the two halves of the arm's contract that the production
++//! `project_types_*` byte-identity tests cannot show on their own,
++//! because a well-formed grammar never drives a fully-ground
++//! disagreement onto a single type variable:
++//!
++//! 1. **Clash detection fires** — two disagreeing *fully-ground*
++//!    concretes (`F64` vs `U8`) pushed at the same type variable
++//!    surface exactly one `TypeObligation::TypeClash`, and the
++//!    incumbent is kept (the overwrite is refused, so the fixed point
++//!    stays stable rather than oscillating).
++//!
++//! 2. **Refinement is NOT frozen** — an under-narrowed incumbent
++//!    (`BoxedEnum`) overwritten by a structural type (`F64`) is
++//!    permitted and records no clash. This is the ~69 `BoxedEnum →
++//!    structural` refinements the four grammars depend on, in miniature.
++
++use bbnf_ir::passes::types::constraint::TypeVarId;
++use bbnf_ir::passes::types::constraint::domain::TypeDomain;
++use bbnf_ir::passes::types::constraint::grounds::GroundConstraint;
++use bbnf_ir::passes::types::constraint::revise::record_domain_clashes;
++use bbnf_ir::passes::types::{ObligationSink, TypeObligation};
++use bbnf_ir::TypeDesc;
++use csp_solver::Csp;
++
++/// Drive two disagreeing fully-ground grounds onto one variable and
++/// harvest the obligation stream. Both are persistent GroundConstraints;
++/// because the clash arm *refuses* a fully-ground overwrite, the fixed
++/// point settles on the incumbent instead of oscillating.
++fn clash_stream(a: TypeDesc, b: TypeDesc) -> Vec<TypeObligation> {
++    let mut csp: Csp<TypeDomain> = Csp::new();
++    let var = csp.add_variable(TypeDomain::unsolved());
++    csp.add_constraint(GroundConstraint::new(var, a));
++    csp.add_constraint(GroundConstraint::new(var, b));
++    let _ = csp.propagate();
++
++    let sink = ObligationSink::new();
++    // No node map in this unit fixture — clash carries `node: None`.
++    record_domain_clashes(csp.variables(), &sink, |_: TypeVarId| None);
++    sink.drain()
++}
++
++/// Drive a single monotonic refinement: seed the variable's incumbent
++/// to `from`, then let one GroundConstraint overwrite it with `to`.
++/// One constraint only — nothing re-asserts `from`, so the fixed point
++/// converges (a refinement never refuses, so a second persistent ground
++/// of a *different* type would oscillate; that is why real refinements
++/// are monotonic, single-writer moves, and why this fixture models them
++/// with a seeded incumbent rather than two competing grounds).
++fn refine_stream(from: TypeDesc, to: TypeDesc) -> Vec<TypeObligation> {
++    let mut csp: Csp<TypeDomain> = Csp::new();
++    let var = csp.add_variable(TypeDomain::ground(from));
++    csp.add_constraint(GroundConstraint::new(var, to));
++    let _ = csp.propagate();
++
++    let sink = ObligationSink::new();
++    record_domain_clashes(csp.variables(), &sink, |_: TypeVarId| None);
++    sink.drain()
++}
++
++#[test]
++fn concrete_vs_concrete_emits_exactly_one_type_clash() {
++    let stream = clash_stream(TypeDesc::F64, TypeDesc::U8);
++
++    assert_eq!(
++        stream.len(),
++        1,
++        "a single fully-ground disagreement must emit exactly one obligation; got {stream:?}",
++    );
++
++    match &stream[0] {
++        TypeObligation::TypeClash { node, lhs, rhs } => {
++            assert_eq!(*node, None, "unit fixture has no tree position");
++            // Order depends on which ground fired first; the pair must
++            // be the F64/U8 disagreement either way.
++            let pair = (lhs.clone(), rhs.clone());
++            assert!(
++                pair == (TypeDesc::F64, TypeDesc::U8)
++                    || pair == (TypeDesc::U8, TypeDesc::F64),
++                "clash must record the F64/U8 disagreement; got {pair:?}",
++            );
++            assert_ne!(lhs, rhs, "a clash is by definition a disagreement");
++        }
++        other => panic!("expected TypeObligation::TypeClash, got {other:?}"),
++    }
++}
++
++#[test]
++fn boxed_enum_refinement_records_no_clash() {
++    // BoxedEnum is under-narrowed: overwriting it with a structural
++    // scalar is a lattice refinement, never a clash.
++    let stream = refine_stream(TypeDesc::BoxedEnum, TypeDesc::F64);
++    assert!(
++        stream.is_empty(),
++        "BoxedEnum -> F64 is a legal refinement and must NOT surface a clash; got {stream:?}",
++    );
++
++    // The compound refinement the four grammars actually exercise:
++    // Tuple([BoxedEnum, U8]) -> Tuple([F64, U8]). The incumbent carries
++    // an under-narrowed child, so the whole tuple is non-ground and the
++    // overwrite is permitted with no clash.
++    let compound = refine_stream(
++        TypeDesc::Tuple(vec![TypeDesc::BoxedEnum, TypeDesc::U8]),
++        TypeDesc::Tuple(vec![TypeDesc::F64, TypeDesc::U8]),
++    );
++    assert!(
++        compound.is_empty(),
++        "Tuple([BoxedEnum,U8]) -> Tuple([F64,U8]) is a refinement, not a clash; got {compound:?}",
++    );
++
++    // HeterogeneousAltJoin is likewise under-narrowed.
++    let het = refine_stream(
++        TypeDesc::HeterogeneousAltJoin(vec![TypeDesc::F64, TypeDesc::U8]),
++        TypeDesc::F64,
++    );
++    assert!(
++        het.is_empty(),
++        "HeterogeneousAltJoin -> F64 is a refinement, not a clash; got {het:?}",
++    );
++}
++
++#[test]
++fn identical_grounds_record_no_clash() {
++    // Same type twice is a no-op, not a disagreement.
++    let stream = clash_stream(TypeDesc::F64, TypeDesc::F64);
++    assert!(
++        stream.is_empty(),
++        "identical grounds are a no-op, not a clash; got {stream:?}",
++    );
++}

@@ -1,0 +1,128 @@
+### vendored bbnf-simd de-face (owner -> scratch vendor) — the 5 prim kernels + feature
+--- /Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/src/lib.rs	2026-06-02 20:07:24
++++ /private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/vendor/bbnf-simd/src/lib.rs	2026-07-16 09:59:17
+@@ -251,29 +251,90 @@
+     pub use crate::scalar::comment_body_mask_64::CommentCarry;
+     pub use crate::scalar::eob_pad_clamp::EobBlock;
+     pub use crate::scalar::structural_classify_64::{KindPartition, StructuralClassify64};
++
++    // ── DE-FACED direct entries (LOCK-9 9A probe) ──────────────────────────
++    // When `defaced` is enabled the five prim kernels resolve at compile time
++    // via `#[cfg(target_arch)]` (mirroring the already-inlining sibling
++    // `byte_class_from_eq_set_64` below), so a cross-crate caller inlines the
++    // body with zero indirect branch. When `defaced` is OFF (CONTROL) the
++    // kernels route through the `OnceLock<PrimitiveKernels>` fn-pointer facade,
++    // which the optimizer cannot devirtualize — every call is a `blr`.
++    #[cfg(feature = "defaced")]
++    #[inline]
++    pub fn byte_class_from_table_64(src: &[u8; 64], table: &[u8; 256]) -> u64 {
++        #[cfg(target_arch = "aarch64")]
++        return crate::aarch64::byte_class_from_table_64::byte_class_from_table_64_neon(src, table);
++        #[allow(unreachable_code)]
++        crate::scalar::byte_class_from_table_64::byte_class_from_table_64_scalar(src, table)
++    }
+ 
++    #[cfg(not(feature = "defaced"))]
+     #[inline]
+     pub fn byte_class_from_table_64(src: &[u8; 64], table: &[u8; 256]) -> u64 {
+         (crate::dispatch::primitive_kernels().byte_class_from_table_64)(src, table)
+     }
+ 
++    #[cfg(feature = "defaced")]
+     #[inline]
+     pub fn bitmap_prefix_xor_64(mask: u64, carry_in: bool) -> u64 {
++        #[cfg(target_arch = "aarch64")]
++        return crate::aarch64::bitmap_prefix_xor_64::bitmap_prefix_xor_64_neon(mask, carry_in);
++        #[allow(unreachable_code)]
++        crate::scalar::bitmap_prefix_xor_64::bitmap_prefix_xor_64_scalar(mask, carry_in)
++    }
++
++    #[cfg(not(feature = "defaced"))]
++    #[inline]
++    pub fn bitmap_prefix_xor_64(mask: u64, carry_in: bool) -> u64 {
+         (crate::dispatch::primitive_kernels().bitmap_prefix_xor_64)(mask, carry_in)
+     }
+ 
++    #[cfg(feature = "defaced")]
+     #[inline]
+     pub fn bitmap_next_set_bit(mask: u64, cursor: u8) -> u8 {
++        #[cfg(target_arch = "aarch64")]
++        return crate::aarch64::bitmap_next_set_bit::bitmap_next_set_bit_neon(mask, cursor);
++        #[allow(unreachable_code)]
++        crate::scalar::bitmap_next_set_bit::bitmap_next_set_bit_scalar(mask, cursor)
++    }
++
++    #[cfg(not(feature = "defaced"))]
++    #[inline]
++    pub fn bitmap_next_set_bit(mask: u64, cursor: u8) -> u8 {
+         (crate::dispatch::primitive_kernels().bitmap_next_set_bit)(mask, cursor)
+     }
+ 
++    #[cfg(feature = "defaced")]
+     #[inline]
+     pub unsafe fn bulk_emit_positions_64(base: u32, mask: u64, dst: *mut u32) -> usize {
++        #[cfg(target_arch = "aarch64")]
++        return unsafe {
++            crate::aarch64::bulk_emit_positions_64::bulk_emit_positions_64_neon(base, mask, dst)
++        };
++        #[allow(unreachable_code)]
++        unsafe {
++            crate::scalar::bulk_emit_positions_64::bulk_emit_positions_64_scalar(base, mask, dst)
++        }
++    }
++
++    #[cfg(not(feature = "defaced"))]
++    #[inline]
++    pub unsafe fn bulk_emit_positions_64(base: u32, mask: u64, dst: *mut u32) -> usize {
+         unsafe { (crate::dispatch::primitive_kernels().bulk_emit_positions_64)(base, mask, dst) }
+     }
+ 
++    #[cfg(feature = "defaced")]
+     #[inline]
+     pub fn eob_pad_clamp(input: &[u8]) -> EobBlock {
++        #[cfg(target_arch = "aarch64")]
++        return crate::aarch64::eob_pad_clamp::eob_pad_clamp_neon(input);
++        #[allow(unreachable_code)]
++        crate::scalar::eob_pad_clamp::eob_pad_clamp_scalar(input)
++    }
++
++    #[cfg(not(feature = "defaced"))]
++    #[inline]
++    pub fn eob_pad_clamp(input: &[u8]) -> EobBlock {
+         (crate::dispatch::primitive_kernels().eob_pad_clamp)(input)
+     }
+ 
+#### vendor Cargo.toml (standalone manifest + defaced feature)
+--- /Users/mkbabb/Programming/bbnf-lang/skinny/crates/bbnf-simd/Cargo.toml	2026-06-01 23:56:06
++++ /private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/pt-scratch/vendor/bbnf-simd/Cargo.toml	2026-07-16 09:59:24
+@@ -1,18 +1,17 @@
+ [package]
+ name = "bbnf-simd"
+ version = "0.1.0"
+-edition.workspace = true
+-license.workspace = true
+-repository.workspace = true
+-rust-version.workspace = true
++edition = "2021"
++license = "MIT OR Apache-2.0"
++repository = "https://github.com/mkbabb/bbnf-lang"
++rust-version = "1.78"
+ 
+-[dependencies]
+-blake3.workspace = true
++[features]
++# LOCK-9 9A probe: when ON the five prim kernels resolve as cfg-direct entries
++# (cross-crate inlinable); when OFF they route through the OnceLock fn-pointer
++# facade (blr per call). CONTROL arm builds with default-features = false.
++default = ["defaced"]
++defaced = []
+ 
+-[dev-dependencies]
+-test-fixtures.workspace = true
+-libc.workspace = true
+-
+-[[test]]
+-name = "checkasm_parity"
+-path = "tests/checkasm_parity.rs"
++[dependencies]
++blake3 = "1"

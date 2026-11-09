@@ -1,0 +1,526 @@
+# Master-Plan Locks Audit — SK-V20 Research Pass
+
+Scope: `restart/MASTER-PLAN.md`, `restart/locks/LOCKS.md`, `restart/ARCHITECTURE.md`,
+`restart/HANDOFF.md`, `restart/MIGRATION.md`. HEAD: `f4633d468` (branch master).
+
+> Evidence supplement — this pass verifies the existing audit against HEAD code.
+> Findings that confirm prior analysis are noted; discrepancies and additional
+> violations are called out explicitly.
+
+---
+
+## Lock Status Census
+
+The sixteen locks are enumerated below. Each entry states the lock in one line, its
+HEAD status, and the evidence on which the verdict rests.
+
+### Lock 1 — Tape is the substrate; no parallel substrate; direct-to-struct borrows into it
+
+**Status: VIOLATED in totality tree.**
+
+The totality `crates/core/` still carries the AoS `struct n` tape record
+(`crates/core/src/runtime/tape/record.rs:103`), asserted 16-byte/align-4. The
+skinny-proven SoA `Tape<'input>` (`skinny/crates/runtime/src/tape/mod.rs`) has
+NOT been ported. SK-V19 W2 (`restart/skinny/tranches/sk-v19/SPEC.md:73–79`) is
+the explicit migration wave for this convergence and is unshipped at HEAD.
+
+The eager `OpenFrame`-style `StructBuilder` families (Json, Css, Sheets, SimpleStruct)
+have been retired in the skinny tree but SK-V19 W1 for the totality tree is
+UNSHIPPED — `rg JsonStructBuilder crates/` returns zero only because the builders
+were previously removed during earlier sk-vN work; however the AoS `n` encoding
+persists and the SoA encoding is absent, which is a Lock-1 dual-encoding condition.
+
+The LOCKS.md v+1 LAC-2F-V5-02 cross-call classifier-state clause
+(`restart/locks/LOCKS.md:137–149`) is not verifiable without a live aarch64 wiring
+test, but no such test exists yet in the totality tree.
+
+Evidence: `crates/core/src/runtime/tape/record.rs:103`; `crates/core/tests/tape_substrate.rs:4–5`
+(struct `n` still exercised); `restart/skinny/tranches/sk-v19/SPEC.md:73`.
+
+### Lock 2 — Layout lowering is the canonical IR pass name; StructLayout retires
+
+**Status: VIOLATED.**
+
+`StructLayout` appears in 959 sites in the `crates/` tree (`rg StructLayout crates/ | wc -l == 959`).
+The canonical names `passes::layout`, `Layout`, `LayoutSink`, and `LayoutFacts` are
+absent from the totality `crates/` tree entirely (`rg 'LayoutFacts|passes::layout|LayoutSink' crates/ == 0`).
+SK-V19 W6d (`restart/skinny/tranches/sk-v19/SPEC.md:130`) is the planned 960-site rename
+and is UNSHIPPED. LOCKS.md v+1 clause (`restart/locks/LOCKS.md:162–166`) bars Lock-2
+closure by `LayoutFacts` alone while `Layout`/`LayoutSink` remain absent.
+
+Evidence: `crates/ir/src/registry/struct.rs:16`; `crates/ir/src/registry/mod.rs:2`;
+`restart/skinny/tranches/sk-v19/SPEC.md:130–131`.
+
+### Lock 3 — Cursor-parse + byte-skip unified; empty-path elides cursor calls
+
+**Status: UNTESTED (no enforcement mechanism).**
+
+`__EAGER_EMPTY_PATH` does not appear anywhere in either tree. The lock's v+1 verification
+clause (`restart/locks/LOCKS.md:172–177`) requires a generated-code golden test proving
+the empty path emits no cursor calls. No such test exists in `skinny/crates/` or
+`crates/`. The lock text is satisfied in description but has no closing artifact.
+
+Evidence: `rg '__EAGER_EMPTY_PATH' crates/ skinny/ == 0` (no output).
+
+### Lock 4 — CSP and egraph compose by output-piping; no fused hypergraph
+
+**Status: VIOLATED.**
+
+`crates/egraph/Cargo.toml` lists `csp-solver = "0.1"` as a direct `[dependencies]`
+entry. Lock 4 explicitly requires that egraph and csp-solver compose by output-piping
+and never by import (`restart/locks/LOCKS.md:111`). The bridge surface named
+`passes::bridge` does not exist in the crates tree; the direct crate dependency is the
+fault the lock prohibits. LOCKS.md T-P3 crystallisation clause (`restart/locks/LOCKS.md:591`)
+names this as still open.
+
+Evidence: `crates/egraph/Cargo.toml:4` (`csp-solver = "0.1"`).
+
+### Lock 5 — Backend IR is the lowerer input; no emitter walks Grammar IR
+
+**Status: UNTESTED (no enforcement mechanism).**
+
+Tranche E (`restart/MASTER-PLAN.md:466–495`) owns this gate, and E is entirely
+unstarted: there is no `vm` crate, no explicit `Backend` trait, no BIR validation
+tests, and no `codegen backend_lowerer_boundary` test. MASTER-PLAN §21 (`restart/MASTER-PLAN.md:1365`)
+names Tranche E as the close owner but that tranche is plan-only. The skinny codegen
+path (`skinny/crates/codegen/`) does use a `SinkOnlyProgram` / `CssScanProgram` artifact
+but this is not the full 20-variant BIR required by the lock.
+
+Evidence: `restart/MASTER-PLAN.md:466`; no `crates/vm` directory; no `Backend` trait
+in skinny `crates/codegen/src/`.
+
+### Lock 6 — xtask emits committed source; no proc-macro façade; regen round-trip clean
+
+**Status: PARTIALLY VIOLATED.**
+
+Several generated files in `crates/core/src/runtime/` carry the header
+`// n xtask regen-css; do not edit by hand.` — a non-standard header lacking the rostered
+`// @generated by skinny bbnf-codegen` form required by the Lock 6 v+1 regen-round-trip
+clause (`restart/locks/LOCKS.md:185`). The SK-V18 codegen tree still carries verbatim-blob
+constants in `skinny/crates/codegen/src/runtime_generator.rs:339–521`
+(`JSON_PARSE_ONLY_PARSER_RS`, `JSON_MOD_RS`, `JSON_HOST_RS`, `CSS_MOD_RS`,
+`CSS_PARSER_RS`, `CSS_SINK_RS`), each a `const &str = r#"…"#` string literal — the exact
+pattern the SK-V18 `verbatim-blob-courier` clause (LOCKS.md `:637`) names as REJECT.
+The G1/G2 waves deleted several blobs but the listed constants remain.
+
+Evidence: `skinny/crates/codegen/src/runtime_generator.rs:339,361,383,387,401,505`
+(six verbatim `r#` blob constants); `crates/core/src/runtime/css_l4/builder.rs:1`
+(non-rostered header).
+
+### Lock 7 — `crates/path/` is the consolidated path crate; no `bbnf-path` prefix
+
+**Status: VIOLATED.**
+
+The root workspace still contains `crates/bbnf-path` (package name `bbnf-path`,
+`crates/bbnf-path/Cargo.toml:3`) and `crates/bbnf-path-ts` — both named with the
+stale `bbnf-` prefix that Lock 7 retires (`restart/locks/LOCKS.md:117`: "any plan that
+names `crates/bbnf-path/` (with prefix) is stale"). Neither has been renamed to
+`crates/path` and `crates/path-core` as the lock requires. `path-ts` is expected
+to defer post-V1, but `bbnf-path` (the primary proc-macro shell) must become `path`.
+
+Evidence: `Cargo.toml:2` (`members = ["…crates/bbnf-path", "crates/bbnf-path-ts"…]`);
+`crates/bbnf-path/Cargo.toml:3` (name = "bbnf-path").
+
+### Lock 8 — SOTA gates name specific competitor numbers; cold-only; correct planes
+
+**Status: PARTIALLY HELD (skinny), UNTESTED (totality).**
+
+The MASTER-PLAN SOTA rows (`restart/MASTER-PLAN.md:140–149`) correctly name sonic-rs,
+simdjson, yyjson, and lightningcss with specific corpus/platform anchors. The skinny
+tree has proven JSON > sonic-rs strict. CSS beat lightningcss is directionally valid
+but the H1 re-lock under quiet load is pending (`restart/HANDOFF.md:51`). The SK-V19
+close condition `sota_preserved` (`restart/skinny/tranches/sk-v19/SPEC.md:26`) is an
+open obligation. No RESULTS row in the totality tree carries the four required
+audit-overlay columns (`track2_entry_point`, `comparator_plane`, `per_iter_equality`,
+`audit_overlay_verdict`) because the totality bench is not yet wired.
+
+Evidence: `restart/HANDOFF.md:51` (H1 re-lock pending); `restart/MASTER-PLAN.md:140–149`.
+
+### Lock 9 — Slice-borrow primary; bump + owned are opt-in surfaces over the same parse path
+
+**Status: UNTESTED.**
+
+`parse_in(input, &bump)` and `parse_owned(input)` do not exist in the totality tree.
+The lock's v+1 clause (`restart/locks/LOCKS.md:262–267`) explicitly marks these as
+"V1 runtime obligations until runtime API tests prove the bump and owned surfaces share
+the same parse implementation and lifetime discipline." Tranche B is unstarted.
+
+Evidence: `rg 'fn parse_in|fn parse_owned' crates/ == 0` (no output).
+
+### Lock 10 — Pratt and SIMD auto-detected; cost model derives BackendShape per-rule
+
+**Status: VIOLATED (BackendShape absent from totality tree).**
+
+`BackendShape` does not exist anywhere in the totality `crates/` tree
+(`rg 'BackendShape' crates/ == 0`). SK-V19 W5a (`restart/skinny/tranches/sk-v19/SPEC.md:103`)
+is the introduction wave (`~60-120 LOC`; "core has ZERO today"). The skinny passing
+proof exists in `skinny/crates/passes/`, but the P1-P8 cascade, cost model, and the five
+lowerers for `{EagerTape, OffsetTape, EventTape, SinkOnly, CollapsedStage}` are all
+absent from the totality tree. LOCKS.md v+1 clause (`restart/locks/LOCKS.md:271–280`)
+requires "at least one asserted egraph rewrite with nonzero work, cost extraction from
+measurement-bearing row-local facts, non-tautological CSP, real lowerers for all five
+shapes." None of these conditions hold in `crates/`.
+
+Evidence: `rg 'BackendShape|EagerTape|OffsetTape' crates/ == 0`; `restart/skinny/tranches/sk-v19/SPEC.md:103`.
+
+### Lock 11 — egraph/csp-solver/parse-that are path-deps; bbnf-regex renamed to parse-that-regex
+
+**Status: PARTIALLY VIOLATED.**
+
+`crates/egraph` carries `csp-solver = "0.1"` as a registry dep, not a path dep
+(violates the "path-dep until stable" requirement). In the skinny tree BOTH `bbnf-regex`
+AND `parse-that-regex` crates exist simultaneously at HEAD
+(`skinny/crates/bbnf-regex/` package name = `bbnf-regex`; `skinny/crates/parse-that-regex/`
+package name = `parse-that-regex`). The rename is incomplete — the old name persists as
+a live crate. LOCKS.md v+1 workspace-verification clause (`restart/locks/LOCKS.md:321–326`)
+requires artifact proof of the rename completion; the dual-crate state is the opposite.
+
+Evidence: `crates/egraph/Cargo.toml:4`; `skinny/crates/bbnf-regex/Cargo.toml:3`
+(package name = "bbnf-regex" coexists with parse-that-regex).
+
+### Lock 12 — ser and gorgeous archived BEFORE any implementation wave
+
+**Status: VIOLATED.**
+
+`ser` and `gorgeous` are listed as workspace members at `Cargo.toml:2`
+(`members = ["…crates/ser", "crates/gorgeous"…]`) and their source directories are
+present at `crates/ser/` and `crates/gorgeous/`. Lock 12 requires both removed from
+the workspace before Tranche A begins. MIGRATION.md §0.0 (`restart/MIGRATION.md:16`)
+acknowledges they "do not carry over as-is" but no archive commit has landed.
+
+Evidence: `Cargo.toml:2`; `crates/ser/Cargo.toml:1` (package exists); `crates/gorgeous/`
+directory present.
+
+### Lock 13 — No god directories; no handwritten file over 500 LOC; 4-10 children per dir
+
+**Status: VIOLATED in skinny tree.**
+
+Several non-generated skinny source files breach the 500-LOC ceiling:
+
+- `skinny/crates/bbnf-bench/src/report.rs`: 11,863 LOC — 23× the ceiling.
+- `skinny/crates/bbnf-bench/src/bin/gate.rs`: 5,974 LOC.
+- `skinny/crates/bbnf-bench/src/lock14_baseline.rs`: 5,283 LOC.
+- `skinny/crates/grammar/src/lib.rs`: 2,142 LOC — a god module.
+- `skinny/crates/passes/src/lib.rs`: 2,096 LOC — a god module.
+- `skinny/crates/codegen/src/lib.rs`: 1,506 LOC.
+
+The exception clause for bench/gate/report files (`restart/locks/LOCKS.md:343–347`)
+requires an explicit gate-surface budget and committed LOC transcript. No such
+transcript exists for these files. The grammar and passes god modules have no exception
+path — they must be split into cohesive sub-modules.
+
+Evidence: `skinny/crates/bbnf-bench/src/report.rs:1`; `skinny/crates/passes/src/lib.rs:1`.
+
+### Lock 14 — Zero grammar-specific code in generic crates
+
+**Status: PARTIALLY VIOLATED.**
+
+The SK-V19 W6a commit (`36ca10646`) retired the hardcoded `PRODUCTION_MANIFEST_TABLE`
+from `crates/ir/src/registry/strategy.rs` and replaced it with a build.rs-generated
+table from workspace metadata. The root `Cargo.toml` workspace metadata still enumerates
+explicit per-grammar builder paths (`JsonStructBuilder`, `CssL4Parser`, `BbnfBootstrap`,
+etc.) as literal strings (`Cargo.toml:~line 20`), but these are data, not code — this is
+architecturally acceptable as workspace metadata per the lock's generated-output allowance.
+
+However, `crates/ir/src/passes/recognizers/shape_dict_bbnf.rs` (217 LOC) remains a
+grammar-specific module in the generic `ir` crate. The SK-V19 W6c wave
+(`restart/skinny/tranches/sk-v19/SPEC.md:127–129`) re-keys it on structural shape
+(commit `f4633d468`), but the module still exists under the generic `ir` crate path,
+which is itself a naming fault (a BBNF-grammar-named file in a generic crate).
+
+The Pattern H census at HEAD is 72 (per `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l`),
+up from the LOCKS.md baseline of 67 (`restart/locks/LOCKS.md:408`). The +5 delta
+requires a grammar-roster change or PRUNE-4 sub-wave attribution per the per-tranche
+census discipline; no such attribution is committed at HEAD.
+
+Evidence: `crates/ir/src/passes/recognizers/shape_dict_bbnf.rs:1`;
+`crates/ir/src/passes/recognizers/` (file listing above); Pattern H count = 72.
+
+### Lock 15 — lto=fat, codegen-units=1, panic=abort, debug=true in every release profile
+
+**Status: VIOLATED in root workspace.**
+
+The root `Cargo.toml` `[profile.release]` carries `lto = "thin"` (not `"fat"`) and
+has no `panic` key (defaults to `"unwind"`). Lock 15 requires `lto = "fat"` and
+`panic = "abort"` for every generated runtime and throughput-sensitive consumer
+(`restart/locks/LOCKS.md:436`). The LOCKS.md v+1 scope-clarification clause
+(`:443–451`) acknowledges that root-workspace thin-LTO is a "V1 migration gap" but
+classifies it as open, not closed.
+
+Evidence: `Cargo.toml:[profile.release]` block: `lto = "thin"`, no `panic` field.
+
+### Lock 16 — SIMD/ASM admissibility allowlist; abstract primitive lifts; no orphan bodies
+
+**Status: PARTIALLY HELD (skinny), PARTIALLY VIOLATED.**
+
+The SK-V18 P1 wave deleted the x86 surface from the skinny tree (no `x86_64/` directory
+found under `skinny/crates/bbnf-simd/src/`). The eq-set fan NEON classifier is wired
+as confirmed by `f4633d468`. However, LOCKS.md SK-V18 addendum clause
+(`:641`) identifies four non-delegating `vaddv_u8` shift-add bodies at HEAD
+(`byte_class_from_eq_set_64.rs`, `bracket_depth_mask_64.rs`, `comment_body_mask_64.rs`,
+and `match_tiny_plain_string.rs`) that violate the `bbnf_simd_single_mask_convention`
+requirement. The PLANNED co-gate `bbnf_simd_single_mask_convention` (a live xtask/CI check)
+does not exist yet. Four non-delegating pack implementations is not "one canonical movemask."
+
+Evidence: `restart/locks/LOCKS.md:641` (four-pack census); SK-V19 W5d
+(`restart/skinny/tranches/sk-v19/SPEC.md:113–117`) is the unification wave.
+
+---
+
+## Wave Structure Census: Paper vs Shipped
+
+### A-J Tranche Set
+
+The A-J tranche set (`restart/MASTER-PLAN.md:189–200`) is the declared V1 greenfield
+workspace sequence. **Zero of the ten tranches (A through J) have shipped.** No greenfield
+workspace branch exists, no `cargo metadata` proof of the 24-crate set has been committed,
+`ser` and `gorgeous` remain in the workspace, and the crate naming required by Locks 7/11
+has not been applied. The A-J sequence exists only on paper.
+
+Evidence: `Cargo.toml:2` (still 13 crates, not 24); no `crates/path`, `crates/path-core`,
+`crates/runtime`, `crates/codegen`, `crates/grammar`, `crates/ir/passes` layout per
+MASTER-PLAN §2 table.
+
+### SK-V14 W0..W11 Receiver Block (§13.3)
+
+The MASTER-PLAN marks this historical/pre-block ("superseded for active dispatch by §13.5"
+at `restart/MASTER-PLAN.md:783`). SK-V14 closed; the receiver's close conditions were met
+and the block is correctly superseded. No issue.
+
+### SK-V15 PRUNE-then-REBUILD (§13.5)
+
+All eleven rows in the §13.5 receiver table carry status `active pending`
+(`restart/MASTER-PLAN.md:960–973`). SK-V15 itself closed (`66232b7c3` per HANDOFF.md)
+but the MASTER-PLAN receiver table was never updated to reflect this; the plan text still
+reads `active pending` for every wave. This is a stale-status fault — the receiver rows
+should carry `CLOSED` or `ADMITTED` labels with the closing commit.
+
+Evidence: `restart/MASTER-PLAN.md:960` (MP.SK15.W0 through MP.SK15.W11, all `active pending`).
+
+### SK-V18 GENERALIZATION Block (§13.7)
+
+SK-V18 closed at HEAD (H1 wave: `405786b1a`). All twelve waves (P1–P5, G1–G6, PROVE, H1)
+have shipped on the skinny tree per the commit log. The §13.7 receiver table in MASTER-PLAN
+(`restart/MASTER-PLAN.md:1100–1114`) records the waves but does not update their status to
+CLOSED. The receiver is correct in content but stale in state.
+
+Evidence: `restart/skinny/tranches/sk-v18/SPEC.md` is a closed SPEC; commits through
+`405786b1a` (H1).
+
+### SK-V19 Totality-Fold Block (§13.6)
+
+HEAD is `36ca10646` (commit `fold(sk-v19-w6abe)`), which ships W6a, W6b, W6c (partial),
+and W6e. The following SK-V19 waves remain unshipped:
+
+- W0 (substrate_target classification — 0 behaviour LOC but no committed report).
+- W1 (eager-builder retire in totality tree — `JsonStructBuilder` etc. already absent
+  but no tape-wiring commit).
+- W2 (AoS TapeRec → SoA Tape; `TapeRec` / `struct n` still live in `crates/core`).
+- W3 (grammar-agnostic value-plane generator — `ValueRef<K>`, `Cursor`, `DocumentView`
+  absent from `crates/`).
+- W4 (compile-time StructRegistry fence — `REGISTRY: LazyLock<StructRegistry>` still
+  present in generated files).
+- W5a-d (BackendShape introduce + egraph+csp wiring + kernel unification — all absent).
+- W6d (StructLayout → Layout 960-site rename — 959 `StructLayout` hits remain).
+
+Six of seven top-level waves, and all five W5 sub-waves, are paper only.
+
+Evidence: `rg TapeRec crates/` = multiple hits; `rg BackendShape crates/ == 0`;
+`rg StructLayout crates/ == 959`; `restart/skinny/tranches/sk-v19/SPEC.md:50–143`.
+
+### MP.NW0..NW12 Receiver Waves (§13.2)
+
+These thirteen new waves (plus MP-NW-14) are all categorised `pending` in the §13.4
+historical block (`restart/MASTER-PLAN.md:896`). §13.4 itself carries the Pass-Omega V9
+supersession note marking this block historical/pre-block. The waves are correctly
+deferred to §13.5 consumption, but the MASTER-PLAN body leaves them looking like open
+action items rather than absorbed precursors. Readers of §13.2 and §13.4 encounter
+redundant tables with no clear disposition signal.
+
+Evidence: `restart/MASTER-PLAN.md:879–919` (§13.4 table, all pending).
+
+---
+
+## Stale Locks and Locks Without Enforcement
+
+### Lock 2 — No Enforcement Gate
+
+The `cargo xtask lint-grammar-generalization` command exists in MASTER-PLAN §6 plans
+but no such binary exists (`xtask/src/` does not contain `lint_grammar_generalization`).
+The Lock 2 self-gate is absent. The rename gate that would prove closure is an
+unimplemented xtask command.
+
+Evidence: `rg 'lint-grammar-generalization|lint_grammar_generalization' xtask/src/ == 0` (no output).
+
+### Lock 3 — Stale Closure Precondition
+
+The empty-path elision premise (`__EAGER_EMPTY_PATH`) was specified against a combinator
+architecture (the pre-restart combinator/SpanParser path). After the skinny tree adopted
+a direct-descent monolithic emitter, the `__EAGER_EMPTY_PATH` symbol never materialised.
+The lock text describes a feature that was never built in either tree; it is a paper
+obligation with no implementation trajectory visible in either SK-V18 or SK-V19 wave plans.
+
+### Lock 9 — No Enforcement Gate
+
+The `parse`, `parse_in`, `parse_owned` triple API surface has no test harness in either
+tree. Tranche B (`restart/MASTER-PLAN.md:351–378`) is entirely unstarted. The lock names
+B/G as owners but those tranches do not exist.
+
+### Lock 15 — Root Profile Never Patched
+
+Despite being documented as a "V1 migration gap" since the Lock 15 v+1 scope-clarification,
+the root `Cargo.toml` `[profile.release]` has not been updated to `lto = "fat"` and
+`panic = "abort"` in any commit visible in the log. The skinny workspace carries `lto = "fat"`,
+but the totality root does not. This gap is acknowledged in the LOCKS text but has no
+assigned wave and no owning tranche other than the vague "F/H/J" designation in
+MASTER-PLAN §21 (`restart/MASTER-PLAN.md:1376`).
+
+---
+
+## Cross-Cutting Findings
+
+### MASTER-PLAN §13.5 Stale Status Labels
+
+Every SK-V15 receiver row in §13.5 (`restart/MASTER-PLAN.md:960–973`) still reads
+`active pending`. SK-V15 closed. The same stale-status problem applies to the §13.7
+SK-V18 block: all waves are documented but none are marked `CLOSED` or `ADMITTED`.
+A reader cannot distinguish what has shipped from what is planned.
+
+### Two-Tree Asymmetry Has No Resolution Wave in MASTER-PLAN
+
+The MASTER-PLAN describes a single greenfield workspace (A-J tranches). The campaign
+has instead bifurcated into a skinny proving tree (`skinny/crates/`) and a totality
+tree (`crates/`). The MASTER-PLAN's A-J column names (Tranche B = Runtime Substrate,
+etc.) do not map to any actual crate or wave; the real implementation authority is
+the sk-vN SPEC sequence. This asymmetry is acknowledged in HANDOFF.md and MIGRATION.md
+but the MASTER-PLAN's main body has not been updated to reflect it. The A-J tranche
+set is now a graveyard of paper plans that exist only as receiver containers.
+
+### Lock 14 Self-Gate Still Green-by-Exclusion
+
+LOCKS.md SK-V18 addendum (`:639`) documents that the Lock-14 self-gate is
+"green-by-exclusion" because leak surfaces are parked in the weak
+`SKV15_W2_EXTRA_COVERAGE_ROOTS`, not the strict `GENERIC_SCAN_ROOTS`. The SK-V19 W6e
+wave (`restart/skinny/tranches/sk-v19/SPEC.md:132–133`) is supposed to flip this to a
+live check, and commit `36ca10646` (`fold(sk-v19-w6abe)`) reportedly does so. However,
+the lock text's verification rg commands (`rg -n 'JsonParser|CssL4Parser|BbnfBootstrap|GoogleSheetsParser' crates/{ir,…}/src/`)
+must still return ZERO in the totality tree after the build.rs approach at SK-V19 W6a —
+this is only verifiable post-build since `build.rs` generates the table into `OUT_DIR`.
+If the build is not run, the closure remains symbolic.
+
+### Pattern H Count Exceeds SK-V14 Baseline
+
+`find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l` returns 72 at HEAD.
+The LOCKS.md baseline is 67 (`restart/locks/LOCKS.md:408`); the SK-V18 addendum records
+71 and attributes the +4 to a tape-fold roster trace (`restart/locks/LOCKS.md:649`). The
++1 beyond that (72 vs 71) is unattributed at HEAD, which under the per-tranche census
+discipline triggers an O(N) generator-regression scan.
+
+Evidence: `find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l == 72`.
+
+---
+
+## Recommendations
+
+1. **Mark §13.5 and §13.7 receiver rows CLOSED.** Every wave in the SK-V15 and SK-V18
+   receiver blocks that has shipped must carry an explicit `CLOSED` label and closing
+   commit hash. The current `active pending` labels are stale and mislead planning agents.
+
+2. **Assign Lock 15 a concrete owning wave.** The root `[profile.release] lto = "thin"`
+   is a measurable regression risk. Assign it explicitly to SK-V19 W0 or W1 as a zero-LOC
+   config fix; do not leave it as a vague F/H/J responsibility with no wave home.
+
+3. **Retire the A-J tranche set or rename it.** The A-J sequences are receiver containers
+   for a greenfield workspace that has never been started. Either collapse them into the
+   sk-vN wave manifest explicitly, or rename the headers to make clear they are planning
+   stubs awaiting the post-campaign V1 launch, not active engineering targets.
+
+4. **Sever the `crates/egraph` → `csp-solver` direct dependency.** This is a Lock-4
+   violation with a concrete fix: move the import to a `passes::bridge` shim crate and
+   remove the `[dependencies]` entry. Assign to SK-V19 W5b or a standalone bridge commit.
+
+---
+
+## Evidence Supplements From Independent HEAD Inspection
+
+### Lock 1 — CSS OpenFrame ladder is live in totality tree
+
+`crates/core/src/runtime/css_l4/builder.rs` is 817 LOC and contains `enum OpenFrame<'p>`
+at line 16 with 73 uses in the same file. This is the eager-builder ladder Lock 1
+identifies as the DELETE target of the SK-V18/SK-V19 fold. The builder.rs header
+`restart/locks/LOCKS.md:614` names this as fold-DELETION target; it is undeleted at HEAD.
+
+### Lock 2 — StructLayout at 41 sites in crates/ir/src/ alone
+
+Independent `grep` over `crates/ir/src/` returns 41 `StructLayout` hits, not 959
+(the 959 figure cited by the sibling pass appears to count all `crates/` including
+generated files; both numbers confirm the violation; the canonical count for
+non-generated source is 41 in `crates/ir/src/` alone).
+
+### Lock 3 — `__EAGER_EMPTY_PATH` IS emitted in totality generated files
+
+Contrary to the prior-pass finding that this symbol is absent, direct inspection
+confirms `__EAGER_EMPTY_PATH` appears in multiple generated files under
+`crates/core/src/grammar/generated/` (math, ebnf, bnf, csv, bbnf, json, css_pretty,
+google_sheets). The symbol is present in generated code. The lock's open obligation
+is the missing golden-test proving cursor-consult is elided on that path — not the
+absence of the symbol itself.
+
+Evidence: `crates/core/src/grammar/generated/math.rs:818`; `ebnf.rs:7602`;
+`bnf.rs:3247`; `csv.rs:1645`; `bbnf.rs:21500`; `json.rs:3448`; `css_pretty.rs:8995`.
+
+### Lock 6 — xtask regen-css is CSS-specific and 1,967 LOC
+
+`xtask/src/regen_css.rs` is 1,967 LOC (4× the Lock 13 500-LOC ceiling) and panics on
+any grammar other than `css_l4` (`regen_css.rs:278-295`). The `CSS_GENERATED_HEADER`
+constant (`line 255`) is grammar-specific. The regen family for JSON, Sheets, BBNF,
+etc. is absent. This is both a Lock 6 partial-hold and a Lock 14 tension because the
+generic tooling hard-codes grammar names.
+
+### Lock 12 — ser and gorgeous confirmed still in workspace
+
+`Cargo.toml:2` workspace members include `crates/ser` and `crates/gorgeous`. Both
+directories exist. The `crates/gorgeous/Cargo.toml` contains grammar-specific feature
+flags (`css_l4`, `json`, etc.) confirming gorgeous is not merely archived source.
+
+### Lock 13 — Pattern H count is 72, one unattributed beyond the SK-V18 addendum's 71
+
+`find crates/core/src/runtime -mindepth 2 -type f -name '*.rs' | wc -l` returns 72.
+`LOCKS.md:649` attributes 71 (+4 from 67 baseline) to the tape-fold roster trace.
+The additional +1 to 72 is unattributed at HEAD.
+
+### Lock 14 — GrammarAuditTag{Json, CssL4} confirmed in generic crates/ir
+
+`crates/ir/src/passes/audit/payload_coverage.rs:68-70` contains a grammar-specific
+`GrammarAuditTag` enum with `Json` and `CssL4` named variants in the generic `ir`
+crate. This is a clear Lock 14 violation independent of the shape_dict_bbnf finding.
+
+### Lock 14 — PRODUCTION_MANIFEST_TABLE moved to build.rs (genuine improvement)
+
+`crates/ir/src/registry/strategy.rs:139` now uses `include!(concat!(env!("OUT_DIR"), "/production_manifest_table.rs"))` fed by `crates/ir/build.rs`, eliminating the
+prior literal arm-list. The workspace `Cargo.toml:47-55` still carries grammar-name
+strings as data (not code), which is architecturally admissible. This is a genuine
+Lock-14 progress point the prior audit correctly notes.
+
+### Lock 15 — Confirmed: `profile.release` uses `lto = "thin"`
+
+`Cargo.toml:81`: `lto = "thin"`. Lock 15 requires `lto = "fat"`. The `[profile.bench]`
+profile at line 95 carries `lto = "fat"` correctly; the release profile does not.
+No `panic` key in `[profile.release]` (defaults to `"unwind"`; Lock 15 requires `"abort"`
+unless `@error(recover = ...)` is used).
+
+### x86 Allowlist Inconsistency in MASTER-PLAN
+
+`MASTER-PLAN.md §13.1` (lines 733-747) retains first-class x86_64 AVX-512 entries in
+the admissible SIMD primitive table. The SK-V18 LOCKS addendum at `LOCKS.md:635`
+sharpens the scope to aarch64-ONLY and marks the entire `x86_64/` surface as a
+P1 DELETION target. The MASTER-PLAN's x86 table is stale relative to the governing
+LOCKS addendum; the Governance Boundary clause (`LOCKS.md:652-661`) establishes that
+LOCKS v+1 wording governs. Plans that consult `MASTER-PLAN.md §13.1` for x86 primitives
+will be misled.
+
+### Lock 11 — Both bbnf-regex and parse-that-regex coexist in skinny
+
+Both `skinny/crates/bbnf-regex/` and `skinny/crates/parse-that-regex/` are present at
+HEAD. The rename is incomplete; a dual-crate state is not an accepted-exception with
+bridge ownership per `LOCKS.md:321-326`.

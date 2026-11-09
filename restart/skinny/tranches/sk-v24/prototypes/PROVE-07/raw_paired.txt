@@ -1,0 +1,23 @@
+# PARITY corpus=twitter direct==serde==sonic typed-struct OK
+# PARITY corpus=canada direct==serde==sonic typed-struct OK
+# PARITY corpus=citm_catalog direct==serde==sonic typed-struct OK
+# SK-V22 JSON paired-interleaved  N=200  loadavg={ 22.24 15.67 11.94 }
+# schema: PAIR corpus ratio mean lo95 hi95  (ratio = A_ns_per_byte / B_ns_per_byte)
+PAIR corpus=twitter ratio=tape/sonic mean=0.4529 lo95=0.4413 hi95=0.4645
+PAIR corpus=twitter ratio=fused/sonic mean=0.6004 lo95=0.5871 hi95=0.6138
+PAIR corpus=twitter ratio=tape/serde mean=0.3119 lo95=0.3048 hi95=0.3191
+PAIR corpus=twitter ratio=fused/serde mean=0.4151 lo95=0.4056 hi95=0.4245
+PAIR corpus=twitter ratio=direct/serde_typed mean=0.8166 lo95=0.8064 hi95=0.8268
+PAIR corpus=twitter ratio=direct/sonic_typed mean=0.7867 lo95=0.7774 hi95=0.7959
+PAIR corpus=canada ratio=tape/sonic mean=0.7009 lo95=0.6907 hi95=0.7111
+PAIR corpus=canada ratio=fused/sonic mean=1.1978 lo95=1.1807 hi95=1.2149
+PAIR corpus=canada ratio=tape/serde mean=0.3986 lo95=0.3921 hi95=0.4051
+PAIR corpus=canada ratio=fused/serde mean=0.6841 lo95=0.6699 hi95=0.6983
+PAIR corpus=canada ratio=direct/serde_typed mean=0.7301 lo95=0.7221 hi95=0.7380
+PAIR corpus=canada ratio=direct/sonic_typed mean=0.5946 lo95=0.5877 hi95=0.6014
+PAIR corpus=citm_catalog ratio=tape/sonic mean=0.4497 lo95=0.4400 hi95=0.4594
+PAIR corpus=citm_catalog ratio=fused/sonic mean=0.5363 lo95=0.5258 hi95=0.5467
+PAIR corpus=citm_catalog ratio=tape/serde mean=0.3095 lo95=0.3029 hi95=0.3160
+PAIR corpus=citm_catalog ratio=fused/serde mean=0.3700 lo95=0.3622 hi95=0.3777
+PAIR corpus=citm_catalog ratio=direct/serde_typed mean=0.5671 lo95=0.5600 hi95=0.5741
+PAIR corpus=citm_catalog ratio=direct/sonic_typed mean=0.6565 lo95=0.6473 hi95=0.6656

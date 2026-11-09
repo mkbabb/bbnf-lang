@@ -1,0 +1,38 @@
+# mirror.toml — LOCK-6 6A MIRROR-TREE relation over the isomorphism plane.
+#
+# The live pair:
+#   spine  = crates/core/src/path/{ir,error}.rs   (canonical types)
+#   bridge = crates/bbnf-path-ts/{src/schema.rs, src/lib.rs, src/fixture.rs,
+#            ts/path.ts}                            (serde twins + TS surface)
+#
+# Each [[pair]] row is a relation r(twin) = spine_preimage. A bridge
+# declaration is LEGITIMATE iff it is either
+#   (a) an identity mirror — its name equals a spine type name, or
+#   (b) matched by an idiom class (idiom-classes.toml) whose relation r
+#       resolves to a spine pre-image named here.
+#
+# The linter fails RED when a bridge declaration is neither an identity
+# mirror nor covered by a [[pair]] pre-image — i.e. an unaccounted
+# exemption. cap = Σ over idiom classes of |source sites matching
+# predicate[c] that resolve to a spine pre-image|.
+
+# serde-transport twins: schema.rs *Payload types → spine types.
+[[pair]]
+twin = "OwnedSegmentPayload"
+preimage = "OwnedPathSegment"
+class = "serde-transport"
+
+[[pair]]
+twin = "TypedPathPayload"
+preimage = "TypedPath"
+class = "serde-transport"
+
+[[pair]]
+twin = "PathErrorPayload"
+preimage = "PathError"
+class = "serde-transport"
+
+[[pair]]
+twin = "PathErrorReasonPayload"
+preimage = "PathErrorReason"
+class = "serde-transport"

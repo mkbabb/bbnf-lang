@@ -1,0 +1,508 @@
+16111 | / ...                   break 'avx2_scan {
+16112 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+16113 | | ...                   };
+help: wrap this expression in parentheses
+16111 ~                                                                     break 'avx2_scan ({
+16112 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+16113 ~                                                                     });
+
+16130 | / ...                   break 'avx2_scan {
+16131 | | ...                       ::core::option::Option::Some(__i - __start)
+16132 | | ...                   };
+help: wrap this expression in parentheses
+16130 ~                                                                     break 'avx2_scan ({
+16131 |                                                                         ::core::option::Option::Some(__i - __start)
+16132 ~                                                                     });
+
+16286 | / ...                   break 'avx2_scan {
+16287 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+16288 | | ...                   };
+help: wrap this expression in parentheses
+16286 ~                                                                     break 'avx2_scan ({
+16287 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+16288 ~                                                                     });
+
+16305 | / ...                   break 'avx2_scan {
+16306 | | ...                       ::core::option::Option::Some(__i - __start)
+16307 | | ...                   };
+help: wrap this expression in parentheses
+16305 ~                                                                     break 'avx2_scan ({
+16306 |                                                                         ::core::option::Option::Some(__i - __start)
+16307 ~                                                                     });
+
+17165 | / ...                   break 'avx2_scan {
+17166 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+17167 | | ...                   };
+help: wrap this expression in parentheses
+17165 ~                                                                     break 'avx2_scan ({
+17166 |                                                                         ::core::option::Option::Some((__i + __rel) - __start)
+17167 ~                                                                     });
+
+17184 | / ...                   break 'avx2_scan {
+17185 | | ...                       ::core::option::Option::Some(__i - __start)
+17186 | | ...                   };
+help: wrap this expression in parentheses
+17184 ~                                                                     break 'avx2_scan ({
+17185 |                                                                         ::core::option::Option::Some(__i - __start)
+17186 ~                                                                     });
+
+21248 | / ...                   break 'avx2_scan {
+21249 | | ...                       ::core::option::Option::Some((__i + __rel) - __start)
+21250 | | ...                   };
+help: wrap this expression in parentheses
+21248 ~                                                                                 break 'avx2_scan ({
+21249 |                                                                                     ::core::option::Option::Some((__i + __rel) - __start)
+21250 ~                                                                                 });
+
+21267 | / ...                   break 'avx2_scan {
+21268 | | ...                       ::core::option::Option::Some(__i - __start)
+21269 | | ...                   };
+help: wrap this expression in parentheses
+21267 ~                                                                                 break 'avx2_scan ({
+21268 |                                                                                     ::core::option::Option::Some(__i - __start)
+21269 ~                                                                                 });
+
+27 | use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
+
+122 | fn pattern_for_state<'a>(ir: &'a GrammarIR, table: &'a DtaTable, idx: usize) -> Option<&'a str> {
+
+101 | fn body_emits_to_builder(node: &IrNode) -> bool {
+
+569 | pub(super) fn lower_string_lit<'a, 'p: 'a>(
+
+16 | enum OpenFrame<'p> {
+...
+32 |     ColorMix {
+
+7326 |                     if __iter_count < 0u32 {
+
+7657 |                     if __iter_count < 0u32 {
+
+7842 |                     if __iter_count < 0u32 {
+
+8088 |                     if __iter_count < 0u32 {
+
+8403 |                     if __iter_count < 0u32 {
+
+8606 |                     if __iter_count < 0u32 {
+
+8732 |                     if __iter_count < 0u32 {
+
+8970 |                     if __iter_count < 0u32 {
+
+9811 |                     if __iter_count < 0u32 {
+
+10926 |                     if __iter_count < 0u32 {
+
+11306 |                     if __iter_count < 0u32 {
+
+11486 | ...                   if __iter_count < 0u32 {
+
+11690 | ...                   if __iter_count < 0u32 {
+
+11894 | ...                   if __iter_count < 0u32 {
+
+12102 |                     if __iter_count < 0u32 {
+
+12361 | ...                   if __iter_count < 0u32 {
+
+12395 | ...                   if __iter_count < 0u32 {
+
+13079 |                     if __iter_count < 0u32 {
+
+13152 |                     if __iter_count < 0u32 {
+
+13207 |                     if __iter_count < 0u32 {
+
+13407 | ...                   if __iter_count < 0u32 {
+
+13431 |                     if __iter_count < 0u32 {
+
+13887 |                     if __iter_count < 0u32 {
+
+1930 |                     if __iter_count < 0u32 {
+
+2130 |                     if __iter_count < 0u32 {
+
+31672 |                     if __iter_count < 0u32 {
+
+39401 |                     if __iter_count < 0u32 {
+
+40619 |                     if __iter_count < 0u32 {
+
+40835 |                     if __iter_count < 0u32 {
+
+41034 |                     if __iter_count < 0u32 {
+
+42142 |                     if __iter_count < 0u32 {
+
+43399 |                     if __iter_count < 0u32 {
+
+43878 | ...                   if __iter_count < 0u32 {
+
+43902 |                     if __iter_count < 0u32 {
+
+44462 |                     if __iter_count < 0u32 {
+
+44521 |                     if __iter_count < 0u32 {
+
+44600 |                     if __iter_count < 0u32 {
+
+44742 | ...                   if __iter_count < 0u32 {
+
+47741 |                     if __iter_count < 0u32 {
+
+47893 |                     if __iter_count < 0u32 {
+
+48077 |                     if __iter_count < 0u32 {
+
+48249 |                     if __iter_count < 0u32 {
+
+48651 |                     if __iter_count < 0u32 {
+
+49441 |                     if __iter_count < 0u32 {
+
+51002 |                     if __iter_count < 0u32 {
+
+51063 |                     if __iter_count < 0u32 {
+
+51252 |                     if __iter_count < 0u32 {
+
+51313 |                     if __iter_count < 0u32 {
+
+51502 |                     if __iter_count < 0u32 {
+
+51563 |                     if __iter_count < 0u32 {
+
+51815 |                     if __iter_count < 0u32 {
+
+51876 |                     if __iter_count < 0u32 {
+
+52048 |                     if __iter_count < 0u32 {
+
+52109 |                     if __iter_count < 0u32 {
+
+52298 |                     if __iter_count < 0u32 {
+
+52359 |                     if __iter_count < 0u32 {
+
+52548 |                     if __iter_count < 0u32 {
+
+52609 |                     if __iter_count < 0u32 {
+
+52798 |                     if __iter_count < 0u32 {
+
+52859 |                     if __iter_count < 0u32 {
+
+53103 |                     if __iter_count < 0u32 {
+
+53164 |                     if __iter_count < 0u32 {
+
+53409 |                     if __iter_count < 0u32 {
+
+53470 |                     if __iter_count < 0u32 {
+
+53920 |                     if __iter_count < 0u32 {
+
+53981 |                     if __iter_count < 0u32 {
+
+54229 |                     if __iter_count < 0u32 {
+
+54290 |                     if __iter_count < 0u32 {
+
+54538 |                     if __iter_count < 0u32 {
+
+54599 |                     if __iter_count < 0u32 {
+
+54844 |                     if __iter_count < 0u32 {
+
+54905 |                     if __iter_count < 0u32 {
+
+55563 |                     if __iter_count < 0u32 {
+
+55624 |                     if __iter_count < 0u32 {
+
+56035 |                     if __iter_count < 0u32 {
+
+56096 |                     if __iter_count < 0u32 {
+
+56278 |                     if __iter_count < 0u32 {
+
+56339 |                     if __iter_count < 0u32 {
+
+56587 |                     if __iter_count < 0u32 {
+
+56648 |                     if __iter_count < 0u32 {
+
+56833 |                     if __iter_count < 0u32 {
+
+56894 |                     if __iter_count < 0u32 {
+
+57428 |                     if __iter_count < 0u32 {
+
+57489 |                     if __iter_count < 0u32 {
+
+58023 |                     if __iter_count < 0u32 {
+
+58084 |                     if __iter_count < 0u32 {
+
+58695 |                     if __iter_count < 0u32 {
+
+58756 |                     if __iter_count < 0u32 {
+
+58937 |                     if __iter_count < 0u32 {
+
+58998 |                     if __iter_count < 0u32 {
+
+59246 |                     if __iter_count < 0u32 {
+
+59307 |                     if __iter_count < 0u32 {
+
+59555 |                     if __iter_count < 0u32 {
+
+59616 |                     if __iter_count < 0u32 {
+
+59860 |                     if __iter_count < 0u32 {
+
+59921 |                     if __iter_count < 0u32 {
+
+61494 |                     if __iter_count < 0u32 {
+
+61698 |                     if __iter_count < 0u32 {
+
+62908 |                     if __iter_count < 0u32 {
+
+63065 |                     if __iter_count < 0u32 {
+
+64547 |                     if __iter_count < 0u32 {
+
+64737 |                     if __iter_count < 0u32 {
+
+64927 |                     if __iter_count < 0u32 {
+
+65540 |                     if __iter_count < 0u32 {
+
+65601 |                     if __iter_count < 0u32 {
+
+65770 |                     if __iter_count < 0u32 {
+
+65831 |                     if __iter_count < 0u32 {
+
+66000 |                     if __iter_count < 0u32 {
+
+66061 |                     if __iter_count < 0u32 {
+
+66293 |                     if __iter_count < 0u32 {
+
+66354 |                     if __iter_count < 0u32 {
+
+66523 |                     if __iter_count < 0u32 {
+
+66584 |                     if __iter_count < 0u32 {
+
+66753 |                     if __iter_count < 0u32 {
+
+66814 |                     if __iter_count < 0u32 {
+
+66983 |                     if __iter_count < 0u32 {
+
+67044 |                     if __iter_count < 0u32 {
+
+67213 |                     if __iter_count < 0u32 {
+
+67274 |                     if __iter_count < 0u32 {
+
+67506 |                     if __iter_count < 0u32 {
+
+67567 |                     if __iter_count < 0u32 {
+
+67799 |                     if __iter_count < 0u32 {
+
+67860 |                     if __iter_count < 0u32 {
+
+68092 |                     if __iter_count < 0u32 {
+
+68153 |                     if __iter_count < 0u32 {
+
+68385 |                     if __iter_count < 0u32 {
+
+68446 |                     if __iter_count < 0u32 {
+
+68678 |                     if __iter_count < 0u32 {
+
+68739 |                     if __iter_count < 0u32 {
+
+68971 |                     if __iter_count < 0u32 {
+
+69032 |                     if __iter_count < 0u32 {
+
+69264 |                     if __iter_count < 0u32 {
+
+69325 |                     if __iter_count < 0u32 {
+
+69494 |                     if __iter_count < 0u32 {
+
+69555 |                     if __iter_count < 0u32 {
+
+69724 |                     if __iter_count < 0u32 {
+
+69785 |                     if __iter_count < 0u32 {
+
+70017 |                     if __iter_count < 0u32 {
+
+70078 |                     if __iter_count < 0u32 {
+
+70247 |                     if __iter_count < 0u32 {
+
+70308 |                     if __iter_count < 0u32 {
+
+70540 |                     if __iter_count < 0u32 {
+
+70601 |                     if __iter_count < 0u32 {
+
+70833 |                     if __iter_count < 0u32 {
+
+70894 |                     if __iter_count < 0u32 {
+
+71063 |                     if __iter_count < 0u32 {
+
+71124 |                     if __iter_count < 0u32 {
+
+71293 |                     if __iter_count < 0u32 {
+
+71354 |                     if __iter_count < 0u32 {
+
+71586 |                     if __iter_count < 0u32 {
+
+71647 |                     if __iter_count < 0u32 {
+
+71879 |                     if __iter_count < 0u32 {
+
+71940 |                     if __iter_count < 0u32 {
+
+72172 |                     if __iter_count < 0u32 {
+
+72233 |                     if __iter_count < 0u32 {
+
+2679 |                     if __iter_count < 0u32 {
+
+2950 | ...                   if __iter_count < 0u32 {
+
+2974 |                     if __iter_count < 0u32 {
+
+3029 |                     if __iter_count < 0u32 {
+
+3078 |                     if __iter_count < 0u32 {
+
+4215 |                     if __iter_count < 0u32 {
+
+4612 |                     if __iter_count < 0u32 {
+
+1399 |                     if __iter_count < 0u32 {
+
+1555 |                     if __iter_count < 0u32 {
+
+3245 |                     if __iter_count < 0u32 {
+
+3583 | ...                   if __iter_count < 0u32 {
+
+3744 | ...                   if __iter_count < 0u32 {
+
+3957 | ...                   if __iter_count < 0u32 {
+
+4172 | ...                   if __iter_count < 0u32 {
+
+5397 |                     if __iter_count < 0u32 {
+
+5678 |                     if __iter_count < 0u32 {
+
+6525 |                     if __iter_count < 0u32 {
+
+6814 |                     if __iter_count < 0u32 {
+
+6991 | ...                   if __iter_count < 0u32 {
+
+7331 | ...                   if __iter_count < 0u32 {
+
+8583 |                     if __iter_count < 0u32 {
+
+9147 |                     if __iter_count < 0u32 {
+
+
+running 1 test
+
+============ LOCK-1 pass-1 · probe 2 · recursion output-parity ============
+
+JSON compiled — 8 rules, 2 carry a recursion knot, all-finite=true
+
+  RUNNING solver — ir.types[value] = HeterogeneousAltJoin([BoxedEnum, Span, Bool, F64])
+                   render               = Sum[4](μ↩ | Str | Bool | F64)
+  RUNNING value-join distinct arms       = 4
+  RUNNING ir.types[array]  = List(Enum)   (1D packs this as List(#0))
+  RUNNING ir.types[object] = List(Enum)   (1D packs this as Row(#0))
+  RUNNING array-type == object-type ?    = true  (1D keeps them distinct)
+
+  REGISTRY (the field codegen ACTUALLY consumes — json.registry.json):
+    array : kind=Struct rule_type=Vec(Enum) fields=[StructField { name: "element", type_desc: BoxedEnum, source: RepeatElement }]
+    object: kind=Struct rule_type=Vec(Enum) fields=[StructField { name: "element", type_desc: BoxedEnum, source: RepeatElement }]
+    array-layout == object-layout (registry) ? = true
+    ⇒ List≠Row is absent from the WHOLE general pipeline; recovered only by a
+      bespoke per-grammar codegen template (xtask regen-json). 1D would DERIVE
+      it from the grammar — the running pass structurally cannot (no Row LayoutKind).
+
+  1D  (e-graph μ-extract)  : Sum[6](Null | Bool | Int(0) | Str | List(#0) | Row(#0))
+  RUNNING (root CSP)       : value = Sum[4](BoxedEnum | Str | Bool | F64)   array = object = List(Enum)
+
+  SCHEMA FIDELITY: 1D PACKS 6 arms incl. List(#0)≠Row(#0). The running solver emits a
+                   COARSE NOMINAL SKELETON: value=Sum[4](BoxedEnum|Str|Bool|F64),
+                   array=object=List(Enum) (List/Row distinction COLLAPSED at TypeDesc level).
+                   Structurally equal to 1D: FALSE — 1D is strictly more faithful.
+  SHIPPED SCHEMA:  structure deferred to codegen — the manifest-bound JsonStructBuilder
+                   emits the 6-variant JsonValue (Null|Bool|Number|String|Array|Object),
+                   distinct Array/Object, recursion closed via arena-id indirection.
+                   Finite, terminating, CORRECT — supplied nominally, not by the solver.
+
+Sheets compiled — 37 rules, 20 carry a recursion knot, all-finite=true
+  Sheets[expression      ] = μ↩
+  Sheets[primary         ] = Sum[4](μ↩ | F64 | Bool | Str)
+  Sheets[paren_expr      ] = Tuple(Str,μ↩,Str)
+  Sheets[comparison_expr ] = Tuple(μ↩,List(Tuple(Str,μ↩)))
+  Sheets mutual-recursion spine: TERMINATED, all-finite (recursion knots: 20).
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_84ec116c24edccbc::__pattern_84ec116c24edccbc_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+
+CSS L4 compiled — 4/4 files, 191 rules, 44 recursion knots, all-finite=true
+
+================ VERDICT ================
+TERMINATION / FINITENESS: the running root CSP terminates and yields a FINITE schema on
+EVERY real recursive grammar — JSON (self-ref value), Sheets (deep mutual recursion),
+CSS L4. Recursion is closed NOMINALLY: a compound/self Ref reduces to a nominal knot
+(BoxedEnum / Enum) on sight, so the pass never diverges by construction. On the
+divergence axis 1D buys nothing — the running pass already gets termination for free.
+
+SCHEMA SHAPE (the honest gap): the running solver's recursive output is a COARSE NOMINAL
+SKELETON — value = Sum[4](BoxedEnum|Str|Bool|F64) (collapses the two recursive arms AND
+the null arm), and array = object = List(Enum) (does NOT even distinguish a List-of-value
+from a Row-of-kv-pair). 1D's Sum(Null|Bool|Int|Str|List(#0)|Row(#0)) is strictly MORE
+structurally faithful: 6 distinct arms, List(#0) ≠ Row(#0), structural back-edges.
+The two are NOT structurally equal — 1D genuinely packs more structure into the TypeDesc.
+
+LOAD-BEARING? No. The running ARCHITECTURE defers structure to codegen by design: the
+manifest-bound JsonStructBuilder + hand-written runtime types emit the faithful 6-variant
+JsonValue (Null|Bool|Number|String|Array|Object) with distinct Array/Object, recursion
+closed via arena-id indirection — finite, terminating, correct. The structure 1D packs
+into the solver's TypeDesc is, in the shipped system, supplied nominally downstream and
+PROTO-1 showed zero cost/overload residue for extraction to rank over. 1D's richer μ-sum
+is therefore UNUSED CAPACITY relative to the shipped system, not a capability it lacks.
+
+⇒ 1D's native cyclicity beats only the STRAWMAN broken nominal fold. Against the RUNNING
+nominal fold it produces a finer-grained TypeDesc the shipped architecture never consumes.
+VERDICT: PASS — RETIRE 1D.  Recorded caveat: 1D is the ONLY path that yields a
+self-contained STRUCTURAL recursive TypeDesc at the rule level (List≠Row, all arms). If a
+future consumer ever needs the PACKED form rather than the codegen-distributed nominal
+form, that single narrow need is the only ground on which to revive it.
+test recursion_parity ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+

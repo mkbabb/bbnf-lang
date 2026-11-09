@@ -4,8 +4,8 @@
 //!
 //! A rule is String-shaped when its body resolves to a single
 //! [`IrNode::Regex`] (optionally wrapped in `Map` / `OptionalWhitespace`)
-//! whose cached [`bbnf_regex::RegexClass`] classification is
-//! [`bbnf_regex::RegexClass::QuotedString`].
+//! whose cached [`parse_that_regex::RegexClass`] classification is
+//! [`parse_that_regex::RegexClass::QuotedString`].
 //!
 //! The canonical sources:
 //!
@@ -24,7 +24,7 @@
 //! `regex_info` directly so it doesn't have to re-derive the NodeId
 //! indirection.
 
-use bbnf_regex::RegexClass;
+use parse_that_regex::RegexClass;
 
 use crate::passes::inspect::unwrap_map_ow;
 use crate::types::{GrammarIR, IrNode, RuleId};

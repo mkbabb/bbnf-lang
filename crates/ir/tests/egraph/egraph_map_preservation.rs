@@ -14,7 +14,7 @@
 //! when its class also carries a non-Map equivalent, the wrapper still
 //! wins on cost. The test below seeds exactly that contention.
 
-use egraph::{EGraph, Extractor, NoAnalysis};
+use parse_that_egraph::{EGraph, Extractor, NoAnalysis};
 
 use bbnf_ir::egraph::GrammarCostModel;
 use bbnf_ir::egraph::node::GrammarENode;

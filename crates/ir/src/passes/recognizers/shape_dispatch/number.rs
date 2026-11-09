@@ -3,8 +3,8 @@
 //! # Predicate
 //!
 //! A rule is Number-shaped when its body resolves to a single
-//! [`IrNode::Regex`] whose cached [`bbnf_regex::RegexClass`] is
-//! [`bbnf_regex::RegexClass::Numeric`]. `Numeric` subsumes signed /
+//! [`IrNode::Regex`] whose cached [`parse_that_regex::RegexClass`] is
+//! [`parse_that_regex::RegexClass::Numeric`]. `Numeric` subsumes signed /
 //! unsigned variants, optional fractions, optional exponents, and
 //! JSON's `reject_leading_zero` via parameter flags the classifier
 //! records per pattern.
@@ -19,7 +19,7 @@
 //!
 //! Reads [`GrammarIR::regex_info`]. No new mining.
 
-use bbnf_regex::RegexClass;
+use parse_that_regex::RegexClass;
 
 use crate::passes::inspect::unwrap_map_ow;
 use crate::types::{GrammarIR, IrNode, RuleId};

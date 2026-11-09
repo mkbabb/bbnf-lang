@@ -10,14 +10,14 @@ repository = "https://github.com/mkbabb/bbnf-lang"
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = "1"
 rmp-serde = "1"
-parse_that = "0.4"
-bbnf-regex = { version = "0.1", features = ["serde"] }
+parse_that.workspace = true
+parse-that-regex = { workspace = true, features = ["serde"] }
 rustc-hash = "2"
 rayon = "1"
 smallvec = "1.13"
-csp-solver = "0.1"
-egraph = { path = "../egraph" }
-egraph-derive = { path = "../egraph-derive" }
+csp-solver.workspace = true
+parse-that-egraph.workspace = true
+parse-that-egraph-derive.workspace = true
 # RON serialisation for per-grammar rewrite-rule files
 # (`grammar/<g>/rewrites/*.ron`); consumed by `crate::rewrites::schema`
 # and `crate::rewrites::RuleSet::{load_from_ron, save_to_ron}`.

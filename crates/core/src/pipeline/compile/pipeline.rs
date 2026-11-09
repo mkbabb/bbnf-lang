@@ -213,7 +213,7 @@ pub fn compile_ast_common<'a>(
         // independent equivalences and regex-algebra rewrites the
         // normalizer's fixed pass order can miss; cost-guided
         // extraction picks the cheapest canonical form per rule via
-        // `GrammarCostModel` (shared with bbnf-regex HIR e-graph in
+        // `GrammarCostModel` (shared with parse-that-regex HIR e-graph in
         // Tranche H).
         timer.span("egraph_build_saturate_writeback", || {
             let (egraph, pool, rule_body_ids) = bbnf_ir::egraph::build_and_saturate(&ir);

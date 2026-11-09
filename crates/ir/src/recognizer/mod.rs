@@ -8,7 +8,7 @@
 //!
 //! # Implementors
 //!
-//! - `RegexInfo` (from `bbnf_regex`) via the `RegexRecognizer` wrapper
+//! - `RegexInfo` (from `parse_that_regex`) via the `RegexRecognizer` wrapper
 //! - `Literal` nodes via `LiteralRecognizer`
 //! - Token rules via `TokenRecognizer`
 //! - Pre-computed `AltDispatch` groups via `DispatchGroupRecognizer`
@@ -24,7 +24,7 @@ mod plans;
 pub use facts::{RecognizerInfo, RecognizerKind, Width};
 pub use plans::{ExecutionPlan, ExecutionPlanKind};
 
-use bbnf_regex::{CharSet128, EngineSet, RegexClass, RegexInfo};
+use parse_that_regex::{CharSet128, EngineSet, RegexClass, RegexInfo};
 
 use crate::AltDispatch;
 

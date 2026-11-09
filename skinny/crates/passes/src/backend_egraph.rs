@@ -1,4 +1,4 @@
-use egraph::{
+use parse_that_egraph::{
     BackoffScheduler, CostModel, EGraph, Extractor, Id, Language, Lattice, NoAnalysis, Rewrite,
     RewriteFn, Scheduler,
 };

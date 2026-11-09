@@ -24,7 +24,7 @@ fn test_prettify_bbnf_alternation() {
 }
 
 #[test]
-fn test_prettify_bbnf_regex() {
+fn test_prettify_parse_that_regex() {
     let config = PrinterConfig::default();
     let input = "number = /[0-9]+/ ;\n";
     let result = prettify_bbnf(input, &config);

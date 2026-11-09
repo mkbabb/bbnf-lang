@@ -6,11 +6,11 @@
 //! matching tail) are left alone.
 
 use bbnf_ir::egraph::node::GrammarENode;
-use egraph::{EGraph, NoAnalysis, Rewrite};
+use parse_that_egraph::{EGraph, NoAnalysis, Rewrite};
 
 use bbnf_ir::egraph::rules::CommonSuffixFactor;
 
-fn canonical_form(egraph: &EGraph<GrammarENode, NoAnalysis>, id: egraph::Id) -> String {
+fn canonical_form(egraph: &EGraph<GrammarENode, NoAnalysis>, id: parse_that_egraph::Id) -> String {
     // Simple debug-format of the canonical e-class.
     let class = egraph.class(egraph.find_ref(id));
     format!("{:?}", class.iter().collect::<Vec<_>>())

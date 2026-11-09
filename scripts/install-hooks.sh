@@ -6,7 +6,6 @@
 # clone or when a template updates.
 #
 #   pre-commit  regen drift gate
-#   pre-push    csp-solver vendor-sync gate (--check drift + --verify build)
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"

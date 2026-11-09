@@ -1,6 +1,6 @@
 //! Insert an `IrNode` tree into an e-graph, returning the root e-class `Id`.
 
-use egraph::{Analysis, EGraph, Id};
+use parse_that_egraph::{Analysis, EGraph, Id};
 
 use super::node::{ENodeTdArm, GrammarENode};
 use crate::{GrammarIR, IrNode};

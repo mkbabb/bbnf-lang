@@ -4,7 +4,7 @@
 //! distinguishing flags (`quote_char`, `allows_escapes`,
 //! `allows_u_escapes`) are carried inside the variant.
 
-use bbnf_regex::RegexClass;
+use parse_that_regex::RegexClass;
 
 use crate::IrNode;
 use crate::dag::NodeId;

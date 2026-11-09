@@ -6,8 +6,8 @@
 # tier writes to `/tmp/test-tier-<tier>.txt`; callers grep the file.
 #
 # Tiers:
-#   leaf     — pure-data + substrate crates (tape, bbnf-ir, egraph,
-#              csp-solver, bbnf-ser). ~1 min cold, ~15 s warm.
+#   leaf     — pure-data + substrate crates (bbnf-ir, bbnf-ser).
+#              ~1 min cold, ~15 s warm.
 #              Appropriate while iterating on mining / IR passes that
 #              don't cross the emitter boundary.
 #   grammar  — per-grammar tape parity + per-grammar shape emit. One
@@ -76,10 +76,11 @@ case "$TIER" in
         # Leaf crates carry no derive-Parser sites; their rustc cost is
         # proportional to hand-written code only. Fastest tier.
         # Workspace crate names (see Cargo.toml / crates/*/Cargo.toml):
-        # `bbnf-ir`, `egraph`, `csp-solver`, `bbnf-ser`.
+        # `bbnf-ir`, `bbnf-ser` (egraph and csp-solver left at sk-v27
+        # LW2.TOPO-1: they are parse-that's and csp-solver's own crates).
         cargo nextest run \
             ${NEXTEST_PROFILE_ARGS[@]+"${NEXTEST_PROFILE_ARGS[@]}"} \
-            -p bbnf-ir -p egraph -p csp-solver -p bbnf-ser \
+            -p bbnf-ir -p bbnf-ser \
             ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} > "$OUT" 2>&1
         ;;
     grammar)

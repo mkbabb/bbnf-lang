@@ -8,7 +8,7 @@ license = "MIT"
 [dependencies]
 ryu = "1"
 itoa = "1"
-pprint = { version = "0.3", optional = true }
+pprint = { workspace = true, optional = true }
 
 [features]
 default = []

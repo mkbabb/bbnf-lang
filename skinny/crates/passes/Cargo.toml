@@ -9,7 +9,7 @@ rust-version.workspace = true
 [dependencies]
 bbnf-regex.workspace = true
 csp-solver.workspace = true
-egraph.workspace = true
+parse-that-egraph.workspace = true
 ir.workspace = true
 thiserror.workspace = true
 

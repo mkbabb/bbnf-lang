@@ -27,8 +27,8 @@ pub mod facts;
 
 pub use facts::{EClassFacts, WidthBound};
 
-use bbnf_regex::sets::charset::CharSet128;
-use egraph::{Analysis, EGraph};
+use parse_that_regex::sets::charset::CharSet128;
+use parse_that_egraph::{Analysis, EGraph};
 
 use crate::egraph::node::GrammarENode;
 

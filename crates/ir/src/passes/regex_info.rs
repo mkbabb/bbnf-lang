@@ -1,7 +1,7 @@
 //! Regex analysis cache pass.
 //!
 //! Populates `GrammarIR::regex_info` by calling
-//! `bbnf_regex::RegexInfo::analyze_with_cost` for each unique regex
+//! `parse_that_regex::RegexInfo::analyze_with_cost` for each unique regex
 //! pattern in the grammar. The HIR-tier extraction cost is built from
 //! `ir.cost_config` so the per-compile knobs apply uniformly across
 //! both tiers — see `crate::cost_config::CostConfig`. Run after all
@@ -10,14 +10,14 @@
 
 use std::collections::HashMap;
 
-use bbnf_regex::egraph::SaturationCache;
+use parse_that_regex::egraph::SaturationCache;
 
 use crate::{GrammarIR, IrNode, StringId};
 
 /// Compute and cache `RegexInfo` for all regex patterns in the grammar.
 ///
 /// Walks all rules, collects unique `Regex(StringId)` nodes, and calls
-/// `bbnf_regex::RegexInfo::analyze_with_cost` for each, threading the
+/// `parse_that_regex::RegexInfo::analyze_with_cost` for each, threading the
 /// per-compile `CostConfig` through to the HIR-tier extractor. Results
 /// are cached on `ir.regex_info` keyed by `StringId`.
 pub fn compute_regex_info(ir: &mut GrammarIR) {
@@ -52,14 +52,14 @@ pub fn compute_regex_info(ir: &mut GrammarIR) {
     for &sid in seen.keys() {
         let pattern = ir.get_string(sid);
         if let Some(mut info) =
-            bbnf_regex::RegexInfo::analyze_with_cost_cached(pattern, &cost, &mut sat_cache)
+            parse_that_regex::RegexInfo::analyze_with_cost_cached(pattern, &cost, &mut sat_cache)
         {
             // AR.6.3: FAMILY_HELPER is a bbnf-lang policy decision —
             // set the bit when the classification matches a variant
             // that has a kernel module in backend/kernels/.
             if has_kernel_coverage(&info.classification) {
                 info.feasible_engines
-                    .insert(bbnf_regex::info::EngineSet::FAMILY_HELPER);
+                    .insert(parse_that_regex::info::EngineSet::FAMILY_HELPER);
             }
             info_map.insert(sid, info);
         }
@@ -72,9 +72,9 @@ pub fn compute_regex_info(ir: &mut GrammarIR) {
 /// variants that have a dedicated kernel module in
 /// `crates/core/src/backend/kernels/`. This is the single source of
 /// truth for the FAMILY_HELPER bit — previously hardcoded inside
-/// bbnf-regex's `derive_feasible_engines`.
-fn has_kernel_coverage(classification: &bbnf_regex::classify::RegexClass) -> bool {
-    use bbnf_regex::classify::RegexClass;
+/// parse-that-regex's `derive_feasible_engines`.
+fn has_kernel_coverage(classification: &parse_that_regex::classify::RegexClass) -> bool {
+    use parse_that_regex::classify::RegexClass;
     matches!(
         classification,
         RegexClass::Numeric { .. }

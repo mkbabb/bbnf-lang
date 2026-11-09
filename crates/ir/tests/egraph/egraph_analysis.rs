@@ -134,7 +134,7 @@ fn grammar_analysis_activates_in_production_build_and_saturate() {
     // Type-level sanity: build_and_saturate's return type is EGraph
     // parameterized over GrammarAnalysis — the assignment below
     // forces the compiler to see this.
-    let _: &::egraph::EGraph<::bbnf_ir::egraph::GrammarENode, GrammarAnalysis> = &egraph;
+    let _: &::parse_that_egraph::EGraph<::bbnf_ir::egraph::GrammarENode, GrammarAnalysis> = &egraph;
 }
 
 #[test]

@@ -231,8 +231,12 @@ pub fn format_with_grammar(
         let value = result.value.as_ref().filter(|_| result.success)?;
 
         // Format using the IR's pretty hints.
-        let printer = pprint::Printer::new(max_width as usize, indent as usize, use_tabs);
-        gorgeous::vm::format_value(&grammar.ir, value, input, printer)
+        let config = gorgeous::PrinterConfig {
+            max_width: max_width as usize,
+            indent: indent as usize,
+            use_tabs,
+        };
+        gorgeous::vm::format_value(&grammar.ir, value, input, &config)
     })
 }
 

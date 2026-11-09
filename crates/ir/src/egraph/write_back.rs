@@ -20,7 +20,7 @@
 
 use rustc_hash::FxHashMap;
 
-use egraph::{EGraph, Extractor, Id};
+use parse_that_egraph::{EGraph, Extractor, Id};
 
 use super::analysis::GrammarAnalysis;
 use super::cost::GrammarCostModel;

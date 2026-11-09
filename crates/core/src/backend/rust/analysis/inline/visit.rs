@@ -6,7 +6,7 @@
 //! grammar-agnostic — every `IrNode` variant is reachable; per-node
 //! cost estimates read budgets from [`CostBudgets`] so the inline
 //! decision boundary stays in lockstep with the shared
-//! [`egraph::CostWeights`].
+//! [`parse_that_egraph::CostWeights`].
 
 use bbnf_ir::{GrammarIR, IrNode, RuleId};
 
@@ -84,13 +84,13 @@ pub fn max_alt_branches(node: &IrNode) -> usize {
 /// Estimate the code expansion cost of inlining a rule body.
 ///
 /// Convenience wrapper that derives [`CostBudgets`] from
-/// [`egraph::CostWeights::default`] — useful for standalone callers
+/// [`parse_that_egraph::CostWeights::default`] — useful for standalone callers
 /// and tests that don't have a `CostWeights` handy. Production code
 /// should call [`estimate_expansion_cost_with_budgets`] with the
 /// per-compile budgets from
 /// `CostBudgets::from_weights(&ir.cost_config.egraph.weights)`.
 pub fn estimate_expansion_cost(node: &IrNode) -> usize {
-    let budgets = CostBudgets::from_weights(&egraph::CostWeights::default());
+    let budgets = CostBudgets::from_weights(&parse_that_egraph::CostWeights::default());
     estimate_expansion_cost_with_budgets(node, &budgets)
 }
 
@@ -99,8 +99,8 @@ pub fn estimate_expansion_cost(node: &IrNode) -> usize {
 ///
 /// Tranche AF.2: the per-node costs (leaf / ref / alt branch /
 /// repeat / negate) that used to be hardcoded here are now scalar
-/// projections of [`egraph::CostWeights::call_overhead`] and
-/// [`egraph::CostWeights::inline_body_size_penalty`]. See
+/// projections of [`parse_that_egraph::CostWeights::call_overhead`] and
+/// [`parse_that_egraph::CostWeights::inline_body_size_penalty`]. See
 /// [`CostBudgets::from_weights`] for the derivation.
 pub(crate) fn estimate_expansion_cost_with_budgets(node: &IrNode, budgets: &CostBudgets) -> usize {
     match node {

@@ -30,7 +30,7 @@ pub mod types;
 // by the retained grammar-tier e-graph rules
 // (DeduplicateAltBranches, SupersetAbsorbAlt, UnionMergeAlt,
 // FuseAltRegexBranches in crate::egraph::rules::regex) plus the HIR
-// e-graph saturation in bbnf-regex. See commit message for details.
+// e-graph saturation in parse-that-regex. See commit message for details.
 
 pub use audit::{
     AbsentRegistryProbe, AuditCoverageReport, GrammarAuditTag, GrammarCoverage, MarkerStatus,

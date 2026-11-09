@@ -11,13 +11,13 @@ name = "bbnf"
 path = "src/lib.rs"
 
 [dependencies]
-pprint = "0.3"
-parse_that = "0.4"
+pprint.workspace = true
+parse_that.workspace = true
 bbnf-ir = { version = "0.1", path = "../ir" }
 bbnf-ser = { version = "0.1", path = "../ser" }
 simd-scan = { version = "0.1", path = "../simd-scan" }
-egraph = { path = "../egraph" }
-csp-solver = "0.1"
+parse-that-egraph.workspace = true
+csp-solver.workspace = true
 rustc-hash = "2"
 
 syn = { version = "2", features = ["full"] }
@@ -83,8 +83,8 @@ bbnf-corpus = { path = "../corpus" }
 regex = "1"
 tempfile = "3"
 prettyplease = "0.2"
-pprint = "0.3"
-parse_that = "0.4"
+pprint.workspace = true
+parse_that.workspace = true
 divan = "0.1"
 mimalloc = "0.1"
 sonic-rs = "0.5"

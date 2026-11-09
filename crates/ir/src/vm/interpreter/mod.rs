@@ -18,7 +18,7 @@
 //! `mod.rs` owns the `Interpreter` struct, the private stack-frame types,
 //! the `new` constructor, the main `run` dispatch loop, the per-iteration
 //! helpers (`collect_values_from`, `track_furthest`,
-//! `emit_furthest_diagnostic`), and the public `parse_with_ir` convenience.
+//! `emit_furthest_diagnostic`).
 
 mod construct;
 mod control;

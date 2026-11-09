@@ -1,0 +1,6 @@
+-- GREEN read 1
+== git grep -nwE 'parse_with_ir|calculate_acyclic_deps_scc' 77124325a -- crates/analysis/src crates/bbnf-path-ts/src crates/bbnf-path/src crates/bootstrap/src crates/core/src crates/csp-solver/src crates/egraph-derive/src crates/egraph/src crates/gorgeous/src crates/ir/src crates/lsp/src crates/ser/src crates/simd-scan/src typescript/src wasm xtask
+count=0
+-- GREEN read 2
+== git grep -nwE 'parse_with_ir|calculate_acyclic_deps_scc' 77124325a -- crates/analysis/src crates/bbnf-path-ts/src crates/bbnf-path/src crates/bootstrap/src crates/core/src crates/csp-solver/src crates/egraph-derive/src crates/egraph/src crates/gorgeous/src crates/ir/src crates/lsp/src crates/ser/src crates/simd-scan/src typescript/src wasm xtask
+count=0

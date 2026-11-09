@@ -62,6 +62,12 @@ toml            = "0.8"
 # exit non-zero on drift.
 tempfile        = "3"
 
+# LW2.TOPO-6 corpus custody: `cargo xtask corpus fetch|verify|pack` hashes
+# the release asset and every corpus file, and resolves the corpus directory
+# through the one resolver the readers use.
+sha2            = "0.10"
+bbnf-corpus     = { path = "../crates/corpus" }
+
 [features]
 default = []
 grammar-regen = ["dep:bbnf"]

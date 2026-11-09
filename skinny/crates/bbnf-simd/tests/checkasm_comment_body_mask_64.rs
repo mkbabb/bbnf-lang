@@ -140,8 +140,8 @@ fn comment_all_constant_fills() {
 
 #[test]
 fn comment_corpus_parity() {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../data/css/bootstrap.css");
-    let bytes = match std::fs::read(path) {
+    let path = bbnf_corpus::path("css/bootstrap.css");
+    let bytes = match std::fs::read(&path) {
         Ok(b) => b,
         Err(error) => {
             eprintln!("comment corpus parity: fixture unavailable ({error}); skipping");

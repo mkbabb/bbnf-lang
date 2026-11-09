@@ -52,7 +52,7 @@ use ::bbnf::grammar::generated::css_l4::*;
 // call site can emit diagnostic output without an extra parse.
 
 fn assert_corpus_parity(fixture: &str) -> (usize, usize) {
-    let path = format!("../../data/css/{}", fixture);
+    let path = bbnf_corpus::path(&format!("css/{}", fixture)).display().to_string();
     let input =
         std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 

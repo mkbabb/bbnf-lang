@@ -608,14 +608,14 @@ fn assert_vm_full_parse(grammar_path: &str, data_path: &str) {
 
 #[test]
 fn pipeline_vm_full_json_data() {
-    assert_vm_full_parse("../../grammar/json/json.bbnf", "../../data/json/data.json");
+    assert_vm_full_parse("../../grammar/json/json.bbnf", &bbnf_corpus::path("json/data.json").display().to_string());
 }
 
 #[test]
 fn pipeline_vm_full_json_twitter() {
     assert_vm_full_parse(
         "../../grammar/json/json.bbnf",
-        "../../data/json/twitter.json",
+        &bbnf_corpus::path("json/twitter.json").display().to_string(),
     );
 }
 
@@ -623,7 +623,7 @@ fn pipeline_vm_full_json_twitter() {
 fn pipeline_vm_full_json_canada() {
     assert_vm_full_parse(
         "../../grammar/json/json.bbnf",
-        "../../data/json/canada.json",
+        &bbnf_corpus::path("json/canada.json").display().to_string(),
     );
 }
 
@@ -631,7 +631,7 @@ fn pipeline_vm_full_json_canada() {
 fn pipeline_vm_full_css_normalize() {
     assert_vm_full_parse(
         "../../grammar/css/pretty.bbnf",
-        "../../data/css/normalize.css",
+        &bbnf_corpus::path("css/normalize.css").display().to_string(),
     );
 }
 
@@ -639,7 +639,7 @@ fn pipeline_vm_full_css_normalize() {
 fn pipeline_vm_full_css_bootstrap() {
     assert_vm_full_parse(
         "../../grammar/css/pretty.bbnf",
-        "../../data/css/bootstrap.css",
+        &bbnf_corpus::path("css/bootstrap.css").display().to_string(),
     );
 }
 

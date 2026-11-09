@@ -10,6 +10,7 @@ rust-version.workspace = true
 blake3.workspace = true
 
 [dev-dependencies]
+bbnf-corpus = { path = "../../../crates/corpus" }
 test-fixtures.workspace = true
 libc.workspace = true
 

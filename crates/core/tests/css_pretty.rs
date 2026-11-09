@@ -5,8 +5,7 @@ use ::bbnf::grammar::generated::css_pretty::*;
 
 fn load_css(name: &str) -> String {
     let candidates = [
-        format!("../../data/css/{}", name),
-        format!("../data/css/{}", name),
+        bbnf_corpus::path(&format!("css/{}", name)).display().to_string(),
     ];
     for path in &candidates {
         if let Ok(contents) = std::fs::read_to_string(path) {

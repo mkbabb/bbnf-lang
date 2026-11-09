@@ -78,6 +78,8 @@ wasm-bench = []
 
 [dev-dependencies]
 quote = "1"
+# sk-v27 LW2.TOPO-6: the one corpus resolver for tests, benches and examples.
+bbnf-corpus = { path = "../corpus" }
 regex = "1"
 tempfile = "3"
 prettyplease = "0.2"

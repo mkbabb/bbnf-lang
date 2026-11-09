@@ -46,7 +46,7 @@ fn shared_printer() -> pprint::Printer {
 /// the shared `token_normalize` transform to both. Panics with a
 /// diff-ready preview if normalization-equivalent output diverges.
 fn assert_canonical_parity(fixture: &str) {
-    let path = format!("../../data/css/{}", fixture);
+    let path = bbnf_corpus::path(&format!("css/{}", fixture)).display().to_string();
     let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let bbnf_canonical = CssL4Parser::stylesheet_prettify()
@@ -135,7 +135,7 @@ fn first_diff(a: &str, b: &str) -> Mismatch {
 /// scale + the prettify output interoperates with lightningcss,
 /// without claiming byte-parity the oracle cannot provide.
 fn assert_scale_interop(fixture: &str) {
-    let path = format!("../../data/css/{}", fixture);
+    let path = bbnf_corpus::path(&format!("css/{}", fixture)).display().to_string();
     let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let bbnf_pretty = CssL4Parser::stylesheet_prettify()

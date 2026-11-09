@@ -45,15 +45,15 @@ fn assert_parses_full(label: &str, path: &str) {
 
 #[test]
 fn bootstrap_full_parse() {
-    assert_parses_full("bootstrap.css", "../../data/css/bootstrap.css");
+    assert_parses_full("bootstrap.css", &bbnf_corpus::path("css/bootstrap.css").display().to_string());
 }
 
 #[test]
 fn normalize_full_parse() {
-    assert_parses_full("normalize.css", "../../data/css/normalize.css");
+    assert_parses_full("normalize.css", &bbnf_corpus::path("css/normalize.css").display().to_string());
 }
 
 #[test]
 fn tailwind_full_parse() {
-    assert_parses_full("tailwind.css", "../../data/css/tailwind.css");
+    assert_parses_full("tailwind.css", &bbnf_corpus::path("css/tailwind.css").display().to_string());
 }

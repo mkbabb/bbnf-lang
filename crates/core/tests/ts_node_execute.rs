@@ -67,8 +67,8 @@ fn json_grammar_src() -> String {
 }
 
 fn twitter_json_src() -> String {
-    std::fs::read_to_string("../../data/json/twitter.json")
-        .expect("read data/json/twitter.json — fixture required for W5.2 node execute proof")
+    std::fs::read_to_string(bbnf_corpus::path("json/twitter.json"))
+        .expect("read corpus json/twitter.json (cargo xtask corpus fetch) — fixture required for W5.2 node execute proof")
 }
 
 /// Compile the JSON grammar through the TS backend and strip TS-only

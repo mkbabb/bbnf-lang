@@ -10,7 +10,7 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use divan::counter::BytesCount;
 
 fn load_css(name: &str) -> String {
-    let path = format!("../../data/css/{}", name);
+    let path = bbnf_corpus::path(&format!("css/{}", name)).display().to_string();
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to read {}: {}", path, e))
 }
 

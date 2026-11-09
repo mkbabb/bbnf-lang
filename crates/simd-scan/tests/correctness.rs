@@ -12,13 +12,7 @@ const CSS_ALPHABET: StructuralAlphabet =
     StructuralAlphabet::from_parts(b"{}();:,", &[(b'/', b'*'), (b'*', b'/')], b"\"'");
 
 fn read_corpus(name: &str) -> Vec<u8> {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap();
-    let path = root.join(name);
-    std::fs::read(&path).unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
+    bbnf_corpus::read(name)
 }
 
 fn assert_indices_equal(a: &StructuralIndex, b: &StructuralIndex, ctx: &str) {
@@ -77,7 +71,7 @@ fn no_quotes_simple() {
 
 #[test]
 fn json_twitter_canonical() {
-    let input = read_corpus("data/json/twitter.json");
+    let input = read_corpus("json/twitter.json");
     let scalar_idx = scalar::scan(&input, &JSON_ALPHABET);
     let simd_idx = scan_structural(&input, &JSON_ALPHABET);
     assert_indices_equal(&scalar_idx, &simd_idx, "twitter.json");
@@ -86,7 +80,7 @@ fn json_twitter_canonical() {
 
 #[test]
 fn json_citm_canonical() {
-    let input = read_corpus("data/json/citm_catalog.json");
+    let input = read_corpus("json/citm_catalog.json");
     let scalar_idx = scalar::scan(&input, &JSON_ALPHABET);
     let simd_idx = scan_structural(&input, &JSON_ALPHABET);
     assert_indices_equal(&scalar_idx, &simd_idx, "citm_catalog.json");
@@ -94,7 +88,7 @@ fn json_citm_canonical() {
 
 #[test]
 fn json_canada_canonical() {
-    let input = read_corpus("data/json/canada.json");
+    let input = read_corpus("json/canada.json");
     let scalar_idx = scalar::scan(&input, &JSON_ALPHABET);
     let simd_idx = scan_structural(&input, &JSON_ALPHABET);
     assert_indices_equal(&scalar_idx, &simd_idx, "canada.json");
@@ -102,7 +96,7 @@ fn json_canada_canonical() {
 
 #[test]
 fn css_bootstrap_canonical() {
-    let input = read_corpus("data/css/bootstrap.css");
+    let input = read_corpus("css/bootstrap.css");
     let scalar_idx = scalar::scan(&input, &CSS_ALPHABET);
     let simd_idx = scan_structural(&input, &CSS_ALPHABET);
     assert_indices_equal(&scalar_idx, &simd_idx, "bootstrap.css");
@@ -110,7 +104,7 @@ fn css_bootstrap_canonical() {
 
 #[test]
 fn css_tailwind_canonical() {
-    let input = read_corpus("data/css/tailwind.css");
+    let input = read_corpus("css/tailwind.css");
     let scalar_idx = scalar::scan(&input, &CSS_ALPHABET);
     let simd_idx = scan_structural(&input, &CSS_ALPHABET);
     assert_indices_equal(&scalar_idx, &simd_idx, "tailwind.css");

@@ -81,6 +81,11 @@ jobs:
       # that don't benefit from partitioning. These are the close
       # gates; they pay the full release cost and are explicitly
       # separated from the preflight block above.
+      # sk-v27 LW2.TOPO-6 (ruling R-c): the test corpus is the release asset
+      # named in corpus/MANIFEST.sha256, fetched over public HTTPS with no
+      # token and checked file by file before any test reads it.
+      - name: corpus — fetch and verify (release asset, sha256 manifest)
+        run: cargo xtask corpus fetch
       - name: heavy — workspace tests (nextest, ci profile, shard ${{ matrix.partition }}/${{ matrix.total }})
         run: cargo nextest run --workspace --profile ci --partition count:${{ matrix.partition }}/${{ matrix.total }}
       - name: heavy — sonic-rs JSON parity

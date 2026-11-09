@@ -1,0 +1,5 @@
+substrate_audit: 2 zero-caller substrates (whitelist size = 0); elapsed = 1.951495375s
+  fn      compute_inside_string_bytes
+      at crates/simd-scan/src/parity.rs:210
+  fn      compact_stripe_synthetic
+      at crates/simd-scan/src/compaction.rs:53

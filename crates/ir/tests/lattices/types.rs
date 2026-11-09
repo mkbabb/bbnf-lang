@@ -82,7 +82,7 @@ fn get_type(ir: &GrammarIR, id: RuleId) -> &TypeDesc {
 #[test]
 fn literal_is_span() {
     let mut ir = make_ir(vec![rule(0, IrNode::Literal(3))]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -90,7 +90,7 @@ fn literal_is_span() {
 #[test]
 fn regex_is_span() {
     let mut ir = make_ir(vec![rule(0, IrNode::Regex(3))]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -106,7 +106,7 @@ fn optional_span_collapses() {
             hi: 1,
         },
     )]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -121,7 +121,7 @@ fn many_span_collapses() {
             hi: u32::MAX,
         },
     )]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -142,7 +142,7 @@ fn many_non_span_is_vec() {
     ]);
     // Rule 1: Alt(Span, Span) -> Span. Ref(1) in Vec context returns Enum
     // (Vec provides heap indirection, so Box is unnecessary), so many(Enum) -> Vec(Enum).
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Vec(Box::new(TypeDesc::Enum)));
 }
@@ -158,7 +158,7 @@ fn seq_consecutive_span_compression() {
             IrNode::Regex(3),
         ]),
     )]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -179,7 +179,7 @@ fn seq_mixed_tuple() {
             IrNode::Seq(vec![IrNode::Literal(2), IrNode::Ref(1), IrNode::Literal(3)]),
         ),
     ]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     // Rule 1: Alt(Span, Span) -> Span.
     // Rule 0: Seq(Span, Ref(1)→Span, Span) -> three consecutive Spans,
@@ -207,7 +207,7 @@ fn pair_flattening() {
             },
         ]),
     )]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     // Repeat(Span) -> Span, Seq(Span, Span) -> Span
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
@@ -219,7 +219,7 @@ fn skip_keeps_left() {
         0,
         IrNode::Skip(Box::new(IrNode::Literal(2)), Box::new(IrNode::Literal(3))),
     )]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -230,7 +230,7 @@ fn next_keeps_right() {
         0,
         IrNode::Next(Box::new(IrNode::Literal(2)), Box::new(IrNode::Literal(3))),
     )]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
 }
@@ -250,7 +250,7 @@ fn alt_homogeneous_span() {
             },
         ]),
     )]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     // Literal -> Span, Optional(Span) -> Span, Alt(Span, Span) -> Span
     assert_eq!(*get_type(&ir, 0), TypeDesc::Span);
@@ -261,7 +261,7 @@ fn cyclic_ref_defaults_to_boxed_enum() {
     // Rule 0 references rule 1, rule 1 references rule 0 (cycle).
     // Rule 0 is processed first -> Ref(1) is unknown -> BoxedEnum.
     let mut ir = make_ir(vec![rule(0, IrNode::Ref(1)), rule(1, IrNode::Ref(0))]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
 }
@@ -316,7 +316,7 @@ fn map_enum_wrap() {
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::Enum);
 }
@@ -371,7 +371,7 @@ fn map_box_wrap() {
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
 }
@@ -459,7 +459,7 @@ fn ref_projects_target_scalar_type() {
         vec![expr_fn(TypeDesc::F64)],
         vec!["r0".into(), "r1".into(), "r2".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::F64);
     assert_eq!(*get_type(&ir, 1), TypeDesc::F64);
@@ -496,7 +496,7 @@ fn seq_of_refs_composes_f64_u8_aggregate() {
         vec![expr_fn(TypeDesc::F64), expr_fn(TypeDesc::U8)],
         vec!["r0".into(), "r1".into(), "r2".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(
         *get_type(&ir, 0),
@@ -578,7 +578,7 @@ fn heterogeneous_css_alt_surfaces_named_obligation() {
             "color".into(),
         ],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     // The join surfaces the distinct branch types as a named
@@ -655,7 +655,7 @@ fn homogeneous_alt_emits_no_obligation() {
         vec![expr_fn(TypeDesc::F64)],
         vec!["value".into(), "a".into(), "b".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::F64);
     assert!(
@@ -719,7 +719,7 @@ fn factored_prefix_alt_projects_scalar() {
         vec![expr_fn(TypeDesc::U8)],
         vec!["r0".into(), "p".into(), "x".into(), "c".into(), "mm".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
     assert_eq!(*get_type(&ir, 0), TypeDesc::U8);
 }
@@ -777,7 +777,7 @@ fn compound_ref_obligation_surfaces() {
         vec![expr_fn(TypeDesc::U8)],
         vec!["r0".into(), "r1".into(), "_".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     // Rule 1 must remain Vec(U8); rule 0's Ref position must
@@ -822,7 +822,7 @@ fn cyclic_ref_obligation_surfaces() {
     // grounds both rule vars to BoxedEnum. Per W3a.2 each Ref into
     // a cyclic rule must surface a `cyclic: true` obligation.
     let mut ir = make_ir(vec![rule(0, IrNode::Ref(1)), rule(1, IrNode::Ref(0))]);
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     assert_eq!(*get_type(&ir, 0), TypeDesc::BoxedEnum);
@@ -894,7 +894,7 @@ fn scalar_ref_emits_no_obligation() {
         vec![expr_fn(TypeDesc::F64)],
         vec!["r0".into(), "r1".into(), "_".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     assert_eq!(*get_type(&ir, 0), TypeDesc::F64);

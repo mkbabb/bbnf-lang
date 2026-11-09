@@ -286,10 +286,6 @@ impl<'a> IrCodegenCtx<'a> {
     }
 }
 
-pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
-    type_desc_to_syn_raw(desc, &ctx.enum_type, &ctx.boxed_enum_type, ctx.ir, true)
-}
-
 fn type_desc_to_syn_raw(
     desc: &TypeDesc,
     enum_type: &Type,
@@ -352,21 +348,5 @@ fn type_desc_to_syn_raw(
             syn::parse_str(type_str)
                 .unwrap_or_else(|e| panic!("Failed to parse type `{}`: {}", type_str, e))
         }
-    }
-}
-
-pub fn type_desc_is_span(desc: &TypeDesc) -> bool {
-    matches!(desc, TypeDesc::Span)
-}
-
-pub fn type_is_span(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        let segments = &type_path.path.segments;
-        if segments.len() != 2 {
-            return false;
-        }
-        segments[0].ident == "parse_that" && segments[1].ident == "Span"
-    } else {
-        false
     }
 }

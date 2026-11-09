@@ -2,7 +2,7 @@
 //!
 //! Exercises the full IR → bytecode → interpret pipeline using hand-built IR trees.
 
-use bbnf_ir::interpreter::{Value, parse_with_ir};
+use bbnf_ir::interpreter::{Interpreter, ParseResult, Value};
 use bbnf_ir::{
     AltBranch, AltDispatch, CharSet128, GrammarIR, IrNode, IrRule, MemoStrategy, RuleMeta,
     TokenDispatchArm,
@@ -10,6 +10,12 @@ use bbnf_ir::{
 use std::collections::HashMap;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
+
+/// Compile `ir` to bytecode and run the interpreter over `input`.
+fn parse_with_ir(ir: &GrammarIR, input: &str) -> ParseResult {
+    let program = bbnf_ir::compiler::compile(ir);
+    Interpreter::new(&program, input).run()
+}
 
 fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
     GrammarIR {

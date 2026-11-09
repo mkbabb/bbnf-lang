@@ -124,7 +124,7 @@ fn heterogeneous_alt_f64_u8_emits_two_sub_variants() {
         vec![expr_fn(TypeDesc::F64), expr_fn(TypeDesc::U8)],
         vec!["r0".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     let rule0 = &ir.rules[0];
@@ -170,7 +170,7 @@ fn heterogeneous_alt_span_u32_emits_two_sub_variants() {
         vec![expr_fn(TypeDesc::U32)],
         vec!["r0".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     let rule0 = &ir.rules[0];
@@ -208,7 +208,7 @@ fn homogeneous_alt_span_emits_no_sub_variants() {
         vec![],
         vec!["r0".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     let rule0 = &ir.rules[0];
@@ -249,7 +249,7 @@ fn nested_heterogeneous_alt_inside_seq_emits_sub_variants() {
         vec![expr_fn(TypeDesc::F64), expr_fn(TypeDesc::U8)],
         vec!["r0".into(), "lit".into()],
     );
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     project_types(&mut ir);
 
     let rule0 = &ir.rules[0];

@@ -1,0 +1,9 @@
+HEAD 4e79247761f7b295fca380db539106a290f6dc6c
+pratt_const_fold #1 rc=0
+regen --check #1 rc=1
+substrate_audit #1 rc=101
+clippy wasm-bench #1 rc=0
+pratt_const_fold #2 rc=0
+regen --check #2 rc=1
+substrate_audit #2 rc=101
+clippy wasm-bench #2 rc=0

@@ -322,17 +322,3 @@ pub fn emit_ws_interleaved_negated_scan_plus(needles: &[u8]) -> TokenStream {
         }
     }
 }
-
-/// Compute the set of ASCII bytes NOT in the given inclusive ranges.
-///
-/// Used to convert a positive character class into its excluded-byte
-/// set for bitmap scanning.
-pub fn compute_excluded_bytes(included_ranges: &[(u8, u8)]) -> Vec<u8> {
-    let mut included = [false; 128];
-    for &(lo, hi) in included_ranges {
-        for b in lo..=hi.min(127) {
-            included[b as usize] = true;
-        }
-    }
-    (0u8..128).filter(|b| !included[*b as usize]).collect()
-}

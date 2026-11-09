@@ -3,13 +3,15 @@
 head and every worktree HEAD, for the three programme repos and the three
 consumers whose SHAs the records cite. Read-only: no checkout, no fetch here.
 
-Writes <out>/heads-W0.json and <out>/CUSTODY-RECEIPT.tsv."""
+Writes <out>/heads-<stem>.json and <out>/CUSTODY-RECEIPT.tsv.
+usage: topo1_heads.py <out> [stem]  (stem defaults to W0; LW2.TOPO-0 passes LW2)"""
 import datetime, json, pathlib, subprocess, sys
 
 HOME = pathlib.Path.home() / "Programming"
 REPOS = {"bbnf-lang": "core", "parse-that": "core", "pprint": "core",
          "value.js": "consumer", "keyframes.js": "consumer", "fourier-analysis": "consumer"}
 out = pathlib.Path(sys.argv[1]); out.mkdir(parents=True, exist_ok=True)
+stem = sys.argv[2] if len(sys.argv) > 2 else "W0"
 
 def git(repo, *a):
     return subprocess.run(["git", "-C", str(HOME / repo), *a], check=True,
@@ -44,6 +46,6 @@ for repo, role in REPOS.items():
     for w in wts:
         if w.get("HEAD"):
             rows.append(f"{repo}\t{role}\tworktree:{w['worktree']}\t{w.get('branch', 'detached')}\t{w['HEAD']}\t{'yes' if w['HEAD'] in on_origin else 'no'}")
-(out / "heads-W0.json").write_text(json.dumps(receipt, indent=1, sort_keys=True) + "\n")
+(out / f"heads-{stem}.json").write_text(json.dumps(receipt, indent=1, sort_keys=True) + "\n")
 (out / "CUSTODY-RECEIPT.tsv").write_text("\n".join(rows) + "\n")
 print(len(rows) - 1, "rows")

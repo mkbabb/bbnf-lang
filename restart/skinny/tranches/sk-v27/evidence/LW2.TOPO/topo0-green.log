@@ -1,0 +1,18 @@
+GREEN
+  60/60 cited commits resolve (1 non-commit object ids, 9 CI run ids, 1 upstream pins verified)
+ancestor sk-v27-topo: true
+ancestor sk-v27-lw1-gate: true
+ancestor sk-v27: true
+ancestor lockstep/merge-skv25: true
+parse-that sk-v27-lw2 on 0f6c598: true
+pprint sk-v27-lw2 on cf83853: true
+rc=0
+GREEN
+  60/60 cited commits resolve (1 non-commit object ids, 9 CI run ids, 1 upstream pins verified)
+ancestor sk-v27-topo: true
+ancestor sk-v27-lw1-gate: true
+ancestor sk-v27: true
+ancestor lockstep/merge-skv25: true
+parse-that sk-v27-lw2 on 0f6c598: true
+pprint sk-v27-lw2 on cf83853: true
+rc=0

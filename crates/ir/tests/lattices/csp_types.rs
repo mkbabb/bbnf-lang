@@ -75,7 +75,7 @@ fn solve_rule_type(ir: &GrammarIR, rule_id: RuleId) -> TypeDesc {
     // Tests build a raw GrammarIR without a DAG; `generate_constraints`
     // (like `project_types`) requires one, so we build it here.
     let mut ir_owned = ir.clone();
-    bbnf_ir::dag::ensure_dag(&mut ir_owned);
+    crate::support::ensure_dag(&mut ir_owned);
     let mut system = generate_constraints(&ir_owned);
     let _ = system.csp.propagate();
     let var = system.rule_vars[&rule_id];

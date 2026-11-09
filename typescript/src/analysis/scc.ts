@@ -87,7 +87,9 @@ export function tarjanSCC(depGraph: Map<string, Set<string>>): SCCResult {
  *   2. It transitively depends on a cyclic SCC
  *   3. Its dependency subgraph has diamond (convergent) paths
  *
- * Replicates the Rust `calculate_acyclic_deps_scc` semantics.
+ * This classification has no Rust twin: the Rust one had no caller and was
+ * deleted at LW1.COMP-1b. The Rust pipeline's live acyclic decision is
+ * `bbnf_ir::passes::inline_acyclic`, and the two are not proven equivalent.
  */
 export function classifyAcyclicDeps(
     depGraph: Map<string, Set<string>>,

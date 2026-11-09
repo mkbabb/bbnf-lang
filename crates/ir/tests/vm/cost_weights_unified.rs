@@ -158,7 +158,7 @@ fn build_three_way_alt_fixture(cost_config: CostConfig) -> GrammarIR {
     // nullable propagation depends on the rule-level snapshot).
     ir.rules[0].meta.first_set = char_set_of(b"tfn");
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     compute_first_sets(&mut ir);
     generate_dispatch_tables(&mut ir);
     classify_materialization(&mut ir);
@@ -191,7 +191,7 @@ fn build_egraph_alt_fixture(cost_config: CostConfig) -> GrammarIR {
     ir.cost_config = cost_config;
     ir.rules = vec![rule(0, 0, body)];
     ir.rules[0].meta.first_set = char_set_of(b"ab");
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     ir
 }
 
@@ -536,7 +536,7 @@ fn materialization_reads_weights_not_hidden_constants() {
     let mut ir_a = empty_ir();
     ir_a.strings = strings.clone();
     ir_a.rules = vec![rule(0, 0, body.clone())];
-    bbnf_ir::dag::ensure_dag(&mut ir_a);
+    crate::support::ensure_dag(&mut ir_a);
     classify_materialization(&mut ir_a);
 
     let dag_a = ir_a.dag.as_ref().unwrap();
@@ -558,7 +558,7 @@ fn materialization_reads_weights_not_hidden_constants() {
     ir_b.strings = strings;
     ir_b.cost_config = cfg_b;
     ir_b.rules = vec![rule(0, 0, body)];
-    bbnf_ir::dag::ensure_dag(&mut ir_b);
+    crate::support::ensure_dag(&mut ir_b);
     classify_materialization(&mut ir_b);
 
     let dag_b = ir_b.dag.as_ref().unwrap();

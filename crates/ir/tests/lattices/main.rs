@@ -5,6 +5,9 @@
 //! test semantics. Add new lattice-related tests as additional `mod ...;`
 //! declarations here, with the actual test bodies under `tests/lattices/`.
 
+#[path = "../support/mod.rs"]
+mod support;
+
 mod csp_authority;
 mod csp_components;
 mod csp_materialization;

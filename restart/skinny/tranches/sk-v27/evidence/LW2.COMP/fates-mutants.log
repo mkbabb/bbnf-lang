@@ -1,0 +1,30 @@
+== mutant outside read 1
+REFUSED cursor_arg: ROUTE unit 'LW5.USE-1' is not an LW2..LW4 unit id
+REFUSED SANCTIONED_SUBSTRATES holds 0 entries, ROUTE rows = 1
+rows=32 routes=1 sanctioned=0 refused=2
+rc=0
+== mutant outside read 2
+REFUSED cursor_arg: ROUTE unit 'LW5.USE-1' is not an LW2..LW4 unit id
+REFUSED SANCTIONED_SUBSTRATES holds 0 entries, ROUTE rows = 1
+rows=32 routes=1 sanctioned=0 refused=2
+rc=0
+== mutant unnamed read 1
+REFUSED cursor_arg: PLAN.md row of LW2.CON-2 does not name the item
+REFUSED cursor_arg: no SANCTIONED_SUBSTRATES entry citing LW2.CON-2
+REFUSED SANCTIONED_SUBSTRATES holds 0 entries, ROUTE rows = 1
+rows=32 routes=1 sanctioned=0 refused=3
+rc=0
+== mutant unnamed read 2
+REFUSED cursor_arg: PLAN.md row of LW2.CON-2 does not name the item
+REFUSED cursor_arg: no SANCTIONED_SUBSTRATES entry citing LW2.CON-2
+REFUSED SANCTIONED_SUBSTRATES holds 0 entries, ROUTE rows = 1
+rows=32 routes=1 sanctioned=0 refused=3
+rc=0
+== mutant sanction read 1
+REFUSED cursor_arg: fate 'SANCTION' is not in {DELETE, ROUTE, MOVE-with-crate}
+rows=32 routes=0 sanctioned=0 refused=1
+rc=0
+== mutant sanction read 2
+REFUSED cursor_arg: fate 'SANCTION' is not in {DELETE, ROUTE, MOVE-with-crate}
+rows=32 routes=0 sanctioned=0 refused=1
+rc=0

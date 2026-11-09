@@ -77,7 +77,7 @@ fn dispatch_for_disjoint_branches() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -159,7 +159,7 @@ fn no_dispatch_for_overlapping_branches() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
     match &ir.rules[0].body {
         IrNode::Alt(_, dispatch) => assert!(dispatch.is_none()),
@@ -239,7 +239,7 @@ fn dispatch_for_nested_alt() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     // The nested Alt should have been annotated.
@@ -327,7 +327,7 @@ fn dispatch_with_nullable_branch_via_follow() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -417,7 +417,7 @@ fn no_dispatch_when_nullable_overlaps_follow() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -517,7 +517,7 @@ fn fallback_dispatch_typed_plus_catchall() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -609,7 +609,7 @@ fn fallback_dispatch_not_superset() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {
@@ -689,7 +689,7 @@ fn fallback_dispatch_too_few_branches() {
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     generate_dispatch_tables(&mut ir);
 
     match &ir.rules[0].body {

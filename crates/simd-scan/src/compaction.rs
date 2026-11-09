@@ -66,42 +66,6 @@ pub fn compact_stripe_synthetic(
     }
 }
 
-/// PEXT-specialised compaction. Available when the runtime supports
-/// BMI2; produces byte-identical output to `compact_stripe_tzcnt`.
-///
-/// The trick: PEXT extracts the bits set in `mask` from a constant
-/// pattern of bit-indices. Combined with a small compress-store
-/// pattern, you avoid the per-bit CTZ loop and write up to 8
-/// compacted positions per chunk.
-///
-/// We expose this as a separate fn that the AVX2 kernel calls only
-/// when `is_x86_feature_detected!("bmi2")` returns true. The
-/// `tzcnt`-loop above is the default everywhere else.
-#[cfg(all(target_arch = "x86_64", target_feature = "bmi2"))]
-#[inline]
-pub fn compact_stripe_pext(
-    mask: u64,
-    stripe_base: u32,
-    bytes: &[u8],
-    out_positions: &mut Vec<u32>,
-    out_kinds: &mut Vec<u8>,
-) {
-    // Process 16-bit chunks of mask at a time; PEXT each chunk over
-    // a constant base-index pattern, scatter-store. For correctness
-    // parity with the tzcnt-loop, we still iterate over set bits;
-    // the PEXT here is the per-chunk position decode rather than a
-    // bulk compress-store (which requires AVX-512).
-    let mut m = mask;
-    while m != 0 {
-        let bit = m.trailing_zeros();
-        let pos = stripe_base + bit;
-        let kind = unsafe { *bytes.get_unchecked(pos as usize) };
-        out_positions.push(pos);
-        out_kinds.push(kind);
-        m &= m - 1;
-    }
-}
-
 /// Reserve enough capacity in `positions` + `kinds` for `additional`
 /// new structural bytes. Called per-stripe by the kernel when the
 /// stripe mask popcount is non-zero.

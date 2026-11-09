@@ -5,6 +5,9 @@
 //! test semantics. Add new pass-level tests as additional `mod ...;`
 //! declarations here, with the actual test bodies under `tests/passes/`.
 
+#[path = "../support/mod.rs"]
+mod support;
+
 mod charset;
 mod context_facts;
 mod dag_invariant;

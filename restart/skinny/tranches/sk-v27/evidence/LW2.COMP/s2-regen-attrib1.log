@@ -1,0 +1,5 @@
+base regen --check rc=1 drift=3
+base regen rc=0
+head regen --check rc=1 drift=3
+head regen rc=0
+regenerated base-vs-head hash diff rc=0

@@ -1,0 +1,15 @@
+base regen --check rc=1 drift=3
+base regen rc=0
+head regen --check rc=1 drift=3
+head regen rc=0
+regenerated base-vs-head hash diff rc=0
+ M crates/core/src/grammar/generated/bnf.rs
+ M crates/core/src/grammar/generated/css_l4.rs
+ M crates/core/src/grammar/generated/google_sheets.rs
+ M crates/core/src/grammar/generated/bnf.rs
+ M crates/core/src/grammar/generated/css_l4.rs
+ M crates/core/src/grammar/generated/google_sheets.rs
+hashdiff:
+same-as-read1
+
+[exited with code 0]

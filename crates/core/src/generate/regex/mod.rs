@@ -8,8 +8,6 @@
 //! - **patterns/** — Pattern detection and analysis utilities.
 //! - **byte_class** (AY.W4.3) — Adapter-entry first-byte dispatcher,
 //!   short-circuiting the pointer-equality cascade.
-//! - **phf** (AY.W4.3) — Cross-rule shared keyword vocabulary
-//!   (deduplicates per-rule PHF byte storage).
 //! - **last_byte_set** (AY.W4.3) — BoundedRegex narrowing —
 //!   per-pattern LAST-byte sets to skip DFA walks early.
 
@@ -18,7 +16,6 @@ pub mod cost_model;
 pub mod emit;
 pub mod last_byte_set;
 pub mod patterns;
-pub mod phf;
 
 // Re-exports for common use.
 pub use cost_model::{CostModel, EmitOpts, LengthHint};

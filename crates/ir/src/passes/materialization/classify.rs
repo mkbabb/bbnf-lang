@@ -88,8 +88,8 @@ pub type EClassFactsMap = HashMap<NodeId, EClassFacts>;
 pub fn classify_materialization(ir: &mut GrammarIR) {
     assert!(
         ir.dag.is_some(),
-        "classify_materialization requires ir.dag to be built; call \
-         bbnf_ir::dag::ensure_dag(&mut ir) in tests or run \
+        "classify_materialization requires ir.dag to be built; use \
+         the tests' ensure_dag fixture or run \
          crates/core/src/pipeline/compile.rs::build_durable_dag"
     );
 

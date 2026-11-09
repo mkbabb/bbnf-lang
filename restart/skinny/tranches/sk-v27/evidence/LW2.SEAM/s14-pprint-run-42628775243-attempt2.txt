@@ -1,0 +1,12 @@
+gh run view 42628775243 -R mkbabb/pprint --attempt 2 --log-failed (read 2026-11-09 by S14), error lines:
+2026-11-09T13:51:21.3698413Z error: redundant closure
+2026-11-09T13:51:21.3712060Z    --> benches/pprint.rs:172:49
+2026-11-09T13:51:21.3743827Z error: redundant closure
+2026-11-09T13:51:21.3744240Z    --> benches/pprint.rs:188:57
+2026-11-09T13:51:21.3748517Z error: redundant closure
+2026-11-09T13:51:21.3748922Z    --> benches/pprint.rs:254:49
+2026-11-09T13:51:21.4001555Z error: could not compile `pprint` (bench "pprint") due to 3 previous errors
+2026-11-09T13:51:21.4009419Z error: approximate value of `f64::consts::PI` found
+2026-11-09T13:51:21.4009931Z   --> tests/pretty_tests.rs:15:23
+2026-11-09T13:51:21.4171796Z error: could not compile `pprint` (test "pretty_tests") due to 1 previous error
+2026-11-09T13:51:21.4720678Z ##[error]Process completed with exit code 101.

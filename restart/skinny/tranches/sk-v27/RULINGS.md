@@ -19,3 +19,12 @@ Also ruled:
 - Wave LW1 runs to its LG-1 gate.
 - The three UNREAD objections (regex C1-9 and C2-6, consumers critic 2 #7) are re-asked and ruled inside LW1 (LW1.RX-4 and LW1.USE).
 - The leftover sk-v26 pre-commit hook (an unguarded `cargo test` of a missing test, plus a `../parse-that` path) is a defect. LW1.COMP-4 removes it, and `--no-verify` is not used after that.
+
+## Addendum, 2026-11-06: the LG-1 rulings (by the delegate)
+
+| # | Ruling |
+|---|---|
+| R-a | The private `docs/precepts` submodule is **removed** from bbnf-lang. A public library cannot carry a private submodule that every downstream cargo git edge must clone. The precepts stay in their own private repo, and bbnf-lang references them only by a plain link in its docs. X-5's crate move (LW2.TOPO-1) proceeds regardless. Falsifier: parse-that #3 and pprint #2 resolve their bbnf-lang edges on a credential-free public runner (RED today → GREEN ×2). |
+| R-b | TS↔Rust parity: each of the 20 divergences is ruled row by row in LW2. Authority runs in this order: the BBNF language spec text first; where the spec is silent, the compiler of record (the sk-v26 spine, X-1) decides, and TS follows. Every ruling adds a spec sentence, so the spec stops being silent there. No divergence is closed by deleting its test. |
+| R-c | The corpus artifact is a **versioned GitHub release asset with a sha256 manifest**, not LFS. LFS is ruled out because it means bandwidth quotas, lfs in every CI job, and a second custody path. It is fetched and verified by `xtask corpus fetch/verify`, locally and in CI; X-8 pins the CSS part to a released value.js tarball. |
+| Z-32 | The 32 zero-caller substrates are given their fates by LW2 S2 CENSUS under X-1/X-5, each as delete, route (with a cited unit) or move with its crate. "Sanction" is not available without a named caller in LW2–LW4. |

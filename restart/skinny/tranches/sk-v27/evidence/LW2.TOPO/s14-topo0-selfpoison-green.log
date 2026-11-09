@@ -1,0 +1,6 @@
+== GREEN read 1: repaired checker, --mutants topo0-mutant.log, records at f2365d0a6
+GREEN
+  66/66 cited commits resolve (1 non-commit object ids, 9 CI run ids, 1 upstream pins verified; 3 of 3 listed mutant tokens re-refused)
+== GREEN read 2: repaired checker, --mutants topo0-mutant.log, records at f2365d0a6
+GREEN
+  66/66 cited commits resolve (1 non-commit object ids, 9 CI run ids, 1 upstream pins verified; 3 of 3 listed mutant tokens re-refused)

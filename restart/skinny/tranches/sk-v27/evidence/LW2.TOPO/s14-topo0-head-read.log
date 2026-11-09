@@ -1,0 +1,8 @@
+== HEAD records (sk-v27-lw2 5a6e0f86f), repaired checker, for the record
+RED
+  66/71 cited commits resolve (1 non-commit object ids, 11 CI run ids, 1 upstream pins verified; 3 of 3 listed mutant tokens re-refused)
+  1874fa3f8: commit in ['bbnf-lang'] but reachable from no receipted head
+  48bb5ee: commit in ['pprint'] but reachable from no receipted head
+  5b9c992: commit in ['parse-that'] but reachable from no receipted head
+  be81c9e: commit in ['parse-that'] but reachable from no receipted head
+  ec47846: commit in ['pprint'] but reachable from no receipted head

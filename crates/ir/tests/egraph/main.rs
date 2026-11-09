@@ -5,6 +5,9 @@
 //! test semantics. Add new e-graph tests as additional `mod ...;`
 //! declarations here, with the actual test bodies under `tests/egraph/`.
 
+#[path = "../support/mod.rs"]
+mod support;
+
 mod egraph_analysis;
 mod egraph_grammar;
 mod egraph_interner;

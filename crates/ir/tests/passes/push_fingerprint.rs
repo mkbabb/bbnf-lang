@@ -70,7 +70,7 @@ fn empty_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
 /// Build a fresh IR, classify every rule body via `ir.materialization`,
 /// then run the pass. Returns the stored fingerprint.
 fn run_pass(mut ir: GrammarIR, classes: &[(u32, MaterializationClass)]) -> PushFingerprint {
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     let dag = ir.dag.as_ref().expect("dag");
     for (rid, class) in classes {
         let rule = &ir.rules[*rid as usize];

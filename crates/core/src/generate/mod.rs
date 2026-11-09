@@ -16,7 +16,6 @@
 //! is the concatenation of both outputs.
 
 pub mod regex;
-pub mod serialize;
 pub use crate::backend::rust::ir_enums;
 pub use crate::backend::rust::ir_types;
 pub use crate::backend::rust::ir_types::ParserAttributes;

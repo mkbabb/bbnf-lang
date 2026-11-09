@@ -52,12 +52,12 @@ pub fn project_types(ir: &mut GrammarIR) {
     // The durable DAG substrate is built exactly once per compile
     // in `pipeline::compile` before any facts/strategy phase runs.
     // Unit tests that exercise this pass in isolation must call
-    // `bbnf_ir::dag::ensure_dag(&mut ir)` beforehand. Asserting
+    // build `ir.dag` beforehand (the tests' `ensure_dag` fixture). Asserting
     // here keeps the invariant honest instead of papering over
     // it with a defensive fallback.
     assert!(
         ir.dag.is_some(),
-        "project_types requires ir.dag — call bbnf_ir::dag::ensure_dag in tests",
+        "project_types requires ir.dag — use the ensure_dag test fixture",
     );
 
     // Phase 1: Generate constraint system from the IR structure.

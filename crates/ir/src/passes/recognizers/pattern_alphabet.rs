@@ -48,7 +48,7 @@
 
 use crate::IrNode;
 use crate::dag::NodeId;
-use crate::passes::sets::structural_alphabet::{StructuralBitmap, build_byte_bitmap};
+use crate::passes::sets::structural_alphabet::StructuralBitmap;
 
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 
@@ -363,21 +363,4 @@ fn add_byte(bitmap: &mut [u64; 4], b: u8) {
 #[inline]
 fn full_bitmap() -> [u64; 4] {
     [u64::MAX; 4]
-}
-
-/// Helper construction — used by tests and by the walker-side
-/// runtime guard when consuming the mined alphabets.
-///
-/// The `matchable_bytes` and `last_byte_set` bitmaps both derive from
-/// `bytes` — callers constructing fixtures against the pre-W3.5c API
-/// get matchable == last_byte by default.
-#[allow(dead_code)]
-pub fn make_alphabet<I: IntoIterator<Item = u8>>(bytes: I) -> PatternAlphabet {
-    let bitmap = build_byte_bitmap(bytes);
-    PatternAlphabet {
-        matchable_bytes: bitmap,
-        is_tight: true,
-        last_byte_set: bitmap,
-        is_last_byte_tight: true,
-    }
 }

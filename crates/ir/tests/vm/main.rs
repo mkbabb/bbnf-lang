@@ -6,6 +6,9 @@
 //! test semantics. Add new VM-adjacent tests as additional `mod ...;`
 //! declarations here, with the actual test bodies under `tests/vm/`.
 
+#[path = "../support/mod.rs"]
+mod support;
+
 mod compiler;
 mod cost_weights_unified;
 mod cross_rule_csp;

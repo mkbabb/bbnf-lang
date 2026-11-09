@@ -263,12 +263,3 @@ fn entry_literal(e: &OperatorChainEntry) -> TokenStream {
         }
     }
 }
-
-// ── Helper: reconstruct a facts summary for tests ───────────────────
-
-/// Accessor for the pack function — exposed so parity tests can
-/// independently verify the bit layout matches this module's
-/// emission.
-pub fn pack_lut_byte_for_test(entry: &OperatorChainEntry) -> u8 {
-    pack_lut_byte(entry)
-}

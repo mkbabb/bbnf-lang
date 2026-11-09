@@ -366,12 +366,3 @@ impl fmt::Debug for ParseResult {
             .finish()
     }
 }
-
-// ── Public API ──────────────────────────────────────────────────────────────
-
-/// Convenience function: compile IR and parse input.
-pub fn parse_with_ir(ir: &crate::GrammarIR, input: &str) -> ParseResult {
-    let program = super::compiler::compile(ir);
-    let mut interp = Interpreter::new(&program, input);
-    interp.run()
-}

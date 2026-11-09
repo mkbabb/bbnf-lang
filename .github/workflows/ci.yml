@@ -123,6 +123,10 @@ jobs:
       # .cargo/config.toml mandates sccache as the rustc wrapper.
       - name: install sccache
         uses: mozilla-actions/sccache-action@v0.0.9
+      # sk-v27 LW2.TOPO-1 (X-5): the three-repository crate graph is the DAG
+      # pprint <- parse-that <- bbnf-lang, read from cargo's own resolution.
+      - name: repo DAG (pprint <- parse-that <- bbnf-lang)
+        run: sh scripts/check-repo-dag.sh
       - name: hermetic build
         run: sh scripts/check-hermetic-build.sh
 

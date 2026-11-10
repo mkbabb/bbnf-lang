@@ -1,0 +1,7 @@
+      fn      compact_stripe_synthetic
+      fn      compute_inside_string_bytes
+     Summary [  24.330s] 1508 tests run: 1506 passed, 2 failed, 25 skipped
+    substrate_audit: 2 zero-caller substrates (whitelist size = 0); elapsed = 1.544897375s
+    substrate_audit: 2 zero-caller substrates (whitelist size = 0); elapsed = 1.550043542s
+  TRY 2 FAIL [   0.186s] (1411/1508) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+  TRY 2 FAIL [   1.571s] (1507/1508) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates

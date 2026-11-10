@@ -1,0 +1,3 @@
+graph: every path package is inside the repository; every git package is pinned to a rev or a release tag
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.97s
+hermetic: clean-clone build GREEN

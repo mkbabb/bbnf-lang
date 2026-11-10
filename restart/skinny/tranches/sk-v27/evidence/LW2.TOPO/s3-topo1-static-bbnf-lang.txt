@@ -1,0 +1,5 @@
+# git grep -n '^\[patch' -- '*.toml' (all paths)
+restart/skinny/tranches/sk-v24/locks/LOCK-5/pass-2/proto2-cvec/Cargo.toml:20:[patch.crates-io]
+restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/rust/.cargo/config.toml:3:[patch.crates-io]
+# live (records restart/ docs/ excluded):        0
+# gitlinks: 0

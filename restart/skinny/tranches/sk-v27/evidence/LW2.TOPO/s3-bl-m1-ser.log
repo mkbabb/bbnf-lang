@@ -1,0 +1,8 @@
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.12s
+────────────
+ Nextest run ID df55623e-9f6c-4d77-8d50-9bbd88397170 with nextest profile: default
+    Starting 2 tests across 2 binaries
+        PASS [   0.010s] (1/2) bbnf-ser::fmt_builder fits_flat
+        PASS [   0.010s] (2/2) bbnf-ser::fmt_builder breaks_when_it_does_not_fit
+────────────
+     Summary [   0.011s] 2 tests run: 2 passed, 0 skipped

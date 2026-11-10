@@ -1,0 +1,11 @@
+Ran 21 tests in 4.428s
+
+OK
+cbb0: refused: cell C-S1-ACC-VALUE is registered for PORTABLE, not NATIVE
+matrix-mismatch rc=2
+cbb0: refused: cell C-S1-ACC-BOGUS is not registered in bench/PREREG.md (65 registered)
+unregistered rc=2
+registered rc=0
+gs1 cells 14
+cell C-S1-ACC-BOGUS is not registered
+cell=C-S1-ACC-SHEET arm=cand n=2 k=2048 ms=22.7679 ns_per_byte=1010.6479 checksum=a0a57dc5766ad99c

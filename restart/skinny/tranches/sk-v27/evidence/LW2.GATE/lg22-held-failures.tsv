@@ -1,0 +1,5 @@
+repo	job	failing test	reads	held owner (S4-A set)
+bbnf-lang	ubuntu shard 2/3; cargo +stable	bbnf-ir::substrate_audit (compute_inside_string_bytes, compact_stripe_synthetic)	TRY 1 FAIL, TRY 2 FAIL	PERF-1 (S6, not started)
+bbnf-lang	ubuntu shard 1/3; cargo +stable	bbnf::ts_node_execute node_execute_twitter_statuses_zero_text	TRY 1 FAIL, TRY 2 FAIL	S1-A / TOPO-6 (open)
+parse-that	cargo +stable; macos-15 nextest	css_parse_test::test_nested_media (stack overflow, debug)	stable rc 101; macos 1 failed	PERF-3 (S6, not started)
+parse-that	ubuntu nextest (--features diagnostics)	debug_test::tests::test_css_{full_rule_parses_successfully,full_rule_with_class_selector,multiple_declarations,rule_parse_or_error_success,rule_unclosed_brace}	5 FAIL (retry 2 each)	S4-B (ruling ask)

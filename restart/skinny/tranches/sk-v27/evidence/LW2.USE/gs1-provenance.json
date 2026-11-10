@@ -1,0 +1,33 @@
+{
+ "base": "4038dce5ac3278eb10441daca1e55d5c4f83cc70",
+ "bbnf_head": "a3b2b060d7d52b5af312827aeafc71a7afa591d8",
+ "bbnf_ts_dirty": "",
+ "node": "v26.0.0",
+ "esbuild": "0.27.3",
+ "differ": [
+  "src/css/bbnf/generated/color.d.ts",
+  "src/css/bbnf/generated/color.js",
+  "src/css/bbnf/generated/grammar.d.ts",
+  "src/css/bbnf/generated/grammar.js"
+ ],
+ "arms": {
+  "base": {
+   "bundle_sha256": "3b757ac1afc8a3dae4271f7547b0c138bc64c5af1d06cd4b8e0dd922eca05093",
+   "generated": {
+    "src/css/bbnf/generated/color.d.ts": "d8c5786a5a71da21198d0489a49da7ce35a3c03c6896d1ec75287740c8db819e",
+    "src/css/bbnf/generated/color.js": "9787da83289093b06d329d77544071ae909cb72ac3da0651125b272d8518cc5c",
+    "src/css/bbnf/generated/grammar.d.ts": "43777c5f97643600d061d8cfdc29f70ae9428b1de318d1eb72f6c9bfe376f73b",
+    "src/css/bbnf/generated/grammar.js": "1ca733e08bfd9dcb3363d9c3245246e42b9870a1a0a996e15169b8fd055f1385"
+   }
+  },
+  "cand": {
+   "bundle_sha256": "93f572b30eebd18a0107ec92ee36e49d3e74d2a2cb20661301c40f673304c51d",
+   "generated": {
+    "src/css/bbnf/generated/color.d.ts": "93ed968a2e1c87bd001040981155df74868ef6b97857c99c10bdae14cae45b3e",
+    "src/css/bbnf/generated/color.js": "1bd4d6eb4bea7340344d6f391eee89b0e3e4955f191a3b503465337551942e1d",
+    "src/css/bbnf/generated/grammar.d.ts": "9e251a8040541f9c0484786ef62f07cbcd2206f340a877417ce54fa43ef51865",
+    "src/css/bbnf/generated/grammar.js": "edd0004c5e11fa8aa3b0c41cf8a3afdc30c85c39b9d56c9594196360c5998b06"
+   }
+  }
+ }
+}

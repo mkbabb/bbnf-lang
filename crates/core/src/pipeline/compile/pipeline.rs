@@ -19,10 +19,13 @@ use crate::pipeline::compile::closure_partition::{
 };
 use crate::pipeline::compile::timer::PipelineTimer;
 use crate::pipeline::validate::validate_ast;
-use crate::pipeline::{CompileError, PipelineOptions};
+use crate::pipeline::{CompileError, CompileRequest};
 use crate::types::AST;
 
 /// The canonical IR-pipeline orchestrator.
+///
+/// `request.target` selects the e-graph rule list through its regex leaf
+/// ([`crate::pipeline::CompileTarget::leaf_match`]).
 ///
 /// Validates, partitions closures, runs SCC + topological order,
 /// lowers to IR, computes FIRST sets, optionally eliminates
@@ -36,8 +39,9 @@ use crate::types::AST;
 pub fn compile_ast_common<'a>(
     ast: AST<'a>,
     directives: &'a DirectiveSet<'a>,
-    options: &PipelineOptions,
+    request: &CompileRequest,
 ) -> Result<GrammarIR, CompileError> {
+    let options = &request.options;
     let mut timer = PipelineTimer::new();
 
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
@@ -216,7 +220,8 @@ pub fn compile_ast_common<'a>(
         // `GrammarCostModel` (shared with parse-that-regex HIR e-graph in
         // Tranche H).
         timer.span("egraph_build_saturate_writeback", || {
-            let (egraph, pool, rule_body_ids) = bbnf_ir::egraph::build_and_saturate(&ir);
+            let (egraph, pool, rule_body_ids) =
+                bbnf_ir::egraph::build_and_saturate(&ir, request.target.leaf_match());
             let cost = bbnf_ir::egraph::GrammarCostModel::from_config(&ir.cost_config);
             bbnf_ir::egraph::write_back_optimized(&egraph, &mut ir, &rule_body_ids, &cost);
             pool.write_back(&mut ir);

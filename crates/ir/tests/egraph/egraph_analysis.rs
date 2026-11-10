@@ -15,7 +15,7 @@
 //! analysis-enabled e-graph still produce correct post-saturation IR.
 
 use bbnf_ir::GrammarIR;
-use bbnf_ir::egraph::{GrammarAnalysis, build_and_saturate};
+use bbnf_ir::egraph::{GrammarAnalysis, LeafMatch, build_and_saturate};
 
 /// Helper: compile a tiny fixture grammar all the way through the
 /// bbnf-ir public surface (without the full pipeline, which lives in
@@ -111,7 +111,7 @@ fn grammar_analysis_activates_in_production_build_and_saturate() {
     // check: if `GrammarAnalysis` isn't the substrate, the compiler
     // rejects this let binding. The runtime assert just keeps the
     // test from being dead code after optimization.
-    let (egraph, _pool, rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, _pool, rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
 
     // Every rule root has a canonical class with attached data.
     for &root in rule_body_ids.values() {

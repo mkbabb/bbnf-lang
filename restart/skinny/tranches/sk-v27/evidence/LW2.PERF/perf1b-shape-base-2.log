@@ -1,0 +1,26 @@
+bbnf-lang 7adb65bb6 parse-that 011ba27
+   present: skinny/crates/bbnf-simd
+A  RED   1 of 3 source crates still in bbnf-lang
+B  RED   31 files outside rust/simd/; not the S6-A set:
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/bracket_depth_mask_64.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/byte_context.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/cache_hints.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/comment_body_mask_64.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/movemask.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/quad_load.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/string_block.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/structural_classify_64.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/utf8/validate_block.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/tests/aarch64_primitives.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/tests/checkasm_common.rs
+     extra   bbnf-lang/skinny/crates/bbnf-simd/tests/checkasm_parity.rs
+     extra   bbnf-lang/skinny/crates/parse-that-regex/src/lib.rs
+C  GREEN generality grep over rust/simd = 0
+D  GREEN parse_that::scan re-exports parse-that-simd
+E  RED   5 manifest lines name simd-scan/bbnf-simd
+rc=1

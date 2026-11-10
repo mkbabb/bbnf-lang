@@ -1,0 +1,7 @@
+bbnf-lang 350b6d2b2 parse-that 4762ad3
+A  GREEN source crates absent (0 of 3)
+B  GREEN core::arch outside rust/simd/ is exactly the 13 S6-A files
+C  GREEN generality grep over rust/simd = 0
+D  GREEN parse_that::scan re-exports parse-that-simd
+E  GREEN no manifest names simd-scan/bbnf-simd
+rc=0

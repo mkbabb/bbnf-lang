@@ -1,0 +1,247 @@
+# LW2.TOPO-2 readings (S4). Falsifier: s4-topo2-stable-plane.sh. Raw build/test logs: /Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S4-TOOLCHAIN/<repo>-<tag>.{build,test}.log
+
+## pprint base-red1
+# 2026-11-10T00:49:49Z repo=pprint rev=b26b7b9 toolchain=1.99.1 load={ 24.25 22.15 29.00 }
+# head b26b7b9d7ff80af77538e2cb4adc3a18a3490cb6 Merge lw2/s3-dag into sk-v27-lw2 (LW2.TOPO-1, S3 DAG): repo DAG GREEN, no [patch], hermetic GREEN
+error: failed to run `rustc` to learn about target-specific information
+# build rc=101
+error: failed to run `rustc` to learn about target-specific information
+# tests passed= failed=
+# test rc=101
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+# config matches outside the +nightly alias family: 4
+VERDICT RED build=101 test=101 stray=4
+
+## parse-that base-red1
+# 2026-11-10T00:49:50Z repo=parse-that rev=f84b811 toolchain=1.99.1 load={ 24.25 22.15 29.00 }
+# head f84b811cea700f9565ee044a8f44f78c0729008c Merge lw2/s3-dag into sk-v27-lw2 (LW2.TOPO-1, S3 DAG): repo DAG GREEN, no [patch], hermetic GREEN
+error: failed to run `rustc` to learn about target-specific information
+# build rc=101
+# corpus fetch rc=1
+error: failed to run `rustc` to learn about target-specific information
+# tests passed= failed=
+# test rc=101
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+#     "-Zthreads=8",
+#     "-Zshare-generics=y",
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+# config matches outside the +nightly alias family: 6
+VERDICT RED build=101 test=101 stray=6
+
+## bbnf-lang base-red1
+# 2026-11-10T00:49:52Z repo=bbnf-lang rev=59a4d71fc toolchain=1.99.1 load={ 25.11 22.37 29.03 }
+# head 59a4d71fcef2ffa207641258c3c81440dde091dc Merge lw2/s3-dag into sk-v27-lw2 (LW2.TOPO-1, S3 DAG): egraph, egraph-derive and csp-solver leave; parse-that and pprint enter as git+rev workspace edges; repo DAG GREEN; ruling ask S3-A
+error[E0554]: `#![feature]` may not be used on the stable release channel
+error: could not compile `smallbox` (lib) due to 1 previous error
+# build rc=101
+error: could not compile `smallbox` (lib) due to 1 previous error
+error[E0554]: `#![feature]` may not be used on the stable release channel
+# tests passed= failed=
+# test rc=101
+#   - build flags (-Zthreads, -Zshare-generics; nightly-gated)
+rustc-wrapper = "sccache"
+# 2026-04-25 B1.W4-followup (pre-B2): `-Zthreads=8 -Zshare-generics=y` were
+# `-Zshare-generics`'s benefit is strictly cold + cross-crate-generic;
+# warm `iter-check` is neither. `-Zthreads` adds parallel-front-end
+# wants to revisit `-Zthreads` / `-Zshare-generics` it does so with a
+# audit-α retrospective above, the prior `-Zthreads=8 -Zshare-generics=y`
+# install required. Linker arg only; `-Zthreads` / `-Zshare-generics`
+# config matches outside the +nightly alias family: 8
+VERDICT RED build=101 test=101 stray=8
+
+## pprint base-red2
+# 2026-11-10T00:50:19Z repo=pprint rev=b26b7b9 toolchain=1.99.1 load={ 50.36 28.38 31.00 }
+# head b26b7b9d7ff80af77538e2cb4adc3a18a3490cb6 Merge lw2/s3-dag into sk-v27-lw2 (LW2.TOPO-1, S3 DAG): repo DAG GREEN, no [patch], hermetic GREEN
+error: failed to run `rustc` to learn about target-specific information
+# build rc=101
+error: failed to run `rustc` to learn about target-specific information
+# tests passed= failed=
+# test rc=101
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+# config matches outside the +nightly alias family: 4
+VERDICT RED build=101 test=101 stray=4
+
+## parse-that base-red2
+# 2026-11-10T00:50:19Z repo=parse-that rev=f84b811 toolchain=1.99.1 load={ 50.36 28.38 31.00 }
+# head f84b811cea700f9565ee044a8f44f78c0729008c Merge lw2/s3-dag into sk-v27-lw2 (LW2.TOPO-1, S3 DAG): repo DAG GREEN, no [patch], hermetic GREEN
+error: failed to run `rustc` to learn about target-specific information
+# build rc=101
+# corpus fetch rc=1
+error: failed to run `rustc` to learn about target-specific information
+# tests passed= failed=
+# test rc=101
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+rustflags = ["-Zthreads=8", "-Zshare-generics=y"]
+#     "-Zthreads=8",
+#     "-Zshare-generics=y",
+    "-Zthreads=8",
+    "-Zshare-generics=y",
+# config matches outside the +nightly alias family: 6
+VERDICT RED build=101 test=101 stray=6
+
+## bbnf-lang base-red2
+# 2026-11-10T00:50:21Z repo=bbnf-lang rev=59a4d71fc toolchain=1.99.1 load={ 50.36 28.38 31.00 }
+# head 59a4d71fcef2ffa207641258c3c81440dde091dc Merge lw2/s3-dag into sk-v27-lw2 (LW2.TOPO-1, S3 DAG): egraph, egraph-derive and csp-solver leave; parse-that and pprint enter as git+rev workspace edges; repo DAG GREEN; ruling ask S3-A
+error[E0554]: `#![feature]` may not be used on the stable release channel
+error: could not compile `smallbox` (lib) due to 1 previous error
+# build rc=101
+error: could not compile `smallbox` (lib) due to 1 previous error
+error[E0554]: `#![feature]` may not be used on the stable release channel
+# tests passed= failed=
+# test rc=101
+#   - build flags (-Zthreads, -Zshare-generics; nightly-gated)
+rustc-wrapper = "sccache"
+# 2026-04-25 B1.W4-followup (pre-B2): `-Zthreads=8 -Zshare-generics=y` were
+# `-Zshare-generics`'s benefit is strictly cold + cross-crate-generic;
+# warm `iter-check` is neither. `-Zthreads` adds parallel-front-end
+# wants to revisit `-Zthreads` / `-Zshare-generics` it does so with a
+# audit-α retrospective above, the prior `-Zthreads=8 -Zshare-generics=y`
+# install required. Linker arg only; `-Zthreads` / `-Zshare-generics`
+# config matches outside the +nightly alias family: 8
+VERDICT RED build=101 test=101 stray=8
+
+## pprint green1
+# 2026-11-10T01:22:50Z repo=pprint rev=c2b4464b3a5898d8bd1fa05cba63c66032e2163a toolchain=1.99.1 load={ 21.13 26.97 29.32 }
+# head c2b4464b3a5898d8bd1fa05cba63c66032e2163a ci(sk-v27 LW2.TOPO-3): the Apple-silicon arm runs on macos-15; GitHub no longer serves macos-14 (run 42732073134: "The configuration 'macos-14-arm64-us-default' is not supported")
+# build rc=0
+# tests passed=86 failed=0
+# test rc=0
+# parsed -Z / rustc-wrapper outside alias.nightly-*: 0
+# config matches outside the +nightly alias family: 0
+VERDICT GREEN build=0 test=0 stray=0
+
+## parse-that green1
+# 2026-11-10T01:23:01Z repo=parse-that rev=5a4299eff0ace1c6588200d8e8a920d657df9896 toolchain=1.99.1 load={ 21.93 26.94 29.28 }
+# head 5a4299eff0ace1c6588200d8e8a920d657df9896 ci(sk-v27 LW2.TOPO-3): macos-15 for the retired macos-14 arm; clippy manual_range_contains in the x86_64-only accumulate_digits_sse (and its aarch64 twin), read on ubuntu-latest and now cleared for x86_64 on both planes
+# build rc=0
+# corpus fetch rc=0
+error: 1 target failed:
+# tests passed=504 failed=0
+# test rc=101
+# parsed -Z / rustc-wrapper outside alias.nightly-*: 0
+# config matches outside the +nightly alias family: 0
+VERDICT RED build=0 test=101 stray=0
+
+## bbnf-lang green1
+# 2026-11-10T01:24:45Z repo=bbnf-lang rev=ade276e70cc4b7d2f5ff4cc78603d5fb952437d9 toolchain=1.99.1 load={ 26.86 26.86 28.95 }
+# head ade276e70cc4b7d2f5ff4cc78603d5fb952437d9 build(sk-v27 LW2.TOPO-2): the nightly alias family moves inside [alias]; appended after [target.x86_64-unknown-linux-gnu] it parsed as target keys and every Linux cargo call failed (run 42732084048); ci: macos-15 for the retired macos-14 arm
+# build rc=0
+error: 15 targets failed:
+error: test failed, to rerun pass `-p bbnf --test ax_w0a2s_real_css_probe`
+error: test failed, to rerun pass `-p bbnf --test css_l4_canonical_parity`
+error: test failed, to rerun pass `-p bbnf --test css_l4`
+error: test failed, to rerun pass `-p bbnf --test css_pretty`
+error: test failed, to rerun pass `-p bbnf --test dfa_fidelity`
+error: test failed, to rerun pass `-p bbnf --test json_canonical_parity`
+error: test failed, to rerun pass `-p bbnf --test json_parity_struct`
+error: test failed, to rerun pass `-p bbnf --test json_parity`
+error: test failed, to rerun pass `-p bbnf --test json_slab`
+error: test failed, to rerun pass `-p bbnf --test lightningcss_parity`
+error: test failed, to rerun pass `-p bbnf --test pipeline`
+# tests passed=1460 failed=48
+# FAILED test tailwind_full_parse ... FAILED
+# FAILED test bootstrap_full_parse ... FAILED
+# FAILED test normalize_full_parse ... FAILED
+# FAILED test parse_bootstrap_css ... FAILED
+# FAILED test parse_normalize_css ... FAILED
+# FAILED test scale_interop_bootstrap ... FAILED
+# FAILED test canonical_parity_normalize ... FAILED
+# FAILED test scale_interop_tailwind ... FAILED
+# FAILED test parse_bootstrap_css ... FAILED
+# FAILED test parse_normalize_css ... FAILED
+# FAILED test parse_tailwind_css ... FAILED
+# FAILED test pipeline_css_dfa_fidelity ... FAILED
+# FAILED test canonical_parity_data ... FAILED
+# FAILED test canonical_parity_canada ... FAILED
+# FAILED test canonical_parity_twitter ... FAILED
+# FAILED test canonical_parity_citm_catalog ... FAILED
+# FAILED test parity_canada_json ... FAILED
+# FAILED test parity_twitter_json ... FAILED
+# FAILED test parity_data_json ... FAILED
+# FAILED test parity_citm_catalog_json ... FAILED
+# FAILED test native_parity_serde_twitter_json ... FAILED
+# FAILED test native_parity_serde_citm_catalog_json ... FAILED
+# FAILED test native_parity_serde_canada_json ... FAILED
+# FAILED test native_parity_serde_data_json ... FAILED
+# FAILED test parse_data_json ... FAILED
+# FAILED test parse_citm_catalog_json ... FAILED
+# FAILED test parse_twitter_json ... FAILED
+# FAILED test parse_canada_json ... FAILED
+# FAILED test lightningcss_parity_tailwind ... FAILED
+# FAILED test lightningcss_parity_bootstrap ... FAILED
+# FAILED test lightningcss_parity_normalize ... FAILED
+# FAILED test pipeline_vm_full_json_canada ... FAILED
+# FAILED test pipeline_vm_full_json_twitter ... FAILED
+# FAILED test pipeline_vm_full_json_data ... FAILED
+# FAILED test pipeline_vm_full_css_normalize ... FAILED
+# FAILED test pipeline_vm_full_css_bootstrap ... FAILED
+# FAILED test sonic_rs_parity_twitter ... FAILED
+# FAILED test sonic_rs_parity_citm ... FAILED
+# FAILED test sonic_rs_parity_canada ... FAILED
+# FAILED test sonic_rs_parity_data_xl ... FAILED
+# test rc=101
+# parsed -Z / rustc-wrapper outside alias.nightly-*: 0
+# config matches outside the +nightly alias family: 0
+VERDICT RED build=0 test=101 stray=0
+
+## pprint green2
+
+## parse-that green2
+# 2026-11-10T01:35:19Z repo=parse-that rev=5a4299eff0ace1c6588200d8e8a920d657df9896 toolchain=1.99.1 load={ 33.98 32.09 31.07 }
+# head 5a4299eff0ace1c6588200d8e8a920d657df9896 ci(sk-v27 LW2.TOPO-3): macos-15 for the retired macos-14 arm; clippy manual_range_contains in the x86_64-only accumulate_digits_sse (and its aarch64 twin), read on ubuntu-latest and now cleared for x86_64 on both planes
+# build rc=0
+# corpus fetch rc=0
+error: 1 target failed:
+# tests passed=504 failed=0
+# test rc=101
+# parsed -Z / rustc-wrapper outside alias.nightly-*: 0
+# config matches outside the +nightly alias family: 0
+VERDICT RED build=0 test=101 stray=0
+
+## bbnf-lang green2
+# 2026-11-10T01:37:22Z repo=bbnf-lang rev=ade276e70cc4b7d2f5ff4cc78603d5fb952437d9 toolchain=1.99.1 load={ 29.01 32.11 31.31 }
+# head ade276e70cc4b7d2f5ff4cc78603d5fb952437d9 build(sk-v27 LW2.TOPO-2): the nightly alias family moves inside [alias]; appended after [target.x86_64-unknown-linux-gnu] it parsed as target keys and every Linux cargo call failed (run 42732084048); ci: macos-15 for the retired macos-14 arm
+# build rc=0
+# corpus fetch rc=0
+error: 2 targets failed:
+error: test failed, to rerun pass `-p bbnf --test ts_node_execute`
+error: test failed, to rerun pass `-p bbnf-ir --test substrate_audit`
+# tests passed=1506 failed=2
+# FAILED test node_execute_twitter_statuses_zero_text ... FAILED
+# FAILED test substrate_audit_zero_caller_substrates ... FAILED
+# test rc=101
+# parsed -Z / rustc-wrapper outside alias.nightly-*: 0
+# config matches outside the +nightly alias family: 0
+VERDICT RED build=0 test=101 stray=0
+
+## bbnf-lang green3
+# 2026-11-10T02:03:29Z repo=bbnf-lang rev=ade276e70cc4b7d2f5ff4cc78603d5fb952437d9 toolchain=1.99.1 load={ 20.68 22.84 25.41 }
+# head ade276e70cc4b7d2f5ff4cc78603d5fb952437d9 build(sk-v27 LW2.TOPO-2): the nightly alias family moves inside [alias]; appended after [target.x86_64-unknown-linux-gnu] it parsed as target keys and every Linux cargo call failed (run 42732084048); ci: macos-15 for the retired macos-14 arm
+# build rc=0
+# corpus fetch rc=0
+error: 2 targets failed:
+error: test failed, to rerun pass `-p bbnf --test ts_node_execute`
+error: test failed, to rerun pass `-p bbnf-ir --test substrate_audit`
+# tests passed=1506 failed=2
+# FAILED test node_execute_twitter_statuses_zero_text ... FAILED
+# FAILED test substrate_audit_zero_caller_substrates ... FAILED
+# test rc=101
+# parsed -Z / rustc-wrapper outside alias.nightly-*: 0
+# config matches outside the +nightly alias family: 0
+VERDICT RED build=0 test=101 stray=0
+
+## substrate_audit names (green2, green3)
+green2   fn      compact_stripe_synthetic
+green2   fn      compute_inside_string_bytes
+green3   fn      compact_stripe_synthetic
+green3   fn      compute_inside_string_bytes
+
+## pprint merged integration 32e58de (S8 + S4): cargo +1.99.1 test --workspace --locked rc 0, 114 passed, 0 failed

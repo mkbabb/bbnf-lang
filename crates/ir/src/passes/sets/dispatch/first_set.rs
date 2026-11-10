@@ -49,11 +49,8 @@ pub(super) fn node_first_set(
         IrNode::Alt(branches, _) => {
             let mut combined = CharSet128::new();
             for b in branches {
-                if let Some(ref fs) = b.first_set {
-                    combined.union(fs);
-                } else {
-                    return None; // nullable branch
-                }
+                // A nullable branch has no FIRST set.
+                combined.union(b.first_set.as_ref()?);
             }
             Some(combined)
         }

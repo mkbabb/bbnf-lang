@@ -40,18 +40,14 @@ pub(super) fn try_build_dispatch(
             effective_sets.push(*first);
         } else if nullable_idx.is_none() {
             // Nullable branch — use FOLLOW(rule) if available.
-            if let Some(follow) = containing_follow {
-                if !follow.is_empty() {
-                    nullable_idx = Some(i);
-                    effective_sets.push(*follow);
-                } else {
-                    // Empty FOLLOW — can't dispatch.
-                    return None;
-                }
-            } else {
-                // No FOLLOW sets available — can't dispatch nullable branch.
+            // No FOLLOW sets available — can't dispatch nullable branch.
+            let follow = containing_follow?;
+            if follow.is_empty() {
+                // Empty FOLLOW — can't dispatch.
                 return None;
             }
+            nullable_idx = Some(i);
+            effective_sets.push(*follow);
         } else {
             // Multiple nullable branches — can't dispatch.
             return None;

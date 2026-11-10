@@ -1,0 +1,145 @@
+FFFFFFFFFF                                                               [100%]
+=================================== FAILURES ===================================
+______ PlaneEquivalence.test_offset_class_refuses_an_arm_without_offsets _______
+
+self = <test_contest.PlaneEquivalence testMethod=test_offset_class_refuses_an_arm_without_offsets>
+
+    def test_offset_class_refuses_an_arm_without_offsets(self):
+>       import admit
+E       ModuleNotFoundError: No module named 'admit'
+
+bench/contest/test_contest.py:69: ModuleNotFoundError
+________ PlaneEquivalence.test_reference_arms_agree_on_every_p4_witness ________
+
+self = <test_contest.PlaneEquivalence testMethod=test_reference_arms_agree_on_every_p4_witness>
+
+    def test_reference_arms_agree_on_every_p4_witness(self):
+>       import admit
+E       ModuleNotFoundError: No module named 'admit'
+
+bench/contest/test_contest.py:55: ModuleNotFoundError
+____________ PlaneEquivalence.test_skip_unescape_mutant_is_refused _____________
+
+self = <test_contest.PlaneEquivalence testMethod=test_skip_unescape_mutant_is_refused>
+
+    def test_skip_unescape_mutant_is_refused(self):
+>       import admit
+E       ModuleNotFoundError: No module named 'admit'
+
+bench/contest/test_contest.py:60: ModuleNotFoundError
+__________________ BuildPlane.test_a_missing_field_is_refused __________________
+
+self = <test_contest.BuildPlane testMethod=test_a_missing_field_is_refused>
+
+    def test_a_missing_field_is_refused(self):
+>       import admit
+E       ModuleNotFoundError: No module named 'admit'
+
+bench/contest/test_contest.py:97: ModuleNotFoundError
+_______________ BuildPlane.test_equal_build_planes_are_admitted ________________
+
+self = <test_contest.BuildPlane testMethod=test_equal_build_planes_are_admitted>
+
+    def test_equal_build_planes_are_admitted(self):
+>       import admit
+E       ModuleNotFoundError: No module named 'admit'
+
+bench/contest/test_contest.py:79: ModuleNotFoundError
+____________________ BuildPlane.test_every_i8_field_counts _____________________
+
+self = <test_contest.BuildPlane testMethod=test_every_i8_field_counts>
+
+    def test_every_i8_field_counts(self):
+>       import admit
+E       ModuleNotFoundError: No module named 'admit'
+
+bench/contest/test_contest.py:89: ModuleNotFoundError
+________________ BuildPlane.test_target_cpu_mismatch_is_refused ________________
+
+self = <test_contest.BuildPlane testMethod=test_target_cpu_mismatch_is_refused>
+
+    def test_target_cpu_mismatch_is_refused(self):
+>       import admit
+E       ModuleNotFoundError: No module named 'admit'
+
+bench/contest/test_contest.py:83: ModuleNotFoundError
+_______________________ Rows.test_every_plane_has_a_spec _______________________
+
+self = <test_contest.Rows testMethod=test_every_plane_has_a_spec>
+
+    def test_every_plane_has_a_spec(self):
+>       for p in {r["plane"] for r in self.rows()} - {"-"}:
+                                      ^^^^^^^^^^^
+
+bench/contest/test_contest.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_contest.Rows testMethod=test_every_plane_has_a_spec>
+
+    def rows(self):
+>       with open(os.path.join(HERE, "ROWS.tsv"), encoding="utf-8", newline="") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s12-critic/bench/contest/ROWS.tsv'
+
+bench/contest/test_contest.py:106: FileNotFoundError
+_______________ Rows.test_every_row_has_a_class_and_a_checklist ________________
+
+self = <test_contest.Rows testMethod=test_every_row_has_a_class_and_a_checklist>
+
+    def test_every_row_has_a_class_and_a_checklist(self):
+>       rs = self.rows()
+             ^^^^^^^^^^^
+
+bench/contest/test_contest.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <test_contest.Rows testMethod=test_every_row_has_a_class_and_a_checklist>
+
+    def rows(self):
+>       with open(os.path.join(HERE, "ROWS.tsv"), encoding="utf-8", newline="") as f:
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: '/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s12-critic/bench/contest/ROWS.tsv'
+
+bench/contest/test_contest.py:106: FileNotFoundError
+__________ Units.test_no_megabit_or_legacy_predicate_in_bench_sources __________
+
+self = <test_contest.Units testMethod=test_no_megabit_or_legacy_predicate_in_bench_sources>
+
+    def test_no_megabit_or_legacy_predicate_in_bench_sources(self):
+        out = subprocess.run(["git", "grep", "-n", r"track1_beats_lightningcss\|mbps", "--", *BENCH_SOURCES,
+                              ":(exclude)bench/contest/test_contest.py"],
+                             cwd=REPO, capture_output=True, text=True)
+>       self.assertEqual(out.stdout, "", "\n" + out.stdout[:2000])
+E       AssertionError: 'crates/core/tests/css_l4_w6_typed_retime.[73572 chars]",\n' != '' : 
+E       crates/core/tests/css_l4_w6_typed_retime.rs:140:    track1_typed_mbps: f64,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:141:    cssparser_typed_mbps: f64,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:142:    sota_threshold_mbps: f64,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:143:    track1_margin_mbps: f64,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:226:        let expected_threshold = self.cssparser_typed_mbps + W6_SOTA_EPSILON_MBPS;
+E       crates/core/tests/css_l4_w6_typed_retime.rs:227:        if !nearly_equal(self.sota_threshold_mbps, expected_threshold) {
+E       crates/core/tests/css_l4_w6_typed_retime.rs:231:            self.track1_margin_mbps,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:232:            self.track1_typed_mbps - self.sota_threshold_mbps,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:239:            && self.track1_typed_mbps > self.sota_threshold_mbps;
+E       crates/core/tests/css_l4_w6_typed_retime.rs:271:        "W6_CSS_TYPED_RETIME disposition={} reason={} corpus_bytes={} track1_mbps={:.3} cssparser_mbps={:.3} margin_mbps={:.3} track1_passes={} track1_errors={} cssparser_passes={} cssparser_errors={} shared_summary_equal={} track1_rules={} cssparser_rules={} track1_style={} cssparser_style={} track1_sel={} cssparser_sel={} track1_decls={} cssparser_decls={}",
+E       crates/core/tests/css_l4_w6_typed_retime.rs:275:        report.track1_typed_mbps,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:276:        report.cssparser_typed_mbps,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:277:        report.track1_margin_mbps,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:334:        track1_typed_mbps: 12.0,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:335:        cssparser_typed_mbps: 10.0,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:336:        sota_threshold_mbps: 11.0,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:337:        track1_margin_mbps: 1.0,
+E       crates/core/tests/css_l4_w6_typed_retime.rs:402:    let lightningcss_full_parse_mbps = throughput_mbps(profiled_bytes, lightningcss_elapse
+
+bench/contest/test_contest.py:132: AssertionError
+=========================== short test summary info ============================
+FAILED bench/contest/test_contest.py::PlaneEquivalence::test_offset_class_refuses_an_arm_without_offsets
+FAILED bench/contest/test_contest.py::PlaneEquivalence::test_reference_arms_agree_on_every_p4_witness
+FAILED bench/contest/test_contest.py::PlaneEquivalence::test_skip_unescape_mutant_is_refused
+FAILED bench/contest/test_contest.py::BuildPlane::test_a_missing_field_is_refused
+FAILED bench/contest/test_contest.py::BuildPlane::test_equal_build_planes_are_admitted
+FAILED bench/contest/test_contest.py::BuildPlane::test_every_i8_field_counts
+FAILED bench/contest/test_contest.py::BuildPlane::test_target_cpu_mismatch_is_refused
+FAILED bench/contest/test_contest.py::Rows::test_every_plane_has_a_spec - Fil...
+FAILED bench/contest/test_contest.py::Rows::test_every_row_has_a_class_and_a_checklist
+FAILED bench/contest/test_contest.py::Units::test_no_megabit_or_legacy_predicate_in_bench_sources
+10 failed in 0.11s

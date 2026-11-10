@@ -252,3 +252,15 @@ Row 0's bytes and conformance cite the value.js 4.3.0 tarball above. Its timing 
 | --- | --- | --- | --- | --- | --- | --- |
 | C-S0-ROW0-VALUE-CSS | F-VALUE-S0 | `parseCssValue` (`/css`) | the 17,316 WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |
 | C-S0-ROW0-VALUE-COLOR | F-VALUE-S0 | `parseCssColor` (`/color`) | the 5,778 css-color WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |
+
+## 10. Paired cure cells: LW2.PERF-3, registered by S6 PERF
+
+This section is an addendum (LW2.SEAM S12-P4-6, ACCEPTED IN PART). It is written before Phase 3 and hashed with the rest of the file. PERF-3 is a correctness cure: `SpanParser::call_inner` (parse-that `rust/parse_that/src/span_parser/mod.rs`) goes from `#[inline(always)]` to `#[inline]` (parse-that `92ff470`), which ends the debug stack overflow in nested CSS at-rules and leaves the release inlining of the kind dispatch to LLVM. Family F-CURE-PERF3 is not a contest: it has no comparator row, and both arms are parse-that's own span-parser parsers at two commits, same toolchain, same matrix, same input (the parse-that corpus-v1 files, fixed by their sha256 in parse-that `corpus/MANIFEST.sha256`).
+
+| Cell | Family | Parser | Input | Parent arm | Cure arm | Measure | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C-PERF3-CSS-BOOTSTRAP | F-CURE-PERF3 | parse_that CSS (span parser) | data/css/bootstrap.css@4a50207b | `ad0dc8a` | `92ff470` | parse time per byte, release (bench profile) | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-PERF3-CSS-TAILWIND | F-CURE-PERF3 | parse_that CSS (span parser) | data/css/tailwind-output.css@cd6e8eac | `ad0dc8a` | `92ff470` | parse time per byte, release (bench profile) | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-PERF3-JSON-TWITTER | F-CURE-PERF3 | parse_that JSON (span parser) | data/json/twitter.json@30721e49 | `ad0dc8a` | `92ff470` | parse time per byte, release (bench profile) | ≥ 200 over ≥ 30 invocations | PORTABLE |
+
+`r = ln(t_cure / t_parent)` per ABBA pair under §1 and §2; output checksums must agree, or the pair is discarded. The three cells are one Holm group. PERF-3 is a correctness cure, so a LOSS does not revert it: a LOSS files a born-RED for LW4.PERF (the release-only dispatch inlining, `cfg_attr(not(debug_assertions), inline(always))`, measured against this cure), and a WIN or UNDECIDED is reported only. A NOISY record never certifies.

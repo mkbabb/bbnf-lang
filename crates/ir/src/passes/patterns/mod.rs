@@ -61,7 +61,7 @@ pub type NodeFactsMap = HashMap<crate::dag::NodeId, NodeFacts>;
 // One struct, one field on NodeFacts. All grammar-tier recognizer
 // information lives in `Recognizer`. The regex-tier classification is
 // pointed to via `RecognizerShape::Regex { sid }` — there is no
-// duplication; the regex fact in `bbnf_regex::RegexInfo` is referenced.
+// duplication; the regex fact in `parse_that_regex::RegexInfo` is referenced.
 
 /// Group identifier for cross-rule recognizer sharing. Sites with the
 /// same `RecognizerSignature` hash collapse into one peer group; each

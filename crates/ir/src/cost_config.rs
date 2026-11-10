@@ -1,6 +1,6 @@
 //! Grammar-tier cost / scheduling configuration.
 //!
-//! Wraps the shared [`egraph::CostConfig`] with grammar-specific knobs
+//! Wraps the shared [`parse_that_egraph::CostConfig`] with grammar-specific knobs
 //! consumed by the grammar-tier extraction cost model
 //! (`crate::egraph::GrammarCostModel`) and by the strategy CSP
 //! introduced in Tranche W phase 3b
@@ -20,17 +20,17 @@
 //! defined and env-var-loaded but never read by any production
 //! consumer. The fourth (`strategy_dispatch_bonus`) was a numeric
 //! duplicate of the existing cross-tier
-//! [`egraph::CostWeights::dispatch_bonus`]: same default value, same
+//! [`parse_that_egraph::CostWeights::dispatch_bonus`]: same default value, same
 //! semantics, just stored twice.
 //!
 //! Z.6 deletes all four. The strategy CSP now reads
 //! `cfg.egraph.weights.dispatch_bonus` directly — the same field the
 //! `RegexExtractionCost` HIR tier already consumes via
 //! [`hir_extraction_cost`]. The universal cost model is therefore
-//! truly universal: one source of truth at `egraph::CostWeights`,
+//! truly universal: one source of truth at `parse_that_egraph::CostWeights`,
 //! both tiers read it.
 
-use egraph::CostConfig as EgraphCostConfig;
+use parse_that_egraph::CostConfig as EgraphCostConfig;
 
 /// Grammar-tier cost / scheduling configuration. Embeds
 /// [`EgraphCostConfig`] (the cross-tier substrate) and layers
@@ -118,7 +118,7 @@ impl CostConfig {
     /// from this config.
     ///
     /// This is the single construction site for
-    /// [`bbnf_regex::egraph::RegexExtractionCost`] in production — every
+    /// [`parse_that_regex::egraph::RegexExtractionCost`] in production — every
     /// call site that used to construct the struct field-by-field (or
     /// call `RegexExtractionCost::default()`) now goes through this
     /// method. The cross-tier commitment from Tranche H-5 is that the
@@ -126,12 +126,12 @@ impl CostConfig {
     /// every HIR knob in `CostConfig.hir_*` flows through to the
     /// extractor. Both halves are honored here.
     ///
-    /// Lives on `bbnf_ir::CostConfig` (not `bbnf_regex`) because the
-    /// dependency direction is `bbnf-ir → bbnf-regex`, not the reverse.
-    /// Attaching the constructor here keeps `bbnf-regex` oblivious to
+    /// Lives on `bbnf_ir::CostConfig` (not `parse_that_regex`) because the
+    /// dependency direction is `bbnf-ir → parse-that-regex`, not the reverse.
+    /// Attaching the constructor here keeps `parse-that-regex` oblivious to
     /// its grammar-tier consumer.
-    pub fn hir_extraction_cost(&self) -> bbnf_regex::egraph::RegexExtractionCost {
-        bbnf_regex::egraph::RegexExtractionCost {
+    pub fn hir_extraction_cost(&self) -> parse_that_regex::egraph::RegexExtractionCost {
+        parse_that_regex::egraph::RegexExtractionCost {
             weights: self.egraph.weights,
             literal_per_byte: self.hir_literal_per_byte,
             class_cost: self.hir_class_cost,
@@ -142,11 +142,18 @@ impl CostConfig {
 
     /// Build a `CostConfig` from environment variables.
     ///
-    /// Recognized variables (in addition to those handled by
-    /// [`EgraphCostConfig::from_env`] — notably
-    /// `BBNF_COST_DISPATCH_BONUS`, which now flows directly into
-    /// `egraph.weights.dispatch_bonus` after the Z.6 ghost-knob
-    /// deletion):
+    /// Recognized variables. The cross-tier knobs of the embedded
+    /// [`EgraphCostConfig`] (the e-graph crate reads no environment, so
+    /// they are read here; `BBNF_COST_DISPATCH_BONUS` flows directly into
+    /// `egraph.weights.dispatch_bonus` after the Z.6 ghost-knob deletion):
+    /// - `BBNF_COST_PARALLELISM_THRESHOLD`
+    /// - `BBNF_COST_EGRAPH_ITER_LIMIT`
+    /// - `BBNF_COST_EGRAPH_NODE_LIMIT`
+    /// - `BBNF_COST_ALT_PER_BRANCH`
+    /// - `BBNF_COST_DISPATCH_BONUS`
+    /// - `BBNF_COST_STRUCTURAL`
+    ///
+    /// The grammar-tier knobs:
     /// - `BBNF_COST_LITERAL`
     /// - `BBNF_COST_REGEX`
     /// - `BBNF_COST_REF`
@@ -156,10 +163,38 @@ impl CostConfig {
     /// - `BBNF_COST_HIR_REPEAT`
     /// - `BBNF_COST_HIR_MERGED_BONUS`
     pub fn from_env() -> Self {
-        let mut c = Self {
-            egraph: EgraphCostConfig::from_env(),
-            ..Self::default()
-        };
+        let mut c = Self::default();
+
+        if let Ok(s) = std::env::var("BBNF_COST_PARALLELISM_THRESHOLD")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph.parallelism_threshold = v;
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_ITER_LIMIT")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph.egraph_iter_limit = v;
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_EGRAPH_NODE_LIMIT")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph.egraph_node_limit = v;
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_ALT_PER_BRANCH")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph.weights.alt_per_branch = v;
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_DISPATCH_BONUS")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph.weights.dispatch_bonus = v;
+        }
+        if let Ok(s) = std::env::var("BBNF_COST_STRUCTURAL")
+            && let Ok(v) = s.parse()
+        {
+            c.egraph.weights.structural = v;
+        }
 
         if let Ok(s) = std::env::var("BBNF_COST_LITERAL")
             && let Ok(v) = s.parse()

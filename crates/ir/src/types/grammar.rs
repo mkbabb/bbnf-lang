@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 use crate::dag;
 use crate::egraph;
@@ -76,7 +76,7 @@ pub struct GrammarIR {
     /// Cached regex analysis per interned regex pattern. Built by `compute_regex_info` pass.
     /// Pointer-stable within a compile session. Not serializable.
     #[serde(skip)]
-    pub regex_info: HashMap<StringId, bbnf_regex::RegexInfo>,
+    pub regex_info: HashMap<StringId, parse_that_regex::RegexInfo>,
 
     /// Per-node structural facts. Built by `recognize_patterns` pass
     /// (tree walk). Keyed by stable `NodeId` from the durable

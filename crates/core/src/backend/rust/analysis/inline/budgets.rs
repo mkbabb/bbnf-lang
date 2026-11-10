@@ -1,4 +1,4 @@
-//! Inline-CSP cost budgets derived from [`egraph::CostWeights`].
+//! Inline-CSP cost budgets derived from [`parse_that_egraph::CostWeights`].
 //!
 //! Tranche AF.2: every numeric threshold the inline CSP consults is a
 //! projection of the shared [`CostWeights`]. Per-node estimates use
@@ -7,7 +7,7 @@
 //! At the default [`CostWeights`] values, every projection here
 //! reproduces the pre-AF.2 hardcoded constants.
 
-use egraph::CostWeights;
+use parse_that_egraph::CostWeights;
 
 /// Structural ceiling on alternation fan-out. Not a cost weight — a
 /// pragmatic gate on dispatch-table complexity that every backend

@@ -7,7 +7,7 @@
 //! revise step.
 //!
 //! Tranche AF.2: every numeric threshold the cost-budget constraint
-//! consults is a projection of [`egraph::CostWeights`] via
+//! consults is a projection of [`parse_that_egraph::CostWeights`] via
 //! [`super::budgets::CostBudgets`]. The shape-guard predicate
 //! [`should_force_direct_call`] reads the same budgets so the inline
 //! decision boundary stays in lockstep with the internal CSP
@@ -16,7 +16,7 @@
 use csp_solver::constraint::{Constraint, Revision, VarId};
 use csp_solver::domain::{Domain, LatticeDomain};
 use csp_solver::variable::Variable;
-use egraph::CostWeights;
+use parse_that_egraph::CostWeights;
 
 use super::budgets::{CostBudgets, MAX_ALT_BRANCHES};
 use super::plan::CallMode;

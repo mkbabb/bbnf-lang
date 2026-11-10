@@ -35,7 +35,7 @@ pub use universal::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonSc
 
 use rustc_hash::FxHashMap;
 
-use egraph::{Analysis, Id, RewriteFn};
+use parse_that_egraph::{Analysis, Id, RewriteFn};
 
 use super::interner::SharedStrings;
 use super::node::GrammarENode;

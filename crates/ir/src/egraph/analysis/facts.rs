@@ -28,7 +28,7 @@
 //! - `all_descendants_elidable` — transitive closure of `elision_safe`
 //!   over children. Monotonically lossy (`&&` join).
 
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 use crate::StringId;
 

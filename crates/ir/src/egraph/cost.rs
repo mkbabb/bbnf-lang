@@ -1,16 +1,16 @@
 //! Grammar-tier extraction cost model.
 //!
-//! Embeds the shared `egraph::CostWeights` substrate (per-node
+//! Embeds the shared `parse_that_egraph::CostWeights` substrate (per-node
 //! structural cost, alt-branch penalty, dispatch bonus) and layers
 //! grammar-specific knobs on top — literal/regex/ref costs plus a
 //! per-child Seq penalty. The shared weights are the single source
 //! of truth for decisions that belong at the structural layer; the
-//! regex-tier `RegexExtractionCost` (bbnf-regex, Tranche H) embeds
+//! regex-tier `RegexExtractionCost` (parse-that-regex, Tranche H) embeds
 //! the same `CostWeights` so dispatch bonuses and alt penalties
 //! stay consistent across tiers. Per-domain knobs do not leak.
 //!
 
-use egraph::{CostModel, CostWeights, Id};
+use parse_that_egraph::{CostModel, CostWeights, Id};
 
 use super::node::GrammarENode;
 use crate::FnDescriptor;

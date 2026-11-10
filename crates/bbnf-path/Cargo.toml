@@ -15,7 +15,7 @@ proc-macro = true
 #
 # Dependencies:
 # * `syn` / `quote` / `proc-macro2` — the proc-macro substrate.
-# * `bbnf-regex` — the W2.3 path-string lexer (`lex_path` + `PathToken`).
+# * `parse-that-regex` — the W2.3 path-string lexer (`lex_path` + `PathToken`).
 # * `bbnf-ir` — `StructRegistry`, `StructLayout`, `LayoutKind`,
 #   `TypeDesc`; the macro walks its compile-time fixture registry
 #   through this surface to validate each segment against the grammar.
@@ -23,8 +23,8 @@ proc-macro = true
 syn = { version = "2", features = ["full", "extra-traits"] }
 quote = "1"
 proc-macro2 = "1"
-bbnf-regex = { version = "0.1" }
-bbnf-ir = { version = "0.1" }
+parse-that-regex.workspace = true
+bbnf-ir = { version = "0.1", path = "../ir" }
 # AZ-IV.W5 T4 — proc-macro deserialises the per-grammar registry from
 # the sidecar JSON file `cargo xtask regen` writes alongside the
 # generated `.rs` modules. Replaces the synthetic hand-authored fixture

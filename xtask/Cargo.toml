@@ -30,8 +30,8 @@ path = "src/main.rs"
 # verified against Cargo.lock at B2.W0.a authorship.
 bbnf-ir         = { path = "../crates/ir" }
 bbnf            = { path = "../crates/core", optional = true }
-parse_that      = "0.4"
-pprint          = "0.3"
+parse_that.workspace = true
+pprint.workspace     = true
 
 # Codegen + post-process toolkit. The IR pipeline emits `proc_macro2::
 # TokenStream`; `prettyplease` formats it after `syn::parse2`. Versions

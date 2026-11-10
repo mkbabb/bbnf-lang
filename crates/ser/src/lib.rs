@@ -12,7 +12,8 @@
 //!
 //! - [`WriterSerializer`]: minimal bytes to any `io::Write`
 //! - [`StringSerializer`]: compact output into owned `String`
-//! - `FmtBuilder` (in pprint): pretty-printed via Wadler-Lindig algorithm
+//! - pprint's `FmtBuilder` (feature `pprint`): pretty-printed via the
+//!   Wadler-Lindig algorithm
 //! - [`SliceDeserializer`]: reads from `&'a str` input
 
 pub mod slice;
@@ -24,3 +25,6 @@ pub use slice::SliceDeserializer;
 pub use string::StringSerializer;
 pub use traits::{Deserializer, Serializer};
 pub use writer::WriterSerializer;
+
+#[cfg(feature = "pprint")]
+mod fmt_builder;

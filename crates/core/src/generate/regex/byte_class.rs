@@ -9,7 +9,7 @@
 //!
 //! # Mechanism
 //!
-//! Each pattern's [`bbnf_regex::regex_first_chars`] yields the set of
+//! Each pattern's [`parse_that_regex::regex_first_chars`] yields the set of
 //! ASCII bytes that can begin a match. When the union of FIRST sets
 //! across all adapter-dispatched patterns has a sparse mapping
 //! (`byte → Vec<pattern_idx>`), we emit a `match input[pos]` ladder

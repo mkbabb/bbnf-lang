@@ -121,7 +121,7 @@ impl RecognizerMiner for PatternAlphabetMiner {
 /// # Last-byte set (AW-IV.W3.5c)
 ///
 /// Delegates to [`compute_last_byte_set`], which builds the NFA via
-/// `bbnf_regex::Nfa::from_pattern` and walks the byte-transitions whose
+/// `parse_that_regex::Nfa::from_pattern` and walks the byte-transitions whose
 /// target can ε-reach the NFA accept state. The resulting bitmap is the
 /// set of bytes that can end a match — the admission data for the
 /// bounded-Regex walker arm. Patterns whose NFA construction fails
@@ -278,7 +278,7 @@ fn mine_matchable_bytes(pattern: &str) -> (StructuralBitmap, bool) {
 
 /// AW-IV.W3.5c — compute the pattern's last-byte set via the NFA.
 ///
-/// Constructs the NFA via `bbnf_regex::Nfa::from_pattern` and walks the
+/// Constructs the NFA via `parse_that_regex::Nfa::from_pattern` and walks the
 /// byte-transitions whose target can ε-reach the NFA's accept state.
 /// The union of those transitions' `ByteSet`s is the last-byte set: the
 /// bytes that can appear immediately before the pattern accepts.
@@ -287,7 +287,7 @@ fn mine_matchable_bytes(pattern: &str) -> (StructuralBitmap, bool) {
 /// construction fails (HIR parse error, unsupported features) so the
 /// consumer falls back to the conservative full-byte answer.
 fn compute_last_byte_set(pattern: &str) -> (StructuralBitmap, bool) {
-    let Some(nfa) = bbnf_regex::Nfa::from_pattern(pattern) else {
+    let Some(nfa) = parse_that_regex::Nfa::from_pattern(pattern) else {
         return (full_bitmap(), false);
     };
 

@@ -8,10 +8,10 @@
 //! these e-graph rules proved parity across the full test suite.
 //! Each rule delegates the actual regex-level work (superset
 //! checking, class union, literal escaping, top-level pipe
-//! detection) to `bbnf_regex::algebra` helpers, keeping the rule
+//! detection) to `parse_that_regex::algebra` helpers, keeping the rule
 //! files thin and the underlying algebra functions reusable by
 //! both the grammar tier and the HIR-tier rules in
-//! `bbnf-regex::egraph::rules`.
+//! `parse-that-regex::egraph::rules`.
 //!
 //! - [`DeduplicateAltBranches`]  — `Alt([.., R, .., R, ..])` → `Alt([.., R, ..])`
 //! - [`SupersetAbsorbAlt`]       — `Alt([.., [a-z], .., [a-c], ..])` → `Alt([.., [a-z], ..])`
@@ -20,7 +20,7 @@
 
 use rustc_hash::FxHashSet;
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::egraph::interner::SharedStrings;
 use crate::egraph::node::GrammarENode;
@@ -105,7 +105,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for DeduplicateAltBranc
 
 /// Absorb a subsumed branch: when one regex char-class branch is a
 /// strict superset of another, the subsumed branch can be dropped.
-/// Delegates to `bbnf_regex::algebra::pattern_is_superset`.
+/// Delegates to `parse_that_regex::algebra::pattern_is_superset`.
 pub struct SupersetAbsorbAlt {
     pool: SharedStrings,
 }
@@ -151,7 +151,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for SupersetAbsorbAlt {
                         let pat_i = self.pool.get(sid_i);
                         let pat_j = self.pool.get(sid_j);
                         if pat_i != pat_j
-                            && ::bbnf_regex::algebra::pattern_is_superset(&pat_i, &pat_j)
+                            && ::parse_that_regex::algebra::pattern_is_superset(&pat_i, &pat_j)
                         {
                             keep[j] = false;
                         }
@@ -190,7 +190,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for SupersetAbsorbAlt {
 // ── Rule: Alt([.., [a-c], [d-f], ..]) ≡ Alt([.., [a-f], ..]) ────────────────
 
 /// Merge two char-class regex branches into a single union
-/// class. Delegates to `bbnf_regex::algebra::try_union_patterns`.
+/// class. Delegates to `parse_that_regex::algebra::try_union_patterns`.
 pub struct UnionMergeAlt {
     pool: SharedStrings,
 }
@@ -384,7 +384,7 @@ impl<A: Analysis<GrammarENode>> Rewrite<GrammarENode, A> for UnionMergeAlt {
                         let pat_i = self.pool.get(sid_i);
                         let pat_j = self.pool.get(sid_j);
                         if let Some(merged) =
-                            ::bbnf_regex::algebra::try_union_patterns(&pat_i, &pat_j)
+                            ::parse_that_regex::algebra::try_union_patterns(&pat_i, &pat_j)
                         {
                             // Only fire when the merged form is a true
                             // simplification, not just

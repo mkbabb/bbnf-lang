@@ -1,17 +1,17 @@
 //! Shared recognizer fact types.
 
-use bbnf_regex::{CharSet128, EngineSet, RegexClass};
+use parse_that_regex::{CharSet128, EngineSet, RegexClass};
 
 /// What kind of recognizer an implementor represents.
 ///
 /// These are *architectural roles*, not family classifications. The
-/// regex-domain family taxonomy lives in `bbnf_regex::RegexClass` and is
+/// regex-domain family taxonomy lives in `parse_that_regex::RegexClass` and is
 /// surfaced via `RecognizerInfo::regex_class()`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RecognizerKind {
     /// A literal byte string.
     Literal,
-    /// A regex pattern (wrapping `bbnf_regex::RegexInfo`).
+    /// A regex pattern (wrapping `parse_that_regex::RegexInfo`).
     Regex,
     /// A token rule (grammar rule with `@token` directive).
     Token,
@@ -75,7 +75,7 @@ pub trait RecognizerInfo {
     /// `RegexRecognizer` wrapper returns `Some(class)`. This is the
     /// single touch point that lets every consumer reach family
     /// information through the trait without breaking the leaf-crate
-    /// boundary — `RegexClass` lives in `bbnf-regex` and is referenced
+    /// boundary — `RegexClass` lives in `parse-that-regex` and is referenced
     /// here, not duplicated.
     fn regex_class(&self) -> Option<&RegexClass> {
         None

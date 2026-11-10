@@ -48,7 +48,7 @@
 
 use std::collections::HashSet;
 
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 use crate::passes::inspect::unwrap_map_ow;
 use crate::types::{AltBranch, GrammarIR, IrNode, RuleId};

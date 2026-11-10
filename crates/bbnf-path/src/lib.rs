@@ -7,7 +7,7 @@
 //!    `path!(GrammarMarker, "seg1", 0, "seg2", ...)` — a Rust path-style
 //!    grammar marker followed by a comma-separated list of path
 //!    segments (string literal, integer literal, `*` wildcard).
-//! 2. Dispatches each string literal through W2.3's `bbnf_regex::lex_path`
+//! 2. Dispatches each string literal through W2.3's `parse_that_regex::lex_path`
 //!    to produce `PathToken`s carrying `proc_macro2::Span`s anchored at
 //!    the macro call-site.
 //! 3. Walks the resulting [`bbnf_ir::PathSegment`]-shaped sequence

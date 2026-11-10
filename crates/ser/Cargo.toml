@@ -8,3 +8,9 @@ license = "MIT"
 [dependencies]
 ryu = "1"
 itoa = "1"
+pprint = { workspace = true, optional = true }
+
+[features]
+default = []
+# `impl Serializer for pprint::FmtBuilder`: pretty-printed serialization.
+pprint = ["dep:pprint"]

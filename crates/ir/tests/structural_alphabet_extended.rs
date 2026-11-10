@@ -64,7 +64,7 @@ use bbnf_ir::{
     AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId,
     TypeDescInterner,
 };
-use bbnf_regex::RegexInfo;
+use parse_that_regex::RegexInfo;
 
 // ── Fixture infrastructure ───────────────────────────────────────────────
 

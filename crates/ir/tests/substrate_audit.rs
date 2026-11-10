@@ -108,7 +108,10 @@ const SANCTIONED_SUBSTRATES: &[&str] = &[
 
 // ───────────────────────────────────────────────────────────────────
 // Audited crate set — bbnf-ir + bbnf-core (excluding generated/) +
-// bbnf-egraph + bbnf-csp-solver + bbnf-simd-scan.
+// bbnf-simd-scan. egraph and csp-solver left this workspace at sk-v27
+// LW2.TOPO-1 (X-5): parse-that-egraph is audited in parse-that
+// (xtask/tests/public_api_callers.rs, ruling A-2); csp-solver is the
+// crates.io release of its upstream.
 // ───────────────────────────────────────────────────────────────────
 
 /// Workspace member crate names (per `cargo metadata`) whose `pub`
@@ -117,8 +120,6 @@ const SANCTIONED_SUBSTRATES: &[&str] = &[
 const AUDITED_CRATES: &[&str] = &[
     "bbnf-ir",    // → crates/ir
     "bbnf",       // → crates/core (a.k.a. bbnf-core in spec text)
-    "egraph",     // → crates/egraph (a.k.a. bbnf-egraph)
-    "csp-solver", // → crates/csp-solver (a.k.a. bbnf-csp-solver)
     "simd-scan",  // → crates/simd-scan (a.k.a. bbnf-simd-scan)
 ];
 

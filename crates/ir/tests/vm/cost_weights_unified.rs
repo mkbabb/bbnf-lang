@@ -1,7 +1,7 @@
 //! Universal cost model contract test.
 //!
 //! The contract this file enforces is a **global invariant**: when any
-//! field of `egraph::CostWeights` changes, every cost-driven decision in
+//! field of `parse_that_egraph::CostWeights` changes, every cost-driven decision in
 //! the pipeline changes in lockstep. There is one source of truth for
 //! cost; no consumer holds a stale duplicate.
 //!
@@ -25,7 +25,7 @@
 
 use std::collections::HashMap;
 
-use egraph::{CostModel, CostWeights, EGraph, Id};
+use parse_that_egraph::{CostModel, CostWeights, EGraph, Id};
 
 use bbnf_ir::egraph::{
     GrammarAnalysis, GrammarCostModel, GrammarENode, build_and_saturate, write_back_optimized,
@@ -321,7 +321,7 @@ fn grammar_cost_model_forwards_all_weight_dimensions() {
 }
 
 /// Constructing a `GrammarCostModel` via `Default::default` must give
-/// the same weights as `egraph::CostWeights::default()`. This pins
+/// the same weights as `parse_that_egraph::CostWeights::default()`. This pins
 /// the "defaults are unified" contract.
 #[test]
 fn grammar_cost_model_default_matches_cost_weights_default() {
@@ -517,7 +517,7 @@ fn dispatch_branch_scales_with_arm_count() {
 /// disagree — and the AF.2 contract says this gate must not have
 /// introduced its own numeric cost knob. Every cost decision the
 /// classifier makes must still trace back to `CostConfig` /
-/// `egraph::CostWeights`.
+/// `parse_that_egraph::CostWeights`.
 ///
 /// This test enforces that property structurally: it scans the
 /// classification output for two variants of the same grammar

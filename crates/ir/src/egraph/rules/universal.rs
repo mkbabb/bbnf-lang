@@ -16,7 +16,7 @@
 
 use rustc_hash::FxHashMap;
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::egraph::interner::SharedStrings;
 use crate::egraph::node::GrammarENode;

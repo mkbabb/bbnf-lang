@@ -52,7 +52,7 @@
 
 use std::collections::HashMap;
 
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 use crate::dag::NodeId;
 use crate::egraph::analysis::{EClassFacts, WidthBound};

@@ -1,0 +1,22 @@
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.03s
+     Running tests/public_api_callers.rs (target/ax-iter/deps/public_api_callers-e0cf17491c1d1ae3)
+
+running 1 test
+test every_pub_item_of_the_audited_crates_has_a_caller ... FAILED
+
+failures:
+
+---- every_pub_item_of_the_audited_crates_has_a_caller stdout ----
+
+thread 'every_pub_item_of_the_audited_crates_has_a_caller' (5062692) panicked at xtask/tests/public_api_callers.rs:296:5:
+pub items with no caller in this workspace (production code or a compiled doctest):
+  fn a2_mutant_uncalled_item at /Users/mkbabb/Programming/parse-that-wt/lw2-s3-dag/rust/egraph/src/lib.rs:60
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    every_pub_item_of_the_audited_crates_has_a_caller
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+
+error: test failed, to rerun pass `-p xtask --test public_api_callers`

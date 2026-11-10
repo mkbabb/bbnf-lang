@@ -10,7 +10,7 @@ use std::collections::HashMap;
 
 use bbnf_ir::egraph::{GrammarCostModel, GrammarENode, build_and_saturate};
 use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
-use egraph::{Extractor, Language};
+use parse_that_egraph::{Extractor, Language};
 
 fn make_ir_with(body: IrNode) -> GrammarIR {
     let strings = vec!["r".to_string()];
@@ -83,7 +83,7 @@ fn build_literal() {
 
 #[test]
 fn e_node_language_impl() {
-    use egraph::Id;
+    use parse_that_egraph::Id;
     // Sanity-check that GrammarENode::children() returns the expected slice.
     let seq = GrammarENode::Seq(vec![Id(1), Id(2), Id(3)].into_boxed_slice());
     let children: Vec<Id> = seq.children().to_vec();

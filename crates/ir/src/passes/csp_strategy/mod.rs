@@ -138,7 +138,7 @@ pub mod constraints;
 
 use std::collections::HashMap;
 
-use bbnf_regex::EngineSet;
+use parse_that_regex::EngineSet;
 use csp_solver::{
     Csp, OptimizationMode, Pruning, SolveConfig,
     constraint::{ImplicationConstraint, VarId},

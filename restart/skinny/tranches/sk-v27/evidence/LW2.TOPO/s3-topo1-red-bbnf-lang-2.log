@@ -1,0 +1,39 @@
+workspace .:
+  edge bbnf-lang -> parse-that
+  edge bbnf-lang -> pprint
+  edge parse-that -> pprint
+  REVERSE parse-that -> bbnf-lang: bbnf-regex depends on csp-solver
+  REVERSE parse-that -> bbnf-lang: bbnf-regex depends on egraph
+  REVERSE parse-that -> bbnf-lang: bbnf-regex depends on egraph-derive
+    Updating git repository `https://github.com/mkbabb/parse-that`
+    Updating git repository `https://github.com/mkbabb/pprint`
+warning: patch `bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/crates/core)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/skinny/crates/bbnf
+warning: patch `bbnf-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=47e928acca0e73ab1a5e7e3f802ca8090ebc4722#47e928ac)` was not used in the crate graph
+  |
+  = help: perhaps you meant one of the following:
+          	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/skinny/crates/bbnf-regex
+warning: patch `bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/crates/ir)` was not used in the crate graph
+warning: patch `bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/crates/ser)` was not used in the crate graph
+warning: patch `egraph-derive v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/crates/egraph-derive)` was not used in the crate graph
+warning: patch `gorgeous v0.1.10 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/crates/gorgeous)` was not used in the crate graph
+warning: patch `parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=47e928acca0e73ab1a5e7e3f802ca8090ebc4722#47e928ac)` was not used in the crate graph
+warning: patch `pprint v0.3.6 (https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48)` was not used in the crate graph
+warning: patch `pprint_derive v0.2.2 (https://github.com/mkbabb/pprint?rev=2b4d2d48657ebc4eb4c23297929ad3532e3eb6b4#2b4d2d48)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+error: cannot update the lock file /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/skinny/Cargo.lock because --locked was passed to prevent this
+help: to generate the lock file without accessing the network, remove the --locked flag and use --offline instead.
+workspace skinny:
+  UNRESOLVED: cargo metadata --locked failed (the graph cannot be read)
+error: failed to parse lock file at: /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s3-read/wasm/Cargo.lock
+
+Caused by:
+  dependency (parse_that) specification is ambiguous. Only one of `git` or `path` is allowed.
+workspace wasm:
+  UNRESOLVED: cargo metadata --locked failed (the graph cannot be read)
+repo DAG: RED (a reverse or escaping edge; allowed: parse-that -> pprint, bbnf-lang -> parse-that, bbnf-lang -> pprint)

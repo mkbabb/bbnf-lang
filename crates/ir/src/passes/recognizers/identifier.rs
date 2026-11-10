@@ -6,7 +6,7 @@
 //! `CharClassQuantified`, `HexDigits` — share the same recognizer
 //! channel because the kernel layer treats them as a single family.
 
-use bbnf_regex::RegexClass;
+use parse_that_regex::RegexClass;
 
 use crate::IrNode;
 use crate::dag::NodeId;

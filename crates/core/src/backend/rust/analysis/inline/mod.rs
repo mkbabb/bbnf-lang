@@ -13,7 +13,7 @@
 //! # Sub-modules
 //!
 //! - [`budgets`] — [`CostBudgets`] derived from
-//!   [`egraph::CostWeights`] (Tranche AF.2 single-source-of-truth
+//!   [`parse_that_egraph::CostWeights`] (Tranche AF.2 single-source-of-truth
 //!   numeric projections).
 //! - [`visit`] — IR-tree walkers (ref counting, fan-out, cost
 //!   estimation, self-reference detection, single-site eligibility).

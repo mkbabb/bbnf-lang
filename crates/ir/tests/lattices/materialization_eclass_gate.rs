@@ -33,7 +33,7 @@ use bbnf_ir::passes::materialization::{
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId, TypeDescInterner,
 };
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 // ── Fixture grammar helpers ──────────────────────────────────────────
 

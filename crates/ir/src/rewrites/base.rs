@@ -16,7 +16,7 @@
 //!
 //! - **RON-serialisable from day one.** Every type in this module is
 //!   `Serialize + Deserialize`. Pattern bodies that hold opaque
-//!   downstream content (e.g. an interned `egraph::Id` referring to a
+//!   downstream content (e.g. an interned `parse_that_egraph::Id` referring to a
 //!   per-grammar rule storage) carry a [`PatternRef`] payload — a
 //!   stable string handle plus an optional numeric tag. Round-trip is
 //!   tested at the schema layer.
@@ -31,12 +31,12 @@ use serde::{Deserialize, Serialize};
 /// alphabet of the surrounding grammar collapsed to the smallest enum
 /// the rewrite-rule storage needs.
 ///
-/// `bbnf-ir` works with byte-shaped grammars (`bbnf_regex::CharSet128`
+/// `bbnf-ir` works with byte-shaped grammars (`parse_that_regex::CharSet128`
 /// covers the substrate); this enum is the lossy projection that's
 /// stable across grammars. Class-1/2 elimination rules need only
 /// distinguish *anonymous* terminals (a particular byte) from
 /// *grammar-named* terminals (a [`StringId`]-backed reference); the
-/// bbnf-regex DFA tier carries the exact bytes.
+/// parse-that-regex DFA tier carries the exact bytes.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Alphabet {
     /// A literal byte.

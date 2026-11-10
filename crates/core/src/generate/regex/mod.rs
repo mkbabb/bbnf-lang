@@ -1,6 +1,6 @@
 //! Regex compilation and inline code emission.
 //!
-//! Classification lives in the `bbnf-regex` crate (via `parse_that::regex::classify`).
+//! Classification lives in the `parse-that-regex` crate (via `parse_that::regex::classify`).
 //!
 //! Layered architecture:
 //! - **cost_model** — Centralized heuristic thresholds (CostModel, LengthHint, EmitOpts).

@@ -9,7 +9,7 @@
 //!    literals (which the W2.3 path-lexer tokenises and may contain
 //!    compound segments like `"foo.bar[0]"`), integer literals, or `*`
 //!    for wildcard.
-//! 2. **Lex** every string literal through `bbnf_regex::lex_path`. The
+//! 2. **Lex** every string literal through `parse_that_regex::lex_path`. The
 //!    lexer's `proc_macro2::Span` flows through to any diagnostic so
 //!    the error squiggle anchors at the offending segment.
 //! 3. **Lower** the lexer's `PathToken` stream to a sequence of
@@ -235,7 +235,7 @@ fn lower_args_to_segments(args: &[MacroArg]) -> Result<Vec<OwnedSegment>> {
     Ok(out)
 }
 
-/// Tokenise a string-literal argument through `bbnf_regex::lex_path`
+/// Tokenise a string-literal argument through `parse_that_regex::lex_path`
 /// and lower the resulting `PathToken` stream into `OwnedSegment`s.
 ///
 /// String literals are not constrained to a single segment — `"foo"`
@@ -267,7 +267,7 @@ fn lower_string_lit(lit: &LitStr, out: &mut Vec<OwnedSegment>) -> Result<()> {
         return Ok(());
     }
 
-    let tokens = bbnf_regex::lex_path(&raw, span).map_err(|err| {
+    let tokens = parse_that_regex::lex_path(&raw, span).map_err(|err| {
         Error::new(
             err.span,
             format!(
@@ -287,7 +287,7 @@ fn lower_string_lit(lit: &LitStr, out: &mut Vec<OwnedSegment>) -> Result<()> {
     // `@ident` (variant select) is not part of the path-string lexer
     // alphabet; variant selection arrives only via the dedicated
     // syntax (a `LitStr` whose first character is `@`) handled above.
-    use bbnf_regex::PathTokenKind as K;
+    use parse_that_regex::PathTokenKind as K;
 
     let mut idx = 0usize;
     while idx < tokens.len() {

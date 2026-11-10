@@ -1,0 +1,13 @@
+workspace rust:
+  REVERSE pprint -> bbnf-lang: pprint depends on bbnf-ser
+    Updating git repository `https://github.com/mkbabb/bbnf-lang`
+warning: patch `bbnf-ser v0.1.0 (https://github.com/mkbabb/bbnf-lang?rev=1874fa3f8db8d007ae82fb2582636b30b02546e2#1874fa3f)` was not used in the crate graph
+help: Check that the patched package version and available features are compatible
+      with the dependency requirements. If the patch has a different version from
+      what is locked in the Cargo.lock file, run `cargo update` to use the new
+      version. This may also occur with an optional dependency that is not enabled.
+error: cannot update the lock file /Users/mkbabb/Programming/pprint-wt/lw2-s3-read/rust/derive/Cargo.lock because --locked was passed to prevent this
+help: to generate the lock file without accessing the network, remove the --locked flag and use --offline instead.
+workspace rust/derive:
+  UNRESOLVED: cargo metadata --locked failed (the graph cannot be read)
+repo DAG: RED (a reverse or escaping edge; allowed: parse-that -> pprint, bbnf-lang -> parse-that, bbnf-lang -> pprint)

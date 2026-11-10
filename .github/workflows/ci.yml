@@ -173,6 +173,9 @@ jobs:
           rustup toolchain install
           rustc --version
       - uses: petarpetrovt/setup-sde@6d2773bc0ef3005fd52e0ae0bb91782321793aec # v6.0
+      # simd-scan's correctness suite reads the canonical corpus (TOPO-6).
+      - name: corpus — fetch and verify (release asset, sha256 manifest)
+        run: cargo xtask corpus fetch
       - name: simd-scan suites under SDE
         run: |
           export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="$SDE_PATH/sde64 -spr --"

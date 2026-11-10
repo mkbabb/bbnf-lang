@@ -41,6 +41,10 @@ Match a pattern. Delimited by forward slashes:
 /[_a-zA-Z][_a-zA-Z0-9]*/
 ```
 
+Inside a pattern, `\` escapes the next character: `\/` is a slash in the pattern, `\\` is a backslash, and the pattern ends at the first unescaped `/`, so `/a\\/` is the pattern `a\\`.
+
+A pattern may begin with an inline flag group, `(?flags)`, whose flags (`i`, `m`, `s`, `u`) apply to the whole pattern.
+
 ### Epsilon
 
 The keyword `epsilon` (or `ε`) matches the empty string:
@@ -48,6 +52,14 @@ The keyword `epsilon` (or `ε`) matches the empty string:
 ```bbnf
 empty = epsilon ;
 maybe = "x" | ε ;
+```
+
+## Span Capture
+
+`@{ expr }` matches `expr` and yields the source span it matched as its value:
+
+```bbnf
+urlFunction = @{ "url" , "(" >> /[^)]+/ << ")" } ;
 ```
 
 ## Nonterminal References
@@ -122,5 +134,7 @@ color = /[0-9a-fA-F]{6}/ -> crate::parse_hex_color ;
 // Constant — discard the matched text, emit a fixed value
 lengthUnit = "px" -> 0u8 | "em" -> 1u8 | "rem" -> 2u8 ;
 ```
+
+The right side of `->` is a value expression, optionally followed by `: Type`; its grammar is `grammar/bbnf/expressions.bbnf` (literals, paths, `input` and its fields, calls, unary and binary operators, and closures `|a, b| expr`). A front end that does not emit Rust keeps the expression as text, and a mapping never changes what the factor matches.
 
 The legacy `=>` operator applies a mapping to the entire rule RHS. `->` is preferred because it attaches to individual factors, enabling per-branch mapping in alternations.

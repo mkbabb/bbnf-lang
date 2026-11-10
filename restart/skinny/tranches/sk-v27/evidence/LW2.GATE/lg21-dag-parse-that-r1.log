@@ -1,0 +1,4 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+workspace rust:
+  edge parse-that -> pprint
+repo DAG: GREEN (every cross-repository edge is parse-that -> pprint, bbnf-lang -> parse-that or bbnf-lang -> pprint)

@@ -126,7 +126,8 @@ class Units(unittest.TestCase):
     """Units are fixed at the source; the legacy predicate is retired."""
 
     def test_no_megabit_or_legacy_predicate_in_bench_sources(self):
-        out = subprocess.run(["git", "grep", "-n", r"track1_beats_lightningcss\|mbps", "--", *BENCH_SOURCES],
+        out = subprocess.run(["git", "grep", "-n", r"track1_beats_lightningcss\|mbps", "--", *BENCH_SOURCES,
+                              ":(exclude)bench/contest/test_contest.py"],
                              cwd=REPO, capture_output=True, text=True)
         self.assertEqual(out.stdout, "", "\n" + out.stdout[:2000])
 

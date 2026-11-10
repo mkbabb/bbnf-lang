@@ -3,8 +3,10 @@
 #   comp3-falsifier.sh red      <tree> <log>
 #   comp3-falsifier.sh baseline <tree> <log> <outcomes-out>
 #   comp3-falsifier.sh green    <tree> <log> <outcomes-out> <baseline-outcomes>
-# red:      direct dependents of csp-solver in the root workspace, every edge kind
-#           (`cargo tree -i csp-solver -e all --depth 1`); GREEN iff exactly {bbnf-ir}.
+# red:      direct dependents of csp-solver among bbnf-lang's own packages (path sources), over
+#           normal, build and dev edges (`cargo tree -i csp-solver -e normal,build,dev --depth 1`);
+#           GREEN iff exactly {bbnf-ir}. Since TOPO-1, parse-that-egraph (a git package) also
+#           depends on csp-solver; it is listed in the log but is not inside bbnf-lang.
 # baseline: the nextest outcome set ("<binary> <test> <outcome>" per test, corpus fetched
 #           and verified first, `cargo nextest run --workspace --profile ci`), plus the
 #           substrate_audit item list.
@@ -22,8 +24,10 @@ red=0
 cd "$T" || exit 2
 say "tree $(git rev-parse HEAD)"
 if [ "$MODE" != baseline ]; then
-  deps=$(cargo tree --locked -i csp-solver -e all --depth 1 --prefix none 2>>"$LOG" | tail -n +2 | awk '{print $1}' | sort -u | tr '\n' ' ')
-  say "csp-solver direct dependents: ${deps:-<none>}"
+  cargo tree --locked -i csp-solver -e normal,build,dev --depth 1 --prefix none 2>>"$LOG" | tail -n +2 > "$LOG.tree"
+  say "csp-solver direct dependents (all): $(awk '{print $1}' "$LOG.tree" | sort -u | tr '\n' ' ')"
+  deps=$(grep -F "($T/" "$LOG.tree" | awk '{print $1}' | sort -u | tr '\n' ' '); rm -f "$LOG.tree"
+  say "csp-solver direct dependents inside bbnf-lang: ${deps:-<none>}"
   [ "$deps" = "bbnf-ir " ] || red=1
 fi
 if [ "$MODE" != red ]; then

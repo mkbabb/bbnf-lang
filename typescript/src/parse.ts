@@ -34,7 +34,17 @@ export function BBNFToASTWithImports(input: string) {
 
     const grammar = parsed as ParsedGrammar;
 
-    return [parser, { imports: grammar.imports, recovers: grammar.recovers ?? [], no_collapses: grammar.no_collapses ?? [], pretties: grammar.pretties ?? [], rules: grammar.rules } as ParsedGrammar] as const;
+    return [parser, {
+        imports: grammar.imports,
+        recovers: grammar.recovers ?? [],
+        no_collapses: grammar.no_collapses ?? [],
+        pretties: grammar.pretties ?? [],
+        ws: grammar.ws ?? [],
+        tokens: grammar.tokens ?? [],
+        inlines: grammar.inlines ?? [],
+        debugs: grammar.debugs ?? [],
+        rules: grammar.rules,
+    } as ParsedGrammar] as const;
 }
 
 /**
@@ -49,6 +59,10 @@ export function BBNFToASTFromFiles(files: Map<string, string>): ParsedGrammar {
     const allRecovers: ParsedGrammar["recovers"] = [];
     const allNoCollapses: ParsedGrammar["no_collapses"] = [];
     const allPretties: ParsedGrammar["pretties"] = [];
+    const allWs: ParsedGrammar["ws"] = [];
+    const allTokens: ParsedGrammar["tokens"] = [];
+    const allInlines: ParsedGrammar["inlines"] = [];
+    const allDebugs: ParsedGrammar["debugs"] = [];
     const mergedAST = new Map<string, ProductionRule>() as AST;
 
     for (const [filename, source] of files) {
@@ -61,10 +75,24 @@ export function BBNFToASTFromFiles(files: Map<string, string>): ParsedGrammar {
         allRecovers.push(...(parsed.recovers ?? []));
         allNoCollapses.push(...(parsed.no_collapses ?? []));
         allPretties.push(...(parsed.pretties ?? []));
+        allWs.push(...parsed.ws);
+        allTokens.push(...parsed.tokens);
+        allInlines.push(...parsed.inlines);
+        allDebugs.push(...parsed.debugs);
         for (const [name, rule] of parsed.rules) {
             mergedAST.set(name, rule);
         }
     }
 
-    return { imports: allImports, recovers: allRecovers, no_collapses: allNoCollapses, pretties: allPretties, rules: mergedAST };
+    return {
+        imports: allImports,
+        recovers: allRecovers,
+        no_collapses: allNoCollapses,
+        pretties: allPretties,
+        ws: allWs,
+        tokens: allTokens,
+        inlines: allInlines,
+        debugs: allDebugs,
+        rules: mergedAST,
+    };
 }

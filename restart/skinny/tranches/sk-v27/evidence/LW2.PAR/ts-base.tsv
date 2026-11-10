@@ -1,0 +1,64 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+crates/core/tests/fixtures/deterministic.bbnf	ACCEPT
+crates/gorgeous/grammar/bbnf/bbnf.bbnf	ACCEPT
+crates/gorgeous/grammar/bnf/bnf.bbnf	ACCEPT
+crates/gorgeous/grammar/css/pretty.bbnf	REJECT	state null
+crates/gorgeous/grammar/ebnf/ebnf.bbnf	ACCEPT
+crates/gorgeous/grammar/google-sheets/google-sheets.bbnf	ACCEPT
+crates/gorgeous/grammar/json/json.bbnf	ACCEPT
+grammar/bbnf/bbnf.bbnf	REJECT	state null
+grammar/bbnf/expressions.bbnf	REJECT	state null
+grammar/bbnf/types.bbnf	ACCEPT
+grammar/bnf/bnf.bbnf	ACCEPT
+grammar/css/l4/color.bbnf	REJECT	state null
+grammar/css/l4/easing.bbnf	REJECT	state null
+grammar/css/l4/filters.bbnf	REJECT	state null
+grammar/css/l4/func-body.bbnf	REJECT	state null
+grammar/css/l4/gradients.bbnf	REJECT	state null
+grammar/css/l4/keyframes.bbnf	REJECT	state null
+grammar/css/l4/keywords.bbnf	REJECT	state null
+grammar/css/l4/media.bbnf	REJECT	state null
+grammar/css/l4/properties.bbnf	REJECT	state null
+grammar/css/l4/selectors.bbnf	REJECT	state null
+grammar/css/l4/stylesheet.bbnf	REJECT	state null
+grammar/css/l4/tokens.bbnf	ACCEPT
+grammar/css/l4/transforms.bbnf	REJECT	state null
+grammar/css/l4/value-unit.bbnf	REJECT	state null
+grammar/css/l4/values.bbnf	REJECT	state null
+grammar/css/pretty.bbnf	REJECT	state null
+grammar/ebnf/ebnf.bbnf	ACCEPT
+grammar/google-sheets/google-sheets.bbnf	REJECT	state null
+grammar/json/json.bbnf	REJECT	state null
+grammar/misc/csv.bbnf	ACCEPT
+grammar/misc/emoji.bbnf	REJECT	state null
+grammar/misc/g4.bbnf	ACCEPT
+grammar/misc/json-commented.bbnf	ACCEPT
+grammar/misc/math-ambiguous.bbnf	ACCEPT
+grammar/misc/math.bbnf	ACCEPT
+grammar/misc/regex.bbnf	ACCEPT
+skinny/grammars/json.bbnf	REJECT	state null
+typescript/test/fixtures/grammar/css/css-color.bbnf	ACCEPT
+typescript/test/fixtures/grammar/css/css-keyframes.bbnf	ACCEPT
+typescript/test/fixtures/grammar/css/css-selectors.bbnf	ACCEPT
+typescript/test/fixtures/grammar/css/css-stylesheet.bbnf	ACCEPT
+typescript/test/fixtures/grammar/css/css-tokens.bbnf	ACCEPT
+typescript/test/fixtures/grammar/css/css-value-unit.bbnf	ACCEPT
+typescript/test/fixtures/grammar/css/css-values.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/bbnf.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/bnf.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/csv.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/ebnf.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/emoji.bbnf	REJECT	state null
+typescript/test/fixtures/grammar/lang/g4.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/google-sheets.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/json-commented.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/json.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/math.bbnf	ACCEPT
+typescript/test/fixtures/grammar/lang/regex.bbnf	ACCEPT
+typescript/test/fixtures/value-js/color.bbnf	ACCEPT
+typescript/test/fixtures/value-js/css.bbnf	ACCEPT
+typescript/test/fixtures/value-js/math.bbnf	ACCEPT
+typescript/test/fixtures/value-js/stylesheet.bbnf	ACCEPT
+typescript/test/fixtures/value-js/tokens.bbnf	ACCEPT
+typescript/test/fixtures/value-js/value.bbnf	ACCEPT

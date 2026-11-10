@@ -1,0 +1,22 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+test_a_missing_field_is_refused (bench.contest.test_contest.BuildPlane.test_a_missing_field_is_refused) ... ok
+test_equal_build_planes_are_admitted (bench.contest.test_contest.BuildPlane.test_equal_build_planes_are_admitted) ... ok
+test_every_i8_field_counts (bench.contest.test_contest.BuildPlane.test_every_i8_field_counts) ... ok
+test_target_cpu_mismatch_is_refused (bench.contest.test_contest.BuildPlane.test_target_cpu_mismatch_is_refused) ... ok
+test_an_edited_prereg_is_refused (bench.contest.test_contest.Cells.test_an_edited_prereg_is_refused) ... ok
+test_an_unregistered_cell_is_refused (bench.contest.test_contest.Cells.test_an_unregistered_cell_is_refused) ... ok
+test_build_mismatch_cell_is_refused_for_its_build_plane_alone (bench.contest.test_contest.Cells.test_build_mismatch_cell_is_refused_for_its_build_plane_alone) ... ok
+test_every_mismatch_cell_is_refused (bench.contest.test_contest.Cells.test_every_mismatch_cell_is_refused) ... ok
+test_every_registered_cell_names_rows_that_exist (bench.contest.test_contest.Cells.test_every_registered_cell_names_rows_that_exist) ... ok
+test_offset_class_refuses_an_arm_without_offsets (bench.contest.test_contest.PlaneEquivalence.test_offset_class_refuses_an_arm_without_offsets) ... ok
+test_reference_arms_agree_on_every_p4_witness (bench.contest.test_contest.PlaneEquivalence.test_reference_arms_agree_on_every_p4_witness) ... ok
+test_skip_unescape_mutant_is_refused (bench.contest.test_contest.PlaneEquivalence.test_skip_unescape_mutant_is_refused) ... ok
+test_every_plane_has_a_spec (bench.contest.test_contest.Rows.test_every_plane_has_a_spec) ... ok
+test_every_row_has_a_class_and_a_checklist (bench.contest.test_contest.Rows.test_every_row_has_a_class_and_a_checklist) ... ok
+test_no_megabit_or_legacy_predicate_in_bench_sources (bench.contest.test_contest.Units.test_no_megabit_or_legacy_predicate_in_bench_sources) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 1.681s
+
+OK
+rc=0 at 193489c8a

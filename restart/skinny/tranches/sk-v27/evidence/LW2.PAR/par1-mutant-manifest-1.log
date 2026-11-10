@@ -1,0 +1,34 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+
+ RUN  v3.2.4 /Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/typescript
+
+ ❯ test/parity.test.ts (3 tests | 1 failed) 887ms
+   × TS <-> Rust front-end parity (LW2.PAR-1) > reads the whole MANIFEST that DIVERGENCE.tsv was ruled at 40ms
+     → grammar/MANIFEST changed: re-read and re-rule DIVERGENCE.tsv: expected '1e6435c5b1d0b6eaaf7f3e76e0f90ecdbd74d…' to be '12936bb5442e6595d1eb2bbbf3f9da48060a8…' // Object.is equality
+   ✓ TS <-> Rust front-end parity (LW2.PAR-1) > cites a spec sentence for every ruled divergence 3ms
+   ✓ TS <-> Rust front-end parity (LW2.PAR-1) > disagrees exactly on the carried Rust-side rows  842ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/parity.test.ts > TS <-> Rust front-end parity (LW2.PAR-1) > reads the whole MANIFEST that DIVERGENCE.tsv was ruled at
+AssertionError: grammar/MANIFEST changed: re-read and re-rule DIVERGENCE.tsv: expected '1e6435c5b1d0b6eaaf7f3e76e0f90ecdbd74d…' to be '12936bb5442e6595d1eb2bbbf3f9da48060a8…' // Object.is equality
+
+Expected: [32m"1[7m2936bb5442e6595d1eb2bbbf3f9da48060a82b0f83947f81deb7a14a2611252[27m"[39m
+Received: [31m"1[7me6435c5b1d0b6eaaf7f3e76e0f90ecdbd74d99fc464db6a4b079cf9757667fd[27m"[39m
+
+ ❯ test/parity.test.ts:86:88
+     84|         const { sha256, files } = manifest();
+     85|         const { header } = divergence();
+     86|         expect(sha256, "grammar/MANIFEST changed: re-read and re-rule …
+       |                                                                                        ^
+     87|         expect(files.length).toBeGreaterThanOrEqual(LW1_BASELINE_CASES…
+     88|         expect(files.length).toBeGreaterThanOrEqual(Number(header.get(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  20:47:33
+   Duration  1.43s (transform 74ms, setup 0ms, collect 87ms, tests 887ms, environment 0ms, prepare 125ms)
+

@@ -1,0 +1,24 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+sccache: warning: The server looks like it shut down unexpectedly, compiling locally instead
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.16s
+     Running tests/par1_regex_trailing_escape.rs (target/debug/deps/par1_regex_trailing_escape-202f714e3ce12087)
+
+running 2 tests
+test neighbouring_escapes_are_read ... ok
+test regex_body_may_end_in_an_escaped_backslash ... FAILED
+
+failures:
+
+---- regex_body_may_end_in_an_escaped_backslash stdout ----
+
+thread 'regex_body_may_end_in_an_escaped_backslash' (9411105) panicked at crates/core/tests/par1_regex_trailing_escape.rs:12:9:
+rejected: c = /a\\/ ;
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    regex_body_may_end_in_an_escaped_backslash
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf --test par1_regex_trailing_escape`

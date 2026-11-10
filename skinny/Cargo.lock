@@ -81,7 +81,6 @@ dependencies = [
 name = "bbnf-bench"
 version = "0.1.0"
 dependencies = [
- "bbnf-simd",
  "blake3",
  "bytemuck",
  "criterion",
@@ -90,6 +89,7 @@ dependencies = [
  "lightningcss",
  "mimalloc",
  "parse-that-regex",
+ "parse-that-simd",
  "runtime",
  "serde",
  "serde_json",
@@ -102,22 +102,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-corpus"
-version = "0.0.0"
-
-[[package]]
 name = "bbnf-regex"
 version = "0.1.0"
-
-[[package]]
-name = "bbnf-simd"
-version = "0.1.0"
-dependencies = [
- "bbnf-corpus",
- "blake3",
- "libc",
- "test-fixtures",
-]
 
 [[package]]
 name = "bitflags"
@@ -900,7 +886,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=bb864d58555d43bb536c771a6e16b3e570d6d902#bb864d58555d43bb536c771a6e16b3e570d6d902"
+source = "git+https://github.com/mkbabb/parse-that?rev=4762ad3cf64b65922d1f44a45fb4040a7ced399e#4762ad3cf64b65922d1f44a45fb4040a7ced399e"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -911,10 +897,15 @@ dependencies = [
 name = "parse-that-regex"
 version = "0.1.0"
 dependencies = [
- "bbnf-simd",
  "memchr",
+ "parse-that-simd",
  "thiserror 1.0.69",
 ]
+
+[[package]]
+name = "parse-that-simd"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=4762ad3cf64b65922d1f44a45fb4040a7ced399e#4762ad3cf64b65922d1f44a45fb4040a7ced399e"
 
 [[package]]
 name = "passes"
@@ -1208,9 +1199,10 @@ dependencies = [
 name = "runtime"
 version = "0.1.0"
 dependencies = [
- "bbnf-simd",
+ "blake3",
  "mimalloc",
  "parse-that-regex",
+ "parse-that-simd",
  "serde_json",
  "thiserror 1.0.69",
 ]

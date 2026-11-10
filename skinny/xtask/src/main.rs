@@ -6,21 +6,7 @@ mod real_typed_schema;
 mod regen;
 mod regen_css;
 
-const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-declaration-values|regen-real-typed|check-real-typed|check-conformance|lint-loc|primitive-checkasm>";
-const PRIMITIVE_CHECKASM_TESTS: &[&str] = &[
-    "checkasm_ascii_set_member_find_64",
-    "checkasm_byte_class_from_eq_set_64",
-    "checkasm_byte_class_from_table_64",
-    "checkasm_bulk_emit_positions_64",
-    "checkasm_structural_terminator_64",
-    "checkasm_bitmap_prefix_xor_64",
-    "checkasm_bitmap_next_set_bit",
-    "checkasm_escape_mask_64",
-    "checkasm_eob_pad_clamp",
-    "checkasm_parity",
-    "checkasm_utf8_block",
-];
-
+const USAGE: &str = "usage: cargo xtask <regen-json|check-json|regen-css|check-css-l4-declaration-values|regen-real-typed|check-real-typed|check-conformance|lint-loc>";
 fn main() -> Result<()> {
     let mut args = std::env::args().skip(1);
     let Some(command) = args.next() else {
@@ -39,7 +25,6 @@ fn main() -> Result<()> {
         "check-real-typed" => check_real_typed(&root),
         "check-conformance" => check_conformance(&root),
         "lint-loc" => lint_loc(&root),
-        "primitive-checkasm" => primitive_checkasm(&root),
         "help" | "--help" | "-h" => {
             eprintln!("{USAGE}");
             Ok(())
@@ -255,7 +240,6 @@ fn lint_loc(root: &Path) -> Result<()> {
         ("crates/codegen", 4500),
         ("crates/runtime", 4000),
         ("crates/parse-that-regex", 4000),
-        ("crates/bbnf-simd", 3500),
         ("crates/bbnf-bench", 3300),
         ("crates/test-fixtures", 800),
         ("xtask", 650),
@@ -298,22 +282,6 @@ fn lint_loc(root: &Path) -> Result<()> {
     } else {
         bail!("{}", failures.join("; "))
     }
-}
-
-fn primitive_checkasm(root: &Path) -> Result<()> {
-    for test in PRIMITIVE_CHECKASM_TESTS {
-        let status = Command::new("cargo")
-            .current_dir(root)
-            .env("BBNF_SIMD_STRICT", "1")
-            .env_remove("BBNF_SIMD_INJECT_BUG")
-            .args(["test", "-p", "bbnf-simd", "--release", "--test", test])
-            .status()
-            .with_context(|| format!("failed to spawn bbnf-simd primitive checkasm gate {test}"))?;
-        if !status.success() {
-            bail!("bbnf-simd primitive checkasm gate {test} failed with status {status}");
-        }
-    }
-    Ok(())
 }
 
 fn rust_loc(path: &Path) -> Result<usize> {

@@ -1,0 +1,6 @@
+{
+ "lang": "js",
+ "toolchain": "node v26.0.0",
+ "runtime_flags": "none",
+ "matrix": "PORTABLE"
+}

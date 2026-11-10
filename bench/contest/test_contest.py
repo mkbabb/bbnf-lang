@@ -101,6 +101,57 @@ class BuildPlane(unittest.TestCase):
         self.assertFalse(admit.build_parity(build_plane(), None).admitted)
 
 
+class Cells(unittest.TestCase):
+    """PREREG §6: registered cells; MISMATCH cells are refused (U4 (c), (d)); nothing unregistered is admitted."""
+
+    def test_every_registered_cell_names_rows_that_exist(self):
+        import admit
+        cells, table = admit.prereg_cells(), admit.rows()
+        self.assertGreater(len(cells), 0)
+        for cid, c in cells.items():
+            for side in ("arm (bbnf)", "arm (opp)"):
+                self.assertIn(c[side], table, cid)
+
+    def test_every_mismatch_cell_is_refused(self):
+        import admit
+        mm = [cid for cid, c in admit.prereg_cells().items() if c["kind"] == "MISMATCH"]
+        self.assertGreaterEqual(len(mm), 4)
+        bp = os.path.join(HERE, "build-planes")
+        for cid in mm:
+            v = admit.admit_cell(cid, os.path.join(bp, "node-default.json"), os.path.join(bp, "node-jitless.json"))
+            self.assertFalse(v.admitted, cid)
+
+    def test_build_mismatch_cell_is_refused_for_its_build_plane_alone(self):
+        import admit
+        bp = os.path.join(HERE, "build-planes")
+        refused = admit.admit_cell("C-MM-BUILD", os.path.join(bp, "node-default.json"),
+                                   os.path.join(bp, "node-jitless.json"))
+        self.assertEqual(refused.reasons, ["build-plane mismatch: runtime_flags 'none' vs '--jitless'"])
+        control = admit.admit_cell("C-MM-BUILD", os.path.join(bp, "node-default.json"),
+                                   os.path.join(bp, "node-default.json"))
+        self.assertTrue(control.admitted, control.text())
+
+    def test_an_unregistered_cell_is_refused(self):
+        import admit
+        v = admit.admit_cell("C-NOT-REGISTERED")
+        self.assertIn("cell C-NOT-REGISTERED is not registered in PREREG.md", v.reasons)
+
+    def test_an_edited_prereg_is_refused(self):
+        import admit
+        with tempfile.TemporaryDirectory() as d:
+            with open(admit.PREREG, encoding="utf-8") as f:
+                text = f.read()
+            tampered = os.path.join(d, "PREREG.md")
+            with open(tampered, "w", encoding="utf-8") as f:
+                f.write(text.replace("| C-J3-AA |", "| C-J3-AB |", 1))
+            saved, admit.PREREG = admit.PREREG, tampered
+            try:
+                v = admit.admit_cell("C-J3-AB")
+            finally:
+                admit.PREREG = saved
+        self.assertTrue(any("does not match PREREG.md.sha256" in r for r in v.reasons), v.reasons)
+
+
 class Rows(unittest.TestCase):
     def rows(self):
         with open(os.path.join(HERE, "ROWS.tsv"), encoding="utf-8", newline="") as f:

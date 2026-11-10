@@ -1,0 +1,137 @@
+//! sk-v27 LW2.RX-4: `FuseAltRegexBranches` leaves the pass list of every
+//! backend whose regex leaf is parse-that-regex's DFA.
+//!
+//! The DFA is leftmost-longest. JS `RegExp` (the TS backend's leaf, and the
+//! oracle of record, regex C1-3) is leftmost-first, and so is the grammar's
+//! ordered choice. Fusing `Alt(/a/, /ab/)` into `/a|ab/` is sound under the
+//! JS leaf and unsound under the DFA leaf: on `"ab"` the ordered choice
+//! consumes 1 byte (oracle `rx2-alt-a-ab`) and the fused DFA leaf consumes 2.
+//! The rule comes back for the DFA backends only through LW3.RX-1, with its
+//! `L_cut` certificate.
+//!
+//! The pass list is printed by the e-graph report (`BBNF_EGRAPH_REPORT=1`,
+//! one `rule=<name>` line per rule); `evidence/LW2.RX/rx4-falsifier.sh` reads
+//! it through `rx4_print_pass_list_{rust,ts}`. The TS emissions over
+//! `grammar/MANIFEST` are written by `rx4_ts_emit_dump` for the byte-identity
+//! read.
+
+use std::path::{Path, PathBuf};
+
+use bbnf::ParserAttributes;
+use bbnf::generate::generate_all;
+use bbnf::pipeline::{
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar,
+    compile_grammar_request, compile_paths_request,
+};
+use bbnf_ir::compiler::compile as compile_bytecode;
+use bbnf_ir::interpreter::Interpreter;
+
+/// Two regex branches, the shorter first: the LW1.RX-2 `Alt(/a/, /ab/)` case.
+const ALT_A_AB: &str = r#"
+x = /a/ | /ab/ ;
+"#;
+
+fn request(target: CompileTarget) -> CompileRequest {
+    CompileRequest {
+        options: PipelineOptions::default(),
+        target,
+    }
+}
+
+/// Oracle `rx2-alt-a-ab`: `/a|ab/y` on `"ab"` is `"a"`, and the ordered
+/// choice `/a/ | /ab/` takes its first branch. The VM runs the DFA leaf.
+#[test]
+fn vm_alt_a_ab_consumes_one_byte() {
+    let ir = compile_grammar(ALT_A_AB, &PipelineOptions::default()).expect("compiles");
+    let program = compile_bytecode(&ir);
+    let mut interp = Interpreter::new(&program, "ab");
+    let result = interp.run();
+    assert!(result.success, "the first branch matches");
+    assert_eq!(
+        result.offset, 1,
+        "ordered choice takes /a/ (1 byte), as the oracle does; 2 means the branches were fused into one leftmost-longest DFA leaf"
+    );
+}
+
+/// The Rust emitter's product carries no fused `a|ab` pattern.
+#[test]
+fn rust_emit_keeps_the_branches_apart() {
+    let prepared = match compile_grammar_request(
+        ALT_A_AB,
+        &request(CompileTarget::Rust {
+            requested_prettify: false,
+        }),
+    )
+    .expect("compiles")
+    {
+        CompileOutput::Rust(prepared) => *prepared,
+        _ => unreachable!("Rust target"),
+    };
+    let ident = quote::format_ident!("AltParser");
+    let tokens = generate_all(&prepared, &ParserAttributes::default(), &ident).to_string();
+    assert!(
+        !tokens.contains("a|ab"),
+        "the Rust product carries the fused pattern `a|ab`"
+    );
+}
+
+/// The TS backend keeps the rule: its leaf is JS `RegExp`, leftmost-first.
+#[test]
+fn ts_emit_keeps_fusion() {
+    let source = match compile_grammar_request(ALT_A_AB, &request(CompileTarget::Ts))
+        .expect("compiles")
+    {
+        CompileOutput::Ts(source) => source,
+        _ => unreachable!("TS target"),
+    };
+    assert!(
+        source.contains("a|ab"),
+        "the TS product fuses the branches into `a|ab`"
+    );
+}
+
+/// Prints the e-graph pass list for the Rust target (read by the falsifier
+/// script with `BBNF_EGRAPH_REPORT=1 --nocapture`).
+#[test]
+fn rx4_print_pass_list_rust() {
+    compile_grammar_request(
+        ALT_A_AB,
+        &request(CompileTarget::Rust {
+            requested_prettify: false,
+        }),
+    )
+    .expect("compiles");
+}
+
+/// Prints the e-graph pass list for the TS target.
+#[test]
+fn rx4_print_pass_list_ts() {
+    compile_grammar_request(ALT_A_AB, &request(CompileTarget::Ts)).expect("compiles");
+}
+
+/// Writes the TS emission of every `grammar/MANIFEST` grammar to
+/// `$RX4_TS_DUMP/<path with / as __>.ts` (or `.err` with the error). Runs
+/// only when `RX4_TS_DUMP` is set.
+#[test]
+fn rx4_ts_emit_dump() {
+    let Ok(out) = std::env::var("RX4_TS_DUMP") else {
+        return;
+    };
+    let out = PathBuf::from(out);
+    std::fs::create_dir_all(&out).expect("dump dir");
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let manifest = std::fs::read_to_string(root.join("grammar/MANIFEST")).expect("MANIFEST");
+    for line in manifest.lines().filter(|l| !l.trim().is_empty()) {
+        let rel = line.split_whitespace().nth(1).expect("sha path");
+        let name = rel.replace('/', "__");
+        match compile_paths_request(&[root.join(rel)], &request(CompileTarget::Ts)) {
+            Ok(CompileOutput::Ts(source)) => {
+                std::fs::write(out.join(format!("{name}.ts")), source).expect("write");
+            }
+            Ok(_) => unreachable!("TS target"),
+            Err(err) => {
+                std::fs::write(out.join(format!("{name}.err")), err.to_string()).expect("write");
+            }
+        }
+    }
+}

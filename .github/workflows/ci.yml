@@ -196,11 +196,40 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
+  typescript:
+    # sk-v27 LW2 (S14 on S13-G4): the TypeScript suite, parity.test.ts
+    # included, gates the merge like every Rust arm. R-b's "no divergence is
+    # closed by deleting its test" and LG-b need it read in CI, not locally.
+    # The parity test's Rust arm is bbnf-bootstrap's debug_parse binary.
+    name: TypeScript — tests (with the Rust parity arm)
+    runs-on: ubuntu-latest
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain (the rust-toolchain.toml pin, stable)
+        run: |
+          rustup toolchain install
+          rustc --version
+          cargo --version
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+      - name: build the parity test's Rust arm
+        run: cargo build -p bbnf-bootstrap --bin debug_parse --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: typescript
+      - run: npm test
+        working-directory: typescript
+
   ci-ok:
     # The one required check: every arm above, by name.
     name: ci-ok
     if: always()
-    needs: [rust, stable, sde, hermetic, extension]
+    needs: [rust, stable, sde, hermetic, extension, typescript]
     runs-on: ubuntu-latest
     steps:
       - name: every arm succeeded

@@ -1,0 +1,21 @@
+source	item	fate	home	basis
+crates/simd-scan	src/alphabet.rs (StructuralAlphabet, KernelShape, NibbleLut, WideLut)	KEPT	parse-that rust/simd/src/alphabet.rs	the one alphabet type; prose generalized (no bbnf_ir mirror claim)
+crates/simd-scan	src/index.rs (StructuralIndex, next_structural_at_or_after)	KEPT	rust/simd/src/index.rs	the wire type generated parsers read through parse_that::scan
+crates/simd-scan	src/dispatch.rs (Tier, OnceLock selected_tier, scan_with)	KEPT, extended	rust/simd/src/dispatch.rs	X-4 one table; + PARSE_THAT_SCAN_TIER (panics on an unknown or unsupported tier), force-scalar feature, Miri = scalar only
+crates/simd-scan	src/scalar.rs (scan)	KEPT	rust/simd/src/scalar.rs	the one scalar oracle of the structural scan
+crates/simd-scan	src/stripe.rs (QuoteState, epilogue, region_fits)	KEPT, widened	rust/simd/src/stripe.rs	now also wasm32+simd128's (the wasm port)
+crates/simd-scan	src/neon.rs	KEPT	rust/simd/src/neon.rs	NEON tier
+crates/simd-scan	src/avx2.rs	KEPT	rust/simd/src/avx2.rs	AVX2 tier (X-4: executed on ubuntu-latest real silicon, PERF-2)
+crates/simd-scan	src/avx512.rs	KEPT	rust/simd/src/avx512.rs	AVX-512 tier (X-4: executed under SDE in parse-that CI; deleted if SDE cannot run it)
+crates/simd-scan	src/wasm.rs	REWRITTEN onto stripe	rust/simd/src/wasm.rs	quote parity, epilogue and lookahead bound are stripe's; base kernel overreads one byte past the input end (tests/wasm_bounds.rs traps at base)
+crates/simd-scan	src/parity.rs prefix_xor_64, escape_mask_64, shift_xor_prefix	KEPT	rust/simd/src/parity.rs	CLMUL/PMULL selected at runtime (was cfg(target_feature))
+crates/simd-scan	src/parity.rs compute_inside_string_bytes	MOVED (census MOVE-with-crate row)	rust/simd/src/parity.rs	per-byte oracle; caller of record is its doctest (A-2)
+crates/simd-scan	src/compaction.rs compact_stripe_tzcnt, reserve	KEPT	rust/simd/src/compaction.rs	the one compaction strategy
+crates/simd-scan	src/compaction.rs compact_stripe_synthetic	DELETED (census MOVE-with-crate row; fate by kernel census)	-	no caller in either repo, no kernel folds digraphs into a synthetic kind; A-2 in parse-that admits no uncalled pub item
+crates/simd-scan	Cargo deps syn, quote, proc-macro2	DELETED	-	unused by every file of the crate
+crates/simd-scan	tests/{correctness,digraph,dispatch_tiers,fuzz,guard_page,quote_parity}.rs	KEPT	rust/simd/tests/	R1 dispatch_tiers, R2/R2x dispatch_tiers differential, R3 guard_page; BBNF-named alphabets renamed ARROW; corpus via parse-that-corpus (tailwind.css -> parse-that's tailwind-output.css, the corpus-v1 CSS of record there)
+crates/simd-scan	benches/stage1_throughput.rs	KEPT	rust/simd/benches/	same corpus substitution
+new	tests/differential.rs	ADDED	rust/simd/tests/	one differential fuzz target per supported tier against scalar::scan (PARSE_THAT_SIMD_FUZZ_INPUTS)
+new	tests/wasm_bounds.rs	ADDED	rust/simd/tests/	guard_page for wasm32: input at the end of linear memory
+skinny/crates/simd-scan	(whole crate)	ABSENT at base	-	deleted at 726ab124f (sk-v5 wave 4, "split JSON scan ownership and remove eventcursor fossil substrate"); nothing left to merge
+skinny/crates/bbnf-simd	(whole crate: aarch64 block primitives, scalar twins, its own OnceLock primitive table, checkasm suite)	NOT YET MERGED (PERF-1b)	-	consumers: skinny runtime, codegen (prose), parse-that-regex (skinny lab), bbnf-bench; its second OnceLock table must fold into dispatch.rs; 97 BBNF-vocabulary lines to generalize

@@ -1,0 +1,8 @@
+tree cc6ef1d
+M1 base wasm kernel, wasm_bounds rc=1
+  RuntimeError: memory access out of bounds
+M2 escape-blind stripe, differential rc=101
+  differential tier=neon inputs_per_alphabet=2000 alphabets=5 total=10000 divergences=2096 seed=0x5eed2711
+M3 uncalled pub fn, public_api_callers rc=101
+    fn s6_uncalled_mutant at /Users/mkbabb/Programming/parse-that-wt/lw2-s6-perf/rust/simd/src/lib.rs:100
+  test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.44s

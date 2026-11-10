@@ -1,0 +1,6 @@
+/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s7-rx/restart/skinny/tranches/sk-v27/evidence/LW2.RX/rx4-falsifier.sh: line 33: cd: /Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/s7-rx/rx4/green-r2-ts-emit: No such file or directory
+rx4 green-r2 @ e36244d57: tests rc=0; rust pass list fusion lines=0; ts pass list fusion lines=0; ts emissions hashed=0 -> RED
+test rust_ir_keeps_the_branches_apart ... ok
+test ts_emit_keeps_fusion ... ok
+test vm_alt_a_ab_consumes_one_byte ... ok
+rc=1

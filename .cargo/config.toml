@@ -214,6 +214,20 @@ expand-bootstrap      = "expand --profile ax-iter -p bbnf-bootstrap --lib"
 expand-derive         = "expand --profile ax-iter -p bbnf --lib"
 asm-bbnf              = "asm --profile ay-final -p bbnf"
 
+# ── nightly alias family: BEGIN ─────────────────────────────────────────────
+# Still inside [alias]. Opt-in nightly work, run as `cargo +nightly <alias>`; a stable build never
+# reads these. The parallel front end and shared generics go through
+# rustflags (B1.W4 measured both as a warm `iter-check` regression on small
+# crate sets, so they are a cold-build experiment, not a default), cranelift
+# through cargo's codegen-backend option (dev profile only; release and
+# bench stay on LLVM; needs `rustup component add rustc-codegen-cranelift-preview
+# --toolchain nightly`), and parse_that's portable-SIMD scan kernels
+# through its `nightly` feature.
+nightly-iter-check           = ["check", "--profile", "ax-iter", "--workspace", "--config", "build.rustflags=['-Zthreads=8','-Zshare-generics=y']"]
+nightly-iter-check-cranelift = ["check", "-Zcodegen-backend", "--profile", "ax-iter", "--workspace", "--config", "profile.ax-iter.codegen-backend='cranelift'"]
+nightly-iter-test            = ["nextest", "run", "--cargo-profile", "ax-iter", "--workspace", "--features", "parse_that/nightly"]
+# ── nightly alias family: END ───────────────────────────────────────────────
+
 # ── Target-specific overrides ───────────────────────────────────────────────
 
 # macOS arm64: default to Apple ld64 (the system linker). Opt-in lld
@@ -251,17 +265,3 @@ asm-bbnf              = "asm --profile ay-final -p bbnf"
 rustflags = [
     "-C", "link-arg=-fuse-ld=lld",
 ]
-
-# ── nightly alias family: BEGIN ─────────────────────────────────────────────
-# Opt-in nightly work, run as `cargo +nightly <alias>`; a stable build never
-# reads these. The parallel front end and shared generics go through
-# rustflags (B1.W4 measured both as a warm `iter-check` regression on small
-# crate sets, so they are a cold-build experiment, not a default), cranelift
-# through cargo's codegen-backend option (dev profile only; release and
-# bench stay on LLVM; needs `rustup component add rustc-codegen-cranelift-preview
-# --toolchain nightly`), and parse_that's portable-SIMD scan kernels
-# through its `nightly` feature.
-nightly-iter-check           = ["check", "--profile", "ax-iter", "--workspace", "--config", "build.rustflags=['-Zthreads=8','-Zshare-generics=y']"]
-nightly-iter-check-cranelift = ["check", "-Zcodegen-backend", "--profile", "ax-iter", "--workspace", "--config", "profile.ax-iter.codegen-backend='cranelift'"]
-nightly-iter-test            = ["nextest", "run", "--cargo-profile", "ax-iter", "--workspace", "--features", "parse_that/nightly"]
-# ── nightly alias family: END ───────────────────────────────────────────────

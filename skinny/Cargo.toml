@@ -20,6 +20,8 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mkbabb/bbnf-lang"
 rust-version = "1.78"
+# The lab is admitted row by row by census (X-1) and is never published.
+publish = false
 
 [workspace.dependencies]
 bbnf = { path = "crates/bbnf" }

@@ -3,6 +3,7 @@ name = "bbnf-lsp"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
+repository = "https://github.com/mkbabb/bbnf-lang"
 description = "Language server for BBNF grammar files"
 
 [lib]

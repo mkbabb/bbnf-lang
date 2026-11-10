@@ -73,6 +73,16 @@ class Prereg(unittest.TestCase):
         self.assertEqual(tiers, {"TOKENIZE", "COLOR→RGBA", "FULL-VALUE"})
         self.assertRegex(t, r"FULL-VALUE[^\n]*unranked")
 
+    def test_rx4_paired_cure_cells_are_registered(self):
+        # LW2.SEAM S12-P4-6 (ACCEPTED IN PART): RX-4 removes FuseAltRegexBranches from the Rust pipeline, which
+        # changes hot-path generated code; its parent-vs-cure cells are registered before Phase 3.
+        t = _text()
+        cells = re.findall(r"^\| (C-RX4-[A-Z0-9-]+) \| F-CURE-RX4 \| [^|]+ \| ([^|]+) \| `63054dba0` \| `88b60839f` \|.*\| PORTABLE \|$", t, re.M)
+        self.assertEqual({c[0] for c in cells},
+                         {"C-RX4-CSSL4-BOOTSTRAP", "C-RX4-CSSL4-TAILWIND", "C-RX4-PRETTY-BOOTSTRAP"}, cells)
+        self.assertRegex(t, r"F-CURE-RX4[^\n]*not a contest")
+        self.assertRegex(t, r"(?s)RX-4[^\n]*correctness cure[^\n]*LOSS")
+
     def test_noisy_never_certifies(self):
         self.assertRegex(_text(), r"NOISY[^\n]*never certif")
 

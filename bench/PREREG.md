@@ -252,3 +252,15 @@ Row 0's bytes and conformance cite the value.js 4.3.0 tarball above. Its timing 
 | --- | --- | --- | --- | --- | --- | --- |
 | C-S0-ROW0-VALUE-CSS | F-VALUE-S0 | `parseCssValue` (`/css`) | the 17,316 WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |
 | C-S0-ROW0-VALUE-COLOR | F-VALUE-S0 | `parseCssColor` (`/color`) | the 5,778 css-color WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |
+
+## 9. Paired cure cell: LW2.RX-4, registered by S7 RX
+
+This section is an addendum (LW2.SEAM S12-P4-6, ACCEPTED IN PART). It is written before Phase 3 and hashed with the rest of the file. RX-4 is a correctness cure: `FuseAltRegexBranches` leaves the e-graph rule list of every DFA-leaf backend (bbnf-lang `e36244d57`), and the Rust products of `css_l4` and `css_pretty` are regenerated without the fused leaves (`88b60839f`; the other 7 grammars are byte-identical). Family F-CURE-RX4 is not a contest: it has no comparator row, and both arms are the bbnf-lang generated parser at two commits, same toolchain, same matrix, same input.
+
+| Cell | Family | Grammar | Input | Parent arm | Cure arm | Measure | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C-RX4-CSSL4-BOOTSTRAP | F-CURE-RX4 | css_l4 | corpus/css/bootstrap.css@4a50207b | `63054dba0` | `88b60839f` | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-RX4-CSSL4-TAILWIND | F-CURE-RX4 | css_l4 | corpus/css/tailwind.css@de305d92 | `63054dba0` | `88b60839f` | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-RX4-PRETTY-BOOTSTRAP | F-CURE-RX4 | css_pretty | corpus/css/bootstrap.css@4a50207b | `63054dba0` | `88b60839f` | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+
+`r = ln(t_cure / t_parent)` per ABBA pair under §1 and §2; output checksums must agree, or the pair is discarded. The three cells are one Holm group. RX-4 is a correctness cure, so a LOSS does not revert it: a LOSS files a born-RED for LW3.RX-1 (fusion re-admitted under its `L_cut` certificate), and a WIN or UNDECIDED is reported only. A NOISY record never certifies.

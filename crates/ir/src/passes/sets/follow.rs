@@ -19,6 +19,7 @@ use csp_solver::Csp;
 use csp_solver::constraint::VarId;
 use rustc_hash::FxHashMap as HashMap;
 
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{CharSet128, GrammarIR, IrNode, RuleId};
 
 use super::super::csp_domains::{CharSetDomain, CharSetGroundConstraint, CharSetUnionConstraint};
@@ -64,7 +65,7 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
         );
     }
 
-    let _ = csp.propagate();
+    propagate_to_fixed_point(&mut csp, "FOLLOW sets");
 
     // Extract results.
     let mut follow: FollowSets = StdHashMap::new();

@@ -35,7 +35,7 @@ bbnf-bench = { path = "crates/bbnf-bench" }
 test-fixtures = { path = "crates/test-fixtures" }
 # The e-graph moved to parse-that (sk-v27 LW2.TOPO-1, X-5); csp-solver is
 # the crates.io release byte-identical to the copy bbnf-lang vendored.
-parse-that-egraph = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "aab7159fca059fa9dc4055b7a3ed51ef769df895" }
+parse-that-egraph = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "5d4fa9dcb48acaf9859997f88796d792e2f34ac3" }
 csp-solver = "0.4.0"
 
 anyhow = "1"

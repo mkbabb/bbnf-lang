@@ -68,8 +68,8 @@ pub fn generate_all(
 
     let mut emit_ctx = RustEmitCtx::new(&ir_ctx);
 
-    let call_strategies = crate::pipeline::compile::compute_call_strategies(ir);
-    let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
+    let mut dstate =
+        crate::backend::driver::DriverState::new(prepared.prep.call_strategies.clone());
     // Install pre-solved Alt strategies and pattern caches so the
     // compile walk can skip re-detection of patterns that were
     // already classified during `prepare_grammar`.

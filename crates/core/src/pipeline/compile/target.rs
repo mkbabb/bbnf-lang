@@ -36,7 +36,7 @@ pub fn finalize_compile(
             // the substrate (registry) is populated before the
             // emitter runs — this is the same path that has been
             // active since W1 close.
-            let prepared = prepare_grammar(ir, *requested_prettify);
+            let prepared = prepare_grammar(ir, *requested_prettify)?;
             // AZ-I.W2-act.A — emit the audit-coverage artefact post-
             // analyze_grammar. `prepared.ir` carries the populated
             // struct_registry the audit pass reads.
@@ -67,7 +67,7 @@ pub fn finalize_compile(
             let enum_name = format!("{entry_name}Value");
 
             let analysis = crate::backend::driver::analysis::BackendAnalysis::default();
-            let call_strategies = compute_call_strategies(&ir);
+            let call_strategies = compute_call_strategies(&ir)?;
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
             install_pattern_caches(&mut dstate, &ir);
             let mut emitter = crate::backend::ts::TsEmitter { enum_name };
@@ -99,7 +99,7 @@ pub fn finalize_compile(
             let module_name = format!("{entry_name}_parser");
 
             let analysis = crate::backend::driver::analysis::BackendAnalysis::default();
-            let call_strategies = compute_call_strategies(&ir);
+            let call_strategies = compute_call_strategies(&ir)?;
             let mut dstate = crate::backend::driver::DriverState::new(call_strategies);
             install_pattern_caches(&mut dstate, &ir);
             // Pre-register ws pattern so the emitter knows its ID.

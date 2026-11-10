@@ -8,7 +8,7 @@
 //! decision boundary stays in lockstep with the shared
 //! [`parse_that_egraph::CostWeights`].
 
-use bbnf_ir::{GrammarIR, IrNode, RuleId};
+use crate::{GrammarIR, IrNode, RuleId};
 
 use super::budgets::CostBudgets;
 

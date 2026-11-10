@@ -1,0 +1,4 @@
+tree c20017d5bc90a7b46cfa267bb3a5ab78a0748963
+csp-solver direct dependents (all): bbnf-ir parse-that-egraph 
+csp-solver direct dependents inside bbnf-lang: bbnf-ir 
+VERDICT: GREEN

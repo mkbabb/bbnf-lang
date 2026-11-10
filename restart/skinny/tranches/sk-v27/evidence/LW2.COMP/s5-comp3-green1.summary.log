@@ -1,0 +1,29 @@
+tree c20017d5bc90a7b46cfa267bb3a5ab78a0748963
+csp-solver direct dependents (all): bbnf-ir parse-that-egraph 
+csp-solver direct dependents inside bbnf-lang: bbnf-ir 
+     Running `target/ax-iter/xtask regen --check`
+     Running `target/ax-iter/xtask regen --check`
+regen --check: clean (9 of 9 grammars matched)
+regen --check rc=0
+     Running `target/ax-iter/xtask corpus fetch`
+corpus fetch: corpus-v1 already verified in /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s5-comp-read/data
+     Running `target/ax-iter/xtask corpus verify`
+corpus verify: 8/8 files match (corpus-v1)
+corpus fetch+verify rc=0
+    CSS_O1_BENCH file=corpus:css/bootstrap.css bytes=280311 cold_mbps=1.199
+    test corpus_simple ... ok
+    test corpus_nested ... ok
+    test corpus_stress ... ok
+    W6_CSS_LIGHTNINGCSS_FULL_PARSE corpus_bytes=979638 lightningcss_full_parse_mbps=34.908 track1_vs_lightningcss_ratio=0.133473
+    W6_CSS_TYPED_RETIME disposition=REJECTED reason=track1_typed_below_cssparser_threshold corpus_bytes=979638 track1_mbps=4.659 cssparser_mbps=145.700 margin_mbps=-142.040 track1_passes=4 track1_errors=0 cssparser_passes=4 cssparser_errors=0 shared_summary_equal=true track1_rules=10136 cssparser_rules=10136 track1_style=9561 cssparser_style=9561 track1_sel=9561 cssparser_sel=9561 track1_decls=20043 cssparser_decls=20043
+    test cost_weights_unified::patched_dispatch_bonus_flips_alt_strategy_to_checkpoint ... ok
+    test cost_weights_unified::dispatch_mode_flips_under_inverted_dispatch_table ... ok
+nextest rc=100
+outcomes: 1512 rows, 2 fail -> /Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S5-COMP/comp3-outcomes-green1.txt
+bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates fail
+bbnf::ts_node_execute node_execute_twitter_statuses_zero_text fail
+substrate_audit items: compact_stripe_synthetic compute_inside_string_bytes 
+nextest set: equal to the baseline outside the COMP-2 flips
+COMP-2 flip rows now: 5, not passing: 0 (want 5 and 0)
+substrate_audit items: equal to the baseline
+VERDICT: GREEN

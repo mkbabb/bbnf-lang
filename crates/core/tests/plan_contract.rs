@@ -1,11 +1,11 @@
 //! The compile plan's grammar-level contract (sk-v27 LW1.COMP-3).
 //!
-//! - **Contradiction is refused (born-RED).** A rule that two
-//!   directives force to opposite call modes is a contradictory
-//!   grammar. `@token` forces `InlineBody` and `@pretty` forces
-//!   `DirectCall`; today the inline plan's priority chain picks one
-//!   (observed: `DirectCall`) and the grammar compiles. The cure
-//!   (LW2.COMP-2) makes the conflict ⊤ and the compile an error.
+//! - **Contradiction is refused.** A rule that two directives force
+//!   to opposite call modes is a contradictory grammar. `@token`
+//!   forces `InlineBody` and `@pretty` forces `DirectCall`. Born RED in
+//!   LW1.COMP-3 (the priority chain picked `DirectCall` and the grammar
+//!   compiled); LW2.COMP-2 makes the conflict ⊤ and the compile an
+//!   error that names both directives.
 //!
 //! - **I7 generality.** No plan decision may read a rule's name. The
 //!   same grammar under two spellings, one with names a heuristic might
@@ -14,12 +14,11 @@
 //!   metadata, rule for rule.
 
 use bbnf::pipeline::{
-    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar,
+    CompileError, CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar,
     compile_grammar_request, compute_call_strategies,
 };
 
 #[test]
-#[ignore = "born-RED sk-v27 LW1.COMP-3: contradictory directives compile; cured by LW2.COMP-2"]
 fn contradictory_call_mode_directives_are_refused() {
     let source = r#"
         word = /[a-z]+/ ;
@@ -30,12 +29,7 @@ fn contradictory_call_mode_directives_are_refused() {
 
     let ir = compile_grammar(source, &PipelineOptions::default())
         .expect("the grammar is well-formed apart from the contradiction");
-    let word = ir
-        .rules
-        .iter()
-        .position(|rule| ir.get_string(rule.name) == "word")
-        .expect("rule `word`");
-    let decided = compute_call_strategies(&ir)[word];
+    let decided = compute_call_strategies(&ir);
 
     let request = CompileRequest {
         options: PipelineOptions::default(),
@@ -48,11 +42,21 @@ fn contradictory_call_mode_directives_are_refused() {
         output.is_err(),
         "`word` is forced InlineBody by @token and DirectCall by @pretty; the plan silently \
          decided {decided:?} and the compile returned {}",
-        match output {
+        match &output {
             Ok(CompileOutput::Rust(_)) => "Ok(Rust)",
             Ok(_) => "Ok(other)",
             Err(_) => unreachable!(),
         },
+    );
+    let Err(err) = output else { unreachable!() };
+    assert!(
+        matches!(&err, CompileError::CallModeConflict { rule, .. } if rule == "word"),
+        "expected a call-mode conflict on `word`, got {err:?}"
+    );
+    let message = err.to_string();
+    assert!(
+        message.contains("@token") && message.contains("@pretty"),
+        "the diagnostic must name both directives: {message}"
     );
 }
 
@@ -76,7 +80,7 @@ fn grammar(names: [&str; 8]) -> String {
 
 fn plan_of(source: &str) -> Vec<String> {
     let ir = compile_grammar(source, &PipelineOptions::default()).expect("grammar compiles");
-    let strategies = compute_call_strategies(&ir);
+    let strategies = compute_call_strategies(&ir).expect("the plan solves");
     ir.rules
         .iter()
         .zip(strategies)

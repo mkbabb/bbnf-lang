@@ -1,0 +1,189 @@
+crates/core/src/backend/rust/analysis/inline/plan.rs:167:    let _ = csp.propagate();
+crates/ir/src/passes/sets/dispatch/eligibility.rs:67:    let _ = csp.propagate();
+crates/ir/src/passes/sets/first_sets.rs:71:    let _ = csp.propagate();
+crates/ir/src/passes/sets/follow.rs:67:    let _ = csp.propagate();
+crates/ir/src/passes/span.rs:61:    let _ = csp.propagate();
+pinned form (POSIX) over bbnf-lang crates: 5   (order's literal \s form on this host: 0)
+crates/core/src/backend/rust/analysis/inline/csp_contract.rs:21://! Decided/Decided conflict, and the six `let _ = csp.propagate()`
+crates/core/src/backend/rust/analysis/inline/plan.rs:167:    let _ = csp.propagate();
+crates/ir/src/passes/sets/dispatch/eligibility.rs:67:    let _ = csp.propagate();
+crates/ir/src/passes/sets/first_sets.rs:71:    let _ = csp.propagate();
+crates/ir/src/passes/sets/follow.rs:67:    let _ = csp.propagate();
+crates/ir/src/passes/span.rs:61:    let _ = csp.propagate();
+crates/ir/src/passes/types/mod.rs:67:    let _ = system.csp.propagate();
+crates/ir/src/passes/types/mod.rs:127:            let _ = system.csp.propagate();
+crates/ir/tests/lattices/csp_types.rs:80:    let _ = system.csp.propagate();
+rust/egraph/src/csp_scheduler.rs:237:            let _ = csp.propagate();
+broad form: bbnf-lang 9, parse-that 1
+--- cargo test -p bbnf --lib csp_contract -- --include-ignored
+
+running 4 tests
+. 1/4
+backend::rust::analysis::inline::csp_contract::conflicting_forced_call_modes_are_unsatisfiable --- FAILED
+backend::rust::analysis::inline::csp_contract::inline_domain_satisfies_the_lattice_laws --- FAILED
+backend::rust::analysis::inline::csp_contract::inline_domain_join_is_a_lattice_join_over_generated_cases --- FAILED
+
+failures:
+
+---- backend::rust::analysis::inline::csp_contract::conflicting_forced_call_modes_are_unsatisfiable stdout ----
+
+thread 'backend::rust::analysis::inline::csp_contract::conflicting_forced_call_modes_are_unsatisfiable' (9068994) panicked at crates/core/src/backend/rust/analysis/inline/csp_contract.rs:134:9:
+forcing InlineBody then DirectCall on one rule propagated as Ok(()); the domain holds Decided(InlineBody)
+
+---- backend::rust::analysis::inline::csp_contract::inline_domain_satisfies_the_lattice_laws stdout ----
+
+thread 'backend::rust::analysis::inline::csp_contract::inline_domain_satisfies_the_lattice_laws' (9068996) panicked at crates/core/src/backend/rust/analysis/inline/csp_contract.rs:119:5:
+[
+    LawViolation {
+        law: "commutative: a ⊔ b = b ⊔ a",
+        operands: [
+            InlineDomain {
+                decision: Decided(
+                    InlineBody,
+                ),
+            },
+            InlineDomain {
+                decision: Decided(
+                    DirectCall,
+                ),
+            },
+        ],
+    },
+    LawViolation {
+        law: "extensive: a ⊑ a ⊔ b and b ⊑ a ⊔ b",
+        operands: [
+            InlineDomain {
+                decision: Decided(
+                    InlineBody,
+                ),
+            },
+            InlineDomain {
+                decision: Decided(
+                    DirectCall,
+                ),
+            },
+        ],
+    },
+    LawViolation {
+        law: "commutative: a ⊔ b = b ⊔ a",
+        operands: [
+            InlineDomain {
+                decision: Decided(
+                    DirectCall,
+                ),
+            },
+            InlineDomain {
+                decision: Decided(
+                    InlineBody,
+                ),
+            },
+        ],
+    },
+    LawViolation {
+        law: "extensive: a ⊑ a ⊔ b and b ⊑ a ⊔ b",
+        operands: [
+            InlineDomain {
+                decision: Decided(
+                    DirectCall,
+                ),
+            },
+            InlineDomain {
+                decision: Decided(
+                    InlineBody,
+                ),
+            },
+        ],
+    },
+]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- backend::rust::analysis::inline::csp_contract::inline_domain_join_is_a_lattice_join_over_generated_cases stdout ----
+
+thread 'backend::rust::analysis::inline::csp_contract::inline_domain_join_is_a_lattice_join_over_generated_cases' (9068995) panicked at crates/core/src/backend/rust/analysis/inline/csp_contract.rs:254:5:
+53722 of 10000 cases break a law; first: [
+    "case 1: [DirectCall, InlineBody, DirectCall, DirectCall] reaches InlineDomain { decision: Decided(DirectCall) }, its reordering [InlineBody, DirectCall, DirectCall, DirectCall] reaches InlineDomain { decision: Decided(InlineBody) }",
+    "case 1: forces [DirectCall, InlineBody, DirectCall, DirectCall] (agree: false) reach InlineDomain { decision: Decided(DirectCall) }",
+    "case 2: [DirectCall, InlineBody] reaches InlineDomain { decision: Decided(DirectCall) }, its reordering [InlineBody, DirectCall] reaches InlineDomain { decision: Decided(InlineBody) }",
+    "case 2: forces [DirectCall, InlineBody] (agree: false) reach InlineDomain { decision: Decided(DirectCall) }",
+    "case 2: LawViolation { law: \"commutative: a ⊔ b = b ⊔ a\", operands: [InlineDomain { decision: Decided(DirectCall) }, InlineDomain { decision: Decided(InlineBody) }] }",
+]
+
+
+failures:
+    backend::rust::analysis::inline::csp_contract::conflicting_forced_call_modes_are_unsatisfiable
+    backend::rust::analysis::inline::csp_contract::inline_domain_join_is_a_lattice_join_over_generated_cases
+    backend::rust::analysis::inline::csp_contract::inline_domain_satisfies_the_lattice_laws
+
+test result: FAILED. 1 passed; 3 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.29s
+
+error: test failed, to rerun pass `-p bbnf --lib`
+rc=101
+--- cargo test -p bbnf --test plan_contract -- --include-ignored
+
+running 2 tests
+contradictory_call_mode_directives_are_refused --- FAILED
+.
+failures:
+
+---- contradictory_call_mode_directives_are_refused stdout ----
+
+thread 'contradictory_call_mode_directives_are_refused' (9070047) panicked at crates/core/tests/plan_contract.rs:47:5:
+`word` is forced InlineBody by @token and DirectCall by @pretty; the plan silently decided DirectCall and the compile returned Ok(Rust)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    contradictory_call_mode_directives_are_refused
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p bbnf --test plan_contract`
+rc=101
+--- cargo xtask regen --check
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1.55s
+     Running `target/ax-iter/xtask regen --check`
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1.46s
+     Running `target/ax-iter/xtask regen --check`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 22.502208ms
+[xtask::regen] bbnf: generate_all done in 82.01525ms
+[xtask::regen] bbnf: prettyplease done in 946.170334ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 4.519166ms
+[xtask::regen] json: generate_all done in 56.9615ms
+[xtask::regen] json: prettyplease done in 116.228292ms
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 845.680292ms
+[xtask::regen] css_l4: generate_all done in 815.813417ms
+[xtask::regen] css_l4: prettyplease done in 5.431672709s
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 23.448625ms
+[xtask::regen] css_pretty: generate_all done in 57.808542ms
+[xtask::regen] css_pretty: prettyplease done in 331.63775ms
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 50.414666ms
+[xtask::regen] google_sheets: generate_all done in 61.368042ms
+[xtask::regen] google_sheets: prettyplease done in 461.524208ms
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 17.206ms
+[xtask::regen] ebnf: generate_all done in 34.920958ms
+[xtask::regen] ebnf: prettyplease done in 272.886708ms
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 10.9225ms
+[xtask::regen] bnf: generate_all done in 10.430167ms
+[xtask::regen] bnf: prettyplease done in 419.535709ms
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 6.442584ms
+[xtask::regen] csv: generate_all done in 7.523875ms
+[xtask::regen] csv: prettyplease done in 244.409792ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 3.027375ms
+[xtask::regen] math: generate_all done in 3.302667ms
+[xtask::regen] math: prettyplease done in 78.987459ms
+regen --check: clean (9 of 9 grammars matched)
+rc=0
+VERDICT: RED

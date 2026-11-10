@@ -77,7 +77,10 @@ fn solve_rule_type(ir: &GrammarIR, rule_id: RuleId) -> TypeDesc {
     let mut ir_owned = ir.clone();
     crate::support::ensure_dag(&mut ir_owned);
     let mut system = generate_constraints(&ir_owned);
-    let _ = system.csp.propagate();
+    system
+        .csp
+        .propagate()
+        .expect("type projection reaches its fixed point");
     let var = system.rule_vars[&rule_id];
     system.csp.variables[var as usize]
         .domain

@@ -17,7 +17,6 @@ bbnf-ir = { version = "0.1", path = "../ir" }
 bbnf-ser = { version = "0.1", path = "../ser" }
 simd-scan = { version = "0.1", path = "../simd-scan" }
 parse-that-egraph.workspace = true
-csp-solver.workspace = true
 rustc-hash = "2"
 
 syn = { version = "2", features = ["full"] }

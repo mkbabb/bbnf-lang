@@ -12,6 +12,7 @@ use csp_solver::Csp;
 use csp_solver::constraint::VarId;
 
 use crate::dag::{GrammarDag, NodeId};
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{CharSet128, GrammarIR, IrNode};
 
 use super::constraint::DisjointConstraint;
@@ -64,7 +65,7 @@ pub(super) fn precompute_dispatch_eligibility(
     }
 
     // Phase 3: Propagate.
-    let _ = csp.propagate();
+    propagate_to_fixed_point(&mut csp, "dispatch eligibility");
 
     // Phase 4: Extract results.
     let mut result = HashMap::with_capacity(alts.len());

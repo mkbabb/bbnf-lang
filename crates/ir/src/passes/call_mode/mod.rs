@@ -1,5 +1,11 @@
-//! Inline-plan analysis: per-rule [`CallMode`] selection via CSP
-//! propagation.
+//! Call-mode plan: per-rule [`CallMode`] selection via CSP
+//! propagation (the inline plan).
+//!
+//! sk-v27 LW2.COMP-3 moved this pass, with its CSP domain and
+//! constraints and the shape statistics it reads, from the Rust
+//! backend into bbnf-ir, so the IR crate is the only consumer of
+//! `csp-solver`. The backends read the plan through
+//! `bbnf::pipeline::compute_call_strategies`.
 //!
 //! This module solves the inlining decision for every rule in the
 //! grammar. The decision is modelled as a Constraint Satisfaction
@@ -30,8 +36,10 @@ mod constraints;
 #[cfg(test)]
 mod csp_contract;
 mod plan;
+mod shape;
 mod visit;
 
 pub use constraints::should_force_direct_call;
-pub use plan::{CallMode, InlinePlan, analyze_parse_inline_plan};
+pub use plan::{CallMode, CallModeConflict, CallModeForce, InlinePlan, analyze_parse_inline_plan};
+pub use shape::{InlineShapeStats, gather_inline_shape_stats};
 pub use visit::{count_refs_vec, estimate_expansion_cost, max_alt_branches};

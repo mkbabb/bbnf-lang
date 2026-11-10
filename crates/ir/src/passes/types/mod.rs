@@ -23,6 +23,7 @@ use std::collections::HashMap;
 use rustc_hash::FxHashMap;
 
 use crate::dag::{GrammarDag, NodeId};
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{AltBranch, GrammarIR, IrNode, RuleId, SubVariant, TypeDesc, TypeDescInterner};
 
 use constraint::SeqChildKind;
@@ -64,7 +65,7 @@ pub fn project_types(ir: &mut GrammarIR) {
     let mut system = generate_constraints(ir);
 
     // Phase 2: Solve via monotonic fixed-point propagation.
-    let _ = system.csp.propagate();
+    propagate_to_fixed_point(&mut system.csp, "type projection");
 
     // Phase 2b: Cycle-break any rule variables still unsolved after
     // propagation. `RefConstraint` suspends propagation while the
@@ -124,7 +125,7 @@ pub fn project_types(ir: &mut GrammarIR) {
                     );
                 }
             }
-            let _ = system.csp.propagate();
+            propagate_to_fixed_point(&mut system.csp, "type projection");
         }
     }
 

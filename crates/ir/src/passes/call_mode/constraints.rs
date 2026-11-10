@@ -19,19 +19,21 @@ use csp_solver::variable::Variable;
 use parse_that_egraph::CostWeights;
 
 use super::budgets::{CostBudgets, MAX_ALT_BRANCHES};
-use super::plan::CallMode;
+use super::plan::{CallMode, CallModeForce};
 
 // ── Domain ────────────────────────────────────────────────────────────────────
 
 /// Lattice value for the inline decision.
 ///
-/// Bottom = `Undecided`. Monotonically resolves to either
-/// `Decided(InlineBody)` or `Decided(DirectCall)`. Once assigned,
-/// it does not change.
+/// `Undecided` is ⊥ and `Conflict` is ⊤; the two decided modes sit
+/// between them and are incomparable. Joining two different decided
+/// modes reaches ⊤, so a rule forced both ways is a contradiction the
+/// solver reports instead of a first-writer-wins choice.
 #[derive(Clone, Debug, PartialEq)]
 pub(super) enum InlineDecision {
     Undecided,
     Decided(CallMode),
+    Conflict,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -43,6 +45,24 @@ impl InlineDomain {
     pub(super) fn undecided() -> Self {
         Self {
             decision: InlineDecision::Undecided,
+        }
+    }
+
+    pub(super) fn decided(mode: CallMode) -> Self {
+        Self {
+            decision: InlineDecision::Decided(mode),
+        }
+    }
+
+    /// Join `mode` into the variable's domain and report the revision:
+    /// reaching ⊤ is `Unsatisfiable`.
+    fn assert_mode(domain: &mut Self, mode: CallMode) -> Revision {
+        if !domain.join(&Self::decided(mode)) {
+            Revision::Unchanged
+        } else if domain.decision == InlineDecision::Conflict {
+            Revision::Unsatisfiable
+        } else {
+            Revision::Changed
         }
     }
 }
@@ -83,28 +103,31 @@ impl LatticeDomain for InlineDomain {
     }
 
     fn join(&mut self, other: &Self) -> bool {
-        match (&self.decision, &other.decision) {
-            (InlineDecision::Undecided, InlineDecision::Decided(_)) => {
-                self.decision = other.decision.clone();
-                true
-            }
-            _ => false,
-        }
+        use InlineDecision::{Conflict, Decided, Undecided};
+        let joined = match (&self.decision, &other.decision) {
+            (_, Undecided) | (Conflict, _) => return false,
+            (Decided(a), Decided(b)) if a == b => return false,
+            (Undecided, other) => other.clone(),
+            (Decided(_), _) => Conflict,
+        };
+        self.decision = joined;
+        true
     }
 }
 
 // ── Constraints ───────────────────────────────────────────────────────────────
 
-/// Unary constraint that forces a rule to a specific call mode.
+/// Unary constraint: one reason forces a rule to the call mode that
+/// reason requires.
 #[derive(Debug)]
 pub(super) struct ForceCallMode {
     var: VarId,
-    mode: CallMode,
+    force: CallModeForce,
 }
 
 impl ForceCallMode {
-    pub(super) fn new(var: VarId, mode: CallMode) -> Self {
-        Self { var, mode }
+    pub(super) fn new(var: VarId, force: CallModeForce) -> Self {
+        Self { var, force }
     }
 }
 
@@ -115,19 +138,14 @@ impl Constraint<InlineDomain> for ForceCallMode {
 
     fn check(&self, assignment: &[Option<InlineDecision>]) -> bool {
         match &assignment[self.var as usize] {
-            Some(InlineDecision::Decided(m)) => *m == self.mode,
+            Some(InlineDecision::Decided(m)) => *m == self.force.mode(),
+            Some(InlineDecision::Conflict) => false,
             _ => true,
         }
     }
 
     fn revise(&self, vars: &mut [Variable<InlineDomain>], _depth: usize) -> Revision {
-        let slot = &mut vars[self.var as usize].domain.decision;
-        if *slot == InlineDecision::Undecided {
-            *slot = InlineDecision::Decided(self.mode);
-            Revision::Changed
-        } else {
-            Revision::Unchanged
-        }
+        InlineDomain::assert_mode(&mut vars[self.var as usize].domain, self.force.mode())
     }
 }
 
@@ -162,8 +180,8 @@ impl Constraint<InlineDomain> for CostBudgetConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<InlineDomain>], _depth: usize) -> Revision {
-        let slot = &mut vars[self.var as usize].domain.decision;
-        if *slot != InlineDecision::Undecided {
+        let domain = &mut vars[self.var as usize].domain;
+        if domain.decision != InlineDecision::Undecided {
             return Revision::Unchanged;
         }
 
@@ -189,8 +207,7 @@ impl Constraint<InlineDomain> for CostBudgetConstraint {
             CallMode::DirectCall
         };
 
-        *slot = InlineDecision::Decided(mode);
-        Revision::Changed
+        InlineDomain::assert_mode(domain, mode)
     }
 }
 
@@ -204,7 +221,7 @@ impl Constraint<InlineDomain> for CostBudgetConstraint {
 /// call site reads the single source of truth on
 /// `ir.cost_config.egraph.weights`.
 pub fn should_force_direct_call(
-    shape: crate::backend::rust::analysis::specialize::InlineShapeStats,
+    shape: super::shape::InlineShapeStats,
     local_cost: usize,
     total_budget: usize,
     weights: &CostWeights,

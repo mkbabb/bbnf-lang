@@ -17,7 +17,7 @@ CPU time landed in the user-interactive QoS bucket. Anything else is NOISY,
 with each reason listed. NOISY numbers are never certifying.
 
 Usage:
-  cbb0.py run --label L --matrix PORTABLE|NATIVE --reps N --out DIR
+  cbb0.py run --label L --matrix PORTABLE|NATIVE --reps N --out DIR [--cell C-ID]
               [--metric NAME=REGEX ...] [--build-note TEXT] [--toolchain TEXT]
               [--repo PATH] -- CMD ...
   cbb0.py dry-run --out DIR [--repo PATH]
@@ -419,6 +419,34 @@ def validate_files(paths: list[str]) -> int:
     return rc
 
 
+def registered_cells(repo: str) -> dict:
+    """Cell id -> matrix ('PORTABLE', 'NATIVE' or '—') for every row of a
+    `Registered cells` table in bench/PREREG.md (`| C-... | F-... | ... |`)."""
+    path = os.path.join(repo, "bench", "PREREG.md")
+    cells = {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                m = re.match(r"^\| (C-[A-Z0-9-]+) \| (F-[A-Z0-9-]+) \|.*\| ([^|]+?) \|\s*$", line)
+                if m:
+                    cells[m.group(1)] = m.group(3).strip()
+    except FileNotFoundError:
+        pass
+    return cells
+
+
+def refuse_unregistered(repo: str, cell: str, label: str, matrix: str):
+    """None if `cell` may run; otherwise the reason it is refused."""
+    cells = registered_cells(repo)
+    if cell not in cells:
+        return f"cell {cell} is not registered in bench/PREREG.md ({len(cells)} registered)"
+    if not label.startswith(cell):
+        return f"the label must begin with the cell id {cell} so the record carries it"
+    if cells[cell] in ("PORTABLE", "NATIVE") and cells[cell] != matrix:
+        return f"cell {cell} is registered for {cells[cell]}, not {matrix}"
+    return None
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="verb", required=True)
@@ -431,6 +459,7 @@ def main(argv=None) -> int:
     r.add_argument("--build-note")
     r.add_argument("--toolchain")
     r.add_argument("--repo", default=os.getcwd())
+    r.add_argument("--cell", help="a cell id registered in bench/PREREG.md; anything else is refused")
     r.add_argument("cmd", nargs=argparse.REMAINDER)
     d = sub.add_parser("dry-run")
     d.add_argument("--out", required=True)
@@ -444,6 +473,11 @@ def main(argv=None) -> int:
         a.cmd = a.cmd[1:] if a.cmd[:1] == ["--"] else a.cmd
         if not a.cmd:
             ap.error("run needs a command after --")
+        if a.cell is not None:
+            why = refuse_unregistered(os.path.abspath(a.repo), a.cell, a.label, a.matrix)
+            if why:
+                print(f"cbb0: refused: {why}", file=sys.stderr)
+                return 2
         if a.reps < 10:
             print(f"cbb0: {a.reps} reps is below the programme floor of 10; the record says so", file=sys.stderr)
         print(run(a))

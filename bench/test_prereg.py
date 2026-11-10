@@ -38,6 +38,19 @@ class Prereg(unittest.TestCase):
         self.assertIn("PORTABLE", t)
         self.assertIn("NATIVE", t)
 
+    def test_root_trials_are_registered(self):
+        # LW2.COMP-1: both trials, their cells, deadline and verdict rule are written before Phase 3.
+        t = _text()
+        cells = re.findall(r"^\| (C-(EG|CSP)-[A-Z0-9-]+) \| (F-TRIAL-(?:EG|CSP)) \|", t, re.M)
+        self.assertEqual(len(cells), 14, cells)
+        self.assertEqual(len({c[0] for c in cells}), 14, "a cell is registered twice")
+        for c, trial, fam in cells:
+            self.assertEqual(fam, f"F-TRIAL-{trial}", c)
+        self.assertRegex(t, r"72 h per trial")
+        self.assertRegex(t, r"trial/lw2-egraph-loser")
+        self.assertRegex(t, r"trial/lw2-csp-loser")
+        self.assertRegex(t, r"(?s)LOSS and UNDECIDED keep the simpler arm")
+
     def test_noisy_never_certifies(self):
         self.assertRegex(_text(), r"NOISY[^\n]*never certif")
 

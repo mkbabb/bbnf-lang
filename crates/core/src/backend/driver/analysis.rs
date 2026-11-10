@@ -10,6 +10,8 @@ use bbnf_ir::dag::NodeId;
 use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
 
 use crate::generate::regex;
+use crate::pipeline::CompileError;
+use crate::pipeline::compile::compute_call_strategies;
 
 /// Immutable type-analysis snapshot handed off to backend preparation.
 #[derive(Clone, Debug, Default)]
@@ -66,6 +68,9 @@ pub struct BackendPreparation {
     /// `ir.key_dispatch_configs` (populated upstream by
     /// `bbnf_ir::passes::recognizers::key_dispatch::collect`).
     pub key_dispatch_configs: std::collections::HashMap<NodeId, bbnf_ir::KeyDispatchMatch>,
+    /// Per-rule call strategies from the inline plan, parallel to
+    /// `ir.rules`.
+    pub call_strategies: Vec<crate::backend::CallStrategy>,
 }
 
 /// Fully prepared grammar bundle consumed by codegen.
@@ -76,7 +81,13 @@ pub struct PreparedGrammar {
 }
 
 /// Prepare a fully-lowered IR for AOT code generation.
-pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedGrammar {
+///
+/// Fails when the inline plan is contradictory
+/// ([`CompileError::CallModeConflict`]).
+pub fn prepare_grammar(
+    mut ir: GrammarIR,
+    requested_prettify: bool,
+) -> Result<PreparedGrammar, CompileError> {
     let config = resolve_backend_config(&ir, requested_prettify);
     apply_ir_prep(&mut ir, &config);
     let analysis = analyze_grammar(&mut ir, &config);
@@ -88,8 +99,9 @@ pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedG
     let alt_strategies = crate::backend::strategy::alt_strategy::solve_alt_strategies(&ir);
     let delim_scan_configs = ir.delim_scan_configs.clone();
     let key_dispatch_configs = ir.key_dispatch_configs.clone();
+    let call_strategies = compute_call_strategies(&ir)?;
 
-    PreparedGrammar {
+    Ok(PreparedGrammar {
         ir,
         prep: BackendPreparation {
             effective_prettify: config.effective_prettify,
@@ -97,8 +109,9 @@ pub fn prepare_grammar(mut ir: GrammarIR, requested_prettify: bool) -> PreparedG
             alt_strategies,
             delim_scan_configs,
             key_dispatch_configs,
+            call_strategies,
         },
-    }
+    })
 }
 
 pub fn resolve_backend_config(ir: &GrammarIR, requested_prettify: bool) -> EffectiveBackendConfig {

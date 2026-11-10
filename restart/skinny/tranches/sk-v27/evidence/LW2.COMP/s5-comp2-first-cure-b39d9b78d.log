@@ -1,0 +1,32 @@
+red2 at 094c78cf2
+pinned form (POSIX) over bbnf-lang crates: 5   (order's literal \s form on this host: 0)
+broad form: bbnf-lang 9, parse-that 1
+--- cargo test -p bbnf --lib csp_contract -- --include-ignored
+rc=101
+--- cargo test -p bbnf --test plan_contract -- --include-ignored
+rc=101
+--- cargo xtask regen --check
+rc=0
+VERDICT: RED
+red2 rc=1
+green at b39d9b78d
+pinned form (POSIX) over bbnf-lang crates: 0   (order's literal \s form on this host: 0)
+broad form: bbnf-lang 0, parse-that 0
+--- cargo test -p bbnf --lib csp_contract -- --include-ignored
+rc=0
+--- cargo test -p bbnf --test plan_contract -- --include-ignored
+rc=0
+--- cargo xtask regen --check
+rc=1
+VERDICT: RED
+green1 rc=1
+pinned form (POSIX) over bbnf-lang crates: 0   (order's literal \s form on this host: 0)
+broad form: bbnf-lang 0, parse-that 0
+--- cargo test -p bbnf --lib csp_contract -- --include-ignored
+rc=0
+--- cargo test -p bbnf --test plan_contract -- --include-ignored
+rc=0
+--- cargo xtask regen --check
+rc=1
+VERDICT: RED
+green2 rc=1

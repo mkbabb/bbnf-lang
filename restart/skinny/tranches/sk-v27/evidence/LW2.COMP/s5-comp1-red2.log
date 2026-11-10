@@ -1,0 +1,28 @@
+registered trial cells: 0 (want 14)
+....
+----------------------------------------------------------------------
+Ran 4 tests in 0.001s
+
+OK
+test_prereg rc=0
+usage: cbb0.py run [-h] --label LABEL --matrix {PORTABLE,NATIVE} [--reps REPS]
+                   --out OUT [--metric METRIC] [--build-note BUILD_NOTE]
+                   [--toolchain TOOLCHAIN] [--repo REPO]
+                   ...
+cbb0.py run: error: the following arguments are required: --label, --matrix, --out
+mutant (unregistered cell) read 1: rc=2 refusals-so-far=0
+usage: cbb0.py run [-h] --label LABEL --matrix {PORTABLE,NATIVE} [--reps REPS]
+                   --out OUT [--metric METRIC] [--build-note BUILD_NOTE]
+                   [--toolchain TOOLCHAIN] [--repo REPO]
+                   ...
+cbb0.py run: error: the following arguments are required: --label, --matrix, --out
+mutant (unregistered cell) read 2: rc=2 refusals-so-far=0
+usage: cbb0.py run [-h] --label LABEL --matrix {PORTABLE,NATIVE} [--reps REPS]
+                   --out OUT [--metric METRIC] [--build-note BUILD_NOTE]
+                   [--toolchain TOOLCHAIN] [--repo REPO]
+                   ...
+cbb0.py run: error: the following arguments are required: --label, --matrix, --out
+registered cell on the wrong matrix: rc=2 refused=no
+records written by refused runs: 0 (want 0)
+PREREG.md sha256: a26628789f33b25a201d95b8e7f5434a1920f31387897a9d7a8ffdce3f623e42
+VERDICT: RED

@@ -4,7 +4,6 @@
 //! decisions. The Rust emitter (`emitter/`) generates `proc_macro2::TokenStream`
 //! for each decision.
 
-pub mod analysis;
 pub mod emitter;
 pub mod emitter_types;
 pub mod ir_enums;

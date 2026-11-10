@@ -1,0 +1,30 @@
+rev ad0dc8a: git grep -niE bbnf -- rust/regex ':!rust/regex/oracle'
+rust/regex/CLAUDE.md:8:by `parse_that` (re-exports the engine), by `bbnf` (DFA codegen + regex
+rust/regex/CLAUDE.md:9:classification + structural facts), and by `bbnf-ir` (FIRST sets + the
+rust/regex/CLAUDE.md:103:  Drives `FnDescriptor` specialization in bbnf and inline scanner
+rust/regex/CLAUDE.md:104:  selection in `bbnf::generate::fast_paths`.
+rust/regex/CLAUDE.md:121:`BBNF_HIR_EGRAPH_REPORT=1` prints the per-rule fire counts for the HIR
+rust/regex/CLAUDE.md:122:saturation, mirroring the grammar tier's `BBNF_EGRAPH_REPORT`.
+rust/regex/CLAUDE.md:147:  tier in `bbnf-ir`.
+rust/regex/Cargo.toml:22:# proc-macro (bbnf-path, AZ-IV.W2.4) can anchor diagnostics at the macro
+rust/regex/benches/regex_classify.rs:7://! specialization in bbnf and `RegexInfo`'s classification field.
+rust/regex/src/algebra/mod.rs:3://! Pure HIR operations — no grammar IR dependency. The bbnf-ir pass calls
+rust/regex/src/egraph/cost.rs:3://! Mirrors `bbnf_ir::egraph::GrammarCostModel` on the grammar tier:
+rust/regex/src/egraph/cost.rs:57:    /// to override the HIR knobs (e.g. the bbnf-lang grammar
+rust/regex/src/egraph/cost.rs:74:/// Mirrors `bbnf_ir::egraph::GrammarCostModel::cost`: same
+rust/regex/src/egraph/mod.rs:3://! Mirrors the grammar-tier e-graph in `bbnf-ir`. See
+rust/regex/src/egraph/mod.rs:4://! `docs/four-layer-optimizer.md` in bbnf-lang for the full
+rust/regex/src/egraph/mod.rs:67:/// tier hit on `compile_bbnf`).
+rust/regex/src/egraph/mod.rs:82:/// Mirrors `bbnf_ir::egraph::build_and_saturate` exactly — same
+rust/regex/src/egraph/mod.rs:84:/// `BBNF_HIR_EGRAPH_REPORT=1` is set in the environment, prints
+rust/regex/src/egraph/mod.rs:86:/// grammar-tier `BBNF_EGRAPH_REPORT`.
+rust/regex/src/egraph/mod.rs:95:    if std::env::var("BBNF_HIR_EGRAPH_REPORT").is_ok() {
+rust/regex/src/egraph/rules/mod.rs:4://! `bbnf_ir::egraph::rules::regex` — same shape, same retention
+rust/regex/src/egraph/rules/mod.rs:29://! when `BBNF_HIR_EGRAPH_REPORT=1` is set in the environment,
+rust/regex/src/egraph/rules/mod.rs:30://! mirroring `BBNF_EGRAPH_REPORT` on the grammar tier.
+rust/regex/src/egraph/saturation_cache.rs:3://! `bbnf-ir::passes::regex_info::compute_regex_info` allocates one
+rust/regex/src/hir/parser/mod.rs:6://! Supports the regex subset used by BBNF grammars:
+rust/regex/src/info/mod.rs:195:    /// bbnf-lang grammar pipeline reading from `ir.cost_config`) should
+rust/regex/src/unicode.rs:4://! Covers the most common categories used by BBNF grammars.
+count=27
+env reader: 1

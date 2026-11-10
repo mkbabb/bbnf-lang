@@ -1,0 +1,11 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+ok  . bbnf: https://github.com/mkbabb/bbnf-lang
+ok  . bbnf-analysis: https://github.com/mkbabb/bbnf-lang
+ok  . bbnf-ir: https://github.com/mkbabb/bbnf-lang
+ok  . bbnf-lsp: https://github.com/mkbabb/bbnf-lang
+ok  . bbnf-path: https://github.com/mkbabb/bbnf-lang
+ok  . bbnf-ser: https://github.com/mkbabb/bbnf-lang
+ok  . gorgeous: https://github.com/mkbabb/gorgeous
+HELD . simd-scan: no repository; leaves with its census MOVE row
+GREEN (0)
+rc=0

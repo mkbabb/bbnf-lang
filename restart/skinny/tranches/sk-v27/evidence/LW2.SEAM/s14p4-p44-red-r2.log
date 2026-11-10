@@ -1,0 +1,23 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+ok  . bbnf: https://github.com/mkbabb/bbnf-lang
+RED . bbnf-analysis: publishable with no repository
+ok  . bbnf-ir: https://github.com/mkbabb/bbnf-lang
+RED . bbnf-lsp: publishable with no repository
+ok  . bbnf-path: https://github.com/mkbabb/bbnf-lang
+RED . bbnf-ser: publishable with no repository
+ok  . gorgeous: https://github.com/mkbabb/gorgeous
+RED . simd-scan: publishable with no repository
+RED skinny bbnf: lab package is publishable
+RED skinny bbnf-bench: lab package is publishable
+RED skinny bbnf-regex: lab package is publishable
+RED skinny bbnf-simd: lab package is publishable
+RED skinny codegen: lab package is publishable
+RED skinny grammar: lab package is publishable
+RED skinny ir: lab package is publishable
+RED skinny parse-that-regex: lab package is publishable
+RED skinny passes: lab package is publishable
+RED skinny runtime: lab package is publishable
+RED skinny test-fixtures: lab package is publishable
+RED skinny xtask: lab package is publishable
+RED (16)
+rc=1

@@ -157,11 +157,8 @@ pub(super) fn leading_first_set(
             // Union of all branch FIRST sets.
             let mut result = CharSet128::new();
             for b in branches {
-                if let Some(fs) = leading_first_set(&b.node, rule_first_sets, strings) {
-                    result.union(&fs);
-                } else {
-                    return None; // Nullable branch → unknown.
-                }
+                // Nullable branch → unknown.
+                result.union(&leading_first_set(&b.node, rule_first_sets, strings)?);
             }
             Some(result)
         }

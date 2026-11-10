@@ -23,7 +23,6 @@ version = "0.2.11"
 dependencies = [
  "bbnf-ir",
  "bbnf-ser",
- "csp-solver",
  "indexmap",
  "parse-that-egraph",
  "parse_that",
@@ -348,7 +347,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=5d4fa9dcb48acaf9859997f88796d792e2f34ac3#5d4fa9dcb48acaf9859997f88796d792e2f34ac3"
+source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -358,7 +357,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=5d4fa9dcb48acaf9859997f88796d792e2f34ac3#5d4fa9dcb48acaf9859997f88796d792e2f34ac3"
+source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -368,7 +367,7 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=5d4fa9dcb48acaf9859997f88796d792e2f34ac3#5d4fa9dcb48acaf9859997f88796d792e2f34ac3"
+source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
@@ -381,7 +380,7 @@ dependencies = [
 [[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=5d4fa9dcb48acaf9859997f88796d792e2f34ac3#5d4fa9dcb48acaf9859997f88796d792e2f34ac3"
+source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
 dependencies = [
  "aho-corasick",
  "colored",

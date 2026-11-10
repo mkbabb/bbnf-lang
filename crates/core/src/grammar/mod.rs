@@ -31,6 +31,9 @@
     non_upper_case_globals,
     clippy::all
 )]
+// Emitted by `cargo xtask regen`; rustfmt leaves it as emitted. A stable
+// attribute, so `cargo fmt` on the stable pin honours it (sk-v27 LW2.TOPO-2).
+#[rustfmt::skip]
 pub mod generated;
 pub mod host;
 pub mod schema;

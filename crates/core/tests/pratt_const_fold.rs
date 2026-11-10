@@ -353,7 +353,7 @@ fn emitted_lut_packs_non_operator_bytes_as_zero() {
         zero_occurrences >= 200,
         "LUT must have ≥ 200 zero bytes in emitted text, got {}\nText prefix: {}",
         zero_occurrences,
-        &text.chars().take(500).collect::<String>(),
+        text.chars().take(500).collect::<String>(),
     );
 }
 

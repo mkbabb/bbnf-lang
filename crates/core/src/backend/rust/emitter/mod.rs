@@ -72,13 +72,12 @@ fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
             // type only if ALL branches agree on a single type.
             let mut result: Option<TypeDesc> = None;
             for b in branches {
-                match resolve_branch_type(&b.node, ir) {
-                    Some(td) => match &result {
-                        None => result = Some(td),
-                        Some(existing) if *existing == td => {}
-                        Some(_) => return None, // heterogeneous nested Alt
-                    },
-                    None => return None, // non-scalar branch in nested Alt
+                // A non-scalar branch makes the nested Alt untyped.
+                let td = resolve_branch_type(&b.node, ir)?;
+                match &result {
+                    None => result = Some(td),
+                    Some(existing) if *existing == td => {}
+                    Some(_) => return None, // heterogeneous nested Alt
                 }
             }
             result

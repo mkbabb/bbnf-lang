@@ -1,4 +1,0 @@
-unstable_features = true
-ignore = [
-  "crates/core/src/grammar/generated",
-]

@@ -1,0 +1,15 @@
+# LW2.USE-3: value.js V-C judged on the published 4.3.0 tarball (sha256 7b3146927731a26ae2a7c1d53c87b302b2d72f76f8b5ccfed1cbb469e0a40908); judge v4.3.0:bench/wpt-conformance/conformance.ts with src/{css,color} resolved to the tarball's dist/subpaths; control: the same judge over v4.3.0's source gives the identical table; judge exit 1
+V-C · WPT 5a5b2b591b39 · cases-2026-11-04-r1.json · 17316 cases · 7599 ruled rows · census 317 files (8 extracted, 309 ruled)
+module               cases  pass  ruled  refused  serialization  serialize-error  accepted  MISS
+css-anchor-position   6711  4481   2230        0              0                0         0     0
+css-color             5778  3225   2487       42             24                0         0    66
+css-easing              91    61     30        0              0                0         0     0
+css-fonts              897   276    621        0              0                0         0     0
+css-grid               669   269    400        0              0                0         0     0
+css-images            1829   346   1483        0              0                0         0     0
+css-syntax             101    97      4        0              0                0         0     0
+css-transforms         231    78    153        0              0                0         0     0
+css-values             976   794    182        0              0                0         0     0
+css-variables           33    24      9        0              0                0         0     0
+TOTAL                17316  9651   7599       42             24                0         0    66
+V-C RED: 66 unruled misses, 0 stale ruled rows, 0 unruled files, 0 stale files

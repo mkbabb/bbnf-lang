@@ -221,7 +221,7 @@ impl Constraint<InlineDomain> for CostBudgetConstraint {
 /// call site reads the single source of truth on
 /// `ir.cost_config.egraph.weights`.
 pub fn should_force_direct_call(
-    shape: crate::backend::rust::analysis::specialize::InlineShapeStats,
+    shape: super::shape::InlineShapeStats,
     local_cost: usize,
     total_budget: usize,
     weights: &CostWeights,

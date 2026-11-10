@@ -1,4 +1,7 @@
-use bbnf_ir::IrNode;
+//! Shape statistics of a rule body that the inline plan's shape guard
+//! reads (refs, wrappers, repeats, alternations, token dispatches).
+
+use crate::IrNode;
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct InlineShapeStats {

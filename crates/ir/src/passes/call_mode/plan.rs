@@ -28,17 +28,17 @@
 use std::collections::HashSet;
 use std::fmt;
 
-use bbnf_ir::{GrammarIR, RuleId};
+use crate::{GrammarIR, RuleId};
 use csp_solver::constraint::VarId;
 use csp_solver::{Csp, Unsatisfiable};
 
 use super::budgets::CostBudgets;
 use super::constraints::{CostBudgetConstraint, ForceCallMode, InlineDecision, InlineDomain};
+use super::shape::gather_inline_shape_stats;
 use super::visit::{
     compute_single_site_inline_with_ref_counts, count_refs_vec,
     estimate_expansion_cost_with_budgets, max_alt_branches,
 };
-use crate::backend::rust::analysis::specialize::gather_inline_shape_stats;
 
 /// Whether a rule's call site emits the body inline or threads through
 /// the dispatch helper.

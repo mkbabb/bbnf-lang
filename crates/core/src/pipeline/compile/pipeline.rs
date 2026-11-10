@@ -427,28 +427,21 @@ pub fn compute_call_strategies(
         .map(|r| r.id)
         .collect();
 
-    let plan = crate::backend::rust::analysis::inline::analyze_parse_inline_plan(
-        ir,
-        &operator_chain_rules,
-    )
-    .map_err(|conflict| crate::pipeline::CompileError::CallModeConflict {
-        rule: ir
-            .get_string(ir.rules[conflict.rule as usize].name)
-            .to_string(),
-        first: conflict.first,
-        second: conflict.second,
-    })?;
+    let plan = bbnf_ir::passes::call_mode::analyze_parse_inline_plan(ir, &operator_chain_rules)
+        .map_err(|conflict| crate::pipeline::CompileError::CallModeConflict {
+            rule: ir
+                .get_string(ir.rules[conflict.rule as usize].name)
+                .to_string(),
+            first: conflict.first,
+            second: conflict.second,
+        })?;
 
     let mut strategies: Vec<CallStrategy> = plan
         .parse_call_modes
         .iter()
         .map(|mode| match mode {
-            crate::backend::rust::analysis::inline::CallMode::DirectCall => {
-                CallStrategy::DirectCall
-            }
-            crate::backend::rust::analysis::inline::CallMode::InlineBody => {
-                CallStrategy::InlineBody
-            }
+            bbnf_ir::passes::call_mode::CallMode::DirectCall => CallStrategy::DirectCall,
+            bbnf_ir::passes::call_mode::CallMode::InlineBody => CallStrategy::InlineBody,
         })
         .collect();
 

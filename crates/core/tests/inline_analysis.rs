@@ -1,5 +1,5 @@
-use bbnf::backend::rust::analysis::inline::should_force_direct_call;
-use bbnf::backend::rust::analysis::specialize::gather_inline_shape_stats;
+use bbnf_ir::passes::call_mode::gather_inline_shape_stats;
+use bbnf_ir::passes::call_mode::should_force_direct_call;
 use bbnf_ir::{AltBranch, IrNode};
 use parse_that_egraph::CostWeights;
 

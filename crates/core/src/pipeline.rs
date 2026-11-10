@@ -83,8 +83,8 @@ pub enum CompileError {
     /// inline CSP is unsatisfiable).
     CallModeConflict {
         rule: String,
-        first: crate::backend::rust::analysis::inline::CallModeForce,
-        second: crate::backend::rust::analysis::inline::CallModeForce,
+        first: bbnf_ir::passes::call_mode::CallModeForce,
+        second: bbnf_ir::passes::call_mode::CallModeForce,
     },
 }
 

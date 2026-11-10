@@ -191,7 +191,6 @@ dependencies = [
  "bbnf-ir",
  "bbnf-path",
  "bbnf-ser",
- "csp-solver",
  "cssparser 0.34.0",
  "dhat",
  "divan",

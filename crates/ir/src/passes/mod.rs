@@ -4,6 +4,7 @@
 //! Passes can be composed in any order (though some orderings are more efficient).
 
 pub mod audit;
+pub mod call_mode;
 pub mod context;
 pub mod csp_domains;
 pub mod csp_strategy;

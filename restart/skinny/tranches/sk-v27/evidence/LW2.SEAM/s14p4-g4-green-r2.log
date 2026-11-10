@@ -1,0 +1,5 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+ci-ok needs: ['rust', 'stable', 'sde', 'hermetic', 'extension', 'typescript']
+jobs running the TS suite: ['typescript'] with the debug_parse arm built: ['typescript']
+GREEN
+rc=0

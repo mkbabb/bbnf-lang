@@ -185,3 +185,70 @@ The slowdown is injected by the runner, never by the measured binary: the slowed
 | C-MM-BUILD | F-JS | MISMATCH | P4 | VAL | corpus/json/twitter.json@30721e49 | hand | R-JS-P4-json-parse | R-JS-P4-json-parse | refused: build planes `bench/contest/build-planes/node-default.json` against `node-jitless.json` | PORTABLE |
 
 `C-G2-AA` and `C-G2-SLOW` use JSON.parse because it is the one arm with a witness mode at LW2.CON-1; every other AA and SLOW cell waits for its bbnf arm's witness mode (U5). F-REGEX and F-PP have no LW2 cells: their rows are "no comparator" until LW3.CON-1 and LW4.PP. The LW1.CON-4 records stay OBSERVATIONAL: their rows are reclassified in ROWS.tsv (`L-CON4-*`), and `C-MM-PLANE` registers the pair that LW1 read as one "parse_only" column, P1 against P4, as refused.
+
+## 8. Consumer cells (LW2.USE-1, USE-2), registered by S10 USE
+
+This section is an addendum. It is written before Phase 3 and hashed with the rest of the file. It registers G-S1 and G-S2 of the consumers design (`restart/skinny/tranches/sk-v27/designs/consumers.md` §C.2, O-6 and O-7) and the Phase 3 timing re-read of LG-d row 0 (LW2.USE-3). The harness is `restart/skinny/tranches/sk-v27/consumers/gs1.mjs`; it refuses a cell id that this section does not register, and `cbb0.py run --cell` refuses one too.
+
+| Family | Plane | Arms | Cells | State |
+|---|---|---|---|---|
+| F-VALUE-S1 | value.js parse entries (JS, node) | base against cand (below) | 14 | registered |
+| F-VALUE-S2 | value.js work tiers against JS libraries, each at its own tier | value.js 4.3.0 against the tier's competitors | 5 | registered; adapters OWED |
+| F-VALUE-S0 | LG-d row 0 timing (descriptive) | value.js 4.3.0 published tarball alone | 2 | registered |
+
+### 8.1 G-S1: non-inferiority of the sk-v27 TS emitter on value.js
+
+**Arms.** One value.js tree, `4038dce5ac3278eb10441daca1e55d5c4f83cc70` (read through git, never a working tree), in two builds:
+
+- **base**: the tree as committed; `src/css/bbnf/generated/{grammar,color}.js` are the modules @mkbabb/bbnf-lang 0.2.0 emitted.
+- **cand**: the same tree with those modules re-emitted by bbnf-lang `typescript/` built at the measured sk-v27 HEAD, through value.js's own `scripts/gen-grammar.mjs` (same grammars, same action tables, same entries).
+
+`gs1.mjs build` refuses unless the two source trees differ in exactly the four generated files, and bundles both with the same esbuild call (node22, ESM, unminified). Both arms run on the same node binary with default flags; the build plane is `js` with identical `runtime_flags` (§7, I-8).
+
+**Corpus.** The WPT value cases of record, value.js `v4.3.0:test/css/wpt-values/cases-2026-11-04-r1.json`, sha256 `2639ac5779ca711beca73e7127c477cbb866d729bc31d692c2f1e2095552fc76`, 17,316 cases (byte-identical at value.js `origin/master` `12fe04a75`). A cell's class is split by base's verdict: `acc` holds the inputs on which base returns `ok`, `rej` the rest.
+
+**Equal work (USE-2).** Every timed pass calls the entry on every input of the class and folds each result into a structural checksum inside the timed region (constructor names, sorted own keys, array order, Map/Set entries, −0 apart from 0; a throw folds as its constructor name). Each process prints its checksum, and a pair whose two checksums differ is discarded (§1). A cell is NOT-COMPARABLE unless `gs1.mjs proof` reads EQUAL-WORK (100 % of the 17,316 × 7 checksums equal) at the same cand bundle sha256 that the cell measures.
+
+**Order and seed.** The PRNG is mulberry32 with seed `20261109`. The pass order is one Fisher–Yates shuffle of the class under the seed, the same for both arms. Pairs run in blocks of four fresh processes (`gs1.mjs block <cell> <b>`): block b runs ABBA (base, cand, cand, base) when the seed's b-th draw is below 0.5, otherwise BAAB, and each block gives two pairs. A pass is k sweeps of the class with k = ⌈4096 / n⌉, after 3 untimed warm-up sweeps; both bundles are loaded in every process.
+
+**Quantity and rule.** `r = ln(t_cand / t_base)`, t in ns per input byte. Non-inferiority on every cell: the one-sided 99 % BCa upper bound of exp(HL r) is < 1.03. Because the claim needs all 14 cells, it is an intersection–union test, and no multiplicity adjustment applies to it. Superiority is claimed only for a cell whose Holm-adjusted CI (FWER 0.01 over the 14 cells) lies wholly below 1.0. §3's sample sizes and QUIET conditions apply unchanged; a NOISY record never certifies. The targets beyond non-inferiority are set later, from C0.1.
+
+| Cell | Family | Entry | Class | n (base, at this hash) | Corpus | Arm A | Arm B | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C-S1-ACC-COLOR | F-VALUE-S1 | parseCssColor | acc | 2,174 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-REJ-COLOR | F-VALUE-S1 | parseCssColor | rej | 15,142 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-ACC-SCALAR | F-VALUE-S1 | parseCssScalar | acc | 2,847 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-REJ-SCALAR | F-VALUE-S1 | parseCssScalar | rej | 14,469 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-ACC-VALUE | F-VALUE-S1 | parseCssValue | acc | 13,118 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-REJ-VALUE | F-VALUE-S1 | parseCssValue | rej | 4,198 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-ACC-VALUES | F-VALUE-S1 | parseCssValues | acc | 13,118 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-REJ-VALUES | F-VALUE-S1 | parseCssValues | rej | 4,198 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-ACC-KFSEL | F-VALUE-S1 | parseKeyframeSelector | acc | 20 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-REJ-KFSEL | F-VALUE-S1 | parseKeyframeSelector | rej | 17,296 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-ACC-TIMING | F-VALUE-S1 | parseTimingFunction | acc | 50 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-REJ-TIMING | F-VALUE-S1 | parseTimingFunction | rej | 17,266 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-ACC-SHEET | F-VALUE-S1 | parseStylesheet | acc | 2 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-S1-REJ-SHEET | F-VALUE-S1 | parseStylesheet | rej | 17,314 | wpt@2639ac57 | base | cand | ≥ 200 over ≥ 30 invocations | PORTABLE |
+
+The small accepted classes (keyframe selectors 20, timing functions 50, stylesheets 2) are what the WPT value corpus holds. The k rule repeats them to ≥ 4,096 calls a pass; they are registered as they stand, never padded from another corpus.
+
+### 8.2 G-S2: work tiers (O-7)
+
+Each competitor is compared only at its own tier. The oracle is the shared WPT expected-serialization subset of the corpus above, and every cell reports its coverage denominator (the cases both arms answer at that tier) beside its ratio. The ratio is reported with its BCa CI. No target is pre-set, so these cells are DESCRIPTIVE (§5) and never certify a win. The value.js arm is the published 4.3.0 tarball (sha256 `7b3146927731a26ae2a7c1d53c87b302b2d72f76f8b5ccfed1cbb469e0a40908`). Competitor pins follow `bench/pins/pins.py`'s rule; `postcss-value-parser`, `culori` and `colorjs.io` are not yet in `bench/W0-BENCH-PINS.tsv`, and each cell waits for its pin row and its adapter (OWED until then).
+
+| Cell | Family | Tier | value.js arm | Competitor | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- |
+| C-S2-TOK-CSSTOOLS | F-VALUE-S2 | TOKENIZE | `tokens.bbnf` emitted by the sk-v27 TS emitter | @csstools/css-tokenizer 4.0.2 (W0-BENCH-PINS) | ≥ 10, ABBA as §8.1 | PORTABLE |
+| C-S2-TOK-PVP | F-VALUE-S2 | TOKENIZE | `tokens.bbnf` emitted by the sk-v27 TS emitter | postcss-value-parser (pin OWED) | ≥ 10, ABBA as §8.1 | PORTABLE |
+| C-S2-RGBA-CULORI | F-VALUE-S2 | COLOR→RGBA | `parseCssColor` + `toRgba8` (`/color`) | culori (pin OWED) | ≥ 10, ABBA as §8.1 | PORTABLE |
+| C-S2-RGBA-COLORJS | F-VALUE-S2 | COLOR→RGBA | `parseCssColor` + `toRgba8` (`/color`) | colorjs.io (pin OWED) | ≥ 10, ABBA as §8.1 | PORTABLE |
+| C-S2-FULL-VALUE | F-VALUE-S2 | FULL-VALUE | `parseCssValue` + `serializeCssValue` (`/css`) | none; reported unranked, value.js alone | ≥ 10 reps | PORTABLE |
+
+### 8.3 LG-d row 0 timing (LW2.USE-3)
+
+Row 0's bytes and conformance cite the value.js 4.3.0 tarball above. Its timing is re-read here, in the Phase 3 window, on the same tarball and the same corpus as LW1.USE-2 (`consumers/use2-benefit.mjs child`), 15 fresh-process reps each. These cells are DESCRIPTIVE: median, IQR and MAD, labelled QUIET or NOISY.
+
+| Cell | Family | Entry | Inputs | Artifact | Reps | Matrix |
+| --- | --- | --- | --- | --- | --- | --- |
+| C-S0-ROW0-VALUE-CSS | F-VALUE-S0 | `parseCssValue` (`/css`) | the 17,316 WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |
+| C-S0-ROW0-VALUE-COLOR | F-VALUE-S0 | `parseCssColor` (`/color`) | the 5,778 css-color WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |

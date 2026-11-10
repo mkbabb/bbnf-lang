@@ -1,0 +1,10 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+base fe7e9ca version 0.3.6 (line 0.3); rev 32e58de version 0.3.6 (line 0.3)
+removed-or-changed pub item lines: 5
+-    pub fn finish(mut self) -> Vec<FmtOp<'a>> {
+-    pub fn mediumline(&mut self) {
+-    pub fn linear_join<I, F>(
+-pub fn render(ops: &[FmtOp<'_>], printer: Printer) -> String {
+-pub fn render_with_hint(ops: &[FmtOp<'_>], printer: Printer, size_hint: usize) -> String {
+RED: breaking public API inside the 0.3 line
+rc=1

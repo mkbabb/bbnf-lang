@@ -20,19 +20,24 @@ import { performance } from "node:perf_hooks";
 import { HERE, readHeads, show, tsv, parseTsv } from "./lib.mjs";
 
 const LOG = join(homedir(), ".dev-logs/bbnf-lockstep/consumers");
-const PKG = { "4.2.1": join(LOG, "x421/package"), "4.2.0": join(LOG, "x420/package") };
+const PKG = { "4.3.0": join(LOG, "x430/package"), "4.2.1": join(LOG, "x421/package"), "4.2.0": join(LOG, "x420/package") };
 const TARBALL_SHA256 = {
+    "4.3.0": "7b3146927731a26ae2a7c1d53c87b302b2d72f76f8b5ccfed1cbb469e0a40908",
     "4.2.1": "a6110f009f24fab1dcad2099a2f8a60da20cc848a96a1b845d3930c51b573097",
     "4.2.0": "1eaea189be662d163d2eaa6a8ce3f8f68b5388a80fccbd7cc53490574d14cdc2",
 };
 const RECORDS = join(HERE, "records/use2-row0.jsonl");
+// LW1 records carry no version; they were taken on these pins
+const LEGACY_VERSION = { value: "4.2.1", "value-color": "4.2.1", keyframes: "4.2.0", fourier: "4.2.0" };
+const versionOf = (r) => r.version ?? LEGACY_VERSION[r.cell];
 const REPS = 15;
 
 // The consumers' rows: the pinned value.js (PIN-CENSUS.tsv), the subpaths their
 // src imports (CONSUMER-CENSUS.tsv), and the parse leaf each one calls.
 const CELLS = {
-    value: { version: "4.2.1", entry: "css", fn: "parseCssValue", corpus: "wpt-all" },
-    "value-color": { version: "4.2.1", entry: "color", fn: "parseCssColor", corpus: "wpt-css-color" },
+    // LW2.USE-3: value's row is the published 4.3.0 tarball; its timing is the Phase 3 cell (bench/PREREG.md §8.3)
+    value: { version: "4.3.0", entry: "css", fn: "parseCssValue", corpus: "wpt-all", phase3: "C-S0-ROW0-VALUE-CSS" },
+    "value-color": { version: "4.3.0", entry: "color", fn: "parseCssColor", corpus: "wpt-css-color", phase3: "C-S0-ROW0-VALUE-COLOR" },
     keyframes: { version: "4.2.0", entry: "css", fn: "parseStylesheet", corpus: "kf-keyframes" },
     fourier: { version: "4.2.0", entry: "color", fn: "parseCssColor", corpus: "wpt-css-color" },
 };
@@ -79,7 +84,7 @@ async function child(cellName) {
     const t1 = performance.now();
     pass();
     const warm = performance.now() - t1;
-    process.stdout.write(JSON.stringify({ cell: cellName, n: inputs.length, ok, cold_ms: cold, warm_ms: warm, corpus_sha256: sha256 }) + "\n");
+    process.stdout.write(JSON.stringify({ cell: cellName, version: cell.version, n: inputs.length, ok, cold_ms: cold, warm_ms: warm, corpus_sha256: sha256 }) + "\n");
 }
 
 function therm() {
@@ -155,10 +160,20 @@ function handSites(repo) {
 const ROW_OF = { value: ["value", "value-color"], keyframes: ["keyframes"], fourier: ["fourier"] };
 const REPO_OF = { value: "value.js", keyframes: "keyframes.js", fourier: "fourier-analysis" };
 
+/** value's conformance column: the V-C table judged on the same tarball (use3-vc-artifact.mjs). */
+function vcOf(version) {
+    const f = join(HERE, `records/use3-vc-${version}.txt`);
+    if (!existsSync(f)) return `V-C not judged on the ${version} tarball`;
+    const text = readFileSync(f, "utf8");
+    const sha = text.match(/sha256 ([0-9a-f]{64})/)[1];
+    const [, cases, pass, ruled, , , , , miss] = text.split("\n").find((l) => l.startsWith("TOTAL")).trim().split(/\s+/);
+    return `V-C judged on value.js ${version} tarball sha256 ${sha} (records/use3-vc-${version}.txt): ${cases} cases, ${pass} pass, ${ruled} ruled, ${miss} MISS (css-color)`;
+}
+
 function table() {
     const recs = existsSync(RECORDS) ? readFileSync(RECORDS, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)) : [];
     const lastRun = recs.length ? recs[recs.length - 1].run : null;
-    const mine = recs.filter((r) => r.run === lastRun);
+    const mine = recs.filter((r) => r.run === lastRun && versionOf(r) === CELLS[r.cell]?.version);
     const quiet = mine.length > 0 && mine.every((r) => r.load1_before < 8 && r.load1_after < 8);
     const loads = mine.flatMap((r) => [r.load1_before, r.load1_after]);
     const rows = [];
@@ -173,9 +188,10 @@ function table() {
             const w = mine.filter((r) => r.cell === c).map((r) => r.warm_ms);
             const k = mine.filter((r) => r.cell === c).map((r) => r.cold_ms);
             const one = mine.find((r) => r.cell === c);
-            if (!w.length) return `${c}: no reps`;
+            if (!w.length) return CELLS[c].phase3 ? `${c} ${CELLS[c].fn}: Phase 3 cell ${CELLS[c].phase3} (value.js ${CELLS[c].version} tarball; the 4.2.1 reading is superseded)` : `${c}: no reps`;
             return `${c} ${CELLS[c].fn}×${one.n} (ok ${one.ok}) warm ${q(w, 0.5).toFixed(2)} ms IQR ${q(w, 0.25).toFixed(2)}–${q(w, 0.75).toFixed(2)}; cold ${q(k, 0.5).toFixed(2)} ms IQR ${q(k, 0.25).toFixed(2)}–${q(k, 0.75).toFixed(2)}; reps ${w.length}`;
         });
+        const phase3 = cells.every((c) => CELLS[c].phase3 && !mine.some((r) => r.cell === c));
         rows.push({
             row: 0,
             consumer: row,
@@ -185,13 +201,14 @@ function table() {
             parse_bytes_gz9: b.gz,
             closure_files: b.files,
             parse_ms: ms.join(" | "),
-            timing_label: !mine.length ? "UNMEASURED" : quiet ? "QUIET" : `NOISY (load1 ${Math.min(...loads).toFixed(1)}–${Math.max(...loads).toFixed(1)})`,
+            timing_label: phase3 ? `PHASE-3 (${cells.map((c) => CELLS[c].phase3).join(", ")})` : !mine.length ? "UNMEASURED" : quiet ? "QUIET" : `NOISY (load1 ${Math.min(...loads).toFixed(1)}–${Math.max(...loads).toFixed(1)})`,
             conformance:
                 row === "value"
-                    ? "V-C at W10 close (tranche-u 4.3.0 candidate, bench/records/W10close/gates/vc-1.txt.gz): 17316 cases, 9651 pass, 7599 ruled, 66 MISS (css-color); 4.2.1 not re-judged"
+                    ? vcOf(version)
                     : row === "keyframes"
                       ? "n/a: keyframes.js has no WPT denominator; it inherits value.js 4.2.0's grammar"
                       : "n/a: fourier has no WPT denominator; it inherits value.js 4.2.0's ./color grammar",
+            artifact_sha256: TARBALL_SHA256[version],
             hand_parse_sites_src: handSites(repo),
             hand_lines_deleted: 0,
             run: lastRun ?? "",
@@ -200,7 +217,7 @@ function table() {
     return rows;
 }
 
-const HEADER = ["row", "consumer", "pinned_value", "src_subpaths", "parse_bytes_raw", "parse_bytes_gz9", "closure_files", "parse_ms", "timing_label", "conformance", "hand_parse_sites_src", "hand_lines_deleted", "run"];
+const HEADER = ["row", "consumer", "pinned_value", "artifact_sha256", "src_subpaths", "parse_bytes_raw", "parse_bytes_gz9", "closure_files", "parse_ms", "timing_label", "conformance", "hand_parse_sites_src", "hand_lines_deleted", "run"];
 const OUT = join(HERE, "BENEFIT-ROW0.tsv");
 const [, , cmd, arg] = process.argv;
 if (cmd === "child") await child(arg);
@@ -216,13 +233,15 @@ else if (cmd === "table") {
         for (const want of ["value", "keyframes", "fourier"]) {
             const r = rows.find((x) => x.consumer === want);
             if (!r) (console.log(`RED row 0 lacks ${want}`), bad++);
-            else if (r.timing_label === "UNMEASURED" || /no reps/.test(r.parse_ms) || !(Number(r.parse_bytes_gz9) > 0))
+            else if (r.timing_label.startsWith("PHASE-3")) {
+                if (want !== "value" || !(Number(r.parse_bytes_gz9) > 0)) (console.log(`RED ${want}: a Phase 3 timing label on a row without a registered cell`), bad++);
+            } else if (r.timing_label === "UNMEASURED" || /no reps/.test(r.parse_ms) || !(Number(r.parse_bytes_gz9) > 0))
                 (console.log(`RED ${want}: unmeasured column`), bad++);
             else if (!/reps (\d+)/.test(r.parse_ms) || Number(r.parse_ms.match(/reps (\d+)/)[1]) < 10) (console.log(`RED ${want}: < 10 reps`), bad++);
         }
         const fresh = tsv(HEADER, table());
         if (fresh !== readFileSync(OUT, "utf8")) (console.log("RED BENEFIT-ROW0.tsv differs from its records"), bad++);
     }
-    if (!bad) console.log("GREEN BENEFIT-ROW0.tsv: value, keyframes and fourier measured from records, ≥ 10 reps each, regenerated identically");
+    if (!bad) console.log("GREEN BENEFIT-ROW0.tsv: keyframes and fourier measured from records (≥ 10 reps each), value's bytes and V-C on one tarball with its timing a registered Phase 3 cell; regenerated identically");
     process.exit(bad ? 1 : 0);
 } else console.log("usage: bench | table | --check");

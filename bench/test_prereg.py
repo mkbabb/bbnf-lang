@@ -51,6 +51,28 @@ class Prereg(unittest.TestCase):
         self.assertRegex(t, r"trial/lw2-csp-loser")
         self.assertRegex(t, r"(?s)LOSS and UNDECIDED keep the simpler arm")
 
+    def test_consumer_cells_are_registered(self):
+        # LW2.USE-1: G-S1's 14 cells (7 value.js entries x accepted/rejected), their ABBA order, seed and corpus
+        # hash, the equal-work admission (USE-2), and G-S2's three tiers, written before Phase 3.
+        t = _text()
+        entries = {"parseCssColor", "parseCssScalar", "parseCssValue", "parseCssValues",
+                   "parseKeyframeSelector", "parseTimingFunction", "parseStylesheet"}
+        cells = re.findall(r"^\| (C-S1-(ACC|REJ)-[A-Z]+) \| F-VALUE-S1 \| (\w+) \| (acc|rej) \|.*\| PORTABLE \|$", t, re.M)
+        self.assertEqual(len(cells), 14, cells)
+        self.assertEqual(len({c[0] for c in cells}), 14, "a G-S1 cell is registered twice")
+        self.assertEqual({(c[2], c[3]) for c in cells}, {(e, k) for e in entries for k in ("acc", "rej")})
+        for cid, k, _e, klass in cells:
+            self.assertEqual(k.lower(), klass, cid)
+        self.assertRegex(t, r"ABBA[^\n]*BAAB")
+        self.assertRegex(t, r"seed `20261109`")
+        self.assertIn("2639ac5779ca711beca73e7127c477cbb866d729bc31d692c2f1e2095552fc76", t)
+        self.assertIn("4038dce5ac3278eb10441daca1e55d5c4f83cc70", t)
+        self.assertRegex(t, r"upper bound[^\n]*< 1\.03")
+        self.assertRegex(t, r"NOT-COMPARABLE[^\n]*EQUAL-WORK")
+        tiers = set(re.findall(r"^\| C-S2-[A-Z0-9-]+ \| F-VALUE-S2 \| (TOKENIZE|COLOR→RGBA|FULL-VALUE) \|", t, re.M))
+        self.assertEqual(tiers, {"TOKENIZE", "COLOR→RGBA", "FULL-VALUE"})
+        self.assertRegex(t, r"FULL-VALUE[^\n]*unranked")
+
     def test_noisy_never_certifies(self):
         self.assertRegex(_text(), r"NOISY[^\n]*never certif")
 

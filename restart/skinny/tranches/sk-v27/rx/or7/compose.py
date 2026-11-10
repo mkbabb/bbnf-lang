@@ -139,6 +139,30 @@ def main():
     names = [r["route"][0] for r in routes]
     parted = [l for l in dict.fromkeys(r["leaf"] for r in rows)
               if len({by[(l, n)]["verdict"] for n in names}) > 1]
+    if meta.get("findings"):
+        out.append("## Findings\n")
+        for line in meta["findings"]:
+            out.append(f"- {line}")
+        out.append("")
+
+    if meta.get("ask"):
+        out.append("## Ruling ask: OR-7\n")
+        for line in meta["ask"]:
+            out.append(line)
+        out.append("")
+
+    # Both routes read the same front end, so an ENGINE verdict on every route
+    # is the front end's (or a lookaround the parser refuses), not a determinizer's.
+    leaves_all = list(dict.fromkeys(r["leaf"] for r in rows))
+    shared = [l for l in leaves_all if all(by[(l, n)]["verdict"] == "ENGINE" for n in names)]
+    out.append("## Where an ENGINE verdict comes from\n")
+    out.append("| Tier | ENGINE on every route (front end or refused) | " + " | ".join(f"ENGINE on {n} only (determinizer)" for n in names) + " |")
+    out.append("|---|---|" + "---|" * len(names))
+    for t in ("DFA", "LOOKAROUND"):
+        tl = [l for l in leaves_all if by[(l, names[0])]["tier"] == t]
+        only = [sum(1 for l in tl if by[(l, n)]["verdict"] == "ENGINE" and l not in shared) for n in names]
+        out.append(f"| {t} | {sum(1 for l in tl if l in shared)} | " + " | ".join(str(c) for c in only) + " |")
+    out.append("")
     out.append(f"## Leaves where the routes' verdicts differ ({len(parted)})\n")
     out.append("| Leaf | Tier | Pattern | " + " | ".join(f"Route {n}" for n in names) + " |")
     out.append("|---|---|---|" + "---|" * len(names))

@@ -28,3 +28,14 @@ Also ruled:
 | R-b | TS↔Rust parity: each of the 20 divergences is ruled row by row in LW2. Authority runs in this order: the BBNF language spec text first; where the spec is silent, the compiler of record (the sk-v26 spine, X-1) decides, and TS follows. Every ruling adds a spec sentence, so the spec stops being silent there. No divergence is closed by deleting its test. |
 | R-c | The corpus artifact is a **versioned GitHub release asset with a sha256 manifest**, not LFS. LFS is ruled out because it means bandwidth quotas, lfs in every CI job, and a second custody path. It is fetched and verified by `xtask corpus fetch/verify`, locally and in CI; X-8 pins the CSS part to a released value.js tarball. |
 | Z-32 | The 32 zero-caller substrates are given their fates by LW2 S2 CENSUS under X-1/X-5, each as delete, route (with a cited unit) or move with its crate. "Sanction" is not available without a named caller in LW2–LW4. |
+
+## Addendum, 2026-11-10: LW2 delegate rulings (by the delegate, value-js-63; recorded by S15 FREEZE)
+
+| # | Ruling |
+|---|---|
+| S4-B | A zero-length regex match **is** a match. The Rust `parse_that::regex` leaf follows the TS `leaf.ts` and the 5 `debug_test::tests::test_css_*` diagnostics tests (R-b parity). Progress is guaranteed by the combinators, not by the leaf. |
+| A-8 | op.rs ABI v2 is frozen as **PROVISIONAL**: frozen in pprint (the const asserts, `ABI-v2.md`, `ABI-v2.sha256`, version line 0.4). The consumer side closes once PP-U9 compiles bbnf-lang and parse-that against it (`cargo check --workspace` and `regen --check`) GREEN ×2. Any change that port forces is an `ABI-v2.md` addendum. |
+| A-9 | As S14 recommended (LW2-SEAMS.md): `\b`/`\B` are ECMAScript word boundaries over `[A-Za-z0-9_]` (without `u`/`i`), never a backspace. `Look` gains `WordBoundary` and `NotWordBoundary` before RX-2 takes the Hir fingerprint, and S7's born-RED tests take their expected values from the V8+JSC oracle. |
+| A-10 | As S14 recommended: COMP-4's accept/reject authority is JSONTestSuite's `y_`/`n_` expectation; parity with root `backend/rust` is a second check, not the gate. Root `grammar/json/json.bbnf` becomes RFC 8259 (mandatory commas, `json = ws value ws`), the `trim_end` tolerances become exact end offsets, and `regen --check` plus nextest run ×2 in that same unit, whatever S5-A rules on the slice's home. |
+| A-11 | As S14 recommended: `gorgeous` publishes from bbnf-lang. Its `repository` reads `https://github.com/mkbabb/bbnf-lang`, and `mkbabb/gorgeous` gets a pointer to it. |
+| A-12 | As S14 recommended: PREREG's 3 % margins (COMP-1 WIN, G-S1 at 1.03) stand as registered. A verdict whose 95 % interval straddles the margin is UNDECIDED and is reported, never re-tested under a wider margin. The FLOORS ruling governs goal claims only. |

@@ -1,0 +1,4 @@
+src/op.rs:108:15: error[E0080]: evaluation panicked: assertion failed: std::mem::size_of::<FmtOp<'static>>() <= 24: evaluation of `op::_` failed here
+error: could not compile `pprint` (lib) due to 1 previous error
+cargo check rc=101
+MUTANT REFUSED by the size assert

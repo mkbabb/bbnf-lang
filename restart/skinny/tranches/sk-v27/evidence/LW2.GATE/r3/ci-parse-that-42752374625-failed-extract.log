@@ -1,0 +1,26 @@
+Rust — cargo +stable (latest)	UNKNOWN STEP	2026-11-10T03:55:21.2177620Z thread 'test_nested_media' (7298) has overflowed its stack
+Rust — cargo +stable (latest)	UNKNOWN STEP	2026-11-10T03:55:21.5632051Z   process didn't exit successfully: `/home/runner/work/parse-that/parse-that/rust/target/debug/deps/css_parse_test-c230baa1220d0650` (signal: 6, SIGABRT: process abort signal)
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7309103Z         FAIL [   0.007s] (258/632) parse_that::debug_test tests::test_css_full_rule_parses_successfully
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7313270Z     test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 60 filtered out; finished in 0.00s
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7314971Z     thread 'tests::test_css_full_rule_parses_successfully' (15140) panicked at parse_that/tests/debug_test.rs:1098:9:
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7317160Z         FAIL [   0.004s] (259/632) parse_that::debug_test tests::test_css_full_rule_with_class_selector
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7320860Z     test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 60 filtered out; finished in 0.00s
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7322293Z     thread 'tests::test_css_full_rule_with_class_selector' (15141) panicked at parse_that/tests/debug_test.rs:1110:9:
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7501162Z         FAIL [   0.005s] (269/632) parse_that::debug_test tests::test_css_multiple_declarations
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7507909Z     test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 60 filtered out; finished in 0.00s
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7510037Z     thread 'tests::test_css_multiple_declarations' (15162) panicked at parse_that/tests/debug_test.rs:1123:9:
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7600902Z         FAIL [   0.005s] (275/632) parse_that::debug_test tests::test_css_rule_parse_or_error_success
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7603664Z     test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 60 filtered out; finished in 0.00s
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7604734Z     thread 'tests::test_css_rule_parse_or_error_success' (15174) panicked at parse_that/tests/debug_test.rs:949:9:
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7644841Z         FAIL [   0.006s] (276/632) parse_that::debug_test tests::test_css_rule_unclosed_brace
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7648862Z     test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 60 filtered out; finished in 0.00s
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:36.7650482Z     thread 'tests::test_css_rule_unclosed_brace' (15176) panicked at parse_that/tests/debug_test.rs:625:9:
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:39.4244522Z         FAIL [   0.007s] (258/632) parse_that::debug_test tests::test_css_full_rule_parses_successfully
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:39.4245090Z         FAIL [   0.004s] (259/632) parse_that::debug_test tests::test_css_full_rule_with_class_selector
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:39.4245593Z         FAIL [   0.005s] (269/632) parse_that::debug_test tests::test_css_multiple_declarations
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:39.4246081Z         FAIL [   0.005s] (275/632) parse_that::debug_test tests::test_css_rule_parse_or_error_success
+Rust (ubuntu-latest) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:55:39.4246583Z         FAIL [   0.006s] (276/632) parse_that::debug_test tests::test_css_rule_unclosed_brace
+Rust (macos-15) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:59:21.3116550Z      SIGABRT [   0.011s] (205/558) parse_that::css_parse_test test_nested_media
+Rust (macos-15) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:59:21.3288860Z     thread 'test_nested_media' (27980) has overflowed its stack
+Rust (macos-15) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:59:21.3489840Z     (test aborted with signal 6: SIGABRT)
+Rust (macos-15) — clippy + nextest	UNKNOWN STEP	2026-11-10T03:59:25.4629640Z      SIGABRT [   0.011s] (205/558) parse_that::css_parse_test test_nested_media

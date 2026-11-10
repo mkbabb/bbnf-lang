@@ -1,0 +1,57 @@
+# pprint base b26b7b9 (sk-v27-lw2) + uncommitted tests/l8_unbalanced.rs; cargo test --no-fail-fast --test born_red_lw1 --test l8_unbalanced -- --include-ignored; run 2
+test red_l2_hardline_sentinel_at_wide_width ... FAILED
+test red_linear_join_separator_order ... FAILED
+test red_l3_prime_fill_ancestor ... FAILED
+test red_l3_trailing_text_after_group ... FAILED
+test red_l3_prime_has_hard_sibling ... FAILED
+test red_l8_width_zero_indented_newline_panics ... FAILED
+test red_group_flat_width_u16_saturation ... FAILED
+test red_wrap_flat_width_u16_saturation ... FAILED
+test red_if_break_count_u16_wrap ... FAILED
+thread 'red_l2_hardline_sentinel_at_wide_width' (9243321) panicked at tests/born_red_lw1.rs:32:5:
+assertion `left == right` failed: v1 renderer diverges from the oracle (w=20000)
+  left: "a\nb c"
+thread 'red_linear_join_separator_order' (9243326) panicked at tests/born_red_lw1.rs:213:5:
+assertion `left == right` failed
+  left: "ab, c,"
+thread 'red_l3_prime_fill_ancestor' (9243322) panicked at tests/born_red_lw1.rs:200:5:
+assertion `left == right` failed
+  left: "xxaa bb; cc"
+thread 'red_l3_trailing_text_after_group' (9243324) panicked at tests/born_red_lw1.rs:32:5:
+assertion `left == right` failed: v1 renderer diverges from the oracle (w=10)
+  left: "aaa bbbcccc"
+thread 'red_l3_prime_has_hard_sibling' (9243323) panicked at tests/born_red_lw1.rs:32:5:
+assertion `left == right` failed: v1 renderer diverges from the oracle (w=6)
+  left: "aa bbcd\ne\nf"
+thread 'red_l8_width_zero_indented_newline_panics' (9243325) panicked at src/render.rs:318:55:
+thread 'red_l8_width_zero_indented_newline_panics' (9243325) panicked at tests/born_red_lw1.rs:250:5:
+assertion `left == right` failed
+  left: None
+thread 'red_group_flat_width_u16_saturation' (9243319) panicked at tests/born_red_lw1.rs:32:5:
+assertion `left == right` failed: v1 renderer diverges from the oracle (w=65600)
+  left: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+thread 'red_wrap_flat_width_u16_saturation' (9243327) panicked at tests/born_red_lw1.rs:32:5:
+assertion `left == right` failed: v1 renderer diverges from the oracle (w=65600)
+  left: "[aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+thread 'red_if_break_count_u16_wrap' (9243320) panicked at tests/born_red_lw1.rs:106:5:
+assertion `left == right` failed
+  left: "\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+test result: FAILED. 0 passed; 9 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test l8_balanced_streams_are_accepted ... ok
+test l8_close_without_open_is_refused ... FAILED
+test l8_group_crossing_an_if_break_branch_is_refused ... FAILED
+test l8_indent_close_without_open_is_refused ... FAILED
+test l8_unclosed_group_is_refused ... FAILED
+test l8_unclosed_indent_is_refused ... FAILED
+thread 'l8_close_without_open_is_refused' (9243330) panicked at src/builder.rs:264:63:
+thread 'l8_close_without_open_is_refused' (9243330) panicked at tests/l8_unbalanced.rs:62:5:
+group_close with nothing open must make finish() refuse, not panic
+thread 'l8_group_crossing_an_if_break_branch_is_refused' (9243331) panicked at tests/l8_unbalanced.rs:95:5:
+a group opened in one IfBreak branch and closed in the other must be refused
+thread 'l8_indent_close_without_open_is_refused' (9243332) panicked at tests/l8_unbalanced.rs:84:5:
+finish() must refuse an indent_close with nothing open
+thread 'l8_unclosed_group_is_refused' (9243333) panicked at tests/l8_unbalanced.rs:51:5:
+finish() must refuse an unclosed group_open, not close it
+thread 'l8_unclosed_indent_is_refused' (9243334) panicked at tests/l8_unbalanced.rs:73:5:
+finish() must refuse an unclosed indent_open
+test result: FAILED. 1 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

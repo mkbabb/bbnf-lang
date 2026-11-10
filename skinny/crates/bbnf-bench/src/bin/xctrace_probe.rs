@@ -152,23 +152,23 @@ fn main() {
     let system_time_ns = ri_after.ri_system_time - ri_before.ri_system_time;
     let total_bytes = (bytes.len() as u128) * (iters as u128);
     let ns_per_byte = elapsed.as_nanos() as f64 / total_bytes as f64;
-    let mbps = (total_bytes as f64 * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0);
+    let mb_s = total_bytes as f64 / (elapsed.as_secs_f64() * 1_000_000.0);
     let cycles_per_byte = cycles as f64 / total_bytes as f64;
     let cpi = cycles as f64 / instructions as f64;
 
     eprintln!(
-        "xctrace_probe: done iters={iters} elapsed={:.3}s ns/B={ns_per_byte:.3} Mbps={mbps:.0} cycles={cycles} instrs={instructions} cycles/B={cycles_per_byte:.3} CPI={cpi:.3} checksum={checksum}",
+        "xctrace_probe: done iters={iters} elapsed={:.3}s ns/B={ns_per_byte:.3} MB/s={mb_s:.0} cycles={cycles} instrs={instructions} cycles/B={cycles_per_byte:.3} CPI={cpi:.3} checksum={checksum}",
         elapsed.as_secs_f64(),
     );
     // Single-line stdout record for the wrapper to parse.
     println!(
-        "PROBE_RESULT corpus_bytes={} iters={} track={} elapsed_s={:.6} ns_per_byte={:.6} mbps={:.3} cycles={} instructions={} cycles_per_byte={:.6} cpi={:.6} user_ns={} system_ns={} checksum={}",
+        "PROBE_RESULT corpus_bytes={} iters={} track={} elapsed_s={:.6} ns_per_byte={:.6} mb_s={:.3} cycles={} instructions={} cycles_per_byte={:.6} cpi={:.6} user_ns={} system_ns={} checksum={}",
         bytes.len(),
         iters,
         track,
         elapsed.as_secs_f64(),
         ns_per_byte,
-        mbps,
+        mb_s,
         cycles,
         instructions,
         cycles_per_byte,

@@ -1,5 +1,5 @@
 //! SK-V17 W2 — the FAIR rich-CSSOM materialization measurement. Reports the cold
-//! per-parse MEDIAN Mbps of the tape-routed CSS Track-1 RICH typed path
+//! per-parse MEDIAN MB/s of the tape-routed CSS Track-1 RICH typed path
 //! (`parser::rich_summary`, which builds the offset tape and lazily projects the
 //! rich typed CSSOM — selectors + typed value-node counts atop the 4 structural
 //! fields) against the lightningcss full-CSSOM comparator, per benched corpus.
@@ -29,12 +29,12 @@ fn median(mut samples: Vec<f64>) -> f64 {
     }
 }
 
-/// One cold per-parse sample: time a single parse, return Mbps.
+/// One cold per-parse sample: time a single parse, return MB/s.
 fn cold_sample(bytes: usize, parse: &mut dyn FnMut()) -> f64 {
     let start = Instant::now();
     parse();
     let ns = start.elapsed().as_nanos() as f64;
-    (bytes as f64) * 8_000.0 / ns
+    (bytes as f64) * 1_000.0 / ns
 }
 
 fn main() {
@@ -46,7 +46,7 @@ fn main() {
 
     let corpora = load_all().expect("load CSS L4 corpora");
     println!(
-        "SK-V17 W2 RICH-typed CSSOM Track-1 (cold, N={n}, median Mbps) vs lightningcss full-CSSOM"
+        "SK-V17 W2 RICH-typed CSSOM Track-1 (cold, N={n}, median MB/s) vs lightningcss full-CSSOM"
     );
     println!(
         "{:<26} {:>14} {:>14} {:>16} {:>10}",

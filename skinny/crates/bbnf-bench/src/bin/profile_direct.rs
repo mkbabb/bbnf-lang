@@ -114,7 +114,7 @@ fn main() {
     let elapsed = start.elapsed();
     let ri_after = read_rusage_v5();
     let total_bytes = (bytes.len() as u128) * (iters as u128);
-    let mbps = (total_bytes as f64 * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0);
+    let mb_s = total_bytes as f64 / (elapsed.as_secs_f64() * 1_000_000.0);
     let cycles = ri_after.ri_cycles - ri_before.ri_cycles;
     let instructions = ri_after.ri_instructions - ri_before.ri_instructions;
     let user_time_ns = ri_after.ri_user_time - ri_before.ri_user_time;
@@ -127,12 +127,12 @@ fn main() {
         cycles as f64 / instructions as f64
     };
     eprintln!(
-        "profile-direct: {iters} iters in {:.2}s -> {:.0} Mbps (digest cksum {checksum})",
+        "profile-direct: {iters} iters in {:.2}s -> {:.0} MB/s (digest cksum {checksum})",
         elapsed.as_secs_f64(),
-        mbps
+        mb_s
     );
     println!(
-        "PROBE_RESULT corpus={} corpus_bytes={} iters={} mode={} warmup_iters={} elapsed_s={:.6} ns_per_byte={:.6} mbps={:.3} cycles={} instructions={} cycles_per_byte={:.6} cpi={:.6} user_ns={} system_ns={} checksum={}",
+        "PROBE_RESULT corpus={} corpus_bytes={} iters={} mode={} warmup_iters={} elapsed_s={:.6} ns_per_byte={:.6} mb_s={:.3} cycles={} instructions={} cycles_per_byte={:.6} cpi={:.6} user_ns={} system_ns={} checksum={}",
         corpus,
         bytes.len(),
         iters,
@@ -140,7 +140,7 @@ fn main() {
         warmup_iters,
         elapsed.as_secs_f64(),
         ns_per_byte,
-        mbps,
+        mb_s,
         cycles,
         instructions,
         cycles_per_byte,

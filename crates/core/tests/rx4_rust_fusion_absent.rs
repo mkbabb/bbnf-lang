@@ -11,9 +11,9 @@
 //!
 //! The pass list is printed by the e-graph report (`BBNF_EGRAPH_REPORT=1`,
 //! one `rule=<name>` line per rule); `evidence/LW2.RX/rx4-falsifier.sh` reads
-//! it through `rx4_print_pass_list_{rust,ts}`. The TS emissions over
-//! `grammar/MANIFEST` are written by `rx4_ts_emit_dump` for the byte-identity
-//! read.
+//! it through `rx4_print_pass_list_{rust,ts}`. The TS emissions of the
+//! workspace's 9 entry grammars are written by `rx4_ts_emit_dump` for the
+//! byte-identity read.
 
 use std::path::{Path, PathBuf};
 
@@ -106,9 +106,10 @@ fn rx4_print_pass_list_ts() {
     compile_grammar_request(ALT_A_AB, &request(CompileTarget::Ts)).expect("compiles");
 }
 
-/// Writes the TS emission of every `grammar/MANIFEST` grammar to
-/// `$RX4_TS_DUMP/<path with / as __>.ts` (or `.err` with the error). Runs
-/// only when `RX4_TS_DUMP` is set.
+/// Writes the TS emission of every entry grammar of the workspace manifest
+/// (`[workspace.metadata.bbnf.grammars]`, the grammars `cargo xtask regen`
+/// emits for Rust) to `$RX4_TS_DUMP/<ident>.ts` (or `.err` with the error).
+/// Runs only when `RX4_TS_DUMP` is set.
 #[test]
 fn rx4_ts_emit_dump() {
     let Ok(out) = std::env::var("RX4_TS_DUMP") else {
@@ -128,18 +129,30 @@ fn rx4_ts_emit_dump() {
 
 fn dump_ts_emissions(out: &Path) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let manifest = std::fs::read_to_string(root.join("grammar/MANIFEST")).expect("MANIFEST");
-    for line in manifest.lines().filter(|l| !l.trim().is_empty()) {
-        let rel = line.split_whitespace().nth(1).expect("sha path");
-        let name = rel.replace('/', "__");
-        match compile_paths_request(&[root.join(rel)], &request(CompileTarget::Ts)) {
+    let cargo = std::fs::read_to_string(root.join("Cargo.toml")).expect("Cargo.toml");
+    let field = |line: &str, key: &str| -> Option<String> {
+        let rest = &line[line.find(key)? + key.len()..];
+        let rest = &rest[rest.find('"')? + 1..];
+        Some(rest[..rest.find('"')?].to_string())
+    };
+    let mut seen = 0;
+    for line in cargo
+        .lines()
+        .filter(|l| l.trim_start().starts_with("{ ident = "))
+    {
+        let (Some(ident), Some(rel)) = (field(line, "ident"), field(line, "path")) else {
+            continue;
+        };
+        seen += 1;
+        match compile_paths_request(&[root.join(&rel)], &request(CompileTarget::Ts)) {
             Ok(CompileOutput::Ts(source)) => {
-                std::fs::write(out.join(format!("{name}.ts")), source).expect("write");
+                std::fs::write(out.join(format!("{ident}.ts")), source).expect("write");
             }
             Ok(_) => unreachable!("TS target"),
             Err(err) => {
-                std::fs::write(out.join(format!("{name}.err")), err.to_string()).expect("write");
+                std::fs::write(out.join(format!("{ident}.err")), err.to_string()).expect("write");
             }
         }
     }
+    assert_eq!(seen, 9, "the workspace grammar manifest lists 9 grammars");
 }

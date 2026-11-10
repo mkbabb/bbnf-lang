@@ -202,16 +202,16 @@ fn fold_forces(forces: &[CallMode]) -> InlineDomain {
 #[ignore = "born-RED sk-v27 LW2.COMP-2: InlineDomain::join is first-writer-wins; cured by LW2.COMP-2"]
 fn inline_domain_join_is_a_lattice_join_over_generated_cases() {
     const CASES: usize = 10_000;
-    let mut gen = Cases(0x9e37_79b9_7f4a_7c15);
+    let mut cases = Cases(0x9e37_79b9_7f4a_7c15);
     let mut checked = 0usize;
     let mut failures: Vec<String> = Vec::new();
 
     for case in 0..CASES {
-        let forces = gen.forces();
+        let forces = cases.forces();
         let reference = fold_forces(&forces);
         for _ in 0..4 {
             let mut order = forces.clone();
-            gen.shuffle(&mut order);
+            cases.shuffle(&mut order);
             let other = fold_forces(&order);
             if other != reference {
                 failures.push(format!(
@@ -232,7 +232,11 @@ fn inline_domain_join_is_a_lattice_join_over_generated_cases() {
             ));
         }
 
-        let triple = [reference, fold_forces(&gen.forces()), fold_forces(&gen.forces())];
+        let triple = [
+            reference,
+            fold_forces(&cases.forces()),
+            fold_forces(&cases.forces()),
+        ];
         for violation in lattice_law_violations(&triple) {
             failures.push(format!("case {case}: {violation:?}"));
         }

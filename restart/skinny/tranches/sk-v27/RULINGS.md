@@ -28,3 +28,42 @@ Also ruled:
 | R-b | TS↔Rust parity: each of the 20 divergences is ruled row by row in LW2. Authority runs in this order: the BBNF language spec text first; where the spec is silent, the compiler of record (the sk-v26 spine, X-1) decides, and TS follows. Every ruling adds a spec sentence, so the spec stops being silent there. No divergence is closed by deleting its test. |
 | R-c | The corpus artifact is a **versioned GitHub release asset with a sha256 manifest**, not LFS. LFS is ruled out because it means bandwidth quotas, lfs in every CI job, and a second custody path. It is fetched and verified by `xtask corpus fetch/verify`, locally and in CI; X-8 pins the CSS part to a released value.js tarball. |
 | Z-32 | The 32 zero-caller substrates are given their fates by LW2 S2 CENSUS under X-1/X-5, each as delete, route (with a cited unit) or move with its crate. "Sanction" is not available without a named caller in LW2–LW4. |
+
+## Addendum, 2026-11-10: the LW2 delegate rulings (by the delegate, value-js-63)
+
+These answer S4-B (`LEDGER.md`, S4 TOOLCHAIN asks, 2026-11-09) and A-8 to A-12 (`LW2-SEAMS.md`, "Phase 4 critique adjudication", on `sk-v27-lw2`). A-9 to A-12 are ruled as S14 recommended, and S14's text there binds.
+
+| # | Ruling |
+|---|---|
+| S4-B | A zero-length regex match **is a match**. parse-that's Rust `regex()`/`regex_span()` leaf follows the TS leaf (`leaf.ts`) and the 5 `debug_test::tests::test_css_*` diagnostics tests (R-b parity). Progress is guaranteed by the combinators (the repetition and `sep_by` families stop on a zero-progress iteration), not by the leaf. Falsifier: the 5 tests RED ×2 → GREEN ×2, with a guard test of a repetition over an empty-matching leaf that terminates. |
+| A-8 | op.rs ABI v2 is frozen as **PROVISIONAL**: frozen in pprint (the const asserts plus `ABI-v2.md`, version line 0.4), consumer status PROVISIONAL. It closes on the consumer side once PP-U9 compiles bbnf-lang and parse-that against it (`cargo check --workspace` and `regen --check` on the 0.4 line) GREEN ×2. Any change PP-U9 forces is an `ABI-v2.md` addendum. LG-2.3 reads GREEN with that label, not without it. |
+| A-9 | As S14 recommended. `\b`/`\B` are pinned and `Look` gains `WordBoundary` and `NotWordBoundary` before RX-2 takes the Hir fingerprint. ECMAScript is the leaf language: `\b` is a word boundary over the ASCII word set `[A-Za-z0-9_]` (without `u`/`i`), never a backspace. S7's born-RED tests take their expected values from the V8+JSC oracle. |
+| A-10 | As S14 recommended. COMP-4's accept and reject authority is JSONTestSuite's `y_`/`n_` expectation; parity with root `backend/rust` is a second check, not the gate. Root `grammar/json/json.bbnf` becomes RFC 8259 (mandatory commas, `json = ws value ws`), the `trim_end` tolerances become exact end offsets, and `regen --check` plus nextest run ×2 in that same unit, whatever S5-A rules on the slice's home. |
+| A-11 | As S14 recommended. `gorgeous` publishes from bbnf-lang: its `repository` reads `mkbabb/bbnf-lang`, and `mkbabb/gorgeous` gets a pointer to it. If the owner keeps `mkbabb/gorgeous` as the home, the crate's source moves there before TOPO-4 and the DAG check adds the repository. |
+| A-12 | As S14 recommended. PREREG's 3 % margins (COMP-1 WIN, G-S1 at 1.03) stand as registered. A verdict whose 95 % interval straddles the margin is UNDECIDED and is reported as such, never re-tested under a wider margin. The FLOORS ruling governs goal claims only. |
+
+## Addendum, 2026-11-10b: the LW2 delegate rulings after the third LG-2 reading (by the delegate, value-js-65)
+
+The third reading of LG-2 (value.js COHESION §0hz.lw2, evidence `lw2/lg2-r3` `0379fe71a`) was RED and nothing merged. These rulings answer the asks open at that reading: RULINGS-1 and RULINGS-2, S4-A and S4-C (`LEDGER.md`, S4 TOOLCHAIN asks), A-1 to A-7 (`LW2-SEAMS.md`, interim adjudication), S1-A, S1-B, S6-A, S6-B, OR-7, S11-A, S15-A and LG-2-A. Where a row says "as S14 recommended", S14's text in `LW2-SEAMS.md` binds.
+
+| # | Ruling |
+|---|---|
+| RULINGS-1 | **Yes.** `sk-v27` is merged into `sk-v27-lw2` by an ordinary merge, before LG-2 is read again, so the integration branch carries every ruling. |
+| RULINGS-2 | **Yes.** PERF-3's RED set also names `css_parse_test::test_parse_bootstrap_css`, the debug stack overflow on the macOS pin. One root cure covers both recursion-depth overflows (it and `test_nested_media`); neither is cured by a larger stack or a skipped test. |
+| S4-A | **Yes, as S4 recommended.** S4 merges on a held reading that names the set exactly: bbnf-lang {`substrate_audit` naming exactly `compute_inside_string_bytes` and `compact_stripe_synthetic`; `node_execute_twitter_statuses_zero_text`}; parse-that {`css_parse_test::test_nested_media` and `css_parse_test::test_parse_bootstrap_css` (PERF-3, RULINGS-2); the 5 `debug_test::tests::test_css_*` under `--features diagnostics` (S4-B)}. Any other failure is RED. `ci-ok` GREEN in full is read at S6's merge and at S16 (LG-2.2). |
+| S4-C | **Yes.** The order's macos-14 arm is read on `macos-15` (Apple silicon, NEON); PERF-2's `neon` reading is taken there. |
+| A-1 | As S14 recommended (the held reading, not a widened assertion; no sanction; no early crate move). |
+| A-2 | As S14 recommended (zero-caller coverage moves with the crates into parse-that, doctests counted, with an uncalled-`pub fn` mutant RED ×2). |
+| A-3 | As S14 recommended: ratified (the census checker matches every `pub` item form, `lw2/s2-census` `e72912eeb`). |
+| A-4 | As S14 recommended (S16 runs `FATES_AT=gate substrate-fates-check.sh`; a MOVE row whose crate is still in bbnf-lang is refused). |
+| A-5 | As S14 recommended (S16 re-takes `heads-LW2-gate.json` and reads `topo0_lw2_check.sh` over every record before LG-2). |
+| A-6 | As S14 recommended (`parse-that-egraph` and `parse-that-egraph-derive`). |
+| A-7 | As S14 recommended (one home for csp-solver, the upstream `mkbabb/csp-solver`; bbnf-lang deletes its vendored copy). The transport of that edge is S3-A's open ask (the git edge cannot resolve credential-free while upstream carries the private submodule; S3 executed the crates.io `0.4.0` edge). |
+| S1-A | **A-10 as ruled.** A new unit, **LW2.TOPO-6b**, makes `json = ws value ws` the entry rule of root `grammar/json/json.bbnf`, moves the projection and the `path!` root to it, requires the commas (RFC 8259), sets exact `trim_end` end offsets, and reads `regen --check`, nextest and the iai JSON gate ×2. The TS-only cure is **not** taken. |
+| S1-B | **The literal reading is the spec's** (R-b: spec text first). `( x << sep ? ) *` means what it says: each `x` may be followed by an optional `sep`. The TS and Rust emitters stop rewriting it into a strict separated list. A grammar that means a strict list writes `x (sep x)*`. Every in-repo grammar using the form is audited for intent, and each one that meant strict is rewritten, each with a falsifier (an input the two readings disagree on, RED ×2 → GREEN ×2). |
+| S6-A | PERF-1 closes when the `core::arch` grep shows `rust/simd` plus **exactly the 13 named files**, each carried by a named row (U5/U6). Any other file is RED. |
+| S6-B | `compact_stripe_synthetic` is **DELETED**. |
+| OR-7 | **Route A**, PROVISIONAL: `regex-automata` 0.4.14, `LeftmostFirst`, an anchored dense minimized DFA, fed by our Hir. It closes when Phase 3's emitted-code cells (G-P1/G-R2, F-REGEX) show parity with Route B; a loss beyond the floor reopens it. G-P1 and G-R2 are registered in PREREG. |
+| S11-A | **No.** No bench is taken before PERF-1b is banked and S6 and S7 are merged with PREREG reconciled. |
+| S15-A | **No.** pprint does not merge early. |
+| LG-2-A | **No.** The three LW2 PRs (bbnf-lang #12, parse-that #4, pprint #3) merge together, through the gate, after every row is GREEN ×2. |

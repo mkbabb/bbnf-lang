@@ -51,11 +51,11 @@ fn main() {
     }
     let elapsed = start.elapsed();
     let total_bytes = (bytes.len() as u128) * (iters as u128);
-    let mbps = (total_bytes as f64 * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0);
+    let mb_s = total_bytes as f64 / (elapsed.as_secs_f64() * 1_000_000.0);
     eprintln!(
-        "profile-lazy: {iters} iters in {:.2}s -> {:.0} Mbps (offset cksum {})",
+        "profile-lazy: {iters} iters in {:.2}s -> {:.0} MB/s (offset cksum {})",
         elapsed.as_secs_f64(),
-        mbps,
+        mb_s,
         total_offsets
     );
 }

@@ -1,0 +1,156 @@
+{
+ "schema": "cb-b0/1",
+ "record_key": "626ed1f1e634524c-c725e622fb97-con1-skip-unescape-mutant-PORTABLE",
+ "label": "con1-skip-unescape-mutant",
+ "matrix": "PORTABLE",
+ "created_at": "2026-11-10T00:40:44+00:00",
+ "repo": {
+  "commit": "c725e622fb97d3d5e17a96c6dd47b63272d58aa0",
+  "tree_hash": "626ed1f1e634524c65bf560d09168b782cbd04ea",
+  "tree_hash_excludes": [
+   "docs/benchmarks/records"
+  ],
+  "head_tree": "46ad896ea041c802230e87529f53d3d1a1e8d55c",
+  "dirty": false
+ },
+ "host": {
+  "model": "Mac17,7",
+  "cpu": "Apple M5 Max",
+  "ncpu": 18,
+  "perflevel0_cpus": 6,
+  "os": "Darwin 25.4.0",
+  "mem_bytes": 137438953472
+ },
+ "toolchain": "",
+ "build_note": "",
+ "command": [
+  "python3",
+  "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/oracle_json_skip_unescape.py",
+  "bench/planes/witness/json/esc-basic.json"
+ ],
+ "harness": {
+  "guarded_run": "fbd27de486",
+  "bench_lock_held": false,
+  "qos_requested": "user_interactive (set by the measured binary; the kernel rejects a spawn-attribute raise and exec resets thread QoS)",
+  "quiet_load": 8.0,
+  "qos_ui_min_fraction": 0.95,
+  "harness_sha256": "c355c0bc587af44b3afda362c16cb65a030a56dbccf04331952804617d797632"
+ },
+ "conditions": {
+  "load_before": [
+   31.97802734375,
+   31.97802734375,
+   31.97802734375
+  ],
+  "load_after": [
+   31.97802734375,
+   31.97802734375,
+   31.97802734375
+  ],
+  "therm_before": {
+   "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+   "warning": false
+  },
+  "therm_after": {
+   "raw": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded",
+   "warning": false
+  }
+ },
+ "reps": [
+  {
+   "wall_ns": 105962542,
+   "exit": 0,
+   "user_us": 60291,
+   "sys_us": 25478,
+   "maxrss_bytes": 19857408,
+   "instructions": 224831864,
+   "cycles": 115274075,
+   "qos_cpu": {
+    "default": 339745,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 1725377,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 0,
+   "load_before": 31.97802734375,
+   "load_after": 31.97802734375,
+   "metrics": {},
+   "stdout_sha256": "26a7eb5dd5b39fb4d33de4d40d497d77af17a5f0b9f52718b8782449b341c6bd"
+  },
+  {
+   "wall_ns": 107067209,
+   "exit": 0,
+   "user_us": 60443,
+   "sys_us": 26100,
+   "maxrss_bytes": 19808256,
+   "instructions": 219697246,
+   "cycles": 116310615,
+   "qos_cpu": {
+    "default": 371742,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 1715084,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 1,
+   "load_before": 31.97802734375,
+   "load_after": 31.97802734375,
+   "metrics": {},
+   "stdout_sha256": "26a7eb5dd5b39fb4d33de4d40d497d77af17a5f0b9f52718b8782449b341c6bd"
+  },
+  {
+   "wall_ns": 99074708,
+   "exit": 0,
+   "user_us": 59671,
+   "sys_us": 25491,
+   "maxrss_bytes": 19857408,
+   "instructions": 215638605,
+   "cycles": 111782545,
+   "qos_cpu": {
+    "default": 323320,
+    "maintenance": 0,
+    "background": 0,
+    "utility": 0,
+    "legacy": 1703614,
+    "user_initiated": 0,
+    "user_interactive": 0
+   },
+   "qos_dominant": "legacy",
+   "qos_ui_fraction": 0.0,
+   "i": 2,
+   "load_before": 31.97802734375,
+   "load_after": 31.97802734375,
+   "metrics": {},
+   "stdout_sha256": "26a7eb5dd5b39fb4d33de4d40d497d77af17a5f0b9f52718b8782449b341c6bd"
+  }
+ ],
+ "summary": {
+  "wall_ms": {
+   "n": 3,
+   "median": 105.962542,
+   "p25": 102.518625,
+   "p75": 106.5148755,
+   "iqr": 3.996250500000002,
+   "mad": 1.1046670000000063,
+   "min": 99.074708,
+   "max": 107.067209,
+   "rel_iqr": 0.03771380361939602
+  }
+ },
+ "status": "NOISY",
+ "status_reasons": [
+  "load1 >= 8 before 3/3 reps (max 31.98)",
+  "guarded --exclusive bench lock not held",
+  "user-interactive QoS < 0.95 of CPU on 3/3 reps (dominant bucket: legacy)",
+  "3 reps, below the programme floor of 10"
+ ]
+}

@@ -1,0 +1,60 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+
+ RUN  v3.2.4 /Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/typescript
+
+ ❯ test/parity.test.ts (3 tests | 1 failed) 372ms
+   ✓ TS <-> Rust front-end parity (LW2.PAR-1) > reads the whole MANIFEST that DIVERGENCE.tsv was ruled at 6ms
+   ✓ TS <-> Rust front-end parity (LW2.PAR-1) > cites a spec sentence for every ruled divergence 1ms
+   × TS <-> Rust front-end parity (LW2.PAR-1) > disagrees exactly on the carried Rust-side rows 364ms
+     → expected [ …(23) ] to deeply equal [ …(2) ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/parity.test.ts > TS <-> Rust front-end parity (LW2.PAR-1) > disagrees exactly on the carried Rust-side rows
+AssertionError: expected [ …(23) ] to deeply equal [ …(2) ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[31m+   "crates/gorgeous/grammar/css/pretty.bbnf",[39m
+[31m+   "grammar/bbnf/bbnf.bbnf",[39m
+[31m+   "grammar/bbnf/expressions.bbnf",[39m
+[31m+   "grammar/css/l4/color.bbnf",[39m
+[31m+   "grammar/css/l4/easing.bbnf",[39m
+[31m+   "grammar/css/l4/filters.bbnf",[39m
+[31m+   "grammar/css/l4/func-body.bbnf",[39m
+[31m+   "grammar/css/l4/gradients.bbnf",[39m
+[31m+   "grammar/css/l4/keyframes.bbnf",[39m
+[31m+   "grammar/css/l4/keywords.bbnf",[39m
+[31m+   "grammar/css/l4/media.bbnf",[39m
+[31m+   "grammar/css/l4/properties.bbnf",[39m
+[31m+   "grammar/css/l4/selectors.bbnf",[39m
+[31m+   "grammar/css/l4/stylesheet.bbnf",[39m
+[31m+   "grammar/css/l4/transforms.bbnf",[39m
+[31m+   "grammar/css/l4/value-unit.bbnf",[39m
+[31m+   "grammar/css/l4/values.bbnf",[39m
+[31m+   "grammar/css/pretty.bbnf",[39m
+[31m+   "grammar/google-sheets/google-sheets.bbnf",[39m
+[31m+   "grammar/json/json.bbnf",[39m
+[2m    "grammar/misc/json-commented.bbnf",[22m
+[31m+   "skinny/grammars/json.bbnf",[39m
+[2m    "typescript/test/fixtures/grammar/lang/json-commented.bbnf",[22m
+[2m  ][22m
+
+ ❯ test/parity.test.ts:110:62
+    108|             .rows.filter((r) => r.fate.startsWith("CARRIED"))
+    109|             .flatMap((r) => r.files);
+    110|         expect(observed.map((o) => o.split("\t")[0]).sort()).toEqual([…
+       |                                                              ^
+    111|     }, 120_000);
+    112| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  20:39:07
+   Duration  594ms (transform 29ms, setup 0ms, collect 34ms, tests 372ms, environment 0ms, prepare 38ms)
+

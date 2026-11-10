@@ -1,6 +1,6 @@
 //! CSS L4 rich-CSSOM equality oracle (the 9-field `assert_rich_strict_equality`).
 //!
-//! The warm 2000-iter micro-fixture throughput harness — the iteration-loop Mbps
+//! The warm 2000-iter micro-fixture throughput harness — the iteration-loop MB/s
 //! timer, the per-fixture lightningcss more-work comparators, the per-fixture
 //! SHA256/byte scaffolding, and the 85–357-byte micro-fixture corpus — has been
 //! retired

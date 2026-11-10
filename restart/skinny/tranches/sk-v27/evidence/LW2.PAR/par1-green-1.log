@@ -1,0 +1,39 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+
+ RUN  v3.2.4 /Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/typescript
+
+ ✓ test/analysis.test.ts (22 tests) 6ms
+ ✓ test/bbnf.test.ts (17 tests) 124ms
+ ✓ test/imports.test.ts (13 tests) 13ms
+ ✓ test/first.test.ts (13 tests) 26ms
+ ✓ test/optimize.test.ts (13 tests) 4ms
+ ✓ test/first-sets.test.ts (17 tests) 6ms
+ ✓ test/css-stylesheet.test.ts (11 tests) 46ms
+ ✓ test/recover.test.ts (9 tests) 15ms
+ ✓ test/reentry.test.ts (7 tests) 46ms
+ ✓ test/bulk.test.ts (4 tests) 140ms
+ ✓ test/dialect.test.ts (8 tests) 9ms
+ ✓ test/parity.test.ts (3 tests) 564ms
+   ✓ TS <-> Rust front-end parity (LW2.PAR-1) > disagrees exactly on the carried Rust-side rows  543ms
+ ✓ test/conformance.test.ts (128 tests) 726ms
+ ✓ test/types.test.ts (3 tests) 728ms
+   ✓ the generated module's types > value.js's grammar (160 rules; map, span and text actions): module + .d.ts pass tsc --strict  426ms
+ ✓ test/modules.test.ts (5 tests) 10ms
+ ✓ test/instrument.test.ts (3 tests) 10ms
+ ✓ test/unroll.test.ts (3 tests) 29ms
+ ✓ test/stock-ascii.test.ts (2 tests) 18ms
+ ✓ test/depth.test.ts (4 tests) 25ms
+ ✓ test/groups.test.ts (4 tests) 11ms
+ ✓ test/value-js-modules.test.ts (2 tests) 34ms
+ ✓ test/gen.test.ts (3 tests) 27ms
+stdout | test/size.test.ts > emitted size (bbnf-lang#2) > the value.js fixture module is within its pinned gzip size
+size: {"raw":112516,"gzip":23638}
+
+ ✓ test/size.test.ts (3 tests) 6ms
+ ✓ test/google-sheets.test.ts (16 tests) 4ms
+
+ Test Files  24 passed (24)
+      Tests  313 passed (313)
+   Start at  20:40:20
+   Duration  4.95s (transform 615ms, setup 0ms, collect 1.48s, tests 2.63s, environment 3ms, prepare 1.05s)
+

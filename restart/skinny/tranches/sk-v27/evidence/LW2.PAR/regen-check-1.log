@@ -1,0 +1,139 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling libc v0.2.183
+   Compiling typenum v1.19.0
+   Compiling version_check v0.9.5
+   Compiling crossbeam-utils v0.8.21
+   Compiling autocfg v1.5.0
+   Compiling hashbrown v0.16.1
+   Compiling equivalent v1.0.2
+   Compiling toml_write v0.1.2
+   Compiling memchr v2.8.0
+   Compiling winnow v0.7.15
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.149
+   Compiling typeid v1.0.3
+   Compiling utf8parse v0.2.2
+   Compiling smallbox v0.8.8
+   Compiling generic-array v0.14.7
+   Compiling num-traits v0.2.19
+   Compiling indexmap v2.13.0
+   Compiling smallvec v1.15.1
+   Compiling rayon-core v1.13.0
+   Compiling rustc-hash v2.1.2
+   Compiling anstyle-parse v1.0.0
+   Compiling cfg-if v1.0.4
+   Compiling itoa v1.0.18
+   Compiling anstyle v1.0.14
+   Compiling thiserror v1.0.69
+   Compiling colorchoice v1.0.5
+   Compiling anstyle-query v1.1.5
+   Compiling syn v2.0.117
+   Compiling include_dir_macros v0.7.4
+   Compiling is_terminal_polyfill v1.70.2
+   Compiling ryu v1.0.23
+   Compiling rustix v1.1.4
+   Compiling itoap v1.0.1
+   Compiling camino v1.2.2
+   Compiling once_cell v1.21.4
+   Compiling getrandom v0.4.2
+   Compiling include_dir v0.7.4
+   Compiling crossbeam-epoch v0.9.18
+   Compiling anstream v1.0.0
+   Compiling serde_derive v1.0.228
+   Compiling crossbeam-deque v0.8.6
+   Compiling parse-that-egraph-derive v0.1.0 (https://github.com/mkbabb/parse-that?rev=aab7159fca059fa9dc4055b7a3ed51ef769df895#aab7159f)
+   Compiling pprint_derive v0.2.2 (https://github.com/mkbabb/pprint?rev=fe7e9cad4547c898426ad527284600c72af02b4b#fe7e9cad)
+   Compiling errno v0.3.14
+   Compiling thiserror-impl v1.0.69
+   Compiling aho-corasick v1.1.4
+   Compiling prettyplease v0.2.37
+   Compiling fast-float2 v0.2.3
+   Compiling pprint v0.3.6 (https://github.com/mkbabb/pprint?rev=fe7e9cad4547c898426ad527284600c72af02b4b#fe7e9cad)
+   Compiling heck v0.5.0
+   Compiling clap_lex v1.1.0
+   Compiling either v1.15.0
+   Compiling strsim v0.11.1
+   Compiling anyhow v1.0.102
+   Compiling clap_derive v4.6.1
+   Compiling rmp v0.8.15
+   Compiling clap_builder v4.6.0
+   Compiling block-buffer v0.10.4
+   Compiling crypto-common v0.1.7
+   Compiling cpufeatures v0.2.17
+   Compiling digest v0.10.7
+   Compiling fastrand v2.3.0
+   Compiling sha2 v0.10.9
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s9-con-spec/crates/corpus)
+   Compiling rayon v1.11.0
+   Compiling bitflags v2.11.0
+   Compiling semver v1.0.27
+   Compiling toml_datetime v0.6.11
+   Compiling serde_spanned v0.6.9
+   Compiling clap v4.6.1
+   Compiling csp-solver v0.4.0
+   Compiling toml_edit v0.22.27
+   Compiling parse-that-egraph v0.1.0 (https://github.com/mkbabb/parse-that?rev=aab7159fca059fa9dc4055b7a3ed51ef769df895#aab7159f)
+   Compiling tempfile v3.27.0
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=aab7159fca059fa9dc4055b7a3ed51ef769df895#aab7159f)
+   Compiling cargo-platform v0.1.9
+   Compiling ron v0.12.1
+   Compiling rmp-serde v1.3.1
+   Compiling toml v0.8.23
+   Compiling cargo_metadata v0.18.1
+   Compiling bbnf-ir v0.1.6 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s9-con-spec/crates/ir)
+   Compiling parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=aab7159fca059fa9dc4055b7a3ed51ef769df895#aab7159f)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s9-con-spec/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1m 05s
+     Running `target/ax-iter/xtask regen --check`
+   Compiling simd-scan v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s9-con-spec/crates/simd-scan)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s9-con-spec/crates/ser)
+   Compiling bbnf v0.2.11 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s9-con-spec/crates/core)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s9-con-spec/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.41s
+     Running `target/ax-iter/xtask regen --check`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 8.740125ms
+[xtask::regen] bbnf: generate_all done in 23.450166ms
+[xtask::regen] bbnf: prettyplease done in 140.942542ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.461125ms
+[xtask::regen] json: generate_all done in 3.623708ms
+[xtask::regen] json: prettyplease done in 26.6985ms
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 97.584709ms
+[xtask::regen] css_l4: generate_all done in 97.067292ms
+[xtask::regen] css_l4: prettyplease done in 689.966625ms
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 3.451834ms
+[xtask::regen] css_pretty: generate_all done in 9.081042ms
+[xtask::regen] css_pretty: prettyplease done in 61.935083ms
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 11.194917ms
+[xtask::regen] google_sheets: generate_all done in 14.633792ms
+[xtask::regen] google_sheets: prettyplease done in 88.920625ms
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 3.631958ms
+[xtask::regen] ebnf: generate_all done in 6.684583ms
+[xtask::regen] ebnf: prettyplease done in 44.9645ms
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.19375ms
+[xtask::regen] bnf: generate_all done in 3.036125ms
+[xtask::regen] bnf: prettyplease done in 19.707125ms
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 750.584µs
+[xtask::regen] csv: generate_all done in 1.846291ms
+[xtask::regen] csv: prettyplease done in 11.018208ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 681.042µs
+[xtask::regen] math: generate_all done in 1.001708ms
+[xtask::regen] math: prettyplease done in 5.646334ms
+regen --check: clean (9 of 9 grammars matched)

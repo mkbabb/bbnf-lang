@@ -1,7 +1,7 @@
 //! SK-V3 Wave 2 capacity-plan probe binary.
 //!
 //! Drives the four `BBNF_CAPACITY_PLAN` plans across a corpus, reporting:
-//!   - throughput Mbps;
+//!   - throughput MB/s;
 //!   - mean offset-vector capacity vs structural-count delta;
 //!   - peak resident set (rusage maxrss);
 //!   - allocation-count proxy: the parser's offset_capacity_bytes growth.
@@ -46,7 +46,7 @@ fn main() {
 
     println!(
         "{:<18} {:<14} {:>12} {:>10} {:>12} {:>14} {:>12}",
-        "corpus", "plan", "Mbps", "src_KiB", "offsets", "cap_bytes", "maxrss_KiB"
+        "corpus", "plan", "MB/s", "src_KiB", "offsets", "cap_bytes", "maxrss_KiB"
     );
     for corpus in &corpora {
         let path = locate_fixture(corpus);
@@ -78,7 +78,7 @@ fn main() {
             let elapsed = start.elapsed();
             let rss_after = max_rss_kib();
             let total_bytes = (bytes.len() as u128) * (iters as u128);
-            let mbps = (total_bytes as f64 * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0);
+            let mb_s = total_bytes as f64 / (elapsed.as_secs_f64() * 1_000_000.0);
             let avg_offsets = offset_count / iters as u64;
             let avg_cap = cap_bytes_sum / iters as u64;
 
@@ -86,7 +86,7 @@ fn main() {
                 "{:<18} {:<14} {:>12.0} {:>10} {:>12} {:>14} {:>12}",
                 corpus,
                 plan_label(plan),
-                mbps,
+                mb_s,
                 src_kib,
                 avg_offsets,
                 avg_cap,

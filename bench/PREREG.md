@@ -1,6 +1,6 @@
 # Contest pre-registration (skeleton)
 
-**Unit:** sk-v27 LW1.CON-5. **Status:** SKELETON. Nothing here is frozen yet, and no claim may cite it.
+**Unit:** sk-v27 LW1.CON-5; families and LW2 cells registered at LW2.CON-1 (§7); root trials at LW2.COMP-1 (§6). **Status:** OPEN. Nothing here is frozen yet, and no claim may cite it.
 
 - **Floors** are proposed and frozen at the feasibility seam, LW2.CON-2, in a hashed decision-plan commit.
 - **The cell list** in each family is filled at LW2.CON-1, from the per-plane semantic specs.
@@ -59,13 +59,13 @@ Each family is one Holm group. Cells are added by addendum before the freeze.
 
 | Family | Plane | Opponents (pinned) | Cells | State |
 |---|---|---|---|---|
-| F-JSON-P1 | JSON to a typed value | simd-json, sonic-rs, serde_json, jiter | OPEN (LW2.CON-1) | skeleton |
-| F-JSON-P4 | JSON lossless CST | tree-sitter + tree-sitter-json (CST class only) | OPEN (LW2.CON-1) | skeleton |
-| F-CSS-P2 | CSS tokenize and parse | cssparser (G-C1a); lightningcss on the typed-coverage manifest only (G-C1b) | OPEN (LW3.CON-1) | skeleton |
-| F-REGEX | regex match, sticky and leftmost-first | regex, regex-automata | OPEN (LW3.CON-1) | skeleton |
-| F-COMB | combinator and generator parsers on the shared grammars | winnow, nom, chumsky, pest, logos | OPEN (LW2.CON-1) | skeleton |
-| F-JS | TS/JS planes | @lezer/*, @csstools/*, css-tree, postcss, peggy, chevrotain, ohm-js, parsimmon | OPEN (LW2.CON-1) | skeleton |
-| F-PP | pretty-printing and formatting throughput | OPEN (the pprint design's opponents) | OPEN (LW4.PP) | skeleton |
+| F-JSON-P1 | P1 JSON check (`bench/planes/P1.md`) | sonic-rs (primary, Rust); serde_json, simd-json, jiter; simdjson (C++, observational) | §7 (LW2.CON-1) | open |
+| F-JSON-P4 | P4 JSON DOM (`P4.md`); the CST class only against CST arms | sonic-rs (primary); serde_json, simd-json, jiter; yyjson (C, observational); tree-sitter-json (CST class only) | §7 (LW2.CON-1) | open |
+| F-CSS-P2 | P2 CSS token and event stream (`P2.md`); G-C1b cells read P7 (`P7.md`) on the typed-coverage manifest only | cssparser (G-C1a, primary); lightningcss (G-C1b) | §7 (LW2.CON-1); G-C1b cells wait for the manifest | open |
+| F-REGEX | regex match, sticky and leftmost-first (no plane spec in LW2) | regex, regex-automata | OPEN (LW3.CON-1, after OR-7) | skeleton |
+| F-COMB | combinator and generator parsers on the shared grammars: JSON at P4, CSS at P2 | winnow, nom, chumsky, pest, lalrpop, peg (logos: no comparator) | §7 (LW2.CON-1) | open |
+| F-JS | the TS face: JSON at P4, CSS at P2 | JSON.parse (tracked, never gated), peggy, chevrotain, ohm-js, parsimmon, antlr4, @lezer/* (CST class), @csstools/*, css-tree (postcss: no comparator) | §7 (LW2.CON-1) | open |
+| F-PP | pretty-printing and formatting throughput | OPEN (the pprint design's opponents) | OPEN (LW4.PP, under X-10) | skeleton |
 | F-TRIAL-EG | root trial: e-graph (P5) on against off, on the CB-5.5 slice | the same slice with the e-graph off | §6 (LW2.COMP-1) | registered |
 | F-TRIAL-CSP | root trial: CSP strategy against greedy, on the CB-5.5 slice | the same slice with the greedy strategy | §6 (LW2.COMP-1) | registered |
 
@@ -133,3 +133,55 @@ The Holm group of each family is its timing cells (four microbench cells and the
 4. **UNDECIDED** otherwise.
 
 WIN keeps the organ, and the simpler arm is tagged the loser. LOSS and UNDECIDED keep the simpler arm (e-graph off; greedy), and the organ is tagged the loser. NATIVE cells are reported beside the PORTABLE ones and can block a WIN only through rule 2's "none is LOSS". Each verdict is recorded with the CB-B0 record ids behind it. Porting the winner is LW3.COMP-1.
+
+## 7. Registered cells (LW2.CON-1)
+
+A cell is measured only if it is registered here and `bench/contest/admit.py cell <id>` admits it. Admission refuses an unregistered cell, a PREREG.md that no longer matches its digest, an arm with no `bench/contest/ROWS.tsv` row or a "no comparator" row, arms of different planes or classes, arms that disagree on any witness input of the plane, and a missing or mismatched build plane (I-8). An arm whose row is OWED (no witness mode yet) is refused until its adapter lands, and the refusal is the cell's LW2 record. Inputs are named by path and the leading digits of their sha256 in `corpus/MANIFEST.sha256`.
+
+### 7.1 Kinds
+
+| Kind | Purpose | Verdict rule |
+|---|---|---|
+| BASE | a baseline per goal, both arms as their rows say | OBSERVATIONAL: median, IQR and MAD of `r` over ≥ 10 pairs; never certifying; no verdict |
+| AA | self against self: both arms are the same row and the same build | competition U4 (a): the decision rule of §2 must report 0 cells beyond the floor; the HL estimate and its CI give the family's A/A noise for the floor `max(10 %, 3 × A/A noise)` (LW2.CON-2) |
+| SLOW | the same row against itself with an injected 15 % slowdown on one side | competition U4 (b): the rule must detect it (LOSS for the slowed side, or a CI whose lower bound exceeds −ln(0.97)); an undetected slowdown makes the family's floor NOISY-UNFROZEN |
+| MISMATCH | a pair that is not plane-equivalent | competition U4 (c) and (d): admission must refuse it; a MISMATCH cell that is admitted, or measured, falsifies the harness |
+
+The slowdown is injected by the runner, never by the measured binary: the slowed arm's process is spawned under the same command, and the runner busy-waits inside that arm's timed window for 15 % of the unslowed arm's A/A median, on the same core class. Pairs are ABBA blocks as §1; every record is a CB-B0 record (`bench/cb-b0/cbb0.py`) with its load, thermal state and QoS.
+
+### 7.2 Cells
+
+| Cell | Family | Kind | Plane | Class | Input | Track | Arm (bbnf) | Arm (opp) | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C-J1-BASE-TWITTER | F-JSON-P1 | BASE | P1 | CHK | corpus/json/twitter.json@30721e49 | generated | R-JSON-P1-bbnf-gen | R-JSON-P1-sonic-rs | ≥ 10 | PORTABLE |
+| C-J1-BASE-CITM | F-JSON-P1 | BASE | P1 | CHK | corpus/json/citm_catalog.json@a73e7a88 | generated | R-JSON-P1-bbnf-gen | R-JSON-P1-sonic-rs | ≥ 10 | PORTABLE |
+| C-J1-BASE-CANADA | F-JSON-P1 | BASE | P1 | CHK | corpus/json/canada.json@f83b3b35 | generated | R-JSON-P1-bbnf-gen | R-JSON-P1-sonic-rs | ≥ 10 | PORTABLE |
+| C-J1-AA | F-JSON-P1 | AA | P1 | CHK | corpus/json/twitter.json@30721e49 | generated | R-JSON-P1-bbnf-gen | R-JSON-P1-bbnf-gen | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-J1-SLOW | F-JSON-P1 | SLOW | P1 | CHK | corpus/json/twitter.json@30721e49 | generated | R-JSON-P1-bbnf-gen | R-JSON-P1-bbnf-gen | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-J3-BASE-TWITTER | F-JSON-P4 | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-JSON-P4-sonic-rs | ≥ 10 | PORTABLE |
+| C-J3-BASE-CITM | F-JSON-P4 | BASE | P4 | VAL | corpus/json/citm_catalog.json@a73e7a88 | generated | R-JSON-P4-bbnf-gen | R-JSON-P4-sonic-rs | ≥ 10 | PORTABLE |
+| C-J3-BASE-CANADA | F-JSON-P4 | BASE | P4 | VAL | corpus/json/canada.json@f83b3b35 | generated | R-JSON-P4-bbnf-gen | R-JSON-P4-sonic-rs | ≥ 10 | PORTABLE |
+| C-J3-BASE-SERDE-TWITTER | F-JSON-P4 | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-JSON-P4-serde_json | ≥ 10 | PORTABLE |
+| C-J3-AA | F-JSON-P4 | AA | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-JSON-P4-bbnf-gen | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-J3-SLOW | F-JSON-P4 | SLOW | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-JSON-P4-bbnf-gen | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-C1-BASE-BOOTSTRAP | F-CSS-P2 | BASE | P2 | TOK | corpus/css/bootstrap.css@4a50207b | generated | R-CSS-P2-bbnf-gen | R-CSS-P2-cssparser | ≥ 10 | PORTABLE |
+| C-C1-BASE-TAILWIND | F-CSS-P2 | BASE | P2 | TOK | corpus/css/tailwind.css@de305d92 | generated | R-CSS-P2-bbnf-gen | R-CSS-P2-cssparser | ≥ 10 | PORTABLE |
+| C-C1-AA | F-CSS-P2 | AA | P2 | TOK | corpus/css/bootstrap.css@4a50207b | generated | R-CSS-P2-bbnf-gen | R-CSS-P2-bbnf-gen | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-C1-SLOW | F-CSS-P2 | SLOW | P2 | TOK | corpus/css/bootstrap.css@4a50207b | generated | R-CSS-P2-bbnf-gen | R-CSS-P2-bbnf-gen | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-C1B-BASE-BOOTSTRAP | F-CSS-P2 | BASE | P7 | TYPED | corpus/css/bootstrap.css@4a50207b (typed-coverage manifest) | generated | R-CSS-P7-bbnf-css_l4 | R-CSS-P7-lightningcss | ≥ 10 | PORTABLE |
+| C-G1-BASE-PEST | F-COMB | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-COMB-P4-pest | ≥ 10 | PORTABLE |
+| C-G1-BASE-NOM | F-COMB | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-COMB-P4-nom | ≥ 10 | PORTABLE |
+| C-G1-BASE-WINNOW | F-COMB | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-COMB-P4-winnow | ≥ 10 | PORTABLE |
+| C-G1-BASE-CHUMSKY | F-COMB | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-COMB-P4-chumsky | ≥ 10 | PORTABLE |
+| C-G1-AA | F-COMB | AA | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-COMB-P4-winnow | R-COMB-P4-winnow | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-G2-BASE-JSONPARSE | F-JS | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JS-P4-bbnf-ts | R-JS-P4-json-parse | ≥ 10 | PORTABLE |
+| C-G2-BASE-PEGGY | F-JS | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JS-P4-bbnf-ts | R-JS-P4-peggy | ≥ 10 | PORTABLE |
+| C-G2-BASE-CHEVROTAIN | F-JS | BASE | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JS-P4-bbnf-ts | R-JS-P4-chevrotain | ≥ 10 | PORTABLE |
+| C-G2-AA | F-JS | AA | P4 | VAL | corpus/json/twitter.json@30721e49 | hand | R-JS-P4-json-parse | R-JS-P4-json-parse | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-G2-SLOW | F-JS | SLOW | P4 | VAL | corpus/json/twitter.json@30721e49 | hand | R-JS-P4-json-parse | R-JS-P4-json-parse | ≥ 30 over ≥ 3 invocations | PORTABLE |
+| C-MM-PLANE | F-JSON-P4 | MISMATCH | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | L-CON4-skinny.parse_only_track1 | L-CON4-skinny.parse_only_serde | refused | PORTABLE |
+| C-MM-CLASS | F-JSON-P4 | MISMATCH | P4 | VAL | corpus/json/twitter.json@30721e49 | generated | R-JSON-P4-bbnf-gen | R-JSON-P4-tree-sitter-json | refused | PORTABLE |
+| C-MM-NOCOMP | F-JS | MISMATCH | P2 | TOK | corpus/css/bootstrap.css@4a50207b | generated | R-JS-P2-csstools | R-JS-P2-postcss | refused | PORTABLE |
+| C-MM-BUILD | F-JS | MISMATCH | P4 | VAL | corpus/json/twitter.json@30721e49 | hand | R-JS-P4-json-parse | R-JS-P4-json-parse | refused: build planes `bench/contest/build-planes/node-default.json` against `node-jitless.json` | PORTABLE |
+
+`C-G2-AA` and `C-G2-SLOW` use JSON.parse because it is the one arm with a witness mode at LW2.CON-1; every other AA and SLOW cell waits for its bbnf arm's witness mode (U5). F-REGEX and F-PP have no LW2 cells: their rows are "no comparator" until LW3.CON-1 and LW4.PP. The LW1.CON-4 records stay OBSERVATIONAL: their rows are reclassified in ROWS.tsv (`L-CON4-*`), and `C-MM-PLANE` registers the pair that LW1 read as one "parse_only" column, P1 against P4, as refused.

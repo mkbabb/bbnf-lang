@@ -4,7 +4,7 @@
 //! single parses with fresh parser state and dropped output.
 //!
 //! Modes:
-//!   default N            -> cold table: median/min ns/byte + Mbps per lane/corpus
+//!   default N            -> cold table: median/min ns/byte + MB/s per lane/corpus
 //!   pmu    ITERS         -> per-lane cyc/byte + instructions + cpi (proc_pid_rusage V5)
 //!   paired N             -> interleaved paired per-sample ratios (load-robust):
 //!                           each sample times parse_tape, fused, sonic, serde
@@ -118,17 +118,17 @@ const CORPORA: &[&str] = &["twitter", "canada", "citm_catalog"];
 struct Stats {
     median_nspb: f64,
     min_nspb: f64,
-    median_mbps: f64,
-    max_mbps: f64,
-    stddev_mbps: f64,
+    median_mb_s: f64,
+    max_mb_s: f64,
+    stddev_mb_s: f64,
     n: usize,
 }
 
-fn mbps(bytes: usize, secs: f64) -> f64 {
+fn mb_s(bytes: usize, secs: f64) -> f64 {
     if secs <= 0.0 {
         return f64::INFINITY;
     }
-    (bytes as f64 * 8.0) / (secs * 1_000_000.0)
+    bytes as f64 / (secs * 1_000_000.0)
 }
 
 fn load_corpus(name: &str) -> Vec<u8> {
@@ -155,21 +155,21 @@ fn sample(parse: ParseFn, input: &str, bytes: &[u8], n: usize) -> Stats {
         ns_samples[n / 2]
     };
     let min_ns = ns_samples[0];
-    // Mbps = (bytes*8)/(secs*1e6); secs/byte = ns_per_byte/1e9 -> Mbps = 8000/ns_per_byte.
-    let median_mbps = 8.0 * 1000.0 / median_ns;
-    let max_mbps = 8.0 * 1000.0 / min_ns;
-    let mean_mbps = ns_samples.iter().map(|ns| 8.0 * 1000.0 / ns).sum::<f64>() / n as f64;
+    // MB/s = bytes/(secs*1e6); secs/byte = ns_per_byte/1e9 -> MB/s = 1000/ns_per_byte.
+    let median_mb_s = 1000.0 / median_ns;
+    let max_mb_s = 1000.0 / min_ns;
+    let mean_mb_s = ns_samples.iter().map(|ns| 1000.0 / ns).sum::<f64>() / n as f64;
     let var = ns_samples
         .iter()
-        .map(|ns| (8.0 * 1000.0 / ns - mean_mbps).powi(2))
+        .map(|ns| (1000.0 / ns - mean_mb_s).powi(2))
         .sum::<f64>()
         / n as f64;
     Stats {
         median_nspb: median_ns,
         min_nspb: min_ns,
-        median_mbps,
-        max_mbps,
-        stddev_mbps: var.sqrt(),
+        median_mb_s,
+        max_mb_s,
+        stddev_mb_s: var.sqrt(),
         n,
     }
 }
@@ -190,7 +190,7 @@ fn main() {
     if mode == "pmu" || std::env::var("JSON_CANON_PMU").is_ok() {
         let iters: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(800);
         println!("# SK-V22 JSON PMU cycles/byte  iters={iters}  loadavg={}", loadavg());
-        println!("# schema: PMU corpus lane bytes iters cycles instructions cyc_per_byte cpi mbps");
+        println!("# schema: PMU corpus lane bytes iters cycles instructions cyc_per_byte cpi mb_s");
         for name in CORPORA {
             let bytes = load_corpus(name);
             let input = std::str::from_utf8(&bytes).unwrap();
@@ -209,11 +209,11 @@ fn main() {
                 let cyc = ri1.ri_cycles - ri0.ri_cycles;
                 let ins = ri1.ri_instructions - ri0.ri_instructions;
                 println!(
-                    "PMU corpus={} lane={} bytes={} iters={} cycles={} instructions={} cyc_per_byte={:.4} cpi={:.4} mbps={:.3}",
+                    "PMU corpus={} lane={} bytes={} iters={} cycles={} instructions={} cyc_per_byte={:.4} cpi={:.4} mb_s={:.3}",
                     name, lane, bytes.len(), iters, cyc, ins,
                     cyc as f64 / total as f64,
                     if ins == 0 { 0.0 } else { cyc as f64 / ins as f64 },
-                    mbps(total as usize, secs)
+                    mb_s(total as usize, secs)
                 );
             }
         }
@@ -271,15 +271,15 @@ fn main() {
         .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
         .unwrap_or_default();
     println!("# SK-V22 canonical cold JSON bench  N={n}  host={host}  loadavg={}", loadavg());
-    println!("# schema: ROW corpus lane bytes n median_nspb min_nspb median_mbps max_mbps stddev_mbps");
+    println!("# schema: ROW corpus lane bytes n median_nspb min_nspb median_mb_s max_mb_s stddev_mb_s");
     for name in CORPORA {
         let bytes = load_corpus(name);
         let input = std::str::from_utf8(&bytes).expect("utf8");
         for (lane, parse) in WORKLOADS {
             let s = sample(*parse, input, &bytes, n);
             println!(
-                "ROW corpus={} lane={} bytes={} n={} median_nspb={:.4} min_nspb={:.4} median_mbps={:.3} max_mbps={:.3} stddev_mbps={:.3}",
-                name, lane, bytes.len(), s.n, s.median_nspb, s.min_nspb, s.median_mbps, s.max_mbps, s.stddev_mbps
+                "ROW corpus={} lane={} bytes={} n={} median_nspb={:.4} min_nspb={:.4} median_mb_s={:.3} max_mb_s={:.3} stddev_mb_s={:.3}",
+                name, lane, bytes.len(), s.n, s.median_nspb, s.min_nspb, s.median_mb_s, s.max_mb_s, s.stddev_mb_s
             );
         }
     }

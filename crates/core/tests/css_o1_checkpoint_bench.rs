@@ -17,8 +17,8 @@ fn time_one(source: &str) -> (f64, usize) {
     black_box(&doc);
     let elapsed = start.elapsed();
     let bytes = source.len();
-    let mbps = (bytes as f64) / elapsed.as_secs_f64() / 1_000_000.0;
-    (mbps, bytes)
+    let mb_s = (bytes as f64) / elapsed.as_secs_f64() / 1_000_000.0;
+    (mb_s, bytes)
 }
 
 #[test]
@@ -36,7 +36,7 @@ fn css_o1_checkpoint_bootstrap_single_sheet_cold() {
             eprintln!("CSS_O1_BENCH skip missing={rel}");
             continue;
         };
-        let (mbps, bytes) = time_one(&source);
-        eprintln!("CSS_O1_BENCH file={rel} bytes={bytes} cold_mbps={mbps:.3}");
+        let (mb_s, bytes) = time_one(&source);
+        eprintln!("CSS_O1_BENCH file={rel} bytes={bytes} cold_mb_s={mb_s:.3}");
     }
 }

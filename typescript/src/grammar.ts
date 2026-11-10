@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Parser, string, all, any, regex } from "@mkbabb/parse-that";
-import type { Expression, Literal, Epsilon, Nonterminal, Comment, Regex, Group, Optional, Many, Concatenation, Alteration, ProductionRule, ImportDirective, RecoverDirective, PrettyDirective, PrettyHint, NoCollapseDirective, ParsedGrammar } from "./types.js";
+import type { Expression, Literal, Epsilon, Nonterminal, Comment, Regex, Group, Optional, Many, Concatenation, Alteration, ProductionRule, ImportDirective, RecoverDirective, PrettyDirective, PrettyHint, NoCollapseDirective, ParsedGrammar, Mapping, WsDirective, RuleDirective } from "./types.js";
 
 const operatorToType: Record<string, string> = {
     "|": "alternation",
@@ -70,6 +70,9 @@ export class BBNFGrammar {
     private _lhs?: Parser<any>;
     private _term?: Parser<any>;
     private _factor?: Parser<any>;
+    private _mappedFactor?: Parser<any>;
+    private _valueExpr?: Parser<string>;
+    private _spanCapture?: Parser<any>;
     private _binaryFactor?: Parser<any>;
     private _concatenation?: Parser<any>;
     private _alternation?: Parser<any>;
@@ -80,6 +83,10 @@ export class BBNFGrammar {
     private _recoverDirective?: Parser<any>;
     private _prettyDirective?: Parser<any>;
     private _noCollapseDirective?: Parser<any>;
+    private _wsDirective?: Parser<any>;
+    private _tokenDirective?: Parser<any>;
+    private _inlineDirective?: Parser<any>;
+    private _debugDirective?: Parser<any>;
     private _grammarWithImports?: Parser<any>;
 
     constructor(options?: Partial<Options>) {
@@ -188,10 +195,34 @@ export class BBNFGrammar {
                 .wrap(string("/"), string("/"))
                 .then(regex(/[gimuy]*/).opt())
                 .map(([r, flags]: any) => {
+                    // A leading inline-flag group, `(?s)…`, sets flags for the whole
+                    // pattern; ECMAScript spells that as RegExp flags.
+                    const inline = /^\(\?([imsu]+)\)/.exec(r);
+                    const source = inline ? r.slice(inline[0].length) : r;
+                    const all = [...new Set([...(flags ?? ""), ...(inline?.[1] ?? "")])].join("");
                     return {
                         type: "regex",
-                        value: new RegExp(r, flags ?? undefined),
+                        value: new RegExp(source, all || undefined),
                     } as Regex;
+                }),
+        ));
+    }
+
+    /**
+     * `@{ rhs }`: a group whose value is the source span it matched
+     * (docs/bbnf/grammar-syntax.md, "Span Capture").
+     */
+    spanCapture(): Parser<any> {
+        return (this._spanCapture ??= Parser.lazy(() =>
+            this.rhs()
+                .trim()
+                .wrap(string("@{"), string("}"))
+                .map((value: any) => {
+                    return {
+                        type: "group",
+                        value,
+                        capture: "span",
+                    } as Group;
                 }),
         ));
     }
@@ -241,6 +272,7 @@ export class BBNFGrammar {
             mapStatePosition(
                 any(
                     this.epsilon(),
+                    this.spanCapture(),
                     this.group(),
                     this.optionalGroup(),
                     this.manyGroup(),
@@ -272,14 +304,68 @@ export class BBNFGrammar {
         ));
     }
 
+    /**
+     * The host expression on the right of `->`: the value-expression language
+     * of `grammar/bbnf/expressions.bbnf` (literals, paths, `input` fields,
+     * calls, unary and binary operators, closures). The TS front end keeps
+     * its source text (`Mapping.expr`); it never evaluates it.
+     */
+    valueExpr(): Parser<string> {
+        return (this._valueExpr ??= Parser.lazy(() => {
+            const text = (p: Parser<any>) => p.map((v: any) => (Array.isArray(v) ? v.flat(Infinity).join("") : String(v)));
+            const ws = (s: string) => string(s).trim().map(() => s);
+            const ident = regex(/[_a-zA-Z][_a-zA-Z0-9]*/);
+            const floatLit = regex(/[0-9]*\.[0-9]+([eE][+-]?[0-9]+)?\w*/);
+            const intLit = regex(/0[xX][0-9a-fA-F]+\w*|[0-9]+\w*/);
+            const stringLit = regex(/"(\\.|[^"\\])*"/);
+            const path = text(all(ident, all(string("::"), ident).many()));
+            const input = text(all(string("input"), all(string("."), ident).many()));
+            const args = text(all(this.valueExpr(), all(ws(","), this.valueExpr()).many()).opt());
+            const call = text(all(path, string("("), args, string(")")));
+            const paren = text(all(string("("), this.valueExpr(), ws(")")));
+            const atom = any(floatLit, intLit, stringLit, call, input, path, paren);
+            const unary = any(text(all(any(string("!"), string("-")), atom)), atom);
+            const chain = (operand: Parser<string>, ...ops: string[]) =>
+                text(all(operand, all(any(...ops.map(ws)), operand).many()));
+            const mul = chain(unary, "*", "/", "%");
+            const add = chain(mul, "+", "-");
+            const cmp = chain(add, "==", "!=", "<=", ">=", "<", ">");
+            const and = chain(cmp, "&&");
+            const or = chain(and, "||");
+            const closure = text(all(string("|"), ident, all(ws(","), ident).many(), string("|"), this.valueExpr()));
+            return any(closure, or) as Parser<string>;
+        }));
+    }
+
+    /** `factor -> valueExpr [: type]` (docs/bbnf/grammar-syntax.md, "Per-Expression Mapping"). */
+    mappedFactor(): Parser<any> {
+        return (this._mappedFactor ??= Parser.lazy(() =>
+            all(
+                this.factor(),
+                all(
+                    string("->").trim(),
+                    this.valueExpr(),
+                    all(string(":").trim(), regex(/[_a-zA-Z][_a-zA-Z0-9]*/)).opt(),
+                ).opt(),
+            ).map(([expression, mapping]: any) => {
+                if (mapping === undefined) {
+                    return expression;
+                }
+                const [, expr, annotation] = mapping;
+                expression.mapping = annotation === undefined ? { expr } : { expr, type: annotation[1] } as Mapping;
+                return expression;
+            }),
+        ));
+    }
+
     binaryFactor(): Parser<any> {
         return (this._binaryFactor ??= Parser.lazy(() =>
             mapStatePosition(
                 all(
-                    this.factor(),
+                    this.mappedFactor(),
                     all(
                         any(string("<<"), string(">>"), string("-")).trim(),
-                        this.factor(),
+                        this.mappedFactor(),
                     ).many(),
                 ).map(reduceBinaryExpression),
             ),
@@ -289,7 +375,8 @@ export class BBNFGrammar {
     concatenation(): Parser<any> {
         return (this._concatenation ??= Parser.lazy(() =>
             mapStatePosition(
-                this.binaryFactor().sepBy(string(",").trim()),
+                // The comma is optional (docs/bbnf/operators.md, "Concatenation").
+                this.binaryFactor().sepBy(regex(/\s*(,\s*)?/)),
             ).map((value: any) => {
                 if (value.length === 1) {
                     return value[0];
@@ -451,6 +538,43 @@ export class BBNFGrammar {
         }));
     }
 
+    /** `@ws /regex/ ;` (docs/bbnf/grammar-syntax.md, "Directives Summary"). */
+    wsDirective(): Parser<any> {
+        return (this._wsDirective ??= Parser.lazy(() =>
+            mapStatePosition(
+                all(
+                    string("@ws").trim(),
+                    this.regexRule().trim(),
+                    any(string(";"), string(".")).trim().opt(),
+                ).map(([, re]: any) => ({ pattern: re.value } as WsDirective)),
+            ),
+        ));
+    }
+
+    /** `@<name> rule ;` for a directive that names one rule (`*` too, when `star`). */
+    private ruleDirective(name: string, star: boolean): Parser<any> {
+        const target = star ? any(string("*"), this.identifier()) : this.identifier();
+        return mapStatePosition(
+            all(
+                string(name).trim(),
+                target.trim(),
+                any(string(";"), string(".")).trim().opt(),
+            ).map(([, ruleName]: any) => ({ ruleName } as RuleDirective)),
+        );
+    }
+
+    tokenDirective(): Parser<any> {
+        return (this._tokenDirective ??= Parser.lazy(() => this.ruleDirective("@token", false)));
+    }
+
+    inlineDirective(): Parser<any> {
+        return (this._inlineDirective ??= Parser.lazy(() => this.ruleDirective("@inline", false)));
+    }
+
+    debugDirective(): Parser<any> {
+        return (this._debugDirective ??= Parser.lazy(() => this.ruleDirective("@debug", true)));
+    }
+
     grammarWithImports(): Parser<any> {
         return (this._grammarWithImports ??= Parser.lazy(() => {
             const commentTrim = this.lineComment().trim().many() as any;
@@ -481,11 +605,18 @@ export class BBNFGrammar {
                 .trim(commentTrim, false)
                 .map(([above, directive, below]: any) => directive);
 
+            const directive = (p: Parser<any>) =>
+                p.trim(commentTrim, false).map(([above, d, below]: any) => d);
+
             const item = any(
                 importDir.map((d: ImportDirective) => ({ type: "import" as const, value: d })),
                 recoverDir.map((d: RecoverDirective) => ({ type: "recover" as const, value: d })),
                 noCollapseDir.map((d: NoCollapseDirective) => ({ type: "no_collapse" as const, value: d })),
                 prettyDir.map((d: PrettyDirective) => ({ type: "pretty" as const, value: d })),
+                directive(this.wsDirective()).map((d: WsDirective) => ({ type: "ws" as const, value: d })),
+                directive(this.tokenDirective()).map((d: RuleDirective) => ({ type: "token" as const, value: d })),
+                directive(this.inlineDirective()).map((d: RuleDirective) => ({ type: "inline" as const, value: d })),
+                directive(this.debugDirective()).map((d: RuleDirective) => ({ type: "debug" as const, value: d })),
                 rule.map((r: ProductionRule) => ({ type: "rule" as const, value: r })),
             );
 
@@ -494,6 +625,10 @@ export class BBNFGrammar {
                 const recovers: RecoverDirective[] = [];
                 const no_collapses: NoCollapseDirective[] = [];
                 const pretties: PrettyDirective[] = [];
+                const ws: WsDirective[] = [];
+                const tokens: RuleDirective[] = [];
+                const inlines: RuleDirective[] = [];
+                const debugs: RuleDirective[] = [];
                 const rules: ProductionRule[] = [];
                 for (const item of items) {
                     if (item.type === "import") {
@@ -504,6 +639,14 @@ export class BBNFGrammar {
                         no_collapses.push(item.value);
                     } else if (item.type === "pretty") {
                         pretties.push(item.value);
+                    } else if (item.type === "ws") {
+                        ws.push(item.value);
+                    } else if (item.type === "token") {
+                        tokens.push(item.value);
+                    } else if (item.type === "inline") {
+                        inlines.push(item.value);
+                    } else if (item.type === "debug") {
+                        debugs.push(item.value);
                     } else {
                         rules.push(item.value);
                     }
@@ -511,7 +654,7 @@ export class BBNFGrammar {
                 const rulesMap: Map<string, ProductionRule> = new Map(
                     rules.map((r) => [r.name.value, r]),
                 );
-                return { imports, recovers, no_collapses, pretties, rules: rulesMap } as ParsedGrammar;
+                return { imports, recovers, no_collapses, pretties, ws, tokens, inlines, debugs, rules: rulesMap } as ParsedGrammar;
             });
         }));
     }

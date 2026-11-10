@@ -17,8 +17,6 @@
 
 use std::path::{Path, PathBuf};
 
-use bbnf::ParserAttributes;
-use bbnf::generate::generate_all;
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar,
     compile_grammar_request, compile_paths_request,
@@ -53,9 +51,10 @@ fn vm_alt_a_ab_consumes_one_byte() {
     );
 }
 
-/// The Rust emitter's product carries no fused `a|ab` pattern.
+/// The IR the Rust emitter receives carries no fused `a|ab` pattern: the
+/// string is never interned, so no regex leaf can name it.
 #[test]
-fn rust_emit_keeps_the_branches_apart() {
+fn rust_ir_keeps_the_branches_apart() {
     let prepared = match compile_grammar_request(
         ALT_A_AB,
         &request(CompileTarget::Rust {
@@ -67,23 +66,21 @@ fn rust_emit_keeps_the_branches_apart() {
         CompileOutput::Rust(prepared) => *prepared,
         _ => unreachable!("Rust target"),
     };
-    let ident = quote::format_ident!("AltParser");
-    let tokens = generate_all(&prepared, &ParserAttributes::default(), &ident).to_string();
-    assert!(
-        !tokens.contains("a|ab"),
-        "the Rust product carries the fused pattern `a|ab`"
+    assert_eq!(
+        prepared.ir.find_string_id("a|ab"),
+        None,
+        "the Rust target's IR interns the fused pattern `a|ab`"
     );
 }
 
 /// The TS backend keeps the rule: its leaf is JS `RegExp`, leftmost-first.
 #[test]
 fn ts_emit_keeps_fusion() {
-    let source = match compile_grammar_request(ALT_A_AB, &request(CompileTarget::Ts))
-        .expect("compiles")
-    {
-        CompileOutput::Ts(source) => source,
-        _ => unreachable!("TS target"),
-    };
+    let source =
+        match compile_grammar_request(ALT_A_AB, &request(CompileTarget::Ts)).expect("compiles") {
+            CompileOutput::Ts(source) => source,
+            _ => unreachable!("TS target"),
+        };
     assert!(
         source.contains("a|ab"),
         "the TS product fuses the branches into `a|ab`"
@@ -119,6 +116,17 @@ fn rx4_ts_emit_dump() {
     };
     let out = PathBuf::from(out);
     std::fs::create_dir_all(&out).expect("dump dir");
+    // The CSS grammars recurse deeply in a debug build; css_l4.rs runs its
+    // compiles on the same 64 MiB stack.
+    std::thread::Builder::new()
+        .stack_size(67_108_864)
+        .spawn(move || dump_ts_emissions(&out))
+        .expect("spawn")
+        .join()
+        .expect("dump thread");
+}
+
+fn dump_ts_emissions(out: &Path) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let manifest = std::fs::read_to_string(root.join("grammar/MANIFEST")).expect("MANIFEST");
     for line in manifest.lines().filter(|l| !l.trim().is_empty()) {

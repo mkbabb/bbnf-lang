@@ -66,6 +66,8 @@ Each family is one Holm group. Cells are added by addendum before the freeze.
 | F-COMB | combinator and generator parsers on the shared grammars | winnow, nom, chumsky, pest, logos | OPEN (LW2.CON-1) | skeleton |
 | F-JS | TS/JS planes | @lezer/*, @csstools/*, css-tree, postcss, peggy, chevrotain, ohm-js, parsimmon | OPEN (LW2.CON-1) | skeleton |
 | F-PP | pretty-printing and formatting throughput | OPEN (the pprint design's opponents) | OPEN (LW4.PP) | skeleton |
+| F-TRIAL-EG | root trial: e-graph (P5) on against off, on the CB-5.5 slice | the same slice with the e-graph off | §6 (LW2.COMP-1) | registered |
+| F-TRIAL-CSP | root trial: CSP strategy against greedy, on the CB-5.5 slice | the same slice with the greedy strategy | §6 (LW2.COMP-1) | registered |
 
 The planes P3, P5 and P6 (Wave F, LW6.CON-1) are named in the competition design past its dispatch cut. They are added as families once LW1.TOPO-0 files the full text.
 
@@ -82,3 +84,52 @@ Each cell reports:
 - the CB-B0 record keys behind it.
 
 Cells reported as OBSERVATIONAL, NOISY, NOT-COMPARABLE or DESCRIPTIVE are labelled as such in the competition table (LG-e).
+
+## 6. Root trials (LW2.COMP-1), registered by S5 COMP
+
+This section is an addendum. It is written before Phase 3 and hashed with the rest of the file. S11 BENCH runs these cells and applies the rule below mechanically; it adds nothing and reads nothing into a record.
+
+**Harness.** Both trials run on the CB-5.5 JSON emitter slice (LW2.COMP-4) for `grammar/json/json.bbnf`. The slice exposes each organ as one arm switch, and the two arms of a trial differ in that switch only: same tree hash, same toolchain, same matrix, same input.
+
+| Trial | Organ arm (complex) | Simpler arm | Loser tag |
+|---|---|---|---|
+| EG | e-graph saturation and extraction on (`bbnf_ir::egraph`, P5) | e-graph off: the plan is built from the unrewritten program | `trial/lw2-egraph-loser` or `trial/lw2-direct-loser` |
+| CSP | per-node strategy chosen by the CSP (`bbnf_ir::passes::csp_strategy`) | greedy: each node takes the first admissible strategy in the solver's own priority order | `trial/lw2-csp-loser` or `trial/lw2-greedy-loser` |
+
+**Quantity.** For a timing cell, `r = ln(t_complex / t_simple)` per ABBA pair, under §1 and §2 (output checksums must agree, or the pair is discarded). A WIN for the organ is `r` below δ = ln(0.97).
+
+**Inputs.** The corpus-v1 JSON files, each fixed by its sha256 in `corpus/MANIFEST.sha256` at the S11 HEAD: `twitter.json` (the upstream simdjson file, LW2.TOPO-6), `canada.json`, `citm_catalog.json`.
+
+**Registered cells.** No other cell may be run for these trials. S11's harness refuses an unregistered cell id (`cbb0.py run --cell`).
+
+| Cell | Family | Kind | Measure | Input | Matrix |
+|---|---|---|---|---|---|
+| C-EG-PARSE-TWITTER-P | F-TRIAL-EG | microbench | parse time per byte, slice parser | twitter.json | PORTABLE |
+| C-EG-PARSE-CANADA-P | F-TRIAL-EG | microbench | parse time per byte, slice parser | canada.json | PORTABLE |
+| C-EG-PARSE-CITM-P | F-TRIAL-EG | microbench | parse time per byte, slice parser | citm_catalog.json | PORTABLE |
+| C-EG-PARSE-TWITTER-N | F-TRIAL-EG | microbench (labelled) | parse time per byte, slice parser | twitter.json | NATIVE |
+| C-EG-EMIT-TIME | F-TRIAL-EG | compile artifact | wall time of one slice emission of json.bbnf | json.bbnf | PORTABLE |
+| C-EG-EMIT-BYTES | F-TRIAL-EG | compile artifact (exact) | bytes of the slice's emitted Rust | json.bbnf | — |
+| C-EG-REGEN-BYTES | F-TRIAL-EG | compile artifact (exact) | bytes `cargo xtask regen` writes under the arm | in-tree grammars | — |
+| C-CSP-PARSE-TWITTER-P | F-TRIAL-CSP | microbench | parse time per byte, slice parser | twitter.json | PORTABLE |
+| C-CSP-PARSE-CANADA-P | F-TRIAL-CSP | microbench | parse time per byte, slice parser | canada.json | PORTABLE |
+| C-CSP-PARSE-CITM-P | F-TRIAL-CSP | microbench | parse time per byte, slice parser | citm_catalog.json | PORTABLE |
+| C-CSP-PARSE-TWITTER-N | F-TRIAL-CSP | microbench (labelled) | parse time per byte, slice parser | twitter.json | NATIVE |
+| C-CSP-EMIT-TIME | F-TRIAL-CSP | compile artifact | wall time of one slice emission of json.bbnf | json.bbnf | PORTABLE |
+| C-CSP-EMIT-BYTES | F-TRIAL-CSP | compile artifact (exact) | bytes of the slice's emitted Rust | json.bbnf | — |
+| C-CSP-REGEN-BYTES | F-TRIAL-CSP | compile artifact (exact) | bytes `cargo xtask regen` writes under the arm | in-tree grammars | — |
+
+The Holm group of each family is its timing cells (four microbench cells and the emit-time cell). An exact cell is read twice per arm, must give the same number both times, and is reported, not tested: it can only veto (below).
+
+**Sample sizes.** §3 applies unchanged: a timing cell certifies with ≥ 200 pairs over ≥ 30 harness invocations, QUIET records only; fewer pairs are exploratory and never decide a trial.
+
+**Deadline.** 72 h per trial, from S11's first registered run of that trial, re-queued once (X-7). A record waits at most 60 min for a 1-minute load below 8 and otherwise runs labelled NOISY; a NOISY record never certifies.
+
+**Verdict rule, per trial** (applied in this order):
+
+1. **UNDECIDED** if, at the deadline, any PORTABLE microbench cell or the emit-time cell lacks a certifying verdict (too few pairs, NOT-COMPARABLE, or NOISY only).
+2. **WIN** for the organ if at least one PORTABLE microbench cell is WIN, none of the four microbench cells is LOSS, the emit-time cell is not LOSS, and neither exact cell grows by more than 3 % over the simpler arm.
+3. **LOSS** for the organ if at least one microbench cell is LOSS and none is WIN.
+4. **UNDECIDED** otherwise.
+
+WIN keeps the organ, and the simpler arm is tagged the loser. LOSS and UNDECIDED keep the simpler arm (e-graph off; greedy), and the organ is tagged the loser. NATIVE cells are reported beside the PORTABLE ones and can block a WIN only through rule 2's "none is LOSS". Each verdict is recorded with the CB-B0 record ids behind it. Porting the winner is LW3.COMP-1.

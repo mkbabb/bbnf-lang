@@ -24,10 +24,18 @@ broad_pt=$(git -C "$PT" grep -nE 'let _ = [A-Za-z_.]*propagate(_with)?\(' -- rus
 say "broad form: bbnf-lang $broad_bl, parse-that $broad_pt"
 [ "$pinned" = 0 ] && [ "$broad_bl" = 0 ] && [ "$broad_pt" = 0 ] || red=1
 cd "$BL" || exit 2
-say "--- cargo test -p bbnf --lib csp_contract -- --include-ignored"
-cargo test -q -p bbnf --lib csp_contract -- --include-ignored >>"$LOG" 2>&1; rc=$?; say "rc=$rc"; [ $rc = 0 ] || red=1
+# The contract's unit tests live in bbnf (base) or bbnf-ir (after LW2.COMP-3 moved the plan);
+# both crates are read, and at least the 4 contract tests must run.
+for pkg in bbnf bbnf-ir; do
+  say "--- cargo test -p $pkg --lib csp_contract -- --include-ignored"
+  cargo test -q -p $pkg --lib csp_contract -- --include-ignored >>"$LOG" 2>&1; rc=$?; say "rc=$rc"; [ $rc = 0 ] || red=1
+done
+ran=$(grep -oE 'test result: [a-zA-Z]+\. [0-9]+ passed; [0-9]+ failed' "$LOG" | awk '{s+=$4+$6} END {print s+0}')
+say "csp_contract tests run (passed + failed, both crates, incl. plan_contract below once it runs): $ran"
 say "--- cargo test -p bbnf --test plan_contract -- --include-ignored"
 cargo test -q -p bbnf --test plan_contract -- --include-ignored >>"$LOG" 2>&1; rc=$?; say "rc=$rc"; [ $rc = 0 ] || red=1
+contract=$(grep -oE 'test result: [a-zA-Z]+\. [0-9]+ passed; [0-9]+ failed' "$LOG" | awk '{s+=$4+$6} END {print s+0}')
+say "contract tests run in all: $contract (want >= 6: 4 csp_contract + 2 plan_contract)"; [ "$contract" -ge 6 ] || red=1
 say "--- cargo xtask regen --check"
 cargo xtask regen --check >>"$LOG" 2>&1; rc=$?; say "rc=$rc"; [ $rc = 0 ] || red=1
 grep -E "^test .*(FAILED|ok)$|test result|panicked|cases break|reaches" "$LOG" | head -40 >/dev/null

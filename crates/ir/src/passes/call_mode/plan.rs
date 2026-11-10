@@ -19,11 +19,15 @@
 //! (each rule's decision is independent given the pre-computed
 //! metrics), so propagation converges immediately.
 //!
-//! The grammar author's directives (`@token`, `@recover`, `@pretty`)
-//! are requirements: each one that holds on a rule is asserted, beside
-//! the compiler's own first-match choice. Two forces that disagree
-//! join to ⊤, propagation reports `Unsatisfiable`, and the plan fails
-//! with a [`CallModeConflict`] naming both forces.
+//! A structural fact the compiler must honour (identity preservation,
+//! an aggregate payload, single-site inlining, an operator chain)
+//! decides a rule's mode first; otherwise the author's directives
+//! (`@token`, `@recover`, `@pretty`) do, then a cycle, then the cost
+//! budget. The directives are always asserted together, on the rule's
+//! own variable or, when a structural fact overrides them, on a
+//! variable of their own: two that disagree join to ⊤, propagation
+//! reports `Unsatisfiable`, and the plan fails with a
+//! [`CallModeConflict`] naming both.
 
 use std::collections::HashSet;
 use std::fmt;
@@ -159,28 +163,44 @@ pub fn analyze_parse_inline_plan(
         .map(|_| csp.add_variable(InlineDomain::undecided()))
         .collect();
 
-    // Phase 4: Add constraints. Each rule's forces are recorded so an
-    // unsatisfiable plan can name the pair that disagrees.
-    let mut forces: Vec<Vec<CallModeForce>> = vec![Vec::new(); ir.rules.len()];
+    // Phase 4: Add constraints. Every variable records the rule it
+    // belongs to and the forces asserted on it, so an unsatisfiable plan
+    // can name the pair that disagrees.
+    let mut var_forces: Vec<(usize, Vec<CallModeForce>)> =
+        (0..ir.rules.len()).map(|idx| (idx, Vec::new())).collect();
+    fn force(
+        csp: &mut Csp<InlineDomain>,
+        var_forces: &mut [(usize, Vec<CallModeForce>)],
+        var: VarId,
+        force: CallModeForce,
+    ) {
+        var_forces[var as usize].1.push(force);
+        csp.add_constraint(ForceCallMode::new(var, force));
+    }
     for (idx, rule) in ir.rules.iter().enumerate() {
+        let var = var_ids[idx];
+
+        // The author's directives. Two that disagree make the grammar
+        // contradictory, whatever else holds for the rule.
         let directives = &rule.meta.directives;
-        let rule_forces = &mut forces[idx];
+        let authored: Vec<CallModeForce> = [
+            directives.token.then_some(CallModeForce::TokenDirective),
+            directives
+                .recover
+                .is_some()
+                .then_some(CallModeForce::RecoverDirective),
+            directives
+                .pretty
+                .is_some()
+                .then_some(CallModeForce::PrettyDirective),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
 
-        // The author's directives are requirements: every one that
-        // holds is asserted.
-        if directives.token {
-            rule_forces.push(CallModeForce::TokenDirective);
-        }
-        if directives.recover.is_some() {
-            rule_forces.push(CallModeForce::RecoverDirective);
-        }
-        if directives.pretty.is_some() {
-            rule_forces.push(CallModeForce::PrettyDirective);
-        }
-
-        // The compiler's own choice is the first match of the priority
-        // chain, asserted beside the directives.
-        let choice = if rule.meta.preserve_identity {
+        // Structural facts the compiler must honour; the first that
+        // holds overrides the directives.
+        let structural = if rule.meta.preserve_identity {
             // These rules must always produce their own tape record so
             // consumers (e.g. the bootstrap host.rs extraction layer)
             // can locate them by variant_idx. Never inline them.
@@ -196,66 +216,65 @@ pub fn analyze_parse_inline_plan(
             Some(CallModeForce::SingleSiteInline)
         } else if operator_chain_rules.contains(&rule.id) {
             Some(CallModeForce::OperatorChain)
-        } else if directives.token {
-            Some(CallModeForce::TokenDirective)
-        } else if rule.meta.is_cyclic {
-            Some(CallModeForce::Cyclic)
-        } else if directives.recover.is_some() {
-            Some(CallModeForce::RecoverDirective)
-        } else if directives.pretty.is_some() {
-            Some(CallModeForce::PrettyDirective)
         } else {
             None
         };
 
-        match choice {
-            Some(force) => {
-                if !rule_forces.contains(&force) {
-                    rule_forces.push(force);
+        if let Some(structural) = structural {
+            force(&mut csp, &mut var_forces, var, structural);
+            // The overridden directives are still checked against each
+            // other, on a variable of their own.
+            if !authored.is_empty() {
+                let intent = csp.add_variable(InlineDomain::undecided());
+                var_forces.push((idx, Vec::new()));
+                for &directive in &authored {
+                    force(&mut csp, &mut var_forces, intent, directive);
                 }
             }
-            None => {
-                // No force applies: the cost-budget constraint
-                // (consolidates all heuristics) decides.
-                let alt_branches = max_alt_branches(&rule.body);
-                let local_cost = estimate_expansion_cost_with_budgets(&rule.body, &budgets);
-                let total_budget = local_cost.saturating_mul(ref_counts[idx] as usize);
-                let shape = gather_inline_shape_stats(&rule.body);
-
-                csp.add_constraint(CostBudgetConstraint {
-                    var: var_ids[idx],
-                    local_cost,
-                    total_budget,
-                    max_alt_branches: alt_branches,
-                    shape_control_nodes: shape.control_nodes(),
-                    shape_refs: shape.refs,
-                    shape_wrapper_heavy: shape.is_wrapper_heavy(),
-                    budgets,
-                });
+        } else if !authored.is_empty() {
+            for &directive in &authored {
+                force(&mut csp, &mut var_forces, var, directive);
             }
-        }
-        for &force in rule_forces.iter() {
-            csp.add_constraint(ForceCallMode::new(var_ids[idx], force));
+        } else if rule.meta.is_cyclic {
+            force(&mut csp, &mut var_forces, var, CallModeForce::Cyclic);
+        } else {
+            // No force applies: the cost-budget constraint
+            // (consolidates all heuristics) decides.
+            let alt_branches = max_alt_branches(&rule.body);
+            let local_cost = estimate_expansion_cost_with_budgets(&rule.body, &budgets);
+            let total_budget = local_cost.saturating_mul(ref_counts[idx] as usize);
+            let shape = gather_inline_shape_stats(&rule.body);
+
+            csp.add_constraint(CostBudgetConstraint {
+                var,
+                local_cost,
+                total_budget,
+                max_alt_branches: alt_branches,
+                shape_control_nodes: shape.control_nodes(),
+                shape_refs: shape.refs,
+                shape_wrapper_heavy: shape.is_wrapper_heavy(),
+                budgets,
+            });
         }
     }
 
     // Phase 5: Solve by propagation. `Unsatisfiable` comes only from a
-    // `ForceCallMode` joining its rule's domain to ⊤.
+    // `ForceCallMode` joining its variable's domain to ⊤.
     if let Err(Unsatisfiable) = csp.propagate() {
-        let (idx, _) = var_ids
+        let (idx, forces) = csp
+            .variables
             .iter()
-            .enumerate()
-            .find(|&(_, &var)| {
-                csp.variables[var as usize].domain.decision == InlineDecision::Conflict
-            })
-            .expect("propagation is unsatisfiable only when a rule's domain reaches ⊤");
-        let first = forces[idx][0];
-        let second = *forces[idx]
+            .zip(&var_forces)
+            .find(|(variable, _)| variable.domain.decision == InlineDecision::Conflict)
+            .map(|(_, owner)| owner)
+            .expect("propagation is unsatisfiable only when a domain reaches ⊤");
+        let first = forces[0];
+        let second = *forces
             .iter()
             .find(|force| force.mode() != first.mode())
-            .expect("a rule reaches ⊤ only when two of its forces disagree");
+            .expect("a domain reaches ⊤ only when two of its forces disagree");
         return Err(CallModeConflict {
-            rule: ir.rules[idx].id,
+            rule: ir.rules[*idx].id,
             first,
             second,
         });

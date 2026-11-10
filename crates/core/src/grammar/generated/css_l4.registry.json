@@ -312,13 +312,26 @@
       "5": {
         "rule_id": 5,
         "rule_name": "string",
-        "kind": "NewtypeWrapper",
+        "kind": "UntaggedEnum",
         "rule_type": "Span",
         "fields": [
           {
-            "name": "value",
+            "name": "branch_0",
             "type_desc": "Span",
-            "source": "TypedLeaf"
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
           }
         ]
       },
@@ -1566,13 +1579,26 @@
       "35": {
         "rule_id": 35,
         "rule_name": "cssString",
-        "kind": "NewtypeWrapper",
+        "kind": "UntaggedEnum",
         "rule_type": "Span",
         "fields": [
           {
-            "name": "value",
+            "name": "branch_0",
             "type_desc": "Span",
-            "source": "TypedLeaf"
+            "source": {
+              "BranchTag": {
+                "branch_index": 0
+              }
+            }
+          },
+          {
+            "name": "branch_1",
+            "type_desc": "Span",
+            "source": {
+              "BranchTag": {
+                "branch_index": 1
+              }
+            }
           }
         ]
       },
@@ -3234,7 +3260,7 @@
         },
         "fields": [
           {
-            "name": "1990",
+            "name": "1988",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -3653,7 +3679,7 @@
             }
           },
           {
-            "name": "1991",
+            "name": "1989",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -4550,7 +4576,7 @@
             }
           },
           {
-            "name": "1993",
+            "name": "1991",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -4618,7 +4644,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4654,7 +4680,7 @@
             }
           },
           {
-            "name": "1995",
+            "name": "1993",
             "type_desc": "F64",
             "source": {
               "BranchTag": {
@@ -4663,7 +4689,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4672,7 +4698,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4681,7 +4707,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4690,7 +4716,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4699,7 +4725,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4708,7 +4734,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -4726,7 +4752,7 @@
             }
           },
           {
-            "name": "1994",
+            "name": "1992",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6386,7 +6412,7 @@
         },
         "fields": [
           {
-            "name": "2010",
+            "name": "2008",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6629,7 +6655,7 @@
             }
           },
           {
-            "name": "2010",
+            "name": "2008",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -6730,7 +6756,7 @@
         },
         "fields": [
           {
-            "name": "2011",
+            "name": "2009",
             "type_desc": "Span",
             "source": {
               "BranchTag": {
@@ -7007,7 +7033,7 @@
             }
           },
           {
-            "name": "2012",
+            "name": "2010",
             "type_desc": "F64",
             "source": {
               "BranchTag": {

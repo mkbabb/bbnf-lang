@@ -12,6 +12,7 @@ use std::collections::HashSet;
 use csp_solver::Csp;
 use csp_solver::constraint::VarId;
 
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{FnDescriptor, GrammarIR, IrNode, RuleId, TypeDesc};
 
 use super::csp_domains::{
@@ -58,7 +59,7 @@ pub fn refine_span_eligibility(ir: &mut GrammarIR) {
         csp.add_constraint(BoolEqualConstraint::new(rule_var, body_var));
     }
 
-    let _ = csp.propagate();
+    propagate_to_fixed_point(&mut csp, "span eligibility");
 
     // Extract results. @token rules are unconditionally span-eligible.
     for rule in &mut ir.rules {

@@ -10,8 +10,33 @@
 use csp_solver::constraint::{Constraint, Revision, VarId};
 use csp_solver::domain::{Domain, LatticeDomain};
 use csp_solver::variable::Variable;
+use csp_solver::{Csp, Unsatisfiable};
 
 use crate::CharSet128;
+
+// ── Propagation ───────────────────────────────────────────────────────────────
+
+/// Propagate a fixed-point pass's CSP to its fixed point.
+///
+/// Every pass that calls this builds its CSP from monotone joins into a
+/// lattice that has no conflict element (`BoolDomain`, `CharSetDomain`,
+/// `DispatchDomain`, `TypeDomain`), and none of their constraints'
+/// `revise` returns `Revision::Unsatisfiable`. Propagation therefore
+/// always reaches the fixed point, and `Unsatisfiable` here is a broken
+/// invariant of the named pass, not a property of the grammar. (The
+/// one CSP whose domain does have a conflict element, the inline plan,
+/// reports it as a typed `CallModeConflict` instead.)
+pub(crate) fn propagate_to_fixed_point<D>(csp: &mut Csp<D>, pass: &'static str)
+where
+    D: Domain,
+    D::Value: PartialEq + 'static,
+{
+    if let Err(Unsatisfiable) = csp.propagate() {
+        unreachable!(
+            "{pass}: propagation reported Unsatisfiable, but no constraint of this pass can"
+        );
+    }
+}
 
 // ── BoolDomain ────────────────────────────────────────────────────────────────
 

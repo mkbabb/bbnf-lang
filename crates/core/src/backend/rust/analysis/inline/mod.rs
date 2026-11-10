@@ -33,5 +33,5 @@ mod plan;
 mod visit;
 
 pub use constraints::should_force_direct_call;
-pub use plan::{CallMode, InlinePlan, analyze_parse_inline_plan};
+pub use plan::{CallMode, CallModeConflict, CallModeForce, InlinePlan, analyze_parse_inline_plan};
 pub use visit::{count_refs_vec, estimate_expansion_cost, max_alt_branches};

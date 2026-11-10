@@ -14,6 +14,7 @@ use rustc_hash::FxHashMap as HashMap;
 use csp_solver::Csp;
 use csp_solver::constraint::VarId;
 
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{CharSet128, GrammarIR, IrNode, RuleId, regex_first};
 
 use super::super::csp_domains::{
@@ -68,7 +69,7 @@ pub fn compute_first_sets(ir: &mut GrammarIR) {
         csp.add_constraint(CharSetUnionConstraint::new(rule_var, body_var));
     }
 
-    let _ = csp.propagate();
+    propagate_to_fixed_point(&mut csp, "FIRST sets");
 
     // Extract results into rule metadata.
     for rule in &mut ir.rules {

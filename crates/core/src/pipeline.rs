@@ -65,10 +65,27 @@ pub enum CompileOutput {
 pub enum CompileError {
     Parse(String),
     Import(String),
-    UnknownPrettyHint { rule: String, hint: String },
-    UndefinedPrettyRule { rule: String },
-    UnknownNonterminal { rule: String, name: String },
-    InvalidProductionRule { rule: String },
+    UnknownPrettyHint {
+        rule: String,
+        hint: String,
+    },
+    UndefinedPrettyRule {
+        rule: String,
+    },
+    UnknownNonterminal {
+        rule: String,
+        name: String,
+    },
+    InvalidProductionRule {
+        rule: String,
+    },
+    /// Two forces require different call modes for one rule (the
+    /// inline CSP is unsatisfiable).
+    CallModeConflict {
+        rule: String,
+        first: crate::backend::rust::analysis::inline::CallModeForce,
+        second: crate::backend::rust::analysis::inline::CallModeForce,
+    },
 }
 
 impl fmt::Display for CompileError {
@@ -91,6 +108,16 @@ impl fmt::Display for CompileError {
                     "rule `{rule}` contains a production rule in expression position"
                 )
             }
+            Self::CallModeConflict {
+                rule,
+                first,
+                second,
+            } => write!(
+                f,
+                "rule `{rule}` is contradictory: {first} requires {:?} and {second} requires {:?}",
+                first.mode(),
+                second.mode()
+            ),
         }
     }
 }

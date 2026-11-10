@@ -402,8 +402,12 @@ pub fn install_pattern_caches(dstate: &mut crate::backend::driver::DriverState, 
 /// Compute call strategies using the shared inline analysis.
 ///
 /// Converts `CallMode::DirectCall` → `CallStrategy::DirectCall`,
-/// `CallMode::InlineBody` → `CallStrategy::InlineBody`.
-pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrategy> {
+/// `CallMode::InlineBody` → `CallStrategy::InlineBody`. A rule the
+/// inline plan finds contradictory is a
+/// [`CompileError::CallModeConflict`](crate::pipeline::CompileError::CallModeConflict).
+pub fn compute_call_strategies(
+    ir: &GrammarIR,
+) -> Result<Vec<crate::backend::CallStrategy>, crate::pipeline::CompileError> {
     use crate::backend::CallStrategy;
     use std::collections::HashSet;
 
@@ -426,7 +430,14 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
     let plan = crate::backend::rust::analysis::inline::analyze_parse_inline_plan(
         ir,
         &operator_chain_rules,
-    );
+    )
+    .map_err(|conflict| crate::pipeline::CompileError::CallModeConflict {
+        rule: ir
+            .get_string(ir.rules[conflict.rule as usize].name)
+            .to_string(),
+        first: conflict.first,
+        second: conflict.second,
+    })?;
 
     let mut strategies: Vec<CallStrategy> = plan
         .parse_call_modes
@@ -477,5 +488,5 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
         }
     }
 
-    strategies
+    Ok(strategies)
 }

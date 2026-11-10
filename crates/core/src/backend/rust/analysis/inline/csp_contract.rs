@@ -16,17 +16,15 @@
 //!    `ForceCallMode::revise` reports `Unchanged` and the first writer
 //!    wins.
 //!
-//! The born-RED tests are `#[ignore]`d so the suite stays green until
-//! LW2.COMP-2 cures them (`InlineDomain` gains a ⊤ for a
-//! Decided/Decided conflict, and the six `let _ = csp.propagate()`
-//! sites route `Unsatisfiable` to a diagnostic). Run them with
-//! `cargo test -p bbnf --lib csp_contract -- --ignored`.
+//! Born RED in LW1.COMP-3 and cured by LW2.COMP-2: `InlineDomain` has
+//! a ⊤ for a Decided/Decided conflict, and the inline plan routes
+//! `Unsatisfiable` to a `CallModeConflict` naming both forces.
 
 use csp_solver::Csp;
 use csp_solver::domain::{BitsetDomain, BitsetLatticeDomain, LatticeDomain};
 
 use super::constraints::{ForceCallMode, InlineDecision, InlineDomain};
-use super::plan::CallMode;
+use super::plan::{CallMode, CallModeForce};
 
 /// One law the sample set breaks, with the operands that break it.
 // Read only through `Debug`, in the assertion message.
@@ -108,7 +106,6 @@ fn bitset_lattice_domain_satisfies_the_lattice_laws() {
 }
 
 #[test]
-#[ignore = "born-RED sk-v27 LW1.COMP-3: InlineDomain::join is first-writer-wins; cured by LW2.COMP-2"]
 fn inline_domain_satisfies_the_lattice_laws() {
     let samples = [
         InlineDomain::undecided(),
@@ -120,11 +117,16 @@ fn inline_domain_satisfies_the_lattice_laws() {
 }
 
 #[test]
-#[ignore = "born-RED sk-v27 LW1.COMP-3: a Decided/Decided conflict propagates as Ok; cured by LW2.COMP-2"]
 fn conflicting_forced_call_modes_are_unsatisfiable() {
     for (first, second) in [
-        (CallMode::InlineBody, CallMode::DirectCall),
-        (CallMode::DirectCall, CallMode::InlineBody),
+        (
+            CallModeForce::TokenDirective,
+            CallModeForce::PrettyDirective,
+        ),
+        (
+            CallModeForce::RecoverDirective,
+            CallModeForce::SingleSiteInline,
+        ),
     ] {
         let mut csp: Csp<InlineDomain> = Csp::new();
         let var = csp.add_variable(InlineDomain::undecided());
@@ -199,7 +201,6 @@ fn fold_forces(forces: &[CallMode]) -> InlineDomain {
 ///   extensive, change flag, monotone) hold over a triple of values
 ///   reached by three such multisets.
 #[test]
-#[ignore = "born-RED sk-v27 LW2.COMP-2: InlineDomain::join is first-writer-wins; cured by LW2.COMP-2"]
 fn inline_domain_join_is_a_lattice_join_over_generated_cases() {
     const CASES: usize = 10_000;
     let mut cases = Cases(0x9e37_79b9_7f4a_7c15);

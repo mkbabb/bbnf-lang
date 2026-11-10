@@ -1,0 +1,9 @@
+# LW2.USE-2 equal-work proof: value.js 4038dce5a base vs cand (bbnf-lang a3b2b060d TS emitter); WPT v4.3.0:test/css/wpt-values/cases-2026-11-04-r1.json sha256 2639ac5779ca711b… (17316 cases); bundles base 3b757ac1afc8a3da… cand 93f572b30eebd18a…; mutant none; verdict EQUAL-WORK (121212/121212)
+entry	cases	equal	unequal	acc_base	rej_base	acc_cand	first_unequal
+parseCssColor	17316	17316	0	2174	15142	2174	-
+parseCssScalar	17316	17316	0	2847	14469	2847	-
+parseCssValue	17316	17316	0	13118	4198	13118	-
+parseCssValues	17316	17316	0	13118	4198	13118	-
+parseKeyframeSelector	17316	17316	0	20	17296	20	-
+parseTimingFunction	17316	17316	0	50	17266	50	-
+parseStylesheet	17316	17316	0	2	17314	2	-

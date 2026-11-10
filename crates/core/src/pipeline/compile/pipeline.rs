@@ -319,7 +319,7 @@ pub fn compile_ast_common<'a>(
     // The alphabet is read at codegen time by the scanner-kernel
     // emitters in `crates/core/src/generate/regex/emit/simd.rs`,
     // and by the runtime `GrammarProfile` consumer in
-    // `simd-scan::StructuralAlphabet::from_profile`.
+    // `parse_that::scan::StructuralAlphabet` (parse-that-simd).
     timer.span("compute_structural_alphabet", || {
         bbnf_ir::passes::sets::compute_structural_alphabet(&mut ir);
     });

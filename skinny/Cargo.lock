@@ -900,7 +900,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
+source = "git+https://github.com/mkbabb/parse-that?rev=bb864d58555d43bb536c771a6e16b3e570d6d902#bb864d58555d43bb536c771a6e16b3e570d6d902"
 dependencies = [
  "csp-solver",
  "rustc-hash",

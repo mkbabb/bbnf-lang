@@ -1872,7 +1872,7 @@ mod __cssprettyparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::simd_scan::StructuralIndex,
+                ::parse_that::scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -1892,17 +1892,17 @@ mod __cssprettyparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::simd_scan::StructuralIndex {
+        ) -> &'a ::parse_that::scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    let alphabet = ::simd_scan::StructuralAlphabet {
+                    let alphabet = ::parse_that::scan::StructuralAlphabet {
                         singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
                         digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
                         digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
                         quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
-                    ::simd_scan::scan_structural(input, &alphabet)
+                    ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip whitespace AND `/* ... */` block comments at `*p`,

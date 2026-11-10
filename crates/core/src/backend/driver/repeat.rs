@@ -120,6 +120,25 @@ pub(super) fn compile_repeat<E: Emitter>(
         return emitter.emit_sep_by(element_out, sep_out, &config, &PLACEHOLDER_TY, ctx);
     }
 
+    // `(x (sep x)*)?` -- the zero-or-more strict separated list
+    // (ruling S1-B). Its loop accepts exactly the literal reading.
+    if lo == 0
+        && hi == 1
+        && let Some(list) = bbnf_ir::passes::inspect::sep_list(inner)
+    {
+        return compile_sep_list(
+            list.element,
+            list.separator,
+            0,
+            false,
+            None,
+            ir,
+            dstate,
+            emitter,
+            ctx,
+        );
+    }
+
     // Optional (0..1) vs many.
     if lo == 0 && hi == 1 {
         // BoxedEnum optionals need Alloc so the inner Ref produces &'a Enum.
@@ -160,4 +179,51 @@ pub(super) fn compile_repeat<E: Emitter>(
     };
     let body = compile_node(inner, inner_alloc, ir, dstate, emitter, ctx);
     emitter.emit_repeat_many(body, lo, hi, &PLACEHOLDER_TY, ctx)
+}
+
+/// Element type tag handed to `emit_sep_by` / `emit_repeat_many`: the
+/// TS backend collects non-span elements into an array.
+static ENUM_TY: TypeDesc = TypeDesc::Enum;
+
+/// Compile a strict separated list `element (separator element)*`
+/// with at least `lo` elements through `emit_sep_by`. `ws` and
+/// `terminator_bytes` carry the delimited-wrap context (`wrap.rs`).
+#[allow(clippy::too_many_arguments)]
+pub(super) fn compile_sep_list<E: Emitter>(
+    element: &IrNode,
+    separator: &IrNode,
+    lo: u32,
+    ws: bool,
+    terminator_bytes: Option<Vec<u8>>,
+    ir: &GrammarIR,
+    dstate: &mut DriverState,
+    emitter: &mut E,
+    ctx: &mut E::Ctx,
+) -> E::Output {
+    let elem_kind = match ir.vec_elem_type(element) {
+        Some(t) => RepeatElemKind::from_type(t),
+        None => match ir.node_type(element) {
+            Some(t) if *t == TypeDesc::BoxedEnum => RepeatElemKind::Enum,
+            Some(t) => RepeatElemKind::from_type(t),
+            None => RepeatElemKind::Span,
+        },
+    };
+    let elem_alloc = if elem_kind == RepeatElemKind::BoxedEnum {
+        ValuePlacement::Alloc
+    } else {
+        ValuePlacement::Inline
+    };
+    let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
+    let sep_out = compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+    let config = SepByConfig {
+        ws,
+        lo,
+        terminator_bytes,
+    };
+    let elem_ty = if elem_kind == RepeatElemKind::Span {
+        &PLACEHOLDER_TY
+    } else {
+        &ENUM_TY
+    };
+    emitter.emit_sep_by(element_out, sep_out, &config, elem_ty, ctx)
 }

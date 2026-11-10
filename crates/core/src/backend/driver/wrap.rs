@@ -39,6 +39,45 @@ pub(super) fn compile_wrap<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
+    // Delimited strict separated list (ruling S1-B):
+    // `open >> OW((element (separator element)*)?) << close`, where a
+    // single-byte close Literal gives the loop an early exit.
+    if let Some((list_node, is_ow)) = unwrap_ow(middle)
+        && let IrNode::Repeat {
+            inner,
+            lo: 0,
+            hi: 1,
+        } = list_node
+        && let Some(list) = bbnf_ir::passes::inspect::sep_list(inner)
+    {
+        let terminator_bytes = if let IrNode::Literal(sid) = close {
+            Some(ir.get_string(*sid).to_string().into_bytes())
+        } else {
+            None
+        };
+        let open_out = compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+        let list_out = super::repeat::compile_sep_list(
+            list.element,
+            list.separator,
+            0,
+            is_ow,
+            terminator_bytes,
+            ir,
+            dstate,
+            emitter,
+            ctx,
+        );
+        let close_out = compile_node(close, ValuePlacement::Inline, ir, dstate, emitter, ctx);
+        let ws_pattern = ir.ws_pattern.map(|sid| ir.get_string(sid));
+        let middle_out = if is_ow {
+            emitter.emit_with_ws_trim(list_out, ws_pattern, ctx)
+        } else {
+            list_out
+        };
+        let after_open = emitter.emit_next(open_out, middle_out, ctx);
+        return emitter.emit_skip(after_open, close_out, ctx);
+    }
+
     // Delimited sep_by with terminator:
     // `open >> OW(Repeat(Skip(element, Optional(separator)))) << close`
     // where close is a single-byte Literal.

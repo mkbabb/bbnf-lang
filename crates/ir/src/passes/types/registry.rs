@@ -224,6 +224,19 @@ fn classify_body(
 
         // ── Repeat → list-typed struct with single RepeatElement field ──
         IrNode::Repeat { inner, lo, hi } => {
+            // `(x (sep x)*)?` -- the zero-or-more separated list
+            // (ruling S1-B) is a list of its element.
+            if let Some(list) = crate::passes::inspect::sep_list(body) {
+                let elem_type =
+                    branch_projected_type(list.element, cx.type_map, cx.dag, cx.fns, cx.rule_types)
+                        .unwrap_or(TypeDesc::Span);
+                let field = StructField {
+                    name: "element".to_string(),
+                    type_desc: elem_type,
+                    source: FieldSource::RepeatElement,
+                };
+                return (LayoutKind::Struct, vec![field]);
+            }
             // Optional/single-shot Repeat (lo=0, hi=1) collapses to
             // its inner's shape.
             if *lo == 0 && *hi == 1 {

@@ -358,7 +358,13 @@ function asString(node) {
     return node.value;
 }
 
+// The root is the entry rule `json = ws >> value << ws` (LW2.TOPO-6b,
+// ruling S1-A): its one field is the `value` node.
 let cur = out.result;
+if (cur === null || cur.tag !== "json") {
+    throw new Error(`root: expected json, got ${cur && cur.tag}`);
+}
+cur = cur.value;
 cur = getField(cur, "statuses");
 cur = getIndex(cur, 0);
 cur = getField(cur, "text");
@@ -455,5 +461,106 @@ process.stdout.write(JSON.stringify(leaf));
             ts_leaf.len(),
             serde_json::to_string(&ts_leaf).unwrap_or_default(),
         ),
+    );
+}
+
+/// RFC 8259 JSON-text (`JSON-text = ws value ws`, `ws = *( %x20 / %x09 /
+/// %x0A / %x0D )`) read on every root
+/// backend that compiles `grammar/json/json.bbnf`: the TS emitter run
+/// under Node, the Rust eager `JsonParser`, and the bytecode VM. An
+/// accepted case must end at exactly `input.len()`; there is no
+/// `trim_end` tolerance. This is LW2.TOPO-6b's falsifier (ruling
+/// S1-A, A-10): the upstream `twitter.json`'s final newline (the
+/// JSON-text whitespace half) and the mandatory commas (`[1 2]`,
+/// `[1,]`, `{"a":1,}`, `{"a":1 "b":2}` rejected) on every backend.
+#[test]
+fn json_text_rfc8259_every_root_backend() {
+    use bbnf::pipeline::compile_grammar;
+    use bbnf_ir::compiler::compile as compile_bytecode;
+    use bbnf_ir::interpreter::Interpreter;
+
+    // (input, RFC 8259 accepts)
+    let cases: &[(&str, bool)] = &[
+        ("{\"a\":1}", true),
+        ("{\"a\":1}\n", true),
+        (" \t\r\n[1, 2] \n", true),
+        ("\n\"x\"", true),
+        ("[ ]", true),
+        ("{ \"a\" : [ 1 , 2 ] }", true),
+        ("1 2", false),
+        ("[1]\u{000C}", false),
+        ("\u{00A0}[1]", false),
+        ("[1] x", false),
+        ("[1 2]", false),
+        ("[1,]", false),
+        ("{\"a\":1,}", false),
+        ("{\"a\":1 \"b\":2}", false),
+        ("[1,2,3]", true),
+        ("{\"a\":1,\"b\":[true,null]}", true),
+    ];
+
+    let node = which_node().expect("node on PATH (no silent skip)");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        tmp.path().join("generated_json.mjs"),
+        compile_and_sanitise_ts_parser(),
+    )
+    .expect("write generated_json.mjs");
+    let inputs: Vec<&str> = cases.iter().map(|(i, _)| *i).collect();
+    std::fs::write(
+        tmp.path().join("cases.json"),
+        serde_json::to_string(&inputs).expect("encode cases"),
+    )
+    .expect("write cases.json");
+    let runner = r#"
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+const dir = dirname(fileURLToPath(import.meta.url));
+const cases = JSON.parse(readFileSync(join(dir, "cases.json"), "utf-8"));
+let input = "";
+globalThis.decode_json_string_to_arena = (span) =>
+    span === null ? null : JSON.parse(input.slice(span.start, span.end));
+const mod = await import("./generated_json.mjs");
+const out = cases.map((c) => {
+    input = c;
+    const r = mod.parse(c);
+    return r !== null && r.result !== null && r.offset === c.length;
+});
+process.stdout.write(JSON.stringify(out));
+"#;
+    std::fs::write(tmp.path().join("runner.mjs"), runner).expect("write runner.mjs");
+    let output = std::process::Command::new(&node)
+        .arg(tmp.path().join("runner.mjs"))
+        .output()
+        .expect("spawn node");
+    assert!(
+        output.status.success(),
+        "node runner failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let ts: Vec<bool> = serde_json::from_slice(&output.stdout).expect("runner stdout");
+
+    let ir = compile_grammar(&json_grammar_src(), &PipelineOptions::default())
+        .expect("compile json grammar");
+    let program = compile_bytecode(&ir);
+
+    let mut wrong = Vec::new();
+    for (k, &(input, want)) in cases.iter().enumerate() {
+        let rust = JsonParser::parse(input).is_ok();
+        let r = Interpreter::new(&program, input).run();
+        let vm = r.success && r.offset as usize == input.len();
+        for (arm, got) in [("ts", ts[k]), ("rust-eager", rust), ("vm", vm)] {
+            if got != want {
+                wrong.push(format!(
+                    "{arm} {input:?}: accepted={got}, RFC 8259 says {want}"
+                ));
+            }
+        }
+    }
+    assert!(
+        wrong.is_empty(),
+        "RFC 8259 JSON-text divergences:\n{}",
+        wrong.join("\n")
     );
 }

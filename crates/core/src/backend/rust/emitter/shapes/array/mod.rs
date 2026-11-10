@@ -9,7 +9,7 @@
 //! 1. **Shape 1 — wrapped homogeneous repeat** (JSON `array`):
 //!
 //!    ```text
-//!    array = "[" >> ((value << comma?)*)?w << "]"
+//!    array = "[" >> ((value , (comma >> value)*)?)?w << "]"
 //!    ```
 //!
 //!    The body unwraps to `Wrap(open_byte, Repeat, close_byte)` where

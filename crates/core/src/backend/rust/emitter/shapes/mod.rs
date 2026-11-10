@@ -88,8 +88,8 @@ pub mod substrate;
 pub mod unordered;
 pub mod wrap;
 
-use bbnf_ir::GrammarIR;
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -193,6 +193,12 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         // missing per-shape fn will surface as a regen-time link error,
         // which the corresponding transparent-aware emitter will
         // address.
+        // A whitespace-alias entry (`json = ws >> value << ws`) has no
+        // shape fn of its own: the root dispatcher dispatches its
+        // target and `parse()` owns the whitespace.
+        if rule.id == ir.entry && ws_alias_entry_target(ir).is_some() {
+            continue;
+        }
         if rule.meta.is_transparent {
             let tag = ir.shape_assignments.get(rule.id);
             let emit_transparent = matches!(tag, ShapeTag::Wrap | ShapeTag::Keyword);
@@ -293,6 +299,65 @@ pub(super) fn has_shape_dispatch(ir: &GrammarIR) -> bool {
     ir.rules
         .iter()
         .any(|rule| !rule.meta.is_transparent && ir.shape_assignments.get(rule.id).is_classified())
+}
+
+/// The rule the root dispatcher dispatches, when the entry rule is a
+/// whitespace alias `ws >> r << ws` (RFC 8259's `JSON-text = ws value
+/// ws`, root `grammar/json/json.bbnf`).
+///
+/// The struct-direct `parse()` entry skips the support module's
+/// whitespace set (`' '`, `\t`, `\n`, `\r`) before the dispatcher
+/// and again before its end-of-input check, and the dispatcher skips
+/// it before the first byte. An entry whose only kept child is one
+/// `Ref` between two copies of exactly that set therefore parses the
+/// same language as dispatching the referenced rule at the root; the
+/// entry rule adds no compound frame (its registry layout stays, so
+/// `path!` roots at it). Anything else returns `None`.
+pub(crate) fn ws_alias_entry_target(ir: &GrammarIR) -> Option<&IrRule> {
+    let entry = ir.rules.iter().find(|r| r.id == ir.entry)?;
+    let (pre, kept, post) = match &entry.body {
+        IrNode::Skip(lhs, post) => match lhs.as_ref() {
+            IrNode::Next(pre, kept) => (pre.as_ref(), kept.as_ref(), post.as_ref()),
+            _ => return None,
+        },
+        IrNode::Next(pre, rhs) => match rhs.as_ref() {
+            IrNode::Skip(kept, post) => (pre.as_ref(), kept.as_ref(), post.as_ref()),
+            _ => return None,
+        },
+        _ => return None,
+    };
+    let IrNode::Ref(target) = kept else {
+        return None;
+    };
+    let is_json_ws = |n: &IrNode| match n {
+        IrNode::Regex(sid) => {
+            let pat = ir.get_string(*sid);
+            let Some(class) = pat.strip_prefix('[').and_then(|r| r.strip_suffix("]*")) else {
+                return false;
+            };
+            let mut set = std::collections::BTreeSet::new();
+            let mut chars = class.chars();
+            while let Some(c) = chars.next() {
+                let b = match c {
+                    '\\' => match chars.next() {
+                        Some('t') => '\t',
+                        Some('n') => '\n',
+                        Some('r') => '\r',
+                        _ => return false,
+                    },
+                    ' ' => ' ',
+                    _ => return false,
+                };
+                set.insert(b);
+            }
+            set == [' ', '\t', '\n', '\r'].into_iter().collect()
+        }
+        _ => false,
+    };
+    if !is_json_ws(pre) || !is_json_ws(post) {
+        return None;
+    }
+    ir.rules.iter().find(|r| r.id == *target)
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

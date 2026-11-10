@@ -1,7 +1,7 @@
 schema_version = 1
 grammar = "json"
 grammar_source = "grammar/json/json.bbnf"
-entry_rule = "value"
+entry_rule = "json"
 runtime_module = "crate::runtime::json"
 output_dir = "crates/core/src/runtime/json"
 parser_type = "JsonParser"
@@ -31,4 +31,5 @@ routes = [
   { rule = "array", kind = "Array" },
   { rule = "pair", kind = "Pair" },
   { rule = "value", kind = "Value" },
+  { rule = "json", kind = "Value" },
 ]

@@ -5,7 +5,7 @@
 //! Emits walker-tape-identical code for the canonical JSON object rule:
 //!
 //! ```text
-//! object = "{" >> ((pair << comma?)*)?w << "}"
+//! object = "{" >> ((pair , (comma >> pair)*)?)?w << "}"
 //! pair   = string, colon >> value
 //! ```
 //!

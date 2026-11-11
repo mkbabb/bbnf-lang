@@ -120,6 +120,6 @@ fn compile_ast_request_internal<'a>(
     request: &CompileRequest,
 ) -> Result<CompileOutput, CompileError> {
     validate_pretty_directives(&ast, directives.pretties)?;
-    let ir = compile_ast_common(ast, directives, &request.options)?;
+    let ir = compile_ast_common(ast, directives, request)?;
     finalize_compile(ir, &request.target)
 }

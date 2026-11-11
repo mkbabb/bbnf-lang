@@ -1,0 +1,9 @@
+rx4 red-r2 @ 63054dba0: tests rc=101; rust pass list fusion lines=1; ts pass list fusion lines=1; ts emissions hashed=9 -> RED
+test ts_emit_keeps_fusion ... ok
+test vm_alt_a_ab_consumes_one_byte ... FAILED
+test rust_ir_keeps_the_branches_apart ... FAILED
+thread 'vm_alt_a_ab_consumes_one_byte' (11409403) panicked at crates/core/tests/rx4_rust_fusion_absent.rs:48:5:
+assertion `left == right` failed: ordered choice takes /a/ (1 byte), as the oracle does; 2 means the branches were fused into one leftmost-longest DFA leaf
+thread 'rust_ir_keeps_the_branches_apart' (11409401) panicked at crates/core/tests/rx4_rust_fusion_absent.rs:69:5:
+assertion `left == right` failed: the Rust target's IR interns the fused pattern `a|ab`
+rc=1

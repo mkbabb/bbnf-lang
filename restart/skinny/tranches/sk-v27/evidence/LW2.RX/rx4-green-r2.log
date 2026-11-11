@@ -1,0 +1,1 @@
+rx4 rx4-green-r2 @ e36244d57: tests rc=0; rust pass list fusion lines=0; ts pass list fusion lines=1; ts emissions hashed=9 -> GREEN (2026-11-10 post-reboot; cure-r2 sha256 file identical to base)

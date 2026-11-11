@@ -1,0 +1,8 @@
+[xtask::regen] math: generate_all done in 1.175458ms
+[xtask::regen] math: prettyplease done in 6.365167ms
+drift: `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s7-rx-read/crates/core/src/grammar/generated/css_l4.rs` differs from `cargo xtask regen --grammar css_l4` output
+drift: `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s7-rx-read/crates/core/src/grammar/generated/css_l4.registry.json` differs from `cargo xtask regen --grammar css_l4` sidecar output
+drift: `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s7-rx-read/crates/core/src/grammar/generated/css_pretty.rs` differs from `cargo xtask regen --grammar css_pretty` output
+drift: `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s7-rx-read/crates/core/src/grammar/generated/css_pretty.registry.json` differs from `cargo xtask regen --grammar css_pretty` sidecar output
+Error: regen --check: 4 of 9 grammars drifted
+Error: grammar-regeneration xtask exited with exit status: 1

@@ -44,14 +44,15 @@ pub use analysis::{EClassFacts, GrammarAnalysis, WidthBound};
 pub use cost::GrammarCostModel;
 pub use interner::SharedStrings;
 pub use node::GrammarENode;
-pub use rules::default_rules;
+pub use rules::{LeafMatch, default_rules};
 pub use write_back::{extract_ir_node, write_back_optimized};
 
 use parse_that_egraph::EGraph;
 
 use crate::GrammarIR;
 
-/// Build an e-graph from the IR and saturate it with default rules.
+/// Build an e-graph from the IR and saturate it with the default rules for
+/// the backend's regex leaf (`leaf`).
 /// Returns the populated e-graph, the shared string pool (which may
 /// contain new entries produced by string-mutating rules like
 /// `MergeLiterals`), and the per-rule body root ids captured during
@@ -59,6 +60,7 @@ use crate::GrammarIR;
 /// `write_back_optimized`.
 pub fn build_and_saturate(
     ir: &GrammarIR,
+    leaf: LeafMatch,
 ) -> (
     EGraph<GrammarENode, GrammarAnalysis>,
     SharedStrings,
@@ -93,7 +95,7 @@ pub fn build_and_saturate(
         .filter_map(|(i, r)| rule_root_ids.get(i).map(|&id| (r.id, id)))
         .collect();
 
-    let rules = default_rules(ir, &pool, rule_body_ids.clone());
+    let rules = default_rules(ir, &pool, rule_body_ids.clone(), leaf);
     let rule_refs: Vec<&dyn parse_that_egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 

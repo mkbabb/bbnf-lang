@@ -1,0 +1,8 @@
+'C-RX4-CSSL4-TAILWIND'
+'C-RX4-CSSL4-BOOTSTRAP'
+'C-RX4-PRETTY-BOOTSTRAP' : []
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.003s
+
+FAILED (failures=1)

@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::egraph::{GrammarCostModel, build_and_saturate, write_back_optimized};
+use bbnf_ir::egraph::{GrammarCostModel, LeafMatch, build_and_saturate, write_back_optimized};
 use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 
 fn empty_ir() -> GrammarIR {
@@ -72,7 +72,7 @@ fn push_rule(ir: &mut GrammarIR, name: &str, body: IrNode) -> u32 {
 }
 
 fn roundtrip(mut ir: GrammarIR) -> GrammarIR {
-    let (egraph, pool, rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, pool, rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
     let cost = GrammarCostModel::default();
     write_back_optimized(&egraph, &mut ir, &rule_body_ids, &cost);
     pool.write_back(&mut ir);

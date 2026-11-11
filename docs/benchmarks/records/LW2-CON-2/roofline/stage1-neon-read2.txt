@@ -1,0 +1,15 @@
+# parse-that 09941e1 load1={ 19.50 15.25 14.28 }
+Timer precision: 41 ns
+stage1_throughput        fastest       │ slowest       │ median        │ mean          │ samples │ iters
+╰─ stage1                              │               │               │               │         │
+   ├─ bootstrap.css      166.1 µs      │ 280.2 µs      │ 181.4 µs      │ 190.6 µs      │ 100     │ 100
+   │                     1.687 GB/s    │ 1 GB/s        │ 1.544 GB/s    │ 1.47 GB/s     │         │
+   ├─ canada.json        415.1 µs      │ 771.3 µs      │ 477.3 µs      │ 490.8 µs      │ 100     │ 100
+   │                     5.422 GB/s    │ 2.918 GB/s    │ 4.715 GB/s    │ 4.585 GB/s    │         │
+   ├─ citm_catalog.json  262.7 µs      │ 513.1 µs      │ 365.5 µs      │ 348 µs        │ 100     │ 100
+   │                     6.574 GB/s    │ 3.365 GB/s    │ 4.725 GB/s    │ 4.962 GB/s    │         │
+   ├─ tailwind.css       2.119 ms      │ 2.805 ms      │ 2.419 ms      │ 2.469 ms      │ 100     │ 100
+   │                     1.788 GB/s    │ 1.351 GB/s    │ 1.567 GB/s    │ 1.535 GB/s    │         │
+   ╰─ twitter.json       90.95 µs      │ 212.7 µs      │ 95.2 µs       │ 109.5 µs      │ 100     │ 100
+                         6.942 GB/s    │ 2.967 GB/s    │ 6.633 GB/s    │ 5.763 GB/s    │         │
+

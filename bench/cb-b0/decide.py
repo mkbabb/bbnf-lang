@@ -203,7 +203,9 @@ def family(paths: list[str], certify_min_pairs: int, quiet_only: bool) -> list[d
     for c, d in zip(loaded, raw):
         base = {k: v for k, v in c.items() if k != "kept"}
         if d is None:
-            base.update({"verdict": "NOT-COMPARABLE", "n_pairs": len(c["kept"])})
+            # no pair left: every block was NOISY (dropped) -> NOISY; pairs left but > 1 % discarded -> NOT-COMPARABLE
+            label = "NOISY" if c["pairs_total"] == 0 else "NOT-COMPARABLE"
+            base.update({"verdict": label, "n_pairs": len(c["kept"])})
         else:
             k = live.index(loaded.index(c))
             d = decide_cell([p["r"] for p in c["kept"]], certify_min_pairs=certify_min_pairs,

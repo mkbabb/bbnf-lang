@@ -1277,6 +1277,8 @@ fn parse_func_args<'i>(
     *cursor = skip_ws(bytes, *cursor);
     let _node_start = *cursor;
     let _ = (28u8, &mark);
+    parse_arg(bytes, cursor, tape)?;
+    *cursor = skip_ws(bytes, *cursor);
     {
         let mut _count: u32 = 0;
         loop {
@@ -1284,17 +1286,9 @@ fn parse_func_args<'i>(
             let mut _probe = *cursor;
             let _r: Result<(), ParseError<'i>> = (|| {
                 let cursor = &mut _probe;
-                parse_arg(bytes, cursor, tape)?;
+                parse_comma(bytes, cursor, tape)?;
                 *cursor = skip_ws(bytes, *cursor);
-                {
-                    let mut _probe = *cursor;
-                    let _r: Result<(), ParseError<'i>> = (|| {
-                        let cursor = &mut _probe;
-                        parse_comma(bytes, cursor, tape)?;
-                        Ok(())
-                    })();
-                    if _r.is_ok() { *cursor = _probe; }
-                }
+                parse_arg(bytes, cursor, tape)?;
                 Ok(())
             })();
             match _r {
@@ -1306,7 +1300,6 @@ fn parse_func_args<'i>(
                 Err(_) => break,
             }
         }
-        if _count < 1 { return Err(ParseError::at(*cursor, "too few repetitions")); }
     }
     Ok(())
 }
@@ -1417,6 +1410,8 @@ fn parse_lambda_params<'i>(
     *cursor = skip_ws(bytes, *cursor);
     let _node_start = *cursor;
     let _ = (33u8, &mark);
+    parse_expression(bytes, cursor, tape)?;
+    *cursor = skip_ws(bytes, *cursor);
     {
         let mut _count: u32 = 0;
         loop {
@@ -1424,17 +1419,9 @@ fn parse_lambda_params<'i>(
             let mut _probe = *cursor;
             let _r: Result<(), ParseError<'i>> = (|| {
                 let cursor = &mut _probe;
-                parse_expression(bytes, cursor, tape)?;
+                parse_comma(bytes, cursor, tape)?;
                 *cursor = skip_ws(bytes, *cursor);
-                {
-                    let mut _probe = *cursor;
-                    let _r: Result<(), ParseError<'i>> = (|| {
-                        let cursor = &mut _probe;
-                        parse_comma(bytes, cursor, tape)?;
-                        Ok(())
-                    })();
-                    if _r.is_ok() { *cursor = _probe; }
-                }
+                parse_expression(bytes, cursor, tape)?;
                 Ok(())
             })();
             match _r {
@@ -1446,7 +1433,6 @@ fn parse_lambda_params<'i>(
                 Err(_) => break,
             }
         }
-        if _count < 1 { return Err(ParseError::at(*cursor, "too few repetitions")); }
     }
     Ok(())
 }

@@ -1,6 +1,8 @@
 #!/bin/sh
 # sk-v27 LW2.TOPO-4b falsifier: the TOPO-4 publish dry-run (S16's topo4.sh, same order and registry),
 # parameterised by the four source trees, plus the crates.io version read TOPO-4-A names.
+# DAG order differs from topo4.sh in one place: bbnf-path precedes bbnf, since bbnf's published manifest
+# keeps its versioned dev-dependency on bbnf-path (S16 never reached that step).
 # One read: a fresh store and CARGO_HOME; the registry server runs inside this process tree and stops on exit.
 # Usage: topo4b.sh <tag> <port> <pprint-0.3-line> <pprint-0.4-line> <parse-that> <bbnf-lang>
 # GREEN when every crate publishes (rc 0), the fresh `bbnf` consumer builds with `cargo +stable build`,
@@ -32,7 +34,7 @@ pub() { dir=$1; pkg=$2; rev=$(git -C $dir rev-parse --short HEAD)
 pub $PT parse-that-egraph-derive && pub $PT parse-that-egraph \
  && pub $PP03/derive pprint_derive && pub $PP03 pprint && pub $PP04 pprint \
  && pub $PT parse-that-simd && pub $PT parse-that-regex && pub $PT parse_that \
- && pub $BL bbnf-ser && pub $BL bbnf-ir && pub $BL bbnf && pub $BL bbnf-path && pub $BL bbnf-analysis && pub $BL bbnf-lsp && pub $BL gorgeous
+ && pub $BL bbnf-ser && pub $BL bbnf-ir && pub $BL bbnf-path && pub $BL bbnf && pub $BL bbnf-analysis && pub $BL bbnf-lsp && pub $BL gorgeous
 PRC=$?; echo "publish rc=$PRC" >> $L/order.tsv
 C=$L/consumer; rm -rf $C; mkdir -p $C/src
 printf '[package]\nname = "topo4-consumer"\nversion = "0.0.0"\nedition = "2021"\npublish = false\n\n[dependencies]\nbbnf = "0.2"\n\n[workspace]\n' > $C/Cargo.toml
@@ -42,7 +44,7 @@ grep -h -A1 'name = "bbnf"' $C/Cargo.lock >> $L/order.tsv 2>/dev/null
 # crates.io version read (TOPO-4-A): the whole publish set at the versions these trees declare, read
 # from the sparse index (yanked included), whether or not the cascade above reached the crate.
 for spec in "$PT parse-that-egraph-derive" "$PT parse-that-egraph" "$PP03/derive pprint_derive" "$PP03 pprint" "$PP04 pprint" \
-  "$PT parse-that-simd" "$PT parse-that-regex" "$PT parse_that" "$BL bbnf-ser" "$BL bbnf-ir" "$BL bbnf" "$BL bbnf-path" \
+  "$PT parse-that-simd" "$PT parse-that-regex" "$PT parse_that" "$BL bbnf-ser" "$BL bbnf-ir" "$BL bbnf-path" "$BL bbnf" \
   "$BL bbnf-analysis" "$BL bbnf-lsp" "$BL gorgeous"; do set -- $spec
   (cd $1 && cargo metadata --offline --no-deps --format-version 1 2>/dev/null) | python3 -I -c "
 import sys,json,urllib.request

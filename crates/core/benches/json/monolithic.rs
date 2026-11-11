@@ -6,14 +6,14 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 use divan::black_box;
 
 use ::bbnf::grammar::generated::json::*;
-use ::bbnf::runtime::{JsonKind, RuntimeView};
+use ::bbnf::runtime::JsonKind;
 
 #[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 
 fn load(name: &str) -> String {
-    let path = format!("../../data/json/{}", name);
+    let path = bbnf_corpus::path(&format!("json/{}", name)).display().to_string();
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
 }
 

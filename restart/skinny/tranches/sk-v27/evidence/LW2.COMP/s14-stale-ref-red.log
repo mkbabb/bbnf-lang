@@ -1,0 +1,10 @@
+-- RED read 1
+== git grep -nwE 'parse_with_ir|calculate_acyclic_deps_scc' 457f3ba0e -- crates/analysis/src crates/bbnf-path-ts/src crates/bbnf-path/src crates/bootstrap/src crates/core/src crates/csp-solver/src crates/egraph-derive/src crates/egraph/src crates/gorgeous/src crates/ir/src crates/lsp/src crates/ser/src crates/simd-scan/src typescript/src wasm xtask
+457f3ba0e:crates/ir/src/vm/interpreter/mod.rs:21://! `emit_furthest_diagnostic`), and the public `parse_with_ir` convenience.
+457f3ba0e:typescript/src/analysis/scc.ts:90: * Replicates the Rust `calculate_acyclic_deps_scc` semantics.
+count=2
+-- RED read 2
+== git grep -nwE 'parse_with_ir|calculate_acyclic_deps_scc' 457f3ba0e -- crates/analysis/src crates/bbnf-path-ts/src crates/bbnf-path/src crates/bootstrap/src crates/core/src crates/csp-solver/src crates/egraph-derive/src crates/egraph/src crates/gorgeous/src crates/ir/src crates/lsp/src crates/ser/src crates/simd-scan/src typescript/src wasm xtask
+457f3ba0e:crates/ir/src/vm/interpreter/mod.rs:21://! `emit_furthest_diagnostic`), and the public `parse_with_ir` convenience.
+457f3ba0e:typescript/src/analysis/scc.ts:90: * Replicates the Rust `calculate_acyclic_deps_scc` semantics.
+count=2

@@ -29,22 +29,11 @@ if [[ ! -d "$WORKTREE_PATH" ]]; then
     exit 1
 fi
 
-# `data/` is gitignored (bbnf/, css/, json/, sheets/ corpora live here).
-# Symlink each top-level sub-corpus individually so a partially-seeded
-# worktree (e.g. one that already has data/sheets/ from an earlier run)
-# still gets every corpus — the old "top-level data/" symlink guard
-# refused to repair partial state because data/ existed. Each sub-
-# corpus symlinks iff it isn't already present.
-if [[ -d "$ROOT/data" ]]; then
-    mkdir -p "$WORKTREE_PATH/data"
-    for corpus in "$ROOT"/data/*/; do
-        name=$(basename "$corpus")
-        target="$WORKTREE_PATH/data/$name"
-        if [[ ! -e "$target" ]]; then
-            ln -s "$corpus" "$target"
-        fi
-    done
-fi
+# The test, bench and example corpus is not tracked and is not linked from
+# the main checkout: its custody is `corpus/MANIFEST.sha256` (sk-v27
+# LW2.TOPO-6, ruling R-c). Run `cargo xtask corpus fetch` in the worktree;
+# it downloads the release asset, checks its sha256 and every file, and is a
+# no-op when the corpus already verifies.
 
 # `target/` hardlink-clone — share compiled artefacts across worktrees
 # while giving each worktree its own incremental-cache so parallel

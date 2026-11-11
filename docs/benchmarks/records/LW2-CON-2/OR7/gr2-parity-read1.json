@@ -1,0 +1,25 @@
+{
+ "dfa_leaves": 133,
+ "cases": 17145,
+ "route_reps_stable": true,
+ "checksum_A_all": "9c59b17edd5c2fd5",
+ "checksum_B_all": "082c2a3d232ba26a",
+ "pairs_survive_discard_rule": false,
+ "leaves_disagreeing": [
+  "value.js@8d7bb5b8#1",
+  "value.js@8d7bb5b8#12",
+  "value.js@8d7bb5b8#14",
+  "value.js@8d7bb5b8#15",
+  "value.js@8d7bb5b8#51",
+  "value.js@8d7bb5b8#80",
+  "value.js@8d7bb5b8#83"
+ ],
+ "cases_disagreeing": 162,
+ "agreeing_leaves": 126,
+ "checksum_agreeing_A": "20a006a13179886b",
+ "checksum_agreeing_B": "20a006a13179886b",
+ "find_unanchored_implemented": {
+  "route_a": false,
+  "route_b": false
+ }
+}

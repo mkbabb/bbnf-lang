@@ -19,25 +19,23 @@ checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
 [[package]]
 name = "bbnf"
-version = "0.2.11"
+version = "0.3.0"
 dependencies = [
  "bbnf-ir",
  "bbnf-ser",
- "csp-solver",
- "egraph",
  "indexmap",
+ "parse-that-egraph",
  "parse_that",
  "pprint",
  "proc-macro2",
  "quote",
  "rustc-hash",
- "simd-scan",
  "syn",
 ]
 
 [[package]]
 name = "bbnf-analysis"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -49,12 +47,12 @@ dependencies = [
 
 [[package]]
 name = "bbnf-ir"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
- "bbnf-regex",
  "csp-solver",
- "egraph",
- "egraph-derive",
+ "parse-that-egraph",
+ "parse-that-egraph-derive",
+ "parse-that-regex",
  "parse_that",
  "rayon",
  "rmp-serde",
@@ -63,18 +61,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
-]
-
-[[package]]
-name = "bbnf-regex"
-version = "0.1.0"
-dependencies = [
- "csp-solver",
- "egraph",
- "egraph-derive",
- "rustc-hash",
- "serde",
- "smallvec",
+ "toml",
 ]
 
 [[package]]
@@ -187,24 +174,11 @@ checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
 
 [[package]]
 name = "csp-solver"
-version = "0.1.0"
-
-[[package]]
-name = "egraph"
-version = "0.1.0"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bcb2264b535b1394feb9c646beee05d5bc096e1a64514a1bd35602ff9595f7d"
 dependencies = [
- "csp-solver",
- "rustc-hash",
- "smallvec",
-]
-
-[[package]]
-name = "egraph-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
+ "include_dir",
 ]
 
 [[package]]
@@ -244,7 +218,7 @@ dependencies = [
 
 [[package]]
 name = "gorgeous"
-version = "0.1.10"
+version = "0.2.0"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -258,6 +232,25 @@ name = "hashbrown"
 version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "841d1cc9bed7f9236f321df977030373f4a4163ae1a7dbfe1a51a2c1a51d9100"
+
+[[package]]
+name = "include_dir"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "923d117408f1e49d914f1a379a309cffe4f18c05cf4e3d12e613a15fc81bd0dd"
+dependencies = [
+ "include_dir_macros",
+]
+
+[[package]]
+name = "include_dir_macros"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cab85a7ed0bd5f0e76d93846e0147172bed2e2d3f859bcc33a8d9699cad1a75"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "indexmap"
@@ -351,14 +344,54 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 
 [[package]]
+name = "parse-that-egraph"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+dependencies = [
+ "csp-solver",
+ "rustc-hash",
+ "smallvec",
+]
+
+[[package]]
+name = "parse-that-egraph-derive"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "parse-that-regex"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+dependencies = [
+ "parse-that-egraph",
+ "parse-that-egraph-derive",
+ "proc-macro2",
+ "rustc-hash",
+ "serde",
+ "smallvec",
+]
+
+[[package]]
+name = "parse-that-simd"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+
+[[package]]
 name = "parse_that"
 version = "0.4.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
 dependencies = [
  "aho-corasick",
- "bbnf-regex",
  "colored",
  "fast-float2",
  "memchr",
+ "parse-that-regex",
+ "parse-that-simd",
  "pprint",
  "smallbox",
  "smallvec",
@@ -372,7 +405,8 @@ checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
 
 [[package]]
 name = "pprint"
-version = "0.3.6"
+version = "0.4.0"
+source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"
 dependencies = [
  "itoap",
  "pprint_derive",
@@ -381,7 +415,8 @@ dependencies = [
 
 [[package]]
 name = "pprint_derive"
-version = "0.2.2"
+version = "0.3.0"
+source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -558,19 +593,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_spanned"
+version = "0.6.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf41e0cfaf7226dca15e8197172c295a782857fcb97fad1808a166870dee75a3"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
-
-[[package]]
-name = "simd-scan"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "smallbox"
@@ -594,6 +629,47 @@ dependencies = [
  "quote",
  "unicode-ident",
 ]
+
+[[package]]
+name = "toml"
+version = "0.8.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc1beb996b9d83529a9e75c17a1686767d148d70663143c7854d8b4a09ced362"
+dependencies = [
+ "serde",
+ "serde_spanned",
+ "toml_datetime",
+ "toml_edit",
+]
+
+[[package]]
+name = "toml_datetime"
+version = "0.6.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.22.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a"
+dependencies = [
+ "indexmap",
+ "serde",
+ "serde_spanned",
+ "toml_datetime",
+ "toml_write",
+ "winnow",
+]
+
+[[package]]
+name = "toml_write"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
 name = "typeid"
@@ -665,6 +741,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
 dependencies = [
  "windows-link",
+]
+
+[[package]]
+name = "winnow"
+version = "0.7.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df79d97927682d2fd8adb29682d1140b343be4ac0f08fd68b7765d9c059d3945"
+dependencies = [
+ "memchr",
 ]
 
 [[package]]

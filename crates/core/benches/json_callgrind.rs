@@ -24,7 +24,7 @@ fn vm_request() -> CompileRequest {
 
 #[cfg(all(feature = "callgrind", target_os = "linux"))]
 #[library_benchmark]
-fn compile_json_iai() -> bbnf::pipeline::CompiledProgram {
+fn compile_json_iai() -> bbnf::pipeline::CompileOutput {
     let source = std::fs::read_to_string(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../grammar/json/json.bbnf"

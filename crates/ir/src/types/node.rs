@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 use super::{FnId, RuleId, StringId};
 

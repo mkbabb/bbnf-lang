@@ -1,7 +1,6 @@
 use std::borrow::Cow;
 use std::fmt;
 
-pub mod integration;
 pub mod number;
 pub mod unicode;
 
@@ -537,9 +536,7 @@ fn unescape_four_unicode_escapes(
         packed[index * 4..index * 4 + 4].copy_from_slice(hex);
     }
 
-    let Some(units) =
-        (unsafe { bbnf_simd::aarch64::unescape_uxxxx::unescape_uxxxx_x4_neon(&packed) })
-    else {
+    let Some(units) = parse_that_simd::prim::decode_hex_quads(&packed) else {
         return Some(Err(RegexError {
             offset: slash,
             kind: RegexErrorKind::InvalidUnicodeEscape,
@@ -555,10 +552,7 @@ fn unescape_four_unicode_escapes(
             if index + 1 >= units.len() {
                 return None;
             }
-            let Some(scalar) = bbnf_simd::aarch64::unescape_uxxxx::join_surrogate_pair_neon(
-                unit,
-                units[index + 1],
-            ) else {
+            let Some(scalar) = join_surrogate_pair(unit, units[index + 1]) else {
                 return Some(Err(RegexError {
                     offset: slash + (index + 1) * 6 + 2,
                     kind: RegexErrorKind::InvalidSurrogatePair,
@@ -597,6 +591,18 @@ fn unescape_four_unicode_escapes(
     Some(Ok(slash + 24))
 }
 
+/// The scalar value of the UTF-16 surrogate pair `(high, low)`, or `None`
+/// when it is not one.
+#[cfg(target_arch = "aarch64")]
+#[inline]
+fn join_surrogate_pair(high: u32, low: u32) -> Option<u32> {
+    if (0xd800..=0xdbff).contains(&high) && (0xdc00..=0xdfff).contains(&low) {
+        Some(0x10000 + (((high - 0xd800) << 10) | (low - 0xdc00)))
+    } else {
+        None
+    }
+}
+
 #[inline(always)]
 fn skip_string_plain(
     input: &[u8],
@@ -606,10 +612,12 @@ fn skip_string_plain(
     let mut flags = StringFlags::empty();
 
     #[cfg(target_arch = "aarch64")]
-    unsafe {
+    {
         while cursor + 16 <= input.len() {
-            let block = bbnf_simd::aarch64::string_block::scan_string_special_block(
-                input.as_ptr().add(cursor),
+            let block = parse_that_simd::prim::string_special_block(
+                input[cursor..cursor + 16]
+                    .try_into()
+                    .expect("slice length is fixed by loop guard"),
                 b'"',
                 b'\\',
                 0x20,
@@ -627,7 +635,11 @@ fn skip_string_plain(
             }
             if block.non_ascii_mask != 0 && mode.validates_utf8() {
                 flags.insert(StringFlags::HAS_NON_ASCII);
-                let status = bbnf_simd::aarch64::utf8::validate_block(input.as_ptr().add(cursor));
+                let status = parse_that_simd::prim::validate_utf8_block(
+                    input[cursor..cursor + 16]
+                        .try_into()
+                        .expect("slice length is fixed by loop guard"),
+                );
                 if status.is_valid_and_complete() {
                     cursor += 16;
                     continue;
@@ -784,7 +796,7 @@ pub fn classify_string_content(input: &[u8], start: usize, end: usize) -> Result
     debug_assert!(start <= end && end <= input.len());
     #[cfg(target_arch = "aarch64")]
     {
-        return unsafe { neon_classify_string_content(input, start, end) };
+        return neon_classify_string_content(input, start, end);
     }
 
     #[allow(unreachable_code)]
@@ -810,50 +822,32 @@ fn scalar_classify_string_content(
     Ok(false)
 }
 
+/// The first control byte (an error) or the first backslash in
+/// `input[start..end]`, 16 bytes at a time, then the scalar tail.
 #[cfg(target_arch = "aarch64")]
-unsafe fn neon_classify_string_content(
-    input: &[u8],
-    start: usize,
-    end: usize,
-) -> Result<bool, RegexError> {
-    use core::arch::aarch64::*;
-
+fn neon_classify_string_content(input: &[u8], start: usize, end: usize) -> Result<bool, RegexError> {
     let mut cursor = start;
-    unsafe {
-        let slash = vdupq_n_u8(b'\\');
-        let control_limit = vdupq_n_u8(0x20);
-        while cursor + 16 <= end {
-            let chunk = vld1q_u8(input.as_ptr().add(cursor));
-            let control_mask = movemask_u8x16(vcltq_u8(chunk, control_limit));
-            if control_mask != 0 {
-                return Err(RegexError {
-                    offset: cursor + control_mask.trailing_zeros() as usize,
-                    kind: RegexErrorKind::ControlCharacter,
-                });
-            }
-            let slash_mask = movemask_u8x16(vceqq_u8(chunk, slash));
-            if slash_mask != 0 {
-                return Ok(true);
-            }
-            cursor += 16;
+    while cursor + 16 <= end {
+        let block = parse_that_simd::prim::string_special_block(
+            input[cursor..cursor + 16]
+                .try_into()
+                .expect("slice length is fixed by loop guard"),
+            0,
+            b'\\',
+            0x20,
+        );
+        if block.control_mask != 0 {
+            return Err(RegexError {
+                offset: cursor + block.control_mask.trailing_zeros() as usize,
+                kind: RegexErrorKind::ControlCharacter,
+            });
         }
+        if block.escape_mask != 0 {
+            return Ok(true);
+        }
+        cursor += 16;
     }
-
     scalar_classify_string_content(input, cursor, end)
-}
-
-#[cfg(target_arch = "aarch64")]
-#[inline(always)]
-unsafe fn movemask_u8x16(value: core::arch::aarch64::uint8x16_t) -> u16 {
-    use core::arch::aarch64::*;
-
-    unsafe {
-        let pattern: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
-        let bits = vandq_u8(value, vld1q_u8(pattern.as_ptr()));
-        let lo = vaddv_u8(vget_low_u8(bits)) as u16;
-        let hi = vaddv_u8(vget_high_u8(bits)) as u16;
-        lo | (hi << 8)
-    }
 }
 
 #[inline]

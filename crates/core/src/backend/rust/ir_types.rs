@@ -24,14 +24,15 @@ use syn::{Type, parse_quote};
 /// `paths` carries absolute filesystem paths used by the IR pipeline
 /// to read grammar source bytes at codegen time.
 ///
-/// `grammar_rel_paths` carries the matching **workspace-root-relative**
-/// path strings (POSIX-normalised, forward-slashed) used by the emitter
-/// when it writes `include_str!()` tokens into per-grammar generated
-/// files. Emitting the relative path lets the generated file be
-/// portable across worktrees and checkouts: at consumer compile time
-/// `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", <rel>)` resolves to
-/// the in-tree grammar source regardless of where the worktree lives
-/// on disk.
+/// `grammar_rel_paths` carries the matching **crate-relative** path
+/// strings (relative to the manifest directory of the crate that
+/// compiles the generated file; POSIX-normalised, forward-slashed) used
+/// by the emitter when it writes `include_str!()` tokens into
+/// per-grammar generated files. At compile time
+/// `concat!(env!("CARGO_MANIFEST_DIR"), "/", <rel>)` resolves to a file
+/// inside that crate, so the generated file is portable across
+/// worktrees and checkouts and the crate builds from its published
+/// package (sk-v27 LW2.TOPO-4b).
 ///
 /// Both vectors are populated 1:1 in index order; unequal lengths are
 /// a programmer error in the populator (xtask). Use
@@ -42,7 +43,7 @@ use syn::{Type, parse_quote};
 #[derive(Clone, Debug, Default)]
 pub struct ParserAttributes {
     pub paths: Vec<std::path::PathBuf>,
-    /// Workspace-root-relative grammar paths (e.g. `grammar/bbnf/bbnf.bbnf`).
+    /// Crate-relative grammar paths (e.g. `grammar/bbnf/bbnf.bbnf`).
     /// One entry per `paths` entry, same order. POSIX forward-slashes.
     pub grammar_rel_paths: Vec<String>,
     pub debug: bool,
@@ -286,10 +287,6 @@ impl<'a> IrCodegenCtx<'a> {
     }
 }
 
-pub fn type_desc_to_syn(desc: &TypeDesc, ctx: &IrCodegenCtx<'_>) -> Type {
-    type_desc_to_syn_raw(desc, &ctx.enum_type, &ctx.boxed_enum_type, ctx.ir, true)
-}
-
 fn type_desc_to_syn_raw(
     desc: &TypeDesc,
     enum_type: &Type,
@@ -352,21 +349,5 @@ fn type_desc_to_syn_raw(
             syn::parse_str(type_str)
                 .unwrap_or_else(|e| panic!("Failed to parse type `{}`: {}", type_str, e))
         }
-    }
-}
-
-pub fn type_desc_is_span(desc: &TypeDesc) -> bool {
-    matches!(desc, TypeDesc::Span)
-}
-
-pub fn type_is_span(ty: &syn::Type) -> bool {
-    if let syn::Type::Path(type_path) = ty {
-        let segments = &type_path.path.segments;
-        if segments.len() != 2 {
-            return false;
-        }
-        segments[0].ident == "parse_that" && segments[1].ident == "Span"
-    } else {
-        false
     }
 }

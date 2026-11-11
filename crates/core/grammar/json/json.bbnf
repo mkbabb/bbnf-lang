@@ -1,0 +1,23 @@
+null = "null" -> 0u8 ;
+bool = "true" -> true | "false" -> false ;
+
+number = /-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/ -> f64 ;
+
+comma = "," ?w ;
+colon = ":" ?w ;
+
+string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/
+       -> decode_json_string_to_arena(input) : String ;
+array = "[" >> (( value , ( comma >> value ) * ) ?)?w << "]" ;
+
+pair = string, colon >> value ;
+object = "{" >> (( pair , ( comma >> pair ) * ) ?)?w << "}" ;
+
+value = object | array | string | number | bool | null ;
+
+ws = /[ \t\n\r]*/ ;
+json = ws >> value << ws ;
+
+@pretty object group ;
+@pretty array group ;
+@pretty pair group ;

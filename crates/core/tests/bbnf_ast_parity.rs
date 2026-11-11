@@ -152,10 +152,8 @@ fn oracle_grammar(source: &str) -> RefGrammar {
                         b'"' | b'\'' | b'`' => in_str = Some(c),
                         b'/' => in_regex = true,
                         b'(' | b'[' | b'{' => depth += 1,
-                        b')' | b']' | b'}' => {
-                            if depth > 0 {
-                                depth -= 1;
-                            }
+                        b')' | b']' | b'}' if depth > 0 => {
+                            depth -= 1;
                         }
                         b';' | b'.' if depth == 0 => {
                             i += 1;

@@ -279,7 +279,18 @@ impl<'a> ConstraintGenerator<'a> {
                 let inner_var = self.generate_node(inner, false);
                 let inner_nid = self.node_id(inner.as_ref());
 
-                if *lo == 0 && *hi == 1 {
+                if *lo == 0
+                    && *hi == 1
+                    && let Some(list) = crate::passes::inspect::sep_list(node)
+                {
+                    // `(x (sep x)*)?` -- the zero-or-more separated list
+                    // (ruling S1-B) is typed as the repeat of its
+                    // element, `Vec<x>`, empty when absent.
+                    let head_vec_var = self.vec_context_vars[&self.node_id(list.element)];
+                    self.csp
+                        .add_constraint(RepeatConstraint::new(var, head_vec_var));
+                    self.csp.add_constraint(EqualConstraint::new(vec_var, var));
+                } else if *lo == 0 && *hi == 1 {
                     // Optional
                     let transparent_ref = if let IrNode::Ref(rule_id) = inner.as_ref() {
                         self.ir.rules[*rule_id as usize].meta.is_transparent

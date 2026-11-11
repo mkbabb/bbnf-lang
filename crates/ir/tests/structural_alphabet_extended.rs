@@ -64,7 +64,7 @@ use bbnf_ir::{
     AltBranch, AltDispatch, CharSet128, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId,
     TypeDescInterner,
 };
-use bbnf_regex::RegexInfo;
+use parse_that_regex::RegexInfo;
 
 // ── Fixture infrastructure ───────────────────────────────────────────────
 
@@ -938,7 +938,7 @@ fn css_l4_singletons_and_digraphs_and_quote_classes() {
         alphabet.digraphs
     );
     // CSS supports both `"...""` and `'...'` strings.
-    for q in [b'"', b'\''] {
+    for q in *b"\"'" {
         assert!(
             alphabet.quote_classes.contains(&q),
             "CSS L4 quote_classes must contain {:?}; got {:?}",
@@ -984,7 +984,7 @@ fn bbnf_singletons_arrow_digraph_and_quote_classes() {
     // The runtime parity kernel still works for any byte the IR
     // exposes — the limit is purely the mining boundary, not a
     // codegen one.
-    for q in [b'"', b'\''] {
+    for q in *b"\"'" {
         assert!(
             alphabet.quote_classes.contains(&q),
             "BBNF quote_classes must contain {:?}; got {:?}",

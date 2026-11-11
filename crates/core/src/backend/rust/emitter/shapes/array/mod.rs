@@ -9,7 +9,7 @@
 //! 1. **Shape 1 — wrapped homogeneous repeat** (JSON `array`):
 //!
 //!    ```text
-//!    array = "[" >> ((value << comma?)*)?w << "]"
+//!    array = "[" >> ((value , (comma >> value)*)?)?w << "]"
 //!    ```
 //!
 //!    The body unwraps to `Wrap(open_byte, Repeat, close_byte)` where
@@ -61,7 +61,7 @@ mod element;
 ///   with no delimiter wrap.
 ///
 /// Struct-direct path emits a uniform body — `begin_compound(&__layout)`
-/// + element loop + `end_compound(handle)` — agnostic to the wrapped /
+/// then the element loop, then `end_compound(handle)` — agnostic to the wrapped /
 /// list distinction (the JsonStructBuilder's Array frame collects items
 /// the same way regardless of which delimiter shape produced them).
 pub fn emit_parse_array(
@@ -98,10 +98,11 @@ fn emit_parse_array_struct_direct(
     strategy: &EmitStrategy,
 ) -> TokenStream {
     let body = unwrap_map_ow(&rule.body);
-    if let Some((open, _middle, close)) = unwrap_wrap(body) {
-        if single_byte_literal(open, ir).is_some() && single_byte_literal(close, ir).is_some() {
-            return emit_parse_array_struct_direct_wrapped(grammar_suffix, rule, ir, strategy);
-        }
+    if let Some((open, _middle, close)) = unwrap_wrap(body)
+        && single_byte_literal(open, ir).is_some()
+        && single_byte_literal(close, ir).is_some()
+    {
+        return emit_parse_array_struct_direct_wrapped(grammar_suffix, rule, ir, strategy);
     }
     emit_parse_array_struct_direct_list(grammar_suffix, rule, ir, strategy)
 }

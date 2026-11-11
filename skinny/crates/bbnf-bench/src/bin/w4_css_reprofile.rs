@@ -46,11 +46,11 @@ fn main() {
     }
     let elapsed = start.elapsed();
     let total = (bytes as u128) * (iters as u128);
-    let mbps = (total as f64 * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0);
+    let mb_s = total as f64 / (elapsed.as_secs_f64() * 1_000_000.0);
     eprintln!(
-        "w4-reprofile: {iters} iters in {:.2}s -> {:.0} Mbps (acc {acc})",
+        "w4-reprofile: {iters} iters in {:.2}s -> {:.0} MB/s (acc {acc})",
         elapsed.as_secs_f64(),
-        mbps
+        mb_s
     );
-    println!("W4_REPROFILE corpus={} iters={iters} mbps={mbps:.1}", corpus.spec.id);
+    println!("W4_REPROFILE corpus={} iters={iters} mb_s={mb_s:.1}", corpus.spec.id);
 }

@@ -1,0 +1,645 @@
+diff --git a/skinny/crates/bbnf-bench/src/bin/json_canon_bench.rs b/skinny/crates/bbnf-bench/src/bin/json_canon_bench.rs
+new file mode 100644
+index 000000000..afdff1028
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/src/bin/json_canon_bench.rs
+@@ -0,0 +1,298 @@
++//! SK-V22 graduation-baseline cold JSON harness — rebuilt from report 33 +
++//! PROTO-A1 recipes. Byte-faithful mirror of `css_canon_bench.rs` cold
++//! discipline: one out-of-band touch to page in the source, then N=200 timed
++//! single parses with fresh parser state and dropped output.
++//!
++//! Modes:
++//!   default N            -> cold table: median/min ns/byte + Mbps per lane/corpus
++//!   pmu    ITERS         -> per-lane cyc/byte + instructions + cpi (proc_pid_rusage V5)
++//!   paired N             -> interleaved paired per-sample ratios (load-robust):
++//!                           each sample times parse_tape, fused, sonic, serde
++//!                           back-to-back; reports paired ratio mean + 95% CI so
++//!                           load hits both sides of every ratio equally.
++//!
++//! Lanes:
++//!   parse_only  runtime::generated_json::parse_only  (structural validation, no tape)
++//!   parse_tape  runtime::generated_json::parse        (the live lazy-view product; tape)
++//!   fused       direct_struct::track1_digest          (parse_direct sink, eager digest)
++//!   sonic       sonic-rs 0.5.8 full-value
++//!   serde       serde_json full-value
++
++use std::hint::black_box;
++use std::time::Instant;
++
++// --- PMU via proc_pid_rusage V5 (cycles/instructions), mirrors css_canon_bench.rs ---
++#[repr(C)]
++#[derive(Default, Clone, Copy)]
++struct RusageInfoV5 {
++    ri_uuid: [u8; 16],
++    ri_user_time: u64,
++    ri_system_time: u64,
++    ri_pkg_idle_wkups: u64,
++    ri_interrupt_wkups: u64,
++    ri_pageins: u64,
++    ri_wired_size: u64,
++    ri_resident_size: u64,
++    ri_phys_footprint: u64,
++    ri_proc_start_abstime: u64,
++    ri_proc_exit_abstime: u64,
++    ri_child_user_time: u64,
++    ri_child_system_time: u64,
++    ri_child_pkg_idle_wkups: u64,
++    ri_child_interrupt_wkups: u64,
++    ri_child_pageins: u64,
++    ri_child_elapsed_abstime: u64,
++    ri_diskio_bytesread: u64,
++    ri_diskio_byteswritten: u64,
++    ri_cpu_time_qos_default: u64,
++    ri_cpu_time_qos_maintenance: u64,
++    ri_cpu_time_qos_background: u64,
++    ri_cpu_time_qos_utility: u64,
++    ri_cpu_time_qos_legacy: u64,
++    ri_cpu_time_qos_user_initiated: u64,
++    ri_cpu_time_qos_user_interactive: u64,
++    ri_billed_system_time: u64,
++    ri_serviced_system_time: u64,
++    ri_logical_writes: u64,
++    ri_lifetime_max_phys_footprint: u64,
++    ri_instructions: u64,
++    ri_cycles: u64,
++    ri_billed_energy: u64,
++    ri_serviced_energy: u64,
++    ri_interval_max_phys_footprint: u64,
++    ri_runnable_time: u64,
++    ri_flags: u64,
++}
++const RUSAGE_INFO_V5: i32 = 5;
++extern "C" {
++    fn proc_pid_rusage(pid: libc::pid_t, flavor: i32, buffer: *mut u8) -> i32;
++}
++fn read_rusage_v5() -> RusageInfoV5 {
++    let mut ri = RusageInfoV5::default();
++    let rc = unsafe {
++        proc_pid_rusage(
++            libc::getpid(),
++            RUSAGE_INFO_V5,
++            (&mut ri) as *mut RusageInfoV5 as *mut u8,
++        )
++    };
++    if rc != 0 {
++        panic!("proc_pid_rusage failed rc={rc}");
++    }
++    ri
++}
++
++type ParseFn = fn(&str, &[u8]) -> u64;
++
++fn parse_only_lane(input: &str, bytes: &[u8]) -> u64 {
++    runtime::generated_json::parse_only(input).expect("generated parse_only failed");
++    black_box(bytes.len() as u64)
++}
++fn parse_tape_lane(input: &str, bytes: &[u8]) -> u64 {
++    let root = runtime::generated_json::parse(input).expect("generated parse (tape) failed");
++    black_box(&root);
++    black_box(bytes.len() as u64)
++}
++fn fused_lane(input: &str, _bytes: &[u8]) -> u64 {
++    let d = bbnf_bench::direct_struct::track1_digest(input).expect("fused track1 digest failed");
++    black_box(d.fingerprint ^ d.objects ^ d.arrays ^ d.strings ^ d.numbers ^ d.string_bytes)
++}
++fn sonic_lane(_input: &str, bytes: &[u8]) -> u64 {
++    let d = bbnf_bench::direct_struct::sonic_digest(bytes).expect("sonic digest failed");
++    black_box(d.fingerprint ^ d.objects ^ d.arrays ^ d.strings ^ d.numbers ^ d.string_bytes)
++}
++fn serde_lane(_input: &str, bytes: &[u8]) -> u64 {
++    let d = bbnf_bench::direct_struct::serde_digest(bytes).expect("serde digest failed");
++    black_box(d.fingerprint ^ d.objects ^ d.arrays ^ d.strings ^ d.numbers ^ d.string_bytes)
++}
++
++const WORKLOADS: &[(&str, ParseFn)] = &[
++    ("parse_only", parse_only_lane),
++    ("parse_tape", parse_tape_lane),
++    ("fused", fused_lane),
++    ("sonic", sonic_lane),
++    ("serde", serde_lane),
++];
++const CORPORA: &[&str] = &["twitter", "canada", "citm_catalog"];
++
++struct Stats {
++    median_nspb: f64,
++    min_nspb: f64,
++    median_mbps: f64,
++    max_mbps: f64,
++    stddev_mbps: f64,
++    n: usize,
++}
++
++fn mbps(bytes: usize, secs: f64) -> f64 {
++    if secs <= 0.0 {
++        return f64::INFINITY;
++    }
++    (bytes as f64 * 8.0) / (secs * 1_000_000.0)
++}
++
++fn load_corpus(name: &str) -> Vec<u8> {
++    let path = bbnf_bench::real_typed_struct::locate_fixture(name);
++    std::fs::read(&path).unwrap_or_else(|e| panic!("read {path:?}: {e}"))
++}
++
++/// N cold per-parse samples. Each sample times exactly one parse of `input`.
++fn sample(parse: ParseFn, input: &str, bytes: &[u8], n: usize) -> Stats {
++    let nbytes = bytes.len();
++    let mut ns_samples: Vec<f64> = Vec::with_capacity(n);
++    black_box(parse(black_box(input), black_box(bytes)));
++    for _ in 0..n {
++        let start = Instant::now();
++        let r = parse(black_box(input), black_box(bytes));
++        let secs = start.elapsed().as_secs_f64();
++        black_box(r);
++        ns_samples.push(secs * 1e9 / nbytes as f64);
++    }
++    ns_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    let median_ns = if n % 2 == 0 {
++        (ns_samples[n / 2 - 1] + ns_samples[n / 2]) / 2.0
++    } else {
++        ns_samples[n / 2]
++    };
++    let min_ns = ns_samples[0];
++    // Mbps = (bytes*8)/(secs*1e6); secs/byte = ns_per_byte/1e9 -> Mbps = 8000/ns_per_byte.
++    let median_mbps = 8.0 * 1000.0 / median_ns;
++    let max_mbps = 8.0 * 1000.0 / min_ns;
++    let mean_mbps = ns_samples.iter().map(|ns| 8.0 * 1000.0 / ns).sum::<f64>() / n as f64;
++    let var = ns_samples
++        .iter()
++        .map(|ns| (8.0 * 1000.0 / ns - mean_mbps).powi(2))
++        .sum::<f64>()
++        / n as f64;
++    Stats {
++        median_nspb: median_ns,
++        min_nspb: min_ns,
++        median_mbps,
++        max_mbps,
++        stddev_mbps: var.sqrt(),
++        n,
++    }
++}
++
++fn loadavg() -> String {
++    std::process::Command::new("sysctl")
++        .args(["-n", "vm.loadavg"])
++        .output()
++        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
++        .unwrap_or_default()
++}
++
++fn main() {
++    let args: Vec<String> = std::env::args().collect();
++    let mode = args.get(1).map(|s| s.as_str()).unwrap_or("");
++
++    // PMU mode: per-corpus per-lane cyc/byte over a fixed iter count.
++    if mode == "pmu" || std::env::var("JSON_CANON_PMU").is_ok() {
++        let iters: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(800);
++        println!("# SK-V22 JSON PMU cycles/byte  iters={iters}  loadavg={}", loadavg());
++        println!("# schema: PMU corpus lane bytes iters cycles instructions cyc_per_byte cpi mbps");
++        for name in CORPORA {
++            let bytes = load_corpus(name);
++            let input = std::str::from_utf8(&bytes).unwrap();
++            for (lane, parse) in WORKLOADS {
++                black_box(parse(black_box(input), black_box(&bytes)));
++                let ri0 = read_rusage_v5();
++                let t0 = Instant::now();
++                let mut ck = 0u64;
++                for _ in 0..iters {
++                    ck ^= parse(black_box(input), black_box(&bytes));
++                }
++                let secs = t0.elapsed().as_secs_f64();
++                let ri1 = read_rusage_v5();
++                black_box(ck);
++                let total = (bytes.len() as u128) * (iters as u128);
++                let cyc = ri1.ri_cycles - ri0.ri_cycles;
++                let ins = ri1.ri_instructions - ri0.ri_instructions;
++                println!(
++                    "PMU corpus={} lane={} bytes={} iters={} cycles={} instructions={} cyc_per_byte={:.4} cpi={:.4} mbps={:.3}",
++                    name, lane, bytes.len(), iters, cyc, ins,
++                    cyc as f64 / total as f64,
++                    if ins == 0 { 0.0 } else { cyc as f64 / ins as f64 },
++                    mbps(total as usize, secs)
++                );
++            }
++        }
++        return;
++    }
++
++    // Paired interleaved mode: per corpus, per sample, time parse_tape, fused,
++    // sonic, serde back-to-back; report paired ratio mean + 95% CI. Load hits
++    // both sides of every ratio inside one sample, nulling inter-invocation drift.
++    if mode == "paired" || std::env::var("JSON_CANON_PAIRED").is_ok() {
++        let n: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(200);
++        println!("# SK-V22 JSON paired-interleaved  N={n}  loadavg={}", loadavg());
++        println!("# schema: PAIR corpus ratio mean lo95 hi95  (ratio = A_ns_per_byte / B_ns_per_byte)");
++        for name in CORPORA {
++            let bytes = load_corpus(name);
++            let input = std::str::from_utf8(&bytes).unwrap();
++            let nb = bytes.len() as f64;
++            // touch
++            black_box(parse_tape_lane(input, &bytes));
++            black_box(fused_lane(input, &bytes));
++            black_box(sonic_lane(input, &bytes));
++            black_box(serde_lane(input, &bytes));
++            // per-sample ns/byte for each lane, interleaved inside one iteration
++            let (mut tape, mut fused, mut sonic, mut serde) =
++                (Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n), Vec::with_capacity(n));
++            for _ in 0..n {
++                let s = Instant::now();
++                black_box(parse_tape_lane(black_box(input), black_box(&bytes)));
++                tape.push(s.elapsed().as_secs_f64() * 1e9 / nb);
++                let s = Instant::now();
++                black_box(fused_lane(black_box(input), black_box(&bytes)));
++                fused.push(s.elapsed().as_secs_f64() * 1e9 / nb);
++                let s = Instant::now();
++                black_box(sonic_lane(black_box(input), black_box(&bytes)));
++                sonic.push(s.elapsed().as_secs_f64() * 1e9 / nb);
++                let s = Instant::now();
++                black_box(serde_lane(black_box(input), black_box(&bytes)));
++                serde.push(s.elapsed().as_secs_f64() * 1e9 / nb);
++            }
++            // paired ratios: skinny/SOTA per sample (lower = skinny faster)
++            emit_paired(name, "tape/sonic", &tape, &sonic);
++            emit_paired(name, "fused/sonic", &fused, &sonic);
++            emit_paired(name, "tape/serde", &tape, &serde);
++            emit_paired(name, "fused/serde", &fused, &serde);
++        }
++        return;
++    }
++
++    // Default cold table.
++    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(200);
++    assert!(n >= 50, "N must be >= 50 (telemetry-honesty gate)");
++    let host = std::process::Command::new("uname")
++        .arg("-m")
++        .output()
++        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
++        .unwrap_or_default();
++    println!("# SK-V22 canonical cold JSON bench  N={n}  host={host}  loadavg={}", loadavg());
++    println!("# schema: ROW corpus lane bytes n median_nspb min_nspb median_mbps max_mbps stddev_mbps");
++    for name in CORPORA {
++        let bytes = load_corpus(name);
++        let input = std::str::from_utf8(&bytes).expect("utf8");
++        for (lane, parse) in WORKLOADS {
++            let s = sample(*parse, input, &bytes, n);
++            println!(
++                "ROW corpus={} lane={} bytes={} n={} median_nspb={:.4} min_nspb={:.4} median_mbps={:.3} max_mbps={:.3} stddev_mbps={:.3}",
++                name, lane, bytes.len(), s.n, s.median_nspb, s.min_nspb, s.median_mbps, s.max_mbps, s.stddev_mbps
++            );
++        }
++    }
++}
++
++/// Emit a paired ratio (per-sample a/b) with mean and 95% CI (normal approx).
++fn emit_paired(corpus: &str, label: &str, a: &[f64], b: &[f64]) {
++    let n = a.len();
++    let ratios: Vec<f64> = a.iter().zip(b).map(|(x, y)| x / y).collect();
++    let mean = ratios.iter().sum::<f64>() / n as f64;
++    let var = ratios.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / (n as f64 - 1.0);
++    let se = (var / n as f64).sqrt();
++    let lo = mean - 1.96 * se;
++    let hi = mean + 1.96 * se;
++    println!("PAIR corpus={corpus} ratio={label} mean={mean:.4} lo95={lo:.4} hi95={hi:.4}");
++}
+diff --git a/skinny/crates/parse-that-regex/src/number/mod.rs b/skinny/crates/parse-that-regex/src/number/mod.rs
+index 7b47fa771..57318f593 100644
+--- a/skinny/crates/parse-that-regex/src/number/mod.rs
++++ b/skinny/crates/parse-that-regex/src/number/mod.rs
+@@ -1,5 +1,6 @@
+ pub mod eisel_lemire;
+ pub mod integer;
++mod simd;
+ 
+ #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+ pub struct NumberSpan {
+@@ -110,6 +111,26 @@ fn scan_digit_run(
+     parts: &mut NumberParts,
+     fractional: bool,
+ ) -> usize {
++    // NEON wide path (aarch64): resolve the leading digit run of a common
++    // canada coordinate — count digits + Mula/Lemire mantissa fold — in one
++    // 16-byte block, replacing the 8/4/2/1 SWAR ladder. Gated to
++    // `digit_count <= 3` so one <=16-digit block keeps the running total
++    // within the 19-digit mantissa budget (no overflow); runs longer than
++    // one block fall through to the SWAR tail below, which preserves the
++    // exact overflow semantics unchanged.
++    #[cfg(target_arch = "aarch64")]
++    while cursor + 16 <= len && parts.can_push_block() {
++        let (count, value) = simd::scan_block(input, cursor);
++        parts.push_block(count, value);
++        if fractional {
++            parts.decimal_exp -= count as i32;
++        }
++        cursor += count as usize;
++        if count < 16 {
++            return cursor;
++        }
++    }
++
+     while cursor + 8 <= len && parts.can_push_eight_digits() {
+         let block = unsafe { std::ptr::read_unaligned(input.as_ptr().add(cursor).cast::<u64>()) };
+         if !is_eight_ascii_digits(block) {
+@@ -319,6 +340,24 @@ impl NumberParts {
+         }
+     }
+ 
++    #[inline(always)]
++    fn can_push_block(&self) -> bool {
++        // One <=16-digit NEON block from here keeps digit_count <= 19,
++        // so the exact mantissa fold below cannot overflow u64.
++        self.digit_count <= 3
++    }
++
++    #[inline(always)]
++    fn push_block(&mut self, count: u32, value: u64) {
++        debug_assert!(self.can_push_block());
++        debug_assert!(count <= 16);
++        self.digit_count += count;
++        self.mantissa = self
++            .mantissa
++            .wrapping_mul(simd::POW10[count as usize])
++            .wrapping_add(value);
++    }
++
+     #[inline(always)]
+     fn can_push_eight_digits(&self) -> bool {
+         self.digit_count <= 11
+diff --git a/skinny/crates/parse-that-regex/src/number/simd.rs b/skinny/crates/parse-that-regex/src/number/simd.rs
+new file mode 100644
+index 000000000..739043f8f
+--- /dev/null
++++ b/skinny/crates/parse-that-regex/src/number/simd.rs
+@@ -0,0 +1,106 @@
++//! NEON digit-run kernels for `scan_digit_run` (aarch64 only).
++//!
++//! Re-authored from SK-V23 PROTO-PB-6. Two composed kernels over one
++//! 16-byte block: a *vshrn nibble-domain* leading-digit count, and a
++//! *Mula/Lemire* branchless right-align + pairwise fold that materializes
++//! the counted digits into a `u64` — feeding the `NumberParts` mantissa
++//! straight to Eisel-Lemire, no scalar tail, no per-count branch.
++//!
++//! The scalar 8/4/2/1 SWAR ladder in the parent module remains the
++//! parity oracle (and the non-aarch64 path); these kernels reproduce its
++//! mantissa/count exactly. See `tests/digit_simd_parity.rs`.
++
++/// `10^n` for `n ∈ 0..=16`. `10^16` is the widest a full block contributes
++/// and fits `u64` (`< 2^63`), so `mantissa * POW10[n] + block_value` never
++/// overflows while the caller keeps the running digit count `<= 19`.
++pub(super) const POW10: [u64; 17] = [
++    1,
++    10,
++    100,
++    1_000,
++    10_000,
++    100_000,
++    1_000_000,
++    10_000_000,
++    100_000_000,
++    1_000_000_000,
++    10_000_000_000,
++    100_000_000_000,
++    1_000_000_000_000,
++    10_000_000_000_000,
++    100_000_000_000_000,
++    1_000_000_000_000_000,
++    10_000_000_000_000_000,
++];
++
++/// Count the leading ASCII digits of `input[cursor..]` and materialize
++/// their integer value, over a single 16-byte NEON block.
++///
++/// Returns `(count, value)` where `count ∈ 0..=16` is the number of
++/// leading bytes in `b'0'..=b'9'` and `value` is the base-10 value of
++/// exactly those `count` digits (`0` when `count == 0`).
++///
++/// # Safety
++/// The caller must guarantee `cursor + 16 <= input.len()`.
++#[cfg(target_arch = "aarch64")]
++#[inline]
++pub(super) fn scan_block(input: &[u8], cursor: usize) -> (u32, u64) {
++    use core::arch::aarch64::*;
++
++    // `SHUF[c][j]` right-aligns the first `c` digits into the high byte
++    // lanes: output lane `j` pulls input digit `j - (16 - c)`, valid only
++    // for `j ∈ [16-c, 15]` (indices `0..=c-1`); the low lanes get an
++    // out-of-range index (`>= 16`) so `vqtbl1q_u8` zero-fills them.
++    const fn build_shuf() -> [[u8; 16]; 17] {
++        let mut table = [[0u8; 16]; 17];
++        let mut c = 0;
++        while c <= 16 {
++            let mut j = 0;
++            while j < 16 {
++                let idx = j as i32 - (16 - c as i32);
++                table[c][j] = if idx < 0 { 0xFF } else { idx as u8 };
++                j += 1;
++            }
++            c += 1;
++        }
++        table
++    }
++    const SHUF: [[u8; 16]; 17] = build_shuf();
++
++    // Per-pair / per-group base-10 weights for the pairwise fold.
++    const W8: [u8; 16] = [10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1, 10, 1];
++    const W16: [u16; 8] = [100, 1, 100, 1, 100, 1, 100, 1];
++    const W32: [u32; 4] = [10_000, 1, 10_000, 1];
++
++    // SAFETY: caller guarantees `cursor + 16 <= input.len()`; all lanes read.
++    unsafe {
++        let chunk = vld1q_u8(input.as_ptr().add(cursor));
++
++        // ── count: vshrn nibble-domain movemask ──────────────────────────
++        // `(b - '0') > 9` (unsigned) ⇒ 0xFF non-digit lanes. `vshrn_n::<4>`
++        // narrows each u16 lane to a nibble, mapping input byte `k` to bit
++        // `4k` of the 64-bit result; the first non-digit ⇒ `tz = 4k ⇒ k`,
++        // all-digit ⇒ `nd == 0 ⇒ tz = 64 ⇒ 16`, branchless. `>> 2` is the
++        // nibble-domain de-scale (raw `tz` counts bit positions, not lanes).
++        let non_digit = vcgtq_u8(vsubq_u8(chunk, vdupq_n_u8(b'0')), vdupq_n_u8(9));
++        let nd = vget_lane_u64::<0>(vreinterpret_u64_u8(vshrn_n_u16::<4>(
++            vreinterpretq_u16_u8(non_digit),
++        )));
++        let count = nd.trailing_zeros() >> 2;
++
++        // ── accumulate: Mula/Lemire right-align + 4-stage fold ───────────
++        let adjusted = vsubq_u8(chunk, vdupq_n_u8(b'0'));
++        let is_digit = vcleq_u8(adjusted, vdupq_n_u8(9)); // 0xFF for digits
++        let digits = vandq_u8(adjusted, is_digit); // non-digit lanes → 0
++        let aligned = vqtbl1q_u8(digits, vld1q_u8(SHUF[count as usize].as_ptr()));
++
++        let t1 = vpaddlq_u8(vmulq_u8(aligned, vld1q_u8(W8.as_ptr()))); // u16 0..99
++        let t2 = vpaddlq_u16(vmulq_u16(t1, vld1q_u16(W16.as_ptr()))); // u32 0..9999
++        let t3 = vpaddlq_u32(vmulq_u32(t2, vld1q_u32(W32.as_ptr()))); // u64 0..1e8
++        let value = vgetq_lane_u64::<0>(t3)
++            .wrapping_mul(100_000_000)
++            .wrapping_add(vgetq_lane_u64::<1>(t3));
++
++        (count, value)
++    }
++}
+diff --git a/skinny/crates/parse-that-regex/tests/digit_simd_parity.rs b/skinny/crates/parse-that-regex/tests/digit_simd_parity.rs
+new file mode 100644
+index 000000000..e259a1469
+--- /dev/null
++++ b/skinny/crates/parse-that-regex/tests/digit_simd_parity.rs
+@@ -0,0 +1,160 @@
++//! Float / integer byte-parity oracle for the NEON digit-run kernel
++//! (`number::simd::scan_block`, re-authored from SK-V23 PROTO-PB-6).
++//!
++//! The kernel is exercised transparently through the public
++//! `match_number_span` + `materialize_*` surface (on aarch64 that path
++//! runs the NEON block). Ground truth is libstd's own `FromStr` — the
++//! canonical correctly-rounded oracle — so agreement here is end-to-end
++//! byte-parity, strictly stronger than kernel-vs-scalar count checks.
++
++use parse_that_regex::number::{
++    match_number_span, materialize_f64, materialize_i64, materialize_u64,
++};
++
++/// `s` followed by a `,` delimiter and enough trailing non-digit padding
++/// that every leading-digit run has a full 16-byte block in bounds — this
++/// is what forces the NEON `scan_block` path (guarded by `cursor + 16 <=
++/// len`) to actually fire on short synthetic inputs.
++fn padded(s: &str) -> Vec<u8> {
++    let mut buf = s.as_bytes().to_vec();
++    buf.push(b',');
++    while buf.len() < s.len() + 20 {
++        buf.push(b',');
++    }
++    buf
++}
++
++/// Materialize `s` through the scan+Eisel-Lemire path and assert its f64
++/// bits equal libstd's `f64::from_str`.
++fn assert_f64_parity(s: &str) {
++    let buf = padded(s);
++    let span = match_number_span(&buf, 0)
++        .unwrap_or_else(|| panic!("scan rejected {s:?}"));
++    let got = materialize_f64(&buf, &span)
++        .unwrap_or_else(|_| panic!("materialize_f64 failed for {s:?}"));
++    let want = s.parse::<f64>().unwrap();
++    assert_eq!(
++        got.to_bits(),
++        want.to_bits(),
++        "float bits diverge for {s:?}: got {got:?} want {want:?}"
++    );
++    // The span's end must land exactly on the delimiter we appended.
++    assert_eq!(span.end, s.len(), "span end diverges for {s:?}");
++}
++
++#[test]
++fn integer_widths_1_through_20() {
++    // Every integer width drives a distinct leading-digit count through the
++    // kernel (counts 1..=16 in one block, >16 via block + SWAR tail).
++    for width in 1..=20u32 {
++        // 1, 12, 123, ... and 9, 98, 987, ...
++        let ascending: String = (0..width).map(|k| char::from(b'1' + (k % 9) as u8)).collect();
++        let descending: String = (0..width).map(|k| char::from(b'9' - (k % 9) as u8)).collect();
++        for s in [ascending, descending] {
++            let mut buf = s.as_bytes().to_vec();
++            buf.push(b',');
++            let span = match_number_span(&buf, 0).unwrap();
++            assert_eq!(span.digit_count, width, "digit_count for {s:?}");
++            if width <= 19 {
++                let want = s.parse::<u64>().unwrap();
++                assert_eq!(materialize_u64(&buf, &span).unwrap(), want, "u64 {s:?}");
++                assert_eq!(span.mantissa, want, "mantissa {s:?}");
++            }
++            // signed round-trip for the ones that fit i64
++            if let Ok(want) = format!("-{s}").parse::<i64>() {
++                let neg = format!("-{s},");
++                let nspan = match_number_span(neg.as_bytes(), 0).unwrap();
++                assert_eq!(materialize_i64(neg.as_bytes(), &nspan).unwrap(), want, "i64 -{s}");
++            }
++        }
++    }
++}
++
++#[test]
++fn fractional_counts_and_representative_floats() {
++    // Fractional runs of every length 1..=17 (canada's coordinate shape),
++    // plus exponents, leading zeros, and IEEE edge magnitudes.
++    let mut cases: Vec<String> = Vec::new();
++    for frac_len in 1..=17usize {
++        let frac: String = (0..frac_len).map(|k| char::from(b'0' + (k % 10) as u8)).collect();
++        cases.push(format!("43.{frac}"));
++        cases.push(format!("-65.{frac}"));
++        cases.push(format!("0.{frac}"));
++    }
++    cases.extend(
++        [
++            "0.0", "-0.0", "1.0", "1e0", "5e-324", "2.2250738585072014e-308",
++            "1.7976931348623157e308", "43.474709000000125", "6.02214076e23",
++            "-65.613616999999977", "43.420273000000009", "123456789.123456789",
++            "9007199254740993", "9999999999999999.9", "1.5e-10", "3.14159265358979",
++        ]
++        .iter()
++        .map(|s| s.to_string()),
++    );
++    for s in &cases {
++        assert_f64_parity(s);
++    }
++}
++
++/// Walk the raw bytes of a JSON corpus, skipping string literals, and run
++/// every numeric token through the kernel — the real-data float oracle.
++fn sweep_corpus(name: &str) -> usize {
++    let manifest = env!("CARGO_MANIFEST_DIR");
++    let path = format!("{manifest}/../test-fixtures/corpus/json/{name}.json");
++    let bytes = match std::fs::read(&path) {
++        Ok(b) => b,
++        Err(_) => return 0, // fixture absent in this checkout — skip, not fail
++    };
++    let n = bytes.len();
++    let mut i = 0usize;
++    let mut checked = 0usize;
++    while i < n {
++        match bytes[i] {
++            b'"' => {
++                // skip the string literal, honoring backslash escapes
++                i += 1;
++                while i < n {
++                    match bytes[i] {
++                        b'\\' => i += 2,
++                        b'"' => {
++                            i += 1;
++                            break;
++                        }
++                        _ => i += 1,
++                    }
++                }
++            }
++            b'-' | b'0'..=b'9' => {
++                let span = match_number_span(&bytes, i)
++                    .unwrap_or_else(|| panic!("{name}: scan rejected at byte {i}"));
++                let text = std::str::from_utf8(&bytes[span.start..span.end]).unwrap();
++                let want = text.parse::<f64>().unwrap();
++                let got = materialize_f64(&bytes, &span).unwrap();
++                assert_eq!(
++                    got.to_bits(),
++                    want.to_bits(),
++                    "{name}: float bits diverge for {text:?} at byte {i}"
++                );
++                checked += 1;
++                i = span.end;
++            }
++            _ => i += 1,
++        }
++    }
++    checked
++}
++
++#[test]
++fn canada_corpus_byte_parity() {
++    let checked = sweep_corpus("canada");
++    // canada is coordinate-heavy: ~111k float tokens when present.
++    if checked > 0 {
++        assert!(checked > 100_000, "expected >100k canada numbers, got {checked}");
++    }
++}
++
++#[test]
++fn twitter_and_citm_corpus_byte_parity() {
++    sweep_corpus("twitter");
++    sweep_corpus("citm_catalog");
++}

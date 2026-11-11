@@ -16,7 +16,7 @@
 
 use rustc_hash::FxHashMap;
 
-use egraph::{Analysis, EGraph, Id, Rewrite};
+use parse_that_egraph::{Analysis, EGraph, Id, Rewrite};
 
 use crate::egraph::interner::SharedStrings;
 use crate::egraph::node::GrammarENode;
@@ -179,10 +179,10 @@ impl WrapOfEpsilonScalar {
             match node {
                 GrammarENode::Literal(_) | GrammarENode::Regex(_) => return true,
                 GrammarENode::Ref(rid) => {
-                    if let Some(ty) = self.rule_types.get(rid) {
-                        if Self::is_scalar(ty) {
-                            return true;
-                        }
+                    if let Some(ty) = self.rule_types.get(rid)
+                        && Self::is_scalar(ty)
+                    {
+                        return true;
                     }
                 }
                 _ => {}

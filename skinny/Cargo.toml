@@ -9,7 +9,6 @@ members = [
   "crates/runtime",
   "crates/parse-that-regex",
   "crates/bbnf-regex",
-  "crates/bbnf-simd",
   "crates/bbnf-bench",
   "crates/test-fixtures",
   "xtask",
@@ -20,6 +19,8 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/mkbabb/bbnf-lang"
 rust-version = "1.78"
+# The lab is admitted row by row by census (X-1) and is never published.
+publish = false
 
 [workspace.dependencies]
 bbnf = { path = "crates/bbnf" }
@@ -30,11 +31,14 @@ codegen = { path = "crates/codegen" }
 runtime = { path = "crates/runtime" }
 parse-that-regex = { path = "crates/parse-that-regex" }
 bbnf-regex = { path = "crates/bbnf-regex" }
-bbnf-simd = { path = "crates/bbnf-simd" }
 bbnf-bench = { path = "crates/bbnf-bench" }
 test-fixtures = { path = "crates/test-fixtures" }
-egraph = { path = "../crates/egraph" }
-csp-solver = { path = "../crates/csp-solver" }
+# The e-graph moved to parse-that (sk-v27 LW2.TOPO-1, X-5); csp-solver is
+# the crates.io release byte-identical to the copy bbnf-lang vendored.
+parse-that-egraph = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+# The block primitives (sk-v27 LW2.PERF-1b, X-3): the one core::arch crate.
+parse-that-simd = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+csp-solver = "0.4.0"
 
 anyhow = "1"
 blake3 = "1"

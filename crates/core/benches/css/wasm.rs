@@ -16,7 +16,7 @@ use parse_that::regex::Dfa;
 use wasmtime::*;
 
 fn load(name: &str) -> String {
-    let path = format!("../../data/css/{}", name);
+    let path = bbnf_corpus::path(&format!("css/{}", name)).display().to_string();
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
 }
 
@@ -43,11 +43,10 @@ fn compiled_wasm() -> WasmBundle {
     )
     .unwrap()
     {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => unreachable!(),
     };
     bbnf_ir::passes::compute_sp_method_rules(&mut ir);
-    bbnf_ir::dag::ensure_dag(&mut ir);
     bbnf_ir::passes::project_types(&mut ir);
 
     // Run driver + WASM emitter to get WAT + regex patterns.

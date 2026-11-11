@@ -48,7 +48,7 @@
 
 use crate::IrNode;
 use crate::dag::NodeId;
-use crate::passes::sets::structural_alphabet::{StructuralBitmap, build_byte_bitmap};
+use crate::passes::sets::structural_alphabet::StructuralBitmap;
 
 use super::{MineOutputs, RecognizerMineCtx, RecognizerMiner};
 
@@ -121,7 +121,7 @@ impl RecognizerMiner for PatternAlphabetMiner {
 /// # Last-byte set (AW-IV.W3.5c)
 ///
 /// Delegates to [`compute_last_byte_set`], which builds the NFA via
-/// `bbnf_regex::Nfa::from_pattern` and walks the byte-transitions whose
+/// `parse_that_regex::Nfa::from_pattern` and walks the byte-transitions whose
 /// target can ε-reach the NFA accept state. The resulting bitmap is the
 /// set of bytes that can end a match — the admission data for the
 /// bounded-Regex walker arm. Patterns whose NFA construction fails
@@ -278,7 +278,7 @@ fn mine_matchable_bytes(pattern: &str) -> (StructuralBitmap, bool) {
 
 /// AW-IV.W3.5c — compute the pattern's last-byte set via the NFA.
 ///
-/// Constructs the NFA via `bbnf_regex::Nfa::from_pattern` and walks the
+/// Constructs the NFA via `parse_that_regex::Nfa::from_pattern` and walks the
 /// byte-transitions whose target can ε-reach the NFA's accept state.
 /// The union of those transitions' `ByteSet`s is the last-byte set: the
 /// bytes that can appear immediately before the pattern accepts.
@@ -287,7 +287,7 @@ fn mine_matchable_bytes(pattern: &str) -> (StructuralBitmap, bool) {
 /// construction fails (HIR parse error, unsupported features) so the
 /// consumer falls back to the conservative full-byte answer.
 fn compute_last_byte_set(pattern: &str) -> (StructuralBitmap, bool) {
-    let Some(nfa) = bbnf_regex::Nfa::from_pattern(pattern) else {
+    let Some(nfa) = parse_that_regex::Nfa::from_pattern(pattern) else {
         return (full_bitmap(), false);
     };
 
@@ -363,21 +363,4 @@ fn add_byte(bitmap: &mut [u64; 4], b: u8) {
 #[inline]
 fn full_bitmap() -> [u64; 4] {
     [u64::MAX; 4]
-}
-
-/// Helper construction — used by tests and by the walker-side
-/// runtime guard when consuming the mined alphabets.
-///
-/// The `matchable_bytes` and `last_byte_set` bitmaps both derive from
-/// `bytes` — callers constructing fixtures against the pre-W3.5c API
-/// get matchable == last_byte by default.
-#[allow(dead_code)]
-pub fn make_alphabet<I: IntoIterator<Item = u8>>(bytes: I) -> PatternAlphabet {
-    let bitmap = build_byte_bitmap(bytes);
-    PatternAlphabet {
-        matchable_bytes: bitmap,
-        is_tight: true,
-        last_byte_set: bitmap,
-        is_last_byte_tight: true,
-    }
 }

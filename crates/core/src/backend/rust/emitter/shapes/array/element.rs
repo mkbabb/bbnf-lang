@@ -6,9 +6,9 @@ use bbnf_ir::GrammarIR;
 /// Extract the value-position Ref target from an array rule body.
 ///
 /// AW-V.W5.2 — the canonical JSON array body is
-/// `"[" >> ((value << comma?)*)?w << "]"`, which lowers to
-/// `Skip(Next("[", OW(Repeat(Skip(value, Repeat(comma, 0..=1))))), "]")`.
-/// The value Ref sits inside the outer Repeat. The list-rule entry
+/// `"[" >> ((value , (comma >> value)*)?)?w << "]"` (LW2.TOPO-6b), which
+/// lowers to `Skip(Next("[", OW(Repeat(Seq[value, Repeat(Next(comma,
+/// value))], 0..=1))), "]")`. The value Ref sits inside the outer Repeat. The list-rule entry
 /// variant (CSS `stylesheet = ruleList ?w`, BBNF `grammar = (item ?w)*`)
 /// has a simpler shape: `Repeat(ref_or_alt, lo, hi)` with OW wrappers.
 ///
@@ -19,7 +19,7 @@ pub(super) fn extract_array_value_ref(
     ir: &GrammarIR,
 ) -> Option<bbnf_ir::RuleId> {
     use bbnf_ir::IrNode;
-    fn find_repeat_inner<'a>(n: &'a IrNode) -> Option<&'a IrNode> {
+    fn find_repeat_inner(n: &IrNode) -> Option<&IrNode> {
         match n {
             IrNode::Repeat { inner, .. } => Some(inner),
             IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
@@ -39,7 +39,7 @@ pub(super) fn extract_array_value_ref(
                 Some(r) => r,
                 None => return false,
             };
-            fn unwrap<'a>(n: &'a IrNode) -> &'a IrNode {
+            fn unwrap(n: &IrNode) -> &IrNode {
                 match n {
                     IrNode::OptionalWhitespace(i) | IrNode::Map { inner: i, .. } => unwrap(i),
                     _ => n,

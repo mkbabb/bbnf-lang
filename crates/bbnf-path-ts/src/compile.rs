@@ -13,7 +13,7 @@
 //!
 //! ## Span-less lexer reuse
 //!
-//! `bbnf_regex::lex_path` takes a `proc_macro2::Span` for diagnostic
+//! `parse_that_regex::lex_path` takes a `proc_macro2::Span` for diagnostic
 //! anchoring. At cdylib runtime there is no source file to anchor at,
 //! so the cdylib hands the lexer `Span::call_site()` and reads only the
 //! lex-error `byte_offset` + `message` fields when surfacing
@@ -122,7 +122,7 @@ fn lex_and_lower(path_str: &str) -> Result<Vec<OwnedSegmentPayload>, PathErrorPa
         return Ok(out);
     }
 
-    let tokens = bbnf_regex::lex_path(path_str, Span::call_site()).map_err(|err| {
+    let tokens = parse_that_regex::lex_path(path_str, Span::call_site()).map_err(|err| {
         PathErrorPayload::new(
             0,
             err.message.clone(),
@@ -132,7 +132,7 @@ fn lex_and_lower(path_str: &str) -> Result<Vec<OwnedSegmentPayload>, PathErrorPa
         )
     })?;
 
-    use bbnf_regex::PathTokenKind as K;
+    use parse_that_regex::PathTokenKind as K;
     let mut idx = 0usize;
     while idx < tokens.len() {
         let tok = &tokens[idx];

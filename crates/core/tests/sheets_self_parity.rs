@@ -503,9 +503,9 @@ fn prettify_idempotent_postfix_percent() {
     assert_prettify_idempotent("=50%");
 }
 
-// ── Fixture corpus: data/sheets/*.txt line-by-line ────────────────
+// ── Fixture corpus: tests/fixtures/sheets/*.txt line-by-line ────────────────
 //
-// `data/sheets/simple.txt`, `nested.txt`, and `stress.txt` carry a
+// `tests/fixtures/sheets/simple.txt`, `nested.txt`, and `stress.txt` carry a
 // hand-curated corpus of live-world formulas. Each non-empty line is
 // an independent formula; we loop both assertions over every line.
 
@@ -537,18 +537,32 @@ fn loop_corpus(corpus: &str, tag: &str) {
 
 #[test]
 fn corpus_simple() {
-    let corpus = include_str!("../../../data/sheets/simple.txt");
+    let corpus = include_str!("fixtures/sheets/simple.txt");
     loop_corpus(corpus, "simple");
 }
 
 #[test]
 fn corpus_nested() {
-    let corpus = include_str!("../../../data/sheets/nested.txt");
+    let corpus = include_str!("fixtures/sheets/nested.txt");
     loop_corpus(corpus, "nested");
 }
 
 #[test]
 fn corpus_stress() {
-    let corpus = include_str!("../../../data/sheets/stress.txt");
+    let corpus = include_str!("fixtures/sheets/stress.txt");
     loop_corpus(corpus, "stress");
+}
+
+/// A broken `func_args` group keeps its commas. The break text of
+/// `sep(", ")` was empty, so a formula too wide for one line printed
+/// its arguments with no separators at all: a different formula,
+/// which the literal `(arg << comma ?) +` reading then re-accepted.
+#[test]
+fn prettify_broken_group_keeps_separators() {
+    let line = "=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))";
+    let p = prettify(line);
+    assert!(p.contains('\n'), "the group must break at width 80: {p:?}");
+    let squeezed: String = p.split_whitespace().collect();
+    let want: String = line.split_whitespace().collect();
+    assert_eq!(squeezed, want, "prettify must print the same formula");
 }

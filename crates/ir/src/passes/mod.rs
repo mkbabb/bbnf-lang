@@ -4,6 +4,7 @@
 //! Passes can be composed in any order (though some orderings are more efficient).
 
 pub mod audit;
+pub mod call_mode;
 pub mod context;
 pub mod csp_domains;
 pub mod csp_strategy;
@@ -30,7 +31,7 @@ pub mod types;
 // by the retained grammar-tier e-graph rules
 // (DeduplicateAltBranches, SupersetAbsorbAlt, UnionMergeAlt,
 // FuseAltRegexBranches in crate::egraph::rules::regex) plus the HIR
-// e-graph saturation in bbnf-regex. See commit message for details.
+// e-graph saturation in parse-that-regex. See commit message for details.
 
 pub use audit::{
     AbsentRegistryProbe, AuditCoverageReport, GrammarAuditTag, GrammarCoverage, MarkerStatus,

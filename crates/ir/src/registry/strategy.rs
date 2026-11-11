@@ -118,75 +118,26 @@ pub enum EmitStrategy {
     },
 }
 
-/// AZ-IV.W1.8 — canonical manifest-driven strategy table.
-///
-/// Per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22, the
-/// per-grammar strategy binding is **data**, not a Rust source-side
-/// arm-list. Every production grammar that activates StructDirect
-/// contributes one row here; adding a new grammar adds a row, not a
-/// match arm in `for_grammar`. The table mirrors
-/// `[workspace.metadata.bbnf-strategy]` in the workspace `Cargo.toml`
-/// (the `regen --check` gate wires the two sources together).
-///
-/// Each row's `idents` slice carries every parser-struct alias the
-/// grammar advertises (so `"JsonParser"` and `"JsonGrammar"`
-/// continue to resolve to the same binding without a literal arm).
-pub const PRODUCTION_MANIFEST_TABLE: &[ManifestStrategyEntry] = &[
-    // AZ-I.W2-act.B1 — JSON.
-    ManifestStrategyEntry {
-        idents: &["JsonParser", "JsonGrammar"],
-        rust_builder_path: "crate::runtime::json::JsonStructBuilder",
-        rust_document_path: "crate::runtime::json::JsonDocument",
-    },
-    // AZ-I.W2-act.B2 — Google Sheets.
-    ManifestStrategyEntry {
-        idents: &["GoogleSheetsParser", "GoogleSheetsGrammar"],
-        rust_builder_path: "crate::runtime::google_sheets::SheetsStructBuilder",
-        rust_document_path: "crate::runtime::google_sheets::SheetsDocument",
-    },
-    // AZ-I.W2-act.B3 — CSS L4.
-    ManifestStrategyEntry {
-        idents: &["CssL4Parser"],
-        rust_builder_path: "crate::runtime::css_l4::CssStructBuilder",
-        rust_document_path: "crate::runtime::css_l4::CssDocument",
-    },
-    // AZ-II.cutover.H — BBNF self-host.
-    ManifestStrategyEntry {
-        idents: &["BbnfBootstrap", "BbnfParser"],
-        rust_builder_path: "crate::runtime::bbnf::BbnfStructBuilder",
-        rust_document_path: "crate::runtime::bbnf::BbnfDocument",
-    },
-    // AZ-II.cutover.L Phase 3c — CSV.
-    ManifestStrategyEntry {
-        idents: &["CsvParser", "CsvGrammar"],
-        rust_builder_path: "crate::runtime::csv::CsvStructBuilder",
-        rust_document_path: "crate::runtime::csv::CsvDocument",
-    },
-    // AZ-II.cutover.L Phase 3c — Math.
-    ManifestStrategyEntry {
-        idents: &["MathParser", "MathGrammar"],
-        rust_builder_path: "crate::runtime::math::MathStructBuilder",
-        rust_document_path: "crate::runtime::math::MathDocument",
-    },
-    // AZ-II.cutover.L Phase 3c — BNF.
-    ManifestStrategyEntry {
-        idents: &["BnfParser", "BnfGrammar"],
-        rust_builder_path: "crate::runtime::bnf::BnfStructBuilder",
-        rust_document_path: "crate::runtime::bnf::BnfDocument",
-    },
-    // AZ-II.cutover.O.2 — EBNF.
-    ManifestStrategyEntry {
-        idents: &["EbnfParser", "EbnfGrammar"],
-        rust_builder_path: "crate::runtime::ebnf::EbnfStructBuilder",
-        rust_document_path: "crate::runtime::ebnf::EbnfDocument",
-    },
-    // AZ-II.cutover.L Phase 3c — CSS Pretty.
-    ManifestStrategyEntry {
-        idents: &["CssPrettyParser", "CssPrettyGrammar"],
-        rust_builder_path: "crate::runtime::css_pretty::CssPrettyStructBuilder",
-        rust_document_path: "crate::runtime::css_pretty::CssPrettyDocument",
-    },
-];
+// SK-V19.W6a — canonical manifest-driven strategy table
+// (`PRODUCTION_MANIFEST_TABLE`), generated from manifest metadata.
+//
+// Per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22 and the
+// SK-V19 Lock-14 close (zero grammar-specific code in generic crates),
+// the per-grammar strategy binding is DATA, not a Rust source-side
+// arm-list — and the data lives in `[package.metadata.bbnf-strategy]`
+// of this crate's `Cargo.toml` (shipped in the package; sk-v27
+// LW2.TOPO-4b), NOT as a grammar-named const in this generic crate.
+// `crates/ir`'s `build.rs` reads that table and emits the
+// `PRODUCTION_MANIFEST_TABLE` const below into
+// `$OUT_DIR/production_manifest_table.rs`. Adding a new grammar adds a
+// row to that manifest table — no edit lands in this file.
+//
+// Each row's `idents` slice carries every parser-struct alias the
+// grammar advertises (so a grammar's `"…Parser"` and `"…Grammar"`
+// aliases continue to resolve to the same binding without a literal
+// arm). The generated table references `ManifestStrategyEntry` (defined
+// below, in scope at module level).
+include!(concat!(env!("OUT_DIR"), "/production_manifest_table.rs"));
 
 impl EmitStrategy {
     /// Resolve the codegen substrate for `grammar_ident` against the
@@ -194,8 +145,8 @@ impl EmitStrategy {
     ///
     /// `grammar_ident` is the parser-struct identifier the emitter
     /// passes to `emit_shapes_for_grammar` — the literal Rust ident
-    /// that names the generated parser (e.g. `"JsonParser"`,
-    /// `"BbnfBootstrap"`, `"CssL4Parser"`).
+    /// that names the generated parser (one of the `idents` advertised
+    /// by a workspace-metadata strategy row).
     ///
     /// `registry` is the rule-id → layout map populated by
     /// `bbnf_ir::passes::project_types`. The struct-direct path
@@ -227,7 +178,7 @@ impl EmitStrategy {
     /// AZ-IV.W0.3 / W1.8 — manifest-driven strategy resolver.
     ///
     /// Looks up `grammar_ident` in `manifest_table` (per-row entries
-    /// constructed from `[workspace.metadata.bbnf-strategy]` or the
+    /// constructed from `[package.metadata.bbnf-strategy]` or the
     /// canonical [`PRODUCTION_MANIFEST_TABLE`]). When a row matches,
     /// the strategy is constructed directly from the row's Rust
     /// binding paths — no literal arm in this source file is
@@ -288,13 +239,13 @@ impl EmitStrategy {
 /// §F5), the literal parser-name arm-list at
 /// [`EmitStrategy::for_grammar`] must be replaced with manifest-driven
 /// data. This row carries the same payload an arm carries today,
-/// keyed by every parser-ident alias the grammar advertises (so
-/// `"JsonParser"` and `"JsonGrammar"` continue to resolve to the same
-/// binding without a literal arm in source).
+/// keyed by every parser-ident alias the grammar advertises (so a
+/// grammar's `"…Parser"` and `"…Grammar"` aliases continue to resolve
+/// to the same binding without a literal arm in source).
 ///
 /// Rows are constructed by the manifest reader (consumer side, not
 /// this crate). The reader normalises rows from
-/// `[workspace.metadata.bbnf-strategy]` or an in-memory test fixture;
+/// `[package.metadata.bbnf-strategy]` or an in-memory test fixture;
 /// either source produces the same row shape, so the resolver is
 /// identical regardless of provenance.
 ///
@@ -312,9 +263,9 @@ impl EmitStrategy {
 /// once the host-binding template lands.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ManifestStrategyEntry {
-    /// Parser-struct idents the grammar registers (e.g. `&["JsonParser",
-    /// "JsonGrammar"]`). The resolver matches when `grammar_ident` is
-    /// in the slice.
+    /// Parser-struct idents the grammar registers (e.g. a grammar's
+    /// `&["…Parser", "…Grammar"]` alias slice). The resolver matches
+    /// when `grammar_ident` is in the slice.
     pub idents: &'static [&'static str],
     /// Rust-backend `StructBuilder` path — same shape as
     /// [`SubstrateBinding::builder_path`].
@@ -329,6 +280,6 @@ impl ManifestStrategyEntry {
     /// covers.
     #[inline]
     pub fn matches_ident(&self, ident: &str) -> bool {
-        self.idents.iter().any(|alias| *alias == ident)
+        self.idents.contains(&ident)
     }
 }

@@ -1,0 +1,290 @@
+# LOCK-5 pass-3 probe-2 (family P2 / titular) — code diff vs READ-ONLY parse-that
+# base-pin HEAD: ef10d5b78236c4a30a7bb22a6113b60bdc4bdf42
+# ============================================================
+---  a/parse_that/src/regex/mod.rs	2026-04-30 11:35:38
++++ parse_that/src/regex/mod.rs	2026-07-16 20:02:13
+@@ -35,6 +35,16 @@
+     parse_generated_with(pattern, &ParseOptions::default())
+ }
+ 
++/// LOCK-5 pass-3 probe: return the RAW generated AST Debug string (no host fold).
++/// Used to attribute self-hosted-path divergences to the exact AST variant/span.
++pub fn parse_generated_ast_debug(pattern: &str) -> Option<String> {
++    let ctx = generated::__RegexParserEnumCtx::with_capacity(pattern.len().max(64));
++    let parser_fn = generated::RegexParser::regex();
++    let (result, state) = parser_fn.parse_return_state_with_context(pattern, &ctx);
++    let ast = result?;
++    Some(format!("consumed={}/{}  AST={:?}", state.offset, pattern.len(), ast))
++}
++
+ /// Self-hosted parse with explicit options.
+ pub fn parse_generated_with(pattern: &str, opts: &ParseOptions) -> Result<Hir, ParseError> {
+     let ctx = generated::__RegexParserEnumCtx::with_capacity(pattern.len().max(64));
+# ---- NEW FILE: parse_that/tests/grammar_driven_regex.rs ----
+--- /dev/null	2026-07-16 20:03:48
++++ parse_that/tests/grammar_driven_regex.rs	2026-07-16 19:58:33
+@@ -0,0 +1,252 @@
++//! LOCK-5 · pass-3 · probe 2 · family P2 (lock-titular) — grammar-driven regex.
++//!
++//! QUESTION: does the bootstrapped-from-regex.bbnf generated parser
++//! (`parse_that::regex::parse_generated`) return an `Hir` that
++//!   (a) RAW: DFA-matches the hand-written `hir::parser::parse`, and
++//!   (b) BRIDGE: still matches after both thread through the XL-C
++//!       `egraph::simplify_hir` bridge,
++//! measured as byte-identical MINIMAL transition tables (renumbering- and
++//! byte-class-partition-invariant canonical form)?
++//!
++//! Any DFA divergence names the exact divergent construct (the LOCK-7A
++//! bootstrap-parity gap). A `parse_generated` reject the hand parser accepts is
++//! itself a bootstrap-parity gap and is recorded separately.
++
++use parse_that::regex::egraph::{simplify_hir, RegexExtractionCost};
++use parse_that::regex::hir::Hir;
++use parse_that::regex::{parse, parse_generated, Dfa, DfaOptions, Nfa, DEAD};
++
++/// pass-3 tagged 56-pattern corpus (44 cyclic + 12 acyclic): JSON/CSS/Sheets
++/// grammar leaves, acyclic chains, bushy alternations, anchored, classes,
++/// bounded repeats. Verbatim from `regex/benches/regex_dfa_compile.rs`.
++const CORPUS: &[&str] = &[
++    // ── cyclic (C): unbounded run ──
++    r"\d+",
++    r"\s+",
++    r"\w+",
++    r"[a-z]+",
++    r"[A-Z]+",
++    r"[a-zA-Z_]\w*",
++    r"[0-9a-fA-F]+",
++    r"-?\d+",
++    r"-?(0|[1-9]\d*)(\.\d+)?",
++    r"[-+]?\d+",
++    r"[-+]?(\d+(\.\d+)?|\.\d+)",
++    r"https?://[a-zA-Z0-9./-]+",
++    r"0x[0-9a-fA-F]+",
++    r"\d+px",
++    r"\d+(?:px|em|rem|vh|vw)",
++    r"(?:foo|bar|baz)+",
++    r"[A-Za-z0-9+/]+",
++    r"[a-zA-Z][a-zA-Z0-9]*",
++    r"(?:0|[1-9][0-9]*)",
++    r"[\-]?[a-zA-Z_][\w-]*|--[\w-]+",
++    r"[a-zA-Z_][\w-]*",
++    r"\d+(?:_\d+)*",
++    r"\w+(?:[-_]\w+)*",
++    r"a*b*c*",
++    r"(ab)+",
++    r"[a-z]+@[a-z]+\.[a-z]+",
++    r"\d+\.\d+",
++    r"[^\x00]*x",
++    r"[a-z]*[0-9]+",
++    r"(?:foo|bar)*",
++    r"\w+\s*=\s*\w+",
++    r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]+",
++    r"\$[a-zA-Z_][a-zA-Z0-9_]*",
++    r"//[^\n]*",
++    r"/\*.*\*/",
++    r"[ \t]+",
++    r"[a-fA-F0-9]{2}(?::[a-fA-F0-9]{2})+",
++    r"\d+(,\d{3})*",
++    r"[A-Za-z]+(?:'[A-Za-z]+)*",
++    r"<[a-zA-Z][a-zA-Z0-9]*>",
++    r"\+?\d[\d -]{6,}\d",
++    r"%[0-9a-fA-F][0-9a-fA-F]|[^%]+",
++    r"[a-z]+(-[a-z]+)*",
++    r"(?:[A-Z][a-z]+)+",
++    // ── acyclic (A): finite language ──
++    r"\d{4}-\d{2}-\d{2}",
++    r"#[0-9a-fA-F]{3,6}",
++    r"[0-9a-fA-F]{3,8}",
++    r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}",
++    r"[tT][rR][uU][eE]",
++    r"\d{2}:\d{2}:\d{2}",
++    r"(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)",
++    r"v\d\.\d\.\d",
++    r"[A-Z]{3}-\d{4}",
++    r"[01]{8}",
++    r"(?:GET|POST|PUT|DELETE|HEAD)",
++    r"\d{5}(?:-\d{4})?",
++];
++
++/// Build a minimized DFA from an arbitrary `Hir` — mirrors the tail of
++/// `Dfa::compile` (`Nfa::from_hir` → `Dfa::from_nfa`, default minimize:true).
++fn dfa_from_hir(hir: &Hir) -> Option<Dfa> {
++    let nfa = Nfa::from_hir(hir)?;
++    Dfa::from_nfa(&nfa, &DfaOptions::default())
++}
++
++/// Renumbering- and partition-invariant BYTE-level canonical form of a minimal
++/// DFA: BFS from start state 0 in byte order; each state becomes
++/// `(is_accept, [canonical-target-id or -1 for DEAD ; 256])`. Two minimal DFAs
++/// are language-equivalent iff their canonical forms are byte-identical.
++fn canon(dfa: &Dfa) -> Vec<(bool, Vec<i64>)> {
++    let num_cls = dfa.num_classes as usize;
++    let flat = &dfa.flat_transitions;
++    let target = |state: u32, b: usize| -> u32 {
++        let class = dfa.byte_classes[b] as usize;
++        flat[state as usize * num_cls + class]
++    };
++    let mut order: Vec<u32> = vec![0];
++    let mut id_of: std::collections::HashMap<u32, i64> = std::collections::HashMap::new();
++    id_of.insert(0, 0);
++    let mut i = 0;
++    while i < order.len() {
++        let s = order[i];
++        for b in 0..256usize {
++            let t = target(s, b);
++            if t != DEAD && !id_of.contains_key(&t) {
++                let nid = order.len() as i64;
++                id_of.insert(t, nid);
++                order.push(t);
++            }
++        }
++        i += 1;
++    }
++    order
++        .iter()
++        .map(|&s| {
++            let row: Vec<i64> = (0..256usize)
++                .map(|b| {
++                    let t = target(s, b);
++                    if t == DEAD { -1 } else { id_of[&t] }
++                })
++                .collect();
++            (dfa.states[s as usize].is_accept, row)
++        })
++        .collect()
++}
++
++fn dfa_eq(a: &Hir, b: &Hir) -> (bool, usize, usize) {
++    match (dfa_from_hir(a), dfa_from_hir(b)) {
++        (Some(x), Some(y)) => {
++            let (cx, cy) = (canon(&x), canon(&y));
++            (cx == cy, cx.len(), cy.len())
++        }
++        (None, None) => (true, 0, 0),
++        (Some(x), None) => (false, canon(&x).len(), usize::MAX),
++        (None, Some(y)) => (false, usize::MAX, canon(&y).len()),
++    }
++}
++
++#[test]
++fn grammar_driven_regex_parity() {
++    let cost = RegexExtractionCost::default();
++
++    let mut gen_reject: Vec<(&str, String)> = Vec::new();
++    let mut hand_reject: Vec<(&str, String)> = Vec::new();
++
++    let mut raw_pass = 0usize;
++    let mut raw_total = 0usize;
++    let mut bridge_pass = 0usize;
++    let mut bridge_total = 0usize;
++    let mut raw_div: Vec<(&str, usize, usize)> = Vec::new();
++    let mut bridge_div: Vec<(&str, usize, usize)> = Vec::new();
++
++    for &p in CORPUS {
++        let hand = match parse(p) {
++            Ok(h) => h,
++            Err(e) => {
++                hand_reject.push((p, format!("{:?}", e.message)));
++                continue;
++            }
++        };
++        let genh = match parse_generated(p) {
++            Ok(h) => h,
++            Err(e) => {
++                gen_reject.push((p, e.message.clone()));
++                continue;
++            }
++        };
++
++        // (a) RAW oracle — generated Hir DFA vs hand Hir DFA.
++        raw_total += 1;
++        let (ok, nh, ng) = dfa_eq(&hand, &genh);
++        if ok {
++            raw_pass += 1;
++        } else {
++            raw_div.push((p, nh, ng));
++            println!("  RAW  DIVERGE  {:<40}  hand_states={} gen_states={}", p, nh as i64, ng as i64);
++            println!("        hand HIR: {:?}", hand);
++            println!("        gen  HIR: {:?}", genh);
++        }
++
++        // (b) BRIDGE oracle — both threaded through XL-C simplify_hir.
++        bridge_total += 1;
++        let sh = simplify_hir(&hand, &cost);
++        let sg = simplify_hir(&genh, &cost);
++        let (bok, bnh, bng) = dfa_eq(&sh, &sg);
++        if bok {
++            bridge_pass += 1;
++        } else {
++            bridge_div.push((p, bnh, bng));
++            println!("  BRDG DIVERGE  {:<40}  hand_states={} gen_states={}", p, bnh as i64, bng as i64);
++            println!("        simplify(hand) HIR: {:?}", sh);
++            println!("        simplify(gen)  HIR: {:?}", sg);
++        }
++    }
++
++    println!("\n===== GRAMMAR-DRIVEN REGEX PARITY ORACLE =====");
++    println!("corpus                : {} patterns", CORPUS.len());
++    println!("hand parser rejects   : {}", hand_reject.len());
++    for (p, e) in &hand_reject {
++        println!("    HAND-REJECT  {:<40}  {}", p, e);
++    }
++    println!("generated rejects     : {}  (LOCK-7A bootstrap-parity gap)", gen_reject.len());
++    for (p, e) in &gen_reject {
++        println!("    GEN-REJECT   {:<40}  {}", p, e);
++    }
++    println!(
++        "RAW    DFA-equivalent : {}/{}  (both-parsed pairs)",
++        raw_pass, raw_total
++    );
++    println!(
++        "BRIDGE DFA-equivalent : {}/{}  (both threaded through simplify_hir)",
++        bridge_pass, bridge_total
++    );
++    println!("raw divergences       : {}", raw_div.len());
++    println!("bridge divergences    : {}", bridge_div.len());
++    println!("==============================================\n");
++
++    // PASS gate: generated-parser AST DFA-equivalent to the hand parser on
++    // >=30 both-parsed patterns, no reject, no divergence in either oracle.
++    assert!(
++        gen_reject.is_empty(),
++        "generated parser rejected {} pattern(s) the hand parser accepts: {:?}",
++        gen_reject.len(),
++        gen_reject
++    );
++    assert!(
++        raw_div.is_empty(),
++        "RAW DFA divergences: {:?}",
++        raw_div
++    );
++    assert!(
++        bridge_div.is_empty(),
++        "BRIDGE DFA divergences: {:?}",
++        bridge_div
++    );
++    assert!(
++        raw_pass >= 30,
++        "RAW parity below gate: {}/{} (need >=30)",
++        raw_pass,
++        raw_total
++    );
++    assert!(
++        bridge_pass >= 30,
++        "BRIDGE parity below gate: {}/{} (need >=30)",
++        bridge_pass,
++        bridge_total
++    );
++}
+# ---- NEW FILE: parse_that/tests/raw_ast_dump.rs ----
+--- /dev/null	2026-07-16 20:03:48
++++ parse_that/tests/raw_ast_dump.rs	2026-07-16 20:02:22
+@@ -0,0 +1,8 @@
++use parse_that::regex::parse_generated_ast_debug as dbg_ast;
++#[test]
++fn dump_raw_ast() {
++    for p in [r".", r"\d{4}", r"[^\x00]", r"\x41", r"a{2,3}", r"a."] {
++        println!("PATTERN {:12} => {}", format!("{:?}", p),
++            dbg_ast(p).unwrap_or_else(|| "<<PARSE FAILED>>".into()));
++    }
++}

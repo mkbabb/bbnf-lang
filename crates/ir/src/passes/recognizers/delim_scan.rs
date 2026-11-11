@@ -101,10 +101,10 @@ pub fn try_detect(
     if pivot_byte == open_byte || pivot_byte == close_byte {
         return None;
     }
-    if let Some(tb) = trail_byte {
-        if tb == open_byte || tb == close_byte || tb == pivot_byte {
-            return None;
-        }
+    if let Some(tb) = trail_byte
+        && (tb == open_byte || tb == close_byte || tb == pivot_byte)
+    {
+        return None;
     }
 
     Some(DelimScanConfig {
@@ -201,10 +201,9 @@ fn find_pivot_in_children(children: &[IrNode], ir: &GrammarIR) -> Option<(u8, Op
             lo: 0,
             hi: 1,
         } = inner
+            && let Some(byte) = single_byte_literal(unwrap_map_ow(rep_inner), ir)
         {
-            if let Some(byte) = single_byte_literal(unwrap_map_ow(rep_inner), ir) {
-                trail = Some(byte);
-            }
+            trail = Some(byte);
         }
     }
     pivot.map(|p| (p, trail))

@@ -57,15 +57,6 @@ pub enum CallStrategy {
     InlineBody,
 }
 
-/// Result type classification for a `Seq` node.
-pub enum SeqResultStrategy {
-    AllSpan,
-    Mixed {
-        result_type: TypeDesc,
-        flatten: Option<FlattenStrategy>,
-    },
-}
-
 /// How to flatten a `(T, Vec<T>)` pair into `Vec<T>`.
 #[derive(Debug)]
 pub enum FlattenStrategy {

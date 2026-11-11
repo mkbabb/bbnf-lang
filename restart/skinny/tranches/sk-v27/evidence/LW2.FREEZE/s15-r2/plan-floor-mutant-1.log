@@ -1,0 +1,14 @@
+F
+======================================================================
+FAIL: test_frozen_floors_follow_the_rule (bench.test_decision_plan.DecisionPlan.test_frozen_floors_follow_the_rule)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/bench/test_decision_plan.py", line 54, in test_frozen_floors_follow_the_rule
+    self.assertEqual(g["floor_pct"], max(10.0, round(3 * d["aa_noise_pct"], 3)))
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 7.5 != 10.0
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (failures=1)

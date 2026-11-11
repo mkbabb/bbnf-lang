@@ -33,7 +33,7 @@ mod __googlesheetsparser_emit_impl {
     pub const GRAMMAR_GoogleSheetsParser: [&'static str; 1usize] = [
         include_str!(
             concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../grammar/google-sheets/google-sheets.bbnf")
+            "/grammar/google-sheets/google-sheets.bbnf")
         ),
     ];
     static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 19usize] = [
@@ -507,8 +507,8 @@ mod __googlesheetsparser_emit_impl {
             pub field_index: u32,
             pub decision: Decision,
         }
-        pub const PATH_PLAN_LEN: usize = 148;
-        pub static PATH_PLAN: &[PathPlanEntry; 148] = &[
+        pub const PATH_PLAN_LEN: usize = 154;
+        pub static PATH_PLAN: &[PathPlanEntry; 154] = &[
             PathPlanEntry {
                 rule_id: 0,
                 segment_kind: SegmentKind::Wildcard,
@@ -859,9 +859,27 @@ mod __googlesheetsparser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 20,
-                segment_kind: SegmentKind::Wildcard,
-                field_index: 4294967295,
-                decision: Decision::ParseFully,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 20,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 20,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 20,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 20,
@@ -901,9 +919,27 @@ mod __googlesheetsparser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 22,
-                segment_kind: SegmentKind::Wildcard,
-                field_index: 4294967295,
-                decision: Decision::ParseFully,
+                segment_kind: SegmentKind::Field,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 22,
+                segment_kind: SegmentKind::Index,
+                field_index: 0,
+                decision: Decision::ParseUntil(0),
+            },
+            PathPlanEntry {
+                rule_id: 22,
+                segment_kind: SegmentKind::Field,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
+            },
+            PathPlanEntry {
+                rule_id: 22,
+                segment_kind: SegmentKind::Index,
+                field_index: 1,
+                decision: Decision::ParseUntil(1),
             },
             PathPlanEntry {
                 rule_id: 22,
@@ -1815,14 +1851,22 @@ mod __googlesheetsparser_emit_impl {
                 rule_id: 20u32,
                 rule_name: ::std::string::String::from("func_args"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Vec(
-                    ::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum),
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("element"), type_desc :
+                    ::std::string::String::from("arg"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::RepeatElement, }
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
                 ],
             });
         __registry
@@ -1851,14 +1895,22 @@ mod __googlesheetsparser_emit_impl {
                 rule_id: 22u32,
                 rule_name: ::std::string::String::from("lambda_params"),
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
-                rule_type: ::bbnf_ir::TypeDesc::Vec(
-                    ::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum),
+                rule_type: ::bbnf_ir::TypeDesc::Tuple(
+                    ::std::vec![
+                        ::bbnf_ir::TypeDesc::BoxedEnum,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
+                    ],
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("element"), type_desc :
+                    ::std::string::String::from("expression"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
-                    ::bbnf_ir::registry::FieldSource::RepeatElement, }
+                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
+                    }, ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("field_1"), type_desc :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    1u32, }, }
                 ],
             });
         __registry
@@ -2240,9 +2292,9 @@ mod __googlesheetsparser_emit_impl {
     static __DTA_REGEX_22: &str = "[A-Za-z_][A-Za-z0-9_.]*";
     static __DTA_REGEX_52: &str = "\\$?[A-Za-z]{1,3}";
     static __DTA_REGEX_53: &str = "\\$?\\d+";
-    static __DTA_REGEX_144: &str = "[lL][aA][mM][bB][dD][aA]\\(";
-    static __DTA_REGEX_169: &str = "[lL][eE][tT]\\(";
-    static __DTA_REGEX_180: &str = "=?";
+    static __DTA_REGEX_146: &str = "[lL][aA][mM][bB][dD][aA]\\(";
+    static __DTA_REGEX_171: &str = "[lL][eE][tT]\\(";
+    static __DTA_REGEX_182: &str = "=?";
     /// AY.W4.3 — first-byte → admissible-pattern bitmap LUT.
     ///
     /// Each entry holds a u32 bitmap; bit `i` set means pattern
@@ -3227,8 +3279,8 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_144.as_ptr())
-            || pattern == __DTA_REGEX_144
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_146.as_ptr())
+            || pattern == __DTA_REGEX_146
         {
             if let Some(&__byte) = input.get(pos) {
                 if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 9) & 1
@@ -3333,8 +3385,8 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_169.as_ptr())
-            || pattern == __DTA_REGEX_169
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_171.as_ptr())
+            || pattern == __DTA_REGEX_171
         {
             if let Some(&__byte) = input.get(pos) {
                 if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 10) & 1
@@ -3421,8 +3473,8 @@ mod __googlesheetsparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_180.as_ptr())
-            || pattern == __DTA_REGEX_180
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_182.as_ptr())
+            || pattern == __DTA_REGEX_182
         {
             if let Some(&__byte) = input.get(pos) {
                 if (__REGEX_FIRST_BYTE_LUT_GoogleSheetsParser[__byte as usize] >> 11) & 1
@@ -3526,7 +3578,7 @@ mod __googlesheetsparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::simd_scan::StructuralIndex,
+                ::parse_that::scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -3546,17 +3598,17 @@ mod __googlesheetsparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::simd_scan::StructuralIndex {
+        ) -> &'a ::parse_that::scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    let alphabet = ::simd_scan::StructuralAlphabet {
+                    let alphabet = ::parse_that::scan::StructuralAlphabet {
                         singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
                         digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
                         digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
                         quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
-                    ::simd_scan::scan_structural(input, &alphabet)
+                    ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip JSON whitespace at `*p`, returning the first
@@ -5394,11 +5446,6 @@ mod __googlesheetsparser_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             {
@@ -5674,11 +5721,6 @@ mod __googlesheetsparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -6474,9 +6516,6 @@ mod __googlesheetsparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -6521,11 +6560,6 @@ mod __googlesheetsparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -6811,11 +6845,6 @@ mod __googlesheetsparser_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             ::core::result::Result::Ok(())
@@ -6908,12 +6937,19 @@ mod __googlesheetsparser_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_flat_GoogleSheetsParser_arg(input, p, state, builder, cursor)
+                })?;
+            }
+            {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -6923,6 +6959,24 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
                                     input,
@@ -6937,63 +6991,6 @@ mod __googlesheetsparser_emit_impl {
                                     cursor,
                                 )
                             })?;
-                            {
-                                let mut __iter_count: u32 = 0;
-                                loop {
-                                    if __iter_count >= 1u32 {
-                                        break;
-                                    }
-                                    let __iter_save_p = *p;
-                                    if input.get(*p).is_none() {
-                                        break;
-                                    }
-                                    let __iter_builder_checkpoint = builder.checkpoint();
-                                    let __iter_result: ::core::result::Result<
-                                        (),
-                                        crate::runtime::DtaError,
-                                    > = (|| {
-                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        let at = *p;
-                                        let end = at + 1usize;
-                                        if input.len() < end || input[at..end] != [44u8] {
-                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                                offset: at as u32,
-                                            });
-                                        }
-                                        *p = end;
-                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        Ok(())
-                                    })();
-                                    match __iter_result {
-                                        Ok(()) => {
-                                            if *p == __iter_save_p {
-                                                builder.rollback(__iter_builder_checkpoint);
-                                                break;
-                                            }
-                                            builder.commit(__iter_builder_checkpoint);
-                                            __iter_count += 1;
-                                        }
-                                        Err(_) => {
-                                            *p = __iter_save_p;
-                                            builder.rollback(__iter_builder_checkpoint);
-                                            break;
-                                        }
-                                    }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
-                                }
-                            }
                             Ok(())
                         })();
                         match __iter_result {
@@ -7011,11 +7008,6 @@ mod __googlesheetsparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -7248,12 +7240,25 @@ mod __googlesheetsparser_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
+                let _ = ({
+                    let _ = __shape_support_GoogleSheetsParser::skip_space(
+                        input,
+                        p,
+                        state,
+                    );
+                    parse_scalar_GoogleSheetsParser_expression(
+                        input,
+                        p,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                })?;
+            }
+            {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -7263,6 +7268,24 @@ mod __googlesheetsparser_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
+                            let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
+                            let at = *p;
+                            let end = at + 1usize;
+                            if input.len() < end || input[at..end] != [44u8] {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: at as u32,
+                                });
+                            }
+                            *p = end;
+                            let _ = __shape_support_GoogleSheetsParser::skip_space(
+                                input,
+                                p,
+                                state,
+                            );
                             let _ = ({
                                 let _ = __shape_support_GoogleSheetsParser::skip_space(
                                     input,
@@ -7277,63 +7300,6 @@ mod __googlesheetsparser_emit_impl {
                                     cursor,
                                 )
                             })?;
-                            {
-                                let mut __iter_count: u32 = 0;
-                                loop {
-                                    if __iter_count >= 1u32 {
-                                        break;
-                                    }
-                                    let __iter_save_p = *p;
-                                    if input.get(*p).is_none() {
-                                        break;
-                                    }
-                                    let __iter_builder_checkpoint = builder.checkpoint();
-                                    let __iter_result: ::core::result::Result<
-                                        (),
-                                        crate::runtime::DtaError,
-                                    > = (|| {
-                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        let at = *p;
-                                        let end = at + 1usize;
-                                        if input.len() < end || input[at..end] != [44u8] {
-                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                                offset: at as u32,
-                                            });
-                                        }
-                                        *p = end;
-                                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
-                                        Ok(())
-                                    })();
-                                    match __iter_result {
-                                        Ok(()) => {
-                                            if *p == __iter_save_p {
-                                                builder.rollback(__iter_builder_checkpoint);
-                                                break;
-                                            }
-                                            builder.commit(__iter_builder_checkpoint);
-                                            __iter_count += 1;
-                                        }
-                                        Err(_) => {
-                                            *p = __iter_save_p;
-                                            builder.rollback(__iter_builder_checkpoint);
-                                            break;
-                                        }
-                                    }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
-                                }
-                            }
                             Ok(())
                         })();
                         match __iter_result {
@@ -7351,11 +7317,6 @@ mod __googlesheetsparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 1u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -8393,7 +8354,8 @@ mod __googlesheetsparser_emit_impl {
                 parse_flat_GoogleSheetsParser_func_open(input, p, state, builder, cursor)
             })?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 1u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let _ = ({
@@ -8414,6 +8376,10 @@ mod __googlesheetsparser_emit_impl {
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }
@@ -8518,9 +8484,6 @@ mod __googlesheetsparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -8579,11 +8542,6 @@ mod __googlesheetsparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -9106,9 +9064,6 @@ mod __googlesheetsparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -9143,11 +9098,6 @@ mod __googlesheetsparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -10229,10 +10179,45 @@ mod __googlesheetsparser_emit_impl {
             {
                 {
                     let __start = state.offset;
-                    if ::parse_that::scan_ident(
-                            state,
-                            &::parse_that::DEFAULT_IDENT_CONFIG,
-                        )
+                    if {
+                        let __start = state.offset;
+                        let __result: Option<()> = (|| {
+                            {
+                                let __b = *state.src_bytes.get(state.offset)?;
+                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                    || (__b >= b'a' && __b <= b'z')))
+                                {
+                                    return None;
+                                }
+                                state.offset += 1;
+                            }
+                            {
+                                let __end = state.src_bytes.len();
+                                let mut __pos = state.offset;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b == b'.' || (__b >= b'0' && __b <= b'9')
+                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                        || (__b >= b'a' && __b <= b'z'))
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                            }
+                            Some(())
+                        })();
+                        if __result.is_some() && state.offset > __start {
+                            Some(
+                                ::parse_that::Span::new(__start, state.offset, state.src),
+                            )
+                        } else {
+                            state.offset = __start;
+                            None
+                        }
+                    }
                         .is_none()
                     {
                         return false;
@@ -10843,10 +10828,45 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         let __start = state.offset;
-                        if ::parse_that::scan_ident(
-                                state,
-                                &::parse_that::DEFAULT_IDENT_CONFIG,
-                            )
+                        if {
+                            let __start = state.offset;
+                            let __result: Option<()> = (|| {
+                                {
+                                    let __b = *state.src_bytes.get(state.offset)?;
+                                    if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                        || (__b >= b'a' && __b <= b'z')))
+                                    {
+                                        return None;
+                                    }
+                                    state.offset += 1;
+                                }
+                                {
+                                    let __end = state.src_bytes.len();
+                                    let mut __pos = state.offset;
+                                    while __pos < __end {
+                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                        if (__b == b'.' || (__b >= b'0' && __b <= b'9')
+                                            || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                            || (__b >= b'a' && __b <= b'z'))
+                                        {
+                                            __pos += 1;
+                                        } else {
+                                            break;
+                                        }
+                                    }
+                                    state.offset = __pos;
+                                }
+                                Some(())
+                            })();
+                            if __result.is_some() && state.offset > __start {
+                                Some(
+                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                )
+                            } else {
+                                state.offset = __start;
+                                None
+                            }
+                        }
                             .is_none()
                         {
                             return false;
@@ -11964,97 +11984,69 @@ mod __googlesheetsparser_emit_impl {
             let __pretty_ok = {
                 {
                     {
-                        let __rep_start81 = state.offset;
-                        let __rep_bcp82 = __builder.checkpoint();
-                        let mut __rep_count79 = 0usize;
-                        while __rep_count79 < 4294967295 {
-                            let __rep_cp80 = state.offset;
-                            let __iter_cp = if __rep_count79 > 0 {
-                                Some(__builder.checkpoint())
-                            } else {
-                                None
-                            };
-                            if __rep_count79 > 0 {
-                                __builder.sep(", ", "");
-                            }
-                            if !{
-                                let __pretty_cp78 = state.offset;
-                                let __ok = (|| -> bool {
-                                    {
-                                        if !Self::__arg_prettify(state, __builder) {
-                                            return false;
-                                        }
+                        if !Self::__arg_prettify(state, __builder) {
+                            return false;
+                        }
+                        {
+                            let mut __rep_count78 = 0usize;
+                            while __rep_count78 < 4294967295 {
+                                let __rep_cp79 = state.offset;
+                                if !{
+                                    let __pretty_cp76 = state.offset;
+                                    let __pretty_bcp77 = __builder.checkpoint();
+                                    let __ok = (|| -> bool {
                                         {
-                                            let __silent_cp76 = state.offset;
-                                            let __silent_bcp77 = __builder.light_checkpoint();
-                                            let __ok = (|| -> bool {
-                                                {
-                                                    let _ = {
-                                                        let __pretty_cp74 = state.offset;
-                                                        let __pretty_bcp75 = __builder.checkpoint();
-                                                        let __ok = (|| -> bool {
+                                            __builder.sep(", ", ",");
+                                            {
+                                                let __silent_cp74 = state.offset;
+                                                let __silent_bcp75 = __builder.light_checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __ows71 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        let __ows72 = state.offset;
+                                                        {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b',')
                                                             {
-                                                                let __ows71 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                let __ows72 = state.offset;
-                                                                {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                                    {
-                                                                        return false;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    __builder.char(b',');
-                                                                };
-                                                                __builder.text_inline_ws(&state.src[__ows71..__ows72]);
-                                                                let __ows73 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                __builder.text_inline_ws(&state.src[__ows73..state.offset]);
-                                                            };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp74;
-                                                            __builder.restore(__pretty_bcp75);
-                                                        }
-                                                        __ok
+                                                                return false;
+                                                            }
+                                                            state.offset += 1;
+                                                            __builder.char(b',');
+                                                        };
+                                                        __builder.text_inline_ws(&state.src[__ows71..__ows72]);
+                                                        let __ows73 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder.text_inline_ws(&state.src[__ows73..state.offset]);
                                                     };
                                                     true
-                                                };
-                                                true
-                                            })();
-                                            __builder.light_restore(__silent_bcp77);
-                                            if !__ok {
-                                                state.offset = __silent_cp76;
+                                                })();
+                                                __builder.light_restore(__silent_bcp75);
+                                                if !__ok {
+                                                    state.offset = __silent_cp74;
+                                                    return false;
+                                                }
+                                            };
+                                            if !Self::__arg_prettify(state, __builder) {
                                                 return false;
                                             }
                                         };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp78;
+                                        true
+                                    })();
+                                    if !__ok {
+                                        state.offset = __pretty_cp76;
+                                        __builder.restore(__pretty_bcp77);
+                                    }
+                                    __ok
+                                } {
+                                    state.offset = __rep_cp79;
+                                    break;
                                 }
-                                __ok
-                            } {
-                                state.offset = __rep_cp80;
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
+                                if state.offset == __rep_cp79 {
+                                    break;
                                 }
-                                break;
+                                __rep_count78 += 1;
                             }
-                            if state.offset == __rep_cp80 {
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            __rep_count79 += 1;
-                        }
-                        if __rep_count79 < 1 {
-                            state.offset = __rep_start81;
-                            __builder.restore(__rep_bcp82);
-                            return false;
-                        }
+                        };
                     };
                     true
                 }
@@ -12088,9 +12080,9 @@ mod __googlesheetsparser_emit_impl {
                                 return false;
                             }
                             {
-                                let __ows83 = state.offset;
+                                let __ows80 = state.offset;
                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                let __ows84 = state.offset;
+                                let __ows81 = state.offset;
                                 {
                                     if state.src_bytes.get(state.offset).copied() != Some(b',')
                                     {
@@ -12099,10 +12091,10 @@ mod __googlesheetsparser_emit_impl {
                                     state.offset += 1;
                                     __builder.char(b',');
                                 };
-                                __builder.text_inline_ws(&state.src[__ows83..__ows84]);
-                                let __ows85 = state.offset;
+                                __builder.text_inline_ws(&state.src[__ows80..__ows81]);
+                                let __ows82 = state.offset;
                                 ::parse_that::trim_leading_whitespace_mut(state);
-                                __builder.text_inline_ws(&state.src[__ows85..state.offset]);
+                                __builder.text_inline_ws(&state.src[__ows82..state.offset]);
                             };
                         };
                         if !Self::__expression_prettify(state, __builder) {
@@ -12136,97 +12128,69 @@ mod __googlesheetsparser_emit_impl {
             let __pretty_ok = {
                 {
                     {
-                        let __rep_start96 = state.offset;
-                        let __rep_bcp97 = __builder.checkpoint();
-                        let mut __rep_count94 = 0usize;
-                        while __rep_count94 < 4294967295 {
-                            let __rep_cp95 = state.offset;
-                            let __iter_cp = if __rep_count94 > 0 {
-                                Some(__builder.checkpoint())
-                            } else {
-                                None
-                            };
-                            if __rep_count94 > 0 {
-                                __builder.sep(", ", "");
-                            }
-                            if !{
-                                let __pretty_cp93 = state.offset;
-                                let __ok = (|| -> bool {
-                                    {
-                                        if !Self::__expression_prettify(state, __builder) {
-                                            return false;
-                                        }
+                        if !Self::__expression_prettify(state, __builder) {
+                            return false;
+                        }
+                        {
+                            let mut __rep_count90 = 0usize;
+                            while __rep_count90 < 4294967295 {
+                                let __rep_cp91 = state.offset;
+                                if !{
+                                    let __pretty_cp88 = state.offset;
+                                    let __pretty_bcp89 = __builder.checkpoint();
+                                    let __ok = (|| -> bool {
                                         {
-                                            let __silent_cp91 = state.offset;
-                                            let __silent_bcp92 = __builder.light_checkpoint();
-                                            let __ok = (|| -> bool {
-                                                {
-                                                    let _ = {
-                                                        let __pretty_cp89 = state.offset;
-                                                        let __pretty_bcp90 = __builder.checkpoint();
-                                                        let __ok = (|| -> bool {
+                                            __builder.sep(", ", ",");
+                                            {
+                                                let __silent_cp86 = state.offset;
+                                                let __silent_bcp87 = __builder.light_checkpoint();
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __ows83 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        let __ows84 = state.offset;
+                                                        {
+                                                            if state.src_bytes.get(state.offset).copied() != Some(b',')
                                                             {
-                                                                let __ows86 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                let __ows87 = state.offset;
-                                                                {
-                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
-                                                                    {
-                                                                        return false;
-                                                                    }
-                                                                    state.offset += 1;
-                                                                    __builder.char(b',');
-                                                                };
-                                                                __builder.text_inline_ws(&state.src[__ows86..__ows87]);
-                                                                let __ows88 = state.offset;
-                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                __builder.text_inline_ws(&state.src[__ows88..state.offset]);
-                                                            };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp89;
-                                                            __builder.restore(__pretty_bcp90);
-                                                        }
-                                                        __ok
+                                                                return false;
+                                                            }
+                                                            state.offset += 1;
+                                                            __builder.char(b',');
+                                                        };
+                                                        __builder.text_inline_ws(&state.src[__ows83..__ows84]);
+                                                        let __ows85 = state.offset;
+                                                        ::parse_that::trim_leading_whitespace_mut(state);
+                                                        __builder.text_inline_ws(&state.src[__ows85..state.offset]);
                                                     };
                                                     true
-                                                };
-                                                true
-                                            })();
-                                            __builder.light_restore(__silent_bcp92);
-                                            if !__ok {
-                                                state.offset = __silent_cp91;
+                                                })();
+                                                __builder.light_restore(__silent_bcp87);
+                                                if !__ok {
+                                                    state.offset = __silent_cp86;
+                                                    return false;
+                                                }
+                                            };
+                                            if !Self::__expression_prettify(state, __builder) {
                                                 return false;
                                             }
                                         };
-                                    };
-                                    true
-                                })();
-                                if !__ok {
-                                    state.offset = __pretty_cp93;
+                                        true
+                                    })();
+                                    if !__ok {
+                                        state.offset = __pretty_cp88;
+                                        __builder.restore(__pretty_bcp89);
+                                    }
+                                    __ok
+                                } {
+                                    state.offset = __rep_cp91;
+                                    break;
                                 }
-                                __ok
-                            } {
-                                state.offset = __rep_cp95;
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
+                                if state.offset == __rep_cp91 {
+                                    break;
                                 }
-                                break;
+                                __rep_count90 += 1;
                             }
-                            if state.offset == __rep_cp95 {
-                                if let Some(__bcp) = __iter_cp {
-                                    __builder.restore(__bcp);
-                                }
-                                break;
-                            }
-                            __rep_count94 += 1;
-                        }
-                        if __rep_count94 < 1 {
-                            state.offset = __rep_start96;
-                            __builder.restore(__rep_bcp97);
-                            return false;
-                        }
+                        };
                     };
                     true
                 }
@@ -12256,23 +12220,23 @@ mod __googlesheetsparser_emit_impl {
                         return false;
                     }
                     {
-                        let mut __rep_count105 = 0usize;
-                        while __rep_count105 < 4294967295 {
-                            let __rep_cp106 = state.offset;
+                        let mut __rep_count99 = 0usize;
+                        while __rep_count99 < 4294967295 {
+                            let __rep_cp100 = state.offset;
                             if !{
-                                let __pretty_cp103 = state.offset;
-                                let __pretty_bcp104 = __builder.checkpoint();
+                                let __pretty_cp97 = state.offset;
+                                let __pretty_bcp98 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        __builder.sep(", ", "");
+                                        __builder.sep(", ", ",");
                                         {
-                                            let __silent_cp101 = state.offset;
-                                            let __silent_bcp102 = __builder.light_checkpoint();
+                                            let __silent_cp95 = state.offset;
+                                            let __silent_bcp96 = __builder.light_checkpoint();
                                             let __ok = (|| -> bool {
                                                 {
-                                                    let __ows98 = state.offset;
+                                                    let __ows92 = state.offset;
                                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                                    let __ows99 = state.offset;
+                                                    let __ows93 = state.offset;
                                                     {
                                                         if state.src_bytes.get(state.offset).copied() != Some(b',')
                                                         {
@@ -12281,17 +12245,16 @@ mod __googlesheetsparser_emit_impl {
                                                         state.offset += 1;
                                                         __builder.char(b',');
                                                     };
-                                                    __builder.text_inline_ws(&state.src[__ows98..__ows99]);
-                                                    let __ows100 = state.offset;
+                                                    __builder.text_inline_ws(&state.src[__ows92..__ows93]);
+                                                    let __ows94 = state.offset;
                                                     ::parse_that::trim_leading_whitespace_mut(state);
-                                                    __builder
-                                                        .text_inline_ws(&state.src[__ows100..state.offset]);
+                                                    __builder.text_inline_ws(&state.src[__ows94..state.offset]);
                                                 };
                                                 true
                                             })();
-                                            __builder.light_restore(__silent_bcp102);
+                                            __builder.light_restore(__silent_bcp96);
                                             if !__ok {
-                                                state.offset = __silent_cp101;
+                                                state.offset = __silent_cp95;
                                                 return false;
                                             }
                                         };
@@ -12302,18 +12265,18 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp103;
-                                    __builder.restore(__pretty_bcp104);
+                                    state.offset = __pretty_cp97;
+                                    __builder.restore(__pretty_bcp98);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp106;
+                                state.offset = __rep_cp100;
                                 break;
                             }
-                            if state.offset == __rep_cp106 {
+                            if state.offset == __rep_cp100 {
                                 break;
                             }
-                            __rep_count105 += 1;
+                            __rep_count99 += 1;
                         }
                     };
                 };
@@ -12344,23 +12307,23 @@ mod __googlesheetsparser_emit_impl {
                             return false;
                         }
                         {
-                            let mut __rep_count114 = 0usize;
-                            while __rep_count114 < 4294967295 {
-                                let __rep_cp115 = state.offset;
+                            let mut __rep_count108 = 0usize;
+                            while __rep_count108 < 4294967295 {
+                                let __rep_cp109 = state.offset;
                                 if !{
-                                    let __pretty_cp112 = state.offset;
-                                    let __pretty_bcp113 = __builder.checkpoint();
+                                    let __pretty_cp106 = state.offset;
+                                    let __pretty_bcp107 = __builder.checkpoint();
                                     let __ok = (|| -> bool {
                                         {
-                                            __builder.sep("; ", "");
+                                            __builder.sep("; ", ";");
                                             {
-                                                let __silent_cp110 = state.offset;
-                                                let __silent_bcp111 = __builder.light_checkpoint();
+                                                let __silent_cp104 = state.offset;
+                                                let __silent_bcp105 = __builder.light_checkpoint();
                                                 let __ok = (|| -> bool {
                                                     {
-                                                        let __ows107 = state.offset;
+                                                        let __ows101 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                                        let __ows108 = state.offset;
+                                                        let __ows102 = state.offset;
                                                         {
                                                             if state.src_bytes.get(state.offset).copied() != Some(b';')
                                                             {
@@ -12369,17 +12332,17 @@ mod __googlesheetsparser_emit_impl {
                                                             state.offset += 1;
                                                             __builder.char(b';');
                                                         };
-                                                        __builder.text_inline_ws(&state.src[__ows107..__ows108]);
-                                                        let __ows109 = state.offset;
+                                                        __builder.text_inline_ws(&state.src[__ows101..__ows102]);
+                                                        let __ows103 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows109..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows103..state.offset]);
                                                     };
                                                     true
                                                 })();
-                                                __builder.light_restore(__silent_bcp111);
+                                                __builder.light_restore(__silent_bcp105);
                                                 if !__ok {
-                                                    state.offset = __silent_cp110;
+                                                    state.offset = __silent_cp104;
                                                     return false;
                                                 }
                                             };
@@ -12390,18 +12353,18 @@ mod __googlesheetsparser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp112;
-                                        __builder.restore(__pretty_bcp113);
+                                        state.offset = __pretty_cp106;
+                                        __builder.restore(__pretty_bcp107);
                                     }
                                     __ok
                                 } {
-                                    state.offset = __rep_cp115;
+                                    state.offset = __rep_cp109;
                                     break;
                                 }
-                                if state.offset == __rep_cp115 {
+                                if state.offset == __rep_cp109 {
                                     break;
                                 }
-                                __rep_count114 += 1;
+                                __rep_count108 += 1;
                             }
                         };
                     };
@@ -12441,27 +12404,27 @@ mod __googlesheetsparser_emit_impl {
                         };
                         {
                             if !{
-                                let __pretty_cp118 = state.offset;
-                                let __pretty_bcp119 = __builder.checkpoint();
+                                let __pretty_cp112 = state.offset;
+                                let __pretty_bcp113 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        let __ows116 = state.offset;
+                                        let __ows110 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows116..state.offset]);
+                                            .text_inline_ws(&state.src[__ows110..state.offset]);
                                         if !Self::__array_rows_prettify(state, __builder) {
                                             return false;
                                         }
-                                        let __ows117 = state.offset;
+                                        let __ows111 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows117..state.offset]);
+                                            .text_inline_ws(&state.src[__ows111..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp118;
-                                    __builder.restore(__pretty_bcp119);
+                                    state.offset = __pretty_cp112;
+                                    __builder.restore(__pretty_bcp113);
                                 }
                                 __ok
                             } {
@@ -12502,27 +12465,27 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         if !{
-                            let __pretty_cp122 = state.offset;
-                            let __pretty_bcp123 = __builder.checkpoint();
+                            let __pretty_cp116 = state.offset;
+                            let __pretty_bcp117 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
-                                    let __ows120 = state.offset;
+                                    let __ows114 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows120..state.offset]);
+                                        .text_inline_ws(&state.src[__ows114..state.offset]);
                                     if !Self::__add_expr_prettify(state, __builder) {
                                         return false;
                                     }
-                                    let __ows121 = state.offset;
+                                    let __ows115 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows121..state.offset]);
+                                        .text_inline_ws(&state.src[__ows115..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp122;
-                                __builder.restore(__pretty_bcp123);
+                                state.offset = __pretty_cp116;
+                                __builder.restore(__pretty_bcp117);
                             }
                             __ok
                         } {
@@ -12530,18 +12493,18 @@ mod __googlesheetsparser_emit_impl {
                         }
                     };
                     {
-                        let mut __rep_count133 = 0usize;
-                        while __rep_count133 < 4294967295 {
-                            let __rep_cp134 = state.offset;
+                        let mut __rep_count127 = 0usize;
+                        while __rep_count127 < 4294967295 {
+                            let __rep_cp128 = state.offset;
                             if !{
-                                let __pretty_cp131 = state.offset;
-                                let __pretty_bcp132 = __builder.checkpoint();
+                                let __pretty_cp125 = state.offset;
+                                let __pretty_bcp126 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
-                                            let __ows124 = state.offset;
+                                            let __ows118 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ows125 = state.offset;
+                                            let __ows119 = state.offset;
                                             {
                                                 if state.src_bytes.get(state.offset).copied() != Some(b'&')
                                                 {
@@ -12550,35 +12513,35 @@ mod __googlesheetsparser_emit_impl {
                                                 state.offset += 1;
                                                 __builder.char(b'&');
                                             };
-                                            __builder.text_inline_ws(&state.src[__ows124..__ows125]);
-                                            let __ows126 = state.offset;
+                                            __builder.text_inline_ws(&state.src[__ows118..__ows119]);
+                                            let __ows120 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __builder
-                                                .text_inline_ws(&state.src[__ows126..state.offset]);
+                                                .text_inline_ws(&state.src[__ows120..state.offset]);
                                         };
                                         {
                                             if !{
-                                                let __pretty_cp129 = state.offset;
-                                                let __pretty_bcp130 = __builder.checkpoint();
+                                                let __pretty_cp123 = state.offset;
+                                                let __pretty_bcp124 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     {
-                                                        let __ows127 = state.offset;
+                                                        let __ows121 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows127..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows121..state.offset]);
                                                         if !Self::__add_expr_prettify(state, __builder) {
                                                             return false;
                                                         }
-                                                        let __ows128 = state.offset;
+                                                        let __ows122 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows128..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows122..state.offset]);
                                                     };
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp129;
-                                                    __builder.restore(__pretty_bcp130);
+                                                    state.offset = __pretty_cp123;
+                                                    __builder.restore(__pretty_bcp124);
                                                 }
                                                 __ok
                                             } {
@@ -12589,18 +12552,18 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp131;
-                                    __builder.restore(__pretty_bcp132);
+                                    state.offset = __pretty_cp125;
+                                    __builder.restore(__pretty_bcp126);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp134;
+                                state.offset = __rep_cp128;
                                 break;
                             }
-                            if state.offset == __rep_cp134 {
+                            if state.offset == __rep_cp128 {
                                 break;
                             }
-                            __rep_count133 += 1;
+                            __rep_count127 += 1;
                         }
                     };
                 };
@@ -12626,27 +12589,27 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         if !{
-                            let __pretty_cp137 = state.offset;
-                            let __pretty_bcp138 = __builder.checkpoint();
+                            let __pretty_cp131 = state.offset;
+                            let __pretty_bcp132 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
-                                    let __ows135 = state.offset;
+                                    let __ows129 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows135..state.offset]);
+                                        .text_inline_ws(&state.src[__ows129..state.offset]);
                                     if !Self::__mul_expr_prettify(state, __builder) {
                                         return false;
                                     }
-                                    let __ows136 = state.offset;
+                                    let __ows130 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows136..state.offset]);
+                                        .text_inline_ws(&state.src[__ows130..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp137;
-                                __builder.restore(__pretty_bcp138);
+                                state.offset = __pretty_cp131;
+                                __builder.restore(__pretty_bcp132);
                             }
                             __ok
                         } {
@@ -12654,37 +12617,37 @@ mod __googlesheetsparser_emit_impl {
                         }
                     };
                     {
-                        let mut __rep_count149 = 0usize;
-                        while __rep_count149 < 4294967295 {
-                            let __rep_cp150 = state.offset;
+                        let mut __rep_count143 = 0usize;
+                        while __rep_count143 < 4294967295 {
+                            let __rep_cp144 = state.offset;
                             if !{
-                                let __pretty_cp147 = state.offset;
-                                let __pretty_bcp148 = __builder.checkpoint();
+                                let __pretty_cp141 = state.offset;
+                                let __pretty_bcp142 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
                                             if !{
-                                                let __pretty_cp141 = state.offset;
-                                                let __pretty_bcp142 = __builder.checkpoint();
+                                                let __pretty_cp135 = state.offset;
+                                                let __pretty_bcp136 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     {
-                                                        let __ows139 = state.offset;
+                                                        let __ows133 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows139..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows133..state.offset]);
                                                         if !Self::__add_op_prettify(state, __builder) {
                                                             return false;
                                                         }
-                                                        let __ows140 = state.offset;
+                                                        let __ows134 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows140..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows134..state.offset]);
                                                     };
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp141;
-                                                    __builder.restore(__pretty_bcp142);
+                                                    state.offset = __pretty_cp135;
+                                                    __builder.restore(__pretty_bcp136);
                                                 }
                                                 __ok
                                             } {
@@ -12693,27 +12656,27 @@ mod __googlesheetsparser_emit_impl {
                                         };
                                         {
                                             if !{
-                                                let __pretty_cp145 = state.offset;
-                                                let __pretty_bcp146 = __builder.checkpoint();
+                                                let __pretty_cp139 = state.offset;
+                                                let __pretty_bcp140 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     {
-                                                        let __ows143 = state.offset;
+                                                        let __ows137 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows143..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows137..state.offset]);
                                                         if !Self::__mul_expr_prettify(state, __builder) {
                                                             return false;
                                                         }
-                                                        let __ows144 = state.offset;
+                                                        let __ows138 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows144..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows138..state.offset]);
                                                     };
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp145;
-                                                    __builder.restore(__pretty_bcp146);
+                                                    state.offset = __pretty_cp139;
+                                                    __builder.restore(__pretty_bcp140);
                                                 }
                                                 __ok
                                             } {
@@ -12724,18 +12687,18 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp147;
-                                    __builder.restore(__pretty_bcp148);
+                                    state.offset = __pretty_cp141;
+                                    __builder.restore(__pretty_bcp142);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp150;
+                                state.offset = __rep_cp144;
                                 break;
                             }
-                            if state.offset == __rep_cp150 {
+                            if state.offset == __rep_cp144 {
                                 break;
                             }
-                            __rep_count149 += 1;
+                            __rep_count143 += 1;
                         }
                     };
                 };
@@ -12761,27 +12724,27 @@ mod __googlesheetsparser_emit_impl {
                 {
                     {
                         if !{
-                            let __pretty_cp153 = state.offset;
-                            let __pretty_bcp154 = __builder.checkpoint();
+                            let __pretty_cp147 = state.offset;
+                            let __pretty_bcp148 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
-                                    let __ows151 = state.offset;
+                                    let __ows145 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows151..state.offset]);
+                                        .text_inline_ws(&state.src[__ows145..state.offset]);
                                     if !Self::__unary_expr_prettify(state, __builder) {
                                         return false;
                                     }
-                                    let __ows152 = state.offset;
+                                    let __ows146 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows152..state.offset]);
+                                        .text_inline_ws(&state.src[__ows146..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp153;
-                                __builder.restore(__pretty_bcp154);
+                                state.offset = __pretty_cp147;
+                                __builder.restore(__pretty_bcp148);
                             }
                             __ok
                         } {
@@ -12789,18 +12752,18 @@ mod __googlesheetsparser_emit_impl {
                         }
                     };
                     {
-                        let mut __rep_count164 = 0usize;
-                        while __rep_count164 < 4294967295 {
-                            let __rep_cp165 = state.offset;
+                        let mut __rep_count158 = 0usize;
+                        while __rep_count158 < 4294967295 {
+                            let __rep_cp159 = state.offset;
                             if !{
-                                let __pretty_cp162 = state.offset;
-                                let __pretty_bcp163 = __builder.checkpoint();
+                                let __pretty_cp156 = state.offset;
+                                let __pretty_bcp157 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
-                                            let __ows155 = state.offset;
+                                            let __ows149 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ows156 = state.offset;
+                                            let __ows150 = state.offset;
                                             {
                                                 if state.src_bytes.get(state.offset).copied() != Some(b'^')
                                                 {
@@ -12809,35 +12772,35 @@ mod __googlesheetsparser_emit_impl {
                                                 state.offset += 1;
                                                 __builder.char(b'^');
                                             };
-                                            __builder.text_inline_ws(&state.src[__ows155..__ows156]);
-                                            let __ows157 = state.offset;
+                                            __builder.text_inline_ws(&state.src[__ows149..__ows150]);
+                                            let __ows151 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __builder
-                                                .text_inline_ws(&state.src[__ows157..state.offset]);
+                                                .text_inline_ws(&state.src[__ows151..state.offset]);
                                         };
                                         {
                                             if !{
-                                                let __pretty_cp160 = state.offset;
-                                                let __pretty_bcp161 = __builder.checkpoint();
+                                                let __pretty_cp154 = state.offset;
+                                                let __pretty_bcp155 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     {
-                                                        let __ows158 = state.offset;
+                                                        let __ows152 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows158..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows152..state.offset]);
                                                         if !Self::__unary_expr_prettify(state, __builder) {
                                                             return false;
                                                         }
-                                                        let __ows159 = state.offset;
+                                                        let __ows153 = state.offset;
                                                         ::parse_that::trim_leading_whitespace_mut(state);
                                                         __builder
-                                                            .text_inline_ws(&state.src[__ows159..state.offset]);
+                                                            .text_inline_ws(&state.src[__ows153..state.offset]);
                                                     };
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp160;
-                                                    __builder.restore(__pretty_bcp161);
+                                                    state.offset = __pretty_cp154;
+                                                    __builder.restore(__pretty_bcp155);
                                                 }
                                                 __ok
                                             } {
@@ -12848,18 +12811,18 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp162;
-                                    __builder.restore(__pretty_bcp163);
+                                    state.offset = __pretty_cp156;
+                                    __builder.restore(__pretty_bcp157);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp165;
+                                state.offset = __rep_cp159;
                                 break;
                             }
-                            if state.offset == __rep_cp165 {
+                            if state.offset == __rep_cp159 {
                                 break;
                             }
-                            __rep_count164 += 1;
+                            __rep_count158 += 1;
                         }
                     };
                 };
@@ -12960,27 +12923,27 @@ mod __googlesheetsparser_emit_impl {
                         };
                         {
                             if !{
-                                let __pretty_cp168 = state.offset;
-                                let __pretty_bcp169 = __builder.checkpoint();
+                                let __pretty_cp162 = state.offset;
+                                let __pretty_bcp163 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        let __ows166 = state.offset;
+                                        let __ows160 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows166..state.offset]);
+                                            .text_inline_ws(&state.src[__ows160..state.offset]);
                                         if !Self::__lambda_params_prettify(state, __builder) {
                                             return false;
                                         }
-                                        let __ows167 = state.offset;
+                                        let __ows161 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows167..state.offset]);
+                                            .text_inline_ws(&state.src[__ows161..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp168;
-                                    __builder.restore(__pretty_bcp169);
+                                    state.offset = __pretty_cp162;
+                                    __builder.restore(__pretty_bcp163);
                                 }
                                 __ok
                             } {
@@ -13049,18 +13012,18 @@ mod __googlesheetsparser_emit_impl {
                         }
                         {
                             if !{
-                                let __pretty_cp174 = state.offset;
-                                let __pretty_bcp175 = __builder.checkpoint();
+                                let __pretty_cp168 = state.offset;
+                                let __pretty_bcp169 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        let __ows172 = state.offset;
+                                        let __ows166 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows172..state.offset]);
+                                            .text_inline_ws(&state.src[__ows166..state.offset]);
                                         {
                                             let _ = {
-                                                let __pretty_cp170 = state.offset;
-                                                let __pretty_bcp171 = __builder.checkpoint();
+                                                let __pretty_cp164 = state.offset;
+                                                let __pretty_bcp165 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__func_args_prettify(state, __builder) {
                                                         return false;
@@ -13068,23 +13031,23 @@ mod __googlesheetsparser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp170;
-                                                    __builder.restore(__pretty_bcp171);
+                                                    state.offset = __pretty_cp164;
+                                                    __builder.restore(__pretty_bcp165);
                                                 }
                                                 __ok
                                             };
                                             true
                                         };
-                                        let __ows173 = state.offset;
+                                        let __ows167 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows173..state.offset]);
+                                            .text_inline_ws(&state.src[__ows167..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp174;
-                                    __builder.restore(__pretty_bcp175);
+                                    state.offset = __pretty_cp168;
+                                    __builder.restore(__pretty_bcp169);
                                 }
                                 __ok
                             } {
@@ -13124,28 +13087,28 @@ mod __googlesheetsparser_emit_impl {
             {
                 {
                     {
-                        let mut __rep_count180 = 0usize;
-                        while __rep_count180 < 4294967295 {
-                            let __rep_cp181 = state.offset;
-                            let __iter_cp = if __rep_count180 > 0 {
+                        let mut __rep_count174 = 0usize;
+                        while __rep_count174 < 4294967295 {
+                            let __rep_cp175 = state.offset;
+                            let __iter_cp = if __rep_count174 > 0 {
                                 Some(__builder.checkpoint())
                             } else {
                                 None
                             };
-                            if __rep_count180 > 0 {
+                            if __rep_count174 > 0 {
                                 __builder.hardline();
                             }
                             if !{
-                                let __pretty_cp179 = state.offset;
+                                let __pretty_cp173 = state.offset;
                                 let __ok = (|| -> bool {
                                     {
                                         if !Self::__let_binding_prettify(state, __builder) {
                                             return false;
                                         }
                                         {
-                                            let __ows176 = state.offset;
+                                            let __ows170 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
-                                            let __ows177 = state.offset;
+                                            let __ows171 = state.offset;
                                             {
                                                 if state.src_bytes.get(state.offset).copied() != Some(b',')
                                                 {
@@ -13154,33 +13117,33 @@ mod __googlesheetsparser_emit_impl {
                                                 state.offset += 1;
                                                 __builder.char(b',');
                                             };
-                                            __builder.text_inline_ws(&state.src[__ows176..__ows177]);
-                                            let __ows178 = state.offset;
+                                            __builder.text_inline_ws(&state.src[__ows170..__ows171]);
+                                            let __ows172 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __builder
-                                                .text_inline_ws(&state.src[__ows178..state.offset]);
+                                                .text_inline_ws(&state.src[__ows172..state.offset]);
                                         };
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp179;
+                                    state.offset = __pretty_cp173;
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp181;
+                                state.offset = __rep_cp175;
                                 if let Some(__bcp) = __iter_cp {
                                     __builder.restore(__bcp);
                                 }
                                 break;
                             }
-                            if state.offset == __rep_cp181 {
+                            if state.offset == __rep_cp175 {
                                 if let Some(__bcp) = __iter_cp {
                                     __builder.restore(__bcp);
                                 }
                                 break;
                             }
-                            __rep_count180 += 1;
+                            __rep_count174 += 1;
                         }
                     };
                     if !Self::__expression_prettify(state, __builder) {
@@ -13263,27 +13226,27 @@ mod __googlesheetsparser_emit_impl {
                         };
                         {
                             if !{
-                                let __pretty_cp184 = state.offset;
-                                let __pretty_bcp185 = __builder.checkpoint();
+                                let __pretty_cp178 = state.offset;
+                                let __pretty_bcp179 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        let __ows182 = state.offset;
+                                        let __ows176 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows182..state.offset]);
+                                            .text_inline_ws(&state.src[__ows176..state.offset]);
                                         if !Self::__let_args_prettify(state, __builder) {
                                             return false;
                                         }
-                                        let __ows183 = state.offset;
+                                        let __ows177 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows183..state.offset]);
+                                            .text_inline_ws(&state.src[__ows177..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp184;
-                                    __builder.restore(__pretty_bcp185);
+                                    state.offset = __pretty_cp178;
+                                    __builder.restore(__pretty_bcp179);
                                 }
                                 __ok
                             } {
@@ -13323,8 +13286,8 @@ mod __googlesheetsparser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp203 = state.offset;
-                        let __pretty_bcp204 = __builder.checkpoint();
+                        let __pretty_cp197 = state.offset;
+                        let __pretty_bcp198 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__let_call_prettify(state, __builder) {
                                 return false;
@@ -13332,15 +13295,15 @@ mod __googlesheetsparser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp203;
-                            __builder.restore(__pretty_bcp204);
+                            state.offset = __pretty_cp197;
+                            __builder.restore(__pretty_bcp198);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp201 = state.offset;
-                                let __pretty_bcp202 = __builder.checkpoint();
+                                let __pretty_cp195 = state.offset;
+                                let __pretty_bcp196 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__lambda_call_prettify(state, __builder) {
                                         return false;
@@ -13348,15 +13311,15 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp201;
-                                    __builder.restore(__pretty_bcp202);
+                                    state.offset = __pretty_cp195;
+                                    __builder.restore(__pretty_bcp196);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp199 = state.offset;
-                                        let __pretty_bcp200 = __builder.checkpoint();
+                                        let __pretty_cp193 = state.offset;
+                                        let __pretty_bcp194 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__func_call_prettify(state, __builder) {
                                                 return false;
@@ -13364,14 +13327,14 @@ mod __googlesheetsparser_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp199;
-                                            __builder.restore(__pretty_bcp200);
+                                            state.offset = __pretty_cp193;
+                                            __builder.restore(__pretty_bcp194);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp198 = state.offset;
+                                                let __pretty_cp192 = state.offset;
                                                 let __ok = (|| -> bool {
                                                     {
                                                         let __start = state.offset;
@@ -13498,14 +13461,14 @@ mod __googlesheetsparser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp198;
+                                                    state.offset = __pretty_cp192;
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp196 = state.offset;
-                                                        let __pretty_bcp197 = __builder.checkpoint();
+                                                        let __pretty_cp190 = state.offset;
+                                                        let __pretty_bcp191 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__boolean_prettify(state, __builder) {
                                                                 return false;
@@ -13513,15 +13476,15 @@ mod __googlesheetsparser_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp196;
-                                                            __builder.restore(__pretty_bcp197);
+                                                            state.offset = __pretty_cp190;
+                                                            __builder.restore(__pretty_bcp191);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp194 = state.offset;
-                                                                let __pretty_bcp195 = __builder.checkpoint();
+                                                                let __pretty_cp188 = state.offset;
+                                                                let __pretty_bcp189 = __builder.checkpoint();
                                                                 let __ok = (|| -> bool {
                                                                     if !Self::__cell_or_range_prettify(state, __builder) {
                                                                         return false;
@@ -13529,21 +13492,56 @@ mod __googlesheetsparser_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp194;
-                                                                    __builder.restore(__pretty_bcp195);
+                                                                    state.offset = __pretty_cp188;
+                                                                    __builder.restore(__pretty_bcp189);
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp193 = state.offset;
+                                                                        let __pretty_cp187 = state.offset;
                                                                         let __ok = (|| -> bool {
                                                                             {
                                                                                 let __start = state.offset;
-                                                                                if ::parse_that::scan_ident(
-                                                                                        state,
-                                                                                        &::parse_that::DEFAULT_IDENT_CONFIG,
-                                                                                    )
+                                                                                if {
+                                                                                    let __start = state.offset;
+                                                                                    let __result: Option<()> = (|| {
+                                                                                        {
+                                                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                                                            if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                                                || (__b >= b'a' && __b <= b'z')))
+                                                                                            {
+                                                                                                return None;
+                                                                                            }
+                                                                                            state.offset += 1;
+                                                                                        }
+                                                                                        {
+                                                                                            let __end = state.src_bytes.len();
+                                                                                            let mut __pos = state.offset;
+                                                                                            while __pos < __end {
+                                                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                                                if (__b == b'.' || (__b >= b'0' && __b <= b'9')
+                                                                                                    || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                                                    || (__b >= b'a' && __b <= b'z'))
+                                                                                                {
+                                                                                                    __pos += 1;
+                                                                                                } else {
+                                                                                                    break;
+                                                                                                }
+                                                                                            }
+                                                                                            state.offset = __pos;
+                                                                                        }
+                                                                                        Some(())
+                                                                                    })();
+                                                                                    if __result.is_some() && state.offset > __start {
+                                                                                        Some(
+                                                                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                                                                        )
+                                                                                    } else {
+                                                                                        state.offset = __start;
+                                                                                        None
+                                                                                    }
+                                                                                }
                                                                                     .is_none()
                                                                                 {
                                                                                     return false;
@@ -13556,13 +13554,13 @@ mod __googlesheetsparser_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp193;
+                                                                            state.offset = __pretty_cp187;
                                                                         }
                                                                         __ok
                                                                     } {
                                                                         {
                                                                             if !{
-                                                                                let __pretty_cp192 = state.offset;
+                                                                                let __pretty_cp186 = state.offset;
                                                                                 let __ok = (|| -> bool {
                                                                                     {
                                                                                         let __start = state.offset;
@@ -13577,14 +13575,14 @@ mod __googlesheetsparser_emit_impl {
                                                                                     true
                                                                                 })();
                                                                                 if !__ok {
-                                                                                    state.offset = __pretty_cp192;
+                                                                                    state.offset = __pretty_cp186;
                                                                                 }
                                                                                 __ok
                                                                             } {
                                                                                 {
                                                                                     if !{
-                                                                                        let __pretty_cp190 = state.offset;
-                                                                                        let __pretty_bcp191 = __builder.checkpoint();
+                                                                                        let __pretty_cp184 = state.offset;
+                                                                                        let __pretty_bcp185 = __builder.checkpoint();
                                                                                         let __ok = (|| -> bool {
                                                                                             if !Self::__error_literal_prettify(state, __builder) {
                                                                                                 return false;
@@ -13592,15 +13590,15 @@ mod __googlesheetsparser_emit_impl {
                                                                                             true
                                                                                         })();
                                                                                         if !__ok {
-                                                                                            state.offset = __pretty_cp190;
-                                                                                            __builder.restore(__pretty_bcp191);
+                                                                                            state.offset = __pretty_cp184;
+                                                                                            __builder.restore(__pretty_bcp185);
                                                                                         }
                                                                                         __ok
                                                                                     } {
                                                                                         {
                                                                                             if !{
-                                                                                                let __pretty_cp188 = state.offset;
-                                                                                                let __pretty_bcp189 = __builder.checkpoint();
+                                                                                                let __pretty_cp182 = state.offset;
+                                                                                                let __pretty_bcp183 = __builder.checkpoint();
                                                                                                 let __ok = (|| -> bool {
                                                                                                     if !Self::__array_literal_prettify(state, __builder) {
                                                                                                         return false;
@@ -13608,15 +13606,15 @@ mod __googlesheetsparser_emit_impl {
                                                                                                     true
                                                                                                 })();
                                                                                                 if !__ok {
-                                                                                                    state.offset = __pretty_cp188;
-                                                                                                    __builder.restore(__pretty_bcp189);
+                                                                                                    state.offset = __pretty_cp182;
+                                                                                                    __builder.restore(__pretty_bcp183);
                                                                                                 }
                                                                                                 __ok
                                                                                             } {
                                                                                                 {
                                                                                                     if !{
-                                                                                                        let __pretty_cp186 = state.offset;
-                                                                                                        let __pretty_bcp187 = __builder.checkpoint();
+                                                                                                        let __pretty_cp180 = state.offset;
+                                                                                                        let __pretty_bcp181 = __builder.checkpoint();
                                                                                                         let __ok = (|| -> bool {
                                                                                                             if !Self::__paren_expr_prettify(state, __builder) {
                                                                                                                 return false;
@@ -13624,8 +13622,8 @@ mod __googlesheetsparser_emit_impl {
                                                                                                             true
                                                                                                         })();
                                                                                                         if !__ok {
-                                                                                                            state.offset = __pretty_cp186;
-                                                                                                            __builder.restore(__pretty_bcp187);
+                                                                                                            state.offset = __pretty_cp180;
+                                                                                                            __builder.restore(__pretty_bcp181);
                                                                                                         }
                                                                                                         __ok
                                                                                                     } {
@@ -13676,12 +13674,12 @@ mod __googlesheetsparser_emit_impl {
                         return false;
                     }
                     {
-                        let mut __rep_count207 = 0usize;
-                        while __rep_count207 < 4294967295 {
-                            let __rep_cp208 = state.offset;
+                        let mut __rep_count201 = 0usize;
+                        while __rep_count201 < 4294967295 {
+                            let __rep_cp202 = state.offset;
                             if !{
-                                let __pretty_cp205 = state.offset;
-                                let __pretty_bcp206 = __builder.checkpoint();
+                                let __pretty_cp199 = state.offset;
+                                let __pretty_bcp200 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         if state.src_bytes.get(state.offset).copied() != Some(b'%')
@@ -13694,18 +13692,18 @@ mod __googlesheetsparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp205;
-                                    __builder.restore(__pretty_bcp206);
+                                    state.offset = __pretty_cp199;
+                                    __builder.restore(__pretty_bcp200);
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp208;
+                                state.offset = __rep_cp202;
                                 break;
                             }
-                            if state.offset == __rep_cp208 {
+                            if state.offset == __rep_cp202 {
                                 break;
                             }
-                            __rep_count207 += 1;
+                            __rep_count201 += 1;
                         }
                     };
                 };

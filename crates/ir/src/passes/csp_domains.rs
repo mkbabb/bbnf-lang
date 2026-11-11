@@ -10,8 +10,33 @@
 use csp_solver::constraint::{Constraint, Revision, VarId};
 use csp_solver::domain::{Domain, LatticeDomain};
 use csp_solver::variable::Variable;
+use csp_solver::{Csp, Unsatisfiable};
 
 use crate::CharSet128;
+
+// ── Propagation ───────────────────────────────────────────────────────────────
+
+/// Propagate a fixed-point pass's CSP to its fixed point.
+///
+/// Every pass that calls this builds its CSP from monotone joins into a
+/// lattice that has no conflict element (`BoolDomain`, `CharSetDomain`,
+/// `DispatchDomain`, `TypeDomain`), and none of their constraints'
+/// `revise` returns `Revision::Unsatisfiable`. Propagation therefore
+/// always reaches the fixed point, and `Unsatisfiable` here is a broken
+/// invariant of the named pass, not a property of the grammar. (The
+/// one CSP whose domain does have a conflict element, the inline plan,
+/// reports it as a typed `CallModeConflict` instead.)
+pub(crate) fn propagate_to_fixed_point<D>(csp: &mut Csp<D>, pass: &'static str)
+where
+    D: Domain,
+    D::Value: PartialEq + 'static,
+{
+    if let Err(Unsatisfiable) = csp.propagate() {
+        unreachable!(
+            "{pass}: propagation reported Unsatisfiable, but no constraint of this pass can"
+        );
+    }
+}
 
 // ── BoolDomain ────────────────────────────────────────────────────────────────
 
@@ -290,7 +315,7 @@ impl Domain for CharSetDomain {
     }
 
     fn singleton_value(&self) -> Option<Self::Value> {
-        Some(self.solved.clone())
+        Some(self.solved)
     }
 
     fn contains(&self, val: &Self::Value) -> bool {
@@ -304,7 +329,7 @@ impl Domain for CharSetDomain {
     fn add(&mut self, _val: &Self::Value) {}
 
     fn values(&self) -> Vec<Self::Value> {
-        vec![self.solved.clone()]
+        vec![self.solved]
     }
 }
 
@@ -386,7 +411,7 @@ impl Constraint<CharSetDomain> for CharSetUnionConstraint {
     }
 
     fn revise(&self, vars: &mut [Variable<CharSetDomain>], _depth: usize) -> Revision {
-        let source_cs = vars[self.source as usize].domain.solved.clone();
+        let source_cs = vars[self.source as usize].domain.solved;
         if charset_union(vars, self.target, &source_cs) {
             Revision::Changed
         } else {

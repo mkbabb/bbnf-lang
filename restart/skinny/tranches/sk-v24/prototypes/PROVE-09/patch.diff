@@ -1,0 +1,513 @@
+diff --git a/rust/parse_that/Cargo.toml b/rust/parse_that/Cargo.toml
+index 99b7922..5b6465c 100644
+--- a/rust/parse_that/Cargo.toml
++++ b/rust/parse_that/Cargo.toml
+@@ -94,7 +94,7 @@ memchr = "2.5.0"
+ aho-corasick = "1.1"
+ fast-float2 = "0.2"
+ smallvec = "1.13"
+-smallbox = { version = "0.8", features = ["nightly"] }
++smallbox = "0.8"
+ 
+ [dev-dependencies]
+ serde_json = "1.0.94"
+diff --git a/rust/parse_that/examples/alloc_count.rs b/rust/parse_that/examples/alloc_count.rs
+new file mode 100644
+index 0000000..94fa452
+--- /dev/null
++++ b/rust/parse_that/examples/alloc_count.rs
+@@ -0,0 +1,57 @@
++//! Alloc-count probe (PROVE-09). A counting global allocator tallies heap
++//! allocations during (1) parser construction and (2) one cold parse, so the
++//! vtable-box allocation profile is visible: the combinator vtable boxes are
++//! paid at CONSTRUCTION, never per-parse — which is why the smallbox→stable
++//! de-nightly is cyc/B-neutral on the hot path.
++
++use std::alloc::{GlobalAlloc, Layout, System};
++use std::sync::atomic::{AtomicUsize, Ordering::Relaxed};
++
++static ALLOCS: AtomicUsize = AtomicUsize::new(0);
++static BYTES: AtomicUsize = AtomicUsize::new(0);
++
++struct Counting;
++unsafe impl GlobalAlloc for Counting {
++    unsafe fn alloc(&self, l: Layout) -> *mut u8 {
++        ALLOCS.fetch_add(1, Relaxed);
++        BYTES.fetch_add(l.size(), Relaxed);
++        unsafe { System.alloc(l) }
++    }
++    unsafe fn dealloc(&self, p: *mut u8, l: Layout) {
++        unsafe { System.dealloc(p, l) }
++    }
++    unsafe fn realloc(&self, p: *mut u8, l: Layout, n: usize) -> *mut u8 {
++        ALLOCS.fetch_add(1, Relaxed);
++        BYTES.fetch_add(n, Relaxed);
++        unsafe { System.realloc(p, l, n) }
++    }
++}
++
++#[global_allocator]
++static A: Counting = Counting;
++
++use parse_that::json::json_parser;
++
++fn main() {
++    // (1) parser-tree construction allocs (vtable boxes live here).
++    let a0 = ALLOCS.load(Relaxed);
++    let b0 = BYTES.load(Relaxed);
++    let parser = json_parser();
++    let a1 = ALLOCS.load(Relaxed);
++    let b1 = BYTES.load(Relaxed);
++    std::hint::black_box(&parser);
++    println!(
++        "construct json_parser(): allocs={} bytes={}",
++        a1 - a0,
++        b1 - b0
++    );
++
++    // (2) per-parse allocs (Vec growth in many/sep_by + arenas) — the hot loop.
++    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../data/json/twitter.json");
++    let data = std::fs::read_to_string(&path).unwrap();
++    let a2 = ALLOCS.load(Relaxed);
++    let v = parser.parse(&data).unwrap();
++    let a3 = ALLOCS.load(Relaxed);
++    std::hint::black_box(v);
++    println!("parse twitter.json ({} B): allocs={}", data.len(), a3 - a2);
++}
+diff --git a/rust/parse_that/src/lib.rs b/rust/parse_that/src/lib.rs
+index 2c01c20..1dca08e 100644
+--- a/rust/parse_that/src/lib.rs
++++ b/rust/parse_that/src/lib.rs
+@@ -1,9 +1,16 @@
+-#![feature(portable_simd)]
++// RESIDUAL nightly gate — required NOT by this crate's source but by the
++// @generated `regex/generated.rs`, which emits the *expanded* `#[derive(Debug)]`
++// (an `#[automatically_derived]` impl that calls the perma-unstable
++// `core::fmt::Formatter::debug_tuple_field1_finish`). Per the @generated-regen
++// edict this is fixed at the generator (emit `#[derive(Debug)]`, not its
++// expansion) + `scripts/bootstrap-regex.sh`, NOT by hand-patching. The other
++// two gates (`portable_simd`, `stmt_expr_attributes`) are fully excised.
+ #![feature(fmt_helpers_for_derive)]
+-#![feature(stmt_expr_attributes)]
+ 
+ // ── Core (always available — used by generated parsers) ──────────────────
+ 
++pub mod simd128;
++
+ pub mod bump_slab;
+ pub use bump_slab::BumpSlab;
+ 
+diff --git a/rust/parse_that/src/parse.rs b/rust/parse_that/src/parse.rs
+index aed1fd7..ad04633 100644
+--- a/rust/parse_that/src/parse.rs
++++ b/rust/parse_that/src/parse.rs
+@@ -1,4 +1,4 @@
+-use smallbox::{SmallBox, space::S32};
++use smallbox::{SmallBox, smallbox, space::S32};
+ 
+ use crate::scanners::trim_leading_whitespace_mut;
+ use crate::state::ParserState;
+@@ -71,7 +71,11 @@ where
+     #[inline]
+     pub fn new(parser_fn: impl ParserFn<'a, Output>) -> Parser<'a, Output> {
+         Parser {
+-            parser_fn: SmallBox::new(parser_fn),
++            // Stable inline small-box: `smallbox!` performs the `dyn` unsizing
++            // coercion on stable, replacing `SmallBox::new` (which needs the
++            // nightly-only `coerce`/`CoerceUnsized` feature). Same S32 inline
++            // storage, same heap-spill threshold — alloc- and codegen-neutral.
++            parser_fn: smallbox!(parser_fn),
+             flags: 0,
+         }
+     }
+diff --git a/rust/parse_that/src/parsers/scan/decode.rs b/rust/parse_that/src/parsers/scan/decode.rs
+index 85d60c5..b861cb3 100644
+--- a/rust/parse_that/src/parsers/scan/decode.rs
++++ b/rust/parse_that/src/parsers/scan/decode.rs
+@@ -16,7 +16,7 @@
+ // escape-free run between escapes copies stripe-strided into the arena
+ // before scalar handling decodes the escape itself.
+ 
+-use std::simd::prelude::*;
++use crate::simd128::*;
+ 
+ use super::quoted_simd::odd_parity_backslashes;
+ 
+diff --git a/rust/parse_that/src/parsers/scan/quote_parity.rs b/rust/parse_that/src/parsers/scan/quote_parity.rs
+index cda9c43..69fa555 100644
+--- a/rust/parse_that/src/parsers/scan/quote_parity.rs
++++ b/rust/parse_that/src/parsers/scan/quote_parity.rs
+@@ -70,7 +70,7 @@ pub fn prefix_xor(mask: u64) -> u64 {
+ 
+ #[inline(always)]
+ fn classify_stripe_64(bytes: &[u8], offset: usize) -> (u64, u64) {
+-    use std::simd::prelude::*;
++    use crate::simd128::*;
+ 
+     let mut quote = 0u64;
+     let mut bs = 0u64;
+diff --git a/rust/parse_that/src/parsers/scan/quoted_simd.rs b/rust/parse_that/src/parsers/scan/quoted_simd.rs
+index 0c149b0..999adf7 100644
+--- a/rust/parse_that/src/parsers/scan/quoted_simd.rs
++++ b/rust/parse_that/src/parsers/scan/quoted_simd.rs
+@@ -9,7 +9,7 @@
+ // (including zero). Equivalently, position `i` is "escaped" iff it is
+ // immediately preceded by an odd-length backslash run.
+ 
+-use std::simd::prelude::*;
++use crate::simd128::*;
+ 
+ const CHUNK: usize = 16;
+ const MASK16: u32 = 0xFFFF;
+diff --git a/rust/parse_that/src/parsers/scan/structural_bitmap.rs b/rust/parse_that/src/parsers/scan/structural_bitmap.rs
+index 722c182..9703fec 100644
+--- a/rust/parse_that/src/parsers/scan/structural_bitmap.rs
++++ b/rust/parse_that/src/parsers/scan/structural_bitmap.rs
+@@ -26,7 +26,7 @@
+ //! carried.
+ 
+ use crate::state::{INPUT_PAD_BYTES, PaddedView};
+-use std::simd::prelude::*;
++use crate::simd128::*;
+ 
+ const STRIPE: usize = 64;
+ 
+diff --git a/rust/parse_that/src/parsers/scan/ws_comment.rs b/rust/parse_that/src/parsers/scan/ws_comment.rs
+index 5c03f5a..842c4e8 100644
+--- a/rust/parse_that/src/parsers/scan/ws_comment.rs
++++ b/rust/parse_that/src/parsers/scan/ws_comment.rs
+@@ -19,7 +19,7 @@
+ 
+ use super::structural_bitmap::classify_stripe;
+ use crate::state::{PaddedView, ParserState, Span};
+-use std::simd::prelude::*;
++use crate::simd128::*;
+ 
+ /// Byte-class lookup table for ASCII whitespace only.
+ static WS_LUT: [bool; 256] = {
+diff --git a/rust/parse_that/src/scanners.rs b/rust/parse_that/src/scanners.rs
+index e0d4a63..0cb56da 100644
+--- a/rust/parse_that/src/scanners.rs
++++ b/rust/parse_that/src/scanners.rs
+@@ -151,7 +151,7 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
+ 
+     let mut bitmap: u64 = 0;
+     {
+-        use std::simd::prelude::*;
++        use crate::simd128::*;
+         let window = &bytes[offset..offset + window_len];
+         let mut i = 0;
+         while i + 16 <= window_len {
+@@ -191,7 +191,7 @@ fn trim_leading_whitespace_scan_and_cache(state: &mut ParserState<'_>) {
+ /// input ends.
+ #[inline(never)]
+ fn trim_leading_whitespace_bulk_simd(state: &mut ParserState<'_>) {
+-    use std::simd::prelude::*;
++    use crate::simd128::*;
+     let bytes = state.src_bytes;
+     let mut i = state.offset;
+     let end = bytes.len();
+@@ -264,7 +264,7 @@ pub fn find_first_of_nibble_lut(
+     lo_lut: &[u8; 16],
+     hi_lut: &[u8; 16],
+ ) -> Option<(usize, u8)> {
+-    use std::simd::prelude::*;
++    use crate::simd128::*;
+ 
+     let lo = u8x16::from_array(*lo_lut);
+     let hi = u8x16::from_array(*hi_lut);
+diff --git a/rust/parse_that/src/simd128.rs b/rust/parse_that/src/simd128.rs
+new file mode 100644
+index 0000000..52a504a
+--- /dev/null
++++ b/rust/parse_that/src/simd128.rs
+@@ -0,0 +1,276 @@
++//! Stable 128-bit byte-lane SIMD — the de-nightly replacement for
++//! `std::simd::prelude` (`#![feature(portable_simd)]`).
++//!
++//! The scanners use one narrow, uniform vocabulary over `u8x16`:
++//! `splat` / `from_slice` / `from_array` / `to_array`, `& | >>`,
++//! `simd_eq` / `simd_ne`, `to_bitmask` / `any` / `all`, and the dynamic
++//! table shuffle `swizzle_dyn`. This module exposes exactly that surface
++//! so each scanner converts by swapping its `use` line — no call-site churn.
++//!
++//! * **aarch64** → `core::arch::aarch64` NEON intrinsics. The lowering is
++//!   the same instruction stream `std::simd` emitted (`ld1`/`cmeq`/`tbl`/
++//!   `and`/`ushr`/`ushl`), so the port is codegen-neutral, not a slowdown.
++//! * **other arches** → a `[u8; 16]` scalar parity oracle, so the crate
++//!   still builds everywhere (no x86 intrinsics anywhere).
++//!
++//! `to_bitmask()` matches `std::simd::Mask::to_bitmask`: lane `i` → bit `i`.
++
++#![allow(non_camel_case_types)]
++
++#[cfg(target_arch = "aarch64")]
++mod imp {
++    use core::arch::aarch64::*;
++
++    /// 16 packed `u8` lanes over a NEON `uint8x16_t`.
++    #[derive(Clone, Copy)]
++    #[repr(transparent)]
++    pub struct u8x16(pub uint8x16_t);
++
++    /// Per-lane boolean result of a comparison: `0xFF` set, `0x00` clear.
++    #[derive(Clone, Copy)]
++    #[repr(transparent)]
++    pub struct mask8x16(uint8x16_t);
++
++    impl u8x16 {
++        #[inline(always)]
++        pub fn splat(v: u8) -> Self {
++            unsafe { u8x16(vdupq_n_u8(v)) }
++        }
++
++        /// Load the first 16 bytes of `s`. Caller guarantees `s.len() >= 16`
++        /// (every call site slices exactly 16 bytes or reads a padded view).
++        #[inline(always)]
++        pub fn from_slice(s: &[u8]) -> Self {
++            debug_assert!(s.len() >= 16);
++            unsafe { u8x16(vld1q_u8(s.as_ptr())) }
++        }
++
++        #[inline(always)]
++        pub fn from_array(a: [u8; 16]) -> Self {
++            unsafe { u8x16(vld1q_u8(a.as_ptr())) }
++        }
++
++        #[inline(always)]
++        pub fn to_array(self) -> [u8; 16] {
++            let mut a = [0u8; 16];
++            unsafe { vst1q_u8(a.as_mut_ptr(), self.0) };
++            a
++        }
++
++        #[inline(always)]
++        pub fn simd_eq(self, o: Self) -> mask8x16 {
++            unsafe { mask8x16(vceqq_u8(self.0, o.0)) }
++        }
++
++        #[inline(always)]
++        pub fn simd_ne(self, o: Self) -> mask8x16 {
++            unsafe { mask8x16(vmvnq_u8(vceqq_u8(self.0, o.0))) }
++        }
++
++        /// Dynamic byte shuffle (`tbl`): lane `i` ← `self[idx[i]]`, and
++        /// `0` when `idx[i] >= 16` — matching `Simd::swizzle_dyn`.
++        #[inline(always)]
++        pub fn swizzle_dyn(self, idx: Self) -> Self {
++            unsafe { u8x16(vqtbl1q_u8(self.0, idx.0)) }
++        }
++    }
++
++    impl core::ops::BitAnd for u8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn bitand(self, o: Self) -> Self {
++            unsafe { u8x16(vandq_u8(self.0, o.0)) }
++        }
++    }
++
++    impl core::ops::Shr<i32> for u8x16 {
++        type Output = Self;
++        /// Logical right shift by a runtime lane count (`ushl` by `-n`).
++        #[inline(always)]
++        fn shr(self, n: i32) -> Self {
++            unsafe { u8x16(vshlq_u8(self.0, vdupq_n_s8((-n) as i8))) }
++        }
++    }
++
++    impl mask8x16 {
++        /// Pack lane `i`'s boolean into bit `i` (`std::simd` `to_bitmask`).
++        #[inline(always)]
++        pub fn to_bitmask(self) -> u64 {
++            const BITS: [u8; 16] = [1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128];
++            unsafe {
++                let masked = vandq_u8(self.0, vld1q_u8(BITS.as_ptr()));
++                let lo = vaddv_u8(vget_low_u8(masked)) as u64;
++                let hi = vaddv_u8(vget_high_u8(masked)) as u64;
++                lo | (hi << 8)
++            }
++        }
++
++        #[inline(always)]
++        pub fn any(self) -> bool {
++            unsafe { vmaxvq_u8(self.0) != 0 }
++        }
++
++        #[inline(always)]
++        pub fn all(self) -> bool {
++            unsafe { vminvq_u8(self.0) == 0xFF }
++        }
++    }
++
++    impl core::ops::BitOr for mask8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn bitor(self, o: Self) -> Self {
++            unsafe { mask8x16(vorrq_u8(self.0, o.0)) }
++        }
++    }
++
++    impl core::ops::BitAnd for mask8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn bitand(self, o: Self) -> Self {
++            unsafe { mask8x16(vandq_u8(self.0, o.0)) }
++        }
++    }
++
++    impl core::ops::Not for mask8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn not(self) -> Self {
++            unsafe { mask8x16(vmvnq_u8(self.0)) }
++        }
++    }
++}
++
++#[cfg(not(target_arch = "aarch64"))]
++mod imp {
++    // Scalar parity oracle — identical semantics, no target intrinsics.
++    #[derive(Clone, Copy)]
++    pub struct u8x16([u8; 16]);
++    #[derive(Clone, Copy)]
++    pub struct mask8x16([bool; 16]);
++
++    impl u8x16 {
++        #[inline(always)]
++        pub fn splat(v: u8) -> Self {
++            u8x16([v; 16])
++        }
++        #[inline(always)]
++        pub fn from_slice(s: &[u8]) -> Self {
++            let mut a = [0u8; 16];
++            a.copy_from_slice(&s[..16]);
++            u8x16(a)
++        }
++        #[inline(always)]
++        pub fn from_array(a: [u8; 16]) -> Self {
++            u8x16(a)
++        }
++        #[inline(always)]
++        pub fn to_array(self) -> [u8; 16] {
++            self.0
++        }
++        #[inline(always)]
++        pub fn simd_eq(self, o: Self) -> mask8x16 {
++            let mut m = [false; 16];
++            for i in 0..16 {
++                m[i] = self.0[i] == o.0[i];
++            }
++            mask8x16(m)
++        }
++        #[inline(always)]
++        pub fn simd_ne(self, o: Self) -> mask8x16 {
++            let mut m = [false; 16];
++            for i in 0..16 {
++                m[i] = self.0[i] != o.0[i];
++            }
++            mask8x16(m)
++        }
++        #[inline(always)]
++        pub fn swizzle_dyn(self, idx: Self) -> Self {
++            let mut a = [0u8; 16];
++            for i in 0..16 {
++                let j = idx.0[i];
++                a[i] = if j < 16 { self.0[j as usize] } else { 0 };
++            }
++            u8x16(a)
++        }
++    }
++
++    impl core::ops::BitAnd for u8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn bitand(self, o: Self) -> Self {
++            let mut a = [0u8; 16];
++            for i in 0..16 {
++                a[i] = self.0[i] & o.0[i];
++            }
++            u8x16(a)
++        }
++    }
++    impl core::ops::Shr<i32> for u8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn shr(self, n: i32) -> Self {
++            let mut a = [0u8; 16];
++            for i in 0..16 {
++                a[i] = self.0[i] >> n;
++            }
++            u8x16(a)
++        }
++    }
++
++    impl mask8x16 {
++        #[inline(always)]
++        pub fn to_bitmask(self) -> u64 {
++            let mut b = 0u64;
++            for i in 0..16 {
++                if self.0[i] {
++                    b |= 1 << i;
++                }
++            }
++            b
++        }
++        #[inline(always)]
++        pub fn any(self) -> bool {
++            self.0.iter().any(|&x| x)
++        }
++        #[inline(always)]
++        pub fn all(self) -> bool {
++            self.0.iter().all(|&x| x)
++        }
++    }
++    impl core::ops::BitOr for mask8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn bitor(self, o: Self) -> Self {
++            let mut m = [false; 16];
++            for i in 0..16 {
++                m[i] = self.0[i] | o.0[i];
++            }
++            mask8x16(m)
++        }
++    }
++    impl core::ops::BitAnd for mask8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn bitand(self, o: Self) -> Self {
++            let mut m = [false; 16];
++            for i in 0..16 {
++                m[i] = self.0[i] & o.0[i];
++            }
++            mask8x16(m)
++        }
++    }
++    impl core::ops::Not for mask8x16 {
++        type Output = Self;
++        #[inline(always)]
++        fn not(self) -> Self {
++            let mut m = [false; 16];
++            for i in 0..16 {
++                m[i] = !self.0[i];
++            }
++            mask8x16(m)
++        }
++    }
++}
++
++pub use imp::{mask8x16, u8x16};
+diff --git a/rust/parse_that/src/span_parser/scan.rs b/rust/parse_that/src/span_parser/scan.rs
+index b0859eb..fd1b3fc 100644
+--- a/rust/parse_that/src/span_parser/scan.rs
++++ b/rust/parse_that/src/span_parser/scan.rs
+@@ -123,7 +123,7 @@ impl<'a> SpanParser<'a> {
+         hi_lut: &[u8; 16],
+         state: &mut ParserState<'a>,
+     ) -> Option<Span<'a>> {
+-        use std::simd::prelude::*;
++        use crate::simd128::*;
+ 
+         let lo = u8x16::from_array(*lo_lut);
+         let hi = u8x16::from_array(*hi_lut);

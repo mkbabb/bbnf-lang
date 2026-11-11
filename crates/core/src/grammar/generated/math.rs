@@ -31,9 +31,7 @@ mod __mathparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_MathParser: [&'static str; 1usize] = [
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/misc/math.bbnf")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/grammar/misc/math.bbnf")),
     ];
     /// Grammar-local Pratt operator metadata.
     ///

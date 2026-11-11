@@ -37,21 +37,17 @@ pub(super) fn try_build_dispatch(
 
     for (i, branch) in branches.iter().enumerate() {
         if let Some(ref first) = branch.first_set {
-            effective_sets.push(first.clone());
+            effective_sets.push(*first);
         } else if nullable_idx.is_none() {
             // Nullable branch — use FOLLOW(rule) if available.
-            if let Some(follow) = containing_follow {
-                if !follow.is_empty() {
-                    nullable_idx = Some(i);
-                    effective_sets.push(follow.clone());
-                } else {
-                    // Empty FOLLOW — can't dispatch.
-                    return None;
-                }
-            } else {
-                // No FOLLOW sets available — can't dispatch nullable branch.
+            // No FOLLOW sets available — can't dispatch nullable branch.
+            let follow = containing_follow?;
+            if follow.is_empty() {
+                // Empty FOLLOW — can't dispatch.
                 return None;
             }
+            nullable_idx = Some(i);
+            effective_sets.push(*follow);
         } else {
             // Multiple nullable branches — can't dispatch.
             return None;
@@ -113,7 +109,7 @@ pub(super) fn try_build_fallback_dispatch(branches: &[AltBranch]) -> Option<AltD
     // Collect FIRST sets for typed branches.
     let mut effective_sets: Vec<CharSet128> = Vec::with_capacity(typed_branches.len());
     for branch in typed_branches {
-        effective_sets.push(branch.first_set.as_ref()?.clone());
+        effective_sets.push(*branch.first_set.as_ref()?);
     }
 
     // The fallback's FIRST set must be a superset of the union of all typed

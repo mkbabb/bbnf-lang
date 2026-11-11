@@ -1,0 +1,48 @@
+tree 4762ad3 (+ 0 working paths)
+native suites rc=0
+  unittests ok 0 passed; 0 failed
+  tests/correctness.rs ok 13 passed; 0 failed
+  tests/differential.rs ok 1 passed; 0 failed
+  tests/digraph.rs ok 7 passed; 0 failed
+  tests/dispatch_tiers.rs ok 3 passed; 0 failed
+  tests/fuzz.rs ok 8 passed; 0 failed
+  tests/guard_page.rs ok 1 passed; 0 failed
+  tests/prim_differential.rs ok 8 passed; 0 failed
+  tests/quote_parity.rs ok 9 passed; 0 failed
+  tests/wasm_bounds.rs ok 0 passed; 0 failed
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s	
+  doctests test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+prim_differential (native, release) rc=0
+  prim_differential kernel=bracket_depth_mask_64 tier=neon inputs_per_set=100000 sets=3 total=300000 divergences=0 seed=0x5eed2711
+  prim_differential kernel=byte_class_from_eq_set_64 tier=neon inputs_per_set=100000 sets=5 total=500000 divergences=0 seed=0x5eed2711
+  prim_differential kernel=decode_hex_quads tier=neon inputs_per_set=100000 sets=2 total=200000 divergences=0 seed=0x5eed2711
+  prim_differential kernel=lo6_classify tier=neon inputs_per_set=100000 sets=3 total=300000 divergences=0 seed=0x5eed2711
+  prim_differential kernel=string_special_block tier=neon inputs_per_set=100000 sets=2 total=200000 divergences=0 seed=0x5eed2711
+  prim_differential kernel=structural_classify_64 tier=neon inputs_per_set=100000 sets=3 total=300000 divergences=0 seed=0x5eed2711
+  prim_differential kernel=validate_utf8_block tier=neon inputs_per_set=100000 sets=2 total=200000 divergences=0 seed=0x5eed2711
+prim_differential (PARSE_THAT_SCAN_TIER=scalar) rc=0
+  prim_differential kernel=bracket_depth_mask_64 tier=scalar
+  prim_differential kernel=byte_class_from_eq_set_64 tier=scalar
+  prim_differential kernel=decode_hex_quads tier=scalar
+  prim_differential kernel=lo6_classify tier=scalar
+  prim_differential kernel=string_special_block tier=scalar
+  prim_differential kernel=structural_classify_64 tier=scalar
+  prim_differential kernel=validate_utf8_block tier=scalar
+x86_64 (Rosetta) suites rc=0
+  passed 72 failed 0
+prim_differential (x86_64 Rosetta, release) rc=0
+  prim_differential kernel=string_special_block tier=scalar inputs_per_set=100000 sets=2 total=200000 divergences=0
+  prim_differential kernel=validate_utf8_block tier=scalar inputs_per_set=100000 sets=2 total=200000 divergences=0
+  prim_differential kernel=decode_hex_quads tier=scalar inputs_per_set=100000 sets=2 total=200000 divergences=0
+  prim_differential kernel=lo6_classify tier=scalar inputs_per_set=100000 sets=3 total=300000 divergences=0
+  prim_differential kernel=bracket_depth_mask_64 tier=scalar inputs_per_set=100000 sets=3 total=300000 divergences=0
+  prim_differential kernel=structural_classify_64 tier=scalar inputs_per_set=100000 sets=3 total=300000 divergences=0
+  prim_differential kernel=byte_class_from_eq_set_64 tier=scalar inputs_per_set=100000 sets=5 total=500000 divergences=0
+wasm32+simd128 suites rc=0
+  passed 72 failed 0
+public_api_callers rc=0
+  test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.38s
+clippy native rc=0
+clippy x86_64 rc=0
+clippy wasm32+simd128 rc=0
+check wasm32 (no simd128) rc=0

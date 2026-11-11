@@ -1,0 +1,2 @@
+read 1: is-ancestor af15f63e0 origin/master(c9b93adb4) rc=1
+read 2: is-ancestor af15f63e0 origin/master(c9b93adb4) rc=1

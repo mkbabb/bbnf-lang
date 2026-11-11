@@ -100,7 +100,7 @@ pub fn build_nibble_luts(targets: &[u8]) -> ([u8; 16], [u8; 16]) {
 /// without a runtime dispatch cost.
 ///
 /// Both paths produce byte-identical output (the correctness tests in
-/// `simd-scan::tests::correctness` enforce cross-arch parity for
+/// parse-that-simd's `tests/correctness.rs` enforce cross-arch parity for
 /// the scanner side; this emitter side shares the nibble-LUT
 /// expansion semantics with the u8x16 path via `build_nibble_luts`).
 ///
@@ -176,11 +176,9 @@ pub fn emit_structural_bitmap_kernel(targets: &[u8]) -> Option<TokenStream> {
                         let __mask = _mm256_movemask_epi8(__nz) as u32;
                         if __mask != 0 {
                             let __rel = __mask.trailing_zeros() as usize;
-                            break 'avx2_scan {
-                                ::core::option::Option::Some(
-                                    (__i + __rel) - __start,
-                                )
-                            };
+                            let __found =
+                                ::core::option::Option::Some((__i + __rel) - __start);
+                            break 'avx2_scan __found;
                         }
                         __i += 32;
                     }
@@ -199,9 +197,8 @@ pub fn emit_structural_bitmap_kernel(targets: &[u8]) -> Option<TokenStream> {
                     while __i < __len {
                         let __b = *__ptr.add(__i);
                         if __byte_lut[__b as usize] {
-                            break 'avx2_scan {
-                                ::core::option::Option::Some(__i - __start)
-                            };
+                            let __found = ::core::option::Option::Some(__i - __start);
+                            break 'avx2_scan __found;
                         }
                         __i += 1;
                     }
@@ -324,18 +321,4 @@ pub fn emit_ws_interleaved_negated_scan_plus(needles: &[u8]) -> TokenStream {
             }
         }
     }
-}
-
-/// Compute the set of ASCII bytes NOT in the given inclusive ranges.
-///
-/// Used to convert a positive character class into its excluded-byte
-/// set for bitmap scanning.
-pub fn compute_excluded_bytes(included_ranges: &[(u8, u8)]) -> Vec<u8> {
-    let mut included = [false; 128];
-    for &(lo, hi) in included_ranges {
-        for b in lo..=hi.min(127) {
-            included[b as usize] = true;
-        }
-    }
-    (0u8..128).filter(|b| !included[*b as usize]).collect()
 }

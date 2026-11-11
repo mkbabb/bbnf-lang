@@ -130,19 +130,7 @@ fn try_operator_chain<E: Emitter>(
         .map(|(_, rt)| compile_chain_child(rhs, rt, rhs_alloc, ir, dstate, emitter, ctx))
         .unwrap_or_else(|| compile_node(rhs, ValuePlacement::Inline, ir, dstate, emitter, ctx));
 
-    // `head_type` / `link_elem_type` are discarded by every backend's
-    // `emit_operator_chain_impl` (`_head_type` / `_link_elem_type`).
-    // Pass the shared placeholder to avoid threading borrows across
-    // a trait-surface boundary for a dead parameter.
-    emitter.emit_operator_chain(
-        head_out,
-        op_out,
-        rhs_out,
-        &PLACEHOLDER_TY,
-        &PLACEHOLDER_TY,
-        ir,
-        ctx,
-    )
+    emitter.emit_operator_chain(head_out, op_out, rhs_out, ctx)
 }
 
 fn compile_seq_grouped<E: Emitter>(
@@ -235,12 +223,10 @@ fn extract_operator_chain(children: &[IrNode]) -> Option<(&IrNode, &IrNode, &IrN
         lo: 0,
         hi: u32::MAX,
     } = &children[1]
+        && let IrNode::Seq(link) = inner.as_ref()
+        && link.len() == 2
     {
-        if let IrNode::Seq(link) = inner.as_ref() {
-            if link.len() == 2 {
-                return Some((&children[0], inner.as_ref(), &link[0], &link[1]));
-            }
-        }
+        return Some((&children[0], inner.as_ref(), &link[0], &link[1]));
     }
     None
 }

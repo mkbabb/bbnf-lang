@@ -31,9 +31,7 @@ mod __bbnfbootstrap_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_BbnfBootstrap: [&'static str; 1usize] = [
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/bbnf/bbnf.bbnf")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/grammar/bbnf/bbnf.bbnf")),
     ];
     static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 28usize] = [
         33, 34, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 58, 59, 60, 61, 62, 63, 64,
@@ -4810,7 +4808,7 @@ mod __bbnfbootstrap_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::simd_scan::StructuralIndex,
+                ::parse_that::scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -4830,17 +4828,17 @@ mod __bbnfbootstrap_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::simd_scan::StructuralIndex {
+        ) -> &'a ::parse_that::scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    let alphabet = ::simd_scan::StructuralAlphabet {
+                    let alphabet = ::parse_that::scan::StructuralAlphabet {
                         singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
                         digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
                         digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
                         quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
-                    ::simd_scan::scan_structural(input, &alphabet)
+                    ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip JSON whitespace at `*p`, returning the first
@@ -7271,9 +7269,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -7322,11 +7317,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -7592,9 +7582,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -7653,11 +7640,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -7838,11 +7820,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -8084,11 +8061,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -8400,11 +8372,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             ::core::result::Result::Ok(())
@@ -8603,11 +8570,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             {
@@ -8728,11 +8690,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -8966,11 +8923,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -9746,9 +9698,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -9807,11 +9756,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -9903,7 +9847,8 @@ mod __bbnfbootstrap_emit_impl {
                 });
             }
             *p = end;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 1u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let _ = ({
@@ -9920,7 +9865,8 @@ mod __bbnfbootstrap_emit_impl {
                             cursor,
                         )
                     })?;
-                    loop {
+                    let mut __reps: u32 = 0;
+                    while __reps < 4294967295u32 {
                         let __save = *p;
                         let __res: ::core::result::Result<
                             (),
@@ -9964,11 +9910,19 @@ mod __bbnfbootstrap_emit_impl {
                             *p = __save;
                             break;
                         }
+                        __reps += 1;
+                        if *p == __save {
+                            break;
+                        }
                     }
                     Ok(())
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }
@@ -10923,11 +10877,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             ::core::result::Result::Ok(())
@@ -11123,9 +11072,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -11303,11 +11249,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             ::core::result::Result::Ok(())
@@ -11406,9 +11347,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -11482,11 +11420,6 @@ mod __bbnfbootstrap_emit_impl {
                                             break;
                                         }
                                     }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
                                 }
                             }
                             Ok(())
@@ -11610,9 +11543,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -11686,11 +11616,6 @@ mod __bbnfbootstrap_emit_impl {
                                             break;
                                         }
                                     }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
                                 }
                             }
                             Ok(())
@@ -11814,9 +11739,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -11890,11 +11812,6 @@ mod __bbnfbootstrap_emit_impl {
                                             break;
                                         }
                                     }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
                                 }
                             }
                             Ok(())
@@ -12037,9 +11954,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -12098,11 +12012,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -12358,11 +12267,6 @@ mod __bbnfbootstrap_emit_impl {
                                                 }
                                             }
                                         }
-                                        if __iter_count < 0u32 {
-                                            return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                                offset: *p as u32,
-                                            });
-                                        }
                                     }
                                     {
                                         let at = *p;
@@ -12391,11 +12295,6 @@ mod __bbnfbootstrap_emit_impl {
                                         break;
                                     }
                                 }
-                            }
-                            if __iter_count < 0u32 {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: *p as u32,
-                                });
                             }
                         }
                         ::core::result::Result::Ok(())
@@ -13076,11 +12975,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             {
@@ -13149,11 +13043,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
-                    }
                 }
             }
             {
@@ -13203,11 +13092,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -13404,11 +13288,6 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                     }
                                 }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
-                                }
                             }
                             Ok(())
                         })();
@@ -13427,11 +13306,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -13883,11 +13757,6 @@ mod __bbnfbootstrap_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -16108,9 +15977,10 @@ mod __bbnfbootstrap_emit_impl {
                                                                 let __mask = _mm256_movemask_epi8(__nz) as u32;
                                                                 if __mask != 0 {
                                                                     let __rel = __mask.trailing_zeros() as usize;
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some((__i + __rel) - __start)
-                                                                    };
+                                                                    let __found = ::core::option::Option::Some(
+                                                                        (__i + __rel) - __start,
+                                                                    );
+                                                                    break 'avx2_scan __found;
                                                                 }
                                                                 __i += 32;
                                                             }
@@ -16127,9 +15997,8 @@ mod __bbnfbootstrap_emit_impl {
                                                             while __i < __len {
                                                                 let __b = *__ptr.add(__i);
                                                                 if __byte_lut[__b as usize] {
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some(__i - __start)
-                                                                    };
+                                                                    let __found = ::core::option::Option::Some(__i - __start);
+                                                                    break 'avx2_scan __found;
                                                                 }
                                                                 __i += 1;
                                                             }
@@ -16283,9 +16152,10 @@ mod __bbnfbootstrap_emit_impl {
                                                                 let __mask = _mm256_movemask_epi8(__nz) as u32;
                                                                 if __mask != 0 {
                                                                     let __rel = __mask.trailing_zeros() as usize;
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some((__i + __rel) - __start)
-                                                                    };
+                                                                    let __found = ::core::option::Option::Some(
+                                                                        (__i + __rel) - __start,
+                                                                    );
+                                                                    break 'avx2_scan __found;
                                                                 }
                                                                 __i += 32;
                                                             }
@@ -16302,9 +16172,8 @@ mod __bbnfbootstrap_emit_impl {
                                                             while __i < __len {
                                                                 let __b = *__ptr.add(__i);
                                                                 if __byte_lut[__b as usize] {
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some(__i - __start)
-                                                                    };
+                                                                    let __found = ::core::option::Option::Some(__i - __start);
+                                                                    break 'avx2_scan __found;
                                                                 }
                                                                 __i += 1;
                                                             }
@@ -17162,9 +17031,10 @@ mod __bbnfbootstrap_emit_impl {
                                                                 let __mask = _mm256_movemask_epi8(__nz) as u32;
                                                                 if __mask != 0 {
                                                                     let __rel = __mask.trailing_zeros() as usize;
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some((__i + __rel) - __start)
-                                                                    };
+                                                                    let __found = ::core::option::Option::Some(
+                                                                        (__i + __rel) - __start,
+                                                                    );
+                                                                    break 'avx2_scan __found;
                                                                 }
                                                                 __i += 32;
                                                             }
@@ -17181,9 +17051,8 @@ mod __bbnfbootstrap_emit_impl {
                                                             while __i < __len {
                                                                 let __b = *__ptr.add(__i);
                                                                 if __byte_lut[__b as usize] {
-                                                                    break 'avx2_scan {
-                                                                        ::core::option::Option::Some(__i - __start)
-                                                                    };
+                                                                    let __found = ::core::option::Option::Some(__i - __start);
+                                                                    break 'avx2_scan __found;
                                                                 }
                                                                 __i += 1;
                                                             }
@@ -21245,9 +21114,10 @@ mod __bbnfbootstrap_emit_impl {
                                                                             let __mask = _mm256_movemask_epi8(__nz) as u32;
                                                                             if __mask != 0 {
                                                                                 let __rel = __mask.trailing_zeros() as usize;
-                                                                                break 'avx2_scan {
-                                                                                    ::core::option::Option::Some((__i + __rel) - __start)
-                                                                                };
+                                                                                let __found = ::core::option::Option::Some(
+                                                                                    (__i + __rel) - __start,
+                                                                                );
+                                                                                break 'avx2_scan __found;
                                                                             }
                                                                             __i += 32;
                                                                         }
@@ -21264,9 +21134,8 @@ mod __bbnfbootstrap_emit_impl {
                                                                         while __i < __len {
                                                                             let __b = *__ptr.add(__i);
                                                                             if __byte_lut[__b as usize] {
-                                                                                break 'avx2_scan {
-                                                                                    ::core::option::Option::Some(__i - __start)
-                                                                                };
+                                                                                let __found = ::core::option::Option::Some(__i - __start);
+                                                                                break 'avx2_scan __found;
                                                                             }
                                                                             __i += 1;
                                                                         }

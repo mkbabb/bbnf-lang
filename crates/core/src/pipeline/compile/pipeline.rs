@@ -19,10 +19,13 @@ use crate::pipeline::compile::closure_partition::{
 };
 use crate::pipeline::compile::timer::PipelineTimer;
 use crate::pipeline::validate::validate_ast;
-use crate::pipeline::{CompileError, PipelineOptions};
+use crate::pipeline::{CompileError, CompileRequest};
 use crate::types::AST;
 
 /// The canonical IR-pipeline orchestrator.
+///
+/// `request.target` selects the e-graph rule list through its regex leaf
+/// ([`crate::pipeline::CompileTarget::leaf_match`]).
 ///
 /// Validates, partitions closures, runs SCC + topological order,
 /// lowers to IR, computes FIRST sets, optionally eliminates
@@ -36,8 +39,9 @@ use crate::types::AST;
 pub fn compile_ast_common<'a>(
     ast: AST<'a>,
     directives: &'a DirectiveSet<'a>,
-    options: &PipelineOptions,
+    request: &CompileRequest,
 ) -> Result<GrammarIR, CompileError> {
+    let options = &request.options;
     let mut timer = PipelineTimer::new();
 
     // Determine the entry rule name: use override if provided, otherwise last rule in source order.
@@ -84,10 +88,10 @@ pub fn compile_ast_common<'a>(
     });
 
     // Set the correct entry rule (last rule in original source order).
-    if let Some(ref name) = entry_rule_name {
-        if let Some(rule) = ir.find_rule(name) {
-            ir.entry = rule.id;
-        }
+    if let Some(ref name) = entry_rule_name
+        && let Some(rule) = ir.find_rule(name)
+    {
+        ir.entry = rule.id;
     }
 
     // Optional: eliminate left-recursion at IR level (indirect via Paull's, then direct).
@@ -213,10 +217,11 @@ pub fn compile_ast_common<'a>(
         // independent equivalences and regex-algebra rewrites the
         // normalizer's fixed pass order can miss; cost-guided
         // extraction picks the cheapest canonical form per rule via
-        // `GrammarCostModel` (shared with bbnf-regex HIR e-graph in
+        // `GrammarCostModel` (shared with parse-that-regex HIR e-graph in
         // Tranche H).
         timer.span("egraph_build_saturate_writeback", || {
-            let (egraph, pool, rule_body_ids) = bbnf_ir::egraph::build_and_saturate(&ir);
+            let (egraph, pool, rule_body_ids) =
+                bbnf_ir::egraph::build_and_saturate(&ir, request.target.leaf_match());
             let cost = bbnf_ir::egraph::GrammarCostModel::from_config(&ir.cost_config);
             bbnf_ir::egraph::write_back_optimized(&egraph, &mut ir, &rule_body_ids, &cost);
             pool.write_back(&mut ir);
@@ -319,7 +324,7 @@ pub fn compile_ast_common<'a>(
     // The alphabet is read at codegen time by the scanner-kernel
     // emitters in `crates/core/src/generate/regex/emit/simd.rs`,
     // and by the runtime `GrammarProfile` consumer in
-    // `simd-scan::StructuralAlphabet::from_profile`.
+    // `parse_that::scan::StructuralAlphabet` (parse-that-simd).
     timer.span("compute_structural_alphabet", || {
         bbnf_ir::passes::sets::compute_structural_alphabet(&mut ir);
     });
@@ -402,8 +407,12 @@ pub fn install_pattern_caches(dstate: &mut crate::backend::driver::DriverState, 
 /// Compute call strategies using the shared inline analysis.
 ///
 /// Converts `CallMode::DirectCall` → `CallStrategy::DirectCall`,
-/// `CallMode::InlineBody` → `CallStrategy::InlineBody`.
-pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrategy> {
+/// `CallMode::InlineBody` → `CallStrategy::InlineBody`. A rule the
+/// inline plan finds contradictory is a
+/// [`CompileError::CallModeConflict`](crate::pipeline::CompileError::CallModeConflict).
+pub fn compute_call_strategies(
+    ir: &GrammarIR,
+) -> Result<Vec<crate::backend::CallStrategy>, crate::pipeline::CompileError> {
     use crate::backend::CallStrategy;
     use std::collections::HashSet;
 
@@ -423,21 +432,21 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
         .map(|r| r.id)
         .collect();
 
-    let plan = crate::backend::rust::analysis::inline::analyze_parse_inline_plan(
-        ir,
-        &operator_chain_rules,
-    );
+    let plan = bbnf_ir::passes::call_mode::analyze_parse_inline_plan(ir, &operator_chain_rules)
+        .map_err(|conflict| crate::pipeline::CompileError::CallModeConflict {
+            rule: ir
+                .get_string(ir.rules[conflict.rule as usize].name)
+                .to_string(),
+            first: conflict.first,
+            second: conflict.second,
+        })?;
 
     let mut strategies: Vec<CallStrategy> = plan
         .parse_call_modes
         .iter()
         .map(|mode| match mode {
-            crate::backend::rust::analysis::inline::CallMode::DirectCall => {
-                CallStrategy::DirectCall
-            }
-            crate::backend::rust::analysis::inline::CallMode::InlineBody => {
-                CallStrategy::InlineBody
-            }
+            bbnf_ir::passes::call_mode::CallMode::DirectCall => CallStrategy::DirectCall,
+            bbnf_ir::passes::call_mode::CallMode::InlineBody => CallStrategy::InlineBody,
         })
         .collect();
 
@@ -470,12 +479,12 @@ pub fn compute_call_strategies(ir: &GrammarIR) -> Vec<crate::backend::CallStrate
         } else {
             MaterializationClass::MustTape
         };
-        if class == MaterializationClass::TransparentElide {
-            if let Some(strat) = strategies.get_mut(rule.id as usize) {
-                *strat = CallStrategy::InlineBody;
-            }
+        if class == MaterializationClass::TransparentElide
+            && let Some(strat) = strategies.get_mut(rule.id as usize)
+        {
+            *strat = CallStrategy::InlineBody;
         }
     }
 
-    strategies
+    Ok(strategies)
 }

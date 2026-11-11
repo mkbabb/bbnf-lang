@@ -9,7 +9,7 @@
 //!    literals (which the W2.3 path-lexer tokenises and may contain
 //!    compound segments like `"foo.bar[0]"`), integer literals, or `*`
 //!    for wildcard.
-//! 2. **Lex** every string literal through `bbnf_regex::lex_path`. The
+//! 2. **Lex** every string literal through `parse_that_regex::lex_path`. The
 //!    lexer's `proc_macro2::Span` flows through to any diagnostic so
 //!    the error squiggle anchors at the offending segment.
 //! 3. **Lower** the lexer's `PathToken` stream to a sequence of
@@ -196,7 +196,7 @@ pub(crate) fn expand(input: TokenStream) -> Result<TokenStream> {
     }
 
     // Validate the segment sequence against the per-grammar fixture.
-    validate_against_fixture(&segments, &fixture)?;
+    validate_against_fixture(&segments, fixture)?;
 
     // Emit the typed-path expression literal.
     let grammar_path = &parsed.grammar;
@@ -235,7 +235,7 @@ fn lower_args_to_segments(args: &[MacroArg]) -> Result<Vec<OwnedSegment>> {
     Ok(out)
 }
 
-/// Tokenise a string-literal argument through `bbnf_regex::lex_path`
+/// Tokenise a string-literal argument through `parse_that_regex::lex_path`
 /// and lower the resulting `PathToken` stream into `OwnedSegment`s.
 ///
 /// String literals are not constrained to a single segment — `"foo"`
@@ -267,7 +267,7 @@ fn lower_string_lit(lit: &LitStr, out: &mut Vec<OwnedSegment>) -> Result<()> {
         return Ok(());
     }
 
-    let tokens = bbnf_regex::lex_path(&raw, span).map_err(|err| {
+    let tokens = parse_that_regex::lex_path(&raw, span).map_err(|err| {
         Error::new(
             err.span,
             format!(
@@ -287,7 +287,7 @@ fn lower_string_lit(lit: &LitStr, out: &mut Vec<OwnedSegment>) -> Result<()> {
     // `@ident` (variant select) is not part of the path-string lexer
     // alphabet; variant selection arrives only via the dedicated
     // syntax (a `LitStr` whose first character is `@`) handled above.
-    use bbnf_regex::PathTokenKind as K;
+    use parse_that_regex::PathTokenKind as K;
 
     let mut idx = 0usize;
     while idx < tokens.len() {
@@ -431,7 +431,7 @@ fn step<'r>(
     registry: &'r StructRegistry,
 ) -> Result<ResolveCursor<'r>> {
     match cursor {
-        ResolveCursor::Layout(layout) => step_into_layout(layout, segment, segment_index),
+        ResolveCursor::Layout(layout) => step_into_layout(layout, segment, segment_index, registry),
         ResolveCursor::Type(ty, parent) => {
             step_into_type(ty, parent, segment, segment_index, registry)
         }
@@ -442,6 +442,7 @@ fn step_into_layout<'r>(
     layout: &'r StructLayout,
     segment: &OwnedSegment,
     segment_index: usize,
+    registry: &'r StructRegistry,
 ) -> Result<ResolveCursor<'r>> {
     match segment {
         OwnedSegment::Field { text, span } => match layout.kind {
@@ -456,7 +457,12 @@ fn step_into_layout<'r>(
                 ),
             )),
             _ => match layout.field(text) {
-                Some(field) => descend_type(&field.type_desc, layout.rule_name.as_str()),
+                // A `RuleReference` field (`json = ws >> value << ws`) is the
+                // referenced rule itself: descend into its layout.
+                Some(field) => match field.target_rule().and_then(|id| registry.layout(id)) {
+                    Some(target) => Ok(ResolveCursor::Layout(target)),
+                    None => descend_type(&field.type_desc, layout.rule_name.as_str()),
+                },
                 None => Err(Error::new(
                     *span,
                     format!(
@@ -560,7 +566,7 @@ fn step_into_type<'r>(
             // table on `GrammarIR`; the IR `path_check` pass (W2.2)
             // does the real `Named` → layout walk through that table.
             match registry.layout(*name_id) {
-                Some(layout) => step_into_layout(layout, segment, segment_index),
+                Some(layout) => step_into_layout(layout, segment, segment_index, registry),
                 None => Err(Error::new(
                     segment.span(),
                     format!(

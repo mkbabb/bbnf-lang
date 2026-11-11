@@ -57,7 +57,7 @@ impl<'p> CssDocument<'p> {
     pub fn walk_declarations(&self) -> CssDeclWalk<'_, 'p> {
         CssDeclWalk {
             doc: self,
-            stack: vec![CssWalkItem::RuleList(self.root.rules, 0)],
+            stack: vec![CssWalkItem::Rules(self.root.rules, 0)],
         }
     }
     pub fn walk_values<'a>(
@@ -81,9 +81,9 @@ impl<'p> CssDocument<'p> {
 }
 #[derive(Debug)]
 enum CssWalkItem {
-    RuleList(CssRuleListId, usize),
-    DeclList(CssDeclListId, usize),
-    KeyframeList(CssKeyframeListId, usize),
+    Rules(CssRuleListId, usize),
+    Decls(CssDeclListId, usize),
+    Keyframes(CssKeyframeListId, usize),
 }
 pub struct CssDeclWalk<'a, 'p: 'a> {
     doc: &'a CssDocument<'p>,
@@ -95,20 +95,19 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
         loop {
             let top = self.stack.last_mut()?;
             match top {
-                CssWalkItem::RuleList(id, idx) => {
+                CssWalkItem::Rules(id, idx) => {
                     let rules = self.doc.rules(*id);
                     if let Some(rule) = rules.get(*idx) {
                         *idx += 1;
                         match rule {
                             CssRule::Style(style) => {
-                                self.stack
-                                    .push(CssWalkItem::DeclList(style.declarations, 0))
+                                self.stack.push(CssWalkItem::Decls(style.declarations, 0))
                             }
                             CssRule::Media(media) => {
-                                self.stack.push(CssWalkItem::RuleList(media.rules, 0))
+                                self.stack.push(CssWalkItem::Rules(media.rules, 0))
                             }
                             CssRule::Keyframes(kf) => {
-                                self.stack.push(CssWalkItem::KeyframeList(kf.blocks, 0))
+                                self.stack.push(CssWalkItem::Keyframes(kf.blocks, 0))
                             }
                             CssRule::GenericAt(_) => {}
                         }
@@ -116,7 +115,7 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
                         self.stack.pop();
                     }
                 }
-                CssWalkItem::DeclList(id, idx) => {
+                CssWalkItem::Decls(id, idx) => {
                     let decls = self.doc.decls(*id);
                     if let Some(decl) = decls.get(*idx) {
                         *idx += 1;
@@ -124,11 +123,11 @@ impl<'a, 'p: 'a> Iterator for CssDeclWalk<'a, 'p> {
                     }
                     self.stack.pop();
                 }
-                CssWalkItem::KeyframeList(id, idx) => {
+                CssWalkItem::Keyframes(id, idx) => {
                     let blocks = self.doc.keyframes(*id);
                     if let Some(block) = blocks.get(*idx) {
                         *idx += 1;
-                        self.stack.push(CssWalkItem::DeclList(block.declarations, 0));
+                        self.stack.push(CssWalkItem::Decls(block.declarations, 0));
                     } else {
                         self.stack.pop();
                     }
@@ -390,16 +389,14 @@ impl CssPathQuery for &str {
                 let extended: &'p str = decl.property;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
-            CssWalkCursor::Value(value, _) => {
-                match value {
-                    CssTypedValue::String(s)
-                    | CssTypedValue::Ident(s)
-                    | CssTypedValue::Span(s) => {
-                        let extended: &'p str = *s;
-                        Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
-                    }
-                    _ => None,
-                }
+            CssWalkCursor::Value(
+                CssTypedValue::String(s)
+                | CssTypedValue::Ident(s)
+                | CssTypedValue::Span(s),
+                _,
+            ) => {
+                let extended: &'p str = s;
+                Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
         }

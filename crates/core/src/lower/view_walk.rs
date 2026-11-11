@@ -177,10 +177,10 @@ pub(crate) fn find_sibling_by_kind<'a, 'p>(
         if child.compound_kind() == Some(target) {
             return Some(child);
         }
-        if is_anonymous_wrapper(child) {
-            if let Some(found) = find_sibling_by_kind(child, target) {
-                return Some(found);
-            }
+        if is_anonymous_wrapper(child)
+            && let Some(found) = find_sibling_by_kind(child, target)
+        {
+            return Some(found);
         }
         // Otherwise `child` is a semantic-rule compound that is NOT
         // the target — its subtree carries the nested grammar, not a

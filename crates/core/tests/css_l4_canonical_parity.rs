@@ -31,7 +31,7 @@ use common::css_normalize::token_normalize;
 // instead of redefining it inline (REAUDIT-2026-04-30 lane 3 §5.1
 // retired the 14 inline duplicates).
 #[allow(unused_imports)]
-use bbnf::css_types as _css_types_link;
+use bbnf::runtime::css_l4::host as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 
@@ -46,7 +46,7 @@ fn shared_printer() -> pprint::Printer {
 /// the shared `token_normalize` transform to both. Panics with a
 /// diff-ready preview if normalization-equivalent output diverges.
 fn assert_canonical_parity(fixture: &str) {
-    let path = format!("../../data/css/{}", fixture);
+    let path = bbnf_corpus::path(&format!("css/{}", fixture)).display().to_string();
     let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let bbnf_canonical = CssL4Parser::stylesheet_prettify()
@@ -135,7 +135,7 @@ fn first_diff(a: &str, b: &str) -> Mismatch {
 /// scale + the prettify output interoperates with lightningcss,
 /// without claiming byte-parity the oracle cannot provide.
 fn assert_scale_interop(fixture: &str) {
-    let path = format!("../../data/css/{}", fixture);
+    let path = bbnf_corpus::path(&format!("css/{}", fixture)).display().to_string();
     let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let bbnf_pretty = CssL4Parser::stylesheet_prettify()

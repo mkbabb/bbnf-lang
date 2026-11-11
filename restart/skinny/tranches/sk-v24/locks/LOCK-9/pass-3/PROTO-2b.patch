@@ -1,0 +1,434 @@
+--- a/rust/regex/examples/emit_probe2.rs (new file — SCRATCH COPY ONLY, parse-that untouched)	2026-07-16 23:28:17
++++ regex/examples/emit_probe2.rs	2026-07-16 23:27:22
+@@ -0,0 +1,431 @@
++//! LOCK-9 pass-3 · SHORT Brief 2 · PROTO-2b (family 9C) — the `[u8;256]→SIMD` emit pass,
++//! derived DIRECTLY from the real DFA's `byte_classes` partition.
++//!
++//! PROTO-2 (probe 1) already proved the emit pass feasible against the real bbnf-regex
++//! DFA, but it derived the member byte-set with the `find_at` oracle (256 single-byte
++//! probes) and flagged: "a `byte_classes`-direct emit is the mechanical next step, not a
++//! new uncertainty." This SHORT probe CLOSES that exact residual: it reads the real
++//! `dfa.byte_classes:[u8;256]` + `dfa.flat_transitions` + `dfa.states[..].is_accept`
++//! to derive the member EQUIVALENCE CLASSES directly (no find_at in the derivation), emits
++//! the SIMD classifier from that partition, and CROSS-VALIDATES the direct partition
++//! against the find_at oracle — proving the two engine-truthful methods agree.
++//!
++//! Parity is still measured end-to-end vs the scalar `dfa.find_at` scan (independent of the
++//! emit path). Gate 4 (lo6-collision silent-drop) and an INJECT_BUG are retained.
++//!
++//! NEON kernels are faithful ports of `skinny/crates/bbnf-simd/src/aarch64/*`
++//! (classify_tbl4, byte_class_from_table_64, movemask). aarch64 only. No perf claim.
++
++use bbnf_regex::{Dfa, DfaOptions, DEAD};
++use core::arch::aarch64::*;
++
++// ── Ported predicate: bbnf_simd::dispatch::lo6_table_admissible (dispatch.rs:101) ──
++fn lo6_table_admissible(members: &[u8]) -> bool {
++    let mut seen = [false; 64];
++    let mut len = 0usize;
++    for &byte in members {
++        len += 1;
++        let slot = (byte & 0x3f) as usize;
++        if seen[slot] {
++            return false;
++        }
++        seen[slot] = true;
++    }
++    len != 0
++}
++
++// Ported: build_lo6_table (classify_tbl4.rs) — last-write-wins per lo6 slot.
++fn build_lo6_table(members: &[u8]) -> [u8; 64] {
++    let mut table = [0u8; 64];
++    for &byte in members {
++        table[(byte & 0x3f) as usize] = byte;
++    }
++    table
++}
++
++// Ported: movemask_u8x16 (movemask.rs) — vshrn nibble-narrow pack to 16 bits.
++#[inline(always)]
++unsafe fn movemask_u8x16(value: uint8x16_t) -> u16 {
++    let pairs = vshrn_n_u16::<4>(vreinterpretq_u16_u8(value));
++    let nibble_bits = vand_u8(pairs, vdup_n_u8(0x11));
++    let lane_bits = vorr_u8(
++        vand_u8(nibble_bits, vdup_n_u8(0x01)),
++        vsri_n_u8::<3>(vdup_n_u8(0), nibble_bits),
++    );
++    let widened = vcombine_u8(lane_bits, vdup_n_u8(0));
++    let interleaved = vzip1q_u8(widened, widened);
++    let mut packed = [0u8; 16];
++    vst1q_u8(packed.as_mut_ptr(), interleaved);
++    let mut mask = 0u16;
++    for pair in 0..8 {
++        let bits = packed[pair * 2];
++        mask |= u16::from(bits & 0x03) << (pair * 2);
++    }
++    mask
++}
++
++// Tier NeonTbl4 — membership via the lo6 `vqtbl4q` table (classify_tbl4.rs).
++#[inline(always)]
++unsafe fn classify_tbl4_membership(ptr: *const u8, table: uint8x16x4_t) -> u64 {
++    let mut mask = 0u64;
++    for lane in 0..4 {
++        let chunk = vld1q_u8(ptr.add(lane * 16));
++        let low6 = vandq_u8(chunk, vdupq_n_u8(0x3f));
++        let class = vqtbl4q_u8(table, low6);
++        let member = vandq_u8(vceqq_u8(class, chunk), vcgtq_u8(class, vdupq_n_u8(0)));
++        mask |= u64::from(movemask_u8x16(member)) << (lane * 16);
++    }
++    mask
++}
++
++// Tier FullTable — ported scalar byte_class_from_table_64. membership(b) := table256[b] != 0.
++fn byte_class_from_table_64(src: &[u8; 64], table: &[u8; 256]) -> u64 {
++    let mut mask = 0u64;
++    for index in 0..64 {
++        if table[src[index] as usize] != 0 {
++            mask |= 1u64 << index;
++        }
++    }
++    mask
++}
++
++// ── xorshift64* deterministic block generator ──
++struct Rng(u64);
++impl Rng {
++    fn next_u64(&mut self) -> u64 {
++        let mut x = self.0;
++        x ^= x >> 12;
++        x ^= x << 25;
++        x ^= x >> 27;
++        self.0 = x;
++        x.wrapping_mul(0x2545F4914F6CDD1D)
++    }
++    fn byte(&mut self) -> u8 {
++        (self.next_u64() & 0xff) as u8
++    }
++}
++
++/// METHOD A (the novum): derive the member set DIRECTLY from the DFA's byte_classes
++/// partition + transition table + accept flags — NO per-byte find_at in the derivation.
++/// A class-id is a "member class" iff the start state transitions on it to an accepting
++/// state; a byte is a member iff its equivalence class is a member class.
++/// Returns (member_set[256], member_class_ids, full_table[256] emitted straight from
++/// the [u8;256] partition).
++fn derive_direct(dfa: &Dfa) -> ([bool; 256], Vec<u16>, [u8; 256]) {
++    let num = dfa.num_classes as usize;
++    let start = 0usize; // start state is state 0
++    let mut class_is_member = vec![false; num];
++    for cls in 0..num {
++        let target = dfa.flat_transitions[start * num + cls];
++        // DEAD (u32::MAX) or a non-accepting target ⇒ not a member class.
++        class_is_member[cls] =
++            target != DEAD && dfa.states[target as usize].is_accept;
++    }
++    let mut set = [false; 256];
++    let mut full = [0u8; 256];
++    for b in 0..256usize {
++        let cls = dfa.byte_classes[b] as usize;
++        if class_is_member[cls] {
++            set[b] = true;
++            full[b] = 0xff; // FullTable emitted DIRECTLY off the byte_classes partition
++        }
++    }
++    let member_class_ids: Vec<u16> = (0..num)
++        .filter(|&c| class_is_member[c])
++        .map(|c| c as u16)
++        .collect();
++    (set, member_class_ids, full)
++}
++
++/// METHOD B (oracle, from PROTO-2): member iff the DFA accepts the single byte [b].
++fn derive_oracle(dfa: &Dfa) -> [bool; 256] {
++    let mut set = [false; 256];
++    for b in 0u16..256 {
++        set[b as usize] = dfa.find_at(&[b as u8], 0) == Some(1);
++    }
++    set
++}
++
++fn members_of(set: &[bool; 256]) -> Vec<u8> {
++    (0u16..256).filter(|&b| set[b as usize]).map(|b| b as u8).collect()
++}
++
++/// Independent scalar reference scan: bit i set iff dfa accepts window[i] (find_at path).
++fn scalar_ref(window: &[u8], oracle: &[bool; 256]) -> u64 {
++    let mut mask = 0u64;
++    for i in 0..64 {
++        if oracle[window[i] as usize] {
++            mask |= 1u64 << i;
++        }
++    }
++    mask
++}
++
++#[derive(Clone, Copy, PartialEq, Eq, Debug)]
++enum Tier {
++    NeonTbl4,
++    FullTable,
++}
++
++fn build_buffer(rng: &mut Rng, members: &[u8], len: usize) -> Vec<u8> {
++    let mut buf = vec![0u8; len];
++    for slot in buf.iter_mut() {
++        if !members.is_empty() && rng.byte() < 115 {
++            *slot = members[(rng.byte() as usize) % members.len()];
++        } else {
++            *slot = rng.byte();
++        }
++    }
++    buf
++}
++
++struct Report {
++    name: String,
++    pattern: String,
++    num_classes: u16,
++    states: usize,
++    members: Vec<u8>,
++    member_class_ids: Vec<u16>,
++    direct_eq_oracle: bool,
++    separable: bool,
++    tier: Tier,
++    blocks: usize,
++    mismatches: usize,
++    bite: Option<(u8, usize, usize)>,
++}
++
++fn run_leaf(name: &str, pattern: &str, unicode: bool) -> Report {
++    let opts = DfaOptions { state_limit: 4096, minimize: true, unicode };
++    let dfa = Dfa::compile_with(pattern, &opts)
++        .unwrap_or_else(|| panic!("DFA compile None for {name} `{pattern}`"));
++
++    // The novum: byte_classes-direct derivation + emitted FullTable.
++    let (direct_set, member_class_ids, full_tbl) = derive_direct(&dfa);
++    // Cross-validate against the find_at oracle (PROTO-2's method).
++    let oracle_set = derive_oracle(&dfa);
++    let direct_eq_oracle = direct_set == oracle_set;
++
++    let members = members_of(&direct_set);
++    let separable = lo6_table_admissible(&members);
++    let tier = if separable { Tier::NeonTbl4 } else { Tier::FullTable };
++
++    let lo6_tbl = build_lo6_table(&members);
++    let lo6_vec = unsafe { vld1q_u8_x4(lo6_tbl.as_ptr()) };
++
++    // Parity: emitted classifier (from byte_classes partition) vs independent find_at scan.
++    let mut rng = Rng(0xD1B54A32D192ED03 ^ ((name.len() as u64) << 11));
++    let buf = build_buffer(&mut rng, &members, 8192);
++    let (mut blocks, mut mismatches, mut off) = (0usize, 0usize, 0usize);
++    while off + 64 <= buf.len() {
++        let ptr = unsafe { buf.as_ptr().add(off) };
++        let simd = std::hint::black_box(unsafe {
++            match tier {
++                Tier::NeonTbl4 => classify_tbl4_membership(ptr, lo6_vec),
++                Tier::FullTable => {
++                    let src: &[u8; 64] = &*(ptr as *const [u8; 64]);
++                    byte_class_from_table_64(src, &full_tbl)
++                }
++            }
++        });
++        let scalar = std::hint::black_box(scalar_ref(&buf[off..off + 64], &oracle_set));
++        if simd != scalar {
++            mismatches += 1;
++        }
++        blocks += 1;
++        off += 1;
++    }
++
++    // INJECT_BUG: drop the first member from the emitted table; parity must break on
++    // blocks containing it.
++    let bite = members.first().map(|&victim| {
++        let mut lo6_bug = lo6_tbl;
++        let mut full_bug = full_tbl;
++        lo6_bug[(victim & 0x3f) as usize] = 0;
++        full_bug[victim as usize] = 0;
++        let lo6_bug_vec = unsafe { vld1q_u8_x4(lo6_bug.as_ptr()) };
++        let (mut cont, mut bit, mut o) = (0usize, 0usize, 0usize);
++        while o + 64 <= buf.len() {
++            let window = &buf[o..o + 64];
++            if window.iter().any(|&b| b == victim) {
++                cont += 1;
++                let ptr = unsafe { buf.as_ptr().add(o) };
++                let buggy = unsafe {
++                    match tier {
++                        Tier::NeonTbl4 => classify_tbl4_membership(ptr, lo6_bug_vec),
++                        Tier::FullTable => {
++                            let src: &[u8; 64] = &*(ptr as *const [u8; 64]);
++                            byte_class_from_table_64(src, &full_bug)
++                        }
++                    }
++                };
++                if buggy != scalar_ref(window, &oracle_set) {
++                    bit += 1;
++                }
++            }
++            o += 1;
++        }
++        (victim, bit, cont)
++    });
++
++    Report {
++        name: name.into(),
++        pattern: pattern.into(),
++        num_classes: dfa.num_classes,
++        states: dfa.state_count(),
++        members,
++        member_class_ids,
++        direct_eq_oracle,
++        separable,
++        tier,
++        blocks,
++        mismatches,
++        bite,
++    }
++}
++
++fn show_bytes(members: &[u8]) -> String {
++    members
++        .iter()
++        .map(|&b| {
++            if b.is_ascii_graphic() {
++                format!("{}(0x{b:02X})", b as char)
++            } else {
++                format!("·(0x{b:02X})")
++            }
++        })
++        .collect::<Vec<_>>()
++        .join(" ")
++}
++
++fn main() {
++    println!("=== LOCK-9 SHORT Brief 2 · PROTO-2b · byte_classes-DIRECT emit vs REAL bbnf-regex DFA ===\n");
++
++    let leaves = [
++        ("ws", r"[ \t\n\r]+", false),
++        ("json_structural", r#"[{}\[\]:,"\\]"#, false),
++        ("css_colliding", r"[;{}:]", false),
++    ];
++
++    let mut all_pass = true;
++    let mut reports = Vec::new();
++    for (name, pat, uni) in leaves {
++        let r = run_leaf(name, pat, uni);
++        println!("── leaf `{}`  pattern {}", r.name, r.pattern);
++        println!(
++            "   DFA: num_classes={} states={}  (ceilings: 255 classes / 4096 states)",
++            r.num_classes, r.states
++        );
++        println!(
++            "   DIRECT member classes {:?}  → members[{}]: {}",
++            r.member_class_ids,
++            r.members.len(),
++            show_bytes(&r.members)
++        );
++        println!(
++            "   byte_classes-DIRECT set == find_at-oracle set : {}  {}",
++            r.direct_eq_oracle,
++            if r.direct_eq_oracle { "[AGREE]" } else { "[DIVERGE — FAIL]" }
++        );
++        println!("   separable(lo6)={}  → emit tier = {:?}", r.separable, r.tier);
++        println!(
++            "   PARITY (emit-from-byte_classes vs find_at scan): {} blocks, mismatches = {}  {}",
++            r.blocks,
++            r.mismatches,
++            if r.mismatches == 0 { "[BIT-IDENTICAL]" } else { "[FAIL]" }
++        );
++        if let Some((v, bit, cont)) = r.bite {
++            let rate = if cont == 0 { 0.0 } else { bit as f64 / cont as f64 };
++            println!(
++                "   INJECT_BUG (drop 0x{:02X}): {}/{} containing-blocks = {:.1}%  {}",
++                v, bit, cont, rate * 100.0,
++                if rate >= 0.90 { "[TEETH]" } else { "[NO-TEETH]" }
++            );
++            if rate < 0.90 {
++                all_pass = false;
++            }
++        }
++        if !r.direct_eq_oracle || r.mismatches != 0 {
++            all_pass = false;
++        }
++        println!();
++        reports.push(r);
++    }
++
++    // ── GATE 4: lo6-colliding CSS set — naive lo6 emit MUST silently drop a member,
++    //    the separability gate MUST route it off vqtbl4q to the byte_classes FullTable. ──
++    println!("── GATE 4 · lo6-collision silent-drop proof (CSS `;{{}}:`) ──");
++    let css = &reports[2];
++    let members = &css.members;
++    let has_semi = members.contains(&b';');
++    let has_brace = members.contains(&b'{');
++    println!(
++        "   contains ;(0x3B)={} {{(0x7B)={}  lo6(0x3B)=0x{:02X} lo6(0x7B)=0x{:02X}  separable={} (expect false)",
++        has_semi, has_brace, b';' & 0x3f, b'{' & 0x3f, css.separable
++    );
++    let gate_routes_off = !css.separable && css.tier == Tier::FullTable;
++
++    let naive_lo6 = build_lo6_table(members);
++    let naive_vec = unsafe { vld1q_u8_x4(naive_lo6.as_ptr()) };
++    let mut win = [b'.'; 64];
++    win[3] = b';';
++    win[10] = b'{';
++    win[20] = b'}';
++    win[40] = b':';
++    let naive_mask = unsafe { classify_tbl4_membership(win.as_ptr(), naive_vec) };
++    let mut set = [false; 256];
++    for &b in members {
++        set[b as usize] = true;
++    }
++    let mut scalar_mask = 0u64;
++    for i in 0..64 {
++        if set[win[i] as usize] {
++            scalar_mask |= 1u64 << i;
++        }
++    }
++    let slot_holder = naive_lo6[0x3b];
++    let dropped: u8 = if slot_holder == b'{' { b';' } else { b'{' };
++    let naive_drops = naive_mask != scalar_mask;
++    println!(
++        "   naive lo6 table[0x3B]=0x{:02X} → 0x{:02X} SILENTLY DROPPED; naive=0x{:016X} scalar=0x{:016X} differ={} {}",
++        slot_holder, dropped, naive_mask, scalar_mask, naive_drops,
++        if naive_drops { "[NAIVE MISCLASSIFIES — required]" } else { "[GATE-4 FAIL]" }
++    );
++
++    // Route non-separable → FullTable built from byte_classes (this leaf's emitted table).
++    let mut full = [0u8; 256];
++    for &m in members {
++        full[m as usize] = 0xff;
++    }
++    let routed_mask = byte_class_from_table_64(&win, &full);
++    let routed_ok = routed_mask == scalar_mask;
++    println!(
++        "   gate routes off vqtbl4q → FullTable: 0x{:016X} bit-identical={} {}",
++        routed_mask, routed_ok, if routed_ok { "[NO SILENT DROP]" } else { "[FAIL]" }
++    );
++    let gate4_ok = gate_routes_off && naive_drops && routed_ok && has_semi && has_brace;
++    if !gate4_ok {
++        all_pass = false;
++    }
++    println!();
++
++    // ── Census: \p{L} over-ceiling (Tier X) via REAL engine — reports class-count, NOT None ──
++    println!("── CENSUS · Tier-X `\\p{{L}}` (unicode) ──");
++    match Dfa::compile_with(r"\p{L}", &DfaOptions::default()) {
++        Some(d) => println!(
++            "   \\p{{L}} compiled: num_classes={} states={} (vs 255/4096 ceilings) — Tier-X by class-count over SIMD membership ceiling, NOT None",
++            d.num_classes, d.state_count()
++        ),
++        None => println!("   \\p{{L}} → None (would contradict PROTO-2's 41-class measurement)"),
++    }
++    println!();
++
++    println!(
++        "VERDICT: {}",
++        if all_pass && gate4_ok {
++            "PASS — byte_classes-DIRECT emit == find_at oracle for all leaves; emitted-from-partition classifier bit-identical to the DFA scan; colliding set routed off the nibble tier with no silent drop; INJECT_BUG bites."
++        } else {
++            "FAIL — see lines above."
++        }
++    );
++    std::process::exit(if all_pass && gate4_ok { 0 } else { 1 });
++}

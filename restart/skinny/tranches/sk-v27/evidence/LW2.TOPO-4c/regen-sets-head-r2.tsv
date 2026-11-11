@@ -1,0 +1,6 @@
+clean	rc=0
+m1-core-orphan	rc=1
+m2-path-orphan	rc=1
+m3-path-drift	rc=1
+tree-unchanged	yes
+regen-sets head-r2: GREEN

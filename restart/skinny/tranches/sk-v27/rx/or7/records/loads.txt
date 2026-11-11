@@ -1,0 +1,4 @@
+route=a rep=1 rc=0 load1_before=7.64 waited_s=75 label=QUIET toolchain=1.99.1 at=2026-11-10T22:10:07Z
+route=b rep=1 rc=0 load1_before=6.93 waited_s=0 label=QUIET toolchain=1.99.1 at=2026-11-10T22:10:10Z
+route=a rep=2 rc=0 load1_before=6.61 waited_s=0 label=QUIET toolchain=1.99.1 at=2026-11-10T22:10:14Z
+route=b rep=2 rc=0 load1_before=6.72 waited_s=0 label=QUIET toolchain=1.99.1 at=2026-11-10T22:10:18Z

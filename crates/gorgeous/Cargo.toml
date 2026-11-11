@@ -1,6 +1,6 @@
 [package]
 name = "gorgeous"
-version = "0.1.10"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 description = "Grammar-driven pretty printers auto-generated from BBNF grammars"
@@ -75,10 +75,10 @@ bin-full = ["bbnf-grammar", "json-grammar", "css-grammar", "ebnf-grammar", "bnf-
 vm = ["dep:bbnf-ir"]
 
 [dependencies]
-parse_that = { version = "0.4", features = ["diagnostics"] }
-bbnf = { version = "0.2", path = "../core" }
-bbnf-ir = { version = "0.1", path = "../ir", optional = true }
-pprint = "0.3"
+parse_that = { workspace = true, features = ["diagnostics"] }
+bbnf = { version = "0.3.0", path = "../core" }
+bbnf-ir = { version = "0.2.0", path = "../ir", optional = true }
+pprint.workspace = true
 
 [dev-dependencies]
 # The crates.io biome_css_* 0.5.7/0.5.8 publishes have a version skew

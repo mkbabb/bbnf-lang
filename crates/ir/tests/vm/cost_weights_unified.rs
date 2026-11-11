@@ -1,7 +1,7 @@
 //! Universal cost model contract test.
 //!
 //! The contract this file enforces is a **global invariant**: when any
-//! field of `egraph::CostWeights` changes, every cost-driven decision in
+//! field of `parse_that_egraph::CostWeights` changes, every cost-driven decision in
 //! the pipeline changes in lockstep. There is one source of truth for
 //! cost; no consumer holds a stale duplicate.
 //!
@@ -25,10 +25,11 @@
 
 use std::collections::HashMap;
 
-use egraph::{CostModel, CostWeights, EGraph, Id};
+use parse_that_egraph::{CostModel, CostWeights, EGraph, Id};
 
 use bbnf_ir::egraph::{
-    GrammarAnalysis, GrammarCostModel, GrammarENode, build_and_saturate, write_back_optimized,
+    GrammarAnalysis, GrammarCostModel, GrammarENode, LeafMatch, build_and_saturate,
+    write_back_optimized,
 };
 use bbnf_ir::passes::{
     AltMode, MaterializationClass, RecognizerDecisionMap, classify_materialization,
@@ -158,7 +159,7 @@ fn build_three_way_alt_fixture(cost_config: CostConfig) -> GrammarIR {
     // nullable propagation depends on the rule-level snapshot).
     ir.rules[0].meta.first_set = char_set_of(b"tfn");
 
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     compute_first_sets(&mut ir);
     generate_dispatch_tables(&mut ir);
     classify_materialization(&mut ir);
@@ -191,7 +192,7 @@ fn build_egraph_alt_fixture(cost_config: CostConfig) -> GrammarIR {
     ir.cost_config = cost_config;
     ir.rules = vec![rule(0, 0, body)];
     ir.rules[0].meta.first_set = char_set_of(b"ab");
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     ir
 }
 
@@ -321,7 +322,7 @@ fn grammar_cost_model_forwards_all_weight_dimensions() {
 }
 
 /// Constructing a `GrammarCostModel` via `Default::default` must give
-/// the same weights as `egraph::CostWeights::default()`. This pins
+/// the same weights as `parse_that_egraph::CostWeights::default()`. This pins
 /// the "defaults are unified" contract.
 #[test]
 fn grammar_cost_model_default_matches_cost_weights_default() {
@@ -438,7 +439,7 @@ fn write_back_optimized_accepts_patched_weights() {
     // `build_and_saturate` takes `&GrammarIR` and returns a new
     // e-graph + a rule-body-root map. The extraction writes back
     // into a cloned IR so we don't clobber the original.
-    let (egraph, _pool, rule_body_ids) = build_and_saturate(&fixture);
+    let (egraph, _pool, rule_body_ids) = build_and_saturate(&fixture, LeafMatch::LeftmostFirst);
     let cost = GrammarCostModel::from_config(&fixture.cost_config);
     let mut target = fixture.clone();
     write_back_optimized(&egraph, &mut target, &rule_body_ids, &cost);
@@ -517,7 +518,7 @@ fn dispatch_branch_scales_with_arm_count() {
 /// disagree — and the AF.2 contract says this gate must not have
 /// introduced its own numeric cost knob. Every cost decision the
 /// classifier makes must still trace back to `CostConfig` /
-/// `egraph::CostWeights`.
+/// `parse_that_egraph::CostWeights`.
 ///
 /// This test enforces that property structurally: it scans the
 /// classification output for two variants of the same grammar
@@ -536,7 +537,7 @@ fn materialization_reads_weights_not_hidden_constants() {
     let mut ir_a = empty_ir();
     ir_a.strings = strings.clone();
     ir_a.rules = vec![rule(0, 0, body.clone())];
-    bbnf_ir::dag::ensure_dag(&mut ir_a);
+    crate::support::ensure_dag(&mut ir_a);
     classify_materialization(&mut ir_a);
 
     let dag_a = ir_a.dag.as_ref().unwrap();
@@ -548,15 +549,17 @@ fn materialization_reads_weights_not_hidden_constants() {
     // sweep does not currently consult these values (the decision is
     // structural), so the classification should be stable — which is
     // the AF.1 invariant: "the gate is additive, not a new cost knob."
-    let mut cfg_b = CostConfig::default();
-    cfg_b.mat_must_tape = 0.0;
-    cfg_b.mat_tape_span_only = 0.0;
-    cfg_b.mat_transparent_elide = 0.0;
+    let cfg_b = CostConfig {
+        mat_must_tape: 0.0,
+        mat_tape_span_only: 0.0,
+        mat_transparent_elide: 0.0,
+        ..CostConfig::default()
+    };
     let mut ir_b = empty_ir();
     ir_b.strings = strings;
     ir_b.cost_config = cfg_b;
     ir_b.rules = vec![rule(0, 0, body)];
-    bbnf_ir::dag::ensure_dag(&mut ir_b);
+    crate::support::ensure_dag(&mut ir_b);
     classify_materialization(&mut ir_b);
 
     let dag_b = ir_b.dag.as_ref().unwrap();

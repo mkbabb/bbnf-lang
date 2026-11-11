@@ -1,0 +1,12 @@
+# sk-v27 LW2.TOPO-6 corpus custody (ruling R-c). Transport: release asset below on mkbabb/bbnf-lang;
+# custody: this manifest. Fetch and check with `cargo xtask corpus fetch` / `cargo xtask corpus verify`.
+# json/twitter.json is upstream simdjson jsonexamples/twitter.json at the CON-2 pin 9c003534b.
+310e4d48477cd45169dc18e749ca10f65286c7b21abd3523363ba616aa7fab3f  corpus-v1.tar.gz
+4a50207b956a4ab943640ee993118b554a34e96a23261cfe58b9aa1807a7849b  css/bootstrap.css
+580818700724d42d7fcc4979b0197971fca1c6d2e0286769237a0ac897df5512  css/normalize.css
+de305d923dde1f8559e7734bb1f01970af3a76efc844b94ca3c8488fea8da3f7  css/tailwind.css
+f83b3b354030d5dd58740c68ac4fecef64cb730a0d12a90362a7f23077f50d78  json/canada.json
+a73e7a883f6ea8de113dff59702975e60119b4b58d451d518a929f31c92e2059  json/citm_catalog.json
+aaf8a8b2a42fbe7c95c1960b7736e5ea16276b4331b017712f724ebd8628f4ec  json/data.json
+8be03e1fb8b380dde51b1866d32eaa5f0e43019037a0885e994b3817bee7bea7  json/data_xl.json
+30721e496a8d73cfc50658923c34eb2c0fbe15ee6835005e43ee624d8dedf200  json/twitter.json

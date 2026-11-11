@@ -1,0 +1,3 @@
+correctness gate: PASS (quoted/escaped-quote/CRLF-in-field/empty-field)
+corpus: /Users/mkbabb/Programming/bbnf-lang/.claude/worktrees/wf_386900ed-462-13/skinny/crates/csv-prove/../../data/csv/rfc4180_50mb.csv (52428877 bytes = 50.0 MiB)
+field parity: bbnf_field_offsets=4807590 csv_fields=3432970 csv_records=343297 (match=false)

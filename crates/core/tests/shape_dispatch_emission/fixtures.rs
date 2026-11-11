@@ -149,6 +149,23 @@ pub fn finalise_and_classify(ir: &mut GrammarIR) {
 /// `grammar/json/json.bbnf`. Every named rule is lowered to the same
 /// `IrNode` topology the production lowering pass produces — the
 /// shape-dispatch classifier matches production tags with zero drift.
+/// The strict separated list `(elem (sep elem)*)?` as lowering emits it
+/// (ruling S1-B: the spelling of a separated list).
+fn strict_list(elem: IrNode, sep: IrNode) -> IrNode {
+    IrNode::Repeat {
+        inner: Box::new(IrNode::Seq(vec![
+            elem.clone(),
+            IrNode::Repeat {
+                inner: Box::new(IrNode::Next(Box::new(sep), Box::new(elem))),
+                lo: 0,
+                hi: u32::MAX,
+            },
+        ])),
+        lo: 0,
+        hi: 1,
+    }
+}
+
 pub fn build_json_ir() -> (GrammarIR, JsonRules) {
     let mut ir = base_ir();
 
@@ -215,47 +232,25 @@ pub fn build_json_ir() -> (GrammarIR, JsonRules) {
     ]);
     let pair = push_rule(&mut ir, "pair", pair_body);
 
-    // array = "[" >> ((value << comma?)*)?w << "]"
-    //       = Next(Literal("["), Skip(OptionalWhitespace(Repeat(Skip(Ref(value), Repeat(comma,0,1)), 0, inf)), Literal("]")))
+    // array = "[" >> ((value , (comma >> value)*)?)?w << "]"
+    //       = Next(Literal("["), Skip(OptionalWhitespace(Repeat(Seq[Ref(value), Repeat(Next(comma, Ref(value)))], 0, 1)), Literal("]")))
     let arr_open = lit(&mut ir, "[");
     let arr_close = lit(&mut ir, "]");
-    let arr_repeat_inner = IrNode::Skip(
-        Box::new(IrNode::Ref(value)),
-        Box::new(IrNode::Repeat {
-            inner: Box::new(IrNode::Ref(comma)),
-            lo: 0,
-            hi: 1,
-        }),
-    );
-    let arr_repeat = IrNode::Repeat {
-        inner: Box::new(arr_repeat_inner),
-        lo: 0,
-        hi: u32::MAX,
-    };
-    let arr_middle = IrNode::OptionalWhitespace(Box::new(arr_repeat));
+    let arr_middle = IrNode::OptionalWhitespace(Box::new(strict_list(
+        IrNode::Ref(value),
+        IrNode::Ref(comma),
+    )));
     let array_body = IrNode::Next(
         Box::new(arr_open),
         Box::new(IrNode::Skip(Box::new(arr_middle), Box::new(arr_close))),
     );
     let array = push_rule(&mut ir, "array", array_body);
 
-    // object = "{" >> ((pair << comma?)*)?w << "}"
+    // object = "{" >> ((pair , (comma >> pair)*)?)?w << "}"
     let obj_open = lit(&mut ir, "{");
     let obj_close = lit(&mut ir, "}");
-    let obj_repeat_inner = IrNode::Skip(
-        Box::new(IrNode::Ref(pair)),
-        Box::new(IrNode::Repeat {
-            inner: Box::new(IrNode::Ref(comma)),
-            lo: 0,
-            hi: 1,
-        }),
-    );
-    let obj_repeat = IrNode::Repeat {
-        inner: Box::new(obj_repeat_inner),
-        lo: 0,
-        hi: u32::MAX,
-    };
-    let obj_middle = IrNode::OptionalWhitespace(Box::new(obj_repeat));
+    let obj_middle =
+        IrNode::OptionalWhitespace(Box::new(strict_list(IrNode::Ref(pair), IrNode::Ref(comma))));
     let object_body = IrNode::Next(
         Box::new(obj_open),
         Box::new(IrNode::Skip(Box::new(obj_middle), Box::new(obj_close))),

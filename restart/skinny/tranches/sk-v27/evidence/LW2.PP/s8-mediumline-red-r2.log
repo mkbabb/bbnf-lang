@@ -1,0 +1,25 @@
+== pprint@b26b7b9d7 hits=20
+origin/sk-v27-lw2:CLAUDE.md:34:- `rust/src/op.rs` — `FmtOp` enum (24 bytes, Copy): Text, QuotedText, Char, I64, U64, I128Hi/Lo, U128Hi/Lo, F64, GroupStart/End, IndentStart/End, WrapStart/End, Hardline, Softline, BreakLine, Mediumline, CommaSep, Sep, IfBreak
+origin/sk-v27-lw2:CLAUDE.md:88:- `Mediumline` — breaks when `current_line_len > max_width / 2`
+origin/sk-v27-lw2:README.md:45:- **Hardline/Softline/BreakLine/Mediumline** — line break variants with different break semantics
+origin/sk-v27-lw2:docs/playground/doc-api.md:79:### Hardline, Softline, Mediumline, Line
+origin/sk-v27-lw2:docs/playground/doc-api.md:84:Doc::Mediumline // Breaks when current_line_len > max_width / 2
+origin/sk-v27-lw2:rust/src/builder.rs:234:    pub fn mediumline(&mut self) {
+origin/sk-v27-lw2:rust/src/builder.rs:235:        self.ops.push(FmtOp::Mediumline);
+origin/sk-v27-lw2:rust/src/op.rs:78:    Mediumline,
+origin/sk-v27-lw2:rust/src/render.rs:178:            FmtOp::Mediumline => {
+origin/sk-v27-lw2:rust/src/render.rs:365:        FmtOp::Mediumline => {
+origin/sk-v27-lw2:rust/tests/builder_tests.rs:190:// ── Mediumline ──────────────────────────────────────────────────────────────
+origin/sk-v27-lw2:rust/tests/builder_tests.rs:193:fn test_mediumline() {
+origin/sk-v27-lw2:rust/tests/builder_tests.rs:196:    b.mediumline();
+origin/sk-v27-lw2:rust/tests/builder_tests.rs:202:    b.mediumline();
+origin/sk-v27-lw2:rust/tests/oracle/lower.rs:16:    /// `Mediumline` reads the column: it is the [L] `column f` combinator that
+origin/sk-v27-lw2:rust/tests/oracle/lower.rs:18:    Mediumline,
+origin/sk-v27-lw2:rust/tests/oracle/lower.rs:143:            FmtOp::Mediumline => return Err(LowerError::Mediumline),
+origin/sk-v27-lw2:rust/tests/oracle_tests.rs:201:fn lower_refuses_mediumline() {
+origin/sk-v27-lw2:rust/tests/oracle_tests.rs:204:    b.mediumline();
+origin/sk-v27-lw2:rust/tests/oracle_tests.rs:207:        Err(LowerError::Mediumline)
+== bbnf-lang@59a4d71fc hits=2
+origin/sk-v27-lw2:docs/pprint/doc-api.md:79:### Hardline, Softline, Mediumline, Line
+origin/sk-v27-lw2:docs/pprint/doc-api.md:84:Doc::Mediumline // Breaks when current_line_len > max_width / 2
+total=22

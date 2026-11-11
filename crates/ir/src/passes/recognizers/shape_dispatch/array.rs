@@ -1,15 +1,15 @@
-//! Array-shape detector — `Wrap(open, Repeat(value << sep?), close)`.
+//! Array-shape detector — `Wrap(open, (value (sep value)*)?, close)`.
 //!
 //! # Predicate
 //!
 //! A rule is Array-shaped when either
 //!
 //! 1. Its body unwraps to a canonical `Wrap(open_byte, middle, close_byte)`
-//!    whose `middle` is a `Repeat` over a homogeneous element — a Ref,
-//!    a single-leaf Alt, or a simple Seq whose first non-trivial child
-//!    is the value and whose tail is at most a trailing-comma skip. The
-//!    canonical source is JSON's
-//!    `array = "[" >> ((value << comma?)*)?w << "]"`.
+//!    whose `middle` is a strict separated list `(x (sep x)*)?` with a
+//!    single-byte separator over a homogeneous element — a Ref, a
+//!    single-leaf Alt, or a simple Seq whose first non-trivial child is
+//!    the value. The canonical source is JSON's
+//!    `array = "[" >> ((value , (comma >> value)*)?)?w << "]"`.
 //! 2. It is the entry rule of a list grammar (`stylesheet = rule*`,
 //!    `grammar = item*`) per the
 //!    [`crate::passes::recognizers::list_rules::mine_list_rules`]
@@ -25,7 +25,7 @@
 
 use std::collections::HashSet;
 
-use crate::passes::inspect::{single_byte_literal, unwrap_map_ow, unwrap_wrap};
+use crate::passes::inspect::{sep_list, single_byte_literal, unwrap_map_ow, unwrap_wrap};
 use crate::passes::recognizers::list_rules::mine_list_rules;
 use crate::types::{GrammarIR, IrNode, RuleId};
 
@@ -38,12 +38,13 @@ pub fn detect_array(rule_id: RuleId, ir: &GrammarIR) -> bool {
     let body = unwrap_map_ow(&rule.body);
 
     // Shape 1 — wrapped homogeneous repeat.
-    if let Some((open, middle, close)) = unwrap_wrap(body) {
-        if single_byte_literal(open, ir).is_some() && single_byte_literal(close, ir).is_some() {
-            let mut visited = HashSet::new();
-            if inner_is_homogeneous_repeat(middle, ir, &mut visited) {
-                return true;
-            }
+    if let Some((open, middle, close)) = unwrap_wrap(body)
+        && single_byte_literal(open, ir).is_some()
+        && single_byte_literal(close, ir).is_some()
+    {
+        let mut visited = HashSet::new();
+        if inner_is_homogeneous_repeat(middle, ir, &mut visited) {
+            return true;
         }
     }
 
@@ -54,7 +55,7 @@ pub fn detect_array(rule_id: RuleId, ir: &GrammarIR) -> bool {
 /// Whether `rule_id` matches the entry-rule list shape per
 /// [`mine_list_rules`].
 pub(crate) fn list_rule_entry_matches(rule_id: RuleId, ir: &GrammarIR) -> bool {
-    mine_list_rules(ir).iter().any(|&id| id == rule_id)
+    mine_list_rules(ir).contains(&rule_id)
 }
 
 /// Walk the wrap's middle looking for a `Repeat` whose inner resolves
@@ -66,14 +67,18 @@ fn inner_is_homogeneous_repeat(
     ir: &GrammarIR,
     visited: &mut HashSet<RuleId>,
 ) -> bool {
-    match unwrap_map_ow(node) {
-        IrNode::Repeat { inner, .. } => {
-            // Reject the Object-pair shape; Array is the complement.
-            if is_pair_seq(inner, ir, &mut visited.clone()) {
-                return false;
-            }
-            is_homogeneous_element(inner, ir, visited)
+    let node = unwrap_map_ow(node);
+    if let Some(list) = sep_list(node) {
+        // Reject the Object-pair shape; Array is the complement. The
+        // Array emitter's loop requires the separator between
+        // elements, so only the strict spelling is admitted (S1-B).
+        if list.separator_byte(ir).is_none() || is_pair_seq(list.element, ir, &mut visited.clone())
+        {
+            return false;
         }
+        return is_homogeneous_element(list.element, ir, visited);
+    }
+    match node {
         IrNode::Skip(lhs, _) | IrNode::Next(_, lhs) => {
             inner_is_homogeneous_repeat(lhs, ir, visited)
         }

@@ -62,7 +62,7 @@ fn pipeline_css_dfa_fidelity() {
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
     let program = compile_bytecode(&ir);
 
-    let input = std::fs::read_to_string("../../data/css/tailwind.css")
+    let input = std::fs::read_to_string(bbnf_corpus::path("css/tailwind.css"))
         .expect("failed to read tailwind.css");
     let bytes = input.as_bytes();
 

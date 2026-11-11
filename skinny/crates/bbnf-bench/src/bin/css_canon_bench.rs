@@ -4,7 +4,7 @@
 //! single-sample + broadcast harness. Per benched CSS corpus
 //! (bootstrap / tailwindcss / material-components-web / animate, the set fixed
 //! in `css_l4_corpus.rs:22-54`), per workload, it takes N cold per-parse
-//! samples and reports median / min / max / stddev in Mbps.
+//! samples and reports median / min / max / stddev in MB/s.
 //!
 //! Cold discipline: each sample is ONE parse of ONE corpus. There is no warm
 //! cache and no amortised allocation across samples — the timed region is a
@@ -148,17 +148,17 @@ struct Stats {
     n: usize,
 }
 
-fn mbps(bytes: usize, secs: f64) -> f64 {
+fn mb_s(bytes: usize, secs: f64) -> f64 {
     if secs <= 0.0 {
         return f64::INFINITY;
     }
-    (bytes as f64 * 8.0) / (secs * 1_000_000.0)
+    bytes as f64 / (secs * 1_000_000.0)
 }
 
 /// N cold per-parse samples. Each sample times exactly one parse of `input`.
 fn sample(parse: ParseFn, input: &str, n: usize) -> Stats {
     let bytes = input.len();
-    let mut mbps_samples: Vec<f64> = Vec::with_capacity(n);
+    let mut mb_s_samples: Vec<f64> = Vec::with_capacity(n);
     // Touch each corpus once outside the timed window so the measured samples
     // are not dominated by first-touch page faults of the source buffer; the
     // PARSE itself is cold per sample (no parser state reused, output dropped).
@@ -168,18 +168,18 @@ fn sample(parse: ParseFn, input: &str, n: usize) -> Stats {
         let r = parse(black_box(input));
         let secs = start.elapsed().as_secs_f64();
         black_box(r);
-        mbps_samples.push(mbps(bytes, secs));
+        mb_s_samples.push(mb_s(bytes, secs));
     }
-    mbps_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    mb_s_samples.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let median = if n % 2 == 0 {
-        (mbps_samples[n / 2 - 1] + mbps_samples[n / 2]) / 2.0
+        (mb_s_samples[n / 2 - 1] + mb_s_samples[n / 2]) / 2.0
     } else {
-        mbps_samples[n / 2]
+        mb_s_samples[n / 2]
     };
-    let min = mbps_samples[0];
-    let max = mbps_samples[n - 1];
-    let mean = mbps_samples.iter().sum::<f64>() / n as f64;
-    let var = mbps_samples.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n as f64;
+    let min = mb_s_samples[0];
+    let max = mb_s_samples[n - 1];
+    let mean = mb_s_samples.iter().sum::<f64>() / n as f64;
+    let var = mb_s_samples.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n as f64;
     Stats {
         median,
         min,
@@ -225,7 +225,7 @@ fn main() {
         let iters: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(2_000);
         let corpora = load_all().expect("load CSS corpora");
         println!("# SK-V17 PMU cycles/byte  iters={iters}");
-        println!("# schema: corpus workload bytes iters cycles instructions cycles_per_byte cpi mbps");
+        println!("# schema: corpus workload bytes iters cycles instructions cycles_per_byte cpi mb_s");
         for corpus in &corpora {
             let input = std::str::from_utf8(&corpus.bytes).unwrap();
             for (name, parse) in WORKLOADS {
@@ -243,7 +243,7 @@ fn main() {
                 let cyc = ri1.ri_cycles - ri0.ri_cycles;
                 let ins = ri1.ri_instructions - ri0.ri_instructions;
                 println!(
-                    "PMU corpus={} workload={} bytes={} iters={} cycles={} instructions={} cycles_per_byte={:.4} cpi={:.4} mbps={:.3}",
+                    "PMU corpus={} workload={} bytes={} iters={} cycles={} instructions={} cycles_per_byte={:.4} cpi={:.4} mb_s={:.3}",
                     corpus.spec.id,
                     name,
                     input.len(),
@@ -252,7 +252,7 @@ fn main() {
                     ins,
                     cyc as f64 / total as f64,
                     if ins == 0 { 0.0 } else { cyc as f64 / ins as f64 },
-                    mbps(total as usize, secs)
+                    mb_s(total as usize, secs)
                 );
             }
         }
@@ -270,13 +270,13 @@ fn main() {
         .unwrap_or_default();
 
     println!("# SK-V17 canonical cold CSS bench  N={n}  host={host}");
-    println!("# schema: corpus workload bytes n median_mbps min_mbps max_mbps stddev_mbps");
+    println!("# schema: corpus workload bytes n median_mb_s min_mb_s max_mb_s stddev_mb_s");
     for corpus in &corpora {
         let input = std::str::from_utf8(&corpus.bytes).expect("utf8");
         for (name, parse) in WORKLOADS {
             let s = sample(*parse, input, n);
             println!(
-                "ROW corpus={} workload={} bytes={} n={} median_mbps={:.3} min_mbps={:.3} max_mbps={:.3} stddev_mbps={:.3}",
+                "ROW corpus={} workload={} bytes={} n={} median_mb_s={:.3} min_mb_s={:.3} max_mb_s={:.3} stddev_mb_s={:.3}",
                 corpus.spec.id,
                 name,
                 input.len(),

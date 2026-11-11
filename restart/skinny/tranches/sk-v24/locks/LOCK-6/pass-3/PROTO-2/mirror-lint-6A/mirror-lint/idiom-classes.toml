@@ -1,0 +1,50 @@
+# idiom-classes.toml — the I=5 idiom classes of the isomorphism plane.
+#
+# Each class carries a predicate over bridge-crate source-declaration
+# sites. cap = Σ_c |sites matching predicate[c] that resolve to a spine
+# pre-image|. On the disciplined tree the sum is 13 = 4+2+1+2+4; a
+# bridge decl that matches no predicate (or matches but has no spine
+# pre-image) is an unaccounted exemption and drives the linter RED.
+#
+# Predicates are expressed structurally; the linter (src/main.rs)
+# implements each `kind` against a syn-extracted decl census (Rust) and
+# a d.ts-extracted decl census (TS).
+
+[[class]]
+name = "serde-transport"
+# Rust struct/enum in schema.rs deriving Serialize+Deserialize whose
+# name ends in "Payload". Pre-image resolved via mirror.toml [[pair]].
+kind = "rust-payload-type"
+source = "src/schema.rs"
+expect = 4          # OwnedSegmentPayload, TypedPathPayload, PathErrorPayload, PathErrorReasonPayload
+
+[[class]]
+name = "native-shim"
+# Rust `pub fn *_native` in lib.rs mirroring a #[wasm_bindgen] export of
+# the same stem. Pre-image = the wasm export (compile_path/execute_path).
+kind = "rust-native-shim"
+source = "src/lib.rs"
+expect = 2          # compile_path_native, execute_path_native
+
+[[class]]
+name = "native-error"
+# TS `class extends Error` in path.ts. Pre-image = spine PathError.
+kind = "ts-error-class"
+source = "ts/path.ts"
+expect = 1          # PathError
+
+[[class]]
+name = "constructor"
+# Bridge-side `fn new` associated constructors (schema.rs Payload::new +
+# ts PathError constructor) mirroring spine PathError::new.
+kind = "bridge-constructor"
+source = "src/schema.rs,ts/path.ts"
+expect = 2          # PathErrorPayload::new, PathError#constructor
+
+[[class]]
+name = "marker"
+# Grammar marker string keys in fixture.rs fixture_for_marker. Pre-image
+# = spine marker ZSTs bbnf::path::{Json,CssL4,Sheets,Bbnf}.
+kind = "marker-key"
+source = "src/fixture.rs"
+expect = 4          # Json, CssL4, Sheets, Bbnf

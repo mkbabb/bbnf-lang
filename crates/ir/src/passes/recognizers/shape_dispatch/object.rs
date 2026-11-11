@@ -6,14 +6,14 @@
 //!
 //! 1. Its body unwraps to a canonical `Wrap(open_byte, middle, close_byte)`
 //!    with single-byte open/close literals.
-//! 2. The wrap's `middle` is a `Repeat` whose inner body resolves — after
-//!    stripping trailing separators (`<< comma?`) — to a Seq-shape
+//! 2. The wrap's `middle` is a strict separated list `(pair (sep pair)*)?`
+//!    with a single-byte separator, whose element resolves to a Seq-shape
 //!    (either directly or through a Ref to a pair rule) whose first
 //!    non-whitespace child is a key-class leaf and whose tail contains
 //!    a structural pivot byte (e.g. `:` or `;`).
 //!
 //! The canonical source is JSON's
-//! `object = "{" >> ((pair << comma?)*)?w << "}"` with
+//! `object = "{" >> ((pair , (comma >> pair)*)?)?w << "}"` with
 //! `pair = string, colon >> value`.
 //!
 //! # Projection
@@ -27,7 +27,7 @@
 
 use std::collections::HashSet;
 
-use crate::passes::inspect::{single_byte_literal, unwrap_map_ow, unwrap_wrap};
+use crate::passes::inspect::{sep_list, single_byte_literal, unwrap_map_ow, unwrap_wrap};
 use crate::types::{GrammarIR, IrNode, RuleId};
 
 /// Detect Object-shape on the rule body: a wrap over a `Repeat` whose
@@ -51,11 +51,17 @@ pub fn detect_object(rule_id: RuleId, ir: &GrammarIR) -> bool {
 }
 
 /// Walk the wrap's middle — stripping OptionalWhitespace / Map
-/// wrappers and Next/Skip chains — looking for a `Repeat(lo: 0, ..)`
-/// whose inner is a pair-shaped Seq.
+/// wrappers and Next/Skip chains — looking for a strict separated
+/// list `(pair (sep pair)*)?` whose element is a pair-shaped Seq.
+/// The Object emitter's loop requires the separator between members,
+/// so only the strict spelling is admitted: `(pair << sep?)*` reads
+/// literally (ruling S1-B) and is not an Object.
 fn inner_is_pair_shaped(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> bool {
-    match unwrap_map_ow(node) {
-        IrNode::Repeat { inner, .. } => is_pair_seq(inner, ir, visited),
+    let node = unwrap_map_ow(node);
+    if let Some(list) = sep_list(node) {
+        return list.separator_byte(ir).is_some() && is_pair_seq(list.element, ir, visited);
+    }
+    match node {
         IrNode::Skip(lhs, _) | IrNode::Next(_, lhs) => inner_is_pair_shaped(lhs, ir, visited),
         _ => false,
     }
@@ -177,7 +183,7 @@ fn scan_tree(node: &IrNode, ir: &GrammarIR, visited: &mut HashSet<RuleId>) -> (u
 /// Next trivia or bridged through a single Ref.
 fn is_single_byte_literal_rule(body: &IrNode, ir: &GrammarIR) -> bool {
     match unwrap_map_ow(body) {
-        IrNode::Literal(sid) => ir.get_string(*sid).as_bytes().len() == 1,
+        IrNode::Literal(sid) => ir.get_string(*sid).len() == 1,
         IrNode::Skip(lhs, _) | IrNode::Next(lhs, _) => is_single_byte_literal_rule(lhs, ir),
         _ => false,
     }

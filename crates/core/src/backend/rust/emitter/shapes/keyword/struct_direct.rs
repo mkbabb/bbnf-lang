@@ -285,7 +285,9 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 Ref(bbnf_ir::RuleId),
                 Seq(&'a IrNode),
             }
-            let per_branch: Vec<(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)> = branches
+            // Leading literal bytes, branch kind, branch index, branch.
+            type KeywordBranch<'a> = (Vec<u8>, BranchKind<'a>, usize, &'a bbnf_ir::AltBranch);
+            let per_branch: Vec<KeywordBranch<'_>> = branches
                 .iter()
                 .enumerate()
                 .filter_map(|(branch_idx, branch)| {
@@ -317,10 +319,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 })
                 .collect();
 
-            let mut by_first: BTreeMap<
-                u8,
-                Vec<&(Vec<u8>, BranchKind<'_>, usize, &bbnf_ir::AltBranch)>,
-            > = BTreeMap::new();
+            let mut by_first: BTreeMap<u8, Vec<&KeywordBranch<'_>>> = BTreeMap::new();
             for entry in &per_branch {
                 by_first.entry(entry.0[0]).or_default().push(entry);
             }
@@ -329,12 +328,7 @@ pub(super) fn emit_parse_keyword_struct_direct(
                 .iter()
                 .map(|(first, group)| {
                     // Descending prefix length — longer literals try first.
-                    let mut group_sorted: Vec<&(
-                        Vec<u8>,
-                        BranchKind<'_>,
-                        usize,
-                        &bbnf_ir::AltBranch,
-                    )> = group.iter().copied().collect();
+                    let mut group_sorted: Vec<&KeywordBranch<'_>> = group.to_vec();
                     group_sorted.sort_by_key(|entry| (std::cmp::Reverse(entry.0.len()), entry.2));
                     let tries: Vec<TokenStream> = group_sorted
                         .iter()

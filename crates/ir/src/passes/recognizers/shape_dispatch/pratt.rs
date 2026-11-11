@@ -40,7 +40,7 @@
 //!   add_expr → mul_expr → exp_expr → unary_expr → postfix_expr` per
 //!   `grammar/google-sheets/google-sheets.bbnf:100-118`.
 //! - CSS math: `mathProduct = mathValue , (("*"|"/") >> mathValue) *`
-//!   + `mathExpr = mathProduct , (("+"|"-") >> mathProduct) *` per
+//!   and `mathExpr = mathProduct , (("+"|"-") >> mathProduct) *` per
 //!   `grammar/css/l4/values.bbnf:49-50`.
 //! - BBNF value expression tower: `value_or → value_and → value_cmp →
 //!   value_add → value_mul → value_unary` per

@@ -228,7 +228,7 @@ fn compile_grammar_ir(rel_entry: &str) -> GrammarIR {
     let out = compile_paths_request(std::slice::from_ref(&entry), &request)
         .unwrap_or_else(|err| panic!("{rel_entry}: compile_paths_request failed: {err}"));
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("{rel_entry}: expected Vm output, got {other:?}"),
     }
 }

@@ -4,7 +4,7 @@
 //! Each method is `pub(super)` so the trait impl in `mod.rs` can delegate
 //! to it via `self.emit_xxx_impl(...)`.
 
-use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
+use bbnf_ir::RuleId;
 
 use crate::backend::ValuePlacement;
 
@@ -55,9 +55,6 @@ impl TsEmitter {
         head: TsCode,
         op: TsCode,
         rhs: TsCode,
-        _head_type: &TypeDesc,
-        _link_elem_type: &TypeDesc,
-        _ir: &GrammarIR,
         ctx: &mut TsEmitCtx,
     ) -> Option<TsCode> {
         let head_var = ctx.fresh("head");

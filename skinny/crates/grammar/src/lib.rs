@@ -1293,15 +1293,34 @@ impl<'a> Parser<'a> {
         let start = self.cursor;
         self.expect_char('@')?;
         let name = self.parse_ident()?;
+        // Consume the directive body up to the terminating `;`/newline. The scan
+        // is string-aware so a `;` inside a `"..."` literal (e.g. a `@pretty`
+        // `sep("; ")` argument) does NOT prematurely end the directive.
         while let Some(ch) = self.peek_char() {
             self.bump_char();
-            if ch == ';' || ch == '\n' {
-                break;
+            match ch {
+                '"' => {
+                    while let Some(inner) = self.peek_char() {
+                        self.bump_char();
+                        match inner {
+                            '\\' => {
+                                self.bump_char();
+                            }
+                            '"' => break,
+                            _ => {}
+                        }
+                    }
+                }
+                ';' | '\n' => break,
+                _ => {}
             }
         }
 
         match name.as_str() {
-            "import" | "token" => Ok(()),
+            // Structural/layout directives the skinny AST parser records via the
+            // separate runtime-facts harvest (`scan_runtime_source`) and skips
+            // here — `@pretty`/`@ws` carry NO rule body, so they add no AST node.
+            "import" | "token" | "pretty" | "ws" => Ok(()),
             _ => Err(self.error_at(
                 "BBNF-DIRECTIVE-NOT-IN-SKINNY",
                 start,
@@ -1344,8 +1363,28 @@ impl<'a> Parser<'a> {
         let mut children = Vec::new();
         loop {
             self.skip_inline_trivia();
+            if self.source[self.cursor..].starts_with("?w") {
+                // `?w` is a standalone optional-whitespace sequence element.
+                let ws_start = self.cursor;
+                self.bump_char();
+                self.bump_char();
+                children.push(self.grammar.add_expr(
+                    ExprKind::Annotation {
+                        name: "ws".into(),
+                        value: None,
+                    },
+                    SourceSpan::new(ws_start, self.cursor),
+                ));
+                continue;
+            }
             match self.peek_char() {
                 None | Some(';') | Some(')') | Some('|') => break,
+                Some(',') => {
+                    // Explicit sequence separator: same Seq as whitespace
+                    // separation, not an AST node.
+                    self.bump_char();
+                    continue;
+                }
                 _ => children.push(self.parse_postfix()?),
             }
         }
@@ -1367,6 +1406,30 @@ impl<'a> Parser<'a> {
         let mut expr = self.parse_atom()?;
         loop {
             self.skip_inline_trivia();
+            if self.source[self.cursor..].starts_with("->") {
+                expr = self.parse_projection(expr, start)?;
+                continue;
+            }
+            let rest = &self.source[self.cursor..];
+            if rest.starts_with("<<") || rest.starts_with(">>") {
+                // Binary infix discard operator. `<<` keeps the left operand,
+                // `>>` keeps the right; the other side is matched then dropped.
+                // The right operand is itself a postfix expr (picks up a
+                // trailing `?`/`*`/`+`). Chains left-associate via the loop.
+                let keep_left = rest.starts_with("<<");
+                self.bump_char();
+                self.bump_char();
+                let right = self.parse_postfix()?;
+                expr = self.grammar.add_expr(
+                    ExprKind::Discard {
+                        left: expr,
+                        right,
+                        keep_left,
+                    },
+                    SourceSpan::new(start, self.cursor),
+                );
+                continue;
+            }
             let Some(ch) = self.peek_char() else {
                 return Ok(expr);
             };
@@ -1384,12 +1447,10 @@ impl<'a> Parser<'a> {
                 }
                 '?' => {
                     if self.source[self.cursor..].starts_with("?w") {
-                        return Err(self.error_at(
-                            "BBNF-DIRECTIVE-NOT-IN-SKINNY",
-                            self.cursor,
-                            "whitespace modifier ?w is not available in the skinny compiler"
-                                .to_string(),
-                        ));
+                        // `?w` is a STANDALONE optional-whitespace sequence
+                        // element, not a postfix on this atom. Leave it for
+                        // `parse_seq` and return the atom intact.
+                        return Ok(expr);
                     }
                     self.bump_char();
                     expr = self.grammar.add_expr(
@@ -1411,6 +1472,24 @@ impl<'a> Parser<'a> {
                 _ => return Ok(expr),
             }
         }
+    }
+
+    /// Parse a `-> target (: type)?` projection. `self.cursor` must sit on the
+    /// `->`. Reuses the runtime-projection boundary rule (stop at `|`, `;`,
+    /// newline, `,`, balanced delimiters) and advances `self.cursor` past the
+    /// projection target/type. Wraps `body` in `ExprKind::Project`.
+    fn parse_projection(&mut self, body: ExprId, start: usize) -> Result<ExprId, GrammarError> {
+        let projection_offset = self.cursor;
+        let scan = parse_runtime_projection(self.source, projection_offset)?;
+        self.cursor = scan.end;
+        Ok(self.grammar.add_expr(
+            ExprKind::Project {
+                body,
+                target: scan.target,
+                ty: scan.type_text,
+            },
+            SourceSpan::new(start, self.cursor),
+        ))
     }
 
     fn parse_atom(&mut self) -> Result<ExprId, GrammarError> {
@@ -1793,14 +1872,25 @@ fn w5b_frontend_public_ws_remains_retired() {
         }
     ));
 
-    let err = parse_grammar("bad", "w = \" \" ;\nroot = ident ?w ;\nident = \"x\" ;").unwrap_err();
-    assert!(matches!(
-        err,
-        GrammarError::Parse {
-            code: "BBNF-DIRECTIVE-NOT-IN-SKINNY",
-            ..
+    // `?w` is a standalone optional-whitespace sequence element: it parses and
+    // PRESERVES the preceding atom (it is not a postfix that replaces it).
+    let ir = parse_grammar("ok", "w = \" \" ;\nroot = ident ?w ;\nident = \"x\" ;")
+        .expect("standalone ?w parses, retaining the preceding atom");
+    let root = ir.rule_by_name("root").expect("root rule");
+    match &ir.expr(root.body).kind {
+        ExprKind::Seq(children) => {
+            assert_eq!(children.len(), 2, "atom + standalone ?w");
+            assert!(
+                matches!(ir.expr(children[0]).kind, ExprKind::Ref { ref name, .. } if name == "ident"),
+                "preceding atom `ident` retained, not dropped"
+            );
+            assert!(
+                matches!(&ir.expr(children[1]).kind, ExprKind::Annotation { name, value: None } if name == "ws"),
+                "trailing standalone ?w lowers to a ws annotation"
+            );
         }
-    ));
+        other => panic!("expected Seq[ident, ?w], got {other:?}"),
+    }
 }
 
 #[cfg(test)]

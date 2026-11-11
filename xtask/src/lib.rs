@@ -8,6 +8,7 @@
 //!
 //! See `docs/tranches/AZ-IV/waves/W0.md` §AZ-IV.W0.5 for scope.
 
+pub mod corpus;
 pub mod regen;
 pub mod regen_css;
 pub mod regen_simple_runtime;

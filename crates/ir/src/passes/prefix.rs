@@ -386,8 +386,8 @@ fn factor_branches(mut branches: Vec<AltBranch>) -> Vec<AltBranch> {
             let all_single = (i..j).all(|k| !is_multi_seq(&branches[k].node));
 
             if all_single {
-                for k in i..j {
-                    result.push(take_branch(&mut branches[k]));
+                for branch in &mut branches[i..j] {
+                    result.push(take_branch(branch));
                 }
             } else {
                 // Productive factoring. Clone the leader once for the result;
@@ -395,8 +395,8 @@ fn factor_branches(mut branches: Vec<AltBranch>) -> Vec<AltBranch> {
                 let leader = leading_node(&branches[i].node).clone();
 
                 let mut remainder_branches: Vec<AltBranch> = Vec::with_capacity(j - i);
-                for k in i..j {
-                    let original_node = std::mem::replace(&mut branches[k].node, IrNode::Epsilon);
+                for branch in &mut branches[i..j] {
+                    let original_node = std::mem::replace(&mut branch.node, IrNode::Epsilon);
                     let stripped = strip_leading(original_node);
                     remainder_branches.push(AltBranch {
                         node: stripped,

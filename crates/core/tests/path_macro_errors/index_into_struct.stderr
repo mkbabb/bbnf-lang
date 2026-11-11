@@ -1,5 +1,5 @@
-error: path[1] index/wildcard on non-list under `stylesheet`
-  --> tests/path_macro_errors/index_into_struct.rs:13:60
+error: path[0] index into non-list `json`
+  --> tests/path_macro_errors/index_into_struct.rs:14:46
    |
-13 |     let _: TypedPath<CssL4, ()> = path!(CssL4, "ruleList", 0);
-   |                                                            ^
+14 |     let _: TypedPath<Json, ()> = path!(Json, 0);
+   |                                              ^

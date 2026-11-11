@@ -10,11 +10,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-use bbnf_ir::passes::materialization::{MaterializationClass, classify_materialization};
+use bbnf_ir::passes::materialization::classify_materialization;
 use bbnf_ir::passes::solve_grammar_components;
 use bbnf_ir::{
-    AltBranch, CostConfig, GrammarIR, IrNode, IrRule, PrettyHints, RuleDirectives, RuleMeta,
-    StringId, TypeDescInterner,
+    AltBranch, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId, TypeDescInterner,
 };
 
 // ── Fixture builders ─────────────────────────────────────────────────
@@ -66,7 +65,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     classify_materialization(&mut ir);
     ir
 }
@@ -77,16 +76,6 @@ fn rule(id: u32, name: StringId, body: IrNode) -> IrRule {
         name,
         body,
         meta: RuleMeta::default(),
-        source_span: None,
-    }
-}
-
-fn rule_with_meta(id: u32, name: StringId, body: IrNode, meta: RuleMeta) -> IrRule {
-    IrRule {
-        id,
-        name,
-        body,
-        meta,
         source_span: None,
     }
 }

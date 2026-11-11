@@ -1,7 +1,7 @@
 //! RecognizerInfo unification tests.
 
 use bbnf_ir::recognizer::{LiteralRecognizer, RecognizerInfo, RecognizerKind, RegexRecognizer};
-use bbnf_regex::RegexInfo;
+use parse_that_regex::RegexInfo;
 
 #[test]
 fn literal_recognizer_reports_width() {

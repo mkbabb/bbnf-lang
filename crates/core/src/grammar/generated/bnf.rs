@@ -31,7 +31,7 @@ mod __bnfparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_BnfParser: [&'static str; 1usize] = [
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/bnf/bnf.bbnf")),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/grammar/bnf/bnf.bbnf")),
     ];
     static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 4usize] = [34, 60, 62, 124];
     pub const GRAMMAR_STRUCTURAL_ALPHABET: &[u8] = &__GRAMMAR_STRUCTURAL_ALPHABET;
@@ -815,7 +815,7 @@ mod __bnfparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::simd_scan::StructuralIndex,
+                ::parse_that::scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -835,17 +835,17 @@ mod __bnfparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::simd_scan::StructuralIndex {
+        ) -> &'a ::parse_that::scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    let alphabet = ::simd_scan::StructuralAlphabet {
+                    let alphabet = ::parse_that::scan::StructuralAlphabet {
                         singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
                         digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
                         digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
                         quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
-                    ::simd_scan::scan_structural(input, &alphabet)
+                    ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip JSON whitespace at `*p`, returning the first
@@ -1611,9 +1611,6 @@ mod __bnfparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -1738,9 +1735,6 @@ mod __bnfparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -1787,9 +1781,6 @@ mod __bnfparser_emit_impl {
                             {
                                 let mut __iter_count: u32 = 0;
                                 loop {
-                                    if __iter_count >= 4294967295u32 {
-                                        break;
-                                    }
                                     let __iter_save_p = *p;
                                     if input.get(*p).is_none() {
                                         break;
@@ -1926,11 +1917,6 @@ mod __bnfparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -2126,11 +2112,6 @@ mod __bnfparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -2430,45 +2411,10 @@ mod __bnfparser_emit_impl {
                         };
                         {
                             let __start = state.offset;
-                            if {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
-                                    {
-                                        let __b = *state.src_bytes.get(state.offset)?;
-                                        if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                            || (__b >= b'a' && __b <= b'z')))
-                                        {
-                                            return None;
-                                        }
-                                        state.offset += 1;
-                                    }
-                                    {
-                                        let __end = state.src_bytes.len();
-                                        let mut __pos = state.offset;
-                                        while __pos < __end {
-                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                            if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                || (__b >= b'a' && __b <= b'z'))
-                                            {
-                                                __pos += 1;
-                                            } else {
-                                                break;
-                                            }
-                                        }
-                                        state.offset = __pos;
-                                    }
-                                    Some(())
-                                })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
-                                }
-                            }
+                            if ::parse_that::scan_ident(
+                                    state,
+                                    &::parse_that::DEFAULT_IDENT_CONFIG,
+                                )
                                 .is_none()
                             {
                                 return false;
@@ -2544,45 +2490,10 @@ mod __bnfparser_emit_impl {
                                                                 };
                                                                 {
                                                                     let __start = state.offset;
-                                                                    if {
-                                                                        let __start = state.offset;
-                                                                        let __result: Option<()> = (|| {
-                                                                            {
-                                                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                    || (__b >= b'a' && __b <= b'z')))
-                                                                                {
-                                                                                    return None;
-                                                                                }
-                                                                                state.offset += 1;
-                                                                            }
-                                                                            {
-                                                                                let __end = state.src_bytes.len();
-                                                                                let mut __pos = state.offset;
-                                                                                while __pos < __end {
-                                                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                        || (__b >= b'a' && __b <= b'z'))
-                                                                                    {
-                                                                                        __pos += 1;
-                                                                                    } else {
-                                                                                        break;
-                                                                                    }
-                                                                                }
-                                                                                state.offset = __pos;
-                                                                            }
-                                                                            Some(())
-                                                                        })();
-                                                                        if __result.is_some() && state.offset > __start {
-                                                                            Some(
-                                                                                ::parse_that::Span::new(__start, state.offset, state.src),
-                                                                            )
-                                                                        } else {
-                                                                            state.offset = __start;
-                                                                            None
-                                                                        }
-                                                                    }
+                                                                    if ::parse_that::scan_ident(
+                                                                            state,
+                                                                            &::parse_that::DEFAULT_IDENT_CONFIG,
+                                                                        )
                                                                         .is_none()
                                                                     {
                                                                         return false;
@@ -2761,45 +2672,10 @@ mod __bnfparser_emit_impl {
                                                                                     };
                                                                                     {
                                                                                         let __start = state.offset;
-                                                                                        if {
-                                                                                            let __start = state.offset;
-                                                                                            let __result: Option<()> = (|| {
-                                                                                                {
-                                                                                                    let __b = *state.src_bytes.get(state.offset)?;
-                                                                                                    if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                                        || (__b >= b'a' && __b <= b'z')))
-                                                                                                    {
-                                                                                                        return None;
-                                                                                                    }
-                                                                                                    state.offset += 1;
-                                                                                                }
-                                                                                                {
-                                                                                                    let __end = state.src_bytes.len();
-                                                                                                    let mut __pos = state.offset;
-                                                                                                    while __pos < __end {
-                                                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                                                        if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                                                                            || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                                                                            || (__b >= b'a' && __b <= b'z'))
-                                                                                                        {
-                                                                                                            __pos += 1;
-                                                                                                        } else {
-                                                                                                            break;
-                                                                                                        }
-                                                                                                    }
-                                                                                                    state.offset = __pos;
-                                                                                                }
-                                                                                                Some(())
-                                                                                            })();
-                                                                                            if __result.is_some() && state.offset > __start {
-                                                                                                Some(
-                                                                                                    ::parse_that::Span::new(__start, state.offset, state.src),
-                                                                                                )
-                                                                                            } else {
-                                                                                                state.offset = __start;
-                                                                                                None
-                                                                                            }
-                                                                                        }
+                                                                                        if ::parse_that::scan_ident(
+                                                                                                state,
+                                                                                                &::parse_that::DEFAULT_IDENT_CONFIG,
+                                                                                            )
                                                                                             .is_none()
                                                                                         {
                                                                                             return false;
@@ -2930,45 +2806,10 @@ mod __bnfparser_emit_impl {
                                 };
                                 {
                                     let __start = state.offset;
-                                    if {
-                                        let __start = state.offset;
-                                        let __result: Option<()> = (|| {
-                                            {
-                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                    || (__b >= b'a' && __b <= b'z')))
-                                                {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                            }
-                                            {
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = state.offset;
-                                                while __pos < __end {
-                                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                        || (__b >= b'a' && __b <= b'z'))
-                                                    {
-                                                        __pos += 1;
-                                                    } else {
-                                                        break;
-                                                    }
-                                                }
-                                                state.offset = __pos;
-                                            }
-                                            Some(())
-                                        })();
-                                        if __result.is_some() && state.offset > __start {
-                                            Some(
-                                                ::parse_that::Span::new(__start, state.offset, state.src),
-                                            )
-                                        } else {
-                                            state.offset = __start;
-                                            None
-                                        }
-                                    }
+                                    if ::parse_that::scan_ident(
+                                            state,
+                                            &::parse_that::DEFAULT_IDENT_CONFIG,
+                                        )
                                         .is_none()
                                     {
                                         return false;

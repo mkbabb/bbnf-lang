@@ -1,23 +1,78 @@
 // JSON-owned structural scan source; not part of the generated JSON roster.
-use bbnf_simd::{ScanBackend, ScalarParityReport, StructuralAlphabet, StructuralIndex};
+//
+// G5 disposition (SK-V18): this module is NEUTRALIZED on the live JSON path. The
+// only entry `parse_direct` reaches is `structural_capacity_for`, and the live
+// default `CapacityPlan` is `GrowOnly` (no env override) — which returns a
+// constant 256 and touches NONE of the structural scanners below. The heavy
+// entries (`scan_structurals` + its aarch64 `neon::scan`, `sampled_structural_
+// capacity`, `exact_structural_count`) are reachable ONLY under the explicit
+// non-default `BBNF_TAPE_CAPACITY=A|B|C` plans (capacity-strategy experiments)
+// and the bench/parity harnesses — they carry ZERO live-path self-time. The
+// capacity probe is KEPT (it owns the live constant); the scanners stay gated
+// behind their plan, not deleted (the env-selectable plans + the scan-parity
+// tests still exercise them).
+use parse_that_simd::prim;
 
 use crate::tape::CapacityPlan;
 
-pub const STRUCTURAL_BYTES: &[u8] = b"{}[],:\"";
-pub const STRUCTURAL_ALPHABET: StructuralAlphabet = StructuralAlphabet::from_bytes(STRUCTURAL_BYTES);
-
 #[cfg(target_arch = "aarch64")]
-const STRUCTURAL_CLASS_TABLE_LO6: [u8; 64] = {
-    let mut table = [0u8; 64];
-    table[(b'"' & 0x3f) as usize] = b'"';
-    table[(b',' & 0x3f) as usize] = b',';
-    table[(b':' & 0x3f) as usize] = b':';
-    table[(b'[' & 0x3f) as usize] = b'[';
-    table[(b']' & 0x3f) as usize] = b']';
-    table[(b'{' & 0x3f) as usize] = b'{';
-    table[(b'}' & 0x3f) as usize] = b'}';
-    table
-};
+const STRUCTURAL_TABLE: prim::Lo6Table = prim::Lo6Table::from_members(b"{}[],:\"");
+
+/// Which scanner built a [`StructuralIndex`].
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ScanBackend {
+    Scalar,
+    Neon,
+}
+
+/// The JSON structural positions of one input, and the scanner that
+/// produced them.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StructuralIndex {
+    positions: Vec<u32>,
+    backend: ScanBackend,
+}
+
+impl StructuralIndex {
+    pub fn from_positions(positions: Vec<u32>, backend: ScanBackend) -> Self {
+        Self { positions, backend }
+    }
+
+    pub fn positions(&self) -> &[u32] {
+        &self.positions
+    }
+
+    pub fn into_positions(self) -> Vec<u32> {
+        self.positions
+    }
+
+    pub fn backend(&self) -> ScanBackend {
+        self.backend
+    }
+
+    /// BLAKE3 over the input length, then each position and its byte.
+    pub fn parity_hash(&self, input: &[u8]) -> [u8; 32] {
+        let mut hasher = blake3::Hasher::new();
+        hasher.update(&(input.len() as u64).to_le_bytes());
+        for position in &self.positions {
+            hasher.update(&position.to_le_bytes());
+            hasher.update(&[input[*position as usize]]);
+        }
+        *hasher.finalize().as_bytes()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ScalarParityReport {
+    pub input_len: usize,
+    pub structural_count: usize,
+    pub hash: [u8; 32],
+}
+
+#[inline]
+pub fn checked_position(offset: usize) -> u32 {
+    u32::try_from(offset).expect("skinny hot path supports inputs up to u32::MAX bytes")
+}
 
 pub fn scan_structurals(input: &[u8]) -> StructuralIndex {
     #[cfg(target_arch = "aarch64")]
@@ -115,7 +170,7 @@ fn scan_tail(
     while cursor < input.len() {
         let remaining = input.len() - cursor;
         let take = remaining.min(64);
-        let block = bbnf_simd::prim::eob_pad_clamp(&input[cursor..cursor + take]);
+        let block = prim::eob_pad_clamp(&input[cursor..cursor + take]);
         let mut lane = 0usize;
         while lane < take {
             let byte = block.bytes[lane];
@@ -141,17 +196,17 @@ fn scan_tail_byte(
         } else if byte == b'\\' {
             *escaped = true;
         } else if byte == b'"' {
-            positions.push(bbnf_simd::checked_position(cursor));
+            positions.push(checked_position(cursor));
             *in_string = false;
         }
         return;
     }
 
     if byte == b'"' {
-        positions.push(bbnf_simd::checked_position(cursor));
+        positions.push(checked_position(cursor));
         *in_string = true;
     } else if is_punctuation(byte) {
-        positions.push(bbnf_simd::checked_position(cursor));
+        positions.push(checked_position(cursor));
     }
 }
 
@@ -199,8 +254,9 @@ fn resolve_string_masks_64(
 
 #[cfg(target_arch = "aarch64")]
 mod neon {
-    use super::{resolve_string_masks_64, scan_tail, STRUCTURAL_CLASS_TABLE_LO6};
-    use bbnf_simd::{compact_mask, escape_mask_64, prefix_xor_64};
+    use super::{checked_position, resolve_string_masks_64, scan_tail, STRUCTURAL_TABLE};
+    use parse_that_simd::parity::{escape_mask_64, prefix_xor_64};
+    use parse_that_simd::prim::compact_positions;
 
     const STRIPE: usize = 64;
 
@@ -210,31 +266,19 @@ mod neon {
         let mut in_string = false;
         let mut bs_carry = false;
 
-        unsafe {
-            let table = bbnf_simd::aarch64::classify_tbl4::load_lo6_table(
-                &STRUCTURAL_CLASS_TABLE_LO6,
-            );
+        {
             while cursor + STRIPE <= input.len() {
-                let structural =
-                    bbnf_simd::aarch64::classify_tbl4::classify_structural_terminator_block_from_table(
-                    input.as_ptr().add(cursor),
-                    table,
-                    b'"',
-                );
-                let quotes = structural.terminator_mask;
+                let block: &[u8; STRIPE] = input[cursor..cursor + STRIPE]
+                    .try_into()
+                    .expect("slice length is fixed by loop guard");
+                let result = STRUCTURAL_TABLE.classify(block, b'"', b'\\', 0x20);
+                let quotes = result.terminator_mask;
                 let emit = if quotes == 0 && !in_string {
-                    structural.structural_mask
+                    result.structural_mask
                 } else {
-                    let result = bbnf_simd::aarch64::classify_tbl4::classify_block_from_table(
-                        input.as_ptr().add(cursor),
-                        table,
-                        b'"',
-                        b'\\',
-                        0x20,
-                    );
-                    let punctuation = result.structural_mask & !result.quote_mask;
+                    let punctuation = result.structural_mask & !result.terminator_mask;
                     let (escaped, new_bs_carry) =
-                        escape_mask_64(result.backslash_mask, bs_carry);
+                        escape_mask_64(result.escape_mask, bs_carry);
                     let real_quotes_fast = quotes & !escaped;
                     let prefix = prefix_xor_64(real_quotes_fast, in_string);
                     let string_body_fast = prefix ^ real_quotes_fast;
@@ -254,7 +298,7 @@ mod neon {
                         } else {
                             resolve_string_masks_64(
                                 quotes,
-                                result.backslash_mask,
+                                result.escape_mask,
                                 in_string,
                                 bs_carry,
                             )
@@ -264,7 +308,7 @@ mod neon {
                     (punctuation & !string_body) | real_quotes
                 };
                 if emit != 0 {
-                    compact_mask(cursor, emit, &mut positions);
+                    compact_positions(checked_position(cursor), emit, &mut positions);
                 }
                 cursor += STRIPE;
             }

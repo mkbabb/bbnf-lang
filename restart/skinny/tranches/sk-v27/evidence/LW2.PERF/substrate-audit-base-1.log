@@ -1,0 +1,6 @@
+tree f292c213b (base sk-v27-lw2)
+thread 'substrate_audit_zero_caller_substrates' (4430462) panicked at crates/ir/tests/substrate_audit.rs:552:9:
+  fn      compute_inside_string_bytes
+  fn      compact_stripe_synthetic
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.68s
+substrate_audit rc=101

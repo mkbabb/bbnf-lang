@@ -50,7 +50,7 @@ fn compile_bbnf() -> GrammarIR {
     let out = compile_paths_request(std::slice::from_ref(&p), &request)
         .expect("BBNF grammar must compile");
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("expected Vm output, got {other:?}"),
     }
 }

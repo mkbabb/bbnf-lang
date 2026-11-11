@@ -1,0 +1,1071 @@
+{
+  "method": {},
+  "chromium": {
+    "cv_on": {
+      "initial": {
+        "support": {
+          "viewTimeline": true,
+          "animationRangeEntry": true,
+          "cv": true,
+          "cvStateEvent": false,
+          "atProperty": true
+        },
+        "skippedCount": 42,
+        "stateEventsSeen": 45,
+        "farAudit": [
+          {
+            "variant": "wrapper",
+            "id": "sec-39",
+            "skipped": true,
+            "animationsAttached": 2,
+            "animCurrentTime": "-2182.81%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "inner",
+            "id": "sec-40",
+            "skipped": true,
+            "animationsAttached": 1,
+            "animCurrentTime": "null",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "1",
+            "computedTransform": "none",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "named-inner",
+            "id": "sec-41",
+            "skipped": true,
+            "animationsAttached": 1,
+            "animCurrentTime": "null",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          }
+        ]
+      },
+      "sweep": {
+        "deviation": {
+          "wrapper": {
+            "samples": 15,
+            "max": 0.247,
+            "p95": 0.247,
+            "mean": 0.127
+          },
+          "inner": {
+            "samples": 21,
+            "max": 0.241,
+            "p95": 0.241,
+            "mean": 0.212
+          },
+          "named-inner": {
+            "samples": 22,
+            "max": 0,
+            "p95": 0,
+            "mean": 0
+          }
+        },
+        "terminalViolations": [],
+        "avgFrameMs": 8.32,
+        "p95FrameMs": 9.8
+      },
+      "jumps": [
+        {
+          "targetId": "sec-36",
+          "variant": "wrapper",
+          "skippedBeforeJump": false,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 94,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-37",
+          "variant": "inner",
+          "skippedBeforeJump": false,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 96,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-38",
+          "variant": "named-inner",
+          "skippedBeforeJump": false,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 2,
+          "msToCorrect": 96,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        }
+      ],
+      "scrollTl": [
+        {
+          "frac": 0.15,
+          "expected": 0.15,
+          "scrollTl": "0.14995"
+        },
+        {
+          "frac": 0.4,
+          "expected": 0.4,
+          "scrollTl": "0.400231"
+        },
+        {
+          "frac": 0.5,
+          "expected": 0.5,
+          "scrollTl": "0.50024"
+        },
+        {
+          "frac": 0.6,
+          "expected": 0.6,
+          "scrollTl": "0.60025"
+        },
+        {
+          "frac": 0.85,
+          "expected": 0.85,
+          "scrollTl": "0.850018"
+        },
+        {
+          "frac": 1.1,
+          "expected": 1,
+          "scrollTl": "1"
+        }
+      ]
+    },
+    "cv_off": {
+      "initial": {
+        "support": {
+          "viewTimeline": true,
+          "animationRangeEntry": true,
+          "cv": true,
+          "cvStateEvent": false,
+          "atProperty": true
+        },
+        "skippedCount": 0,
+        "stateEventsSeen": 0,
+        "farAudit": [
+          {
+            "variant": "wrapper",
+            "id": "sec-39",
+            "skipped": null,
+            "animationsAttached": 2,
+            "animCurrentTime": "-2121.62%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "inner",
+            "id": "sec-40",
+            "skipped": null,
+            "animationsAttached": 1,
+            "animCurrentTime": "-2240.95%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "named-inner",
+            "id": "sec-41",
+            "skipped": null,
+            "animationsAttached": 1,
+            "animCurrentTime": "-2232.59%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          }
+        ]
+      },
+      "sweep": {
+        "deviation": {
+          "wrapper": {
+            "samples": 18,
+            "max": 0.24,
+            "p95": 0.24,
+            "mean": 0.137
+          },
+          "inner": {
+            "samples": 23,
+            "max": 0.241,
+            "p95": 0.241,
+            "mean": 0.239
+          },
+          "named-inner": {
+            "samples": 23,
+            "max": 0,
+            "p95": 0,
+            "mean": 0
+          }
+        },
+        "terminalViolations": [],
+        "avgFrameMs": 8.32,
+        "p95FrameMs": 9.8
+      },
+      "jumps": [
+        {
+          "targetId": "sec-36",
+          "variant": "wrapper",
+          "skippedBeforeJump": null,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 93,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-37",
+          "variant": "inner",
+          "skippedBeforeJump": null,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 97,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-38",
+          "variant": "named-inner",
+          "skippedBeforeJump": null,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 96,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        }
+      ],
+      "scrollTl": [
+        {
+          "frac": 0.15,
+          "expected": 0.15,
+          "scrollTl": "0.14995"
+        },
+        {
+          "frac": 0.4,
+          "expected": 0.4,
+          "scrollTl": "0.400231"
+        },
+        {
+          "frac": 0.5,
+          "expected": 0.5,
+          "scrollTl": "0.50024"
+        },
+        {
+          "frac": 0.6,
+          "expected": 0.6,
+          "scrollTl": "0.60025"
+        },
+        {
+          "frac": 0.85,
+          "expected": 0.85,
+          "scrollTl": "0.850018"
+        },
+        {
+          "frac": 1.1,
+          "expected": 1,
+          "scrollTl": "1"
+        }
+      ]
+    }
+  },
+  "webkit": {
+    "cv_on": {
+      "initial": {
+        "support": {
+          "viewTimeline": true,
+          "animationRangeEntry": true,
+          "cv": true,
+          "cvStateEvent": false,
+          "atProperty": true
+        },
+        "skippedCount": 44,
+        "stateEventsSeen": 44,
+        "farAudit": [
+          {
+            "variant": "wrapper",
+            "id": "sec-39",
+            "skipped": true,
+            "animationsAttached": 2,
+            "animCurrentTime": "-2191.092028%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "inner",
+            "id": "sec-40",
+            "skipped": true,
+            "animationsAttached": 1,
+            "animCurrentTime": "-5076.423828%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "named-inner",
+            "id": "sec-41",
+            "skipped": true,
+            "animationsAttached": 1,
+            "animCurrentTime": "-2305.743151%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          }
+        ]
+      },
+      "sweep": {
+        "deviation": {
+          "wrapper": {
+            "samples": 14,
+            "max": 0.246,
+            "p95": 0.246,
+            "mean": 0.148
+          },
+          "inner": {
+            "samples": 23,
+            "max": 0.945,
+            "p95": 0.87,
+            "mean": 0.442
+          },
+          "named-inner": {
+            "samples": 21,
+            "max": 0,
+            "p95": 0,
+            "mean": 0
+          }
+        },
+        "terminalViolations": [],
+        "avgFrameMs": 16.63,
+        "p95FrameMs": 18
+      },
+      "jumps": [
+        {
+          "targetId": "sec-36",
+          "variant": "wrapper",
+          "skippedBeforeJump": false,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 178,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-37",
+          "variant": "inner",
+          "skippedBeforeJump": false,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 177,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-38",
+          "variant": "named-inner",
+          "skippedBeforeJump": false,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": null,
+          "msToCorrect": 1481,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 0
+            }
+          ],
+          "lastFrame": {
+            "f": 89,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 0
+          }
+        }
+      ],
+      "scrollTl": [
+        {
+          "frac": 0.15,
+          "expected": 0.15,
+          "scrollTl": "0.14995"
+        },
+        {
+          "frac": 0.4,
+          "expected": 0.4,
+          "scrollTl": "0.399718"
+        },
+        {
+          "frac": 0.5,
+          "expected": 0.5,
+          "scrollTl": "0.499728"
+        },
+        {
+          "frac": 0.6,
+          "expected": 0.6,
+          "scrollTl": "0.599737"
+        },
+        {
+          "frac": 0.85,
+          "expected": 0.85,
+          "scrollTl": "0.849505"
+        },
+        {
+          "frac": 1.1,
+          "expected": 1,
+          "scrollTl": "1"
+        }
+      ]
+    },
+    "cv_off": {
+      "initial": {
+        "support": {
+          "viewTimeline": true,
+          "animationRangeEntry": true,
+          "cv": true,
+          "cvStateEvent": false,
+          "atProperty": true
+        },
+        "skippedCount": 0,
+        "stateEventsSeen": 0,
+        "farAudit": [
+          {
+            "variant": "wrapper",
+            "id": "sec-39",
+            "skipped": null,
+            "animationsAttached": 2,
+            "animCurrentTime": "-2121.623832%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "inner",
+            "id": "sec-40",
+            "skipped": null,
+            "animationsAttached": 1,
+            "animCurrentTime": "-2240.955078%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          },
+          {
+            "variant": "named-inner",
+            "id": "sec-41",
+            "skipped": null,
+            "animationsAttached": 1,
+            "animCurrentTime": "-2232.589653%",
+            "animPlayState": "running",
+            "timelineIsView": "ViewTimeline",
+            "computedOpacity": "0",
+            "computedTransform": "matrix(1, 0, 0, 1, 0, 54)",
+            "scrollTl": "0"
+          }
+        ]
+      },
+      "sweep": {
+        "deviation": {
+          "wrapper": {
+            "samples": 18,
+            "max": 0.24,
+            "p95": 0.24,
+            "mean": 0.138
+          },
+          "inner": {
+            "samples": 23,
+            "max": 0.241,
+            "p95": 0.241,
+            "mean": 0.237
+          },
+          "named-inner": {
+            "samples": 23,
+            "max": 0,
+            "p95": 0,
+            "mean": 0
+          }
+        },
+        "terminalViolations": [],
+        "avgFrameMs": 16.62,
+        "p95FrameMs": 19
+      },
+      "jumps": [
+        {
+          "targetId": "sec-36",
+          "variant": "wrapper",
+          "skippedBeforeJump": null,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 177,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-37",
+          "variant": "inner",
+          "skippedBeforeJump": null,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 182,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        },
+        {
+          "targetId": "sec-38",
+          "variant": "named-inner",
+          "skippedBeforeJump": null,
+          "framesToCorrect": 0,
+          "aboveFramesToTerminal": 0,
+          "msToCorrect": 178,
+          "firstFrames": [
+            {
+              "f": 0,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 1,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 2,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 3,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 4,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            },
+            {
+              "f": 5,
+              "expected": 1,
+              "measured": 1,
+              "aboveOp": 1
+            }
+          ],
+          "lastFrame": {
+            "f": 11,
+            "expected": 1,
+            "measured": 1,
+            "aboveOp": 1
+          }
+        }
+      ],
+      "scrollTl": [
+        {
+          "frac": 0.15,
+          "expected": 0.15,
+          "scrollTl": "0.14995"
+        },
+        {
+          "frac": 0.4,
+          "expected": 0.4,
+          "scrollTl": "0.399718"
+        },
+        {
+          "frac": 0.5,
+          "expected": 0.5,
+          "scrollTl": "0.499728"
+        },
+        {
+          "frac": 0.6,
+          "expected": 0.6,
+          "scrollTl": "0.599737"
+        },
+        {
+          "frac": 0.85,
+          "expected": 0.85,
+          "scrollTl": "0.849505"
+        },
+        {
+          "frac": 1.1,
+          "expected": 1,
+          "scrollTl": "1"
+        }
+      ]
+    }
+  }
+}

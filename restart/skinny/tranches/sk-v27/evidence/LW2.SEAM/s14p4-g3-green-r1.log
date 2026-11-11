@@ -1,0 +1,4 @@
+rev bfdd909: git grep -niE bbnf -- rust/regex ':!rust/regex/oracle'
+count=0
+env reader: 0
+oracle (S7): 16

@@ -1,0 +1,12 @@
+== RED1 base census @ base tree
+refused-lines=33
+rows=32 routes=0 sanctioned=0 refused=33
+== RED2 base census @ base tree
+refused-lines=33
+rows=32 routes=0 sanctioned=0 refused=33
+== RED1 new census @ base tree
+refused-lines=27
+rows=32 routes=0 sanctioned=0 refused=27
+== RED2 new census @ base tree
+refused-lines=27
+rows=32 routes=0 sanctioned=0 refused=27

@@ -6,9 +6,9 @@
 //! [`IrNode::Regex`] whose classification is NOT one of the two
 //! narrow families claimed by earlier detectors:
 //!
-//! - [`bbnf_regex::RegexClass::QuotedString`] — claimed by
+//! - [`parse_that_regex::RegexClass::QuotedString`] — claimed by
 //!   [`super::string::detect_string`].
-//! - [`bbnf_regex::RegexClass::Numeric`] — claimed by
+//! - [`parse_that_regex::RegexClass::Numeric`] — claimed by
 //!   [`super::number::detect_number`].
 //!
 //! Every other regex leaf falls to HRegex: `Identifier`,
@@ -42,7 +42,7 @@
 //! [`crate::passes::regex_info::compute_regex_info`] during the IR
 //! construction pass. No new mining.
 
-use bbnf_regex::RegexClass;
+use parse_that_regex::RegexClass;
 
 use crate::passes::inspect::unwrap_map_ow;
 use crate::types::{GrammarIR, IrNode, RuleId};

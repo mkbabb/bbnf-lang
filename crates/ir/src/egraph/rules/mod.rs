@@ -35,7 +35,7 @@ pub use universal::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonSc
 
 use rustc_hash::FxHashMap;
 
-use egraph::{Analysis, Id, RewriteFn};
+use parse_that_egraph::{Analysis, Id, RewriteFn};
 
 use super::interner::SharedStrings;
 use super::node::GrammarENode;
@@ -71,10 +71,14 @@ use crate::{GrammarIR, RuleId, TypeDesc};
 ///   JSON wrap-compound elision).
 /// - [`ConcatLiterals`] — `Seq([.., Literal(a), Literal(b), ..])
 ///   ≡ Seq([.., Literal(ab), ..])` (G4).
+///
+/// The list depends on the backend's regex leaf ([`LeafMatch`]):
+/// [`FuseAltRegexBranches`] is in it only for a leftmost-first leaf.
 pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
     ir: &GrammarIR,
     pool: &SharedStrings,
     _rule_body_ids: FxHashMap<RuleId, Id>,
+    leaf: LeafMatch,
 ) -> Vec<Box<dyn RewriteFn<GrammarENode, A>>> {
     // AY.W2.3 G3 — snapshot the per-rule `TypeDesc` side-table so the
     // rewrite's search path can resolve a `Ref` branch's projection
@@ -84,15 +88,38 @@ pub fn default_rules<A: Analysis<GrammarENode> + 'static>(
         .iter()
         .map(|(rid, ty)| (*rid, ty.clone()))
         .collect();
-    vec![
+    let mut rules: Vec<Box<dyn RewriteFn<GrammarENode, A>>> = vec![
         Box::new(DeduplicateAltBranches),
         Box::new(SupersetAbsorbAlt::new(pool.clone())),
         Box::new(UnionMergeAlt::new(pool.clone())),
-        Box::new(FuseAltRegexBranches::new(pool.clone())),
-        Box::new(CommonSuffixFactor),
+    ];
+    // `Alt(/a/, /ab/)` and `/a|ab/` are the same parse only under a
+    // leftmost-first leaf, which the grammar's ordered choice is. A
+    // leftmost-longest leaf reads the fused `/a|ab/` on "ab" as 2 bytes
+    // where the ordered choice reads 1, so the rule is not in that list.
+    // It returns for the DFA leaf with the leftmost-first priority cut and
+    // its `L_cut` certificate (sk-v27 LW3.RX-1).
+    if leaf == LeafMatch::LeftmostFirst {
+        rules.push(Box::new(FuseAltRegexBranches::new(pool.clone())));
+    }
+    rules.extend([
+        Box::new(CommonSuffixFactor) as Box<dyn RewriteFn<GrammarENode, A>>,
         Box::new(AltOfSingle),
         Box::new(RepeatOfSingle),
         Box::new(WrapOfEpsilonScalar::new(rule_types)),
         Box::new(ConcatLiterals::new(pool.clone())),
-    ]
+    ]);
+    rules
+}
+
+/// How a backend's regex leaf resolves an alternation: it decides which
+/// grammar-tier regex rewrites preserve the parse.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LeafMatch {
+    /// ECMAScript `RegExp` (the TS backend): the first alternative that
+    /// matches wins, as in the grammar's ordered choice.
+    LeftmostFirst,
+    /// parse-that-regex's DFA (the Rust, VM and WASM backends): the longest
+    /// match wins.
+    LeftmostLongest,
 }

@@ -185,16 +185,15 @@ dependencies = [
 
 [[package]]
 name = "bbnf"
-version = "0.2.11"
+version = "0.3.0"
 dependencies = [
+ "bbnf-corpus",
  "bbnf-ir",
  "bbnf-path",
  "bbnf-ser",
- "csp-solver",
  "cssparser 0.34.0",
  "dhat",
  "divan",
- "egraph",
  "fast-float2",
  "iai-callgrind",
  "indexmap",
@@ -202,6 +201,7 @@ dependencies = [
  "lightningcss",
  "mimalloc",
  "nom",
+ "parse-that-egraph",
  "parse_that",
  "pest",
  "pest_grammars",
@@ -215,7 +215,6 @@ dependencies = [
  "serde_json",
  "serde_json_borrow",
  "simd-json",
- "simd-scan",
  "sonic-rs",
  "syn 2.0.117",
  "tempfile",
@@ -228,7 +227,7 @@ dependencies = [
 
 [[package]]
 name = "bbnf-analysis"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -247,14 +246,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "bbnf-corpus"
+version = "0.0.0"
+
+[[package]]
 name = "bbnf-ir"
-version = "0.1.6"
+version = "0.2.0"
 dependencies = [
- "bbnf-regex",
  "cargo_metadata",
  "csp-solver",
- "egraph",
- "egraph-derive",
+ "parse-that-egraph",
+ "parse-that-egraph-derive",
+ "parse-that-regex",
  "parse_that",
  "proc-macro2",
  "rayon",
@@ -265,6 +268,7 @@ dependencies = [
  "serde_json",
  "smallvec",
  "syn 2.0.117",
+ "toml 0.8.23",
 ]
 
 [[package]]
@@ -287,7 +291,7 @@ name = "bbnf-path"
 version = "0.1.0"
 dependencies = [
  "bbnf-ir",
- "bbnf-regex",
+ "parse-that-regex",
  "proc-macro2",
  "quote",
  "serde",
@@ -301,9 +305,9 @@ version = "0.1.0"
 dependencies = [
  "bbnf",
  "bbnf-ir",
- "bbnf-regex",
  "console_error_panic_hook",
  "js-sys",
+ "parse-that-regex",
  "proc-macro2",
  "serde",
  "serde-wasm-bindgen",
@@ -312,23 +316,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "bbnf-regex"
-version = "0.1.0"
-dependencies = [
- "csp-solver",
- "egraph",
- "egraph-derive",
- "proc-macro2",
- "rustc-hash 2.1.2",
- "serde",
- "smallvec",
-]
-
-[[package]]
 name = "bbnf-ser"
 version = "0.1.0"
 dependencies = [
  "itoa",
+ "pprint",
  "ryu",
 ]
 
@@ -603,21 +595,6 @@ dependencies = [
 name = "biome_unicode_table"
 version = "0.5.7"
 source = "git+https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147abe64e9c85908d317a8dd1de343ad132"
-
-[[package]]
-name = "bit-set"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08807e080ed7f9d5433fa9b275196cfc35414f66a0c79d864dc51a0d825231a3"
-dependencies = [
- "bit-vec",
-]
-
-[[package]]
-name = "bit-vec"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e764a1d40d510daf35e07be9eb06e75770908c27d411ee6c92109c9840eaaf7"
 
 [[package]]
 name = "bitflags"
@@ -1066,7 +1043,12 @@ dependencies = [
 
 [[package]]
 name = "csp-solver"
-version = "0.1.0"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bcb2264b535b1394feb9c646beee05d5bc096e1a64514a1bd35602ff9595f7d"
+dependencies = [
+ "include_dir",
+]
 
 [[package]]
 name = "cssparser"
@@ -1270,25 +1252,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d0881ea181b1df73ff77ffaaf9c7544ecc11e82fba9b5f27b262a3c73a332555"
 
 [[package]]
-name = "egraph"
-version = "0.1.0"
-dependencies = [
- "csp-solver",
- "egraph-derive",
- "rustc-hash 2.1.2",
- "smallvec",
-]
-
-[[package]]
-name = "egraph-derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1406,12 +1369,6 @@ dependencies = [
  "ref-cast",
  "serde",
 ]
-
-[[package]]
-name = "fnv"
-version = "1.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "foldhash"
@@ -1596,7 +1553,7 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "gorgeous"
-version = "0.1.10"
+version = "0.2.0"
 dependencies = [
  "bbnf",
  "bbnf-ir",
@@ -1703,6 +1660,25 @@ name = "id-arena"
 version = "2.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3d3067d79b975e8844ca9eb072e16b31c3c1c36928edf9c6789548c524d0d954"
+
+[[package]]
+name = "include_dir"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "923d117408f1e49d914f1a379a309cffe4f18c05cf4e3d12e613a15fc81bd0dd"
+dependencies = [
+ "include_dir_macros",
+]
+
+[[package]]
+name = "include_dir_macros"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cab85a7ed0bd5f0e76d93846e0147172bed2e2d3f859bcc33a8d9699cad1a75"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "indexmap"
@@ -2235,14 +2211,54 @@ dependencies = [
 ]
 
 [[package]]
+name = "parse-that-egraph"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+dependencies = [
+ "csp-solver",
+ "rustc-hash 2.1.2",
+ "smallvec",
+]
+
+[[package]]
+name = "parse-that-egraph-derive"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "parse-that-regex"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+dependencies = [
+ "parse-that-egraph",
+ "parse-that-egraph-derive",
+ "proc-macro2",
+ "rustc-hash 2.1.2",
+ "serde",
+ "smallvec",
+]
+
+[[package]]
+name = "parse-that-simd"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+
+[[package]]
 name = "parse_that"
 version = "0.4.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
 dependencies = [
  "aho-corasick",
- "bbnf-regex",
  "colored",
  "fast-float2",
  "memchr",
+ "parse-that-regex",
+ "parse-that-simd",
  "pprint",
  "smallbox",
  "smallvec",
@@ -2352,7 +2368,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c80231409c20246a13fddb31776fb942c38553c51e871f8cbd687a4cfb5843d"
 dependencies = [
  "phf_shared",
- "rand 0.8.5",
+ "rand",
 ]
 
 [[package]]
@@ -2409,7 +2425,8 @@ dependencies = [
 
 [[package]]
 name = "pprint"
-version = "0.3.6"
+version = "0.4.0"
+source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"
 dependencies = [
  "itoap",
  "pprint_derive",
@@ -2418,20 +2435,12 @@ dependencies = [
 
 [[package]]
 name = "pprint_derive"
-version = "0.2.2"
+version = "0.3.0"
+source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.117",
-]
-
-[[package]]
-name = "ppv-lite86"
-version = "0.2.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85eae3c4ed2f50dcfe72643da4befc30deadb458a9b590d720cde2f2b1e97da9"
-dependencies = [
- "zerocopy",
 ]
 
 [[package]]
@@ -2481,25 +2490,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8fd00f0bb2e90d81d1044c2b32617f68fcb9fa3bb7640c23e9c748e53fb30934"
 dependencies = [
  "unicode-ident",
-]
-
-[[package]]
-name = "proptest"
-version = "1.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b45fcc2344c680f5025fe57779faef368840d0bd1f42f216291f0dc4ace4744"
-dependencies = [
- "bit-set",
- "bit-vec",
- "bitflags",
- "num-traits",
- "rand 0.9.4",
- "rand_chacha",
- "rand_xorshift",
- "regex-syntax",
- "rusty-fork",
- "tempfile",
- "unarray",
 ]
 
 [[package]]
@@ -2629,12 +2619,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "quick-error"
-version = "1.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1d01941d82fa2ab50be1e79e6714289dd7cde78eba4c074bc5a4374f650dfe0"
-
-[[package]]
 name = "quote"
 version = "1.0.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2676,27 +2660,7 @@ version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
- "rand_core 0.6.4",
-]
-
-[[package]]
-name = "rand"
-version = "0.9.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44c5af06bb1b7d3216d91932aed5265164bf384dc89cd6ba05cf59a35f5f76ea"
-dependencies = [
- "rand_chacha",
- "rand_core 0.9.5",
-]
-
-[[package]]
-name = "rand_chacha"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb"
-dependencies = [
- "ppv-lite86",
- "rand_core 0.9.5",
+ "rand_core",
 ]
 
 [[package]]
@@ -2704,24 +2668,6 @@ name = "rand_core"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
-
-[[package]]
-name = "rand_core"
-version = "0.9.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "76afc826de14238e6e8c374ddcc1fa19e374fd8dd986b0d2af0d02377261d83c"
-dependencies = [
- "getrandom 0.3.4",
-]
-
-[[package]]
-name = "rand_xorshift"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "513962919efc330f829edb2535844d1b912b0fbe2ca165d613e4e8788bb05a5a"
-dependencies = [
- "rand_core 0.9.5",
-]
 
 [[package]]
 name = "rayon"
@@ -2995,18 +2941,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b39cdef0fa800fc44525c84ccb54a029961a8215f9619753635a9c0d2538d46d"
 
 [[package]]
-name = "rusty-fork"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc6bf79ff24e648f6da1f8d1f011e9cac26491b619e6b9280f2b47f1774e6ee2"
-dependencies = [
- "fnv",
- "quick-error",
- "tempfile",
- "wait-timeout",
-]
-
-[[package]]
 name = "ryu"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3229,17 +3163,6 @@ dependencies = [
  "serde_json",
  "simdutf8",
  "value-trait",
-]
-
-[[package]]
-name = "simd-scan"
-version = "0.1.0"
-dependencies = [
- "divan",
- "proc-macro2",
- "proptest",
- "quote",
- "syn 2.0.117",
 ]
 
 [[package]]
@@ -3782,12 +3705,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2896d95c02a80c6d6a5d6e953d479f5ddf2dfdb6a244441010e373ac0fb88971"
 
 [[package]]
-name = "unarray"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
-
-[[package]]
 name = "unicode-bom"
 version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3874,15 +3791,6 @@ name = "void"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
-
-[[package]]
-name = "wait-timeout"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "09ac3b126d3914f9849036f826e054cbabdc8519970b8998ddaf3b5bd3c65f11"
-dependencies = [
- "libc",
-]
 
 [[package]]
 name = "wasi"
@@ -4590,6 +4498,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bbnf",
+ "bbnf-corpus",
  "bbnf-ir",
  "cargo_metadata",
  "clap",
@@ -4600,6 +4509,7 @@ dependencies = [
  "quote",
  "serde",
  "serde_json",
+ "sha2",
  "syn 2.0.117",
  "tempfile",
  "toml 0.8.23",

@@ -37,21 +37,6 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// Emit the function-level generic parameter list fragment that
-/// introduces `__P`. The where-clause binds it to `PathSchema<'_>`
-/// with an anonymous lifetime so the cursor's schema lifetime stays
-/// decoupled from the input-bytes lifetime `'p`.
-///
-/// Example expansion:
-/// ```ignore
-/// pub fn parse_object_JsonParser_object<'p, __P>(...)
-/// where
-///     __P: for<'__c> crate::path::schema::PathSchema<'__c>,
-/// ```
-pub fn cursor_generic_clause() -> TokenStream {
-    quote! { __P }
-}
-
 /// Emit the where-clause fragment binding `__P` to `PathSchema` for
 /// any lifetime. The `for<'__c>` HRTB lets the cursor's internal
 /// schema lifetime be inferred independently of the input-bytes
@@ -67,9 +52,4 @@ pub fn cursor_where_clause() -> TokenStream {
 /// not propagate it through the function's return type.
 pub fn cursor_param() -> TokenStream {
     quote! { cursor: &mut crate::path::cursor::PathCursor<'_, __P> }
-}
-
-/// Emit the bare cursor argument used at every cross-shape call site.
-pub fn cursor_arg() -> TokenStream {
-    quote! { cursor }
 }

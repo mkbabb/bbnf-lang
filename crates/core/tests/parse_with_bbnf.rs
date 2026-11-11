@@ -3,7 +3,7 @@
 //! [`parse_with_json`](super::parse_with_json) for the row layout.
 
 use bbnf::grammar::generated::bbnf::BbnfBootstrap;
-use bbnf::path::ir::{OwnedPathSegment, TypedPath};
+use bbnf::path::ir::TypedPath;
 use bbnf::path::markers::Bbnf;
 use bbnf::runtime::bbnf::parse_with;
 use bbnf::runtime::bbnf::value::BbnfValue;

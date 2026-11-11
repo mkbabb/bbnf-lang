@@ -1,0 +1,19 @@
+# sk-v27 LW2.CON-2 (S11 BENCH): the fresh-process driver of PREREG §10 (F-CURE-PERF3).
+# build.sh writes Cargo.toml from this template once per arm, pointing parse_that at a
+# detached parse-that worktree of that arm's commit. Nothing else differs between arms.
+[package]
+name = "perf3-driver"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+parse_that = { path = "@PT@/rust/parse_that" }
+
+[profile.release]
+# parse-that's [profile.bench] at both arm commits: inherits release, lto fat, cgu 1, opt 3.
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
+[workspace]

@@ -1,0 +1,16 @@
+registered trial cells: 14 (want 14)
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.001s
+
+OK
+test_prereg rc=0
+cbb0: refused: cell C-EG-MUTANT is not registered in bench/PREREG.md (14 registered)
+mutant (unregistered cell) read 1: rc=2 refusals-so-far=1
+cbb0: refused: cell C-EG-MUTANT is not registered in bench/PREREG.md (14 registered)
+mutant (unregistered cell) read 2: rc=2 refusals-so-far=2
+cbb0: refused: cell C-EG-PARSE-TWITTER-P is registered for PORTABLE, not NATIVE
+registered cell on the wrong matrix: rc=2 refused=yes
+records written by refused runs: 0 (want 0)
+PREREG.md sha256: 2ba03aae95de017959ebfdbc816b3a987f8d283afadfab05c3f33af99fc20777
+VERDICT: GREEN

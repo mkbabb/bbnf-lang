@@ -1,0 +1,20 @@
+## U4 (c) skip-unescape mutant vs JSON.parse, P4/VAL, at 193489c8a
+REFUSED
+  - plane-inequivalent on P4/esc-bad.json: ACCEPT vs REJECT
+  - plane-inequivalent on P4/esc-basic.json: output digest ff2273e084c9 vs ab2d17dea539
+  - plane-inequivalent on P4/esc-key.json: output digest c4770e650689 vs 1880d1cdc808
+  - plane-inequivalent on P4/esc-lone-high.json: ACCEPT vs REJECT
+  - plane-inequivalent on P4/esc-lone-low.json: ACCEPT vs REJECT
+  - plane-inequivalent on P4/esc-short-hex.json: ACCEPT vs REJECT
+  - plane-inequivalent on P4/esc-unicode.json: output digest 76c8cbf34be5 vs 67d87560c90b
+rc=1
+## control: oracle vs JSON.parse
+ADMITTED
+rc=0
+## U4 (d) C-MM-BUILD default vs --jitless
+REFUSED
+  - build-plane mismatch: runtime_flags 'none' vs '--jitless'
+rc=1
+## control: equal build planes
+ADMITTED
+rc=0

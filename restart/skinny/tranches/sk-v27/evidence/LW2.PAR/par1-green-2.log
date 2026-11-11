@@ -1,0 +1,40 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+
+ RUN  v3.2.4 /Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/typescript
+
+ ✓ test/conformance.test.ts (128 tests) 1077ms
+ ✓ test/types.test.ts (3 tests) 1072ms
+   ✓ the generated module's types > value.js's grammar (160 rules; map, span and text actions): module + .d.ts pass tsc --strict  601ms
+   ✓ the generated module's types > a groups action is typed GroupsAction: the module passes tsc --strict and a wrong kind is rejected  322ms
+ ✓ test/bulk.test.ts (4 tests) 153ms
+ ✓ test/parity.test.ts (3 tests) 576ms
+   ✓ TS <-> Rust front-end parity (LW2.PAR-1) > disagrees exactly on the carried Rust-side rows  564ms
+ ✓ test/bbnf.test.ts (17 tests) 157ms
+ ✓ test/css-stylesheet.test.ts (11 tests) 43ms
+ ✓ test/reentry.test.ts (7 tests) 48ms
+ ✓ test/value-js-modules.test.ts (2 tests) 38ms
+ ✓ test/unroll.test.ts (3 tests) 34ms
+ ✓ test/gen.test.ts (3 tests) 24ms
+ ✓ test/first.test.ts (13 tests) 39ms
+ ✓ test/depth.test.ts (4 tests) 24ms
+ ✓ test/stock-ascii.test.ts (2 tests) 19ms
+ ✓ test/recover.test.ts (9 tests) 15ms
+ ✓ test/imports.test.ts (13 tests) 13ms
+ ✓ test/groups.test.ts (4 tests) 11ms
+ ✓ test/modules.test.ts (5 tests) 10ms
+ ✓ test/instrument.test.ts (3 tests) 12ms
+ ✓ test/dialect.test.ts (8 tests) 11ms
+ ✓ test/analysis.test.ts (22 tests) 5ms
+ ✓ test/first-sets.test.ts (17 tests) 5ms
+stdout | test/size.test.ts > emitted size (bbnf-lang#2) > the value.js fixture module is within its pinned gzip size
+size: {"raw":112516,"gzip":23638}
+
+ ✓ test/size.test.ts (3 tests) 7ms
+ ✓ test/google-sheets.test.ts (16 tests) 5ms
+ ✓ test/optimize.test.ts (13 tests) 4ms
+
+ Test Files  24 passed (24)
+      Tests  313 passed (313)
+   Start at  20:40:30
+   Duration  5.49s (transform 853ms, setup 0ms, collect 1.72s, tests 3.40s, environment 3ms, prepare 1.04s)
+

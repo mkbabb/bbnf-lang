@@ -1,0 +1,273 @@
+diff --git a/skinny/crates/ir/src/lib.rs b/skinny/crates/ir/src/lib.rs
+index a604b0044..7078aee3d 100644
+--- a/skinny/crates/ir/src/lib.rs
++++ b/skinny/crates/ir/src/lib.rs
+@@ -327,6 +327,128 @@ pub fn nullability(grammar: &GrammarIr) -> Vec<bool> {
+     }
+ }
+ 
++/// Binding-time (stage) of an IR expression node — STEP 1 of the STAGED-RESIDUAL
++/// (family 3D) probe: the monotone dual of `nullability`, annotating every expr
++/// with the earliest stage at which its value is bound.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
++pub enum Stage {
++    /// S0 — comptime. Value fully determined by the grammar alone (a delimiter
++    /// literal, a regex pattern, an annotation). Residualizable at generation time.
++    Comptime,
++    /// S1 — runtime. Reads the input cursor (a rule invocation or a scan loop);
++    /// cannot be evaluated at generation time.
++    Runtime,
++}
++
++impl Stage {
++    /// The lattice join: S1 dominates. Comptime only when BOTH sides are Comptime.
++    #[inline]
++    pub fn join(self, other: Stage) -> Stage {
++        match (self, other) {
++            (Stage::Comptime, Stage::Comptime) => Stage::Comptime,
++            _ => Stage::Runtime,
++        }
++    }
++}
++
++/// A binding-time leak: a node hard-pinned to S0 (a grammar-constant leaf) that
++/// the fixpoint found to depend on the S1 cursor. Raised, never silently demoted
++/// to S1 (no-silent-epsilon) — a comptime island that structurally consumes the
++/// runtime cursor is an authoring error, not a stage to swallow.
++#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++pub struct StageLeak {
++    pub expr: ExprId,
++}
++
++/// Binding-time analysis — the same monotone `Changed`-flag fixpoint as
++/// `nullability`. Seeds the grammar-constant leaves (`Literal` / `Regex` /
++/// `Annotation`) at S0 (Comptime) and the cursor-binding spine (`Ref` invocation,
++/// `Repeat` scan) at S1 (Runtime); every combinator joins its operands. Monotone
++/// toward Runtime (S0 -> S1 only, never back).
++pub fn binding_times(grammar: &GrammarIr) -> Vec<Stage> {
++    let mut stage = vec![Stage::Comptime; grammar.exprs.len()];
++    loop {
++        let mut changed = false;
++        for expr in &grammar.exprs {
++            let next = match &expr.kind {
++                // S0 leaves: pure grammar constants (the delimiter island lives here).
++                ExprKind::Literal { .. }
++                | ExprKind::Regex { .. }
++                | ExprKind::Annotation { .. } => Stage::Comptime,
++                // S1 spine: the cursor-binding constructs.
++                ExprKind::Ref { .. } => Stage::Runtime,
++                ExprKind::Repeat { body, .. } => Stage::Runtime.join(stage[body.0]),
++                // Combinators: join operand stages (Comptime iff every operand is).
++                ExprKind::Seq(children) => children
++                    .iter()
++                    .fold(Stage::Comptime, |acc, c| acc.join(stage[c.0])),
++                ExprKind::Alt { branches, .. } => branches
++                    .iter()
++                    .fold(Stage::Comptime, |acc, b| acc.join(stage[b.0])),
++                ExprKind::Optional(inner) => stage[inner.0],
++            };
++            // Monotone: a node only ever rises toward Runtime.
++            let raised = stage[expr.id.0].join(next);
++            if raised != stage[expr.id.0] {
++                stage[expr.id.0] = raised;
++                changed = true;
++            }
++        }
++        if !changed {
++            return stage;
++        }
++    }
++}
++
++/// The child operands of an expression (for island / leak traversal).
++fn expr_operands(kind: &ExprKind) -> Vec<ExprId> {
++    match kind {
++        ExprKind::Seq(children) => children.clone(),
++        ExprKind::Alt { branches, .. } => branches.clone(),
++        ExprKind::Repeat { body, .. } => vec![*body],
++        ExprKind::Optional(inner) => vec![*inner],
++        ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. } | ExprKind::Annotation { .. } => {
++            Vec::new()
++        }
++    }
++}
++
++/// The residual S0 islands: each is the root of a maximal comptime subtree
++/// spliced directly into the S1 spine (a Comptime operand of a Runtime node).
++/// These are exactly the delimiter/STOP-set constants a split emitter would lift
++/// out of the runtime scan loop. The count is the residual-count artifact.
++pub fn residual_islands(grammar: &GrammarIr, stage: &[Stage]) -> Vec<ExprId> {
++    let mut islands = std::collections::BTreeSet::new();
++    for expr in &grammar.exprs {
++        if stage[expr.id.0] == Stage::Runtime {
++            for child in expr_operands(&expr.kind) {
++                if stage[child.0] == Stage::Comptime {
++                    islands.insert(child.0);
++                }
++            }
++        }
++    }
++    islands.into_iter().map(ExprId).collect()
++}
++
++/// The binding-time leaks (no-silent-epsilon guard): a grammar-constant leaf
++/// (`Literal` / `Regex` / `Annotation`) the fixpoint raised to Runtime. Empty on
++/// a well-staged grammar — the S0 leaves are childless constants, so a clean
++/// delimiter island never leaks.
++pub fn stage_leaks(grammar: &GrammarIr, stage: &[Stage]) -> Vec<StageLeak> {
++    grammar
++        .exprs
++        .iter()
++        .filter(|expr| {
++            matches!(
++                expr.kind,
++                ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Annotation { .. }
++            ) && stage[expr.id.0] == Stage::Runtime
++        })
++        .map(|expr| StageLeak { expr: expr.id })
++        .collect()
++}
++
+ #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+ pub struct BackendIr {
+     pub grammar_name: String,
+diff --git a/skinny/crates/ir/tests/binding_times.rs b/skinny/crates/ir/tests/binding_times.rs
+new file mode 100644
+index 000000000..ce558bcf2
+--- /dev/null
++++ b/skinny/crates/ir/tests/binding_times.rs
+@@ -0,0 +1,134 @@
++//! STEP 1 of the STAGED-RESIDUAL (family 3D) probe — the binding-time analysis
++//! that would drive a split (S0/S1) CSS leaf emitter.
++//!
++//! These tests exercise `binding_times` on a synthetic GrammarIr that MIRRORS the
++//! CSS component-delimiter scan: four STOP-set islands (`;{}`, `{};`, `;}`,
++//! `:{};`) each an `Alt` of single-byte `Literal`s, spliced into a `Repeat` scan
++//! spine. The synthetic mirror is necessary: in this tree the CSS recognizer is a
++//! raw-string template (`CSS_GENERATED_RS`), so the real CSS delimiter literals
++//! never become GrammarIr nodes for `binding_times` to see. The tests therefore
++//! prove the BTA machinery classifies a delimiter island as S0 and the scan as
++//! S1 — the precondition the corollary needs — while the report records that the
++//! actual CSS emit path bypasses the IR entirely.
++
++use ir::{binding_times, residual_islands, stage_leaks, AltMode, CaseSensitivity, ExprKind,
++    GrammarIr, SourceSpan, Stage};
++
++/// Build an `Alt` of single-byte literals — one CSS STOP set.
++fn stop_set(grammar: &mut GrammarIr, bytes: &[u8]) -> ir::ExprId {
++    let branches = bytes
++        .iter()
++        .map(|b| {
++            grammar.add_expr(
++                ExprKind::Literal {
++                    bytes: vec![*b],
++                    case: CaseSensitivity::Sensitive,
++                },
++                SourceSpan::new(0, 1),
++            )
++        })
++        .collect();
++    grammar.add_expr(
++        ExprKind::Alt {
++            branches,
++            mode: AltMode::Dispatch,
++        },
++        SourceSpan::new(0, bytes.len()),
++    )
++}
++
++/// A GrammarIr mirroring the CSS component scan: 4 STOP islands under a Repeat.
++fn css_delimiter_shaped_grammar() -> (GrammarIr, Vec<ir::ExprId>, ir::ExprId) {
++    let mut grammar = GrammarIr::new("css_mirror", "hash");
++    // The four grammar-derived STOP sets (PROVE-12's 5 call sites collapse to 4
++    // distinct sets: `;{}` == `{};` as SETS, plus `;}` and `:{};`).
++    let at_rule = stop_set(&mut grammar, b";{}");
++    let qualified = stop_set(&mut grammar, b"{};");
++    let declaration = stop_set(&mut grammar, b";}");
++    let colon_before = stop_set(&mut grammar, b":{};");
++    let islands = vec![at_rule, qualified, declaration, colon_before];
++
++    // Each STOP set is its OWN scan call site (as PROVE-12's 5 `find_component_delim`
++    // sites are): wrap each island in its own `Repeat` scan spine, then Seq the
++    // four scans into the entry rule. Every Repeat is S1; its Alt body is an S0
++    // island spliced directly into it.
++    let scans: Vec<ir::ExprId> = islands
++        .iter()
++        .map(|island| {
++            grammar.add_expr(
++                ExprKind::Repeat {
++                    body: *island,
++                    min: 0,
++                    max: None,
++                },
++                SourceSpan::new(0, 20),
++            )
++        })
++        .collect();
++    let spine = grammar.add_expr(ExprKind::Seq(scans.clone()), SourceSpan::new(0, 24));
++    grammar.add_rule("stylesheet", spine, SourceSpan::new(0, 28));
++    (grammar, islands, spine)
++}
++
++#[test]
++fn stop_islands_are_comptime_scan_is_runtime() {
++    let (grammar, islands, scan) = css_delimiter_shaped_grammar();
++    let stage = binding_times(&grammar);
++
++    // Every delimiter STOP-set Alt (and every single-byte literal inside it) is S0.
++    for island in &islands {
++        assert_eq!(stage[island.0], Stage::Comptime, "STOP island must be S0");
++        for child in match &grammar.expr(*island).kind {
++            ExprKind::Alt { branches, .. } => branches.clone(),
++            _ => unreachable!(),
++        } {
++            assert_eq!(stage[child.0], Stage::Comptime, "delimiter literal must be S0");
++        }
++    }
++    // The Repeat scan spine is S1 (reads the input cursor).
++    assert_eq!(stage[scan.0], Stage::Runtime, "scan loop must be S1");
++}
++
++#[test]
++fn residual_island_count_matches_the_four_stop_sets() {
++    let (grammar, _islands, _scan) = css_delimiter_shaped_grammar();
++    let stage = binding_times(&grammar);
++    let residuals = residual_islands(&grammar, &stage);
++    // Exactly the 4 STOP-set Alts are lifted: each is a Comptime operand of the
++    // Runtime Seq/Repeat spine. This is the residual-count artifact = 4.
++    assert_eq!(residuals.len(), 4, "expected 4 residualized S0 delimiter islands");
++}
++
++#[test]
++fn clean_delimiter_grammar_has_no_stage_leaks() {
++    // The delimiter island is a clean S0 island: the grammar-constant leaves are
++    // childless, so the no-silent-epsilon leak guard never fires.
++    let (grammar, _islands, _scan) = css_delimiter_shaped_grammar();
++    let stage = binding_times(&grammar);
++    assert!(stage_leaks(&grammar, &stage).is_empty(), "clean delimiter grammar must not leak");
++}
++
++#[test]
++fn a_literal_fed_a_ref_is_a_seq_not_a_leak() {
++    // A Seq combining an S0 literal with an S1 Ref joins to S1 (the combinator
++    // rises), while the literal itself stays a clean S0 leaf — no leak. This is
++    // the monotone-join direction: S0 -> S1 only, never demoting the literal.
++    let mut grammar = GrammarIr::new("mixed", "hash");
++    let lit = grammar.add_expr(
++        ExprKind::Literal { bytes: b";".to_vec(), case: CaseSensitivity::Sensitive },
++        SourceSpan::new(0, 1),
++    );
++    let reference = grammar.add_expr(
++        ExprKind::Ref { name: "other".into(), target: None },
++        SourceSpan::new(0, 5),
++    );
++    let seq = grammar.add_expr(ExprKind::Seq(vec![lit, reference]), SourceSpan::new(0, 6));
++    grammar.add_rule("r", seq, SourceSpan::new(0, 8));
++    let stage = binding_times(&grammar);
++    assert_eq!(stage[lit.0], Stage::Comptime);
++    assert_eq!(stage[reference.0], Stage::Runtime);
++    assert_eq!(stage[seq.0], Stage::Runtime);
++    assert!(stage_leaks(&grammar, &stage).is_empty());
++    // The S0 literal is a residual island spliced into the S1 seq.
++    assert_eq!(residual_islands(&grammar, &stage), vec![lit]);
++}

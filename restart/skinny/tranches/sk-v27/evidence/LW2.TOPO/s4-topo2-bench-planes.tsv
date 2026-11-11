@@ -1,0 +1,19 @@
+# LW2.TOPO-2 (competition U1b): the build plane of every bench arm after S4. Bench profiles are unchanged by TOPO-2.
+# plane = toolchain | rustc wrapper | rustflags | parse_that scan plane. "pin" = rust-toolchain.toml stable 1.99.1 (all three repos).
+# The scan plane is parse_that's: "lanes-scalar" (default, stable) or "lanes-portable-simd" (feature parse_that/nightly, nightly toolchain only).
+# Before TOPO-2 every arm ran on nightly-2026-04-11 with the portable-SIMD kernels always on; a record taken on either plane names it.
+repo	arm	command	profile	toolchain	wrapper	rustflags(aarch64-darwin | x86_64-linux)	parse_that scan plane
+bbnf-lang	bench-all	cargo bench-all	ay-final	pin	none committed (CI: sccache)	none | -C link-arg=-fuse-ld=lld	lanes-scalar
+bbnf-lang	bench-json	cargo bench-json	ay-final	pin	none committed	none | lld	lanes-scalar
+bbnf-lang	bench-css	cargo bench-css	ay-final	pin	none committed	none | lld	lanes-scalar
+bbnf-lang	bench-bbnf	cargo bench-bbnf	ay-final	pin	none committed	none | lld	lanes-scalar
+bbnf-lang	bench-sheets	cargo bench-sheets	ay-final	pin	none committed	none | lld	lanes-scalar
+bbnf-lang	bench-compile	cargo bench-compile	ay-final	pin	none committed	none | lld	lanes-scalar
+bbnf-lang	bench-iai (CI)	cargo bench -p bbnf --bench json_callgrind --features callgrind --profile bench-ci	bench-ci	pin	sccache (CI env)	lld (ubuntu)	lanes-scalar
+bbnf-lang	bench-iter-*	cargo bench-iter-{all,json,css,bbnf,sheets,compile}	bench-iter	pin	none committed	none | lld	lanes-scalar
+bbnf-lang	prep-bench / final-bench	cargo prep-bench / cargo final-bench	profiling-prep / bench	pin	none committed	none | lld	lanes-scalar
+bbnf-lang	any arm, nightly plane	cargo +nightly <bench alias> --features parse_that/nightly	as the alias	nightly (opt-in)	none committed	none | lld	lanes-portable-simd
+parse-that	parse_that benches (13 [[bench]], incl. competitors)	cargo bench -p parse_that --bench <name>	bench (fat LTO, cgu=1)	pin	none committed	none | lld	lanes-scalar
+parse-that	regex benches (4), regex-bootstrap regex_parse	cargo bench -p parse-that-regex / -p regex-bootstrap	bench	pin	none committed	none | lld	n/a (no scan kernels) / lanes-scalar
+parse-that	any parse_that arm, nightly plane	cargo +nightly bench -p parse_that --features nightly --bench <name>	bench	nightly (opt-in)	none committed	none | lld	lanes-portable-simd
+pprint	pprint, digit_count	cargo bench --bench <name>	bench (default)	pin	none committed	none | lld	n/a

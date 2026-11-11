@@ -1,0 +1,31 @@
+# release — publish @mkbabb/latex-paper to npm on a v*.*.* tag (G.W5 Sub-wave C).
+#
+# Re-runs the release gate (build → test) before npm publish. build emits
+# the dist/ that the published artifact ships (tsup + vue-tsc dts).
+#
+# Publish auth: NPM_TOKEN repository secret. Runs only on tag refs.
+name: release
+
+on:
+    push:
+        tags:
+            - "v*.*.*"
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  registry-url: "https://registry.npmjs.org"
+            - run: npm ci
+            - name: build (tsup + vue-tsc type gate)
+              run: npm run build
+            - name: test
+              run: npm run test
+            - name: publish
+              run: npm publish --access public
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,4 @@
+head 08b3a4f
+RED: ABI-v2.md has no Freeze status section
+RED: rust/ABI-v2.sha256 absent
+rc=1

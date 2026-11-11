@@ -1,0 +1,8 @@
+== repair mutant read 1: a resolvable SHA (af15f63e0) listed as a refused mutant
+RED
+  65/65 cited commits resolve (1 non-commit object ids, 9 CI run ids, 1 upstream pins verified; 3 of 4 listed mutant tokens re-refused)
+  af15f63e0: listed as a refused mutant but resolves (commit)
+== repair mutant read 2: a resolvable SHA (af15f63e0) listed as a refused mutant
+RED
+  65/65 cited commits resolve (1 non-commit object ids, 9 CI run ids, 1 upstream pins verified; 3 of 4 listed mutant tokens re-refused)
+  af15f63e0: listed as a refused mutant but resolves (commit)

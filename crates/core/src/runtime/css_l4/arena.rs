@@ -64,6 +64,10 @@ pub struct CssArena<'p> {
     selectors: Vec<Vec<Selector<'p>>>,
     values: Vec<Vec<CssTypedValue<'p>>>,
     keyframes: Vec<Vec<KeyframeBlock<'p>>>,
+    #[expect(
+        clippy::vec_box,
+        reason = "boxed for address stability of handed-out &'p refs"
+    )]
     colors: Vec<Box<CssColor<'p>>>,
 }
 impl<'p> CssArena<'p> {

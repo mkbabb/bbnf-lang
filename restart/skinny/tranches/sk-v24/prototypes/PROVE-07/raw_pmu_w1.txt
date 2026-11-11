@@ -1,0 +1,29 @@
+# PARITY corpus=twitter direct==serde==sonic typed-struct OK
+# PARITY corpus=canada direct==serde==sonic typed-struct OK
+# PARITY corpus=citm_catalog direct==serde==sonic typed-struct OK
+# SK-V22 JSON PMU cycles/byte  iters=800  loadavg={ 18.12 15.33 11.97 }
+# schema: PMU corpus lane bytes iters cycles instructions cyc_per_byte cpi mbps
+PMU corpus=twitter lane=parse_only bytes=631515 iters=800 cycles=733117356 instructions=3153602997 cyc_per_byte=1.4511 cpi=0.2325 mbps=15091.382
+PMU corpus=twitter lane=parse_tape bytes=631515 iters=800 cycles=915049150 instructions=5037130177 cyc_per_byte=1.8112 cpi=0.1817 mbps=11896.090
+PMU corpus=twitter lane=fused bytes=631515 iters=800 cycles=1233164122 instructions=6257474551 cyc_per_byte=2.4409 cpi=0.1971 mbps=8418.942
+PMU corpus=twitter lane=sonic bytes=631515 iters=800 cycles=2274142479 instructions=11223012420 cyc_per_byte=4.5014 cpi=0.2026 mbps=2921.630
+PMU corpus=twitter lane=serde bytes=631515 iters=800 cycles=3151452003 instructions=13676761204 cyc_per_byte=6.2379 cpi=0.2304 mbps=1876.244
+PMU corpus=twitter lane=direct_struct bytes=631515 iters=800 cycles=1027599866 instructions=5114849168 cyc_per_byte=2.0340 cpi=0.2009 mbps=11062.602
+PMU corpus=twitter lane=serde_typed bytes=631515 iters=800 cycles=1250147865 instructions=4837038439 cyc_per_byte=2.4745 cpi=0.2585 mbps=10805.011
+PMU corpus=twitter lane=sonic_typed bytes=631515 iters=800 cycles=1241167544 instructions=4029825470 cyc_per_byte=2.4567 cpi=0.3080 mbps=11387.604
+PMU corpus=canada lane=parse_only bytes=2251051 iters=800 cycles=3972476461 instructions=25891523868 cyc_per_byte=2.2059 cpi=0.1534 mbps=12381.357
+PMU corpus=canada lane=parse_tape bytes=2251051 iters=800 cycles=4361140633 instructions=29360562888 cyc_per_byte=2.4217 cpi=0.1485 mbps=11705.578
+PMU corpus=canada lane=fused bytes=2251051 iters=800 cycles=7542496260 instructions=49753981780 cyc_per_byte=4.1883 cpi=0.1516 mbps=6589.342
+PMU corpus=canada lane=sonic bytes=2251051 iters=800 cycles=6128177686 instructions=35443871291 cyc_per_byte=3.4030 cpi=0.1729 mbps=7763.892
+PMU corpus=canada lane=serde bytes=2251051 iters=800 cycles=9763546480 instructions=50710590051 cyc_per_byte=5.4217 cpi=0.1925 mbps=4616.500
+PMU corpus=canada lane=direct_struct bytes=2251051 iters=800 cycles=15712519455 instructions=75900588310 cyc_per_byte=8.7251 cpi=0.2070 mbps=2860.628
+PMU corpus=canada lane=serde_typed bytes=2251051 iters=800 cycles=19259756681 instructions=100644260997 cyc_per_byte=10.6949 cpi=0.1914 mbps=2812.301
+PMU corpus=canada lane=sonic_typed bytes=2251051 iters=800 cycles=23237651567 instructions=134150767625 cyc_per_byte=12.9038 cpi=0.1732 mbps=2377.895
+PMU corpus=citm_catalog lane=parse_only bytes=1727204 iters=800 cycles=1382660743 instructions=7705517090 cyc_per_byte=1.0006 cpi=0.1794 mbps=30351.568
+PMU corpus=citm_catalog lane=parse_tape bytes=1727204 iters=800 cycles=1532563969 instructions=10191627304 cyc_per_byte=1.1091 cpi=0.1504 mbps=27681.079
+PMU corpus=citm_catalog lane=fused bytes=1727204 iters=800 cycles=1713694410 instructions=13663219572 cyc_per_byte=1.2402 cpi=0.1254 mbps=25028.095
+PMU corpus=citm_catalog lane=sonic bytes=1727204 iters=800 cycles=3298240294 instructions=23643300067 cyc_per_byte=2.3870 cpi=0.1395 mbps=12790.334
+PMU corpus=citm_catalog lane=serde bytes=1727204 iters=800 cycles=4811535894 instructions=32414724992 cyc_per_byte=3.4822 cpi=0.1484 mbps=9129.929
+PMU corpus=citm_catalog lane=direct_struct bytes=1727204 iters=800 cycles=1368292794 instructions=9432360791 cyc_per_byte=0.9903 cpi=0.1451 mbps=31669.318
+PMU corpus=citm_catalog lane=serde_typed bytes=1727204 iters=800 cycles=2709018031 instructions=16308578151 cyc_per_byte=1.9606 cpi=0.1661 mbps=15568.036
+PMU corpus=citm_catalog lane=sonic_typed bytes=1727204 iters=800 cycles=2298009129 instructions=9439952636 cyc_per_byte=1.6631 cpi=0.2434 mbps=18475.279

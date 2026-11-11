@@ -3,7 +3,7 @@
 //! This directory module consolidates the pure type definitions consumed by
 //! every backend (Rust codegen, bytecode VM, TS interpreter, prettify) and by
 //! every analysis pass under `crate::passes`. None of these types depend on a
-//! pass implementation — only on each other and on `bbnf_regex` for the
+//! pass implementation — only on each other and on `parse_that_regex` for the
 //! `CharSet128` substrate.
 //!
 //! Sub-module map:

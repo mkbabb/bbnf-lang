@@ -28,11 +28,11 @@ pub use registry::{
     SubstrateBinding,
 };
 
-// Re-export from bbnf-regex (canonical source of CharSet128, regex_first, classify)
-pub use bbnf_regex::sets::charset::CharSet128;
+// Re-export from parse-that-regex (canonical source of CharSet128, regex_first, classify)
+pub use parse_that_regex::sets::charset::CharSet128;
 pub mod regex_first {
-    //! FIRST set extraction — delegates to bbnf_regex.
-    pub use bbnf_regex::first::regex_first_chars;
+    //! FIRST set extraction — delegates to parse_that_regex.
+    pub use parse_that_regex::first::regex_first_chars;
 }
 
 pub use vm::bytecode;

@@ -1,0 +1,127 @@
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 435d51472..b3aaf69ee 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -33,6 +33,9 @@ pub fn compile(grammar: &GrammarIr) -> Result<PipelineOutput, PassError> {
+     let normalized = normalize(grammar)?;
+     let entry_rule = derive_entry_rule(&normalized)?;
+     let type_facts = layout::types::infer(&normalized)?;
++    // Per-pass contract on the single (collapsed) IR, run immediately after the
++    // L0->L1 (infer) pass: every projection node must carry a populated type_ref.
++    verify(&normalized, &type_facts)?;
+     let mut layout_facts = layout::run(&normalized, type_facts, entry_rule);
+     let materialization = extract::derive_materialization_plan(&normalized);
+     let shape_facts = shapes::derive_shape_facts(&normalized, &materialization);
+@@ -67,6 +70,46 @@ pub fn compile(grammar: &GrammarIr) -> Result<PipelineOutput, PassError> {
+     })
+ }
+ 
++/// Per-pass contract on the single (collapsed) IR — the 3B substitute for a
++/// distinct typed level.
++///
++/// A "projection" node is an `ExprKind::Annotation` that declares a target type
++/// (`value = Some(_)`, i.e. a `->` in the grammar). Its type must survive the
++/// L0->L1 (`layout::types::infer`) pass as a populated `type_ref` in the
++/// `node_types` attribute table — never dropped to `Unit`.
++///
++/// In a typed-level tower (family 3A) this invariant is structural: the second
++/// IR could not be constructed without the type, so a drop is a compile error.
++/// Here there is one IR plus a runtime attribute table (`TypeFacts::node_types`);
++/// a dropped type is *not* a compile error (the table is a `HashMap`, build stays
++/// green), so this per-pass assertion is what localizes the defect — naming the
++/// exact edge (infer) at which the type_ref was lost.
++pub fn verify(grammar: &GrammarIr, type_facts: &layout::types::TypeFacts) -> Result<(), PassError> {
++    for expr in &grammar.exprs {
++        if let ExprKind::Annotation {
++            name,
++            value: Some(declared),
++        } = &expr.kind
++        {
++            let node_ty = type_facts.node_types.get(&expr.id);
++            let populated =
++                matches!(node_ty, Some(ty) if !matches!(ty, Type::Builtin(BuiltinTy::Unit)));
++            if !populated {
++                return Err(PassError::Type(format!(
++                    "L0->L1 (infer) contract violation: projection node #{} (annotation \
++                     `{name} -> {declared}`) reached codegen with a dropped type_ref \
++                     (node_type = {node_ty:?}); the declared type was discarded by \
++                     `layout::types::infer` at the `ExprKind::Annotation` arm. A distinct \
++                     typed level would have made this a compile error; the single-IR per-pass \
++                     contract localizes it to the infer edge instead.",
++                    expr.id.0,
++                )));
++            }
++        }
++    }
++    Ok(())
++}
++
+ fn derive_entry_rule(grammar: &GrammarIr) -> Result<ir::RuleId, PassError> {
+     if let Some(rule) = grammar
+         .rules
+--- NEW FILE crates/passes/tests/verify_contract.rs ---
+diff --git a/crates/passes/tests/verify_contract.rs b/crates/passes/tests/verify_contract.rs
+new file mode 100644
+index 000000000..8f4e7000a
+--- /dev/null
++++ b/crates/passes/tests/verify_contract.rs
+@@ -0,0 +1,59 @@
++//! LOCK-3 pass-1 probe (b): a per-pass contract on the single (collapsed) IR
++//! localizes a dropped type_ref to the L0->L1 (infer) edge — with no distinct
++//! typed level, and while `cargo build` stays green.
++
++use ir::{ExprKind, GrammarIr, SourceSpan};
++use passes::{layout, verify, BuiltinTy, Type};
++
++/// L0 (grammar): a single rule `value` whose body is a `->` projection node
++/// (an annotation declaring the target type `Number`).
++fn projection_grammar() -> GrammarIr {
++    let mut grammar = GrammarIr::new("proj", "test");
++    let ann = grammar.add_expr(
++        ExprKind::Annotation {
++            name: "type".into(),
++            value: Some("Number".into()),
++        },
++        SourceSpan::new(0, 8),
++    );
++    grammar.add_rule("value", ann, SourceSpan::new(0, 8));
++    grammar
++}
++
++#[test]
++fn head_infer_drops_projection_type_ref() {
++    let grammar = projection_grammar();
++    // L0->L1: run the real inference pass unmodified.
++    let facts = layout::types::infer(&grammar).expect("infer");
++    let node_ty = facts.node_types.get(&grammar.exprs[0].id).cloned();
++    // HEAD collapses `ExprKind::Annotation` to `Unit`, discarding `-> Number`.
++    assert_eq!(
++        node_ty,
++        Some(Type::Builtin(BuiltinTy::Unit)),
++        "HEAD infer drops the declared type_ref to Unit"
++    );
++}
++
++#[test]
++fn verify_turns_red_and_names_the_infer_edge() {
++    let grammar = projection_grammar();
++    let facts = layout::types::infer(&grammar).expect("infer");
++    // The single-IR per-pass contract catches the drop that the type table hid.
++    let err = verify(&grammar, &facts).expect_err("verify must turn RED on the dropped type_ref");
++    let msg = err.to_string();
++    assert!(msg.contains("infer"), "violation names the infer edge: {msg}");
++    assert!(msg.contains("L0->L1"), "violation names the L0->L1 edge: {msg}");
++    assert!(msg.contains("type_ref"), "violation names the dropped type_ref: {msg}");
++}
++
++#[test]
++fn verify_is_green_when_type_ref_is_populated() {
++    // Same projection, but with the type_ref preserved (the localized fix at the
++    // infer edge): the same one IR + attribute table now satisfies the contract.
++    let grammar = projection_grammar();
++    let mut facts = layout::types::infer(&grammar).expect("infer");
++    facts
++        .node_types
++        .insert(grammar.exprs[0].id, Type::Builtin(BuiltinTy::Span));
++    verify(&grammar, &facts).expect("verify is GREEN once the type_ref survives infer");
++}

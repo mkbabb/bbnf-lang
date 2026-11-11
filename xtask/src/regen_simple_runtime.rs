@@ -470,122 +470,121 @@ fn emit_typed_formula_arena(
         )
     };
     runtime_template(
-        &format!(
-            r#"
+        &r#"
 use bbnf_ir::registry::StructLayout;
 
 use __MODULE__::value::__P__Value;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum __P__CompoundKind {{
+pub enum __P__CompoundKind {
 __VARIANTS__
-}}
+}
 
-impl __P__CompoundKind {{
+impl __P__CompoundKind {
     #[inline]
-    pub fn is_transparent_wrap(self) -> bool {{
+    pub fn is_transparent_wrap(self) -> bool {
         __TRANSPARENT__
-    }}
+    }
 
     #[inline]
-    pub fn from_layout(layout: &StructLayout) -> Self {{
-        match layout.rule_id {{
+    pub fn from_layout(layout: &StructLayout) -> Self {
+        match layout.rule_id {
 __ARMS__
             _ => Self::__DEFAULT__,
-        }}
-    }}
-}}
+        }
+    }
+}
 
 #[derive(Debug, Clone)]
-pub struct __P__Compound<'p> {{
+pub struct __P__Compound<'p> {
     pub kind: __P__CompoundKind,
     pub children: Vec<__P__Value<'p>>,
-}}
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct __P__CompoundId(u32);
 
-impl __P__CompoundId {{
+impl __P__CompoundId {
     pub const EMPTY: Self = Self(0);
 
     #[inline]
-    pub const fn is_empty(self) -> bool {{
+    pub const fn is_empty(self) -> bool {
         self.0 == 0
-    }}
+    }
 
     #[inline]
-    fn slab_index(self) -> Option<usize> {{
-        if self.0 == 0 {{
+    fn slab_index(self) -> Option<usize> {
+        if self.0 == 0 {
             None
-        }} else {{
+        } else {
             Some((self.0 - 1) as usize)
-        }}
-    }}
-}}
+        }
+    }
+}
 
 #[derive(Debug, Default)]
-pub struct __P__Arena<'p> {{
+pub struct __P__Arena<'p> {
     compounds: Vec<__P__Compound<'p>>,
-}}
+}
 
-impl<'p> __P__Arena<'p> {{
+impl<'p> __P__Arena<'p> {
     #[inline]
-    pub fn new() -> Self {{
+    pub fn new() -> Self {
         Self::default()
-    }}
+    }
 
     #[inline]
-    pub fn with_capacity(compounds: usize) -> Self {{
-        Self {{
+    pub fn with_capacity(compounds: usize) -> Self {
+        Self {
             compounds: Vec::with_capacity(compounds),
-        }}
-    }}
+        }
+    }
 
     #[inline]
     pub fn push_compound(
         &mut self,
         kind: __P__CompoundKind,
         children: Vec<__P__Value<'p>>,
-    ) -> __P__CompoundId {{
-        self.compounds.push(__P__Compound {{ kind, children }});
+    ) -> __P__CompoundId {
+        self.compounds.push(__P__Compound { kind, children });
         __P__CompoundId(self.compounds.len() as u32)
-    }}
+    }
 
     #[inline]
-    pub fn compound(&self, id: __P__CompoundId) -> __P__CompoundView<'_, 'p> {{
-        match id.slab_index() {{
-            None => __P__CompoundView {{
+    pub fn compound(&self, id: __P__CompoundId) -> __P__CompoundView<'_, 'p> {
+        match id.slab_index() {
+            None => __P__CompoundView {
                 kind: __P__CompoundKind::Wrap,
                 children: &[],
-            }},
-            Some(i) => {{
+            },
+            Some(i) => {
                 let entry = &self.compounds[i];
-                __P__CompoundView {{
+                __P__CompoundView {
                     kind: entry.kind,
                     children: entry.children.as_slice(),
-                }}
-            }}
-        }}
-    }}
+                }
+            }
+        }
+    }
 
     #[inline]
-    pub fn compound_count(&self) -> usize {{
+    pub fn compound_count(&self) -> usize {
         self.compounds.len()
-    }}
+    }
 
     #[inline]
-    pub fn truncate(&mut self, compounds: usize) {{
+    pub fn truncate(&mut self, compounds: usize) {
         self.compounds.truncate(compounds);
-    }}
-}}
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
-pub struct __P__CompoundView<'a, 'p: 'a> {{
+pub struct __P__CompoundView<'a, 'p: 'a> {
     pub kind: __P__CompoundKind,
     pub children: &'a [__P__Value<'p>],
-}}
-"#,
-        )
+}
+"#
+        .to_string()
         .replace("__VARIANTS__", &variants)
         .replace("__ARMS__", &arms)
         .replace("__DEFAULT__", &projection.kind.default)
@@ -950,7 +949,7 @@ impl __P__PathQuery for &str {
             | __P__Value::CellRef(s)
             | __P__Value::Identifier(s)
             | __P__Value::SheetPrefix { text: s, .. } => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
@@ -1878,11 +1877,11 @@ impl<'p> __P__StructBuilder<'p> {{
             return;
         }}
         if let Some(OpenFrame::Object {{ pending_key, .. }}) = self.stack.last_mut() {{
-            if pending_key.is_none() {{
-                if let __P__Value::String(s) = value {{
-                    *pending_key = Some(s);
-                    return;
-                }}
+            if pending_key.is_none()
+                && let __P__Value::String(s) = value
+            {{
+                *pending_key = Some(s);
+                return;
             }}
             debug_assert!(
                 pending_key.is_some(),
@@ -2291,7 +2290,7 @@ impl __P__PathQuery for &str {
         let value = walk_path(doc, path)?;
         match value {
             __P__Value::String(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
@@ -2873,21 +2872,16 @@ fn emit_typed_bbnf_value(projection: &RuntimeProjection) -> String {
         r#"
 use __MODULE__::arena::__P__CompoundId;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum __P__Value<'p> {
     Int(i64),
     Float(f64),
     Bool(bool),
     Span(&'p str),
     Tag(u8),
+    #[default]
     Unit,
     Compound(__P__CompoundId),
-}
-
-impl<'p> Default for __P__Value<'p> {
-    fn default() -> Self {
-        __P__Value::Unit
-    }
 }
 "#,
         projection,
@@ -3086,7 +3080,18 @@ impl<'a, 'p: 'a> __P__View<'a, 'p> {
                     Some((a, b)) => (a.min(lo), b.max(hi)),
                 });
             }
-            __P__Value::Compound(_) => {
+            __P__Value::Compound(id) => {
+                // A compound that recorded its own bounds spans them even
+                // when no child carries a span (e.g. a literal-only branch
+                // such as `epsilon`), as `byte_span` reads them.
+                if let Some((lo, hi)) = self.doc.compound(id).bounds {
+                    let (lo, hi) = (lo as usize, hi as usize);
+                    *acc = Some(match *acc {
+                        None => (lo, hi),
+                        Some((a, b)) => (a.min(lo), b.max(hi)),
+                    });
+                    return;
+                }
                 for child in self.children_iter() {
                     child.fold_span_range(input_start, input_end, acc);
                 }
@@ -3175,7 +3180,7 @@ impl __P__PathQuery for &str {
     fn query<'p>(doc: &__P__Document<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             __P__Value::Span(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,
@@ -4136,7 +4141,7 @@ impl {p}PathQuery for &str {{
     fn query<'p>(doc: &{p}Document<'p>, path: Path<'_>) -> Option<Self> {{
         match walk_path(doc, path)? {{
             {p}Value::Span(s) => {{
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe {{ core::mem::transmute::<&'p str, &str>(extended) }})
             }}
             _ => None,
@@ -4256,17 +4261,12 @@ fn emit_value(projection: &RuntimeProjection) -> String {
         r#"
 use {module}::arena::{p}CompoundId;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum {p}Value<'p> {{
     Span(&'p str),
+    #[default]
     Unit,
     Compound({p}CompoundId),
-}}
-
-impl<'p> Default for {p}Value<'p> {{
-    fn default() -> Self {{
-        Self::Unit
-    }}
 }}
 "#
     )

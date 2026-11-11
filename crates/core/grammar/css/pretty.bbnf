@@ -1,0 +1,68 @@
+// CSS Stylesheet Grammar — Prettifier edition
+// Models CSS nesting (CSS Nesting Module Level 1) to create structural AST.
+// Treats selectors and values as opaque spans for formatting.
+//
+// Uses explicit `ws` (comment-aware whitespace) instead of `?w` (which only
+// trims \s) so inline comments like `/* 1 */` are consumed correctly.
+
+// Comments + whitespace — single regex hits sp_css_ws_comment() SIMD fast path.
+// Uses DFA-compatible comment body: [^*]* matches non-star chars, then (\*+[^/][^*]*)*
+// handles star sequences that aren't followed by /, and \*+/ matches the closing.
+// This avoids non-greedy .*? which DFA engines compile as greedy .* .
+@ws /(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*/ ;
+ws = /(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*/ ;
+
+// Opaque tokens — @token forces fusion-style inlining + span eligibility.
+// Variant preserved (unlike @inline), so @pretty can still reference them.
+@token selectorSpan ;
+@token valueSpan ;
+@token propertyName ;
+selectorSpan = /[^{};]+/ ;
+valueSpan    = /[^;{}!,]+/ ;
+
+// Declarations
+propertyName = /[a-zA-Z_][\w-]*/ | /--[\w-]+/ | /-[a-zA-Z][\w-]*/ ;
+important    = "!" , ws , "important" ;
+optSemicolon = ";" ? ;
+declaration  = propertyName , ws , ":" , ws , (valueSpan , ("," , ws , valueSpan) *) ? ,
+               important ? , optSemicolon << ws ;
+
+@recover declaration /[^;{}]+;/ ;
+
+// Block contents: declarations and nested rules (CSS Nesting Level 1)
+// This creates the structural cycle: blockContent → ruleItem → ... → ruleBlock → blockContent
+blockContent = (ws >> (declaration | ruleItem)) * ;
+ruleBlock    = "{" >> (ws >> blockContent << ws) << "}" ;
+
+// Qualified rules
+qualifiedRule = selectorSpan , ws , ruleBlock ;
+
+@recover qualifiedRule /[^}]+}/ ;
+
+// At-rules
+mediaRule      = "@media" , /[^{]+/ , ruleBlock ;
+supportsRule   = "@supports" , /[^{]+/ , ruleBlock ;
+fontFaceRule   = "@font-face" , ws , ruleBlock ;
+importRule     = "@import" , valueSpan , ("," , ws , valueSpan) * , ";" ;
+atRuleBody     = ruleBlock | ";" ;
+genericAtRule  = /@[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+
+atRule = mediaRule | supportsRule | fontFaceRule | importRule | genericAtRule ;
+
+@recover atRule /[^;{}]+[;]|[^}]+}/ ;
+
+// Rule item
+ruleItem = qualifiedRule | atRule ;
+
+// Rule list (top-level)
+ruleList   = (ws >> ruleItem) * ;
+
+// Entry point
+stylesheet = ws >> ruleList << ws ;
+
+@pretty stylesheet block ;
+@pretty ruleList block ;
+@pretty blockContent block indent ;
+@pretty qualifiedRule group indent ;
+@pretty declaration group ;
+@pretty atRule group indent ;

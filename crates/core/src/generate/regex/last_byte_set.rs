@@ -23,7 +23,7 @@
 //! Patterns with regex literal suffixes (e.g. CSS L4's
 //! `(\\.|[^\"\\\\])*"` ends on `"`) and selector regex chains have
 //! computable LAST sets via the existing
-//! [`bbnf_regex::RegexInfo::literal_suffix`] field.
+//! [`parse_that_regex::RegexInfo::literal_suffix`] field.
 
 use parse_that::regex::RegexInfo;
 use parse_that::regex::sets::charset::CharSet128;
@@ -106,7 +106,7 @@ pub fn emit_last_byte_set_table(
 }
 
 /// Helper extension on `CharSet128` exposing the internal bit pair
-/// for emission. The bbnf-regex crate stores the set as two u64s
+/// for emission. The parse-that-regex crate stores the set as two u64s
 /// (lo: bytes 0..64, hi: bytes 64..128); we expose them here to
 /// avoid round-tripping through the public iterator.
 trait CharSet128Bits {

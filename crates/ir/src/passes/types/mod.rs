@@ -23,6 +23,7 @@ use std::collections::HashMap;
 use rustc_hash::FxHashMap;
 
 use crate::dag::{GrammarDag, NodeId};
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{AltBranch, GrammarIR, IrNode, RuleId, SubVariant, TypeDesc, TypeDescInterner};
 
 use constraint::SeqChildKind;
@@ -52,19 +53,19 @@ pub fn project_types(ir: &mut GrammarIR) {
     // The durable DAG substrate is built exactly once per compile
     // in `pipeline::compile` before any facts/strategy phase runs.
     // Unit tests that exercise this pass in isolation must call
-    // `bbnf_ir::dag::ensure_dag(&mut ir)` beforehand. Asserting
+    // build `ir.dag` beforehand (the tests' `ensure_dag` fixture). Asserting
     // here keeps the invariant honest instead of papering over
     // it with a defensive fallback.
     assert!(
         ir.dag.is_some(),
-        "project_types requires ir.dag — call bbnf_ir::dag::ensure_dag in tests",
+        "project_types requires ir.dag — use the ensure_dag test fixture",
     );
 
     // Phase 1: Generate constraint system from the IR structure.
     let mut system = generate_constraints(ir);
 
     // Phase 2: Solve via monotonic fixed-point propagation.
-    let _ = system.csp.propagate();
+    propagate_to_fixed_point(&mut system.csp, "type projection");
 
     // Phase 2b: Cycle-break any rule variables still unsolved after
     // propagation. `RefConstraint` suspends propagation while the
@@ -124,7 +125,7 @@ pub fn project_types(ir: &mut GrammarIR) {
                     );
                 }
             }
-            let _ = system.csp.propagate();
+            propagate_to_fixed_point(&mut system.csp, "type projection");
         }
     }
 
@@ -353,12 +354,12 @@ pub fn project_types(ir: &mut GrammarIR) {
     ) {
         match node {
             IrNode::Repeat { inner, hi, .. } if *hi > 1 => {
-                if let Some(nid) = dag.node_for(inner.as_ref()) {
-                    if let Some(ty) = map.vec_elem_type(nid) {
-                        if *ty != TypeDesc::Span && !out.contains(ty) {
-                            out.push(ty.clone());
-                        }
-                    }
+                if let Some(nid) = dag.node_for(inner.as_ref())
+                    && let Some(ty) = map.vec_elem_type(nid)
+                    && *ty != TypeDesc::Span
+                    && !out.contains(ty)
+                {
+                    out.push(ty.clone());
                 }
                 collect_repeat_scratch(inner, map, dag, out);
             }
@@ -418,7 +419,7 @@ pub fn project_types(ir: &mut GrammarIR) {
             _ => {}
         }
     }
-    for (_, td) in &types_map {
+    for td in types_map.values() {
         collect_scratch_from_td(td, &mut scratch);
     }
     type_map.set_scratch_types(scratch);
@@ -507,14 +508,14 @@ fn collect_alt_join_obligations(
 ) {
     match node {
         IrNode::Alt(branches, _) => {
-            if let Some(node_id) = dag.node_for(node) {
-                if let Some(TypeDesc::HeterogeneousAltJoin(types)) = type_map.node_type(node_id) {
-                    out.push(TypeObligation::HeterogeneousAltJoin {
-                        rule: Some(rule_id),
-                        node: Some(node_id),
-                        branches: types.clone(),
-                    });
-                }
+            if let Some(node_id) = dag.node_for(node)
+                && let Some(TypeDesc::HeterogeneousAltJoin(types)) = type_map.node_type(node_id)
+            {
+                out.push(TypeObligation::HeterogeneousAltJoin {
+                    rule: Some(rule_id),
+                    node: Some(node_id),
+                    branches: types.clone(),
+                });
             }
             for AltBranch { node: child, .. } in branches {
                 collect_alt_join_obligations(rule_id, child, type_map, dag, out);
@@ -714,21 +715,15 @@ fn compute_structural_types_for_node(
     match node {
         IrNode::Repeat { inner, lo, hi } => {
             // Collapse 1: Optional(Span) → Span.
-            if *lo == 0 && *hi == 1 {
-                if let (Some(node_nid), Some(inner_nid)) =
+            if *lo == 0
+                && *hi == 1
+                && let (Some(node_nid), Some(inner_nid)) =
                     (dag.node_for(node), dag.node_for(inner.as_ref()))
-                {
-                    if let Some(collapsed) = type_map.node_type(node_nid).cloned() {
-                        if collapsed == TypeDesc::Span {
-                            if let Some(inner_ty) = type_map.node_type(inner_nid).cloned() {
-                                type_map.insert_structural_type(
-                                    node_nid,
-                                    TypeDesc::Option(Box::new(inner_ty)),
-                                );
-                            }
-                        }
-                    }
-                }
+                && let Some(collapsed) = type_map.node_type(node_nid).cloned()
+                && collapsed == TypeDesc::Span
+                && let Some(inner_ty) = type_map.node_type(inner_nid).cloned()
+            {
+                type_map.insert_structural_type(node_nid, TypeDesc::Option(Box::new(inner_ty)));
             }
             compute_structural_types_for_node(inner, type_map, dag);
         }
@@ -738,19 +733,18 @@ fn compute_structural_types_for_node(
             // seq_result_type is the COLLAPSED type; the structural
             // type is the un-compressed, un-flattened Tuple of all
             // child types.
-            if let Some(seq_nid) = dag.node_for(node) {
-                if let Some(result_type) = type_map.seq_result_type(seq_nid).cloned() {
-                    if let Some(child_types) = type_map.seq_child_types(seq_nid) {
-                        let child_types = child_types.to_vec();
-                        let structural_result = match child_types.len() {
-                            0 => TypeDesc::Tuple(vec![]),
-                            1 => child_types.into_iter().next().unwrap(),
-                            _ => TypeDesc::Tuple(child_types),
-                        };
-                        if structural_result != result_type {
-                            type_map.insert_structural_type(seq_nid, structural_result);
-                        }
-                    }
+            if let Some(seq_nid) = dag.node_for(node)
+                && let Some(result_type) = type_map.seq_result_type(seq_nid).cloned()
+                && let Some(child_types) = type_map.seq_child_types(seq_nid)
+            {
+                let child_types = child_types.to_vec();
+                let structural_result = match child_types.len() {
+                    0 => TypeDesc::Tuple(vec![]),
+                    1 => child_types.into_iter().next().unwrap(),
+                    _ => TypeDesc::Tuple(child_types),
+                };
+                if structural_result != result_type {
+                    type_map.insert_structural_type(seq_nid, structural_result);
                 }
             }
             for child in children {

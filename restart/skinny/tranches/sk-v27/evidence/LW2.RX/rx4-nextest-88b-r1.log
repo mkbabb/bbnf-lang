@@ -1,0 +1,6 @@
+     Summary [  70.891s] 1519 tests run: 1517 passed (1 slow), 2 failed, 23 skipped
+    Starting 1519 tests across 155 binaries (23 tests skipped)
+  TRY 1 FAIL [   0.186s] (─────────) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+  TRY 1 FAIL [   6.913s] (─────────) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+  TRY 2 FAIL [   0.262s] ( 969/1519) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+  TRY 2 FAIL [   4.657s] (1518/1519) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates

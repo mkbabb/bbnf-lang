@@ -1,14 +1,15 @@
-//! `path!` rejects an `Index` step targeted at a non-list field.
+//! `path!` rejects an `Index` step targeted at a non-list layout.
 //!
-//! AZ-IV.W5 T4 — fixture migrated from the synthetic Twitter-shape
-//! fixture to the production registry. The CSS L4 `stylesheet` root's
-//! `ruleList` field projects to `BoxedEnum`; indexing into a
-//! BoxedEnum is invalid because BoxedEnum is not a list.
+//! AZ-IV.W5 T4 — fixture on the production registry. LW2.TOPO-6b:
+//! a `RuleReference` field now descends into the referenced rule's
+//! layout (CSS L4's `stylesheet.ruleList` is that list, so indexing it
+//! is valid). The JSON root `json = ws >> value << ws` is a struct with
+//! one field, not a list, so indexing it is invalid.
 
-use bbnf::path::{CssL4, TypedPath};
+use bbnf::path::{Json, TypedPath};
 use bbnf_path::path;
 
 fn main() {
-    // `stylesheet.ruleList` is a BoxedEnum scalar, not a list.
-    let _: TypedPath<CssL4, ()> = path!(CssL4, "ruleList", 0);
+    // The `json` root struct is not a list.
+    let _: TypedPath<Json, ()> = path!(Json, 0);
 }

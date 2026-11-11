@@ -1,0 +1,5 @@
+rx4 green-r1 @ e36244d57: tests rc=0; rust pass list fusion lines=0; ts pass list fusion lines=1; ts emissions hashed=9 -> GREEN
+test rust_ir_keeps_the_branches_apart ... ok
+test ts_emit_keeps_fusion ... ok
+test vm_alt_a_ab_consumes_one_byte ... ok
+rc=0

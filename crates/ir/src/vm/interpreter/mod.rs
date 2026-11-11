@@ -18,7 +18,7 @@
 //! `mod.rs` owns the `Interpreter` struct, the private stack-frame types,
 //! the `new` constructor, the main `run` dispatch loop, the per-iteration
 //! helpers (`collect_values_from`, `track_furthest`,
-//! `emit_furthest_diagnostic`), and the public `parse_with_ir` convenience.
+//! `emit_furthest_diagnostic`).
 
 mod construct;
 mod control;
@@ -356,7 +356,7 @@ impl<'prog> Interpreter<'prog> {
     }
 }
 
-impl<'prog> fmt::Debug for ParseResult {
+impl fmt::Debug for ParseResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ParseResult")
             .field("value", &self.value)
@@ -365,13 +365,4 @@ impl<'prog> fmt::Debug for ParseResult {
             .field("diagnostics", &self.diagnostics)
             .finish()
     }
-}
-
-// ── Public API ──────────────────────────────────────────────────────────────
-
-/// Convenience function: compile IR and parse input.
-pub fn parse_with_ir(ir: &crate::GrammarIR, input: &str) -> ParseResult {
-    let program = super::compiler::compile(ir);
-    let mut interp = Interpreter::new(&program, input);
-    interp.run()
 }

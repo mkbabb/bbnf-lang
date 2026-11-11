@@ -116,10 +116,9 @@ pub fn emit_generalized_regex_direct(pattern: &str, opts: &EmitOpts) -> Option<T
 pub(crate) fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
     let (shorthand, is_plus) = if let Some(s) = pattern.strip_suffix('+') {
         (s, true)
-    } else if let Some(s) = pattern.strip_suffix('*') {
-        (s, false)
     } else {
-        return None;
+        let s = pattern.strip_suffix('*')?;
+        (s, false)
     };
 
     // Tranche X phase 1: kernel routing short-circuit for the

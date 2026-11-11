@@ -6,7 +6,9 @@
 //! production registry by discipline. T4 swaps the source-of-truth: the
 //! macro now reads the per-grammar [`StructRegistry`] projected by the
 //! IR's `project_types` pass, serialised to JSON by `cargo xtask regen`
-//! at `crates/core/src/grammar/generated/<ident>.registry.json`.
+//! at `crates/core/src/grammar/generated/<ident>.registry.json`, and
+//! copied by the same regen into this crate at
+//! `registry/<ident>.registry.json` (sk-v27 LW2.TOPO-4c).
 //!
 //! ## Why a JSON sidecar
 //!
@@ -16,8 +18,9 @@
 //! reads through directly. A proc-macro cannot use that path: the
 //! `bbnf` core crate depends on `bbnf-path` (for the `path!` symbol),
 //! so a `bbnf-path → bbnf` import is a dependency cycle. The sidecar
-//! JSON breaks the cycle: the proc-macro reads bytes from disk via
-//! `std::fs`, deserialises through `serde_json` against
+//! JSON breaks the cycle: the proc-macro embeds the in-crate copy with
+//! `include_str!`, so the bytes ship inside the published package and
+//! a changed copy rebuilds the macro, deserialises through `serde_json` against
 //! `bbnf-ir`'s `StructRegistry` (which already derives serde), and
 //! caches per-marker via `OnceLock` to avoid re-parsing on every macro
 //! invocation.
@@ -44,10 +47,12 @@
 //!
 //! Adding a new marker (post-W5) is a pure additive change: register
 //! the marker ZST under `crates/core/src/path/markers.rs`, add the
-//! marker → grammar-ident mapping to [`marker_to_grammar_ident`], and
-//! the macro routes to the new sidecar.
+//! marker → grammar-ident mapping to [`marker_to_grammar_ident`], embed
+//! its copy in [`sidecar_for_ident`], and list the ident under
+//! `[package.metadata.bbnf-path] grammars` in this crate's `Cargo.toml`
+//! (the list `cargo xtask regen` copies and `regen --check` holds as a
+//! set).
 
-use std::path::PathBuf;
 use std::sync::OnceLock;
 
 use bbnf_ir::registry::StructRegistry;
@@ -155,20 +160,18 @@ fn load_registry_for_ident(
         return Ok(cached);
     }
 
-    let path = sidecar_path_for_ident(ident);
-    let bytes = std::fs::read(&path).map_err(|err| {
+    let bytes = sidecar_for_ident(ident).ok_or_else(|| {
         format!(
-            "failed to read registry sidecar for marker `{marker}` (grammar `{ident}`) at \
-             `{}`: {err} — regenerate via `cargo xtask regen --grammar {ident}`",
-            path.display(),
+            "internal: marker `{marker}` resolved to grammar ident `{ident}` but no registry \
+             sidecar is embedded (extend `sidecar_for_ident`)",
         )
     })?;
 
-    let parsed: Sidecar = serde_json::from_slice(&bytes).map_err(|err| {
+    let parsed: Sidecar = serde_json::from_str(bytes).map_err(|err| {
         format!(
-            "failed to parse registry sidecar `{}` for marker `{marker}`: {err} — \
-             the sidecar is likely stale; regenerate via `cargo xtask regen --grammar {ident}`",
-            path.display(),
+            "failed to parse registry sidecar `registry/{ident}.registry.json` for marker \
+             `{marker}`: {err} — the sidecar is likely stale; regenerate via \
+             `cargo xtask regen --grammar {ident}`",
         )
     })?;
 
@@ -182,20 +185,22 @@ fn load_registry_for_ident(
     Ok(slot.get_or_init(|| resolved))
 }
 
-/// Resolve the absolute path to `<ident>.registry.json`.
-///
-/// Anchored on `bbnf-path`'s own `CARGO_MANIFEST_DIR` (the proc-macro
-/// crate) and offset to `crates/core/src/grammar/generated/`. This is
-/// stable across worktrees + checkouts because `bbnf-path` is a sibling
-/// of `bbnf-core` under `crates/`; the relative offset is a workspace
-/// invariant the regen pipeline maintains.
-fn sidecar_path_for_ident(ident: &str) -> PathBuf {
-    let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    PathBuf::from(manifest_dir)
-        .join("..")
-        .join("core")
-        .join("src")
-        .join("grammar")
-        .join("generated")
-        .join(format!("{ident}.registry.json"))
+/// The embedded `<ident>.registry.json` sidecar: the in-crate copy at
+/// `registry/<ident>.registry.json`, which `cargo xtask regen` writes
+/// from `crates/core/src/grammar/generated/` and `regen --check` keeps
+/// equal to it. Embedded rather than read at expansion time, so the
+/// macro needs no file outside its own package (sk-v27 LW2.TOPO-4c).
+fn sidecar_for_ident(ident: &str) -> Option<&'static str> {
+    macro_rules! sidecar {
+        ($name:literal) => {
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/registry/", $name, ".registry.json"))
+        };
+    }
+    match ident {
+        "json" => Some(sidecar!("json")),
+        "css_l4" => Some(sidecar!("css_l4")),
+        "google_sheets" => Some(sidecar!("google_sheets")),
+        "bbnf" => Some(sidecar!("bbnf")),
+        _ => None,
+    }
 }

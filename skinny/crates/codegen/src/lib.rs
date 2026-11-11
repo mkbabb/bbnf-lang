@@ -1,4 +1,6 @@
+pub mod css_scan_direct;
 pub mod direct_schema;
+pub(crate) mod general_descent;
 mod grammar_profile;
 pub mod grammar_provider;
 mod json_sink_direct;
@@ -15,9 +17,8 @@ use std::path::Path;
 use thiserror::Error;
 
 pub use grammar_provider::{
-    emit_runtime_from_request, RuntimeEmitterKind, RuntimeFrontendRequirements,
-    RuntimeGenerationRequest, RuntimeGrammarSource, RuntimeOutputLabels, RuntimeProfileContract,
-    RuntimeWorkspaceMetadata,
+    emit_runtime_from_request, RuntimeFrontendRequirements, RuntimeGenerationRequest,
+    RuntimeGrammarSource, RuntimeOutputLabels, RuntimeProfileContract, RuntimeWorkspaceMetadata,
 };
 
 #[derive(Debug, Error)]
@@ -34,13 +35,6 @@ pub enum CodegenError {
     UnexpectedFile(String),
     #[error("lowering failed: {0}")]
     Lowering(String),
-    #[error("{code}: {path}@{offset} source_hash={source_hash}")]
-    UnsupportedRuntimeConstruct {
-        code: &'static str,
-        path: String,
-        offset: usize,
-        source_hash: String,
-    },
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -151,14 +145,34 @@ pub fn emit_typed_from_source(
     )
 }
 
-fn emit_with_layout(
+/// Lower a lowerable grammar source to its [`lower::sink_only::SinkOnlyProgram`]
+/// — the `SinkOnly` lowered artifact the runtime un-fork renders. Same
+/// parse → compile → `lower_to_rust` pipeline `emit_from_source` rides; the
+/// artifact dispatch in `runtime_generator` consumes the produced program.
+pub(crate) fn lower_sink_only_from_source(
+    grammar_name: &str,
+    source: &str,
+) -> Result<lower::sink_only::SinkOnlyProgram, CodegenError> {
+    let grammar = grammar::parse_grammar(grammar_name, source)?;
+    let output = passes::compile(&grammar)?;
+    lower_sink_only_with_layout(
+        &output.backend_ir,
+        &output.layout_facts.backend_shape,
+        &output.layout_facts.cost_facts,
+        &output.layout_facts.per_grammar_policy,
+        &output.layout_facts.same_substrate_union,
+        &output.diagnostics,
+    )
+}
+
+fn lower_sink_only_with_layout(
     backend: &BackendIr,
     backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
     cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
     per_grammar_policy: &std::collections::HashMap<RuleId, PerGrammarPolicyFacts>,
     same_substrate_union: &std::collections::HashMap<RuleId, SameSubstrateUnionFacts>,
     diagnostics: &[passes::diagnostics::PassDiagnostic],
-) -> Result<EmittedSource, CodegenError> {
+) -> Result<lower::sink_only::SinkOnlyProgram, CodegenError> {
     let lowered = lower::lower_to_rust(
         backend,
         &lower::LowerCtx {
@@ -170,12 +184,30 @@ fn emit_with_layout(
         },
     )
     .map_err(CodegenError::Lowering)?;
-    let sink_only = lowered.sink_only_program.as_ref().ok_or_else(|| {
+    lowered.sink_only_program.ok_or_else(|| {
         CodegenError::Lowering(
             "BackendIr did not contain DirectBuild sink-only program".to_string(),
         )
-    })?;
-    runtime_generator::emit_compiled(&backend.grammar_name, sink_only)
+    })
+}
+
+fn emit_with_layout(
+    backend: &BackendIr,
+    backend_shape: &std::collections::HashMap<RuleId, BackendShape>,
+    cost_facts: &std::collections::HashMap<RuleId, CostFacts>,
+    per_grammar_policy: &std::collections::HashMap<RuleId, PerGrammarPolicyFacts>,
+    same_substrate_union: &std::collections::HashMap<RuleId, SameSubstrateUnionFacts>,
+    diagnostics: &[passes::diagnostics::PassDiagnostic],
+) -> Result<EmittedSource, CodegenError> {
+    let sink_only = lower_sink_only_with_layout(
+        backend,
+        backend_shape,
+        cost_facts,
+        per_grammar_policy,
+        same_substrate_union,
+        diagnostics,
+    )?;
+    runtime_generator::emit_sink_only(&backend.grammar_name, &sink_only)
 }
 
 fn emit_typed_with_layout(
@@ -279,7 +311,6 @@ mod tests {
 
     fn compiled_contract() -> RuntimeProfileContract {
         RuntimeProfileContract {
-            emitter: RuntimeEmitterKind::CompiledLowering,
             expected_files: grammar_profile::COMPILED_RUNTIME_FILES,
             frontend_requirements: RuntimeFrontendRequirements::none(),
             output_labels: None,
@@ -288,7 +319,6 @@ mod tests {
 
     fn request_facts_contract(profile_id: &str) -> RuntimeProfileContract {
         RuntimeProfileContract {
-            emitter: RuntimeEmitterKind::RequestFacts,
             expected_files: grammar_profile::REQUEST_FACTS_RUNTIME_FILES,
             frontend_requirements: RuntimeFrontendRequirements::full_request_facts(),
             output_labels: Some(request_facts_labels(profile_id)),
@@ -301,15 +331,10 @@ mod tests {
     // derived from the grammar/`BackendRule` shape — one entry per generated
     // companion), and the request-facts identity labels are derived
     // STRUCTURALLY from that id, not read from a per-rule literal table.
-    const CSS_PROFILE_IDS: &[&str] = &[
-        "css_l4_declaration_values",
-        "css_l4_declaration_values_extended",
-        "css_l4_stylesheet_selectors",
-        "css_l4_visual_functions",
-        "css_l4_at_rules_and_media",
-        "css_l4_vendor_and_custom_atrules",
-        "css_l4_nested_layout",
-    ];
+    // SK-V18 P3: the 7 byte-identical css_l4 companions COLLAPSED to the ONE
+    // canonical `css_l4_declaration_values` (the `track1_rich` path) — aligned
+    // with the single `RuntimeTarget` row in `xtask/src/regen_css.rs`.
+    const CSS_PROFILE_IDS: &[&str] = &["css_l4_declaration_values"];
 
     fn request_facts_labels(profile_id: &str) -> RuntimeOutputLabels {
         assert!(
@@ -318,13 +343,9 @@ mod tests {
         );
         // ROW_ID is the only label `config.rs` still consumes (the fact-stream
         // schema/output-plane labels retired with the emitter). It is derived
-        // from the profile id by stripping the `css_l4_` prefix; the one spelling
-        // exception (`stylesheet_selectors` -> `stylesheet_and_selectors`) names
-        // the grammar companion exactly, matching `xtask/src/regen_css.rs`.
-        let slug = match profile_id {
-            "css_l4_stylesheet_selectors" => "stylesheet_and_selectors",
-            other => other.strip_prefix("css_l4_").unwrap_or(other),
-        };
+        // from the profile id by stripping the `css_l4_` prefix (the lone
+        // canonical companion `css_l4_declaration_values` post-P3-collapse).
+        let slug = profile_id.strip_prefix("css_l4_").unwrap_or(profile_id);
         // Leak is test-only.
         let row_id: &'static str =
             Box::leak(format!("css_l4/{slug}/direct_to_struct/main").into_boxed_str());
@@ -357,23 +378,6 @@ mod tests {
             output_dir: "crates/runtime/src/grammars/css_l4_declaration_values".to_string(),
             profile_contract: request_facts_contract("css_l4_declaration_values"),
         }
-    }
-
-    const W5C_CSS_SOURCE: &str = r#"
-@import "tokens.bbnf" ;
-@token ident ;
-@ws /\s*/ ;
-@pretty stylesheet block ;
-root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
-tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
-"#;
-
-    fn w5c_css_request(profile_id: &str, source: &str) -> RuntimeGenerationRequest {
-        let mut request = w5a_css_request(source);
-        request.profile_id = profile_id.to_string();
-        request.output_dir = format!("crates/runtime/src/grammars/{profile_id}");
-        request.profile_contract = request_facts_contract(profile_id);
-        request
     }
 
     fn w5c_full_css_request(profile_id: &str) -> RuntimeGenerationRequest {
@@ -532,7 +536,12 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     #[test]
     fn css_l4_frontend_profiles_are_request_generated() {
         for &profile_id in CSS_PROFILE_IDS {
-            let emitted = emit_runtime_from_request(w5c_css_request(profile_id, W5C_CSS_SOURCE))
+            // SK-V18 G2: the CSS provider is now GENUINELY derived from the raw
+            // l4 grammar AST (`lower::css_scan`), so the request must carry the
+            // real structural rules (`ruleBlock`/`atRuleBody`/`cssString`/...),
+            // not the minimal `W5C_CSS_SOURCE` placeholder the retired courier
+            // ignored.
+            let emitted = emit_runtime_from_request(w5c_full_css_request(profile_id))
                 .expect("request generated css runtime");
             let names = emitted.files().map(|(name, _)| name).collect::<Vec<_>>();
 
@@ -566,14 +575,14 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 
         // SK-V17 W1: the CSS provider routes into the EXISTING skinny tape; the
         // fact-stream W7 policy plane is retired with `emit_fact_stream`.
-        let css = emit_runtime_from_request(w5c_css_request(
-            "css_l4_declaration_values_extended",
-            W5C_CSS_SOURCE,
-        ))
-        .unwrap();
+        // SK-V18 G2: the provider is derived from the real l4 grammar AST.
+        let css = emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values"))
+            .unwrap();
         let css_generated = css.get("generated.rs").unwrap();
 
-        assert!(css_generated.contains("crate::tape::{OffsetFlags, Tape, TapeBuilder, ValueRef}"));
+        assert!(css_generated.contains(
+            "crate::tape::{Cursor, DocumentView, OffsetFlags, Tape, TapeBuilder, TapeId, ValueRef}"
+        ));
         assert!(css_generated.contains("parse_into_tape"));
         assert!(!css_generated.contains("emit_fact_stream"));
     }
@@ -625,11 +634,14 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         let emitted = emit_from_source("json", JSON_GRAMMAR).unwrap();
         let parser = emitted.get("parser.rs").unwrap();
         let generated = emitted.get("generated.rs").unwrap();
+        // The parse-only recognizer is derived as a recognize-only emit POLICY
+        // of the same SinkOnly walk (G1 amendment); it is a recursive-descent
+        // recognizer, not the retired iterative explicit-stack courier.
         let start = generated
-            .find("struct ParseOnlyState")
-            .expect("parse_only state emitted");
+            .find("pub fn parse_only")
+            .expect("parse_only entry emitted");
         let end = generated
-            .find("// sink-only lowered from BackendIr")
+            .find("pub fn parse_direct")
             .unwrap_or(generated.len());
         let parse_only_section = &generated[start..end];
 
@@ -640,11 +652,16 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             .unwrap()
             .contains("parse_only, parse_only_bytes"));
         assert!(generated.contains("pub fn parse_only"));
-        assert!(parse_only_section.contains("fn parse_only_value_iterative"));
-        assert!(parse_only_section.contains("enum ParseOnlyFrame"));
-        assert!(parse_only_section.contains("fn parse_only_string"));
+        assert!(parse_only_section.contains("fn recognize_value"));
+        assert!(parse_only_section.contains("fn recognize_object"));
+        assert!(parse_only_section.contains("fn recognize_array"));
+        // The recognizer suppresses the sink: no JsonSink generic, no tape.
+        assert!(!parse_only_section.contains("sink: &mut S"));
         assert!(!parse_only_section.contains("TapeBuilder"));
         assert!(!parse_only_section.contains("emit_plain_offset"));
+        // The retired iterative courier blob must be gone campaign-wide.
+        assert!(!generated.contains("struct ParseOnlyState"));
+        assert!(!generated.contains("enum ParseOnlyFrame"));
         assert!(generated.contains(
             "#[cfg_attr(feature = \"parse-attribution\", inline(never))]\n\
              #[cfg_attr(not(feature = \"parse-attribution\"), inline(always))]\n\
@@ -965,7 +982,12 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
 tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 "#;
-        let emitted = emit_runtime_from_request(w5a_css_request(source)).unwrap();
+        // SK-V18 G2: the CSS body is derived from the real l4 grammar AST; the
+        // success path uses the full multi-source request. The placeholder
+        // `source` is retained below for the metadata/closure-rejection probes
+        // (which fail at validation, before body derivation).
+        let emitted =
+            emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values")).unwrap();
         // SK-V17 W1: tape-routed provider — assert the tape append, not the
         // retired fact-stream String emitter.
         assert!(emitted
@@ -996,7 +1018,11 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 root = @{ "url" , "(" >> ident ?w , "," ?w , ident << ")" } ;
 tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
 "#;
-        let emitted = emit_runtime_from_request(w5a_css_request(source)).unwrap();
+        // SK-V18 G2: success path uses the full l4 grammar (the body is
+        // derived); `source` retained to exercise the frontend-closure path.
+        let _ = source;
+        let emitted =
+            emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values")).unwrap();
 
         assert!(emitted
             .get("generated.rs")
@@ -1079,13 +1105,20 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
     }
 
     pub(super) fn w5c_gen_css_runtime_output_depends_on_frontend_source_hash() {
+        // SK-V18 G2: the CSS body is derived from the real l4 grammar AST. A
+        // mutation of a NON-structural source (here a benign trailing comment
+        // on the entry source) changes the frontend source-hash — hence
+        // `config.rs` — while leaving the derived structural alphabet (and so
+        // `generated.rs`) byte-identical.
         let first =
-            emit_runtime_from_request(w5c_css_request("css_l4_declaration_values", W5C_CSS_SOURCE))
-                .unwrap();
-        let changed = format!("{W5C_CSS_SOURCE}\nextra = ident ;\n");
-        let second =
-            emit_runtime_from_request(w5c_css_request("css_l4_declaration_values", &changed))
-                .unwrap();
+            emit_runtime_from_request(w5c_full_css_request("css_l4_declaration_values")).unwrap();
+        let mut changed_request = w5c_full_css_request("css_l4_declaration_values");
+        for source in &mut changed_request.sources {
+            if source.rel_path.ends_with("stylesheet.bbnf") {
+                source.source.push_str("\n// G2 source-hash-dependence probe\n");
+            }
+        }
+        let second = emit_runtime_from_request(changed_request).unwrap();
 
         assert_ne!(first.get("config.rs"), second.get("config.rs"));
         assert!(first
@@ -1103,7 +1136,8 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
         match expr {
             BackendExpr::Entry(inner)
             | BackendExpr::OptionalBranch(inner)
-            | BackendExpr::RepeatLoop { body: inner, .. } => strip_direct_builds(inner),
+            | BackendExpr::RepeatLoop { body: inner, .. }
+            | BackendExpr::ValueProject { body: inner, .. } => strip_direct_builds(inner),
             BackendExpr::Seq(children)
             | BackendExpr::Alt {
                 branches: children, ..
@@ -1119,7 +1153,6 @@ tag = "from" -> 0u8 | "paint" -> crate::paint(input): u32 ;
             | BackendExpr::SpanMark { .. }
             | BackendExpr::TapeEmit { .. }
             | BackendExpr::DirectBuild { .. }
-            | BackendExpr::ValueProject { .. }
             | BackendExpr::Return => {}
         }
     }

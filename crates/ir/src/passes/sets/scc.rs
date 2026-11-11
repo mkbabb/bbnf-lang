@@ -36,80 +36,70 @@ pub fn compute_scc(ir: &mut GrammarIR) {
 /// Returns SCCs in reverse-topological order (leaf SCCs first).
 fn tarjan(deps: &[Vec<RuleId>]) -> Vec<Vec<RuleId>> {
     let n = deps.len();
-    let mut index_counter: u32 = 0;
-    let mut stack: Vec<RuleId> = Vec::new();
-    let mut on_stack = vec![false; n];
-    let mut index = vec![u32::MAX; n]; // u32::MAX = undefined
-    let mut lowlink = vec![0u32; n];
-    let mut sccs: Vec<Vec<RuleId>> = Vec::new();
+    let mut tarjan = Tarjan {
+        deps,
+        index_counter: 0,
+        stack: Vec::new(),
+        on_stack: vec![false; n],
+        index: vec![u32::MAX; n], // u32::MAX = undefined
+        lowlink: vec![0u32; n],
+        sccs: Vec::new(),
+    };
 
     for v in 0..n {
-        if index[v] == u32::MAX {
-            strongconnect(
-                v as RuleId,
-                deps,
-                &mut index_counter,
-                &mut stack,
-                &mut on_stack,
-                &mut index,
-                &mut lowlink,
-                &mut sccs,
-            );
+        if tarjan.index[v] == u32::MAX {
+            tarjan.strongconnect(v as RuleId);
         }
     }
 
-    sccs
+    tarjan.sccs
 }
 
-fn strongconnect(
-    v: RuleId,
-    deps: &[Vec<RuleId>],
-    index_counter: &mut u32,
-    stack: &mut Vec<RuleId>,
-    on_stack: &mut [bool],
-    index: &mut [u32],
-    lowlink: &mut [u32],
-    sccs: &mut Vec<Vec<RuleId>>,
-) {
-    let vi = v as usize;
-    index[vi] = *index_counter;
-    lowlink[vi] = *index_counter;
-    *index_counter += 1;
-    stack.push(v);
-    on_stack[vi] = true;
+/// The traversal state of one [`tarjan`] run.
+struct Tarjan<'a> {
+    deps: &'a [Vec<RuleId>],
+    index_counter: u32,
+    stack: Vec<RuleId>,
+    on_stack: Vec<bool>,
+    index: Vec<u32>,
+    lowlink: Vec<u32>,
+    sccs: Vec<Vec<RuleId>>,
+}
 
-    for &w in &deps[vi] {
-        let wi = w as usize;
-        if wi >= deps.len() {
-            continue; // dangling reference — skip
-        }
-        if index[wi] == u32::MAX {
-            strongconnect(
-                w,
-                deps,
-                index_counter,
-                stack,
-                on_stack,
-                index,
-                lowlink,
-                sccs,
-            );
-            lowlink[vi] = lowlink[vi].min(lowlink[wi]);
-        } else if on_stack[wi] {
-            lowlink[vi] = lowlink[vi].min(index[wi]);
-        }
-    }
+impl Tarjan<'_> {
+    fn strongconnect(&mut self, v: RuleId) {
+        let vi = v as usize;
+        self.index[vi] = self.index_counter;
+        self.lowlink[vi] = self.index_counter;
+        self.index_counter += 1;
+        self.stack.push(v);
+        self.on_stack[vi] = true;
 
-    if lowlink[vi] == index[vi] {
-        let mut scc = Vec::new();
-        loop {
-            let w = stack.pop().unwrap();
-            on_stack[w as usize] = false;
-            scc.push(w);
-            if w == v {
-                break;
+        let deps = self.deps;
+        for &w in &deps[vi] {
+            let wi = w as usize;
+            if wi >= deps.len() {
+                continue; // dangling reference — skip
+            }
+            if self.index[wi] == u32::MAX {
+                self.strongconnect(w);
+                self.lowlink[vi] = self.lowlink[vi].min(self.lowlink[wi]);
+            } else if self.on_stack[wi] {
+                self.lowlink[vi] = self.lowlink[vi].min(self.index[wi]);
             }
         }
-        sccs.push(scc);
+
+        if self.lowlink[vi] == self.index[vi] {
+            let mut scc = Vec::new();
+            loop {
+                let w = self.stack.pop().unwrap();
+                self.on_stack[w as usize] = false;
+                scc.push(w);
+                if w == v {
+                    break;
+                }
+            }
+            self.sccs.push(scc);
+        }
     }
 }

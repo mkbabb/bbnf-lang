@@ -74,14 +74,14 @@ fn main() {
     // extraction stage (every other pass is deterministic w.r.t.
     // grammar source).
     let pipeline_start = Instant::now();
-    let output = match compile_paths_request(&[path.clone()], &request) {
+    let output = match compile_paths_request(std::slice::from_ref(&path), &request) {
         Ok(o) => o,
         Err(e) => emit_error(&path_str, &format!("compile error: {}", e)),
     };
     let pipeline_ns = pipeline_start.elapsed().as_nanos();
 
     let ir = match output {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => emit_error(&path_str, "expected CompileOutput::Vm"),
     };
 

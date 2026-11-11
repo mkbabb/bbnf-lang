@@ -1,0 +1,833 @@
+diff --git a/skinny/crates/bbnf-bench/src/bin/json_path_bench.rs b/skinny/crates/bbnf-bench/src/bin/json_path_bench.rs
+new file mode 100644
+index 000000000..2098f35a1
+--- /dev/null
++++ b/skinny/crates/bbnf-bench/src/bin/json_path_bench.rs
+@@ -0,0 +1,325 @@
++//! PROVE-06 (SK-V24, F4) — cold path-get bench: skinny stop-early `get`
++//! (`runtime::generated_json::get`, the tape-free NEON-skip lazy seam) vs
++//! sonic-rs `get_from_str` on twitter, over shallow / deep / missing path
++//! classes plus a stop-early prefix proof.
++//!
++//! Certified metric: PMU cyc/get (per-process `ri_cycles` HW counter, load-
++//! robust) and the paired per-sample wall ratio (mine vs sonic interleaved in
++//! one sample, load hitting both sides). Ratios are the certified comparison;
++//! absolutes are directional. A `tape_pointer` lane (parse full tape THEN
++//! `JsonValue::pointer`) is reported to contrast the eager-parse cost the
++//! stop-early lane elides.
++//!
++//! Invocation:
++//!     cargo build --release -p bbnf-bench --bin json_path_bench
++//!     ./target/release/json_path_bench [N] [iters]     (default N=200 iters=20000)
++
++use runtime::generated_json as json;
++use sonic_rs::{get_from_str, pointer, PointerNode};
++use std::hint::black_box;
++use std::time::Instant;
++
++// --- PMU via proc_pid_rusage V5 (cycles), mirrors css_canon_bench.rs ---
++#[repr(C)]
++#[derive(Default, Clone, Copy)]
++struct RusageInfoV5 {
++    ri_uuid: [u8; 16],
++    ri_user_time: u64,
++    ri_system_time: u64,
++    ri_pkg_idle_wkups: u64,
++    ri_interrupt_wkups: u64,
++    ri_pageins: u64,
++    ri_wired_size: u64,
++    ri_resident_size: u64,
++    ri_phys_footprint: u64,
++    ri_proc_start_abstime: u64,
++    ri_proc_exit_abstime: u64,
++    ri_child_user_time: u64,
++    ri_child_system_time: u64,
++    ri_child_pkg_idle_wkups: u64,
++    ri_child_interrupt_wkups: u64,
++    ri_child_pageins: u64,
++    ri_child_elapsed_abstime: u64,
++    ri_diskio_bytesread: u64,
++    ri_diskio_byteswritten: u64,
++    ri_cpu_time_qos_default: u64,
++    ri_cpu_time_qos_maintenance: u64,
++    ri_cpu_time_qos_background: u64,
++    ri_cpu_time_qos_utility: u64,
++    ri_cpu_time_qos_legacy: u64,
++    ri_cpu_time_qos_user_initiated: u64,
++    ri_cpu_time_qos_user_interactive: u64,
++    ri_billed_system_time: u64,
++    ri_serviced_system_time: u64,
++    ri_logical_writes: u64,
++    ri_lifetime_max_phys_footprint: u64,
++    ri_instructions: u64,
++    ri_cycles: u64,
++    ri_billed_energy: u64,
++    ri_serviced_energy: u64,
++    ri_interval_max_phys_footprint: u64,
++    ri_runnable_time: u64,
++    ri_flags: u64,
++}
++const RUSAGE_INFO_V5: i32 = 5;
++extern "C" {
++    fn proc_pid_rusage(pid: libc::pid_t, flavor: i32, buffer: *mut u8) -> i32;
++}
++fn cycles_now() -> u64 {
++    let mut ri = RusageInfoV5::default();
++    let rc = unsafe {
++        proc_pid_rusage(
++            libc::getpid(),
++            RUSAGE_INFO_V5,
++            (&mut ri) as *mut RusageInfoV5 as *mut u8,
++        )
++    };
++    if rc != 0 {
++        panic!("proc_pid_rusage failed rc={rc}");
++    }
++    ri.ri_cycles
++}
++
++fn loadavg() -> String {
++    std::process::Command::new("sysctl")
++        .args(["-n", "vm.loadavg"])
++        .output()
++        .ok()
++        .and_then(|o| String::from_utf8(o.stdout).ok())
++        .map(|s| s.trim().trim_matches(|c| c == '{' || c == '}' || c == ' ').to_string())
++        .unwrap_or_else(|| "?".into())
++}
++
++fn median(mut v: Vec<f64>) -> f64 {
++    v.sort_by(|a, b| a.partial_cmp(b).unwrap());
++    v[v.len() / 2]
++}
++
++struct Case {
++    name: &'static str,
++    class: &'static str,
++    mine: Vec<json::Seg<'static>>,
++    sonic: Vec<PointerNode>,
++}
++
++fn digest_mine(input: &str, segs: &[json::Seg]) -> u64 {
++    match json::get(input, segs) {
++        Some(v) => {
++            let raw = v.as_raw_str().as_bytes();
++            raw.len() as u64 ^ raw.first().copied().unwrap_or(0) as u64
++        }
++        None => 0,
++    }
++}
++
++fn digest_sonic(input: &str, path: &[PointerNode]) -> u64 {
++    match get_from_str(input, path) {
++        Ok(v) => {
++            let raw = v.as_raw_str().as_bytes();
++            raw.len() as u64 ^ raw.first().copied().unwrap_or(0) as u64
++        }
++        Err(_) => 0,
++    }
++}
++
++fn main() {
++    let args: Vec<String> = std::env::args().collect();
++    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(200);
++    let iters: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(20_000);
++    const BURST: usize = 256;
++
++    let path = concat!(
++        env!("CARGO_MANIFEST_DIR"),
++        "/../test-fixtures/corpus/json/twitter.json"
++    );
++    let input = std::fs::read_to_string(path).expect("twitter fixture");
++    let nbytes = input.len();
++
++    let cases = vec![
++        Case {
++            name: "statuses[0]",
++            class: "shallow",
++            mine: vec![json::Seg::Key("statuses"), json::Seg::Idx(0)],
++            sonic: pointer!["statuses", 0].to_vec(),
++        },
++        Case {
++            name: "statuses[0].user.screen_name",
++            class: "deep",
++            mine: vec![
++                json::Seg::Key("statuses"),
++                json::Seg::Idx(0),
++                json::Seg::Key("user"),
++                json::Seg::Key("screen_name"),
++            ],
++            sonic: pointer!["statuses", 0, "user", "screen_name"].to_vec(),
++        },
++        Case {
++            name: "statuses[0].nonexistent",
++            class: "missing",
++            mine: vec![
++                json::Seg::Key("statuses"),
++                json::Seg::Idx(0),
++                json::Seg::Key("nonexistent_field"),
++            ],
++            sonic: pointer!["statuses", 0, "nonexistent_field"].to_vec(),
++        },
++        Case {
++            name: "statuses[0].id (prefix)",
++            class: "prefix",
++            mine: vec![
++                json::Seg::Key("statuses"),
++                json::Seg::Idx(0),
++                json::Seg::Key("id"),
++            ],
++            sonic: pointer!["statuses", 0, "id"].to_vec(),
++        },
++    ];
++
++    println!("# PROVE-06 json_path_bench — twitter {nbytes} B, N={n}, iters={iters}, BURST={BURST}");
++    println!("# loadavg {}", loadavg());
++    println!(
++        "# arch {} | sonic-rs=0.5.8 get_from_str (checked)",
++        std::env::consts::ARCH
++    );
++
++    // --- Parity gate (sonic get_unchecked is the raw-slice reference oracle) ---
++    println!("\n## parity (mine.as_raw_str vs sonic get_unchecked.as_raw_str)");
++    for c in &cases {
++        let mine = json::get(&input, &c.mine).map(|v| v.as_raw_str().to_string());
++        let sonic = unsafe { sonic_rs::get_unchecked(&input, &c.sonic) }
++            .ok()
++            .map(|v| v.as_raw_str().to_string());
++        // tape-pointer oracle: parse full tape then JsonValue::pointer
++        let root = json::parse(&input).expect("twitter parses");
++        let tape_raw = root
++            .value()
++            .pointer(&c.mine)
++            .map(|v| input[v.span()].to_string());
++        let ok = mine == sonic;
++        // string spans differ (tape span excludes quotes); compare presence only
++        let tape_ok = tape_raw.is_some() == mine.is_some();
++        println!(
++            "  [{}] {:<32} mine={:?} sonic={:?} parity={} tape_present={}",
++            c.class,
++            c.name,
++            mine.as_deref().map(|s| &s[..s.len().min(24)]),
++            sonic.as_deref().map(|s| &s[..s.len().min(24)]),
++            if ok { "OK" } else { "MISMATCH" },
++            if tape_ok { "OK" } else { "MISMATCH" },
++        );
++        assert!(ok, "parity mismatch on {}", c.name);
++    }
++
++    // --- Stop-early proof: max source offset the prefix get reaches ---
++    let prefix = &cases[3];
++    if let Some(v) = json::get(&input, &prefix.mine) {
++        let end = v.as_raw_str().as_ptr() as usize - input.as_ptr() as usize
++            + v.as_raw_str().len();
++        println!(
++            "\n## stop-early: prefix {:?} resolves at byte {} / {} ({:.3}% of doc scanned)",
++            prefix.name,
++            end,
++            nbytes,
++            100.0 * end as f64 / nbytes as f64
++        );
++    }
++
++    // one out-of-band touch to page in the source
++    black_box(input.as_bytes().iter().fold(0u8, |a, b| a ^ b));
++
++    // --- PMU: certified cyc/get (tight loop, per-process HW counter) ---
++    println!("\n## PMU cyc/get (iters={iters})  [ratio = mine/sonic; <1 ⇒ skinny faster]");
++    println!(
++        "  {:<32} {:>12} {:>12} {:>8} {:>10}",
++        "case", "mine cyc", "sonic cyc", "ratio", "sonic_unck"
++    );
++    for c in &cases {
++        let c0 = cycles_now();
++        for _ in 0..iters {
++            black_box(digest_mine(&input, &c.mine));
++        }
++        let mine_cyc = (cycles_now() - c0) as f64 / iters as f64;
++
++        let c0 = cycles_now();
++        for _ in 0..iters {
++            black_box(digest_sonic(&input, &c.sonic));
++        }
++        let sonic_cyc = (cycles_now() - c0) as f64 / iters as f64;
++
++        let c0 = cycles_now();
++        for _ in 0..iters {
++            let d = unsafe { sonic_rs::get_unchecked(&input, &c.sonic) }
++                .map(|v| v.as_raw_str().len() as u64)
++                .unwrap_or(0);
++            black_box(d);
++        }
++        let unck_cyc = (cycles_now() - c0) as f64 / iters as f64;
++
++        println!(
++            "  [{:<7}] {:<22} {:>12.0} {:>12.0} {:>8.3} {:>10.3}",
++            c.class,
++            c.name,
++            mine_cyc,
++            sonic_cyc,
++            mine_cyc / sonic_cyc,
++            mine_cyc / unck_cyc,
++        );
++    }
++
++    // --- Paired per-sample wall (N samples, BURST gets per sample) ---
++    println!("\n## paired per-sample wall ratio (N={n}, BURST={BURST})");
++    println!(
++        "  {:<32} {:>10} {:>10} {:>8} {:>16}",
++        "case", "mine ns", "sonic ns", "ratio", "ratio 95% CI"
++    );
++    for c in &cases {
++        let mut ratios = Vec::with_capacity(n);
++        let mut mine_ns = Vec::with_capacity(n);
++        let mut sonic_ns = Vec::with_capacity(n);
++        for _ in 0..n {
++            let t = Instant::now();
++            for _ in 0..BURST {
++                black_box(digest_mine(&input, &c.mine));
++            }
++            let m = t.elapsed().as_nanos() as f64 / BURST as f64;
++            let t = Instant::now();
++            for _ in 0..BURST {
++                black_box(digest_sonic(&input, &c.sonic));
++            }
++            let s = t.elapsed().as_nanos() as f64 / BURST as f64;
++            ratios.push(m / s);
++            mine_ns.push(m);
++            sonic_ns.push(s);
++        }
++        let mean = ratios.iter().sum::<f64>() / n as f64;
++        let var = ratios.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / (n as f64 - 1.0);
++        let ci = 1.96 * (var / n as f64).sqrt();
++        println!(
++            "  [{:<7}] {:<22} {:>10.1} {:>10.1} {:>8.3} {:>7.3}±{:.3}",
++            c.class,
++            c.name,
++            median(mine_ns),
++            median(sonic_ns),
++            mean,
++            mean,
++            ci,
++        );
++    }
++
++    // --- Contrast lane: eager tape_pointer (parse full tape THEN pointer) ---
++    println!("\n## contrast: tape_pointer cyc/get (full parse + JsonValue::pointer)");
++    for c in &cases {
++        let c0 = cycles_now();
++        for _ in 0..(iters / 20).max(50) {
++            let root = json::parse(&input).expect("parse");
++            let d = root
++                .value()
++                .pointer(&c.mine)
++                .map(|v| v.span().len() as u64)
++                .unwrap_or(0);
++            black_box(d);
++        }
++        let cyc = (cycles_now() - c0) as f64 / (iters / 20).max(50) as f64;
++        println!("  [{:<7}] {:<22} {:>12.0} cyc  ({:.2} cyc/B full doc)", c.class, c.name, cyc, cyc / nbytes as f64);
++    }
++}
+diff --git a/skinny/crates/codegen/src/json_templates/view.rs b/skinny/crates/codegen/src/json_templates/view.rs
+index 5d735ccfc..0adba3a6c 100644
+--- a/skinny/crates/codegen/src/json_templates/view.rs
++++ b/skinny/crates/codegen/src/json_templates/view.rs
+@@ -330,6 +330,25 @@ impl<'doc, 'input: 'doc> Iterator for JsonArrayValues<'doc, 'input> {
+     }
+ }
+ 
++impl<'doc, 'input: 'doc> JsonValue<'doc, 'input> {
++    /// Navigate a JSON pointer over the already-built tape (the eager-parse
++    /// lane), reusing the lazy `ValueRef`/`Cursor` seam via `get`/`values`.
++    /// Contrast `super::path::get`, the stop-early lane that never builds a tape.
++    pub fn pointer(self, path: &[super::path::Seg<'_>]) -> Option<JsonValue<'doc, 'input>> {
++        let mut current = self;
++        for seg in path {
++            current = match (current, seg) {
++                (JsonValue::Object(object), super::path::Seg::Key(key)) => object.get(key)?,
++                (JsonValue::Array(array), super::path::Seg::Idx(index)) => {
++                    array.values().nth(*index)?
++                }
++                _ => return None,
++            };
++        }
++        Some(current)
++    }
++}
++
+ pub(crate) fn span_for_value<'doc, 'input: 'doc>(
+     inner: ValueRef<'doc, 'input>,
+ ) -> std::ops::Range<usize> {
+diff --git a/skinny/crates/codegen/src/runtime_generator.rs b/skinny/crates/codegen/src/runtime_generator.rs
+index dbf82f733..0b73d5c18 100644
+--- a/skinny/crates/codegen/src/runtime_generator.rs
++++ b/skinny/crates/codegen/src/runtime_generator.rs
+@@ -363,6 +363,7 @@ const JSON_MOD_RS: &str = r#"
+     pub mod generated;
+     pub mod host;
+     pub mod parser;
++    pub mod path;
+     pub mod scan;
+     pub mod sink;
+     pub mod value;
+@@ -371,6 +372,7 @@ const JSON_MOD_RS: &str = r#"
+ 
+     pub use parser::{parse, parse_bytes, parse_only, parse_only_bytes, RECOGNIZER_COUNT};
+     pub use generated::parse_direct;
++    pub use path::{get, Located, Seg};
+     pub use sink::JsonSink;
+     pub use value::{JsonNodeKind, JsonToken, JsonValue, ParseError, ParseErrorKind};
+     pub use view::{
+diff --git a/skinny/crates/runtime/src/grammars/json/mod.rs b/skinny/crates/runtime/src/grammars/json/mod.rs
+index ebc7dced8..f49b9f4bd 100644
+--- a/skinny/crates/runtime/src/grammars/json/mod.rs
++++ b/skinny/crates/runtime/src/grammars/json/mod.rs
+@@ -3,6 +3,7 @@ pub(crate) mod config;
+ pub mod generated;
+ pub mod host;
+ pub mod parser;
++pub mod path;
+ pub mod scan;
+ pub mod sink;
+ pub mod value;
+@@ -11,6 +12,7 @@ pub mod visitor;
+ 
+ pub use parser::{parse, parse_bytes, parse_only, parse_only_bytes, RECOGNIZER_COUNT};
+ pub use generated::parse_direct;
++pub use path::{get, Located, Seg};
+ pub use sink::JsonSink;
+ pub use value::{JsonNodeKind, JsonToken, JsonValue, ParseError, ParseErrorKind};
+ pub use view::{
+diff --git a/skinny/crates/runtime/src/grammars/json/path.rs b/skinny/crates/runtime/src/grammars/json/path.rs
+new file mode 100644
+index 000000000..e4f86e2bd
+--- /dev/null
++++ b/skinny/crates/runtime/src/grammars/json/path.rs
+@@ -0,0 +1,178 @@
++// JSON-owned stop-early path get; not part of the generated JSON roster.
++//
++// A pointer/path `get` that skip-parses directly over the source bytes, touching
++// only the bytes on the resolved path plus the brackets of the subtrees it steps
++// over. It never builds the offset tape: subtrees are jumped with the NEON
++// structural skip engine (`scan::skip_container`, the dormant jump-to-matching-
++// bracket primitive), strings are bounded with `match_string`, scalars with a
++// delimiter scan. This is the F4 stop-early lazy seam, additive and grammar-side.
++use parse_that_regex::{match_string, StringMode};
++
++use super::scan;
++
++/// One step of a JSON pointer: an object key or an array index.
++#[derive(Copy, Clone, Debug)]
++pub enum Seg<'a> {
++    Key(&'a str),
++    Idx(usize),
++}
++
++/// The located value, as its raw source slice (byte-identical to what a lazy
++/// `get` returns — the caller decodes on demand). Bounded stop-early.
++#[derive(Copy, Clone, Debug, PartialEq)]
++pub enum Located<'i> {
++    Object(&'i str),
++    Array(&'i str),
++    String(&'i str),
++    Number(&'i str),
++    Bool(bool),
++    Null,
++}
++
++impl<'i> Located<'i> {
++    /// The raw source slice of the located value (`""`-quoted for strings,
++    /// `{}`/`[]`-bracketed for containers) — the `as_raw_str` analogue.
++    pub fn as_raw_str(&self) -> &'i str {
++        match *self {
++            Located::Object(s)
++            | Located::Array(s)
++            | Located::String(s)
++            | Located::Number(s) => s,
++            Located::Bool(true) => "true",
++            Located::Bool(false) => "false",
++            Located::Null => "null",
++        }
++    }
++}
++
++/// Resolve `path` against `input`, stopping as soon as the target is located.
++/// Returns `None` when any segment is absent or type-mismatched.
++pub fn get<'i>(input: &'i str, path: &[Seg<'_>]) -> Option<Located<'i>> {
++    let bytes = input.as_bytes();
++    let mut at = skip_ws(bytes, 0);
++    for seg in path {
++        at = match (bytes.get(at)?, seg) {
++            (b'{', Seg::Key(key)) => object_find(bytes, at, key)?,
++            (b'[', Seg::Idx(index)) => array_find(bytes, at, *index)?,
++            _ => return None,
++        };
++        at = skip_ws(bytes, at);
++    }
++    Some(locate(input, bytes, at))
++}
++
++/// Locate the value at `open` (a `{`), returning the start index of the value
++/// bound to `key`, or `None` if the key is absent.
++fn object_find(bytes: &[u8], open: usize, key: &str) -> Option<usize> {
++    let mut at = skip_ws(bytes, open + 1);
++    if bytes.get(at) == Some(&b'}') {
++        return None;
++    }
++    loop {
++        let key_end = match_string(bytes, at, StringMode::Utf8).ok()?.raw_end;
++        let hit = key_eq(bytes, at + 1, key_end - 1, key);
++        let colon = skip_ws(bytes, key_end);
++        let value = skip_ws(bytes, colon + 1);
++        if hit {
++            return Some(value);
++        }
++        let after = skip_ws(bytes, skip_value(bytes, value));
++        match bytes.get(after)? {
++            b',' => at = skip_ws(bytes, after + 1),
++            _ => return None,
++        }
++    }
++}
++
++/// Locate element `index` of the array at `open` (a `[`), or `None`.
++fn array_find(bytes: &[u8], open: usize, index: usize) -> Option<usize> {
++    let mut at = skip_ws(bytes, open + 1);
++    if bytes.get(at) == Some(&b']') {
++        return None;
++    }
++    let mut cursor = 0usize;
++    loop {
++        if cursor == index {
++            return Some(at);
++        }
++        let after = skip_ws(bytes, skip_value(bytes, at));
++        match bytes.get(after)? {
++            b',' => {
++                at = skip_ws(bytes, after + 1);
++                cursor += 1;
++            }
++            _ => return None,
++        }
++    }
++}
++
++/// Advance past a whole value (object/array/string/scalar) starting at `at`.
++#[inline]
++fn skip_value(bytes: &[u8], at: usize) -> usize {
++    match bytes[at] {
++        b'{' | b'[' => scan::skip_container(bytes, at),
++        b'"' => match_string(bytes, at, StringMode::Utf8)
++            .map(|span| span.raw_end)
++            .unwrap_or(at + 1),
++        _ => skip_scalar(bytes, at),
++    }
++}
++
++/// Classify + bound the value at `at` into a `Located` raw slice.
++#[inline]
++fn locate<'i>(input: &'i str, bytes: &[u8], at: usize) -> Located<'i> {
++    match bytes[at] {
++        b'{' => Located::Object(&input[at..scan::skip_container(bytes, at)]),
++        b'[' => Located::Array(&input[at..scan::skip_container(bytes, at)]),
++        b'"' => Located::String(
++            &input[at
++                ..match_string(bytes, at, StringMode::Utf8)
++                    .map(|span| span.raw_end)
++                    .unwrap_or(at + 1)],
++        ),
++        b't' => Located::Bool(true),
++        b'f' => Located::Bool(false),
++        b'n' => Located::Null,
++        _ => Located::Number(&input[at..skip_scalar(bytes, at)]),
++    }
++}
++
++/// Scan a scalar (number/`true`/`false`/`null`) to its delimiter.
++#[inline]
++fn skip_scalar(bytes: &[u8], at: usize) -> usize {
++    let mut cursor = at;
++    while cursor < bytes.len()
++        && !matches!(
++            bytes[cursor],
++            b',' | b']' | b'}' | b' ' | b'\t' | b'\n' | b'\r'
++        )
++    {
++        cursor += 1;
++    }
++    cursor
++}
++
++/// Compare the key body `bytes[start..end]` (between the quotes) to `key`.
++/// Fast path is a raw byte compare; escaped keys fall back to unescape.
++#[inline]
++fn key_eq(bytes: &[u8], start: usize, end: usize, key: &str) -> bool {
++    let body = &bytes[start..end];
++    if !body.contains(&b'\\') {
++        return body == key.as_bytes();
++    }
++    match std::str::from_utf8(body) {
++        Ok(raw) => parse_that_regex::unescape_string(raw)
++            .map(|decoded| decoded == key)
++            .unwrap_or(false),
++        Err(_) => false,
++    }
++}
++
++#[inline]
++fn skip_ws(bytes: &[u8], at: usize) -> usize {
++    let mut cursor = at;
++    while cursor < bytes.len() && matches!(bytes[cursor], b' ' | b'\t' | b'\n' | b'\r') {
++        cursor += 1;
++    }
++    cursor
++}
+diff --git a/skinny/crates/runtime/src/grammars/json/scan.rs b/skinny/crates/runtime/src/grammars/json/scan.rs
+index 3f1cc8bbb..e2e4225e1 100644
+--- a/skinny/crates/runtime/src/grammars/json/scan.rs
++++ b/skinny/crates/runtime/src/grammars/json/scan.rs
+@@ -56,6 +56,57 @@ pub fn scalar_parity_report(input: &[u8]) -> ScalarParityReport {
+     }
+ }
+ 
++/// Jump-to-matching-bracket: given `open` at a `{`/`[`, return the index just
++/// past its matching close. This is the stop-early skip engine — it reuses the
++/// dormant NEON structural scanner's block loop (escape-aware string suppression)
++/// to bulk-skip subtrees for the path-get seam, touching only the subtree bytes.
++pub fn skip_container(input: &[u8], open: usize) -> usize {
++    #[cfg(target_arch = "aarch64")]
++    {
++        return neon::skip_container(input, open);
++    }
++    #[allow(unreachable_code)]
++    skip_tail(input, open, 0, false, false)
++}
++
++/// Scalar depth-count from `start`, carrying the block loop's string/escape
++/// state. Returns the index just past the close where depth returns to zero.
++fn skip_tail(
++    input: &[u8],
++    start: usize,
++    mut depth: i32,
++    mut in_string: bool,
++    mut escaped: bool,
++) -> usize {
++    let mut cursor = start;
++    while cursor < input.len() {
++        let byte = input[cursor];
++        if in_string {
++            if escaped {
++                escaped = false;
++            } else if byte == b'\\' {
++                escaped = true;
++            } else if byte == b'"' {
++                in_string = false;
++            }
++        } else {
++            match byte {
++                b'"' => in_string = true,
++                b'{' | b'[' => depth += 1,
++                b'}' | b']' => {
++                    depth -= 1;
++                    if depth == 0 {
++                        return cursor + 1;
++                    }
++                }
++                _ => {}
++            }
++        }
++        cursor += 1;
++    }
++    input.len()
++}
++
+ pub fn structural_capacity_for(plan: CapacityPlan, source: &[u8]) -> usize {
+     match plan {
+         CapacityPlan::Sampled => sampled_structural_capacity(source),
+@@ -216,6 +267,52 @@ mod neon {
+ 
+     const STRIPE: usize = 64;
+ 
++    /// The per-block structural-emit mask (real structurals outside strings),
++    /// carrying `in_string`/`bs_carry` across blocks. Sole source of the proven
++    /// escape-aware string-suppression logic — shared by `scan` (position
++    /// collection) and `skip_container` (bracket depth counting).
++    #[inline]
++    unsafe fn block_emit_mask(
++        ptr: *const u8,
++        table: core::arch::aarch64::uint8x16x4_t,
++        in_string: &mut bool,
++        bs_carry: &mut bool,
++    ) -> u64 {
++        let structural =
++            bbnf_simd::aarch64::classify_tbl4::classify_structural_terminator_block_from_table(
++                ptr, table, b'"',
++            );
++        let quotes = structural.terminator_mask;
++        if quotes == 0 && !*in_string {
++            return structural.structural_mask;
++        }
++        let result = bbnf_simd::aarch64::classify_tbl4::classify_block_from_table(
++            ptr, table, b'"', b'\\', 0x20,
++        );
++        let punctuation = result.structural_mask & !result.quote_mask;
++        let (escaped, new_bs_carry) = escape_mask_64(result.backslash_mask, *bs_carry);
++        let real_quotes_fast = quotes & !escaped;
++        let prefix = prefix_xor_64(real_quotes_fast, *in_string);
++        let string_body_fast = prefix ^ real_quotes_fast;
++        let escaped_quotes = quotes & escaped;
++        let carry_is_in_string = !new_bs_carry || (string_body_fast & (1u64 << 63)) != 0;
++        let fast_path_is_strict =
++            (escaped_quotes & !string_body_fast) == 0 && carry_is_in_string;
++        let (real_quotes, string_body, next_in_string, next_bs_carry) = if fast_path_is_strict {
++            (
++                real_quotes_fast,
++                string_body_fast,
++                ((prefix >> 63) & 1) == 1,
++                new_bs_carry,
++            )
++        } else {
++            resolve_string_masks_64(quotes, result.backslash_mask, *in_string, *bs_carry)
++        };
++        *in_string = next_in_string;
++        *bs_carry = next_bs_carry && *in_string;
++        (punctuation & !string_body) | real_quotes
++    }
++
+     pub fn scan(input: &[u8]) -> Vec<u32> {
+         let mut positions = Vec::with_capacity(input.len() / 8 + 8);
+         let mut cursor = 0usize;
+@@ -227,54 +324,12 @@ mod neon {
+                 &STRUCTURAL_CLASS_TABLE_LO6,
+             );
+             while cursor + STRIPE <= input.len() {
+-                let structural =
+-                    bbnf_simd::aarch64::classify_tbl4::classify_structural_terminator_block_from_table(
++                let emit = block_emit_mask(
+                     input.as_ptr().add(cursor),
+                     table,
+-                    b'"',
++                    &mut in_string,
++                    &mut bs_carry,
+                 );
+-                let quotes = structural.terminator_mask;
+-                let emit = if quotes == 0 && !in_string {
+-                    structural.structural_mask
+-                } else {
+-                    let result = bbnf_simd::aarch64::classify_tbl4::classify_block_from_table(
+-                        input.as_ptr().add(cursor),
+-                        table,
+-                        b'"',
+-                        b'\\',
+-                        0x20,
+-                    );
+-                    let punctuation = result.structural_mask & !result.quote_mask;
+-                    let (escaped, new_bs_carry) =
+-                        escape_mask_64(result.backslash_mask, bs_carry);
+-                    let real_quotes_fast = quotes & !escaped;
+-                    let prefix = prefix_xor_64(real_quotes_fast, in_string);
+-                    let string_body_fast = prefix ^ real_quotes_fast;
+-                    let escaped_quotes = quotes & escaped;
+-                    let carry_is_in_string =
+-                        !new_bs_carry || (string_body_fast & (1u64 << 63)) != 0;
+-                    let fast_path_is_strict =
+-                        (escaped_quotes & !string_body_fast) == 0 && carry_is_in_string;
+-                    let (real_quotes, string_body, next_in_string, next_bs_carry) =
+-                        if fast_path_is_strict {
+-                            (
+-                                real_quotes_fast,
+-                                string_body_fast,
+-                                ((prefix >> 63) & 1) == 1,
+-                                new_bs_carry,
+-                            )
+-                        } else {
+-                            resolve_string_masks_64(
+-                                quotes,
+-                                result.backslash_mask,
+-                                in_string,
+-                                bs_carry,
+-                            )
+-                        };
+-                    in_string = next_in_string;
+-                    bs_carry = next_bs_carry && in_string;
+-                    (punctuation & !string_body) | real_quotes
+-                };
+                 if emit != 0 {
+                     compact_mask(cursor, emit, &mut positions);
+                 }
+@@ -285,6 +340,44 @@ mod neon {
+         scan_tail(input, cursor, &mut positions, in_string, bs_carry);
+         positions
+     }
++
++    pub fn skip_container(input: &[u8], open: usize) -> usize {
++        let mut cursor = open;
++        let mut in_string = false;
++        let mut bs_carry = false;
++        let mut depth = 0i32;
++
++        unsafe {
++            let table = bbnf_simd::aarch64::classify_tbl4::load_lo6_table(
++                &STRUCTURAL_CLASS_TABLE_LO6,
++            );
++            while cursor + STRIPE <= input.len() {
++                let mut emit = block_emit_mask(
++                    input.as_ptr().add(cursor),
++                    table,
++                    &mut in_string,
++                    &mut bs_carry,
++                );
++                while emit != 0 {
++                    let lane = emit.trailing_zeros() as usize;
++                    emit &= emit - 1;
++                    match *input.get_unchecked(cursor + lane) {
++                        b'{' | b'[' => depth += 1,
++                        b'}' | b']' => {
++                            depth -= 1;
++                            if depth == 0 {
++                                return cursor + lane + 1;
++                            }
++                        }
++                        _ => {}
++                    }
++                }
++                cursor += STRIPE;
++            }
++        }
++
++        super::skip_tail(input, cursor, depth, in_string, bs_carry)
++    }
+ }
+ 
+ #[cfg(test)]
+diff --git a/skinny/crates/runtime/src/grammars/json/view.rs b/skinny/crates/runtime/src/grammars/json/view.rs
+index 5d735ccfc..0adba3a6c 100644
+--- a/skinny/crates/runtime/src/grammars/json/view.rs
++++ b/skinny/crates/runtime/src/grammars/json/view.rs
+@@ -330,6 +330,25 @@ impl<'doc, 'input: 'doc> Iterator for JsonArrayValues<'doc, 'input> {
+     }
+ }
+ 
++impl<'doc, 'input: 'doc> JsonValue<'doc, 'input> {
++    /// Navigate a JSON pointer over the already-built tape (the eager-parse
++    /// lane), reusing the lazy `ValueRef`/`Cursor` seam via `get`/`values`.
++    /// Contrast `super::path::get`, the stop-early lane that never builds a tape.
++    pub fn pointer(self, path: &[super::path::Seg<'_>]) -> Option<JsonValue<'doc, 'input>> {
++        let mut current = self;
++        for seg in path {
++            current = match (current, seg) {
++                (JsonValue::Object(object), super::path::Seg::Key(key)) => object.get(key)?,
++                (JsonValue::Array(array), super::path::Seg::Idx(index)) => {
++                    array.values().nth(*index)?
++                }
++                _ => return None,
++            };
++        }
++        Some(current)
++    }
++}
++
+ pub(crate) fn span_for_value<'doc, 'input: 'doc>(
+     inner: ValueRef<'doc, 'input>,
+ ) -> std::ops::Range<usize> {

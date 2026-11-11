@@ -1,0 +1,416 @@
+diff --git a/skinny/crates/passes/src/backend_egraph_bbnf.rs b/skinny/crates/passes/src/backend_egraph_bbnf.rs
+new file mode 100644
+index 000000000..8026720e0
+--- /dev/null
++++ b/skinny/crates/passes/src/backend_egraph_bbnf.rs
+@@ -0,0 +1,286 @@
++//! PROTO-2 / PROVE-2-CHILD-NODE-IN-SEAM — a CHILD-BEARING tree-profile
++//! grammar e-node over skinny's FLAT `GrammarIr`.
++//!
++//! The production decision seam (`backend_egraph::DecisionNode`) is
++//! childless: `children: [Id; 0]`, and its cost model returns `node.score`
++//! ignoring `_child_cost`. It decides *which backend shape* a rule takes —
++//! it never reasons over grammar structure.
++//!
++//! This module answers the RED-unknown: can skinny's flat `GrammarIr`
++//! (an `ExprKind` arena addressed by `ExprId`, with **no** interned
++//! `DagNode`/`StringId`/`FnId`/`AltDispatch`) host a *child-bearing*
++//! e-node carrying PROTO-1's N-crossover Alt cost arm — WITHOUT dragging
++//! bbnf-ir's top-level DAG? `BbnfNode` is authored purely over the flat
++//! arena: `Seq(Vec<Id>)` and `Alt { branches: Vec<Id>, dispatch }` bear
++//! children; leaves carry an opaque arena key. Organ-separable by
++//! construction — it depends on `ir` (flat) and `egraph` (shared), nothing
++//! from bbnf-ir.
++//!
++//! The organ is OBSERVATIONAL in the seam: `probe_child_bearing` runs the
++//! full build→saturate→extract→teardown for a rule that bears an `Alt`, and
++//! returns a report. It never feeds `ActiveSelection`, so wiring it into
++//! `select_active_backend` is regen-neutral (generated output is
++//! byte-identical whether or not the organ runs).
++
++use egraph::{
++    BackoffScheduler, CostModel, CostWeights, EGraph, Extractor, Id, Language, NoAnalysis, Rewrite,
++    RewriteFn, Scheduler, CALIBRATED_WEIGHTS,
++};
++use ir::{AltMode, ExprId, ExprKind, GrammarIr};
++
++/// A child-bearing grammar e-node over the flat `GrammarIr` arena.
++///
++/// Unlike `backend_egraph::DecisionNode` (childless `[Id; 0]`), `Seq` and
++/// `Alt` carry their sub-terms as child e-class `Id`s. `Alt.dispatch`
++/// distinguishes the constant-time dispatch form from sequential trial —
++/// the two are distinct e-nodes (distinct `Hash`/`Eq`) so both survive in
++/// one e-class after the manufacture rewrite unions them.
++#[derive(Clone, Debug, PartialEq, Eq, Hash)]
++pub(crate) enum BbnfNode {
++    /// Ordered sequence — child-bearing.
++    Seq(Vec<Id>),
++    /// Alternation — child-bearing. `dispatch = true` is the constant-time
++    /// dispatch form (128-entry byte→branch table); `false` is sequential
++    /// trial.
++    Alt { branches: Vec<Id>, dispatch: bool },
++    /// A terminal leaf (Ref / Literal / Regex / wrapper), keyed by its
++    /// stable arena `ExprId` so distinct leaves stay distinct e-classes.
++    Leaf(u64),
++}
++
++impl Language for BbnfNode {
++    fn children(&self) -> &[Id] {
++        match self {
++            BbnfNode::Seq(children) => children,
++            BbnfNode::Alt { branches, .. } => branches,
++            BbnfNode::Leaf(_) => &[],
++        }
++    }
++
++    fn children_mut(&mut self) -> &mut [Id] {
++        match self {
++            BbnfNode::Seq(children) => children,
++            BbnfNode::Alt { branches, .. } => branches,
++            BbnfNode::Leaf(_) => &mut [],
++        }
++    }
++}
++
++/// PROTO-1's N-crossover Alt cost arm, ported into skinny's production
++/// crate. The two Alt forms carry the SAME children, so the extractor's
++/// pick reduces to `Δ(N) = dispatch_table + N·(dispatch_branch −
++/// alt_per_branch)`, crossing at `N* = dispatch_table /
++/// (alt_per_branch − dispatch_branch)` = 3.0 under `CALIBRATED_WEIGHTS`.
++pub(crate) struct BbnfCostModel {
++    pub weights: CostWeights,
++}
++
++impl CostModel<BbnfNode> for BbnfCostModel {
++    type Cost = f64;
++
++    fn cost(&self, node: &BbnfNode, child_cost: impl Fn(Id) -> f64) -> f64 {
++        match node {
++            BbnfNode::Leaf(_) => self.weights.structural,
++            BbnfNode::Seq(children) => {
++                let child_sum: f64 = children.iter().map(|&c| child_cost(c)).sum();
++                self.weights.structural + child_sum
++            }
++            BbnfNode::Alt { branches, dispatch } => {
++                let n = branches.len() as f64;
++                let child_sum: f64 = branches.iter().map(|&c| child_cost(c)).sum();
++                let shared = self.weights.structural + child_sum;
++                if *dispatch {
++                    shared + self.weights.dispatch_table + n * self.weights.dispatch_branch
++                } else {
++                    shared + n * self.weights.alt_per_branch
++                }
++            }
++        }
++    }
++}
++
++/// Confluent widening rewrite: for any e-class holding an `Alt`, manufacture
++/// the missing dispatch/sequential twin (same branches) and union it in.
++/// Terminating — once both forms coexist it fires no more.
++struct ManufactureDispatchAlt;
++
++impl Rewrite<BbnfNode, NoAnalysis> for ManufactureDispatchAlt {
++    type Match = BbnfNode;
++
++    fn name(&self) -> &str {
++        "manufacture-dispatch-alt"
++    }
++
++    fn search(&self, egraph: &EGraph<BbnfNode, NoAnalysis>) -> Vec<(Id, Self::Match)> {
++        let mut matches = Vec::new();
++        for class in egraph.classes() {
++            let has_dispatch = class
++                .iter()
++                .any(|node| matches!(node, BbnfNode::Alt { dispatch: true, .. }));
++            let has_seq = class
++                .iter()
++                .any(|node| matches!(node, BbnfNode::Alt { dispatch: false, .. }));
++            for node in class.iter() {
++                if let BbnfNode::Alt { branches, dispatch } = node {
++                    if *dispatch && !has_seq {
++                        matches.push((
++                            class.id,
++                            BbnfNode::Alt {
++                                branches: branches.clone(),
++                                dispatch: false,
++                            },
++                        ));
++                    } else if !*dispatch && !has_dispatch {
++                        matches.push((
++                            class.id,
++                            BbnfNode::Alt {
++                                branches: branches.clone(),
++                                dispatch: true,
++                            },
++                        ));
++                    }
++                    break;
++                }
++            }
++        }
++        matches
++    }
++
++    fn apply(&self, egraph: &mut EGraph<BbnfNode, NoAnalysis>, class_id: Id, twin: Self::Match) {
++        let id = egraph.add(twin);
++        egraph.union(class_id, id);
++    }
++}
++
++/// Lower a flat `GrammarIr` expr sub-tree into child-bearing `BbnfNode`
++/// e-nodes. `Seq`/`Alt` project to child `Id`s; everything else is an
++/// opaque `Leaf` keyed by its arena `ExprId`. Returns the root `Id`.
++fn lower(graph: &mut EGraph<BbnfNode, NoAnalysis>, grammar: &GrammarIr, expr: ExprId) -> Id {
++    match &grammar.expr(expr).kind {
++        ExprKind::Seq(children) => {
++            let ids: Vec<Id> = children
++                .iter()
++                .map(|child| lower(graph, grammar, *child))
++                .collect();
++            graph.add(BbnfNode::Seq(ids))
++        }
++        ExprKind::Alt { branches, mode } => {
++            let ids: Vec<Id> = branches
++                .iter()
++                .map(|branch| lower(graph, grammar, *branch))
++                .collect();
++            let dispatch = matches!(mode, AltMode::Dispatch);
++            graph.add(BbnfNode::Alt {
++                branches: ids,
++                dispatch,
++            })
++        }
++        // Leaves and wrappers become opaque leaves keyed by arena position —
++        // enough to give each Alt branch a distinct, disjoint child class.
++        _ => graph.add(BbnfNode::Leaf(expr.0 as u64)),
++    }
++}
++
++/// Does this expr sub-tree contain an `Alt` (the decision-relevant shape)?
++fn contains_alt(grammar: &GrammarIr, expr: ExprId) -> bool {
++    match &grammar.expr(expr).kind {
++        ExprKind::Alt { .. } => true,
++        ExprKind::Seq(children) => children.iter().any(|c| contains_alt(grammar, *c)),
++        ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => contains_alt(grammar, *body),
++        ExprKind::Project { body, .. } => contains_alt(grammar, *body),
++        ExprKind::Discard { left, right, .. } => {
++            contains_alt(grammar, *left) || contains_alt(grammar, *right)
++        }
++        _ => false,
++    }
++}
++
++/// Report of a single organ run over one rule body.
++#[derive(Clone, Debug)]
++pub struct BbnfOrganReport {
++    /// Whether the rule bore an `Alt` (the organ only builds for those).
++    pub ran: bool,
++    /// Distinct e-node survivors in the `Alt` e-class after saturation.
++    pub alt_survivors: usize,
++    /// Branch count of the faced `Alt`.
++    pub alt_arity: usize,
++    /// `true` if the extractor picked the dispatch form (N ≥ N*).
++    pub picked_dispatch: bool,
++    /// Total e-nodes / e-classes after saturation.
++    pub total_nodes: usize,
++    pub total_classes: usize,
++    /// Rewrite iterations to saturation.
++    pub iterations: u32,
++}
++
++impl Default for BbnfOrganReport {
++    fn default() -> Self {
++        Self {
++            ran: false,
++            alt_survivors: 0,
++            alt_arity: 0,
++            picked_dispatch: false,
++            total_nodes: 0,
++            total_classes: 0,
++            iterations: 0,
++        }
++    }
++}
++
++/// Build → saturate → extract → teardown the child-bearing organ for one
++/// rule body under `CALIBRATED_WEIGHTS`. Returns `ran = false` (a cheap
++/// early-out) when the body bears no `Alt`. Purely observational — no
++/// effect on `ActiveSelection`, hence regen-neutral.
++pub fn probe_child_bearing(grammar: &GrammarIr, body: ExprId) -> BbnfOrganReport {
++    if !contains_alt(grammar, body) {
++        return BbnfOrganReport::default();
++    }
++
++    let mut graph = EGraph::<BbnfNode, NoAnalysis>::with_capacity(16);
++    let root = lower(&mut graph, grammar, body);
++    graph.rebuild();
++
++    let scheduler = BackoffScheduler::default();
++    let manufacture = ManufactureDispatchAlt;
++    let rules: [&dyn RewriteFn<BbnfNode, NoAnalysis>; 1] = [&manufacture];
++    let report = scheduler.run(&mut graph, &rules);
++
++    let cost_model = BbnfCostModel {
++        weights: CALIBRATED_WEIGHTS,
++    };
++    let extractor = Extractor::new(&graph, &cost_model);
++    let _ = extractor.best_node(root);
++
++    // Locate the Alt e-class (the value-dispatch decision point) and count
++    // its distinct e-node survivors.
++    let mut alt_survivors = 0usize;
++    let mut alt_arity = 0usize;
++    let mut picked_dispatch = false;
++    for class in graph.classes() {
++        let alt_nodes: Vec<&BbnfNode> = class
++            .iter()
++            .filter(|node| matches!(node, BbnfNode::Alt { .. }))
++            .collect();
++        if alt_nodes.is_empty() {
++            continue;
++        }
++        alt_survivors = class.iter().count();
++        if let Some(BbnfNode::Alt { branches, .. }) = alt_nodes.first().copied() {
++            alt_arity = branches.len();
++        }
++        if let Some(best) = extractor.best_node(class.id) {
++            picked_dispatch = matches!(best, BbnfNode::Alt { dispatch: true, .. });
++        }
++        break;
++    }
++
++    BbnfOrganReport {
++        ran: true,
++        alt_survivors,
++        alt_arity,
++        picked_dispatch,
++        total_nodes: graph.total_nodes(),
++        total_classes: graph.classes().count(),
++        iterations: report.iterations as u32,
++    }
++}
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 0133bcc64..10bdb2c14 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -11,6 +11,7 @@ use std::collections::{HashMap, HashSet};
+ use thiserror::Error;
+ 
+ mod backend_egraph;
++pub mod backend_egraph_bbnf;
+ mod decision_csp;
+ pub mod diagnostics;
+ 
+@@ -501,6 +502,12 @@ pub mod recognizers {
+         }
+ 
+         let candidates = backend_candidates(grammar, rule, backend_rule, layout, target);
++        // PROTO-2 child-bearing organ, wired into the production seam. It
++        // builds → saturates → extracts a tree-profile e-node over the flat
++        // GrammarIr for the rule's Alt (if any). Observational: the result
++        // is discarded, so it never feeds ActiveSelection and generated
++        // output stays byte-identical (regen-neutral).
++        let _organ = crate::backend_egraph_bbnf::probe_child_bearing(grammar, rule.body);
+         let active = crate::backend_egraph::select(rule.id, candidates.clone());
+         crate::decision_csp::finalize_rule(&grammar.name, rule.id, candidates, active)
+     }
+diff --git a/skinny/crates/passes/tests/child_node_extraction.rs b/skinny/crates/passes/tests/child_node_extraction.rs
+new file mode 100644
+index 000000000..b8f7970bc
+--- /dev/null
++++ b/skinny/crates/passes/tests/child_node_extraction.rs
+@@ -0,0 +1,93 @@
++//! PROTO-2 / PROVE-2-CHILD-NODE-IN-SEAM.
++//!
++//! Faces the child-bearing `BbnfNode` organ at a REAL json rule — json.bbnf's
++//! `value = ws (object | array | string | number | bool | null) ws` — parsed
++//! through the production `grammar` front end into skinny's flat `GrammarIr`.
++//! Asserts: the organ builds over the flat arena (no bbnf-ir DAG), faces ≥2
++//! confluent survivors at the 6-branch Alt, the N-crossover arm picks the
++//! dispatch form (N = 6 > N* = 3), and the whole build→saturate→extract→
++//! teardown organ runs in well under 50µs.
++
++use std::time::Instant;
++
++use passes::backend_egraph_bbnf::probe_child_bearing;
++
++fn load_json_grammar() -> ir::GrammarIr {
++    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammars/json.bbnf");
++    let source = std::fs::read_to_string(path).expect("read grammars/json.bbnf");
++    grammar::parse_json_grammar(&source).expect("parse json.bbnf into flat GrammarIr")
++}
++
++#[test]
++fn child_node_extraction_faces_two_survivors_at_json_value() {
++    let grammar = load_json_grammar();
++    let value = grammar
++        .rule_by_name("value")
++        .expect("json.bbnf has a `value` rule");
++
++    let report = probe_child_bearing(&grammar, value.body);
++
++    println!(
++        "[CHILD-NODE] rule=value ran={} alt_arity={} survivors={} picked_dispatch={} \
++         total_nodes={} total_classes={} iterations={}",
++        report.ran,
++        report.alt_arity,
++        report.alt_survivors,
++        report.picked_dispatch,
++        report.total_nodes,
++        report.total_classes,
++        report.iterations,
++    );
++
++    // The organ ran over the flat GrammarIr — no bbnf-ir DAG was needed.
++    assert!(report.ran, "organ must build for a rule bearing an Alt");
++    // json's value Alt has exactly 6 branches (object|array|string|number|bool|null).
++    assert_eq!(report.alt_arity, 6, "value dispatch is a 6-branch Alt");
++    // ≥2 confluent survivors: sequential + manufactured dispatch twin.
++    assert!(
++        report.alt_survivors >= 2,
++        "extraction must face ≥2 survivors at the real json value rule; got {}",
++        report.alt_survivors
++    );
++    // N = 6 > N* = 3 ⇒ the N-crossover arm picks the dispatch form.
++    assert!(
++        report.picked_dispatch,
++        "at N=6 the calibrated N-crossover arm must pick the dispatch form"
++    );
++}
++
++#[test]
++fn child_node_organ_runs_under_50us_cold() {
++    let grammar = load_json_grammar();
++    let value = grammar.rule_by_name("value").expect("value rule");
++
++    // Warm the arena caches once (parse is NOT the organ; excluded).
++    let _ = probe_child_bearing(&grammar, value.body);
++
++    // Cold-paired: fresh EGraph build→saturate→extract→teardown each run.
++    let mut samples: Vec<u128> = Vec::with_capacity(200);
++    for _ in 0..200 {
++        let start = Instant::now();
++        let report = probe_child_bearing(&grammar, value.body);
++        let elapsed = start.elapsed().as_nanos();
++        std::hint::black_box(&report);
++        samples.push(elapsed);
++    }
++    samples.sort_unstable();
++    let min_ns = samples[0];
++    let median_ns = samples[samples.len() / 2];
++    let p90_ns = samples[samples.len() * 9 / 10];
++
++    println!(
++        "[CHILD-NODE-ORGAN-US] min={:.3} median={:.3} p90={:.3} (n=200 cold build+saturate+extract+teardown)",
++        min_ns as f64 / 1000.0,
++        median_ns as f64 / 1000.0,
++        p90_ns as f64 / 1000.0,
++    );
++
++    assert!(
++        median_ns < 50_000,
++        "organ median must be < 50µs; got {:.3}µs",
++        median_ns as f64 / 1000.0
++    );
++}

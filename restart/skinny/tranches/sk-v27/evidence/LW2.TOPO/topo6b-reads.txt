@@ -1,0 +1,37 @@
+# LW2.TOPO-6b (ruling S1-A / A-10) reads, seat S1 TOPO-6b, 2026-11-10
+# base lw2/s1-custody b38af49ea (= e3dacb6d1 + merge of sk-v27-lw2 a89bcd25f); logs ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/topo6b/
+
+## RED x2 at base (falsifier: json_text_rfc8259_every_root_backend + node_execute_twitter_statuses_zero_text + pipeline_vm_full_json_{data,twitter,canada} exact offsets)
+6         throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+1      Summary [   2.343s] 5 tests run: 0 passed, 5 failed, 25 skipped
+1      Summary [   2.368s] 5 tests run: 0 passed, 5 failed, 25 skipped
+6     Error: parse() failed: {"result":null,"offset":567926}
+6     ts " \t\r\n[1, 2] \n": accepted=false, RFC 8259 says true
+6     ts "\n\"x\"": accepted=false, RFC 8259 says true
+6     ts "{\"a\":1}\n": accepted=false, RFC 8259 says true
+6     vm " \t\r\n[1, 2] \n": accepted=false, RFC 8259 says true
+6     vm "[1 2]": accepted=true, RFC 8259 says false
+6     vm "[1,]": accepted=true, RFC 8259 says false
+6     vm "\n\"x\"": accepted=false, RFC 8259 says true
+6     vm "{\"a\":1 \"b\":2}": accepted=true, RFC 8259 says false
+6     vm "{\"a\":1,}": accepted=true, RFC 8259 says false
+6     vm "{\"a\":1}\n": accepted=false, RFC 8259 says true
+
+## RED x2 at base: json_wasm --test (WASM IntLit/BoolLit map returned the literal in place of the offset)
+corpus: citm_catalog.json: WASM parse failed or incomplete (-1/1727204)
+probe `null`: WASM parse failed or incomplete (0/4)
+
+## GREEN x2 (worktree diff on b38af49ea, committed as the TOPO-6b commit)
+falsifier read 1: Summary [   0.251s] 5 tests run: 5 passed, 25 skipped
+falsifier read 2: Summary [   0.254s] 5 tests run: 5 passed, 25 skipped
+regen --check 1: regen --check: clean (9 of 9 grammars matched)
+regen --check 2: regen --check: clean (9 of 9 grammars matched)
+nextest --workspace --profile ci read 1: Summary [  21.953s] 1517 tests run: 1516 passed, 1 failed, 23 skipped ; failing: (1516/1517) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates (─────────) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates 
+nextest --workspace --profile ci read 2: Summary [  10.421s] 1517 tests run: 1516 passed, 1 failed, 23 skipped ; failing: (1517/1517) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates (─────────) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates 
+clippy --workspace --all-targets --locked -D warnings: rc 0
+json_vm --test (exact end offsets) x2: rc 0, rc 0
+json_wasm --test (exact end offsets) x2: rc 0, rc 0
+grammar/MANIFEST --check (topo4.py): rc 0
+twitter leaf: status=pass rust_eager==rust_lazy==ts: byte-for-byte 
+
+## iai JSON gate: read on PR #10 CI (valgrind is Linux-only); see the LEDGER row

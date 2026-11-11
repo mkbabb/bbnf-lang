@@ -6,10 +6,22 @@ on:
   pull_request:
     branches: [main, master]
 
+# sk-v27 LW2.TOPO-3: the arm set is macos-15 (for the order's macos-14) and ubuntu-latest on the pinned
+# stable toolchain (rust-toolchain.toml), each sharded three ways with the
+# preflight (regen, clippy -D warnings, iter-check) on both arms; a
+# `cargo +stable` job on the latest stable; and an Intel SDE job that runs
+# the generated parsers' x86 paths (the kernels and their SDE arm are
+# parse-that-simd's, in parse-that, since LW2.PERF-1). `ci-ok` needs every job and is the one required
+# check. The build wrapper is set here (RUSTC_WRAPPER with the sccache
+# action), never in .cargo/config.toml (LW2.TOPO-2).
+
 jobs:
   rust:
-    name: Rust — preflight + workspace close (shard ${{ matrix.partition }}/${{ matrix.total }})
-    runs-on: ubuntu-latest
+    name: Rust (${{ matrix.os }}) — preflight + workspace close (shard ${{ matrix.partition }}/${{ matrix.total }})
+    runs-on: ${{ matrix.os }}
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
     # ── Nextest partitioning (AZ-III.W0p.5) ────────────────────────────
     # The workspace test step runs as a 3-shard matrix via
     # `cargo nextest --partition count:N/M`; nextest deterministically
@@ -23,19 +35,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # macos-15 (Apple silicon, NEON): GitHub no longer serves macos-14
+        # ("The configuration 'macos-14-arm64-us-default' is not supported",
+        # pprint run 42732073134); the order's macos-14 arm reads here.
+        os: [macos-15, ubuntu-latest]
         partition: [1, 2, 3]
         total: [3]
     steps:
       - uses: actions/checkout@v4
-      # Pinned toolchain lives in rust-toolchain.toml (B1.W0.a).
-      # rustup honours the committed file automatically; no explicit
-      # channel override here — the pin is the source of truth.
-      - name: show toolchain resolution
+      # The pin (stable 1.99.1) lives in rust-toolchain.toml; the explicit
+      # install makes rustup fetch it before the first cargo call.
+      - name: toolchain (the rust-toolchain.toml pin, stable)
         run: |
-          rustup show
+          rustup toolchain install
+          rustup show active-toolchain
           rustc --version
           cargo --version
       - uses: Swatinem/rust-cache@v2
+      # RUSTC_WRAPPER (job env) names sccache, backed by the Actions cache.
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: install cargo-nextest
         uses: taiki-e/install-action@v2
         with:
@@ -74,6 +93,11 @@ jobs:
       # that don't benefit from partitioning. These are the close
       # gates; they pay the full release cost and are explicitly
       # separated from the preflight block above.
+      # sk-v27 LW2.TOPO-6 (ruling R-c): the test corpus is the release asset
+      # named in corpus/MANIFEST.sha256, fetched over public HTTPS with no
+      # token and checked file by file before any test reads it.
+      - name: corpus — fetch and verify (release asset, sha256 manifest)
+        run: cargo xtask corpus fetch
       - name: heavy — workspace tests (nextest, ci profile, shard ${{ matrix.partition }}/${{ matrix.total }})
         run: cargo nextest run --workspace --profile ci --partition count:${{ matrix.partition }}/${{ matrix.total }}
       - name: heavy — sonic-rs JSON parity
@@ -86,9 +110,82 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nextest-junit-${{ matrix.partition }}
+          name: nextest-junit-${{ matrix.os }}-${{ matrix.partition }}
           path: target/nextest/ci/junit.xml
           if-no-files-found: warn
+
+  hermetic:
+    # CB-1a: a fresh checkout, with no sibling repositories and no
+    # credentials, builds the whole workspace from its pinned git edges.
+    # The script also fails on any path package outside the repository
+    # and on any git package not pinned by rev.
+    name: Rust — hermetic clean-clone build
+    runs-on: ubuntu-latest
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: toolchain (the rust-toolchain.toml pin, stable)
+        run: |
+          rustup toolchain install
+          rustc --version
+          cargo --version
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+      # sk-v27 LW2.TOPO-1 (X-5): the three-repository crate graph is the DAG
+      # pprint <- parse-that <- bbnf-lang, read from cargo's own resolution.
+      - name: repo DAG (pprint <- parse-that <- bbnf-lang)
+        run: sh scripts/check-repo-dag.sh
+      - name: hermetic build
+        run: sh scripts/check-hermetic-build.sh
+
+  stable:
+    # The LW1.PERF-2 command on the latest stable release: the forward arm of
+    # the pin, so a new stable that breaks the build is read before the pin
+    # moves.
+    name: Rust — cargo +stable (latest)
+    runs-on: ubuntu-latest
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: mozilla-actions/sccache-action@v0.0.9
+      - run: cargo +stable --version
+      - run: cargo +stable build --release --locked
+      - run: cargo +stable xtask corpus fetch
+      - run: cargo +stable test --workspace --locked --no-fail-fast
+
+  sde:
+    # Intel SDE (Sapphire Rapids: AVX-512 F, BW, VBMI2) runs the generated
+    # JSON and CSS parsers on a default build, so any structural-index scan
+    # they make runs parse_that::scan's runtime-selected AVX-512 tier on an
+    # emulated part that has the ISA (ruling X-4).
+    # parse-that-simd's own SDE arm is in parse-that. The emitter's
+    # compile-time-only AVX2 regex paths are not built here: with
+    # `-C target-cpu=sapphirerapids` they do not compile on stable
+    # (`str_as_str`, generated bbnf.rs; LW2.PERF-1 finding, routed to the
+    # codegen unit that retires them, U6).
+    name: Rust — Intel SDE (AVX-512, generated parsers)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain (the rust-toolchain.toml pin, stable)
+        run: |
+          rustup toolchain install
+          rustc --version
+      - uses: petarpetrovt/setup-sde@6d2773bc0ef3005fd52e0ae0bb91782321793aec # v6.0
+      # The parity suites read the canonical corpus (TOPO-6).
+      - name: corpus — fetch and verify (release asset, sha256 manifest)
+        run: cargo xtask corpus fetch
+      - name: generated-parser parity suites under SDE
+        run: |
+          export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="$SDE_PATH/sde64 -spr --"
+          cargo test --target x86_64-unknown-linux-gnu -p bbnf --locked --no-fail-fast --test json_parity --test css_l4_parity
 
   extension:
     name: Extension — lint + build
@@ -104,3 +201,46 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  typescript:
+    # sk-v27 LW2 (S14 on S13-G4): the TypeScript suite, parity.test.ts
+    # included, gates the merge like every Rust arm. R-b's "no divergence is
+    # closed by deleting its test" and LG-b need it read in CI, not locally.
+    # The parity test's Rust arm is bbnf-bootstrap's debug_parse binary.
+    name: TypeScript — tests (with the Rust parity arm)
+    runs-on: ubuntu-latest
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: toolchain (the rust-toolchain.toml pin, stable)
+        run: |
+          rustup toolchain install
+          rustc --version
+          cargo --version
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
+      - name: build the parity test's Rust arm
+        run: cargo build -p bbnf-bootstrap --bin debug_parse --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+        working-directory: typescript
+      - run: npm test
+        working-directory: typescript
+
+  ci-ok:
+    # The one required check: every arm above, by name.
+    name: ci-ok
+    if: always()
+    needs: [rust, stable, sde, hermetic, extension, typescript]
+    runs-on: ubuntu-latest
+    steps:
+      - name: every arm succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$NEEDS" | jq -e 'all(.[]; .result == "success")' > /dev/null

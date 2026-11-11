@@ -1,0 +1,31 @@
+# admit.py over every PREREG §7 cell, read 1, 2026-11-11T02:30:04Z, commit 2be4da973, PREREG sha256 55acca830095435a
+C-J1-BASE-TWITTER	REFUSED - row R-JSON-P1-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-JSON-P1-sonic-rs has no witness mode yet (OWED (U5 adapter)) 
+C-J1-BASE-CITM	REFUSED - row R-JSON-P1-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-JSON-P1-sonic-rs has no witness mode yet (OWED (U5 adapter)) 
+C-J1-BASE-CANADA	REFUSED - row R-JSON-P1-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-JSON-P1-sonic-rs has no witness mode yet (OWED (U5 adapter)) 
+C-J1-AA	REFUSED - row R-JSON-P1-bbnf-gen has no witness mode yet (OWED (U5 adapter)) 
+C-J1-SLOW	REFUSED - row R-JSON-P1-bbnf-gen has no witness mode yet (OWED (U5 adapter)) 
+C-J3-BASE-TWITTER	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-JSON-P4-sonic-rs has no witness mode yet (OWED (U5 adapter)) 
+C-J3-BASE-CITM	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-JSON-P4-sonic-rs has no witness mode yet (OWED (U5 adapter)) 
+C-J3-BASE-CANADA	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-JSON-P4-sonic-rs has no witness mode yet (OWED (U5 adapter)) 
+C-J3-BASE-SERDE-TWITTER	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-JSON-P4-serde_json has no witness mode yet (OWED (U5 adapter)) 
+C-J3-AA	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) 
+C-J3-SLOW	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) 
+C-C1-BASE-BOOTSTRAP	REFUSED - row R-CSS-P2-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-CSS-P2-cssparser has no witness mode yet (OWED (U5 adapter)) 
+C-C1-BASE-TAILWIND	REFUSED - row R-CSS-P2-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-CSS-P2-cssparser has no witness mode yet (OWED (U5 adapter)) 
+C-C1-AA	REFUSED - row R-CSS-P2-bbnf-gen has no witness mode yet (OWED (U5 adapter)) 
+C-C1-SLOW	REFUSED - row R-CSS-P2-bbnf-gen has no witness mode yet (OWED (U5 adapter)) 
+C-C1B-BASE-BOOTSTRAP	REFUSED - row R-CSS-P7-bbnf-css_l4 has no witness mode yet (OWED (U5 adapter)) - row R-CSS-P7-lightningcss has no witness mode yet (OWED (U5 adapter)) 
+C-G1-BASE-PEST	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-COMB-P4-pest has no witness mode yet (OWED (U5 adapter)) 
+C-G1-BASE-NOM	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-COMB-P4-nom has no witness mode yet (OWED (U5 adapter)) 
+C-G1-BASE-WINNOW	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-COMB-P4-winnow has no witness mode yet (OWED (U5 adapter)) 
+C-G1-BASE-CHUMSKY	REFUSED - row R-JSON-P4-bbnf-gen has no witness mode yet (OWED (U5 adapter)) - row R-COMB-P4-chumsky has no witness mode yet (OWED (U5 adapter)) 
+C-G1-AA	REFUSED - row R-COMB-P4-winnow has no witness mode yet (OWED (U5 adapter)) 
+C-G2-BASE-JSONPARSE	REFUSED - row R-JS-P4-bbnf-ts has no witness mode yet (OWED (U5 adapter)) 
+C-G2-BASE-PEGGY	REFUSED - row R-JS-P4-bbnf-ts has no witness mode yet (OWED (U5 adapter)) - row R-JS-P4-peggy has no witness mode yet (OWED (U5 adapter)) 
+C-G2-BASE-CHEVROTAIN	REFUSED - row R-JS-P4-bbnf-ts has no witness mode yet (OWED (U5 adapter)) - row R-JS-P4-chevrotain has no witness mode yet (OWED (U5 adapter)) 
+C-G2-AA	ADMITTED 
+C-G2-SLOW	ADMITTED 
+C-MM-PLANE	REFUSED - plane differs: cell P4, L-CON4-skinny.parse_only_track1 P1, L-CON4-skinny.parse_only_serde P4 - class differs: cell VAL, L-CON4-skinny.parse_only_track1 CHK, L-CON4-skinny.parse_only_serde VAL 
+C-MM-CLASS	REFUSED - class differs: cell VAL, R-JSON-P4-bbnf-gen VAL, R-JSON-P4-tree-sitter-json CST 
+C-MM-NOCOMP	REFUSED - row R-JS-P2-postcss is marked no comparator 
+C-MM-BUILD	REFUSED - build-plane mismatch: runtime_flags 'none' vs '--jitless' 

@@ -9,7 +9,7 @@
 //!
 //! # Mechanism
 //!
-//! Each pattern's [`bbnf_regex::regex_first_chars`] yields the set of
+//! Each pattern's [`parse_that_regex::regex_first_chars`] yields the set of
 //! ASCII bytes that can begin a match. When the union of FIRST sets
 //! across all adapter-dispatched patterns has a sparse mapping
 //! (`byte → Vec<pattern_idx>`), we emit a `match input[pos]` ladder
@@ -181,56 +181,4 @@ impl RuleAlphabetFacts {
         admits_digraph: false,
         is_compound: false,
     };
-}
-
-/// Classify a single rule against the grammar's mined alphabet +
-/// digraph facts.
-///
-/// Parameters:
-///
-/// - `rule_first_set`: the rule's FIRST-set bytes (`IrRule::meta::first_set`
-///   materialised as a byte slice the caller already collected — we
-///   take a slice rather than owning the import to keep the byte_class
-///   module free of IR / CSP dependencies);
-/// - `structural_alphabet`: the grammar's
-///   `GrammarProfile::structural_alphabet` bytes (sorted);
-/// - `structural_digraph_mask`: the grammar's 256-bit bitmap of
-///   digraph first-bytes (`GrammarProfile::structural_digraph_mask`);
-/// - `is_compound`: whether the rule is a children-bearing compound
-///   (Seq / Alt / Repeat / Rule / TokenDispatch).
-///
-/// Returns a [`RuleAlphabetFacts`] the emitter lowers into a
-/// [`::tape::ScanPolicyEntry`]. The function is pure — no hidden
-/// state, no allocation, admissible in const contexts if the IR ever
-/// moves in that direction.
-#[inline]
-pub fn classify_rule_alphabet(
-    rule_first_set: &[u8],
-    structural_alphabet: &[u8],
-    structural_digraph_mask: &[u64; 4],
-    is_compound: bool,
-) -> RuleAlphabetFacts {
-    let mut intersection: u8 = 0;
-    let mut admits_digraph = false;
-
-    for &b in rule_first_set {
-        // Alphabet membership — linear scan over the sorted alphabet
-        // (bounded ≤ 53 bytes on every shipped grammar, so the
-        // linear-vs-bitmap trade-off lands on linear here).
-        if structural_alphabet.contains(&b) {
-            intersection = intersection.saturating_add(1);
-        }
-        // Digraph first-byte probe — one indexed load + one mask.
-        let word = (b >> 6) as usize;
-        let bit = b & 0x3F;
-        if (structural_digraph_mask[word] >> bit) & 1 == 1 {
-            admits_digraph = true;
-        }
-    }
-
-    RuleAlphabetFacts {
-        alphabet_intersection_count: intersection,
-        admits_digraph,
-        is_compound,
-    }
 }

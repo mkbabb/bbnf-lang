@@ -11,6 +11,7 @@
 //! - [`resolve`] — cycle-safe Ref-chain resolvers
 //!   ([`resolve_to_seq`] / [`unwrap_to_alt`] / [`unwrap_to_repeat`]).
 //! - [`literal`] — single-byte literal extractor ([`single_byte_literal`]).
+//! - [`sep_list`] — the strict separated list `x (sep x)*` ([`sep_list()`]).
 //! - [`leading`] — leading-position literal/regex extraction
 //!   ([`extract_leading_literals`] / [`extract_leading_regex_pattern`]).
 //!
@@ -23,11 +24,13 @@
 pub mod leading;
 pub mod literal;
 pub mod resolve;
+pub mod sep_list;
 pub mod unwrap;
 pub mod walk;
 
 pub use leading::{extract_leading_literals, extract_leading_regex_pattern};
 pub use literal::single_byte_literal;
 pub use resolve::{resolve_to_seq, unwrap_to_alt, unwrap_to_repeat};
+pub use sep_list::{SepList, sep_list};
 pub use unwrap::{unwrap_map_ow, unwrap_wrap};
 pub use walk::visit_children_alt;

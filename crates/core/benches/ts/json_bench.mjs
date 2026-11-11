@@ -12,8 +12,9 @@
  *   # First generate the TS parser:
  *   cargo test -p bbnf --test gen_ts_parser -- --nocapture
  *
- *   # Then run (from rust/bbnf/):
- *   node benches/ts/json_bench.mjs
+ *   # Then run (from crates/core/), passing the corpus directory that the one
+ *   # resolver names (`cargo xtask corpus fetch` provides it):
+ *   node benches/ts/json_bench.mjs "$(cargo xtask corpus dir)"
  */
 
 import { readFileSync, existsSync } from "node:fs";
@@ -23,7 +24,12 @@ import { performance } from "node:perf_hooks";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "../../../..");
-const dataDir = join(repoRoot, "data/json");
+const corpusDir = process.argv[2];
+if (!corpusDir) {
+    console.error("usage: node benches/ts/json_bench.mjs <corpus-dir>  (cargo xtask corpus dir)");
+    process.exit(2);
+}
+const dataDir = join(corpusDir, "json");
 const grammarPath = join(repoRoot, "grammar/json/json.bbnf");
 
 // ── Load BBNF-generated TS parser ───────────────────────────────────────────

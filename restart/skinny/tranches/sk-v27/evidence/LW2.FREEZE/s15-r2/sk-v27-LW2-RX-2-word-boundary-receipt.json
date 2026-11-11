@@ -1,0 +1,37 @@
+{
+  "unit": "LW1.RX-1",
+  "corpus": "sk-v27-LW2-RX-2-word-boundary",
+  "corpusPath": "/Users/mkbabb/Programming/parse-that-wt/lw2-s15-freeze/rust/regex/oracle/wordboundary.json",
+  "cases": 15,
+  "reps": 2,
+  "guarded": true,
+  "startedAt": "2026-11-11T05:40:52.595Z",
+  "engines": {
+    "v8": {
+      "version": "node v26.0.0 / v8 14.6.202.33-node.19",
+      "ms": [
+        4438.275042,
+        4121.535417
+      ]
+    },
+    "jsc": {
+      "version": "system JavaScriptCore.framework 21624.1.16.11.4 (bun absent)",
+      "ms": [
+        4116.712917,
+        4449.189
+      ]
+    }
+  },
+  "self": {
+    "v8": {
+      "consistent": true
+    },
+    "jsc": {
+      "consistent": true
+    }
+  },
+  "crossAgree": 15,
+  "specAmbiguity": [],
+  "verdict": "SELF-CONSISTENT",
+  "finishedAt": "2026-11-11T05:41:09.723Z"
+}

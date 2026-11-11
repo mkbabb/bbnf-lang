@@ -1,6 +1,6 @@
 [package]
 name = "bbnf"
-version = "0.2.11"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 description = "BBNF grammar parser and code generator built on parse_that"
@@ -11,13 +11,11 @@ name = "bbnf"
 path = "src/lib.rs"
 
 [dependencies]
-pprint = "0.3"
-parse_that = "0.4"
-bbnf-ir = { version = "0.1", path = "../ir" }
+pprint.workspace = true
+parse_that.workspace = true
+bbnf-ir = { version = "0.2.0", path = "../ir" }
 bbnf-ser = { version = "0.1", path = "../ser" }
-simd-scan = { version = "0.1", path = "../simd-scan" }
-egraph = { path = "../egraph" }
-csp-solver = "0.1"
+parse-that-egraph.workspace = true
 rustc-hash = "2"
 
 syn = { version = "2", features = ["full"] }
@@ -78,11 +76,13 @@ wasm-bench = []
 
 [dev-dependencies]
 quote = "1"
+# sk-v27 LW2.TOPO-6: the one corpus resolver for tests, benches and examples.
+bbnf-corpus = { path = "../corpus" }
 regex = "1"
 tempfile = "3"
 prettyplease = "0.2"
-pprint = "0.3"
-parse_that = "0.4"
+pprint.workspace = true
+parse_that.workspace = true
 divan = "0.1"
 mimalloc = "0.1"
 sonic-rs = "0.5"

@@ -19,6 +19,7 @@ use csp_solver::Csp;
 use csp_solver::constraint::VarId;
 use rustc_hash::FxHashMap as HashMap;
 
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{CharSet128, GrammarIR, IrNode, RuleId};
 
 use super::super::csp_domains::{CharSetDomain, CharSetGroundConstraint, CharSetUnionConstraint};
@@ -46,11 +47,8 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
         .collect();
 
     // Build FIRST set + nullable lookup per rule.
-    let first_of: HashMap<RuleId, CharSet128> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, r.meta.first_set.clone()))
-        .collect();
+    let first_of: HashMap<RuleId, CharSet128> =
+        ir.rules.iter().map(|r| (r.id, r.meta.first_set)).collect();
     let nullable: HashMap<RuleId, bool> =
         ir.rules.iter().map(|r| (r.id, r.meta.nullable)).collect();
 
@@ -67,13 +65,13 @@ pub fn compute_follow_sets(ir: &GrammarIR) -> FollowSets {
         );
     }
 
-    let _ = csp.propagate();
+    propagate_to_fixed_point(&mut csp, "FOLLOW sets");
 
     // Extract results.
     let mut follow: FollowSets = StdHashMap::new();
     for rule in &ir.rules {
         let var = follow_vars[&rule.id];
-        follow.insert(rule.id, csp.variables[var as usize].domain.solved.clone());
+        follow.insert(rule.id, csp.variables[var as usize].domain.solved);
     }
 
     follow
@@ -104,38 +102,35 @@ fn emit_follow_constraints(
                 );
 
                 // If child is Ref(B), compute what follows it.
-                if let IrNode::Ref(ref_id) = child {
-                    if let Some(&follow_var) = follow_vars.get(ref_id) {
-                        // Compute FIRST of the suffix after this Ref.
-                        let mut suffix_first = CharSet128::new();
-                        let mut suffix_nullable = true;
+                if let IrNode::Ref(ref_id) = child
+                    && let Some(&follow_var) = follow_vars.get(ref_id)
+                {
+                    // Compute FIRST of the suffix after this Ref.
+                    let mut suffix_first = CharSet128::new();
+                    let mut suffix_nullable = true;
 
-                        for sibling in children.iter().skip(i + 1) {
-                            let child_first = compute_node_first(sibling, first_of, ir);
-                            suffix_first.union(&child_first);
-                            if !compute_node_nullable(sibling, nullable) {
-                                suffix_nullable = false;
-                                break;
-                            }
+                    for sibling in children.iter().skip(i + 1) {
+                        let child_first = compute_node_first(sibling, first_of, ir);
+                        suffix_first.union(&child_first);
+                        if !compute_node_nullable(sibling, nullable) {
+                            suffix_nullable = false;
+                            break;
                         }
+                    }
 
-                        // Add FIRST(suffix) to FOLLOW(B) as a ground constraint.
-                        if !suffix_first.is_empty() {
-                            csp.add_constraint(CharSetGroundConstraint::new(
-                                follow_var,
-                                suffix_first,
-                            ));
-                        }
+                    // Add FIRST(suffix) to FOLLOW(B) as a ground constraint.
+                    if !suffix_first.is_empty() {
+                        csp.add_constraint(CharSetGroundConstraint::new(follow_var, suffix_first));
+                    }
 
-                        // If suffix is nullable, FOLLOW(container) flows into FOLLOW(B).
-                        if suffix_nullable {
-                            if let Some(&container_follow) = follow_vars.get(&container_rule) {
-                                csp.add_constraint(CharSetUnionConstraint::new(
-                                    follow_var,
-                                    container_follow,
-                                ));
-                            }
-                        }
+                    // If suffix is nullable, FOLLOW(container) flows into FOLLOW(B).
+                    if suffix_nullable
+                        && let Some(&container_follow) = follow_vars.get(&container_rule)
+                    {
+                        csp.add_constraint(CharSetUnionConstraint::new(
+                            follow_var,
+                            container_follow,
+                        ));
                     }
                 }
             }
@@ -171,28 +166,24 @@ fn emit_follow_constraints(
             let inner_first = compute_node_first(inner, first_of, ir);
             match inner.as_ref() {
                 IrNode::Ref(ref_id) => {
-                    if let Some(&follow_var) = follow_vars.get(ref_id) {
-                        if !inner_first.is_empty() {
-                            csp.add_constraint(CharSetGroundConstraint::new(
-                                follow_var,
-                                inner_first,
-                            ));
-                        }
+                    if let Some(&follow_var) = follow_vars.get(ref_id)
+                        && !inner_first.is_empty()
+                    {
+                        csp.add_constraint(CharSetGroundConstraint::new(follow_var, inner_first));
                     }
                 }
                 // For Repeat { inner: Seq([..., Ref(B)]) }, the last Ref in the
                 // sequence also has FIRST(inner) in its FOLLOW (the repeat loops back).
                 IrNode::Seq(children) => {
                     for child in children.iter().rev() {
-                        if let IrNode::Ref(ref_id) = child {
-                            if let Some(&follow_var) = follow_vars.get(ref_id) {
-                                if !inner_first.is_empty() {
-                                    csp.add_constraint(CharSetGroundConstraint::new(
-                                        follow_var,
-                                        inner_first.clone(),
-                                    ));
-                                }
-                            }
+                        if let IrNode::Ref(ref_id) = child
+                            && let Some(&follow_var) = follow_vars.get(ref_id)
+                            && !inner_first.is_empty()
+                        {
+                            csp.add_constraint(CharSetGroundConstraint::new(
+                                follow_var,
+                                inner_first,
+                            ));
                         }
                         if !compute_node_nullable(child, nullable) {
                             break;
@@ -208,12 +199,12 @@ fn emit_follow_constraints(
             emit_follow_constraints(b, container_rule, first_of, nullable, ir, follow_vars, csp);
 
             // For Skip(Ref(A), B): FIRST(B) is in FOLLOW(A).
-            if let IrNode::Ref(ref_id) = a.as_ref() {
-                if let Some(&follow_var) = follow_vars.get(ref_id) {
-                    let b_first = compute_node_first(b, first_of, ir);
-                    if !b_first.is_empty() {
-                        csp.add_constraint(CharSetGroundConstraint::new(follow_var, b_first));
-                    }
+            if let IrNode::Ref(ref_id) = a.as_ref()
+                && let Some(&follow_var) = follow_vars.get(ref_id)
+            {
+                let b_first = compute_node_first(b, first_of, ir);
+                if !b_first.is_empty() {
+                    csp.add_constraint(CharSetGroundConstraint::new(follow_var, b_first));
                 }
             }
         }

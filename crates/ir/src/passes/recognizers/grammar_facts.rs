@@ -504,10 +504,10 @@ impl<'ir> DtaBuilder<'ir> {
     /// non-Seq states are left alone.
     fn maybe_promote_to_kv_pair(&mut self, entry: StateId) {
         let idx = entry.0 as usize;
-        if let Some(state) = self.states.get_mut(idx) {
-            if let DtaState::Seq { promote, .. } = state {
-                *promote = SeqPromote::KvPair;
-            }
+        if let Some(state) = self.states.get_mut(idx)
+            && let DtaState::Seq { promote, .. } = state
+        {
+            *promote = SeqPromote::KvPair;
         }
     }
 
@@ -770,16 +770,16 @@ impl<'ir> DtaBuilder<'ir> {
                 // declined and the FnDescriptor is `Expr` with a
                 // `Named` return type, project well-known names
                 // ("String", "Bytes") to their decoder selectors.
-                if rx_payload.is_none() && matches!(strip_to_leaf(inner), IrNode::Regex(_)) {
-                    if let Some(FnDescriptor::Expr {
+                if rx_payload.is_none()
+                    && matches!(strip_to_leaf(inner), IrNode::Regex(_))
+                    && let Some(FnDescriptor::Expr {
                         return_type: Some(TypeDesc::Named(sid)),
                         ..
                     }) = fn_desc
-                    {
-                        let name = self.ir.get_string(*sid);
-                        if let Some(kind) = regex_payload_from_named(name) {
-                            rx_payload = Some(kind);
-                        }
+                {
+                    let name = self.ir.get_string(*sid);
+                    if let Some(kind) = regex_payload_from_named(name) {
+                        rx_payload = Some(kind);
                     }
                 }
                 let inherit_lit = if matches!(lit_payload, LiteralPayload::None) {
@@ -796,7 +796,7 @@ impl<'ir> DtaBuilder<'ir> {
                 // pair (`bbnf_ir::vm::compiler::node::compile_node`).
                 // Pre-W4γ the lifter silently returned the inner state,
                 // stripping every whitespace-trim site from the DTA and
-                // breaking `BbnfBootstrap::parse` on any grammar with
+                // breaking the self-host parser on any grammar with
                 // `?w` between atoms.
                 //
                 // The ws regex is carried on each `WsTrim` state so the
@@ -1203,22 +1203,20 @@ fn resolve_map_payload(
     let inner_is_regex = matches!(strip_to_leaf(inner), IrNode::Regex(_));
     match desc {
         FnDescriptor::Expr { expr, return_type } => {
-            if inner_is_literal {
-                if let Some(payload) = literal_payload_from_expr(expr, return_type.as_ref()) {
-                    return (payload, None);
-                }
+            if inner_is_literal
+                && let Some(payload) = literal_payload_from_expr(expr, return_type.as_ref())
+            {
+                return (payload, None);
             }
-            if inner_is_regex {
-                if let Some(kind) = regex_payload_from_return(return_type.as_ref()) {
-                    return (LiteralPayload::None, Some(kind));
-                }
-                // AW-III.W1 universal-named arm — `TypeDesc::Named`
-                // routes via the IR string interner. Caller's IR is
-                // not in scope here; the helper signature accepts an
-                // already-resolved name string. The lifter's Map arm
-                // resolves Named via `ir.get_string` before this
-                // helper sees the input.
+            if inner_is_regex && let Some(kind) = regex_payload_from_return(return_type.as_ref()) {
+                return (LiteralPayload::None, Some(kind));
             }
+            // AW-III.W1 universal-named arm — `TypeDesc::Named`
+            // routes via the IR string interner. Caller's IR is
+            // not in scope here; the helper signature accepts an
+            // already-resolved name string. The lifter's Map arm
+            // resolves Named via `ir.get_string` before this
+            // helper sees the input.
             (LiteralPayload::None, None)
         }
         FnDescriptor::NumberConvert { .. } => {
@@ -1407,8 +1405,7 @@ fn collect_operator_alternatives(
     };
 
     let mut out = Vec::with_capacity(literals.len());
-    let mut discriminant: usize = 0;
-    for literal in literals {
+    for (discriminant, literal) in literals.into_iter().enumerate() {
         let bytes = literal.as_bytes();
         if bytes.is_empty() {
             return None;
@@ -1422,7 +1419,6 @@ fn collect_operator_alternatives(
             rung_rule: rung_rule_id,
             op_discriminant: discriminant.min(u8::MAX as usize) as u8,
         });
-        discriminant += 1;
     }
     Some(out)
 }

@@ -1,0 +1,20 @@
+published: parse-that-egraph-derive=0.1.0 parse-that-egraph=0.1.0 pprint_derive=0.3.0 pprint=0.4.0 parse-that-simd=0.1.0 parse-that-regex=0.1.0 parse_that=0.4.0 bbnf-ser=0.1.0 bbnf-ir=0.2.0 bbnf-path=0.1.0 bbnf=0.3.0 bbnf-analysis=0.2.0 bbnf-lsp=0.1.0 gorgeous=0.2.0 
+bbnf =0.2.9 crate	control	rc=0	bbnf=0.2.9 bbnf-ir=0.1.5 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+bbnf =0.2.9 crate	fresh	rc=0	bbnf=0.2.9 bbnf-ir=0.1.5 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+bbnf-analysis =0.1.1 crate	control	rc=0	bbnf=0.2.9 bbnf-analysis=0.1.1 bbnf-ir=0.1.5 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+bbnf-analysis =0.1.1 crate	fresh	rc=0	bbnf=0.2.9 bbnf-analysis=0.1.1 bbnf-ir=0.1.5 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+bbnf-ir =0.1.5 crate	control	rc=0	bbnf-ir=0.1.5
+bbnf-ir =0.1.5 crate	fresh	rc=0	bbnf-ir=0.1.5
+bbnf_derive =0.2.9 crate	control	rc=0	bbnf=0.2.9 bbnf-ir=0.1.5 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+bbnf_derive =0.2.9 crate	fresh	rc=0	bbnf=0.2.9 bbnf-ir=0.1.5 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+gorgeous =0.1.8 crate	control	rc=0	bbnf=0.2.9 bbnf-ir=0.1.5 gorgeous=0.1.8 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+gorgeous =0.1.8 crate	fresh	rc=0	bbnf=0.2.9 bbnf-ir=0.1.5 gorgeous=0.1.8 parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+parse_that =0.3.3 crate	control	rc=0	parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+parse_that =0.3.3 crate	fresh	rc=0	parse_that=0.3.3 pprint=0.3.6 pprint_derive=0.2.2
+pprint =0.3.6 crate	control	rc=0	pprint=0.3.6 pprint_derive=0.2.2
+pprint =0.3.6 crate	fresh	rc=0	pprint=0.3.6 pprint_derive=0.2.2
+pprint_derive =0.2.2 crate	control	rc=0	pprint_derive=0.2.2
+pprint_derive =0.2.2 crate	fresh	rc=0	pprint_derive=0.2.2
+pprint =0.3.6 derive-example	control	rc=0	pprint=0.3.6 pprint_derive=0.2.2
+pprint =0.3.6 derive-example	fresh	rc=0	pprint=0.3.6 pprint_derive=0.2.2
+semver-probe r6-head-r1: GREEN (9 of 9 consumers build, controls and fresh resolves)

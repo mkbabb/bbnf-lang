@@ -1,0 +1,5 @@
+head 07c0520 clean=0
+ABI-v2.md: OK
+src/op.rs: OK
+GREEN: op.rs ABI v2 frozen in pprint, PROVISIONAL for consumers (A-8)
+rc=0

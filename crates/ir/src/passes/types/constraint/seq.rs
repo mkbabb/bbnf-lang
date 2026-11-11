@@ -45,10 +45,8 @@ impl SeqConstraint {
     ) -> Self {
         let mut scope = vec![var];
         scope.extend_from_slice(&children);
-        for orig in &sp_override_originals {
-            if let Some(v) = orig {
-                scope.push(*v);
-            }
+        for v in sp_override_originals.iter().flatten() {
+            scope.push(*v);
         }
         // Deduplicate scope (VarId is u32, dedup is fine).
         scope.sort_unstable();

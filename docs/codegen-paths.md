@@ -233,8 +233,6 @@ crates/ir/
     egraph/             IR egraph integration
     types/              TypeDesc and TypeDescInterner substrate
 
-crates/egraph/          General egraph implementation
-crates/csp-solver/      General CSP solver implementation
 crates/simd-scan/       Scanner primitives and throughput benches
 crates/tape/            DELETED at AZ-II.cutover.O5 / AZ-III.W1 (no longer in workspace)
 crates/gorgeous/        Formatter surface and built-in grammar formatters
@@ -242,7 +240,6 @@ crates/analysis/        Shared analysis for LSP
 crates/lsp/             Language server binary and benches
 crates/bootstrap/       Bootstrap support crate
 crates/ser/             Serialization support
-crates/egraph-derive/   Derive helper for the egraph crate, not BBNF parser generation
 
 wasm/
   src/                  WASM exports for VM/gorgeous/LSP/analysis surfaces

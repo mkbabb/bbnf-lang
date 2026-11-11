@@ -92,10 +92,10 @@ fn wire_contract_bool_is_typed_bool() {
 #[test]
 fn wire_contract_number_is_typed_f64() {
     let mut b = JsonStructBuilder::new();
-    b.push_leaf_with_f64(3.14);
+    b.push_leaf_with_f64(1.25);
     let doc = b.finalise(SYNTH_INPUT);
     match doc.root {
-        JsonValue::Number(JsonNumber::Float(v)) => assert_eq!(v, 3.14),
+        JsonValue::Number(JsonNumber::Float(v)) => assert_eq!(v, 1.25),
         other => panic!("unexpected root variant: {:?}", other),
     }
 }
@@ -455,7 +455,7 @@ fn assert_doc_eq_serde(
 }
 
 fn parity_serde(fixture: &str) {
-    let path = format!("../../data/json/{}", fixture);
+    let path = bbnf_corpus::path(&format!("json/{}", fixture)).display().to_string();
     let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
     let doc =
         JsonParser::parse(&src).unwrap_or_else(|e| panic!("{fixture}: bbnf parse failed: {e:?}"));

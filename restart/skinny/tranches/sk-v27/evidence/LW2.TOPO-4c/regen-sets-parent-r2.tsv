@@ -1,0 +1,6 @@
+clean	rc=0
+m1-core-orphan	rc=0
+m2-path-orphan	rc=0
+m3-path-drift	rc=0
+tree-unchanged	yes
+regen-sets parent-r2: RED

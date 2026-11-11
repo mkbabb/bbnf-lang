@@ -1,0 +1,38 @@
+RED
+  no heads receipt at /Users/mkbabb/.dev-logs/bbnf-lockstep/heads-W0.json
+rc=1
+RED
+  no heads receipt at /Users/mkbabb/.dev-logs/bbnf-lockstep/heads-W0.json
+rc=1
+RED
+  20/33 cited commits resolve (0 non-commit object ids)
+  179623b1f: commit in ['bbnf-lang'] but reachable from no receipted head
+  214b43cd1: commit in ['bbnf-lang'] but reachable from no receipted head
+  3af771630: commit in ['bbnf-lang'] but reachable from no receipted head
+  46c605608: commit in ['bbnf-lang'] but reachable from no receipted head
+  47d51a190: commit in ['bbnf-lang'] but reachable from no receipted head
+  70e9f4317: commit in ['bbnf-lang'] but reachable from no receipted head
+  7ee85ae0d: commit in ['bbnf-lang'] but reachable from no receipted head
+  9afc2a1a0: commit in ['bbnf-lang'] but reachable from no receipted head
+  af15f63e0: commit in ['bbnf-lang'] but reachable from no receipted head
+  b4e635d3e: commit in ['bbnf-lang'] but reachable from no receipted head
+  b5fd0ca98: commit in ['bbnf-lang'] but reachable from no receipted head
+  ce51c36fc: commit in ['bbnf-lang'] but reachable from no receipted head
+  ee63331df: commit in ['bbnf-lang'] but reachable from no receipted head
+rc=1
+RED
+  20/33 cited commits resolve (0 non-commit object ids)
+  179623b1f: commit in ['bbnf-lang'] but reachable from no receipted head
+  214b43cd1: commit in ['bbnf-lang'] but reachable from no receipted head
+  3af771630: commit in ['bbnf-lang'] but reachable from no receipted head
+  46c605608: commit in ['bbnf-lang'] but reachable from no receipted head
+  47d51a190: commit in ['bbnf-lang'] but reachable from no receipted head
+  70e9f4317: commit in ['bbnf-lang'] but reachable from no receipted head
+  7ee85ae0d: commit in ['bbnf-lang'] but reachable from no receipted head
+  9afc2a1a0: commit in ['bbnf-lang'] but reachable from no receipted head
+  af15f63e0: commit in ['bbnf-lang'] but reachable from no receipted head
+  b4e635d3e: commit in ['bbnf-lang'] but reachable from no receipted head
+  b5fd0ca98: commit in ['bbnf-lang'] but reachable from no receipted head
+  ce51c36fc: commit in ['bbnf-lang'] but reachable from no receipted head
+  ee63331df: commit in ['bbnf-lang'] but reachable from no receipted head
+rc=1

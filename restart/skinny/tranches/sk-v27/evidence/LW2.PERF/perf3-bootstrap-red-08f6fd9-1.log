@@ -1,0 +1,11 @@
+head 08f6fd9
+  thread 'test_parse_bootstrap_css' (6381016) has overflowed its stack
+  fatal runtime error: stack overflow, aborting
+    process didn't exit successfully: `/Users/mkbabb/.dev-logs/bbnf-lockstep/target-parse-that/debug/deps/css_parse_test-c4aca2e38c10ff33 test_parse_bootstrap_css --exact` (signal: 6, SIGABRT: process abort signal)
+test_parse_bootstrap_css rc=101
+test_parse_bootstrap_css min_passing_stack_bytes=2752512
+  thread 'test_nested_media' (6381143) has overflowed its stack
+  fatal runtime error: stack overflow, aborting
+    process didn't exit successfully: `/Users/mkbabb/.dev-logs/bbnf-lockstep/target-parse-that/debug/deps/css_parse_test-c4aca2e38c10ff33 test_nested_media --exact` (signal: 6, SIGABRT: process abort signal)
+test_nested_media rc=101
+test_nested_media min_passing_stack_bytes=3342336

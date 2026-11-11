@@ -98,13 +98,9 @@ use bbnf_ir::registry::EmitStrategy;
 /// state on success or failure (the inner is purely a guard); a
 /// rule body whose only "emission" is a Negate guard contributes
 /// no children to the open frame.
-fn body_emits_to_builder(node: &IrNode) -> bool {
-    body_emits_to_builder_with(node, None)
-}
-
-/// Same predicate as [`body_emits_to_builder`], but with access to
-/// the [`GrammarIR`] so `Map { fn_id }` annotations can be inspected
-/// for their payload class. Constant-folded payloads
+///
+/// When the [`GrammarIR`] is given, `Map { fn_id }` annotations are
+/// inspected for their payload class. Constant-folded payloads
 /// (`MapExpr::IntLit` / `BoolLit` / `FloatLit` / `StringLit`) DO emit
 /// to the builder via the per-shape emitter's `payload_push`; the
 /// inert `Span` synthesis must not run alongside them or the rule's
@@ -123,16 +119,16 @@ fn body_emits_to_builder_with(node: &IrNode, ir: Option<&GrammarIR>) -> bool {
             // inner's emission contribution.
             if let Some(ir) = ir {
                 use bbnf_ir::{FnDescriptor, MapExpr};
-                if let Some(FnDescriptor::Expr { expr, .. }) = ir.fns.get(*fn_id as usize) {
-                    if matches!(
+                if let Some(FnDescriptor::Expr { expr, .. }) = ir.fns.get(*fn_id as usize)
+                    && matches!(
                         expr,
                         MapExpr::IntLit(_)
                             | MapExpr::BoolLit(_)
                             | MapExpr::FloatLit(_)
                             | MapExpr::StringLit(_),
-                    ) {
-                        return true;
-                    }
+                    )
+                {
+                    return true;
                 }
             }
             body_emits_to_builder_with(inner, ir)
@@ -329,7 +325,7 @@ pub(super) fn emit_parse_flat_struct_direct(
     // parse_literal` / `parse_regex` lines 174-224) compensated by
     // capturing `lo = self.pos` before the body and pushing
     // `push_leaf_with_str(&self.src[lo..hi])` after. The codegen
-    // path now does the same: when `body_emits_to_builder` returns
+    // path now does the same: when `body_emits_to_builder_with` returns
     // `false`, the emitted body wraps the per-position emission with
     // span-bracket capture and pushes one synthetic `Span` leaf
     // carrying the rule's consumed source slice before
@@ -931,13 +927,26 @@ fn emit_inline_repeat_struct_direct(
 ) -> TokenStream {
     let inner_emit =
         emit_position_core_struct_direct(inner, support_mod, dispatcher_ident, grammar_suffix, ir);
-    let lo_lit = lo as u32;
-    // `hi == 0` represents unbounded iteration in the IR convention.
-    let hi_check = if hi == 0 {
+    // `hi == u32::MAX` is unbounded iteration in the IR convention
+    // (`IrNode::Repeat`), so it carries no upper-bound check.
+    let hi_check = if hi == u32::MAX {
         quote! {}
     } else {
-        let n_lit = hi as u32;
-        quote! { if __iter_count >= #n_lit { break; } }
+        quote! { if __iter_count >= #hi { break; } }
+    };
+    // A zero lower bound is always met, so it emits no check.
+    let lo_check = if lo == 0 {
+        quote! {}
+    } else {
+        quote! {
+            if __iter_count < #lo {
+                return ::core::result::Result::Err(
+                    crate::runtime::DtaError::Syntax {
+                        offset: *p as u32,
+                    },
+                );
+            }
+        }
     };
     quote! {
         {
@@ -972,13 +981,7 @@ fn emit_inline_repeat_struct_direct(
                     }
                 }
             }
-            if __iter_count < #lo_lit {
-                return ::core::result::Result::Err(
-                    crate::runtime::DtaError::Syntax {
-                        offset: *p as u32,
-                    },
-                );
-            }
+            #lo_check
         }
     }
 }

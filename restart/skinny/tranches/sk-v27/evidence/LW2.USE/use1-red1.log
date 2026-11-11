@@ -1,0 +1,15 @@
+F.....
+======================================================================
+FAIL: test_consumer_cells_are_registered (bench.test_prereg.Prereg.test_consumer_cells_are_registered)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s10-use/bench/test_prereg.py", line 61, in test_consumer_cells_are_registered
+    self.assertEqual(len(cells), 14, cells)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 0 != 14 : []
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.005s
+
+FAILED (failures=1)
+cbb0: refused: cell C-S1-ACC-VALUE is not registered in bench/PREREG.md (44 registered)

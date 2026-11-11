@@ -1,0 +1,137 @@
+graph: every path package is inside the repository; every git package is pinned to a rev or a release tag
+warning: unnecessary parentheses around closure body
+  --> parse_that/tests/padded_input_test.rs:59:42
+   |
+59 |         let src: String = (0..n).map(|i| ((b'a' + (i % 26) as u8) as char)).collect();
+   |                                          ^                               ^
+   |
+   = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+   |
+59 -         let src: String = (0..n).map(|i| ((b'a' + (i % 26) as u8) as char)).collect();
+59 +         let src: String = (0..n).map(|i| (b'a' + (i % 26) as u8) as char).collect();
+   |
+
+warning: unnecessary parentheses around closure body
+  --> parse_that/tests/padded_input_test.rs:69:18
+   |
+69 |         .map(|i| ((b'0' + (i % 10) as u8) as char))
+   |                  ^                               ^
+   |
+help: remove these parentheses
+   |
+69 -         .map(|i| ((b'0' + (i % 10) as u8) as char))
+69 +         .map(|i| (b'0' + (i % 10) as u8) as char)
+   |
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> parse_that/benches/competitors/nom.rs:71:13
+   |
+71 | fn array(i: &str) -> IResult<&str, Vec<JsonValue>> {
+   |             ^^^^             ^^^^      ^^^^^^^^^ the same lifetime is hidden here
+   |             |                |
+   |             |                the same lifetime is elided here
+   |             the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+71 | fn array(i: &str) -> IResult<&str, Vec<JsonValue<'_>>> {
+   |                                                 ++++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> parse_that/benches/competitors/nom.rs:81:17
+   |
+81 | fn key_value(i: &str) -> IResult<&str, (&str, JsonValue)> {
+   |                 ^^^^             ^^^^   ^^^^  ^^^^^^^^^ the same lifetime is hidden here
+   |                 |                |      |
+   |                 |                |      the same lifetime is elided here
+   |                 |                the same lifetime is elided here
+   |                 the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+81 | fn key_value(i: &str) -> IResult<&str, (&str, JsonValue<'_>)> {
+   |                                                        ++++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> parse_that/benches/competitors/nom.rs:85:12
+   |
+85 | fn hash(i: &str) -> IResult<&str, HashMap<&str, JsonValue>> {
+   |            ^^^^             ^^^^          ^^^^  ^^^^^^^^^ the same lifetime is hidden here
+   |            |                |             |
+   |            |                |             the same lifetime is elided here
+   |            |                the same lifetime is elided here
+   |            the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+   |
+85 | fn hash(i: &str) -> IResult<&str, HashMap<&str, JsonValue<'_>>> {
+   |                                                          ++++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> parse_that/benches/competitors/nom.rs:102:13
+    |
+102 | fn value(i: &str) -> IResult<&str, JsonValue> {
+    |             ^^^^             ^^^^  ^^^^^^^^^ the same lifetime is hidden here
+    |             |                |
+    |             |                the same lifetime is elided here
+    |             the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+102 | fn value(i: &str) -> IResult<&str, JsonValue<'_>> {
+    |                                             ++++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+   --> parse_that/benches/competitors/nom.rs:116:12
+    |
+116 | fn root(i: &str) -> IResult<&str, JsonValue> {
+    |            ^^^^             ^^^^  ^^^^^^^^^ the same lifetime is hidden here
+    |            |                |
+    |            |                the same lifetime is elided here
+    |            the lifetime is elided here
+    |
+    = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+help: use `'_` for type paths
+    |
+116 | fn root(i: &str) -> IResult<&str, JsonValue<'_>> {
+    |                                            ++++
+
+warning: `parse_that` (test "padded_input_test") generated 2 warnings (run `cargo fix --test "padded_input_test" -p parse_that` to apply 2 suggestions)
+warning: `parse_that` (bench "nom") generated 5 warnings (run `cargo fix --bench "nom" -p parse_that` to apply 5 suggestions)
+warning: unused import: `parse_that::regex::byteset::ByteSet`
+ --> parse_that/tests/regex/nfa_test.rs:1:5
+  |
+1 | use parse_that::regex::byteset::ByteSet;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `classes`
+  --> parse_that/tests/regex/equiv_test.rs:31:10
+   |
+31 |     let (classes, num) = compute_byte_classes(&[digits, alpha]);
+   |          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_classes`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `classes`
+  --> parse_that/tests/regex/equiv_test.rs:75:10
+   |
+75 |     let (classes, num) = compute_byte_classes(&[bs]);
+   |          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_classes`
+
+warning: unused variable: `classes`
+  --> parse_that/tests/regex/equiv_test.rs:56:10
+   |
+56 |     let (classes, num) = compute_byte_classes(&[leading, continuation]);
+   |          ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_classes`
+
+warning: `parse_that` (test "regex") generated 4 warnings (run `cargo fix --test "regex" -p parse_that` to apply 4 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 10.84s
+hermetic: clean-clone build GREEN

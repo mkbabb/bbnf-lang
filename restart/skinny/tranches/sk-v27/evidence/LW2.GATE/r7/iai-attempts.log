@@ -1,0 +1,2 @@
+2026-11-11T16:54:38Z run 43061155334 attempt 1 failure (install valgrind; Temporary failure resolving azure.archive/archive/security.ubuntu.com) class=network/archive
+2026-11-11T17:01:09Z run 43061155334 attempt 2 success

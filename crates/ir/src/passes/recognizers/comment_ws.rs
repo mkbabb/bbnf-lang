@@ -3,7 +3,7 @@
 //! Regex node whose classification is the canonical comment-aware
 //! whitespace pattern.
 
-use bbnf_regex::RegexClass;
+use parse_that_regex::RegexClass;
 
 use crate::IrNode;
 use crate::dag::NodeId;

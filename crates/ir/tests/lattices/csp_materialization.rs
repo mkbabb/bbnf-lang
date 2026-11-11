@@ -72,7 +72,7 @@ fn make_ir(rules: Vec<IrRule>, strings: Vec<String>) -> GrammarIR {
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     // Run the AB.0 classification first — the CSP consumes its
     // output as the domain prefilter.
     classify_materialization(&mut ir);
@@ -154,12 +154,14 @@ fn epsilon_rule_stays_transparent_elide_after_csp() {
 #[test]
 fn pretty_pinned_rule_stays_must_tape_after_csp() {
     let strings = vec!["entry".to_string(), "a".to_string(), "b".to_string()];
-    let mut meta = RuleMeta::default();
-    meta.directives = RuleDirectives {
-        pretty: Some(PrettyHints::default()),
-        recover: None,
-        token: false,
-        debug: false,
+    let meta = RuleMeta {
+        directives: RuleDirectives {
+            pretty: Some(PrettyHints::default()),
+            recover: None,
+            token: false,
+            debug: false,
+        },
+        ..RuleMeta::default()
     };
     let body = IrNode::Alt(
         vec![
@@ -195,8 +197,10 @@ fn debug_pinned_rule_stays_must_tape_after_csp() {
 #[test]
 fn preserve_identity_stays_must_tape_after_csp() {
     let strings = vec!["entry".to_string(), "hi".to_string()];
-    let mut meta = RuleMeta::default();
-    meta.preserve_identity = true;
+    let meta = RuleMeta {
+        preserve_identity: true,
+        ..RuleMeta::default()
+    };
     let rules = vec![rule_with_meta(0, 0, IrNode::Literal(1), meta)];
     let mut ir = make_ir(rules, strings);
     solve_and_merge(&mut ir);

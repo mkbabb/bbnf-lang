@@ -72,13 +72,12 @@ fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
             // type only if ALL branches agree on a single type.
             let mut result: Option<TypeDesc> = None;
             for b in branches {
-                match resolve_branch_type(&b.node, ir) {
-                    Some(td) => match &result {
-                        None => result = Some(td),
-                        Some(existing) if *existing == td => {}
-                        Some(_) => return None, // heterogeneous nested Alt
-                    },
-                    None => return None, // non-scalar branch in nested Alt
+                // A non-scalar branch makes the nested Alt untyped.
+                let td = resolve_branch_type(&b.node, ir)?;
+                match &result {
+                    None => result = Some(td),
+                    Some(existing) if *existing == td => {}
+                    Some(_) => return None, // heterogeneous nested Alt
                 }
             }
             result
@@ -102,10 +101,11 @@ fn resolve_branch_type(node: &IrNode, ir: &GrammarIR) -> Option<TypeDesc> {
 fn collect_alt_payload_types(branches: &[AltBranch], ir: &GrammarIR) -> Vec<TypeDesc> {
     let mut types = Vec::new();
     for b in branches {
-        if let Some(td) = resolve_branch_type(&b.node, ir) {
-            if td.needs_payload_slot() && !types.contains(&td) {
-                types.push(td);
-            }
+        if let Some(td) = resolve_branch_type(&b.node, ir)
+            && td.needs_payload_slot()
+            && !types.contains(&td)
+        {
+            types.push(td);
         }
     }
     types
@@ -356,7 +356,8 @@ impl Emitter for RustEmitter {
     }
     fn emit_prettify_sep_inline(&mut self, sep: &str, _ctx: &mut Self::Ctx) -> TokenStream {
         let sep_lit = proc_macro2::Literal::string(sep);
-        quote::quote! { __builder.sep(#sep_lit, ""); }
+        let brk_lit = proc_macro2::Literal::string(sep.trim_end());
+        quote::quote! { __builder.sep(#sep_lit, #brk_lit); }
     }
     fn emit_prettify_rule_function(
         &mut self,

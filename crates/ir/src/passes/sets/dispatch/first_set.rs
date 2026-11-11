@@ -30,11 +30,7 @@ pub(super) fn node_first_set(
         }
         IrNode::Ref(rule_id) => {
             let (ref first_set, nullable) = rule_metas[*rule_id as usize];
-            if nullable {
-                None
-            } else {
-                Some(first_set.clone())
-            }
+            if nullable { None } else { Some(*first_set) }
         }
         IrNode::Seq(children) => {
             let mut combined = CharSet128::new();
@@ -53,11 +49,8 @@ pub(super) fn node_first_set(
         IrNode::Alt(branches, _) => {
             let mut combined = CharSet128::new();
             for b in branches {
-                if let Some(ref fs) = b.first_set {
-                    combined.union(fs);
-                } else {
-                    return None; // nullable branch
-                }
+                // A nullable branch has no FIRST set.
+                combined.union(b.first_set.as_ref()?);
             }
             Some(combined)
         }
@@ -84,7 +77,7 @@ pub(super) fn node_first_set_nullable_part(
             if first_set.is_empty() {
                 None
             } else {
-                Some(first_set.clone())
+                Some(*first_set)
             }
         }
         IrNode::Repeat { inner, .. } => node_first_set_nullable_part(inner, rule_metas),

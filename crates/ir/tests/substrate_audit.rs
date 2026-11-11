@@ -25,9 +25,8 @@
 //!
 //! 1. `cargo_metadata` resolves the workspace and locates every
 //!    audited crate's `src/` directory.
-//! 2. The five audited crates (`bbnf-ir`, `bbnf` aka bbnf-core,
-//!    `egraph` aka bbnf-egraph, `csp-solver` aka bbnf-csp-solver,
-//!    `simd-scan` aka bbnf-simd-scan) have every `pub fn`,
+//! 2. The audited crates (`bbnf-ir`, `bbnf` aka bbnf-core) have every
+//!    `pub fn`,
 //!    `pub struct`, `pub enum`, `pub trait`, and `pub static`
 //!    enumerated by walking each .rs file with `syn`. Items inside
 //!    `crates/core/src/grammar/generated/**` are excluded (those are
@@ -107,8 +106,12 @@ const SANCTIONED_SUBSTRATES: &[&str] = &[
 ];
 
 // ───────────────────────────────────────────────────────────────────
-// Audited crate set — bbnf-ir + bbnf-core (excluding generated/) +
-// bbnf-egraph + bbnf-csp-solver + bbnf-simd-scan.
+// Audited crate set — bbnf-ir + bbnf-core (excluding generated/).
+// egraph and csp-solver left this workspace at sk-v27 LW2.TOPO-1 (X-5),
+// and simd-scan at LW2.PERF-1 (X-3, as parse-that-simd): the two
+// parse-that crates are audited in parse-that
+// (xtask/tests/public_api_callers.rs, ruling A-2); csp-solver is the
+// crates.io release of its upstream.
 // ───────────────────────────────────────────────────────────────────
 
 /// Workspace member crate names (per `cargo metadata`) whose `pub`
@@ -117,9 +120,6 @@ const SANCTIONED_SUBSTRATES: &[&str] = &[
 const AUDITED_CRATES: &[&str] = &[
     "bbnf-ir",    // → crates/ir
     "bbnf",       // → crates/core (a.k.a. bbnf-core in spec text)
-    "egraph",     // → crates/egraph (a.k.a. bbnf-egraph)
-    "csp-solver", // → crates/csp-solver (a.k.a. bbnf-csp-solver)
-    "simd-scan",  // → crates/simd-scan (a.k.a. bbnf-simd-scan)
 ];
 
 // ───────────────────────────────────────────────────────────────────

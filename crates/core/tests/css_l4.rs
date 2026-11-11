@@ -8,14 +8,13 @@
 // `LengthUnit` / `AngleUnit` / `TimeUnit` / `CssColor` /
 // `parse_rgb_color` symbols with zero references — is retired.
 #[allow(unused_imports)]
-use bbnf::css_types as _css_types_link;
+use bbnf::runtime::css_l4::host as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 
 fn load_css(name: &str) -> String {
     let candidates = [
-        format!("../../data/css/{}", name),
-        format!("../data/css/{}", name),
+        bbnf_corpus::path(&format!("css/{}", name)).display().to_string(),
     ];
     for path in &candidates {
         if let Ok(contents) = std::fs::read_to_string(path) {
@@ -190,10 +189,10 @@ fn find_hex_payload_u32(css_input: &str, target: u32) -> Option<u32> {
 
     let doc = CssL4Parser::parse(css_input).ok()?;
     for (_property, value) in doc.walk_values() {
-        if let CssTypedValue::Color(CssColor::Hex(packed)) = value {
-            if *packed == target {
-                return Some(*packed);
-            }
+        if let CssTypedValue::Color(CssColor::Hex(packed)) = value
+            && *packed == target
+        {
+            return Some(*packed);
         }
     }
     None

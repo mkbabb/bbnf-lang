@@ -48,7 +48,7 @@ pub fn compile_grammar(source: &str, options: &PipelineOptions) -> Result<Gramma
         target: CompileTarget::Vm,
     };
     match compile_grammar_request(source, &request) {
-        Ok(CompileOutput::Vm(ir)) => Ok(ir),
+        Ok(CompileOutput::Vm(ir)) => Ok(*ir),
         Ok(_) => unreachable!("VM wrapper received non-VM output"),
         Err(err) => Err(err.to_string()),
     }
@@ -99,7 +99,7 @@ pub fn compile_ast<'a>(
         target: CompileTarget::Vm,
     };
     match compile_ast_request(ast, directives, &request) {
-        Ok(CompileOutput::Vm(ir)) => Ok(ir),
+        Ok(CompileOutput::Vm(ir)) => Ok(*ir),
         Ok(_) => unreachable!("VM wrapper received non-VM output"),
         Err(err) => Err(err.to_string()),
     }
@@ -120,6 +120,6 @@ fn compile_ast_request_internal<'a>(
     request: &CompileRequest,
 ) -> Result<CompileOutput, CompileError> {
     validate_pretty_directives(&ast, directives.pretties)?;
-    let ir = compile_ast_common(ast, directives, &request.options)?;
+    let ir = compile_ast_common(ast, directives, request)?;
     finalize_compile(ir, &request.target)
 }

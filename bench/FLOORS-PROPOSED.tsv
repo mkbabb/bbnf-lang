@@ -1,0 +1,20 @@
+# sk-v27 LW2.CON-2 (S11 BENCH), proposed floors. floor = max(10 %, 3 x A/A noise); A/A noise = the larger magnitude of the
+# A/A cell's 99 % BCa interval ends for the HL estimate of r = ln(t_a / t_b). PROPOSED only: the FLOORS ruling freezes them
+# (LW2.CON-2s seals DECISION-PLAN.lw2.json). Records: docs/benchmarks/records/LW2-CON-2/. QoS: user-interactive fraction 0.00 on
+# every process (LW1.CON-1 host fact), disclosed; the floor reads blocks QUIET under LW2-ORDER §5's proposed reading (load < 8,
+# no thermal warning). Under PREREG §3's literal QUIET (QoS >= 95 %) no record here is QUIET and no floor is proposed.
+goal	family	aa_cell	aa_pairs	aa_hl_pct	aa_ci99_pct	aa_noise_pct	proposed_floor_pct	u4a	slow_cell	slow_hl_pct	u4b	reading	state	records
+G-G2	F-JS	C-G2-AA	220	+1.23	[-0.06, +2.49]	2.49	10.0	PASS	C-G2-SLOW	+14.08 (LOSS)	PASS	quiet blocks (6+4 NOISY blocks dropped; 1 dirty-tree record excluded)	PROPOSED (QoS ruling owed)	C-G2-AA, C-G2-SLOW, floors-F-JS-quiet-read{1,2}.tsv
+G-G2	F-JS	C-G2-AA	232	+1.12	[-0.12, +2.33]	2.33	10.0	PASS	C-G2-SLOW	+13.93 (LOSS)	PASS	all blocks	NOISY-UNFROZEN (records NOISY: load1 max 8.31/8.63)	floors-F-JS-read{1,2}.tsv
+G-J1	F-JSON-P1	C-J1-AA	—	—	—	—	—	—	C-J1-SLOW	—	—	admission REFUSED x2: R-JSON-P1-bbnf-gen witness OWED (U5)	NOISY-UNFROZEN (no A/A admissible; re-queued once, X-7)	admission/admission-read{1,2}.tsv
+G-J3	F-JSON-P4	C-J3-AA	—	—	—	—	—	—	C-J3-SLOW	—	—	admission REFUSED x2: R-JSON-P4-bbnf-gen witness OWED (U5)	NOISY-UNFROZEN (no A/A admissible; re-queued once)	admission/admission-read{1,2}.tsv
+G-C1	F-CSS-P2	C-C1-AA	—	—	—	—	—	—	C-C1-SLOW	—	—	admission REFUSED x2: R-CSS-P2-bbnf-gen witness OWED (U5)	NOISY-UNFROZEN (no A/A admissible; re-queued once)	admission/admission-read{1,2}.tsv
+G-C2	F-CSS-P2	—	—	—	—	—	—	—	—	—	—	no A/A cell registered; C-C1B-BASE refused (P7 typed-coverage manifest OWED)	NOISY-UNFROZEN	admission/admission-read{1,2}.tsv
+G-G1	F-COMB	C-G1-AA	—	—	—	—	—	—	—	—	—	admission REFUSED x2: R-COMB-P4-winnow witness OWED (U5); no SLOW cell registered	NOISY-UNFROZEN	admission/admission-read{1,2}.tsv
+G-G3	F-COMB	—	—	—	—	—	—	—	—	—	—	no cell registered	NOISY-UNFROZEN	—
+G-R1	F-REGEX	—	—	—	—	—	—	—	—	—	—	fidelity goal (oracle agreement), no timing floor	n/a	rx/OR7-SPIKE.md
+G-R2	F-REGEX	—	—	—	—	—	—	—	—	—	—	C-OR7-GR2-* NOT-COMPARABLE by rule before timing: route match ends differ on 7 of 133 leaves (162 cases), so every pair is discarded; FIND has no unanchored search on either route	BLOCKED on ruling ask S11-OR7	OR7/gr2-parity-read{1,2}.json
+G-P1	F-REGEX	—	—	—	—	—	—	—	—	—	—	C-OR7-GP1-* arms (A-backed and B-backed emitter commits) do not exist; §11 requires them named by addendum	BLOCKED (LW3 emitter wiring)	—
+G-P2	—	—	—	—	—	—	—	—	—	—	—	no cell registered	NOISY-UNFROZEN	—
+G-E1	—	—	—	—	—	—	—	—	—	—	—	no cell registered	NOISY-UNFROZEN	—
+P-5	—	—	—	—	—	—	—	—	—	—	—	no cell registered	NOISY-UNFROZEN	—

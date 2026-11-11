@@ -1,0 +1,429 @@
+{
+  "when": "2026-07-02T09:01:46.529Z",
+  "arm": "ii",
+  "query": "fixture=fourier&render=flat&seed=own&level=root&arm=ii&norm=1&mount=governed&batch=4",
+  "results": [
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "scenario": "idle",
+      "stripGeo": {
+        "strips": 94,
+        "worstErrPct": 0,
+        "sample": [
+          {
+            "id": "sturm-liouville-theory",
+            "height": 4584,
+            "estimate": 4584,
+            "errPct": 0
+          },
+          {
+            "id": "the-wronskian",
+            "height": 1796,
+            "estimate": 1796,
+            "errPct": 0
+          },
+          {
+            "id": "green-s-functions",
+            "height": 1978,
+            "estimate": 1978,
+            "errPct": 0
+          },
+          {
+            "id": "solution-of-the-boundary-value-problem",
+            "height": 3510,
+            "estimate": 3510,
+            "errPct": 0
+          },
+          {
+            "id": "potentially-generalizing-the-result",
+            "height": 410,
+            "estimate": 410,
+            "errPct": 0
+          },
+          {
+            "id": "lens-i-linear-algebra",
+            "height": 514,
+            "estimate": 514,
+            "errPct": 0
+          }
+        ],
+        "pass": true
+      },
+      "clsTotal": 0.0002,
+      "clsSupported": true,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 5,
+      "framesWithVisibleStrip": 0,
+      "clsPass": true,
+      "flashFree": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "scenario": "chase",
+      "steps": 346,
+      "clsTotal": 0.0002,
+      "clsSupported": true,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 5,
+      "framesWithVisibleStrip": 0,
+      "pageErrors": []
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "scenario": "idle",
+      "stripGeo": {
+        "strips": 94,
+        "worstErrPct": 0,
+        "sample": [
+          {
+            "id": "sturm-liouville-theory",
+            "height": 4584,
+            "estimate": 4584,
+            "errPct": 0
+          },
+          {
+            "id": "the-wronskian",
+            "height": 1796,
+            "estimate": 1796,
+            "errPct": 0
+          },
+          {
+            "id": "green-s-functions",
+            "height": 1978,
+            "estimate": 1978,
+            "errPct": 0
+          },
+          {
+            "id": "solution-of-the-boundary-value-problem",
+            "height": 3510,
+            "estimate": 3510,
+            "errPct": 0
+          },
+          {
+            "id": "potentially-generalizing-the-result",
+            "height": 410,
+            "estimate": 410,
+            "errPct": 0
+          },
+          {
+            "id": "lens-i-linear-algebra",
+            "height": 514,
+            "estimate": 514,
+            "errPct": 0
+          }
+        ],
+        "pass": true
+      },
+      "clsTotal": 0.0052,
+      "clsSupported": true,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 5,
+      "framesWithVisibleStrip": 0,
+      "clsPass": true,
+      "flashFree": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "scenario": "chase",
+      "steps": 307,
+      "clsTotal": 0.0052,
+      "clsSupported": true,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 6,
+      "framesWithVisibleStrip": 0,
+      "pageErrors": []
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "scenario": "idle",
+      "stripGeo": {
+        "strips": 94,
+        "worstErrPct": 0,
+        "sample": [
+          {
+            "id": "sturm-liouville-theory",
+            "height": 4584,
+            "estimate": 4584,
+            "errPct": 0
+          },
+          {
+            "id": "the-wronskian",
+            "height": 1796,
+            "estimate": 1796,
+            "errPct": 0
+          },
+          {
+            "id": "green-s-functions",
+            "height": 1978,
+            "estimate": 1978,
+            "errPct": 0
+          },
+          {
+            "id": "solution-of-the-boundary-value-problem",
+            "height": 3510,
+            "estimate": 3510,
+            "errPct": 0
+          },
+          {
+            "id": "potentially-generalizing-the-result",
+            "height": 410,
+            "estimate": 410,
+            "errPct": 0
+          },
+          {
+            "id": "lens-i-linear-algebra",
+            "height": 514,
+            "estimate": 514,
+            "errPct": 0
+          }
+        ],
+        "pass": true
+      },
+      "clsTotal": 0.0017,
+      "clsSupported": true,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 6,
+      "framesWithVisibleStrip": 0,
+      "clsPass": true,
+      "flashFree": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "scenario": "chase",
+      "steps": 227,
+      "clsTotal": 0.0017,
+      "clsSupported": true,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 6,
+      "framesWithVisibleStrip": 0,
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "scenario": "idle",
+      "stripGeo": {
+        "strips": 94,
+        "worstErrPct": 0,
+        "sample": [
+          {
+            "id": "sturm-liouville-theory",
+            "height": 4584,
+            "estimate": 4584,
+            "errPct": 0
+          },
+          {
+            "id": "the-wronskian",
+            "height": 1796,
+            "estimate": 1796,
+            "errPct": 0
+          },
+          {
+            "id": "green-s-functions",
+            "height": 1978,
+            "estimate": 1978,
+            "errPct": 0
+          },
+          {
+            "id": "solution-of-the-boundary-value-problem",
+            "height": 3510,
+            "estimate": 3510,
+            "errPct": 0
+          },
+          {
+            "id": "potentially-generalizing-the-result",
+            "height": 410,
+            "estimate": 410,
+            "errPct": 0
+          },
+          {
+            "id": "lens-i-linear-algebra",
+            "height": 514,
+            "estimate": 514,
+            "errPct": 0
+          }
+        ],
+        "pass": true
+      },
+      "clsTotal": 0,
+      "clsSupported": false,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 17,
+      "framesWithVisibleStrip": 0,
+      "clsPass": true,
+      "flashFree": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "scenario": "chase",
+      "steps": 346,
+      "clsTotal": 0,
+      "clsSupported": false,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 17,
+      "framesWithVisibleStrip": 0,
+      "pageErrors": [
+        "ResizeObserver loop completed with undelivered notifications."
+      ]
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "scenario": "idle",
+      "stripGeo": {
+        "strips": 94,
+        "worstErrPct": 0,
+        "sample": [
+          {
+            "id": "sturm-liouville-theory",
+            "height": 4584,
+            "estimate": 4584,
+            "errPct": 0
+          },
+          {
+            "id": "the-wronskian",
+            "height": 1796,
+            "estimate": 1796,
+            "errPct": 0
+          },
+          {
+            "id": "green-s-functions",
+            "height": 1978,
+            "estimate": 1978,
+            "errPct": 0
+          },
+          {
+            "id": "solution-of-the-boundary-value-problem",
+            "height": 3510,
+            "estimate": 3510,
+            "errPct": 0
+          },
+          {
+            "id": "potentially-generalizing-the-result",
+            "height": 410,
+            "estimate": 410,
+            "errPct": 0
+          },
+          {
+            "id": "lens-i-linear-algebra",
+            "height": 514,
+            "estimate": 514,
+            "errPct": 0
+          }
+        ],
+        "pass": true
+      },
+      "clsTotal": 0,
+      "clsSupported": false,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 17,
+      "framesWithVisibleStrip": 0,
+      "clsPass": true,
+      "flashFree": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "scenario": "chase",
+      "steps": 306,
+      "clsTotal": 0,
+      "clsSupported": false,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 17,
+      "framesWithVisibleStrip": 0,
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "scenario": "idle",
+      "stripGeo": {
+        "strips": 94,
+        "worstErrPct": 0,
+        "sample": [
+          {
+            "id": "sturm-liouville-theory",
+            "height": 4584,
+            "estimate": 4584,
+            "errPct": 0
+          },
+          {
+            "id": "the-wronskian",
+            "height": 1796,
+            "estimate": 1796,
+            "errPct": 0
+          },
+          {
+            "id": "green-s-functions",
+            "height": 1978,
+            "estimate": 1978,
+            "errPct": 0
+          },
+          {
+            "id": "solution-of-the-boundary-value-problem",
+            "height": 3510,
+            "estimate": 3510,
+            "errPct": 0
+          },
+          {
+            "id": "potentially-generalizing-the-result",
+            "height": 410,
+            "estimate": 410,
+            "errPct": 0
+          },
+          {
+            "id": "lens-i-linear-algebra",
+            "height": 514,
+            "estimate": 514,
+            "errPct": 0
+          }
+        ],
+        "pass": true
+      },
+      "clsTotal": 0,
+      "clsSupported": false,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 16,
+      "framesWithVisibleStrip": 0,
+      "clsPass": true,
+      "flashFree": true,
+      "pageErrors": []
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "scenario": "chase",
+      "steps": 227,
+      "clsTotal": 0,
+      "clsSupported": false,
+      "reveals": 94,
+      "revealsInViewport": 0,
+      "framesTracked": 17,
+      "framesWithVisibleStrip": 0,
+      "pageErrors": []
+    }
+  ]
+}

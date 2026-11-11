@@ -1,0 +1,19 @@
+pprint publish tree 32d73ca version = "0.4.0"
+parse-that tree 48ed339
+ok	pprint	32d73ca44	rust/Cargo.lock
+ok	pprint	32d73ca44	rust/parse_that/Cargo.toml
+ok	pprint	32d73ca44	Cargo.toml
+ok	parse-that	48ed3394b	Cargo.toml
+ok	pprint	32d73ca44	Cargo.lock
+ok	parse-that	48ed3394b	Cargo.lock
+ok	parse-that	48ed3394b	skinny/Cargo.toml
+ok	parse-that	48ed3394b	skinny/Cargo.lock
+ok	pprint	32d73ca44	wasm/Cargo.toml
+ok	parse-that	48ed3394b	wasm/Cargo.toml
+ok	pprint	32d73ca44	wasm/Cargo.lock
+ok	parse-that	48ed3394b	wasm/Cargo.lock
+lock	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4e/rust	rc=0
+lock	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4e	rc=0
+lock	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4e/skinny	rc=0
+lock	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4e/wasm	rc=0
+pins: GREEN

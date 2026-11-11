@@ -24,7 +24,7 @@
 //! descriptors recurse into themselves. The walk is grammar-general — no
 //! rule-name pattern matching anywhere on the codegen surface.
 
-use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout, StructRegistry};
+use bbnf_ir::registry::{FieldSource, LayoutKind, StructField, StructLayout};
 use bbnf_ir::{GrammarIR, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};

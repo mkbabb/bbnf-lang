@@ -17,13 +17,16 @@ use super::ir_types::ParserAttributes;
 /// Generate the `GRAMMAR_X` const array with `include_str!()` for each
 /// grammar source path.
 ///
-/// The emitter consumes `parser_attrs.grammar_rel_paths` —
-/// workspace-root-relative POSIX paths — and wraps each one in a
-/// `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", <rel>)` token so
-/// the resulting `include_str!` resolves at the consumer's compile
-/// time relative to the `bbnf` crate's manifest directory
-/// (`<workspace>/crates/core`). Two `..` levels lift to the workspace
-/// root, then the relative path joins the actual grammar file.
+/// The emitter consumes `parser_attrs.grammar_rel_paths` — paths
+/// relative to the manifest directory of the crate that compiles the
+/// generated file (POSIX) — and wraps each one in a
+/// `concat!(env!("CARGO_MANIFEST_DIR"), "/", <rel>)` token, so the
+/// `include_str!` resolves inside that crate. For `bbnf` the path is
+/// its in-crate grammar copy (`crates/core/grammar/…`), which
+/// `cargo xtask regen` writes from the workspace `grammar/` tree and
+/// `cargo xtask regen --check` holds byte-identical to it (sk-v27
+/// LW2.TOPO-4b). A path that leaves the crate would not be in the
+/// published package, so the crate would not build from crates.io.
 ///
 /// Embedding the relative path keeps the generated file portable
 /// across worktrees and developer checkouts; embedding an absolute
@@ -38,12 +41,9 @@ pub fn generate_grammar_arr(parser_attrs: &ParserAttributes, ident: &syn::Ident)
     // the prior runtime assert here papered over construction-site
     // gaps and has been retired.
     let include_strs = parser_attrs.grammar_rel_paths.iter().map(|rel| {
-        // `concat!(env!("CARGO_MANIFEST_DIR"), "/../../", <rel>)` —
-        // CARGO_MANIFEST_DIR for `bbnf` resolves to
-        // `<workspace>/crates/core`; `../../` lifts to the workspace
-        // root; `<rel>` (e.g. `grammar/bbnf/bbnf.bbnf`) joins the
-        // grammar source file.
-        let suffix = format!("/../../{rel}");
+        // `concat!(env!("CARGO_MANIFEST_DIR"), "/", <rel>)` — `<rel>`
+        // (e.g. `grammar/bbnf/bbnf.bbnf`) is inside the crate.
+        let suffix = format!("/{rel}");
         quote! {
             include_str!(concat!(env!("CARGO_MANIFEST_DIR"), #suffix))
         }

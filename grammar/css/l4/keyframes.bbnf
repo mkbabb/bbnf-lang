@@ -34,7 +34,7 @@ PROPERTY_VALUE = FUNCTION | STRING | percentage | DIMENSION | HASH
 
 PROPERTY_NAME     = IDENT ;
 DECLARATION       = (PROPERTY_NAME << ":" ?w) , PROPERTY_VALUE ;
-DECLARATIONS_LIST = (DECLARATION ?w << ";" ?) + << ";" ? ;
+DECLARATIONS_LIST = DECLARATION ?w , (";" >> DECLARATION ?w) * << ";" ? ;
 
 // --- Keyframe blocks ---
 

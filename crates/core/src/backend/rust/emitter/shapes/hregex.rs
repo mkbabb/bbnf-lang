@@ -219,7 +219,10 @@ fn emit_parse_hregex_struct_direct(
                 builder, __f64,
             );
         },
-        Some(FnDescriptor::Expr { expr, return_type }) if matches!(expr, MapExpr::Input) => {
+        Some(FnDescriptor::Expr {
+            expr: MapExpr::Input,
+            return_type,
+        }) => {
             match return_type {
                 Some(TypeDesc::F64) => quote! {
                     let __f64: f64 = core::str::from_utf8(

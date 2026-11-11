@@ -14,6 +14,7 @@ use rustc_hash::FxHashMap as HashMap;
 use csp_solver::Csp;
 use csp_solver::constraint::VarId;
 
+use crate::passes::csp_domains::propagate_to_fixed_point;
 use crate::{CharSet128, GrammarIR, IrNode, RuleId, regex_first};
 
 use super::super::csp_domains::{
@@ -68,12 +69,12 @@ pub fn compute_first_sets(ir: &mut GrammarIR) {
         csp.add_constraint(CharSetUnionConstraint::new(rule_var, body_var));
     }
 
-    let _ = csp.propagate();
+    propagate_to_fixed_point(&mut csp, "FIRST sets");
 
     // Extract results into rule metadata.
     for rule in &mut ir.rules {
         let var = rule_vars[&rule.id];
-        rule.meta.first_set = csp.variables[var as usize].domain.solved.clone();
+        rule.meta.first_set = csp.variables[var as usize].domain.solved;
     }
 
     // Phase 3: Populate per-branch FIRST sets for all Alt nodes.
@@ -94,10 +95,10 @@ fn generate_first_constraints(
             let var = csp.add_variable(CharSetDomain::empty());
             let mut cs = CharSet128::new();
             let s = ir.get_string(*sid);
-            if let Some(&b) = s.as_bytes().first() {
-                if b < 128 {
-                    cs.add(b);
-                }
+            if let Some(&b) = s.as_bytes().first()
+                && b < 128
+            {
+                cs.add(b);
             }
             csp.add_constraint(CharSetGroundConstraint::new(var, cs));
             var
@@ -224,10 +225,10 @@ pub fn compute_node_first(
         IrNode::Literal(sid) => {
             let mut cs = CharSet128::new();
             let s = ir.get_string(*sid);
-            if let Some(&b) = s.as_bytes().first() {
-                if b < 128 {
-                    cs.add(b);
-                }
+            if let Some(&b) = s.as_bytes().first()
+                && b < 128
+            {
+                cs.add(b);
             }
             cs
         }
@@ -305,11 +306,8 @@ fn is_node_nullable_simple(node: &IrNode) -> bool {
 
 /// Walk all rule bodies and populate `AltBranch.first_set` for every `Alt` node.
 fn populate_branch_first_sets(ir: &mut GrammarIR) {
-    let first_of: HashMap<RuleId, CharSet128> = ir
-        .rules
-        .iter()
-        .map(|r| (r.id, r.meta.first_set.clone()))
-        .collect();
+    let first_of: HashMap<RuleId, CharSet128> =
+        ir.rules.iter().map(|r| (r.id, r.meta.first_set)).collect();
 
     // We need owned strings for regex_first lookup; clone the string table reference.
     let strings: Vec<String> = ir.strings.clone();
@@ -378,10 +376,10 @@ fn compute_node_first_with_strings(
         IrNode::Literal(sid) => {
             let mut cs = CharSet128::new();
             let s = &strings[*sid as usize];
-            if let Some(&b) = s.as_bytes().first() {
-                if b < 128 {
-                    cs.add(b);
-                }
+            if let Some(&b) = s.as_bytes().first()
+                && b < 128
+            {
+                cs.add(b);
             }
             cs
         }

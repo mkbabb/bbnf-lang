@@ -78,11 +78,9 @@ impl<'p> JsonStructBuilder<'p> {
             return;
         }
         if let Some(OpenFrame::Object { pending_key, .. }) = self.stack.last_mut() {
-            if pending_key.is_none() {
-                if let JsonValue::String(s) = value {
-                    *pending_key = Some(s);
-                    return;
-                }
+            if pending_key.is_none() && let JsonValue::String(s) = value {
+                *pending_key = Some(s);
+                return;
             }
             debug_assert!(
                 pending_key.is_some(), "Object value pushed without pending key"

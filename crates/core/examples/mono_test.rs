@@ -11,7 +11,7 @@ fn main() {
         "canada.json",
         "data_xl.json",
     ] {
-        let path = format!("../../data/json/{}", name);
+        let path = bbnf_corpus::path(&format!("json/{}", name)).display().to_string();
         let input = match std::fs::read_to_string(&path) {
             Ok(s) => s,
             Err(_) => continue,

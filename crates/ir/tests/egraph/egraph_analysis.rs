@@ -15,7 +15,7 @@
 //! analysis-enabled e-graph still produce correct post-saturation IR.
 
 use bbnf_ir::GrammarIR;
-use bbnf_ir::egraph::{GrammarAnalysis, build_and_saturate};
+use bbnf_ir::egraph::{GrammarAnalysis, LeafMatch, build_and_saturate};
 
 /// Helper: compile a tiny fixture grammar all the way through the
 /// bbnf-ir public surface (without the full pipeline, which lives in
@@ -98,7 +98,7 @@ fn fixture_ir() -> GrammarIR {
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     ir
 }
 
@@ -111,14 +111,14 @@ fn grammar_analysis_activates_in_production_build_and_saturate() {
     // check: if `GrammarAnalysis` isn't the substrate, the compiler
     // rejects this let binding. The runtime assert just keeps the
     // test from being dead code after optimization.
-    let (egraph, _pool, rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, _pool, rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
 
     // Every rule root has a canonical class with attached data.
-    for (_rid, &root) in &rule_body_ids {
+    for &root in rule_body_ids.values() {
         let class = egraph.class(root);
         // `class.data` is `EClassFacts` — access triggers a field
         // read, which fails to compile if the substrate is wrong.
-        let _first_set = class.data.first_set.clone();
+        let _first_set = class.data.first_set;
         let _nullable = class.data.nullable;
         let _width_min = class.data.width.min;
     }
@@ -134,7 +134,7 @@ fn grammar_analysis_activates_in_production_build_and_saturate() {
     // Type-level sanity: build_and_saturate's return type is EGraph
     // parameterized over GrammarAnalysis — the assignment below
     // forces the compiler to see this.
-    let _: &::egraph::EGraph<::bbnf_ir::egraph::GrammarENode, GrammarAnalysis> = &egraph;
+    let _: &::parse_that_egraph::EGraph<::bbnf_ir::egraph::GrammarENode, GrammarAnalysis> = &egraph;
 }
 
 #[test]

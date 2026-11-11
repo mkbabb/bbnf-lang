@@ -1,0 +1,317 @@
+diff --git a/scripts/measure-prove11.mjs b/scripts/measure-prove11.mjs
+new file mode 100644
+index 0000000..5c044d2
+--- /dev/null
++++ b/scripts/measure-prove11.mjs
+@@ -0,0 +1,91 @@
++// PROVE-11 single-dist measurement (faithful: ONE build per process, exactly as
++// production loads it — no cross-module megamorphism). Prints median ns/op per
++// lane as JSON. A driver runs this alternately against dist-pristine and
++// dist-modified, interleaved, so cross-process load drift is controlled.
++//
++// Usage: node --expose-gc scripts/measure-prove11.mjs <abs-path-to-dist/parse.js>
++
++const distPath = process.argv[2];
++const { all, any, dispatch, string, regex, Parser } = await import(distPath);
++
++function timeNsPerOp(fn, opsPerBatch, batches = 13) {
++    const samples = [];
++    for (let i = 0; i < 5; i++) fn(); // warm
++    for (let b = 0; b < batches; b++) {
++        const t0 = process.hrtime.bigint();
++        for (let i = 0; i < opsPerBatch; i++) fn();
++        const t1 = process.hrtime.bigint();
++        samples.push(Number(t1 - t0) / opsPerBatch);
++    }
++    samples.sort((a, b) => a - b);
++    return samples[Math.floor(samples.length / 2)];
++}
++
++// ── fixtures (identical grammar to pt-b3-fusion.bench.ts) ────────────────────
++const pa = string("a"), pb = string("b"), pc = string("c");
++const fusedAll3 = all(pa, pb, pc);
++const unfusedThen3 = pa.then(pb).then(pc);
++
++const cssFns = {
++    "calc(": string("calc("), "clamp(": string("clamp("), "cos(": string("cos("),
++    "min(": string("min("), "max(": string("max("), "var(": string("var("),
++    "rgb(": string("rgb("), "rgba(": string("rgba("), "hsl(": string("hsl("),
++    "rotate(": string("rotate("), "scale(": string("scale("),
++    "translate(": string("translate("), "skew(": string("skew("),
++    "linear-gradient(": string("linear-gradient("), "url(": string("url("),
++};
++const cssTokens = Object.keys(cssFns);
++const seqAny = any(...Object.values(cssFns));
++const byFirst = {};
++for (const t of cssTokens) (byFirst[t[0]] ??= []).push(cssFns[t]);
++const table = {};
++for (const [fc, ps] of Object.entries(byFirst)) table[fc] = ps.length === 1 ? ps[0] : any(...ps);
++const dispatched = dispatch(table);
++const corpus = ["url(", "linear-gradient(", "translate(", "scale(", "rotate("];
++
++const comma = string(",").trim();
++const colon = string(":").trim();
++const jsonNull = string("null").map(() => null);
++const jsonBool = string("true").or(string("false")).map((v) => v === "true");
++const jsonNumber = regex(/-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/).map(Number);
++const jsonString = regex(/"(?:[^"\\]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"/).map(
++    (s) => (s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s)));
++const jsonArray = Parser.lazy(() => jsonValue.sepBy(comma).trim().wrap(string("["), string("]")));
++const jsonObject = Parser.lazy(() =>
++    jsonString.skip(colon).then(jsonValue.trim()).sepBy(comma).trim()
++        .wrap(string("{"), string("}")).map((pairs) => Object.fromEntries(pairs)));
++const jsonValue = dispatch({
++    "{": jsonObject, "[": jsonArray, '"': jsonString, "-": jsonNumber,
++    "0-9": jsonNumber, t: jsonBool, f: jsonBool, n: jsonNull,
++});
++const JSONParser = jsonValue.trim();
++const jsonSample = JSON.stringify({
++    name: "constellation", version: 12, tags: ["calc", "clamp", "cubic"],
++    nested: { a: 1, b: [true, false, null], c: "x" },
++    list: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
++});
++
++// ── allocation proof: scavenge pressure over a fixed parse count ─────────────
++// The lazy-array change removes 2 array allocs per ParserState construction and
++// avoids re-alloc on every mergeErrorState furthest-advance. Fewer allocations →
++// less minor-GC pressure. We measure heapUsed growth without gc between, over a
++// large non-retaining loop (transient garbage), as an allocation-rate proxy.
++function allocBytesPerOp(fn, n) {
++    for (let i = 0; i < 200000; i++) fn(); // warm/JIT
++    global.gc(); global.gc();
++    const m0 = process.memoryUsage().heapUsed;
++    for (let i = 0; i < n; i++) fn();
++    const m1 = process.memoryUsage().heapUsed;
++    return (m1 - m0) / n; // bytes of live+transient growth per op (approx alloc)
++}
++
++const res = {
++    fusedNs: timeNsPerOp(() => fusedAll3.parse("abc"), 300000),
++    unfusedNs: timeNsPerOp(() => unfusedThen3.parse("abc"), 300000),
++    jsonNs: timeNsPerOp(() => JSONParser.parse(jsonSample), 80000),
++    dispatchNs: timeNsPerOp(() => { for (const s of corpus) dispatched.parse(s); }, 150000),
++    seqAnyNs: timeNsPerOp(() => { for (const s of corpus) seqAny.parse(s); }, 150000),
++    fusedAllocBpo: allocBytesPerOp(() => fusedAll3.parse("abc"), 2000000),
++    jsonAllocBpo: allocBytesPerOp(() => JSONParser.parse(jsonSample), 400000),
++};
++console.log(JSON.stringify(res));
+diff --git a/src/parse/debug.ts b/src/parse/debug.ts
+index f5d69b8..972e810 100644
+--- a/src/parse/debug.ts
++++ b/src/parse/debug.ts
+@@ -177,12 +177,12 @@ export function statePrint(
+             output += `\n   ${cyan(formatExpected(expected))}`;
+         }
+ 
+-        const secondarySpans = state.secondarySpans;
++        const secondarySpans = state.secondarySpans ?? [];
+         if (secondarySpans.length > 0) {
+             output += `\n${formatSecondarySpans(state.src, secondarySpans)}`;
+         }
+ 
+-        const suggestions = state.suggestions;
++        const suggestions = state.suggestions ?? [];
+         if (suggestions.length > 0) {
+             output += `\n${formatSuggestions(suggestions)}`;
+         }
+diff --git a/src/parse/state.ts b/src/parse/state.ts
+index f587295..61c97a8 100644
+--- a/src/parse/state.ts
++++ b/src/parse/state.ts
+@@ -39,10 +39,17 @@ export class ParserState<T = unknown> {
+      * `state.furthest_offset` model). `expected` is the accumulated label set
+      * at `furthest`; `suggestions`/`secondarySpans` are the diagnostic extras
+      * collected at `furthest` when diagnostics are enabled.
++     *
++     * All three are lazily allocated (declared, `undefined` at construction —
++     * native class fields, so the object's hidden class is fixed from birth and
++     * never transitions when a diagnostic later populates one). The success hot
++     * path — diagnostics off — never allocates these arrays, neither in the
++     * constructor nor on the `mergeErrorState` furthest-advance backtracking
++     * path; they materialize only when `diagnosticsEnabled` actually collects.
+      */
+     expected?: string[];
+-    suggestions: Suggestion[] = [];
+-    secondarySpans: SecondarySpan[] = [];
++    suggestions?: Suggestion[];
++    secondarySpans?: SecondarySpan[];
+ 
+     constructor(
+         public src: string,
+diff --git a/src/parse/utils.ts b/src/parse/utils.ts
+index 40bc20e..a53b59a 100644
+--- a/src/parse/utils.ts
++++ b/src/parse/utils.ts
+@@ -31,8 +31,8 @@ export function mergeErrorState(state: ParserState<unknown>, label?: string) {
+         // diagnostic feature: only seed it when diagnostics are enabled.
+         state.furthest = state.offset;
+         state.expected = diagnosticsEnabled && label ? [label] : undefined;
+-        state.suggestions = [];
+-        state.secondarySpans = [];
++        state.suggestions = undefined;
++        state.secondarySpans = undefined;
+     } else if (state.offset === state.furthest) {
+         // Same furthest offset — accumulate the label (diagnostics only).
+         if (diagnosticsEnabled && label) {
+@@ -50,13 +50,13 @@ export function mergeErrorState(state: ParserState<unknown>, label?: string) {
+ 
+ export function addSuggestion(state: ParserState<unknown>, suggestion: Suggestion) {
+     if (diagnosticsEnabled) {
+-        state.suggestions.push(suggestion);
++        (state.suggestions ??= []).push(suggestion);
+     }
+ }
+ 
+ export function addSecondarySpan(state: ParserState<unknown>, offset: number, label: string) {
+     if (diagnosticsEnabled) {
+-        state.secondarySpans.push({ offset, label });
++        (state.secondarySpans ??= []).push({ offset, label });
+     }
+ }
+ 
+@@ -118,8 +118,8 @@ export function collectDiagnostic(state: ParserState<unknown>, errorOffset: numb
+         line,
+         column,
+         expected: state.expected ? [...state.expected] : [],
+-        suggestions: [...state.suggestions],
+-        secondarySpans: [...state.secondarySpans],
++        suggestions: state.suggestions ? [...state.suggestions] : [],
++        secondarySpans: state.secondarySpans ? [...state.secondarySpans] : [],
+         found,
+     });
+ 
+@@ -131,8 +131,8 @@ export function collectDiagnostic(state: ParserState<unknown>, errorOffset: numb
+ export function resetErrorState(state: ParserState<unknown>): void {
+     state.furthest = -1;
+     state.expected = undefined;
+-    state.suggestions = [];
+-    state.secondarySpans = [];
++    state.suggestions = undefined;
++    state.secondarySpans = undefined;
+ }
+ 
+ export function getCollectedDiagnostics(): readonly Diagnostic[] {
+diff --git a/test/benchmarks/pt-prove11-paired.bench.ts b/test/benchmarks/pt-prove11-paired.bench.ts
+new file mode 100644
+index 0000000..c9f3ab1
+--- /dev/null
++++ b/test/benchmarks/pt-prove11-paired.bench.ts
+@@ -0,0 +1,96 @@
++// PROVE-11 paired V8-uplift bench (load-immune).
++//
++// Imports BOTH the pristine (v1.0.0) and modified (lazy diagnostic arrays)
++// BUILT dists in ONE vitest process and benches each lane adjacent, so vitest's
++// per-group "Nx faster" ratio is a true paired measurement — load drift hits
++// both arms in the same sampling window and nulls out.
++//
++// The lever: ParserState no longer allocates `suggestions`/`secondarySpans`
++// arrays in its constructor, and mergeErrorState no longer re-allocates them on
++// every furthest-offset advance during backtracking. Diagnostics-off hot path
++// pays zero array allocation for these fields (matching the pre-existing lazy
++// `expected` pattern).
++
++import { describe, bench, type BenchOptions } from "vitest";
++
++const PRI: any = await import("/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/PROVE-11-work/dist-pristine/parse.js");
++const MOD: any = await import("/private/tmp/claude-504/-Users-mkbabb-Programming-bbnf-lang/67d0543b-e7c7-48da-9c77-0a9635fd4b0d/scratchpad/PROVE-11-work/dist-modified/parse.js");
++
++const options: BenchOptions = { warmupIterations: 100, time: 2000 };
++
++// Build the full fixture set for a given module (identical grammar both sides).
++function fixtures(M: any) {
++    const { all, any, dispatch, string, regex, Parser } = M;
++    const pa = string("a"), pb = string("b"), pc = string("c");
++    const fusedAll3 = all(pa, pb, pc);
++    const unfusedThen3 = pa.then(pb).then(pc);
++
++    const cssFns: Record<string, any> = {
++        "calc(": string("calc("), "clamp(": string("clamp("), "cos(": string("cos("),
++        "min(": string("min("), "max(": string("max("), "var(": string("var("),
++        "rgb(": string("rgb("), "rgba(": string("rgba("), "hsl(": string("hsl("),
++        "rotate(": string("rotate("), "scale(": string("scale("),
++        "translate(": string("translate("), "skew(": string("skew("),
++        "linear-gradient(": string("linear-gradient("), "url(": string("url("),
++    };
++    const cssTokens = Object.keys(cssFns);
++    const seqAny = any(...Object.values(cssFns));
++    const byFirst: Record<string, any[]> = {};
++    for (const t of cssTokens) (byFirst[t[0]!] ??= []).push(cssFns[t]!);
++    const table: Record<string, any> = {};
++    for (const [fc, ps] of Object.entries(byFirst)) table[fc] = ps.length === 1 ? ps[0] : any(...ps);
++    const dispatched = dispatch(table);
++    const corpus = ["url(", "linear-gradient(", "translate(", "scale(", "rotate("];
++
++    const comma = string(",").trim();
++    const colon = string(":").trim();
++    const jsonNull = string("null").map(() => null);
++    const jsonBool = string("true").or(string("false")).map((v: string) => v === "true");
++    const jsonNumber = regex(/-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/).map(Number);
++    const jsonString = regex(/"(?:[^"\\]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"/).map(
++        (s: string) => (s.indexOf("\\") === -1 ? s.slice(1, -1) : JSON.parse(s)));
++    const jsonArray = Parser.lazy(() => jsonValue.sepBy(comma).trim().wrap(string("["), string("]")));
++    const jsonObject = Parser.lazy(() =>
++        jsonString.skip(colon).then(jsonValue.trim()).sepBy(comma).trim()
++            .wrap(string("{"), string("}")).map((pairs: any) => Object.fromEntries(pairs)));
++    const jsonValue: any = dispatch({
++        "{": jsonObject, "[": jsonArray, '"': jsonString, "-": jsonNumber,
++        "0-9": jsonNumber, t: jsonBool, f: jsonBool, n: jsonNull,
++    });
++    const JSONParser = jsonValue.trim();
++    const jsonSample = JSON.stringify({
++        name: "constellation", version: 12, tags: ["calc", "clamp", "cubic"],
++        nested: { a: 1, b: [true, false, null], c: "x" },
++        list: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
++    });
++
++    return { fusedAll3, unfusedThen3, seqAny, dispatched, corpus, JSONParser, jsonSample };
++}
++
++const P = fixtures(PRI);
++const M = fixtures(MOD);
++
++describe("PROVE-11 · fused all(a,b,c).parse('abc')", () => {
++    bench("MODIFIED (lazy diag arrays)", () => { M.fusedAll3.parse("abc"); }, options);
++    bench("PRISTINE (v1.0.0)", () => { P.fusedAll3.parse("abc"); }, options);
++});
++
++describe("PROVE-11 · unfused a.then(b).then(c).parse('abc')", () => {
++    bench("MODIFIED (lazy diag arrays)", () => { M.unfusedThen3.parse("abc"); }, options);
++    bench("PRISTINE (v1.0.0)", () => { P.unfusedThen3.parse("abc"); }, options);
++});
++
++describe("PROVE-11 · json-comprehensive parse (backtracking-heavy)", () => {
++    bench("MODIFIED (lazy diag arrays)", () => { M.JSONParser.parse(M.jsonSample); }, options);
++    bench("PRISTINE (v1.0.0)", () => { P.JSONParser.parse(P.jsonSample); }, options);
++});
++
++describe("PROVE-11 · first-char dispatch corpus (no-regression)", () => {
++    bench("MODIFIED (lazy diag arrays)", () => { for (const s of M.corpus) M.dispatched.parse(s); }, options);
++    bench("PRISTINE (v1.0.0)", () => { for (const s of P.corpus) P.dispatched.parse(s); }, options);
++});
++
++describe("PROVE-11 · sequential any corpus (backtracking, no-regression)", () => {
++    bench("MODIFIED (lazy diag arrays)", () => { for (const s of M.corpus) M.seqAny.parse(s); }, options);
++    bench("PRISTINE (v1.0.0)", () => { for (const s of P.corpus) P.seqAny.parse(s); }, options);
++});
+diff --git a/test/debug.test.ts b/test/debug.test.ts
+index 3c3dea1..a2de103 100644
+--- a/test/debug.test.ts
++++ b/test/debug.test.ts
+@@ -143,7 +143,7 @@ describe("Diagnostics Infrastructure", () => {
+             const state = new ParserState("[hello");
+             p.parser(state);
+ 
+-            const suggestions = state.suggestions;
++            const suggestions = state.suggestions ?? [];
+             expect(suggestions.length).toBeGreaterThan(0);
+             expect(suggestions[0].kind).toBe("unclosed-delimiter");
+             expect(suggestions[0].message).toContain("]");
+@@ -154,7 +154,7 @@ describe("Diagnostics Infrastructure", () => {
+             const state = new ParserState("[hello");
+             p.parser(state);
+ 
+-            const spans = state.secondarySpans;
++            const spans = state.secondarySpans ?? [];
+             expect(spans.length).toBeGreaterThan(0);
+             expect(spans[0].label).toContain("opened here");
+             expect(spans[0].offset).toBe(0);

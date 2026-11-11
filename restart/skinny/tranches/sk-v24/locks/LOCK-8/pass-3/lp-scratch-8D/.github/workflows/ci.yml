@@ -1,0 +1,32 @@
+# ci — PR + push gate matrix for @mkbabb/latex-paper (G.W5 Sub-wave C).
+#
+# Wires latex-paper's real package.json scripts: build (tsup +
+# `vue-tsc -p tsconfig.vue.json` — the typecheck is folded into build) →
+# test (vitest run). latex-paper defines no separate typecheck or proof:*
+# scripts; the vue-tsc pass inside build is the type gate.
+#
+# Default branch detection: this repo's default may be main or master;
+# the workflow gates both so the trigger fires regardless.
+name: ci
+
+on:
+    pull_request:
+        branches: [main, master]
+    push:
+        branches: [main, master]
+
+jobs:
+    gates:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: "npm"
+            - run: npm ci
+            - name: build (tsup + vue-tsc type gate)
+              run: npm run build
+            - name: test
+              run: npm run test

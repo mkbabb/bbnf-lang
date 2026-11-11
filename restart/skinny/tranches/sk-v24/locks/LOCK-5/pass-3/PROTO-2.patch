@@ -1,0 +1,320 @@
+diff --git a/crates/ir/src/egraph/mod.rs b/crates/ir/src/egraph/mod.rs
+index 0c9742109..d452b741c 100644
+--- a/crates/ir/src/egraph/mod.rs
++++ b/crates/ir/src/egraph/mod.rs
+@@ -47,7 +47,7 @@ pub use node::GrammarENode;
+ pub use rules::default_rules;
+ pub use write_back::{extract_ir_node, write_back_optimized};
+ 
+-use egraph::EGraph;
++use egraph::{EGraph, RunReport};
+ 
+ use crate::GrammarIR;
+ 
+@@ -63,6 +63,23 @@ pub fn build_and_saturate(
+     EGraph<GrammarENode, GrammarAnalysis>,
+     SharedStrings,
+     rustc_hash::FxHashMap<crate::RuleId, egraph::Id>,
++) {
++    let (egraph, pool, rule_body_ids, _report) = build_and_saturate_reported(ir);
++    (egraph, pool, rule_body_ids)
++}
++
++/// Identical to [`build_and_saturate`] but also returns the scheduler's
++/// [`RunReport`] — the same struct the `BBNF_EGRAPH_REPORT=1` reporter
++/// prints from. Exposes per-rule work counts (node-adds + class-unions
++/// attributed to each rewrite) for fire-census probes without parsing
++/// stderr. The plain wrapper drops the report.
++pub fn build_and_saturate_reported(
++    ir: &GrammarIR,
++) -> (
++    EGraph<GrammarENode, GrammarAnalysis>,
++    SharedStrings,
++    rustc_hash::FxHashMap<crate::RuleId, egraph::Id>,
++    RunReport,
+ ) {
+     use crate::RuleId;
+     use rustc_hash::FxHashMap;
+@@ -124,5 +141,5 @@ pub fn build_and_saturate(
+     drop(rule_refs);
+     drop(rules);
+ 
+-    (egraph, pool, rule_body_ids)
++    (egraph, pool, rule_body_ids, _report)
+ }
+diff --git a/crates/ir/tests/backend_egraph_fire_census.rs b/crates/ir/tests/backend_egraph_fire_census.rs
+new file mode 100644
+index 000000000..683efe37c
+--- /dev/null
++++ b/crates/ir/tests/backend_egraph_fire_census.rs
+@@ -0,0 +1,270 @@
++//! LOCK-5 pass-3 PROTO-2 — grammar-tier regex e-graph fire census.
++//!
++//! QUESTION. Does the grammar-tier regex e-graph
++//! (`crates/ir/src/egraph/rules/regex.rs`) FIRE on Map-wrapped
++//! (projected, `x -> Tag`) Alt branches, or only on bare
++//! `Alt([Regex, Regex, ..])` branches?
++//!
++//! PROTO-1 found the three regex-specific rules resolve a branch's
++//! regex via `class_regex(child)` — which searches the child's
++//! e-class for a `GrammarENode::Regex` node — and return `None` on a
++//! `Map { inner, fn_id }` child (a projection wrapper), because a Map
++//! e-class holds no bare `Regex` node. `FuseAltRegexBranches` likewise
++//! sets `all_fusable = false` on a Map child. If so, projected
++//! branches are structurally inert for the regex tier.
++//!
++//! METHOD. Build two IRs over the SAME >=30 Alt-of-regex corpus:
++//!   - BARE:      `Alt([Regex(a), Regex(b), ..], None)`
++//!   - PROJECTED: `Alt([Map(Regex(a), tagA), Map(Regex(b), tagB), ..], None)`
++//! run `build_and_saturate_reported` (the production saturation path,
++//! same `RunReport` the `BBNF_EGRAPH_REPORT=1` reporter prints), and
++//! tabulate `per_rule.work` (= node-adds + class-unions attributed to
++//! the rule, i.e. its fire-effect count) for the four rules.
++//!
++//! PASS (Fork-B available) = the four rules fire >=1 on bare AND ~0 on
++//! projected (regex-tier consumer density near zero under projection).
++
++use std::collections::HashMap;
++
++use bbnf_ir::egraph::build_and_saturate_reported;
++use bbnf_ir::types::FnDescriptor;
++use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
++
++const DEDUP: &str = "deduplicate-alt-branches";
++const ABSORB: &str = "superset-absorb-alt";
++const UNION: &str = "union-merge-alt";
++const FUSE: &str = "fuse-alt-regex-branches";
++
++/// The corpus: each entry is one Alt's list of branch regex/literal
++/// patterns. Grouped so the bare form exercises every rule.
++fn corpus() -> Vec<Vec<&'static str>> {
++    vec![
++        // ── Fuse family: all-regex/literal disjoint alternations ──
++        vec!["a", "b", "c"],
++        vec!["foo", "bar", "baz"],
++        vec!["cat", "dog", "bird"],
++        vec!["ab", "cd", "ef"],
++        vec!["x", "y", "z"],
++        vec!["one", "two", "three"],
++        vec!["red", "green", "blue"],
++        vec!["\\d+", "[a-z]+", "\\w"],
++        vec!["true", "false"],
++        vec!["get", "post", "put", "delete"],
++        vec!["[a-z]+", "[0-9]+"],
++        vec!["\\d", "\\w", "\\s"],
++        vec!["ab*", "cd+", "ef?"],
++        vec!["hello", "world", "foo", "bar"],
++        vec!["m", "n", "o", "p"],
++        // ── Superset-absorb family: one class contains another ──
++        vec!["[a-z]", "[a-c]"],
++        vec!["[0-9]", "[3-5]"],
++        vec!["[a-zA-Z]", "[a-f]"],
++        vec!["[a-z]", "[m-p]"],
++        vec!["[0-9a-f]", "[a-c]"],
++        vec!["[a-z0-9]", "[4-6]"],
++        vec!["[A-Z]", "[C-E]"],
++        vec!["[a-z]", "[x-z]"],
++        // ── Union-merge family: adjacent / overlapping classes ──
++        vec!["[a-c]", "[d-f]"],
++        vec!["[a-z]", "[A-Z]"],
++        vec!["[0-4]", "[5-9]"],
++        vec!["[a-c]", "[b-d]"],
++        vec!["[a-m]", "[n-z]"],
++        vec!["[0-3]", "[2-5]"],
++        vec!["[g-i]", "[j-l]"],
++        vec!["[a-c]", "[c-e]"],
++        // ── Dedup family: structurally identical / duplicate branches ──
++        vec!["[a-c]", "[a-c]"],
++        vec!["q", "r", "q"],
++    ]
++}
++
++/// A pattern is a "regex" if it contains a metacharacter; otherwise a
++/// plain literal. Both are valid Alt-of-regex branches; FuseAltRegex
++/// handles the mix.
++fn is_regex(p: &str) -> bool {
++    p.chars().any(|c| "\\[](){}.*+?|^$".contains(c))
++}
++
++/// Intern a pattern, deduplicating identical strings — the behaviour of
++/// the real `SharedStrings` interner. Two identical branch patterns thus
++/// share a `StringId`, so their `Regex`/`Literal` e-nodes hash-cons to
++/// the SAME e-class (which is what `DeduplicateAltBranches` keys on).
++fn leaf(ir: &mut GrammarIR, pat: &str) -> IrNode {
++    let sid = match ir.strings.iter().position(|s| s == pat) {
++        Some(i) => i as u32,
++        None => {
++            let i = ir.strings.len() as u32;
++            ir.strings.push(pat.to_string());
++            i
++        }
++    };
++    if is_regex(pat) {
++        IrNode::Regex(sid)
++    } else {
++        IrNode::Literal(sid)
++    }
++}
++
++/// Wrap a leaf in a `Map` carrying a distinct `EnumWrap` tag — the IR
++/// shape produced by `x -> Tag` map syntax. Distinct tags model real
++/// grammars where each alternative carries its own variant.
++fn tag_wrap(ir: &mut GrammarIR, inner: IrNode) -> IrNode {
++    let variant_sid = ir.strings.len() as u32;
++    ir.strings.push(format!("V{}", ir.fns.len()));
++    let fn_id = ir.fns.len() as u32;
++    ir.fns.push(FnDescriptor::EnumWrap {
++        variant: variant_sid,
++    });
++    IrNode::Map {
++        inner: Box::new(inner),
++        fn_id,
++    }
++}
++
++/// Build one IR whose rules are the corpus Alts. When `projected`, each
++/// branch is `Map`-wrapped with a distinct tag.
++fn build_corpus_ir(projected: bool) -> GrammarIR {
++    let mut ir = empty_ir();
++    let patterns = corpus();
++    let mut rules = Vec::with_capacity(patterns.len());
++    for (i, branch_pats) in patterns.iter().enumerate() {
++        let branches: Vec<AltBranch> = branch_pats
++            .iter()
++            .map(|p| {
++                let l = leaf(&mut ir, p);
++                let node = if projected { tag_wrap(&mut ir, l) } else { l };
++                AltBranch {
++                    node,
++                    first_set: None,
++                }
++            })
++            .collect();
++        rules.push(IrRule {
++            id: i as u32,
++            name: 0,
++            body: IrNode::Alt(branches, None),
++            meta: RuleMeta::default(),
++            source_span: None,
++        });
++    }
++    ir.rules = rules;
++    ir
++}
++
++fn work_of(report: &egraph::RunReport, name: &str) -> usize {
++    report
++        .per_rule
++        .iter()
++        .find(|(n, _)| n == name)
++        .map(|(_, w)| *w)
++        .unwrap_or(0)
++}
++
++#[test]
++fn backend_egraph_fire_census() {
++    let bare_ir = build_corpus_ir(false);
++    let proj_ir = build_corpus_ir(true);
++
++    let (_e1, _p1, _r1, bare) = build_and_saturate_reported(&bare_ir);
++    let (_e2, _p2, _r2, proj) = build_and_saturate_reported(&proj_ir);
++
++    let n = corpus().len();
++    let names = [DEDUP, ABSORB, UNION, FUSE];
++
++    eprintln!("\n=== PROTO-2 GRAMMAR-TIER REGEX E-GRAPH FIRE CENSUS ===");
++    eprintln!("corpus: {} Alt-of-regex patterns, bare vs -> Tag projected", n);
++    eprintln!(
++        "bare saturation:      iters={} total_applied={} saturated={}",
++        bare.iterations, bare.total_applied, bare.saturated
++    );
++    eprintln!(
++        "projected saturation: iters={} total_applied={} saturated={}",
++        proj.iterations, proj.total_applied, proj.saturated
++    );
++    eprintln!("\n  {:<28} {:>10} {:>12}", "rule", "bare.work", "proj.work");
++    eprintln!("  {:-<28} {:->10} {:->12}", "", "", "");
++    for name in names {
++        eprintln!(
++            "  {:<28} {:>10} {:>12}",
++            name,
++            work_of(&bare, name),
++            work_of(&proj, name)
++        );
++    }
++    eprintln!();
++
++    // The three REGEX-SPECIFIC rules must fire on bare and be exactly
++    // inert on projected (structural inertness: class_regex → None on
++    // Map children; FuseAltRegex → all_fusable=false on Map children).
++    for name in [ABSORB, UNION, FUSE] {
++        assert!(
++            work_of(&bare, name) >= 1,
++            "{name} should fire on BARE Alt-of-regex corpus (got work={})",
++            work_of(&bare, name)
++        );
++        assert_eq!(
++            work_of(&proj, name),
++            0,
++            "{name} must be inert on PROJECTED (Map-wrapped) branches"
++        );
++    }
++
++    // DeduplicateAltBranches is structural (matches any node kind by
++    // canonical e-class). It fires on bare duplicate branches; under
++    // distinct-tag projection the wrappers differ, so it too is inert.
++    assert!(
++        work_of(&bare, DEDUP) >= 1,
++        "DeduplicateAltBranches should fire on bare duplicate branches"
++    );
++    assert_eq!(
++        work_of(&proj, DEDUP),
++        0,
++        "DeduplicateAltBranches inert on distinct-tag projected branches"
++    );
++}
++
++// ── Full GrammarIR scaffold (mirrors crates/ir/tests/egraph builders) ──
++fn empty_ir() -> GrammarIR {
++    GrammarIR {
++        rules: Vec::new(),
++        entry: 0,
++        strings: vec!["_root".to_string()],
++        fns: Vec::new(),
++        types: Vec::new(),
++        follow_sets: HashMap::new(),
++        ws_pattern: None,
++        collapse_simple_spans: false,
++        debug_all: false,
++        debug_labels: Vec::new(),
++        type_map: None,
++        regex_info: HashMap::new(),
++        node_facts: HashMap::new(),
++        recognizer_decisions: HashMap::new(),
++        delim_scan_configs: HashMap::new(),
++        key_dispatch_configs: HashMap::new(),
++        context_facts: HashMap::new(),
++        has_family_recognizers: false,
++        regex_engine_decisions: HashMap::new(),
++        dag: None,
++        cost_config: bbnf_ir::CostConfig::default(),
++        type_desc_interner: bbnf_ir::TypeDescInterner::new(),
++        materialization: HashMap::new(),
++        payload_layouts: HashMap::new(),
++        string_index: Default::default(),
++        structural_alphabet: None,
++        push_fingerprint: None,
++        dedup_eligible_rules: Vec::new(),
++        shape_assignments:
++            bbnf_ir::passes::recognizers::shape_dispatch::ShapeAssignments::default(),
++        eclass_facts: HashMap::new(),
++        keyword_branches: HashMap::new(),
++        disjoint_first_tables: HashMap::new(),
++        pattern_alphabets: HashMap::new(),
++        ctns_lifts: std::collections::HashSet::new(),
++        struct_registry: bbnf_ir::StructRegistry::default(),
++        type_obligations: Vec::new(),
++        inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
++        path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
++    }
++}

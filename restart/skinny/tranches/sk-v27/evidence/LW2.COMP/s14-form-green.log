@@ -1,0 +1,22 @@
+== GREEN read 1 (repaired checker, tree 457f3ba0e)
+control: rows=32 routes=0 sanctioned=0 refused=0
+mutant [pub fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub const fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub unsafe fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub async fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub const unsafe fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub extern "C" fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub(crate) fn]: rows=32 routes=0 sanctioned=0 refused=0
+gate, simd-scan present: rows=32 routes=0 sanctioned=0 refused=2
+gate, simd-scan absent: rows=32 routes=0 sanctioned=0 refused=0
+== GREEN read 2 (repaired checker, tree 457f3ba0e)
+control: rows=32 routes=0 sanctioned=0 refused=0
+mutant [pub fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub const fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub unsafe fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub async fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub const unsafe fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub extern "C" fn]: rows=32 routes=0 sanctioned=0 refused=1
+mutant [pub(crate) fn]: rows=32 routes=0 sanctioned=0 refused=0
+gate, simd-scan present: rows=32 routes=0 sanctioned=0 refused=2
+gate, simd-scan absent: rows=32 routes=0 sanctioned=0 refused=0

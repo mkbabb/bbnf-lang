@@ -13,7 +13,7 @@
 //!   [`KeyDispatchMatch`] — keyword-dispatch alternation configuration.
 //!   Populated by `passes::recognizers::key_dispatch::collect`.
 
-use bbnf_regex::RegexClass;
+use parse_that_regex::RegexClass;
 use serde::{Deserialize, Serialize};
 
 use super::RuleId;

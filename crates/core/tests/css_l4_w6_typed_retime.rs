@@ -1,7 +1,7 @@
 use bbnf::grammar::generated::css_l4::CssL4Parser;
 use bbnf::runtime::css_l4::{
-    visit_document, CssColor, CssFunction, CssRule, CssTypedValue, CssVisitor, Declaration,
-    GenericAtRule, KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet,
+    CssColor, CssFunction, CssRule, CssTypedValue, CssVisitor, Declaration, GenericAtRule,
+    KeyframeBlock, KeyframesRule, MediaRule, Selector, StyleRule, StyleSheet, visit_document,
 };
 use cssparser::{
     AtRuleParser, CowRcStr, DeclarationParser, Parser, ParserInput, ParserState,
@@ -12,13 +12,12 @@ use std::hint::black_box;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-const W6_REPORT_SCHEMA: &str = "sk-v15-css-l4-typed-retime-v1";
+const W6_REPORT_SCHEMA: &str = "sk-v15-css-l4-typed-retime-v2";
 const W6_WAVE_ID: &str = "SK-V15-W6";
 const W6_RUN_ID: &str = "sk-v15-w6:css-typed-cssparser-same-workload-cold";
 const W6_SAMPLE_COUNT: usize = 1;
 const W6_VALUE_PLANE: &str = "css_l4_typed_document";
 const W6_COMPARATOR_WORKLOAD: &str = "cssparser_stylesheet_rule_body_typed_summary";
-const W6_SOTA_EPSILON_MBPS: f64 = 1.0;
 const CSS_L4_SK_V14_MIN_BYTES: usize = 800 * 1024;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -56,22 +55,6 @@ const CSS_L4_SK_V14_CORPORA: &[CssL4CorpusSpec] = &[
         bytes: 71_750,
     },
 ];
-
-#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-enum W6Disposition {
-    Admitted,
-    Rejected,
-}
-
-impl W6Disposition {
-    fn as_str(self) -> &'static str {
-        match self {
-            Self::Admitted => "ADMITTED",
-            Self::Rejected => "REJECTED",
-        }
-    }
-}
 
 // Structural CSSOM summary used to gate track1 (the grammar-derived
 // typed document) against cssparser under one shared counting
@@ -137,13 +120,8 @@ struct CssL4W6RetimeReport {
     track1_summary: CssTypedSummary,
     cssparser_summary: CssTypedSummary,
     shared_typed_summary_equal: bool,
-    track1_typed_mbps: f64,
-    cssparser_typed_mbps: f64,
-    sota_threshold_mbps: f64,
-    track1_margin_mbps: f64,
-    admitted_rows: usize,
-    disposition: W6Disposition,
-    disposition_reason: String,
+    track1_typed_mb_s: f64,
+    cssparser_typed_mb_s: f64,
 }
 
 impl CssL4W6RetimeReport {
@@ -223,26 +201,11 @@ impl CssL4W6RetimeReport {
         if self.shared_typed_summary_equal != expected_equal {
             return Err("SK-V15 W6 typed-summary equality flag is inconsistent".to_string());
         }
-        let expected_threshold = self.cssparser_typed_mbps + W6_SOTA_EPSILON_MBPS;
-        if !nearly_equal(self.sota_threshold_mbps, expected_threshold) {
-            return Err("SK-V15 W6 SOTA threshold is not cssparser+epsilon".to_string());
-        }
-        if !nearly_equal(
-            self.track1_margin_mbps,
-            self.track1_typed_mbps - self.sota_threshold_mbps,
-        ) {
-            return Err("SK-V15 W6 margin accounting is inconsistent".to_string());
-        }
-        let admits = self.shared_typed_summary_equal
-            && self.track1_typed_errors == 0
-            && self.cssparser_typed_errors == 0
-            && self.track1_typed_mbps > self.sota_threshold_mbps;
-        if admits {
-            if self.disposition != W6Disposition::Admitted || self.admitted_rows != 1 {
-                return Err("SK-V15 W6 admit disposition is inconsistent".to_string());
-            }
-        } else if self.disposition != W6Disposition::Rejected || self.admitted_rows != 0 {
-            return Err("SK-V15 W6 rejection disposition is inconsistent".to_string());
+        // The timings are OBSERVATIONAL: no admission predicate is read from them
+        // (sk-v27 LW2.CON-1 retired the cssparser + 1 Mbit/s "SOTA" margin; a
+        // contest claim is a registered bench/PREREG.md cell, never this test).
+        if !(self.track1_typed_mb_s.is_finite() && self.cssparser_typed_mb_s.is_finite()) {
+            return Err("SK-V15 W6 throughput is not finite".to_string());
         }
         Ok(())
     }
@@ -268,13 +231,10 @@ fn css_l4_w6_typed_same_workload_retime() {
         std::fs::write(&path, format!("{json}\n")).expect("write W6 report");
     }
     eprintln!(
-        "W6_CSS_TYPED_RETIME disposition={} reason={} corpus_bytes={} track1_mbps={:.3} cssparser_mbps={:.3} margin_mbps={:.3} track1_passes={} track1_errors={} cssparser_passes={} cssparser_errors={} shared_summary_equal={} track1_rules={} cssparser_rules={} track1_style={} cssparser_style={} track1_sel={} cssparser_sel={} track1_decls={} cssparser_decls={}",
-        report.disposition.as_str(),
-        report.disposition_reason,
+        "W6_CSS_TYPED_RETIME corpus_bytes={} track1_mb_s={:.3} cssparser_mb_s={:.3} track1_passes={} track1_errors={} cssparser_passes={} cssparser_errors={} shared_summary_equal={} track1_rules={} cssparser_rules={} track1_style={} cssparser_style={} track1_sel={} cssparser_sel={} track1_decls={} cssparser_decls={}",
         report.corpus_bytes,
-        report.track1_typed_mbps,
-        report.cssparser_typed_mbps,
-        report.track1_margin_mbps,
+        report.track1_typed_mb_s,
+        report.cssparser_typed_mb_s,
         report.track1_typed_passes,
         report.track1_typed_errors,
         report.cssparser_typed_passes,
@@ -331,13 +291,8 @@ fn css_l4_w6_gate_rejects_retired_live_sources() {
             ..CssTypedSummary::default()
         },
         shared_typed_summary_equal: true,
-        track1_typed_mbps: 12.0,
-        cssparser_typed_mbps: 10.0,
-        sota_threshold_mbps: 11.0,
-        track1_margin_mbps: 1.0,
-        admitted_rows: 1,
-        disposition: W6Disposition::Admitted,
-        disposition_reason: "track1_typed_cssparser_same_workload_sota".into(),
+        track1_typed_mb_s: 12.0,
+        cssparser_typed_mb_s: 10.0,
     };
     report.validate_gate().expect("baseline valid");
     report
@@ -383,11 +338,10 @@ fn run_typed_retime() -> Result<CssL4W6RetimeReport, String> {
     })?;
     // W6 fair cold comparator — lightningcss full L2 semantic parse over
     // the identical corpus and identical cold convention (warmup_iters=0,
-    // sample_count=1). cssparser remains the SPEC admission gate (it is
-    // the same-token-stream same-workload comparator); lightningcss is the
-    // upper-bound SOTA reference (a hand-tuned full-document parser built
-    // on cssparser). It does not gate admission — it bounds the honest
-    // ceiling the typed Track 1 parse is measured against.
+    // sample_count=1). cssparser is the same-token-stream same-workload
+    // comparator; lightningcss is the upper-bound reference (a hand-tuned
+    // full-document parser built on cssparser). Neither timing gates
+    // anything: they are OBSERVATIONAL rows (bench/contest/ROWS.tsv).
     let lightningcss_elapsed = time_loop(|| {
         for _ in 0..W6_SAMPLE_COUNT {
             for source in &sources {
@@ -399,44 +353,19 @@ fn run_typed_retime() -> Result<CssL4W6RetimeReport, String> {
         }
         Ok(())
     })?;
-    let lightningcss_full_parse_mbps = throughput_mbps(profiled_bytes, lightningcss_elapsed);
+    let lightningcss_full_parse_mb_s = throughput_mb_s(profiled_bytes, lightningcss_elapsed);
     eprintln!(
-        "W6_CSS_LIGHTNINGCSS_FULL_PARSE corpus_bytes={} lightningcss_full_parse_mbps={:.3} track1_vs_lightningcss_ratio={:.6}",
+        "W6_CSS_LIGHTNINGCSS_FULL_PARSE corpus_bytes={} lightningcss_full_parse_mb_s={:.3} track1_vs_lightningcss_ratio={:.6}",
         corpus_bytes,
-        lightningcss_full_parse_mbps,
-        throughput_mbps(profiled_bytes, track1_elapsed) / lightningcss_full_parse_mbps,
+        lightningcss_full_parse_mb_s,
+        throughput_mb_s(profiled_bytes, track1_elapsed) / lightningcss_full_parse_mb_s,
     );
-    let track1_typed_mbps = throughput_mbps(profiled_bytes, track1_elapsed);
-    let cssparser_typed_mbps = throughput_mbps(profiled_bytes, cssparser_elapsed);
-    let sota_threshold_mbps = cssparser_typed_mbps + W6_SOTA_EPSILON_MBPS;
-    let track1_margin_mbps = track1_typed_mbps - sota_threshold_mbps;
+    let track1_typed_mb_s = throughput_mb_s(profiled_bytes, track1_elapsed);
+    let cssparser_typed_mb_s = throughput_mb_s(profiled_bytes, cssparser_elapsed);
     let shared_typed_summary_equal =
         summaries_share_gate_fields(&track1.summary, &cssparser.summary)
             && track1.errors == 0
             && cssparser.errors == 0;
-    let admits = shared_typed_summary_equal
-        && track1.errors == 0
-        && cssparser.errors == 0
-        && track1_typed_mbps > sota_threshold_mbps;
-    let (disposition, disposition_reason, admitted_rows) = if admits {
-        (
-            W6Disposition::Admitted,
-            "track1_typed_cssparser_same_workload_sota",
-            1,
-        )
-    } else if track1.errors > 0 {
-        (W6Disposition::Rejected, "track1_typed_parse_errors", 0)
-    } else if cssparser.errors > 0 {
-        (W6Disposition::Rejected, "cssparser_typed_parse_errors", 0)
-    } else if !shared_typed_summary_equal {
-        (W6Disposition::Rejected, "typed_summary_guard_failed", 0)
-    } else {
-        (
-            W6Disposition::Rejected,
-            "track1_typed_below_cssparser_threshold",
-            0,
-        )
-    };
 
     Ok(CssL4W6RetimeReport {
         schema_id: W6_REPORT_SCHEMA.into(),
@@ -464,13 +393,8 @@ fn run_typed_retime() -> Result<CssL4W6RetimeReport, String> {
         track1_summary: track1.summary,
         cssparser_summary: cssparser.summary,
         shared_typed_summary_equal,
-        track1_typed_mbps,
-        cssparser_typed_mbps,
-        sota_threshold_mbps,
-        track1_margin_mbps,
-        admitted_rows,
-        disposition,
-        disposition_reason: disposition_reason.into(),
+        track1_typed_mb_s,
+        cssparser_typed_mb_s,
     })
 }
 
@@ -588,10 +512,10 @@ impl<'p> CssVisitor<'p> for Track1SummaryVisitor {
         // at-rule prelude, except for the at-rules its stylesheet parser
         // consumes specially (@charset/@import/@namespace). Mirror that:
         // skip those at the `rules` counter so the typed total matches.
-        if let CssRule::GenericAt(generic) = rule {
-            if is_cssparser_skipped_at_rule(generic.name) {
-                return;
-            }
+        if let CssRule::GenericAt(generic) = rule
+            && is_cssparser_skipped_at_rule(generic.name)
+        {
+            return;
         }
         self.summary.rules += 1;
     }
@@ -901,13 +825,9 @@ fn time_loop(mut run: impl FnMut() -> Result<(), String>) -> Result<Duration, St
     Ok(start.elapsed())
 }
 
-fn throughput_mbps(bytes: usize, elapsed: Duration) -> f64 {
+fn throughput_mb_s(bytes: usize, elapsed: Duration) -> f64 {
     if elapsed.is_zero() {
         return f64::INFINITY;
     }
-    ((bytes as f64) * 8.0) / (elapsed.as_secs_f64() * 1_000_000.0)
-}
-
-fn nearly_equal(a: f64, b: f64) -> bool {
-    (a - b).abs() <= 0.001
+    (bytes as f64) / (elapsed.as_secs_f64() * 1_000_000.0)
 }

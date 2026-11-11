@@ -12,7 +12,10 @@ use bbnf::backend::rust::emitter::EmitStrategy;
 use bbnf::backend::rust::emitter::shapes::{array, keyword, number, object, scalar, string};
 use bbnf_ir::registry::SubstrateBinding;
 
+// The fixture module is shared with `shape_dispatch_emission`, which
+// reads every rule id; this binary reads a subset.
 #[path = "shape_dispatch_emission/fixtures.rs"]
+#[allow(dead_code)]
 mod fixtures;
 
 use fixtures::*;

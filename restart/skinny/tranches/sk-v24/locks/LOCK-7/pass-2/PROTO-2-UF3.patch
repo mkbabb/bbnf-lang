@@ -1,0 +1,61 @@
+PROTO-2-UF3 — patch / diff of code
+==================================
+
+NO REPO CODE WAS MUTATED.
+
+Both real trees (bbnf-lang, parse-that) are byte-for-byte untouched. The probe's
+non-vacuity step (plant a mutation in regex.bbnf, regen, observe derived-byte drift,
+revert) was UNREACHABLE: it presupposes a working regen, and stage 1 proved the regen
+command produces the empty-file hash rather than the parser. With no derivation there is
+nothing to mutate against — so no source edit was applied, and there is no diff to revert.
+
+The only file writes performed were confined to the isolated scratch copy
+(scratchpad/pt-scratch-uf3/), which parse-that R3 §8 mandates and which is discarded:
+
+  1. rsync of parse-that working tree into the scratch dir.
+  2. The R3 §8 config repoint (below) — external sibling patch prefixes → absolute
+     originals, so the scratch build resolves read-only against the real sibling repos.
+  3. scripts/bootstrap-regex.sh's own destructive write of parse_that/src/regex/generated.rs
+     (truncation to 0 bytes) — inside the scratch copy only; restored from the preserved
+     COMMITTED.generated.rs immediately after measurement.
+
+Scratch-only config repoint (rust/.cargo/config.toml — NOT a repo change):
+
+  -pprint        = { path = "../../pprint/rust" }
+  +pprint        = { path = "/Users/mkbabb/Programming/pprint/rust" }
+  -pprint_derive = { path = "../../pprint/rust/derive" }
+  +pprint_derive = { path = "/Users/mkbabb/Programming/pprint/rust/derive" }
+  -bbnf          = { path = "../../bbnf-lang/crates/core" }
+  +bbnf          = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/core" }
+  -bbnf-ir       = { path = "../../bbnf-lang/crates/ir" }
+  +bbnf-ir       = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/ir" }
+  -bbnf-ser      = { path = "../../bbnf-lang/crates/ser" }
+  +bbnf-ser      = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/ser" }
+  -csp-solver    = { path = "../../csc411/CSC411_HW2_ProgrammingQuestion/csp-solver" }
+  +csp-solver    = { path = "/Users/mkbabb/Programming/csc411/CSC411_HW2_ProgrammingQuestion/csp-solver" }
+  -egraph        = { path = "../../bbnf-lang/crates/egraph" }
+  +egraph        = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/egraph" }
+  -egraph-derive = { path = "../../bbnf-lang/crates/egraph-derive" }
+  +egraph-derive = { path = "/Users/mkbabb/Programming/bbnf-lang/crates/egraph-derive" }
+
+Raw evidence (scratchpad/pt-scratch-uf3/):
+
+  regen-stage1.log:
+    Expanding regex-bootstrap...
+    Processing generated code...
+    Traceback (most recent call last):
+      File "<stdin>", line 4, in <module>
+    StopIteration
+    EXIT=1
+
+  shasum -a 256:
+    committed  parse_that/src/regex/generated.rs = 82167cecfe4db8cb0fa716e53fa5ab72407a6efa264a6af7866a696e0612fcce  (2293 lines, 184201 bytes)
+    G0 (regen) parse_that/src/regex/generated.rs = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  (0 lines, 0 bytes — empty-file hash)
+
+  cargo expand -p regex-bootstrap  → exit 0, 25 lines, "Finished dev profile in 0.28s"
+    body (post doc-comment): pub use parse_that::regex::generated::{RegexParser, parse_generated};
+    stderr: warning: patch `bbnf` / `bbnf-ir` / `bbnf-ser` / `csp-solver` … was not used in the crate graph
+
+bbnf-lang HEAD confirmation:
+    6142387f1 feat(b2): retire crates/derive proc-macro crate; purge bbnf_derive deps (B2.W2)
+    crates/derive : does not exist

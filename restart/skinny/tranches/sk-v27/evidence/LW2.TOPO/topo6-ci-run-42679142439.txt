@@ -1,0 +1,18 @@
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:06:57.6531938Z corpus fetch: https://github.com/mkbabb/bbnf-lang/releases/download/corpus-v1/corpus-v1.tar.gz
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:06:59.3242443Z corpus fetch: 8 files verified in /home/runner/work/bbnf-lang/bbnf-lang/data
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:08:19.6811897Z   TRY 1 FAIL [   0.673s] (───────) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:08:19.6883768Z         throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:08:19.6885180Z     Error: parse() failed: {"result":null,"offset":567926}
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:08:21.9613063Z   TRY 2 FAIL [   0.280s] (418/592) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:08:22.0111885Z         throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:08:22.0171959Z     Error: parse() failed: {"result":null,"offset":567926}
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:11:31.6804324Z      Summary [ 203.707s] 592 tests run: 591 passed (1 slow), 1 failed, 1070 skipped
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:11:31.9079533Z   TRY 2 FAIL [   0.280s] (418/592) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:11:31.9102697Z         throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+Rust — preflight + workspace close (shard 1/3)	UNKNOWN STEP	2026-11-09T19:11:31.9102931Z     Error: parse() failed: {"result":null,"offset":567926}
+Rust — preflight + workspace close (shard 2/3)	UNKNOWN STEP	2026-11-09T19:01:21.9754642Z corpus fetch: https://github.com/mkbabb/bbnf-lang/releases/download/corpus-v1/corpus-v1.tar.gz
+Rust — preflight + workspace close (shard 2/3)	UNKNOWN STEP	2026-11-09T19:01:23.4643324Z corpus fetch: 8 files verified in /home/runner/work/bbnf-lang/bbnf-lang/data
+Rust — preflight + workspace close (shard 2/3)	UNKNOWN STEP	2026-11-09T19:03:22.7670660Z   TRY 1 FAIL [   5.796s] (───────) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+Rust — preflight + workspace close (shard 2/3)	UNKNOWN STEP	2026-11-09T19:03:29.3977346Z   TRY 2 FAIL [   4.629s] (544/544) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+Rust — preflight + workspace close (shard 2/3)	UNKNOWN STEP	2026-11-09T19:03:29.4013769Z      Summary [  17.763s] 544 tests run: 543 passed, 1 failed, 1118 skipped
+Rust — preflight + workspace close (shard 2/3)	UNKNOWN STEP	2026-11-09T19:03:29.4702877Z   TRY 2 FAIL [   4.629s] (544/544) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates

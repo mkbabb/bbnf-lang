@@ -34,7 +34,7 @@ use bbnf_ir::{
     AltBranch, AltDispatch, CostConfig, GrammarIR, IrNode, IrRule, RuleId, RuleMeta,
     TypeDescInterner,
 };
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 // ── Fixture builders ───────────────────────────────────────────────────
 

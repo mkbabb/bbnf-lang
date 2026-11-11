@@ -1,0 +1,1644 @@
+{
+ "plan": "sk-v27 LW2 decision plan (LW2.CON-2s, competition U6s)",
+ "sealed": "2026-11-11",
+ "seat": "S15 FREEZE",
+ "authority": [
+  "restart/skinny/tranches/sk-v27/LW2-ORDER.md §3 LW2.CON-2s",
+  "bench/PREREG.md",
+  "restart/skinny/tranches/sk-v27/RULINGS.md"
+ ],
+ "change_rule": "Any later change needs a RULINGS addendum with owner sign-off (competition U6s); the sha256 of this file is cited in RULINGS.md.",
+ "prereg": {
+  "path": "bench/PREREG.md",
+  "sha256": "55acca830095435ae6179d9b28e035060c4f91119b04089975f354d15be947fe"
+ },
+ "measured_at": {
+  "bbnf-lang": "lw2/s11-bench 0879d876e",
+  "records": "docs/benchmarks/records/LW2-CON-2/",
+  "raw": "~/.dev-logs/bbnf-lockstep/bench/lw2/"
+ },
+ "gates": {
+  "quantity": "r = ln(t_contestant / t_opponent), wall time per input byte, per ABBA pair of fresh processes (PREREG §1)",
+  "estimator": "Hodges-Lehmann of r",
+  "interval": {
+   "method": "BCa bootstrap",
+   "resamples": 10000,
+   "level_claim": 0.99,
+   "level_reported": [
+    0.99,
+    0.95
+   ]
+  },
+  "test": "one-sided Wilcoxon signed-rank",
+  "multiplicity": {
+   "method": "Holm-Bonferroni within each family",
+   "fwer": 0.01
+  },
+  "minimum_effect": {
+   "pct": 3.0,
+   "delta": "ln(0.97)"
+  },
+  "verdicts": {
+   "WIN": "Holm-adjusted p < 0.01 and CI upper bound < delta",
+   "LOSS": "mirror of WIN",
+   "TIE": "whole CI inside (delta, -delta)",
+   "UNDECIDED": "anything else; never rounded to a win"
+  },
+  "a12": "PREREG's 3 % margins (COMP-1 WIN, G-S1 at 1.03) stand; a 95 % interval straddling a margin is UNDECIDED and is never re-tested under a wider margin; floors govern goal claims only",
+  "g_s1": "non-inferiority on every §8.1 cell: one-sided 99 % BCa upper bound of exp(HL r) < 1.03 (IUT, no multiplicity adjustment); superiority only under Holm FWER 0.01 over the 14 cells",
+  "checksum_discard": "a pair whose output checksums differ is discarded; > 1 % discarded makes the cell NOT-COMPARABLE",
+  "certification": {
+   "pairs_min": 200,
+   "invocations_min": 30,
+   "records": "QUIET only; a NOISY record never certifies"
+  },
+  "exploratory": {
+   "reps_min_per_side": 10,
+   "report": [
+    "median",
+    "IQR",
+    "MAD"
+   ]
+  },
+  "aa_floor_rule": "floor = max(10 %, 3 x A/A noise); A/A noise = larger magnitude of the A/A cell's 99 % BCa interval ends for exp(HL r) - 1 (bench/cb-b0/decide.py aa_noise_pct, proposed_floor_pct)",
+  "slow_injection_pct": 15,
+  "quiet": {
+   "load1_below": 8,
+   "thermal": "no warning (pmset -g therm)",
+   "lock": "guarded --exclusive bench --cpu-cores 0",
+   "qos": "LW2-ORDER §5 reading: QoS is a disclosed host condition; a pair whose arms ran under different QoS accounting is discarded. PREREG §3's fourth QUIET bullet (user-interactive QoS on >= 95 %) is not met on this host (LW1.CON-1); the QoS ruling of record decides between the two, and the G-G2 floor's contingency fixes the effect of either answer."
+  },
+  "load_wait_min": 60,
+  "matrices": {
+   "headline": "PORTABLE",
+   "labelled": "NATIVE (-C target-cpu=native)",
+   "claims_read": "on Apple M-series (aarch64)",
+   "x86": "observational only (X-4)"
+  },
+  "budget": {
+   "hours_per_certification_unit": 72,
+   "requeue": 1,
+   "clock": "from the unit's first registered run (each cell's budget.clock_start)"
+  },
+  "nothing_certified_in_lw2": true
+ },
+ "families": [
+  {
+   "family": "F-JSON-P1",
+   "plane": "P1 JSON check",
+   "primary": "sonic-rs",
+   "others": [
+    "serde_json",
+    "simd-json",
+    "jiter"
+   ],
+   "observational": [
+    "simdjson"
+   ],
+   "cells": [
+    "C-J1-BASE-TWITTER",
+    "C-J1-BASE-CITM",
+    "C-J1-BASE-CANADA",
+    "C-J1-AA",
+    "C-J1-SLOW"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-JSON-P4",
+   "plane": "P4 JSON DOM",
+   "primary": "sonic-rs",
+   "others": [
+    "serde_json",
+    "simd-json",
+    "jiter"
+   ],
+   "observational": [
+    "yyjson"
+   ],
+   "cst_class_only": [
+    "tree-sitter-json"
+   ],
+   "cells": [
+    "C-J3-BASE-TWITTER",
+    "C-J3-BASE-CITM",
+    "C-J3-BASE-CANADA",
+    "C-J3-BASE-SERDE-TWITTER",
+    "C-J3-AA",
+    "C-J3-SLOW",
+    "C-MM-PLANE",
+    "C-MM-CLASS"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-CSS-P2",
+   "plane": "P2 CSS token and event stream (G-C1b reads P7 on the typed-coverage manifest)",
+   "primary": "cssparser (G-C1a)",
+   "primary_g_c1b": "lightningcss (G-C1b)",
+   "cells": [
+    "C-C1-BASE-BOOTSTRAP",
+    "C-C1-BASE-TAILWIND",
+    "C-C1-AA",
+    "C-C1-SLOW",
+    "C-C1B-BASE-BOOTSTRAP"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-REGEX",
+   "plane": "regex match, sticky and leftmost-first",
+   "primary": "Route B (in-house Dfa, parse-that spike/or7-route-b 2d01be6) for the §11 OR-7 parity cells",
+   "others": [
+    "regex",
+    "regex-automata"
+   ],
+   "note": "contest cells OPEN until LW3.CON-1",
+   "cells": [
+    "C-OR7-GR2-FIND",
+    "C-OR7-GR2-ANCHORED",
+    "C-OR7-GP1-CSSL4-BOOTSTRAP",
+    "C-OR7-GP1-CSSL4-TAILWIND",
+    "C-OR7-GP1-JSON-TWITTER"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-COMB",
+   "plane": "combinator and generator parsers (JSON at P4, CSS at P2)",
+   "primary": null,
+   "others": [
+    "winnow",
+    "nom",
+    "chumsky",
+    "pest",
+    "lalrpop",
+    "peg"
+   ],
+   "note": "PREREG §4 names no primary; the A/A row is R-COMB-P4-winnow (C-G1-AA)",
+   "cells": [
+    "C-G1-BASE-PEST",
+    "C-G1-BASE-NOM",
+    "C-G1-BASE-WINNOW",
+    "C-G1-BASE-CHUMSKY",
+    "C-G1-AA"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-JS",
+   "plane": "the TS face (JSON at P4, CSS at P2)",
+   "primary": null,
+   "others": [
+    "peggy",
+    "chevrotain",
+    "ohm-js",
+    "parsimmon",
+    "antlr4",
+    "@lezer/* (CST class)",
+    "@csstools/*",
+    "css-tree"
+   ],
+   "tracked_never_gated": [
+    "JSON.parse"
+   ],
+   "note": "PREREG §4 names no primary; JSON.parse is tracked, never gated, and is the A/A/SLOW calibration arm",
+   "cells": [
+    "C-G2-BASE-JSONPARSE",
+    "C-G2-BASE-PEGGY",
+    "C-G2-BASE-CHEVROTAIN",
+    "C-G2-AA",
+    "C-G2-SLOW",
+    "C-MM-NOCOMP",
+    "C-MM-BUILD"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-PP",
+   "plane": "pretty-printing",
+   "primary": null,
+   "note": "OPEN (LW4.PP, under X-10); no LW2 cell",
+   "cells": [],
+   "holm_group": null
+  },
+  {
+   "family": "F-TRIAL-EG",
+   "plane": "root trial on the CB-5.5 slice",
+   "primary": "the same slice with the e-graph off",
+   "cells": [
+    "C-EG-PARSE-TWITTER-P",
+    "C-EG-PARSE-CANADA-P",
+    "C-EG-PARSE-CITM-P",
+    "C-EG-PARSE-TWITTER-N",
+    "C-EG-EMIT-TIME",
+    "C-EG-EMIT-BYTES",
+    "C-EG-REGEN-BYTES"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-TRIAL-CSP",
+   "plane": "root trial on the CB-5.5 slice",
+   "primary": "the same slice with the greedy strategy",
+   "cells": [
+    "C-CSP-PARSE-TWITTER-P",
+    "C-CSP-PARSE-CANADA-P",
+    "C-CSP-PARSE-CITM-P",
+    "C-CSP-PARSE-TWITTER-N",
+    "C-CSP-EMIT-TIME",
+    "C-CSP-EMIT-BYTES",
+    "C-CSP-REGEN-BYTES"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-VALUE-S1",
+   "plane": "value.js parse entries (JS, node)",
+   "primary": "base (value.js 4038dce5 as committed, bbnf-lang 0.2.0 emission)",
+   "cells": [
+    "C-S1-ACC-COLOR",
+    "C-S1-REJ-COLOR",
+    "C-S1-ACC-SCALAR",
+    "C-S1-REJ-SCALAR",
+    "C-S1-ACC-VALUE",
+    "C-S1-REJ-VALUE",
+    "C-S1-ACC-VALUES",
+    "C-S1-REJ-VALUES",
+    "C-S1-ACC-KFSEL",
+    "C-S1-REJ-KFSEL",
+    "C-S1-ACC-TIMING",
+    "C-S1-REJ-TIMING",
+    "C-S1-ACC-SHEET",
+    "C-S1-REJ-SHEET"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-VALUE-S2",
+   "plane": "value.js work tiers",
+   "primary": "the tier's competitor (each cell's Competitor column)",
+   "cells": [
+    "C-S2-TOK-CSSTOOLS",
+    "C-S2-TOK-PVP",
+    "C-S2-RGBA-CULORI",
+    "C-S2-RGBA-COLORJS",
+    "C-S2-FULL-VALUE"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-VALUE-S0",
+   "plane": "LG-d row 0 timing",
+   "primary": null,
+   "note": "DESCRIPTIVE, value.js 4.3.0 alone",
+   "cells": [
+    "C-S0-ROW0-VALUE-CSS",
+    "C-S0-ROW0-VALUE-COLOR"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-CURE-RX4",
+   "plane": "cure cell, not a contest",
+   "primary": "parent arm 63054dba0",
+   "cells": [
+    "C-RX4-CSSL4-BOOTSTRAP",
+    "C-RX4-CSSL4-TAILWIND",
+    "C-RX4-PRETTY-BOOTSTRAP"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  },
+  {
+   "family": "F-CURE-PERF3",
+   "plane": "cure cell, not a contest",
+   "primary": "parent arm parse-that ad0dc8a",
+   "cells": [
+    "C-PERF3-CSS-BOOTSTRAP",
+    "C-PERF3-CSS-TAILWIND",
+    "C-PERF3-JSON-TWITTER"
+   ],
+   "holm_group": "the family's timing cells (PREREG §2, §6, §9, §10, §11)"
+  }
+ ],
+ "floors": [
+  {
+   "goal": "G-G2",
+   "family": "F-JS",
+   "state": "FROZEN",
+   "floor_pct": 10.0,
+   "derivation": {
+    "rule": "max(10 %, 3 x A/A noise)",
+    "aa_cell": "C-G2-AA",
+    "aa_pairs": 220,
+    "aa_hl_pct": 1.229,
+    "aa_ci99_pct": [
+     -0.06,
+     2.489
+    ],
+    "aa_noise_pct": 2.489,
+    "three_x_noise_pct": 7.467,
+    "slow_cell": "C-G2-SLOW",
+    "slow_hl_pct": 14.08,
+    "slow_verdict": "LOSS",
+    "u4a": "PASS",
+    "u4b": "PASS",
+    "reading": "QUIET blocks under LW2-ORDER §5 (load < 8, no thermal warning, exclusive bench lock); QoS disclosed, user-interactive fraction 0.00",
+    "records": [
+     "docs/benchmarks/records/LW2-CON-2/floors-F-JS-quiet-read1.tsv",
+     "docs/benchmarks/records/LW2-CON-2/floors-F-JS-quiet-read2.tsv",
+     "docs/benchmarks/records/LW2-CON-2/F-JS-decision-quiet.json"
+    ]
+   },
+   "contingency": "If the QoS ruling takes PREREG §3's literal QUIET (user-interactive QoS on >= 95 % of each rep's CPU time), no LW2 record is QUIET and this row reads NOISY-UNFROZEN; no other value in this plan moves.",
+   "ruling": "FLOORS (delegate pre-ruling, value-js-65 2026-11-10b dispatch: adopt S11's proposal when it follows max(10 %, 3 x A/A noise) exactly)"
+  },
+  {
+   "goal": "G-J1",
+   "family": "F-JSON-P1",
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no admissible A/A: C-J1-AA REFUSED x2, R-JSON-P1-bbnf-gen witness OWED (U5)",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-J3",
+   "family": "F-JSON-P4",
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no admissible A/A: C-J3-AA REFUSED x2, R-JSON-P4-bbnf-gen witness OWED (U5)",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-C1",
+   "family": "F-CSS-P2",
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no admissible A/A: C-C1-AA REFUSED x2, R-CSS-P2-bbnf-gen witness OWED (U5)",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-C2",
+   "family": "F-CSS-P2",
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no A/A cell registered; C-C1B-BASE-BOOTSTRAP REFUSED (P7 typed-coverage manifest OWED)",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-G1",
+   "family": "F-COMB",
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no admissible A/A: C-G1-AA REFUSED x2, R-COMB-P4-winnow witness OWED (U5); no SLOW cell registered",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-G3",
+   "family": "F-COMB",
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no cell registered",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-P2",
+   "family": null,
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no cell registered",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-E1",
+   "family": null,
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no cell registered",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "P-5",
+   "family": null,
+   "state": "NOISY-UNFROZEN",
+   "floor_pct": null,
+   "reason": "no cell registered",
+   "requeue": "once, inside its 72 h budget (X-7)"
+  },
+  {
+   "goal": "G-R1",
+   "family": "F-REGEX",
+   "state": "n/a",
+   "floor_pct": null,
+   "reason": "fidelity goal (oracle agreement), no timing floor"
+  },
+  {
+   "goal": "G-R2",
+   "family": "F-REGEX",
+   "state": "BLOCKED",
+   "floor_pct": null,
+   "reason": "C-OR7-GR2-* NOT-COMPARABLE by §11's discard rule before timing (route match ends differ on 7 of 133 DFA leaves, 162 cases; OR7/gr2-parity-read{1,2}.json); FIND has no unanchored search on either spike; ask S11-OR7"
+  },
+  {
+   "goal": "G-P1",
+   "family": "F-REGEX",
+   "state": "BLOCKED",
+   "floor_pct": null,
+   "reason": "C-OR7-GP1-* arm commits (A-backed and B-backed emitters) do not exist; §11 requires them named by addendum (LW3 emitter wiring)"
+  }
+ ],
+ "cells": [
+  {
+   "cell": "C-EG-PARSE-TWITTER-P",
+   "family": "F-TRIAL-EG",
+   "prereg_section": "§6",
+   "kind": "microbench",
+   "measure": "parse time per byte, slice parser",
+   "input": "twitter.json",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-EG-PARSE-CANADA-P",
+   "family": "F-TRIAL-EG",
+   "prereg_section": "§6",
+   "kind": "microbench",
+   "measure": "parse time per byte, slice parser",
+   "input": "canada.json",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-EG-PARSE-CITM-P",
+   "family": "F-TRIAL-EG",
+   "prereg_section": "§6",
+   "kind": "microbench",
+   "measure": "parse time per byte, slice parser",
+   "input": "citm_catalog.json",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-EG-PARSE-TWITTER-N",
+   "family": "F-TRIAL-EG",
+   "prereg_section": "§6",
+   "kind": "microbench (labelled)",
+   "measure": "parse time per byte, slice parser",
+   "input": "twitter.json",
+   "matrix": "NATIVE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-EG-EMIT-TIME",
+   "family": "F-TRIAL-EG",
+   "prereg_section": "§6",
+   "kind": "compile artifact",
+   "measure": "wall time of one slice emission of json.bbnf",
+   "input": "json.bbnf",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-EG-EMIT-BYTES",
+   "family": "F-TRIAL-EG",
+   "prereg_section": "§6",
+   "kind": "compile artifact (exact)",
+   "measure": "bytes of the slice's emitted Rust",
+   "input": "json.bbnf",
+   "matrix": "—",
+   "mode": "EXACT (veto only)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-EG-REGEN-BYTES",
+   "family": "F-TRIAL-EG",
+   "prereg_section": "§6",
+   "kind": "compile artifact (exact)",
+   "measure": "bytes `cargo xtask regen` writes under the arm",
+   "input": "in-tree grammars",
+   "matrix": "—",
+   "mode": "EXACT (veto only)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-CSP-PARSE-TWITTER-P",
+   "family": "F-TRIAL-CSP",
+   "prereg_section": "§6",
+   "kind": "microbench",
+   "measure": "parse time per byte, slice parser",
+   "input": "twitter.json",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-CSP-PARSE-CANADA-P",
+   "family": "F-TRIAL-CSP",
+   "prereg_section": "§6",
+   "kind": "microbench",
+   "measure": "parse time per byte, slice parser",
+   "input": "canada.json",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-CSP-PARSE-CITM-P",
+   "family": "F-TRIAL-CSP",
+   "prereg_section": "§6",
+   "kind": "microbench",
+   "measure": "parse time per byte, slice parser",
+   "input": "citm_catalog.json",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-CSP-PARSE-TWITTER-N",
+   "family": "F-TRIAL-CSP",
+   "prereg_section": "§6",
+   "kind": "microbench (labelled)",
+   "measure": "parse time per byte, slice parser",
+   "input": "twitter.json",
+   "matrix": "NATIVE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-CSP-EMIT-TIME",
+   "family": "F-TRIAL-CSP",
+   "prereg_section": "§6",
+   "kind": "compile artifact",
+   "measure": "wall time of one slice emission of json.bbnf",
+   "input": "json.bbnf",
+   "matrix": "PORTABLE",
+   "mode": "CERTIFYING",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-CSP-EMIT-BYTES",
+   "family": "F-TRIAL-CSP",
+   "prereg_section": "§6",
+   "kind": "compile artifact (exact)",
+   "measure": "bytes of the slice's emitted Rust",
+   "input": "json.bbnf",
+   "matrix": "—",
+   "mode": "EXACT (veto only)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-CSP-REGEN-BYTES",
+   "family": "F-TRIAL-CSP",
+   "prereg_section": "§6",
+   "kind": "compile artifact (exact)",
+   "measure": "bytes `cargo xtask regen` writes under the arm",
+   "input": "in-tree grammars",
+   "matrix": "—",
+   "mode": "EXACT (veto only)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J1-BASE-TWITTER",
+   "family": "F-JSON-P1",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P1",
+   "cls": "CHK",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P1-bbnf-gen",
+   "arm_opp": "R-JSON-P1-sonic-rs",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J1-BASE-CITM",
+   "family": "F-JSON-P1",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P1",
+   "cls": "CHK",
+   "input": "corpus/json/citm_catalog.json@a73e7a88",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P1-bbnf-gen",
+   "arm_opp": "R-JSON-P1-sonic-rs",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J1-BASE-CANADA",
+   "family": "F-JSON-P1",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P1",
+   "cls": "CHK",
+   "input": "corpus/json/canada.json@f83b3b35",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P1-bbnf-gen",
+   "arm_opp": "R-JSON-P1-sonic-rs",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J1-AA",
+   "family": "F-JSON-P1",
+   "prereg_section": "§7.2",
+   "kind": "AA",
+   "plane": "P1",
+   "cls": "CHK",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P1-bbnf-gen",
+   "arm_opp": "R-JSON-P1-bbnf-gen",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 a)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J1-SLOW",
+   "family": "F-JSON-P1",
+   "prereg_section": "§7.2",
+   "kind": "SLOW",
+   "plane": "P1",
+   "cls": "CHK",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P1-bbnf-gen",
+   "arm_opp": "R-JSON-P1-bbnf-gen",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 b)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J3-BASE-TWITTER",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-JSON-P4-sonic-rs",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J3-BASE-CITM",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/citm_catalog.json@a73e7a88",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-JSON-P4-sonic-rs",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J3-BASE-CANADA",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/canada.json@f83b3b35",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-JSON-P4-sonic-rs",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J3-BASE-SERDE-TWITTER",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-JSON-P4-serde_json",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J3-AA",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "AA",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-JSON-P4-bbnf-gen",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 a)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-J3-SLOW",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "SLOW",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-JSON-P4-bbnf-gen",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 b)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-C1-BASE-BOOTSTRAP",
+   "family": "F-CSS-P2",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P2",
+   "cls": "TOK",
+   "input": "corpus/css/bootstrap.css@4a50207b",
+   "track": "generated",
+   "arm_bbnf": "R-CSS-P2-bbnf-gen",
+   "arm_opp": "R-CSS-P2-cssparser",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-C1-BASE-TAILWIND",
+   "family": "F-CSS-P2",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P2",
+   "cls": "TOK",
+   "input": "corpus/css/tailwind.css@de305d92",
+   "track": "generated",
+   "arm_bbnf": "R-CSS-P2-bbnf-gen",
+   "arm_opp": "R-CSS-P2-cssparser",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-C1-AA",
+   "family": "F-CSS-P2",
+   "prereg_section": "§7.2",
+   "kind": "AA",
+   "plane": "P2",
+   "cls": "TOK",
+   "input": "corpus/css/bootstrap.css@4a50207b",
+   "track": "generated",
+   "arm_bbnf": "R-CSS-P2-bbnf-gen",
+   "arm_opp": "R-CSS-P2-bbnf-gen",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 a)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-C1-SLOW",
+   "family": "F-CSS-P2",
+   "prereg_section": "§7.2",
+   "kind": "SLOW",
+   "plane": "P2",
+   "cls": "TOK",
+   "input": "corpus/css/bootstrap.css@4a50207b",
+   "track": "generated",
+   "arm_bbnf": "R-CSS-P2-bbnf-gen",
+   "arm_opp": "R-CSS-P2-bbnf-gen",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 b)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-C1B-BASE-BOOTSTRAP",
+   "family": "F-CSS-P2",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P7",
+   "cls": "TYPED",
+   "input": "corpus/css/bootstrap.css@4a50207b (typed-coverage manifest)",
+   "track": "generated",
+   "arm_bbnf": "R-CSS-P7-bbnf-css_l4",
+   "arm_opp": "R-CSS-P7-lightningcss",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G1-BASE-PEST",
+   "family": "F-COMB",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-COMB-P4-pest",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G1-BASE-NOM",
+   "family": "F-COMB",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-COMB-P4-nom",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G1-BASE-WINNOW",
+   "family": "F-COMB",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-COMB-P4-winnow",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G1-BASE-CHUMSKY",
+   "family": "F-COMB",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-COMB-P4-chumsky",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G1-AA",
+   "family": "F-COMB",
+   "prereg_section": "§7.2",
+   "kind": "AA",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-COMB-P4-winnow",
+   "arm_opp": "R-COMB-P4-winnow",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 a)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G2-BASE-JSONPARSE",
+   "family": "F-JS",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JS-P4-bbnf-ts",
+   "arm_opp": "R-JS-P4-json-parse",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G2-BASE-PEGGY",
+   "family": "F-JS",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JS-P4-bbnf-ts",
+   "arm_opp": "R-JS-P4-peggy",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G2-BASE-CHEVROTAIN",
+   "family": "F-JS",
+   "prereg_section": "§7.2",
+   "kind": "BASE",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JS-P4-bbnf-ts",
+   "arm_opp": "R-JS-P4-chevrotain",
+   "pairs": "≥ 10",
+   "matrix": "PORTABLE",
+   "mode": "OBSERVATIONAL",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-G2-AA",
+   "family": "F-JS",
+   "prereg_section": "§7.2",
+   "kind": "AA",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "hand",
+   "arm_bbnf": "R-JS-P4-json-parse",
+   "arm_opp": "R-JS-P4-json-parse",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 a)",
+   "admission_lw2": "ADMITTED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-10T21:29:07Z"
+   }
+  },
+  {
+   "cell": "C-G2-SLOW",
+   "family": "F-JS",
+   "prereg_section": "§7.2",
+   "kind": "SLOW",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "hand",
+   "arm_bbnf": "R-JS-P4-json-parse",
+   "arm_opp": "R-JS-P4-json-parse",
+   "pairs": "≥ 30 over ≥ 3 invocations",
+   "matrix": "PORTABLE",
+   "mode": "CALIBRATION (U4 b)",
+   "admission_lw2": "ADMITTED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-10T21:55:45Z"
+   }
+  },
+  {
+   "cell": "C-MM-PLANE",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "MISMATCH",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "L-CON4-skinny.parse_only_track1",
+   "arm_opp": "L-CON4-skinny.parse_only_serde",
+   "pairs": "refused",
+   "matrix": "PORTABLE",
+   "mode": "REFUSAL (U4 c/d)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-MM-CLASS",
+   "family": "F-JSON-P4",
+   "prereg_section": "§7.2",
+   "kind": "MISMATCH",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "generated",
+   "arm_bbnf": "R-JSON-P4-bbnf-gen",
+   "arm_opp": "R-JSON-P4-tree-sitter-json",
+   "pairs": "refused",
+   "matrix": "PORTABLE",
+   "mode": "REFUSAL (U4 c/d)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-MM-NOCOMP",
+   "family": "F-JS",
+   "prereg_section": "§7.2",
+   "kind": "MISMATCH",
+   "plane": "P2",
+   "cls": "TOK",
+   "input": "corpus/css/bootstrap.css@4a50207b",
+   "track": "generated",
+   "arm_bbnf": "R-JS-P2-csstools",
+   "arm_opp": "R-JS-P2-postcss",
+   "pairs": "refused",
+   "matrix": "PORTABLE",
+   "mode": "REFUSAL (U4 c/d)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-MM-BUILD",
+   "family": "F-JS",
+   "prereg_section": "§7.2",
+   "kind": "MISMATCH",
+   "plane": "P4",
+   "cls": "VAL",
+   "input": "corpus/json/twitter.json@30721e49",
+   "track": "hand",
+   "arm_bbnf": "R-JS-P4-json-parse",
+   "arm_opp": "R-JS-P4-json-parse",
+   "pairs": "refused: build planes `bench/contest/build-planes/node-default.json` against `node-jitless.json`",
+   "matrix": "PORTABLE",
+   "mode": "REFUSAL (U4 c/d)",
+   "admission_lw2": "REFUSED",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-ACC-COLOR",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-REJ-COLOR",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-ACC-SCALAR",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-REJ-SCALAR",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-ACC-VALUE",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-REJ-VALUE",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-ACC-VALUES",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-REJ-VALUES",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-ACC-KFSEL",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-REJ-KFSEL",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-ACC-TIMING",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-REJ-TIMING",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-ACC-SHEET",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S1-REJ-SHEET",
+   "family": "F-VALUE-S1",
+   "prereg_section": "§8.1",
+   "mode": "CERTIFYING (non-inferiority, IUT over 14 cells)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S2-TOK-CSSTOOLS",
+   "family": "F-VALUE-S2",
+   "prereg_section": "§8.2",
+   "mode": "DESCRIPTIVE",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S2-TOK-PVP",
+   "family": "F-VALUE-S2",
+   "prereg_section": "§8.2",
+   "mode": "DESCRIPTIVE",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S2-RGBA-CULORI",
+   "family": "F-VALUE-S2",
+   "prereg_section": "§8.2",
+   "mode": "DESCRIPTIVE",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S2-RGBA-COLORJS",
+   "family": "F-VALUE-S2",
+   "prereg_section": "§8.2",
+   "mode": "DESCRIPTIVE",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S2-FULL-VALUE",
+   "family": "F-VALUE-S2",
+   "prereg_section": "§8.2",
+   "mode": "DESCRIPTIVE",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S0-ROW0-VALUE-CSS",
+   "family": "F-VALUE-S0",
+   "prereg_section": "§8.3",
+   "mode": "DESCRIPTIVE",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-S0-ROW0-VALUE-COLOR",
+   "family": "F-VALUE-S0",
+   "prereg_section": "§8.3",
+   "mode": "DESCRIPTIVE",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-RX4-CSSL4-BOOTSTRAP",
+   "family": "F-CURE-RX4",
+   "prereg_section": "§9",
+   "mode": "CERTIFYING (cure report; a LOSS files a born-RED, never reverts)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-11T00:16:12Z"
+   }
+  },
+  {
+   "cell": "C-RX4-CSSL4-TAILWIND",
+   "family": "F-CURE-RX4",
+   "prereg_section": "§9",
+   "mode": "CERTIFYING (cure report; a LOSS files a born-RED, never reverts)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-11T00:20:00Z"
+   }
+  },
+  {
+   "cell": "C-RX4-PRETTY-BOOTSTRAP",
+   "family": "F-CURE-RX4",
+   "prereg_section": "§9",
+   "mode": "CERTIFYING (cure report; a LOSS files a born-RED, never reverts)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-11T00:23:29Z"
+   }
+  },
+  {
+   "cell": "C-PERF3-CSS-BOOTSTRAP",
+   "family": "F-CURE-PERF3",
+   "prereg_section": "§10",
+   "mode": "CERTIFYING (cure report; a LOSS files a born-RED, never reverts)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-10T23:57:38Z"
+   }
+  },
+  {
+   "cell": "C-PERF3-CSS-TAILWIND",
+   "family": "F-CURE-PERF3",
+   "prereg_section": "§10",
+   "mode": "CERTIFYING (cure report; a LOSS files a born-RED, never reverts)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-11T00:08:06Z"
+   }
+  },
+  {
+   "cell": "C-PERF3-JSON-TWITTER",
+   "family": "F-CURE-PERF3",
+   "prereg_section": "§10",
+   "mode": "CERTIFYING (cure report; a LOSS files a born-RED, never reverts)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "2026-11-11T00:12:20Z"
+   }
+  },
+  {
+   "cell": "C-OR7-GR2-FIND",
+   "family": "F-REGEX",
+   "prereg_section": "§11",
+   "mode": "CERTIFYING (OR-7 close/reopen)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-OR7-GR2-ANCHORED",
+   "family": "F-REGEX",
+   "prereg_section": "§11",
+   "mode": "CERTIFYING (OR-7 close/reopen)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-OR7-GP1-CSSL4-BOOTSTRAP",
+   "family": "F-REGEX",
+   "prereg_section": "§11",
+   "mode": "CERTIFYING (OR-7 close/reopen)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-OR7-GP1-CSSL4-TAILWIND",
+   "family": "F-REGEX",
+   "prereg_section": "§11",
+   "mode": "CERTIFYING (OR-7 close/reopen)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  },
+  {
+   "cell": "C-OR7-GP1-JSON-TWITTER",
+   "family": "F-REGEX",
+   "prereg_section": "§11",
+   "mode": "CERTIFYING (OR-7 close/reopen)",
+   "budget": {
+    "hours": 72,
+    "requeue": 1,
+    "clock_start": "not started"
+   }
+  }
+ ]
+}

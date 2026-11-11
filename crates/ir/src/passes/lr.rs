@@ -271,29 +271,29 @@ pub fn substitute_leading_ref(
                 return None;
             }
 
-            if let IrNode::Ref(id) = &children[0] {
-                if *id == target_id {
-                    let rest: Vec<IrNode> = children[1..].to_vec();
+            if let IrNode::Ref(id) = &children[0]
+                && *id == target_id
+            {
+                let rest: Vec<IrNode> = children[1..].to_vec();
 
-                    // Distribute alternation replacement across rest.
-                    if let IrNode::Alt(alt_branches, _) = replacement {
-                        let new_branches: Vec<AltBranch> = alt_branches
-                            .iter()
-                            .map(|ab| {
-                                let mut combined = vec![ab.node.clone()];
-                                combined.extend(rest.iter().cloned());
-                                AltBranch {
-                                    node: IrNode::Seq(combined),
-                                    first_set: None,
-                                }
-                            })
-                            .collect();
-                        return Some(IrNode::Alt(new_branches, None));
-                    } else {
-                        let mut combined = vec![replacement.clone()];
-                        combined.extend(rest);
-                        return Some(IrNode::Seq(combined));
-                    }
+                // Distribute alternation replacement across rest.
+                if let IrNode::Alt(alt_branches, _) = replacement {
+                    let new_branches: Vec<AltBranch> = alt_branches
+                        .iter()
+                        .map(|ab| {
+                            let mut combined = vec![ab.node.clone()];
+                            combined.extend(rest.iter().cloned());
+                            AltBranch {
+                                node: IrNode::Seq(combined),
+                                first_set: None,
+                            }
+                        })
+                        .collect();
+                    return Some(IrNode::Alt(new_branches, None));
+                } else {
+                    let mut combined = vec![replacement.clone()];
+                    combined.extend(rest);
+                    return Some(IrNode::Seq(combined));
                 }
             }
             None

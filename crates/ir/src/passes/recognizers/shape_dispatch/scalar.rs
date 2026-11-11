@@ -14,8 +14,8 @@
 //!    rules whose body is a single `Ref(target)` where `target`
 //!    itself carries a classified shape tag (the non-structural
 //!    pipeline's rule-unification sometimes yields such alias forms:
-//!    BBNF `string_lit` unifies with `import_path`, BbnfBootstrap's
-//!    `lhs = identifier` stays separate, etc.). The emitter
+//!    one rule like `string_lit` unifies with `import_path`, another
+//!    like `lhs = identifier` stays separate, etc.). The emitter
 //!    delegates to the target's shape fn.
 //!
 //! # Projection

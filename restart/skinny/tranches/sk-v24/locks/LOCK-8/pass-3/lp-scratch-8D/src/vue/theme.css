@@ -1,0 +1,644 @@
+/**
+ * @mkbabb/latex-paper default theme
+ *
+ * Requires the consumer to define HSL custom properties:
+ *   --primary, --foreground, --border, --muted, --muted-foreground,
+ *   --accent-pink, --section-heading, --card, --radius, --_section-color
+ *
+ * Scoped under `.paper-article` for specificity.
+ */
+
+/* ── Cross-reference links ─────────────────────────────────── */
+
+.paper-article .paper-ref {
+    color: hsl(var(--primary));
+    text-decoration: none;
+    cursor: pointer;
+    border-bottom: 1px dashed hsl(var(--primary) / 0.4);
+    transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.paper-article .paper-ref:hover {
+    border-bottom-style: solid;
+    border-bottom-color: hsl(var(--primary));
+}
+
+/* ── Math blocks ───────────────────────────────────────────── */
+
+.paper-article .math-block {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 1rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+    margin: 0.75rem 0;
+    text-align: center;
+    border-left: 2px solid transparent;
+    padding-left: 1rem;
+    border-radius: 2px;
+    transition: border-color 0.3s ease;
+}
+
+.paper-article .math-block__equation {
+    min-width: 0;
+}
+
+.paper-article .math-block__number {
+    font-size: 0.8rem;
+    color: hsl(var(--muted-foreground));
+    white-space: nowrap;
+}
+
+.paper-article .math-block:hover {
+    border-left-color: hsl(var(--border));
+}
+
+/* ── Math inline ───────────────────────────────────────────── */
+
+.paper-article .math-inline {
+    white-space: nowrap;
+}
+
+/* ── Theorem blocks ────────────────────────────────────────── */
+
+.paper-article .theorem-block {
+    position: relative;
+    margin: 1rem 0;
+    border-radius: 0.5rem;
+    border-left-width: 3px;
+    border-left-style: solid;
+    padding: 0.75rem 1.25rem;
+    scroll-margin-top: 6rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+    transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+}
+
+.paper-article .theorem-block:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
+}
+
+:where(.dark) .paper-article .theorem-block {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+:where(.dark) .paper-article .theorem-block:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.paper-article .theorem-block::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 3rem;
+    height: 3rem;
+    border-top: 1px solid hsl(var(--border));
+    border-right: 1px solid hsl(var(--border));
+    border-radius: 0 0.5rem 0 0;
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.paper-article .theorem-block:hover::before {
+    opacity: 0.8;
+}
+
+/* Theorem type accent colors */
+.paper-article .theorem-block--theorem,
+.paper-article .theorem-block--proposition,
+.paper-article .theorem-block--corollary {
+    border-left-color: hsl(var(--primary));
+}
+
+.paper-article .theorem-block--definition,
+.paper-article .theorem-block--example {
+    border-left-color: hsl(var(--accent-pink));
+}
+
+.paper-article .theorem-block--lemma,
+.paper-article .theorem-block--aside {
+    border-left-color: hsl(var(--muted-foreground));
+}
+
+.paper-article .theorem-label {
+    margin-bottom: 0.25rem;
+}
+
+.paper-article .theorem-block--theorem .theorem-label,
+.paper-article .theorem-block--proposition .theorem-label,
+.paper-article .theorem-block--corollary .theorem-label {
+    color: hsl(var(--primary));
+}
+
+.paper-article .theorem-block--definition .theorem-label,
+.paper-article .theorem-block--example .theorem-label {
+    color: hsl(var(--accent-pink));
+}
+
+.paper-article .theorem-block--lemma .theorem-label,
+.paper-article .theorem-block--aside .theorem-label {
+    color: hsl(var(--muted-foreground));
+}
+
+.paper-article .theorem-type {
+    font-weight: 700;
+    font-variant: small-caps;
+}
+
+.paper-article .theorem-number {
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+.paper-article .theorem-body {
+    font-size: 0.938rem;
+    line-height: 1.75;
+    color: hsl(var(--foreground) / 0.9);
+}
+
+.paper-article .theorem-body > :first-child,
+.paper-article .paper-proof-body > :first-child {
+    margin-top: 0;
+}
+
+.paper-article .theorem-body > :last-child,
+.paper-article .paper-proof-body > :last-child {
+    margin-bottom: 0;
+}
+
+.paper-article .theorem-body p + p,
+.paper-article .paper-proof-body p + p {
+    margin-top: 0.9rem;
+}
+
+.paper-article .theorem-body--italic {
+    font-style: italic;
+}
+
+.paper-article .theorem-body .math-block {
+    margin-left: 0.5rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.paper-article .theorem-body .math-block + .math-block {
+    margin-top: 0;
+}
+
+/* ── Sections ──────────────────────────────────────────────── */
+
+.paper-article .paper-section {
+    scroll-margin-top: 5rem;
+}
+
+.paper-article .paper-section:not(:last-child) {
+    margin-bottom: 2rem;
+}
+
+/* ── Proofs and code ───────────────────────────────────────── */
+
+.paper-article .paper-proof-block {
+    margin: 1rem 0 1.25rem;
+    padding: 0.875rem 1rem;
+    border-left: 3px solid hsl(var(--border));
+    background: hsl(var(--card) / 0.6);
+    border-radius: 0.5rem;
+}
+
+.paper-article .paper-proof-label {
+    font-weight: 700;
+    font-variant: small-caps;
+    margin-bottom: 0.375rem;
+}
+
+.paper-article .paper-proof-body {
+    color: hsl(var(--foreground) / 0.92);
+    line-height: 1.75;
+}
+
+.paper-article .paper-code-block {
+    margin: 1rem 0 1.25rem;
+}
+
+.paper-article .paper-code-caption {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: hsl(var(--muted-foreground));
+}
+
+.paper-article .paper-code-pre {
+    margin: 0;
+    padding: 0.875rem 1rem;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    border: 1px solid hsl(var(--border));
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.paper-article .paper-code-pre.hljs {
+    color: #24292e;
+    background: #ffffff;
+}
+
+.dark .paper-article .paper-code-pre.hljs {
+    color: #c9d1d9;
+    background: #0d1117;
+}
+
+.paper-article .paper-code-pre code {
+    display: block;
+    white-space: pre;
+    font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+.paper-article .hljs-keyword,
+.paper-article .hljs-meta .hljs-keyword,
+.paper-article .hljs-template-tag,
+.paper-article .hljs-type,
+.paper-article .hljs-variable.language_ {
+    color: #d73a49;
+}
+
+.paper-article .hljs-string,
+.paper-article .hljs-title,
+.paper-article .hljs-section,
+.paper-article .hljs-title.class_,
+.paper-article .hljs-title.class_.inherited__,
+.paper-article .hljs-title.function_ {
+    color: #6f42c1;
+}
+
+.paper-article .hljs-literal,
+.paper-article .hljs-meta,
+.paper-article .hljs-number,
+.paper-article .hljs-operator,
+.paper-article .hljs-variable,
+.paper-article .hljs-attr,
+.paper-article .hljs-attribute,
+.paper-article .hljs-selector-attr,
+.paper-article .hljs-selector-class,
+.paper-article .hljs-selector-id {
+    color: #005cc5;
+}
+
+.paper-article .hljs-regexp,
+.paper-article .hljs-meta .hljs-string,
+.paper-article .hljs-string {
+    color: #032f62;
+}
+
+.paper-article .hljs-built_in,
+.paper-article .hljs-symbol,
+.paper-article .hljs-bullet {
+    color: #e36209;
+}
+
+.paper-article .hljs-comment,
+.paper-article .hljs-code,
+.paper-article .hljs-formula {
+    color: #6a737d;
+}
+
+.paper-article .hljs-name,
+.paper-article .hljs-quote,
+.paper-article .hljs-selector-tag,
+.paper-article .hljs-selector-pseudo {
+    color: #22863a;
+}
+
+.paper-article .hljs-subst,
+.paper-article .hljs-punctuation,
+.paper-article .hljs-params,
+.paper-article .hljs-property,
+.paper-article .hljs-tag,
+.paper-article .hljs-char.escape_,
+.paper-article .hljs-link {
+    color: #24292e;
+}
+
+.paper-article .hljs-section {
+    font-weight: 700;
+}
+
+.dark .paper-article .hljs-comment {
+    color: #8b949e;
+}
+
+.dark .paper-article .hljs-tag {
+    color: #7ee787;
+}
+
+.dark .paper-article .hljs-subst,
+.dark .paper-article .hljs-punctuation,
+.dark .paper-article .hljs-operator,
+.dark .paper-article .hljs-params,
+.dark .paper-article .hljs-property {
+    color: #c9d1d9;
+}
+
+.dark .paper-article .hljs-operator {
+    opacity: 0.7;
+}
+
+.dark .paper-article .hljs-bullet,
+.dark .paper-article .hljs-variable,
+.dark .paper-article .hljs-template-variable,
+.dark .paper-article .hljs-selector-tag,
+.dark .paper-article .hljs-name,
+.dark .paper-article .hljs-deletion {
+    color: #ff7b72;
+}
+
+.dark .paper-article .hljs-symbol,
+.dark .paper-article .hljs-number,
+.dark .paper-article .hljs-link,
+.dark .paper-article .hljs-attr,
+.dark .paper-article .hljs-variable.constant_,
+.dark .paper-article .hljs-literal {
+    color: #79c0ff;
+}
+
+.dark .paper-article .hljs-title,
+.dark .paper-article .hljs-class .hljs-title,
+.dark .paper-article .hljs-title.class_ {
+    color: #d2a8ff;
+}
+
+.dark .paper-article .hljs-code,
+.dark .paper-article .hljs-addition,
+.dark .paper-article .hljs-title.class_.inherited__,
+.dark .paper-article .hljs-string {
+    color: #a5d6ff;
+}
+
+.dark .paper-article .hljs-built_in,
+.dark .paper-article .hljs-doctag,
+.dark .paper-article .hljs-quote,
+.dark .paper-article .hljs-keyword.hljs-atrule,
+.dark .paper-article .hljs-regexp {
+    color: #ffa657;
+}
+
+.dark .paper-article .hljs-function .hljs-title,
+.dark .paper-article .hljs-attribute,
+.dark .paper-article .hljs-title.function_,
+.dark .paper-article .hljs-section {
+    color: #d2a8ff;
+}
+
+.dark .paper-article .hljs-type,
+.dark .paper-article .hljs-template-tag,
+.dark .paper-article .diff .hljs-meta,
+.dark .paper-article .hljs-keyword {
+    color: #ff7b72;
+}
+
+.dark .paper-article .hljs-meta,
+.dark .paper-article .hljs-meta .hljs-keyword,
+.dark .paper-article .hljs-meta .hljs-string {
+    color: #7ee787;
+}
+
+.dark .paper-article .hljs-strong {
+    color: #7ee787;
+    font-weight: 700;
+}
+
+.dark .paper-article .hljs-emphasis {
+    color: #d2a8ff;
+    font-style: italic;
+}
+
+.paper-article .paper-bibliography {
+    margin: 1.5rem 0;
+}
+
+.paper-article .paper-bibliography-heading {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.paper-article .paper-bibliography-list {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.paper-article .paper-bibliography-list li + li {
+    margin-top: 0.75rem;
+}
+
+.paper-article .paper-bib-title {
+    font-style: italic;
+}
+
+.paper-article .section-header--chapter {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: hsl(var(--card));
+    box-shadow: none;
+    padding: 0.75rem 1rem 0.25rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: var(--radius);
+}
+
+.paper-article .section-header--sub {
+    position: sticky;
+    top: 3.5rem;
+    z-index: 9;
+    background: hsl(var(--card));
+    box-shadow: none;
+    padding: 0.5rem 1rem 0.125rem;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    border-radius: var(--radius);
+}
+
+.paper-article .section-heading {
+    font-weight: 700;
+    letter-spacing: normal;
+    line-height: 1.25;
+    margin-bottom: 0;
+}
+
+.paper-article .section-header--chapter .section-heading {
+    font-size: 1.625rem;
+    color: var(--_section-color, hsl(var(--section-heading)));
+}
+
+.paper-article .section-header--sub .section-heading {
+    font-size: 1.25rem;
+    color: var(--_section-color, hsl(var(--section-heading)));
+}
+
+.paper-article .section-number {
+    font-size: 0.95rem;
+    font-weight: 400;
+    margin-right: 0.375rem;
+    user-select: none;
+}
+
+.paper-article .section-header--chapter .section-number {
+    font-size: 0.95rem;
+    color: color-mix(in srgb, var(--_section-color, hsl(var(--section-heading))) 50%, transparent);
+}
+
+.paper-article .section-header--sub .section-number {
+    font-size: 0.8rem;
+    color: color-mix(in srgb, var(--_section-color, hsl(var(--section-heading))) 50%, transparent);
+}
+
+.paper-article .section-heading:hover .section-number {
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+}
+
+.paper-article .section-divider {
+    margin-top: 1rem;
+    height: 1px;
+    background: linear-gradient(
+        to right,
+        color-mix(in srgb, var(--_section-color, hsl(var(--section-heading))) 30%, transparent),
+        color-mix(in srgb, var(--_section-color, hsl(var(--section-heading))) 10%, transparent),
+        transparent
+    );
+}
+
+.paper-article .section-body {
+    margin-top: 1.25rem;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: hsl(var(--foreground) / 0.9);
+}
+
+@media (min-width: 1024px) {
+    .paper-article .section-body {
+        font-size: 1.125rem;
+    }
+}
+
+.paper-article .section-body p + p {
+    margin-top: 1rem;
+}
+
+.paper-article .section-body em {
+    font-style: italic;
+    color: hsl(var(--foreground));
+}
+
+.paper-article .section-body strong {
+    font-weight: 700;
+    color: hsl(var(--foreground));
+}
+
+.paper-article .section-body .paper-code {
+    font-family: "Fira Code", monospace;
+    font-size: 0.85em;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    background: hsl(var(--muted) / 0.5);
+    color: hsl(var(--foreground));
+}
+
+.paper-article .section-body .paper-cite {
+    font-style: normal;
+    font-size: 0.8em;
+    color: hsl(var(--primary));
+    cursor: default;
+    font-family: "Fira Code", monospace;
+    vertical-align: super;
+    line-height: 0;
+}
+
+.paper-article .section-body .paper-quote {
+    border-left: 3px solid hsl(var(--border));
+    margin: 1rem 0;
+    padding: 0.75rem 1.25rem;
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+    background: hsl(var(--muted) / 0.2);
+    border-radius: 0 0.375rem 0.375rem 0;
+}
+
+.paper-article .section-body .paper-list {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+}
+
+.paper-article .section-body .paper-list li {
+    margin: 0.25rem 0;
+}
+
+.paper-article .section-body .paper-description {
+    margin: 0.75rem 0;
+}
+
+.paper-article .section-body .paper-description dt {
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+
+.paper-article .section-body .paper-description dd {
+    margin-left: 1.5rem;
+    margin-top: 0.125rem;
+}
+
+/* ── Figures ───────────────────────────────────────────────── */
+
+.paper-article .paper-figure {
+    border: 1px solid hsl(var(--border) / 0.5);
+    background: white;
+    border-radius: 0.5rem;
+}
+
+:where(.dark) .paper-article .paper-figure {
+    filter: invert(1) hue-rotate(180deg);
+    background: transparent;
+    border-color: hsl(var(--border) / 0.3);
+}
+
+.paper-article .paper-portrait {
+    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: 0.5rem;
+}
+
+.paper-article figure {
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    scroll-margin-top: 6rem;
+}
+
+.paper-article figure img {
+    max-width: 100%;
+    height: auto;
+}
+
+.paper-article figcaption {
+    font-size: 0.875rem;
+    color: hsl(var(--muted-foreground));
+    text-align: center;
+    max-width: 32rem;
+    font-style: italic;
+}
+
+.paper-figure-placeholder {
+    width: 100%;
+    max-width: 32rem;
+    aspect-ratio: 4 / 3;
+    border-radius: 0.375rem;
+    border: 1px dashed hsl(var(--border));
+    background: hsl(var(--muted) / 0.3);
+}

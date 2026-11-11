@@ -109,7 +109,12 @@ impl GrammarIr {
 
     pub fn validate(&self) -> Result<ValidationReport, ValidationError> {
         validate_resolved_refs(self)?;
-        validate_repeat_bodies(self)?;
+        // Nullable repeat bodies are ALLOWED. A nullable body (e.g. `arg = expression ?`
+        // wrapped in `(arg << comma ?) +`) is a legitimate construct: the grammar admits
+        // empty matches between separators. Loop-progress safety is the EMITTER's
+        // responsibility — generated loops break when the cursor fails to advance — so the
+        // validator no longer hard-rejects them. (Existing structural grammars contain no
+        // nullable repeats, so this relaxation leaves their lowering byte-identical.)
         Ok(ValidationReport {
             rule_count: self.rules.len(),
             expr_count: self.exprs.len(),
@@ -177,6 +182,24 @@ impl GrammarIr {
                     out.push_str(value);
                 }
             }
+            ExprKind::Project { body, target, ty } => {
+                self.pretty_expr_wrapped(*body, out);
+                out.push_str(" -> ");
+                out.push_str(target);
+                if let Some(ty) = ty {
+                    out.push_str(": ");
+                    out.push_str(ty);
+                }
+            }
+            ExprKind::Discard {
+                left,
+                right,
+                keep_left,
+            } => {
+                self.pretty_expr_wrapped(*left, out);
+                out.push_str(if *keep_left { " << " } else { " >> " });
+                self.pretty_expr_wrapped(*right, out);
+            }
         }
     }
 
@@ -235,6 +258,16 @@ pub enum ExprKind {
         name: String,
         value: Option<String>,
     },
+    Project {
+        body: ExprId,
+        target: String,
+        ty: Option<String>,
+    },
+    Discard {
+        left: ExprId,
+        right: ExprId,
+        keep_left: bool,
+    },
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -262,8 +295,6 @@ pub enum ValidationError {
     UnresolvedRef { name: String, span: SourceSpan },
     #[error("expression {expr:?} references missing rule id {rule:?}")]
     MissingRuleId { expr: ExprId, rule: RuleId },
-    #[error("repeat body at {span:?} is nullable")]
-    NullableRepeatBody { span: SourceSpan },
 }
 
 fn validate_resolved_refs(grammar: &GrammarIr) -> Result<(), ValidationError> {
@@ -280,18 +311,6 @@ fn validate_resolved_refs(grammar: &GrammarIr) -> Result<(), ValidationError> {
                     expr: expr.id,
                     rule: rule_id,
                 });
-            }
-        }
-    }
-    Ok(())
-}
-
-fn validate_repeat_bodies(grammar: &GrammarIr) -> Result<(), ValidationError> {
-    let nullable = nullability(grammar);
-    for expr in &grammar.exprs {
-        if let ExprKind::Repeat { body, .. } = expr.kind {
-            if nullable.get(body.0).copied().unwrap_or(false) {
-                return Err(ValidationError::NullableRepeatBody { span: expr.span });
             }
         }
     }
@@ -315,6 +334,8 @@ pub fn nullability(grammar: &GrammarIr) -> Vec<bool> {
                     .map(|rule| nullable[rule.body.0])
                     .unwrap_or(false),
                 ExprKind::Annotation { .. } => true,
+                ExprKind::Project { body, .. } => nullable[body.0],
+                ExprKind::Discard { left, right, .. } => nullable[left.0] && nullable[right.0],
             };
             if next != nullable[expr.id.0] {
                 nullable[expr.id.0] = next;
@@ -384,7 +405,9 @@ pub enum BackendExpr {
         fields: Vec<DirectBuildField>,
     },
     ValueProject {
-        projection: String,
+        body: Box<BackendExpr>,
+        target: String,
+        ty: Option<String>,
     },
     Return,
 }
@@ -581,7 +604,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rejects_nullable_repeat_body() {
+    fn allows_nullable_repeat_body() {
+        // A repeat over a nullable body (here an empty literal) is a legitimate construct —
+        // the grammar admits empty matches, and loop-progress safety is the emitter's
+        // responsibility. The validator must therefore SUCCEED.
         let mut grammar = GrammarIr::new("test", "hash");
         let literal = grammar.add_expr(
             ExprKind::Literal {
@@ -598,12 +624,13 @@ mod tests {
             },
             SourceSpan::new(4, 7),
         );
-        grammar.add_rule("bad", repeat, SourceSpan::new(0, 8));
+        grammar.add_rule("ok", repeat, SourceSpan::new(0, 8));
 
-        assert!(matches!(
-            grammar.validate(),
-            Err(ValidationError::NullableRepeatBody { .. })
-        ));
+        // The body is genuinely nullable...
+        let nullable = nullability(&grammar);
+        assert!(nullable[literal.0]);
+        // ...yet validation now succeeds.
+        assert!(grammar.validate().is_ok());
     }
 
     #[test]

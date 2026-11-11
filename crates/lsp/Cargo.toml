@@ -3,6 +3,7 @@ name = "bbnf-lsp"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
+repository = "https://github.com/mkbabb/bbnf-lang"
 description = "Language server for BBNF grammar files"
 
 [lib]
@@ -18,9 +19,9 @@ tower-lsp-server = "0.23"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-bbnf = { version = "0.2", path = "../core" }
-bbnf-ir = { version = "0.1", path = "../ir" }
-bbnf-analysis = { version = "0.1", path = "../analysis" }
+bbnf = { version = "0.3.0", path = "../core" }
+bbnf-ir = { version = "0.2.0", path = "../ir" }
+bbnf-analysis = { version = "0.2.0", path = "../analysis" }
 
 [dev-dependencies]
 tempfile = "3"

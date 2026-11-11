@@ -1,15 +1,15 @@
 //! AST helper functions over the struct-direct [`BbnfView`] surface.
 //!
 //! AZ-II.cutover.D4 — every analysis-side ast walker migrates from
-//! the tape-cursor `BbnfBootstrapNodeView` to the struct-direct
+//! the legacy tape-cursor node view to the struct-direct
 //! [`bbnf::runtime::bbnf::BbnfView`] (a [`bbnf::runtime::RuntimeView`]
 //! impl). Pure functions consumed by `state/diagnostics.rs` and
 //! `features/*.rs`.
 //!
 //! # Discriminator translation
 //!
-//! Pre-cutover.D the helpers dispatched on `BbnfBootstrapRuleKind`,
-//! whose alphabet included sub-variant tokens (`term_0`, `term_1`,
+//! Pre-cutover.D the helpers dispatched on the legacy tape-first
+//! rule-kind enum, whose alphabet included sub-variant tokens (`term_0`, `term_1`,
 //! `term_2`) emitted by the tape-first generator. The struct-direct
 //! `BbnfCompoundKind` alphabet collapses every Alt sub-variant onto
 //! the parent `term` arm and exposes the branch index via
@@ -190,18 +190,15 @@ pub(crate) fn iter_iteration_views<'a, 'p>(
 ) -> impl Iterator<Item = BbnfView<'a, 'p>> {
     let kept: Vec<BbnfView<'a, 'p>> = node
         .children()
-        .filter_map(|child| {
+        .filter(|child| {
             // Drop separator-only / whitespace-only Span children —
             // the analysis layer is interested in the substantive
             // operand compounds, not the delimiters.
-            if !child.is_compound() {
-                let text = child.span_text_opt().unwrap_or("").trim();
-                if text.is_empty() || text == "|" || text == "," {
-                    return None;
-                }
-                return Some(child);
+            if child.is_compound() {
+                return true;
             }
-            Some(child)
+            let text = child.span_text_opt().unwrap_or("").trim();
+            !(text.is_empty() || text == "|" || text == ",")
         })
         .collect();
     kept.into_iter()

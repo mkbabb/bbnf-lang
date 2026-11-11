@@ -1,0 +1,180 @@
+    Checking pprint v0.4.0 (/Users/mkbabb/Programming/pprint-wt/lw2-topo-4e-0.4/rust)
+error: approximate value of `f64::consts::PI` found
+  --> tests/pretty_tests.rs:15:23
+   |
+15 |     let out = pprint(&3.14f64, PRINTER);
+   |                       ^^^^^^^
+   |
+   = help: consider using the constant directly
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
+   = note: `#[deny(clippy::approx_constant)]` on by default
+
+error: field `0` is never read
+  --> tests/derive_tests.rs:47:13
+   |
+47 |     Skipped(i32),
+   |     ------- ^^^
+   |     |
+   |     field in this variant
+   |
+   = note: `TestEnum` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+   = note: `-D dead-code` implied by `-D warnings`
+   = help: to override `-D warnings` add `#[expect(dead_code)]` or `#[allow(dead_code)]`
+help: consider changing the field to be of unit type to suppress this warning while preserving the field numbering, or remove the field
+   |
+47 -     Skipped(i32),
+47 +     Skipped(()),
+   |
+
+error: approximate value of `f{32, 64}::consts::PI` found
+  --> tests/derive_tests.rs:72:29
+   |
+72 |     let s = TupleStruct(42, 3.14);
+   |                             ^^^^
+   |
+   = help: consider using the constant directly
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
+   = note: `#[deny(clippy::approx_constant)]` on by default
+
+error: could not compile `pprint` (test "pretty_tests") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: approximate value of `f{32, 64}::consts::PI` found
+   --> tests/builder_tests.rs:155:11
+    |
+155 |     b.f64(3.14);
+    |           ^^^^
+    |
+    = help: consider using the constant directly
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
+    = note: `#[deny(clippy::approx_constant)]` on by default
+
+error: approximate value of `f{32, 64}::consts::PI` found
+   --> tests/builder_tests.rs:185:11
+    |
+185 |     b.f64(3.14);
+    |           ^^^^
+    |
+    = help: consider using the constant directly
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#approx_constant
+
+error: explicit call to `.into_iter()` in function argument accepting `IntoIterator`
+   --> tests/builder_tests.rs:266:12
+    |
+266 |     b.join(items.into_iter(), |b, s| b.text(s));
+    |            ^^^^^^^^^^^^^^^^^
+    |
+note: this parameter accepts any `IntoIterator`, so you don't need to call `.into_iter()`
+   --> src/builder.rs:390:12
+    |
+390 |         I: IntoIterator,
+    |            ^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#useless_conversion
+    = note: `-D clippy::useless-conversion` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::useless_conversion)]`
+help: consider removing the `.into_iter()`
+    |
+266 -     b.join(items.into_iter(), |b, s| b.text(s));
+266 +     b.join(items, |b, s| b.text(s));
+    |
+
+error: explicit call to `.into_iter()` in function argument accepting `IntoIterator`
+   --> tests/builder_tests.rs:273:12
+    |
+273 |     b.join(["hello"].into_iter(), |b, s| b.text(s));
+    |            ^^^^^^^^^^^^^^^^^^^^^
+    |
+note: this parameter accepts any `IntoIterator`, so you don't need to call `.into_iter()`
+   --> src/builder.rs:390:12
+    |
+390 |         I: IntoIterator,
+    |            ^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#useless_conversion
+help: consider removing the `.into_iter()`
+    |
+273 -     b.join(["hello"].into_iter(), |b, s| b.text(s));
+273 +     b.join(["hello"], |b, s| b.text(s));
+    |
+
+error: explicit call to `.into_iter()` in function argument accepting `IntoIterator`
+   --> tests/builder_tests.rs:281:18
+    |
+281 |     b.smart_join(items.into_iter(), ", ", 15, 0, |b, s| b.text(s));
+    |                  ^^^^^^^^^^^^^^^^^
+    |
+note: this parameter accepts any `IntoIterator`, so you don't need to call `.into_iter()`
+   --> src/builder.rs:415:12
+    |
+415 |         I: IntoIterator,
+    |            ^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#useless_conversion
+help: consider removing the `.into_iter()`
+    |
+281 -     b.smart_join(items.into_iter(), ", ", 15, 0, |b, s| b.text(s));
+281 +     b.smart_join(items, ", ", 15, 0, |b, s| b.text(s));
+    |
+
+error: explicit call to `.into_iter()` in function argument accepting `IntoIterator`
+   --> tests/builder_tests.rs:290:18
+    |
+290 |     b.smart_join(items.into_iter(), ", ", 80, 0, |b, s| b.text(s));
+    |                  ^^^^^^^^^^^^^^^^^
+    |
+note: this parameter accepts any `IntoIterator`, so you don't need to call `.into_iter()`
+   --> src/builder.rs:415:12
+    |
+415 |         I: IntoIterator,
+    |            ^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#useless_conversion
+help: consider removing the `.into_iter()`
+    |
+290 -     b.smart_join(items.into_iter(), ", ", 80, 0, |b, s| b.text(s));
+290 +     b.smart_join(items, ", ", 80, 0, |b, s| b.text(s));
+    |
+
+error: explicit call to `.into_iter()` in function argument accepting `IntoIterator`
+   --> tests/builder_tests.rs:298:19
+    |
+298 |     b.linear_join(items.into_iter(), ", ", 12, |b, s| b.text(s));
+    |                   ^^^^^^^^^^^^^^^^^
+    |
+note: this parameter accepts any `IntoIterator`, so you don't need to call `.into_iter()`
+   --> src/builder.rs:486:12
+    |
+486 |         I: IntoIterator,
+    |            ^^^^^^^^^^^^
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#useless_conversion
+help: consider removing the `.into_iter()`
+    |
+298 -     b.linear_join(items.into_iter(), ", ", 12, |b, s| b.text(s));
+298 +     b.linear_join(items, ", ", 12, |b, s| b.text(s));
+    |
+
+error: could not compile `pprint` (test "derive_tests") due to 2 previous errors
+error: redundant closure
+   --> benches/pprint.rs:172:49
+    |
+172 |     let docs: Vec<RcDoc<()>> = items.iter().map(|i| RcDoc::as_string(i)).collect();
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the associated function itself: `RcDoc::as_string`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_closure
+    = note: `-D clippy::redundant-closure` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::redundant_closure)]`
+
+error: redundant closure
+   --> benches/pprint.rs:188:57
+    |
+188 |             let docs: Vec<RcDoc<()>> = inner.iter().map(|i| RcDoc::as_string(i)).collect();
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the associated function itself: `RcDoc::as_string`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_closure
+
+error: redundant closure
+   --> benches/pprint.rs:254:49
+    |
+254 |     let docs: Vec<RcDoc<()>> = items.iter().map(|f| RcDoc::as_string(f)).collect();
+    |                                                 ^^^^^^^^^^^^^^^^^^^^^^^ help: replace the closure with the associated function itself: `RcDoc::as_string`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_closure
+
+error: could not compile `pprint` (test "builder_tests") due to 7 previous errors
+error: could not compile `pprint` (bench "pprint") due to 3 previous errors

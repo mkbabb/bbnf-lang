@@ -12,7 +12,7 @@
 //! catching equivalences the normalizer's fixed pass order misses via
 //! e-class canonical matching, and picking cost-cheapest canonical
 //! forms via `GrammarCostModel` (the shared cost model, also consumed
-//! by the bbnf-regex HIR e-graph in Tranche H and by CSP strategy
+//! by the parse-that-regex HIR e-graph in Tranche H and by CSP strategy
 //! solvers).
 //!
 //! ```text
@@ -44,14 +44,15 @@ pub use analysis::{EClassFacts, GrammarAnalysis, WidthBound};
 pub use cost::GrammarCostModel;
 pub use interner::SharedStrings;
 pub use node::GrammarENode;
-pub use rules::default_rules;
+pub use rules::{LeafMatch, default_rules};
 pub use write_back::{extract_ir_node, write_back_optimized};
 
-use egraph::EGraph;
+use parse_that_egraph::EGraph;
 
 use crate::GrammarIR;
 
-/// Build an e-graph from the IR and saturate it with default rules.
+/// Build an e-graph from the IR and saturate it with the default rules for
+/// the backend's regex leaf (`leaf`).
 /// Returns the populated e-graph, the shared string pool (which may
 /// contain new entries produced by string-mutating rules like
 /// `MergeLiterals`), and the per-rule body root ids captured during
@@ -59,10 +60,11 @@ use crate::GrammarIR;
 /// `write_back_optimized`.
 pub fn build_and_saturate(
     ir: &GrammarIR,
+    leaf: LeafMatch,
 ) -> (
     EGraph<GrammarENode, GrammarAnalysis>,
     SharedStrings,
-    rustc_hash::FxHashMap<crate::RuleId, egraph::Id>,
+    rustc_hash::FxHashMap<crate::RuleId, parse_that_egraph::Id>,
 ) {
     use crate::RuleId;
     use rustc_hash::FxHashMap;
@@ -86,21 +88,21 @@ pub fn build_and_saturate(
 
     // Map RuleId → root e-class Id using the Vec<Id> insert_ir
     // returned — the i-th entry is the root of ir.rules[i].body.
-    let rule_body_ids: FxHashMap<RuleId, egraph::Id> = ir
+    let rule_body_ids: FxHashMap<RuleId, parse_that_egraph::Id> = ir
         .rules
         .iter()
         .enumerate()
         .filter_map(|(i, r)| rule_root_ids.get(i).map(|&id| (r.id, id)))
         .collect();
 
-    let rules = default_rules(ir, &pool, rule_body_ids.clone());
-    let rule_refs: Vec<&dyn egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
+    let rules = default_rules(ir, &pool, rule_body_ids.clone(), leaf);
+    let rule_refs: Vec<&dyn parse_that_egraph::RewriteFn<GrammarENode, GrammarAnalysis>> =
         rules.iter().map(|r| r.as_ref()).collect();
 
     // Read scheduler caps from the per-compile cost config — single
     // source of truth for iter_limit and node_limit.
-    let scheduler = egraph::CspScheduler::from_config(&ir.cost_config.egraph);
-    use egraph::Scheduler;
+    let scheduler = parse_that_egraph::CspScheduler::from_config(&ir.cost_config.egraph);
+    use parse_that_egraph::Scheduler;
     let _report = scheduler.run(&mut egraph, &rule_refs);
     if std::env::var("BBNF_EGRAPH_REPORT").is_ok() {
         eprintln!(

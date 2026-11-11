@@ -31,9 +31,7 @@ mod __ebnfparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_EbnfParser: [&'static str; 1usize] = [
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/ebnf/ebnf.bbnf")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/grammar/ebnf/ebnf.bbnf")),
     ];
     static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 89usize] = [
         8, 9, 10, 12, 13, 32, 34, 39, 40, 41, 42, 43, 44, 45, 46, 48, 49, 50, 51, 52, 53,
@@ -1348,7 +1346,7 @@ mod __ebnfparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::simd_scan::StructuralIndex,
+                ::parse_that::scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -1368,17 +1366,17 @@ mod __ebnfparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::simd_scan::StructuralIndex {
+        ) -> &'a ::parse_that::scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    let alphabet = ::simd_scan::StructuralAlphabet {
+                    let alphabet = ::parse_that::scan::StructuralAlphabet {
                         singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
                         digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
                         digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
                         quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
-                    ::simd_scan::scan_structural(input, &alphabet)
+                    ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip JSON whitespace at `*p`, returning the first
@@ -3095,9 +3093,6 @@ mod __ebnfparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -3241,11 +3236,6 @@ mod __ebnfparser_emit_impl {
                                 break;
                             }
                         }
-                    }
-                    if __iter_count < 0u32 {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: *p as u32,
-                        });
                     }
                 }
             }
@@ -3580,11 +3570,6 @@ mod __ebnfparser_emit_impl {
                                     }
                                 }
                             }
-                            if __iter_count < 0u32 {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: *p as u32,
-                                });
-                            }
                         }
                         {
                             let at = *p;
@@ -3741,11 +3726,6 @@ mod __ebnfparser_emit_impl {
                                     }
                                 }
                             }
-                            if __iter_count < 0u32 {
-                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                    offset: *p as u32,
-                                });
-                            }
                         }
                         {
                             let at = *p;
@@ -3861,9 +3841,6 @@ mod __ebnfparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -3953,11 +3930,6 @@ mod __ebnfparser_emit_impl {
                                             break;
                                         }
                                     }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
                                 }
                             }
                             Ok(())
@@ -4081,9 +4053,6 @@ mod __ebnfparser_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 4294967295u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -4168,11 +4137,6 @@ mod __ebnfparser_emit_impl {
                                             break;
                                         }
                                     }
-                                }
-                                if __iter_count < 0u32 {
-                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                                        offset: *p as u32,
-                                    });
                                 }
                             }
                             Ok(())

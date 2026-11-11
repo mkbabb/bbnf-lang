@@ -1,0 +1,20 @@
+===== REBIRTH window A 10:06:47 load=9.09 12.14 13.41 =====
+micro_parse_that          fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ json_number_float_exp  13.11 ns      │ 18.07 ns      │ 13.35 ns      │ 13.56 ns      │ 200     │ 102400
+├─ json_number_int_large  17.01 ns      │ 153.5 ns      │ 17.34 ns      │ 24.7 ns       │ 200     │ 51200
+╰─ json_number_int_small  10.83 ns      │ 42.08 ns      │ 11.07 ns      │ 11.88 ns      │ 200     │ 102400
+parse_that_combinator  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ apache              95.29 µs      │ 283.8 µs      │ 98.66 µs      │ 107.4 µs      │ 200     │ 200
+├─ canada              2.152 ms      │ 3.858 ms      │ 2.409 ms      │ 2.493 ms      │ 200     │ 200
+├─ citm_catalog        954.7 µs      │ 1.747 ms      │ 1.007 ms      │ 1.065 ms      │ 200     │ 200
+╰─ twitter             426.2 µs      │ 909.4 µs      │ 438.9 µs      │ 474.1 µs      │ 200     │ 200
+===== REBIRTH window B 10:06:49 load=9.09 12.14 13.41 =====
+micro_parse_that          fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ json_number_float_exp  13.85 ns      │ 22.47 ns      │ 14.45 ns      │ 14.48 ns      │ 200     │ 102400
+├─ json_number_int_large  16.53 ns      │ 51.85 ns      │ 17.83 ns      │ 18.1 ns       │ 200     │ 51200
+╰─ json_number_int_small  10.67 ns      │ 221.9 ns      │ 11.48 ns      │ 14.37 ns      │ 200     │ 102400
+parse_that_combinator  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ apache              93.99 µs      │ 358 µs        │ 96.91 µs      │ 106.7 µs      │ 200     │ 200
+├─ canada              2.176 ms      │ 3.142 ms      │ 2.345 ms      │ 2.468 ms      │ 200     │ 200
+├─ citm_catalog        949.9 µs      │ 1.651 ms      │ 996.5 µs      │ 1.05 ms       │ 200     │ 200
+╰─ twitter             421.6 µs      │ 828.9 µs      │ 439.5 µs      │ 484.4 µs      │ 200     │ 200

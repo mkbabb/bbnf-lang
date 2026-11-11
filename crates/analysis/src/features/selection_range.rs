@@ -89,10 +89,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
 
     // Span-leaf focus: push and return.
     if !node.is_compound() {
-        if contains {
-            if let Some((lo, hi)) = span {
-                spans.push((lo, hi));
-            }
+        if contains && let Some((lo, hi)) = span {
+            spans.push((lo, hi));
         }
         return;
     }
@@ -100,10 +98,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
     match node.compound_kind() {
         // Alternation.
         Some(BbnfCompoundKind::Alternation) => {
-            if contains {
-                if let Some((lo, hi)) = span {
-                    spans.push((lo, hi));
-                }
+            if contains && let Some((lo, hi)) = span {
+                spans.push((lo, hi));
             }
             for branch in iter_iteration_views(node) {
                 collect_spans(branch, offset, spans);
@@ -112,10 +108,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
 
         // Concatenation.
         Some(BbnfCompoundKind::Concatenation) => {
-            if contains {
-                if let Some((lo, hi)) = span {
-                    spans.push((lo, hi));
-                }
+            if contains && let Some((lo, hi)) = span {
+                spans.push((lo, hi));
             }
             for part in iter_iteration_views(node) {
                 collect_spans(part, offset, spans);
@@ -124,10 +118,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
 
         // Binary factor.
         Some(BbnfCompoundKind::BinaryFactor) => {
-            if contains {
-                if let Some((lo, hi)) = span {
-                    spans.push((lo, hi));
-                }
+            if contains && let Some((lo, hi)) = span {
+                spans.push((lo, hi));
             }
             for operand in collect_binary_operand_views(node) {
                 collect_spans(operand, offset, spans);
@@ -136,10 +128,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
 
         // Mapped factor: inner + optional mapping.
         Some(BbnfCompoundKind::MappedFactor) => {
-            if contains {
-                if let Some((lo, hi)) = span {
-                    spans.push((lo, hi));
-                }
+            if contains && let Some((lo, hi)) = span {
+                spans.push((lo, hi));
             }
             if let Some(inner) = node.child(0) {
                 collect_spans(inner, offset, spans);
@@ -148,10 +138,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
 
         // Factor.
         Some(BbnfCompoundKind::Factor) => {
-            if contains {
-                if let Some((lo, hi)) = span {
-                    spans.push((lo, hi));
-                }
+            if contains && let Some((lo, hi)) = span {
+                spans.push((lo, hi));
             }
             for c in node.children() {
                 collect_spans(c, offset, spans);
@@ -164,10 +152,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
                 let _ = b;
                 // Grouped: span is meaningful for the wrapping
                 // brackets.
-                if contains {
-                    if let Some((lo, hi)) = span {
-                        spans.push((lo, hi));
-                    }
+                if contains && let Some((lo, hi)) = span {
+                    spans.push((lo, hi));
                 }
                 if let Some(inner) = node
                     .children()
@@ -194,10 +180,8 @@ fn collect_spans(node: BbnfView<'_, '_>, offset: usize, spans: &mut Vec<(usize, 
 
         // Closure: recurse into body.
         Some(BbnfCompoundKind::Closure) => {
-            if contains {
-                if let Some((lo, hi)) = span {
-                    spans.push((lo, hi));
-                }
+            if contains && let Some((lo, hi)) = span {
+                spans.push((lo, hi));
             }
             if let Some(body) = node
                 .children()

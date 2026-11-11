@@ -16,7 +16,7 @@ use parse_that::regex::Dfa;
 use wasmtime::*;
 
 fn load(name: &str) -> String {
-    let path = format!("../../data/json/{}", name);
+    let path = bbnf_corpus::path(&format!("json/{}", name)).display().to_string();
     std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {}", path, e))
 }
 
@@ -50,11 +50,10 @@ fn compiled_wasm() -> WasmBundle {
     )
     .unwrap()
     {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => unreachable!(),
     };
     bbnf_ir::passes::compute_sp_method_rules(&mut ir);
-    bbnf_ir::dag::ensure_dag(&mut ir);
     bbnf_ir::passes::project_types(&mut ir);
 
     // Run driver + WASM emitter manually to access regex_patterns.
@@ -221,7 +220,7 @@ macro_rules! bench {
                 // Warmup + correctness: assert the parse consumed full input.
                 let result = parse.call(&mut store, (0, input_len as i32)).unwrap();
                 assert!(
-                    result >= 0 && (result as usize) >= input.trim_end().len(),
+                    result >= 0 && (result as usize) == input.len(),
                     concat!($file, ": WASM parse failed or incomplete ({}/{})"),
                     result,
                     input.len(),

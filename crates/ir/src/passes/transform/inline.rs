@@ -124,14 +124,13 @@ pub fn inline_acyclic(ir: &mut GrammarIR, trace: &mut dyn TraceSink) {
 fn collect_refs_to(node: &IrNode, bodies: &[Option<IrNode>], refs_seen: &mut [bool]) {
     match node {
         IrNode::Ref(id) => {
-            if let Some(slot) = refs_seen.get_mut(*id as usize) {
-                if bodies
+            if let Some(slot) = refs_seen.get_mut(*id as usize)
+                && bodies
                     .get(*id as usize)
                     .map(|b| b.is_some())
                     .unwrap_or(false)
-                {
-                    *slot = true;
-                }
+            {
+                *slot = true;
             }
         }
         IrNode::Seq(children) => {

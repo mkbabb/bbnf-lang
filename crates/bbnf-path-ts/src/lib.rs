@@ -13,7 +13,7 @@
 //! `ts/path.ts`:
 //!
 //! - [`compile_path`] — lex the path string through the same
-//!   `bbnf_regex::lex_path` the proc-macro uses, validate the segment
+//!   `parse_that_regex::lex_path` the proc-macro uses, validate the segment
 //!   sequence against the per-grammar [`fixture::GrammarFixture`], and
 //!   emit a serialized [`schema::TypedPathPayload`]. The payload's
 //!   shape is byte-identical to the Rust frontend's

@@ -1,0 +1,556 @@
+diff --git a/skinny/Cargo.lock b/skinny/Cargo.lock
+index b6809f67d..b16c1c931 100644
+--- a/skinny/Cargo.lock
++++ b/skinny/Cargo.lock
+@@ -104,6 +104,9 @@ dependencies = [
+ [[package]]
+ name = "bbnf-regex"
+ version = "0.1.0"
++dependencies = [
++ "serde",
++]
+ 
+ [[package]]
+ name = "bbnf-simd"
+diff --git a/skinny/crates/bbnf-regex/Cargo.toml b/skinny/crates/bbnf-regex/Cargo.toml
+index 850975786..d89855e40 100644
+--- a/skinny/crates/bbnf-regex/Cargo.toml
++++ b/skinny/crates/bbnf-regex/Cargo.toml
+@@ -7,3 +7,4 @@ repository.workspace = true
+ rust-version.workspace = true
+ 
+ [dependencies]
++serde.workspace = true
+diff --git a/skinny/crates/bbnf-regex/src/lib.rs b/skinny/crates/bbnf-regex/src/lib.rs
+index 5c787394a..f5f96f14a 100644
+--- a/skinny/crates/bbnf-regex/src/lib.rs
++++ b/skinny/crates/bbnf-regex/src/lib.rs
+@@ -1,3 +1,5 @@
++use serde::{Deserialize, Serialize};
++
+ #[derive(Clone, Debug, PartialEq, Eq)]
+ pub struct RegexFacts {
+     pub nullable: bool,
+@@ -31,7 +33,7 @@ pub struct ByteClass {
+     pub bytes: ByteSet256,
+ }
+ 
+-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
++#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+ pub struct ByteSet256 {
+     words: [u64; 4],
+ }
+diff --git a/skinny/crates/codegen/src/lower/sink_only.rs b/skinny/crates/codegen/src/lower/sink_only.rs
+index 4aeadca0a..b41e0dac8 100644
+--- a/skinny/crates/codegen/src/lower/sink_only.rs
++++ b/skinny/crates/codegen/src/lower/sink_only.rs
+@@ -79,6 +79,9 @@ pub enum SinkOnlyExpr {
+     },
+     OptionalBranch(Box<SinkOnlyExpr>),
+     ByteLiteral(Vec<u8>),
++    ByteClass {
++        negated: bool,
++    },
+     RegexProgram {
+         span_kind: SinkOnlySpanKind,
+         pattern: String,
+@@ -199,6 +202,7 @@ fn lower_expr(expr: &BackendExpr, facts: &mut SinkOnlyFacts) -> SinkOnlyExpr {
+             facts.literals.insert(bytes.clone());
+             SinkOnlyExpr::ByteLiteral(bytes.clone())
+         }
++        BackendExpr::ByteClass { negated, .. } => SinkOnlyExpr::ByteClass { negated: *negated },
+         BackendExpr::RegexProgram { pattern, span_kind } => {
+             let span_kind = sink_span_kind(*span_kind);
+             facts.span_kinds.insert(span_kind);
+@@ -235,6 +239,7 @@ fn direct_shape(expr: &SinkOnlyExpr) -> Option<DirectShape> {
+         SinkOnlyExpr::Seq(children) => children.iter().find_map(direct_shape),
+         SinkOnlyExpr::Alt { branches, .. } => branches.iter().find_map(direct_shape),
+         SinkOnlyExpr::ByteLiteral(_)
++        | SinkOnlyExpr::ByteClass { .. }
+         | SinkOnlyExpr::RegexProgram { .. }
+         | SinkOnlyExpr::CallRule { .. }
+         | SinkOnlyExpr::SpanMark { .. }
+diff --git a/skinny/crates/codegen/src/lower/tape_plan.rs b/skinny/crates/codegen/src/lower/tape_plan.rs
+index 4c5f9ae65..90dbf7290 100644
+--- a/skinny/crates/codegen/src/lower/tape_plan.rs
++++ b/skinny/crates/codegen/src/lower/tape_plan.rs
+@@ -122,6 +122,13 @@ fn render_expr(expr: &BackendExpr, flavor: TapeFlavor, ops: &mut Vec<String>) {
+                 pattern
+             ));
+         }
++        BackendExpr::ByteClass { set, negated } => {
++            ops.push(format!(
++                "{}_match_byte_class(negated={negated}, n={}) -> ParserState::match_byte_class",
++                flavor.prefix(),
++                set.to_vec().len()
++            ));
++        }
+         BackendExpr::CallRule { callee } => {
+             ops.push(format!("{}_call_rule({callee})", flavor.prefix()));
+         }
+diff --git a/skinny/crates/ir/src/lib.rs b/skinny/crates/ir/src/lib.rs
+index a604b0044..42c7c0b3b 100644
+--- a/skinny/crates/ir/src/lib.rs
++++ b/skinny/crates/ir/src/lib.rs
+@@ -1,4 +1,5 @@
+ use bbnf_regex::analyze;
++pub use bbnf_regex::ByteSet256;
+ use serde::{Deserialize, Serialize};
+ use std::collections::HashMap;
+ use std::fmt;
+@@ -168,6 +169,20 @@ impl GrammarIr {
+                 out.push_str(pattern);
+                 out.push('/');
+             }
++            ExprKind::Class { set, negated } => {
++                out.push('[');
++                if *negated {
++                    out.push('^');
++                }
++                for byte in set.to_vec() {
++                    out.push(byte as char);
++                }
++                out.push(']');
++            }
++            ExprKind::Look { kind } => out.push_str(match kind {
++                LookKind::Start | LookKind::StartLF | LookKind::StartCRLF => "^",
++                LookKind::End | LookKind::EndLF | LookKind::EndCRLF => "$",
++            }),
+             ExprKind::Ref { name, .. } => out.push_str(name),
+             ExprKind::Annotation { name, value } => {
+                 out.push('@');
+@@ -235,6 +250,29 @@ pub enum ExprKind {
+         name: String,
+         value: Option<String>,
+     },
++    // LOCK-5 probe: regex atoms folded directly into the grammar HIR (family 5A).
++    // A character class carries its own byte-set semantics structurally — no
++    // regex pattern string, no `analyze()` round-trip.
++    Class {
++        set: ByteSet256,
++        negated: bool,
++    },
++    // A zero-width position assertion (anchor / lookaround), mirroring the
++    // parse-that HIR `Look`.
++    Look {
++        kind: LookKind,
++    },
++}
++
++// Zero-width position assertions, mirroring parse-that's `regex::hir::Look`.
++#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
++pub enum LookKind {
++    Start,
++    End,
++    StartLF,
++    EndLF,
++    StartCRLF,
++    EndCRLF,
+ }
+ 
+ #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+@@ -315,6 +353,11 @@ pub fn nullability(grammar: &GrammarIr) -> Vec<bool> {
+                     .map(|rule| nullable[rule.body.0])
+                     .unwrap_or(false),
+                 ExprKind::Annotation { .. } => true,
++                // A class matches exactly one byte — never empty (even negated,
++                // over a non-empty complement). Structural, like a non-empty Literal.
++                ExprKind::Class { .. } => false,
++                // Zero-width assertion — matches the empty string. Like Optional.
++                ExprKind::Look { .. } => true,
+             };
+             if next != nullable[expr.id.0] {
+                 nullable[expr.id.0] = next;
+@@ -365,6 +408,13 @@ pub enum BackendExpr {
+     },
+     OptionalBranch(Box<BackendExpr>),
+     ByteLiteral(Vec<u8>),
++    // LOCK-5 probe: the backend primitive a folded `ExprKind::Class` lowers to.
++    // This is backend-plane growth (plane 2) that BOTH 5A and 5B incur — a
++    // byte-class matcher is needed regardless of how many HIRs the front carries.
++    ByteClass {
++        set: ByteSet256,
++        negated: bool,
++    },
+     RegexProgram {
+         pattern: String,
+         span_kind: SpanKind,
+diff --git a/skinny/crates/ir/tests/lock5_nullability_parity.rs b/skinny/crates/ir/tests/lock5_nullability_parity.rs
+new file mode 100644
+index 000000000..dc30065c3
+--- /dev/null
++++ b/skinny/crates/ir/tests/lock5_nullability_parity.rs
+@@ -0,0 +1,196 @@
++//! LOCK-5 probe 1, deliverable (B): structural-nullability parity oracle.
++//!
++//! The three json.bbnf leaf patterns — whitespace, quoted-string, number —
++//! are hand-built as `Class`/`Seq`/`Alt`/`Repeat`/`Optional` subtrees (the
++//! family-5A "one HIR" shape: regex atoms folded directly into `ExprKind`,
++//! no separate regex functor). The translation mirrors parse-that's real
++//! `regex::hir` (`Hir::{Class,Concat,Alternation,Repetition,Literal}` with a
++//! `CharClass::Bytes { ranges, negated }`), collapsing byte ranges into
++//! `ByteSet256`.
++//!
++//! We then run the EXTENDED `ir::nullability` (with the new `Class => false`,
++//! `Look => true` arms) and assert the same verdicts the extant regex-string
++//! oracle in `ir::tests::regex_nullability_uses_quantified_atom_shape`
++//! produces: nullable[ws] == true, nullable[string] == false,
++//! nullable[number] == false. Green here ⇒ folding regex into the grammar HIR
++//! preserves nullability parity — 5A does not break the oracle.
++
++use ir::{AltMode, ByteSet256, ExprId, ExprKind, GrammarIr, SourceSpan};
++
++const SP: SourceSpan = SourceSpan { start: 0, end: 0 };
++
++fn class_set(bytes: &[u8]) -> ByteSet256 {
++    let mut set = ByteSet256::default();
++    for &b in bytes {
++        set.insert(b);
++    }
++    set
++}
++
++fn class_range(lo: u8, hi: u8) -> ByteSet256 {
++    let mut set = ByteSet256::default();
++    set.insert_range(lo, hi);
++    set
++}
++
++struct Builder<'a> {
++    g: &'a mut GrammarIr,
++}
++
++impl Builder<'_> {
++    fn add(&mut self, kind: ExprKind) -> ExprId {
++        self.g.add_expr(kind, SP)
++    }
++    fn class(&mut self, set: ByteSet256) -> ExprId {
++        self.add(ExprKind::Class {
++            set,
++            negated: false,
++        })
++    }
++    fn class_neg(&mut self, set: ByteSet256) -> ExprId {
++        self.add(ExprKind::Class { set, negated: true })
++    }
++    fn lit(&mut self, bytes: &[u8]) -> ExprId {
++        self.add(ExprKind::Literal {
++            bytes: bytes.to_vec(),
++            case: ir::CaseSensitivity::Sensitive,
++        })
++    }
++    fn seq(&mut self, kids: Vec<ExprId>) -> ExprId {
++        self.add(ExprKind::Seq(kids))
++    }
++    fn alt(&mut self, branches: Vec<ExprId>) -> ExprId {
++        self.add(ExprKind::Alt {
++            branches,
++            mode: AltMode::Speculative,
++        })
++    }
++    fn star(&mut self, body: ExprId) -> ExprId {
++        self.add(ExprKind::Repeat {
++            body,
++            min: 0,
++            max: None,
++        })
++    }
++    fn plus(&mut self, body: ExprId) -> ExprId {
++        self.add(ExprKind::Repeat {
++            body,
++            min: 1,
++            max: None,
++        })
++    }
++    fn rep(&mut self, body: ExprId, min: u32, max: u32) -> ExprId {
++        self.add(ExprKind::Repeat {
++            body,
++            min,
++            max: Some(max),
++        })
++    }
++    fn opt(&mut self, body: ExprId) -> ExprId {
++        self.add(ExprKind::Optional(body))
++    }
++}
++
++/// `[ \t\n\r]*`  →  Repetition{ sub: Class[ws], min: 0 }
++fn build_ws(b: &mut Builder) -> ExprId {
++    let ws = b.class(class_set(&[b' ', b'\t', b'\n', b'\r']));
++    b.star(ws)
++}
++
++/// `"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"`
++/// → Concat[ Literal(`"`), Repetition{ Alternation[ Class[^"\],
++///          Concat[Literal(`\`), Alternation[ Class["\/bfnrt],
++///          Concat[Literal(`u`), Repetition{Class[hex],4,4}] ]] ], min:0 },
++///   Literal(`"`) ]
++fn build_string(b: &mut Builder) -> ExprId {
++    let normal = b.class_neg(class_set(&[b'"', b'\\']));
++    let simple_escape = b.class_set_escape();
++    let bslash = b.lit(&[b'\\']);
++    let u = b.lit(&[b'u']);
++    let hex = {
++        let mut s = class_range(b'0', b'9');
++        for c in b'a'..=b'f' {
++            s.insert(c);
++        }
++        for c in b'A'..=b'F' {
++            s.insert(c);
++        }
++        b.class(s)
++    };
++    let hex4 = b.rep(hex, 4, 4);
++    let unicode = b.seq(vec![u, hex4]);
++    let escape_body = b.alt(vec![simple_escape, unicode]);
++    let escaped = b.seq(vec![bslash, escape_body]);
++    let content = b.alt(vec![normal, escaped]);
++    let content_star = b.star(content);
++    let open = b.lit(&[b'"']);
++    let close = b.lit(&[b'"']);
++    b.seq(vec![open, content_star, close])
++}
++
++/// `-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?`
++/// → Concat[ Repetition{Literal(`-`),0,1}, Alternation[Literal(`0`),
++///          Concat[Class[1-9], Repetition{Class[0-9],0,inf}]],
++///          Repetition{Concat[Literal(`.`),Repetition{Class[0-9],1,inf}],0,1},
++///          Repetition{Concat[Class[eE],Repetition{Class[+-],0,1},
++///                     Repetition{Class[0-9],1,inf}],0,1} ]
++fn build_number(b: &mut Builder) -> ExprId {
++    let minus = b.lit(&[b'-']);
++    let sign = b.opt(minus);
++
++    let zero = b.lit(&[b'0']);
++    let one_nine = b.class(class_range(b'1', b'9'));
++    let digits0 = {
++        let d = b.class(class_range(b'0', b'9'));
++        b.star(d)
++    };
++    let nonzero = b.seq(vec![one_nine, digits0]);
++    let int_part = b.alt(vec![zero, nonzero]);
++
++    let dot = b.lit(&[b'.']);
++    let frac_digits = {
++        let d = b.class(class_range(b'0', b'9'));
++        b.plus(d)
++    };
++    let frac_body = b.seq(vec![dot, frac_digits]);
++    let frac = b.opt(frac_body);
++
++    let e = b.class(class_set(&[b'e', b'E']));
++    let exp_sign = {
++        let s = b.class(class_set(&[b'+', b'-']));
++        b.opt(s)
++    };
++    let exp_digits = {
++        let d = b.class(class_range(b'0', b'9'));
++        b.plus(d)
++    };
++    let exp_body = b.seq(vec![e, exp_sign, exp_digits]);
++    let exp = b.opt(exp_body);
++
++    b.seq(vec![sign, int_part, frac, exp])
++}
++
++impl Builder<'_> {
++    fn class_set_escape(&mut self) -> ExprId {
++        // `["\\\/bfnrt]`
++        self.class(class_set(&[b'"', b'\\', b'/', b'b', b'f', b'n', b'r', b't']))
++    }
++}
++
++#[test]
++fn folded_regex_atoms_preserve_json_leaf_nullability() {
++    let mut g = GrammarIr::new("json_leaves", "hash");
++    let (ws, string, number) = {
++        let mut b = Builder { g: &mut g };
++        (build_ws(&mut b), build_string(&mut b), build_number(&mut b))
++    };
++
++    let nullable = ir::nullability(&g);
++
++    // Whitespace `[...]*` — the Kleene star admits the empty match.
++    assert!(nullable[ws.0], "nullable[ws] must be true (Kleene star)");
++    // Quoted string opens with a required `\"` byte — never empty.
++    assert!(!nullable[string.0], "nullable[string] must be false");
++    // Number's integer part is a required `0 | [1-9]\\d*` — never empty.
++    assert!(!nullable[number.0], "nullable[number] must be false");
++}
+diff --git a/skinny/crates/passes/src/lib.rs b/skinny/crates/passes/src/lib.rs
+index 435d51472..872b71b4e 100644
+--- a/skinny/crates/passes/src/lib.rs
++++ b/skinny/crates/passes/src/lib.rs
+@@ -201,6 +201,12 @@ pub mod layout {
+                         Type::Rule(rule_id)
+                     }
+                     ExprKind::Annotation { .. } => Type::Builtin(BuiltinTy::Unit),
++                    // A class matches one byte — the SAME leaf type a Literal
++                    // yields. No regex-specific scalar type is required: the
++                    // grammar's byte lattice (Bytes / U8) already covers it.
++                    ExprKind::Class { .. } => Type::Builtin(BuiltinTy::Bytes),
++                    // A zero-width assertion carries no value — like an Annotation.
++                    ExprKind::Look { .. } => Type::Builtin(BuiltinTy::Unit),
+                 };
+ 
+                 self.facts.node_types.insert(expr_id, ty.clone());
+@@ -778,7 +784,11 @@ pub mod recognizers {
+             ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                 has_recovery_annotation(grammar, *body)
+             }
+-            ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. } => false,
++            ExprKind::Literal { .. }
++            | ExprKind::Regex { .. }
++            | ExprKind::Ref { .. }
++            | ExprKind::Class { .. }
++            | ExprKind::Look { .. } => false,
+         }
+     }
+ 
+@@ -798,7 +808,11 @@ pub mod recognizers {
+             ExprKind::Repeat { body, .. } | ExprKind::Optional(body) => {
+                 has_parse_time_host_decode(grammar, *body)
+             }
+-            ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. } => false,
++            ExprKind::Literal { .. }
++            | ExprKind::Regex { .. }
++            | ExprKind::Ref { .. }
++            | ExprKind::Class { .. }
++            | ExprKind::Look { .. } => false,
+         }
+     }
+ 
+@@ -819,7 +833,9 @@ pub mod recognizers {
+             ExprKind::Literal { .. }
+             | ExprKind::Regex { .. }
+             | ExprKind::Ref { .. }
+-            | ExprKind::Annotation { .. } => false,
++            | ExprKind::Annotation { .. }
++            | ExprKind::Class { .. }
++            | ExprKind::Look { .. } => false,
+         }
+     }
+ 
+@@ -904,6 +920,24 @@ pub mod recognizers {
+                 bytes: HashSet::new(),
+                 nullable: true,
+             }),
++            // A class's first-set IS its byte-set — intrinsic, no `analyze()`
++            // round-trip (strictly simpler than the Regex arm above).
++            ExprKind::Class { set, negated } => {
++                let bytes = if *negated {
++                    (0u8..=u8::MAX).filter(|b| !set.contains(*b)).collect()
++                } else {
++                    set.to_vec().into_iter().collect()
++                };
++                Some(FirstBytes {
++                    bytes,
++                    nullable: false,
++                })
++            }
++            // Zero-width assertion — transparent to the first-set, like Annotation.
++            ExprKind::Look { .. } => Some(FirstBytes {
++                bytes: HashSet::new(),
++                nullable: true,
++            }),
+         }
+     }
+ 
+@@ -942,6 +976,7 @@ pub mod recognizers {
+                 branches: children, ..
+             } => children.iter().any(contains_direct_build),
+             BackendExpr::ByteLiteral(_)
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::RegexProgram { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+@@ -964,6 +999,7 @@ pub mod recognizers {
+                 .iter()
+                 .any(|child| contains_tape_kind(child, needle)),
+             BackendExpr::ByteLiteral(_)
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::RegexProgram { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+@@ -981,6 +1017,7 @@ pub mod recognizers {
+             | BackendExpr::RepeatLoop { body: inner, .. } => alt_branch_count(inner),
+             BackendExpr::Seq(children) => children.iter().map(alt_branch_count).max().unwrap_or(0),
+             BackendExpr::ByteLiteral(_)
++            | BackendExpr::ByteClass { .. }
+             | BackendExpr::RegexProgram { .. }
+             | BackendExpr::CallRule { .. }
+             | BackendExpr::SpanMark { .. }
+@@ -1068,7 +1105,9 @@ pub mod recognizers {
+                 ExprKind::Literal { .. }
+                 | ExprKind::Regex { .. }
+                 | ExprKind::Ref { target: None, .. }
+-                | ExprKind::Annotation { .. } => {}
++                | ExprKind::Annotation { .. }
++                | ExprKind::Class { .. }
++                | ExprKind::Look { .. } => {}
+             }
+         }
+ 
+@@ -1307,6 +1346,14 @@ pub mod extract {
+                 callee: name.clone(),
+             },
+             ExprKind::Annotation { .. } => BackendExpr::Seq(Vec::new()),
++            // Structural 1:1 forward — the class carries its own set, no
++            // `analyze()`/pattern round-trip (contrast the Regex arm above).
++            ExprKind::Class { set, negated } => BackendExpr::ByteClass {
++                set: *set,
++                negated: *negated,
++            },
++            // Zero-width assertion emits nothing structurally — like Annotation.
++            ExprKind::Look { .. } => BackendExpr::Seq(Vec::new()),
+         }
+     }
+ 
+@@ -1457,7 +1504,11 @@ pub mod extract {
+                 expr_has_regex_kind(grammar, *body, kind)
+             }
+             ExprKind::Regex { pattern } => span_kind(pattern).is_some_and(|span| span == kind),
+-            ExprKind::Literal { .. } | ExprKind::Ref { .. } | ExprKind::Annotation { .. } => false,
++            ExprKind::Literal { .. }
++            | ExprKind::Ref { .. }
++            | ExprKind::Annotation { .. }
++            | ExprKind::Class { .. }
++            | ExprKind::Look { .. } => false,
+         }
+     }
+ 
+@@ -1501,7 +1552,9 @@ pub mod extract {
+             }
+             ExprKind::Ref { target: None, .. }
+             | ExprKind::Regex { .. }
+-            | ExprKind::Annotation { .. } => false,
++            | ExprKind::Annotation { .. }
++            | ExprKind::Class { .. }
++            | ExprKind::Look { .. } => false,
+         }
+     }
+ 
+@@ -1538,7 +1591,9 @@ pub mod extract {
+             ExprKind::Ref { target: None, .. }
+             | ExprKind::Literal { .. }
+             | ExprKind::Regex { .. }
+-            | ExprKind::Annotation { .. } => {}
++            | ExprKind::Annotation { .. }
++            | ExprKind::Class { .. }
++            | ExprKind::Look { .. } => {}
+         }
+     }
+ 
+@@ -1564,7 +1619,11 @@ pub mod extract {
+                 collect_direct_literals(grammar, *body, literals);
+             }
+             ExprKind::Literal { bytes, .. } => literals.push(bytes.clone()),
+-            ExprKind::Ref { .. } | ExprKind::Regex { .. } | ExprKind::Annotation { .. } => {}
++            ExprKind::Ref { .. }
++            | ExprKind::Regex { .. }
++            | ExprKind::Annotation { .. }
++            | ExprKind::Class { .. }
++            | ExprKind::Look { .. } => {}
+         }
+     }
+ 

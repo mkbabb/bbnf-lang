@@ -79,10 +79,8 @@ fn emit_bytes_class_predicate(ranges: &[ByteRange], negated: bool) -> Option<Tok
     }
 
     // Detect well-known shorthand patterns by their canonical ranges.
-    if !negated {
-        if let Some(shorthand) = detect_shorthand_bytes(ranges) {
-            return Some(shorthand);
-        }
+    if !negated && let Some(shorthand) = detect_shorthand_bytes(ranges) {
+        return Some(shorthand);
     }
 
     // General case: emit range checks.
@@ -111,10 +109,8 @@ fn emit_unicode_class_predicate(ranges: &[CodepointRange], negated: bool) -> Opt
         .map(|r| ByteRange::new(r.start as u8, r.end as u8))
         .collect();
 
-    if !negated {
-        if let Some(shorthand) = detect_shorthand_bytes(&byte_ranges) {
-            return Some(shorthand);
-        }
+    if !negated && let Some(shorthand) = detect_shorthand_bytes(&byte_ranges) {
+        return Some(shorthand);
     }
     let inner = emit_ranges_predicate(&byte_ranges)?;
     if negated {

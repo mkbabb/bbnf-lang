@@ -1,0 +1,185 @@
+// Google Sheets Formula Grammar
+// Parses and pretty-prints spreadsheet formulas with proper indentation.
+
+// ── Lexical tokens ──────────────────────────────────────────────────
+
+number = /(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?/ -> f64 ;
+
+// Raw span for now; escape-decoding (doubled `""` → `"`) is deferred to
+// AU.6.7's unified arena, which provides `push_leaf_with_string` and a
+// decode kernel analogous to JSON's `decode_json_string_to_arena`.
+// TODO AU.6.7: -> decode_sheets_string_to_arena(input) : String
+string = /"([^"]|"")*"/ -> input : Span ;
+
+// Each alt maps to its own bool literal. Mirrors JSON's
+// `bool = "true" -> true | "false" -> false` pattern, extended to
+// case-insensitive regex forms used by Sheets.
+boolean = /[tT][rR][uU][eE]/ -> true
+        | /[fF][aA][lL][sS][eE]/ -> false ;
+
+// Sheets error literals. The `Nu8` discriminant uses the declaration
+// order below as its stable ordering and matches the conventional
+// lightningcss-style tagged-enum layout. Numbering also aligns with
+// Google Sheets' internal error codes where they overlap.
+//
+//   0 = #N/A        missing value
+//   1 = #VALUE!     wrong value type
+//   2 = #REF!       invalid reference
+//   3 = #DIV/0!     division by zero
+//   4 = #NULL!      intersection of non-intersecting ranges
+//   5 = #NAME?      unknown function / name
+//   6 = #NUM!       numeric computation overflow / domain error
+//   7 = #ERROR!     generic parser / formula error
+//   8 = #SPILL!     array result cannot spill into target range
+error_literal = "#N/A"    -> 0u8
+              | "#VALUE!" -> 1u8
+              | "#REF!"   -> 2u8
+              | "#DIV/0!" -> 3u8
+              | "#NULL!"  -> 4u8
+              | "#NAME?"  -> 5u8
+              | "#NUM!"   -> 6u8
+              | "#ERROR!" -> 7u8
+              | "#SPILL!" -> 8u8 ;
+
+// Sheet prefix: Sheet1! or 'Sheet Name'!
+//
+// AZ-IV.W1.2: typed-Nu8 alt-of-regex would silently drop the matched
+// span — typed projection replaces the matched bytes with the tag,
+// breaking round-trip serialization for the sheet-name text. The
+// quoted-vs-bare distinction is recoverable from the leading byte
+// (`'` for quoted), so a single span-projecting regex preserves the
+// surface text while keeping the structural shape unambiguous.
+sheet_prefix = /'(?:[^']|'')*'!|[A-Za-z_]\w*!/ -> input : Span ;
+
+// Cell reference: column letters + row digits (A1, $B$2).
+// Declared return shape is (row: u32, col: u32, abs_row: bool,
+// abs_col: bool); named-tuple annotations are not expressible in
+// the current type_annotation grammar (which accepts a single
+// type_name token, not a parenthesised named-tuple), so the
+// annotation degrades to a raw Span until AU.6.7's unified arena
+// provides a host-style decode kernel (analogous to CSS's
+// parse_hex_color) that can emit the 4-field aggregate in one go.
+// TODO AU.6.7: -> decode_cell_ref(input) : CellRef  (aggregate: u32,u32,bool,bool)
+cell_ref = /\$?[A-Za-z]{1,3}\$?\d+/ -> input : Span ;
+
+// Range endpoint: cell ref, column-only ($B, AD), or row-only ($3).
+// Left structural: the three branches have heterogeneous natural
+// types — cell_ref's typed aggregate (once it lands via AU.6.7) vs
+// column-only / row-only spans — and the current type_annotation
+// grammar cannot unify a rule reference with regex Nu8 tags under
+// one alt without introducing a named-tuple variant form. The three
+// endpoint shapes are structurally recoverable from each branch's
+// record kind on the tape.
+// TODO AU.6.7: variant-tagged enum (Cell | Column | Row) once the
+// backend-agnostic tagged-union payload codegen lands.
+range_end = cell_ref | /\$?[A-Za-z]{1,3}/ | /\$?\d+/ ;
+
+// Cell with optional sheet prefix
+cell = sheet_prefix ? , cell_ref ;
+
+// Range: A1:B2, B3:B, A:A, 1:5, Sheet1!C2:C
+range_ref = sheet_prefix ? , range_end , ":" , range_end ;
+
+// Reference: range first (greedy), then single cell
+cell_or_range = range_ref | cell ;
+
+// Identifier: variable names, named ranges, function names.
+// Explicit Span annotation makes the tape-level projection intent
+// obvious and keeps the grammar aligned with the AU.6.8 parity rule:
+// every leaf rule declares a type.
+identifier = /[A-Za-z_][A-Za-z0-9_.]*/ -> input : Span ;
+
+// ── Expressions ── operator precedence tower ────────────────────────
+
+// Operator kinds carry a stable Nu8 discriminant. Declaration order
+// inside each rule is its discriminant ordering; unrelated operator
+// rules do not share a namespace (each is its own small enum).
+compare_op = "<>" -> 0u8
+           | "<=" -> 1u8
+           | ">=" -> 2u8
+           | "="  -> 3u8
+           | "<"  -> 4u8
+           | ">"  -> 5u8 ;
+comparison_expr = concat_expr ?w , (compare_op ?w , concat_expr ?w) * ;
+
+concat_expr = add_expr ?w , ("&" ?w , add_expr ?w) * ;
+
+add_op = "+" -> 0u8
+       | "-" -> 1u8 ;
+add_expr = mul_expr ?w , (add_op ?w , mul_expr ?w) * ;
+
+mul_op = "*" -> 0u8
+       | "/" -> 1u8 ;
+mul_expr = exp_expr ?w , (mul_op ?w , exp_expr ?w) * ;
+
+exp_expr = unary_expr ?w , ("^" ?w , unary_expr ?w) * ;
+
+unary_prefix = "+" -> 0u8
+             | "-" -> 1u8 ;
+unary_expr = unary_prefix * , postfix_expr ;
+
+postfix_expr = primary , "%" * ;
+
+// ── Primary expressions ─────────────────────────────────────────────
+
+primary = let_call
+        | lambda_call
+        | func_call
+        | number
+        | string
+        | boolean
+        | error_literal
+        | cell_or_range
+        | identifier
+        | array_literal
+        | paren_expr ;
+
+paren_expr = "(" , expression ?w , ")" ;
+
+// ── Function calls ──────────────────────────────────────────────────
+
+// Generic function call: flat arg list
+func_open = identifier , "(" ;
+arg = expression ? ;
+comma = "," ?w ;
+func_args = arg , (comma >> arg) * ;
+func_call = func_open , (func_args ?) ?w , ")" ;
+
+// LET(name, value, name, value, ..., body) — paired bindings
+let_binding = expression << comma , expression ;
+let_args = (let_binding << comma) * , expression ;
+let_call = /[lL][eE][tT]\(/ , let_args ?w , ")" ;
+
+// LAMBDA(param, param, ..., body) — params + body
+lambda_params = expression , (comma >> expression) * ;
+lambda_call = /[lL][aA][mM][bB][dD][aA]\(/ , lambda_params ?w , ")" ;
+
+// ── Array literal ───────────────────────────────────────────────────
+
+array_row = expression , ("," ?w , expression) * ;
+array_rows = array_row , (";" ?w , array_row) * ;
+array_literal = "{" , (array_rows) ?w , "}" ;
+
+expression = comparison_expr ;
+
+// ── Entry point ─────────────────────────────────────────────────────
+
+formula = /=?/ , expression ;
+
+// ── Pretty-printing directives ──────────────────────────────────────
+
+@pretty func_open compact ;
+@pretty func_call group indent ;
+@pretty func_args group indent sep(", ") ;
+
+@pretty let_call group indent ;
+@pretty let_binding group indent sep(", ") ;
+@pretty let_args hardbreak sep(", ") ;
+
+@pretty lambda_call group indent ;
+@pretty lambda_params group indent sep(", ") ;
+
+@pretty array_row sep(", ") ;
+@pretty array_rows group indent sep("; ") ;
+@pretty array_literal group indent ;
+@pretty formula compact ;

@@ -120,12 +120,12 @@ fn emit_concat(subs: &[Hir]) -> Option<TokenStream> {
     let mut i = 0;
     while i < subs.len() {
         // Optimization: lazy repetition of broad class + literal -> memmem scan.
-        if i + 1 < subs.len() {
-            if let Some((code, consumed)) = try_emit_lazy_literal_scan(&subs[i..]) {
-                stmts.push(code);
-                i += consumed;
-                continue;
-            }
+        if i + 1 < subs.len()
+            && let Some((code, consumed)) = try_emit_lazy_literal_scan(&subs[i..])
+        {
+            stmts.push(code);
+            i += consumed;
+            continue;
         }
         stmts.push(emit_hir(&subs[i])?);
         i += 1;

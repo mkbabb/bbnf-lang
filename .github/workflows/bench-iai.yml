@@ -23,9 +23,17 @@ permissions:
 jobs:
   iai-bench:
     runs-on: ubuntu-latest
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      # The build wrapper is CI env (RUSTC_WRAPPER above), not repository
+      # config (sk-v27 LW2.TOPO-2).
+      - name: install sccache
+        uses: mozilla-actions/sccache-action@v0.0.9
 
       - name: install valgrind
         run: |
@@ -34,7 +42,8 @@ jobs:
 
       - name: install rust toolchain from rust-toolchain.toml
         run: |
-          rustup show
+          rustup toolchain install
+          rustup show active-toolchain
           rustc --version
 
       - name: install cargo-nextest (for cross-job surface parity)
@@ -42,11 +51,19 @@ jobs:
         with:
           tool: nextest
 
+      # The bench harness execs iai-callgrind-runner, which must match the
+      # iai-callgrind library version in Cargo.lock.
+      - name: install iai-callgrind-runner
+        run: cargo install iai-callgrind-runner --version 0.12.3 --locked
+
+      # tee, not a redirect then cat: under `bash -e` a failing bench
+      # exits before the cat, so its error never reached the log.
       - name: run iai-callgrind bench on PR branch
+        shell: bash
         run: |
+          set -o pipefail
           cargo bench -p bbnf --bench json_callgrind --features callgrind --profile bench-ci \
-            > /tmp/iai-pr.txt 2>&1
-          cat /tmp/iai-pr.txt
+            2>&1 | tee /tmp/iai-pr.txt
 
       - name: checkout master baseline
         run: |

@@ -81,7 +81,6 @@ dependencies = [
 name = "bbnf-bench"
 version = "0.1.0"
 dependencies = [
- "bbnf-simd",
  "blake3",
  "bytemuck",
  "criterion",
@@ -90,6 +89,7 @@ dependencies = [
  "lightningcss",
  "mimalloc",
  "parse-that-regex",
+ "parse-that-simd",
  "runtime",
  "serde",
  "serde_json",
@@ -104,15 +104,6 @@ dependencies = [
 [[package]]
 name = "bbnf-regex"
 version = "0.1.0"
-
-[[package]]
-name = "bbnf-simd"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "libc",
- "test-fixtures",
-]
 
 [[package]]
 name = "bitflags"
@@ -391,7 +382,12 @@ dependencies = [
 
 [[package]]
 name = "csp-solver"
-version = "0.1.0"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bcb2264b535b1394feb9c646beee05d5bc096e1a64514a1bd35602ff9595f7d"
+dependencies = [
+ "include_dir",
+]
 
 [[package]]
 name = "cssparser"
@@ -467,15 +463,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd1511a7b6a56299bd043a9c167a6d2bfb37bf84a6dfceaba651168adfb43c87"
 dependencies = [
  "dtoa",
-]
-
-[[package]]
-name = "egraph"
-version = "0.1.0"
-dependencies = [
- "csp-solver",
- "rustc-hash",
- "smallvec",
 ]
 
 [[package]]
@@ -626,6 +613,25 @@ name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
+
+[[package]]
+name = "include_dir"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "923d117408f1e49d914f1a379a309cffe4f18c05cf4e3d12e613a15fc81bd0dd"
+dependencies = [
+ "include_dir_macros",
+]
+
+[[package]]
+name = "include_dir_macros"
+version = "0.7.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cab85a7ed0bd5f0e76d93846e0147172bed2e2d3f859bcc33a8d9699cad1a75"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
 
 [[package]]
 name = "indexmap"
@@ -878,13 +884,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "parse-that-egraph"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+dependencies = [
+ "csp-solver",
+ "rustc-hash",
+ "smallvec",
+]
+
+[[package]]
 name = "parse-that-regex"
 version = "0.1.0"
 dependencies = [
- "bbnf-simd",
  "memchr",
+ "parse-that-simd",
  "thiserror 1.0.69",
 ]
+
+[[package]]
+name = "parse-that-simd"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
 
 [[package]]
 name = "passes"
@@ -892,9 +913,9 @@ version = "0.1.0"
 dependencies = [
  "bbnf-regex",
  "csp-solver",
- "egraph",
  "grammar",
  "ir",
+ "parse-that-egraph",
  "thiserror 1.0.69",
 ]
 
@@ -1178,9 +1199,10 @@ dependencies = [
 name = "runtime"
 version = "0.1.0"
 dependencies = [
- "bbnf-simd",
+ "blake3",
  "mimalloc",
  "parse-that-regex",
+ "parse-that-simd",
  "serde_json",
  "thiserror 1.0.69",
 ]
@@ -1703,39 +1725,3 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
-
-[[patch.unused]]
-name = "bbnf"
-version = "0.2.11"
-
-[[patch.unused]]
-name = "bbnf-ir"
-version = "0.1.6"
-
-[[patch.unused]]
-name = "bbnf-regex"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "bbnf-ser"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "egraph-derive"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "gorgeous"
-version = "0.1.10"
-
-[[patch.unused]]
-name = "parse_that"
-version = "0.4.0"
-
-[[patch.unused]]
-name = "pprint"
-version = "0.3.6"
-
-[[patch.unused]]
-name = "pprint_derive"
-version = "0.2.2"

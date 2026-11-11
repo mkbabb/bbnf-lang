@@ -1,0 +1,6 @@
+bbnf-lang r1 master=1 lw2=0
+bbnf-lang r2 master=1 lw2=0
+parse-that r1 master=128 lw2=128
+parse-that r2 master=128 lw2=128
+pprint r1 master=128 lw2=128
+pprint r2 master=128 lw2=128

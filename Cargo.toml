@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/core", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/egraph", "crates/egraph-derive", "crates/csp-solver", "crates/simd-scan", "crates/bbnf-path", "crates/bbnf-path-ts", "xtask"]
+members = ["crates/core", "crates/analysis", "crates/ir", "crates/lsp", "crates/ser", "crates/gorgeous", "crates/bootstrap", "crates/bbnf-path", "crates/bbnf-path-ts", "crates/corpus", "xtask"]
 exclude = ["wasm"]
 resolver = "2"
 
@@ -14,7 +14,28 @@ resolver = "2"
 # skip_recover) as features so consumer-side derive attrs can reduce
 # to `include!` + marker struct (W1 scope).
 #
-# `path` is workspace-relative.
+# `path` is workspace-relative. `cargo xtask regen` also writes each
+# grammar's source to `crates/core/<path>`, the in-crate copy the generated
+# parser `include_str!`s, so `bbnf` builds from its published package;
+# `cargo xtask regen --check` fails on a missing or drifted copy (sk-v27
+# LW2.TOPO-4b). `grammar/` stays the one source.
+# ── Edges into the sibling repositories (sk-v27 LW2.TOPO-1, ruling X-5) ──────
+# The repository graph is pprint -> parse-that -> bbnf-lang
+# (scripts/check-repo-dag.sh). Each edge is a git + rev pin on a pushed
+# commit (no [patch] table, no sibling path) and carries the version it takes
+# on crates.io, so the publish cascade edits only these sources. Members take
+# them with `<name>.workspace = true`; moving a pin is one commit that edits
+# a rev here and the lockfile.
+[workspace.dependencies]
+parse_that               = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+parse-that-regex         = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+parse-that-egraph        = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+parse-that-egraph-derive = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+pprint                   = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
+# csp-solver has one home, mkbabb/csp-solver; 0.4.0 is the release whose
+# src/ and data/ are byte-identical to the copy crates/csp-solver vendored.
+csp-solver               = "0.4.0"
+
 [workspace.metadata.bbnf]
 grammars = [
     { ident = "bbnf",          path = "grammar/bbnf/bbnf.bbnf",                   features = ["structural", "prettify", "serialize"] },
@@ -26,33 +47,6 @@ grammars = [
     { ident = "bnf",           path = "grammar/bnf/bnf.bbnf",                     features = ["prettify", "serialize"] },
     { ident = "csv",           path = "grammar/misc/csv.bbnf",                    features = ["serialize"] },
     { ident = "math",          path = "grammar/misc/math.bbnf",                   features = ["serialize"] },
-]
-
-# AZ-IV.W1.8 — manifest-driven `EmitStrategy::for_grammar` binding
-# table per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22.
-# Replaces the 9-arm allow-list previously hard-coded in
-# `crates/ir/src/registry/strategy.rs::EmitStrategy::for_grammar`.
-# Each row carries every parser-struct ident the grammar advertises
-# plus the Rust-backend `StructBuilder` / `Document` paths the emitter
-# splices into the generated `parse()` body.
-#
-# The canonical run-time mirror lives at
-# `crates/ir/src/registry/strategy.rs::PRODUCTION_MANIFEST_TABLE`;
-# adding a new grammar requires both a row here AND the matching
-# `PRODUCTION_MANIFEST_TABLE` entry. The synthetic-grammar test in
-# `crates/core/tests/synthetic_grammar_strategy.rs` proves the
-# resolver consults the table without source-arm edits.
-[workspace.metadata.bbnf-strategy]
-grammars = [
-    { idents = ["JsonParser", "JsonGrammar"], rust_builder_path = "crate::runtime::json::JsonStructBuilder", rust_document_path = "crate::runtime::json::JsonDocument" },
-    { idents = ["GoogleSheetsParser", "GoogleSheetsGrammar"], rust_builder_path = "crate::runtime::google_sheets::SheetsStructBuilder", rust_document_path = "crate::runtime::google_sheets::SheetsDocument" },
-    { idents = ["CssL4Parser"], rust_builder_path = "crate::runtime::css_l4::CssStructBuilder", rust_document_path = "crate::runtime::css_l4::CssDocument" },
-    { idents = ["BbnfBootstrap", "BbnfParser"], rust_builder_path = "crate::runtime::bbnf::BbnfStructBuilder", rust_document_path = "crate::runtime::bbnf::BbnfDocument" },
-    { idents = ["CsvParser", "CsvGrammar"], rust_builder_path = "crate::runtime::csv::CsvStructBuilder", rust_document_path = "crate::runtime::csv::CsvDocument" },
-    { idents = ["MathParser", "MathGrammar"], rust_builder_path = "crate::runtime::math::MathStructBuilder", rust_document_path = "crate::runtime::math::MathDocument" },
-    { idents = ["BnfParser", "BnfGrammar"], rust_builder_path = "crate::runtime::bnf::BnfStructBuilder", rust_document_path = "crate::runtime::bnf::BnfDocument" },
-    { idents = ["EbnfParser", "EbnfGrammar"], rust_builder_path = "crate::runtime::ebnf::EbnfStructBuilder", rust_document_path = "crate::runtime::ebnf::EbnfDocument" },
-    { idents = ["CssPrettyParser", "CssPrettyGrammar"], rust_builder_path = "crate::runtime::css_pretty::CssPrettyStructBuilder", rust_document_path = "crate::runtime::css_pretty::CssPrettyDocument" },
 ]
 
 # ─── Profile tiers (B0.W1.a) ────────────────────────────────────────────

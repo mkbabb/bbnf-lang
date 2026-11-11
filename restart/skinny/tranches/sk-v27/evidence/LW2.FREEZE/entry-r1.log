@@ -1,0 +1,8 @@
+== entry read r1 2026-11-10 17:29:24 bbnf-lang f292c213b parse-that e2d1af5
+RX-2: OR-7 rows in RULINGS: 0
+RX-2: Look WordBoundary in parse-that rust/regex: 0 files
+CON-2s: bench/DECISION-PLAN.lw2.json: ls: bench/DECISION-PLAN.lw2.json: No such file or directory
+CON-2s: LW2-CON-2 records: 0 ; raw samples: 0
+CON-2s: FLOORS rows in RULINGS: 0
+TOPO-4: crates/simd-scan present: yes; parse-that rust/simd present: no
+TOPO-5: is-ancestor af15f63e0 origin/master: rc=1

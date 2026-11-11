@@ -1,0 +1,34 @@
+# pprint lw2/s8-pp 7f86398; run 2: cargo test --no-fail-fast (debug, full suite incl. laws at 1e5)
+     Running unittests src/lib.rs (target/debug/deps/pprint-208a5596c499286a)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/born_red_lw1.rs (target/debug/deps/born_red_lw1-1e0dba6e42eb2e72)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/builder_tests.rs (target/debug/deps/builder_tests-ee0d3c1cdb53c949)
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/derive_tests.rs (target/debug/deps/derive_tests-1e2209e6abc0b992)
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/digit_count.rs (target/debug/deps/digit_count-b37e46be04844623)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.19s
+     Running tests/l8_unbalanced.rs (target/debug/deps/l8_unbalanced-7ac314476c5c7698)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/laws.rs (target/debug/deps/laws-0a10818051223fdc)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.09s
+     Running tests/oracle_tests.rs (target/debug/deps/oracle_tests-aa5faa2b186bafbd)
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+     Running tests/pretty_tests.rs (target/debug/deps/pretty_tests-2bb63160fa0a054d)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 1 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.01s
+# cargo test --release --test laws -- --nocapture --test-threads=1
+test l1_group_flat_iff_fits ... L1: 100000 cells, 0 divergences
+test l2_hard_forces_break ... L2: 100000 cells, 0 divergences
+test l3_rest_lookahead ... L3': 100000 cells, 0 divergences
+test l4_align_and_hang_on_the_oracle ... L4 align/hang: 100000 cells
+test l4_nest_changes_indentation_only ... L4: 100000 cells, 0 divergences
+test l5_fill_pairwise ... L5: 100000 cells, 0 divergences
+test l5_linear_join_is_leijen_fill_sep ... L5 linear_join: 100000 cells
+test l6_if_break_follows_the_innermost_group ... L6: 100000 cells, 0 divergences
+test l7_i_no_overflow_past_a_breakable_point ... L7(i): 100000 cells
+test l7_ii_infinite_width_is_flatten ... L7(ii): 100000 cells
+test l7_iii_oracle_at_every_width ... L7(iii): 100040 cells, 0 divergences
+test l8_total ... L8: 100002 cells (16667 accepted, 69606 refused)
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.16s

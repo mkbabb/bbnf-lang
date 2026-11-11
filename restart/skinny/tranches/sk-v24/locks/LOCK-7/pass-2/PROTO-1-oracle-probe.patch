@@ -1,0 +1,49 @@
+diff --git a/skinny/crates/grammar/tests/oracle_selfparse_probe.rs b/skinny/crates/grammar/tests/oracle_selfparse_probe.rs
+new file mode 100644
+index 000000000..94d037f83
+--- /dev/null
++++ b/skinny/crates/grammar/tests/oracle_selfparse_probe.rs
+@@ -0,0 +1,43 @@
++// PROBE (throwaway): does the current hand-written ORACLE parse the full
++// grammar/**/*.bbnf corpus? Establishes the Stage-1 precondition state.
++use std::path::PathBuf;
++
++fn repo_root() -> PathBuf {
++    // CARGO_MANIFEST_DIR = <repo>/skinny/crates/grammar
++    let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
++    p.pop(); // crates
++    p.pop(); // skinny
++    p.pop(); // <repo>
++    p
++}
++
++#[test]
++fn oracle_parses_corpus() {
++    let root = repo_root();
++    let corpus = [
++        "grammar/bbnf/bbnf.bbnf",
++        "grammar/json/json.bbnf",
++        "grammar/google-sheets/google-sheets.bbnf",
++        "grammar/css/l4/stylesheet.bbnf",
++    ];
++    let mut report = String::new();
++    for rel in corpus {
++        let path = root.join(rel);
++        let src = match std::fs::read_to_string(&path) {
++            Ok(s) => s,
++            Err(e) => {
++                report.push_str(&format!("{rel}: READ-ERR {e}\n"));
++                continue;
++            }
++        };
++        match grammar::parse_grammar(rel, &src) {
++            Ok(ir) => report.push_str(&format!(
++                "{rel}: Ok  ({} rules)\n",
++                ir.rules.len()
++            )),
++            Err(e) => report.push_str(&format!("{rel}: ERR  {e:?}\n")),
++        }
++    }
++    // Always print, then assert nothing so we see the full census.
++    panic!("ORACLE CORPUS CENSUS:\n{report}");
++}

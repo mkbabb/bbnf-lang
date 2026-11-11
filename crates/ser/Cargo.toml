@@ -4,7 +4,14 @@ version = "0.1.0"
 edition = "2024"
 description = "Grammar-guided Serializer/Deserializer traits for BBNF"
 license = "MIT"
+repository = "https://github.com/mkbabb/bbnf-lang"
 
 [dependencies]
 ryu = "1"
 itoa = "1"
+pprint = { workspace = true, optional = true }
+
+[features]
+default = []
+# `impl Serializer for pprint::FmtBuilder`: pretty-printed serialization.
+pprint = ["dep:pprint"]

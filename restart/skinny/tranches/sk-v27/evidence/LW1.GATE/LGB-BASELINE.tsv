@@ -1,0 +1,37 @@
+file	rust	ts	rust_detail	ts_detail
+grammar/bbnf/bbnf.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/bbnf/expressions.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/bbnf/types.bbnf	ACCEPT	ACCEPT		
+grammar/bnf/bnf.bbnf	ACCEPT	ACCEPT		
+grammar/css/l4/color.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/easing.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/filters.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/func-body.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/gradients.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/keyframes.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/keywords.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/media.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/properties.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/selectors.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/stylesheet.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/tokens.bbnf	ACCEPT	ACCEPT		
+grammar/css/l4/transforms.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/value-unit.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/l4/values.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/css/pretty.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/ebnf/ebnf.bbnf	ACCEPT	ACCEPT		
+grammar/google-sheets/google-sheets.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/json/json.bbnf	ACCEPT	REJECT		TS no parse (state null)
+grammar/misc/csv.bbnf	ACCEPT	ACCEPT		
+grammar/misc/emoji.bbnf	REJECT	REJECT	Syntax { offset: 0, rule: None }	TS no parse (state null)
+grammar/misc/g4.bbnf	ACCEPT	ACCEPT		
+grammar/misc/json-commented.bbnf	REJECT	ACCEPT	Syntax { offset: 264, rule: None }	
+grammar/misc/math-ambiguous.bbnf	ACCEPT	ACCEPT		
+grammar/misc/math.bbnf	ACCEPT	ACCEPT		
+grammar/misc/regex.bbnf	ACCEPT	ACCEPT		
+valuejs-02603478f/color.bbnf	ACCEPT	ACCEPT		
+valuejs-02603478f/css.bbnf	ACCEPT	ACCEPT		
+valuejs-02603478f/math.bbnf	ACCEPT	ACCEPT		
+valuejs-02603478f/stylesheet.bbnf	ACCEPT	ACCEPT		
+valuejs-02603478f/tokens.bbnf	ACCEPT	ACCEPT		
+valuejs-02603478f/value.bbnf	ACCEPT	ACCEPT		

@@ -164,7 +164,17 @@ impl<'a, 'p: 'a> BbnfView<'a, 'p> {
                     },
                 );
             }
-            BbnfValue::Compound(_) => {
+            BbnfValue::Compound(id) => {
+                if let Some((lo, hi)) = self.doc.compound(id).bounds {
+                    let (lo, hi) = (lo as usize, hi as usize);
+                    *acc = Some(
+                        match *acc {
+                            None => (lo, hi),
+                            Some((a, b)) => (a.min(lo), b.max(hi)),
+                        },
+                    );
+                    return;
+                }
                 for child in self.children_iter() {
                     child.fold_span_range(input_start, input_end, acc);
                 }
@@ -251,7 +261,7 @@ impl BbnfPathQuery for &str {
     fn query<'p>(doc: &BbnfDocument<'p>, path: Path<'_>) -> Option<Self> {
         match walk_path(doc, path)? {
             BbnfValue::Span(s) => {
-                let extended: &'p str = *s;
+                let extended: &'p str = s;
                 Some(unsafe { core::mem::transmute::<&'p str, &str>(extended) })
             }
             _ => None,

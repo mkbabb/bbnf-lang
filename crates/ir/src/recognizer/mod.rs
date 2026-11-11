@@ -8,7 +8,7 @@
 //!
 //! # Implementors
 //!
-//! - `RegexInfo` (from `bbnf_regex`) via the `RegexRecognizer` wrapper
+//! - `RegexInfo` (from `parse_that_regex`) via the `RegexRecognizer` wrapper
 //! - `Literal` nodes via `LiteralRecognizer`
 //! - Token rules via `TokenRecognizer`
 //! - Pre-computed `AltDispatch` groups via `DispatchGroupRecognizer`
@@ -24,7 +24,7 @@ mod plans;
 pub use facts::{RecognizerInfo, RecognizerKind, Width};
 pub use plans::{ExecutionPlan, ExecutionPlanKind};
 
-use bbnf_regex::{CharSet128, EngineSet, RegexClass, RegexInfo};
+use parse_that_regex::{CharSet128, EngineSet, RegexClass, RegexInfo};
 
 use crate::AltDispatch;
 
@@ -39,7 +39,7 @@ impl<'a> RecognizerInfo for RegexRecognizer<'a> {
     }
 
     fn first_bytes(&self) -> Option<CharSet128> {
-        Some(self.info.first_chars.clone())
+        Some(self.info.first_chars)
     }
 
     fn nullable(&self) -> bool {
@@ -94,10 +94,10 @@ impl<'a> RecognizerInfo for LiteralRecognizer<'a> {
 
     fn first_bytes(&self) -> Option<CharSet128> {
         let mut cs = CharSet128::new();
-        if let Some(&b) = self.bytes.first() {
-            if b < 128 {
-                cs.add(b);
-            }
+        if let Some(&b) = self.bytes.first()
+            && b < 128
+        {
+            cs.add(b);
         }
         Some(cs)
     }

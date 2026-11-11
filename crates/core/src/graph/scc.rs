@@ -105,10 +105,10 @@ pub fn tarjan_scc<'a>(deps: &'a Dependencies<'a>) -> SccResult<'a> {
             }
         } else {
             let name = scc[0];
-            if let Some(successors) = deps.get(name) {
-                if successors.contains(name) {
-                    cyclic_rules.insert(name);
-                }
+            if let Some(successors) = deps.get(name)
+                && successors.contains(name)
+            {
+                cyclic_rules.insert(name);
             }
         }
     }
@@ -145,10 +145,11 @@ pub fn topological_sort_scc<'a>(
     for (&node, successors) in deps {
         if let Some(&src_scc) = scc_result.scc_index.get(node) {
             for &succ in successors {
-                if let Some(&dst_scc) = scc_result.scc_index.get(succ) {
-                    if src_scc != dst_scc && scc_dependents[dst_scc].insert(src_scc) {
-                        in_degree[src_scc] += 1;
-                    }
+                if let Some(&dst_scc) = scc_result.scc_index.get(succ)
+                    && src_scc != dst_scc
+                    && scc_dependents[dst_scc].insert(src_scc)
+                {
+                    in_degree[src_scc] += 1;
                 }
             }
         }
@@ -191,60 +192,16 @@ pub fn topological_sort_scc<'a>(
         scc_entries.sort_by_key(|(key, _)| depth_score.get(*key).copied().unwrap_or(0));
 
         for (key, val) in scc_entries {
-            new_ast.insert(*key, val.clone());
+            new_ast.insert(*key, *val);
         }
     }
 
     // Any rules not in the SCC index (shouldn't happen, but safety net).
     for (lhs, rhs) in ast {
         if !new_ast.contains_key(*lhs) {
-            new_ast.insert(*lhs, rhs.clone());
+            new_ast.insert(*lhs, *rhs);
         }
     }
 
     new_ast
-}
-
-/// Compute acyclic dependencies using SCC data.
-pub fn calculate_acyclic_deps_scc<'a>(
-    deps: &Dependencies<'a>,
-    _scc_result: &SccResult<'a>,
-) -> Dependencies<'a> {
-    fn is_acyclic_dfs<'a>(
-        name: &'a str,
-        deps: &'a Dependencies<'a>,
-        visited: &mut HashSet<&'a str>,
-    ) -> bool {
-        if visited.contains(name) {
-            return false;
-        }
-        visited.insert(name);
-        if let Some(sub_deps) = deps.get(name) {
-            for &sub in sub_deps {
-                if deps.contains_key(sub) && !is_acyclic_dfs(sub, deps, visited) {
-                    return false;
-                }
-            }
-        }
-        true
-    }
-
-    deps.iter()
-        .filter(|(name, _)| {
-            let mut visited = HashSet::new();
-            is_acyclic_dfs(name, deps, &mut visited)
-        })
-        .map(|(name, sub_deps)| (*name, sub_deps.clone()))
-        .collect()
-}
-
-/// Non-acyclic deps: everything not in the acyclic set.
-pub fn calculate_non_acyclic_deps_scc<'a>(
-    deps: &Dependencies<'a>,
-    acyclic_deps: &Dependencies<'a>,
-) -> Dependencies<'a> {
-    deps.iter()
-        .filter(|(lhs, _)| !acyclic_deps.contains_key(*lhs))
-        .map(|(lhs, deps)| (*lhs, deps.clone()))
-        .collect()
 }

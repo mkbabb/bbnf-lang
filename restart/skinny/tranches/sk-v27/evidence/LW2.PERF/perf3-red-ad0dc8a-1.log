@@ -1,0 +1,16 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+head 08f6fd9
+thread 'test_nested_media' (11689442) has overflowed its stack
+fatal runtime error: stack overflow, aborting
+  process didn't exit successfully: `/Users/mkbabb/Programming/parse-that-wt/lw2-s6-perf/rust/target/debug/deps/css_parse_test-c4aca2e38c10ff33 test_nested_media --exact` (signal: 6, SIGABRT: process abort signal)
+nested_media rc=0
+thread 'nested_at_rules_depth_16_default_stack' (11689979) has overflowed its stack
+fatal runtime error: stack overflow, aborting
+  process didn't exit successfully: `/Users/mkbabb/Programming/parse-that-wt/lw2-s6-perf/rust/target/debug/deps/css_stack_depth-612506f52e9de180 nested_at_rules_depth_16_default_stack --exact` (signal: 6, SIGABRT: process abort signal)
+1	1933312	-
+2	3342336	1409024
+4	6176768	1417216
+8	11829248	1413120
+16	23134208	1413120
+per_level_bytes_of_record	1413120
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 2.23s

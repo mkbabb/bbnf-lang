@@ -214,7 +214,7 @@ fn struct_direct_documents_expose_projection_values() {
     );
     let spans = collect_bbnf_spans(&bbnf);
     assert!(
-        spans.iter().any(|span| *span == "foo"),
+        spans.contains(&"foo"),
         "BbnfDocument span walk must reach the lhs identifier"
     );
     assert!(

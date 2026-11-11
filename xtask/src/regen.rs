@@ -105,9 +105,11 @@ impl GrammarEntry {
     ///
     /// Populates both `paths` (absolute, for the IR pipeline to read
     /// grammar source bytes at codegen time) and `grammar_rel_paths`
-    /// (workspace-root-relative POSIX, for the emitter to embed in
-    /// `include_str!()` so the generated file is portable across
-    /// worktrees + checkouts). Both are pushed in lock-step.
+    /// (relative to the `bbnf` crate's manifest directory, POSIX: the
+    /// in-crate grammar copy at [`grammar_copy_path`], for the emitter
+    /// to embed in `include_str!()` so the generated file is portable
+    /// across worktrees + checkouts and builds from the published
+    /// package). Both are pushed in lock-step.
     ///
     /// Pre-AZ-IV.W0.5 this method silently warned on unknown features
     /// and continued. Now it returns an error citing the offending
@@ -120,9 +122,11 @@ impl GrammarEntry {
     fn parser_attributes(&self, grammar_path: PathBuf) -> Result<ParserAttributes> {
         let mut attrs = ParserAttributes::default();
         attrs.paths.push(grammar_path);
-        // The manifest's raw `path` is already workspace-relative
-        // (e.g. `grammar/bbnf/bbnf.bbnf`). Normalise to forward
-        // slashes for cross-platform stability of the embedded literal.
+        // The manifest's raw `path` is workspace-relative (e.g.
+        // `grammar/bbnf/bbnf.bbnf`), and the in-crate copy sits at the
+        // same path under `crates/core/` (sk-v27 LW2.TOPO-4b), so the
+        // same string is the crate-relative path the emitter embeds.
+        // Normalise to forward slashes for cross-platform stability.
         attrs.grammar_rel_paths.push(self.path.replace('\\', "/"));
         for feat in &self.features {
             match feat.as_str() {
@@ -219,11 +223,24 @@ pub fn run(
         let entry = grammars.iter().find(|g| g.ident == ident).ok_or_else(|| {
             anyhow!("grammar `{ident}` not found in [workspace.metadata.bbnf.grammars]")
         })?;
-        let target = match output_override {
-            Some(dir) => dir.join(format!("{}.rs", entry.ident)),
-            None => output_path(&workspace_root, &entry.ident),
-        };
-        regen_grammar(&workspace_root, entry, &target)?;
+        match output_override {
+            Some(dir) => {
+                regen_grammar(
+                    &workspace_root,
+                    entry,
+                    &dir.join(format!("{}.rs", entry.ident)),
+                )?;
+            }
+            None => {
+                regen_grammar(
+                    &workspace_root,
+                    entry,
+                    &output_path(&workspace_root, &entry.ident),
+                )?;
+                sync_grammar_copy(&workspace_root, entry)?;
+                sync_path_registry_copy(&workspace_root, entry)?;
+            }
+        }
         Ok(())
     } else if let Some(dir) = output_override {
         for entry in &grammars {
@@ -281,6 +298,175 @@ fn output_path(workspace_root: &Path, ident: &str) -> PathBuf {
         .join("grammar")
         .join("generated")
         .join(format!("{ident}.rs"))
+}
+
+/// sk-v27 LW2.TOPO-4b — the in-crate copy of a grammar's source:
+/// `crates/core/<path>` (e.g. `crates/core/grammar/bbnf/bbnf.bbnf`).
+///
+/// The generated parser's `GRAMMAR_X` array `include_str!`s this file
+/// relative to the `bbnf` crate's manifest directory, so the source
+/// ships inside the published package; a path out of the crate (the
+/// former `../../grammar/…`) is in no package. `grammar/` stays the
+/// one source of truth: `cargo xtask regen` writes the copy and
+/// `cargo xtask regen --check` fails on a missing or drifted copy.
+#[cfg(feature = "grammar-regen")]
+fn grammar_copy_path(workspace_root: &Path, entry: &GrammarEntry) -> Result<PathBuf> {
+    let rel = Path::new(&entry.path);
+    if !rel
+        .components()
+        .all(|c| matches!(c, std::path::Component::Normal(_)))
+    {
+        bail!(
+            "[workspace.metadata.bbnf.grammars] grammar `{}`: path `{}` must be a plain \
+             workspace-relative path (its in-crate copy sits at `crates/core/<path>`)",
+            entry.ident,
+            entry.path
+        );
+    }
+    Ok(workspace_root.join("crates").join("core").join(rel))
+}
+
+/// Write the in-crate grammar copy ([`grammar_copy_path`]) from the
+/// workspace source, leaving the file (and its mtime) untouched when
+/// the bytes already agree.
+#[cfg(feature = "grammar-regen")]
+fn sync_grammar_copy(workspace_root: &Path, entry: &GrammarEntry) -> Result<()> {
+    let source = entry.grammar_source(workspace_root);
+    let copy = grammar_copy_path(workspace_root, entry)?;
+    let bytes =
+        std::fs::read(&source).with_context(|| format!("read grammar `{}`", source.display()))?;
+    if std::fs::read(&copy).ok().as_deref() == Some(bytes.as_slice()) {
+        return Ok(());
+    }
+    if let Some(parent) = copy.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("create parent dir for `{}`", copy.display()))?;
+    }
+    std::fs::write(&copy, &bytes).with_context(|| format!("write `{}`", copy.display()))
+}
+
+/// sk-v27 LW2.TOPO-4c — the grammars whose registry sidecar the
+/// `bbnf-path` proc-macro embeds: `[package.metadata.bbnf-path]
+/// grammars` in `crates/bbnf-path/Cargo.toml`, the crate's own list.
+#[cfg(feature = "grammar-regen")]
+fn path_registry_grammars(workspace_root: &Path) -> Result<Vec<String>> {
+    let manifest = workspace_root.join("crates").join("bbnf-path").join("Cargo.toml");
+    let text = std::fs::read_to_string(&manifest)
+        .with_context(|| format!("read `{}`", manifest.display()))?;
+    let doc: toml::Value =
+        toml::from_str(&text).with_context(|| format!("parse `{}`", manifest.display()))?;
+    let list = doc
+        .get("package")
+        .and_then(|p| p.get("metadata"))
+        .and_then(|m| m.get("bbnf-path"))
+        .and_then(|b| b.get("grammars"))
+        .and_then(toml::Value::as_array)
+        .ok_or_else(|| {
+            anyhow!(
+                "`{}` has no `[package.metadata.bbnf-path] grammars` array",
+                manifest.display()
+            )
+        })?;
+    list.iter()
+        .map(|v| {
+            v.as_str().map(str::to_owned).ok_or_else(|| {
+                anyhow!("`[package.metadata.bbnf-path] grammars` holds a non-string entry")
+            })
+        })
+        .collect()
+}
+
+/// sk-v27 LW2.TOPO-4c — the in-crate copy of a grammar's registry
+/// sidecar that `bbnf-path` embeds: `crates/bbnf-path/registry/<ident>.registry.json`.
+#[cfg(feature = "grammar-regen")]
+fn path_registry_copy_path(workspace_root: &Path, ident: &str) -> PathBuf {
+    workspace_root
+        .join("crates")
+        .join("bbnf-path")
+        .join("registry")
+        .join(format!("{ident}.registry.json"))
+}
+
+/// Write `bbnf-path`'s copy of the grammar's checked-in sidecar when
+/// the grammar is on its list, leaving an equal copy untouched.
+#[cfg(feature = "grammar-regen")]
+fn sync_path_registry_copy(workspace_root: &Path, entry: &GrammarEntry) -> Result<()> {
+    if !path_registry_grammars(workspace_root)?.contains(&entry.ident) {
+        return Ok(());
+    }
+    let sidecar = registry_sidecar_path(workspace_root, &entry.ident);
+    let copy = path_registry_copy_path(workspace_root, &entry.ident);
+    let bytes =
+        std::fs::read(&sidecar).with_context(|| format!("read `{}`", sidecar.display()))?;
+    if std::fs::read(&copy).ok().as_deref() == Some(bytes.as_slice()) {
+        return Ok(());
+    }
+    if let Some(parent) = copy.parent() {
+        std::fs::create_dir_all(parent)
+            .with_context(|| format!("create parent dir for `{}`", copy.display()))?;
+    }
+    std::fs::write(&copy, &bytes).with_context(|| format!("write `{}`", copy.display()))
+}
+
+/// Every file under `dir`, recursively, as paths; an absent `dir` is empty.
+#[cfg(feature = "grammar-regen")]
+fn files_under(dir: &Path) -> Result<BTreeSet<PathBuf>> {
+    let mut out = BTreeSet::new();
+    let mut stack = vec![dir.to_path_buf()];
+    while let Some(d) = stack.pop() {
+        let Ok(rd) = std::fs::read_dir(&d) else { continue };
+        for e in rd {
+            let path = e.with_context(|| format!("read dir `{}`", d.display()))?.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else {
+                out.insert(path);
+            }
+        }
+    }
+    Ok(out)
+}
+
+/// sk-v27 LW2.TOPO-4c — the two in-crate copy directories hold exactly
+/// the copies the manifests name, nothing more: `crates/core/grammar/`
+/// the in-crate grammar copy of every `[workspace.metadata.bbnf.grammars]`
+/// entry, `crates/bbnf-path/registry/` the sidecar copy of every
+/// `[package.metadata.bbnf-path] grammars` ident (each a manifest
+/// grammar). Anything else in either directory would ship in a
+/// published package unchecked.
+#[cfg(feature = "grammar-regen")]
+fn copy_sets_drift(workspace_root: &Path, all: &[GrammarEntry]) -> Result<Vec<String>> {
+    let mut drift = Vec::new();
+    let mut expected = BTreeSet::new();
+    for entry in all {
+        expected.insert(grammar_copy_path(workspace_root, entry)?);
+    }
+    let grammar_dir = workspace_root.join("crates").join("core").join("grammar");
+    for orphan in files_under(&grammar_dir)?.difference(&expected) {
+        drift.push(format!(
+            "orphan: `{}` is no in-crate copy of a `[workspace.metadata.bbnf.grammars]` entry",
+            orphan.display()
+        ));
+    }
+    let listed = path_registry_grammars(workspace_root)?;
+    let mut expected = BTreeSet::new();
+    for ident in &listed {
+        if !all.iter().any(|g| &g.ident == ident) {
+            drift.push(format!(
+                "`[package.metadata.bbnf-path] grammars` names `{ident}`, which is no \
+                 `[workspace.metadata.bbnf.grammars]` entry"
+            ));
+        }
+        expected.insert(path_registry_copy_path(workspace_root, ident));
+    }
+    let registry_dir = workspace_root.join("crates").join("bbnf-path").join("registry");
+    for orphan in files_under(&registry_dir)?.difference(&expected) {
+        drift.push(format!(
+            "orphan: `{}` is no sidecar copy of a `[package.metadata.bbnf-path] grammars` ident",
+            orphan.display()
+        ));
+    }
+    Ok(drift)
 }
 
 /// AZ-IV.W5 T4 — sidecar JSON path for a grammar's serialised
@@ -366,7 +552,7 @@ fn regen_grammar(workspace_root: &Path, entry: &GrammarEntry, target_path: &Path
     let t0 = std::time::Instant::now();
 
     let prepared = match compile_paths_request(&parser_attrs.paths, &request) {
-        Ok(CompileOutput::Rust(prepared)) => prepared,
+        Ok(CompileOutput::Rust(prepared)) => *prepared,
         Ok(_) => bail!("Rust target produced non-Rust pipeline output"),
         Err(err) => bail!("compile_paths_request for `{}`: {err}", entry.ident),
     };
@@ -575,6 +761,8 @@ fn regen_all(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
     for entry in grammars {
         let target = output_path(workspace_root, &entry.ident);
         let bytes = regen_grammar(workspace_root, entry, &target)?;
+        sync_grammar_copy(workspace_root, entry)?;
+        sync_path_registry_copy(workspace_root, entry)?;
         println!(
             "regen {}: wrote {} bytes to {}",
             entry.ident,
@@ -592,21 +780,24 @@ fn regen_all(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
 /// non-zero on drift. Used by CI + pre-commit hook.
 #[cfg(feature = "grammar-regen")]
 fn regen_check(workspace_root: &Path, grammars: &[GrammarEntry]) -> Result<()> {
-    regen_check_filtered(workspace_root, grammars, grammars.len())
+    regen_check_filtered(workspace_root, grammars, grammars)
 }
 
 /// Inner: run the tempdir+diff loop over an already-filtered grammar
-/// list. `total_count` is the original (unfiltered) workspace grammar
-/// count; the success message reports it so a `--staged`-filtered
-/// run that touched 1 of 9 grammars prints "matched 1 of 9".
+/// list. `all` is the original (unfiltered) workspace grammar list;
+/// the success message reports its length so a `--staged`-filtered
+/// run that touched 1 of 9 grammars prints "matched 1 of 9", and the
+/// copy-set check (sk-v27 LW2.TOPO-4c) reads every entry.
 #[cfg(feature = "grammar-regen")]
 fn regen_check_filtered(
     workspace_root: &Path,
     grammars: &[GrammarEntry],
-    total_count: usize,
+    all: &[GrammarEntry],
 ) -> Result<()> {
+    let total_count = all.len();
     let tmpdir = tempfile::tempdir().context("create tempdir for regen --check")?;
-    let mut drift = Vec::new();
+    let mut drift = copy_sets_drift(workspace_root, all)?;
+    let path_grammars = path_registry_grammars(workspace_root)?;
 
     for entry in grammars {
         let tmp_target = tmpdir.path().join(format!("{}.rs", entry.ident));
@@ -662,6 +853,48 @@ fn regen_check_filtered(
                 ));
             }
         }
+
+        // sk-v27 LW2.TOPO-4c — `bbnf-path`'s embedded copy of the
+        // sidecar must equal the regenerated sidecar.
+        if path_grammars.contains(&entry.ident) {
+            let copy = path_registry_copy_path(workspace_root, &entry.ident);
+            let regenerated_sidecar = std::fs::read(&tmp_sidecar)
+                .with_context(|| format!("read regenerated sidecar `{}`", tmp_sidecar.display()))?;
+            match std::fs::read(&copy) {
+                Err(_) => drift.push(format!(
+                    "missing bbnf-path sidecar copy `{}` — regenerate with `cargo xtask regen --grammar {}`",
+                    copy.display(),
+                    entry.ident
+                )),
+                Ok(copy_bytes) if copy_bytes != regenerated_sidecar => drift.push(format!(
+                    "drift: bbnf-path sidecar copy `{}` differs from `cargo xtask regen --grammar {}` sidecar output",
+                    copy.display(),
+                    entry.ident
+                )),
+                Ok(_) => {}
+            }
+        }
+
+        // sk-v27 LW2.TOPO-4b — the in-crate grammar copy the generated
+        // `include_str!` names must equal its `grammar/` source.
+        let source = entry.grammar_source(workspace_root);
+        let copy = grammar_copy_path(workspace_root, entry)?;
+        let source_bytes = std::fs::read(&source)
+            .with_context(|| format!("read grammar `{}`", source.display()))?;
+        match std::fs::read(&copy) {
+            Err(_) => drift.push(format!(
+                "missing in-crate grammar copy `{}` — regenerate with `cargo xtask regen --grammar {}`",
+                copy.display(),
+                entry.ident
+            )),
+            Ok(copy_bytes) if copy_bytes != source_bytes => drift.push(format!(
+                "drift: in-crate grammar copy `{}` differs from `{}` — regenerate with `cargo xtask regen --grammar {}`",
+                copy.display(),
+                source.display(),
+                entry.ident
+            )),
+            Ok(_) => {}
+        }
     }
 
     if drift.is_empty() {
@@ -676,7 +909,7 @@ fn regen_check_filtered(
             eprintln!("{msg}");
         }
         bail!(
-            "regen --check: {} of {} grammars drifted",
+            "regen --check: {} drift finding(s) over {} grammars",
             drift.len(),
             grammars.len()
         );
@@ -719,7 +952,7 @@ fn regen_check_staged(workspace_root: &Path, grammars: &[GrammarEntry]) -> Resul
     // to the unfiltered check loop so every grammar in the new
     // manifest re-runs against its on-disk emission.
     if manifest_metadata_staged {
-        return regen_check_filtered(workspace_root, grammars, grammars.len());
+        return regen_check_filtered(workspace_root, grammars, grammars);
     }
 
     let filtered: Vec<GrammarEntry> = grammars
@@ -741,7 +974,7 @@ fn regen_check_staged(workspace_root: &Path, grammars: &[GrammarEntry]) -> Resul
         return Ok(());
     }
 
-    regen_check_filtered(workspace_root, &filtered, grammars.len())
+    regen_check_filtered(workspace_root, &filtered, grammars)
 }
 
 /// `git diff --cached --name-only`, parsed into a workspace-relative
@@ -779,13 +1012,15 @@ fn staged_paths(workspace_root: &Path) -> Result<BTreeSet<String>> {
 
 /// True when any staged path matches the same trigger pattern the
 /// pre-commit hook used to evaluate inline:
-/// `^(grammar/|crates/core/src/grammar/generated/|xtask/src/regen)`.
+/// `^(grammar/|crates/core/src/grammar/generated/|xtask/src/regen)`,
+/// plus the in-crate grammar copies under `crates/core/grammar/`.
 /// Centralising the pattern in xtask keeps a single source of truth
 /// for what "grammar-relevant" means.
 #[cfg(feature = "grammar-regen")]
 fn staged_has_grammar_relevant(staged: &BTreeSet<String>) -> bool {
     staged.iter().any(|p| {
         p.starts_with("grammar/")
+            || p.starts_with("crates/core/grammar/")
             || p.starts_with("crates/core/src/grammar/generated/")
             || p.starts_with("xtask/src/regen")
     })
@@ -801,7 +1036,8 @@ fn staged_has_grammar_relevant(staged: &BTreeSet<String>) -> bool {
 fn grammar_overlaps_staged(entry: &GrammarEntry, staged: &BTreeSet<String>) -> bool {
     let source = entry.path.replace('\\', "/");
     let generated = format!("crates/core/src/grammar/generated/{}.rs", entry.ident);
-    staged.contains(&source) || staged.contains(&generated)
+    let copy = format!("crates/core/{source}");
+    staged.contains(&source) || staged.contains(&generated) || staged.contains(&copy)
 }
 
 /// True when the staged `Cargo.toml` differs from `HEAD:Cargo.toml`

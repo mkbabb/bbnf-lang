@@ -1,0 +1,20 @@
+== crates.io pprint-0.3.6 (sha256 b48c2f578c2f6300) against /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust
+Only in x-pprint/pprint-0.3.6: README.md
+Files x-pprint/pprint-0.3.6/benches/digit_count.rs and /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/benches/digit_count.rs differ
+Files x-pprint/pprint-0.3.6/benches/pprint.rs and /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/benches/pprint.rs differ
+Only in x-pprint/pprint-0.3.6/src: doc.rs
+Files x-pprint/pprint-0.3.6/src/lib.rs and /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/src/lib.rs differ
+Only in x-pprint/pprint-0.3.6/src: print.rs
+Files x-pprint/pprint-0.3.6/src/utils.rs and /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/src/utils.rs differ
+Files x-pprint/pprint-0.3.6/tests/derive_tests.rs and /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/tests/derive_tests.rs differ
+== crates.io pprint_derive-0.2.2 (sha256 6a290a85f683171b) against /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/derive
+Files x-pprint_derive/pprint_derive-0.2.2/lib.rs and /Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/derive/lib.rs differ
+== crates.io bbnf-analysis-0.1.1 (sha256 c54140a38086f299) against /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis
+Files x-bbnf-analysis/bbnf-analysis-0.1.1/src/analysis.rs and /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis/src/analysis.rs differ
+Files x-bbnf-analysis/bbnf-analysis-0.1.1/src/features/code_actions.rs and /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis/src/features/code_actions.rs differ
+Files x-bbnf-analysis/bbnf-analysis-0.1.1/src/features/code_lens.rs and /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis/src/features/code_lens.rs differ
+Files x-bbnf-analysis/bbnf-analysis-0.1.1/src/features/completion.rs and /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis/src/features/completion.rs differ
+Files x-bbnf-analysis/bbnf-analysis-0.1.1/src/features/document_symbols.rs and /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis/src/features/document_symbols.rs differ
+Files x-bbnf-analysis/bbnf-analysis-0.1.1/src/features/formatting.rs and /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis/src/features/formatting.rs differ
+Files x-bbnf-analysis/bbnf-analysis-0.1.1/src/features/goto_definition.rs and /Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/crates/analysis/src/features/goto_definition.rs differ
+Only in x-bbnf-analysis/bbnf-analysis-0.1.1/src/features: hover.rs

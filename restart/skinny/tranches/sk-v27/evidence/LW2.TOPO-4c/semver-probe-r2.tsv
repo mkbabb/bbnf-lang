@@ -1,0 +1,8 @@
+substituted: pprint=0.3.7 (9322105)
+bbnf =0.2.9 control	rc=0	pprint version=0.3.6 
+bbnf =0.2.9 substituted	rc=101	pprint version=0.3.7 	errors=2
+gorgeous =0.1.8 control	rc=0	pprint version=0.3.6 
+gorgeous =0.1.8 substituted	rc=101	pprint version=0.3.7 	errors=3
+bbnf-analysis =0.1.1 control	rc=0	pprint version=0.3.6 
+bbnf-analysis =0.1.1 substituted	rc=101	pprint version=0.3.7 	errors=2
+semver-probe r2: RED (3 of 3 existing consumers break)

@@ -1,0 +1,3437 @@
+{
+  "when": "2026-07-02T08:54:43.993Z",
+  "results": [
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "off",
+      "settledHeight": 172299,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 13027
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "i",
+      "settledHeight": 173927,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.023161,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 826,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 75588,
+            "clampedPx": 0.4,
+            "fraction": 0.011317,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 111014,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 158677,
+            "clampedPx": 0.3,
+            "fraction": 0.008724,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 4078,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 63079,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 102745,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 132886,
+            "clampedPx": 0.3,
+            "fraction": 0.023161,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": false,
+        "heightDeltaVsRefPct": 0.94
+      },
+      "pageErrors": [],
+      "ms": 12039
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "ii",
+      "settledHeight": 175487,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 826,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 76120,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 111850,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 159997,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 4110,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 63467,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 103501,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 134010,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 1.85
+      },
+      "pageErrors": [],
+      "ms": 11953
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "iii",
+      "settledHeight": 170823,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 826,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 74532,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 109350,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 156021,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 4014,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 62311,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 101241,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 130646,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.86
+      },
+      "pageErrors": [],
+      "ms": 11731
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "off",
+      "settledHeight": 118019,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 9253
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "i",
+      "settledHeight": 118155,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.006599,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 4931,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 27313,
+            "clampedPx": 0.1,
+            "fraction": 0.003474,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 63959,
+            "clampedPx": 0.3,
+            "fraction": 0.005542,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 88235,
+            "clampedPx": 0,
+            "fraction": 0.006059,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 2607,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 28419,
+            "clampedPx": 0,
+            "fraction": 0.006599,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 61686,
+            "clampedPx": 0.4,
+            "fraction": 0.004988,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 89756,
+            "clampedPx": 0.3,
+            "fraction": 0.005044,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": false,
+        "heightDeltaVsRefPct": 0.12
+      },
+      "pageErrors": [],
+      "ms": 9108
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "ii",
+      "settledHeight": 118315,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 4931,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 27345,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 64039,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 88347,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 2623,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 28467,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 61782,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 89884,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.25
+      },
+      "pageErrors": [],
+      "ms": 9096
+    },
+    {
+      "engine": "chromium",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "iii",
+      "settledHeight": 117867,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 4931,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 27249,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 63799,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 88011,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 2607,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 28355,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 61526,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 89532,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.13
+      },
+      "pageErrors": [],
+      "ms": 9091
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "off",
+      "settledHeight": 144175,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 12153
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "i",
+      "settledHeight": 145951,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.008368,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65392,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 94294,
+            "clampedPx": 0.4,
+            "fraction": 0.007783,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 132988,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3259,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53971,
+            "clampedPx": 0.3,
+            "fraction": 0.008368,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 87439,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 112058,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": false,
+        "heightDeltaVsRefPct": 1.23
+      },
+      "pageErrors": [],
+      "ms": 11087
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "ii",
+      "settledHeight": 147691,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65988,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 95230,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 134460,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3295,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 54405,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 88285,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 113312,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 2.44
+      },
+      "pageErrors": [],
+      "ms": 11108
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "iii",
+      "settledHeight": 142847,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 64336,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 92630,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 130332,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3195,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53203,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 85935,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 109818,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.92
+      },
+      "pageErrors": [],
+      "ms": 10919
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "off",
+      "settledHeight": 84296,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 7902
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "i",
+      "settledHeight": 84446,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.007364,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19565,
+            "clampedPx": 0.4,
+            "fraction": 0.005859,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45678,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63049,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20226,
+            "clampedPx": 0.3,
+            "fraction": 0.007364,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43980,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64083,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": false,
+        "heightDeltaVsRefPct": 0.18
+      },
+      "pageErrors": [],
+      "ms": 7802
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "ii",
+      "settledHeight": 84626,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.003821,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19601,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45768,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63175,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1850,
+            "clampedPx": 0.3,
+            "fraction": 0.003385,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20280,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 44088,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64227,
+            "clampedPx": 0.3,
+            "fraction": 0.003821,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.39
+      },
+      "pageErrors": [],
+      "ms": 7836
+    },
+    {
+      "engine": "chromium",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "iii",
+      "settledHeight": 84158,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.003821,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19501,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45518,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 62825,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0.003385,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20162,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43820,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 63859,
+            "clampedPx": 0.3,
+            "fraction": 0.003821,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.16
+      },
+      "pageErrors": [],
+      "ms": 7809
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "off",
+      "settledHeight": 144287,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 10420
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "i",
+      "settledHeight": 146063,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.008368,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65392,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 94294,
+            "clampedPx": 0.4,
+            "fraction": 0.007783,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 132988,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3259,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53971,
+            "clampedPx": 0.3,
+            "fraction": 0.008368,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 87439,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 112058,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": false,
+        "heightDeltaVsRefPct": 1.23
+      },
+      "pageErrors": [],
+      "ms": 9382
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "ii",
+      "settledHeight": 147803,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65988,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 95230,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 134460,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3295,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 54405,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 88285,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 113312,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 2.44
+      },
+      "pageErrors": [],
+      "ms": 9340
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "iii",
+      "settledHeight": 142959,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 64336,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 92630,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 130332,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3195,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53203,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 85935,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 109818,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.92
+      },
+      "pageErrors": [],
+      "ms": 9234
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "off",
+      "settledHeight": 84408,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 6927
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "i",
+      "settledHeight": 84558,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.007364,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19565,
+            "clampedPx": 0.4,
+            "fraction": 0.005859,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45678,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63049,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20226,
+            "clampedPx": 0.3,
+            "fraction": 0.007364,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43980,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64083,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": false,
+        "heightDeltaVsRefPct": 0.18
+      },
+      "pageErrors": [],
+      "ms": 6783
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "ii",
+      "settledHeight": 84738,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.003821,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19601,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45768,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63175,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1850,
+            "clampedPx": 0.3,
+            "fraction": 0.003385,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20280,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 44088,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64227,
+            "clampedPx": 0.3,
+            "fraction": 0.003821,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.39
+      },
+      "pageErrors": [],
+      "ms": 6797
+    },
+    {
+      "engine": "chromium",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "iii",
+      "settledHeight": 84270,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0.003821,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19501,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45518,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 62825,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0.003385,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20162,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43820,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 63859,
+            "clampedPx": 0.3,
+            "fraction": 0.003821,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.16
+      },
+      "pageErrors": [],
+      "ms": 6841
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "off",
+      "settledHeight": 172358,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 69046
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "i",
+      "settledHeight": 173986,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 826,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 75625,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 111078,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 158766,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 4078,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 63119,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 102810,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 132976,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.94
+      },
+      "pageErrors": [],
+      "ms": 25943
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "ii",
+      "settledHeight": 175546,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 826,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 76157,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 111914,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 160086,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 4110,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 63507,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 103566,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 134100,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 1.85
+      },
+      "pageErrors": [],
+      "ms": 25789
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "fourier",
+      "arm": "iii",
+      "settledHeight": 170882,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 826,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 74569,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 109414,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 156110,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 4014,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 62351,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 101306,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 130736,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.86
+      },
+      "pageErrors": [],
+      "ms": 25580
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "off",
+      "settledHeight": 118023,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 18588
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "i",
+      "settledHeight": 118159,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 4931,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 27313,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 63961,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 88238,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 2607,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 28420,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 61688,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 89759,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.12
+      },
+      "pageErrors": [],
+      "ms": 18298
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "ii",
+      "settledHeight": 118319,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 4931,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 27345,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 64041,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 88350,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 2623,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 28468,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 61784,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 89887,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.25
+      },
+      "pageErrors": [],
+      "ms": 18313
+    },
+    {
+      "engine": "webkit",
+      "viewport": "mobile",
+      "fixture": "nested",
+      "arm": "iii",
+      "settledHeight": 117871,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 4931,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 27249,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 63801,
+            "clampedPx": 0.4,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 88014,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 2607,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 28356,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 61528,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 89535,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.13
+      },
+      "pageErrors": [],
+      "ms": 18318
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "off",
+      "settledHeight": 144138,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 38407
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "i",
+      "settledHeight": 145914,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65369,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 94267,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 132951,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3259,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53951,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 87414,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 112024,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 1.23
+      },
+      "pageErrors": [],
+      "ms": 24525
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "ii",
+      "settledHeight": 147654,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65965,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 95203,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 134423,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3295,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 54385,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 88260,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 113278,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 2.44
+      },
+      "pageErrors": [],
+      "ms": 24396
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "fourier",
+      "arm": "iii",
+      "settledHeight": 142810,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 64313,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 92603,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 130295,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3195,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53183,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 85910,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 109784,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.92
+      },
+      "pageErrors": [],
+      "ms": 23655
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "off",
+      "settledHeight": 84288,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 15975
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "i",
+      "settledHeight": 84438,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19564,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45674,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63043,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20225,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43975,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64077,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.18
+      },
+      "pageErrors": [],
+      "ms": 15897
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "ii",
+      "settledHeight": 84618,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19600,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45764,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63169,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1850,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20279,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 44083,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64221,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.39
+      },
+      "pageErrors": [],
+      "ms": 15804
+    },
+    {
+      "engine": "webkit",
+      "viewport": "laptop",
+      "fixture": "nested",
+      "arm": "iii",
+      "settledHeight": 84150,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19500,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45514,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 62819,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20161,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43815,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 63853,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.16
+      },
+      "pageErrors": [],
+      "ms": 15776
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "off",
+      "settledHeight": 144250,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 33938
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "i",
+      "settledHeight": 146026,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65369,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 94267,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 132951,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3259,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53951,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 87414,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 112024,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 1.23
+      },
+      "pageErrors": [],
+      "ms": 20913
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "ii",
+      "settledHeight": 147766,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 65965,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 95203,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 134423,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3295,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 54385,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 88260,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 113278,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 2.44
+      },
+      "pageErrors": [],
+      "ms": 20488
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "fourier",
+      "arm": "iii",
+      "settledHeight": 142922,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 97,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "introduction",
+            "kind": "chapter",
+            "scrollTop": 588,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "eigentheory-foundations",
+            "kind": "chapter",
+            "scrollTop": 64313,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "the-discrete-fourier-transform",
+            "kind": "chapter",
+            "scrollTop": 92603,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extended-proofs",
+            "kind": "chapter",
+            "scrollTop": 130295,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fourier-s-problem",
+            "kind": "sub",
+            "scrollTop": 3195,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "extending-the-result-to-mathbf-l-2-l-l",
+            "kind": "sub",
+            "scrollTop": 53183,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "chebyshev-polynomials-via-the-joukowski-transform",
+            "kind": "sub",
+            "scrollTop": 85910,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "fast-legendre-transform-flt",
+            "kind": "sub",
+            "scrollTop": 109784,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.92
+      },
+      "pageErrors": [],
+      "ms": 20245
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "off",
+      "settledHeight": 84400,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": null,
+      "pageErrors": [],
+      "ms": 14020
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "i",
+      "settledHeight": 84550,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19564,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45674,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63043,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20225,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43975,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64077,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.18
+      },
+      "pageErrors": [],
+      "ms": 13728
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "ii",
+      "settledHeight": 84730,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19600,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45764,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 63169,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1850,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20279,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 44083,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 64221,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": 0.39
+      },
+      "pageErrors": [],
+      "ms": 13690
+    },
+    {
+      "engine": "webkit",
+      "viewport": "desktop",
+      "fixture": "nested",
+      "arm": "iii",
+      "settledHeight": 84262,
+      "sticky": {
+        "samples": 220,
+        "sampledHeaders": 44,
+        "pinnable": 100,
+        "failures": 0,
+        "worstDeltaPx": 0,
+        "pass": true,
+        "failSamples": []
+      },
+      "band": {
+        "worstFraction": 0,
+        "perShot": [
+          {
+            "id": "nsec-0",
+            "kind": "chapter",
+            "scrollTop": 3540,
+            "clampedPx": 0.2,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2",
+            "kind": "chapter",
+            "scrollTop": 19500,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5",
+            "kind": "chapter",
+            "scrollTop": 45514,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7",
+            "kind": "chapter",
+            "scrollTop": 62819,
+            "clampedPx": 0.1,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-0-0",
+            "kind": "sub",
+            "scrollTop": 1832,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-2-1-0",
+            "kind": "sub",
+            "scrollTop": 20161,
+            "clampedPx": 0.5,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-5-0",
+            "kind": "sub",
+            "scrollTop": 43815,
+            "clampedPx": 0.3,
+            "fraction": 0,
+            "mismatchedDims": false
+          },
+          {
+            "id": "nsec-7-1-0",
+            "kind": "sub",
+            "scrollTop": 63853,
+            "clampedPx": 0,
+            "fraction": 0,
+            "mismatchedDims": false
+          }
+        ],
+        "pass": true,
+        "heightDeltaVsRefPct": -0.16
+      },
+      "pageErrors": [],
+      "ms": 13811
+    }
+  ]
+}

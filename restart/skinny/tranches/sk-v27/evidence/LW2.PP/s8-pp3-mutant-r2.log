@@ -1,0 +1,15 @@
+test l3_rest_lookahead ... FAILED
+test l1_group_flat_iff_fits ... FAILED
+test l5_linear_join_is_leijen_fill_sep ... FAILED
+test l5_fill_pairwise ... FAILED
+test l7_iii_oracle_at_every_width ... FAILED
+test l6_if_break_follows_the_innermost_group ... FAILED
+test l2_hard_forces_break ... FAILED
+test l4_nest_changes_indentation_only ... FAILED
+test l7_i_no_overflow_past_a_breakable_point ... ok
+test l8_total ... ok
+test l4_align_and_hang_on_the_oracle ... ok
+test l7_ii_infinite_width_is_flatten ... ok
+test result: FAILED. 4 passed; 8 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.62s
+cargo test rc=101
+MUTANT CAUGHT

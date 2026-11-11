@@ -1,0 +1,6 @@
+workspace rust:
+  edge parse-that -> pprint
+  REVERSE parse-that -> bbnf-lang: bbnf-regex depends on csp-solver
+  REVERSE parse-that -> bbnf-lang: bbnf-regex depends on egraph
+  REVERSE parse-that -> bbnf-lang: bbnf-regex depends on egraph-derive
+repo DAG: RED (a reverse or escaping edge; allowed: parse-that -> pprint, bbnf-lang -> parse-that, bbnf-lang -> pprint)

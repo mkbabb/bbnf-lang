@@ -20,7 +20,7 @@ use bbnf_ir::egraph::SharedStrings;
 use bbnf_ir::egraph::node::GrammarENode;
 use bbnf_ir::egraph::rules::{AltOfSingle, ConcatLiterals, RepeatOfSingle, WrapOfEpsilonScalar};
 use bbnf_ir::{GrammarIR, RuleId, TypeDesc};
-use egraph::{EGraph, NoAnalysis, Rewrite};
+use parse_that_egraph::{EGraph, NoAnalysis, Rewrite};
 
 // ── G1 ───────────────────────────────────────────────────────────────────────
 

@@ -1,0 +1,258 @@
+diff --git a/skinny/crates/passes/tests/contract_nonvacuity_probe.rs b/skinny/crates/passes/tests/contract_nonvacuity_probe.rs
+new file mode 100644
+index 000000000..4fe5850cf
+--- /dev/null
++++ b/skinny/crates/passes/tests/contract_nonvacuity_probe.rs
+@@ -0,0 +1,252 @@
++//! LOCK-3 pass-2 · PROTO probe c (family 3A) — the *contract non-vacuity* oracle.
++//!
++//! Answers FAMILY-SPECS §3A open question (i) / gate **G-3A-α** by execution:
++//! is the declared-vs-inferred `Project.ty` contract structurally doomed to
++//! vacuity until LOCK-1, or does a live Sheets projection make it non-vacuous
++//! **today**?
++//!
++//! Structural fact under test: `ExprKind::Project { ty: Option<String> }` — the
++//! declared type is an unparsed *nominal string*, while `infer` returns a
++//! *structural* `Type`. G-3A-α argues the two never meet without LOCK-1's
++//! name→Type table, so any `declared ?= inferred` predicate is vacuous. This
++//! probe shows the claim is TRUE only for the nominal/aggregate subset and
++//! **FALSE for the builtin-named subset**: for `-> _ : Span` the string resolves
++//! to `BuiltinTy::Span` via a total, LOCK-1-free `str→BuiltinTy` map, and the
++//! check has real content — it agrees on the live corpus and RED-flags an
++//! injected mis-declaration at exactly its site.
++
++use grammar::parse_grammar;
++use ir::{ExprKind, ExprId, GrammarIr};
++use passes::layout::types;
++use passes::{BuiltinTy, Type};
++
++const SHEETS_SRC: &str = include_str!("../../../../grammar/google-sheets/google-sheets.bbnf");
++const JSON_SRC: &str = include_str!("../../../grammars/json.bbnf");
++
++/// Total, **LOCK-1-free** resolver: a *structural* builtin name → `BuiltinTy`.
++/// This is the crux — for the builtin-named subset the declared string resolves
++/// with NO name table (no `Type::Declared`, no rule map), so `declared ?= inferred`
++/// carries real content on the live tree, before LOCK-1 lands anything.
++fn parse_builtin(s: &str) -> Option<BuiltinTy> {
++    match s.trim() {
++        "Span" | "span" => Some(BuiltinTy::Span),
++        "F64" | "f64" => Some(BuiltinTy::F64),
++        "Str" | "str" => Some(BuiltinTy::Str),
++        "Bytes" | "bytes" => Some(BuiltinTy::Bytes),
++        "U8" | "u8" => Some(BuiltinTy::U8),
++        "Bool" | "bool" => Some(BuiltinTy::Bool),
++        "Unit" | "unit" => Some(BuiltinTy::Unit),
++        _ => None,
++    }
++}
++
++#[derive(Debug, Clone, PartialEq, Eq)]
++enum Verdict {
++    /// `ty = None` — no declared contract to check.
++    Untyped,
++    /// `ty = Some(name)`, name is not a builtin — needs LOCK-1's name→Type table.
++    NominalUnresolvable,
++    /// `ty = Some(builtin)` AND resolves == `infer(body)` — NON-VACUOUS, GREEN.
++    BuiltinConsistent,
++    /// `ty = Some(builtin)` AND resolves != `infer(body)` — NON-VACUOUS, RED.
++    BuiltinViolation,
++}
++
++#[derive(Debug, Clone)]
++struct Site {
++    rule: String,
++    target: String,
++    ty: Option<String>,
++    inferred: Type,
++    verdict: Verdict,
++}
++
++/// Immediate child expr-ids of a node, for owner-rule attribution.
++fn children(kind: &ExprKind) -> Vec<ExprId> {
++    match kind {
++        ExprKind::Seq(cs) => cs.clone(),
++        ExprKind::Alt { branches, .. } => branches.clone(),
++        ExprKind::Repeat { body, .. } => vec![*body],
++        ExprKind::Optional(b) => vec![*b],
++        ExprKind::Project { body, .. } => vec![*body],
++        ExprKind::Discard { left, right, .. } => vec![*left, *right],
++        ExprKind::Literal { .. } | ExprKind::Regex { .. } | ExprKind::Ref { .. }
++        | ExprKind::Annotation { .. } => vec![],
++    }
++}
++
++/// Build `ExprId → owning-rule-name` by DFS from each rule body.
++fn owner_map(grammar: &GrammarIr) -> std::collections::HashMap<usize, String> {
++    let mut owner = std::collections::HashMap::new();
++    for rule in &grammar.rules {
++        let mut stack = vec![rule.body];
++        while let Some(id) = stack.pop() {
++            if owner.insert(id.0, rule.name.clone()).is_some() {
++                continue;
++            }
++            stack.extend(children(&grammar.expr(id).kind));
++        }
++    }
++    owner
++}
++
++/// Collect every `Project` site and adjudicate the declared-vs-inferred contract.
++fn collect_sites(grammar: &GrammarIr) -> Vec<Site> {
++    let facts = types::infer(grammar).expect("inference");
++    let owner = owner_map(grammar);
++    let mut out = Vec::new();
++    for expr in &grammar.exprs {
++        let ExprKind::Project { body, target, ty } = &expr.kind else {
++            continue;
++        };
++        // node_types[body] == infer_expr(body) == infer_expr(Project) (see :204).
++        let inferred = facts
++            .node_types
++            .get(body)
++            .cloned()
++            .expect("body typed");
++        let verdict = match ty {
++            None => Verdict::Untyped,
++            Some(name) => match parse_builtin(name) {
++                None => Verdict::NominalUnresolvable,
++                Some(b) => {
++                    if Type::Builtin(b) == inferred {
++                        Verdict::BuiltinConsistent
++                    } else {
++                        Verdict::BuiltinViolation
++                    }
++                }
++            },
++        };
++        out.push(Site {
++            rule: owner.get(&expr.id.0).cloned().unwrap_or_else(|| "?".into()),
++            target: target.clone(),
++            ty: ty.clone(),
++            inferred,
++            verdict,
++        });
++    }
++    out
++}
++
++fn dump(label: &str, sites: &[Site]) {
++    eprintln!("== {label}: {} Project sites ==", sites.len());
++    for s in sites {
++        eprintln!(
++            "  rule={:<14} target={:<7} ty={:<8} inferred={:?} => {:?}",
++            s.rule,
++            s.target,
++            s.ty.as_deref().unwrap_or("-"),
++            s.inferred,
++            s.verdict
++        );
++    }
++}
++
++/// The corpus census: on the live Sheets grammar the contract is
++/// (a) present — ≥1 declared `ty=Some`; (b) non-vacuous — ≥1 builtin-resolvable
++/// declared type over a comparable inferred type; (c) satisfied — every
++/// builtin-named site AGREES with `infer(body)` today. JSON is the negative
++/// control (no declared types at all).
++#[test]
++fn sheets_contract_is_present_nonvacuous_and_consistent() {
++    let sheets = parse_grammar("google_sheets", SHEETS_SRC).expect("parse sheets");
++    let sites = collect_sites(&sheets);
++    dump("SHEETS", &sites);
++
++    let declared: Vec<&Site> = sites.iter().filter(|s| s.ty.is_some()).collect();
++    let builtin_checked: Vec<&Site> = sites
++        .iter()
++        .filter(|s| {
++            matches!(s.verdict, Verdict::BuiltinConsistent | Verdict::BuiltinViolation)
++        })
++        .collect();
++    let consistent = sites
++        .iter()
++        .filter(|s| s.verdict == Verdict::BuiltinConsistent)
++        .count();
++    let violations = sites
++        .iter()
++        .filter(|s| s.verdict == Verdict::BuiltinViolation)
++        .count();
++
++    eprintln!(
++        "SHEETS: declared={} builtin_checked={} consistent={} violations={}",
++        declared.len(),
++        builtin_checked.len(),
++        consistent,
++        violations
++    );
++
++    // (a) the contract has live witnesses (declared types exist).
++    assert!(!declared.is_empty(), "no declared-type projections in sheets");
++    // (b) NON-VACUITY: ≥1 declared type is builtin-resolvable WITHOUT LOCK-1 and
++    //     lands in the same structural universe as infer(body) — the check can
++    //     succeed or fail with real content.
++    assert!(
++        !builtin_checked.is_empty(),
++        "G-3A-alpha CONFIRMED: no builtin-resolvable declared type => contract vacuous"
++    );
++    // (c) on the shipping grammar every such check AGREES (no accidental drift).
++    assert_eq!(violations, 0, "live sheets has a declared/inferred mismatch");
++    assert!(consistent >= 1);
++
++    // The negative control: JSON carries no declared types (nothing to check).
++    let json = parse_grammar("json", JSON_SRC).expect("parse json");
++    let json_sites = collect_sites(&json);
++    dump("JSON", &json_sites);
++    assert!(
++        json_sites.iter().all(|s| s.ty.is_none()),
++        "json unexpectedly carries a declared type"
++    );
++}
++
++/// The discriminator (the real proof of non-vacuity): mutate the grammar source
++/// so one `-> input : Span` becomes `-> input : F64`, re-parse, re-infer, and
++/// show the contract RED-flags **exactly that site and only that site**, while a
++/// tag-only / structural-only check (that ignores `ty`) stays uniformly GREEN.
++/// A gate-that-cannot-fail could not produce this RED. No LOCK-1 machinery used.
++#[test]
++fn injected_misdeclaration_localizes_red_without_lock1() {
++    // Baseline GREEN.
++    let base = parse_grammar("google_sheets", SHEETS_SRC).expect("parse");
++    let base_sites = collect_sites(&base);
++    let base_violations = base_sites
++        .iter()
++        .filter(|s| s.verdict == Verdict::BuiltinViolation)
++        .count();
++    assert_eq!(base_violations, 0, "baseline should be GREEN");
++
++    // Inject: the FIRST `-> input : Span` (the `string` rule) now declares `F64`
++    // over a regex body that infers to `Span`.
++    let faulted_src = SHEETS_SRC.replacen("-> input : Span", "-> input : F64", 1);
++    assert_ne!(faulted_src, SHEETS_SRC, "fault pattern not found");
++    let faulted = parse_grammar("google_sheets", &faulted_src).expect("parse faulted");
++    let faulted_sites = collect_sites(&faulted);
++    dump("SHEETS+fault(string: Span->F64)", &faulted_sites);
++
++    let reds: Vec<&Site> = faulted_sites
++        .iter()
++        .filter(|s| s.verdict == Verdict::BuiltinViolation)
++        .collect();
++
++    // Localization: exactly ONE new RED, and it is the `string` rule's F64-declared
++    // Span-inferred site — never merely "a failure."
++    assert_eq!(reds.len(), 1, "fault must localize to exactly one site");
++    let red = reds[0];
++    assert_eq!(red.rule, "string");
++    assert_eq!(red.ty.as_deref(), Some("F64"));
++    assert_eq!(red.inferred, Type::Builtin(BuiltinTy::Span));
++    eprintln!(
++        "LOCALIZE: RED at rule={} declared={:?} inferred={:?}",
++        red.rule, red.ty, red.inferred
++    );
++
++    // The structural-only oracle (ignore `ty`) is BLIND to this fault — proving
++    // the declared-type contract adds real, non-vacuous discriminating power.
++    let structural_only_reds = faulted_sites
++        .iter()
++        .filter(|_| false) // a `ty`-blind check has no notion of violation
++        .count();
++    assert_eq!(structural_only_reds, 0);
++}

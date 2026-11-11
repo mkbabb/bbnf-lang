@@ -29,6 +29,10 @@ enum OpenFrame<'p> {
         space_tag: Option<u8>,
         components_base: usize,
     },
+    #[expect(
+        dead_code,
+        reason = "colorMix has no StructLayout in the css_l4 registry yet"
+    )]
     ColorMix {
         mix_space: Option<u8>,
         hue_method: Option<u8>,
@@ -258,15 +262,17 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             None
         };
         match (captured, self.stack.last_mut()) {
-            (Some(text), Some(OpenFrame::SelectorList { span, .. })) => {
-                if span.is_empty() {
-                    *span = text;
-                }
+            (
+                Some(text),
+                Some(OpenFrame::SelectorList { span, .. }),
+            ) if span.is_empty() => {
+                *span = text;
             }
-            (Some(text), Some(OpenFrame::GenericAtRule { name, .. })) => {
-                if name.is_empty() || *name == ";" {
-                    *name = text;
-                }
+            (
+                Some(text),
+                Some(OpenFrame::GenericAtRule { name, .. }),
+            ) if name.is_empty() || *name == ";" => {
+                *name = text;
             }
             _ => {}
         }
@@ -724,7 +730,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 let packed = hex_span
                     .map(|s| {
                         let digits = s.strip_prefix('#').unwrap_or(s);
-                        crate::css_types::parse_hex_color(digits)
+                        crate::runtime::css_l4::host::parse_hex_color(digits)
                     })
                     .unwrap_or(0);
                 self.deposit_value(CssTypedValue::Color(CssColor::Hex(packed)));
@@ -794,10 +800,10 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
     fn push_branch_tag(&mut self, branch_index: u32) {
         match self.stack.last_mut() {
             Some(OpenFrame::Numeric { unit, .. }) => *unit = Some(branch_index as u8),
-            Some(OpenFrame::ColorFunction { kind_tag, space_tag, .. }) => {
-                if kind_tag.is_none() && space_tag.is_none() {
-                    *kind_tag = Some(branch_index as u8);
-                }
+            Some(
+                OpenFrame::ColorFunction { kind_tag, space_tag, .. },
+            ) if kind_tag.is_none() && space_tag.is_none() => {
+                *kind_tag = Some(branch_index as u8);
             }
             Some(OpenFrame::ColorMix { mix_space, hue_method, .. }) => {
                 if mix_space.is_none() {
@@ -806,10 +812,8 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                     *hue_method = Some(branch_index as u8);
                 }
             }
-            Some(OpenFrame::DirPseudo { kind_tag }) => {
-                if kind_tag.is_none() {
-                    *kind_tag = Some(branch_index as u8);
-                }
+            Some(OpenFrame::DirPseudo { kind_tag }) if kind_tag.is_none() => {
+                *kind_tag = Some(branch_index as u8);
             }
             _ => {}
         }

@@ -46,7 +46,7 @@ fn compile_entry(rel_entry: &str) -> GrammarIR {
             panic!("shape_dict_bbnf: compile_paths_request failed for {rel_entry}: {err}")
         });
     match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         other => panic!("shape_dict_bbnf: expected Vm output for {rel_entry}, got {other:?}"),
     }
 }

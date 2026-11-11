@@ -1,0 +1,270 @@
+{
+  "when": "2026-07-02T08:16:05.580Z",
+  "sectionCount": 60,
+  "readingAt": "sec-40",
+  "toleranceJumpPx": 1,
+  "anchoring": {
+    "chromiumVersion": "149.0.7827.55",
+    "chromium-native": {
+      "arm": "chromium-native",
+      "forceManual": false,
+      "supportsOverflowAnchor": true,
+      "branch": "native overflow-anchor (manual path disabled)",
+      "landing": {
+        "landed": true,
+        "reason": "done",
+        "errorPx": 0.140625,
+        "travelFrames": 1,
+        "settleFrames": 4,
+        "corrections": 1,
+        "behavior": "instant"
+      },
+      "before": {
+        "scrollY": 14474,
+        "rectTop": 80.140625,
+        "docHeight": 21588
+      },
+      "growth1": {
+        "id": "sec-38",
+        "h0": 245,
+        "skippedBefore": false,
+        "h1": 645,
+        "delta": 400,
+        "jumpPx": 0.25
+      },
+      "growth2": {
+        "id": "sec-2",
+        "h0": 245,
+        "skippedBefore": false,
+        "h1": 845,
+        "delta": 600,
+        "jumpPx": 0.25
+      },
+      "after": {
+        "scrollY": 15474,
+        "rectTop": 80.640625,
+        "docHeight": 22589
+      },
+      "appliedDeltaTotal": 1000,
+      "scrollTopAbsorbed": 1000,
+      "pass": true,
+      "errors": []
+    },
+    "chromium-manual": {
+      "arm": "chromium-manual (stable-Safari emulation cross-check)",
+      "forceManual": true,
+      "supportsOverflowAnchor": false,
+      "branch": "compensateScrollTop (manual net-delta path)",
+      "landing": {
+        "landed": true,
+        "reason": "done",
+        "errorPx": 0.140625,
+        "travelFrames": 1,
+        "settleFrames": 4,
+        "corrections": 1,
+        "behavior": "instant"
+      },
+      "before": {
+        "scrollY": 14474,
+        "rectTop": 80.140625,
+        "docHeight": 21588
+      },
+      "growth1": {
+        "id": "sec-38",
+        "h0": 245,
+        "skippedBefore": false,
+        "h1": 645,
+        "delta": 400,
+        "jumpPx": 0.25
+      },
+      "growth2": {
+        "id": "sec-2",
+        "h0": 245,
+        "skippedBefore": false,
+        "h1": 845,
+        "delta": 600,
+        "jumpPx": 0.25
+      },
+      "after": {
+        "scrollY": 15474,
+        "rectTop": 80.640625,
+        "docHeight": 22589
+      },
+      "appliedDeltaTotal": 1000,
+      "scrollTopAbsorbed": 1000,
+      "pass": true,
+      "errors": []
+    },
+    "webkitVersion": "26.5",
+    "webkit-natural": {
+      "arm": "webkit-natural",
+      "forceManual": false,
+      "supportsOverflowAnchor": true,
+      "branch": "native overflow-anchor (manual path disabled)",
+      "landing": {
+        "landed": true,
+        "reason": "done",
+        "errorPx": 0.453125,
+        "travelFrames": 1,
+        "settleFrames": 3,
+        "corrections": 1,
+        "behavior": "instant"
+      },
+      "before": {
+        "scrollY": 14916,
+        "rectTop": 80.453125,
+        "docHeight": 22310
+      },
+      "growth1": {
+        "id": "sec-38",
+        "h0": 320,
+        "skippedBefore": false,
+        "h1": 720,
+        "delta": 400,
+        "jumpPx": 0
+      },
+      "growth2": {
+        "id": "sec-2",
+        "h0": 245,
+        "skippedBefore": false,
+        "h1": 845,
+        "delta": 600,
+        "jumpPx": 0.25
+      },
+      "after": {
+        "scrollY": 15916,
+        "rectTop": 80.703125,
+        "docHeight": 23311
+      },
+      "appliedDeltaTotal": 1000,
+      "scrollTopAbsorbed": 1000,
+      "pass": true,
+      "errors": []
+    },
+    "webkit-manual": {
+      "arm": "webkit-manual (stable-Safari: compensateScrollTop on REAL WebKit)",
+      "forceManual": true,
+      "supportsOverflowAnchor": false,
+      "branch": "compensateScrollTop (manual net-delta path)",
+      "landing": {
+        "landed": true,
+        "reason": "done",
+        "errorPx": 0.453125,
+        "travelFrames": 1,
+        "settleFrames": 3,
+        "corrections": 1,
+        "behavior": "instant"
+      },
+      "before": {
+        "scrollY": 14916,
+        "rectTop": 80.453125,
+        "docHeight": 22310
+      },
+      "growth1": {
+        "id": "sec-38",
+        "h0": 320,
+        "skippedBefore": false,
+        "h1": 720,
+        "delta": 400,
+        "jumpPx": 0
+      },
+      "growth2": {
+        "id": "sec-2",
+        "h0": 245,
+        "skippedBefore": false,
+        "h1": 845,
+        "delta": 600,
+        "jumpPx": 0.25
+      },
+      "after": {
+        "scrollY": 15916,
+        "rectTop": 80.703125,
+        "docHeight": 23311
+      },
+      "appliedDeltaTotal": 1000,
+      "scrollTopAbsorbed": 1000,
+      "pass": true,
+      "errors": []
+    }
+  },
+  "print": {
+    "chromiumEager": {
+      "sections": 60,
+      "mathBlocks": 20,
+      "errors": []
+    },
+    "chromiumGoverned": {
+      "mountedBefore": 8,
+      "mountedAfterBeforeprint": 60,
+      "revealAllCalled": false,
+      "printDom": {
+        "lastSectionPrintCV": "visible",
+        "midSectionPrintCV": "visible",
+        "skippedHoles": 0,
+        "sentinelInnerText": true,
+        "mathBlockCount": 20,
+        "tallestMathBlockPx": 111,
+        "mathBreakInside": "auto"
+      },
+      "errors": []
+    },
+    "eagerPdf": {
+      "pages": 18,
+      "bytes": 14929,
+      "sentinelInPdfText": true,
+      "missingSectionTitles": [],
+      "equationNumberMarkers": 20
+    },
+    "governedPdf": {
+      "pages": 18,
+      "bytes": 14929,
+      "sentinelInPdfText": true,
+      "missingSectionTitles": [],
+      "equationNumberMarkers": 20
+    },
+    "pageCountEqual": true,
+    "raster": {
+      "picks": [
+        2,
+        9,
+        17
+      ],
+      "files": [
+        "/private/tmp/claude-504/-Users-mkbabb-Programming-sci-report/61ef4d2b-22d2-4c2d-a271-4c36ee42c6b5/scratchpad/virt-p4/probe/w3a/w3a-governed-p2-02.png",
+        "/private/tmp/claude-504/-Users-mkbabb-Programming-sci-report/61ef4d2b-22d2-4c2d-a271-4c36ee42c6b5/scratchpad/virt-p4/probe/w3a/w3a-governed-p9-09.png",
+        "/private/tmp/claude-504/-Users-mkbabb-Programming-sci-report/61ef4d2b-22d2-4c2d-a271-4c36ee42c6b5/scratchpad/virt-p4/probe/w3a/w3a-governed-p17-17.png"
+      ]
+    },
+    "webkitGoverned": {
+      "mountedBefore": 8,
+      "mountedAfterBeforeprint": 60,
+      "revealAllCalled": false,
+      "printDom": {
+        "lastSectionPrintCV": "visible",
+        "midSectionPrintCV": "visible",
+        "skippedHoles": 0,
+        "sentinelInnerText": true,
+        "mathBlockCount": 20,
+        "tallestMathBlockPx": 118,
+        "mathBreakInside": "auto"
+      },
+      "errors": []
+    }
+  },
+  "skipStateSupplement": {
+    "why": "The in-run skippedBefore diagnostic probed checkVisibility({contentVisibilityAuto:true}) on the CV HOST, which always reads visible \u2014 the skipped state lives on the DESCENDANTS. Re-probed on descendants (skipcheck.mjs).",
+    "chromium": {
+      "hostCheckVisibility": true,
+      "childCheckVisibility": false,
+      "childSkipped": true,
+      "hostComputedCV": "auto"
+    },
+    "webkit": {
+      "hostCheckVisibility": true,
+      "childCheckVisibility": false,
+      "childSkipped": true,
+      "hostComputedCV": "auto"
+    },
+    "conclusion": "sec-2's contents ARE content-visibility-skipped at the sec-40 reading depth on BOTH engines \u2014 growth 2 genuinely exercised the skipped-box remeasure case."
+  }
+}

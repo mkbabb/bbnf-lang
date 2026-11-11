@@ -1,0 +1,29 @@
+# PARITY corpus=twitter direct==serde==sonic typed-struct OK
+# PARITY corpus=canada direct==serde==sonic typed-struct OK
+# PARITY corpus=citm_catalog direct==serde==sonic typed-struct OK
+# SK-V22 canonical cold JSON bench  N=200  host=arm64  loadavg={ 13.99 14.82 12.26 }
+# schema: ROW corpus lane bytes n median_nspb min_nspb median_mbps max_mbps stddev_mbps
+ROW corpus=twitter lane=parse_only bytes=631515 n=200 median_nspb=0.3437 min_nspb=0.3195 median_mbps=23275.009 max_mbps=25036.275 stddev_mbps=1902.218
+ROW corpus=twitter lane=parse_tape bytes=631515 n=200 median_nspb=0.4029 min_nspb=0.3729 median_mbps=19856.035 max_mbps=21452.739 stddev_mbps=2050.906
+ROW corpus=twitter lane=fused bytes=631515 n=200 median_nspb=0.5181 min_nspb=0.4957 median_mbps=15441.054 max_mbps=16138.793 stddev_mbps=1318.833
+ROW corpus=twitter lane=sonic bytes=631515 n=200 median_nspb=1.0210 min_nspb=0.8444 median_mbps=7835.271 max_mbps=9474.205 stddev_mbps=709.162
+ROW corpus=twitter lane=serde bytes=631515 n=200 median_nspb=1.4448 min_nspb=1.3015 median_mbps=5537.201 max_mbps=6146.752 stddev_mbps=549.187
+ROW corpus=twitter lane=direct_struct bytes=631515 n=200 median_nspb=0.4735 min_nspb=0.4522 median_mbps=16894.378 max_mbps=17690.549 stddev_mbps=1452.270
+ROW corpus=twitter lane=serde_typed bytes=631515 n=200 median_nspb=0.5860 min_nspb=0.5420 median_mbps=13651.316 max_mbps=14759.722 stddev_mbps=757.780
+ROW corpus=twitter lane=sonic_typed bytes=631515 n=200 median_nspb=0.6183 min_nspb=0.5493 median_mbps=12938.942 max_mbps=14562.907 stddev_mbps=785.197
+ROW corpus=canada lane=parse_only bytes=2251051 n=200 median_nspb=0.5151 min_nspb=0.4724 median_mbps=15530.903 max_mbps=16936.465 stddev_mbps=900.892
+ROW corpus=canada lane=parse_tape bytes=2251051 n=200 median_nspb=0.5357 min_nspb=0.4893 median_mbps=14932.351 max_mbps=16350.233 stddev_mbps=939.587
+ROW corpus=canada lane=fused bytes=2251051 n=200 median_nspb=0.9036 min_nspb=0.8429 median_mbps=8853.508 max_mbps=9491.222 stddev_mbps=666.557
+ROW corpus=canada lane=sonic bytes=2251051 n=200 median_nspb=0.8046 min_nspb=0.7565 median_mbps=9942.528 max_mbps=10575.557 stddev_mbps=576.364
+ROW corpus=canada lane=serde bytes=2251051 n=200 median_nspb=1.3347 min_nspb=1.2524 median_mbps=5993.895 max_mbps=6387.564 stddev_mbps=315.022
+ROW corpus=canada lane=direct_struct bytes=2251051 n=200 median_nspb=2.0387 min_nspb=1.8202 median_mbps=3924.060 max_mbps=4395.064 stddev_mbps=209.589
+ROW corpus=canada lane=serde_typed bytes=2251051 n=200 median_nspb=2.8222 min_nspb=2.6158 median_mbps=2834.677 max_mbps=3058.363 stddev_mbps=122.620
+ROW corpus=canada lane=sonic_typed bytes=2251051 n=200 median_nspb=3.8248 min_nspb=3.2265 median_mbps=2091.594 max_mbps=2479.472 stddev_mbps=156.250
+ROW corpus=citm_catalog lane=parse_only bytes=1727204 n=200 median_nspb=0.2878 min_nspb=0.2630 median_mbps=27800.902 max_mbps=30418.562 stddev_mbps=1626.841
+ROW corpus=citm_catalog lane=parse_tape bytes=1727204 n=200 median_nspb=0.3165 min_nspb=0.2829 median_mbps=25279.031 max_mbps=28281.033 stddev_mbps=2246.091
+ROW corpus=citm_catalog lane=fused bytes=1727204 n=200 median_nspb=0.3908 min_nspb=0.3482 median_mbps=20472.446 max_mbps=22976.732 stddev_mbps=1542.877
+ROW corpus=citm_catalog lane=sonic bytes=1727204 n=200 median_nspb=0.7675 min_nspb=0.7096 median_mbps=10423.976 max_mbps=11274.334 stddev_mbps=769.822
+ROW corpus=citm_catalog lane=serde bytes=1727204 n=200 median_nspb=1.1684 min_nspb=1.0383 median_mbps=6846.838 max_mbps=7704.640 stddev_mbps=866.905
+ROW corpus=citm_catalog lane=direct_struct bytes=1727204 n=200 median_nspb=0.3075 min_nspb=0.2973 median_mbps=26019.848 max_mbps=26906.528 stddev_mbps=8200.675
+ROW corpus=citm_catalog lane=serde_typed bytes=1727204 n=200 median_nspb=0.5884 min_nspb=0.5518 median_mbps=13595.569 max_mbps=14498.450 stddev_mbps=2402.534
+ROW corpus=citm_catalog lane=sonic_typed bytes=1727204 n=200 median_nspb=0.5781 min_nspb=0.4401 median_mbps=13838.099 max_mbps=18178.105 stddev_mbps=4174.788

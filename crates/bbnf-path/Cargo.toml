@@ -9,13 +9,21 @@ repository = "https://github.com/mkbabb/bbnf-lang"
 [lib]
 proc-macro = true
 
+# sk-v27 LW2.TOPO-4c — the grammars whose registry sidecar this crate
+# embeds (`src/registry.rs::sidecar_for_ident`) from its in-crate copy at
+# `registry/<ident>.registry.json`. `cargo xtask regen` writes each copy
+# from `crates/core/src/grammar/generated/`; `regen --check` fails on a
+# missing or drifted copy and on any file in `registry/` not listed here.
+[package.metadata.bbnf-path]
+grammars = ["json", "css_l4", "google_sheets", "bbnf"]
+
 # AZ-IV.W2.4 — `path!` proc-macro entry. The crate is `proc-macro = true`
 # and cdylib-free (Rust frontend only); the future TS template-literal
 # tag (W5) is a separate cdylib that consumes the same Path IR.
 #
 # Dependencies:
 # * `syn` / `quote` / `proc-macro2` — the proc-macro substrate.
-# * `bbnf-regex` — the W2.3 path-string lexer (`lex_path` + `PathToken`).
+# * `parse-that-regex` — the W2.3 path-string lexer (`lex_path` + `PathToken`).
 # * `bbnf-ir` — `StructRegistry`, `StructLayout`, `LayoutKind`,
 #   `TypeDesc`; the macro walks its compile-time fixture registry
 #   through this surface to validate each segment against the grammar.
@@ -23,8 +31,8 @@ proc-macro = true
 syn = { version = "2", features = ["full", "extra-traits"] }
 quote = "1"
 proc-macro2 = "1"
-bbnf-regex = { version = "0.1" }
-bbnf-ir = { version = "0.1" }
+parse-that-regex.workspace = true
+bbnf-ir = { version = "0.2.0", path = "../ir" }
 # AZ-IV.W5 T4 — proc-macro deserialises the per-grammar registry from
 # the sidecar JSON file `cargo xtask regen` writes alongside the
 # generated `.rs` modules. Replaces the synthetic hand-authored fixture

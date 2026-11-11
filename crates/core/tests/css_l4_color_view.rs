@@ -23,7 +23,7 @@ use common::legacy_color_payload::{COLOR_PAYLOAD_BYTES, Color, ColorSpace};
 // `grammar/css/l4/color.bbnf` lives in `bbnf::css_types` (the canonical
 // shim).
 #[allow(unused_imports)]
-use bbnf::css_types as _css_types_link;
+use bbnf::runtime::css_l4::host as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 
@@ -300,7 +300,7 @@ fn color_named_type_admission_or_no_color_rules() {
     let out =
         compile_paths_request(&[stylesheet], &request).expect("CSS L4 compile for admission gate");
     let ir = match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     };
 

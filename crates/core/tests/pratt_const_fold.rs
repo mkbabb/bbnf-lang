@@ -16,7 +16,7 @@
 //! End-to-end integration with the DTA driver's `ShuntingYard` arm
 //! is proven by the Sheets / BBNF / CSS parity tests upstream.
 
-use bbnf::backend::rust::emitter::precedence::{emit_precedence_lut, pack_lut_byte_for_test};
+use bbnf::backend::rust::emitter::precedence::emit_precedence_lut;
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
@@ -47,18 +47,54 @@ fn mk_entry(
     }
 }
 
+/// The packed byte the emitter writes for `entry`: emit a one-operator
+/// grammar's LUT family and read slot `entry.byte` of the aggregate
+/// `PRECEDENCE_LUT` constant, so the bit layout is checked on the emitted
+/// artifact itself.
+fn packed_lut_byte(entry: &OperatorChainEntry) -> u8 {
+    let facts = OperatorChainFacts {
+        rules: vec![OperatorChainRule {
+            rule: 0 as RuleId,
+            rule_name: "packed".to_string(),
+            entries: vec![entry.clone()],
+        }],
+        chain_heads: vec![0 as RuleId],
+    };
+    let file: syn::File =
+        syn::parse2(emit_precedence_lut("TestGrammar", &facts)).expect("emitted LUT parses");
+    let lut = file
+        .items
+        .iter()
+        .find_map(|item| match item {
+            syn::Item::Const(c) if c.ident == "PRECEDENCE_LUT" => Some(&*c.expr),
+            _ => None,
+        })
+        .expect("aggregate PRECEDENCE_LUT is emitted");
+    let syn::Expr::Array(lut) = lut else {
+        panic!("PRECEDENCE_LUT is an array literal");
+    };
+    assert_eq!(lut.elems.len(), 256);
+    match &lut.elems[entry.byte as usize] {
+        syn::Expr::Lit(syn::ExprLit {
+            lit: syn::Lit::Int(v),
+            ..
+        }) => v.base10_parse().expect("u8 literal"),
+        _ => panic!("LUT slot is not an integer literal"),
+    }
+}
+
 #[test]
 fn pack_left_assoc_binary_no_second() {
     // `+` — prec 5, left, binary, single-byte → 0x05
     let e = mk_entry(b'+', None, 5, Associativity::Left, OperatorArity::Binary);
-    assert_eq!(pack_lut_byte_for_test(&e), 0x05);
+    assert_eq!(packed_lut_byte(&e), 0x05);
 }
 
 #[test]
 fn pack_right_assoc_binary_no_second() {
     // `^` — prec 7, right, binary, single-byte → 0x17
     let e = mk_entry(b'^', None, 7, Associativity::Right, OperatorArity::Binary);
-    assert_eq!(pack_lut_byte_for_test(&e), 0x17);
+    assert_eq!(packed_lut_byte(&e), 0x17);
 }
 
 #[test]
@@ -71,21 +107,21 @@ fn pack_left_assoc_binary_two_byte() {
         Associativity::Left,
         OperatorArity::Binary,
     );
-    assert_eq!(pack_lut_byte_for_test(&e), 0x83);
+    assert_eq!(packed_lut_byte(&e), 0x83);
 }
 
 #[test]
 fn pack_prefix_unary() {
     // prefix `-` — prec 8, left, prefix, single-byte → 0x28
     let e = mk_entry(b'-', None, 8, Associativity::Left, OperatorArity::Prefix);
-    assert_eq!(pack_lut_byte_for_test(&e), 0x28);
+    assert_eq!(packed_lut_byte(&e), 0x28);
 }
 
 #[test]
 fn pack_postfix_unary() {
     // postfix `%` — prec 9, left, postfix, single-byte → 0x49
     let e = mk_entry(b'%', None, 9, Associativity::Left, OperatorArity::Postfix);
-    assert_eq!(pack_lut_byte_for_test(&e), 0x49);
+    assert_eq!(packed_lut_byte(&e), 0x49);
 }
 
 #[test]
@@ -99,7 +135,7 @@ fn pack_precedence_saturates_at_nibble() {
         Associativity::Left,
         OperatorArity::Binary,
     );
-    assert_eq!(pack_lut_byte_for_test(&e) & 0x0F, 4);
+    assert_eq!(packed_lut_byte(&e) & 0x0F, 4);
 }
 
 // ─── Emitter TokenStream ──────────────────────────────────────────────
@@ -149,7 +185,7 @@ fn compile_and_mine(path: &str) -> OperatorChainFacts {
     };
     let out = compile_paths_request(&[grammar], &request).expect("compile");
     let ir = match out {
-        CompileOutput::Vm(ir) => ir,
+        CompileOutput::Vm(ir) => *ir,
         _ => panic!("expected Vm output"),
     };
     let dta = bbnf_ir::passes::lift_dta(&ir);
@@ -182,7 +218,7 @@ fn sheets_mines_operators() {
             .collect::<Vec<_>>(),
     );
     // Verify the key arithmetic operators are captured.
-    for expected in &[b'+', b'-', b'*', b'/', b'^', b'&'] {
+    for expected in b"+-*/^&" {
         assert!(
             facts.entries_flat().any(|e| e.byte == *expected),
             "Sheets must mine operator {:?}",
@@ -222,7 +258,7 @@ fn bbnf_mines_operators() {
             .map(|e| e.byte as char)
             .collect::<Vec<_>>(),
     );
-    for expected in &[b'+', b'-', b'*', b'/'] {
+    for expected in b"+-*/" {
         assert!(
             facts.entries_flat().any(|e| e.byte == *expected),
             "BBNF must mine operator {:?}",
@@ -254,7 +290,7 @@ fn css_l4_mines_math_expr_operators() {
             .map(|e| e.byte as char)
             .collect::<Vec<_>>(),
     );
-    for expected in &[b'+', b'-', b'*', b'/'] {
+    for expected in b"+-*/" {
         assert!(
             facts.entries_flat().any(|e| e.byte == *expected),
             "CSS must mine operator {:?}",
@@ -317,7 +353,7 @@ fn emitted_lut_packs_non_operator_bytes_as_zero() {
         zero_occurrences >= 200,
         "LUT must have ≥ 200 zero bytes in emitted text, got {}\nText prefix: {}",
         zero_occurrences,
-        &text.chars().take(500).collect::<String>(),
+        text.chars().take(500).collect::<String>(),
     );
 }
 

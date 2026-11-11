@@ -1,0 +1,14 @@
+parse-that-egraph-derive	-	new-name
+parse-that-egraph	-	new-name
+pprint_derive	0.2.2	breaks	pprint 0.3.6 derive use (VecStruct) vs pprint =0.3.6: control rc=0, tree at 0.2.3 substituted rc=101 (version=0.2.3)
+pprint	0.3.6	breaks	Summary semver requires new major version: 6 major and 0 minor checks failed
+parse-that-simd	-	new-name
+parse-that-regex	-	new-name
+parse_that	0.3.3	breaks	Summary semver requires new major version: 6 major and 0 minor checks failed
+bbnf-ser	-	new-name
+bbnf-ir	0.1.5	breaks	Summary semver requires new major version: 10 major and 0 minor checks failed
+bbnf-path	-	new-name
+bbnf	0.2.9	breaks	Summary semver requires new major version: 13 major and 0 minor checks failed
+bbnf-analysis	0.1.1	breaks	Summary semver requires new major version: 4 major and 0 minor checks failed
+bbnf-lsp	-	new-name
+gorgeous	0.1.8	breaks	Summary semver requires new major version: 5 major and 0 minor checks failed

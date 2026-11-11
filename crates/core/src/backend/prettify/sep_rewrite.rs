@@ -53,7 +53,11 @@ pub enum SilentPosition {
 /// 1. `Skip(main, rhs)` — `main << sep_token` or `main << comma ?`. Yields
 ///    `Some((main, rhs, After))`; emit `main` first, then silent-parse rhs.
 ///
-/// 2. `Seq([sep_token, rest...])` — `("," ?w , expression) *` form where
+/// 2. `Next(sep_token, main)` — `(comma >> arg) *`, the tail of a strict
+///    separated list `arg , (comma >> arg) *` (ruling S1-B). Yields
+///    `Some((main, sep_token, Before))`.
+///
+/// 3. `Seq([sep_token, rest...])` — `("," ?w , expression) *` form where
 ///    the separator is the leading child. Yields
 ///    `Some((Seq([rest...]), sep_token, Before))`; silent-parse the sep
 ///    first, then emit the rest.
@@ -64,6 +68,12 @@ pub fn split_inner_for_sep(
 ) -> Option<(IrNode, IrNode, SilentPosition)> {
     match inner {
         IrNode::Skip(main, rhs) => Some(((**main).clone(), (**rhs).clone(), SilentPosition::After)),
+
+        // `sep >> main` — the tail of a strict separated list
+        // `x , (sep >> x) *` (ruling S1-B); the separator leads.
+        IrNode::Next(lead, main) if is_sep_token(lead, sep, ir) => {
+            Some(((**main).clone(), (**lead).clone(), SilentPosition::Before))
+        }
 
         IrNode::Seq(children) if !children.is_empty() => {
             if is_sep_token(&children[0], sep, ir) {

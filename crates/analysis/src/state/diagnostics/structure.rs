@@ -19,17 +19,17 @@ pub(super) fn detect_empty_bodies(
     diagnostics: &mut Vec<Diagnostic>,
 ) {
     for (&name, entry) in ast.iter() {
-        if is_empty_rhs(entry.rhs) {
-            if let Some(&idx) = rule_index.get(name) {
-                let rule = &rules[idx];
-                diagnostics.push(Diagnostic {
-                    range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
-                    severity: Some(DiagnosticSeverity::WARNING),
-                    source: Some(crate::DIAGNOSTIC_SOURCE.into()),
-                    message: format!("Rule `{}` has an empty body", name),
-                    ..Default::default()
-                });
-            }
+        if is_empty_rhs(entry.rhs)
+            && let Some(&idx) = rule_index.get(name)
+        {
+            let rule = &rules[idx];
+            diagnostics.push(Diagnostic {
+                range: line_index.span_to_range(rule.name_span.0, rule.name_span.1),
+                severity: Some(DiagnosticSeverity::WARNING),
+                source: Some(crate::DIAGNOSTIC_SOURCE.into()),
+                message: format!("Rule `{}` has an empty body", name),
+                ..Default::default()
+            });
         }
     }
 }

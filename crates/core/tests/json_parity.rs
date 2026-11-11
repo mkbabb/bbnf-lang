@@ -130,7 +130,7 @@ fn assert_struct_eq_sonic(
 }
 
 fn parity_against_sonic(fixture: &str) {
-    let path = format!("../../data/json/{}", fixture);
+    let path = bbnf_corpus::path(&format!("json/{}", fixture)).display().to_string();
     let src = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: read failed: {e}"));
 
     let doc = JsonParser::parse(&src)

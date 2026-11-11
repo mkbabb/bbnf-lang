@@ -28,11 +28,20 @@ interface Token<T, V = string> {
 
 export type Comment = Token<"comment">;
 
+/**
+ * A `->` mapping on a factor (docs/bbnf/grammar-syntax.md, "Per-Expression
+ * Mapping"). The target is host (Rust) code: the TS front end keeps its
+ * source text and does not evaluate it, so a mapping never changes what the
+ * factor matches.
+ */
+export type Mapping = { expr: string; type?: string };
+
 interface ExpressionToken<T, V = string> extends Token<T, V> {
     comment?: {
         left: Comment[];
         right: Comment[];
     };
+    mapping?: Mapping;
 }
 
 export type Nonterminal = ExpressionToken<"nonterminal">;
@@ -41,7 +50,10 @@ export type Literal = ExpressionToken<"literal">;
 export type Regex = ExpressionToken<"regex", RegExp>;
 export type Epsilon = ExpressionToken<"epsilon">;
 
-export type Group = ExpressionToken<"group", Expression>;
+export type Group = ExpressionToken<"group", Expression> & {
+    /** `@{ rhs }`: the group's value is the source span it matched. */
+    capture?: "span";
+};
 export type ManyGroup = ExpressionToken<"many", Expression>;
 export type OptionalGroup = ExpressionToken<"optional", Expression>;
 
@@ -106,10 +118,23 @@ export type NoCollapseDirective = {
     range?: { start: number; end: number };
 };
 
+/** `@ws /regex/ ;`: the grammar-wide pattern of the `?w` operator. */
+export type WsDirective = { pattern: RegExp; range?: { start: number; end: number } };
+
+/**
+ * `@token rule ;`, `@inline rule ;`, `@debug rule ;` and `@debug * ;`: a
+ * directive that names one rule (or `*`, every rule, for `@debug`).
+ */
+export type RuleDirective = { ruleName: string; range?: { start: number; end: number } };
+
 export type ParsedGrammar = {
     imports: ImportDirective[];
     recovers: RecoverDirective[];
     no_collapses: NoCollapseDirective[];
     pretties: PrettyDirective[];
+    ws: WsDirective[];
+    tokens: RuleDirective[];
+    inlines: RuleDirective[];
+    debugs: RuleDirective[];
     rules: AST;
 };

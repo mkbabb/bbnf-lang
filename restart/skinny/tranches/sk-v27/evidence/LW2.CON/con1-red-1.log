@@ -1,0 +1,113 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794252999 slope=43.3/s inuse=29715 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+EEEEEEEEEF
+======================================================================
+ERROR: test_a_missing_field_is_refused (bench.contest.test_contest.BuildPlane.test_a_missing_field_is_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 97, in test_a_missing_field_is_refused
+    import admit
+ModuleNotFoundError: No module named 'admit'
+
+======================================================================
+ERROR: test_equal_build_planes_are_admitted (bench.contest.test_contest.BuildPlane.test_equal_build_planes_are_admitted)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 79, in test_equal_build_planes_are_admitted
+    import admit
+ModuleNotFoundError: No module named 'admit'
+
+======================================================================
+ERROR: test_every_i8_field_counts (bench.contest.test_contest.BuildPlane.test_every_i8_field_counts)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 89, in test_every_i8_field_counts
+    import admit
+ModuleNotFoundError: No module named 'admit'
+
+======================================================================
+ERROR: test_target_cpu_mismatch_is_refused (bench.contest.test_contest.BuildPlane.test_target_cpu_mismatch_is_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 83, in test_target_cpu_mismatch_is_refused
+    import admit
+ModuleNotFoundError: No module named 'admit'
+
+======================================================================
+ERROR: test_offset_class_refuses_an_arm_without_offsets (bench.contest.test_contest.PlaneEquivalence.test_offset_class_refuses_an_arm_without_offsets)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 69, in test_offset_class_refuses_an_arm_without_offsets
+    import admit
+ModuleNotFoundError: No module named 'admit'
+
+======================================================================
+ERROR: test_reference_arms_agree_on_every_p4_witness (bench.contest.test_contest.PlaneEquivalence.test_reference_arms_agree_on_every_p4_witness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 55, in test_reference_arms_agree_on_every_p4_witness
+    import admit
+ModuleNotFoundError: No module named 'admit'
+
+======================================================================
+ERROR: test_skip_unescape_mutant_is_refused (bench.contest.test_contest.PlaneEquivalence.test_skip_unescape_mutant_is_refused)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 60, in test_skip_unescape_mutant_is_refused
+    import admit
+ModuleNotFoundError: No module named 'admit'
+
+======================================================================
+ERROR: test_every_plane_has_a_spec (bench.contest.test_contest.Rows.test_every_plane_has_a_spec)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 121, in test_every_plane_has_a_spec
+    for p in {r["plane"] for r in self.rows()} - {"-"}:
+                                  ~~~~~~~~~^^
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 106, in rows
+    with open(os.path.join(HERE, "ROWS.tsv"), encoding="utf-8", newline="") as f:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/ROWS.tsv'
+
+======================================================================
+ERROR: test_every_row_has_a_class_and_a_checklist (bench.contest.test_contest.Rows.test_every_row_has_a_class_and_a_checklist)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 110, in test_every_row_has_a_class_and_a_checklist
+    rs = self.rows()
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 106, in rows
+    with open(os.path.join(HERE, "ROWS.tsv"), encoding="utf-8", newline="") as f:
+         ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/ROWS.tsv'
+
+======================================================================
+FAIL: test_no_megabit_or_legacy_predicate_in_bench_sources (bench.contest.test_contest.Units.test_no_megabit_or_legacy_predicate_in_bench_sources)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/S9-CON-SPEC/red-tree/bench/contest/test_contest.py", line 132, in test_no_megabit_or_legacy_predicate_in_bench_sources
+    self.assertEqual(out.stdout, "", "\n" + out.stdout[:2000])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'crates/core/tests/css_l4_w6_typed_retime.[73572 chars]",\n' != '' : 
+crates/core/tests/css_l4_w6_typed_retime.rs:140:    track1_typed_mbps: f64,
+crates/core/tests/css_l4_w6_typed_retime.rs:141:    cssparser_typed_mbps: f64,
+crates/core/tests/css_l4_w6_typed_retime.rs:142:    sota_threshold_mbps: f64,
+crates/core/tests/css_l4_w6_typed_retime.rs:143:    track1_margin_mbps: f64,
+crates/core/tests/css_l4_w6_typed_retime.rs:226:        let expected_threshold = self.cssparser_typed_mbps + W6_SOTA_EPSILON_MBPS;
+crates/core/tests/css_l4_w6_typed_retime.rs:227:        if !nearly_equal(self.sota_threshold_mbps, expected_threshold) {
+crates/core/tests/css_l4_w6_typed_retime.rs:231:            self.track1_margin_mbps,
+crates/core/tests/css_l4_w6_typed_retime.rs:232:            self.track1_typed_mbps - self.sota_threshold_mbps,
+crates/core/tests/css_l4_w6_typed_retime.rs:239:            && self.track1_typed_mbps > self.sota_threshold_mbps;
+crates/core/tests/css_l4_w6_typed_retime.rs:271:        "W6_CSS_TYPED_RETIME disposition={} reason={} corpus_bytes={} track1_mbps={:.3} cssparser_mbps={:.3} margin_mbps={:.3} track1_passes={} track1_errors={} cssparser_passes={} cssparser_errors={} shared_summary_equal={} track1_rules={} cssparser_rules={} track1_style={} cssparser_style={} track1_sel={} cssparser_sel={} track1_decls={} cssparser_decls={}",
+crates/core/tests/css_l4_w6_typed_retime.rs:275:        report.track1_typed_mbps,
+crates/core/tests/css_l4_w6_typed_retime.rs:276:        report.cssparser_typed_mbps,
+crates/core/tests/css_l4_w6_typed_retime.rs:277:        report.track1_margin_mbps,
+crates/core/tests/css_l4_w6_typed_retime.rs:334:        track1_typed_mbps: 12.0,
+crates/core/tests/css_l4_w6_typed_retime.rs:335:        cssparser_typed_mbps: 10.0,
+crates/core/tests/css_l4_w6_typed_retime.rs:336:        sota_threshold_mbps: 11.0,
+crates/core/tests/css_l4_w6_typed_retime.rs:337:        track1_margin_mbps: 1.0,
+crates/core/tests/css_l4_w6_typed_retime.rs:402:    let lightningcss_full_parse_mbps = throughput_mbps(profiled_bytes, lightningcss_elapse
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.103s
+
+FAILED (failures=1, errors=9)
+rc=1 at c725e622f

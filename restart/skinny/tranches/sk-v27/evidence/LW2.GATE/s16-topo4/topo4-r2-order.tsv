@@ -1,0 +1,12 @@
+parse-that-egraph-derive	5608b94	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+parse-that-egraph	5608b94	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+pprint_derive	fe7e9ca	/Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust/derive	rc=0
+pprint	fe7e9ca	/Users/mkbabb/Programming/pprint-wt/lw2-s3-dag/rust	rc=0
+pprint	b980672	/Users/mkbabb/Programming/pprint-wt/sk-v27-lw2/rust	rc=0
+parse-that-simd	5608b94	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+parse-that-regex	5608b94	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+parse_that	5608b94	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+bbnf-ser	6e1cd1813	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze	rc=0
+bbnf-ir	6e1cd1813	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze	rc=101
+publish rc=101
+consumer cargo +stable build rc=101

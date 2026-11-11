@@ -1,0 +1,160 @@
+--- /dev/null	2026-07-16 04:11:50
++++ a/parse-that/rust/regex/tests/sheng_census.rs	2026-07-16 04:10:23
+@@ -0,0 +1,157 @@
++//! LOCK-9 PROTO-2 — Tier-2 Sheng feasibility census.
++//!
++//! Compiles each archetypal scanner leaf through the existing pipeline
++//! (`Dfa::compile_with`, minimize=true → hopcroft_minimize) and prints
++//! `state_count() x class_count()`. Determines whether each leaf fits the
++//! NEON `vqtbl1q_u8` budget (Tier-2: state<=16 AND class<=16) or the
++//! `vqtbl4q_u8` budget (state*class <= 64).
++//!
++//! Sheng lowers the transition table as a byte-shuffle over bytes, so the
++//! honest model is BYTE mode (unicode=false). We also emit the unicode=true
++//! numbers (the literal `Dfa::compile` default) for transparency.
++
++use bbnf_regex::{Dfa, DfaOptions};
++
++/// (name, pattern) — the five archetypal scanner leaves named in the brief.
++const LEAVES: &[(&str, &str)] = &[
++    ("number", r"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?"),
++    ("string-body", r#""(?:[^"\\]|\\.)*""#),
++    ("ws+comment", r"(?:\s|/\*.*?\*/)*"),
++    ("identifier", r"[A-Za-z_][A-Za-z0-9_]*"),
++    ("hex", r"[0-9a-fA-F]+"),
++];
++
++struct Row {
++    name: &'static str,
++    states: usize,
++    classes: usize,
++    ok: bool,
++}
++
++fn compile_row(name: &'static str, pat: &str, unicode: bool) -> Row {
++    let opts = DfaOptions {
++        state_limit: 4096,
++        minimize: true,
++        unicode,
++    };
++    match Dfa::compile_with(pat, &opts) {
++        Some(dfa) => Row {
++            name,
++            states: dfa.state_count(),
++            classes: dfa.class_count(),
++            ok: true,
++        },
++        None => Row {
++            name,
++            states: 0,
++            classes: 0,
++            ok: false,
++        },
++    }
++}
++
++fn tier2_fit(r: &Row) -> bool {
++    r.ok && r.states <= 16 && r.classes <= 16
++}
++fn tbl4_fit(r: &Row) -> bool {
++    r.ok && r.states.saturating_mul(r.classes) <= 64
++}
++
++fn print_table(title: &str, rows: &[Row]) {
++    println!("\n=== {title} ===");
++    println!(
++        "{:<13} {:>7} {:>8} {:>9} | {:<18} {:<18}",
++        "leaf", "states", "classes", "s*c", "Tier-2 (<=16&<=16)", "tbl4 (s*c<=64)"
++    );
++    println!("{}", "-".repeat(80));
++    for r in rows {
++        if !r.ok {
++            println!(
++                "{:<13} {:>7} {:>8} {:>9} | {:<18} {:<18}",
++                r.name, "FAIL", "-", "-", "-", "-"
++            );
++            continue;
++        }
++        let sc = r.states * r.classes;
++        println!(
++            "{:<13} {:>7} {:>8} {:>9} | {:<18} {:<18}",
++            r.name,
++            r.states,
++            r.classes,
++            sc,
++            if tier2_fit(r) { "YES" } else { "no" },
++            if tbl4_fit(r) { "YES" } else { "no" },
++        );
++    }
++}
++
++#[test]
++fn sheng_census() {
++    println!("\n########## LOCK-9 PROTO-2 : Tier-2 Sheng feasibility census ##########");
++
++    let byte_rows: Vec<Row> = LEAVES
++        .iter()
++        .map(|(n, p)| compile_row(n, p, false))
++        .collect();
++    let uni_rows: Vec<Row> = LEAVES
++        .iter()
++        .map(|(n, p)| compile_row(n, p, true))
++        .collect();
++
++    print_table(
++        "BYTE mode (unicode=false) — the Sheng-relevant model",
++        &byte_rows,
++    );
++    print_table(
++        "UNICODE mode (unicode=true) — literal Dfa::compile default",
++        &uni_rows,
++    );
++
++    // Verdict is driven by the byte-mode numbers (a NEON byte shuffle consumes bytes).
++    let string_body = byte_rows.iter().find(|r| r.name == "string-body").unwrap();
++    let number = byte_rows.iter().find(|r| r.name == "number").unwrap();
++
++    let string_tbl4 = tbl4_fit(string_body);
++    let number_tbl4 = tbl4_fit(number);
++    let go = string_tbl4 && number_tbl4;
++
++    println!("\n=== VERDICT (byte mode) ===");
++    println!(
++        "string-body: {}x{} = {} s*c  -> tbl4(<=64): {}",
++        string_body.states,
++        string_body.classes,
++        string_body.states * string_body.classes,
++        if string_tbl4 { "FIT" } else { "EXCEEDS" }
++    );
++    println!(
++        "number:      {}x{} = {} s*c  -> tbl4(<=64): {}",
++        number.states,
++        number.classes,
++        number.states * number.classes,
++        if number_tbl4 { "FIT" } else { "EXCEEDS" }
++    );
++
++    let fit_count = byte_rows.iter().filter(|r| tbl4_fit(r)).count();
++    println!(
++        "\ntbl4-fitting leaves (byte mode): {}/{}  ({:.0}%)",
++        fit_count,
++        byte_rows.len(),
++        100.0 * fit_count as f64 / byte_rows.len() as f64
++    );
++    let t2_count = byte_rows.iter().filter(|r| tier2_fit(r)).count();
++    println!(
++        "Tier-2 (vqtbl1q, <=16&<=16) fitting leaves: {}/{}",
++        t2_count,
++        byte_rows.len()
++    );
++
++    println!(
++        "\n>>> VERDICT: {} <<<",
++        if go {
++            "TIER-2 GO (both string-body AND number fit <=64 s*c)"
++        } else {
++            "TIER-2 DEGRADE (string-body and/or number exceed 64 s*c; Sheng is a minority tier)"
++        }
++    );
++    println!("#####################################################################\n");
++}

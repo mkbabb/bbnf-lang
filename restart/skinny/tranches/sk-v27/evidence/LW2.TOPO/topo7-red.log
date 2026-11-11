@@ -1,0 +1,12 @@
+    Updating git submodule `git@github.com:mkbabb/precepts.git`
+warning: spurious network error (3 tries remaining): process didn't exit successfully: `git fetch --tags --force --update-head-ok 'git@github.com:mkbabb/precepts.git' '+refs/heads/*:refs/remotes/origin/*' '+HEAD:refs/remotes/origin/HEAD'` (exit status: 128)
+warning: spurious network error (2 tries remaining): process didn't exit successfully: `git fetch --tags --force --update-head-ok 'git@github.com:mkbabb/precepts.git' '+refs/heads/*:refs/remotes/origin/*' '+HEAD:refs/remotes/origin/HEAD'` (exit status: 128)
+warning: spurious network error (1 try remaining): process didn't exit successfully: `git fetch --tags --force --update-head-ok 'git@github.com:mkbabb/precepts.git' '+refs/heads/*:refs/remotes/origin/*' '+HEAD:refs/remotes/origin/HEAD'` (exit status: 128)
+error: failed to get `egraph` as a dependency of package `topo7-resolve v0.0.0 (/private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/topo7-resolve.qpdlcE/crate)`
+rev=492402233fd07997aceaedcb1cd71f2eee91f17d rc=101
+    Updating git submodule `git@github.com:mkbabb/precepts.git`
+warning: spurious network error (3 tries remaining): process didn't exit successfully: `git fetch --tags --force --update-head-ok 'git@github.com:mkbabb/precepts.git' '+refs/heads/*:refs/remotes/origin/*' '+HEAD:refs/remotes/origin/HEAD'` (exit status: 128)
+warning: spurious network error (2 tries remaining): process didn't exit successfully: `git fetch --tags --force --update-head-ok 'git@github.com:mkbabb/precepts.git' '+refs/heads/*:refs/remotes/origin/*' '+HEAD:refs/remotes/origin/HEAD'` (exit status: 128)
+warning: spurious network error (1 try remaining): process didn't exit successfully: `git fetch --tags --force --update-head-ok 'git@github.com:mkbabb/precepts.git' '+refs/heads/*:refs/remotes/origin/*' '+HEAD:refs/remotes/origin/HEAD'` (exit status: 128)
+error: failed to get `egraph` as a dependency of package `topo7-resolve v0.0.0 (/private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/topo7-resolve.3dTo7M/crate)`
+rev=492402233fd07997aceaedcb1cd71f2eee91f17d rc=101

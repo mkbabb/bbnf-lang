@@ -129,51 +129,42 @@ fn compile_prettify_node<E: Emitter>(
             // iteration separator bytes. Optional Repeats `?` and non-sep
             // policies flow through the normal compile path.
             let iterated = !(*lo == 0 && *hi == 1);
-            if iterated {
-                if let SeparatorPolicy::Custom(sep) = &plan.policy.separator {
-                    if let Some((main, silent, pos)) = split_inner_for_sep(inner, sep, ir) {
-                        let main_out =
-                            compile_prettify_node(&main, current_rule, plans, ir, emitter, ctx);
-                        let silent_inner =
-                            compile_prettify_node(&silent, current_rule, plans, ir, emitter, ctx);
-                        let silent_out = emitter.emit_prettify_silent(silent_inner, ctx);
-                        match pos {
-                            SilentPosition::After => {
-                                // `main << sep` — main emits first, sep-
-                                // parse is silent, outer Repeat emits the
-                                // pprint separator *between* iterations.
-                                let combined =
-                                    emitter.emit_prettify_seq(vec![main_out, silent_out], ctx);
-                                return emitter.emit_prettify_repeat(
-                                    combined,
-                                    *lo,
-                                    *hi,
-                                    &plan.policy,
-                                    ctx,
-                                );
-                            }
-                            SilentPosition::Before => {
-                                // `sep , main` — sep leads each iteration.
-                                // Emit the pprint separator inline at the
-                                // start of every iteration (including
-                                // iter 1), then silent-parse the matching
-                                // separator token, then emit main. The
-                                // outer Repeat runs with `None` separator
-                                // policy to avoid double-emitting.
-                                let sep_out = emitter.emit_prettify_sep_inline(sep, ctx);
-                                let combined = emitter
-                                    .emit_prettify_seq(vec![sep_out, silent_out, main_out], ctx);
-                                let mut inline_policy = plan.policy.clone();
-                                inline_policy.separator = SeparatorPolicy::None;
-                                return emitter.emit_prettify_repeat(
-                                    combined,
-                                    *lo,
-                                    *hi,
-                                    &inline_policy,
-                                    ctx,
-                                );
-                            }
-                        }
+            if iterated
+                && let SeparatorPolicy::Custom(sep) = &plan.policy.separator
+                && let Some((main, silent, pos)) = split_inner_for_sep(inner, sep, ir)
+            {
+                let main_out = compile_prettify_node(&main, current_rule, plans, ir, emitter, ctx);
+                let silent_inner =
+                    compile_prettify_node(&silent, current_rule, plans, ir, emitter, ctx);
+                let silent_out = emitter.emit_prettify_silent(silent_inner, ctx);
+                match pos {
+                    SilentPosition::After => {
+                        // `main << sep` — main emits first, sep-
+                        // parse is silent, outer Repeat emits the
+                        // pprint separator *between* iterations.
+                        let combined = emitter.emit_prettify_seq(vec![main_out, silent_out], ctx);
+                        return emitter.emit_prettify_repeat(combined, *lo, *hi, &plan.policy, ctx);
+                    }
+                    SilentPosition::Before => {
+                        // `sep , main` — sep leads each iteration.
+                        // Emit the pprint separator inline at the
+                        // start of every iteration (including
+                        // iter 1), then silent-parse the matching
+                        // separator token, then emit main. The
+                        // outer Repeat runs with `None` separator
+                        // policy to avoid double-emitting.
+                        let sep_out = emitter.emit_prettify_sep_inline(sep, ctx);
+                        let combined =
+                            emitter.emit_prettify_seq(vec![sep_out, silent_out, main_out], ctx);
+                        let mut inline_policy = plan.policy.clone();
+                        inline_policy.separator = SeparatorPolicy::None;
+                        return emitter.emit_prettify_repeat(
+                            combined,
+                            *lo,
+                            *hi,
+                            &inline_policy,
+                            ctx,
+                        );
                     }
                 }
             }

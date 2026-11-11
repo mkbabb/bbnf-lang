@@ -248,8 +248,10 @@ fn pipeline_resolver_matches_emitter_resolver() {
     // pipeline-side wrapper and the backend-side resolver fails
     // visibly here.
     let registry = populated_registry();
-    let mut ir = bbnf_ir::GrammarIR::default();
-    ir.struct_registry = registry;
+    let ir = bbnf_ir::GrammarIR {
+        struct_registry: registry,
+        ..bbnf_ir::GrammarIR::default()
+    };
 
     let pipeline_strategy = bbnf::pipeline::compile::resolve_emit_strategy("JsonParser", &ir);
     let emitter_strategy = EmitStrategy::for_grammar("JsonParser", &ir.struct_registry);

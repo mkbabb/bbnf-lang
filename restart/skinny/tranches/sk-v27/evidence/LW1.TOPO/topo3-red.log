@@ -1,0 +1,18 @@
+RED
+  no custody manifest at /Users/mkbabb/.dev-logs/bbnf-lockstep/custody/MANIFEST.sha256
+  no PRESERVE.tsv
+rc=1
+RED
+  no custody manifest at /Users/mkbabb/.dev-logs/bbnf-lockstep/custody/MANIFEST.sha256
+  no PRESERVE.tsv
+rc=1
+parse-that/dirty.patch: FAILED
+shasum: WARNING: 1 computed checksum did NOT match
+RED
+  shasum -c MANIFEST.sha256 failed
+rc=1
+parse-that/dirty.patch: FAILED
+shasum: WARNING: 1 computed checksum did NOT match
+RED
+  shasum -c MANIFEST.sha256 failed
+rc=1

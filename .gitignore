@@ -4,6 +4,11 @@ coverage/
 data/
 # the TS front end's JSON test fixture is checked in (bbnf.test.ts, conformance)
 !typescript/test/fixtures/data/
+# csp-solver's vendored sudoku template bank is compile-time SOURCE (embedded via
+# include_dir! in puzzles/sudoku/generate.rs), not a build artifact — re-include it
+# despite the blanket data/ rule so the vendored crate builds on a clean checkout.
+!crates/csp-solver/data/
+!crates/csp-solver/data/**
 .vscode/*
 !.vscode/launch.json
 !.vscode/tasks.json

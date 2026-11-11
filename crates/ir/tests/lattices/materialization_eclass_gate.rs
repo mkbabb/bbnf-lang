@@ -33,7 +33,7 @@ use bbnf_ir::passes::materialization::{
 use bbnf_ir::{
     AltBranch, CostConfig, GrammarIR, IrNode, IrRule, RuleMeta, StringId, TypeDescInterner,
 };
-use bbnf_regex::sets::charset::CharSet128;
+use parse_that_regex::sets::charset::CharSet128;
 
 // ── Fixture grammar helpers ──────────────────────────────────────────
 
@@ -81,7 +81,7 @@ fn make_ir_with_entry(rules: Vec<IrRule>, strings: Vec<String>, entry: u32) -> G
         inline_trace: bbnf_ir::passes::inline_trace::InlineTrace::default(),
         path_check_resolver: bbnf_ir::passes::path_check::PathCheckResolver::default(),
     };
-    bbnf_ir::dag::ensure_dag(&mut ir);
+    crate::support::ensure_dag(&mut ir);
     ir
 }
 

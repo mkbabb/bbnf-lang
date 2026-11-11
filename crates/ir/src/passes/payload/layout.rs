@@ -337,6 +337,7 @@ fn scalar_layout_eligible(ir: &GrammarIR, rule_id: RuleId, ty: &TypeDesc) -> boo
 ///   * a `Tuple(scalar_fields...)` whose `plan_layout` succeeds
 ///     (bounded by `MAX_PAYLOAD_BYTES` and all fields scalar), or
 ///   * a KV-pair shape `Tuple([Span, scalar])`.
+///
 /// Such a parent's body relies on the candidate's leaves to fill the
 /// shared aggregate buffer; forcing the child to carry its own
 /// layout orphans the parent's field.
@@ -498,7 +499,7 @@ pub fn plan_layout_with_cap(fields: &[TypeDesc], cap: u8) -> Option<PayloadLayou
         let size = f.payload_size_bytes()?;
         let align = f.payload_align_bytes()?;
         let aligned = (offset + align - 1) & !(align - 1);
-        if aligned.checked_add(size).map_or(true, |end| end > cap) {
+        if aligned.checked_add(size).is_none_or(|end| end > cap) {
             return None;
         }
         planned.push(PayloadField {

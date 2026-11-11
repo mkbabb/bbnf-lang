@@ -29,11 +29,12 @@ pub struct PipelineOptions {
 }
 
 /// Backend-specific compilation target.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum CompileTarget {
     /// Prepare the grammar for Rust codegen (monolithic recursive descent).
     Rust { requested_prettify: bool },
     /// Produce a VM-ready `GrammarIR`.
+    #[default]
     Vm,
     /// Emit TypeScript source code (direct recursive descent).
     Ts,
@@ -41,9 +42,17 @@ pub enum CompileTarget {
     Wasm,
 }
 
-impl Default for CompileTarget {
-    fn default() -> Self {
-        Self::Vm
+impl CompileTarget {
+    /// How this backend's regex leaf resolves an alternation. The TS backend
+    /// runs ECMAScript `RegExp` (leftmost-first); the Rust, VM and WASM
+    /// backends run parse-that-regex's DFA (leftmost-longest).
+    pub fn leaf_match(&self) -> bbnf_ir::egraph::LeafMatch {
+        match self {
+            CompileTarget::Ts => bbnf_ir::egraph::LeafMatch::LeftmostFirst,
+            CompileTarget::Rust { .. } | CompileTarget::Vm | CompileTarget::Wasm => {
+                bbnf_ir::egraph::LeafMatch::LeftmostLongest
+            }
+        }
     }
 }
 
@@ -57,8 +66,8 @@ pub struct CompileRequest {
 /// Output of a compilation request.
 #[derive(Debug)]
 pub enum CompileOutput {
-    Rust(crate::backend::PreparedGrammar),
-    Vm(GrammarIR),
+    Rust(Box<crate::backend::PreparedGrammar>),
+    Vm(Box<GrammarIR>),
     /// Generated TypeScript source code.
     Ts(String),
     /// Generated WASM module bytes.
@@ -70,10 +79,27 @@ pub enum CompileOutput {
 pub enum CompileError {
     Parse(String),
     Import(String),
-    UnknownPrettyHint { rule: String, hint: String },
-    UndefinedPrettyRule { rule: String },
-    UnknownNonterminal { rule: String, name: String },
-    InvalidProductionRule { rule: String },
+    UnknownPrettyHint {
+        rule: String,
+        hint: String,
+    },
+    UndefinedPrettyRule {
+        rule: String,
+    },
+    UnknownNonterminal {
+        rule: String,
+        name: String,
+    },
+    InvalidProductionRule {
+        rule: String,
+    },
+    /// Two forces require different call modes for one rule (the
+    /// inline CSP is unsatisfiable).
+    CallModeConflict {
+        rule: String,
+        first: bbnf_ir::passes::call_mode::CallModeForce,
+        second: bbnf_ir::passes::call_mode::CallModeForce,
+    },
 }
 
 impl fmt::Display for CompileError {
@@ -96,6 +122,16 @@ impl fmt::Display for CompileError {
                     "rule `{rule}` contains a production rule in expression position"
                 )
             }
+            Self::CallModeConflict {
+                rule,
+                first,
+                second,
+            } => write!(
+                f,
+                "rule `{rule}` is contradictory: {first} requires {:?} and {second} requires {:?}",
+                first.mode(),
+                second.mode()
+            ),
         }
     }
 }

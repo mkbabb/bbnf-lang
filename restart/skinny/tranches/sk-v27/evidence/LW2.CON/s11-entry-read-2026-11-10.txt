@@ -1,0 +1,27 @@
+LW2 S11-BENCH entry read, 2026-11-10 17:24-17:30 -0500, after the 2026-11-10 reboot (light reads only; nothing measured)
+integration tip: bbnf-lang origin/sk-v27-lw2 f292c213b; parse-that origin/sk-v27-lw2 e2d1af5
+seat branch lw2/s11-bench: merged origin/sk-v27-lw2 (d92629cbf; LEDGER conflict kept both sides)
+
+Machine (X-7, order section 5) -- now ADMISSIBLE, read x2:
+  read 1 17:24:55  load {5.70 9.47 10.29}  therm: no warning  guarded --exclusive bench --cpu-cores 0 rc 0
+  read 2 17:25:23  load {5.37 9.02 10.10}  therm: no warning  guarded --exclusive bench --cpu-cores 0 rc 0
+  zone.log inuse 6016, slope -1.5/s (post-reboot); no bbnf/parse-that/pprint process live (seat is alone)
+  raw: ~/.dev-logs/bbnf-lockstep/lw2/s11-bench/entry2-read{1,2}.log
+
+Phase 3 entry (order section 2 "every Phase 2 seat merged; PREREG hash committed"; S14 S12-P4-6 BINDS:
+"Phase 3 opens only when every Phase 2 seat is merged, and that includes S6's PERF-1"):
+  PREREG at sk-v27-lw2  GREEN x2  test_prereg.py 6 passed x2; sha256 ed4ef41b5d8c = cited; 8 sections
+                        but it lacks the paired cure cells S12-P4-6 requires (F-CURE-RX4, F-CURE-PERF3)
+  S6 PERF  NOT merged   bbnf-lang origin/lw2/s6-perf 7adb65bb6, parse-that 011ba27: not ancestors of sk-v27-lw2
+                        PERF-1 PARTIAL: PERF-1b (fold skinny/crates/bbnf-simd into parse-that-simd) owed
+  S7 RX    NOT merged   bbnf-lang origin/lw2/s7-rx a88b12d65, parse-that 816cba0: not ancestors
+  PREREG fork: s6-perf digest 3b4ad169f038 (adds section "10" F-CURE-PERF3), s7-rx digest 321e43ad41c5
+               (adds section "9" F-CURE-RX4); both append after section 8.
+               git merge-tree s6-perf s7-rx: CONFLICT in bench/PREREG.md, PREREG.md.sha256, test_prereg.py, LEDGER.md
+               -> no single committed PREREG hash covers both cells; S11 would refuse both cells (unregistered at the base)
+  -> entry condition RED x2 (code side only)
+
+Consequence: LW2.CON-2, COMP-1 verdicts, RX-1/USE/G-S cells not started. No record, floor or NOISY label written.
+Measuring now would take baselines on the pre-PERF-1 scalar plane, which S14 rejected (S12-P4-6, second half).
+Owed to open Phase 3: S6 PERF-1b banked; S6+S7 merged into sk-v27-lw2 (both repos) with one PREREG
+(sections 9 and 10 kept, digest re-taken once, test_prereg GREEN x2); then re-dispatch S11 alone.

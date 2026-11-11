@@ -37,7 +37,7 @@ use bbnf::runtime::css_l4::{CssColor, CssDimension, CssTypedValue};
 // `grammar/css/l4/color.bbnf` lives in `bbnf::css_types` — the canonical
 // shim (REAUDIT-2026-04-30 lane 3 §5.1 retired the inline duplicates).
 #[allow(unused_imports)]
-use bbnf::css_types as _css_types_link;
+use bbnf::runtime::css_l4::host as _css_types_link;
 
 use ::bbnf::grammar::generated::css_l4::*;
 
@@ -322,7 +322,7 @@ fn selector_parses_without_payload_loss() {
     let input = ".foo#bar > baz.qux:hover { color: red; }";
     let doc = CssL4Parser::parse(input).expect("parse");
     assert!(
-        doc.rules(doc.root().rules).len() > 0,
+        !doc.rules(doc.root().rules).is_empty(),
         "selector parse must produce a non-empty CssDocument rule list"
     );
 }

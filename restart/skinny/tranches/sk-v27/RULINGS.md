@@ -67,3 +67,12 @@ The third reading of LG-2 (value.js COHESION §0hz.lw2, evidence `lw2/lg2-r3` `0
 | S11-A | **No.** No bench is taken before PERF-1b is banked and S6 and S7 are merged with PREREG reconciled. |
 | S15-A | **No.** pprint does not merge early. |
 | LG-2-A | **No.** The three LW2 PRs (bbnf-lang #12, parse-that #4, pprint #3) merge together, through the gate, after every row is GREEN ×2. |
+
+## Addendum, 2026-11-11: the FLOORS adoption and the LW2.CON-2s seal (seat S15 FREEZE, under the delegate's pre-ruling)
+
+The delegate (value-js-65) pre-ruled at S15's dispatch: adopt S11's floor proposal if it follows the larger-of-10 %-and-3×-A/A rule exactly, otherwise return the ask. It does, so the row below is that pre-ruling applied, not a new ruling.
+
+| # | Ruling |
+|---|---|
+| FLOORS | **G-G2 (F-JS) = 10.0 %, FROZEN.** S11's proposal (`bench/FLOORS-PROPOSED.tsv`, `lw2/s11-bench` `0879d876e`) reads A/A noise 2.489 % (C-G2-AA, 220 QUIET pairs, CI99 [−0.060, +2.489] %), 3 × noise = 7.467 %, so `max(10 %, 3 × noise)` = 10.0 %, which is the proposal; U4 (a) PASS, U4 (b) PASS (C-G2-SLOW +14.08 %, LOSS). Every other goal keeps S11's state: G-J1, G-J3, G-C1, G-C2, G-G1, G-G3, G-P2, G-E1 and P-5 NOISY-UNFROZEN (no admissible A/A), G-R2 and G-P1 BLOCKED, G-R1 n/a. The floor was read from QUIET blocks under LW2-ORDER §5's QoS reading, which is not yet ruled; the plan fixes the effect of the other answer (G-G2 → NOISY-UNFROZEN, nothing else moves), so the QoS ruling needs no plan addendum. |
+| CON-2s | `bench/DECISION-PLAN.lw2.json` is sealed: sha256 `9882d5a1e0048c3446b054796aa300ce7e7b4e579e521e740040c822207c76bf`. It fixes the gate values, the 76 registered cells (PREREG §6–§11, sealed over PREREG sha256 `55acca83…`), the 14 families with their primary competitors as PREREG §4 names them (none where §4 names none), the 13 goal rows and the 72 h per-unit budgets with their clock starts. Any change needs an addendum here with owner sign-off (competition U6s). |

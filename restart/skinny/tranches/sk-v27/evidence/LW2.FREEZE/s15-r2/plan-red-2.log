@@ -1,0 +1,26 @@
+test_every_goal_has_one_row (bench.test_decision_plan.DecisionPlan.test_every_goal_has_one_row) ... ok
+test_every_registered_cell_once (bench.test_decision_plan.DecisionPlan.test_every_registered_cell_once) ... ok
+test_frozen_floors_follow_the_rule (bench.test_decision_plan.DecisionPlan.test_frozen_floors_follow_the_rule) ... ok
+test_sealed_over_the_prereg_of_record (bench.test_decision_plan.DecisionPlan.test_sealed_over_the_prereg_of_record) ... ok
+test_sha256_is_cited_in_rulings (bench.test_decision_plan.DecisionPlan.test_sha256_is_cited_in_rulings) ... FAIL
+
+======================================================================
+FAIL: test_sha256_is_cited_in_rulings (bench.test_decision_plan.DecisionPlan.test_sha256_is_cited_in_rulings)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s15-freeze/bench/test_decision_plan.py", line 35, in test_sha256_is_cited_in_rulings
+    self.assertEqual(cited, [_sha256(PLAN)], "RULINGS.md must cite the plan's sha256 exactly once")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Lists differ: [] != ['9882d5a1e0048c3446b054796aa300ce7e7b4e579e521e740040c822207c76bf']
+
+Second list contains 1 additional elements.
+First extra element 0:
+'9882d5a1e0048c3446b054796aa300ce7e7b4e579e521e740040c822207c76bf'
+
+- []
++ ['9882d5a1e0048c3446b054796aa300ce7e7b4e579e521e740040c822207c76bf'] : RULINGS.md must cite the plan's sha256 exactly once
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.002s
+
+FAILED (failures=1)

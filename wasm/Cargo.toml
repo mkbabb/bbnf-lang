@@ -16,7 +16,7 @@ gorgeous = { version = "0.1", path = "../crates/gorgeous", features = ["vm", "bb
 # The sibling repositories, as git + rev edges with their crates.io versions
 # (the root workspace's [workspace.dependencies] pins, sk-v27 LW2.TOPO-1).
 pprint = { version = "0.3", git = "https://github.com/mkbabb/pprint", rev = "fe7e9cad4547c898426ad527284600c72af02b4b" }
-parse_that = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "bb864d58555d43bb536c771a6e16b3e570d6d902" }
+parse_that = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "09941e140b9750cbc5859a4bc25cdfad1552d0ba" }
 ls-types = "0.0.6"
 wasm-bindgen = "0.2"
 js-sys = "0.3"

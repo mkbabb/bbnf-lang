@@ -431,7 +431,7 @@ fn step<'r>(
     registry: &'r StructRegistry,
 ) -> Result<ResolveCursor<'r>> {
     match cursor {
-        ResolveCursor::Layout(layout) => step_into_layout(layout, segment, segment_index),
+        ResolveCursor::Layout(layout) => step_into_layout(layout, segment, segment_index, registry),
         ResolveCursor::Type(ty, parent) => {
             step_into_type(ty, parent, segment, segment_index, registry)
         }
@@ -442,6 +442,7 @@ fn step_into_layout<'r>(
     layout: &'r StructLayout,
     segment: &OwnedSegment,
     segment_index: usize,
+    registry: &'r StructRegistry,
 ) -> Result<ResolveCursor<'r>> {
     match segment {
         OwnedSegment::Field { text, span } => match layout.kind {
@@ -456,7 +457,12 @@ fn step_into_layout<'r>(
                 ),
             )),
             _ => match layout.field(text) {
-                Some(field) => descend_type(&field.type_desc, layout.rule_name.as_str()),
+                // A `RuleReference` field (`json = ws >> value << ws`) is the
+                // referenced rule itself: descend into its layout.
+                Some(field) => match field.target_rule().and_then(|id| registry.layout(id)) {
+                    Some(target) => Ok(ResolveCursor::Layout(target)),
+                    None => descend_type(&field.type_desc, layout.rule_name.as_str()),
+                },
                 None => Err(Error::new(
                     *span,
                     format!(
@@ -560,7 +566,7 @@ fn step_into_type<'r>(
             // table on `GrammarIR`; the IR `path_check` pass (W2.2)
             // does the real `Named` → layout walk through that table.
             match registry.layout(*name_id) {
-                Some(layout) => step_into_layout(layout, segment, segment_index),
+                Some(layout) => step_into_layout(layout, segment, segment_index, registry),
                 None => Err(Error::new(
                     segment.span(),
                     format!(

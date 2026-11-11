@@ -1,9 +1,11 @@
-//! Mine `RecognizerShape::SeparatorList` records on `Skip(element, opt_sep)`
-//! patterns where the separator is a single-byte literal.
+//! Mine `RecognizerShape::SeparatorList` records on the strict separated
+//! list `element (sep element)*` (`passes::inspect::sep_list`) where the
+//! separator is a single-byte literal. `( element << sep ? ) *` reads
+//! literally (ruling S1-B) and is not mined.
 
 use crate::IrNode;
 use crate::dag::NodeId;
-use crate::passes::inspect::single_byte_literal;
+use crate::passes::inspect::sep_list;
 use crate::passes::patterns::{
     OnePassGrade, OutputShape, Recognizer, RecognizerRole, RecognizerShape,
 };
@@ -21,20 +23,18 @@ impl RecognizerMiner for SeparatorListMiner {
         ctx: &RecognizerMineCtx,
         outputs: &mut MineOutputs,
     ) {
-        let IrNode::Skip(element, opt_sep) = node else {
+        // Only the strict separated list `x (sep x)*` is a separator
+        // list; `x << sep ?` under a repeat reads literally (S1-B).
+        let IrNode::Seq(_) = node else {
             return;
         };
-        let IrNode::Repeat {
-            inner,
-            lo: 0,
-            hi: 1,
-        } = opt_sep.as_ref()
-        else {
+        let Some(list) = sep_list(node) else {
             return;
         };
-        let Some(sep_byte) = single_byte_literal(inner, ctx.ir) else {
+        let Some(sep_byte) = list.separator_byte(ctx.ir) else {
             return;
         };
+        let element = list.element;
 
         let element_shape = element_shape_from(element);
         let element_sig = compute_shape_hash(

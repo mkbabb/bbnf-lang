@@ -41765,7 +41765,8 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 4294967295u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let at = *p;
@@ -41790,6 +41791,10 @@ mod __cssl4parser_emit_impl {
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }
@@ -42081,7 +42086,8 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 4294967295u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let at = *p;
@@ -42106,6 +42112,10 @@ mod __cssl4parser_emit_impl {
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }
@@ -44317,7 +44327,8 @@ mod __cssl4parser_emit_impl {
                 builder,
                 cursor,
             )?;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 1u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let at = *p;
@@ -44336,6 +44347,10 @@ mod __cssl4parser_emit_impl {
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }
@@ -44426,7 +44441,8 @@ mod __cssl4parser_emit_impl {
                 builder,
                 cursor,
             )?;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 1u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let at = *p;
@@ -44445,6 +44461,10 @@ mod __cssl4parser_emit_impl {
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }
@@ -45178,7 +45198,8 @@ mod __cssl4parser_emit_impl {
                     cursor,
                 )
             })?;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 1u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let at = *p;
@@ -45203,6 +45224,10 @@ mod __cssl4parser_emit_impl {
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }
@@ -49988,7 +50013,8 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 4294967295u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let at = *p;
@@ -50015,6 +50041,15 @@ mod __cssl4parser_emit_impl {
                     *p = __save;
                     break;
                 }
+                __reps += 1;
+                if *p == __save {
+                    break;
+                }
+            }
+            if __reps < 1u32 {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                    offset: *p as u32,
+                });
             }
             let at = *p;
             let end = at + 1usize;
@@ -50100,7 +50135,8 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 4294967295u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let at = *p;
@@ -50127,6 +50163,15 @@ mod __cssl4parser_emit_impl {
                     *p = __save;
                     break;
                 }
+                __reps += 1;
+                if *p == __save {
+                    break;
+                }
+            }
+            if __reps < 1u32 {
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                    offset: *p as u32,
+                });
             }
             let at = *p;
             let end = at + 1usize;

@@ -1,19 +1,9 @@
 AZ-IV.W5.2 ts_node_execute
-node_version=v22.15.0
-commit=9cef79c563ba47fb418a2028a4e20b1de4dd6748
-unix_ts=1777763368
-status=fail-w1-gap
+node_version=v26.0.0
+commit=b38af49ea031d3341c09c8f30f3a2409297c05da
+unix_ts=1794352816
+status=pass
 path=$.statuses[0].text
-reason=TS-emitted parser cannot navigate object.value
-detail=W1 backend-ts emits count-only repeats; object/array `value` is a span over input range, not an aggregated array of pairs/elements. Path-walk fails at first object descent.
-stderr_first_400=file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmp9ugOkg/runner.mjs:46
-    for (const p of pairs) {
-                    ^
-
-TypeError: pairs is not iterable
-    at getField (file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmp9ugOkg/runner.mjs:46:21)
-    at file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmp9ugOkg/runner.mjs:76:7
-
-Node.js v22.15.0
-
-stdout_first_400=
+leaf_byte_len=362
+leaf_json="@aym0566x \n\n名前:前田あゆみ\n第一印象:なんか怖っ！\n今の印象:とりあえずキモい。噛み合わない\n好きなところ:ぶすでキモいとこ😋✨✨\n思い出:んーーー、ありすぎ😊❤️\nLINE交換できる？:あぁ……ごめん✋\nトプ画をみて:照れますがな😘✨\n一言:お前は一生もんのダチ💖"
+rust_eager==rust_lazy==ts: byte-for-byte

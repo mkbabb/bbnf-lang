@@ -32,7 +32,7 @@ macro_rules! bench {
                 let r = interp.run();
                 assert!(r.success, concat!($file, ": VM parse failed"));
                 assert!(
-                    r.offset as usize >= input.trim_end().len(),
+                    r.offset as usize == input.len(),
                     concat!($file, ": VM incomplete parse ({}/{})"),
                     r.offset,
                     input.len(),

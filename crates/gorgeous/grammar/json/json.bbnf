@@ -7,10 +7,10 @@ comma = "," ?w ;
 colon = ":" ?w ;
 
 string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ;
-array = "[" >> (( value << comma ? ) *)?w << "]" ;
+array = "[" >> (( value , ( comma >> value ) * ) ?)?w << "]" ;
 
 pair = string, colon >> value ;
-object = "{" >> (( pair << comma ? ) *)?w << "}" ;
+object = "{" >> (( pair , ( comma >> pair ) * ) ?)?w << "}" ;
 
 value = object | array | string | number | bool | null ;
 

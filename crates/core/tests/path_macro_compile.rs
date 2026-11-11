@@ -12,10 +12,10 @@
 //!
 //! Coverage:
 //!
-//! 1. JSON: `path!(Json, "@branch_0")` — variant-select on the `value`
+//! 1. JSON: `path!(Json, "value", "@branch_0")` — variant-select on the `value`
 //!    tagged-enum's first branch. The closest production analogue of
 //!    the W2.4 hard-gate path semantics.
-//! 2. JSON: `path!(Json, "@branch_4")` — variant-select on a different
+//! 2. JSON: `path!(Json, "value", "@branch_4")` — variant-select on a different
 //!    branch index.
 //! 3. CssL4: `path!(CssL4, "ruleList")` resolves to `ruleList` on the
 //!    `stylesheet` struct root.
@@ -29,23 +29,25 @@ use bbnf_path::path;
 
 #[test]
 fn json_first_branch_variant_select_compiles() {
-    // The JSON grammar's `value` rule is a tagged-enum over the six
+    // The JSON grammar's root is `json = ws >> value << ws`; its one
+    // field is the `value` rule reference, a tagged-enum over the six
     // alternatives in `value = object | array | string | number |
     // bool | null`. Selecting the first branch via `@branch_0`
     // exercises the variant-select path against the production
     // registry.
-    let p: TypedPath<Json, ()> = path!(Json, "@branch_0");
-    assert_eq!(p.len(), 1);
+    let p: TypedPath<Json, ()> = path!(Json, "value", "@branch_0");
+    assert_eq!(p.len(), 2);
     let owned = p.owned_segments();
-    assert!(matches!(&owned[0], OwnedPathSegment::VariantName(s) if s == "branch_0"));
+    assert!(matches!(&owned[0], OwnedPathSegment::Field(s) if s == "value"));
+    assert!(matches!(&owned[1], OwnedPathSegment::VariantName(s) if s == "branch_0"));
 }
 
 #[test]
 fn json_branch_4_variant_select_compiles() {
-    let p: TypedPath<Json, ()> = path!(Json, "@branch_4");
-    assert_eq!(p.len(), 1);
+    let p: TypedPath<Json, ()> = path!(Json, "value", "@branch_4");
+    assert_eq!(p.len(), 2);
     let owned = p.owned_segments();
-    assert!(matches!(&owned[0], OwnedPathSegment::VariantName(s) if s == "branch_4"));
+    assert!(matches!(&owned[1], OwnedPathSegment::VariantName(s) if s == "branch_4"));
 }
 
 #[test]
@@ -75,8 +77,8 @@ fn fully_qualified_marker_path_compiles() {
     // The grammar argument may be a Rust path of any depth; the macro
     // reads the trailing identifier as the registry key and passes the
     // full path through to the emitted `TypedPath::<...>`.
-    let p: TypedPath<bbnf::path::Json, ()> = path!(bbnf::path::Json, "@branch_0");
-    assert_eq!(p.len(), 1);
+    let p: TypedPath<bbnf::path::Json, ()> = path!(bbnf::path::Json, "value", "@branch_0");
+    assert_eq!(p.len(), 2);
 }
 
 // AZ-IV.W5 T4 — wildcard production-registry coverage deferred. The

@@ -72,7 +72,7 @@ paren_expr = "(" , expression ?w , ")" ;
 func_open = identifier , "(" ;
 arg = expression ? ;
 comma = "," ?w ;
-func_args = (arg << comma ?) + ;
+func_args = arg , (comma >> arg) * ;
 func_call = func_open , (func_args ?) ?w , ")" ;
 
 // LET(name, value, name, value, ..., body) — paired bindings
@@ -81,7 +81,7 @@ let_args = (let_binding << comma) * , expression ;
 let_call = /[lL][eE][tT]\(/ , let_args ?w , ")" ;
 
 // LAMBDA(param, param, ..., body) — params + body
-lambda_params = (expression << comma ?) + ;
+lambda_params = expression , (comma >> expression) * ;
 lambda_call = /[lL][aA][mM][bB][dD][aA]\(/ , lambda_params ?w , ")" ;
 
 // ── Array literal ───────────────────────────────────────────────────

@@ -39,8 +39,12 @@ pub(super) fn emit_separator_ops(policy: &PrettyPolicy) -> TokenStream {
         },
         SeparatorPolicy::Custom(sep_str) => {
             let sep_lit = proc_macro2::Literal::string(sep_str);
-            // Sep with empty brk: flat -> emit flat bytes, break -> newline.
-            quote! { __builder.sep(#sep_lit, ""); }
+            let brk_lit = proc_macro2::Literal::string(sep_str.trim_end());
+            // Flat mode emits the separator; break mode emits its
+            // non-blank part, then the newline. An empty break text
+            // dropped the `,` of `sep(", ")`, which changed the
+            // formula a broken group printed.
+            quote! { __builder.sep(#sep_lit, #brk_lit); }
         }
     }
 }

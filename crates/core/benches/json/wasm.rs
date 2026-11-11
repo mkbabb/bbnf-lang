@@ -220,7 +220,7 @@ macro_rules! bench {
                 // Warmup + correctness: assert the parse consumed full input.
                 let result = parse.call(&mut store, (0, input_len as i32)).unwrap();
                 assert!(
-                    result >= 0 && (result as usize) >= input.trim_end().len(),
+                    result >= 0 && (result as usize) == input.len(),
                     concat!($file, ": WASM parse failed or incomplete ({}/{})"),
                     result,
                     input.len(),

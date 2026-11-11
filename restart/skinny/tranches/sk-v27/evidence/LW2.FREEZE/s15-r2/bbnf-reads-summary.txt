@@ -1,0 +1,9 @@
+corpus rc=0
+metadata-locked rc=0
+regen-check-1 rc=0
+regen-check-2 rc=0
+nextest-1 rc=0
+nextest-2 rc=0
+wasm-check-1 rc=0
+wasm-check-2 rc=0
+DONE

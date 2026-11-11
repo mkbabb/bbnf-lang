@@ -1,0 +1,30 @@
+bbnf-lang#12	33fd03d7e	pass	Extension — lint + build	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773356
+bbnf-lang#12	33fd03d7e	pass	Rust (macos-15) — preflight + workspace close (shard 1/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773181
+bbnf-lang#12	33fd03d7e	pass	Rust (macos-15) — preflight + workspace close (shard 2/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773053
+bbnf-lang#12	33fd03d7e	pass	Rust (macos-15) — preflight + workspace close (shard 3/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773217
+bbnf-lang#12	33fd03d7e	pass	Rust (ubuntu-latest) — preflight + workspace close (shard 1/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773119
+bbnf-lang#12	33fd03d7e	pass	Rust (ubuntu-latest) — preflight + workspace close (shard 2/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773190
+bbnf-lang#12	33fd03d7e	pass	Rust (ubuntu-latest) — preflight + workspace close (shard 3/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773213
+bbnf-lang#12	33fd03d7e	pass	Rust — Intel SDE (AVX-512, generated parsers)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773168
+bbnf-lang#12	33fd03d7e	pass	Rust — cargo +stable (latest)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773131
+bbnf-lang#12	33fd03d7e	pass	Rust — hermetic clean-clone build	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773171
+bbnf-lang#12	33fd03d7e	pass	TypeScript — tests (with the Rust parity arm)	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130663773351
+bbnf-lang#12	33fd03d7e	pass	ci-ok	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155262/job/130686368302
+bbnf-lang#12	33fd03d7e	pass	iai-bench	https://github.com/mkbabb/bbnf-lang/actions/runs/43061155334/job/130670111575
+parse-that#4	1dea59e9e	pass	Rust (macos-15) — clippy + nextest	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661845432
+parse-that#4	1dea59e9e	pass	Rust (ubuntu-latest) — clippy + nextest	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661844693
+parse-that#4	1dea59e9e	pass	Rust — Intel SDE (AVX-512, sapphirerapids)	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661844187
+parse-that#4	1dea59e9e	pass	Rust — cargo +stable (latest)	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661844754
+parse-that#4	1dea59e9e	pass	Rust — nightly plane (parse_that/nightly)	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661844696
+parse-that#4	1dea59e9e	pass	Rust — repo DAG + hermetic clean-clone build	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661844810
+parse-that#4	1dea59e9e	pass	Rust — wasm32 SIMD128 (parse-that-simd, Node WASI)	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661844847
+parse-that#4	1dea59e9e	pass	ci-ok	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130681053687
+parse-that#4	1dea59e9e	pass	typescript	https://github.com/mkbabb/parse-that/actions/runs/43060610987/job/130661844883
+pprint#3	bc9d47feb	pass	Rust (macos-15) — clippy + nextest	https://github.com/mkbabb/pprint/actions/runs/43041059704/job/130592643930
+pprint#3	bc9d47feb	pass	Rust (ubuntu-latest) — clippy + nextest	https://github.com/mkbabb/pprint/actions/runs/43041059704/job/130592643660
+pprint#3	bc9d47feb	pass	Rust — Intel SDE (AVX-512, sapphirerapids)	https://github.com/mkbabb/pprint/actions/runs/43041059704/job/130592643691
+pprint#3	bc9d47feb	pass	Rust — cargo +stable (latest)	https://github.com/mkbabb/pprint/actions/runs/43041059704/job/130592643720
+pprint#3	bc9d47feb	pass	Rust — repo DAG + hermetic clean-clone build	https://github.com/mkbabb/pprint/actions/runs/43041059704/job/130592643191
+pprint#3	bc9d47feb	pass	ci-ok	https://github.com/mkbabb/pprint/actions/runs/43041059704/job/130604123591
+pprint#5	32d73ca44	pass	Clippy + Test	https://github.com/mkbabb/pprint/actions/runs/43041003613/job/130592440931
+pprint#5	32d73ca44	pass	Rust — repo DAG + hermetic clean-clone build	https://github.com/mkbabb/pprint/actions/runs/43041003613/job/130592441496

@@ -1,0 +1,3 @@
+workspace rust:
+  no cross-repository edge
+repo DAG: GREEN (every cross-repository edge is parse-that -> pprint, bbnf-lang -> parse-that or bbnf-lang -> pprint)

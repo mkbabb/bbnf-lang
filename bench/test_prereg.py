@@ -93,6 +93,22 @@ class Prereg(unittest.TestCase):
         self.assertRegex(t, r"F-CURE-PERF3[^\n]*not a contest")
         self.assertRegex(t, r"(?s)PERF-3[^\n]*correctness cure[^\n]*LOSS")
 
+    def test_or7_parity_cells_are_registered(self):
+        # RULINGS 2026-11-10b OR-7 (Route A PROVISIONAL): its closing cells, G-R2 leaf throughput and G-P1 emitted
+        # code, Route A against Route B in family F-REGEX, are registered before Phase 3, with the close/reopen rule.
+        t = _text()
+        cells = re.findall(r"^\| (C-OR7-(GR2|GP1)-[A-Z0-9-]+) \| F-REGEX \| (G-R2|G-P1) \|.*\| PORTABLE \|$", t, re.M)
+        self.assertEqual({c[0] for c in cells},
+                         {"C-OR7-GR2-FIND", "C-OR7-GR2-ANCHORED", "C-OR7-GP1-CSSL4-BOOTSTRAP",
+                          "C-OR7-GP1-CSSL4-TAILWIND", "C-OR7-GP1-JSON-TWITTER"}, cells)
+        for c, short, goal in cells:
+            self.assertEqual(goal, "G-" + short[1:], c)
+        for c in re.findall(r"^\| C-OR7-GR2-[A-Z]+ \|.*$", t, re.M):
+            self.assertIn("| `5999f9c` | `2d01be6` |", c)
+        self.assertRegex(t, r"(?s)OR-7 closes when every cell reads WIN or TIE for Route A")
+        self.assertRegex(t, r"LOSS beyond the frozen G-R2 or G-P1 floor[^\n]*reopens OR-7")
+        self.assertRegex(t, r"(?m)^\| F-REGEX \|[^\n]*§11")
+
     def test_noisy_never_certifies(self):
         self.assertRegex(_text(), r"NOISY[^\n]*never certif")
 

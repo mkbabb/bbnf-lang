@@ -1,0 +1,40 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling quote v1.0.45
+   Compiling unicode-ident v1.0.24
+   Compiling bitflags v2.11.0
+   Compiling shlex v1.3.0
+   Compiling find-msvc-tools v0.1.9
+   Compiling zmij v1.0.21
+   Compiling serde_core v1.0.228
+   Compiling serde_json v1.0.149
+   Compiling smallvec v1.15.1
+   Compiling rustc-hash v2.1.2
+   Compiling cfg-if v1.0.4
+   Compiling memchr v2.8.0
+   Compiling itoa v1.0.18
+   Compiling libc v0.2.184
+   Compiling cc v1.2.58
+   Compiling errno v0.3.14
+   Compiling rustix v1.1.4
+   Compiling terminal_size v0.4.4
+   Compiling libmimalloc-sys v0.1.44
+   Compiling clap_builder v4.6.0
+   Compiling syn v2.0.117
+   Compiling include_dir_macros v0.7.4
+   Compiling clap v4.6.1
+   Compiling include_dir v0.7.4
+   Compiling csp-solver v0.4.0
+   Compiling mimalloc v0.1.48
+   Compiling parse-that-egraph v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust/egraph)
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust/egraph-derive)
+   Compiling divan-macros v0.1.21
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust/regex)
+   Compiling divan v0.1.21
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.62s
+     Running tests/abi_fingerprint.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-shared/debug/deps/abi_fingerprint-b7d76e4a69260e8a)
+
+running 1 test
+test hir_abi_fingerprint_is_recorded ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

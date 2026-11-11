@@ -6,8 +6,8 @@
 #  - the crates.io read adds the version-line rule: for each crate crates.io already holds, its newest
 #    non-yanked version is the baseline; the crate breaks when `cargo semver-checks check-release
 #    --release-type patch` against that baseline says a new major (0.x: minor) version is required, or,
-#    for the proc-macro pprint_derive (no library target to diff), when its 0.2 documented example
-#    (`#[derive(Pretty)]`, `let doc: Doc = hey.into()`) against the newest crates.io pprint fails with
+#    for the proc-macro pprint_derive (no library target to diff), when the derive use pprint 0.3.6's own tests make
+#    (tests/derive_tests.rs `VecStruct<'a>`, `let doc: Doc = v.into()`) against the newest crates.io pprint fails with
 #    the tree substituted at the baseline's next patch (control: the same example as published, rc 0).
 #    The declared version must equal the rule's version: next minor if it breaks, next patch if not,
 #    stepping over any version crates.io holds (yanked included). A crate that does not break but
@@ -87,7 +87,7 @@ while IFS="$(printf '\t')" read -r pkg v man kind base held; do
     case "$s" in *"new major version"*) verdict=breaks;; *"new minor version"*|*"no semver update required"*) verdict=compatible;; *) verdict=READ-ERROR;; esac
     printf "%s\t%s\t%s\t%s\n" "$pkg" "$base" "$verdict" "$(echo $s | sed 's/^ *//')" >> $L/breaks.tsv
   else
-    # proc-macro: the documented example of the baseline line, as published (control) and with the tree at
+    # proc-macro: pprint 0.3.6's own derive use, as published (control) and with the tree at
     # the baseline's next patch substituted (a copy outside the repository; only its version line differs).
     nextp=$(python3 -I -c "a='$base'.split('.');print(f'{a[0]}.{a[1]}.{int(a[2])+1}')")
     T=$L/derive-tree; rm -rf $T; cp -R "$(dirname $man)" $T; rm -rf $T/target
@@ -97,12 +97,12 @@ while IFS="$(printf '\t')" read -r pkg v man kind base held; do
       printf '[package]\nname = "derive-probe"\nversion = "0.0.0"\nedition = "2021"\npublish = false\n\n[dependencies]\npprint = "=%s"\n' $pv > $D/Cargo.toml
       [ $mode = substituted ] && printf '\n[patch.crates-io]\n%s = { path = "%s" }\n' $pkg $T >> $D/Cargo.toml
       printf '\n[workspace]\n' >> $D/Cargo.toml
-      printf 'use pprint::Doc;\nuse pprint::Pretty;\n#[derive(Pretty)]\nstruct Hey {\n    a: u32,\n    b: u32,\n}\nfn main() {\n    let hey = Hey { a: 1, b: 2 };\n    let doc: Doc = hey.into();\n    let _ = doc;\n}\n' > $D/src/main.rs
+      printf 'use pprint::{Doc, Pretty};\n#[derive(Pretty, Debug)]\n#[pprint(verbose)]\npub struct VecStruct<'"'"'a> {\n    a: Vec<usize>,\n    b: &'"'"'a str,\n}\nfn main() {\n    let v = VecStruct { a: vec![1, 2], b: "x" };\n    let doc: Doc = v.into();\n    let _ = doc;\n}\n' > $D/src/main.rs
       (cd $D && cargo +stable check) < /dev/null > $D.log 2>&1; eval "r_$mode=\$?"
     done
     used=$(grep -c "name = \"$pkg\"" $L/derive-substituted/Cargo.lock 2>/dev/null); uv=$(grep -h -A1 "name = \"$pkg\"" $L/derive-substituted/Cargo.lock | grep version | tr -d ' "')
     if [ $r_control -ne 0 ] || [ "$uv" != "version=$nextp" ]; then verdict=READ-ERROR; elif [ $r_substituted -ne 0 ]; then verdict=breaks; else verdict=compatible; fi
-    printf "%s\t%s\t%s\tdocumented example vs pprint =%s: control rc=%s, tree at %s substituted rc=%s (%s)\n" "$pkg" "$base" "$verdict" "$pv" "$r_control" "$nextp" "$r_substituted" "$uv" >> $L/breaks.tsv
+    printf "%s\t%s\t%s\tpprint 0.3.6 derive use (VecStruct) vs pprint =%s: control rc=%s, tree at %s substituted rc=%s (%s)\n" "$pkg" "$base" "$verdict" "$pv" "$r_control" "$nextp" "$r_substituted" "$uv" >> $L/breaks.tsv
   fi
 done < $L/baselines.tsv
 # Expected versions (TOPO-4-A2) and the integration head's reconciliation.

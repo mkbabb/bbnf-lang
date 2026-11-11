@@ -10,8 +10,10 @@
 #  3. The consumers are read from crates.io itself, so they are the same at every tree: the newest
 #     non-yanked version of each publish-set crate that crates.io holds, the newest non-yanked
 #     version of each crates.io reverse dependency of the set that is not in the set, and the
-#     pprint_derive 0.2 documented example (`#[derive(Pretty)]`, `let doc: Doc = hey.into()`)
-#     against the newest pprint crates.io holds, which isolates the derive.
+#     derive use pprint 0.3.6's own tests make (tests/derive_tests.rs `VecStruct<'a>`,
+#     `#[pprint(verbose)]`, `let doc: Doc = v.into()`) against the newest pprint crates.io holds,
+#     which isolates the derive (the 0.2.2 doc comment's lifetime-free form does not compile on
+#     any published release: E0261, read at the first parent read, VOID).
 #  4. Each consumer, pinned exactly, is checked twice with `cargo +nightly check` (the published
 #     tree's smallbox `nightly` feature does not build on stable): the control against crates.io
 #     as it is, and the fresh resolve against the union registry.
@@ -72,7 +74,7 @@ PY
 probe() { name=$1; ver=$2; kind=$3; mode=$4; D=$L/$name-$kind-$mode; mkdir -p $D/src
   printf '[package]\nname = "semver-probe"\nversion = "0.0.0"\nedition = "2021"\npublish = false\n\n[dependencies]\n%s = "=%s"\n\n[workspace]\n' $name $ver > $D/Cargo.toml
   if [ $kind = derive-example ]; then
-    printf 'use pprint::Doc;\nuse pprint::Pretty;\n#[derive(Pretty)]\nstruct Hey {\n    a: u32,\n    b: u32,\n}\nfn main() {\n    let hey = Hey { a: 1, b: 2 };\n    let doc: Doc = hey.into();\n    let _ = doc;\n}\n' > $D/src/main.rs
+    printf 'use pprint::{Doc, Pretty};\n#[derive(Pretty, Debug)]\n#[pprint(verbose)]\npub struct VecStruct<'"'"'a> {\n    a: Vec<usize>,\n    b: &'"'"'a str,\n}\nfn main() {\n    let v = VecStruct { a: vec![1, 2], b: "x" };\n    let doc: Doc = v.into();\n    let _ = doc;\n}\n' > $D/src/main.rs
   else printf 'fn main() {}\n' > $D/src/main.rs; fi
   if [ $mode = control ]; then (cd $D && cargo +nightly check) < /dev/null > $D.log 2>&1
   else (cd $D && cargo +nightly check --config $UNIF) < /dev/null > $D.log 2>&1; fi

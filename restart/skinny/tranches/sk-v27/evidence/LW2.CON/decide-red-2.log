@@ -1,0 +1,18 @@
+
+==================================== ERRORS ====================================
+_________________ ERROR collecting bench/cb-b0/test_decide.py __________________
+ImportError while importing test module '/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s11-bench/bench/cb-b0/test_decide.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/importlib/__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+bench/cb-b0/test_decide.py:19: in <module>
+    import decide  # noqa: E402
+    ^^^^^^^^^^^^^
+E   ModuleNotFoundError: No module named 'decide'
+=========================== short test summary info ============================
+ERROR bench/cb-b0/test_decide.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.07s
+rc=2

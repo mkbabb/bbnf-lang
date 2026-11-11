@@ -1,6 +1,6 @@
 [package]
 name = "bbnf"
-version = "0.2.12"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 description = "BBNF grammar parser and code generator built on parse_that"
@@ -13,7 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 pprint.workspace = true
 parse_that.workspace = true
-bbnf-ir = { version = "0.1.7", path = "../ir" }
+bbnf-ir = { version = "0.2.0", path = "../ir" }
 bbnf-ser = { version = "0.1", path = "../ser" }
 parse-that-egraph.workspace = true
 rustc-hash = "2"

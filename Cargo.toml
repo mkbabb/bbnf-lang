@@ -27,11 +27,11 @@ resolver = "2"
 # them with `<name>.workspace = true`; moving a pin is one commit that edits
 # a rev here and the lockfile.
 [workspace.dependencies]
-parse_that               = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "d5f0a5c3d8dc046e57450ad34956f4359b4e6029" }
-parse-that-regex         = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "d5f0a5c3d8dc046e57450ad34956f4359b4e6029" }
-parse-that-egraph        = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "d5f0a5c3d8dc046e57450ad34956f4359b4e6029" }
-parse-that-egraph-derive = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "d5f0a5c3d8dc046e57450ad34956f4359b4e6029" }
-pprint                   = { version = "0.3.7", git = "https://github.com/mkbabb/pprint", rev = "9322105b34bda70828d71b359c12992e78562375" }
+parse_that               = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "ff4a63a31e91d13c0a68887b7278aed6920f8fc2" }
+parse-that-regex         = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "ff4a63a31e91d13c0a68887b7278aed6920f8fc2" }
+parse-that-egraph        = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "ff4a63a31e91d13c0a68887b7278aed6920f8fc2" }
+parse-that-egraph-derive = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "ff4a63a31e91d13c0a68887b7278aed6920f8fc2" }
+pprint                   = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "60114420ba45124440c16327aeaf428f3f69cd25" }
 # csp-solver has one home, mkbabb/csp-solver; 0.4.0 is the release whose
 # src/ and data/ are byte-identical to the copy crates/csp-solver vendored.
 csp-solver               = "0.4.0"

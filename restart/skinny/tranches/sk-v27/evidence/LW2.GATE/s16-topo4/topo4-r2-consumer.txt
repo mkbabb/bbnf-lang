@@ -1,0 +1,4 @@
+    Updating `lw2` index
+error: no matching package named `bbnf` found
+location searched: `lw2` index (which is replacing registry `crates-io`)
+required by package `topo4-consumer v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/s15-freeze/topo4-r2/consumer)`

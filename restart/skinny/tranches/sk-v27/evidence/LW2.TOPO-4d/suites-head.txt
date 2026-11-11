@@ -1,0 +1,7 @@
+head suites (once each), 2026-11-11T13:21:33Z
+pprint 6011442 (0.4.0): cargo test --workspace --locked 86 passed 0 failed; clippy --lib -D warnings rc 0; clippy --all-targets -D warnings rc 101 (3 test-only lints, identical at parent 9322105: approx_constant x3, explicit into_iter)
+pprint ae00814 (integration, 0.5.0-alpha.0): cargo test --workspace --locked 114 passed 0 failed; clippy --all-targets -D warnings rc 0; ABI-v2.sha256 shasum -c rc 0
+parse-that ff4a63a: clippy ax-iter --all-targets -D warnings rc 0; 626 tests run: 626 passed, 12 skipped; diagnostics 700 tests run: 700 passed, 12 skipped; doctests 22 passed 0 failed
+bbnf-lang 611c2fbc9: clippy ax-iter --workspace --all-targets --locked -D warnings rc 0; iter-check --locked rc 0; xtask regen --check rc 0; nextest --workspace --profile ci --locked 1489 tests run: 1489 passed, 23 skipped (BBNF_CORPUS_DIR = the lg2-r5 worktree's data/); wasm check --locked rc 0; skinny metadata --locked rc 0
+check-repo-dag.sh rc 0 in bbnf-lang 611c2fbc9, parse-that ff4a63a, pprint ae00814 and 6011442
+cross-check: LW2.TOPO-4c/semver-probe.sh with pprint 6011442 substituted: GREEN x2 (the 0.4.0 patch is unused by every ^0.3 consumer)

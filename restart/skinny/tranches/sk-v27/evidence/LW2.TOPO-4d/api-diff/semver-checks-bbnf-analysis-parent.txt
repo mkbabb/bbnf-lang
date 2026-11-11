@@ -1,0 +1,81 @@
+    Building bbnf-analysis v0.1.2 (current)
+       Built [   0.415s] (current)
+     Parsing bbnf-analysis v0.1.2 (current)
+      Parsed [   0.002s] (current)
+     Parsing bbnf-analysis v0.1.1 (baseline, cached)
+      Parsed [   0.007s] (baseline)
+    Checking bbnf-analysis v0.1.1 -> v0.1.2 (assume patch change)
+     Checked [   0.007s] 229 checks: 225 pass, 4 fail, 0 warn, 31 skip
+
+--- failure constructible_struct_adds_field: struct exhaustively constructible through public API adds field ---
+
+Description:
+A pub struct that could be exhaustively constructed with a literal using only public API has a new pub field, breaking existing exhaustive literals.
+        ref: https://doc.rust-lang.org/reference/expressions/struct-expr.html
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/constructible_struct_adds_field.ron
+
+Failed in:
+  field DocumentInfo.debugs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:134
+  field DocumentInfo.tokens in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:136
+  field DocumentInfo.ws_pattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:138
+  field DocumentInfo.ir_meta in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:140
+  field DocumentInfo.debugs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:134
+  field DocumentInfo.tokens in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:136
+  field DocumentInfo.ws_pattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:138
+  field DocumentInfo.ir_meta in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:140
+  field DocumentInfo.debugs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:134
+  field DocumentInfo.tokens in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:136
+  field DocumentInfo.ws_pattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:138
+  field DocumentInfo.ir_meta in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:140
+  field DocumentInfo.debugs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:134
+  field DocumentInfo.tokens in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:136
+  field DocumentInfo.ws_pattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:138
+  field DocumentInfo.ir_meta in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/types.rs:140
+  field CachedParseResult.debugs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/parsing.rs:33
+  field CachedParseResult.tokens in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/parsing.rs:34
+  field CachedParseResult.ws_pattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/parsing.rs:35
+  field CachedParseResult.debugs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/parsing.rs:33
+  field CachedParseResult.tokens in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/parsing.rs:34
+  field CachedParseResult.ws_pattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/analysis/src/state/parsing.rs:35
+
+--- failure function_missing: pub fn removed or renamed ---
+
+Description:
+A publicly-visible function cannot be imported by its prior path. A `pub use` may have been removed, or the function itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_missing.ron
+
+Failed in:
+  function bbnf_analysis::state::ast_utils::format_charset, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/ast_utils.rs:23
+  function bbnf_analysis::ast_utils::format_charset, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/ast_utils.rs:23
+
+--- failure struct_missing: pub struct removed or renamed ---
+
+Description:
+A publicly-visible struct cannot be imported by its prior path. A `pub use` may have been removed, or the struct itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_missing.ron
+
+Failed in:
+  struct bbnf_analysis::state::types::NoCollapseInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:64
+  struct bbnf_analysis::types::NoCollapseInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:64
+  struct bbnf_analysis::state::NoCollapseInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:64
+  struct bbnf_analysis::NoCollapseInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:64
+
+--- failure struct_pub_field_missing: pub struct's pub field removed or renamed ---
+
+Description:
+A publicly-visible struct has at least one public field that is no longer available under its prior name. It may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_pub_field_missing.ron
+
+Failed in:
+  field no_collapses of struct DocumentInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:93
+  field no_collapses of struct DocumentInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:93
+  field no_collapses of struct DocumentInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:93
+  field no_collapses of struct DocumentInfo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/types.rs:93
+  field no_collapses of struct CachedParseResult, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/parsing.rs:25
+  field no_collapses of struct CachedParseResult, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-analysis-0.1.1/src/state/parsing.rs:25
+
+     Summary semver requires new major version: 4 major and 0 minor checks failed
+    Finished [   0.843s] bbnf-analysis

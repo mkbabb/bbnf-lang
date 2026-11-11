@@ -1,0 +1,21 @@
+parse-that-egraph-derive	0.1.0	c6d7b9b	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+parse-that-egraph	0.1.0	c6d7b9b	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+pprint_derive	0.2.3	9322105	/Users/mkbabb/Programming/pprint-wt/lw2-topo-4b-0.3/rust/derive	rc=0
+pprint	0.3.7	9322105	/Users/mkbabb/Programming/pprint-wt/lw2-topo-4b-0.3/rust	rc=0
+parse-that-simd	0.1.0	c6d7b9b	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+parse-that-regex	0.1.0	c6d7b9b	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+parse_that	0.4.0	c6d7b9b	/Users/mkbabb/Programming/parse-that-wt/sk-v27-lw2/rust	rc=0
+bbnf-ser	0.1.0	af21ba4a9	/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw2	rc=0
+bbnf-ir	0.1.7	af21ba4a9	/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw2	rc=0
+bbnf-path	0.1.0	af21ba4a9	/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw2	rc=0
+bbnf	0.2.12	af21ba4a9	/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw2	rc=0
+bbnf-analysis	0.1.2	af21ba4a9	/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw2	rc=0
+bbnf-lsp	0.1.0	af21ba4a9	/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw2	rc=0
+gorgeous	0.1.11	af21ba4a9	/Users/mkbabb/Programming/bbnf-lang-wt/sk-v27-lw2	rc=0
+publish rc=0
+consumer (bbnf = "0.2.12") cargo +stable build rc=0
+name = "bbnf"
+version = "0.2.12"
+path consumer (bbnf = "0.2.12", bbnf-path = "0.1.0") cargo +stable build rc=0
+crates.io collisions=0 line-mismatches=6 read-errors=0
+TOPO-4d topo4c read parent-r1: RED

@@ -1,0 +1,362 @@
+    Building bbnf v0.2.12 (current)
+       Built [   1.760s] (current)
+     Parsing bbnf v0.2.12 (current)
+      Parsed [   0.024s] (current)
+     Parsing bbnf v0.2.9 (baseline, cached)
+      Parsed [   0.006s] (baseline)
+    Checking bbnf v0.2.9 -> v0.2.12 (assume patch change)
+     Checked [   0.022s] 229 checks: 216 pass, 13 fail, 0 warn, 31 skip
+
+--- failure constructible_struct_adds_field: struct exhaustively constructible through public API adds field ---
+
+Description:
+A pub struct that could be exhaustively constructed with a literal using only public API has a new pub field, breaking existing exhaustive literals.
+        ref: https://doc.rust-lang.org/reference/expressions/struct-expr.html
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/constructible_struct_adds_field.ron
+
+Failed in:
+  field IrCodegenCtx.effective_prettify in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:116
+  field IrCodegenCtx.fused_number_rules in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:122
+  field IrCodegenCtx.operator_chain_rules in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:124
+  field IrCodegenCtx.scratch_types in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:127
+  field IrCodegenCtx.global_sub_variants in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:129
+  field IrCodegenCtx.effective_prettify in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:116
+  field IrCodegenCtx.fused_number_rules in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:122
+  field IrCodegenCtx.operator_chain_rules in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:124
+  field IrCodegenCtx.scratch_types in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:127
+  field IrCodegenCtx.global_sub_variants in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:129
+  field ParserAttributes.grammar_rel_paths in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:48
+  field ParserAttributes.serialize in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:53
+  field ParserAttributes.structural in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:58
+  field ParserAttributes.grammar_rel_paths in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:48
+  field ParserAttributes.serialize in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:53
+  field ParserAttributes.structural in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:58
+  field PipelineOptions.structural in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/pipeline.rs:28
+
+--- failure constructible_struct_adds_private_field: struct no longer constructible due to new private field ---
+
+Description:
+A struct has a new non-public field that causes downstream code to be unable to construct it with a struct expression, including functional-update syntax.
+        ref: https://doc.rust-lang.org/reference/expressions/struct-expr.html
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/constructible_struct_adds_private_field.ron
+
+Failed in:
+  field ModuleData.data in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/imports/registry.rs:18
+
+--- failure copy_impl_added: type now implements Copy ---
+
+Description:
+A public type now implements Copy, causing non-move closures to capture it by reference instead of moving it.
+        ref: https://github.com/rust-lang/rust/issues/100905
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/copy_impl_added.ron
+
+Failed in:
+  bbnf::types::RecoverDirective in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/types.rs:57
+  bbnf::RecoverDirective in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/types.rs:57
+
+--- failure derive_trait_impl_removed: built-in derived trait no longer implemented ---
+
+Description:
+A public type has stopped deriving one or more traits. This can break downstream code that depends on those types implementing those traits.
+        ref: https://doc.rust-lang.org/reference/attributes/derive.html#derive
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/derive_trait_impl_removed.ron
+
+Failed in:
+  type RecoverDirective no longer derives PartialEq, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/types.rs:57
+  type RecoverDirective no longer derives Eq, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/types.rs:57
+  type RecoverDirective no longer derives PartialEq, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/types.rs:57
+  type RecoverDirective no longer derives Eq, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/types.rs:57
+
+--- failure enum_missing: pub enum removed or renamed ---
+
+Description:
+A publicly-visible enum cannot be imported by its prior path. A `pub use` may have been removed, or the enum itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/enum_missing.ron
+
+Failed in:
+  enum bbnf::generate::fast_paths::NegCharClassQuantifier, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:132
+  enum bbnf::fast_paths::NegCharClassQuantifier, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:132
+  enum bbnf::generate::prettify::heuristics::HeuristicMode, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/heuristics.rs:7
+  enum bbnf::prettify::heuristics::HeuristicMode, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/heuristics.rs:7
+  enum bbnf::types::Comment, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:10
+  enum bbnf::Comment, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:10
+  enum bbnf::types::Expression, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:24
+  enum bbnf::Expression, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:24
+
+--- failure function_missing: pub fn removed or renamed ---
+
+Description:
+A publicly-visible function cannot be imported by its prior path. A `pub use` may have been removed, or the function itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_missing.ron
+
+Failed in:
+  function bbnf::generate::prettify::hints::hint_description, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:172
+  function bbnf::prettify::hints::hint_description, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:172
+  function bbnf::generate::prettify::hints::is_sep_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:140
+  function bbnf::prettify::hints::is_sep_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:140
+  function bbnf::generate::ir_codegen::unescape_literal, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:43
+  function bbnf::ir_codegen::unescape_literal, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:43
+  function bbnf::analysis::metadata::find_aliases, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:29
+  function bbnf::metadata::find_aliases, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:29
+  function bbnf::analysis::find_aliases, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:29
+  function bbnf::analysis::scc::calculate_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:201
+  function bbnf::scc::calculate_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:201
+  function bbnf::analysis::calculate_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:201
+  function bbnf::calculate_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:201
+  function bbnf::generate::fast_paths::emit_regex_parser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:15
+  function bbnf::fast_paths::emit_regex_parser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:15
+  function bbnf::analysis::deps::calculate_ast_deps, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:68
+  function bbnf::analysis::calculate_ast_deps, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:68
+  function bbnf::analysis::dispatch::find_first_set_conflicts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:18
+  function bbnf::dispatch::find_first_set_conflicts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:18
+  function bbnf::analysis::find_first_set_conflicts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:18
+  function bbnf::find_first_set_conflicts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:18
+  function bbnf::generate::ir_types::type_is_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:165
+  function bbnf::ir_types::type_is_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:165
+  function bbnf::optimize::remove_indirect_left_recursion, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/optimize.rs:138
+  function bbnf::remove_indirect_left_recursion, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/optimize.rs:138
+  function bbnf::generate::ir_span::compute_sp_method_rules, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_span.rs:255
+  function bbnf::ir_span::compute_sp_method_rules, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_span.rs:255
+  function bbnf::generate::prettify::generate_item_to_doc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:166
+  function bbnf::prettify::generate_item_to_doc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:166
+  function bbnf::analysis::regex_first::regex_first_chars, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/regex_first.rs:6
+  function bbnf::regex_first::regex_first_chars, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/regex_first.rs:6
+  function bbnf::analysis::regex_first_chars, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/regex_first.rs:6
+  function bbnf::regex_first_chars, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/regex_first.rs:6
+  function bbnf::generate::prettify::hints::extract_split_delim, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:162
+  function bbnf::prettify::hints::extract_split_delim, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:162
+  function bbnf::generate::ir_codegen::emit_rule_body_inline, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/inline.rs:81
+  function bbnf::ir_codegen::emit_rule_body_inline, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/inline.rs:81
+  function bbnf::generate::prettify::doc_for_binding, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:53
+  function bbnf::prettify::doc_for_binding, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:53
+  function bbnf::generate::prettify::hints::is_valid_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:135
+  function bbnf::prettify::hints::is_valid_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:135
+  function bbnf::analysis::metadata::find_transparent_alternations, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:66
+  function bbnf::metadata::find_transparent_alternations, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:66
+  function bbnf::analysis::find_transparent_alternations, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:66
+  function bbnf::find_transparent_alternations, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:66
+  function bbnf::generate::prettify::is_vec_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:16
+  function bbnf::prettify::is_vec_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:16
+  function bbnf::analysis::metadata::compute_ref_counts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:10
+  function bbnf::metadata::compute_ref_counts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:10
+  function bbnf::analysis::compute_ref_counts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:10
+  function bbnf::compute_ref_counts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:10
+  function bbnf::analysis::scc::topological_sort_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:124
+  function bbnf::analysis::topological_sort_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:124
+  function bbnf::analysis::deps::traverse_ast, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:21
+  function bbnf::deps::traverse_ast, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:21
+  function bbnf::analysis::traverse_ast, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:21
+  function bbnf::traverse_ast, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:21
+  function bbnf::generate::ir_types::type_desc_is_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:156
+  function bbnf::ir_types::type_desc_is_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:156
+  function bbnf::optimize::remove_direct_left_recursion, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/optimize.rs:26
+  function bbnf::remove_direct_left_recursion, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/optimize.rs:26
+  function bbnf::generate::ir_pretty::generate_prettify_ir, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_pretty/mod.rs:35
+  function bbnf::ir_pretty::generate_prettify_ir, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_pretty/mod.rs:35
+  function bbnf::generate::prettify::hints::closest_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:182
+  function bbnf::prettify::hints::closest_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:182
+  function bbnf::generate::ir_types::type_desc_to_syn, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:113
+  function bbnf::ir_types::type_desc_to_syn, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:113
+  function bbnf::generate::prettify::range_for_binding, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:100
+  function bbnf::prettify::range_for_binding, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:100
+  function bbnf::generate::prettify::hints::is_split_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:156
+  function bbnf::prettify::hints::is_split_hint, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:156
+  function bbnf::generate::prettify::is_box_enum_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:38
+  function bbnf::prettify::is_box_enum_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:38
+  function bbnf::analysis::first_sets::compute_first_sets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:21
+  function bbnf::first_sets::compute_first_sets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:21
+  function bbnf::analysis::compute_first_sets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:21
+  function bbnf::compute_first_sets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:21
+  function bbnf::types::set_expression_comments, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:158
+  function bbnf::set_expression_comments, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:158
+  function bbnf::generate::ir_codegen::infer::infer_node_type_in_vec, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:143
+  function bbnf::ir_codegen::infer::infer_node_type_in_vec, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:143
+  function bbnf::generate::ir_codegen::ir_node_to_tokens_vec, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:87
+  function bbnf::ir_codegen::ir_node_to_tokens_vec, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:87
+  function bbnf::generate::prettify::hints::valid_hint_names, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:130
+  function bbnf::prettify::hints::valid_hint_names, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:130
+  function bbnf::analysis::scc::tarjan_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:22
+  function bbnf::analysis::tarjan_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:22
+  function bbnf::analysis::deps::get_nonterminal_name, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:13
+  function bbnf::deps::get_nonterminal_name, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:13
+  function bbnf::analysis::get_nonterminal_name, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:13
+  function bbnf::get_nonterminal_name, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:13
+  function bbnf::generate::prettify::hints::hint_documentation, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:177
+  function bbnf::prettify::hints::hint_documentation, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:177
+  function bbnf::generate::ir_span::try_ir_span_parser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_span.rs:20
+  function bbnf::ir_span::try_ir_span_parser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_span.rs:20
+  function bbnf::generate::prettify::hints::extract_sep_string, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:146
+  function bbnf::prettify::hints::extract_sep_string, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:146
+  function bbnf::analysis::metadata::find_span_eligible_rules, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:154
+  function bbnf::metadata::find_span_eligible_rules, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:154
+  function bbnf::analysis::find_span_eligible_rules, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:154
+  function bbnf::find_span_eligible_rules, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:154
+  function bbnf::generate::prettify::is_option_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:27
+  function bbnf::prettify::is_option_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:27
+  function bbnf::generate::ir_codegen::infer::infer_node_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:9
+  function bbnf::ir_codegen::infer::infer_node_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:9
+  function bbnf::generate::ir_codegen::infer_node_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:9
+  function bbnf::ir_codegen::infer_node_type, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:9
+  function bbnf::generate::ir_codegen::ir_node_to_tokens, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:79
+  function bbnf::ir_codegen::ir_node_to_tokens, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:79
+  function bbnf::analysis::scc::calculate_non_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:238
+  function bbnf::scc::calculate_non_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:238
+  function bbnf::analysis::calculate_non_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:238
+  function bbnf::calculate_non_acyclic_deps_scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:238
+  function bbnf::generate::fast_paths::emit_regex_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:41
+  function bbnf::fast_paths::emit_regex_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:41
+  function bbnf::analysis::dispatch::build_dispatch_table, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:126
+  function bbnf::dispatch::build_dispatch_table, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:126
+  function bbnf::analysis::build_dispatch_table, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:126
+  function bbnf::build_dispatch_table, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:126
+  function bbnf::generate::ir_enums::generate_enum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_enums.rs:15
+  function bbnf::ir_enums::generate_enum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_enums.rs:15
+  function bbnf::generate::prettify::generate_item_source_range, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:224
+  function bbnf::prettify::generate_item_source_range, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/prettify_utils.rs:224
+
+--- failure function_parameter_count_changed: pub fn parameter count changed ---
+
+Description:
+A publicly-visible function now takes a different number of parameters.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#fn-change-arity
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_parameter_count_changed.ron
+
+Failed in:
+  bbnf::lower::lower_to_ir now takes 4 parameters instead of 10, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/lower/mod.rs:115
+  bbnf::pipeline::compile_ast now takes 3 parameters instead of 5, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/pipeline/compile/mod.rs:92
+
+--- failure inherent_method_missing: pub method removed or renamed ---
+
+Description:
+A publicly-visible method or associated fn is no longer available under its prior name. It may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/inherent_method_missing.ron
+
+Failed in:
+  IrCodegenCtx::recover_sentinel, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:86
+  IrCodegenCtx::recover_sentinel, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:86
+
+--- failure method_parameter_count_changed: pub method parameter count changed ---
+
+Description:
+A publicly-visible method now takes a different number of parameters, not counting the receiver (self) parameter.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#fn-change-arity
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/method_parameter_count_changed.ron
+
+Failed in:
+  bbnf::generate::ir_types::IrCodegenCtx::new takes 3 parameters in ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:39, but now takes 4 parameters in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:133
+  bbnf::ir_types::IrCodegenCtx::new takes 3 parameters in ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_types.rs:39, but now takes 4 parameters in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/core/src/backend/rust/ir_types.rs:133
+
+--- failure module_missing: pub module removed or renamed ---
+
+Description:
+A publicly-visible module cannot be imported by its prior path. A `pub use` may have been removed, or the module may have been renamed, removed, or made non-public.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/module_missing.ron
+
+Failed in:
+  mod bbnf::analysis::first_sets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:1
+  mod bbnf::first_sets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:1
+  mod bbnf::generate::ir_codegen, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:1
+  mod bbnf::ir_codegen, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/mod.rs:1
+  mod bbnf::generate::ir_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_span.rs:1
+  mod bbnf::ir_span, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_span.rs:1
+  mod bbnf::generate::ir_codegen::infer, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:1
+  mod bbnf::ir_codegen::infer, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_codegen/infer.rs:1
+  mod bbnf::generate::fast_paths, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:1
+  mod bbnf::fast_paths, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/fast_paths.rs:1
+  mod bbnf::generate::prettify, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/mod.rs:1
+  mod bbnf::prettify, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/mod.rs:1
+  mod bbnf::generate::prettify::heuristics, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/heuristics.rs:1
+  mod bbnf::prettify::heuristics, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/heuristics.rs:1
+  mod bbnf::analysis::metadata, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:1
+  mod bbnf::metadata, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/metadata.rs:1
+  mod bbnf::analysis::scc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:1
+  mod bbnf::analysis::dispatch, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:1
+  mod bbnf::dispatch, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:1
+  mod bbnf::generate::ir_pretty, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_pretty/mod.rs:1
+  mod bbnf::ir_pretty, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/ir_pretty/mod.rs:1
+  mod bbnf::optimize, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/optimize.rs:1
+  mod bbnf::analysis, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/mod.rs:1
+  mod bbnf::analysis::regex_first, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/regex_first.rs:1
+  mod bbnf::regex_first, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/regex_first.rs:1
+  mod bbnf::analysis::charset, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:1
+  mod bbnf::charset, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:1
+  mod bbnf::analysis::deps, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/deps.rs:1
+  mod bbnf::generate::prettify::hints, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:1
+  mod bbnf::prettify::hints, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:1
+
+--- failure pub_module_level_const_missing: pub module-level const is missing ---
+
+Description:
+A public const is missing or renamed
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/pub_module_level_const_missing.ron
+
+Failed in:
+  HINT_DEFS in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:19
+  HINT_DEFS in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:19
+
+--- failure struct_missing: pub struct removed or renamed ---
+
+Description:
+A publicly-visible struct cannot be imported by its prior path. A `pub use` may have been removed, or the struct itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_missing.ron
+
+Failed in:
+  struct bbnf::types::NoCollapseDirective, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:130
+  struct bbnf::NoCollapseDirective, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:130
+  struct bbnf::analysis::charset::CharSet, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:5
+  struct bbnf::charset::CharSet, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:5
+  struct bbnf::analysis::CharSet, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:5
+  struct bbnf::CharSet, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:5
+  struct bbnf::types::Token, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:57
+  struct bbnf::Token, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:57
+  struct bbnf::analysis::charset::CharSetIter, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:90
+  struct bbnf::charset::CharSetIter, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:90
+  struct bbnf::analysis::CharSetIter, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:90
+  struct bbnf::CharSetIter, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/charset.rs:90
+  struct bbnf::types::Comments, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:16
+  struct bbnf::Comments, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:16
+  struct bbnf::analysis::dispatch::FirstSetConflict, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:11
+  struct bbnf::dispatch::FirstSetConflict, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:11
+  struct bbnf::analysis::FirstSetConflict, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:11
+  struct bbnf::FirstSetConflict, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:11
+  struct bbnf::grammar::BBNFGrammar, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/grammar.rs:68
+  struct bbnf::BBNFGrammar, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/grammar.rs:68
+  struct bbnf::generate::prettify::hints::HintDef, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:7
+  struct bbnf::prettify::hints::HintDef, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/prettify/hints.rs:7
+  struct bbnf::analysis::dispatch::DispatchTable, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:111
+  struct bbnf::dispatch::DispatchTable, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:111
+  struct bbnf::analysis::DispatchTable, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:111
+  struct bbnf::DispatchTable, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/dispatch.rs:111
+  struct bbnf::analysis::first_sets::FirstSets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:14
+  struct bbnf::first_sets::FirstSets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:14
+  struct bbnf::analysis::FirstSets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:14
+  struct bbnf::FirstSets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/first_sets.rs:14
+  struct bbnf::types::ParsedGrammar, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:150
+  struct bbnf::ParsedGrammar, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/types.rs:150
+  struct bbnf::analysis::scc::SccResult, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:12
+  struct bbnf::analysis::SccResult, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/analysis/scc.rs:12
+
+--- failure struct_pub_field_missing: pub struct's pub field removed or renamed ---
+
+Description:
+A publicly-visible struct has at least one public field that is no longer available under its prior name. It may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_pub_field_missing.ron
+
+Failed in:
+  field source of struct ModuleData, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/imports.rs:90
+  field grammar of struct ModuleData, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/imports.rs:92
+  field local_rule_names of struct ModuleData, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/imports.rs:94
+  field ignore_whitespace of struct ParserAttributes, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/types.rs:7
+  field use_string of struct ParserAttributes, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/types.rs:9
+  field ignore_whitespace of struct ParserAttributes, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/types.rs:7
+  field use_string of struct ParserAttributes, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-0.2.9/src/generate/types.rs:9
+
+     Summary semver requires new major version: 13 major and 0 minor checks failed
+    Finished [   2.415s] bbnf

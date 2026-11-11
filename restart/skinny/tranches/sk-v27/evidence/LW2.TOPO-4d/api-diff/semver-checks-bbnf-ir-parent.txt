@@ -1,0 +1,196 @@
+    Building bbnf-ir v0.1.7 (current)
+       Built [   0.707s] (current)
+     Parsing bbnf-ir v0.1.7 (current)
+      Parsed [   0.013s] (current)
+     Parsing bbnf-ir v0.1.5 (baseline, cached)
+      Parsed [   0.008s] (baseline)
+    Checking bbnf-ir v0.1.5 -> v0.1.7 (assume patch change)
+     Checked [   0.014s] 229 checks: 219 pass, 10 fail, 0 warn, 31 skip
+
+--- failure auto_trait_impl_removed: auto trait no longer implemented ---
+
+Description:
+A public type has stopped implementing one or more auto traits. This can break downstream code that depends on the traits being implemented.
+        ref: https://doc.rust-lang.org/reference/special-types-and-traits.html#auto-traits
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/auto_trait_impl_removed.ron
+
+Failed in:
+  type Interpreter is no longer UnwindSafe, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/interpreter/mod.rs:71
+  type Interpreter is no longer RefUnwindSafe, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/interpreter/mod.rs:71
+
+--- failure constructible_struct_adds_field: struct exhaustively constructible through public API adds field ---
+
+Description:
+A pub struct that could be exhaustively constructed with a literal using only public API has a new pub field, breaking existing exhaustive literals.
+        ref: https://doc.rust-lang.org/reference/expressions/struct-expr.html
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/constructible_struct_adds_field.ron
+
+Failed in:
+  field AltDispatch.fallback_idx in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/node.rs:134
+  field RuleMeta.preserve_identity in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/rule.rs:167
+  field RuleMeta.directives in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/rule.rs:172
+  field BytecodeProgram.memo_enabled in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:171
+  field BytecodeProgram.dispatch_tables in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:175
+  field BytecodeProgram.token_dispatch_tables in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:179
+  field BytecodeProgram.compiled_regexes in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:184
+  field BytecodeProgram.source_map in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:198
+  field IrRule.source_span in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/rule.rs:29
+  field GrammarIR.ws_pattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:52
+  field GrammarIR.collapse_simple_spans in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:58
+  field GrammarIR.debug_all in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:63
+  field GrammarIR.debug_labels in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:68
+  field GrammarIR.type_map in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:74
+  field GrammarIR.regex_info in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:79
+  field GrammarIR.node_facts in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:86
+  field GrammarIR.recognizer_decisions in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:97
+  field GrammarIR.delim_scan_configs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:105
+  field GrammarIR.key_dispatch_configs in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:113
+  field GrammarIR.context_facts in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:120
+  field GrammarIR.has_family_recognizers in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:136
+  field GrammarIR.regex_engine_decisions in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:145
+  field GrammarIR.dag in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:160
+  field GrammarIR.cost_config in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:168
+  field GrammarIR.type_desc_interner in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:182
+  field GrammarIR.materialization in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:195
+  field GrammarIR.eclass_facts in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:208
+  field GrammarIR.keyword_branches in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:221
+  field GrammarIR.disjoint_first_tables in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:232
+  field GrammarIR.pattern_alphabets in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:243
+  field GrammarIR.ctns_lifts in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:255
+  field GrammarIR.payload_layouts in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:275
+  field GrammarIR.string_index in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:285
+  field GrammarIR.structural_alphabet in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:300
+  field GrammarIR.push_fingerprint in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:314
+  field GrammarIR.dedup_eligible_rules in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:327
+  field GrammarIR.shape_assignments in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:342
+  field GrammarIR.struct_registry in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:362
+  field GrammarIR.inline_trace in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:381
+  field GrammarIR.path_check_resolver in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:394
+  field GrammarIR.type_obligations in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/grammar.rs:428
+
+--- failure derive_trait_impl_removed: built-in derived trait no longer implemented ---
+
+Description:
+A public type has stopped deriving one or more traits. This can break downstream code that depends on those types implementing those traits.
+        ref: https://doc.rust-lang.org/reference/attributes/derive.html#derive
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/derive_trait_impl_removed.ron
+
+Failed in:
+  type ParseResult no longer derives Clone, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/interpreter/value.rs:79
+
+--- failure enum_variant_added: enum variant added on exhaustive enum ---
+
+Description:
+A publicly-visible enum without #[non_exhaustive] has a new variant.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#enum-variant-new
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/enum_variant_added.ron
+
+Failed in:
+  variant FnDescriptor:NumberConvert in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/fn_descriptor.rs:40
+  variant FnDescriptor:HexConvert in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/fn_descriptor.rs:45
+  variant FnDescriptor:SpanCapture in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/fn_descriptor.rs:49
+  variant FnDescriptor:Expr in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/fn_descriptor.rs:54
+  variant TypeDesc:F64 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:17
+  variant TypeDesc:Bool in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:19
+  variant TypeDesc:I8 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:21
+  variant TypeDesc:U8 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:23
+  variant TypeDesc:I16 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:25
+  variant TypeDesc:U16 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:27
+  variant TypeDesc:I32 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:29
+  variant TypeDesc:U32 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:31
+  variant TypeDesc:I64 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:33
+  variant TypeDesc:U64 in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:35
+  variant TypeDesc:HeterogeneousAltJoin in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/type_desc.rs:63
+  variant IrNode:TokenDispatch in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/types/node.rs:90
+  variant Op:TrimWsPattern in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:87
+  variant Op:DispatchToken in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:104
+  variant Op:DebugBreak in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/vm/bytecode.rs:145
+
+--- failure enum_variant_missing: pub enum variant removed or renamed ---
+
+Description:
+A publicly-visible enum has at least one variant that is no longer available under its prior name. It may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/enum_variant_missing.ron
+
+Failed in:
+  variant FnDescriptor::Custom, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/lib.rs:143
+
+--- failure function_missing: pub fn removed or renamed ---
+
+Description:
+A publicly-visible function cannot be imported by its prior path. A `pub use` may have been removed, or the function itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_missing.ron
+
+Failed in:
+  function bbnf_ir::regex_first::regex_first_chars, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/regex_first.rs:11
+  function bbnf_ir::passes::dispatch::generate_dispatch_tables, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/dispatch.rs:26
+  function bbnf_ir::passes::prune::prune_unreachable, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/prune.rs:11
+  function bbnf_ir::passes::inline::inline_acyclic, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/inline.rs:23
+  function bbnf_ir::passes::types::infer_types, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/types/mod.rs:34
+  function bbnf_ir::passes::infer_types, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/types/mod.rs:34
+  function bbnf_ir::passes::alias::canonicalize_aliases, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/alias.rs:11
+  function bbnf_ir::interpreter::parse_with_ir, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/interpreter.rs:565
+  function bbnf_ir::passes::optimize::eliminate_epsilon, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/optimize.rs:20
+  function bbnf_ir::passes::follow::compute_follow_sets, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/follow.rs:23
+  function bbnf_ir::passes::optimize::merge_literals, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/optimize.rs:118
+  function bbnf_ir::passes::memo::refine_memo_strategies, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/memo.rs:37
+  function bbnf_ir::passes::refine_memo_strategies, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/memo.rs:37
+  function bbnf_ir::passes::merge_regex::merge_regex_alts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/merge_regex.rs:13
+  function bbnf_ir::passes::merge_regex_alts, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/merge_regex.rs:13
+
+--- failure function_parameter_count_changed: pub fn parameter count changed ---
+
+Description:
+A publicly-visible function now takes a different number of parameters.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#fn-change-arity
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_parameter_count_changed.ron
+
+Failed in:
+  bbnf_ir::passes::inline_acyclic now takes 2 parameters instead of 1, in ~/Programming/bbnf-lang-wt/sk-v27-lw2/crates/ir/src/passes/transform/inline.rs:33
+
+--- failure module_missing: pub module removed or renamed ---
+
+Description:
+A publicly-visible module cannot be imported by its prior path. A `pub use` may have been removed, or the module may have been renamed, removed, or made non-public.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/module_missing.ron
+
+Failed in:
+  mod bbnf_ir::passes::alias, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/alias.rs:1
+  mod bbnf_ir::passes::merge_regex, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/merge_regex.rs:1
+  mod bbnf_ir::passes::memo, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/memo.rs:1
+  mod bbnf_ir::passes::dispatch, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/dispatch.rs:1
+  mod bbnf_ir::passes::inline, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/inline.rs:1
+  mod bbnf_ir::passes::prune, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/prune.rs:1
+  mod bbnf_ir::passes::optimize, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/optimize.rs:1
+  mod bbnf_ir::charset, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/charset.rs:1
+  mod bbnf_ir::passes::follow, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/passes/follow.rs:1
+
+--- failure struct_missing: pub struct removed or renamed ---
+
+Description:
+A publicly-visible struct cannot be imported by its prior path. A `pub use` may have been removed, or the struct itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_missing.ron
+
+Failed in:
+  struct bbnf_ir::charset::CharSet128, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/charset.rs:10
+  struct bbnf_ir::CharSet128, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/charset.rs:10
+  struct bbnf_ir::charset::CharSet128Iter, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/charset.rs:119
+
+--- failure struct_pub_field_missing: pub struct's pub field removed or renamed ---
+
+Description:
+A publicly-visible struct has at least one public field that is no longer available under its prior name. It may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_pub_field_missing.ron
+
+Failed in:
+  field pretty of struct RuleMeta, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/lib.rs:277
+  field recover of struct RuleMeta, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/lib.rs:280
+  field no_collapse of struct RuleMeta, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/bbnf-ir-0.1.5/src/lib.rs:283
+
+     Summary semver requires new major version: 10 major and 0 minor checks failed
+    Finished [   1.306s] bbnf-ir

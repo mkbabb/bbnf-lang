@@ -1,0 +1,9 @@
+iai-bench	install valgrind	2026-11-11T16:38:37.3854800Z E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/main/g/gdb/gdb_17.1-2ubuntu1_amd64v3.deb  Temporary failure resolving 'security.ubuntu.com'
+iai-bench	install valgrind	2026-11-11T16:38:37.3855558Z E: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/pool/main/g/glibc/libc6-dbg_2.43-2ubuntu2.4_amd64v3.deb  Temporary failure resolving 'security.ubuntu.com'
+iai-bench	install valgrind	2026-11-11T16:38:37.3856336Z E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/main/v/valgrind/valgrind_3.26.0-0ubuntu1_amd64v3.deb  Temporary failure resolving 'security.ubuntu.com'
+iai-bench	install valgrind	2026-11-11T16:38:37.3890449Z ##[error]Process completed with exit code 100.
+attempt 1 failure 2026-11-11T15:07:02Z
+attempt 2 failure 2026-11-11T15:26:52Z
+attempt 3 failure 2026-11-11T15:35:43Z
+attempt 4 failure 2026-11-11T16:01:18Z
+attempt 5 failure 2026-11-11T16:30:18Z

@@ -1,0 +1,6 @@
+
+  thread 'main' (15323723) panicked at build.rs:29:9:
+  crates/ir build.rs: cannot read /Users/mkbabb/.dev-logs/bbnf-lockstep/target-topo4-r1/Cargo.toml: No such file or directory (os error 2)
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+warning: build failed, waiting for other jobs to finish...
+error: failed to verify package tarball

@@ -1,0 +1,506 @@
+{
+ "schema": "cb-b0-pairs/1",
+ "cell": "C-G2-AA",
+ "matrix": "PORTABLE",
+ "admission": "ADMITTED",
+ "created_at": "2026-11-11T02:48:18+00:00",
+ "repo": {
+  "commit": "2be4da973a3f8e2b989935424e6d5a4f80d52164",
+  "tree_hash": "fb41b1a8424287a5e50d2b552e9645e0f62c5f45",
+  "tree_hash_excludes": [
+   "docs/benchmarks/records"
+  ],
+  "head_tree": "406aebd2689cf6ebac1ea228907f644c0457661f",
+  "dirty": false
+ },
+ "host": {
+  "model": "Mac17,7",
+  "cpu": "Apple M5 Max",
+  "ncpu": 18,
+  "perflevel0_cpus": 6,
+  "os": "Darwin 25.4.0",
+  "mem_bytes": 137438953472
+ },
+ "note": "JSON.parse self vs self, K=50 parses per process",
+ "arm_a": [
+  "node",
+  "/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s11-bench/bench/contest/arms/node_json_parse.mjs",
+  "--time",
+  "50",
+  "/Users/mkbabb/.dev-logs/bbnf-lockstep/corpus-v1/data/json/twitter.json"
+ ],
+ "arm_b": [
+  "node",
+  "/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s11-bench/bench/contest/arms/node_json_parse.mjs",
+  "--time",
+  "50",
+  "/Users/mkbabb/.dev-logs/bbnf-lockstep/corpus-v1/data/json/twitter.json"
+ ],
+ "slow_a_ns": 0,
+ "bench_lock_held": true,
+ "guarded_run": "bc76dcbaff",
+ "harness_sha256": {
+  "pairs.py": "16d89e371faea889a51d36cfd23f2b08c7cef7d19950479b16e15680edf7f7e9",
+  "cbb0.py": "8d4055d928e6e959cbec38e16914937c8b5bf8a0f0d4aa0ca8c09e6388180d8d"
+ },
+ "qos": {
+  "ui_fraction_min": 0.0,
+  "reading": "disclosed host condition (LW2-ORDER \u00a75; QoS ruling owed)"
+ },
+ "status": "QUIET",
+ "status_reasons": [],
+ "blocks": [
+  {
+   "k": 0,
+   "order": "ABBA",
+   "waited_s": 0.0,
+   "load_before": [
+    7.47314453125,
+    7.47314453125,
+    7.47314453125,
+    7.47314453125
+   ],
+   "therm_warning": false,
+   "quiet": true,
+   "pairs": [
+    {
+     "r": 0.14852249378519952,
+     "a": {
+      "wall_ns": 375139333,
+      "exit": 0,
+      "user_us": 333127,
+      "sys_us": 29796,
+      "maxrss_bytes": 108625920,
+      "instructions": 5294421198,
+      "cycles": 1485618929,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 8710182,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 323362834,
+      "exit": 0,
+      "user_us": 302784,
+      "sys_us": 20277,
+      "maxrss_bytes": 107233280,
+      "instructions": 5277795749,
+      "cycles": 1241728964,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7746191,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    },
+    {
+     "r": 0.04160791714765411,
+     "a": {
+      "wall_ns": 331302333,
+      "exit": 0,
+      "user_us": 313675,
+      "sys_us": 21641,
+      "maxrss_bytes": 107151360,
+      "instructions": 5296428295,
+      "cycles": 1291169873,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 8047544,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 317800375,
+      "exit": 0,
+      "user_us": 299398,
+      "sys_us": 23208,
+      "maxrss_bytes": 107020288,
+      "instructions": 5268415374,
+      "cycles": 1266906692,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7687284,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    }
+   ]
+  },
+  {
+   "k": 1,
+   "order": "ABBA",
+   "waited_s": 0.0,
+   "load_before": [
+    7.47314453125,
+    7.47314453125,
+    7.47314453125,
+    7.47314453125
+   ],
+   "therm_warning": false,
+   "quiet": true,
+   "pairs": [
+    {
+     "r": -0.10810877781677469,
+     "a": {
+      "wall_ns": 285460750,
+      "exit": 0,
+      "user_us": 282639,
+      "sys_us": 15210,
+      "maxrss_bytes": 107298816,
+      "instructions": 5260297225,
+      "cycles": 1155850915,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7148325,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 318051500,
+      "exit": 0,
+      "user_us": 298635,
+      "sys_us": 23965,
+      "maxrss_bytes": 108314624,
+      "instructions": 5292463465,
+      "cycles": 1295010152,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7742375,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    },
+    {
+     "r": 0.05465229121763892,
+     "a": {
+      "wall_ns": 298370500,
+      "exit": 0,
+      "user_us": 287707,
+      "sys_us": 16706,
+      "maxrss_bytes": 105742336,
+      "instructions": 5266638696,
+      "cycles": 1183794081,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7305893,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 282501458,
+      "exit": 0,
+      "user_us": 279970,
+      "sys_us": 13925,
+      "maxrss_bytes": 106053632,
+      "instructions": 5255664699,
+      "cycles": 1158775151,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7053429,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    }
+   ]
+  },
+  {
+   "k": 2,
+   "order": "ABBA",
+   "waited_s": 0.0,
+   "load_before": [
+    7.47314453125,
+    7.19482421875,
+    7.19482421875,
+    7.19482421875
+   ],
+   "therm_warning": false,
+   "quiet": true,
+   "pairs": [
+    {
+     "r": -0.0730479783381127,
+     "a": {
+      "wall_ns": 284233042,
+      "exit": 0,
+      "user_us": 278288,
+      "sys_us": 17587,
+      "maxrss_bytes": 107560960,
+      "instructions": 5255025552,
+      "cycles": 1167825302,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7069108,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 305772833,
+      "exit": 0,
+      "user_us": 293135,
+      "sys_us": 22750,
+      "maxrss_bytes": 108298240,
+      "instructions": 5267575018,
+      "cycles": 1242712376,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7517667,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    },
+    {
+     "r": 0.0679242799383337,
+     "a": {
+      "wall_ns": 314448000,
+      "exit": 0,
+      "user_us": 301069,
+      "sys_us": 21318,
+      "maxrss_bytes": 107560960,
+      "instructions": 5275454785,
+      "cycles": 1274455300,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7722748,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 293798583,
+      "exit": 0,
+      "user_us": 286361,
+      "sys_us": 19273,
+      "maxrss_bytes": 106135552,
+      "instructions": 5263570553,
+      "cycles": 1204148402,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7300879,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    }
+   ]
+  },
+  {
+   "k": 3,
+   "order": "ABBA",
+   "waited_s": 0.0,
+   "load_before": [
+    7.19482421875,
+    7.19482421875,
+    7.19482421875,
+    7.19482421875
+   ],
+   "therm_warning": false,
+   "quiet": true,
+   "pairs": [
+    {
+     "r": 0.13496144948291847,
+     "a": {
+      "wall_ns": 306850167,
+      "exit": 0,
+      "user_us": 293325,
+      "sys_us": 19833,
+      "maxrss_bytes": 106266624,
+      "instructions": 5299948433,
+      "cycles": 1259703866,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7515772,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 268110209,
+      "exit": 0,
+      "user_us": 266586,
+      "sys_us": 12915,
+      "maxrss_bytes": 106283008,
+      "instructions": 5259390177,
+      "cycles": 1167061179,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 6708000,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    },
+    {
+     "r": 0.005398979789573725,
+     "a": {
+      "wall_ns": 295272584,
+      "exit": 0,
+      "user_us": 290651,
+      "sys_us": 15571,
+      "maxrss_bytes": 107429888,
+      "instructions": 5296141411,
+      "cycles": 1201277766,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7349237,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "b": {
+      "wall_ns": 293682709,
+      "exit": 0,
+      "user_us": 289304,
+      "sys_us": 16065,
+      "maxrss_bytes": 106266624,
+      "instructions": 5270757025,
+      "cycles": 1208977000,
+      "qos_cpu": {
+       "default": 0,
+       "maintenance": 0,
+       "background": 0,
+       "utility": 0,
+       "legacy": 7328807,
+       "user_initiated": 0,
+       "user_interactive": 0
+      },
+      "qos_dominant": "legacy",
+      "qos_ui_fraction": 0.0,
+      "checksum": "bf9b780",
+      "stdout_tail": "checksum=bf9b780\n"
+     },
+     "checksum_a": "bf9b780",
+     "checksum_b": "bf9b780"
+    }
+   ]
+  }
+ ]
+}

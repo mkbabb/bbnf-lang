@@ -1,0 +1,42 @@
+== red-base-r1
+error[E0599]: no variant, associated function, or constant named `WordBoundary` found for enum `parse_that_regex::Look` in the current scope
+error[E0599]: no variant, associated function, or constant named `WordBoundary` found for enum `parse_that_regex::Look` in the current scope
+error[E0599]: no variant, associated function, or constant named `NotWordBoundary` found for enum `parse_that_regex::Look` in the current scope
+error[E0599]: no variant, associated function, or constant named `NotWordBoundary` found for enum `parse_that_regex::Look` in the current scope
+== red-base-r2
+error[E0599]: no variant, associated function, or constant named `WordBoundary` found for enum `parse_that_regex::Look` in the current scope
+error[E0599]: no variant, associated function, or constant named `NotWordBoundary` found for enum `parse_that_regex::Look` in the current scope
+error[E0599]: no variant, associated function, or constant named `WordBoundary` found for enum `parse_that_regex::Look` in the current scope
+error[E0599]: no variant, associated function, or constant named `WordBoundary` found for enum `parse_that_regex::Look` in the current scope
+== mutant-variant-r1
+error[E0004]: non-exhaustive patterns: `&parse_that_regex::Look::Mutant` not covered
+== mutant-variant-r2
+error[E0004]: non-exhaustive patterns: `&parse_that_regex::Look::Mutant` not covered
+== mutant-layout-r1
+test hir_abi_fingerprint_is_recorded ... FAILED
+thread 'hir_abi_fingerprint_is_recorded' (14719795) panicked at regex/tests/abi_fingerprint.rs:210:5:
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+== mutant-layout-r2
+test hir_abi_fingerprint_is_recorded ... FAILED
+thread 'hir_abi_fingerprint_is_recorded' (14721686) panicked at regex/tests/abi_fingerprint.rs:210:5:
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+== green-final-r1
+test hir_abi_fingerprint_is_recorded ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test backspace_inside_a_class_is_unchanged ... ok
+test word_boundary_outside_a_class_is_an_assertion ... ok
+== green-final-r2
+test hir_abi_fingerprint_is_recorded ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test backspace_inside_a_class_is_unchanged ... ok
+test word_boundary_outside_a_class_is_an_assertion ... ok
+== workspace-r1
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test dirty_domain_lattice_semantics ... ok
+test parent_dirty_prop_propagates_through_ac3 ... ok
+== workspace-r2
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test parent_dirty_prop_propagates_through_ac3 ... ok
+test dirty_domain_lattice_semantics ... ok

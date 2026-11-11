@@ -1,0 +1,19 @@
+LW2 S11-BENCH entry read, 2026-11-09 22:17-22:25 -0500 (light reads only; nothing measured)
+integration tip: bbnf-lang origin/sk-v27-lw2 9f083f7e7; seat branch lw2/s11-bench cut there
+
+Phase 3 entry (order section 2: "every Phase 2 seat merged; bench/PREREG.md hash committed"):
+  PREREG digest      GREEN x2  bench/test_prereg.py 6 passed x2; PREREG.md sha256 ed4ef41b...3649 = PREREG.md.sha256
+  S4 S5 S8 S9 S10    merged into sk-v27-lw2 (S5 with COMP-4 OPEN on ask S5-A)
+  S6 PERF            NOT merged: origin/lw2/s6-perf 374c133de not an ancestor of sk-v27-lw2 (PERF-3 GREEN x1; PERF-1, PERF-2 not started)
+  S7 RX              NOT merged: origin/lw2/s7-rx 16d657d00 not an ancestor (no unit banked)
+  -> entry condition RED
+
+Machine (X-7, section 5):
+  guarded heavy:                   REFUSED rc 75 "kernel zone data.kalloc.1024 at 8.05M ... heavy and browser runs stop at 8M: reboot the Mac"
+  guarded --exclusive bench --cpu-cores 0: REFUSED rc 75, same line
+  zone.log 22:12-22:17: inuse 7.98M -> 8.05M, slope ~240-270/s (uptime 11:44, i.e. the 2026-11-09 reboot)
+  load1 at read: 38 then 60 (X-7 bar: < 8); other workflows live (chrome-headless-shell, node, python in zone.log top)
+  pmset -g therm: no thermal or performance warning recorded
+
+Consequence: LW2.CON-2, COMP-1 verdicts and the queued cells are not started. No record, no floor, no NOISY label
+is written, because nothing ran. The seat ends per section 2 ("never waits in a loop").

@@ -1,0 +1,1 @@
+load1={ 21.15 15.41 14.32 } read_best_GBps=78.31 read_median_GBps=72.49 copy_best_GBps=233.77 copy_median_GBps=211.35 reps=9 sink=1

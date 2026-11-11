@@ -1,0 +1,18 @@
+# sk-v27 LW2.CON-2 (S11 BENCH): the fresh-process driver of PREREG §9 (F-CURE-RX4).
+# build.sh writes Cargo.toml from this template once per arm, pointing `bbnf` at a detached
+# bbnf-lang worktree of that arm's commit. Nothing else differs between arms.
+[package]
+name = "rx4-driver"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+bbnf = { path = "@BL@/crates/core" }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
+[workspace]

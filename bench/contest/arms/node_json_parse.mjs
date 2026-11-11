@@ -86,6 +86,37 @@ function canonical(v) {
     return Buffer.concat(parts);
 }
 
+// Timed mode (LW2.CON-2, S11): `--time K FILE` parses FILE K times in this one process and folds
+// every node of every result into a checksum inside the timed loop (PREREG §1: the walk is timed),
+// then prints `checksum=<fold>` once. The input bytes are read before the loop.
+function fold(h, x) {
+    if (x === null) return (h * 31 + 1) >>> 0;
+    if (x === true) return (h * 31 + 2) >>> 0;
+    if (x === false) return (h * 31 + 3) >>> 0;
+    if (typeof x === "string") return (h * 31 + x.length + 4) >>> 0;
+    if (Array.isArray(x)) {
+        for (const y of x) h = fold(h, y);
+        return (h * 31 + x.length + 5) >>> 0;
+    }
+    if (typeof x.int === "bigint") return (h * 31 + Number(x.int & 0xffffn) + 6) >>> 0;
+    if (typeof x.f64 === "number") return (h * 31 + (Math.trunc(x.f64) & 0xffff) + 7) >>> 0;
+    let n = 0;
+    for (const k in x) {
+        h = fold((h * 31 + k.length) >>> 0, x[k]);
+        n++;
+    }
+    return (h * 31 + n + 8) >>> 0;
+}
+
+if (process.argv[2] === "--time") {
+    const k = Number(process.argv[3]);
+    const bytes = readFileSync(process.argv[4]);
+    let h = 0;
+    for (let i = 0; i < k; i++) h = fold(h, parse(bytes));
+    console.log(`checksum=${h.toString(16)}`);
+    process.exit(0);
+}
+
 for (const path of process.argv.slice(2)) {
     let line;
     try {

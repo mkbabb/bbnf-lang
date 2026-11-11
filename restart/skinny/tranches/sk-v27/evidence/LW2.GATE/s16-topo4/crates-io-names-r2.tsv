@@ -1,0 +1,16 @@
+pprint	200	mkbabb	0.3.6
+pprint_derive	200	mkbabb	0.2.2
+parse_that	200	mkbabb	0.3.3
+parse-that-regex	404		
+parse-that-simd	404		
+parse-that-egraph	404		
+parse-that-egraph-derive	404		
+parse_that_cli	404		
+csp-solver	200	mkbabb	0.6.0
+bbnf	200	mkbabb	0.2.9
+bbnf-ir	200	mkbabb	0.1.5
+bbnf-ser	404		
+bbnf-path	404		
+bbnf-analysis	200	mkbabb	0.1.1
+bbnf-lsp	404		
+gorgeous	200	mkbabb	0.1.8

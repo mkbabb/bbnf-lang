@@ -31,9 +31,7 @@ mod __cssprettyparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_CssPrettyParser: [&'static str; 1usize] = [
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/css/pretty.bbnf")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/grammar/css/pretty.bbnf")),
     ];
     static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 6usize] = [33, 44, 58, 59, 123, 125];
     pub const GRAMMAR_STRUCTURAL_ALPHABET: &[u8] = &__GRAMMAR_STRUCTURAL_ALPHABET;

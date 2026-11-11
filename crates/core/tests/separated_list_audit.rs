@@ -3,8 +3,9 @@
 //! rewrites it into a strict separated list, so a grammar that means a
 //! strict list must write `x (sep x)*`.
 //!
-//! This audit lowers every tracked `.bbnf` outside `restart/` and
-//! `docs/` (the `grammar/MANIFEST` set) and lists each rule whose IR
+//! This audit lowers every tracked `.bbnf` outside `restart/`, `docs/`
+//! and the in-crate copies under `crates/core/grammar/` (the
+//! `grammar/MANIFEST` set) and lists each rule whose IR
 //! carries the literal form `Repeat { Skip(x, Repeat { sep, 0, 1 }),
 //! hi > 1 }`. Each such use must be ruled: its intent is the literal
 //! reading, recorded with the reason in [`RULED_LITERAL`]. A use not in
@@ -89,6 +90,10 @@ fn tracked_grammars(root: &Path) -> Vec<String> {
         .split('\0')
         .filter(|p| !p.is_empty())
         .filter(|p| !p.starts_with("restart/") && !p.starts_with("docs/"))
+        // The in-crate copies `cargo xtask regen` writes (sk-v27
+        // LW2.TOPO-4b) are byte-identical to their `grammar/` sources
+        // under `regen --check`, so they are not grammars of their own.
+        .filter(|p| !p.starts_with("crates/core/grammar/"))
         .map(str::to_owned)
         .collect()
 }

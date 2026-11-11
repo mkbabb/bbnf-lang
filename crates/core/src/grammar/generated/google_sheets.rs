@@ -33,7 +33,7 @@ mod __googlesheetsparser_emit_impl {
     pub const GRAMMAR_GoogleSheetsParser: [&'static str; 1usize] = [
         include_str!(
             concat!(env!("CARGO_MANIFEST_DIR"),
-            "/../../grammar/google-sheets/google-sheets.bbnf")
+            "/grammar/google-sheets/google-sheets.bbnf")
         ),
     ];
     static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 19usize] = [

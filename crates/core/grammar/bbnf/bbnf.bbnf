@@ -1,0 +1,89 @@
+// BBNF — Better Backus-Naur Form
+// Self-hosted grammar definition.
+
+@import { value_expr, type_annotation } from "expressions" ;
+@import { type_name } from "types" ;
+
+// ─── Terminals ──────────────────────────────────────────────────────────────
+
+identifier = /[_a-zA-Z][_a-zA-Z0-9-]*/ -> Span ;
+
+literal = ( "\"" , /(\\.|[^"\\])*/  , "\""
+        | "'"  , /(\\.|[^'\\])*/  , "'"
+        | "`"  , /(\\.|[^`\\])*/  , "`" ) -> Span ;
+
+regex = ( "/" , /(\\.|[^\/])+/ , "/" ) -> Span ;
+
+big_comment = ( "/*" , /[^\*]*/ , "*/" ) ?w -> Span ;
+comment = ( "//" , /.*/ ) ?w -> Span ;
+
+// ─── Expressions ────────────────────────────────────────────────────────────
+
+lhs = identifier ;
+
+// Grammar function call args: each arg is a single binary_factor
+// (alternation of binary_factors, no comma-concatenation).
+// This avoids ambiguity between call arg commas and concatenation commas.
+call_arg = ( binary_factor ?w , "|" ? ) + ;
+
+term = "ε" | "epsilon"
+     | identifier , ( "(" , call_arg ?w , ( "," ?w , call_arg ?w ) * , ")" ) ?
+     | literal
+     | regex
+     | "@{" , rhs ?w , "}"
+     | "(" , rhs ?w , ")"
+     | "[" , rhs ?w , "]"
+     | "{" , rhs ?w , "}" ;
+
+modifier = "?w" | "?" | "*" | "+" ;
+factor = big_comment ? , term ?w , modifier ? , big_comment ? ;
+
+// Map syntax: factor -> value_expr : type
+mapped_factor = factor , ( "->" ?w , ( value_expr , type_annotation ? ) ) ? ;
+
+binary_operators = "<<" | ">>" | "-" ;
+binary_factor = mapped_factor , ( binary_operators ?w , mapped_factor ) * ;
+
+concatenation = ( binary_factor ?w , "," ? ) + ;
+alternation = ( concatenation ?w , "|" ? ) + ;
+
+// Closures at rule level: |params| rhs (grammar functions)
+closure = "|" , identifier , ( "," ?w , identifier ) * , "|" ?w , rhs ;
+rhs = closure | alternation ;
+
+// ─── Rules and Directives ───────────────────────────────────────────────────
+
+rule = lhs , "=" ?w , rhs ?w , ( ";" | "." ) ;
+
+import_path = "\"" , /(\\.|[^"\\])*/ , "\"" ;
+import_items = "{" ?w , ( identifier , ( "," ?w , identifier ) * ) ?w , "}" ;
+import_directive = "@import" ?w , (
+      import_items ?w , "from" ?w , import_path
+    | import_path
+) ?w , ( ";" | "." ) ? ;
+
+recover_directive = "@recover" ?w , identifier ?w , rhs ?w , ( ";" | "." ) ? ;
+
+pretty_hint = identifier , ( "(" , /[^)]*/ , ")" ) ? ;
+pretty_directive = "@pretty" ?w , ( "*" | identifier ) ?w , ( pretty_hint ?w ) + , ( ";" | "." ) ? ;
+
+ws_directive = "@ws" ?w , regex ?w , ( ";" | "." ) ? ;
+token_directive = "@token" ?w , identifier ?w , ( ";" | "." ) ? ;
+debug_directive = "@debug" ?w , ( "*" | identifier ) ?w , ( ";" | "." ) ? ;
+host_directive = "@host" ?w , identifier ?w , ( ":" ?w , type_name ?w ) ? , ( ";" | "." ) ? ;
+
+directive = import_directive
+          | recover_directive
+          | pretty_directive
+          | ws_directive
+          | token_directive
+          | debug_directive
+          | host_directive ;
+
+// Grammar: top-level items in any order.
+grammar_item = comment | big_comment | directive | rule ;
+grammar = ( grammar_item ?w ) * ;
+
+@pretty grammar block ;
+@pretty rule group ;
+@pretty alternation group ;

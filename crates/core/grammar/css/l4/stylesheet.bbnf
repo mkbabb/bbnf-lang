@@ -1,0 +1,60 @@
+@import "properties.bbnf" ;
+@import "selectors.bbnf" ;
+@import "media.bbnf" ;
+
+// Comment-aware whitespace: skip block comments as whitespace.
+// Uses DFA-compatible comment body: [^*]* matches non-star chars, then
+// (\*+[^/][^*]*)* handles star sequences that aren't followed by /, and
+// \*+/ matches the closing. Avoids non-greedy .*? which the parse-that
+// DFA backend compiles as greedy .* (subset construction discards the
+// NFA's lazy/greedy ε-priority), causing the entire region between two
+// `/*` ... `*/` pairs to be swallowed as one comment.
+@ws /(?s)(?:\s|\/\*[^*]*(?:\*+[^\/][^*]*)*\*+\/)*/ ;
+@token ident ;
+
+blockContent = ((declaration | ruleItem) ?w) * ;
+ruleBlock    = "{" >> blockContent ?w << "}" ;
+
+// Typed selectors — full CSS Selectors L4 AST (parity with lightningcss)
+qualifiedRule = selectorList ?w , ruleBlock ?w ;
+
+// Typed @-rules
+mediaRule     = "@media" ?w , mediaQueryList ?w , ruleBlock ;
+
+// u8 discriminant for keyframe selector forms: percentage=0, from=1, to=2.
+// (Numeric percent stops use tag 0; the numeric literal carries the
+// percentage value when AU.2.5 aggregate codegen composes it.)
+keyframeStop  = /\d+(\.\d+)?%/ -> 0u8 | "from" -> 1u8 | "to" -> 2u8 ;
+keyframeSel   = keyframeStop , (/\s*,\s*/ >> keyframeStop) * ;
+keyframeBlock = keyframeSel ?w , "{" >> ((declaration ?w) *) ?w << "}" ;
+keyframesRule = /@(-[a-z]+-)?keyframes/ ?w , ident ?w , "{" >> ((keyframeBlock ?w) *) ?w << "}" ;
+
+// Generic @-rule fallback
+atRuleBody    = ruleBlock | ";" ;
+genericAtRule = /@-?[a-zA-Z][\w-]*/ , /[^;{}]*/ , atRuleBody ;
+
+// u8 discriminant for at-rule kind — matches lightningcss AtRule ordering:
+// @media=0, @keyframes=1, generic (catch-all)=255.
+// TODO typed-aggregate (AU.2.6): per-variant body types (MediaQueryList vs
+// KeyframeBlockList vs generic prelude). Variant-payload codegen lands
+// with AU.6.7.
+atRule   = mediaRule | keyframesRule | genericAtRule ;
+ruleItem = qualifiedRule | atRule ;
+ruleList = (ruleItem ?w) * ;
+stylesheet = ruleList ?w ;
+
+// Prettify directives — match lightningcss's default PrinterOptions
+// output shape for W1r.3a canonical-form parity. Separator + wrapper
+// choices align with `grammar/css/pretty.bbnf` (the L2 reference) so
+// the two grammars emit structurally similar output on shared
+// fixtures. The `token_normalize` pipeline in
+// `crates/core/tests/common/css_normalize.rs` cancels any residual
+// syntactic divergences.
+@pretty stylesheet block ;
+@pretty ruleList blankline ;
+@pretty blockContent block indent ;
+@pretty qualifiedRule group ;
+@pretty mediaRule group indent ;
+@pretty keyframesRule group indent ;
+@pretty genericAtRule group ;
+@pretty atRule group ;

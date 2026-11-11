@@ -1,0 +1,27 @@
+bbnf-lang	#12	fail	Rust (macos-15) — preflight + workspace close (shard 1/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210876
+bbnf-lang	#12	fail	Rust (macos-15) — preflight + workspace close (shard 2/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210942
+bbnf-lang	#12	fail	Rust (ubuntu-latest) — preflight + workspace close (shard 1/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210654
+bbnf-lang	#12	fail	Rust (ubuntu-latest) — preflight + workspace close (shard 2/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210765
+bbnf-lang	#12	fail	Rust — cargo +stable (latest)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210305
+bbnf-lang	#12	fail	ci-ok	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129662749388
+bbnf-lang	#12	pass	Extension — lint + build	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210725
+bbnf-lang	#12	pass	Rust (macos-15) — preflight + workspace close (shard 3/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210799
+bbnf-lang	#12	pass	Rust (ubuntu-latest) — preflight + workspace close (shard 3/3)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210736
+bbnf-lang	#12	pass	Rust — Intel SDE (AVX-512 tier, simd-scan)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210561
+bbnf-lang	#12	pass	Rust — hermetic clean-clone build	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210651
+bbnf-lang	#12	pass	TypeScript — tests (with the Rust parity arm)	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065743/job/129624210643
+bbnf-lang	#12	pass	iai-bench	https://github.com/mkbabb/bbnf-lang/actions/runs/42754065726/job/129624210689
+parse-that	#4	fail	Rust (macos-15) — clippy + nextest	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129618747147
+parse-that	#4	fail	Rust (ubuntu-latest) — clippy + nextest	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129618747085
+parse-that	#4	fail	Rust — cargo +stable (latest)	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129618747080
+parse-that	#4	fail	ci-ok	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129620580637
+parse-that	#4	pass	Rust — Intel SDE (AVX-512, sapphirerapids)	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129618747119
+parse-that	#4	pass	Rust — nightly plane (parse_that/nightly)	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129618746835
+parse-that	#4	pass	Rust — repo DAG + hermetic clean-clone build	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129618747110
+parse-that	#4	pass	typescript	https://github.com/mkbabb/parse-that/actions/runs/42752374625/job/129618747114
+pprint	#3	pass	Rust (macos-15) — clippy + nextest	https://github.com/mkbabb/pprint/actions/runs/42752371072/job/129618732050
+pprint	#3	pass	Rust (ubuntu-latest) — clippy + nextest	https://github.com/mkbabb/pprint/actions/runs/42752371072/job/129618732150
+pprint	#3	pass	Rust — Intel SDE (AVX-512, sapphirerapids)	https://github.com/mkbabb/pprint/actions/runs/42752371072/job/129618731770
+pprint	#3	pass	Rust — cargo +stable (latest)	https://github.com/mkbabb/pprint/actions/runs/42752371072/job/129618732022
+pprint	#3	pass	Rust — repo DAG + hermetic clean-clone build	https://github.com/mkbabb/pprint/actions/runs/42752371072/job/129618732211
+pprint	#3	pass	ci-ok	https://github.com/mkbabb/pprint/actions/runs/42752371072/job/129631139622

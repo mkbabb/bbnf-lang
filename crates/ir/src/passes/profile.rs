@@ -71,7 +71,7 @@ pub struct GrammarProfile {
     /// Stored as `(first, second)` tuples — the emitter lowers this
     /// directly to a `&'static [(u8, u8)]` that feeds the runtime
     /// `GrammarProfile::structural_digraphs` slot and the SIMD
-    /// scanner's [`simd_scan::StructuralAlphabet::digraph_pairs`]
+    /// scanner's `parse_that::scan::StructuralAlphabet::digraph_pairs`
     /// with no shim layer (AW-III.W5.d).
     pub structural_digraphs: Vec<(u8, u8)>,
 

@@ -73,6 +73,16 @@ class Prereg(unittest.TestCase):
         self.assertEqual(tiers, {"TOKENIZE", "COLOR→RGBA", "FULL-VALUE"})
         self.assertRegex(t, r"FULL-VALUE[^\n]*unranked")
 
+    def test_perf3_paired_cure_cells_are_registered(self):
+        # LW2.SEAM S12-P4-6 (ACCEPTED IN PART): PERF-3 changes the span parser's hot-path dispatch inlining
+        # (parse-that 92ff470); its parent-vs-cure cells are registered before Phase 3.
+        t = _text()
+        cells = re.findall(r"^\| (C-PERF3-[A-Z0-9-]+) \| F-CURE-PERF3 \| [^|]+ \| ([^|]+) \| `ad0dc8a` \| `92ff470` \|.*\| PORTABLE \|$", t, re.M)
+        self.assertEqual({c[0] for c in cells},
+                         {"C-PERF3-CSS-BOOTSTRAP", "C-PERF3-CSS-TAILWIND", "C-PERF3-JSON-TWITTER"}, cells)
+        self.assertRegex(t, r"F-CURE-PERF3[^\n]*not a contest")
+        self.assertRegex(t, r"(?s)PERF-3[^\n]*correctness cure[^\n]*LOSS")
+
     def test_noisy_never_certifies(self):
         self.assertRegex(_text(), r"NOISY[^\n]*never certif")
 

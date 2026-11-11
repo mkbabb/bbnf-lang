@@ -1,0 +1,35 @@
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/bbnf_bench-133dde847e35af94)
+test json_w9::tests::w9_surface_probe_classifies_direct_and_typed_rows ... FAILED
+thread 'json_w9::tests::w9_surface_probe_classifies_direct_and_typed_rows' (7274994) panicked at crates/bbnf-bench/src/json_w9.rs:138:44:
+    json_w9::tests::w9_surface_probe_classifies_direct_and_typed_rows
+test result: FAILED. 58 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.05s
+     Running unittests src/bin/css_canon_bench.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/css_canon_bench-d2a673e534384257)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/css_track1_profile.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/css_track1_profile-8ed59d712cad9756)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/json_canon_bench.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/json_canon_bench-7e82a525aea8935e)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/profile_direct.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/profile_direct-040d89923715d1aa)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/w1_tape_typed_bench.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/w1_tape_typed_bench-90bba1199c470ac5)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/w2_rich_cssom_bench.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/w2_rich_cssom_bench-6d9730f9ca187ead)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/w4_css_reprofile.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/w4_css_reprofile-dbf7c6c713db62a7)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/bin/xctrace_probe.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/xctrace_probe-364a70624a8b48a7)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/codegen-bf29ada2c4136076)
+test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/parse_that_regex-2f3005f68522fe55)
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/runtime-052dca2dee94572a)
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/css_scan_differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/css_scan_differential-2f65159584fb3c41)
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 22.91s
+     Running tests/sheets_conformance.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-bbnf-lang/debug/deps/sheets_conformance-6abac6a2a1e7e9b0)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

@@ -1,0 +1,12 @@
+    41152  _parse_that::parsers::css::css_at_rule::{closure#0}::{closure#0}
+    35632  _<parse_that::span_parser::SpanParser>::call_inner
+    28752  _parse_that::parsers::css::media::parse_supports_condition
+    19776  _parse_that::parsers::css::declaration::css_keyframe_stop::{closure#2}
+    19536  _parse_that::parsers::css::value::parse_number_value_inline
+    13088  _parse_that::parsers::css::media::parse_media_feature
+    12192  _parse_that::parsers::css::media::parse_media_condition
+    10560  _fast_float2::binary::compute_product_approx
+     8720  _parse_that::parsers::css::media::parse_media_query
+     8432  _parse_that::parsers::css::selector::css_pseudo_selector::{closure#0}::{closure#1}
+     7200  _parse_that::parsers::css::declaration::css_declaration::{closure#0}
+     6944  _<memchr::arch::aarch64::neon::memchr::Three>::find_raw_impl

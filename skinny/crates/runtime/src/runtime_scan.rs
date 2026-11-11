@@ -16,7 +16,7 @@
 //! it returns offsets and EMITS NOTHING, structurally incompatible with the
 //! parse-WITH-emit `{}`/`[]` descents of JSON/Sheets. The CSS-scoped name is
 //! therefore FORCED, not contingent. The INNER structural-classification
-//! sub-kernel (`bbnf_simd::prim::structural_classify_64`, the grammar-neutral
+//! sub-kernel (`parse_that_simd::prim::structural_classify_64`, the grammar-neutral
 //! `vceqq` fan) stays neutral: it takes the significant byte-set + the kind
 //! partition as CALLER DATA.
 //!
@@ -34,7 +34,7 @@
 //! `pos` advances past the current block — at the block boundary or after a
 //! recursion / string / comment jump (§3.3 of the redesign research).
 
-use bbnf_simd::prim::{structural_classify_64, KindPartition};
+use parse_that_simd::prim::{structural_classify_64, KindPartition};
 
 /// A position-only scan error (the CSS provider maps it to its `CssFactError`).
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]

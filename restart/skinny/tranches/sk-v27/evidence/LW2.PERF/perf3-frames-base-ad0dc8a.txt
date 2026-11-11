@@ -1,0 +1,12 @@
+  1371152  _parse_that::parsers::css::css_at_rule::{closure#0}::{closure#0}
+   397088  _parse_that::parsers::css::selector::css_pseudo_selector::{closure#0}::{closure#1}
+   302624  _parse_that::parsers::css::selector::css_attribute_selector::{closure#0}
+   206896  _parse_that::parsers::css::declaration::css_declaration_block::{closure#0}
+   171760  _parse_that::parsers::css::css_stylesheet::{closure#1}
+   114096  _<parse_that::span_parser::SpanParser>::dispatch_sep_by_ws
+   113248  _<parse_that::span_parser::SpanParser>::dispatch_sep_by
+   113152  _<parse_that::span_parser::SpanParser>::dispatch_wrap
+   113040  _parse_that::parsers::css::declaration::css_keyframe_block::{closure#0}
+   113040  _parse_that::parsers::css::selector::css_selector_list::{closure#0}
+    86656  _parse_that::parsers::css::selector::css_complex_selector::{closure#0}::{closure#0}
+    81424  _parse_that::parsers::css::declaration::css_keyframe_block::{closure#1}

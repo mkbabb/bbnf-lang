@@ -1,0 +1,64 @@
+   Compiling libc v0.2.184
+   Compiling cfg-if v1.0.4
+   Compiling getrandom v0.3.4
+   Compiling proc-macro2 v1.0.106
+   Compiling rustix v1.1.4
+   Compiling bitflags v2.11.0
+   Compiling unicode-ident v1.0.24
+   Compiling zerocopy v0.8.48
+   Compiling quote v1.0.45
+   Compiling autocfg v1.5.0
+   Compiling clap_lex v1.1.0
+   Compiling anstyle v1.0.14
+   Compiling bit-vec v0.8.0
+   Compiling condtype v1.3.0
+   Compiling regex-lite v0.1.9
+   Compiling unarray v0.1.4
+   Compiling regex-syntax v0.8.10
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw2-s6-perf/rust/corpus)
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw2-s6-perf/rust/simd)
+   Compiling bit-set v0.8.0
+   Compiling num-traits v0.2.19
+   Compiling syn v2.0.117
+   Compiling errno v0.3.14
+   Compiling rand_core v0.9.5
+   Compiling rand_xorshift v0.4.0
+   Compiling rand v0.9.5
+   Compiling terminal_size v0.4.4
+   Compiling clap_builder v4.6.0
+   Compiling clap v4.6.1
+   Compiling divan-macros v0.1.21
+   Compiling divan v0.1.21
+   Compiling ppv-lite86 v0.2.21
+   Compiling rand_chacha v0.9.0
+   Compiling proptest v1.11.0
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.34s
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-parse-that/miri/aarch64-apple-darwin/debug/deps/parse_that_simd-981723b3e23d1c6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-parse-that/miri/aarch64-apple-darwin/debug/deps/dispatch_tiers-f611af36f625ccd4)
+
+running 3 tests
+test every_isa_tier_of_the_target_is_compiled ... ok
+test every_supported_tier_matches_the_scalar_oracle ... ok
+test selected_tier_is_the_best_supported ... ignored, Miri selects the scalar tier by design (dispatch::select)
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 104.99s
+
+     Running tests/prim_differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/target-parse-that/miri/aarch64-apple-darwin/debug/deps/prim_differential-3eb36ddfb632d657)
+
+running 8 tests
+test bracket_depth_mask_64 ... ok
+test byte_class_from_eq_set_64 ... ok
+test decode_hex_quads ... ok
+test lo6_classify ... ok
+test string_special_block ... ok
+test structural_classify_64 ... ok
+test the_selected_tier_runs_the_neon_bodies_on_aarch64 ... ok
+test validate_utf8_block ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3296.82s
+

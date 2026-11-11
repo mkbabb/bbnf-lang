@@ -22,7 +22,7 @@ impl ValidateStatus {
 pub fn validate_block(input: &[u8; 16]) -> ValidateStatus {
     #[cfg(target_arch = "aarch64")]
     {
-        let status = unsafe { bbnf_simd::aarch64::utf8::validate_block(input.as_ptr()) };
+        let status = parse_that_simd::prim::validate_utf8_block(input);
         return ValidateStatus {
             is_valid: status.is_valid(),
             complete_bytes: status.complete_bytes(),

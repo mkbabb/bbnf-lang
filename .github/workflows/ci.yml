@@ -10,7 +10,8 @@ on:
 # stable toolchain (rust-toolchain.toml), each sharded three ways with the
 # preflight (regen, clippy -D warnings, iter-check) on both arms; a
 # `cargo +stable` job on the latest stable; and an Intel SDE job that runs
-# simd-scan's AVX-512 tier. `ci-ok` needs every job and is the one required
+# the generated parsers' x86 paths (the kernels and their SDE arm are
+# parse-that-simd's, in parse-that, since LW2.PERF-1). `ci-ok` needs every job and is the one required
 # check. The build wrapper is set here (RUSTC_WRAPPER with the sccache
 # action), never in .cargo/config.toml (LW2.TOPO-2).
 
@@ -160,11 +161,16 @@ jobs:
       - run: cargo +stable test --workspace --locked --no-fail-fast
 
   sde:
-    # Intel SDE (Sapphire Rapids: AVX-512 F, BW, VBMI2) runs simd-scan's
-    # suite, so the runtime dispatch selects the AVX-512 tier and its
-    # kernel executes on an emulated part that has the ISA (ruling X-4).
-    # The dispatch_tiers suite prints the selected tier.
-    name: Rust — Intel SDE (AVX-512 tier, simd-scan)
+    # Intel SDE (Sapphire Rapids: AVX-512 F, BW, VBMI2) runs the generated
+    # JSON and CSS parsers on a default build, so any structural-index scan
+    # they make runs parse_that::scan's runtime-selected AVX-512 tier on an
+    # emulated part that has the ISA (ruling X-4).
+    # parse-that-simd's own SDE arm is in parse-that. The emitter's
+    # compile-time-only AVX2 regex paths are not built here: with
+    # `-C target-cpu=sapphirerapids` they do not compile on stable
+    # (`str_as_str`, generated bbnf.rs; LW2.PERF-1 finding, routed to the
+    # codegen unit that retires them, U6).
+    name: Rust — Intel SDE (AVX-512, generated parsers)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -173,13 +179,13 @@ jobs:
           rustup toolchain install
           rustc --version
       - uses: petarpetrovt/setup-sde@6d2773bc0ef3005fd52e0ae0bb91782321793aec # v6.0
-      # simd-scan's correctness suite reads the canonical corpus (TOPO-6).
+      # The parity suites read the canonical corpus (TOPO-6).
       - name: corpus — fetch and verify (release asset, sha256 manifest)
         run: cargo xtask corpus fetch
-      - name: simd-scan suites under SDE
+      - name: generated-parser parity suites under SDE
         run: |
           export CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER="$SDE_PATH/sde64 -spr --"
-          cargo test -p simd-scan --locked --no-fail-fast --lib --tests -- --nocapture
+          cargo test --target x86_64-unknown-linux-gnu -p bbnf --locked --no-fail-fast --test json_parity --test css_l4_parity
 
   extension:
     name: Extension — lint + build

@@ -24,11 +24,9 @@
 //!
 //! - [`object`] — `parse_object_<grammar>_<rule>` emitter.
 //! - [`array`] — `parse_array_<grammar>_<rule>` emitter.
-//! - [`string`] — `parse_string_<grammar>_<rule>` emitter (quoted-
-//!   string SIMD body via `simd-scan::emit::quoted_string_simd_body`
-//!   / `first_quote_or_backslash`).
+//! - [`string`] — `parse_string_<grammar>_<rule>` emitter.
 //! - [`number`] — `parse_number_<grammar>_<rule>` emitter (Eisel-Lemire
-//!   body via `simd-scan::emit::eisel_lemire_body`).
+//!   body).
 //! - [`keyword`] — `parse_keyword_<grammar>_<rule>` emitter (literal or
 //!   short Alt-of-literal dispatch).
 //! - [`scalar`] — `parse_scalar_<grammar>_<rule>` emitter (single-leaf

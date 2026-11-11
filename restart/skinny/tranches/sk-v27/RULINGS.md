@@ -67,3 +67,14 @@ The third reading of LG-2 (value.js COHESION §0hz.lw2, evidence `lw2/lg2-r3` `0
 | S11-A | **No.** No bench is taken before PERF-1b is banked and S6 and S7 are merged with PREREG reconciled. |
 | S15-A | **No.** pprint does not merge early. |
 | LG-2-A | **No.** The three LW2 PRs (bbnf-lang #12, parse-that #4, pprint #3) merge together, through the gate, after every row is GREEN ×2. |
+
+## Addendum, 2026-11-11: the LW2 delegate rulings after the fourth LG-2 reading (by the delegate, the orchestrator)
+
+The fourth reading of LG-2 (`lw2/lg2-r4` `0a3ccb1b7`, evidence `evidence/LW2.GATE/r4/`) was RED and nothing merged. Its one blocker is LW2.GATE TOPO-4: the publish dry-run read RED ×2 (`e06220484`). These rulings answer the asks open at that reading: TOPO-4-A and TOPO-4-B (S16's TOPO-4 row), LG-de and the QoS reading (LW2-ORDER §5). LG-2-A (2026-11-10b) stands unchanged.
+
+| # | Ruling |
+|---|---|
+| TOPO-4-A | **A published crates.io version is never overwritten or reused.** Each collided crate is bumped to its next patch: `pprint` 0.3.7, `pprint_derive` 0.2.3, `bbnf-analysis` 0.1.2. The one exception is a crate that is already moving to its 0.4 line in this wave: it takes that 0.4 version instead. Falsifier: the TOPO-4 dry-run's name-and-version read against the crates.io API shows 0 versions in the publish set that crates.io already holds. |
+| TOPO-4-B | **A new LW2 unit, LW2.TOPO-4b, cures it at root.** `bbnf-ir` reads its strategy table from its own `[package.metadata]` or from a crate-local file, never from the workspace-root `Cargo.toml`. The emitter writes grammar paths that sit inside the crate, and `cargo xtask regen --check` keeps the in-crate copy in step with `grammar/`. `parse_that_cli` is `publish = false` while it depends on `parse-that-corpus`. Falsifier: the TOPO-4 dry-run itself, RED ×2 → GREEN ×2. |
+| LG-de | **LG-d (row-0 timings) and LG-e (cell re-reads) carry to LW3** as named ledger rows, each with its blocker and a 72 h clock. They do not block the LG-2 merge. Nothing is CERTIFIED in LW2. |
+| QoS | **The order's proposed reading (LW2-ORDER §5) is adopted.** Load and thermal state decide the NOISY label. Every record states its QoS class as a disclosed host condition, and a pair whose two arms ran under different QoS accounting is discarded. The FLOORS row (above) stands as frozen; the plan's contingency (G-G2 → NOISY-UNFROZEN) does not fire. |

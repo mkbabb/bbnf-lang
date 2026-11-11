@@ -1,0 +1,15 @@
+parse-that-egraph-derive	0.1.0	free
+parse-that-egraph	0.1.0	free
+pprint_derive	0.2.2	COLLISION
+pprint	0.3.6	COLLISION
+pprint	0.4.0-alpha.0	free
+parse-that-simd	0.1.0	free
+parse-that-regex	0.1.0	free
+parse_that	0.4.0	free
+bbnf-ser	0.1.0	free
+bbnf-ir	0.1.6	COLLISION (yanked)
+bbnf-path	0.1.0	free
+bbnf	0.2.11	COLLISION (yanked)
+bbnf-analysis	0.1.1	COLLISION
+bbnf-lsp	0.1.0	free
+gorgeous	0.1.10	COLLISION (yanked)

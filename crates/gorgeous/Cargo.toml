@@ -1,6 +1,6 @@
 [package]
 name = "gorgeous"
-version = "0.1.10"
+version = "0.1.11"
 edition = "2024"
 license = "MIT"
 description = "Grammar-driven pretty printers auto-generated from BBNF grammars"
@@ -76,8 +76,8 @@ vm = ["dep:bbnf-ir"]
 
 [dependencies]
 parse_that = { workspace = true, features = ["diagnostics"] }
-bbnf = { version = "0.2", path = "../core" }
-bbnf-ir = { version = "0.1", path = "../ir", optional = true }
+bbnf = { version = "0.2.12", path = "../core" }
+bbnf-ir = { version = "0.1.7", path = "../ir", optional = true }
 pprint.workspace = true
 
 [dev-dependencies]

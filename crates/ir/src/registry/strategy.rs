@@ -119,17 +119,18 @@ pub enum EmitStrategy {
 }
 
 // SK-V19.W6a — canonical manifest-driven strategy table
-// (`PRODUCTION_MANIFEST_TABLE`), generated from workspace metadata.
+// (`PRODUCTION_MANIFEST_TABLE`), generated from manifest metadata.
 //
 // Per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22 and the
 // SK-V19 Lock-14 close (zero grammar-specific code in generic crates),
 // the per-grammar strategy binding is DATA, not a Rust source-side
-// arm-list — and the data lives in `[workspace.metadata.bbnf-strategy]`
-// of the workspace `Cargo.toml`, NOT as a grammar-named const in this
-// generic crate. `crates/ir`'s `build.rs` reads that table and emits
-// the `PRODUCTION_MANIFEST_TABLE` const below into
+// arm-list — and the data lives in `[package.metadata.bbnf-strategy]`
+// of this crate's `Cargo.toml` (shipped in the package; sk-v27
+// LW2.TOPO-4b), NOT as a grammar-named const in this generic crate.
+// `crates/ir`'s `build.rs` reads that table and emits the
+// `PRODUCTION_MANIFEST_TABLE` const below into
 // `$OUT_DIR/production_manifest_table.rs`. Adding a new grammar adds a
-// row to the workspace Cargo.toml table — no edit lands in this file.
+// row to that manifest table — no edit lands in this file.
 //
 // Each row's `idents` slice carries every parser-struct alias the
 // grammar advertises (so a grammar's `"…Parser"` and `"…Grammar"`
@@ -177,7 +178,7 @@ impl EmitStrategy {
     /// AZ-IV.W0.3 / W1.8 — manifest-driven strategy resolver.
     ///
     /// Looks up `grammar_ident` in `manifest_table` (per-row entries
-    /// constructed from `[workspace.metadata.bbnf-strategy]` or the
+    /// constructed from `[package.metadata.bbnf-strategy]` or the
     /// canonical [`PRODUCTION_MANIFEST_TABLE`]). When a row matches,
     /// the strategy is constructed directly from the row's Rust
     /// binding paths — no literal arm in this source file is
@@ -244,7 +245,7 @@ impl EmitStrategy {
 ///
 /// Rows are constructed by the manifest reader (consumer side, not
 /// this crate). The reader normalises rows from
-/// `[workspace.metadata.bbnf-strategy]` or an in-memory test fixture;
+/// `[package.metadata.bbnf-strategy]` or an in-memory test fixture;
 /// either source produces the same row shape, so the resolver is
 /// identical regardless of provenance.
 ///

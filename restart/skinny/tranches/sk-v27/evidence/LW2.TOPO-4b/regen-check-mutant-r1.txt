@@ -1,0 +1,4 @@
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/target-shared/ax-iter/xtask regen --check`
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/target-shared/ax-iter/xtask regen --check`
+drift: in-crate grammar copy `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4b/crates/core/grammar/misc/csv.bbnf` differs from `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4b/grammar/misc/csv.bbnf` — regenerate with `cargo xtask regen --grammar csv`
+Error: regen --check: 1 of 9 grammars drifted

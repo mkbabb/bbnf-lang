@@ -31,9 +31,7 @@ mod __jsonparser_emit_impl {
     use super::*;
     use ::parse_that::*;
     pub const GRAMMAR_JsonParser: [&'static str; 1usize] = [
-        include_str!(
-            concat!(env!("CARGO_MANIFEST_DIR"), "/../../grammar/json/json.bbnf")
-        ),
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/grammar/json/json.bbnf")),
     ];
     static __GRAMMAR_STRUCTURAL_ALPHABET: [u8; 6usize] = [44, 58, 91, 93, 123, 125];
     static __GRAMMAR_STRUCTURAL_QUOTE_CLASSES: [u8; 1usize] = [34];

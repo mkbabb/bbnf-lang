@@ -6,10 +6,12 @@
   topo4.py verify     <repo> <worktree> <local> <origin>   the falsifier
 
 MANIFEST: one line per tracked *.bbnf, "sha256  path", sorted by path; it
-excludes .claude/worktrees/, restart/ and target/."""
+excludes .claude/worktrees/, restart/, target/ and the in-crate copies under crates/core/grammar/."""
 import hashlib, pathlib, re, subprocess, sys
 
-EXCL = (".claude/worktrees/", "restart/", "target/")
+# crates/core/grammar/ holds the in-crate copies `cargo xtask regen` writes (LW2.TOPO-4b),
+# byte-identical to their grammar/ sources under `regen --check`: not grammars of their own.
+EXCL = (".claude/worktrees/", "restart/", "target/", "crates/core/grammar/")
 TR = pathlib.Path(__file__).resolve().parent.parent
 
 def git(d, *a):

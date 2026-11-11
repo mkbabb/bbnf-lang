@@ -164,6 +164,8 @@ def load_cell(path: str, quiet_only: bool) -> dict:
     files = sorted(glob.glob(os.path.join(path, "*.json")))
     recs = [json.load(open(f)) for f in files]
     recs = [r for r in recs if r.get("schema") == "cb-b0-pairs/1"]
+    dirty = [r for r in recs if r["repo"]["dirty"]]
+    recs = [r for r in recs if not r["repo"]["dirty"]]  # a record over an uncommitted tree never counts
     if not recs:
         raise SystemExit(f"no pair records under {path}")
     cells = {r["cell"] for r in recs}
@@ -178,6 +180,7 @@ def load_cell(path: str, quiet_only: bool) -> dict:
             pairs.extend(b["pairs"])
     kept, discarded = screen_pairs(pairs)
     return {"cell": cells.pop(), "records": [os.path.basename(f) for f in files], "invocations": len(recs),
+            "records_dirty_excluded": len(dirty), "trees": sorted({r["repo"]["tree_hash"][:16] for r in recs}),
             "blocks_dropped_noisy": blocks_dropped, "pairs_total": len(pairs), "pairs_discarded": discarded,
             "kept": kept, "statuses": sorted({r["status"] for r in recs}),
             "load_max": max(max(b["load_before"]) for r in recs for b in r["blocks"]),

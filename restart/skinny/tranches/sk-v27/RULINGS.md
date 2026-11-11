@@ -107,3 +107,12 @@ The sixth reading of LG-2 (`lw2/lg2-r6` `a8522e3ac`, merged as `2a5640e28`; evid
 | TOPO-4-A3 | **Yes.** The integration head's `0.5.0-alpha.0` line stays out of this wave's publish set and is reconciled against 0.4.0 as `topo4c.sh` reads it. |
 | TOPO-4-A4 | **Ratified** (LW2.TOPO-4e, done as the critic recommended). |
 | Standing | LG-d and LG-e carry to LW3 (LG-de). LG-2-A: nothing merges while any row is RED. A crates.io version is never reused, yanked included. |
+
+## Addendum, 2026-11-11d: TOPO-4-A6 and the standing rule for the eighth LG-2 reading (by the delegate, the orchestrator)
+
+The seventh reading of LG-2 (`lw2/lg2-r7` `44aff36fb`, merged as `657b19d18`; evidence `evidence/LW2.GATE/r7/`) was RED on one row only: `evidence/LW2.TOPO-4e/pins.sh` read 6 MISMATCH ×2, because bbnf-lang's parse-that pins name `48ed339`, whose git tree differs from parse-that's PR #4 head `1dea59e` by 8 documentation lines (`docs/tranches/SK-V27.md`; `rust/` is the same tree `eb79a6de7` in both), a gate record having been merged into parse-that `sk-v27-lw2` after the re-pin. Every other row read GREEN ×2. This ruling answers ask TOPO-4-A6. LG-2-A, LG-2-B, TOPO-4-A2/A3/A4/A5, LG-de (LG-d, LG-e), LW3.CI-IAI-1 and the never-reuse rule stand unchanged.
+
+| # | Ruling |
+|---|---|
+| TOPO-4-A6 | **Option 1.** bbnf-lang's parse-that pins are re-pinned to parse-that's final PR head (`1dea59e`) in the manifests and lockfiles of all three workspaces (root, `skinny/`, `wasm/`); `pins.sh` RED ×2 → GREEN ×2; **the test is not changed**. From now on nothing more is committed to parse-that `sk-v27-lw2` or pprint `sk-v27-lw2` before the merge: a reading's records go in bbnf-lang only, and bbnf-lang's own record commits are made **before** the final CI read, not after. Unit: **LW2.TOPO-4f**. |
+| Standing (eighth reading) | A RED that is purely a stale pin or a stale record (no source change in any crate) may be cured inside the reading by the gate seat as its own small unit (RED ×2 → GREEN ×2, a LEDGER row), followed by a fresh CI read and a fresh full re-read of every row. Any other RED stops the reading. |

@@ -1,0 +1,22 @@
+parse-that-egraph-derive	0.1.0	d5f0a5c	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4b/rust	rc=0
+parse-that-egraph	0.1.0	d5f0a5c	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4b/rust	rc=0
+pprint_derive	0.2.3	9322105	/Users/mkbabb/Programming/pprint-wt/lw2-topo-4b-0.3/rust/derive	rc=0
+pprint	0.3.7	9322105	/Users/mkbabb/Programming/pprint-wt/lw2-topo-4b-0.3/rust	rc=0
+pprint	0.4.0-alpha.0	8df1ac3	/Users/mkbabb/Programming/pprint-wt/lw2-topo-4b/rust	rc=0
+parse-that-simd	0.1.0	d5f0a5c	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4b/rust	rc=0
+parse-that-regex	0.1.0	d5f0a5c	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4b/rust	rc=0
+parse_that	0.4.0	d5f0a5c	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4b/rust	rc=0
+bbnf-ser	0.1.0	d86b8bca4	/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/r5/lg2-r5/wt/bl-parent	rc=0
+bbnf-ir	0.1.7	d86b8bca4	/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/r5/lg2-r5/wt/bl-parent	rc=0
+bbnf-path	0.1.0	d86b8bca4	/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/r5/lg2-r5/wt/bl-parent	rc=0
+bbnf	0.2.12	d86b8bca4	/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/r5/lg2-r5/wt/bl-parent	rc=0
+bbnf-analysis	0.1.2	d86b8bca4	/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/r5/lg2-r5/wt/bl-parent	rc=0
+bbnf-lsp	0.1.0	d86b8bca4	/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/r5/lg2-r5/wt/bl-parent	rc=0
+gorgeous	0.1.11	d86b8bca4	/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/r5/lg2-r5/wt/bl-parent	rc=0
+publish rc=0
+consumer cargo +stable build rc=0
+name = "bbnf"
+version = "0.2.12"
+path consumer cargo +stable build rc=101
+crates.io collisions=0 read-errors=0
+TOPO-4c read parent-r2: RED

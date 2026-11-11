@@ -1,0 +1,14 @@
+== bbnf-lang:12
+Rust (macos-15) — preflight + workspace close (shard 1/3)	fail
+Rust (macos-15) — preflight + workspace close (shard 2/3)	fail
+Rust (ubuntu-latest) — preflight + workspace close (shard 1/3)	fail
+Rust (ubuntu-latest) — preflight + workspace close (shard 2/3)	fail
+Rust — cargo +stable (latest)	fail
+ci-ok	fail
+== parse-that:4
+Rust (macos-15) — clippy + nextest	fail
+Rust (ubuntu-latest) — clippy + nextest	fail
+Rust — cargo +stable (latest)	fail
+ci-ok	fail
+== pprint:3
+ci-ok	pass

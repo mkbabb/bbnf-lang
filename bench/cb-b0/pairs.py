@@ -6,7 +6,9 @@ processes (A B B A), each block giving two pairs (A1,B1) and (A2,B2). Every proc
 by `cbb0.spawn_rep`, so each carries its wall time, rusage and kernel QoS accounting.
 
 Before each block the runner waits for a 1-minute load below 8, at most 60 min per invocation
-(X-7); once that budget is spent the block runs and is labelled NOISY. A block is QUIET only
+(X-7); once that budget is spent the block runs and is labelled NOISY. `CBB0_WAIT_DEADLINE`
+(epoch seconds) shares one 60-min budget across every invocation of a cell run: a stricter
+reading of X-7 (never more waiting than a record's own budget, only less). A block is QUIET only
 when its four processes all started at load < 8 and no thermal warning was recorded around it;
 user-interactive QoS is recorded per process as a disclosed host condition (LW2-ORDER §5
 reading, ruled at SEAM-B), not as a QUIET term.
@@ -78,13 +80,13 @@ def run(a) -> str:
         admission = "ADMITTED"
     cmd_a, cmd_b = shlex.split(a.a), shlex.split(a.b)
     ident = cbb0.tree_hash(repo)
-    started = time.monotonic()
+    deadline = float(os.environ.get("CBB0_WAIT_DEADLINE", time.time() + WAIT_BUDGET_S))
     lock = cbb0.bench_lock_held()
     blocks = []
     with tempfile.TemporaryDirectory(prefix="cbb0-pairs-") as d:
         for k in range(a.blocks):
             waited = 0.0
-            while cbb0.load1() >= cbb0.QUIET_LOAD and time.monotonic() - started < WAIT_BUDGET_S:
+            while cbb0.load1() >= cbb0.QUIET_LOAD and time.time() < deadline:
                 time.sleep(15)
                 waited += 15
             th0 = cbb0.therm()

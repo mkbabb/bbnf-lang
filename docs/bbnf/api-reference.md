@@ -48,7 +48,7 @@ Like `BBNFToAST` but resolves `@import` directives. Handles cyclic imports via p
 Compiles an AST into a record of `Parser<T>` combinators keyed by rule name. Applies these optimizations:
 
 - **Dispatch tables** — disjoint FIRST sets → O(1) character dispatch
-- **Pattern recognition** — regex coalescing, `sepBy` detection, wrap coalescing
+- **Pattern recognition** — regex coalescing, strict separated-list (`x (sep x)*`) recognition, wrap coalescing
 - **Lazy references** — enable post-generation parser customization
 - **Recovery wrapping** — `@recover` rules get `.recover(syncParser, null)`
 

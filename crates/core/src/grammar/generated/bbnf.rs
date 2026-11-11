@@ -9849,7 +9849,8 @@ mod __bbnfbootstrap_emit_impl {
                 });
             }
             *p = end;
-            loop {
+            let mut __reps: u32 = 0;
+            while __reps < 1u32 {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let _ = ({
@@ -9866,7 +9867,8 @@ mod __bbnfbootstrap_emit_impl {
                             cursor,
                         )
                     })?;
-                    loop {
+                    let mut __reps: u32 = 0;
+                    while __reps < 4294967295u32 {
                         let __save = *p;
                         let __res: ::core::result::Result<
                             (),
@@ -9910,11 +9912,19 @@ mod __bbnfbootstrap_emit_impl {
                             *p = __save;
                             break;
                         }
+                        __reps += 1;
+                        if *p == __save {
+                            break;
+                        }
                     }
                     Ok(())
                 })();
                 if __res.is_err() {
                     *p = __save;
+                    break;
+                }
+                __reps += 1;
+                if *p == __save {
                     break;
                 }
             }

@@ -1,19 +1,17 @@
 //! Wrap pattern compilation: `open >> middle << close`.
 //!
 //! Decisions:
-//! - Delimited sep_by with terminator:
-//!   `open >> OW(Repeat(Skip(element, Optional(separator)))) << close`
+//! - Delimited strict separated list with terminator:
+//!   `open >> OW((element (separator element)*)?) << close` (ruling S1-B)
 //! - Delimiter-scan optimization (forward memchr pivot).
 //! - Generic wrap fallback.
 
 use bbnf_ir::passes::csp_strategy::WrapMode;
-use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
+use bbnf_ir::{GrammarIR, IrNode};
 
 use super::DriverState;
-use super::derive_vec_elem_type;
 use super::node::compile_node;
-use crate::backend::types::decisions;
-use crate::backend::{Emitter, SepByConfig, ValuePlacement};
+use crate::backend::{Emitter, ValuePlacement};
 
 /// Compile a `Skip(Next(open, middle), close)` or equivalent wrap
 /// pattern. `wrap_root` is the outer Skip/Next node — used to look
@@ -73,55 +71,6 @@ pub(super) fn compile_wrap<E: Emitter>(
             emitter.emit_with_ws_trim(list_out, ws_pattern, ctx)
         } else {
             list_out
-        };
-        let after_open = emitter.emit_next(open_out, middle_out, ctx);
-        return emitter.emit_skip(after_open, close_out, ctx);
-    }
-
-    // Delimited sep_by with terminator:
-    // `open >> OW(Repeat(Skip(element, Optional(separator)))) << close`
-    // where close is a single-byte Literal.
-    if let Some((inner_repeat, is_ow)) = unwrap_ow(middle)
-        && let IrNode::Repeat {
-            inner,
-            lo,
-            hi: u32::MAX,
-        } = inner_repeat
-        && let Some((element, separator)) = decisions::detect_sep_by(inner)
-    {
-        let terminator_bytes = if let IrNode::Literal(sid) = close {
-            let raw = ir.get_string(*sid);
-            Some(raw.to_string().into_bytes())
-        } else {
-            None
-        };
-
-        let elem_type = derive_vec_elem_type(ir, element);
-
-        let elem_alloc = if elem_type == TypeDesc::BoxedEnum {
-            ValuePlacement::Alloc
-        } else {
-            ValuePlacement::Inline
-        };
-        let open_out = compile_node(open, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-        let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
-        let sep_out = compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-        let close_out = compile_node(close, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-
-        let config = SepByConfig {
-            ws: is_ow,
-            lo: *lo,
-            terminator_bytes,
-        };
-
-        let ws_pattern = ir.ws_pattern.map(|sid| ir.get_string(sid));
-        let sep_by_out = emitter.emit_sep_by(element_out, sep_out, &config, &elem_type, ctx);
-
-        // open >> ws_trim(sep_by) << close
-        let middle_out = if is_ow {
-            emitter.emit_with_ws_trim(sep_by_out, ws_pattern, ctx)
-        } else {
-            sep_by_out
         };
         let after_open = emitter.emit_next(open_out, middle_out, ctx);
         return emitter.emit_skip(after_open, close_out, ctx);

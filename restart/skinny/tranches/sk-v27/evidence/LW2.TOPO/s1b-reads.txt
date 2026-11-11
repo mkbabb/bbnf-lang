@@ -1,0 +1,49 @@
+# LW2.S1-B (ruling S1-B: the literal reading is the spec's) reads, seat S1 TOPO-6b, 2026-11-10
+# base lw2/s1-custody 0ffc05533 (LW2.TOPO-6b); logs ~/.dev-logs/bbnf-lockstep/lw2/s1-custody/s1b/
+
+## RED x2, grammar intent (separated_list_intent, before the four grammar rewrites; nextest TRY 1 + TRY 2)
+   1      Summary [   2.214s] 4 tests run: 0 passed, 4 failed, 0 skipped
+   3     rust grammar/google-sheets/google-sheets.bbnf "=LAMBDA(x y, x)": accepted=true, intent says false
+   3     rust grammar/google-sheets/google-sheets.bbnf "=SUM(1 2)": accepted=true, intent says false
+   3     vm crates/gorgeous/grammar/google-sheets/google-sheets.bbnf "=LAMBDA(x y, x)": accepted=true, intent says false
+   3     vm crates/gorgeous/grammar/google-sheets/google-sheets.bbnf "=SUM(1 2)": accepted=true, intent says false
+   3     vm crates/gorgeous/grammar/json/json.bbnf "[1 2]": accepted=true, intent says false
+   3     vm crates/gorgeous/grammar/json/json.bbnf "[1,]": accepted=true, intent says false
+   3     vm crates/gorgeous/grammar/json/json.bbnf "{\"a\":1 \"b\":2}": accepted=true, intent says false
+   3     vm crates/gorgeous/grammar/json/json.bbnf "{\"a\":1,}": accepted=true, intent says false
+   3     vm grammar/css/l4/keyframes.bbnf "@keyframes x { from { opacity: 0 color: red } }": accepted=true, intent says false
+   3     vm grammar/google-sheets/google-sheets.bbnf "=LAMBDA(x y, x)": accepted=true, intent says false
+   3     vm grammar/google-sheets/google-sheets.bbnf "=SUM(1 2)": accepted=true, intent says false
+
+## RED x2, emitter half (literal_separated_list_every_backend at 0ffc05533, detached worktree, own CARGO_TARGET_DIR so the shared target keeps this worktree's CARGO_MANIFEST_DIR; worktree and target removed after)
+read 1:
+     Summary [   2.201s] 2 tests run: 1 passed, 1 failed, 2 skipped
+ts "[a,]": accepted=false, literal reading says true
+ts "[a,b,]": accepted=false, literal reading says true
+ts "[ab]": accepted=false, literal reading says true
+read 2:
+     Summary [   2.203s] 2 tests run: 1 passed, 1 failed, 2 skipped
+ts "[a,]": accepted=false, literal reading says true
+ts "[a,b,]": accepted=false, literal reading says true
+ts "[ab]": accepted=false, literal reading says true
+(Rust half: the TOPO-6b shape_dispatch RED, the Object/Array detectors rewrote the literal form into a strict list; the detectors now admit only x (sep x)*.)
+
+## RED x2, broken-group separators (prettify_broken_group_keeps_separators at 0ffc05533)
+read 1:
+      left: "=IF(AND(A1>0,B1<100)VLOOKUP(A1,C1:E100,3,FALSE)IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),\"N/A\"))"
+     Summary [   2.023s] 1 test run: 0 passed, 1 failed, 84 skipped
+     right: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),\"N/A\"))"
+read 2:
+      left: "=IF(AND(A1>0,B1<100)VLOOKUP(A1,C1:E100,3,FALSE)IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),\"N/A\"))"
+     Summary [   2.018s] 1 test run: 0 passed, 1 failed, 84 skipped
+     right: "=IF(AND(A1>0,B1<100),VLOOKUP(A1,C1:E100,3,FALSE),IFERROR(INDEX(MATCH(A1,F1:F100,0),G1:G100),\"N/A\"))"
+
+## GREEN x2 (worktree diff on 0ffc05533, committed as the S1-B commit)
+regen --check 1: regen --check: clean (9 of 9 grammars matched)
+nextest --workspace --profile ci read 1: Summary [  19.791s] 1524 tests run: 1523 passed, 1 failed, 23 skipped ; failing: substrate_audit_zero_caller_substrates 
+regen --check 2: regen --check: clean (9 of 9 grammars matched)
+nextest --workspace --profile ci read 2: Summary [  11.026s] 1524 tests run: 1523 passed, 1 failed, 23 skipped ; failing: substrate_audit_zero_caller_substrates 
+falsifiers in both reads PASS: google_sheets_args_are_comma_separated gorgeous_google_sheets_args_are_comma_separated gorgeous_json_lists_require_commas keyframe_declarations_are_semicolon_separated literal_optional_separator_forms_are_ruled literal_separated_list_every_backend prettify_broken_group_keeps_separators 
+clippy --workspace --all-targets -D warnings: rc 0 (clippy-2.log); grammar/MANIFEST rewritten: 63 grammars 8b1db3d153c6b5f84fd994b1f665e3a6d01cf36b2ba09dc2a544be8b64a9fc40
+
+## TOPO-6b CI on PR #10 (0ffc05533): iai-callgrind regression run 42924412746 attempt 1 = success, but the step reads 'baseline is unseeded; regression decision skipped' (docs/benchmarks/iai-baselines/json.json absent), so the gate builds and runs json_callgrind and decides nothing.

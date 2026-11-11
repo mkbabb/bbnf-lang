@@ -1,7 +1,10 @@
 //! Repeat node compilation.
 //!
 //! Decisions (shared across all backends):
-//! - sep_by pattern detection (`Repeat(Skip(element, Repeat(sep, 0, 1)), lo, MAX)`)
+//! - the strict separated list `(element (sep element)*)?` lowers through
+//!   `emit_sep_by` (`bbnf_ir::passes::inspect::sep_list`). A
+//!   `( element << sep ? ) *` repetition reads literally (ruling S1-B,
+//!   R-b: spec text first) and compiles as the repeat it is.
 //! - optional (`0..1`) vs many (`0+`, `1+`)
 //!
 //! # `TypeDesc` plumbing (Tranche AF.1)
@@ -19,7 +22,6 @@ use bbnf_ir::{GrammarIR, IrNode, TypeDesc};
 
 use super::DriverState;
 use super::node::compile_node;
-use crate::backend::types::decisions;
 use crate::backend::{Emitter, SepByConfig, ValuePlacement};
 
 /// Shared unit-variant stand-in for the dead `elem_type` /
@@ -80,46 +82,6 @@ pub(super) fn compile_repeat<E: Emitter>(
     emitter: &mut E,
     ctx: &mut E::Ctx,
 ) -> E::Output {
-    // sep_by: Repeat(Skip(element, Repeat(separator, 0, 1)), lo, MAX).
-    if hi == u32::MAX
-        && let Some((element, separator)) = decisions::detect_sep_by(inner)
-    {
-        // Derive the element-kind tag without cloning. Mirrors
-        // the prior `derive_vec_elem_type` helper, but stays in
-        // variant-tag space:
-        //   1. Prefer `vec_elem_type` (the explicit Vec-context
-        //      type when `project_types` populated it).
-        //   2. Otherwise fall back to `node_type`, mapping
-        //      `BoxedEnum` → `Enum` because the Vec context
-        //      stores unboxed values (the heap indirection comes
-        //      from the Vec itself).
-        //   3. Default to `Span` when both are absent.
-        let elem_kind = match ir.vec_elem_type(element) {
-            Some(t) => RepeatElemKind::from_type(t),
-            None => match ir.node_type(element) {
-                Some(t) if *t == TypeDesc::BoxedEnum => RepeatElemKind::Enum,
-                Some(t) => RepeatElemKind::from_type(t),
-                None => RepeatElemKind::Span,
-            },
-        };
-
-        let elem_alloc = if elem_kind == RepeatElemKind::BoxedEnum {
-            ValuePlacement::Alloc
-        } else {
-            ValuePlacement::Inline
-        };
-        let element_out = compile_node(element, elem_alloc, ir, dstate, emitter, ctx);
-        let sep_out = compile_node(separator, ValuePlacement::Inline, ir, dstate, emitter, ctx);
-
-        let config = SepByConfig {
-            ws: false,
-            lo,
-            terminator_bytes: None,
-        };
-
-        return emitter.emit_sep_by(element_out, sep_out, &config, &PLACEHOLDER_TY, ctx);
-    }
-
     // `(x (sep x)*)?` -- the zero-or-more strict separated list
     // (ruling S1-B). Its loop accepts exactly the literal reading.
     if lo == 0

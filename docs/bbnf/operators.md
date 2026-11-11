@@ -63,6 +63,22 @@ items  = item * ;
 sign   = ("+" | "-") ? ;
 ```
 
+### Separated lists
+
+Every expression means what it says; no backend rewrites one form into
+another. A strict separated list is written with the separator between
+elements:
+
+```bbnf
+args  = arg , ( "," >> arg ) * ;                         // one or more
+array = "[" >> ( value , ( "," >> value ) * ) ? << "]" ;  // zero or more
+```
+
+`( x << sep ? ) *` is not a separated list. It is a repetition of `x`,
+each optionally followed by `sep`, so it accepts `x x` and a trailing
+`sep`. Backends lower the strict spellings above, and only those, to a
+separated-list loop, which accepts the same language.
+
 ## 6. Optional Whitespace `?w`
 
 Wraps the preceding term so optional whitespace is consumed before and after:

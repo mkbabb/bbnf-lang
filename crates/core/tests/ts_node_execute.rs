@@ -75,13 +75,16 @@ fn twitter_json_src() -> String {
 /// syntax that the existing `gen_ts_parser` helper misses (`declare
 /// function …;`, `as unknown as …` casts inside expressions).
 fn compile_and_sanitise_ts_parser() -> String {
+    compile_and_sanitise_ts(&json_grammar_src())
+}
+
+/// Compile any grammar source through the TS backend to runnable ESM.
+fn compile_and_sanitise_ts(grammar: &str) -> String {
     let request = CompileRequest {
         options: PipelineOptions::default(),
         target: CompileTarget::Ts,
     };
-    let source = match compile_grammar_request(&json_grammar_src(), &request)
-        .expect("compile json grammar to TS")
-    {
+    let source = match compile_grammar_request(grammar, &request).expect("compile grammar to TS") {
         CompileOutput::Ts(src) => src,
         other => panic!("expected TS output, got {other:?}"),
     };
@@ -561,6 +564,90 @@ process.stdout.write(JSON.stringify(out));
     assert!(
         wrong.is_empty(),
         "RFC 8259 JSON-text divergences:\n{}",
+        wrong.join("\n")
+    );
+}
+
+/// Ruling S1-B: `( x << sep ? ) *` means what it says. Each iteration is
+/// an `x` with an optional separator after it, so `[ab]` (no separator)
+/// and `[a,]` (a trailing one) are sentences of this grammar. The TS
+/// emitter used to rewrite the form into a strict list and reject both,
+/// while the VM read it literally. Every backend now reads it literally.
+#[test]
+fn literal_separated_list_every_backend() {
+    use bbnf::pipeline::compile_grammar;
+    use bbnf_ir::compiler::compile as compile_bytecode;
+    use bbnf_ir::interpreter::Interpreter;
+
+    let grammar = "item = /[a-z]/ ;\nlist = \"[\" , (item << \",\" ?) * , \"]\" ;\n";
+    // (input, accepted under the literal reading)
+    let cases: &[(&str, bool)] = &[
+        ("[ab]", true),
+        ("[a,]", true),
+        ("[a,b,]", true),
+        ("[a,b]", true),
+        ("[a]", true),
+        ("[]", true),
+        ("[,a]", false),
+        ("[a,,b]", false),
+    ];
+
+    let node = which_node().expect("node on PATH (no silent skip)");
+    let tmp = tempfile::tempdir().expect("tempdir");
+    std::fs::write(
+        tmp.path().join("generated_list.mjs"),
+        compile_and_sanitise_ts(grammar),
+    )
+    .expect("write generated_list.mjs");
+    let inputs: Vec<&str> = cases.iter().map(|(i, _)| *i).collect();
+    std::fs::write(
+        tmp.path().join("cases.json"),
+        serde_json::to_string(&inputs).expect("encode cases"),
+    )
+    .expect("write cases.json");
+    let runner = r#"
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+const dir = dirname(fileURLToPath(import.meta.url));
+const cases = JSON.parse(readFileSync(join(dir, "cases.json"), "utf-8"));
+const mod = await import("./generated_list.mjs");
+const out = cases.map((c) => {
+    const r = mod.parse(c);
+    return r !== null && r.result !== null && r.offset === c.length;
+});
+process.stdout.write(JSON.stringify(out));
+"#;
+    std::fs::write(tmp.path().join("runner.mjs"), runner).expect("write runner.mjs");
+    let output = std::process::Command::new(&node)
+        .arg(tmp.path().join("runner.mjs"))
+        .output()
+        .expect("spawn node");
+    assert!(
+        output.status.success(),
+        "node runner failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let ts: Vec<bool> = serde_json::from_slice(&output.stdout).expect("runner stdout");
+
+    let ir = compile_grammar(grammar, &PipelineOptions::default()).expect("compile list grammar");
+    let program = compile_bytecode(&ir);
+
+    let mut wrong = Vec::new();
+    for (k, &(input, want)) in cases.iter().enumerate() {
+        let r = Interpreter::new(&program, input).run();
+        let vm = r.success && r.offset as usize == input.len();
+        for (arm, got) in [("ts", ts[k]), ("vm", vm)] {
+            if got != want {
+                wrong.push(format!(
+                    "{arm} {input:?}: accepted={got}, literal reading says {want}"
+                ));
+            }
+        }
+    }
+    assert!(
+        wrong.is_empty(),
+        "literal separated-list divergences:\n{}",
         wrong.join("\n")
     );
 }

@@ -117,20 +117,6 @@ pub fn decide_seq(seq_node: &IrNode, ir: &GrammarIR) -> SeqDecision {
 // Helpers
 // ═════════════════════════════════════════════════════════════════════════════
 
-/// Detect sep_by pattern: `Skip(element, Repeat(separator, 0, 1))`.
-pub fn detect_sep_by(inner: &IrNode) -> Option<(&IrNode, &IrNode)> {
-    if let IrNode::Skip(element, opt_sep) = inner
-        && let IrNode::Repeat {
-            inner: separator,
-            lo: 0,
-            hi: 1,
-        } = opt_sep.as_ref()
-    {
-        return Some((element.as_ref(), separator.as_ref()));
-    }
-    None
-}
-
 /// Detect `(T, Vec<T>)` or `(Vec<T>, T)` flattening.
 pub fn detect_flatten(result_type: &TypeDesc, child_types: &[TypeDesc]) -> Option<FlattenStrategy> {
     let TypeDesc::Vec(_) = result_type else {

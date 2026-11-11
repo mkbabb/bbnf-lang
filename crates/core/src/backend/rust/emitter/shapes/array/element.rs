@@ -6,9 +6,9 @@ use bbnf_ir::GrammarIR;
 /// Extract the value-position Ref target from an array rule body.
 ///
 /// AW-V.W5.2 — the canonical JSON array body is
-/// `"[" >> ((value << comma?)*)?w << "]"`, which lowers to
-/// `Skip(Next("[", OW(Repeat(Skip(value, Repeat(comma, 0..=1))))), "]")`.
-/// The value Ref sits inside the outer Repeat. The list-rule entry
+/// `"[" >> ((value , (comma >> value)*)?)?w << "]"` (LW2.TOPO-6b), which
+/// lowers to `Skip(Next("[", OW(Repeat(Seq[value, Repeat(Next(comma,
+/// value))], 0..=1))), "]")`. The value Ref sits inside the outer Repeat. The list-rule entry
 /// variant (CSS `stylesheet = ruleList ?w`, BBNF `grammar = (item ?w)*`)
 /// has a simpler shape: `Repeat(ref_or_alt, lo, hi)` with OW wrappers.
 ///

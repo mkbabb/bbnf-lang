@@ -8,7 +8,8 @@ publish.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bbnf-simd.workspace = true
+blake3.workspace = true
+parse-that-simd.workspace = true
 parse-that-regex.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

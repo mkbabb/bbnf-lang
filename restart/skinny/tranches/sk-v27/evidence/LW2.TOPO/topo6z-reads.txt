@@ -1,0 +1,53 @@
+# TOPO-6 last RED re-read at f292c213b (heavy runs admitted, 2026-11-10)
+HEAD f292c213b07c94adea3bbf2161f985b6ca0d6be6 tag=red
+corpus verify rc=0: corpus verify: 8/8 files match (corpus-v1)
+red read 1 rc=100
+        throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+    Error: parse() failed: {"result":null,"offset":567926}
+        throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+red read 2 rc=100
+        throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+    Error: parse() failed: {"result":null,"offset":567926}
+        throw new Error(`parse() failed: ${JSON.stringify(out)}`);
+red full rc=100
+     Summary [  49.723s] 1513 tests run: 1511 passed, 2 failed, 23 skipped
+(1443/1513) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+(1510/1513) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+(─────────) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+(─────────) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+
+# RFC 8259 JSON-text falsifier (born-RED, patch topo6z-born-red.patch; read with the 4 comma rows included)
+   6 ts " \t\r\n[1, 2] \n": accepted=false, RFC 8259 says true
+   6 ts "\n\"x\"": accepted=false, RFC 8259 says true
+   6 ts "{\"a\":1}\n": accepted=false, RFC 8259 says true
+   6 vm " \t\r\n[1, 2] \n": accepted=false, RFC 8259 says true
+   6 vm "[1 2]": accepted=true, RFC 8259 says false
+   6 vm "[1,]": accepted=true, RFC 8259 says false
+   6 vm "\n\"x\"": accepted=false, RFC 8259 says true
+   6 vm "{\"a\":1 \"b\":2}": accepted=true, RFC 8259 says false
+   6 vm "{\"a\":1,}": accepted=true, RFC 8259 says false
+   6 vm "{\"a\":1}\n": accepted=false, RFC 8259 says true
+
+# trial form value = ( ... ) ?w (reverted)
+HEAD f292c213b + worktree diff; tag=green
+regen --check (pre) rc=1: drift: `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s1-custody/crates/core/src/grammar/generated/json.rs` differs from `cargo xtask regen --grammar json` output drift: `/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s1-custody/crates/core/src/grammar/generated/json.registry.json` differs from `cargo xtas
+regen write rc=0
+ M crates/core/src/grammar/generated/json.registry.json
+ M crates/core/src/grammar/generated/json.rs
+regen --check 1 rc=0
+regen --check 2 rc=0
+targeted 1 rc=100
+     Summary [   2.457s] 25 tests run: 24 passed, 1 failed, 5 skipped
+  TRY 1 FAIL [   0.168s] (─────) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+  TRY 2 FAIL [   0.257s] (25/25) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+targeted 2 rc=100
+     Summary [   2.329s] 25 tests run: 24 passed, 1 failed, 5 skipped
+  TRY 1 FAIL [   0.160s] (─────) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+  TRY 2 FAIL [   0.138s] (25/25) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+full 1 rc=101
+full 2 rc=101
+green-full-1.log:error: path[0] `@branch_4` not a variant of `value`; valid: branch_0, branch_1, branch_2, 22, 23, 24
+green-t-1.log:            throw new Error(`getField: expected object, got ${node && node.tag}`);
+green-t-1.log:        at getField (file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmpY1pegw/runner.mjs:43:15)
+green-t-1.log:        at getField (file:///private/var/folders/ld/20j4p2791k5_90_0ccgx2txm0000gr/T/.tmpg4dTpY/runner.mjs:43:15)
+green-t-1.log:    Error: getField: expected object, got value

@@ -1,0 +1,8 @@
+[xtask::regen] csv: compile_paths_request done in 1.509458ms
+[xtask::regen] csv: generate_all done in 3.091125ms
+[xtask::regen] csv: prettyplease done in 16.345041ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 1.834708ms
+[xtask::regen] math: generate_all done in 1.532542ms
+[xtask::regen] math: prettyplease done in 8.115083ms
+regen --check: clean (9 of 9 grammars matched)

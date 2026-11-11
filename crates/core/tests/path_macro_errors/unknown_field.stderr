@@ -1,5 +1,5 @@
-error: path[0] `nope`: expected variant on tagged-enum `value`; valid variants: branch_0, branch_1, branch_2, branch_3, branch_4, branch_5
-  --> tests/path_macro_errors/unknown_field.rs:16:46
+error: path[1] `nope`: expected variant on tagged-enum `value`; valid variants: branch_0, branch_1, branch_2, branch_3, branch_4, branch_5
+  --> tests/path_macro_errors/unknown_field.rs:16:55
    |
-16 |     let _: TypedPath<Json, ()> = path!(Json, "nope");
-   |                                              ^^^^^^
+16 |     let _: TypedPath<Json, ()> = path!(Json, "value", "nope");
+   |                                                       ^^^^^^

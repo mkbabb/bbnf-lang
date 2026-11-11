@@ -552,3 +552,17 @@ fn corpus_stress() {
     let corpus = include_str!("fixtures/sheets/stress.txt");
     loop_corpus(corpus, "stress");
 }
+
+/// A broken `func_args` group keeps its commas. The break text of
+/// `sep(", ")` was empty, so a formula too wide for one line printed
+/// its arguments with no separators at all: a different formula,
+/// which the literal `(arg << comma ?) +` reading then re-accepted.
+#[test]
+fn prettify_broken_group_keeps_separators() {
+    let line = "=IF(AND(A1>0, B1<100), VLOOKUP(A1, C1:E100, 3, FALSE), IFERROR(INDEX(MATCH(A1, F1:F100, 0), G1:G100), \"N/A\"))";
+    let p = prettify(line);
+    assert!(p.contains('\n'), "the group must break at width 80: {p:?}");
+    let squeezed: String = p.split_whitespace().collect();
+    let want: String = line.split_whitespace().collect();
+    assert_eq!(squeezed, want, "prettify must print the same formula");
+}

@@ -569,13 +569,33 @@
         "rule_name": "func_args",
         "kind": "Struct",
         "rule_type": {
-          "Vec": "Enum"
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": "Enum"
+            }
+          ]
         },
         "fields": [
           {
-            "name": "element",
+            "name": "arg",
             "type_desc": "BoxedEnum",
-            "source": "RepeatElement"
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
           }
         ]
       },
@@ -615,13 +635,33 @@
         "rule_name": "lambda_params",
         "kind": "Struct",
         "rule_type": {
-          "Vec": "Enum"
+          "Tuple": [
+            "BoxedEnum",
+            {
+              "Vec": "Enum"
+            }
+          ]
         },
         "fields": [
           {
-            "name": "element",
+            "name": "expression",
             "type_desc": "BoxedEnum",
-            "source": "RepeatElement"
+            "source": {
+              "SeqPosition": {
+                "position": 0
+              }
+            }
+          },
+          {
+            "name": "field_1",
+            "type_desc": {
+              "Vec": "Enum"
+            },
+            "source": {
+              "SeqPosition": {
+                "position": 1
+              }
+            }
           }
         ]
       },

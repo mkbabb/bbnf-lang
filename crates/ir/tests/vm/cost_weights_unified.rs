@@ -28,7 +28,8 @@ use std::collections::HashMap;
 use parse_that_egraph::{CostModel, CostWeights, EGraph, Id};
 
 use bbnf_ir::egraph::{
-    GrammarAnalysis, GrammarCostModel, GrammarENode, build_and_saturate, write_back_optimized,
+    GrammarAnalysis, GrammarCostModel, GrammarENode, LeafMatch, build_and_saturate,
+    write_back_optimized,
 };
 use bbnf_ir::passes::{
     AltMode, MaterializationClass, RecognizerDecisionMap, classify_materialization,
@@ -438,7 +439,7 @@ fn write_back_optimized_accepts_patched_weights() {
     // `build_and_saturate` takes `&GrammarIR` and returns a new
     // e-graph + a rule-body-root map. The extraction writes back
     // into a cloned IR so we don't clobber the original.
-    let (egraph, _pool, rule_body_ids) = build_and_saturate(&fixture);
+    let (egraph, _pool, rule_body_ids) = build_and_saturate(&fixture, LeafMatch::LeftmostFirst);
     let cost = GrammarCostModel::from_config(&fixture.cost_config);
     let mut target = fixture.clone();
     write_back_optimized(&egraph, &mut target, &rule_body_ids, &cost);

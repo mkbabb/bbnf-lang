@@ -30,7 +30,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "rustc-hash",
- "simd-scan",
  "syn",
 ]
 
@@ -347,7 +346,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
+source = "git+https://github.com/mkbabb/parse-that?rev=09941e140b9750cbc5859a4bc25cdfad1552d0ba#09941e140b9750cbc5859a4bc25cdfad1552d0ba"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -357,7 +356,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
+source = "git+https://github.com/mkbabb/parse-that?rev=09941e140b9750cbc5859a4bc25cdfad1552d0ba#09941e140b9750cbc5859a4bc25cdfad1552d0ba"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -367,7 +366,7 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
+source = "git+https://github.com/mkbabb/parse-that?rev=09941e140b9750cbc5859a4bc25cdfad1552d0ba#09941e140b9750cbc5859a4bc25cdfad1552d0ba"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
@@ -378,15 +377,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "parse-that-simd"
+version = "0.1.0"
+source = "git+https://github.com/mkbabb/parse-that?rev=09941e140b9750cbc5859a4bc25cdfad1552d0ba#09941e140b9750cbc5859a4bc25cdfad1552d0ba"
+
+[[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=ad0dc8accff446fb22aeb50c5863167d0525e28d#ad0dc8accff446fb22aeb50c5863167d0525e28d"
+source = "git+https://github.com/mkbabb/parse-that?rev=09941e140b9750cbc5859a4bc25cdfad1552d0ba#09941e140b9750cbc5859a4bc25cdfad1552d0ba"
 dependencies = [
  "aho-corasick",
  "colored",
  "fast-float2",
  "memchr",
  "parse-that-regex",
+ "parse-that-simd",
  "pprint",
  "smallbox",
  "smallvec",
@@ -601,15 +606,6 @@ name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
-
-[[package]]
-name = "simd-scan"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "smallbox"

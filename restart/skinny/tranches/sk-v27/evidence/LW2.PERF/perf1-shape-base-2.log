@@ -1,0 +1,44 @@
+   present: crates/simd-scan
+   present: skinny/crates/bbnf-simd
+A  RED   2 of 3 source crates still in bbnf-lang
+B  RED   36 files outside rust/simd/:
+     bbnf-lang/crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs
+     bbnf-lang/crates/core/src/generate/regex/emit/simd.rs
+     bbnf-lang/crates/core/src/grammar/generated/bbnf.rs
+     bbnf-lang/crates/core/src/grammar/generated/bnf.rs
+     bbnf-lang/crates/core/src/grammar/generated/css_l4.rs
+     bbnf-lang/crates/core/src/grammar/generated/css_pretty.rs
+     bbnf-lang/crates/core/src/grammar/generated/csv.rs
+     bbnf-lang/crates/core/src/grammar/generated/ebnf.rs
+     bbnf-lang/crates/core/src/grammar/generated/google_sheets.rs
+     bbnf-lang/crates/core/src/grammar/generated/json.rs
+     bbnf-lang/crates/core/src/grammar/generated/math.rs
+     bbnf-lang/crates/simd-scan/src/avx2.rs
+     bbnf-lang/crates/simd-scan/src/avx512.rs
+     bbnf-lang/crates/simd-scan/src/neon.rs
+     bbnf-lang/crates/simd-scan/src/parity.rs
+     bbnf-lang/crates/simd-scan/src/wasm.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/bracket_depth_mask_64.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/byte_class_from_eq_set_64.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/byte_context.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/cache_hints.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/classify_tbl4.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/comment_body_mask_64.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/digit_mac.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/match_tiny_plain_string.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/movemask.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/quad_load.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/string_block.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/structural_classify_64.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/unescape_uxxxx.rs
+     bbnf-lang/skinny/crates/bbnf-simd/src/aarch64/utf8/validate_block.rs
+     bbnf-lang/skinny/crates/bbnf-simd/tests/aarch64_primitives.rs
+     bbnf-lang/skinny/crates/bbnf-simd/tests/checkasm_common.rs
+     bbnf-lang/skinny/crates/bbnf-simd/tests/checkasm_parity.rs
+     bbnf-lang/skinny/crates/parse-that-regex/src/lib.rs
+     parse-that/rust/parse_that/src/parsers/scan/lanes.rs
+     parse-that/rust/parse_that/src/parsers/scan/number_simd.rs
+C  RED   parse-that has no rust/simd crate
+D  RED   no parse_that::scan face
+E  RED   10 manifest lines name simd-scan/bbnf-simd
+rc=1

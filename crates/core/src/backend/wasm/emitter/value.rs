@@ -43,40 +43,23 @@ impl WasmEmitter {
     pub(super) fn emit_map_expr_impl(
         &mut self,
         inner: String,
-        expr: &MapExpr,
+        _expr: &MapExpr,
         _return_type: Option<&TypeDesc>,
         _alloc: ValuePlacement,
         _ir: &GrammarIR,
         ctx: &mut WasmEmitCtx,
     ) -> String {
-        // WASM map expressions: simple cases only.
+        // The WASM backend is a recognizer: every expression's value is
+        // the offset it reached (or -1). A map's value is not carried,
+        // so every map expression, `IntLit` / `BoolLit` included (JSON's
+        // `null -> 0u8`, `"true" -> true`), passes the inner offset
+        // through. Returning the literal in its place (`0` for `null`)
+        // moved the parse to offset 0 or 1 after every keyword.
         let result = ctx.fresh("map_r");
-        match expr {
-            MapExpr::IntLit(n) => {
-                format!(
-                    "(local.set {result} {inner}) \
-                     (if (result i32) (i32.ne (local.get {result}) (i32.const -1)) \
-                       (then (i32.const {n})) \
-                       (else (i32.const -1)))"
-                )
-            }
-            MapExpr::BoolLit(b) => {
-                let val = if *b { 1 } else { 0 };
-                format!(
-                    "(local.set {result} {inner}) \
-                     (if (result i32) (i32.ne (local.get {result}) (i32.const -1)) \
-                       (then (i32.const {val})) \
-                       (else (i32.const -1)))"
-                )
-            }
-            _ => {
-                // General case: pass through (WASM doesn't evaluate complex expressions).
-                format!(
-                    "(local.set {result} {inner}) \
-                     (local.get {result})"
-                )
-            }
-        }
+        format!(
+            "(local.set {result} {inner}) \
+             (local.get {result})"
+        )
     }
 
     pub(super) fn emit_span_capture_impl(

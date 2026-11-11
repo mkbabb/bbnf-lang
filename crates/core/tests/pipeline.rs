@@ -588,6 +588,19 @@ fn pipeline_css_vm_comment_in_value() {
 // ── Full-file VM parsing ───────────────────────────────────────────────────
 
 fn assert_vm_full_parse(grammar_path: &str, data_path: &str) {
+    assert_vm_parse_to(grammar_path, data_path, EndOffset::TrimEnd);
+}
+
+/// How far a full-file parse must reach. JSON is RFC 8259 JSON-text
+/// (`ws value ws`), so it must consume every byte (ruling A-10); the
+/// CSS grammars keep the trailing-whitespace tolerance.
+#[derive(Clone, Copy, PartialEq)]
+enum EndOffset {
+    Exact,
+    TrimEnd,
+}
+
+fn assert_vm_parse_to(grammar_path: &str, data_path: &str, end: EndOffset) {
     let grammar =
         std::fs::read_to_string(grammar_path).unwrap_or_else(|e| panic!("{}: {}", grammar_path, e));
     let ir = compile_grammar(&grammar, &PipelineOptions::default()).unwrap();
@@ -597,8 +610,12 @@ fn assert_vm_full_parse(grammar_path: &str, data_path: &str) {
     let mut interp = Interpreter::new(&program, &input);
     let r = interp.run();
     assert!(r.success, "{}: VM parse failed", data_path);
+    let floor = match end {
+        EndOffset::Exact => input.len(),
+        EndOffset::TrimEnd => input.trim_end().len(),
+    };
     assert!(
-        r.offset as usize >= input.trim_end().len(),
+        r.offset as usize >= floor && r.offset as usize <= input.len(),
         "{}: VM incomplete parse ({}/{})",
         data_path,
         r.offset,
@@ -608,22 +625,28 @@ fn assert_vm_full_parse(grammar_path: &str, data_path: &str) {
 
 #[test]
 fn pipeline_vm_full_json_data() {
-    assert_vm_full_parse("../../grammar/json/json.bbnf", &bbnf_corpus::path("json/data.json").display().to_string());
+    assert_vm_parse_to(
+        "../../grammar/json/json.bbnf",
+        &bbnf_corpus::path("json/data.json").display().to_string(),
+        EndOffset::Exact,
+    );
 }
 
 #[test]
 fn pipeline_vm_full_json_twitter() {
-    assert_vm_full_parse(
+    assert_vm_parse_to(
         "../../grammar/json/json.bbnf",
         &bbnf_corpus::path("json/twitter.json").display().to_string(),
+        EndOffset::Exact,
     );
 }
 
 #[test]
 fn pipeline_vm_full_json_canada() {
-    assert_vm_full_parse(
+    assert_vm_parse_to(
         "../../grammar/json/json.bbnf",
         &bbnf_corpus::path("json/canada.json").display().to_string(),
+        EndOffset::Exact,
     );
 }
 

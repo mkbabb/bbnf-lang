@@ -15,7 +15,6 @@ pprint.workspace = true
 parse_that.workspace = true
 bbnf-ir = { version = "0.1", path = "../ir" }
 bbnf-ser = { version = "0.1", path = "../ser" }
-simd-scan = { version = "0.1", path = "../simd-scan" }
 parse-that-egraph.workspace = true
 rustc-hash = "2"
 

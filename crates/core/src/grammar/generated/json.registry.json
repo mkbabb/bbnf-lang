@@ -1,5 +1,5 @@
 {
-  "entry_rule": "value",
+  "entry_rule": "json",
   "registry": {
     "layouts": {
       "0": {
@@ -196,6 +196,23 @@
             "source": {
               "BranchTag": {
                 "branch_index": 5
+              }
+            }
+          }
+        ]
+      },
+      "8": {
+        "rule_id": 8,
+        "rule_name": "json",
+        "kind": "Struct",
+        "rule_type": "BoxedEnum",
+        "fields": [
+          {
+            "name": "value",
+            "type_desc": "BoxedEnum",
+            "source": {
+              "RuleReference": {
+                "target_rule": 7
               }
             }
           }

@@ -374,7 +374,7 @@
         },
         "fields": [
           {
-            "name": "43",
+            "name": "42",
             "type_desc": "Span",
             "source": {
               "BranchTag": {

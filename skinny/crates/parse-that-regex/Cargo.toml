@@ -8,6 +8,6 @@ publish.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-bbnf-simd.workspace = true
+parse-that-simd.workspace = true
 memchr.workspace = true
 thiserror.workspace = true

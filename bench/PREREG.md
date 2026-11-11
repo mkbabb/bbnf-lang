@@ -62,7 +62,7 @@ Each family is one Holm group. Cells are added by addendum before the freeze.
 | F-JSON-P1 | P1 JSON check (`bench/planes/P1.md`) | sonic-rs (primary, Rust); serde_json, simd-json, jiter; simdjson (C++, observational) | §7 (LW2.CON-1) | open |
 | F-JSON-P4 | P4 JSON DOM (`P4.md`); the CST class only against CST arms | sonic-rs (primary); serde_json, simd-json, jiter; yyjson (C, observational); tree-sitter-json (CST class only) | §7 (LW2.CON-1) | open |
 | F-CSS-P2 | P2 CSS token and event stream (`P2.md`); G-C1b cells read P7 (`P7.md`) on the typed-coverage manifest only | cssparser (G-C1a, primary); lightningcss (G-C1b) | §7 (LW2.CON-1); G-C1b cells wait for the manifest | open |
-| F-REGEX | regex match, sticky and leftmost-first (no plane spec in LW2) | regex, regex-automata | OPEN (LW3.CON-1, after OR-7) | skeleton |
+| F-REGEX | regex match, sticky and leftmost-first (no plane spec in LW2) | regex, regex-automata; for the OR-7 parity cells, Route A against Route B | §11 (OR-7 parity cells, G-R2 and G-P1); the contest cells OPEN (LW3.CON-1) | open |
 | F-COMB | combinator and generator parsers on the shared grammars: JSON at P4, CSS at P2 | winnow, nom, chumsky, pest, lalrpop, peg (logos: no comparator) | §7 (LW2.CON-1) | open |
 | F-JS | the TS face: JSON at P4, CSS at P2 | JSON.parse (tracked, never gated), peggy, chevrotain, ohm-js, parsimmon, antlr4, @lezer/* (CST class), @csstools/*, css-tree (postcss: no comparator) | §7 (LW2.CON-1) | open |
 | F-PP | pretty-printing and formatting throughput | OPEN (the pprint design's opponents) | OPEN (LW4.PP, under X-10) | skeleton |
@@ -252,3 +252,41 @@ Row 0's bytes and conformance cite the value.js 4.3.0 tarball above. Its timing 
 | --- | --- | --- | --- | --- | --- | --- |
 | C-S0-ROW0-VALUE-CSS | F-VALUE-S0 | `parseCssValue` (`/css`) | the 17,316 WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |
 | C-S0-ROW0-VALUE-COLOR | F-VALUE-S0 | `parseCssColor` (`/color`) | the 5,778 css-color WPT inputs | value.js 4.3.0 tarball | 15 | PORTABLE |
+
+## 9. Paired cure cell: LW2.RX-4, registered by S7 RX
+
+This section is an addendum (LW2.SEAM S12-P4-6, ACCEPTED IN PART). It is written before Phase 3 and hashed with the rest of the file. RX-4 is a correctness cure: `FuseAltRegexBranches` leaves the e-graph rule list of every DFA-leaf backend (bbnf-lang `e36244d57`), and the Rust products of `css_l4` and `css_pretty` are regenerated without the fused leaves (`88b60839f`; the other 7 grammars are byte-identical). Family F-CURE-RX4 is not a contest: it has no comparator row, and both arms are the bbnf-lang generated parser at two commits, same toolchain, same matrix, same input.
+
+| Cell | Family | Grammar | Input | Parent arm | Cure arm | Measure | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C-RX4-CSSL4-BOOTSTRAP | F-CURE-RX4 | css_l4 | corpus/css/bootstrap.css@4a50207b | `63054dba0` | `88b60839f` | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-RX4-CSSL4-TAILWIND | F-CURE-RX4 | css_l4 | corpus/css/tailwind.css@de305d92 | `63054dba0` | `88b60839f` | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-RX4-PRETTY-BOOTSTRAP | F-CURE-RX4 | css_pretty | corpus/css/bootstrap.css@4a50207b | `63054dba0` | `88b60839f` | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+
+`r = ln(t_cure / t_parent)` per ABBA pair under §1 and §2; output checksums must agree, or the pair is discarded. The three cells are one Holm group. RX-4 is a correctness cure, so a LOSS does not revert it: a LOSS files a born-RED for LW3.RX-1 (fusion re-admitted under its `L_cut` certificate), and a WIN or UNDECIDED is reported only. A NOISY record never certifies.
+
+## 10. Paired cure cells: LW2.PERF-3, registered by S6 PERF
+
+This section is an addendum (LW2.SEAM S12-P4-6, ACCEPTED IN PART). It is written before Phase 3 and hashed with the rest of the file. PERF-3 is a correctness cure: `SpanParser::call_inner` (parse-that `rust/parse_that/src/span_parser/mod.rs`) goes from `#[inline(always)]` to `#[inline]` (parse-that `92ff470`), which ends the debug stack overflow in nested CSS at-rules and leaves the release inlining of the kind dispatch to LLVM. Family F-CURE-PERF3 is not a contest: it has no comparator row, and both arms are parse-that's own span-parser parsers at two commits, same toolchain, same matrix, same input (the parse-that corpus-v1 files, fixed by their sha256 in parse-that `corpus/MANIFEST.sha256`).
+
+| Cell | Family | Parser | Input | Parent arm | Cure arm | Measure | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C-PERF3-CSS-BOOTSTRAP | F-CURE-PERF3 | parse_that CSS (span parser) | data/css/bootstrap.css@4a50207b | `ad0dc8a` | `92ff470` | parse time per byte, release (bench profile) | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-PERF3-CSS-TAILWIND | F-CURE-PERF3 | parse_that CSS (span parser) | data/css/tailwind-output.css@cd6e8eac | `ad0dc8a` | `92ff470` | parse time per byte, release (bench profile) | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-PERF3-JSON-TWITTER | F-CURE-PERF3 | parse_that JSON (span parser) | data/json/twitter.json@30721e49 | `ad0dc8a` | `92ff470` | parse time per byte, release (bench profile) | ≥ 200 over ≥ 30 invocations | PORTABLE |
+
+`r = ln(t_cure / t_parent)` per ABBA pair under §1 and §2; output checksums must agree, or the pair is discarded. The three cells are one Holm group. PERF-3 is a correctness cure, so a LOSS does not revert it: a LOSS files a born-RED for LW4.PERF (the release-only dispatch inlining, `cfg_attr(not(debug_assertions), inline(always))`, measured against this cure), and a WIN or UNDECIDED is reported only. A NOISY record never certifies.
+
+## 11. OR-7 parity cells: Route A against Route B (G-R2, G-P1), registered by the LW2 merge seat
+
+This section is an addendum (RULINGS 2026-11-10b, OR-7: Route A PROVISIONAL, "G-P1 and G-R2 are registered in PREREG"). It is written before Phase 3 and hashed with the rest of the file. The cells are the first cells of family F-REGEX (§4), and they are one Holm group. Both arms share the front end, `parse_that_regex::parse` at parse-that `8678725` (LW2.RX-3), and differ only in the determinizer. Route A is regex-automata 0.4.14 (`MatchKind::LeftmostFirst`, `StartKind::Anchored`, dense DFA, `minimize(true)`) fed by our `Hir` (parse-that `spike/or7-route-a` `5999f9c`). Route B is the in-house `Dfa` (powerset plus Hopcroft) at parse-that `spike/or7-route-b` `2d01be6`. The leaf corpus is the OR-7 spike's, `rx/or7/records/or7-corpus.json`@47854f95 (171 leaves, 21,722 cases), restricted to the 133 DFA-tier leaves; a lookaround leaf is never pooled.
+
+| Cell | Family | Goal | Workload | Input | Arm A (Route A) | Arm B (Route B) | Measure | Pairs | Matrix |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C-OR7-GR2-FIND | F-REGEX | G-R2 | leaf `find` (unanchored search) | the 133 DFA-tier leaves × their corpus cases | `5999f9c` | `2d01be6` | search time per input byte | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-OR7-GR2-ANCHORED | F-REGEX | G-R2 | anchored leaf match at offset 0 | the 133 DFA-tier leaves × their corpus cases | `5999f9c` | `2d01be6` | match time per input byte | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-OR7-GP1-CSSL4-BOOTSTRAP | F-REGEX | G-P1 | emitted code: the generated `css_l4` parser whose regex leaves read each route's tables | corpus/css/bootstrap.css@4a50207b | the A-backed emitter commit | the B-backed emitter commit | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-OR7-GP1-CSSL4-TAILWIND | F-REGEX | G-P1 | emitted code, as above | corpus/css/tailwind.css@de305d92 | the A-backed emitter commit | the B-backed emitter commit | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+| C-OR7-GP1-JSON-TWITTER | F-REGEX | G-P1 | emitted code, the generated JSON parser, as above | corpus/json/twitter.json@30721e49 | the A-backed emitter commit | the B-backed emitter commit | parse time per byte, generated parser | ≥ 200 over ≥ 30 invocations | PORTABLE |
+
+`r = ln(t_A / t_B)` per ABBA pair under §1 and §2. Every match end, and every generated parser's output checksum, must agree between the arms, or the pair is discarded. A route that disagrees with the ECMAScript oracle on a case is a G-R1 matter, not a timing pair. The two emitted-code arms of each G-P1 cell are named by commit in an addendum before they are measured; a G-P1 cell measured before that addendum is re-measured. OR-7 closes when every cell reads WIN or TIE for Route A. A LOSS beyond the frozen G-R2 or G-P1 floor (LW2.CON-2's decision plan) reopens OR-7 with these records. UNDECIDED keeps OR-7 PROVISIONAL and is reported as UNDECIDED. A NOISY record never certifies.

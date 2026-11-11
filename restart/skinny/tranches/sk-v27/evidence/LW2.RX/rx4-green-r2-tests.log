@@ -1,0 +1,11 @@
+[guarded] waiting for headroom (load 52 > 36)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.25s
+     Running tests/rx4_rust_fusion_absent.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw2/s7-rx/target-bbnf/debug/deps/rx4_rust_fusion_absent-9558558518e548f8)
+
+running 3 tests
+test rust_ir_keeps_the_branches_apart ... ok
+test ts_emit_keeps_fusion ... ok
+test vm_alt_a_ab_consumes_one_byte ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.01s
+

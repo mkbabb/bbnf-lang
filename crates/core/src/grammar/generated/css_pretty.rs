@@ -868,7 +868,7 @@ mod __cssprettyparser_emit_impl {
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
-                    ::std::string::String::from("43"), type_desc :
+                    ::std::string::String::from("42"), type_desc :
                     ::bbnf_ir::TypeDesc::Span, source :
                     ::bbnf_ir::registry::FieldSource::BranchTag { branch_index : 0u32, },
                     }, ::bbnf_ir::registry::StructField { name :
@@ -998,11 +998,13 @@ mod __cssprettyparser_emit_impl {
     pub const REGISTRY_ENTRY_RULE: &str = "stylesheet";
     static __DTA_REGEX_1: &str = "(?s)(?:\\s|\\/\\*[^*]*(?:\\*+[^\\/][^*]*)*\\*+\\/)*";
     static __DTA_REGEX_5: &str = "[^;{}!,]+";
-    static __DTA_REGEX_13: &str = "[a-zA-Z_][\\w-]*|--[\\w-]+|-[a-zA-Z][\\w-]*";
-    static __DTA_REGEX_32: &str = "@[a-zA-Z][\\w-]*";
-    static __DTA_REGEX_33: &str = "[^;{}]*";
-    static __DTA_REGEX_36: &str = "[^{};]+";
-    static __DTA_REGEX_41: &str = "[^{]+";
+    static __DTA_REGEX_14: &str = "-[a-zA-Z][\\w-]*";
+    static __DTA_REGEX_15: &str = "[a-zA-Z_][\\w-]*";
+    static __DTA_REGEX_35: &str = "@[a-zA-Z][\\w-]*";
+    static __DTA_REGEX_36: &str = "[^;{}]*";
+    static __DTA_REGEX_39: &str = "[^{};]+";
+    static __DTA_REGEX_44: &str = "[^{]+";
+    static __DTA_HREGEX_82: &str = "--[\\w-]+";
     /// AY.W4.3 — per-pattern (LAST-byte-set lo, hi) packed
     /// `CharSet128` tuples. `(0, 0)` means narrowing is
     /// disabled for that pattern (suffix not deterministic).
@@ -1012,7 +1014,9 @@ mod __cssprettyparser_emit_impl {
     /// contain any byte in the LAST set, the regex cannot
     /// complete a match — skip the DFA walk entirely.
     #[allow(dead_code)]
-    pub(crate) const __REGEX_LAST_BYTE_SET_CssPrettyParser: [(u64, u64); 7] = [
+    pub(crate) const __REGEX_LAST_BYTE_SET_CssPrettyParser: [(u64, u64); 9] = [
+        (0, 0),
+        (0, 0),
         (0, 0),
         (0, 0),
         (0, 0),
@@ -1359,11 +1363,90 @@ mod __cssprettyparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_13.as_ptr())
-            || pattern == __DTA_REGEX_13
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_14.as_ptr())
+            || pattern == __DTA_REGEX_14
         {
             if input.len() >= 64 * 1024 {
                 let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[2];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                45 => __dfa_state = 2,
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                45 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
+                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
+                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
+                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        2 => {
+                            match b {
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        1 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_15.as_ptr())
+            || pattern == __DTA_REGEX_15
+        {
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[3];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1405,7 +1488,6 @@ mod __cssprettyparser_emit_impl {
                                 | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => {
                                     __dfa_state = 1;
                                 }
-                                45 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
@@ -1417,28 +1499,6 @@ mod __cssprettyparser_emit_impl {
                                 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
                                 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
                                 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                45 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
-                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
-                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
-                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
-                                _ => break,
-                            }
-                        }
-                        3 => {
-                            match b {
-                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
-                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
-                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
-                                45 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
@@ -1457,11 +1517,11 @@ mod __cssprettyparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_32.as_ptr())
-            || pattern == __DTA_REGEX_32
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_35.as_ptr())
+            || pattern == __DTA_REGEX_35
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[3];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[4];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1536,11 +1596,11 @@ mod __cssprettyparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_33.as_ptr())
-            || pattern == __DTA_REGEX_33
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_36.as_ptr())
+            || pattern == __DTA_REGEX_36
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[4];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[5];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1619,11 +1679,11 @@ mod __cssprettyparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_36.as_ptr())
-            || pattern == __DTA_REGEX_36
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_39.as_ptr())
+            || pattern == __DTA_REGEX_39
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[5];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[6];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1729,11 +1789,11 @@ mod __cssprettyparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
-        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_41.as_ptr())
-            || pattern == __DTA_REGEX_41
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_44.as_ptr())
+            || pattern == __DTA_REGEX_44
         {
             if input.len() >= 64 * 1024 {
-                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[6];
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[7];
                 if (__lb_lo | __lb_hi) != 0 {
                     let __scan_end = (pos + 256).min(input.len());
                     let __slice = &input[pos..__scan_end];
@@ -1821,6 +1881,92 @@ mod __cssprettyparser_emit_impl {
                                 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
                                 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
                                 | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        1 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_HREGEX_82.as_ptr())
+            || pattern == __DTA_HREGEX_82
+        {
+            if input.len() >= 64 * 1024 {
+                let (__lb_lo, __lb_hi) = __REGEX_LAST_BYTE_SET_CssPrettyParser[8];
+                if (__lb_lo | __lb_hi) != 0 {
+                    let __scan_end = (pos + 256).min(input.len());
+                    let __slice = &input[pos..__scan_end];
+                    let mut __found = false;
+                    for &__b in __slice {
+                        let __test = if __b < 64 {
+                            (__lb_lo >> __b) & 1
+                        } else if __b < 128 {
+                            (__lb_hi >> (__b - 64)) & 1
+                        } else {
+                            0
+                        };
+                        if __test != 0 {
+                            __found = true;
+                            break;
+                        }
+                    }
+                    if !__found && __scan_end == input.len() {
+                        return ::core::option::Option::None;
+                    }
+                }
+            }
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                45 => __dfa_state = 3,
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                45 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
+                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
+                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
+                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        2 => {
+                            match b {
+                                45 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
+                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
+                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
+                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        3 => {
+                            match b {
+                                45 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
@@ -1872,7 +2018,7 @@ mod __cssprettyparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::simd_scan::StructuralIndex,
+                ::parse_that::scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -1892,17 +2038,17 @@ mod __cssprettyparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::simd_scan::StructuralIndex {
+        ) -> &'a ::parse_that::scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    let alphabet = ::simd_scan::StructuralAlphabet {
+                    let alphabet = ::parse_that::scan::StructuralAlphabet {
                         singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
                         digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
                         digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
                         quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
-                    ::simd_scan::scan_structural(input, &alphabet)
+                    ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip whitespace AND `/* ... */` block comments at `*p`,
@@ -2789,18 +2935,145 @@ mod __cssprettyparser_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
-                {
-                    let __scan_start = *p;
-                    let Some(match_len) = __regex_scan_CssPrettyParser(
-                        "[a-zA-Z_][\\w-]*|--[\\w-]+|-[a-zA-Z][\\w-]*",
-                        input,
-                        *p,
-                    ) else {
-                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
-                            offset: __scan_start as u32,
-                        });
-                    };
-                    *p += match_len as usize;
+                'try_branches: loop {
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let __alt_span_lo: usize = *p;
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_CssPrettyParser(
+                                    "--[\\w-]+",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let __alt_span_lo: usize = *p;
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_CssPrettyParser(
+                                    "-[a-zA-Z][\\w-]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    {
+                        let __alt_save_p = *p;
+                        let __alt_builder_checkpoint = builder.checkpoint();
+                        let __alt_result: ::core::result::Result<
+                            (),
+                            crate::runtime::DtaError,
+                        > = (|| {
+                            let __alt_span_lo: usize = *p;
+                            {
+                                let __scan_start = *p;
+                                let Some(match_len) = __regex_scan_CssPrettyParser(
+                                    "[a-zA-Z_][\\w-]*",
+                                    input,
+                                    *p,
+                                ) else {
+                                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                        offset: __scan_start as u32,
+                                    });
+                                };
+                                *p += match_len as usize;
+                            }
+                            {
+                                let __alt_span_hi: usize = *p;
+                                let __alt_span_slice: &str = ::core::str::from_utf8(
+                                        &input[__alt_span_lo..__alt_span_hi],
+                                    )
+                                    .unwrap_or("");
+                                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                    builder,
+                                    __alt_span_slice,
+                                );
+                            }
+                            Ok(())
+                        })();
+                        match __alt_result {
+                            Ok(()) => {
+                                builder.commit(__alt_builder_checkpoint);
+                                break 'try_branches;
+                            }
+                            Err(_) => {
+                                *p = __alt_save_p;
+                                builder.rollback(__alt_builder_checkpoint);
+                            }
+                        }
+                    }
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: *p as u32,
+                    });
                 }
             }
             {
@@ -5344,136 +5617,149 @@ mod __cssprettyparser_emit_impl {
                 {
                     {
                         {
-                            let __start = state.offset;
-                            if {
-                                let __start = state.offset;
-                                let __result: Option<()> = (|| {
+                            if !{
+                                let __pretty_cp6 = state.offset;
+                                let __ok = (|| -> bool {
                                     {
-                                        let __save_alt = state.offset;
-                                        let __alt_ok = (|| -> Option<()> {
+                                        let __start = state.offset;
+                                        if {
+                                            let __start = state.offset;
+                                            let __end = state.src_bytes.len();
+                                            if state.src_bytes.get(__start..__start + 2)
+                                                == Some(b"--" as &[u8])
                                             {
-                                                let __b = *state.src_bytes.get(state.offset)?;
-                                                if !(((__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                    || (__b >= b'a' && __b <= b'z')))
-                                                {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                            }
-                                            {
-                                                let __end = state.src_bytes.len();
-                                                let mut __pos = state.offset;
+                                                let mut __pos = __start + 2;
                                                 while __pos < __end {
                                                     let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                    if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                        || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                        || (__b >= b'a' && __b <= b'z'))
+                                                    if (__b.is_ascii_alphanumeric() || __b == b'_'
+                                                        || __b == b'-')
                                                     {
                                                         __pos += 1;
                                                     } else {
                                                         break;
                                                     }
                                                 }
-                                                state.offset = __pos;
+                                                if __pos >= __start + 3 {
+                                                    state.offset = __pos;
+                                                    Some(::parse_that::Span::new(__start, __pos, state.src))
+                                                } else {
+                                                    None
+                                                }
+                                            } else {
+                                                None
                                             }
-                                            Some(())
+                                        }
+                                            .is_none()
+                                        {
+                                            return false;
+                                        }
+                                        let __matched = &state.src[__start..state.offset];
+                                        if !__matched.is_empty() {
+                                            __builder.text(__matched);
+                                        }
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp6;
+                                }
+                                __ok
+                            } {
+                                {
+                                    if !{
+                                        let __pretty_cp5 = state.offset;
+                                        let __ok = (|| -> bool {
+                                            {
+                                                let __start = state.offset;
+                                                if {
+                                                    let __start = state.offset;
+                                                    let __result: Option<()> = (|| {
+                                                        if state.src_bytes.get(state.offset).copied() != Some(b'-')
+                                                        {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                        {
+                                                            let __b = *state.src_bytes.get(state.offset)?;
+                                                            if !(__b.is_ascii_alphabetic()) {
+                                                                return None;
+                                                            }
+                                                            state.offset += 1;
+                                                        }
+                                                        {
+                                                            let __end = state.src_bytes.len();
+                                                            let mut __pos = state.offset;
+                                                            while __pos < __end {
+                                                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                if (__b == b'-' || (__b >= b'0' && __b <= b'9')
+                                                                    || (__b >= b'A' && __b <= b'Z') || __b == b'_'
+                                                                    || (__b >= b'a' && __b <= b'z'))
+                                                                {
+                                                                    __pos += 1;
+                                                                } else {
+                                                                    break;
+                                                                }
+                                                            }
+                                                            state.offset = __pos;
+                                                        }
+                                                        Some(())
+                                                    })();
+                                                    if __result.is_some() && state.offset > __start {
+                                                        Some(
+                                                            ::parse_that::Span::new(__start, state.offset, state.src),
+                                                        )
+                                                    } else {
+                                                        state.offset = __start;
+                                                        None
+                                                    }
+                                                }
+                                                    .is_none()
+                                                {
+                                                    return false;
+                                                }
+                                                let __matched = &state.src[__start..state.offset];
+                                                if !__matched.is_empty() {
+                                                    __builder.text(__matched);
+                                                }
+                                            };
+                                            true
                                         })();
-                                        let __alt_ok = if __alt_ok.is_none() {
-                                            state.offset = __save_alt;
-                                            (|| -> Option<()> {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                                {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                                {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                                {
-                                                    let __loop_start = state.offset;
-                                                    let __end = state.src_bytes.len();
-                                                    let mut __pos = state.offset;
-                                                    while __pos < __end {
-                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                        if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                            || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                            || (__b >= b'a' && __b <= b'z'))
+                                        if !__ok {
+                                            state.offset = __pretty_cp5;
+                                        }
+                                        __ok
+                                    } {
+                                        {
+                                            if !{
+                                                let __pretty_cp4 = state.offset;
+                                                let __ok = (|| -> bool {
+                                                    {
+                                                        let __start = state.offset;
+                                                        if ::parse_that::scan_ident(
+                                                                state,
+                                                                &::parse_that::DEFAULT_IDENT_CONFIG,
+                                                            )
+                                                            .is_none()
                                                         {
-                                                            __pos += 1;
-                                                        } else {
-                                                            break;
+                                                            return false;
                                                         }
-                                                    }
-                                                    if __pos < __loop_start + 1 as usize {
-                                                        return None;
-                                                    }
-                                                    state.offset = __pos;
-                                                }
-                                                Some(())
-                                            })()
-                                        } else {
-                                            __alt_ok
-                                        };
-                                        let __alt_ok = if __alt_ok.is_none() {
-                                            state.offset = __save_alt;
-                                            (|| -> Option<()> {
-                                                if state.src_bytes.get(state.offset).copied() != Some(b'-')
-                                                {
-                                                    return None;
-                                                }
-                                                state.offset += 1;
-                                                {
-                                                    let __b = *state.src_bytes.get(state.offset)?;
-                                                    if !(__b.is_ascii_alphabetic()) {
-                                                        return None;
-                                                    }
-                                                    state.offset += 1;
-                                                }
-                                                {
-                                                    let __end = state.src_bytes.len();
-                                                    let mut __pos = state.offset;
-                                                    while __pos < __end {
-                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                        if (__b == b'-' || (__b >= b'0' && __b <= b'9')
-                                                            || (__b >= b'A' && __b <= b'Z') || __b == b'_'
-                                                            || (__b >= b'a' && __b <= b'z'))
-                                                        {
-                                                            __pos += 1;
-                                                        } else {
-                                                            break;
+                                                        let __matched = &state.src[__start..state.offset];
+                                                        if !__matched.is_empty() {
+                                                            __builder.text(__matched);
                                                         }
-                                                    }
-                                                    state.offset = __pos;
+                                                    };
+                                                    true
+                                                })();
+                                                if !__ok {
+                                                    state.offset = __pretty_cp4;
                                                 }
-                                                Some(())
-                                            })()
-                                        } else {
-                                            __alt_ok
-                                        };
-                                        if __alt_ok.is_none() {
-                                            return None;
+                                                __ok
+                                            } {
+                                                return false;
+                                            }
                                         }
                                     }
-                                    Some(())
-                                })();
-                                if __result.is_some() && state.offset > __start {
-                                    Some(
-                                        ::parse_that::Span::new(__start, state.offset, state.src),
-                                    )
-                                } else {
-                                    state.offset = __start;
-                                    None
                                 }
-                            }
-                                .is_none()
-                            {
-                                return false;
-                            }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
                             }
                         };
                         {
@@ -5867,8 +6153,8 @@ mod __cssprettyparser_emit_impl {
                         };
                         {
                             let _ = {
-                                let __pretty_cp8 = state.offset;
-                                let __pretty_bcp9 = __builder.checkpoint();
+                                let __pretty_cp11 = state.offset;
+                                let __pretty_bcp12 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -5906,12 +6192,12 @@ mod __cssprettyparser_emit_impl {
                                             }
                                         };
                                         {
-                                            let mut __rep_count6 = 0usize;
-                                            while __rep_count6 < 4294967295 {
-                                                let __rep_cp7 = state.offset;
+                                            let mut __rep_count9 = 0usize;
+                                            while __rep_count9 < 4294967295 {
+                                                let __rep_cp10 = state.offset;
                                                 if !{
-                                                    let __pretty_cp4 = state.offset;
-                                                    let __pretty_bcp5 = __builder.checkpoint();
+                                                    let __pretty_cp7 = state.offset;
+                                                    let __pretty_bcp8 = __builder.checkpoint();
                                                     let __ok = (|| -> bool {
                                                         {
                                                             {
@@ -6151,26 +6437,26 @@ mod __cssprettyparser_emit_impl {
                                                         true
                                                     })();
                                                     if !__ok {
-                                                        state.offset = __pretty_cp4;
-                                                        __builder.restore(__pretty_bcp5);
+                                                        state.offset = __pretty_cp7;
+                                                        __builder.restore(__pretty_bcp8);
                                                     }
                                                     __ok
                                                 } {
-                                                    state.offset = __rep_cp7;
+                                                    state.offset = __rep_cp10;
                                                     break;
                                                 }
-                                                if state.offset == __rep_cp7 {
+                                                if state.offset == __rep_cp10 {
                                                     break;
                                                 }
-                                                __rep_count6 += 1;
+                                                __rep_count9 += 1;
                                             }
                                         };
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp8;
-                                    __builder.restore(__pretty_bcp9);
+                                    state.offset = __pretty_cp11;
+                                    __builder.restore(__pretty_bcp12);
                                 }
                                 __ok
                             };
@@ -6178,8 +6464,8 @@ mod __cssprettyparser_emit_impl {
                         };
                         {
                             let _ = {
-                                let __pretty_cp10 = state.offset;
-                                let __pretty_bcp11 = __builder.checkpoint();
+                                let __pretty_cp13 = state.offset;
+                                let __pretty_bcp14 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -6399,8 +6685,8 @@ mod __cssprettyparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp10;
-                                    __builder.restore(__pretty_bcp11);
+                                    state.offset = __pretty_cp13;
+                                    __builder.restore(__pretty_bcp14);
                                 }
                                 __ok
                             };
@@ -6409,8 +6695,8 @@ mod __cssprettyparser_emit_impl {
                         {
                             {
                                 let _ = {
-                                    let __pretty_cp12 = state.offset;
-                                    let __pretty_bcp13 = __builder.checkpoint();
+                                    let __pretty_cp15 = state.offset;
+                                    let __pretty_bcp16 = __builder.checkpoint();
                                     let __ok = (|| -> bool {
                                         {
                                             if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -6423,8 +6709,8 @@ mod __cssprettyparser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp12;
-                                        __builder.restore(__pretty_bcp13);
+                                        state.offset = __pretty_cp15;
+                                        __builder.restore(__pretty_bcp16);
                                     }
                                     __ok
                                 };
@@ -7845,19 +8131,19 @@ mod __cssprettyparser_emit_impl {
             let __pretty_ok = {
                 {
                     {
-                        let mut __rep_count17 = 0usize;
-                        while __rep_count17 < 4294967295 {
-                            let __rep_cp18 = state.offset;
-                            let __iter_cp = if __rep_count17 > 0 {
+                        let mut __rep_count20 = 0usize;
+                        while __rep_count20 < 4294967295 {
+                            let __rep_cp21 = state.offset;
+                            let __iter_cp = if __rep_count20 > 0 {
                                 Some(__builder.checkpoint())
                             } else {
                                 None
                             };
-                            if __rep_count17 > 0 {
+                            if __rep_count20 > 0 {
                                 __builder.hardline();
                             }
                             if !{
-                                let __pretty_cp16 = state.offset;
+                                let __pretty_cp19 = state.offset;
                                 let __ok = (|| -> bool {
                                     {
                                         {
@@ -8053,8 +8339,8 @@ mod __cssprettyparser_emit_impl {
                                         };
                                         {
                                             if !{
-                                                let __pretty_cp14 = state.offset;
-                                                let __pretty_bcp15 = __builder.checkpoint();
+                                                let __pretty_cp17 = state.offset;
+                                                let __pretty_bcp18 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__declaration_prettify(state, __builder) {
                                                         return false;
@@ -8062,8 +8348,8 @@ mod __cssprettyparser_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp14;
-                                                    __builder.restore(__pretty_bcp15);
+                                                    state.offset = __pretty_cp17;
+                                                    __builder.restore(__pretty_bcp18);
                                                 }
                                                 __ok
                                             } {
@@ -8076,23 +8362,23 @@ mod __cssprettyparser_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp16;
+                                    state.offset = __pretty_cp19;
                                 }
                                 __ok
                             } {
-                                state.offset = __rep_cp18;
+                                state.offset = __rep_cp21;
                                 if let Some(__bcp) = __iter_cp {
                                     __builder.restore(__bcp);
                                 }
                                 break;
                             }
-                            if state.offset == __rep_cp18 {
+                            if state.offset == __rep_cp21 {
                                 if let Some(__bcp) = __iter_cp {
                                     __builder.restore(__bcp);
                                 }
                                 break;
                             }
-                            __rep_count17 += 1;
+                            __rep_count20 += 1;
                         }
                     };
                     true
@@ -8123,8 +8409,8 @@ mod __cssprettyparser_emit_impl {
                 {
                     {
                         if !{
-                            let __pretty_cp27 = state.offset;
-                            let __pretty_bcp28 = __builder.checkpoint();
+                            let __pretty_cp30 = state.offset;
+                            let __pretty_bcp31 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 if !Self::__mediaRule_prettify(state, __builder) {
                                     return false;
@@ -8132,15 +8418,15 @@ mod __cssprettyparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp27;
-                                __builder.restore(__pretty_bcp28);
+                                state.offset = __pretty_cp30;
+                                __builder.restore(__pretty_bcp31);
                             }
                             __ok
                         } {
                             {
                                 if !{
-                                    let __pretty_cp25 = state.offset;
-                                    let __pretty_bcp26 = __builder.checkpoint();
+                                    let __pretty_cp28 = state.offset;
+                                    let __pretty_bcp29 = __builder.checkpoint();
                                     let __ok = (|| -> bool {
                                         if !Self::__supportsRule_prettify(state, __builder) {
                                             return false;
@@ -8148,15 +8434,15 @@ mod __cssprettyparser_emit_impl {
                                         true
                                     })();
                                     if !__ok {
-                                        state.offset = __pretty_cp25;
-                                        __builder.restore(__pretty_bcp26);
+                                        state.offset = __pretty_cp28;
+                                        __builder.restore(__pretty_bcp29);
                                     }
                                     __ok
                                 } {
                                     {
                                         if !{
-                                            let __pretty_cp23 = state.offset;
-                                            let __pretty_bcp24 = __builder.checkpoint();
+                                            let __pretty_cp26 = state.offset;
+                                            let __pretty_bcp27 = __builder.checkpoint();
                                             let __ok = (|| -> bool {
                                                 if !Self::__fontFaceRule_prettify(state, __builder) {
                                                     return false;
@@ -8164,15 +8450,15 @@ mod __cssprettyparser_emit_impl {
                                                 true
                                             })();
                                             if !__ok {
-                                                state.offset = __pretty_cp23;
-                                                __builder.restore(__pretty_bcp24);
+                                                state.offset = __pretty_cp26;
+                                                __builder.restore(__pretty_bcp27);
                                             }
                                             __ok
                                         } {
                                             {
                                                 if !{
-                                                    let __pretty_cp21 = state.offset;
-                                                    let __pretty_bcp22 = __builder.checkpoint();
+                                                    let __pretty_cp24 = state.offset;
+                                                    let __pretty_bcp25 = __builder.checkpoint();
                                                     let __ok = (|| -> bool {
                                                         if !Self::__importRule_prettify(state, __builder) {
                                                             return false;
@@ -8180,15 +8466,15 @@ mod __cssprettyparser_emit_impl {
                                                         true
                                                     })();
                                                     if !__ok {
-                                                        state.offset = __pretty_cp21;
-                                                        __builder.restore(__pretty_bcp22);
+                                                        state.offset = __pretty_cp24;
+                                                        __builder.restore(__pretty_bcp25);
                                                     }
                                                     __ok
                                                 } {
                                                     {
                                                         if !{
-                                                            let __pretty_cp19 = state.offset;
-                                                            let __pretty_bcp20 = __builder.checkpoint();
+                                                            let __pretty_cp22 = state.offset;
+                                                            let __pretty_bcp23 = __builder.checkpoint();
                                                             let __ok = (|| -> bool {
                                                                 if !Self::__genericAtRule_prettify(state, __builder) {
                                                                     return false;
@@ -8196,8 +8482,8 @@ mod __cssprettyparser_emit_impl {
                                                                 true
                                                             })();
                                                             if !__ok {
-                                                                state.offset = __pretty_cp19;
-                                                                __builder.restore(__pretty_bcp20);
+                                                                state.offset = __pretty_cp22;
+                                                                __builder.restore(__pretty_bcp23);
                                                             }
                                                             __ok
                                                         } {
@@ -8237,8 +8523,8 @@ mod __cssprettyparser_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp29 = state.offset;
-                        let __pretty_bcp30 = __builder.checkpoint();
+                        let __pretty_cp32 = state.offset;
+                        let __pretty_bcp33 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__qualifiedRule_prettify(state, __builder) {
                                 return false;
@@ -8246,8 +8532,8 @@ mod __cssprettyparser_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp29;
-                            __builder.restore(__pretty_bcp30);
+                            state.offset = __pretty_cp32;
+                            __builder.restore(__pretty_bcp33);
                         }
                         __ok
                     } {
@@ -8276,19 +8562,19 @@ mod __cssprettyparser_emit_impl {
         ) -> bool {
             {
                 {
-                    let mut __rep_count32 = 0usize;
-                    while __rep_count32 < 4294967295 {
-                        let __rep_cp33 = state.offset;
-                        let __iter_cp = if __rep_count32 > 0 {
+                    let mut __rep_count35 = 0usize;
+                    while __rep_count35 < 4294967295 {
+                        let __rep_cp36 = state.offset;
+                        let __iter_cp = if __rep_count35 > 0 {
                             Some(__builder.checkpoint())
                         } else {
                             None
                         };
-                        if __rep_count32 > 0 {
+                        if __rep_count35 > 0 {
                             __builder.hardline();
                         }
                         if !{
-                            let __pretty_cp31 = state.offset;
+                            let __pretty_cp34 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     {
@@ -8489,23 +8775,23 @@ mod __cssprettyparser_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp31;
+                                state.offset = __pretty_cp34;
                             }
                             __ok
                         } {
-                            state.offset = __rep_cp33;
+                            state.offset = __rep_cp36;
                             if let Some(__bcp) = __iter_cp {
                                 __builder.restore(__bcp);
                             }
                             break;
                         }
-                        if state.offset == __rep_cp33 {
+                        if state.offset == __rep_cp36 {
                             if let Some(__bcp) = __iter_cp {
                                 __builder.restore(__bcp);
                             }
                             break;
                         }
-                        __rep_count32 += 1;
+                        __rep_count35 += 1;
                     }
                 };
                 true

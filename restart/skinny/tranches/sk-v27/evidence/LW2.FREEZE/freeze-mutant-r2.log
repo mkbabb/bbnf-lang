@@ -1,0 +1,6 @@
+mutant: op.rs + MutantVariant
+ABI-v2.md: OK
+src/op.rs: FAILED
+shasum: WARNING: 1 computed checksum did NOT match
+RED: shasum -c over ABI-v2.sha256 failed
+rc=1

@@ -57,10 +57,15 @@ pub fn emit_dispatcher(
     let Some(root_name) = root_rule_name(ir) else {
         return quote! {};
     };
-    let entry = ir.entry;
-    let Some(entry_rule) = ir.rules.iter().find(|r| r.id == entry) else {
+    // A whitespace-alias entry (`json = ws >> value << ws`) dispatches
+    // its target: the dispatcher keeps the entry's name (`parse()` and
+    // `parse_with` call it) and takes the target's body and rule id.
+    let Some(entry_rule) = super::super::ws_alias_entry_target(ir)
+        .or_else(|| ir.rules.iter().find(|r| r.id == ir.entry))
+    else {
         return quote! {};
     };
+    let entry = entry_rule.id;
 
     let entry_rule_id_lit = entry;
     let dispatcher_ident = dispatcher_fn_ident(grammar_suffix, &root_name);

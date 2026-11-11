@@ -1,25 +1,24 @@
-//! Runtime-side bridge to the shared `bbnf-simd` structural primitives.
+//! Runtime-side bridge to the shared `parse-that-simd` block primitives.
 //!
 //! Grammar-neutral by construction: every entry takes the alphabet / byte-set
 //! as CALLER DATA (Lock 14 — the delimiter policy comes from the generated
 //! grammar module, never hardcoded here). The shared aarch64 eq-set / bracket-
-//! depth classifiers (`bbnf_simd::prim`) are the same kernels JSON rides; here
+//! depth classifiers (`parse_that_simd::prim`) are the same kernels JSON rides; here
 //! `count_top_level_commas` accelerates the CSS selector-list separator count
 //! via the bracket-depth-interior mask — the count is consumed unchanged (speed
 //! from the scan, never from dropping structure).
 //!
 //! The CSS structural scan's per-byte dispatch was lifted to the G6
-//! structural-classification kernel (`bbnf_simd::prim::structural_classify_64`),
+//! structural-classification kernel (`parse_that_simd::prim::structural_classify_64`),
 //! consumed by `runtime_scan::css_balanced_component_scan`; the former
 //! inner-inert-skip (`find_css_significant`) and the dead comment-close
 //! consumer (`find_comment_close`) are SUBSUMED/RETIRED.
 
-use bbnf_simd::prim::{bracket_depth_mask_64, byte_class_from_eq_set_64};
+use parse_that_simd::prim::{bracket_depth_mask_64, byte_class_from_eq_set_64};
 
 /// CSS bracket open/close sets (caller data for the L6 primitive).
-const BRACKET_OPENS: [u8; 4] = [b'(', b'[', b'{', 0];
-const BRACKET_CLOSES: [u8; 4] = [b')', b']', b'}', 0];
-const BRACKET_LEN: usize = 3;
+const BRACKET_OPENS: &[u8] = b"([{";
+const BRACKET_CLOSES: &[u8] = b")]}";
 
 /// Count top-level commas (commas at bracket depth 0, outside strings) in a CSS
 /// selector prelude — the selector-list separator count. The L6
@@ -47,14 +46,8 @@ pub fn count_top_level_commas(bytes: &[u8]) -> usize {
         if byte_class_from_eq_set_64(block, QUOTES) != 0 {
             break;
         }
-        let (interior, depth_out) = bracket_depth_mask_64(
-            block,
-            &BRACKET_OPENS,
-            BRACKET_LEN,
-            &BRACKET_CLOSES,
-            BRACKET_LEN,
-            depth,
-        );
+        let (interior, depth_out) =
+            bracket_depth_mask_64(block, BRACKET_OPENS, BRACKET_CLOSES, depth);
         // Top-level commas: comma bits not inside any bracket group.
         let comma_mask = byte_class_from_eq_set_64(block, COMMA);
         commas += (comma_mask & !interior).count_ones() as usize;

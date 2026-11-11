@@ -1,0 +1,19 @@
+perf3-green-try2.log:     Running tests/css_stack_depth.rs (target/debug/deps/css_stack_depth-612506f52e9de180)
+perf3-green-try2.log:1	114688	-
+perf3-green-try2.log:2	147456	32768
+perf3-green-try2.log:4	245760	49152
+perf3-green-try2.log:8	425984	45056
+perf3-green-try2.log:16	802816	47104
+perf3-green-try2.log:per_level_bytes_of_record	47104
+perf3-green-try2.log:test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.10s
+perf3-green-try.log:     Running tests/css_parse_test.rs (target/debug/deps/css_parse_test-c4aca2e38c10ff33)
+perf3-green-try.log:test result: ok. 51 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.05s
+perf3-green-try.log:     Running tests/css_stack_depth.rs (target/debug/deps/css_stack_depth-612506f52e9de180)
+perf3-green-try.log:0	69632	-
+perf3-green-try.log:1	102400	32768
+perf3-green-try.log:2	135168	32768
+perf3-green-try.log:4	233472	40960
+perf3-green-try.log:8	413696	43008
+perf3-green-try.log:16	790528	45056
+perf3-green-try.log:thread 'nested_at_rule_stack_slope_is_constant' (11627005) panicked at parse_that/tests/css_stack_depth.rs:118:9:
+perf3-green-try.log:test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.22s

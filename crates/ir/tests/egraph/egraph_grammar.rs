@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-use bbnf_ir::egraph::{GrammarCostModel, GrammarENode, build_and_saturate};
+use bbnf_ir::egraph::{GrammarCostModel, GrammarENode, LeafMatch, build_and_saturate};
 use bbnf_ir::{AltBranch, GrammarIR, IrNode, IrRule, RuleMeta};
 use parse_that_egraph::{Extractor, Language};
 
@@ -77,7 +77,7 @@ fn build_literal() {
     let body = lit(&mut ir, "hello");
     ir.rules[0].body = body;
 
-    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
     assert!(egraph.classes().count() >= 1);
 }
 
@@ -127,7 +127,7 @@ fn rule_deduplicate_alt_branches() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
     let cost = GrammarCostModel::default();
     let extractor = Extractor::new(&egraph, &cost);
 
@@ -172,7 +172,7 @@ fn rule_superset_absorb_alt() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, _pool, _rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
     let cost = GrammarCostModel::default();
     let extractor = Extractor::new(&egraph, &cost);
 
@@ -215,7 +215,7 @@ fn rule_union_merge_alt() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
     let strings = pool.into_vec();
 
     let merged: Vec<&String> = strings
@@ -289,7 +289,7 @@ fn rule_fuse_alt_regex_branches() {
     );
     ir.rules[0].body = alt;
 
-    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir);
+    let (egraph, pool, _rule_body_ids) = build_and_saturate(&ir, LeafMatch::LeftmostFirst);
     let strings = pool.into_vec();
 
     assert!(

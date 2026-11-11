@@ -25,7 +25,7 @@ impl TsEmitter {
              while (true) {{\n\
                const __prev = s.offset;\n\
                const __r = {body_expr};\n\
-               if (__r === null) break;\n\
+               if (__r === null) {{ s.offset = __prev; break; }}\n\
                {count}++;\n\
                if (s.offset === __prev) break;\n\
              }}\n\
@@ -43,12 +43,18 @@ impl TsEmitter {
     ) -> TsCode {
         let cp = ctx.fresh("cp");
         let result = ctx.fresh("opt");
-        let mut stmts = format!("const {cp} = s.offset;\n");
-        let body_expr = body.dissolve(&mut stmts);
-        stmts.push_str(&format!(
-            "let {result} = {body_expr};\n\
-             if ({result} === null) s.offset = {cp};\n"
-        ));
+        // The body runs as one expression (an IIFE when it carries
+        // statements): a fallible sub-sequence early-returns `null`,
+        // and that return must fail the optional, not the whole rule.
+        // An absent optional succeeds with `undefined` (parse-that's
+        // `opt()`), never `null`, which is this emitter's failure value.
+        let raw = ctx.fresh("optraw");
+        let body_expr = body.as_expr();
+        let stmts = format!(
+            "const {cp} = s.offset;\n\
+             const {raw} = {body_expr};\n\
+             const {result} = {raw} === null ? (s.offset = {cp}, undefined) : {raw};\n"
+        );
         TsCode::new(stmts, result)
     }
 
@@ -57,12 +63,30 @@ impl TsEmitter {
         element: TsCode,
         separator: TsCode,
         config: &SepByConfig,
-        _elem_type: &TypeDesc,
+        elem_type: &TypeDesc,
         ctx: &mut TsEmitCtx,
     ) -> TsCode {
         let start = ctx.fresh("start");
         let count = ctx.fresh("count");
         let result = ctx.fresh("sep");
+        // Span elements collapse to the list's span; any other element
+        // is collected, so the list's value is the array its
+        // `Vec<T>` type declares.
+        let items = ctx.fresh("items");
+        let collect = *elem_type != TypeDesc::Span;
+        let (decl, push, value) = if collect {
+            (
+                format!("const {items} = [];\n"),
+                format!(" {items}.push(__r);"),
+                items.clone(),
+            )
+        } else {
+            (
+                String::new(),
+                String::new(),
+                format!("span({start}, s.offset)"),
+            )
+        };
         let cp = ctx.fresh("cp");
         let lo = config.lo;
         let elem_expr = element.as_expr();
@@ -90,19 +114,20 @@ impl TsEmitter {
 
         let stmts = format!(
             "const {start} = s.offset;\n\
+             {decl}\
              let {count} = 0;\n\
              {{\n  const __r = {elem_expr};\n  \
-             if (__r !== null) {count}++;\n}}\n\
+             if (__r !== null) {{ {count}++;{push} }} else s.offset = {start};\n}}\n\
              if ({count} > 0) {{\n  \
              while (true) {{\n    \
                {terminator_check}\
                const {cp} = s.offset;\n    \
                const __sep = {sep_expr};\n    \
-               if (__sep === null) break;\n    \
+               if (__sep === null) {{ s.offset = {cp}; break; }}\n    \
                const __r = {elem_expr};\n    \
-               if (__r !== null) {{ {count}++; }} else {{ s.offset = {cp}; break; }}\n  \
+               if (__r !== null) {{ {count}++;{push} }} else {{ s.offset = {cp}; break; }}\n  \
              }}\n}}\n\
-             const {result} = {count} >= {lo} ? span({start}, s.offset) : null;\n"
+             const {result} = {count} >= {lo} ? {value} : null;\n"
         );
         TsCode::new(stmts, result)
     }

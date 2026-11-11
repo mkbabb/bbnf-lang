@@ -799,7 +799,7 @@ fn trim_ascii(mut bytes: &[u8]) -> &[u8] {
 
 /// Count top-level commas in a selector prelude (commas not nested inside
 /// `()`/`[]`/`{}` or strings) — the selector-list separator count. Rides the
-/// shared neutral `bbnf_simd` bracket-depth NEON kernel.
+/// shared neutral `parse_that_simd` bracket-depth NEON kernel.
 #[inline]
 fn count_top_level_commas(bytes: &[u8]) -> usize {
     crate::runtime_simd::count_top_level_commas(bytes)

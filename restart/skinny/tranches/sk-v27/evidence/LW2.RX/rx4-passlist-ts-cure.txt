@@ -1,0 +1,9 @@
+  rule=deduplicate-alt-branches work=0
+  rule=superset-absorb-alt work=0
+  rule=union-merge-alt work=0
+  rule=fuse-alt-regex-branches work=2
+  rule=common-suffix-factor work=0
+  rule=alt-of-single work=0
+  rule=repeat-of-single work=0
+  rule=wrap-of-epsilon-scalar work=0
+  rule=concat-literals work=0

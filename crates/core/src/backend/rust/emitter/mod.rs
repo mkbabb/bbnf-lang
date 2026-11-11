@@ -356,7 +356,8 @@ impl Emitter for RustEmitter {
     }
     fn emit_prettify_sep_inline(&mut self, sep: &str, _ctx: &mut Self::Ctx) -> TokenStream {
         let sep_lit = proc_macro2::Literal::string(sep);
-        quote::quote! { __builder.sep(#sep_lit, ""); }
+        let brk_lit = proc_macro2::Literal::string(sep.trim_end());
+        quote::quote! { __builder.sep(#sep_lit, #brk_lit); }
     }
     fn emit_prettify_rule_function(
         &mut self,

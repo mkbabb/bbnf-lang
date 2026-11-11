@@ -1,0 +1,873 @@
+[guarded] waiting for headroom (load 36 > 36)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.48s
+     Running unittests src/lib.rs (target/debug/deps/parse_that_corpus-a3aca58f429a3b9c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/parse_that_egraph-a489a2b6ae83b6e3)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/csp_scheduler.rs (target/debug/deps/csp_scheduler-af657ffa4a6a78fc)
+
+running 4 tests
+test dirty_domain_lattice_semantics ... ok
+test parent_dirty_prop_propagates_through_ac3 ... ok
+test csp_scheduler_matches_backoff_scheduler ... ok
+test csp_scheduler_reaches_saturation ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/derive_language.rs (target/debug/deps/derive_language-b1b64dac1c73aab6)
+
+running 13 tests
+test auto_boxed_slice ... ok
+test auto_children_mut_pair_roundtrip ... ok
+test auto_fixed_array_pair ... ok
+test auto_named_struct_variant ... ok
+test auto_leaf_scalar ... ok
+test auto_single_id ... ok
+test children_mut_replaces_ids ... ok
+test auto_vec_of_id ... ok
+test named_single_child_visible ... ok
+test single_child_visible ... ok
+test leaf_has_no_children ... ok
+test unit_has_no_children ... ok
+test variadic_children_visible ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/egraph_basic.rs (target/debug/deps/egraph_basic-c8e83bfd165553af)
+
+running 6 tests
+test extract_smallest_after_saturate ... ok
+test intern_builds_shared_children ... ok
+test intern_dedupes_identical_nodes ... ok
+test intern_distinct_nodes ... ok
+test union_merges_classes ... ok
+test saturate_add_zero ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/saturation.rs (target/debug/deps/saturation-786f00785c11e61d)
+
+running 3 tests
+test no_op_saturates_in_one_iteration ... ok
+test pure_union_rule_counted_as_work ... ok
+test multi_iteration_flatten_reaches_fixed_point ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/unionfind.rs (target/debug/deps/unionfind-6e7f4307b73b8f51)
+
+running 3 tests
+test make_set_distinct ... ok
+test path_compression ... ok
+test union_and_find ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/parse_that_egraph_derive-25f1f3d2122b054b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/parse_that_regex-4ce1a410c6d3c07a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/algebra_superset.rs (target/debug/deps/algebra_superset-98c242b90e480a21)
+
+running 2 tests
+test superset_basic ... ok
+test superset_equal ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/algebra_union.rs (target/debug/deps/algebra_union-89642ce4479b7a20)
+
+running 1 test
+test union_disjoint ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/born_red_lw1.rs (target/debug/deps/born_red_lw1-94f943b9a333e8ec)
+
+running 13 tests
+test alt_fusion_is_leftmost_first ... ignored, born-RED LW1.RX-2 (Alt fusion): the DFA is leftmost-longest and returns 2; cure LW3.RX-1 (leftmost-first), LW2.RX-4 disables Rust fusion meanwhile
+test c1_1_negative_lookahead_backs_off_greedy_run ... ignored, born-RED LW1.RX-2 (C1-1): lookaround is rejected by the parser ("invalid group syntax"); cure LW3.RX-1
+test c1_1_negative_lookahead_full_run_when_unblocked ... ignored, born-RED LW1.RX-2 (C1-1): lookaround is rejected by the parser; cure LW3.RX-1
+test kelvin_folds_under_iu ... ignored, born-RED LW1.RX-2 (Kelvin /iu): case folding is ASCII-only; cure LW3.RX-1 (u/v semantics)
+test latin1_folds_under_i_and_iu ... ignored, born-RED LW1.RX-2 (fold, non-ASCII): case folding is ASCII-only; cure LW3.RX-1
+test long_s_folds_under_iu ... ignored, born-RED LW1.RX-2 (fold /iu): case folding is ASCII-only; cure LW3.RX-1
+test superset_absorb_compares_scalar_values ... ignored, born-RED LW1.RX-2 (SupersetAbsorbAlt): containment is tested on UTF-8 byte sets, not scalar-value sets; cure LW2.RX-4 / LW4.RX-2
+test superset_absorb_requires_equal_consumption ... ignored, born-RED LW1.RX-2 (SupersetAbsorbAlt, C2-1): repetition is stripped before the containment test; cure LW2.RX-4
+test union_merge_keeps_both_branches_languages ... ignored, born-RED LW1.RX-2 (UnionMergeAlt): the union is printed from UTF-8 bytes as Latin-1 chars; cure LW2.RX-4 / LW4.RX-2
+test superset_absorb_ascii_single_class_holds ... ok
+test superset_absorb_e_acute_greek_guard ... ok
+test alt_longer_branch_first_agrees ... ok
+test kelvin_does_not_fold_without_u ... ok
+
+test result: ok. 4 passed; 0 failed; 9 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/egraph_rules_flatten.rs (target/debug/deps/egraph_rules_flatten-3d62536107b55dd8)
+
+running 3 tests
+test flatten_nested_alternation_matches ... ok
+test flatten_flat_does_not_match ... ok
+test flatten_nested_concat_matches ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/egraph_rules_redundant.rs (target/debug/deps/egraph_rules_redundant-81ce648cde0ea13f)
+
+running 2 tests
+test dedup_identical_literal_branches ... ok
+test dedup_no_duplicates ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/egraph_rules_repetition.rs (target/debug/deps/egraph_rules_repetition-c559570d6e784dd2)
+
+running 3 tests
+test merge_bounds_arithmetic ... ok
+test merge_plus_star_to_plus ... ok
+test merge_different_subs_does_not_match ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/egraph_rules_superset.rs (target/debug/deps/egraph_rules_superset-b206fda824fbda6a)
+
+running 2 tests
+test superset_absorbs_subset ... ok
+test disjoint_classes_not_absorbed ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/egraph_rules_union.rs (target/debug/deps/egraph_rules_union-46e011a779810b03)
+
+running 2 tests
+test union_does_not_match_on_equal_classes ... ok
+test union_merges_adjacent_classes ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/egraph_simplify.rs (target/debug/deps/egraph_simplify-8ec0617d9880c363)
+
+running 3 tests
+test simplify_hir_round_trips_leaf ... ok
+test simplify_hir_dedup_alt_branches ... ok
+test simplify_hir_preserves_structure ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/info.rs (target/debug/deps/info-83e94533862303b5)
+
+running 11 tests
+test test_anchored ... ok
+test test_identifier_bare ... ok
+test test_identifier_double_dash_only ... ok
+test test_nullable_pattern ... ok
+test test_negated_class ... ok
+test test_simple_literal ... ok
+test test_width_bounds ... ok
+test test_alternation_one_pass ... ok
+test test_identifier_custom_property_fold ... ok
+test test_identifier_vendor_prefix ... ok
+test test_json_number_classification ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/path_lexer.rs (target/debug/deps/path_lexer-a7bf15dde978151c)
+
+running 15 tests
+test deterministic_span_attribution ... ok
+test empty_input_yields_only_eof ... ok
+test error_carries_provided_span ... ok
+test lexes_dotted_path ... ok
+test ignores_interstitial_whitespace ... ok
+test lexes_index_runs_into_brackets ... ok
+test lexes_escaped_quote_in_input ... ok
+test lexes_underscore_idents ... ok
+test lexes_jsonpath_style ... ok
+test lexes_wildcard_path ... ok
+test lexes_unicode_identifiers ... ok
+test rejects_invalid_utf8_lead_byte ... ok
+test rejects_unexpected_punctuation ... ok
+test round_trip_text_preserves_input ... ok
+test whitespace_only_input_yields_only_eof ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/parse_that-34c7ebf912f6281a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/combinator_test.rs (target/debug/deps/combinator_test-bff3677b4b0a2079)
+
+running 99 tests
+test tests::chain_second_failure ... ok
+test tests::chain_failure_propagates ... ok
+test tests::test_add_operator ... ok
+test tests::chain_state_advances ... ok
+test tests::chain_basic ... ok
+test tests::test_bitor_operator ... ok
+test tests::test_dispatch_byte ... ok
+test tests::test_dispatch_byte_no_fallback ... ok
+test tests::test_epsilon ... ok
+test tests::test_eof_not_at_end ... ok
+test tests::test_eof_at_end ... ok
+test tests::test_flat_then ... ok
+test tests::test_lazy_basic ... ok
+test tests::test_any_span_keywords ... ok
+test tests::test_look_ahead_failure ... ok
+test tests::test_look_ahead_success ... ok
+test tests::test_many_unbounded ... ok
+test tests::test_many_with_max ... ok
+test tests::test_many_with_min ... ok
+test tests::test_many_zero_matches ... ok
+test tests::test_any_span_no_match ... ok
+test tests::test_map_failure_propagates ... ok
+test tests::test_map_transform ... ok
+test tests::test_negate_failure ... ok
+test tests::test_negate_success ... ok
+test tests::test_next_combinator ... ok
+test tests::test_next_span ... ok
+test tests::test_next_span_empty_input ... ok
+test tests::test_not_failure ... ok
+test tests::test_not_success ... ok
+test tests::test_number_span_fast_big_exponent ... ok
+test tests::test_number_span_fast_empty ... ok
+test tests::test_number_span_fast_exponent ... ok
+test tests::test_number_span_fast_float ... ok
+test tests::test_number_span_fast_integer ... ok
+test tests::test_number_span_fast_just_minus ... ok
+test tests::test_number_span_fast_neg_exponent ... ok
+test tests::test_number_span_fast_neg_zero ... ok
+test tests::test_number_span_fast_negative ... ok
+test tests::test_number_span_fast_no_match ... ok
+test tests::test_number_span_fast_zero ... ok
+test tests::test_one_of ... ok
+test tests::test_opt_none ... ok
+test tests::test_opt_some ... ok
+test tests::test_or_neither_matches ... ok
+test tests::test_or_backtracking ... ok
+test tests::test_or_second_matches ... ok
+test tests::test_or_first_matches ... ok
+test tests::test_parse_or_error_failure ... ok
+test tests::test_parse_or_error_success ... ok
+test tests::test_regex_digits ... ok
+test tests::test_regex_empty_input ... ok
+test tests::test_regex_no_match ... ok
+test tests::test_regex_span_match ... ok
+test tests::test_save_state_backtrack ... ok
+test tests::test_save_state_success ... ok
+test tests::test_sep_by ... ok
+test tests::test_sep_by_single ... ok
+test tests::test_skip ... ok
+test tests::test_sep_by_min_not_met ... ok
+test tests::test_sp_bridge_into_parser ... ok
+test tests::test_sp_many ... ok
+test tests::test_sp_bridge_map ... ok
+test tests::test_sp_oneof_flattening ... ok
+test tests::test_sp_opt ... ok
+test tests::test_sp_sep_by ... ok
+test tests::test_sp_seq_flattening ... ok
+test tests::test_sp_string_match ... ok
+test tests::test_sp_string_no_match ... ok
+test tests::test_sp_take_while_byte_no_match ... ok
+test tests::test_sp_take_while_byte ... ok
+test tests::test_number_span_fast_randomized_boundaries ... ok
+test tests::test_sp_trim_whitespace ... ok
+test tests::test_sp_wrap ... ok
+test tests::test_span_many ... ok
+test tests::test_span_opt ... ok
+test tests::test_span_sep_by ... ok
+test tests::test_span_then ... ok
+test tests::test_span_wrap ... ok
+test tests::test_string_empty_input ... ok
+test tests::test_string_empty_pattern ... ok
+test tests::test_string_match ... ok
+test tests::test_string_no_match ... ok
+test tests::test_string_span_match ... ok
+test tests::test_string_utf8 ... ok
+test tests::test_take_until_any_equivalence_specialization_sizes ... ok
+test tests::test_take_while_byte_span_digits ... ok
+test tests::test_take_while_byte_span_no_match ... ok
+test tests::test_take_while_span_digits ... ok
+test tests::test_take_while_span_no_match ... ok
+test tests::test_take_while_span_utf8 ... ok
+test tests::test_then_first_fails ... ok
+test tests::test_then_success ... ok
+test tests::test_then_second_fails ... ok
+test tests::test_trim_whitespace ... ok
+test tests::test_trim_whitespace_no_ws ... ok
+test tests::test_wrap ... ok
+test tests::test_wrap_missing_right ... ok
+test tests::test_take_until_any_randomized_equivalence ... ok
+
+test result: ok. 99 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/css_parse_test.rs (target/debug/deps/css_parse_test-e7ea17771f935a0d)
+
+running 52 tests
+test test_block_comment_multiline ... ok
+test test_block_comment_fast ... ok
+test test_class_selector ... ok
+test test_comment ... ok
+test test_attribute_selector ... ok
+test test_at_font_face ... ok
+test test_child_combinator ... ok
+test test_at_import ... ok
+test test_compound_selector ... ok
+test test_at_media ... ok
+test test_custom_property_declaration ... ok
+test test_calc_function ... ok
+test test_at_keyframes ... ok
+test test_dimension_values ... ok
+test test_empty_stylesheet ... ok
+test test_descendant_combinator ... ok
+test test_hex_color ... ok
+test test_hex_color_3 ... ok
+test test_hex_color_8 ... ok
+test test_id_selector ... ok
+test test_media_query_list ... ok
+test test_media_query_and_conditions ... ok
+test test_media_query_not_print ... ok
+test test_media_query_plain_feature ... ok
+test test_multiple_declarations ... ok
+test test_media_query_screen_and_feature ... ok
+test test_multiple_rules ... ok
+test test_negative_dimension ... ok
+test test_parse_tailwind_css ... ignored
+test test_nested_media ... ok
+test test_pseudo_class ... ok
+test test_pseudo_element ... ok
+test test_rgb_function ... ok
+test test_selector_list ... ok
+test test_simple_rule ... ok
+test test_specificity_complex ... ok
+test test_specificity_class ... ok
+test test_specificity_compound ... ok
+test test_specificity_id ... ok
+test test_specificity_pseudo_is ... ok
+test test_specificity_pseudo_where ... ok
+test test_parse_normalize_css ... ok
+test test_specificity_type ... ok
+test test_string_value ... ok
+test test_specificity_universal ... ok
+test test_supports_and ... ok
+test test_supports_declaration ... ok
+test test_supports_not ... ok
+test test_universal_selector ... ok
+test test_var_function ... ok
+test test_whitespace_only ... ok
+test test_parse_bootstrap_css ... ok
+
+test result: ok. 51 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/css_recovery_test.rs (target/debug/deps/css_recovery_test-72fb64be67924caf)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/css_stack_depth.rs (target/debug/deps/css_stack_depth-822bf20e1797d0b0)
+
+running 3 tests
+test child_parse_on_sized_stack ... ok
+test nested_at_rules_depth_16_default_stack ... ok
+test nested_at_rule_stack_slope_is_constant ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.48s
+
+     Running tests/csv_test.rs (target/debug/deps/csv_test-d41320d9e6494ec4)
+
+running 2 tests
+test tests::test_csv ... ok
+test tests::test_csv_file ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.23s
+
+     Running tests/debug_test.rs (target/debug/deps/debug_test-a793f3245af4aa5c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/decode_test.rs (target/debug/deps/decode_test-4bcd6170e8a39a58)
+
+running 44 tests
+test arena_offset_respects_existing_data ... ok
+test decode_microbench ... ignored
+test borrowed_empty ... ok
+test borrowed_simple ... ok
+test borrowed_no_escapes_at_all ... ok
+test error_invalid_escape ... ok
+test error_lone_high_surrogate ... ok
+test error_lone_low_surrogate ... ok
+test error_no_opening_quote ... ok
+test error_truncated_unicode ... ok
+test error_unterminated ... ok
+test non_zero_start_offset ... ok
+test owned_mixed_content ... ok
+test owned_all_simple_escapes ... ok
+test owned_newline ... ok
+test owned_surrogate_pair ... ok
+test owned_unicode_bmp ... ok
+test owned_unicode_multibyte ... ok
+test sequential_decodes_share_arena ... ok
+test simd_borrowed_close_quote_at_every_stripe_offset ... ok
+test simd_borrowed_close_quote_at_stripe_high_bit ... ok
+test simd_borrowed_close_quote_at_second_stripe_offset ... ok
+test simd_borrowed_close_quote_at_stripe_one_start ... ok
+test simd_borrowed_close_quote_in_scalar_tail ... ok
+test simd_borrowed_exactly_one_stripe ... ok
+test simd_borrowed_two_stripes ... ok
+test simd_borrowed_utf8_across_stripe_boundary ... ok
+test simd_borrowed_many_stripes ... ok
+test simd_borrowed_utf8_multibyte_no_escapes ... ok
+test simd_owned_all_escapes_dense ... ok
+test simd_escape_parity_runs_before_quote ... ok
+test simd_owned_close_quote_at_stripe_high_bit ... ok
+test simd_owned_double_backslash_spans_stripe_boundary ... ok
+test simd_owned_escape_at_offset_zero ... ok
+test simd_owned_escape_in_scalar_tail ... ok
+test simd_owned_escape_at_every_stripe_offset ... ok
+test simd_owned_escape_spans_stripe_boundary ... ok
+test simd_owned_escape_then_close ... ok
+test simd_owned_escaped_quote_then_real_quote ... ok
+test simd_owned_escape_then_full_stripe_then_close ... ok
+test simd_owned_long_run_then_escape ... ok
+test simd_owned_large_with_periodic_escapes ... ok
+test simd_owned_surrogate_pair_across_stripe_boundary ... ok
+test simd_cross_validate_grid ... ok
+
+test result: ok. 43 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/json_test.rs (target/debug/deps/json_test-487add22931eb610)
+
+running 37 tests
+test tests::test_boolean_values ... ok
+test tests::test_empty_object ... ok
+test tests::test_empty_array ... ok
+test tests::test_json ... ok
+test tests::test_leading_zero_standalone ... ok
+test tests::test_large_numeric_literals_match_serde_f64 ... ok
+test tests::test_malformed_backslash_at_end ... ok
+test tests::test_malformed_not_json ... ok
+test tests::test_malformed_unicode_at_end ... ok
+test tests::test_long_string ... ok
+test tests::test_malformed_unterminated_string ... ok
+test tests::test_negative_number ... ok
+test tests::test_integer_values ... ok
+test tests::test_nested_arrays ... ok
+test tests::test_number_edge_cases ... ok
+test tests::test_scientific_notation ... ok
+test tests::test_single_element_containers ... ok
+test tests::test_leading_zero_decimal ... ok
+test tests::test_leading_zero_rejected ... ok
+test tests::test_malformed_truncated_unicode ... ok
+test tests::test_null_value ... ok
+test tests::test_string_basic_escapes ... ok
+test tests::test_string_empty ... ok
+test tests::test_string_only_escapes ... ok
+test tests::test_string_nested_escapes ... ok
+test tests::test_string_with_forward_slash_escape ... ok
+test tests::test_string_surrogate_pair_edges ... ok
+test tests::test_string_unicode_escape ... ok
+test tests::test_whitespace_variants ... ok
+test tests::test_equivalence_data ... ok
+test tests::test_json_file_print ... ok
+test tests::test_equivalence_apache ... ok
+test tests::test_equivalence_twitter ... ok
+test tests::test_equivalence_citm_catalog ... ok
+test tests::test_equivalence_canada ... ok
+test tests::test_json_file ... ok
+test tests::test_equivalence_data_xl ... ok
+
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.71s
+
+     Running tests/lanes_test.rs (target/debug/deps/lanes_test-262639784809e684)
+
+running 3 tests
+test load_round_trips ... ok
+test nibble_mask_matches_definition_for_every_byte_and_lane ... ok
+test eq_mask_matches_definition_for_every_byte_and_lane ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/number_fastpath_test.rs (target/debug/deps/number_fastpath_test-051c5cca4aebe262)
+
+running 22 tests
+test fastpath_and_slow_path_agree_in_range ... ok
+test fastpath_canada_shaped_coordinates ... ok
+test fastpath_out_of_range_falls_through ... ok
+test fastpath_integers_to_2_53 ... ok
+test fastpath_scientific_in_range ... ok
+test fastpath_negative_zero ... ok
+test fastpath_short_fractions ... ok
+test fastpath_overflow_mantissa_falls_through ... ok
+test integer_digits_followed_by_exponent ... ok
+test integer_digits_followed_by_fraction ... ok
+test integer_eighteen_digits_fits_budget ... ok
+test integer_cross_validate_all_lengths ... ok
+test integer_fifteen_digits_fits_in_single_stripe ... ok
+test integer_four_digits_below_simd_stripe ... ok
+test integer_scan_at_nonzero_start_offset ... ok
+test integer_one_digit ... ok
+test integer_scan_right_up_to_input_boundary ... ok
+test integer_seventeen_digits_crosses_stripe ... ok
+test integer_sixteen_digits_fills_stripe ... ok
+test integer_strict_negative ... ok
+test integer_twenty_digits_budget_guard_fires ... ok
+test parse_number_f64_plus_sign_is_positive ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/number_simd_test.rs (target/debug/deps/number_simd_test-6322f2203296c563)
+
+running 12 tests
+test cross_validate_all_counts ... ok
+test scan_all_digits_16 ... ok
+test scan_all_nines ... ok
+test scan_boundary_above_nine ... ok
+test scan_boundary_below_zero ... ok
+test scan_all_zeros ... ok
+test scan_nine_digits ... ok
+test scan_no_digits ... ok
+test scan_partial_digits ... ok
+test scan_short_input_returns_available_digits ... ok
+test scan_single_digit ... ok
+test scan_with_offset ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/padded_input_test.rs (target/debug/deps/padded_input_test-8976a4f632dea814)
+
+running 8 tests
+test empty_input_padding ... ok
+test padded_bytes_permit_full_stripe_read_at_end ... ok
+test public_views_never_leak_padding ... ok
+test padded_bytes_aligned_for_avx512_cache_line ... ok
+test short_input_padding ... ok
+test long_input_padding ... ok
+test single_byte_input_padding ... ok
+test stripe_boundary_input_padding ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/quote_parity_test.rs (target/debug/deps/quote_parity_test-736c0bda695f7fbc)
+
+running 7 tests
+test escaped_quote ... ok
+test filter_basic ... ok
+test no_strings ... ok
+test long_no_escape ... ok
+test filter_no_strings ... ok
+test prefix_xor_basic ... ok
+test simple_string ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/quoted_simd_test.rs (target/debug/deps/quoted_simd_test-c3abaa60f2b09850)
+
+running 33 tests
+test all_bs_even ... ok
+test bs1_before_quote ... ok
+test all_bs_odd ... ok
+test bs2_before_quote ... ok
+test bs3_before_quote ... ok
+test bs4_before_quote ... ok
+test cross_validate_patterns ... ok
+test em_1bs ... ok
+test em_2bs ... ok
+test em_3bs ... ok
+test em_carry_1bs ... ok
+test em_carry_2bs ... ok
+test em_no_bs ... ok
+test em_no_bs_carry ... ok
+test empty_string ... ok
+test escape_at_chunk_boundary ... ok
+test escaped_backslash_then_quote ... ok
+test escaped_quote ... ok
+test escaped_backslash_escaped_quote ... ok
+test even_run_spanning_then_quote ... ok
+test exactly_16_byte_content ... ok
+test long_no_escapes ... ok
+test odd_run_spanning_then_quote ... ok
+test cross_validate_generated ... ok
+test only_escapes ... ok
+test run_spanning_chunks ... ok
+test simple_string ... ok
+test two_chunks_bs ... ok
+test two_chunks_bs_odd ... ok
+test unicode_escape ... ok
+test long_with_escapes ... ok
+test unterminated ... ok
+test unterminated_backslash ... ok
+
+test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/regex.rs (target/debug/deps/regex-162a3b6ea948546e)
+
+running 124 tests
+test byteset_test::difference ... ok
+test accel_test::memchr2_for_json_string ... ok
+test byteset_test::disjoint ... ok
+test accel_test::accel_for_wider_negated_class ... ok
+test byteset_test::ascii_set ... ok
+test accel_test::memchr_for_negated_class ... ok
+test accel_test::no_accel_for_non_looping ... ok
+test byteset_test::high_bytes_utf8_leading ... ok
+test byteset_test::exit_bytes ... ok
+test byteset_test::exact_size_iterator ... ok
+test byteset_test::negate ... ok
+test byteset_test::exit_bytes_over_limit ... ok
+test byteset_test::full_set ... ok
+test byteset_test::insert_remove ... ok
+test byteset_test::range ... ok
+test byteset_test::empty_set ... ok
+test byteset_test::high_bytes_utf8_continuation ... ok
+test byteset_test::iterator_ascending ... ok
+test byteset_test::range_boundary ... ok
+test byteset_test::singleton ... ok
+test byteset_test::union_and_intersect ... ok
+test dfa_test::alternation ... ok
+test dfa_test::bounded_repetition ... ok
+test dfa_test::case_insensitive ... ok
+test dfa_test::char_class ... ok
+test dfa_test::css_block_comment_no_dotall_greedy ... ok
+test dfa_test::css_ident_pattern ... ok
+test dfa_test::css_ident_alt_specific ... ok
+test dfa_test::css_value_span_stop_chars ... ok
+test dfa_test::dot_no_newline ... ok
+test dfa_test::empty_pattern ... ok
+test dfa_test::json_number_pattern ... ok
+test dfa_test::css_value_span ... ok
+test dfa_test::hex_color_pattern ... ok
+test dfa_test::large_dfa_css_ident ... ok
+test dfa_test::optional ... ok
+test dfa_test::lazy_plus_is_greedy_in_dfa ... ok
+test dfa_test::lazy_question_is_greedy_in_dfa ... ok
+test dfa_test::minimization_reduces_states ... ok
+test dfa_test::negated_class ... ok
+test dfa_test::no_dotall_stops_at_newline ... ok
+test dfa_test::large_dfa_json_number ... ok
+test dfa_test::offset_matching ... ok
+test dfa_test::dot_all ... ok
+test dfa_test::dotall_plus ... ok
+test dfa_test::lazy_star_is_greedy_in_dfa ... ok
+test dfa_test::oracle_whitespace ... ok
+test dfa_test::oracle_email_like ... ok
+test dfa_test::css_block_comment_dotall_greedy ... ok
+test dfa_test::dotall_star ... ok
+test dfa_test::oracle_hex_color ... ok
+test dfa_test::oracle_repetition_boundary ... ok
+test dfa_test::shorthand_classes ... ok
+test dfa_test::oracle_digits ... ok
+test dfa_test::css_ws_comment_adjacent ... ok
+test dfa_test::zero_width_empty_alt ... ok
+test dfa_test::oracle_nested_groups ... ok
+test dfa_test::zero_width_optional ... ok
+test dfa_test::oracle_json_string_body ... ok
+test dfa_test::zero_width_star ... ok
+test dfa_test::oracle_pipe_literal ... ok
+test dfa_test::simple_literal ... ok
+test dfa_test::star ... ok
+test equiv_test::no_byte_sets ... ok
+test dfa_test::unicode_ascii_only ... ok
+test equiv_test::overlapping_ranges ... ok
+test equiv_test::single_range ... ok
+test equiv_test::two_disjoint_ranges ... ok
+test dfa_test::oracle_css_number ... ok
+test dfa_test::css_ws_comment_regex ... ok
+test equiv_test::utf8_leading_bytes ... ok
+test equiv_test::word_char_classes ... ok
+test hir_test::negate_empty ... ok
+test dfa_test::state_limit_guard ... ok
+test hir_test::char_class_negated_flag ... ok
+test hir_test::negate_full ... ok
+test nfa_test::literal_pattern ... ok
+test nfa_test::plus_lazy ... ok
+test nfa_test::star_greedy ... ok
+test nfa_test::transition_byte_sets ... ok
+test dfa_test::css_ident_alternation ... ok
+test dfa_test::oracle_word_chars ... ok
+test hir_test::negate_middle ... ok
+test nfa_test::alternation ... ok
+test nfa_test::backreference_unsupported ... ok
+test nfa_test::bounded_repetition ... ok
+test nfa_test::char_class_ascii ... ok
+test nfa_test::char_class_unicode ... ok
+test nfa_test::concat ... ok
+test nfa_test::empty_pattern ... ok
+test nfa_test::dot_all ... ok
+test parser_test::alternation ... ok
+test nfa_test::unicode_property ... ok
+test parser_test::css_ws_comment ... ok
+test parser_test::dotall_flag_byte_mode ... ok
+test parser_test::empty ... ok
+test parser_test::hex_color ... ok
+test parser_test::literal ... ok
+test parser_test::bounded_repetition ... ok
+test parser_test::byte_mode ... ok
+test parser_test::char_class ... ok
+test parser_test::complex_ident ... ok
+test dfa_test::dotall_bounded ... ok
+test utf8_test::roundtrip_ascii ... ok
+test utf8_test::single_char ... ok
+test parser_test::css_ident ... ok
+test utf8_test::two_byte_range ... ok
+test parser_test::dot_default ... ok
+test parser_test::dotall_flag_unicode ... ok
+test parser_test::escaped_literal ... ok
+test parser_test::json_number ... ok
+test parser_test::lazy_quantifier ... ok
+test parser_test::negated_class ... ok
+test parser_test::non_capturing_group ... ok
+test parser_test::quantifiers ... ok
+test parser_test::json_string ... ok
+test parser_test::quoted_string ... ok
+test parser_test::shorthand_classes ... ok
+test utf8_test::cross_boundary ... ok
+test utf8_test::ascii_range ... ok
+test utf8_test::four_byte ... ok
+test utf8_test::latin_extended_a ... ok
+test utf8_test::full_unicode ... ok
+test utf8_test::surrogate_skip ... ok
+
+test result: ok. 124 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/split_test.rs (target/debug/deps/split_test-2948188c51007791)
+
+running 11 tests
+test basic_split ... ok
+test empty_input ... ok
+test deep_nesting ... ok
+test mixed_nesting_and_quotes ... ok
+test empty_segments ... ok
+test nested_brackets ... ok
+test no_delimiter ... ok
+test single_char ... ok
+test single_quoted_strings ... ok
+test quoted_strings ... ok
+test nested_parens ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/structural_bitmap_test.rs (target/debug/deps/structural_bitmap_test-c128901b6ff8c5c6)
+
+running 6 tests
+test find_next_basic ... ok
+test find_next_tail_only ... ok
+test find_next_none ... ok
+test iter_across_stripe ... ok
+test iter_basic ... ok
+test iter_set_offset_skips_forward ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/ws_comment_test.rs (target/debug/deps/ws_comment_test-c4a9f4a7677800ae)
+
+running 18 tests
+test all_slash_stripe_terminates ... ok
+test empty_input ... ok
+test long_ws_crossing_stripe ... ok
+test exact_stripe_all_ws ... ok
+test long_comment_crossing_stripe ... ok
+test no_ws ... ok
+test simple_block_comment ... ok
+test nested_star_in_comment ... ok
+test multiple_comments ... ok
+test simple_ws ... ok
+test slash_without_comment ... ok
+test stripe_boundary_comment ... ok
+test stripe_boundary_ws_slash ... ok
+test tabs_and_newlines ... ok
+test unterminated_comment ... ok
+test ws_slash_non_star ... ok
+test ws_slash_then_x ... ok
+test ws_then_comment_then_ws ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests main.rs (target/debug/deps/main-f7c0c057d642bec6)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/regex_bootstrap-2c43458f77cc9ffc)
+
+running 3 tests
+test tests::parse_quantifiers ... ok
+test tests::parse_bounded_repetition ... ok
+test tests::parse_comprehensive_patterns ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/main.rs (target/debug/deps/xtask-1043f1061abe903a)
+
+running 1 test
+test tests::manifest_needs_one_asset_and_plain_paths ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/public_api_callers.rs (target/debug/deps/public_api_callers-d1541c03171633b9)
+
+running 1 test
+test every_pub_item_of_the_audited_crates_has_a_caller ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.43s
+
+   Doc-tests parse_that_corpus
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests parse_that_egraph
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests parse_that_egraph_derive
+
+running 1 test
+test egraph-derive/src/lib.rs - (line 26) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.35s; merged doctests compilation took 0.19s
+   Doc-tests parse_that_regex
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests parse_that
+
+running 1 test
+test parse_that/src/split.rs - split::split_balanced (line 21) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.40s; merged doctests compilation took 0.25s
+   Doc-tests regex_bootstrap
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+rc=0

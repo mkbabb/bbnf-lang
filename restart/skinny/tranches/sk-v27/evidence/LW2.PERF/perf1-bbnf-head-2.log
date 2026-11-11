@@ -1,0 +1,12 @@
+corpus verify rc=0
+tree 2ec6226aa (+ working changes: 2 paths)
+regen --check rc=0
+iter-clippy rc=0
+substrate_audit rc=0
+     Running tests/substrate_audit.rs (target/debug/deps/substrate_audit-6aa4dca09c849364)
+test substrate_audit_self_test_detects_synthetic_zero_caller ... ok
+test substrate_audit_zero_caller_substrates ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.64s
+json_parity+css_l4_parity rc=0
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s

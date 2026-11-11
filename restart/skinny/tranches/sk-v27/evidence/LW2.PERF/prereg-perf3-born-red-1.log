@@ -1,0 +1,20 @@
+....F..
+======================================================================
+FAIL: test_perf3_paired_cure_cells_are_registered (bench.test_prereg.Prereg.test_perf3_paired_cure_cells_are_registered)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mkbabb/Programming/bbnf-lang-wt/lw2-s6-perf/bench/test_prereg.py", line 81, in test_perf3_paired_cure_cells_are_registered
+    self.assertEqual({c[0] for c in cells},
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+                     {"C-PERF3-CSS-BOOTSTRAP", "C-PERF3-CSS-TAILWIND", "C-PERF3-JSON-TWITTER"}, cells)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Items in the second set but not the first:
+'C-PERF3-CSS-BOOTSTRAP'
+'C-PERF3-CSS-TAILWIND'
+'C-PERF3-JSON-TWITTER' : []
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.002s
+
+FAILED (failures=1)
+rc=1

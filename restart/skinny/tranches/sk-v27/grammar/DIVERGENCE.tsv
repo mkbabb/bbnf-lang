@@ -1,7 +1,8 @@
 # sk-v27 LW2.PAR-1 TS<->Rust divergences, ruled under R-b (spec text first; where silent, the compiler, ask S9-A)
 # S9-A (open): the Rust arm is the in-tree BbnfBootstrap::parse, not the sk-v26 spine (not in the LW2 tree; LW3.COMP-1); ADDED = a docs/bbnf sentence this unit adds where the spec was silent.
-# manifest-sha256	12936bb5442e6595d1eb2bbbf3f9da48060a82b0f83947f81deb7a14a2611252
+# manifest-sha256	8b1db3d153c6b5f84fd994b1f665e3a6d01cf36b2ba09dc2a544be8b64a9fc40
 # cases	63
+# re-read 2026-11-10 (LW2 merge seat) at the S1 MANIFEST (TOPO-6b json.bbnf; S1-B keyframes, google-sheets, gorgeous json and google-sheets): the 63 cases disagree exactly on the CARRIED rows, unchanged; every row stands; only manifest-sha256 moves (was 12936bb5…).
 # rust = BbnfBootstrap::parse (crates/bootstrap debug_parse); ts_base = typescript/ at the PAR-1 base; fate CURED-TS rows are
 # cured in typescript/ by this unit, CARRIED rows are Rust-side (born-RED, LW3.COMP-1). anchor = exact docs/bbnf/ text, ' ‖ '-separated.
 id	files	rust	ts_base	constructs	authority	anchor	fate

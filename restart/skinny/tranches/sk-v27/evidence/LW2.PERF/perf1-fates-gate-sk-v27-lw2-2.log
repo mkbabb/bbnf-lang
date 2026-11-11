@@ -1,0 +1,4 @@
+REFUSED compute_inside_string_bytes: fate MOVE-with-crate but crates/simd-scan is still in this repository at the gate
+REFUSED compact_stripe_synthetic: fate MOVE-with-crate but crates/simd-scan is still in this repository at the gate
+rows=32 routes=0 sanctioned=0 refused=2
+rc=1

@@ -42,6 +42,20 @@ pub enum CompileTarget {
     Wasm,
 }
 
+impl CompileTarget {
+    /// How this backend's regex leaf resolves an alternation. The TS backend
+    /// runs ECMAScript `RegExp` (leftmost-first); the Rust, VM and WASM
+    /// backends run parse-that-regex's DFA (leftmost-longest).
+    pub fn leaf_match(&self) -> bbnf_ir::egraph::LeafMatch {
+        match self {
+            CompileTarget::Ts => bbnf_ir::egraph::LeafMatch::LeftmostFirst,
+            CompileTarget::Rust { .. } | CompileTarget::Vm | CompileTarget::Wasm => {
+                bbnf_ir::egraph::LeafMatch::LeftmostLongest
+            }
+        }
+    }
+}
+
 /// Shared compilation request.
 #[derive(Clone, Debug, Default)]
 pub struct CompileRequest {

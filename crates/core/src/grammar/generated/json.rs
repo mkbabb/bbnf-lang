@@ -110,8 +110,8 @@ mod __jsonparser_emit_impl {
             pub field_index: u32,
             pub decision: Decision,
         }
-        pub const PATH_PLAN_LEN: usize = 21;
-        pub static PATH_PLAN: &[PathPlanEntry; 21] = &[
+        pub const PATH_PLAN_LEN: usize = 22;
+        pub static PATH_PLAN: &[PathPlanEntry; 22] = &[
             PathPlanEntry {
                 rule_id: 0,
                 segment_kind: SegmentKind::Wildcard,
@@ -234,6 +234,12 @@ mod __jsonparser_emit_impl {
             },
             PathPlanEntry {
                 rule_id: 7,
+                segment_kind: SegmentKind::Wildcard,
+                field_index: 4294967295,
+                decision: Decision::ParseFully,
+            },
+            PathPlanEntry {
+                rule_id: 8,
                 segment_kind: SegmentKind::Wildcard,
                 field_index: 4294967295,
                 decision: Decision::ParseFully,
@@ -424,15 +430,30 @@ mod __jsonparser_emit_impl {
                 ],
             });
         __registry
+            .insert(::bbnf_ir::registry::StructLayout {
+                rule_id: 8u32,
+                rule_name: ::std::string::String::from("json"),
+                kind: ::bbnf_ir::registry::LayoutKind::Struct,
+                rule_type: ::bbnf_ir::TypeDesc::BoxedEnum,
+                fields: ::std::vec![
+                    ::bbnf_ir::registry::StructField { name :
+                    ::std::string::String::from("value"), type_desc :
+                    ::bbnf_ir::TypeDesc::BoxedEnum, source :
+                    ::bbnf_ir::registry::FieldSource::RuleReference { target_rule : 7u32,
+                    }, }
+                ],
+            });
+        __registry
     });
     /// AZ-IV.W5 T4 — entry-rule name for the per-grammar registry.
     ///
     /// `bbnf-path` resolves the document-root rule through this const;
     /// the value is the first non-transparent rule's name (typically
     /// the start production of the grammar's top-level production).
-    pub const REGISTRY_ENTRY_RULE: &str = "value";
+    pub const REGISTRY_ENTRY_RULE: &str = "json";
     static __DTA_REGEX_4: &str = "-?(0|[1-9]\\d*)(\\.\\d+)?([eE][+-]?\\d+)?";
     static __DTA_REGEX_5: &str = "\"(?:[^\"\\\\]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"";
+    static __DTA_REGEX_48: &str = "[ \\t\\n\\r]*";
     #[inline]
     #[cold]
     fn __regex_scan_JsonParser(
@@ -659,6 +680,42 @@ mod __jsonparser_emit_impl {
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
             };
         }
+        if ::core::ptr::eq(pattern.as_ptr(), __DTA_REGEX_48.as_ptr())
+            || pattern == __DTA_REGEX_48
+        {
+            return '__dfa: {
+                let mut __dfa_state: u32 = 0;
+                let mut __dfa_p: usize = pos;
+                let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::Some(
+                    pos as u32,
+                );
+                loop {
+                    let b = match input.get(__dfa_p) {
+                        ::core::option::Option::Some(&b) => b,
+                        ::core::option::Option::None => break,
+                    };
+                    match __dfa_state {
+                        0 => {
+                            match b {
+                                9 | 10 | 13 | 32 => __dfa_state = 0,
+                                _ => break,
+                            }
+                        }
+                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    }
+                    __dfa_p += 1;
+                    match __dfa_state {
+                        0 => {
+                            __dfa_last_match = ::core::option::Option::Some(
+                                __dfa_p as u32,
+                            );
+                        }
+                        _ => {}
+                    }
+                }
+                break '__dfa __dfa_last_match.map(|end| end - pos as u32);
+            };
+        }
         ::core::option::Option::None
     }
     #[inline(never)]
@@ -699,7 +756,7 @@ mod __jsonparser_emit_impl {
             /// at parse-entry (AY.W1-fix demonstrated eager scans
             /// regress JSON twitter -64%).
             pub(crate) structural_index: ::core::cell::OnceCell<
-                ::simd_scan::StructuralIndex,
+                ::parse_that::scan::StructuralIndex,
             >,
         }
         impl ScanState {
@@ -719,17 +776,17 @@ mod __jsonparser_emit_impl {
         pub(crate) fn ensure_structural_index<'a>(
             state: &'a mut ScanState,
             input: &[u8],
-        ) -> &'a ::simd_scan::StructuralIndex {
+        ) -> &'a ::parse_that::scan::StructuralIndex {
             state
                 .structural_index
                 .get_or_init(|| {
-                    let alphabet = ::simd_scan::StructuralAlphabet {
+                    let alphabet = ::parse_that::scan::StructuralAlphabet {
                         singletons: super::GRAMMAR_STRUCTURAL_ALPHABET,
                         digraph_mask: super::GRAMMAR_STRUCTURAL_DIGRAPH_MASK,
                         digraph_pairs: super::GRAMMAR_STRUCTURAL_DIGRAPHS,
                         quote_classes: super::GRAMMAR_STRUCTURAL_QUOTE_CLASSES,
                     };
-                    ::simd_scan::scan_structural(input, &alphabet)
+                    ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
         /// Skip JSON whitespace at `*p`, returning the first
@@ -2175,7 +2232,7 @@ mod __jsonparser_emit_impl {
     /// recursion rationale.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_JsonParser_value<'p, __P>(
+    pub fn parse_JsonParser_json<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
@@ -2185,7 +2242,7 @@ mod __jsonparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
-        parse_JsonParser_value__value(input, p, state, builder, cursor)
+        parse_JsonParser_json__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
     /// the grammar root and from Object / Array compound bodies.
@@ -2193,7 +2250,7 @@ mod __jsonparser_emit_impl {
     /// AX.W0a.2.f — compound; plain `#[inline]`.
     #[inline]
     #[allow(non_snake_case, clippy::too_many_arguments)]
-    pub fn parse_JsonParser_value__value<'p, __P>(
+    pub fn parse_JsonParser_json__value<'p, __P>(
         input: &'p [u8],
         p: &mut usize,
         state: &mut __shape_support_JsonParser::ScanState,
@@ -2665,38 +2722,43 @@ mod __jsonparser_emit_impl {
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __builder.text_inline_ws(&state.src[__ows9..state.offset]);
                                             {
-                                                let mut __rep_count7 = 0usize;
-                                                while __rep_count7 < 4294967295 {
-                                                    let __rep_cp8 = state.offset;
-                                                    if !{
-                                                        let __pretty_cp5 = state.offset;
-                                                        let __pretty_bcp6 = __builder.checkpoint();
-                                                        let __ok = (|| -> bool {
+                                                let _ = {
+                                                    let __pretty_cp7 = state.offset;
+                                                    let __pretty_bcp8 = __builder.checkpoint();
+                                                    let __ok = (|| -> bool {
+                                                        {
+                                                            if !Self::__pair_prettify(state, __builder) {
+                                                                return false;
+                                                            }
                                                             {
-                                                                if !Self::__pair_prettify(state, __builder) {
-                                                                    return false;
-                                                                }
-                                                                {
-                                                                    let _ = {
+                                                                let mut __rep_count5 = 0usize;
+                                                                while __rep_count5 < 4294967295 {
+                                                                    let __rep_cp6 = state.offset;
+                                                                    if !{
                                                                         let __pretty_cp3 = state.offset;
                                                                         let __pretty_bcp4 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             {
-                                                                                let __ows0 = state.offset;
-                                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                                let __ows1 = state.offset;
                                                                                 {
-                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                                                    let __ows0 = state.offset;
+                                                                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                                                                    let __ows1 = state.offset;
                                                                                     {
-                                                                                        return false;
-                                                                                    }
-                                                                                    state.offset += 1;
-                                                                                    __builder.char(b',');
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                                                        {
+                                                                                            return false;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        __builder.char(b',');
+                                                                                    };
+                                                                                    __builder.text_inline_ws(&state.src[__ows0..__ows1]);
+                                                                                    let __ows2 = state.offset;
+                                                                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                                                                    __builder.text_inline_ws(&state.src[__ows2..state.offset]);
                                                                                 };
-                                                                                __builder.text_inline_ws(&state.src[__ows0..__ows1]);
-                                                                                let __ows2 = state.offset;
-                                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                                __builder.text_inline_ws(&state.src[__ows2..state.offset]);
+                                                                                if !Self::__pair_prettify(state, __builder) {
+                                                                                    return false;
+                                                                                }
                                                                             };
                                                                             true
                                                                         })();
@@ -2705,26 +2767,26 @@ mod __jsonparser_emit_impl {
                                                                             __builder.restore(__pretty_bcp4);
                                                                         }
                                                                         __ok
-                                                                    };
-                                                                    true
-                                                                };
+                                                                    } {
+                                                                        state.offset = __rep_cp6;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __rep_cp6 {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count5 += 1;
+                                                                }
                                                             };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp5;
-                                                            __builder.restore(__pretty_bcp6);
-                                                        }
-                                                        __ok
-                                                    } {
-                                                        state.offset = __rep_cp8;
-                                                        break;
+                                                        };
+                                                        true
+                                                    })();
+                                                    if !__ok {
+                                                        state.offset = __pretty_cp7;
+                                                        __builder.restore(__pretty_bcp8);
                                                     }
-                                                    if state.offset == __rep_cp8 {
-                                                        break;
-                                                    }
-                                                    __rep_count7 += 1;
-                                                }
+                                                    __ok
+                                                };
+                                                true
                                             };
                                             let __ows10 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -2794,38 +2856,43 @@ mod __jsonparser_emit_impl {
                                             ::parse_that::trim_leading_whitespace_mut(state);
                                             __builder.text_inline_ws(&state.src[__ows22..state.offset]);
                                             {
-                                                let mut __rep_count20 = 0usize;
-                                                while __rep_count20 < 4294967295 {
-                                                    let __rep_cp21 = state.offset;
-                                                    if !{
-                                                        let __pretty_cp18 = state.offset;
-                                                        let __pretty_bcp19 = __builder.checkpoint();
-                                                        let __ok = (|| -> bool {
+                                                let _ = {
+                                                    let __pretty_cp20 = state.offset;
+                                                    let __pretty_bcp21 = __builder.checkpoint();
+                                                    let __ok = (|| -> bool {
+                                                        {
+                                                            if !Self::__value_prettify(state, __builder) {
+                                                                return false;
+                                                            }
                                                             {
-                                                                if !Self::__value_prettify(state, __builder) {
-                                                                    return false;
-                                                                }
-                                                                {
-                                                                    let _ = {
+                                                                let mut __rep_count18 = 0usize;
+                                                                while __rep_count18 < 4294967295 {
+                                                                    let __rep_cp19 = state.offset;
+                                                                    if !{
                                                                         let __pretty_cp16 = state.offset;
                                                                         let __pretty_bcp17 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             {
-                                                                                let __ows13 = state.offset;
-                                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                                let __ows14 = state.offset;
                                                                                 {
-                                                                                    if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                                                    let __ows13 = state.offset;
+                                                                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                                                                    let __ows14 = state.offset;
                                                                                     {
-                                                                                        return false;
-                                                                                    }
-                                                                                    state.offset += 1;
-                                                                                    __builder.char(b',');
+                                                                                        if state.src_bytes.get(state.offset).copied() != Some(b',')
+                                                                                        {
+                                                                                            return false;
+                                                                                        }
+                                                                                        state.offset += 1;
+                                                                                        __builder.char(b',');
+                                                                                    };
+                                                                                    __builder.text_inline_ws(&state.src[__ows13..__ows14]);
+                                                                                    let __ows15 = state.offset;
+                                                                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                                                                    __builder.text_inline_ws(&state.src[__ows15..state.offset]);
                                                                                 };
-                                                                                __builder.text_inline_ws(&state.src[__ows13..__ows14]);
-                                                                                let __ows15 = state.offset;
-                                                                                ::parse_that::trim_leading_whitespace_mut(state);
-                                                                                __builder.text_inline_ws(&state.src[__ows15..state.offset]);
+                                                                                if !Self::__value_prettify(state, __builder) {
+                                                                                    return false;
+                                                                                }
                                                                             };
                                                                             true
                                                                         })();
@@ -2834,26 +2901,26 @@ mod __jsonparser_emit_impl {
                                                                             __builder.restore(__pretty_bcp17);
                                                                         }
                                                                         __ok
-                                                                    };
-                                                                    true
-                                                                };
+                                                                    } {
+                                                                        state.offset = __rep_cp19;
+                                                                        break;
+                                                                    }
+                                                                    if state.offset == __rep_cp19 {
+                                                                        break;
+                                                                    }
+                                                                    __rep_count18 += 1;
+                                                                }
                                                             };
-                                                            true
-                                                        })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp18;
-                                                            __builder.restore(__pretty_bcp19);
-                                                        }
-                                                        __ok
-                                                    } {
-                                                        state.offset = __rep_cp21;
-                                                        break;
+                                                        };
+                                                        true
+                                                    })();
+                                                    if !__ok {
+                                                        state.offset = __pretty_cp20;
+                                                        __builder.restore(__pretty_bcp21);
                                                     }
-                                                    if state.offset == __rep_cp21 {
-                                                        break;
-                                                    }
-                                                    __rep_count20 += 1;
-                                                }
+                                                    __ok
+                                                };
+                                                true
                                             };
                                             let __ows23 = state.offset;
                                             ::parse_that::trim_leading_whitespace_mut(state);
@@ -3430,6 +3497,88 @@ mod __jsonparser_emit_impl {
                 Some(__builder.finish())
             })
         }
+        fn __json_prettify<'a>(
+            state: &mut ::parse_that::ParserState<'a>,
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+        ) -> bool {
+            {
+                {
+                    {
+                        {
+                            let __start = state.offset;
+                            if {
+                                let __start = state.offset;
+                                let __end = state.src_bytes.len();
+                                let mut __pos = __start;
+                                while __pos < __end {
+                                    let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                    if (__b >= b'\t' && __b <= b'\n') || __b == b'\r'
+                                        || __b == b' '
+                                    {
+                                        __pos += 1;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                state.offset = __pos;
+                                Some(::parse_that::Span::new(__start, __pos, state.src))
+                            }
+                                .is_none()
+                            {
+                                return false;
+                            }
+                            let __matched = &state.src[__start..state.offset];
+                            if !__matched.is_empty() {
+                                __builder.text(__matched);
+                            }
+                        };
+                        if !Self::__value_prettify(state, __builder) {
+                            return false;
+                        }
+                    };
+                    {
+                        let __start = state.offset;
+                        if {
+                            let __start = state.offset;
+                            let __end = state.src_bytes.len();
+                            let mut __pos = __start;
+                            while __pos < __end {
+                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                if (__b >= b'\t' && __b <= b'\n') || __b == b'\r'
+                                    || __b == b' '
+                                {
+                                    __pos += 1;
+                                } else {
+                                    break;
+                                }
+                            }
+                            state.offset = __pos;
+                            Some(::parse_that::Span::new(__start, __pos, state.src))
+                        }
+                            .is_none()
+                        {
+                            return false;
+                        }
+                        let __matched = &state.src[__start..state.offset];
+                        if !__matched.is_empty() {
+                            __builder.text(__matched);
+                        }
+                    };
+                };
+                true
+            }
+        }
+        pub fn json_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
+                let mut __builder = ::pprint::FmtBuilder::with_capacity(
+                    state.src.len().saturating_mul(2),
+                );
+                if !Self::__json_prettify(state, &mut __builder) {
+                    return None;
+                }
+                Some(__builder.finish())
+            })
+        }
         /// Parse an input string and return the grammar-specific
         /// document that owns the StructDirect runtime arena.
         pub fn parse(
@@ -3459,7 +3608,7 @@ mod __jsonparser_emit_impl {
             );
             {
                 let mut pos: usize = 0;
-                parse_JsonParser_value(
+                parse_JsonParser_json(
                         __input_bytes,
                         &mut pos,
                         &mut state,

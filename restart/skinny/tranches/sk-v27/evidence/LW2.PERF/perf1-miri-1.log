@@ -1,0 +1,45 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s
+     Running unittests src/lib.rs (target/miri/miri/aarch64-apple-darwin/debug/deps/parse_that_simd-981723b3e23d1c6b)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/digraph.rs (target/miri/miri/aarch64-apple-darwin/debug/deps/digraph-3107f0a0c1aa6853)
+
+running 7 tests
+test arrow_and_paren_star_digraphs ... ok
+test arrow_digraph ... ok
+test css_block_comment_open_close ... ok
+test css_no_digraph_no_extra_hits ... ok
+test css_real_world_bootstrap_snippet ... ok
+test digraph_at_stripe_boundary ... ok
+test digraph_long_input ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.94s
+
+     Running tests/dispatch_tiers.rs (target/miri/miri/aarch64-apple-darwin/debug/deps/dispatch_tiers-f611af36f625ccd4)
+
+running 3 tests
+test every_isa_tier_of_the_target_is_compiled ... ok
+test every_supported_tier_matches_the_scalar_oracle ... ok
+test selected_tier_is_the_best_supported ... ignored, Miri selects the scalar tier by design (dispatch::select)
+
+test result: ok. 2 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 104.99s
+
+     Running tests/quote_parity.rs (target/miri/miri/aarch64-apple-darwin/debug/deps/quote_parity-10dacd3081a13597)
+
+running 9 tests
+test double_backslash_quote_closes_string ... ok
+test empty_input_quote_path ... ok
+test escaped_quote_does_not_close_string ... ok
+test input_starting_with_string ... ok
+test long_string_spanning_multiple_stripes ... ok
+test many_strings_in_array ... ok
+test quote_carry_across_64_byte_stripes ... ok
+test quote_filters_braces_inside_string ... ok
+test shift_xor_matches_clmul ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.03s
+
+rc=0

@@ -345,10 +345,13 @@ fn emit_struct_direct_position_core(
             ir,
         ),
         IrNode::Epsilon => quote! {},
-        IrNode::Repeat { inner, .. } => {
-            // Best-effort inline: dispatch the inner repeatedly until
-            // it errs, then catch and proceed. Mirrors the value-list
-            // pattern in the tape body.
+        IrNode::Repeat { inner, lo, hi } => {
+            // Dispatch the inner up to `hi` times until it errs, then
+            // restore and proceed; fewer than `lo` matches fail the
+            // position. A zero-progress iteration ends the repetition
+            // (ruling S4-B: progress is the combinators' guarantee):
+            // `(func_args ?)` over a nullable `func_args` otherwise
+            // matched the empty string forever.
             let inner_emit = emit_struct_direct_position_core(
                 inner,
                 support_mod,
@@ -356,8 +359,22 @@ fn emit_struct_direct_position_core(
                 grammar_suffix,
                 ir,
             );
+            let lo = *lo;
+            let hi = *hi;
+            // `lo == 0` has no floor to check (and `__reps < 0` trips
+            // `unused_comparisons` in the generated module).
+            let floor = (lo > 0).then(|| {
+                quote! {
+                    if __reps < #lo {
+                        return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                            offset: *p as u32,
+                        });
+                    }
+                }
+            });
             quote! {
-                loop {
+                let mut __reps: u32 = 0;
+                while __reps < #hi {
                     let __save = *p;
                     let __res: ::core::result::Result<
                         (),
@@ -370,7 +387,12 @@ fn emit_struct_direct_position_core(
                         *p = __save;
                         break;
                     }
+                    __reps += 1;
+                    if *p == __save {
+                        break;
+                    }
                 }
+                #floor
             }
         }
         // Alt / Regex / Negate / Minus / TokenDispatch — fall through

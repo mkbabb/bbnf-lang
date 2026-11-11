@@ -95,3 +95,15 @@ The fifth reading of LG-2 (`lw2/lg2-r5` `1ec2eb50e`, evidence `evidence/LW2.GATE
 | # | Ruling |
 |---|---|
 | TOPO-4-A2 | **The version line follows the evidence, crate by crate.** A crate whose public API breaks against its newest published, non-yanked version takes its next minor (0.x) line; a crate whose API does not break takes its next patch. Each crate is decided by evidence (the semver probe plus a public-API diff), never by assumption. As recommended: `pprint` 0.4.0 and `pprint_derive` 0.3.0, with `parse_that` re-pinned to `pprint = "0.4"`; `bbnf` 0.3.0, `bbnf-ir` 0.2.0, `gorgeous` 0.2.0; `bbnf-analysis` 0.2.0 if its API breaks against 0.1.1, else 0.1.2. Every dependent's requirement is re-pinned to match, and a dependent whose own public API re-exports a broken type breaks too and takes its minor. `pprint` 0.4.0-alpha.0 leaves this wave's publish set; if the pprint integration head differs from what publishes as 0.4.0, the seat states exactly how the two lines are reconciled, never publishes two things under one version, and asks if it is not clear. A version crates.io already holds (yanked included) is never reused. **The gate gains a test:** `semver-probe.sh` GREEN ×2 with every control passing (published consumers still build on a fresh resolve), beside `topo4c.sh` GREEN ×2. Unit: **LW2.TOPO-4d**. |
+
+## Addendum, 2026-11-11c: the LW2 delegate rulings after the sixth LG-2 reading (by the delegate, the orchestrator)
+
+The sixth reading of LG-2 (`lw2/lg2-r6` `a8522e3ac`, merged as `2a5640e28`; evidence `evidence/LW2.GATE/r6/`) was RED on one row only: bbnf-lang PR #12's `iai-callgrind regression` job failed 5 times at `apt-get install -y valgrind` on runner DNS to the Ubuntu archive. Every other row, `semver-probe.sh` and `topo4c.sh` read GREEN ×2, and the critic sustained no objection. These rulings answer asks LG-2-B, TOPO-4-A5, TOPO-4-A3 and TOPO-4-A4. LG-de, the QoS reading, LG-2-A and the never-reuse rule stand unchanged.
+
+| # | Ruling |
+|---|---|
+| LG-2-B | **(a)** The `iai-callgrind regression` job is re-run until it is green, with **no change to the workflow**. A failure for any reason other than runner network or package-archive availability is a real RED, and the seat stops. **(b)** Making that job independent of the live Ubuntu archive is carried to LW3 as a named row (**LW3.CI-IAI-1**). |
+| TOPO-4-A5 | **As recommended.** `pprint` 0.4.0 and `pprint_derive` 0.3.0 publish from `32d73ca` (pprint `lw2/topo-4e-0.4`); `parse-that` and `bbnf-lang` publish from their master merge commits. Identity is judged by git tree (`evidence/LW2.TOPO-4e/pins.sh`), never by commit hash. The ledger records the sha256 crates.io serves for each `.crate` after each publish. |
+| TOPO-4-A3 | **Yes.** The integration head's `0.5.0-alpha.0` line stays out of this wave's publish set and is reconciled against 0.4.0 as `topo4c.sh` reads it. |
+| TOPO-4-A4 | **Ratified** (LW2.TOPO-4e, done as the critic recommended). |
+| Standing | LG-d and LG-e carry to LW3 (LG-de). LG-2-A: nothing merges while any row is RED. A crates.io version is never reused, yanked included. |

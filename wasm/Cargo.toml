@@ -15,8 +15,8 @@ bbnf-ir = { version = "0.2.0", path = "../crates/ir" }
 gorgeous = { version = "0.2", path = "../crates/gorgeous", features = ["vm", "bbnf-grammar", "bnf-grammar", "css-grammar", "ebnf-grammar", "json-grammar"] }
 # The sibling repositories, as git + rev edges with their crates.io versions
 # (the root workspace's [workspace.dependencies] pins, sk-v27 LW2.TOPO-1).
-pprint = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "60114420ba45124440c16327aeaf428f3f69cd25" }
-parse_that = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "ff4a63a31e91d13c0a68887b7278aed6920f8fc2" }
+pprint = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
+parse_that = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "48ed3394b193d87cc2667ac4fa5473da97dfe9ce" }
 ls-types = "0.0.6"
 wasm-bindgen = "0.2"
 js-sys = "0.3"

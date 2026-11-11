@@ -1,0 +1,21 @@
+parse-that-egraph-derive	0.1.0	ff4a63a	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4d/rust	rc=0
+parse-that-egraph	0.1.0	ff4a63a	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4d/rust	rc=0
+pprint_derive	0.3.0	6011442	/Users/mkbabb/Programming/pprint-wt/lw2-topo-4d-0.4/rust/derive	rc=0
+pprint	0.4.0	6011442	/Users/mkbabb/Programming/pprint-wt/lw2-topo-4d-0.4/rust	rc=0
+parse-that-simd	0.1.0	ff4a63a	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4d/rust	rc=0
+parse-that-regex	0.1.0	ff4a63a	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4d/rust	rc=0
+parse_that	0.4.0	ff4a63a	/Users/mkbabb/Programming/parse-that-wt/lw2-topo-4d/rust	rc=0
+bbnf-ser	0.1.0	611c2fbc9	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4d	rc=0
+bbnf-ir	0.2.0	611c2fbc9	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4d	rc=0
+bbnf-path	0.1.0	611c2fbc9	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4d	rc=0
+bbnf	0.3.0	611c2fbc9	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4d	rc=0
+bbnf-analysis	0.2.0	611c2fbc9	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4d	rc=0
+bbnf-lsp	0.1.0	611c2fbc9	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4d	rc=0
+gorgeous	0.2.0	611c2fbc9	/Users/mkbabb/Programming/bbnf-lang-wt/lw2-topo-4d	rc=0
+publish rc=0
+consumer (bbnf = "0.3.0") cargo +stable build rc=0
+name = "bbnf"
+version = "0.3.0"
+path consumer (bbnf = "0.3.0", bbnf-path = "0.1.0") cargo +stable build rc=0
+crates.io collisions=0 line-mismatches=0 read-errors=0
+TOPO-4d topo4c read head-r2: GREEN

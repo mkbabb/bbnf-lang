@@ -1,0 +1,15 @@
+parse-that-egraph-derive	0.1.0	free	line: new name, any free version
+parse-that-egraph	0.1.0	free	line: new name, any free version
+pprint_derive	0.3.0	free	line: breaks vs 0.2.2 -> expected 0.3.0: OK
+pprint	0.4.0	free	line: breaks vs 0.3.6 -> expected 0.4.0: OK
+parse-that-simd	0.1.0	free	line: new name, any free version
+parse-that-regex	0.1.0	free	line: new name, any free version
+parse_that	0.4.0	free	line: breaks vs 0.3.3 -> expected 0.4.0: OK
+bbnf-ser	0.1.0	free	line: new name, any free version
+bbnf-ir	0.2.0	free	line: breaks vs 0.1.5 -> expected 0.2.0: OK
+bbnf-path	0.1.0	free	line: new name, any free version
+bbnf	0.3.0	free	line: breaks vs 0.2.9 -> expected 0.3.0: OK
+bbnf-analysis	0.2.0	free	line: breaks vs 0.1.1 -> expected 0.2.0: OK
+bbnf-lsp	0.1.0	free	line: new name, any free version
+gorgeous	0.2.0	free	line: breaks vs 0.1.8 -> expected 0.2.0: OK
+pprint (integration head)	0.5.0-alpha.0	free	reconcile vs published pprint 0.4.0: OK

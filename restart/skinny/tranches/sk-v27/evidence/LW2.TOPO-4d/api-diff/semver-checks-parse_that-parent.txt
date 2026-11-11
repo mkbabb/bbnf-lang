@@ -1,0 +1,110 @@
+    Building parse_that v0.4.0 (current)
+       Built [   0.341s] (current)
+     Parsing parse_that v0.4.0 (current)
+      Parsed [   0.004s] (current)
+     Parsing parse_that v0.3.3 (baseline, cached)
+      Parsed [   0.006s] (baseline)
+    Checking parse_that v0.3.3 -> v0.4.0 (assume patch change)
+     Checked [   0.010s] 229 checks: 223 pass, 6 fail, 0 warn, 31 skip
+
+--- failure auto_trait_impl_removed: auto trait no longer implemented ---
+
+Description:
+A public type has stopped implementing one or more auto traits. This can break downstream code that depends on the traits being implemented.
+        ref: https://doc.rust-lang.org/reference/special-types-and-traits.html#auto-traits
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/auto_trait_impl_removed.ron
+
+Failed in:
+  type ParserState is no longer Send, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState is no longer Sync, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState is no longer Send, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState is no longer Sync, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+
+--- failure constructible_struct_adds_field: struct exhaustively constructible through public API adds field ---
+
+Description:
+A pub struct that could be exhaustively constructed with a literal using only public API has a new pub field, breaking existing exhaustive literals.
+        ref: https://doc.rust-lang.org/reference/expressions/struct-expr.html
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/constructible_struct_adds_field.ron
+
+Failed in:
+  field ParserState.context_ptr in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:213
+  field ParserState.ws_bitmap in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:241
+  field ParserState.ws_bitmap_start in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:243
+  field ParserState.context_ptr in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:213
+  field ParserState.ws_bitmap in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:241
+  field ParserState.ws_bitmap_start in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:243
+
+--- failure constructible_struct_adds_private_field: struct no longer constructible due to new private field ---
+
+Description:
+A struct has a new non-public field that causes downstream code to be unable to construct it with a struct expression, including functional-update syntax.
+        ref: https://doc.rust-lang.org/reference/expressions/struct-expr.html
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/constructible_struct_adds_private_field.ron
+
+Failed in:
+  field ParserState.padded_buf in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:226
+  field ParserState.padded_buf in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:226
+
+--- failure derive_trait_impl_removed: built-in derived trait no longer implemented ---
+
+Description:
+A public type has stopped deriving one or more traits. This can break downstream code that depends on those types implementing those traits.
+        ref: https://doc.rust-lang.org/reference/attributes/derive.html#derive
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/derive_trait_impl_removed.ron
+
+Failed in:
+  type ParserState no longer derives PartialEq, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState no longer derives Clone, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState no longer derives Hash, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState no longer derives Eq, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState no longer derives PartialEq, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState no longer derives Clone, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState no longer derives Hash, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+  type ParserState no longer derives Eq, in ~/Programming/parse-that-wt/sk-v27-lw2/rust/parse_that/src/state.rs:202
+
+--- failure function_missing: pub fn removed or renamed ---
+
+Description:
+A publicly-visible function cannot be imported by its prior path. A `pub use` may have been removed, or the function itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_missing.ron
+
+Failed in:
+  function parse_that::span_parser::sp_json_string_quoted, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:98
+  function parse_that::sp_json_string_quoted, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:98
+  function parse_that::span_parser::sp_css_string, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:116
+  function parse_that::sp_css_string, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:116
+  function parse_that::span_parser::sp_json_string, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:92
+  function parse_that::sp_json_string, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:92
+  function parse_that::span_parser::sp_css_ws_comment, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:110
+  function parse_that::sp_css_ws_comment, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:110
+  function parse_that::leaf::trim_leading_whitespace_mut, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/leaf.rs:68
+  function parse_that::span_parser::sp_json_number, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:86
+  function parse_that::sp_json_number, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:86
+  function parse_that::leaf::cached_regex, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/leaf.rs:11
+  function parse_that::cached_regex, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/leaf.rs:11
+  function parse_that::span_parser::sp_css_ident, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:104
+  function parse_that::sp_css_ident, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:104
+  function parse_that::leaf::trim_leading_whitespace, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/leaf.rs:26
+  function parse_that::trim_leading_whitespace, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/leaf.rs:26
+  function parse_that::span_parser::sp_css_block_comment, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:122
+  function parse_that::sp_css_block_comment, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/span_parser/constructors.rs:122
+  function parse_that::parsers::json::number_span_fast_parser, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/parsers/json.rs:250
+  function parse_that::json::number_span_fast_parser, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/parsers/json.rs:250
+  function parse_that::parsers::number_span_fast_parser, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/parsers/json.rs:250
+  function parse_that::number_span_fast_parser, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/parsers/json.rs:250
+
+--- failure inherent_method_missing: pub method removed or renamed ---
+
+Description:
+A publicly-visible method or associated fn is no longer available under its prior name. It may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/inherent_method_missing.ron
+
+Failed in:
+  Parser::memoize, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/combinators/methods.rs:605
+  Parser::memoize, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/parse_that-0.3.3/src/combinators/methods.rs:605
+
+     Summary semver requires new major version: 6 major and 0 minor checks failed
+    Finished [   0.764s] parse_that

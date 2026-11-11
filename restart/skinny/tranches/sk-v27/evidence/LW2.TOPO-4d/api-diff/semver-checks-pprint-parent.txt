@@ -1,0 +1,112 @@
+    Building pprint v0.3.7 (current)
+       Built [   0.453s] (current)
+     Parsing pprint v0.3.7 (current)
+      Parsed [   0.003s] (current)
+     Parsing pprint v0.3.6 (baseline, cached)
+      Parsed [   0.002s] (baseline)
+    Checking pprint v0.3.6 -> v0.3.7 (assume patch change)
+     Checked [   0.007s] 229 checks: 223 pass, 6 fail, 0 warn, 31 skip
+
+--- failure enum_missing: pub enum removed or renamed ---
+
+Description:
+A publicly-visible enum cannot be imported by its prior path. A `pub use` may have been removed, or the enum itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/enum_missing.ron
+
+Failed in:
+  enum pprint::doc::Doc, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:13
+  enum pprint::Doc, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:13
+
+--- failure function_missing: pub fn removed or renamed ---
+
+Description:
+A publicly-visible function cannot be imported by its prior path. A `pub use` may have been removed, or the function itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_missing.ron
+
+Failed in:
+  function pprint::doc::if_break, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:225
+  function pprint::if_break, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:225
+  function pprint::doc::softline, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:220
+  function pprint::softline, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:220
+  function pprint::doc::hardline, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:215
+  function pprint::hardline, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:215
+  function pprint::doc::dedent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:210
+  function pprint::dedent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:210
+  function pprint::doc::indent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:205
+  function pprint::indent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:205
+  function pprint::doc::linear_join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:197
+  function pprint::linear_join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:197
+  function pprint::doc::smart_join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:188
+  function pprint::smart_join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:188
+  function pprint::doc::join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:179
+  function pprint::join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:179
+  function pprint::doc::wrap, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:166
+  function pprint::wrap, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:166
+  function pprint::doc::concat, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:146
+  function pprint::concat, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:146
+  function pprint::doc::group, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:141
+  function pprint::group, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:141
+  function pprint::doc::bytes, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:113
+  function pprint::bytes, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:113
+  function pprint::print::pprint_ref, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/print.rs:844
+  function pprint::pprint_ref, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/print.rs:844
+  function pprint::print::pprint, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/print.rs:823
+
+--- failure module_missing: pub module removed or renamed ---
+
+Description:
+A publicly-visible module cannot be imported by its prior path. A `pub use` may have been removed, or the module may have been renamed, removed, or made non-public.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/module_missing.ron
+
+Failed in:
+  mod pprint::print, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/print.rs:1
+  mod pprint::doc, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:1
+
+--- failure pub_module_level_const_missing: pub module-level const is missing ---
+
+Description:
+A public const is missing or renamed
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/pub_module_level_const_missing.ron
+
+Failed in:
+  PRINTER in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/print.rs:867
+
+--- failure struct_missing: pub struct removed or renamed ---
+
+Description:
+A publicly-visible struct cannot be imported by its prior path. A `pub use` may have been removed, or the struct itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_missing.ron
+
+Failed in:
+  struct pprint::print::Printer, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/print.rs:860
+
+--- failure trait_missing: pub trait removed or renamed ---
+
+Description:
+A publicly-visible trait cannot be imported by its prior path. A `pub use` may have been removed, or the trait itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/trait_missing.ron
+
+Failed in:
+  trait pprint::doc::Dedent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:249
+  trait pprint::Dedent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:249
+  trait pprint::doc::Indent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:239
+  trait pprint::Indent, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:239
+  trait pprint::doc::Group, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:229
+  trait pprint::Group, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:229
+  trait pprint::doc::LinearJoin, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:279
+  trait pprint::LinearJoin, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:279
+  trait pprint::doc::SmartJoin, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:269
+  trait pprint::SmartJoin, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:269
+  trait pprint::doc::Wrap, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:289
+  trait pprint::Wrap, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:289
+  trait pprint::doc::Join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:259
+  trait pprint::Join, previously in file ~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pprint-0.3.6/src/doc.rs:259
+
+     Summary semver requires new major version: 6 major and 0 minor checks failed
+    Finished [   0.793s] pprint

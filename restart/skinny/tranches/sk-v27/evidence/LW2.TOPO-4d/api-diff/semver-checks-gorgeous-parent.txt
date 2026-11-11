@@ -1,0 +1,79 @@
+    Building gorgeous v0.1.11 (current)
+       Built [   0.367s] (current)
+     Parsing gorgeous v0.1.11 (current)
+      Parsed [   0.001s] (current)
+     Parsing gorgeous v0.1.8 (baseline, cached)
+      Parsed [   0.007s] (baseline)
+    Checking gorgeous v0.1.8 -> v0.1.11 (assume patch change)
+     Checked [   0.004s] 229 checks: 224 pass, 5 fail, 0 warn, 31 skip
+
+--- failure enum_missing: pub enum removed or renamed ---
+
+Description:
+A publicly-visible enum cannot be imported by its prior path. A `pub use` may have been removed, or the enum itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/enum_missing.ron
+
+Failed in:
+  enum gorgeous::css::CssParserEnum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/css.rs:6
+  enum gorgeous::json::JsonParserEnum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/json.rs:6
+  enum gorgeous::bbnf::BbnfParserEnum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/bbnf.rs:6
+  enum gorgeous::bnf::BnfParserEnum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/bnf.rs:6
+  enum gorgeous::google_sheets::GoogleSheetsParserEnum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/google_sheets.rs:6
+  enum gorgeous::ebnf::EbnfParserEnum, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/ebnf.rs:6
+
+--- failure function_missing: pub fn removed or renamed ---
+
+Description:
+A publicly-visible function cannot be imported by its prior path. A `pub use` may have been removed, or the function itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/function_missing.ron
+
+Failed in:
+  function gorgeous::json::prettify_json_range, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/json.rs:34
+  function gorgeous::range_to_doc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/lib.rs:54
+  function gorgeous::css::prettify_css_range, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/css.rs:34
+
+--- failure pub_module_level_const_missing: pub module-level const is missing ---
+
+Description:
+A public const is missing or renamed
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/pub_module_level_const_missing.ron
+
+Failed in:
+  GRAMMAR_BbnfParser in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/bbnf.rs:6
+  GRAMMAR_CssParser in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/css.rs:6
+  GRAMMAR_JsonParser in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/json.rs:6
+  GRAMMAR_EbnfParser in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/ebnf.rs:6
+  GRAMMAR_GoogleSheetsParser in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/google_sheets.rs:6
+  GRAMMAR_BnfParser in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/bnf.rs:6
+
+--- failure struct_missing: pub struct removed or renamed ---
+
+Description:
+A publicly-visible struct cannot be imported by its prior path. A `pub use` may have been removed, or the struct itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/struct_missing.ron
+
+Failed in:
+  struct gorgeous::json::JsonParser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/json.rs:11
+  struct gorgeous::css::CssParser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/css.rs:12
+  struct gorgeous::bbnf::BbnfParser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/bbnf.rs:11
+  struct gorgeous::bnf::BnfParser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/bnf.rs:11
+  struct gorgeous::google_sheets::GoogleSheetsParser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/google_sheets.rs:11
+  struct gorgeous::ebnf::EbnfParser, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/ebnf.rs:11
+
+--- failure trait_missing: pub trait removed or renamed ---
+
+Description:
+A publicly-visible trait cannot be imported by its prior path. A `pub use` may have been removed, or the trait itself may have been renamed or removed entirely.
+        ref: https://doc.rust-lang.org/cargo/reference/semver.html#item-remove
+       impl: https://github.com/obi1kenobi/cargo-semver-checks/tree/v0.51.0/src/lints/trait_missing.ron
+
+Failed in:
+  trait gorgeous::SourceRange, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/lib.rs:85
+  trait gorgeous::ToDoc, previously in file ~/.dev-logs/bbnf-lockstep/registry/cargo-home-parent-r1/registry/src/index.crates.io-1949cf8c6b5b557f/gorgeous-0.1.8/src/lib.rs:74
+
+     Summary semver requires new major version: 5 major and 0 minor checks failed
+    Finished [   0.859s] gorgeous

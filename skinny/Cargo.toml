@@ -35,9 +35,9 @@ bbnf-bench = { path = "crates/bbnf-bench" }
 test-fixtures = { path = "crates/test-fixtures" }
 # The e-graph moved to parse-that (sk-v27 LW2.TOPO-1, X-5); csp-solver is
 # the crates.io release byte-identical to the copy bbnf-lang vendored.
-parse-that-egraph = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+parse-that-egraph = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "6889b29c1d5a4c3514d29abc027543ffbce3f88e" }
 # The block primitives (sk-v27 LW2.PERF-1b, X-3): the one core::arch crate.
-parse-that-simd = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+parse-that-simd = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "6889b29c1d5a4c3514d29abc027543ffbce3f88e" }
 csp-solver = "0.4.0"
 
 anyhow = "1"

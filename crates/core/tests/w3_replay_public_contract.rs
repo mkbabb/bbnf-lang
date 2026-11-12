@@ -5829,6 +5829,7 @@ fn assert_generic_external_runtime_is_dual_root_identical_and_executes_all_publi
                 .args(arguments)
                 .env("CARGO_HOME", home)
                 .env("CARGO_NET_OFFLINE", "true")
+                .env("CARGO_PROFILE_DEV_DEBUG", "0")
                 .env("CARGO_TARGET_DIR", target)
                 .env_remove("RUSTC_WRAPPER")
                 .current_dir(&first_root),
@@ -6464,7 +6465,7 @@ fn assert_archive_is_the_pinned_tree(
             }
         }
     }
-    let mut compared = 0usize;
+    let mut expected: Vec<(String, String, Vec<u8>)> = Vec::new();
     for entry in &package.files {
         let relative = entry.strip_prefix(&archive_root).expect("archive root");
         let bytes = fs::read(unpacked.join(entry))
@@ -6503,22 +6504,66 @@ fn assert_archive_is_the_pinned_tree(
         } else {
             format!("{path_in_vcs}/{relative}")
         };
-        let blob = command_output(
-            Command::new("git")
-                .arg("-C")
-                .arg(checkout)
-                .args(["show", &format!("{rev}:{tracked}")]),
-            &format!("{}: blob {tracked} at the pin", package.name),
-        );
+        expected.push((tracked, relative.to_owned(), bytes));
+    }
+    // One `git cat-file --batch` reads every blob at the pin.
+    let mut reader = Command::new("git")
+        .arg("-C")
+        .arg(checkout)
+        .args(["cat-file", "--batch"])
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .spawn()
+        .expect("spawn git cat-file --batch");
+    let request = expected
+        .iter()
+        .map(|(tracked, _, _)| format!("{rev}:{tracked}\n"))
+        .collect::<String>();
+    let mut stdin = reader.stdin.take().expect("cat-file stdin");
+    let writer = std::thread::spawn(move || {
+        use std::io::Write as _;
+        stdin
+            .write_all(request.as_bytes())
+            .expect("write cat-file request");
+    });
+    let output = reader
+        .wait_with_output()
+        .expect("git cat-file --batch output");
+    writer.join().expect("cat-file request thread");
+    assert!(
+        output.status.success(),
+        "{}: git cat-file --batch",
+        package.name
+    );
+    let mut cursor = &output.stdout[..];
+    for (tracked, relative, bytes) in &expected {
+        let header_end = cursor
+            .iter()
+            .position(|byte| *byte == b'\n')
+            .expect("cat-file header");
+        let header = std::str::from_utf8(&cursor[..header_end]).expect("cat-file header UTF-8");
+        let fields: Vec<&str> = header.split(' ').collect();
         assert!(
-            blob.stdout == bytes,
+            fields.len() == 3 && fields[1] == "blob",
+            "{}: {tracked} is a blob at {rev} (cat-file said {header:?})",
+            package.name
+        );
+        let size: usize = fields[2].parse().expect("blob size");
+        let blob = &cursor[header_end + 1..header_end + 1 + size];
+        assert!(
+            blob == &bytes[..],
             "{}: packaged {relative} equals {tracked} at {rev}",
             package.name
         );
-        compared += 1;
+        cursor = &cursor[header_end + 1 + size + 1..];
     }
     assert!(
-        compared > 1,
+        cursor.is_empty(),
+        "{}: cat-file answered every request once",
+        package.name
+    );
+    assert!(
+        expected.len() > 1,
         "{}: the tree comparison read files",
         package.name
     );
@@ -6591,6 +6636,7 @@ fn main() {
                 .current_dir(&consumer)
                 .env("CARGO_HOME", home)
                 .env("CARGO_NET_OFFLINE", "true")
+                .env("CARGO_PROFILE_DEV_DEBUG", "0")
                 .env("CARGO_TARGET_DIR", scratch.join("consumer-target"))
                 .env_remove("RUSTC_WRAPPER"),
             label,
@@ -6692,6 +6738,13 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
 
     let temporary = tempfile::tempdir().expect("W3 package crossing");
     let scratch = temporary.path();
+    let started = std::time::Instant::now();
+    let phase = |label: &str| {
+        eprintln!(
+            "[crossing] {label}: {:.1}s",
+            started.elapsed().as_secs_f64()
+        )
+    };
     let home = isolated_lockstep_cargo_home(scratch);
     let registry = scratch.join("w3-local-registry");
 
@@ -6840,6 +6893,7 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
         "the pinned parse_that declares kernel ABI 4 (COMP-4b)"
     );
 
+    phase("upstream packaged");
     for name in SK_V27_OWNED_PACKAGES {
         write_lockstep_registry(&registry, &third_party, &metadata, &packaged);
         let entry = metadata["packages"]
@@ -6855,12 +6909,15 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
         ));
     }
     write_lockstep_registry(&registry, &third_party, &metadata, &packaged);
+    phase("owned packaged");
     for package in &packaged {
         assert_package_resolves_from_registry(&home, scratch, package, &registry);
     }
+    phase("resolved");
     // One isolated home and one target directory for the two registry-only
     // builds: the consumer compiles every packaged library from its archive.
     assert_registry_only_package_consumer(&registry, scratch, &home);
+    phase("consumer built and ran");
     assert_generic_external_runtime_is_dual_root_identical_and_executes_all_public_cases(
         &registry,
         &home,

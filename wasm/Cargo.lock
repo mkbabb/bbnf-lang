@@ -385,7 +385,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
+source = "git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c1d5a4c3514d29abc027543ffbce3f88e"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -395,7 +395,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
+source = "git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c1d5a4c3514d29abc027543ffbce3f88e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -405,7 +405,7 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
+source = "git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c1d5a4c3514d29abc027543ffbce3f88e"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
@@ -420,12 +420,12 @@ dependencies = [
 [[package]]
 name = "parse-that-simd"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
+source = "git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c1d5a4c3514d29abc027543ffbce3f88e"
 
 [[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
+source = "git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c1d5a4c3514d29abc027543ffbce3f88e"
 dependencies = [
  "aho-corasick",
  "colored",

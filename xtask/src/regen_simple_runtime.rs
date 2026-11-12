@@ -604,18 +604,21 @@ use __MODULE__::arena::{__P__Arena, __P__CompoundKind};
 use __MODULE__::document::__P__Document;
 use __MODULE__::value::__P__Value;
 
-// O(1) checkpoint design: the growing per-frame `children` Vec is hoisted
-// into the builder-owned append-only `pending_children` scratch; each
-// frame holds a `children_base` cursor. The `Frame` is now `Copy`
-// (`CompoundKind` + cursor + token), so the checkpoint `stack.clone()` is
-// an O(depth) memcpy rather than the prior O(document) deep clone of the
-// growing root-compound child Vec at every speculative checkpoint. Scratch
-// rollback is a count-marker truncate — the precise inverse of append.
+// O(1) checkpoint (sk-v27 LW3.ORC1-CKPT): the growing per-frame `children`
+// live in the builder-owned append-only `pending_children` scratch; each
+// frame holds a `children_base` cursor and is never written after
+// `begin_compound`. A speculative region is balanced (every compound it
+// begins it ends or rolls back, and it ends none that was open at its
+// checkpoint), so the checkpoint holds the stack length and the top frame's
+// handle, never the stack: a stack copy per checkpoint, with every
+// enclosing level's checkpoint live, held memory quadratic in depth.
+// Rollback truncates, and checks the top frame's handle so an unbalanced
+// region panics instead of restoring a wrong stack. Scratch rollback is a
+// count-marker truncate — the precise inverse of append.
 #[derive(Debug, Clone, Copy)]
 struct Frame {
     kind: __P__CompoundKind,
     children_base: usize,
-    #[allow(dead_code)]
     handle_token: u64,
 }
 
@@ -628,10 +631,12 @@ pub struct __P__StructBuilder<'p> {
     next_handle: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct __P__StructCheckpoint<'p> {
     compounds: usize,
-    stack: Vec<Frame>,
+    stack_len: usize,
+    /// The handle of the frame on top at the checkpoint.
+    top: Option<u64>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
     pending_children_len: usize,
@@ -696,9 +701,8 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     fn checkpoint(&self) -> Self::Checkpoint {
         __P__StructCheckpoint {
             compounds: self.arena.compound_count(),
-            // O(depth) memcpy of `Copy` frames; growing children live in
-            // the `pending_children` scratch (length-marked below).
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: self.stack.last().map(|f| f.handle_token),
             root: self.root,
             next_handle: self.next_handle,
             pending_children_len: self.pending_children.len(),
@@ -708,7 +712,16 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     #[inline]
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {
         self.arena.truncate(checkpoint.compounds);
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "__P__StructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        assert_eq!(
+            self.stack.last().map(|f| f.handle_token),
+            checkpoint.top,
+            "__P__StructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+        );
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_children.truncate(checkpoint.pending_children_len);
@@ -1774,18 +1787,21 @@ use __MODULE__::arena::__P__Arena;
 use __MODULE__::document::__P__Document;
 use __MODULE__::value::{{__P__Number, __P__Pair, __P__Value}};
 
-// O(1) checkpoint design: the growing per-frame item/pair containers are
-// hoisted out of `OpenFrame` into builder-owned append-only scratch
-// stacks (`pending_items` / `pending_pairs`). Each container-owning frame
-// holds only a `*_base: usize` cursor; interior deposits append to the
-// scratch top; `end_compound` drains `[base..]` as one contiguous list.
-// Frames carry only `Copy` scalars + cursor indices, so `stack.clone()`
-// at checkpoint is an O(depth) memcpy — the prior O(N^2) cause (deep
-// clone of the growing root array/object Vec at every checkpoint) is
-// eliminated. The `pending_key` scalar stays inline; the cheap
-// `stack.clone()` restores below-marker frames' `pending_key` on
-// rollback, so the speculative-key corruption case is sound. Scratch
-// rollback is a count-marker truncate (the precise inverse of append).
+// O(1) checkpoint (sk-v27 LW3.ORC1-CKPT): the growing per-frame item/pair
+// containers live in builder-owned append-only scratch stacks
+// (`pending_items` / `pending_pairs`); each container-owning frame holds a
+// `*_base: usize` cursor, and `end_compound` drains `[base..]`. A
+// speculative region is balanced (every compound it begins it ends or rolls
+// back, and it ends none that was open at its checkpoint), so only the frame
+// on top at the checkpoint can be written inside it (`deposit` writes the
+// top frame's `pending_key` / key / value slots). The checkpoint therefore
+// holds the stack length and a copy of that one frame, never the stack: a
+// stack copy per checkpoint, with every enclosing level's checkpoint live,
+// held memory quadratic in depth (JSONTestSuite
+// `n_structure_100000_opening_arrays`). `serials` holds each open frame's
+// handle; rollback checks the top frame's serial and panics on an
+// unbalanced region instead of restoring a wrong stack. Scratch rollback is
+// a count-marker truncate (the precise inverse of append).
 #[derive(Debug, Clone, Copy)]
 enum OpenFrame<'p> {{
     Array {{ items_base: usize }},
@@ -1804,17 +1820,21 @@ enum OpenFrame<'p> {{
 pub struct __P__StructBuilder<'p> {{
     arena: __P__Arena<'p>,
     stack: Vec<OpenFrame<'p>>,
+    /// The handle of each open frame, parallel to `stack`.
+    serials: Vec<u64>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
     pending_items: Vec<__P__Value<'p>>,
     pending_pairs: Vec<__P__Pair<'p>>,
 }}
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct __P__StructCheckpoint<'p> {{
     arrays: usize,
     objects: usize,
-    stack: Vec<OpenFrame<'p>>,
+    stack_len: usize,
+    /// `(serial, frame)` of the frame on top at the checkpoint.
+    top: Option<(u64, OpenFrame<'p>)>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
     pending_items_len: usize,
@@ -1833,6 +1853,7 @@ impl<'p> __P__StructBuilder<'p> {{
         Self {{
             arena: __P__Arena::new(),
             stack: Vec::with_capacity(8),
+            serials: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
             pending_items: Vec::with_capacity(32),
@@ -1845,6 +1866,7 @@ impl<'p> __P__StructBuilder<'p> {{
         Self {{
             arena: __P__Arena::with_capacity(arrays, objects),
             stack: Vec::with_capacity(8),
+            serials: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
             pending_items: Vec::with_capacity(32),
@@ -1922,9 +1944,11 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
         __P__StructCheckpoint {{
             arrays: self.arena.array_count(),
             objects: self.arena.object_count(),
-            // O(depth) memcpy of `Copy` frames; the growing item/pair
-            // containers live in the scratch stacks (length-marked below).
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: match (self.serials.last(), self.stack.last()) {{
+                (Some(&serial), Some(&frame)) => Some((serial, frame)),
+                _ => None,
+            }},
             root: self.root,
             next_handle: self.next_handle,
             pending_items_len: self.pending_items.len(),
@@ -1935,7 +1959,22 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
     #[inline]
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {{
         self.arena.truncate(checkpoint.arrays, checkpoint.objects);
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "__P__StructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        self.serials.truncate(checkpoint.stack_len);
+        if let Some((serial, frame)) = checkpoint.top {{
+            assert_eq!(
+                self.serials.last().copied(),
+                Some(serial),
+                "__P__StructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+            );
+            if let Some(top) = self.stack.last_mut() {{
+                *top = frame;
+            }}
+        }}
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         // Truncate the append-only scratch stacks to their checkpoint
@@ -1963,8 +2002,9 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
             }},
             _ => OpenFrame::Wrap {{ value: None }},
         }};
-        self.stack.push(frame);
         self.next_handle = self.next_handle.wrapping_add(1);
+        self.stack.push(frame);
+        self.serials.push(self.next_handle);
         CompoundHandle::new(self.next_handle, 0)
     }}
 
@@ -1973,6 +2013,7 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {{
             .stack
             .pop()
             .expect("__P__StructBuilder::end_compound on empty stack");
+        self.serials.pop();
         let value = match frame {{
             OpenFrame::Array {{ items_base }} => {{
                 let items: Vec<__P__Value<'p>> = self.pending_items.split_off(items_base);
@@ -2667,13 +2708,18 @@ use __MODULE__::value::__P__Value;
 use crate::runtime::builder::StructBuilder;
 use crate::runtime::handle::CompoundHandle;
 
-// O(1) checkpoint design: the growing per-frame `children` Vec is hoisted
-// into the builder-owned append-only `pending_children` scratch; each
-// frame holds a `children_base` cursor. The `OpenFrame` is now `Copy`
-// (kind + tag + offset scalars + cursor), so the checkpoint `stack.clone()`
-// is an O(depth) memcpy rather than an O(document) deep clone of the
-// growing root-compound child Vec at every speculative checkpoint. Scratch
-// rollback is a count-marker truncate — the precise inverse of append.
+// O(1) checkpoint (sk-v27 LW3.ORC1-CKPT): the growing per-frame `children`
+// live in the builder-owned append-only `pending_children` scratch; each
+// frame holds a `children_base` cursor. A speculative region is balanced
+// (every compound it begins it ends or rolls back, and it ends none that
+// was open at its checkpoint), so only the frame on top at the checkpoint
+// can be written inside it (`push_branch_tag`, `record_compound_bounds_*`
+// write `last_mut()`). The checkpoint holds the stack length and a copy of
+// that one frame, never the stack: a stack copy per checkpoint, with every
+// enclosing level's checkpoint live, held memory quadratic in depth.
+// Rollback checks the top frame's serial and panics on an unbalanced
+// region instead of restoring a wrong stack. Scratch rollback is a
+// count-marker truncate — the precise inverse of append.
 #[derive(Debug, Clone, Copy)]
 struct OpenFrame {
     kind: __P__CompoundKind,
@@ -2681,6 +2727,8 @@ struct OpenFrame {
     start_offset: Option<u32>,
     end_offset: Option<u32>,
     children_base: usize,
+    /// The handle `begin_compound` returned for this frame.
+    serial: u64,
 }
 
 #[derive(Debug)]
@@ -2692,10 +2740,12 @@ pub struct __P__StructBuilder<'p> {
     next_handle: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct __P__StructCheckpoint<'p> {
     compounds: usize,
-    stack: Vec<OpenFrame>,
+    stack_len: usize,
+    /// The frame on top at the checkpoint.
+    top: Option<OpenFrame>,
     root: Option<__P__Value<'p>>,
     next_handle: u64,
     pending_children_len: usize,
@@ -2761,9 +2811,8 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     fn checkpoint(&self) -> Self::Checkpoint {
         __P__StructCheckpoint {
             compounds: self.arena.compound_count(),
-            // O(depth) memcpy of `Copy` frames; growing children live in
-            // the `pending_children` scratch (length-marked below).
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: self.stack.last().copied(),
             root: self.root,
             next_handle: self.next_handle,
             pending_children_len: self.pending_children.len(),
@@ -2773,21 +2822,37 @@ impl<'p> StructBuilder for __P__StructBuilder<'p> {
     #[inline]
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {
         self.arena.truncate(checkpoint.compounds);
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "__P__StructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        if let Some(frame) = checkpoint.top {
+            let top = self
+                .stack
+                .last_mut()
+                .expect("__P__StructBuilder::rollback: stack_len > 0");
+            assert_eq!(
+                top.serial, frame.serial,
+                "__P__StructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+            );
+            *top = frame;
+        }
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_children.truncate(checkpoint.pending_children_len);
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
+        self.next_handle = self.next_handle.wrapping_add(1);
         self.stack.push(OpenFrame {
             kind: __P__CompoundKind::from_layout(layout),
             branch_tag: None,
             start_offset: None,
             end_offset: None,
             children_base: self.pending_children.len(),
+            serial: self.next_handle,
         });
-        self.next_handle = self.next_handle.wrapping_add(1);
         CompoundHandle::new(self.next_handle, 0)
     }
 

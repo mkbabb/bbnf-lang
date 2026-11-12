@@ -93,11 +93,13 @@ struct Frame<'p, V: SimpleValue<'p>> {
     /// Cursor into the builder's append-only `pending_children` scratch.
     /// Interior leaf / compound pushes append to the scratch top;
     /// `end_compound` drains `[children_base..]` as this frame's child
-    /// slice. Hoisting the growing child `Vec` out of the frame keeps the
-    /// frame `Clone` cheap (scalar + cursor), so the checkpoint
-    /// `stack.clone()` is O(depth) rather than an O(document) deep clone —
-    /// the prior O(N^2) speculation cost.
+    /// slice.
     children_base: usize,
+    /// The handle [`StructBuilder::begin_compound`] returned for this
+    /// frame: unique among the frames a speculative region can open, so a
+    /// rollback can check that the frame on top at its checkpoint is still
+    /// the frame at that depth (see [`SimpleCheckpoint`]).
+    serial: u64,
     /// Anchors both `'p` and `V` through the `SimpleValue<'p>` bound now
     /// that the child values live in the builder's `pending_children`
     /// scratch rather than in this frame. Zero-sized; carrying `V` keeps
@@ -137,16 +139,31 @@ pub struct SimpleStructBuilder<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>>
     next_handle: u64,
 }
 
-/// Rollback snapshot for [`SimpleStructBuilder`]. Pure `Copy` / length
-/// markers: the `stack` clone is O(depth) of scalar+cursor frames, and
-/// `pending_children_len` is the truncate target for the scratch stack.
-#[derive(Debug, Clone)]
+/// Rollback snapshot for [`SimpleStructBuilder`]: length markers and the
+/// one mutable field of the frame on top, so it is O(1) whatever the depth
+/// (sk-v27 LW3.ORC1-CKPT).
+///
+/// A speculative region is balanced (the emitter's generation order): every
+/// compound it begins it also ends or rolls back, and it ends no compound
+/// that was open at its checkpoint. So the frames below the top are neither
+/// popped nor touched (only the top frame is written, by
+/// [`StructBuilder::push_branch_tag`]), and the frames above `stack_len`
+/// are the region's own. Rollback truncates to `stack_len` and restores the
+/// top frame's branch tag; it first checks, by the top frame's serial, that
+/// the region kept the balance, and panics if it did not, so a violation
+/// can never restore a wrong stack in silence. The previous design copied
+/// the whole stack into every checkpoint; the checkpoints of all enclosing
+/// levels are live at once, so a parse held memory quadratic in its depth.
+#[derive(Debug, Clone, Copy)]
 pub struct SimpleCheckpoint<'p, V: SimpleValue<'p>> {
     compounds: usize,
-    stack: Vec<Frame<'p, V>>,
+    stack_len: usize,
+    /// `(serial, branch_tag)` of the frame on top at the checkpoint.
+    top: Option<(u64, Option<u32>)>,
     root: Option<V>,
     next_handle: u64,
     pending_children_len: usize,
+    _phantom: PhantomData<&'p ()>,
 }
 
 impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> Default for SimpleStructBuilder<'p, V, C> {
@@ -217,20 +234,34 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
     fn checkpoint(&self) -> Self::Checkpoint {
         SimpleCheckpoint {
             compounds: self.arena.compound_count(),
-            // O(depth) memcpy of scalar+cursor frames; the growing child
-            // containers live in the `pending_children` scratch (truncated
-            // by the length marker on rollback).
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: self.stack.last().map(|f| (f.serial, f.branch_tag)),
             root: self.root,
             next_handle: self.next_handle,
             pending_children_len: self.pending_children.len(),
+            _phantom: PhantomData,
         }
     }
 
     #[inline]
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {
         self.arena.truncate(checkpoint.compounds);
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "SimpleStructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        if let Some((serial, branch_tag)) = checkpoint.top {
+            let top = self
+                .stack
+                .last_mut()
+                .expect("SimpleStructBuilder::rollback: stack_len > 0");
+            assert_eq!(
+                top.serial, serial,
+                "SimpleStructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+            );
+            top.branch_tag = branch_tag;
+        }
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         // Inverse of every speculative child append since the checkpoint.
@@ -238,13 +269,14 @@ impl<'p, V: SimpleValue<'p>, C: SimpleCompound<'p, V>> StructBuilder
     }
 
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
+        self.next_handle = self.next_handle.wrapping_add(1);
         self.stack.push(Frame {
             layout: layout.clone(),
             branch_tag: None,
             children_base: self.pending_children.len(),
+            serial: self.next_handle,
             _phantom: PhantomData,
         });
-        self.next_handle = self.next_handle.wrapping_add(1);
         CompoundHandle::new(self.next_handle, 0)
     }
 

@@ -16,16 +16,20 @@ enum OpenFrame<'p> {
 pub struct JsonStructBuilder<'p> {
     arena: JsonArena<'p>,
     stack: Vec<OpenFrame<'p>>,
+    /// The handle of each open frame, parallel to `stack`.
+    serials: Vec<u64>,
     root: Option<JsonValue<'p>>,
     next_handle: u64,
     pending_items: Vec<JsonValue<'p>>,
     pending_pairs: Vec<JsonPair<'p>>,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct JsonStructCheckpoint<'p> {
     arrays: usize,
     objects: usize,
-    stack: Vec<OpenFrame<'p>>,
+    stack_len: usize,
+    /// `(serial, frame)` of the frame on top at the checkpoint.
+    top: Option<(u64, OpenFrame<'p>)>,
     root: Option<JsonValue<'p>>,
     next_handle: u64,
     pending_items_len: usize,
@@ -42,6 +46,7 @@ impl<'p> JsonStructBuilder<'p> {
         Self {
             arena: JsonArena::new(),
             stack: Vec::with_capacity(8),
+            serials: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
             pending_items: Vec::with_capacity(32),
@@ -53,6 +58,7 @@ impl<'p> JsonStructBuilder<'p> {
         Self {
             arena: JsonArena::with_capacity(arrays, objects),
             stack: Vec::with_capacity(8),
+            serials: Vec::with_capacity(8),
             root: None,
             next_handle: 0,
             pending_items: Vec::with_capacity(32),
@@ -119,7 +125,11 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
         JsonStructCheckpoint {
             arrays: self.arena.array_count(),
             objects: self.arena.object_count(),
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: match (self.serials.last(), self.stack.last()) {
+                (Some(&serial), Some(&frame)) => Some((serial, frame)),
+                _ => None,
+            },
             root: self.root,
             next_handle: self.next_handle,
             pending_items_len: self.pending_items.len(),
@@ -129,7 +139,21 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
     #[inline]
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {
         self.arena.truncate(checkpoint.arrays, checkpoint.objects);
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "JsonStructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        self.serials.truncate(checkpoint.stack_len);
+        if let Some((serial, frame)) = checkpoint.top {
+            assert_eq!(
+                self.serials.last().copied(), Some(serial),
+                "JsonStructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+            );
+            if let Some(top) = self.stack.last_mut() {
+                *top = frame;
+            }
+        }
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_items.truncate(checkpoint.pending_items_len);
@@ -160,8 +184,9 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
             }
             _ => OpenFrame::Wrap { value: None },
         };
-        self.stack.push(frame);
         self.next_handle = self.next_handle.wrapping_add(1);
+        self.stack.push(frame);
+        self.serials.push(self.next_handle);
         CompoundHandle::new(self.next_handle, 0)
     }
     fn end_compound(&mut self, _handle: CompoundHandle) {
@@ -169,6 +194,7 @@ impl<'p> StructBuilder for JsonStructBuilder<'p> {
             .stack
             .pop()
             .expect("JsonStructBuilder::end_compound on empty stack");
+        self.serials.pop();
         let value = match frame {
             OpenFrame::Array { items_base } => {
                 let items: Vec<JsonValue<'p>> = self.pending_items.split_off(items_base);

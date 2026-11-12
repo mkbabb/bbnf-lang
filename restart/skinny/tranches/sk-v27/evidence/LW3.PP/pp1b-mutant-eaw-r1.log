@@ -1,0 +1,18 @@
+test cjk_leaves_do_not_overflow ... FAILED
+test multiline_leaf_last_line_width_and_has_hard ... FAILED
+test emoji_leaves_do_not_overflow ... FAILED
+test unicode_oracle_and_renderer_agree ... FAILED
+test combining_mark_leaves_do_not_overflow ... ok
+thread 'cjk_leaves_do_not_overflow' (41261868) panicked at tests/pp1b_width.rs:203:13:
+  left: "  日本 語x"
+ right: "\n\n日本\n\n    한국어\n\n中文字Ｈｉｶﾅｶﾅ"
+thread 'multiline_leaf_last_line_width_and_has_hard' (41261871) panicked at tests/pp1b_width.rs:263:9:
+  left: "x\n漢 漢"
+ right: "x\n漢\n漢"
+thread 'emoji_leaves_do_not_overflow' (41261870) panicked at tests/pp1b_width.rs:203:13:
+  left: " a😀\"🚀🚀\"\"❤\u{fe0f}\"\"👍🏽\"\n"
+ right: "\na😀\"🚀🚀\"\"❤\u{fe0f}\"\"👍🏽\"\n"
+thread 'unicode_oracle_and_renderer_agree' (41261872) panicked at src/width.rs:60:5:
+test result: FAILED. 1 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.92s
+error: test failed, to rerun pass `--test pp1b_width`
+error: 1 target failed:

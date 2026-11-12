@@ -1,0 +1,17 @@
+test a_tab_in_a_leaf_is_refused ... ok
+test non_ascii_wrap_and_sep_bytes_are_refused ... ok
+test char_0xff_is_refused_at_build ... ok
+test ascii_bytes_still_render ... ok
+test every_non_ascii_char_byte_is_refused ... ok
+test a_flat_group_65_deep_stays_flat ... FAILED
+test l1_holds_at_depth_10_000 ... FAILED
+test closed_form_matches_the_oracle ... FAILED
+thread 'a_flat_group_65_deep_stays_flat' (41088430) panicked at tests/pp1a_one_loop.rs:193:5:
+L1: a 65-deep group that fits (261 columns) breaks: "( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( (\na\n) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )"
+thread 'l1_holds_at_depth_10_000' (41088436) panicked at tests/pp1a_one_loop.rs:221:9:
+thread 'closed_form_matches_the_oracle' (41088434) panicked at tests/pp1a_one_loop.rs:209:13:
+  left: "(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\na\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)
+ right: "(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n( a )\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)"
+test result: FAILED. 5 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+error: test failed, to rerun pass `--test pp1a_one_loop`
+error: 1 target failed:

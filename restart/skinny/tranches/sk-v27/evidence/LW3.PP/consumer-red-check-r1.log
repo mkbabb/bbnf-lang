@@ -1,0 +1,16 @@
+BL 4b2e265e0 + bare re-pin (Cargo.toml, Cargo.lock), cargo check --profile ax-iter --workspace --all-targets --all-features --locked --keep-going
+errors: 321
+error: could not compile `bbnf-ser` (test "fmt_builder") due to 1 previous error
+error: could not compile `bbnf` (lib) due to 320 previous errors
+error: could not compile `bbnf` (lib test) due to 320 previous errors
+ 138      --> crates/core/src/grammar/generated/css_l4.rs
+  53      --> crates/core/src/grammar/generated/bbnf.rs
+  50       --> crates/core/src/grammar/generated/css_l4.rs
+  33      --> crates/core/src/grammar/generated/google_sheets.rs
+  15     --> crates/core/src/grammar/generated/css_pretty.rs
+  13     --> crates/core/src/grammar/generated/ebnf.rs
+   9     --> crates/core/src/grammar/generated/json.rs
+   5     --> crates/core/src/grammar/generated/bnf.rs
+   4     --> crates/core/src/grammar/generated/google_sheets.rs
+   1   --> crates/ser/tests/fmt_builder.rs
+   1   --> /Users/mkbabb/.cargo/git/checkouts/pprint-b8d1c5659add3853/bc78dd8/rust/src/render.rs

@@ -1,0 +1,29 @@
+thread 'if_break_nest_10_6_in_break_mode' (41005255) has overflowed its stack
+error: test failed, to rerun pass `--test pp1a_deep_if_break`
+  process didn't exit successfully: `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/ax-iter/deps/pp1a_deep_if_break-10a1d588e8064120` (signal: 6, SIGABRT: process abort signal)
+test ascii_bytes_still_render ... ok
+test a_tab_in_a_leaf_is_refused ... FAILED
+test char_0xff_is_refused_at_build ... FAILED
+test every_non_ascii_char_byte_is_refused ... FAILED
+test a_flat_group_65_deep_stays_flat ... FAILED
+test non_ascii_wrap_and_sep_bytes_are_refused ... FAILED
+test l1_holds_at_depth_10_000 ... FAILED
+test closed_form_matches_the_oracle ... FAILED
+thread 'a_tab_in_a_leaf_is_refused' (41005260) panicked at tests/pp1a_one_loop.rs:38:13:
+char tab: accepted at build; renders [] (valid UTF-8: true)
+thread 'char_0xff_is_refused_at_build' (41005262) panicked at tests/pp1a_one_loop.rs:58:13:
+char(0xFF) renders invalid UTF-8: [97, 255]
+thread 'every_non_ascii_char_byte_is_refused' (41005264) panicked at tests/pp1a_one_loop.rs:38:13:
+char(0x80): accepted at build; renders [128] (valid UTF-8: false)
+thread 'a_flat_group_65_deep_stays_flat' (41005259) panicked at tests/pp1a_one_loop.rs:193:5:
+L1: a 65-deep group that fits (261 columns) breaks: "( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( ( (\na\n) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) ) )"
+thread 'non_ascii_wrap_and_sep_bytes_are_refused' (41005266) panicked at tests/pp1a_one_loop.rs:38:13:
+wrap open 0xC3: accepted at build; renders [195, 120, 93] (valid UTF-8: false)
+thread 'l1_holds_at_depth_10_000' (41005265) panicked at tests/pp1a_one_loop.rs:221:9:
+thread 'closed_form_matches_the_oracle' (41005263) panicked at tests/pp1a_one_loop.rs:209:13:
+  left: "(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\na\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)
+ right: "(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n(\n( a )\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)\n)"
+test result: FAILED. 1 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+error: test failed, to rerun pass `--test pp1a_one_loop`
+error: 2 targets failed:
+rust/src/render.rs:90:    unsafe { String::from_utf8_unchecked(state.output) }

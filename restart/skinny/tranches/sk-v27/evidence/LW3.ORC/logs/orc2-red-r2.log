@@ -1,0 +1,16 @@
+# LW3.ORC2 list-oracles RED r2 at 118e9d097 2026-11-12T14:44:42Z (tree 0 modified tracked files)
+$ zsh -c /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/g1 --list-oracles; n=$(/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/g1 --list-oracles | grep -E '^grammar=(bbnf|json|css_l4|css_pretty|google_sheets|ebnf|bnf|csv|math) ' | grep -c 'oracles=0'); echo "nine grammars with no oracle: $n"; [ $n -eq 0 ]
+grammar=bbnf oracles=1 [ts-frontend] inputs=70
+grammar=json oracles=3 [jsontestsuite,serde_json,ts-package] inputs=323
+grammar=css_l4 oracles=1 [valuejs-leaves] inputs=3
+grammar=css_pretty oracles=1 [valuejs-leaves] inputs=3
+grammar=google_sheets oracles=1 [ts-package] inputs=3
+grammar=ebnf oracles=0 [] inputs=0
+grammar=bnf oracles=0 [] inputs=0
+grammar=csv oracles=1 [ts-package] inputs=2
+grammar=math oracles=0 [] inputs=0
+grammar=toml oracles=2 [ts-package,toml-test] inputs=679
+grammar=graphql oracles=2 [ts-package,graphql-js] inputs=1725
+grammar=r7rs_datum oracles=2 [ts-package,lexpr] inputs=460
+nine grammars with no oracle: 3
+rc=1

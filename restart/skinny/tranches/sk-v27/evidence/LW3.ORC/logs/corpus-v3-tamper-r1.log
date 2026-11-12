@@ -1,0 +1,7 @@
+# corpus-v3 one-byte tamper r1 (math/cases/hand-15.txt byte 0) at ea8997adb 2026-11-12T16:25:22Z (tree 0 modified tracked files)
+$ cargo xtask corpus verify
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask corpus verify`
+  math/cases/hand-15.txt: sha256 ad667b78ba8ed0275868fcc1c3650f7d5c73fc6143352d3f65bbc292dc36a511 != manifest e12a7e051731cf1dbeefa2142a8e1abb1eb5898e2cbe4aa522120829a5588dc7
+Error: corpus verify: 1 of 5255 files fail against /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/corpus/MANIFEST.sha256 in /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/corpus-v3-r1; run `cargo xtask corpus fetch`
+rc=1

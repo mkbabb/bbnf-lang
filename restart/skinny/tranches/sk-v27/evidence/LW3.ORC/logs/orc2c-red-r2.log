@@ -1,0 +1,19 @@
+# LW3.ORC2 falsifier orc2_check.sh RED r2 at 118e9d097 2026-11-12T17:28:36Z (tree 0 modified tracked files)
+$ /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/bin/orc2_check.sh /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/g1
+grammar=bbnf oracles=1 [ts-frontend] inputs=70
+grammar=json oracles=3 [jsontestsuite,serde_json,ts-package] inputs=323
+grammar=css_l4 oracles=1 [valuejs-leaves] inputs=3
+grammar=css_pretty oracles=1 [valuejs-leaves] inputs=3
+grammar=google_sheets oracles=1 [ts-package] inputs=3
+grammar=ebnf oracles=0 [] inputs=0
+grammar=bnf oracles=0 [] inputs=0
+grammar=csv oracles=1 [ts-package] inputs=2
+grammar=math oracles=0 [] inputs=0
+grammar=toml oracles=2 [ts-package,toml-test] inputs=679
+grammar=graphql oracles=2 [ts-package,graphql-js] inputs=1725
+grammar=r7rs_datum oracles=2 [ts-package,lexpr] inputs=460
+RED: ebnf reads no oracle
+RED: bnf reads no oracle
+RED: math reads no oracle
+orc2: RED
+rc=1

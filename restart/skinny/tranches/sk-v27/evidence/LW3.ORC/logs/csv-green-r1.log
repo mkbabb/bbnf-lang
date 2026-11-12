@@ -1,0 +1,5 @@
+# LW3.ORC1-CSV GREEN r1 at 118e9d097 2026-11-12T13:20:47Z (tree 0 modified tracked files)
+$ zsh -c cargo test -p bbnf --test orc1_entry_eof 2>&1 | grep -E "test result|panicked|accepted|refused"; cargo xtask regen --check 2>&1 | tail -1
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+regen --check: clean (9 of 9 grammars matched)
+rc=0

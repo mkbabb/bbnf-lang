@@ -1,0 +1,4 @@
+# LW3.QX1-C GREEN r1 at cf6b3ecf8 2026-11-12T13:00:56Z (tree 7 modified tracked files)
+$ python3 restart/skinny/tranches/sk-v27/evidence/LW3.ORC/orc_check.py qx1 HEAD
+qx1 at HEAD: GREEN
+rc=0

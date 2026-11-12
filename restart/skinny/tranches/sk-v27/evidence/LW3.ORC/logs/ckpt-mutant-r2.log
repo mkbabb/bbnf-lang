@@ -1,0 +1,15 @@
+# LW3.ORC1-CKPT MUTANT r2 (the JSON checkpoint holds a copy of the open-frame serials) at 517a587e9 2026-11-12T12:20:21Z (tree 1 modified tracked files)
+$ zsh -c cargo test -p bbnf --test orc1_checkpoint_depth -- --test-threads=1 --nocapture 2>&1 | grep -E "ratio|test result|^error"
+test bbnf_checkpoint_is_independent_of_depth ... bbnf balanced: peak 233710 B at depth 250, 931471 B at depth 1000; ratio 3.99
+bbnf unclosed: peak 103869 B at depth 250, 411531 B at depth 1000; ratio 3.96
+test css_l4_checkpoint_is_independent_of_depth ... css_l4 balanced: peak 132056 B at depth 250, 505248 B at depth 1000; ratio 3.83
+css_l4 unclosed: peak 94940 B at depth 250, 346844 B at depth 1000; ratio 3.65
+test google_sheets_checkpoint_is_independent_of_depth ... google_sheets balanced: peak 163735 B at depth 250, 651712 B at depth 1000; ratio 3.98
+google_sheets unclosed: peak 62859 B at depth 250, 247815 B at depth 1000; ratio 3.94
+test json_checkpoint_is_independent_of_depth ... json unclosed: peak 513586 B at depth 250, 8048200 B at depth 1000; ratio 15.67
+json unclosed: peak heap grows faster than linearly in depth (513586 B at 250, 8048200 B at 1000, ratio 15.67): a checkpoint copies the open-frame stack
+test simple_template_checkpoint_is_independent_of_depth ... ebnf unclosed: peak 125518 B at depth 250, 498038 B at depth 1000; ratio 3.97
+ebnf balanced: peak 180670 B at depth 250, 719614 B at depth 1000; ratio 3.98
+test result: FAILED. 4 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+error: test failed, to rerun pass `-p bbnf --test orc1_checkpoint_depth`
+rc=0

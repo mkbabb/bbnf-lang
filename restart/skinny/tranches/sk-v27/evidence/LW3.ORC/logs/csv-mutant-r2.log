@@ -1,0 +1,32 @@
+# LW3.ORC1-CSV MUTANT r2 (the trailing skip emitted for every entry; regenerated) at 118e9d097 2026-11-12T13:21:54Z (tree 9 modified tracked files)
+$ cargo test -p bbnf --test orc1_entry_eof
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running tests/orc1_entry_eof.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_entry_eof-f134ebf9177199ca)
+
+running 3 tests
+test a_grammar_that_reads_its_trailing_whitespace_still_does ... ok
+test csv_reads_no_line_break_after_the_last_record ... FAILED
+test math_number_reads_no_trailing_whitespace ... FAILED
+
+failures:
+
+---- csv_reads_no_line_break_after_the_last_record stdout ----
+
+thread 'csv_reads_no_line_break_after_the_last_record' (49209708) panicked at crates/core/tests/orc1_entry_eof.rs:19:9:
+accepted "a,b\n"
+
+---- math_number_reads_no_trailing_whitespace stdout ----
+
+thread 'math_number_reads_no_trailing_whitespace' (49209709) panicked at crates/core/tests/orc1_entry_eof.rs:29:9:
+accepted "1\n"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    csv_reads_no_line_break_after_the_last_record
+    math_number_reads_no_trailing_whitespace
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf --test orc1_entry_eof`
+rc=101

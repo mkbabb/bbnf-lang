@@ -1,0 +1,5 @@
+# LW3.QX1-C RED r1 at d1ecc8762 2026-11-12T13:00:39Z (tree 7 modified tracked files)
+$ python3 restart/skinny/tranches/sk-v27/evidence/LW3.ORC/orc_check.py qx1 HEAD
+RED: 0 LW3.QX1-C rows (want 1)
+qx1 at HEAD: RED
+rc=1

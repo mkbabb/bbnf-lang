@@ -1,0 +1,5 @@
+# LW3.ORC1-RB MUTANT r2 (rb_json_ws.rs no longer names J-13; tree ca5a5255fbaf7b7a6ae8ef4fa7589be0a0d1b272) at ea8997adb 2026-11-12T16:35:16Z (tree 0 modified tracked files)
+$ python3 restart/skinny/tranches/sk-v27/evidence/LW3.ORC/orc_check.py rows ca5a5255fbaf7b7a6ae8ef4fa7589be0a0d1b272
+RED: J-13: the_ts_package_arm_reads_rfc_8259_whitespace_at_every_place's ignore reason does not name the row
+rows at ca5a5255fbaf7b7a6ae8ef4fa7589be0a0d1b272: RED
+rc=1

@@ -1,0 +1,53 @@
+# LW3.ORC1-WS RED r1 at 05c2de8fa 2026-11-12T13:13:30Z (tree 0 modified tracked files)
+$ cargo test -p bbnf-oracle --test orc1_json_ws
+   Compiling bbnf-oracle v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/oracle)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.51s
+     Running tests/orc1_json_ws.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_json_ws-221e25ce8ae1a6b9)
+
+running 2 tests
+test the_grammar_writes_its_whitespace_with_its_own_ws_rule ... FAILED
+test the_ts_package_arm_reads_rfc_8259_whitespace_at_every_place ... FAILED
+
+failures:
+
+---- the_grammar_writes_its_whitespace_with_its_own_ws_rule stdout ----
+
+thread 'the_grammar_writes_its_whitespace_with_its_own_ws_rule' (49045823) panicked at crates/oracle/tests/orc1_json_ws.rs:56:5:
+grammar/json/json.bbnf still writes ?w, which reads \s (U+000B, U+000C)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- the_ts_package_arm_reads_rfc_8259_whitespace_at_every_place stdout ----
+
+thread 'the_ts_package_arm_reads_rfc_8259_whitespace_at_every_place' (49045824) panicked at crates/oracle/tests/orc1_json_ws.rs:49:5:
+21 of 108 diverge:
+"[\u{c}]": RFC 8259 rejects, arm accept
+"[\u{b}]": RFC 8259 rejects, arm accept
+"[\u{c}1]": RFC 8259 rejects, arm accept
+"[\u{b}1]": RFC 8259 rejects, arm accept
+"[1\u{c}]": RFC 8259 rejects, arm accept
+"[1\u{b}]": RFC 8259 rejects, arm accept
+"[1\u{c},1]": RFC 8259 rejects, arm accept
+"[1\u{b},1]": RFC 8259 rejects, arm accept
+"[1,\u{c}1]": RFC 8259 rejects, arm accept
+"[1,\u{b}1]": RFC 8259 rejects, arm accept
+"{\u{c}}": RFC 8259 rejects, arm accept
+"{\u{b}}": RFC 8259 rejects, arm accept
+"{\u{c}\"k\":1}": RFC 8259 rejects, arm accept
+"{\u{b}\"k\":1}": RFC 8259 rejects, arm accept
+"{\"k\"\u{c}:1}": RFC 8259 rejects, arm accept
+"{\"k\"\u{b}:1}": RFC 8259 rejects, arm accept
+"{\"k\":\u{c}1}": RFC 8259 rejects, arm accept
+"{\"k\":\u{b}1}": RFC 8259 rejects, arm accept
+"{\"k\":1\u{c}}": RFC 8259 rejects, arm accept
+"{\"k\":1\u{b}}": RFC 8259 rejects, arm accept
+"\u{feff}1": RFC 8259 rejects, arm accept
+
+
+failures:
+    the_grammar_writes_its_whitespace_with_its_own_ws_rule
+    the_ts_package_arm_reads_rfc_8259_whitespace_at_every_place
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+error: test failed, to rerun pass `-p bbnf-oracle --test orc1_json_ws`
+rc=101

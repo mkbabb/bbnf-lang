@@ -1,0 +1,7 @@
+# LW3.ORC2 MUTANT r1 (root-math model without RW before number) at ea8997adb 2026-11-12T16:34:48Z (tree 1 modified tracked files)
+$ node restart/skinny/tranches/sk-v27/evidence/LW3.ORC/ws_model.mjs /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/oracle-cache/peggy/0e7f00d12812716b /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/corpus-v3-r1 /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/logs/comp3a-g1-r1.log /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/logs/dump-ebnf.log /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/logs/dump-bnf.log /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/logs/dump-math.log
+model root-ebnf.peggy: root on ebnf: equal on 617 of 617
+model root-bnf.peggy: root on bnf: equal on 616 of 616
+model root-math.peggy: root on math: equal on 617 of 623, differs on math/cases/hand-15.txt math/cases/mut-0017.txt math/cases/mut-0051.txt math/cases/mut-0131.txt math/cases/mut-0173.txt
+model ts-ebnf.peggy: ts-package on ebnf: equal on 617 of 617
+rc=1

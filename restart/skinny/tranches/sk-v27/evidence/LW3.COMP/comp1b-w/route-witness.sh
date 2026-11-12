@@ -17,9 +17,10 @@
 # The optional [mutant] changes the witness:
 #   unadmitted  the ROUTE names LW5.COMP-1-NOPE, which no PLAN or LEDGER row
 #               admits: must be refused.
-#   unnamed     the witness item is `fn calculate_acyclic_deps_scc`'s site
-#               (crates/core/src/graph/scc.rs:210), which no line carrying
-#               LW5.COMP-1-MINE names: must be refused.
+#   unnamed     the witness item is `fn find_aliases`
+#               (crates/core/src/graph/metadata.rs:21), outside the recognizer
+#               directory, which no line carrying LW5.COMP-1-MINE names: must
+#               be refused.
 #   crate-wide  PLAN's A-01 line names only `crates/ir/` instead of the
 #               recognizer directory: must be refused (a row cannot cover a
 #               whole crate).
@@ -44,7 +45,7 @@ kind=struct; name=CommentWsMiner; loc=crates/ir/src/passes/recognizers/comment_w
 case $MUT in
   '') ;;
   unadmitted) unit=LW5.COMP-1-NOPE ;;
-  unnamed) kind=fn; name=calculate_acyclic_deps_scc; loc=crates/core/src/graph/scc.rs:210 ;;
+  unnamed) kind=fn; name=find_aliases; loc=crates/core/src/graph/metadata.rs:21 ;;
   crate-wide)
     python3 -I - "$W/$SK/PLAN.md" <<'EOF'
 import sys

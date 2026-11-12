@@ -36,6 +36,14 @@ pub struct EGraph<N: Language, A: Analysis<N> = NoAnalysis> {
     analysis_pending: Vec<Id>,
     /// Bookkeeping: total number of rebuilds invoked.
     rebuild_count: u32,
+    /// Bookkeeping: total number of outer worklist passes executed inside
+    /// `rebuild` across this e-graph's lifetime. One pass = one drain of the
+    /// `pending` + `analysis_pending` worklists. Congruence/injectivity work
+    /// scheduled from `modify` re-enqueues classes, so this counts the true
+    /// number of fixpoint iterations — the metric an injectivity+lattice
+    /// convergence proof needs, distinct from `rebuild_count` (calls to
+    /// `rebuild`).
+    rebuild_pass_count: u64,
     /// Bookkeeping: total number of `union` calls that actually merged
     /// two distinct classes (no-op unions on equal classes are not
     /// counted). Used by the scheduler's saturation detection — a
@@ -60,6 +68,7 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
             pending: Vec::new(),
             analysis_pending: Vec::new(),
             rebuild_count: 0,
+            rebuild_pass_count: 0,
             union_count: 0,
         }
     }
@@ -83,6 +92,7 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
             pending: Vec::new(),
             analysis_pending: Vec::new(),
             rebuild_count: 0,
+            rebuild_pass_count: 0,
             union_count: 0,
         }
     }
@@ -101,6 +111,15 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
     /// Number of rebuilds performed.
     pub fn rebuild_count(&self) -> u32 {
         self.rebuild_count
+    }
+
+    /// Number of outer worklist passes executed inside `rebuild` over this
+    /// e-graph's lifetime. Each pass drains the `pending` + `analysis_pending`
+    /// worklists once; `modify`-scheduled unions re-enqueue classes, so this
+    /// is the count of true fixpoint iterations (injectivity + lattice join),
+    /// as opposed to `rebuild_count` which counts `rebuild` invocations.
+    pub fn rebuild_pass_count(&self) -> u64 {
+        self.rebuild_pass_count
     }
 
     /// Number of `union` calls that actually merged two distinct
@@ -232,10 +251,16 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
         let dst_class = &mut self.classes[dst.as_usize()];
         dst_class.nodes.extend(src_class.nodes);
         dst_class.parents.extend(src_class.parents);
-        let changed = A::merge(&mut dst_class.data, src_class.data);
-        if changed {
-            self.analysis_pending.push(dst);
-        }
+        // Join analysis data. The changed-bit is not consulted for
+        // scheduling: `modify` is enqueued unconditionally below so it can
+        // react to the merged *node set* (congruence / injectivity), which is
+        // independent of whether the lattice `data` itself moved. When two
+        // classes holding same-constructor nodes merge, the injectivity hook
+        // must fire even though neither class's `data` changed. For analyses
+        // whose `modify` is the default no-op this is free — the class is
+        // popped and ignored.
+        let _ = A::merge(&mut dst_class.data, src_class.data);
+        self.analysis_pending.push(dst);
         // Src's parent edges may now have non-canonical children; schedule
         // rebuild.
         self.pending.push(dst);
@@ -250,6 +275,7 @@ impl<N: Language, A: Analysis<N>> EGraph<N, A> {
     /// parent pointers are stale until rebuild completes.
     pub fn rebuild(&mut self) {
         while !self.pending.is_empty() || !self.analysis_pending.is_empty() {
+            self.rebuild_pass_count += 1;
             while let Some(class_id) = self.pending.pop() {
                 let canonical = self.unionfind.find(class_id);
                 // Re-canonicalize every node in this class and re-memoize.

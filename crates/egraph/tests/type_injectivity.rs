@@ -1,0 +1,566 @@
+//! Prototype 1D — the injectivity propagator as unification, plus recursive
+//! (μ-type) sum extraction, on the shipped e-graph engine.
+//!
+//! # Question
+//!
+//! 1D's only net-new primitive is an *injectivity propagator*: when an
+//! e-class is known to hold two nodes of the **same constructor and same
+//! arity**, `C(x₁..xₙ) = C(y₁..yₙ)` forces `xᵢ = yᵢ` pointwise. This is
+//! exactly first-order unification, expressed as e-class union. The probe
+//! proves:
+//!
+//!  1. the propagator, implemented in `Analysis::modify`, is genuine
+//!     unification (positional child-union, driven to a fixpoint by the
+//!     existing `pending`/`rebuild` worklist);
+//!  2. a recursive `value = object|array|string|number|bool|null` type
+//!     (object/array cyclically referencing `value`) saturates to exactly
+//!     six canonical sum arms and extracts to a *finite* representative with
+//!     a back-edge (the extractor's visited-set terminates the cycle);
+//!  3. extraction is deterministic (order-independent and idempotent);
+//!  4. a `WidthBound` lattice on `Int` leaves joins monotonically and the
+//!     combined injectivity + width fixpoint converges without oscillation
+//!     inside a bounded number of rebuild passes.
+//!
+//! # Encoding notes
+//!
+//! The brief's `Row{fields, tail}` is stored as a single contiguous
+//! `Box<[Id]>` (row tail = last element, preceding = field value-types)
+//! because `Language::children()` must return one `&[Id]`; the derive
+//! rejects a variant with two separate `Id`-bearing fields. All five
+//! recursive constructors are therefore single-tagged-field variants, so
+//! `#[derive(Language)]` handles the whole enum.
+//!
+//! `Var` is the μ-binder recursion variable used to tie the cyclic knot; the
+//! cost model prices it out so extraction always prefers the unrolled sum.
+
+use egraph::{
+    Analysis, BackoffScheduler, CostModel, EGraph, Extractor, Id, Language, Rewrite, RewriteFn,
+    Scheduler,
+};
+use egraph_derive::Language;
+
+// ── The type language ───────────────────────────────────────────────────────
+
+/// Base (childless) type constructors. `Int` carries the observed literal so
+/// the analysis can derive a `WidthBound`.
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+enum Base {
+    Null,
+    Bool,
+    Str,
+    Int(i64),
+}
+
+/// A structural type e-node. Every recursive field is a single tagged field,
+/// so `#[derive(Language)]` projects it directly to `children() -> &[Id]`.
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Language)]
+enum TypeENode {
+    /// Base/scalar leaf.
+    Leaf(Base),
+    /// Anonymous union (associative-commutative): the JSON `value` sum.
+    Sum(Box<[Id]>),
+    /// Homogeneous array element type — the JSON `array`.
+    List(Id),
+    /// Function type `dom -> range`; injective in both positions.
+    Arrow([Id; 2]),
+    /// Record — the JSON `object`. Contiguous `[field_types.., tail]`; the
+    /// last element is the row-polymorphism tail (here, the recursion var).
+    Row(Box<[Id]>),
+    /// μ-binder recursion variable placeholder used only to tie cyclic knots.
+    Var,
+}
+
+/// Shallow structural sort key: distinct per top constructor so the six JSON
+/// arms have a total, Id-independent canonical order.
+fn shallow_key(node: &TypeENode) -> u8 {
+    match node {
+        TypeENode::Leaf(Base::Null) => 0,
+        TypeENode::Leaf(Base::Bool) => 1,
+        TypeENode::Leaf(Base::Int(_)) => 2,
+        TypeENode::Leaf(Base::Str) => 3,
+        TypeENode::List(_) => 4,
+        TypeENode::Row(_) => 5,
+        TypeENode::Sum(_) => 6,
+        TypeENode::Var => 7,
+        TypeENode::Arrow(_) => 8,
+    }
+}
+
+/// The key of an e-class: min shallow key over its nodes (deterministic).
+fn class_key(egraph: &EGraph<TypeENode, TypeAnalysis>, id: Id) -> u8 {
+    egraph
+        .class(id)
+        .iter()
+        .map(shallow_key)
+        .min()
+        .unwrap_or(u8::MAX)
+}
+
+// ── The width lattice + injectivity analysis ────────────────────────────────
+
+/// Observed literal range for an `Int` leaf. Join is `[min↓, max↑]`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct WidthBound {
+    min: i64,
+    max: i64,
+}
+
+/// The smallest unsigned width that holds a bound (non-negative bounds only,
+/// which is all this probe exercises).
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum WidthTy {
+    U8,
+    U16,
+    U32,
+    U64,
+}
+
+fn width_ty(b: WidthBound) -> WidthTy {
+    let hi = b.max.max(-b.min); // magnitude bound
+    if hi <= u8::MAX as i64 {
+        WidthTy::U8
+    } else if hi <= u16::MAX as i64 {
+        WidthTy::U16
+    } else if hi <= u32::MAX as i64 {
+        WidthTy::U32
+    } else {
+        WidthTy::U64
+    }
+}
+
+/// Per-class analysis: an optional width bound (bottom = `None`) plus the
+/// injectivity propagator in `modify`.
+struct TypeAnalysis;
+
+impl Analysis<TypeENode> for TypeAnalysis {
+    type Data = Option<WidthBound>;
+
+    fn make(_egraph: &EGraph<TypeENode, Self>, node: &TypeENode) -> Self::Data {
+        match node {
+            TypeENode::Leaf(Base::Int(v)) => Some(WidthBound { min: *v, max: *v }),
+            _ => None,
+        }
+    }
+
+    fn merge(a: &mut Self::Data, b: Self::Data) -> bool {
+        match (*a, b) {
+            (_, None) => false,
+            (None, Some(y)) => {
+                *a = Some(y);
+                true
+            }
+            (Some(x), Some(y)) => {
+                let joined = WidthBound {
+                    min: x.min.min(y.min),
+                    max: x.max.max(y.max),
+                };
+                if joined != x {
+                    *a = Some(joined);
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+    }
+
+    /// The injectivity propagator = unification. When a class holds two nodes
+    /// of the same constructor and arity, union their positional children
+    /// pairwise. Each `union` re-enqueues the merged class through the
+    /// existing `pending`/`analysis_pending` fixpoint, so the propagator runs
+    /// to convergence with no bespoke worklist.
+    fn modify(egraph: &mut EGraph<TypeENode, Self>, id: Id) {
+        let canonical = egraph.find(id);
+        // Snapshot node shapes so the immutable borrow is released before we
+        // start unioning.
+        let nodes: Vec<TypeENode> = egraph.class(canonical).iter().cloned().collect();
+        for i in 0..nodes.len() {
+            for j in (i + 1)..nodes.len() {
+                let a = &nodes[i];
+                let b = &nodes[j];
+                if std::mem::discriminant(a) != std::mem::discriminant(b) {
+                    continue;
+                }
+                let (ac, bc) = (a.children(), b.children());
+                if ac.len() != bc.len() {
+                    continue;
+                }
+                for k in 0..ac.len() {
+                    egraph.union(ac[k], bc[k]);
+                }
+            }
+        }
+    }
+}
+
+// ── Cost model ──────────────────────────────────────────────────────────────
+
+/// Prices the recursion variable out of every extraction and bounds the
+/// cyclic cost by charging `List`/`Row` a constant (pointer-like) cost rather
+/// than recursing into the — potentially cyclic — element type. `Sum` sums its
+/// arms so extraction prefers the fewest (deduplicated) arms.
+struct TypeCost;
+
+impl CostModel<TypeENode> for TypeCost {
+    type Cost = usize;
+
+    fn cost(&self, node: &TypeENode, child_cost: impl Fn(Id) -> usize) -> usize {
+        match node {
+            TypeENode::Var => 1_000_000,
+            TypeENode::Leaf(_) => 1,
+            TypeENode::List(_) => 2,
+            TypeENode::Row(_) => 2,
+            TypeENode::Arrow([d, r]) => 1 + child_cost(*d) + child_cost(*r),
+            TypeENode::Sum(arms) => {
+                let mut s = 1usize;
+                for a in arms.iter() {
+                    s = s.saturating_add(child_cost(*a));
+                }
+                s
+            }
+        }
+    }
+}
+
+// ── AC sum normalization: flatten + dedup + sort, confluent ─────────────────
+
+/// Fully normalize a sum's arms: flatten one level of nested `Sum`s, dedup by
+/// canonical class, and sort by shallow structural key. All three rewrites
+/// below emit *this* canonical arm list, so they are confluent — only one
+/// six-arm representative can ever exist, which keeps the injectivity
+/// propagator sound on the AC `Sum` (there is never a second, differently
+/// ordered same-arity sum in the class to falsely unify against).
+fn normalize_arms(egraph: &EGraph<TypeENode, TypeAnalysis>, arms: &[Id]) -> Vec<Id> {
+    // Flatten one level: splice the children of any arm whose class holds a Sum.
+    let mut flat: Vec<Id> = Vec::new();
+    for &arm in arms {
+        let canon = egraph.find_ref(arm);
+        let nested: Option<Vec<Id>> = egraph.class(canon).iter().find_map(|n| match n {
+            TypeENode::Sum(cs) => Some(cs.iter().map(|c| egraph.find_ref(*c)).collect()),
+            _ => None,
+        });
+        match nested {
+            Some(cs) => flat.extend(cs),
+            None => flat.push(canon),
+        }
+    }
+    // Dedup by canonical id (preserve first occurrence).
+    let mut deduped: Vec<Id> = Vec::new();
+    for id in flat {
+        if !deduped.contains(&id) {
+            deduped.push(id);
+        }
+    }
+    // Sort by (shallow key, id) — keys are distinct across the six arms, so the
+    // id tiebreak never decides order: canonicalization is Id-independent.
+    deduped.sort_by_key(|&id| (class_key(egraph, id), id.0));
+    deduped
+}
+
+/// Is `arms` already a normalized (flat, deduped, sorted) canonical form?
+fn is_canonical(egraph: &EGraph<TypeENode, TypeAnalysis>, arms: &[Id]) -> bool {
+    let canon = normalize_arms(egraph, arms);
+    canon.len() == arms.len()
+        && arms
+            .iter()
+            .zip(&canon)
+            .all(|(a, c)| egraph.find_ref(*a) == *c)
+}
+
+/// One rewrite family, three match conditions (nesting / duplication /
+/// disorder). Each emits the shared canonical arm list.
+struct SumNormalize {
+    tag: &'static str,
+}
+
+struct SumMatch {
+    canonical: Box<[Id]>,
+}
+
+impl Rewrite<TypeENode, TypeAnalysis> for SumNormalize {
+    type Match = SumMatch;
+
+    fn name(&self) -> &str {
+        self.tag
+    }
+
+    fn search(&self, egraph: &EGraph<TypeENode, TypeAnalysis>) -> Vec<(Id, Self::Match)> {
+        let mut out = Vec::new();
+        for class in egraph.classes() {
+            for node in class.iter() {
+                let TypeENode::Sum(arms) = node else {
+                    continue;
+                };
+                if is_canonical(egraph, arms) {
+                    continue;
+                }
+                let canonical = normalize_arms(egraph, arms).into_boxed_slice();
+                // Only rewrite when normalization actually changes the arm set,
+                // so the canonical form is a fixpoint (no oscillation).
+                out.push((class.id, SumMatch { canonical }));
+                break;
+            }
+        }
+        out
+    }
+
+    fn apply(&self, egraph: &mut EGraph<TypeENode, TypeAnalysis>, class_id: Id, m: Self::Match) {
+        let new = egraph.add(TypeENode::Sum(m.canonical));
+        egraph.union(class_id, new);
+    }
+}
+
+// ── Canonical structural serialization (Id-independent) ─────────────────────
+
+/// Serialize the extracted tree rooted at `root` to a canonical S-expression.
+/// Cyclic back-edges become `#n` where `n` is the DFS discovery index of the
+/// target class — structure-relative, so two structurally identical graphs
+/// (even with different raw Ids) serialize byte-for-byte identically.
+fn canonical_sexpr<A: Analysis<TypeENode>, C: CostModel<TypeENode>>(
+    ext: &Extractor<'_, TypeENode, A, C>,
+    egraph: &EGraph<TypeENode, A>,
+    root: Id,
+) -> String {
+    fn go<A: Analysis<TypeENode>, C: CostModel<TypeENode>>(
+        ext: &Extractor<'_, TypeENode, A, C>,
+        egraph: &EGraph<TypeENode, A>,
+        id: Id,
+        order: &mut Vec<Id>,
+        out: &mut String,
+    ) {
+        let canon = egraph.find_ref(id);
+        if let Some(pos) = order.iter().position(|&c| c == canon) {
+            out.push_str(&format!("#{}", pos));
+            return;
+        }
+        let idx = order.len();
+        order.push(canon);
+        let node = ext.best_node(canon).expect("extracted node");
+        match node {
+            TypeENode::Leaf(b) => out.push_str(&format!("@{}:{:?}", idx, b)),
+            TypeENode::Var => out.push_str(&format!("@{}:Var", idx)),
+            TypeENode::List(c) => {
+                out.push_str(&format!("@{}:List(", idx));
+                go(ext, egraph, *c, order, out);
+                out.push(')');
+            }
+            TypeENode::Row(cs) => {
+                out.push_str(&format!("@{}:Row(", idx));
+                for (i, c) in cs.iter().enumerate() {
+                    if i > 0 {
+                        out.push(',');
+                    }
+                    go(ext, egraph, *c, order, out);
+                }
+                out.push(')');
+            }
+            TypeENode::Arrow([d, r]) => {
+                out.push_str(&format!("@{}:Arrow(", idx));
+                go(ext, egraph, *d, order, out);
+                out.push(',');
+                go(ext, egraph, *r, order, out);
+                out.push(')');
+            }
+            TypeENode::Sum(arms) => {
+                out.push_str(&format!("@{}:Sum(", idx));
+                for (i, a) in arms.iter().enumerate() {
+                    if i > 0 {
+                        out.push('|');
+                    }
+                    go(ext, egraph, *a, order, out);
+                }
+                out.push(')');
+            }
+        }
+    }
+    let mut order = Vec::new();
+    let mut out = String::new();
+    go(ext, egraph, root, &mut order, &mut out);
+    out
+}
+
+// ── Cyclic value-type builder ───────────────────────────────────────────────
+
+/// Build the recursive `value` type into `g`, using `arm_order` to permute the
+/// *source* sum arms (to prove order-independent normalization). Returns the
+/// class id of `value`.
+fn build_value(g: &mut EGraph<TypeENode, TypeAnalysis>, arm_order: &[usize]) -> Id {
+    let null = g.add(TypeENode::Leaf(Base::Null));
+    let boolean = g.add(TypeENode::Leaf(Base::Bool));
+    let number = g.add(TypeENode::Leaf(Base::Int(0)));
+    let string = g.add(TypeENode::Leaf(Base::Str));
+    // A nested sub-sum to exercise flatten, plus a placeholder to tie the knot.
+    let nested = g.add(TypeENode::Sum(Box::new([null, boolean])));
+    let placeholder = g.add(TypeENode::Var);
+    // object/array reference the placeholder (≡ value after the closing union).
+    let array = g.add(TypeENode::List(placeholder));
+    let object = g.add(TypeENode::Row(Box::new([placeholder])));
+    // The source arms, deliberately messy: nested sub-sum + a duplicate number.
+    let base_arms = [nested, number, string, array, object, null];
+    let mut arms: Vec<Id> = arm_order.iter().map(|&i| base_arms[i]).collect();
+    arms.push(number); // duplicate to exercise absorb
+    let value = g.add(TypeENode::Sum(arms.into_boxed_slice()));
+    // Tie the cyclic knot: placeholder ≡ value.
+    g.union(placeholder, value);
+    g.rebuild();
+    value
+}
+
+fn saturate_sums(g: &mut EGraph<TypeENode, TypeAnalysis>) {
+    let flatten = SumNormalize { tag: "sum-flatten" };
+    let sort = SumNormalize { tag: "sum-sort" };
+    let absorb = SumNormalize { tag: "sum-absorb" };
+    let rules: Vec<&dyn RewriteFn<TypeENode, TypeAnalysis>> = vec![&flatten, &sort, &absorb];
+    let scheduler = BackoffScheduler::default();
+    let _ = scheduler.run(g, &rules);
+}
+
+// ── (a) injectivity propagator = unification ────────────────────────────────
+
+#[test]
+fn injectivity_unifies_positional_children() {
+    let mut g: EGraph<TypeENode, TypeAnalysis> = EGraph::new();
+    // Sum([a,b]) and Sum([c,d]) unioned into one class → a≡c, b≡d.
+    let a = g.add(TypeENode::Leaf(Base::Null));
+    let b = g.add(TypeENode::Leaf(Base::Bool));
+    let c = g.add(TypeENode::Leaf(Base::Str));
+    let d = g.add(TypeENode::Leaf(Base::Int(1)));
+    let s1 = g.add(TypeENode::Sum(Box::new([a, b])));
+    let s2 = g.add(TypeENode::Sum(Box::new([c, d])));
+    g.union(s1, s2);
+    g.rebuild();
+    assert_eq!(g.find(a), g.find(c), "Sum position 0 unified");
+    assert_eq!(g.find(b), g.find(d), "Sum position 1 unified");
+
+    // Arrow domains + ranges likewise.
+    let p = g.add(TypeENode::Leaf(Base::Null));
+    let q = g.add(TypeENode::Leaf(Base::Bool));
+    let r = g.add(TypeENode::Leaf(Base::Str));
+    let s = g.add(TypeENode::Leaf(Base::Int(9)));
+    let f1 = g.add(TypeENode::Arrow([p, q]));
+    let f2 = g.add(TypeENode::Arrow([r, s]));
+    g.union(f1, f2);
+    g.rebuild();
+    assert_eq!(g.find(p), g.find(r), "Arrow domain unified");
+    assert_eq!(g.find(q), g.find(s), "Arrow range unified");
+}
+
+// ── (b) recursive extraction: six arms, finite representative, back-edge ────
+
+#[test]
+fn recursive_value_extracts_six_arms_finitely() {
+    let mut g: EGraph<TypeENode, TypeAnalysis> = EGraph::new();
+    let value = build_value(&mut g, &[0, 1, 2, 3, 4, 5]);
+    saturate_sums(&mut g);
+
+    let ext = Extractor::new(&g, &TypeCost);
+    let best = ext.best_node(value).expect("value has a best node");
+    let TypeENode::Sum(arms) = best else {
+        panic!("value should extract to a Sum, got {:?}", best);
+    };
+    assert_eq!(arms.len(), 6, "exactly six canonical arms, got {:?}", arms);
+
+    // The six arms canonicalize to {null, bool, number, string, array, object}.
+    let mut keys: Vec<u8> = arms.iter().map(|&a| class_key(&g, a)).collect();
+    keys.sort_unstable();
+    assert_eq!(keys, vec![0, 1, 2, 3, 4, 5], "one arm per JSON constructor");
+
+    // Finite representative with a back-edge: the tree terminates despite the
+    // object/array → value cycle, and the recursion variable never appears.
+    let tree = ext.extract_tree(value).expect("finite extraction");
+    assert!(
+        tree.len() <= g.total_classes(),
+        "finite: {} nodes over {} classes",
+        tree.len(),
+        g.total_classes()
+    );
+    assert!(
+        !tree.iter().any(|(_, n)| matches!(n, TypeENode::Var)),
+        "recursion variable priced out of extraction"
+    );
+    // A genuine back-edge exists: some extracted List/Row child points at a
+    // class already in the extracted set (the cycle closes onto `value`).
+    let extracted: std::collections::HashSet<Id> =
+        tree.iter().map(|(id, _)| g.find_ref(*id)).collect();
+    let has_back_edge = tree.iter().any(|(_, n)| match n {
+        TypeENode::List(c) => extracted.contains(&g.find_ref(*c)),
+        TypeENode::Row(cs) => cs.iter().any(|c| extracted.contains(&g.find_ref(*c))),
+        _ => false,
+    });
+    assert!(has_back_edge, "cyclic back-edge present in finite tree");
+}
+
+// ── (c) order-independence + (d) idempotence of extraction ──────────────────
+
+#[test]
+fn extraction_is_order_independent_and_idempotent() {
+    // Two different source orderings of the six arms.
+    let mut g1: EGraph<TypeENode, TypeAnalysis> = EGraph::new();
+    let v1 = build_value(&mut g1, &[0, 1, 2, 3, 4, 5]);
+    saturate_sums(&mut g1);
+    let e1 = Extractor::new(&g1, &TypeCost);
+    let s1 = canonical_sexpr(&e1, &g1, v1);
+
+    let mut g2: EGraph<TypeENode, TypeAnalysis> = EGraph::new();
+    let v2 = build_value(&mut g2, &[4, 0, 5, 2, 3, 1]);
+    saturate_sums(&mut g2);
+    let e2 = Extractor::new(&g2, &TypeCost);
+    let s2 = canonical_sexpr(&e2, &g2, v2);
+
+    // (c) byte-identical across source orderings. Both extract to
+    // `@0:Sum(@1:Null|@2:Bool|@3:Int(0)|@4:Str|@5:List(#0)|@6:Row(#0))` — six
+    // arms with List/Row closing back onto #0 (the value class).
+    assert_eq!(s1, s2, "two source orderings extract byte-identically");
+
+    // (d) idempotent: re-extract the same graph → byte-identical.
+    let e1b = Extractor::new(&g1, &TypeCost);
+    let s1b = canonical_sexpr(&e1b, &g1, v1);
+    assert_eq!(s1, s1b, "re-extraction is byte-identical");
+}
+
+// ── (e) width join + injectivity fixpoint converges, no oscillation ─────────
+
+#[test]
+fn width_join_and_injectivity_converge_bounded() {
+    let mut g: EGraph<TypeENode, TypeAnalysis> = EGraph::new();
+    let dom = g.add(TypeENode::Leaf(Base::Str));
+    let w200 = g.add(TypeENode::Leaf(Base::Int(200)));
+    let w70k = g.add(TypeENode::Leaf(Base::Int(70000)));
+    // Two projections dom -> 200 and dom -> 70000.
+    let p1 = g.add(TypeENode::Arrow([dom, w200]));
+    let p2 = g.add(TypeENode::Arrow([dom, w70k]));
+
+    // Sanity: before joining, 200 fits u8, 70000 needs u32.
+    assert_eq!(width_ty(g.class(w200).data.unwrap()), WidthTy::U8);
+    assert_eq!(width_ty(g.class(w70k).data.unwrap()), WidthTy::U32);
+
+    let passes_before = g.rebuild_pass_count();
+    g.union(p1, p2);
+    g.rebuild();
+    let passes = g.rebuild_pass_count() - passes_before;
+
+    // Arrow injectivity unified the range positions → widths joined.
+    assert_eq!(g.find(w200), g.find(w70k), "Arrow range positions unified");
+    let joined = g.class(w200).data.expect("joined width bound");
+    assert_eq!(joined, WidthBound { min: 200, max: 70000 });
+    assert_eq!(width_ty(joined), WidthTy::U32, "joined width is u32");
+
+    // Convergence within 2×(class count) rebuild passes.
+    let bound = 2 * g.total_classes() as u64;
+    assert!(
+        passes <= bound,
+        "converged in {} passes, bound 2×{} = {}",
+        passes,
+        g.total_classes(),
+        bound
+    );
+
+    // No oscillation: further rebuilds do no new work and the width is stable.
+    let unions_after = g.union_count();
+    let width_after = g.class(w200).data;
+    for _ in 0..4 {
+        g.rebuild();
+        assert_eq!(g.union_count(), unions_after, "no further unions (stable)");
+        assert_eq!(g.class(w200).data, width_after, "width bound does not oscillate");
+    }
+}

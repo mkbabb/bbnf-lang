@@ -71895,7 +71895,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn number_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn number_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -71903,7 +71903,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__number_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __percentageUnit_prettify<'a>(
@@ -71921,7 +71921,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn percentageUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn percentageUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -71929,7 +71929,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__percentageUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __namedColor_prettify<'a>(
@@ -76387,7 +76387,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn namedColor_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn namedColor_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -76395,7 +76395,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__namedColor_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __hex_prettify<'a>(
@@ -76458,7 +76458,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn hex_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn hex_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -76466,7 +76466,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__hex_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __colorSpace_prettify<'a>(
@@ -76737,7 +76737,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn colorSpace_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn colorSpace_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -76745,7 +76745,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__colorSpace_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __string_prettify<'a>(
@@ -76869,7 +76869,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn string_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn string_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -76877,7 +76877,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__string_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mathProductOp_prettify<'a>(
@@ -76919,7 +76919,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mathProductOp_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mathProductOp_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -76927,7 +76927,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mathProductOp_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mathSumOp_prettify<'a>(
@@ -76969,7 +76969,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mathSumOp_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mathSumOp_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -76977,7 +76977,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mathSumOp_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __absoluteLengthUnit_prettify<'a>(
@@ -77174,10 +77174,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn absoluteLengthUnit_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn absoluteLengthUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -77185,7 +77182,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__absoluteLengthUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __fontLengthUnit_prettify<'a>(
@@ -77549,7 +77546,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn fontLengthUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn fontLengthUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -77557,7 +77554,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__fontLengthUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __viewportLengthUnit_prettify<'a>(
@@ -78081,10 +78078,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn viewportLengthUnit_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn viewportLengthUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -78092,7 +78086,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__viewportLengthUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __containerLengthUnit_prettify<'a>(
@@ -78227,10 +78221,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn containerLengthUnit_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn containerLengthUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -78238,7 +78229,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__containerLengthUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __angleUnit_prettify<'a>(
@@ -78324,7 +78315,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn angleUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn angleUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -78332,7 +78323,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__angleUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __timeUnit_prettify<'a>(
@@ -78380,7 +78371,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn timeUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn timeUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -78388,7 +78379,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__timeUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __frequencyUnit_prettify<'a>(
@@ -78442,7 +78433,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn frequencyUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn frequencyUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -78450,7 +78441,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__frequencyUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __resolutionUnit_prettify<'a>(
@@ -78557,7 +78548,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn resolutionUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn resolutionUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -78565,7 +78556,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__resolutionUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __flexUnit_prettify<'a>(
@@ -78589,7 +78580,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn flexUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn flexUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -78597,7 +78588,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__flexUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __displayKeyword_prettify<'a>(
@@ -79104,7 +79095,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn displayKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn displayKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -79112,7 +79103,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__displayKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __positionKeyword_prettify<'a>(
@@ -79259,7 +79250,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn positionKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn positionKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -79267,7 +79258,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__positionKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __overflowKeyword_prettify<'a>(
@@ -79369,7 +79360,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn overflowKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn overflowKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -79377,7 +79368,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__overflowKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __visibilityKeyword_prettify<'a>(
@@ -79447,7 +79438,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn visibilityKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn visibilityKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -79455,7 +79446,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__visibilityKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __flexDirKeyword_prettify<'a>(
@@ -79621,7 +79612,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn flexDirKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn flexDirKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -79629,7 +79620,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__flexDirKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __flexWrapKeyword_prettify<'a>(
@@ -79734,7 +79725,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn flexWrapKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn flexWrapKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -79742,7 +79733,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__flexWrapKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __alignKeyword_prettify<'a>(
@@ -80133,7 +80124,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn alignKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn alignKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -80141,7 +80132,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__alignKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __borderStyleKeyword_prettify<'a>(
@@ -80369,10 +80360,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn borderStyleKeyword_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn borderStyleKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -80380,7 +80368,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__borderStyleKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __borderWidthKeyword_prettify<'a>(
@@ -80473,10 +80461,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn borderWidthKeyword_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn borderWidthKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -80484,7 +80469,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__borderWidthKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __fontWeightKeyword_prettify<'a>(
@@ -80604,7 +80589,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn fontWeightKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn fontWeightKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -80612,7 +80597,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__fontWeightKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __textAlignKeyword_prettify<'a>(
@@ -80730,7 +80715,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn textAlignKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn textAlignKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -80738,7 +80723,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__textAlignKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __boxSizingKeyword_prettify<'a>(
@@ -80792,7 +80777,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn boxSizingKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn boxSizingKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -80800,7 +80785,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__boxSizingKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __cursorKeyword_prettify<'a>(
@@ -81162,7 +81147,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn cursorKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn cursorKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81170,7 +81155,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__cursorKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __globalKeyword_prettify<'a>(
@@ -81341,7 +81326,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn globalKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn globalKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81349,7 +81334,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__globalKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaType_prettify<'a>(
@@ -81458,7 +81443,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaType_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaType_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81466,7 +81451,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaType_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaQualifier_prettify<'a>(
@@ -81520,7 +81505,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaQualifier_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaQualifier_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81528,7 +81513,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaQualifier_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ident_prettify<'a>(
@@ -81591,7 +81576,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn ident_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ident_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81599,7 +81584,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__ident_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __importantSuffix_prettify<'a>(
@@ -81658,7 +81643,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn importantSuffix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn importantSuffix_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81666,7 +81651,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__importantSuffix_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __cssString_prettify<'a>(
@@ -81790,7 +81775,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn cssString_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn cssString_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81798,7 +81783,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__cssString_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __dashIdent_prettify<'a>(
@@ -81861,7 +81846,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn dashIdent_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn dashIdent_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -81869,7 +81854,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__dashIdent_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __colorProps_prettify<'a>(
@@ -82221,7 +82206,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn colorProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn colorProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -82229,7 +82214,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__colorProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __sizeProps_prettify<'a>(
@@ -82560,7 +82545,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn sizeProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn sizeProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -82568,7 +82553,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__sizeProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __spacingProps_prettify<'a>(
@@ -83172,7 +83157,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn spacingProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn spacingProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -83180,7 +83165,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__spacingProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __fontProps_prettify<'a>(
@@ -83909,7 +83894,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn fontProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn fontProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -83917,7 +83902,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__fontProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __bgProps_prettify<'a>(
@@ -84198,7 +84183,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn bgProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn bgProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -84206,7 +84191,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__bgProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __transformProps_prettify<'a>(
@@ -84549,7 +84534,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn transformProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn transformProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -84557,7 +84542,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__transformProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __transitionProps_prettify<'a>(
@@ -85165,7 +85150,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn transitionProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn transitionProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -85173,7 +85158,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__transitionProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __listTableProps_prettify<'a>(
@@ -85568,7 +85553,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn listTableProps_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn listTableProps_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -85576,7 +85561,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__listTableProps_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __hash_prettify<'a>(
@@ -85676,7 +85661,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn hash_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn hash_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -85684,7 +85669,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__hash_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __selectorIdent_prettify<'a>(
@@ -85830,7 +85815,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn selectorIdent_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn selectorIdent_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -85838,7 +85823,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__selectorIdent_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __attrMatcher_prettify<'a>(
@@ -85950,7 +85935,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn attrMatcher_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn attrMatcher_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -85958,7 +85943,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__attrMatcher_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __anPlusB_prettify<'a>(
@@ -86209,7 +86194,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn anPlusB_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn anPlusB_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -86217,7 +86202,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__anPlusB_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __combinator_prettify<'a>(
@@ -86419,7 +86404,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn combinator_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn combinator_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -86427,7 +86412,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__combinator_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __nthFunctionName_prettify<'a>(
@@ -86614,7 +86599,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn nthFunctionName_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn nthFunctionName_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -86622,7 +86607,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__nthFunctionName_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __dirKeyword_prettify<'a>(
@@ -86676,7 +86661,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn dirKeyword_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn dirKeyword_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -86684,7 +86669,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__dirKeyword_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __keyframeStop_prettify<'a>(
@@ -86795,7 +86780,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn keyframeStop_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn keyframeStop_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -86803,7 +86788,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__keyframeStop_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __percentage_prettify<'a>(
@@ -86833,7 +86818,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn percentage_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn percentage_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -86841,7 +86826,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__percentage_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __funcBody_prettify<'a>(
@@ -86967,7 +86952,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn funcBody_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn funcBody_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -86975,7 +86960,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__funcBody_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __urlFunction_prettify<'a>(
@@ -87089,7 +87074,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn urlFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn urlFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87097,7 +87082,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__urlFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __relativeLengthUnit_prettify<'a>(
@@ -87163,10 +87148,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn relativeLengthUnit_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn relativeLengthUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87174,7 +87156,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__relativeLengthUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __angle_prettify<'a>(
@@ -87200,7 +87182,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn angle_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn angle_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87208,7 +87190,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__angle_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __time_prettify<'a>(
@@ -87234,7 +87216,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn time_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn time_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87242,7 +87224,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__time_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __frequency_prettify<'a>(
@@ -87268,7 +87250,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn frequency_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn frequency_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87276,7 +87258,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__frequency_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __resolution_prettify<'a>(
@@ -87302,7 +87284,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn resolution_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn resolution_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87310,7 +87292,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__resolution_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __flex_prettify<'a>(
@@ -87346,7 +87328,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn flex_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn flex_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87354,7 +87336,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__flex_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaFeature_prettify<'a>(
@@ -87556,7 +87538,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaFeature_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaFeature_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87564,7 +87546,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaFeature_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __customPropertyDecl_prettify<'a>(
@@ -87860,10 +87842,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn customPropertyDecl_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn customPropertyDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -87871,7 +87850,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__customPropertyDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __genericDecl_prettify<'a>(
@@ -88097,7 +88076,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn genericDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn genericDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -88105,7 +88084,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__genericDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __nsPrefix_prettify<'a>(
@@ -88289,7 +88268,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn nsPrefix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn nsPrefix_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -88297,7 +88276,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__nsPrefix_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __classSelector_prettify<'a>(
@@ -88452,7 +88431,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn classSelector_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn classSelector_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -88460,7 +88439,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__classSelector_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __partPseudo_prettify<'a>(
@@ -88812,7 +88791,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn partPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn partPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -88820,7 +88799,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__partPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __highlightPseudo_prettify<'a>(
@@ -89000,7 +88979,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn highlightPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn highlightPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89008,7 +88987,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__highlightPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __simplePseudoElement_prettify<'a>(
@@ -89169,10 +89148,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn simplePseudoElement_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn simplePseudoElement_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89180,7 +89156,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__simplePseudoElement_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __langPseudo_prettify<'a>(
@@ -89532,7 +89508,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn langPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn langPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89540,7 +89516,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__langPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __simplePseudoClass_prettify<'a>(
@@ -89695,7 +89671,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn simplePseudoClass_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn simplePseudoClass_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89703,7 +89679,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__simplePseudoClass_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __dirPseudo_prettify<'a>(
@@ -89751,7 +89727,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn dirPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn dirPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89759,7 +89735,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__dirPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __keyframeSel_prettify<'a>(
@@ -89841,7 +89817,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn keyframeSel_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn keyframeSel_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89849,7 +89825,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__keyframeSel_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __genericFunction_prettify<'a>(
@@ -89927,7 +89903,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn genericFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn genericFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89935,7 +89911,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__genericFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaNot_prettify<'a>(
@@ -89974,7 +89950,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaNot_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaNot_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -89982,7 +89958,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaNot_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaAnd_prettify<'a>(
@@ -90059,7 +90035,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaAnd_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaAnd_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -90067,7 +90043,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaAnd_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaOr_prettify<'a>(
@@ -90144,7 +90120,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaOr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaOr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -90152,7 +90128,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaOr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaCondition_prettify<'a>(
@@ -90236,7 +90212,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaCondition_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaCondition_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -90244,7 +90220,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaCondition_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaInParens_prettify<'a>(
@@ -90332,7 +90308,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaInParens_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaInParens_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -90340,7 +90316,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaInParens_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __wqName_prettify<'a>(
@@ -90506,7 +90482,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn wqName_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn wqName_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -90514,7 +90490,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__wqName_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __attrSelector_prettify<'a>(
@@ -91619,7 +91595,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn attrSelector_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn attrSelector_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -91627,7 +91603,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__attrSelector_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __varFunction_prettify<'a>(
@@ -91737,7 +91713,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn varFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn varFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -91745,7 +91721,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__varFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __envFunction_prettify<'a>(
@@ -91867,7 +91843,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn envFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn envFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -91875,7 +91851,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__envFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __length_prettify<'a>(
@@ -91919,7 +91895,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn length_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn length_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -91927,7 +91903,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__length_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaTypedQuery_prettify<'a>(
@@ -92030,7 +92006,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaTypedQuery_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaTypedQuery_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92038,7 +92014,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaTypedQuery_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __typeSelector_prettify<'a>(
@@ -92095,7 +92071,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn typeSelector_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn typeSelector_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92103,7 +92079,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__typeSelector_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __colorFn_prettify<'a>(
@@ -92190,7 +92166,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn colorFn_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn colorFn_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92198,7 +92174,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__colorFn_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __valueUnit_prettify<'a>(
@@ -92359,7 +92335,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn valueUnit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn valueUnit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92367,7 +92343,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__valueUnit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __isPseudo_prettify<'a>(
@@ -92415,7 +92391,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn isPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn isPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92423,7 +92399,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__isPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __wherePseudo_prettify<'a>(
@@ -92471,7 +92447,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn wherePseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn wherePseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92479,7 +92455,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__wherePseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __notPseudo_prettify<'a>(
@@ -92527,7 +92503,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn notPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn notPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92535,7 +92511,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__notPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __hasPseudo_prettify<'a>(
@@ -92583,7 +92559,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn hasPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn hasPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92591,7 +92567,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__hasPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __nthPseudo_prettify<'a>(
@@ -92665,7 +92641,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn nthPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn nthPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92673,7 +92649,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__nthPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __relativeSelector_prettify<'a>(
@@ -92707,7 +92683,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn relativeSelector_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn relativeSelector_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92715,7 +92691,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__relativeSelector_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __relativeSelectorList_prettify<'a>(
@@ -92797,10 +92773,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn relativeSelectorList_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn relativeSelectorList_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92808,7 +92781,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__relativeSelectorList_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __selectorList_prettify<'a>(
@@ -92890,7 +92863,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn selectorList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn selectorList_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92898,7 +92871,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__selectorList_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __pseudoElement_prettify<'a>(
@@ -92982,7 +92955,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn pseudoElement_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn pseudoElement_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -92990,7 +92963,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__pseudoElement_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __slottedPseudo_prettify<'a>(
@@ -93038,7 +93011,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn slottedPseudo_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn slottedPseudo_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93046,7 +93019,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__slottedPseudo_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __complexSelector_prettify<'a>(
@@ -93095,7 +93068,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn complexSelector_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn complexSelector_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93103,7 +93076,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__complexSelector_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __pseudoClass_prettify<'a>(
@@ -93259,7 +93232,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn pseudoClass_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn pseudoClass_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93267,7 +93240,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__pseudoClass_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __compoundSelector_prettify<'a>(
@@ -93486,7 +93459,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn compoundSelector_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn compoundSelector_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93494,7 +93467,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__compoundSelector_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __colonSelector_prettify<'a>(
@@ -93526,7 +93499,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn colonSelector_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn colonSelector_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93534,7 +93507,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__colonSelector_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaQueryList_prettify<'a>(
@@ -93634,7 +93607,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mediaQueryList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaQueryList_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93642,7 +93615,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaQueryList_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mathExpr_prettify<'a>(
@@ -93691,7 +93664,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mathExpr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mathExpr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93699,7 +93672,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mathExpr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __calcFunction_prettify<'a>(
@@ -93747,7 +93720,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn calcFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn calcFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93755,7 +93728,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__calcFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __minFunction_prettify<'a>(
@@ -93850,7 +93823,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn minFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn minFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93858,7 +93831,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__minFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __maxFunction_prettify<'a>(
@@ -93953,7 +93926,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn maxFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn maxFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -93961,7 +93934,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__maxFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __clampFunction_prettify<'a>(
@@ -94033,7 +94006,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn clampFunction_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn clampFunction_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -94041,7 +94014,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__clampFunction_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mathProduct_prettify<'a>(
@@ -94090,7 +94063,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mathProduct_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mathProduct_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -94098,7 +94071,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mathProduct_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mathValue_prettify<'a>(
@@ -94297,7 +94270,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn mathValue_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mathValue_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -94305,7 +94278,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mathValue_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_prettify<'a>(
@@ -94853,7 +94826,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn value_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -94861,7 +94834,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__value_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __colorDecl_prettify<'a>(
@@ -94973,7 +94946,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn colorDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn colorDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -94981,7 +94954,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__colorDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __sizeDecl_prettify<'a>(
@@ -95093,7 +95066,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn sizeDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn sizeDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95101,7 +95074,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__sizeDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __spacingDecl_prettify<'a>(
@@ -95213,7 +95186,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn spacingDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn spacingDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95221,7 +95194,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__spacingDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __fontDecl_prettify<'a>(
@@ -95351,7 +95324,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn fontDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn fontDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95359,7 +95332,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__fontDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __bgDecl_prettify<'a>(
@@ -95471,7 +95444,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn bgDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn bgDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95479,7 +95452,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__bgDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __transformDecl_prettify<'a>(
@@ -95591,7 +95564,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn transformDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn transformDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95599,7 +95572,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__transformDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __transitionDecl_prettify<'a>(
@@ -95711,7 +95684,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn transitionDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn transitionDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95719,7 +95692,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__transitionDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __listTableDecl_prettify<'a>(
@@ -95831,7 +95804,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn listTableDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn listTableDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95839,7 +95812,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__listTableDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __displayDecl_prettify<'a>(
@@ -95979,7 +95952,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn displayDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn displayDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -95987,7 +95960,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__displayDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __positionDecl_prettify<'a>(
@@ -96127,7 +96100,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn positionDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn positionDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -96135,7 +96108,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__positionDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __overflowDecl_prettify<'a>(
@@ -96393,7 +96366,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn overflowDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn overflowDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -96401,7 +96374,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__overflowDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __visibilityDecl_prettify<'a>(
@@ -96541,7 +96514,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn visibilityDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn visibilityDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -96549,7 +96522,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__visibilityDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __flexDirDecl_prettify<'a>(
@@ -96689,7 +96662,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn flexDirDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn flexDirDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -96697,7 +96670,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__flexDirDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __flexWrapDecl_prettify<'a>(
@@ -96837,7 +96810,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn flexWrapDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn flexWrapDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -96845,7 +96818,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__flexWrapDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __alignDecl_prettify<'a>(
@@ -97272,7 +97245,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn alignDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn alignDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -97280,7 +97253,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__alignDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __flexNumDecl_prettify<'a>(
@@ -97527,7 +97500,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn flexNumDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn flexNumDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -97535,7 +97508,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__flexNumDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __fontSizeDecl_prettify<'a>(
@@ -97657,7 +97630,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn fontSizeDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn fontSizeDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -97665,7 +97638,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__fontSizeDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __fontWeightDecl_prettify<'a>(
@@ -97805,7 +97778,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn fontWeightDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn fontWeightDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -97813,7 +97786,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__fontWeightDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __lineHeightDecl_prettify<'a>(
@@ -97935,7 +97908,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn lineHeightDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn lineHeightDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -97943,7 +97916,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__lineHeightDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __borderWidthDecl_prettify<'a>(
@@ -98230,7 +98203,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn borderWidthDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn borderWidthDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -98238,7 +98211,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__borderWidthDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __borderStyleDecl_prettify<'a>(
@@ -98525,7 +98498,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn borderStyleDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn borderStyleDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -98533,7 +98506,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__borderStyleDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __borderRadiusDecl_prettify<'a>(
@@ -98938,7 +98911,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn borderRadiusDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn borderRadiusDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -98946,7 +98919,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__borderRadiusDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __opacityDecl_prettify<'a>(
@@ -99068,7 +99041,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn opacityDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn opacityDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -99076,7 +99049,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__opacityDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __textAlignDecl_prettify<'a>(
@@ -99216,7 +99189,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn textAlignDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn textAlignDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -99224,7 +99197,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__textAlignDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __boxSizingDecl_prettify<'a>(
@@ -99364,7 +99337,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn boxSizingDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn boxSizingDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -99372,7 +99345,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__boxSizingDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __cursorDecl_prettify<'a>(
@@ -99512,7 +99485,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn cursorDecl_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn cursorDecl_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -99520,7 +99493,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__cursorDecl_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __declaration_prettify<'a>(
@@ -100036,7 +100009,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn declaration_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn declaration_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100044,7 +100017,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__declaration_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __keyframeBlock_prettify<'a>(
@@ -100185,7 +100158,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn keyframeBlock_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn keyframeBlock_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100193,7 +100166,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__keyframeBlock_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __keyframesRule_prettify<'a>(
@@ -100202,7 +100175,7 @@ mod __cssl4parser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -100489,12 +100462,12 @@ mod __cssl4parser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn keyframesRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn keyframesRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100502,7 +100475,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__keyframesRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __atRuleBody_prettify<'a>(
@@ -100539,7 +100512,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn atRuleBody_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn atRuleBody_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100547,7 +100520,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__atRuleBody_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __genericAtRule_prettify<'a>(
@@ -100555,7 +100528,7 @@ mod __cssl4parser_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -100659,11 +100632,11 @@ mod __cssl4parser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn genericAtRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn genericAtRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100671,7 +100644,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__genericAtRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ruleBlock_prettify<'a>(
@@ -100729,7 +100702,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn ruleBlock_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ruleBlock_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100737,7 +100710,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__ruleBlock_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __qualifiedRule_prettify<'a>(
@@ -100745,7 +100718,7 @@ mod __cssl4parser_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -100809,11 +100782,11 @@ mod __cssl4parser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn qualifiedRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn qualifiedRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100821,7 +100794,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__qualifiedRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaRule_prettify<'a>(
@@ -100830,7 +100803,7 @@ mod __cssl4parser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -100891,12 +100864,12 @@ mod __cssl4parser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn mediaRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100904,7 +100877,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__mediaRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __atRule_prettify<'a>(
@@ -100912,7 +100885,7 @@ mod __cssl4parser_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         if !{
@@ -100971,11 +100944,11 @@ mod __cssl4parser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn atRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn atRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -100983,7 +100956,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__atRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ruleItem_prettify<'a>(
@@ -101015,7 +100988,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn ruleItem_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ruleItem_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101023,7 +100996,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__ruleItem_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __blockContent_prettify<'a>(
@@ -101032,7 +101005,7 @@ mod __cssl4parser_emit_impl {
         ) -> bool {
             __builder.indent_open();
             __builder.hardline();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         let mut __rep_count953 = 0usize;
@@ -101120,12 +101093,12 @@ mod __cssl4parser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.hardline();
             __pretty_ok
         }
-        pub fn blockContent_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn blockContent_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101133,7 +101106,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__blockContent_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ruleList_prettify<'a>(
@@ -101211,7 +101184,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn ruleList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ruleList_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101219,7 +101192,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__ruleList_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __stylesheet_prettify<'a>(
@@ -101259,7 +101232,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn stylesheet_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn stylesheet_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101267,7 +101240,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::__stylesheet_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____pattern_90b9f441ae92fa6c_prettify<'a>(
@@ -101308,7 +101281,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __pattern_90b9f441ae92fa6c_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -101317,7 +101290,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____pattern_90b9f441ae92fa6c_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____calcFunction_cont_152_prettify<'a>(
@@ -101349,10 +101322,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __calcFunction_cont_152_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __calcFunction_cont_152_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101360,7 +101330,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____calcFunction_cont_152_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____minFunction_cont_153_prettify<'a>(
@@ -101439,10 +101409,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __minFunction_cont_153_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __minFunction_cont_153_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101450,7 +101417,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____minFunction_cont_153_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____maxFunction_cont_154_prettify<'a>(
@@ -101529,10 +101496,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __maxFunction_cont_154_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __maxFunction_cont_154_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101540,7 +101504,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____maxFunction_cont_154_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____clampFunction_cont_155_prettify<'a>(
@@ -101599,10 +101563,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __clampFunction_cont_155_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __clampFunction_cont_155_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101610,7 +101571,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____clampFunction_cont_155_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____varFunction_cont_156_prettify<'a>(
@@ -101707,10 +101668,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __varFunction_cont_156_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __varFunction_cont_156_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101718,7 +101676,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____varFunction_cont_156_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____envFunction_cont_157_prettify<'a>(
@@ -101827,10 +101785,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __envFunction_cont_157_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __envFunction_cont_157_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101838,7 +101793,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____envFunction_cont_157_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____varFunction_cont_158_prettify<'a>(
@@ -101935,10 +101890,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __varFunction_cont_158_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __varFunction_cont_158_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101946,7 +101898,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____varFunction_cont_158_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____calcFunction_cont_159_prettify<'a>(
@@ -101978,10 +101930,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __calcFunction_cont_159_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __calcFunction_cont_159_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -101989,7 +101938,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____calcFunction_cont_159_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____urlFunction_cont_160_prettify<'a>(
@@ -102087,10 +102036,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __urlFunction_cont_160_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __urlFunction_cont_160_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -102098,7 +102044,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____urlFunction_cont_160_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____genericFunction_cont_161_prettify<'a>(
@@ -102130,7 +102076,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __genericFunction_cont_161_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -102139,7 +102085,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____genericFunction_cont_161_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____colorDecl_cont_162_prettify<'a>(
@@ -102248,10 +102194,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __colorDecl_cont_162_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __colorDecl_cont_162_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -102259,7 +102202,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____colorDecl_cont_162_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____sizeDecl_cont_163_prettify<'a>(
@@ -102368,10 +102311,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __sizeDecl_cont_163_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __sizeDecl_cont_163_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -102379,7 +102319,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____sizeDecl_cont_163_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____spacingDecl_cont_164_prettify<'a>(
@@ -102488,10 +102428,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __spacingDecl_cont_164_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __spacingDecl_cont_164_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -102499,7 +102436,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____spacingDecl_cont_164_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____fontDecl_cont_165_prettify<'a>(
@@ -102626,10 +102563,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __fontDecl_cont_165_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __fontDecl_cont_165_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -102637,7 +102571,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____fontDecl_cont_165_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____bgDecl_cont_166_prettify<'a>(
@@ -102746,7 +102680,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __bgDecl_cont_166_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn __bgDecl_cont_166_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -102754,7 +102688,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____bgDecl_cont_166_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____transformDecl_cont_167_prettify<'a>(
@@ -102863,10 +102797,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __transformDecl_cont_167_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __transformDecl_cont_167_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -102874,7 +102805,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____transformDecl_cont_167_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____transitionDecl_cont_168_prettify<'a>(
@@ -102985,7 +102916,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __transitionDecl_cont_168_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -102994,7 +102925,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____transitionDecl_cont_168_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____listTableDecl_cont_169_prettify<'a>(
@@ -103103,10 +103034,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __listTableDecl_cont_169_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __listTableDecl_cont_169_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -103114,7 +103042,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____listTableDecl_cont_169_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____displayDecl_cont_170_prettify<'a>(
@@ -103241,10 +103169,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __displayDecl_cont_170_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __displayDecl_cont_170_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -103252,7 +103177,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____displayDecl_cont_170_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____positionDecl_cont_171_prettify<'a>(
@@ -103379,10 +103304,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __positionDecl_cont_171_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __positionDecl_cont_171_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -103390,7 +103312,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____positionDecl_cont_171_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____overflowDecl_cont_172_prettify<'a>(
@@ -103517,10 +103439,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __overflowDecl_cont_172_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __overflowDecl_cont_172_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -103528,7 +103447,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____overflowDecl_cont_172_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____visibilityDecl_cont_173_prettify<'a>(
@@ -103657,7 +103576,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __visibilityDecl_cont_173_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -103666,7 +103585,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____visibilityDecl_cont_173_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____flexDirDecl_cont_174_prettify<'a>(
@@ -103793,10 +103712,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __flexDirDecl_cont_174_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __flexDirDecl_cont_174_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -103804,7 +103720,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____flexDirDecl_cont_174_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____flexWrapDecl_cont_175_prettify<'a>(
@@ -103931,10 +103847,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __flexWrapDecl_cont_175_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __flexWrapDecl_cont_175_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -103942,7 +103855,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____flexWrapDecl_cont_175_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____alignDecl_cont_176_prettify<'a>(
@@ -104069,10 +103982,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __alignDecl_cont_176_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __alignDecl_cont_176_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -104080,7 +103990,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____alignDecl_cont_176_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____flexNumDecl_cont_177_prettify<'a>(
@@ -104189,10 +104099,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __flexNumDecl_cont_177_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __flexNumDecl_cont_177_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -104200,7 +104107,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____flexNumDecl_cont_177_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____fontSizeDecl_cont_178_prettify<'a>(
@@ -104309,10 +104216,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __fontSizeDecl_cont_178_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __fontSizeDecl_cont_178_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -104320,7 +104224,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____fontSizeDecl_cont_178_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____fontWeightDecl_cont_179_prettify<'a>(
@@ -104449,7 +104353,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __fontWeightDecl_cont_179_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -104458,7 +104362,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____fontWeightDecl_cont_179_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____lineHeightDecl_cont_180_prettify<'a>(
@@ -104569,7 +104473,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __lineHeightDecl_cont_180_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -104578,7 +104482,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____lineHeightDecl_cont_180_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____borderWidthDecl_cont_181_prettify<'a>(
@@ -104707,7 +104611,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __borderWidthDecl_cont_181_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -104716,7 +104620,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____borderWidthDecl_cont_181_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____borderStyleDecl_cont_182_prettify<'a>(
@@ -104845,7 +104749,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __borderStyleDecl_cont_182_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -104854,7 +104758,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____borderStyleDecl_cont_182_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____borderRadiusDecl_cont_183_prettify<'a>(
@@ -104965,7 +104869,7 @@ mod __cssl4parser_emit_impl {
         }
         pub fn __borderRadiusDecl_cont_183_prettify<'a>() -> Parser<
             'a,
-            Vec<::pprint::FmtOp<'a>>,
+            ::pprint::Doc<'a>,
         > {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
@@ -104974,7 +104878,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____borderRadiusDecl_cont_183_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____opacityDecl_cont_184_prettify<'a>(
@@ -105083,10 +104987,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __opacityDecl_cont_184_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __opacityDecl_cont_184_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -105094,7 +104995,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____opacityDecl_cont_184_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____textAlignDecl_cont_185_prettify<'a>(
@@ -105221,10 +105122,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __textAlignDecl_cont_185_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __textAlignDecl_cont_185_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -105232,7 +105130,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____textAlignDecl_cont_185_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____boxSizingDecl_cont_186_prettify<'a>(
@@ -105359,10 +105257,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __boxSizingDecl_cont_186_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __boxSizingDecl_cont_186_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -105370,7 +105265,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____boxSizingDecl_cont_186_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn ____cursorDecl_cont_187_prettify<'a>(
@@ -105497,10 +105392,7 @@ mod __cssl4parser_emit_impl {
                 true
             }
         }
-        pub fn __cursorDecl_cont_187_prettify<'a>() -> Parser<
-            'a,
-            Vec<::pprint::FmtOp<'a>>,
-        > {
+        pub fn __cursorDecl_cont_187_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -105508,7 +105400,7 @@ mod __cssl4parser_emit_impl {
                 if !Self::____cursorDecl_cont_187_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         /// Parse an input string and return the grammar-specific

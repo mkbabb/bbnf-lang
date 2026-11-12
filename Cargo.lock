@@ -2248,7 +2248,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=54042ce6b4dfabd04447d6740eb4461c5514168e#54042ce6b4dfabd04447d6740eb4461c5514168e"
 dependencies = [
  "csp-solver",
  "rustc-hash 2.1.2",
@@ -2258,7 +2258,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=54042ce6b4dfabd04447d6740eb4461c5514168e#54042ce6b4dfabd04447d6740eb4461c5514168e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2268,7 +2268,7 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=54042ce6b4dfabd04447d6740eb4461c5514168e#54042ce6b4dfabd04447d6740eb4461c5514168e"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
@@ -2281,12 +2281,12 @@ dependencies = [
 [[package]]
 name = "parse-that-simd"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=54042ce6b4dfabd04447d6740eb4461c5514168e#54042ce6b4dfabd04447d6740eb4461c5514168e"
 
 [[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=54042ce6b4dfabd04447d6740eb4461c5514168e#54042ce6b4dfabd04447d6740eb4461c5514168e"
 dependencies = [
  "aho-corasick",
  "colored",
@@ -2460,18 +2460,19 @@ dependencies = [
 
 [[package]]
 name = "pprint"
-version = "0.4.0"
-source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"
+version = "0.5.0-alpha.0"
+source = "git+https://github.com/mkbabb/pprint?rev=bc78dd850edb533a9a587f1f6bb7694ff0b358a8#bc78dd850edb533a9a587f1f6bb7694ff0b358a8"
 dependencies = [
  "itoap",
  "pprint_derive",
  "ryu",
+ "unicode-width 0.2.2",
 ]
 
 [[package]]
 name = "pprint_derive"
 version = "0.3.0"
-source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"
+source = "git+https://github.com/mkbabb/pprint?rev=bc78dd850edb533a9a587f1f6bb7694ff0b358a8#bc78dd850edb533a9a587f1f6bb7694ff0b358a8"
 dependencies = [
  "proc-macro2",
  "quote",

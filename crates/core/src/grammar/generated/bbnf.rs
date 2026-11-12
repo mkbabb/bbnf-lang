@@ -14457,7 +14457,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn int_lit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn int_lit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -14465,7 +14465,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__int_lit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __float_lit_prettify<'a>(
@@ -14563,7 +14563,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn float_lit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn float_lit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -14571,7 +14571,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__float_lit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __bool_lit_prettify<'a>(
@@ -14623,7 +14623,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn bool_lit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn bool_lit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -14631,7 +14631,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__bool_lit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __string_lit_prettify<'a>(
@@ -14736,7 +14736,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn string_lit_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn string_lit_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -14744,7 +14744,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__string_lit_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_ident_prettify<'a>(
@@ -14770,7 +14770,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_ident_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_ident_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -14778,7 +14778,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_ident_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mul_op_prettify<'a>(
@@ -14853,7 +14853,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn mul_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mul_op_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -14861,7 +14861,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__mul_op_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __add_op_prettify<'a>(
@@ -14900,7 +14900,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn add_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn add_op_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -14908,7 +14908,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__add_op_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __cmp_op_prettify<'a>(
@@ -15070,7 +15070,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn cmp_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn cmp_op_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -15078,7 +15078,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__cmp_op_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __type_name_prettify<'a>(
@@ -15388,7 +15388,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn type_name_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn type_name_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -15396,7 +15396,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__type_name_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __identifier_prettify<'a>(
@@ -15422,7 +15422,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn identifier_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn identifier_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -15430,7 +15430,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__identifier_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __literal_prettify<'a>(
@@ -15775,7 +15775,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn literal_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn literal_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -15783,7 +15783,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__literal_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __regex_prettify<'a>(
@@ -15891,7 +15891,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn regex_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn regex_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -15899,7 +15899,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__regex_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __big_comment_prettify<'a>(
@@ -16066,7 +16066,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn big_comment_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn big_comment_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16074,7 +16074,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__big_comment_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __comment_prettify<'a>(
@@ -16227,7 +16227,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn comment_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn comment_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16235,7 +16235,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__comment_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __modifier_prettify<'a>(
@@ -16337,7 +16337,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn modifier_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn modifier_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16345,7 +16345,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__modifier_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __binary_operators_prettify<'a>(
@@ -16432,7 +16432,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn binary_operators_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn binary_operators_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16440,7 +16440,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__binary_operators_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __import_path_prettify<'a>(
@@ -16545,7 +16545,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn import_path_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn import_path_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16553,7 +16553,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__import_path_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_path_prettify<'a>(
@@ -16637,7 +16637,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_path_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_path_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16645,7 +16645,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_path_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_input_prettify<'a>(
@@ -16721,7 +16721,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_input_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_input_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16729,7 +16729,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_input_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __type_annotation_prettify<'a>(
@@ -16761,7 +16761,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn type_annotation_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn type_annotation_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16769,7 +16769,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__type_annotation_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __lhs_prettify<'a>(
@@ -16795,7 +16795,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn lhs_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn lhs_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16803,7 +16803,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__lhs_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __import_items_prettify<'a>(
@@ -16939,7 +16939,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn import_items_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn import_items_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -16947,7 +16947,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__import_items_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __pretty_hint_prettify<'a>(
@@ -17110,7 +17110,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn pretty_hint_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn pretty_hint_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17118,7 +17118,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__pretty_hint_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __token_directive_prettify<'a>(
@@ -17222,7 +17222,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn token_directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn token_directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17230,7 +17230,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__token_directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __debug_directive_prettify<'a>(
@@ -17370,7 +17370,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn debug_directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn debug_directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17378,7 +17378,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__debug_directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __host_directive_prettify<'a>(
@@ -17544,7 +17544,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn host_directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn host_directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17552,7 +17552,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__host_directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ws_directive_prettify<'a>(
@@ -17661,7 +17661,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn ws_directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ws_directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17669,7 +17669,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__ws_directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_mul_prettify<'a>(
@@ -17744,7 +17744,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_mul_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_mul_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17752,7 +17752,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_mul_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_or_prettify<'a>(
@@ -17822,7 +17822,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_or_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_or_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17830,7 +17830,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_or_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_add_prettify<'a>(
@@ -17931,7 +17931,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_add_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_add_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -17939,7 +17939,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_add_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_cmp_prettify<'a>(
@@ -18014,7 +18014,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_cmp_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_cmp_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -18022,7 +18022,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_cmp_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_and_prettify<'a>(
@@ -18092,7 +18092,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_and_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_and_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -18100,7 +18100,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_and_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_closure_prettify<'a>(
@@ -18205,7 +18205,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_closure_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_closure_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -18213,7 +18213,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_closure_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_fn_call_prettify<'a>(
@@ -18311,7 +18311,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_fn_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_fn_call_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -18319,7 +18319,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_fn_call_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_expr_prettify<'a>(
@@ -18351,7 +18351,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -18359,7 +18359,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_atom_prettify<'a>(
@@ -18858,7 +18858,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_atom_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_atom_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -18866,7 +18866,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_atom_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_unary_prettify<'a>(
@@ -18929,7 +18929,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn value_unary_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_unary_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -18937,7 +18937,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__value_unary_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __import_directive_prettify<'a>(
@@ -19119,7 +19119,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn import_directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn import_directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -19127,7 +19127,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__import_directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __pretty_directive_prettify<'a>(
@@ -19330,7 +19330,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn pretty_directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn pretty_directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -19338,7 +19338,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__pretty_directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __alternation_prettify<'a>(
@@ -19346,7 +19346,7 @@ mod __bbnfbootstrap_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         let __rep_start247 = state.offset;
@@ -19436,11 +19436,11 @@ mod __bbnfbootstrap_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn alternation_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn alternation_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -19448,7 +19448,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__alternation_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __call_arg_prettify<'a>(
@@ -19545,7 +19545,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn call_arg_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn call_arg_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -19553,7 +19553,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__call_arg_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __concatenation_prettify<'a>(
@@ -19650,7 +19650,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn concatenation_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn concatenation_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -19658,7 +19658,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__concatenation_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __closure_prettify<'a>(
@@ -19772,7 +19772,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn closure_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn closure_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -19780,7 +19780,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__closure_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __term_prettify<'a>(
@@ -20304,7 +20304,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn term_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn term_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -20312,7 +20312,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__term_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __binary_factor_prettify<'a>(
@@ -20387,7 +20387,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn binary_factor_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn binary_factor_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -20395,7 +20395,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__binary_factor_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __rhs_prettify<'a>(
@@ -20427,7 +20427,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn rhs_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn rhs_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -20435,7 +20435,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__rhs_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __factor_prettify<'a>(
@@ -20531,7 +20531,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn factor_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn factor_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -20539,7 +20539,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__factor_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mapped_factor_prettify<'a>(
@@ -20619,7 +20619,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn mapped_factor_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mapped_factor_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -20627,7 +20627,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__mapped_factor_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __rule_prettify<'a>(
@@ -20635,7 +20635,7 @@ mod __bbnfbootstrap_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -20731,11 +20731,11 @@ mod __bbnfbootstrap_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn rule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn rule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -20743,7 +20743,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__rule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __recover_directive_prettify<'a>(
@@ -20876,7 +20876,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn recover_directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn recover_directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -20884,7 +20884,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__recover_directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __directive_prettify<'a>(
@@ -21022,7 +21022,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn directive_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn directive_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -21030,7 +21030,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__directive_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __grammar_item_prettify<'a>(
@@ -21255,7 +21255,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn grammar_item_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn grammar_item_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -21263,7 +21263,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__grammar_item_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __grammar_prettify<'a>(
@@ -21340,7 +21340,7 @@ mod __bbnfbootstrap_emit_impl {
                 true
             }
         }
-        pub fn grammar_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn grammar_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -21348,7 +21348,7 @@ mod __bbnfbootstrap_emit_impl {
                 if !Self::__grammar_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         /// Parse an input string and return the grammar-specific

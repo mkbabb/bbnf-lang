@@ -21,8 +21,10 @@ pub fn format_value(
     if !value_to_ops(ir, value, input, &mut builder) {
         return None;
     }
-    let ops = builder.finish();
-    Some(pprint::render(&ops, config.to_printer()))
+    // A refused document (an unbalanced stream, a non-ASCII byte or a tab in
+    // a leaf, pprint's L8 and LW3.PP-1a) cannot be formatted.
+    let doc = builder.finish().ok()?;
+    Some(pprint::render(&doc, config.to_printer()))
 }
 
 /// Format a parse result (legacy alias).

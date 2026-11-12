@@ -27,7 +27,10 @@ fn list<'a, S: Serializer<'a>>(s: &mut S, items: &[&'a str]) {
 fn pretty(items: &[&str], width: usize) -> String {
     let mut b = FmtBuilder::new();
     list(&mut b, items);
-    render(&b.finish(), Printer::new(width, 2, false))
+    render(
+        &b.finish().expect("the serializer builds a balanced document"),
+        Printer::new(width, 2, false),
+    )
 }
 
 #[test]

@@ -2238,10 +2238,7 @@ fn active_roots_remain_preselection_only_and_the_guard_self_falsifies() {
         fs::remove_dir_all(&harness).expect("remove renamed harness fixture");
     }
     for (index, (package, owned_path)) in [
-        (
-            "parse_that",
-            pinned_parse_that_package_dir(),
-        ),
+        ("parse_that", pinned_parse_that_package_dir()),
         ("bbnf", root().join("crates/core")),
     ]
     .into_iter()
@@ -4532,18 +4529,26 @@ fn pinned_parse_that_package_dir() -> PathBuf {
         .iter()
         .filter(|package| package["name"] == "parse_that")
         .collect::<Vec<_>>();
-    assert_eq!(packages.len(), 1, "the lock resolves exactly one parse_that");
+    assert_eq!(
+        packages.len(),
+        1,
+        "the lock resolves exactly one parse_that"
+    );
     assert!(
-        packages[0]["source"]
-            .as_str()
-            .is_some_and(|source| source.starts_with("git+https://github.com/mkbabb/parse-that?rev=")),
+        packages[0]["source"].as_str().is_some_and(
+            |source| source.starts_with("git+https://github.com/mkbabb/parse-that?rev=")
+        ),
         "parse_that is a git+rev edge: {}",
         packages[0]["source"]
     );
-    PathBuf::from(packages[0]["manifest_path"].as_str().expect("parse_that manifest path"))
-        .parent()
-        .expect("parse_that package dir")
-        .to_path_buf()
+    PathBuf::from(
+        packages[0]["manifest_path"]
+            .as_str()
+            .expect("parse_that manifest path"),
+    )
+    .parent()
+    .expect("parse_that package dir")
+    .to_path_buf()
 }
 
 #[test]
@@ -5992,7 +5997,8 @@ fn local_registry_record(package: &Value, checksum: &str) -> String {
 /// and edits this hash in the same commit.
 const PARSE_THAT_ABI4_RECEIPT: &str =
     "restart/skinny/tranches/sk-v27/evidence/LW3.COMP/comp1b-t/LW3-PARSE-THAT-ABI4.json";
-const PARSE_THAT_ABI4_RECEIPT_SHA256: &str = "__RECEIPT__";
+const PARSE_THAT_ABI4_RECEIPT_SHA256: &str =
+    "d8ffcbd55508569b3054fbd5a4f2fccfe398bc98ef0e9fbc4be0ac22f20a20f5";
 const PARSE_THAT_ABI4_RECEIPT_SCHEMA: &str = "bbnf.sk-v27.parse-that-abi4-receipt.v1";
 
 /// The upstream packages in publish (dependency) order, and the repository
@@ -6037,7 +6043,10 @@ fn lockstep_third_party_packages(locks: &[PathBuf]) -> Vec<ThirdPartyPackage> {
                 continue;
             }
             let name = package["name"].as_str().expect("locked name").to_owned();
-            let version = package["version"].as_str().expect("locked version").to_owned();
+            let version = package["version"]
+                .as_str()
+                .expect("locked version")
+                .to_owned();
             let checksum = package["checksum"]
                 .as_str()
                 .expect("a crates.io lock entry carries its checksum")
@@ -6060,7 +6069,9 @@ fn lockstep_third_party_packages(locks: &[PathBuf]) -> Vec<ThirdPartyPackage> {
     for ((name, version), checksum) in wanted {
         let mut found = None;
         for index_root in &index_roots {
-            let sparse = index_root.join(".cache").join(registry_index_relative(&name));
+            let sparse = index_root
+                .join(".cache")
+                .join(registry_index_relative(&name));
             let Ok(sparse_bytes) = fs::read(&sparse) else {
                 continue;
             };
@@ -6142,7 +6153,12 @@ fn write_lockstep_registry(
                 archive,
                 registry.join(format!("{}-{}.crate", package.name, package.version)),
             )
-            .unwrap_or_else(|error| panic!("{} {}: copy archive: {error}", package.name, package.version));
+            .unwrap_or_else(|error| {
+                panic!(
+                    "{} {}: copy archive: {error}",
+                    package.name, package.version
+                )
+            });
         }
         records
             .entry(registry_index_relative(&package.name))
@@ -6376,8 +6392,10 @@ fn assert_archive_is_the_pinned_tree(
     for field in ["readme", "license-file"] {
         if let Some(named) = original["package"].get(field).and_then(toml::Value::as_str) {
             if named.split('/').any(|component| component == "..") {
-                let mut components: Vec<&str> =
-                    path_in_vcs.split('/').filter(|part| !part.is_empty()).collect();
+                let mut components: Vec<&str> = path_in_vcs
+                    .split('/')
+                    .filter(|part| !part.is_empty())
+                    .collect();
                 for part in named.split('/') {
                     match part {
                         ".." => assert!(
@@ -6448,7 +6466,11 @@ fn assert_archive_is_the_pinned_tree(
         );
         compared += 1;
     }
-    assert!(compared > 1, "{}: the tree comparison read files", package.name);
+    assert!(
+        compared > 1,
+        "{}: the tree comparison read files",
+        package.name
+    );
 }
 
 fn assert_registry_only_package_consumer(registry: &Path, scratch: &Path) {
@@ -6559,8 +6581,10 @@ fn main() {
             .as_array()
             .unwrap()
             .iter()
-            .all(|package| package["source"].as_str() == Some(CRATES_IO_INDEX)
-                || package["name"].as_str() == Some("bbnf-w3-registry-consumer")),
+            .all(
+                |package| package["source"].as_str() == Some(CRATES_IO_INDEX)
+                    || package["name"].as_str() == Some("bbnf-w3-registry-consumer")
+            ),
         "the registry consumer resolves no git or path package"
     );
     run(
@@ -6616,12 +6640,22 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
     // The workspace's own lock names the pins; its metadata gives the pinned
     // checkouts (inside the isolated home) and every owned package's record.
     let workspace_lock = root().join("Cargo.lock");
-    let bootstrap_third_party = lockstep_third_party_packages(std::slice::from_ref(&workspace_lock));
-    write_lockstep_registry(&registry, &bootstrap_third_party, &json!({"packages": []}), &[]);
+    let bootstrap_third_party =
+        lockstep_third_party_packages(std::slice::from_ref(&workspace_lock));
+    write_lockstep_registry(
+        &registry,
+        &bootstrap_third_party,
+        &json!({"packages": []}),
+        &[],
+    );
     let metadata = lockstep_metadata(&home, &registry);
     let owned = sk_v27_owned_git_packages(&metadata);
     let checkout_root = |repository: &str| {
-        let anchor = if repository == "pprint" { "pprint" } else { "parse_that" };
+        let anchor = if repository == "pprint" {
+            "pprint"
+        } else {
+            "parse_that"
+        };
         let manifest = &owned[anchor].1;
         let mut directory = manifest.parent().expect("manifest directory").to_path_buf();
         while !directory.join(".git").exists() {
@@ -6630,7 +6664,11 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
         directory
     };
     let rev_of = |repository: &str| {
-        let anchor = if repository == "pprint" { "pprint" } else { "parse_that" };
+        let anchor = if repository == "pprint" {
+            "pprint"
+        } else {
+            "parse_that"
+        };
         owned[anchor]
             .2
             .rsplit_once('#')
@@ -8953,11 +8991,14 @@ const SK_V27_PPRINT_GIT: &str = "https://github.com/mkbabb/pprint";
 /// The exact width of the locked metadata package graph (every platform).
 const SK_V27_METADATA_PACKAGE_COUNT: usize = 511;
 /// sha256 over the sorted `bbnf` target inventory (`name:kind`, one per line).
-const SK_V27_BBNF_TARGETS_SHA256: &str = "469c15d04df9cc6fef59ec95badf9a29cd6fc59712965be7afaca62c2fcd8b6d";
+const SK_V27_BBNF_TARGETS_SHA256: &str =
+    "469c15d04df9cc6fef59ec95badf9a29cd6fc59712965be7afaca62c2fcd8b6d";
 /// sha256 over the sorted `bbnf` metadata dependency rows.
-const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str = "c1db28fb8c440b855d8afc374e27dd148b1e43c56ab88e6996c27e5466909199";
+const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
+    "c1db28fb8c440b855d8afc374e27dd148b1e43c56ab88e6996c27e5466909199";
 /// sha256 over the complete resolved package/feature/target identity rows.
-const SK_V27_METADATA_IDENTITY_SHA256: &str = "298a46979443dd1767744d85c4d18cbb624c23b64f3d239755596992c91db9af";
+const SK_V27_METADATA_IDENTITY_SHA256: &str =
+    "298a46979443dd1767744d85c4d18cbb624c23b64f3d239755596992c91db9af";
 /// sha256 of the complete Cargo.lock.
 const SK_V27_LOCK_SHA256: &str = "2d62609d85c3162a2e8973af89a3b9a3e6e698852eee9fb13c821bb0e345a351";
 
@@ -8989,7 +9030,10 @@ fn sk_v27_owned_git_packages(metadata: &Value) -> BTreeMap<String, (String, Path
         })
         .map(|package| {
             (
-                package["name"].as_str().expect("owned package name").to_owned(),
+                package["name"]
+                    .as_str()
+                    .expect("owned package name")
+                    .to_owned(),
                 (
                     package["version"]
                         .as_str()
@@ -9017,10 +9061,17 @@ fn assert_git_rev_edge(label: &str, dependency: &toml::Value, git: &str, version
         "{label}: exact git+rev edge shape (no path, branch, tag or feature override)"
     );
     assert_eq!(dependency["git"].as_str(), Some(git), "{label}: git URL");
-    assert_eq!(dependency["version"].as_str(), Some(version), "{label}: version");
+    assert_eq!(
+        dependency["version"].as_str(),
+        Some(version),
+        "{label}: version"
+    );
     let rev = dependency["rev"].as_str().expect("edge rev").to_owned();
     assert!(
-        rev.len() == 40 && rev.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()),
+        rev.len() == 40
+            && rev
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()),
         "{label}: rev is one full lowercase commit id, got {rev:?}"
     );
     rev
@@ -9383,7 +9434,11 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
     let tests = core_manifest["test"]
         .as_array()
         .expect("BBNF explicit test targets");
-    assert_eq!(tests.len(), expected_tests.len(), "the spine's 11 explicit test targets");
+    assert_eq!(
+        tests.len(),
+        expected_tests.len(),
+        "the spine's 11 explicit test targets"
+    );
     for (test, (name, path)) in tests.iter().zip(expected_tests) {
         assert_eq!(keys(test), string_set(&["name", "path"]));
         assert_eq!(test["name"].as_str(), Some(name));
@@ -9480,7 +9535,12 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
             "syn",
         ])
     );
-    for name in ["parse_that", "parse-that-regex", "parse-that-egraph", "pprint"] {
+    for name in [
+        "parse_that",
+        "parse-that-regex",
+        "parse-that-egraph",
+        "pprint",
+    ] {
         let dependency = &core_manifest["dependencies"][name];
         assert_eq!(
             keys(dependency),
@@ -9632,7 +9692,10 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
             "iter-clippy",
             "clippy --profile ax-iter --workspace --all-targets -- -D warnings",
         ),
-        ("iter-test", "nextest run --cargo-profile ax-iter --workspace"),
+        (
+            "iter-test",
+            "nextest run --cargo-profile ax-iter --workspace",
+        ),
         ("iter-check-full", "check --profile ax-iter --workspace"),
     ] {
         assert_eq!(
@@ -9739,12 +9802,26 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
             .expect("owned parse-that-regex Cargo.toml");
     assert_eq!(
         keys(&parse_that_manifest),
-        string_set(&["bench", "dependencies", "dev-dependencies", "features", "lib", "package"]),
+        string_set(&[
+            "bench",
+            "dependencies",
+            "dev-dependencies",
+            "features",
+            "lib",
+            "package"
+        ]),
         "owned parse_that manifest surface"
     );
     assert_eq!(
         keys(&parse_that_manifest["package"]),
-        string_set(&["description", "edition", "license", "name", "repository", "version"]),
+        string_set(&[
+            "description",
+            "edition",
+            "license",
+            "name",
+            "repository",
+            "version"
+        ]),
         "owned parse_that package identity surface"
     );
     for (key, value) in [
@@ -9752,7 +9829,10 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
         ("version", "0.4.0"),
         ("edition", "2024"),
         ("license", "MIT"),
-        ("description", "Zero-copy parser combinator library for Rust"),
+        (
+            "description",
+            "Zero-copy parser combinator library for Rust",
+        ),
         ("repository", SK_V27_PARSE_THAT_GIT),
     ] {
         assert_eq!(
@@ -9766,9 +9846,18 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
             && parse_that_manifest["package"].get("links").is_none(),
         "owned parse_that has no build or native-link ingress"
     );
-    assert_eq!(keys(&parse_that_manifest["lib"]), string_set(&["name", "path"]));
-    assert_eq!(parse_that_manifest["lib"]["name"].as_str(), Some("parse_that"));
-    assert_eq!(parse_that_manifest["lib"]["path"].as_str(), Some("src/lib.rs"));
+    assert_eq!(
+        keys(&parse_that_manifest["lib"]),
+        string_set(&["name", "path"])
+    );
+    assert_eq!(
+        parse_that_manifest["lib"]["name"].as_str(),
+        Some("parse_that")
+    );
+    assert_eq!(
+        parse_that_manifest["lib"]["path"].as_str(),
+        Some("src/lib.rs")
+    );
     let parse_that_features = parse_that_manifest["features"]
         .as_table()
         .expect("parse_that features")
@@ -9824,12 +9913,26 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
     );
     assert_eq!(
         keys(&regex_manifest),
-        string_set(&["bench", "dependencies", "dev-dependencies", "features", "lib", "package"]),
+        string_set(&[
+            "bench",
+            "dependencies",
+            "dev-dependencies",
+            "features",
+            "lib",
+            "package"
+        ]),
         "owned parse-that-regex manifest surface"
     );
     assert_eq!(
         keys(&regex_manifest["package"]),
-        string_set(&["description", "edition", "license", "name", "repository", "version"]),
+        string_set(&[
+            "description",
+            "edition",
+            "license",
+            "name",
+            "repository",
+            "version"
+        ]),
         "owned parse-that-regex package identity surface"
     );
     for (key, value) in [
@@ -9855,14 +9958,19 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
         "owned parse-that-regex has no build or native-link ingress"
     );
     assert_eq!(keys(&regex_manifest["lib"]), string_set(&["name", "path"]));
-    assert_eq!(regex_manifest["lib"]["name"].as_str(), Some("parse_that_regex"));
+    assert_eq!(
+        regex_manifest["lib"]["name"].as_str(),
+        Some("parse_that_regex")
+    );
     assert_eq!(regex_manifest["lib"]["path"].as_str(), Some("src/lib.rs"));
     assert_eq!(
         keys(&regex_manifest["features"]),
         string_set(&["default", "serde"])
     );
     assert_eq!(
-        regex_manifest["features"]["default"].as_array().map(Vec::len),
+        regex_manifest["features"]["default"]
+            .as_array()
+            .map(Vec::len),
         Some(0),
         "owned parse-that-regex default feature set is sealed empty"
     );
@@ -9915,7 +10023,12 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
             .iter()
             .map(|bench| bench["name"].as_str().expect("bench name"))
             .collect::<Vec<_>>(),
-        ["regex_parse", "regex_classify", "regex_hir_egraph", "regex_dfa_compile"],
+        [
+            "regex_parse",
+            "regex_classify",
+            "regex_hir_egraph",
+            "regex_dfa_compile"
+        ],
         "owned parse-that-regex exact bench table"
     );
 
@@ -9939,7 +10052,15 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
             .keys()
             .cloned()
             .collect::<BTreeSet<_>>(),
-        string_set(&["callgrind", "competitor", "dhat-heap", "iai", "stress", "vm", "wasm-bench"]),
+        string_set(&[
+            "callgrind",
+            "competitor",
+            "dhat-heap",
+            "iai",
+            "stress",
+            "vm",
+            "wasm-bench"
+        ]),
         "resolved package feature map is the manifest's, exactly"
     );
     let target_rows = package["targets"]
@@ -9963,7 +10084,11 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
     for required in ["bbnf:lib", "bbnf-gen:bin", "root_api_present:test"]
         .into_iter()
         .map(str::to_owned)
-        .chain(expected_tests.iter().map(|(name, _)| format!("{name}:test")))
+        .chain(
+            expected_tests
+                .iter()
+                .map(|(name, _)| format!("{name}:test")),
+        )
     {
         assert!(
             target_rows.contains(&required),

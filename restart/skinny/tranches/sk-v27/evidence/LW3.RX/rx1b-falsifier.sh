@@ -12,6 +12,8 @@ set -u
 repo=$1; logs=$2; label=$3
 mkdir -p "$logs"
 guard=~/.claude/guard/guarded
+# Under one outer `guarded` run (GUARD_INNER=1) the steps run in its tree.
+if [ -n "${GUARD_INNER:-}" ]; then guard=$(cd "$(dirname "$0")" && pwd)/inner-run.sh; fi
 . ~/.dev-logs/bbnf-lockstep/lw3/s4-rx/env-pt.sh
 cd "$repo" || exit 2
 sha=$(git rev-parse --short=9 HEAD); tree=$(git write-tree 2>/dev/null || echo -)

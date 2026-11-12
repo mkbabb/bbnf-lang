@@ -346,7 +346,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -356,7 +356,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -366,11 +366,13 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
  "proc-macro2",
+ "regex-automata",
+ "regex-syntax",
  "rustc-hash",
  "serde",
  "smallvec",
@@ -379,12 +381,12 @@ dependencies = [
 [[package]]
 name = "parse-that-simd"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
 
 [[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
 dependencies = [
  "aho-corasick",
  "colored",
@@ -480,6 +482,23 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "regex-automata"
+version = "0.4.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e1dd4122fc1595e8162618945476892eefca7b88c52820e74af6262213cae8f"
+dependencies = [
+ "aho-corasick",
+ "memchr",
+ "regex-syntax",
+]
+
+[[package]]
+name = "regex-syntax"
+version = "0.8.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
 name = "rmp"

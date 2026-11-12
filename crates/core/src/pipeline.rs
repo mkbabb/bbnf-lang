@@ -43,9 +43,12 @@ pub enum CompileTarget {
 }
 
 impl CompileTarget {
-    /// How this backend's regex leaf resolves an alternation. The TS backend
-    /// runs ECMAScript `RegExp` (leftmost-first); the Rust, VM and WASM
-    /// backends run parse-that-regex's DFA (leftmost-longest).
+    /// Which grammar-tier regex rewrites this backend's leaf admits. The TS
+    /// backend runs ECMAScript `RegExp`. The Rust, VM and WASM backends run
+    /// parse-that-regex's DFA, leftmost-first since sk-v27 LW3.RX-1c; they
+    /// keep the `LeftmostLongest` class, which keeps `FuseAltRegexBranches`
+    /// out of their pass list, until fusion returns with its `L_cut`
+    /// certificate (LW3.RX-1h).
     pub fn leaf_match(&self) -> bbnf_ir::egraph::LeafMatch {
         match self {
             CompileTarget::Ts => bbnf_ir::egraph::LeafMatch::LeftmostFirst,

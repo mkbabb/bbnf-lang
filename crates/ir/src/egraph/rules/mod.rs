@@ -119,7 +119,9 @@ pub enum LeafMatch {
     /// ECMAScript `RegExp` (the TS backend): the first alternative that
     /// matches wins, as in the grammar's ordered choice.
     LeftmostFirst,
-    /// parse-that-regex's DFA (the Rust, VM and WASM backends): the longest
-    /// match wins.
+    /// The Rust, VM and WASM backends' class: their leaf is parse-that-regex's
+    /// DFA, leftmost-longest until sk-v27 LW3.RX-1c and leftmost-first since;
+    /// fusion stays out of their pass list until it carries the `L_cut`
+    /// certificate (LW3.RX-1h).
     LeftmostLongest,
 }

@@ -21,18 +21,47 @@ use bbnf::pipeline::{
 use bbnf_ir::{GrammarIR, IrNode};
 
 /// `(grammar path, rule, reason)`: uses of `( x << sep ? ) *|+` whose
-/// intent is the literal reading. None among the lowered grammars.
+/// intent is the literal reading.
 ///
-/// Read by hand because the Rust front end does not lower them:
 /// `grammar/misc/json-commented.bbnf` and its TypeScript fixture copy
 /// are comment-syntax fixtures (`/*a*/` in every position); their
-/// `( value << ","? ) *` lists are the literal repetition the
-/// TypeScript package has always read, not a JSON claim (the fixture
-/// has no whitespace rule and single-quoted strings), so they keep it.
+/// `( value << ","? ) *` and `( pair << ","? ) *` lists are the literal
+/// repetition the TypeScript package has always read, not a JSON claim
+/// (the fixture has no whitespace rule and single-quoted strings), so
+/// they keep it. This was read by hand while the Rust front end did not
+/// lower the fixture: its self-hosted `regex` leaf `(\\.|[^\/])+` was
+/// read leftmost-longest and ran `/\\\\/` past its closing slash. Since
+/// sk-v27 LW3.RX-1c the leaf is leftmost-first, as ECMAScript reads it,
+/// the fixture lowers, and the same ruling is checked here.
+///
+/// Read by hand because the Rust front end does not lower them:
 /// `grammar/misc/emoji.bbnf` (and its copy) and the six pinned
 /// `typescript/test/fixtures/value-js/` grammars (X-8, a released
 /// tarball) do not use the form.
-const RULED_LITERAL: &[(&str, &str, &str)] = &[];
+const LITERAL_JSON_COMMENTED: &str =
+    "comment-syntax fixture; the literal repetition the TypeScript package reads (S1-B)";
+const RULED_LITERAL: &[(&str, &str, &str)] = &[
+    (
+        "grammar/misc/json-commented.bbnf",
+        "array",
+        LITERAL_JSON_COMMENTED,
+    ),
+    (
+        "grammar/misc/json-commented.bbnf",
+        "object",
+        LITERAL_JSON_COMMENTED,
+    ),
+    (
+        "typescript/test/fixtures/grammar/lang/json-commented.bbnf",
+        "array",
+        LITERAL_JSON_COMMENTED,
+    ),
+    (
+        "typescript/test/fixtures/grammar/lang/json-commented.bbnf",
+        "object",
+        LITERAL_JSON_COMMENTED,
+    ),
+];
 
 /// `(grammar path, rule, ask)`: TypeScript-package fixture copies of
 /// grammars that mean a strict list, held for ruling S1-C. They feed

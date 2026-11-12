@@ -29,125 +29,53 @@ use parse_that::regex::nfa::DEAD;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-/// DFA accept-state semantics.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum MatchMode {
-    /// Return the longest (last) accept position. Default for greedy patterns.
-    Greedy,
-    /// Return the shortest (first) accept position. For patterns with lazy quantifiers.
-    Shortest,
-}
-
 /// Try to compile a regex pattern to inline DFA code.
 ///
 /// Returns `None` if the pattern uses unsupported features (backreferences)
-/// or the DFA exceeds the state limit (exponential blowup).
-/// Lazy quantifiers are supported via shortest-match (first-accept) semantics.
+/// or the DFA exceeds the state limit (exponential blowup). The DFA is
+/// parse-that's leftmost-first automaton (sk-v27 LW3.RX-1c): lazy
+/// quantifiers and ordered alternation are in its tables, so every tier
+/// walks to the last acceptance before the walk dies and there is no
+/// match-mode choice.
 pub fn try_emit_dfa_inline(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
-    let hir = parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
-        .ok()?;
-    let mode = if super::hir::contains_lazy_quantifier(&hir) {
-        MatchMode::Shortest
-    } else {
-        MatchMode::Greedy
-    };
-
+    parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode()).ok()?;
     let dfa = Dfa::compile(pattern)?;
-    Some(emit_dfa(&dfa, mode, opts))
+    if dfa.has_look {
+        return Some(emit_engine_call(pattern));
+    }
+    Some(emit_dfa(&dfa, opts))
 }
 
-/// Emit inline code for a compiled DFA.
-///
-/// Tier selection by state count (gated by `opts.cost`), with match mode
-/// determining accept behavior:
-/// - `Greedy`: track last accept (longest match). Tiers A/B.
-/// - `Shortest`: return on first accept. Table-driven shortest-match codegen.
-fn emit_dfa(dfa: &Dfa, mode: MatchMode, opts: &EmitOpts) -> TokenStream {
+/// A DFA whose acceptance or start reads look context (`^`, `$`, `\b`)
+/// is run by parse-that's own walk over the whole input, so the look-behind
+/// byte and the end of input are the engine's to read.
+fn emit_engine_call(pattern: &str) -> TokenStream {
+    quote! {
+        {
+            let __dfa = ::parse_that::scanners::cached_dfa(#pattern);
+            match __dfa.find_at(state.src_bytes, state.offset) {
+                Some(__end) => {
+                    let __start = state.offset;
+                    state.offset = __end;
+                    Some(::parse_that::Span::new(__start, __end, state.src))
+                }
+                None => None,
+            }
+        }
+    }
+}
+
+/// Emit inline code for a compiled DFA, tier by state count (gated by
+/// `opts.cost`).
+fn emit_dfa(dfa: &Dfa, opts: &EmitOpts) -> TokenStream {
     let n = dfa.state_count();
     if n == 0 {
         return quote! { None };
     }
-
-    if mode == MatchMode::Shortest {
-        return emit_dfa_shortest(dfa);
-    }
-
     if n <= opts.cost.decision_tree_max_states {
         emit_tier_a(dfa)
     } else {
         emit_tier_b(dfa)
-    }
-}
-
-/// Emit a DFA with shortest-match (first-accept) semantics.
-///
-/// Returns on the first accept state reached, not the last. Used for
-/// patterns containing lazy quantifiers (`*?`, `+?`).
-fn emit_dfa_shortest(dfa: &Dfa) -> TokenStream {
-    let num_cls = dfa.num_classes as usize;
-    let byte_classes: Vec<proc_macro2::Literal> = dfa
-        .byte_classes
-        .iter()
-        .map(|&c| proc_macro2::Literal::u8_unsuffixed(c))
-        .collect();
-
-    let num_states = dfa.state_count();
-    let num_cls_lit = proc_macro2::Literal::usize_unsuffixed(num_cls);
-
-    // Build flat transition table as literals.
-    let flat: Vec<proc_macro2::Literal> = dfa
-        .flat_transitions
-        .iter()
-        .map(|&s| proc_macro2::Literal::u32_unsuffixed(s))
-        .collect();
-
-    // Accept-state set.
-    let mut accept_arms = Vec::new();
-    for (i, s) in dfa.states.iter().enumerate() {
-        if s.is_accept {
-            let i_lit = proc_macro2::Literal::u32_unsuffixed(i as u32);
-            accept_arms.push(quote! { #i_lit });
-        }
-    }
-
-    let start_is_accept = dfa.states[0].is_accept;
-    let start_check = if start_is_accept {
-        quote! {
-            // Start state is accepting — empty match is shortest.
-            return Some(::parse_that::Span::new(__start, __start, state.src));
-        }
-    } else {
-        quote! {}
-    };
-
-    // Table-driven state machine with first-accept return.
-    let dead = proc_macro2::Literal::u32_unsuffixed(DEAD);
-
-    quote! {
-        {
-            static __BYTE_CLASSES: [u8; 256] = [#(#byte_classes),*];
-            static __TRANSITIONS: [u32; #num_states * #num_cls_lit] = [#(#flat),*];
-            let __start = state.offset;
-            #start_check
-            let __end = state.src_bytes.len();
-            let mut __s: u32 = 0;
-            let mut __pos = __start;
-            while __pos < __end {
-                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                let __cls = __BYTE_CLASSES[__b as usize] as usize;
-                let __next = __TRANSITIONS[__s as usize * #num_cls_lit + __cls];
-                if __next == #dead {
-                    break;
-                }
-                __s = __next;
-                __pos += 1;
-                if matches!(__s, #(#accept_arms)|*) {
-                    state.offset = __pos;
-                    return Some(::parse_that::Span::new(__start, __pos, state.src));
-                }
-            }
-            None
-        }
     }
 }
 
@@ -476,5 +404,10 @@ pub fn canonical_dfa_hash(pattern: &str) -> Option<u64> {
         parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
             .ok()?;
     let dfa = Dfa::compile(pattern)?;
+    // The structure hash reads transitions and unconditional acceptance only;
+    // a look-dependent DFA is not deduplicated.
+    if dfa.has_look {
+        return None;
+    }
     Some(accel::hash_dfa_structure(&dfa))
 }

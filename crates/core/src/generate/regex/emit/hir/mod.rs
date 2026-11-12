@@ -24,19 +24,6 @@ use repetition::emit_repetition;
 
 // ── Lazy quantifier detection ──────────────────────────────────────────────
 
-/// Check if an HIR tree contains any lazy (non-greedy) quantifiers.
-///
-/// Used by the DFA emitter to bail on patterns with lazy quantifiers,
-/// since DFA-based matching always produces longest-match semantics.
-pub(crate) fn contains_lazy_quantifier(hir: &Hir) -> bool {
-    match hir {
-        Hir::Repetition(rep) => !rep.greedy || contains_lazy_quantifier(&rep.sub),
-        Hir::Concat(subs) | Hir::Alternation(subs) => subs.iter().any(contains_lazy_quantifier),
-        Hir::Group(sub) => contains_lazy_quantifier(sub),
-        _ => false,
-    }
-}
-
 /// Try to compile a regex pattern into inline byte-operation code.
 ///
 /// On success, returns a `TokenStream` that evaluates to `Option<Span<'a>>`,

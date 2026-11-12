@@ -24,8 +24,34 @@ fn dfa_lazy_star_stops_at_first_close() {
     let dfa = parse_that::regex::Dfa::compile(pattern).expect("DFA should compile");
     let re = Regex::new(&format!(r"\A(?:{})", pattern)).unwrap();
 
-    assert_eq!(dfa.find_at(input.as_bytes(), 0), Some(8), "first /* to first */");
+    assert_eq!(
+        dfa.find_at(input.as_bytes(), 0),
+        Some(8),
+        "first /* to first */"
+    );
     assert_eq!(re.find(input).map(|m| m.end()), Some(8));
+}
+
+/// An alternation is leftmost-first (sk-v27 LW3.RX-1c): the self-hosted
+/// BBNF `regex` leaf `(\\.|[^\/])+` reads the body `\\\\` of `/\\\\/` and
+/// stops at its closing slash, as ECMAScript does. Read leftmost-longest,
+/// the last backslash paired with the slash through `\\.` and the leaf ran
+/// on to the next `/` (here the line comment's), so a grammar holding the
+/// regex `/\\\\/` before a `//` comment did not parse
+/// (`grammar/misc/json-commented.bbnf`'s `char` rule).
+#[test]
+fn bbnf_regex_leaf_stops_at_its_closing_slash() {
+    let dfa = parse_that::regex::Dfa::compile(r"(\\.|[^\/])+").expect("DFA should compile");
+    assert_eq!(
+        dfa.find_at(br"\\\\/ ; // x", 0),
+        Some(4),
+        "the body is the four backslashes"
+    );
+
+    let src = "c = /\\\\\\\\/ ; // x\nd = \"y\" ;\n";
+    let grammar = bbnf::grammar::parse(src).expect("the grammar parses");
+    let rules: Vec<&str> = grammar.rules.keys().copied().collect();
+    assert_eq!(rules, ["c", "d"]);
 }
 
 /// The DFA-compatible CSS comment pattern stops at the first `*/`.

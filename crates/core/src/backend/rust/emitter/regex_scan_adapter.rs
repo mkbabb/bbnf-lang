@@ -259,6 +259,10 @@ fn emit_dfa_body_for_pattern(pattern: &str) -> TokenStream {
             pattern,
         )
     });
+    // This walk reads unconditional acceptance from start state 0; a
+    // look-dependent DFA (`^`, `$`, `\b`; sk-v27 LW3.RX-1c) is not one
+    // the lifter may hand it.
+    assert!(!dfa.has_look, "DFA for {pattern:?} carries look conditions");
 
     // ── Per-state dispatch arms ─────────────────────────────────────
     //
@@ -300,9 +304,10 @@ fn emit_dfa_body_for_pattern(pattern: &str) -> TokenStream {
     // ── Accept-state check ─────────────────────────────────────────
     //
     // After a byte is consumed, the new state is checked against the
-    // set of accepting states. Greedy semantics: `__dfa_last_match` is
-    // updated on every accept, so the longest match wins — matching
-    // `Dfa::find_at`.
+    // set of accepting states. `__dfa_last_match` is updated on every
+    // accept and the walk stops at the first dead transition; on the
+    // leftmost-first table this is the leftmost-first match, as
+    // `Dfa::find_at` returns it.
     let accept_lits: Vec<Literal> = dfa
         .states
         .iter()
@@ -384,6 +389,10 @@ fn emit_dfa_body_table_driven(
             pattern,
         )
     });
+    // This walk reads unconditional acceptance from start state 0; a
+    // look-dependent DFA (`^`, `$`, `\b`; sk-v27 LW3.RX-1c) is not one
+    // the lifter may hand it.
+    assert!(!dfa.has_look, "DFA for {pattern:?} carries look conditions");
     let num_cls_lit = Literal::usize_unsuffixed(num_classes);
     let start_accept = if dfa.states[0].is_accept {
         quote! { ::core::option::Option::Some(pos as u32) }

@@ -41,6 +41,7 @@ dependencies = [
  "bbnf-ir",
  "indexmap",
  "ls-types",
+ "parse_that",
  "pprint",
  "self_cell",
 ]
@@ -346,7 +347,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
+source = "git+https://github.com/mkbabb/parse-that?rev=661edc686be4e319e2e71f887d15264fd71642e7#661edc686be4e319e2e71f887d15264fd71642e7"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -356,7 +357,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
+source = "git+https://github.com/mkbabb/parse-that?rev=661edc686be4e319e2e71f887d15264fd71642e7#661edc686be4e319e2e71f887d15264fd71642e7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -366,7 +367,7 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
+source = "git+https://github.com/mkbabb/parse-that?rev=661edc686be4e319e2e71f887d15264fd71642e7#661edc686be4e319e2e71f887d15264fd71642e7"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
@@ -381,12 +382,12 @@ dependencies = [
 [[package]]
 name = "parse-that-simd"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
+source = "git+https://github.com/mkbabb/parse-that?rev=661edc686be4e319e2e71f887d15264fd71642e7#661edc686be4e319e2e71f887d15264fd71642e7"
 
 [[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61"
+source = "git+https://github.com/mkbabb/parse-that?rev=661edc686be4e319e2e71f887d15264fd71642e7#661edc686be4e319e2e71f887d15264fd71642e7"
 dependencies = [
  "aho-corasick",
  "colored",

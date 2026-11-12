@@ -11,6 +11,7 @@
 //! - [`cycles`]: left-recursion / cycle-path detection via Tarjan SCC.
 //! - [`structure`]: empty-body, alias, and unreachable-rule detection.
 //! - [`directives`]: per-directive validation + semantic-token emission glue.
+//! - [`regex_reading`]: the `BBNF-RX-NOU` lint on regex leaves.
 //! - [`ir_analysis`]: IR pipeline integration (FOLLOW sets, dispatch, memo,
 //!   projected types, FIRST-set conflict detection).
 
@@ -20,6 +21,7 @@ mod early;
 mod extract;
 mod ir_analysis;
 mod references;
+mod regex_reading;
 mod structure;
 
 use bbnf::graph::calculate_ast_deps;
@@ -168,6 +170,9 @@ pub fn analyze_from_cache(
 
     // Sort semantic tokens by offset for encoding.
     semantic_tokens.sort_by_key(|t| t.span.0);
+
+    // Regex leaves whose reading differs without `u` (BBNF-RX-NOU).
+    regex_reading::lint_non_u_leaves(ast, line_index, &mut diagnostics);
 
     // IR pipeline: extract rich metadata (FOLLOW sets, dispatch, memo, types, FIRST sets).
     let ir_analysis = cached

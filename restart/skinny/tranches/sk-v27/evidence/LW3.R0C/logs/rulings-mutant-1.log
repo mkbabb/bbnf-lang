@@ -1,0 +1,4 @@
+unit=rulings rev=1d566beb01fbf61b0dce9a2b371c96e7b45eb3d8 reasons=1
+RED Z32-W: row is not marked "delegate, owner may overturn"
+RED
+rc=1

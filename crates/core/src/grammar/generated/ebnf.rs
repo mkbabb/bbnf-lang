@@ -7610,11 +7610,6 @@ mod __ebnfparser_emit_impl {
                             }
                         }
                     })?;
-                let _ = __shape_support_EbnfParser::skip_space(
-                    __input_bytes,
-                    &mut pos,
-                    &mut state,
-                );
                 if pos != input.len() {
                     return Err(crate::runtime::ParseErr::Syntax {
                         offset: pos as u32,

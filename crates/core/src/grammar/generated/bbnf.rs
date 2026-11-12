@@ -21504,11 +21504,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         }
                     })?;
-                let _ = __shape_support_BbnfBootstrap::skip_space(
-                    __input_bytes,
-                    &mut pos,
-                    &mut state,
-                );
                 if pos != input.len() {
                     return Err(crate::runtime::ParseErr::Syntax {
                         offset: pos as u32,

@@ -37,19 +37,30 @@ fn strings(max: usize) -> Vec<String> {
     out
 }
 
-fn serde_accepts(s: &str) -> bool {
-    serde_json::from_str::<serde_json::Value>(s).is_ok()
+/// serde_json's verdict, or `None` when it refuses only because the number
+/// leaves f64's range (JSONTestSuite's `i_number_huge_exp` class: the RFC
+/// leaves the range to the implementation, so neither verdict is wrong).
+fn serde_accepts(s: &str) -> Option<bool> {
+    match serde_json::from_str::<serde_json::Value>(s) {
+        Ok(_) => Some(true),
+        Err(e) if e.to_string().contains("number out of range") => None,
+        Err(_) => Some(false),
+    }
 }
 
 #[test]
 fn number_scanner_equals_rfc_8259_on_every_short_string() {
     let mut diverging = Vec::new();
     let mut read = 0usize;
+    let mut out_of_range = 0usize;
     for s in strings(6) {
         for text in [s.clone(), format!("[{s}]"), format!("{{\"k\":{s}}}")] {
+            let Some(rfc) = serde_accepts(&text) else {
+                out_of_range += 1;
+                continue;
+            };
             read += 1;
             let root = JsonParser::parse(&text).is_ok();
-            let rfc = serde_accepts(&text);
             if root != rfc {
                 diverging.push(format!(
                     "{text:?}: root {} / serde_json {}",
@@ -59,7 +70,10 @@ fn number_scanner_equals_rfc_8259_on_every_short_string() {
             }
         }
     }
-    eprintln!("read {read} texts, {} diverging", diverging.len());
+    eprintln!(
+        "read {read} texts ({out_of_range} out of f64's range not judged), {} diverging",
+        diverging.len()
+    );
     assert!(
         diverging.is_empty(),
         "{} of {read} texts diverge from RFC 8259; first 20:\n{}",

@@ -1,0 +1,20 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd cargo test --release --test pp1a_one_loop -- --test-threads=2 --nocapture
+# date 2026-11-12T06:08:26-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.55s
+     Running tests/pp1a_one_loop.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp1a_one_loop-9119443993336185)
+
+running 8 tests
+test a_tab_in_a_leaf_is_refused ... ok
+test a_flat_group_65_deep_stays_flat ... ok
+test ascii_bytes_still_render ... ok
+test char_0xff_is_refused_at_build ... ok
+test every_non_ascii_char_byte_is_refused ... ok
+test l1_holds_at_depth_10_000 ... ok
+test non_ascii_wrap_and_sep_bytes_are_refused ... ok
+test closed_form_matches_the_oracle ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+# rc 0

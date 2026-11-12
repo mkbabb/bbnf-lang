@@ -1,0 +1,25 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test pp2_trivia -- --test-threads=2 --nocapture
+# date 2026-11-12T06:01:44-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.72s
+     Running tests/pp2_trivia.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp2_trivia-f9d3f1e86b5b83d4)
+
+running 8 tests
+test a_boundary_flushes_a_pending_suffix_through_a_hardline ... ok
+test a_pending_suffix_across_a_hardline_matches_the_oracle ... ok
+test break_parent_breaks_every_enclosing_group ... ok
+L9(i): 100000 cells
+test l9_i_a_suffix_ends_its_line ... ok
+L9(iii): 100000 cells
+test l9_iii_at_most_one_blank_line ... ok
+L9 (oracle): 100000 cells, 0 divergences
+test l9_trivia_documents_agree_with_the_oracle ... ok
+S8-B (composition): 100000 cells, 0 divergences
+test s8b_fill_sep_equals_its_composition ... ok
+S8-B (Leijen fillSep): 100000 cells, 0 divergences
+test s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.67s
+
+# rc 0

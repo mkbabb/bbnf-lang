@@ -1,0 +1,16 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test pp1b_ascii_path -- --test-threads=2 --nocapture
+# date 2026-11-12T06:01:29-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.36s
+     Running tests/pp1b_ascii_path.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp1b_ascii_path-e6259eee9f55efb3)
+
+running 3 tests
+ASCII path = general path on 2064640 lines of length <= 3
+test ascii_path_equals_general_path_on_every_short_ascii_line ... ok
+test ascii_run_is_the_ascii_prefix_length ... ok
+test ascii_path_equals_general_path_on_long_ascii_lines ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+# rc 0

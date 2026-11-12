@@ -1,0 +1,15 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test pp2_suffix_content -- --test-threads=2 --nocapture
+# date 2026-11-12T06:01:40-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.28s
+     Running tests/pp2_suffix_content.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp2_suffix_content-4bc766f5d9093151)
+
+running 3 tests
+test a_non_leaf_in_a_suffix_is_suffix_content ... ok
+test a_suffix_holds_leaves_only ... ok
+test the_trivia_builders_emit_one_op_each ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+# rc 0

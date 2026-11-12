@@ -1,0 +1,84 @@
+# head 418c59f1a2b746c5df1f3e2ab4017cfb8eb7d5df + tests/oracle/mod.rs and tests/pp2_trivia.rs from dd43d2f, the base binding
+# cmd cargo test --release --test pp2_trivia --no-fail-fast
+2026-11-12T05:54:55-05:00
+   Compiling pprint_derive v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-red/rust/derive)
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-red/rust)
+    Finished `release` profile [optimized] target(s) in 1.51s
+     Running tests/pp2_trivia.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp2_trivia-f9d3f1e86b5b83d4)
+
+running 8 tests
+test a_boundary_flushes_a_pending_suffix_through_a_hardline ... FAILED
+test a_pending_suffix_across_a_hardline_matches_the_oracle ... FAILED
+test break_parent_breaks_every_enclosing_group ... FAILED
+test l9_trivia_documents_agree_with_the_oracle ... FAILED
+test s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep ... FAILED
+test l9_i_a_suffix_ends_its_line ... FAILED
+test l9_iii_at_most_one_blank_line ... FAILED
+test s8b_fill_sep_equals_its_composition ... ok
+
+failures:
+
+---- a_boundary_flushes_a_pending_suffix_through_a_hardline stdout ----
+
+thread 'a_boundary_flushes_a_pending_suffix_through_a_hardline' (46719305) panicked at tests/pp2_trivia.rs:233:5:
+assertion `left == right` failed
+  left: "a //1b"
+ right: "a //1\nb"
+
+---- a_pending_suffix_across_a_hardline_matches_the_oracle stdout ----
+
+thread 'a_pending_suffix_across_a_hardline_matches_the_oracle' (46719306) panicked at tests/pp2_trivia.rs:219:5:
+assertion `left == right` failed
+  left: "a //1 b\nz"
+ right: "a b //1\nz"
+
+---- break_parent_breaks_every_enclosing_group stdout ----
+
+thread 'break_parent_breaks_every_enclosing_group' (46719307) panicked at tests/pp2_trivia.rs:248:5:
+assertion `left == right` failed
+  left: "a b c"
+ right: "a\nb\nc"
+
+---- l9_trivia_documents_agree_with_the_oracle stdout ----
+
+thread 'l9_trivia_documents_agree_with_the_oracle' (46719310) panicked at tests/pp2_trivia.rs:267:13:
+assertion `left == right` failed: L9: diverges from the oracle at w=32
+tree: [Text("a"), Group([Suffix(3), Group([BreakParent, FillSep(2), Suffix(2), Boundary]), Group([Text("bb"), Boundary])]), Suffix(5), Boundary]
+  left: "a #4   /*3*/bb ;6"
+ right: "a   #4 /*3*/\nbb ;6\n"
+
+---- s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep stdout ----
+
+thread 's8b_fill_sep_is_one_op_equal_to_leijen_fill_sep' (46719312) panicked at tests/pp2_trivia.rs:378:5:
+S8-B: fill_sep builds no FillSep op: [Text("a"), GroupStart { hdr: 0 }, IfBreak { break_count: 1, flat_count: 1 }, BreakLine, Text(" "), GroupEnd, Text("b")]
+
+---- l9_i_a_suffix_ends_its_line stdout ----
+
+thread 'l9_i_a_suffix_ends_its_line' (46719308) panicked at tests/pp2_trivia.rs:302:21:
+L9(i) w=5: a suffix is not at the end of its line " //1a ;6 //1 //22accc"
+tree: [Group([Text("ccc"), Softline, Group([Group([Text("x;")]), Boundary, IfBreak([Softline], [Text("a"), Softline])])]), Suffix(0), Text("a"), Indent([Suffix(5), Group([Suffix(0)]), Group([BreakParent, Suffix(1), Indent([Indent([Text("a"), Text("ccc")])])])])]
+
+---- l9_iii_at_most_one_blank_line stdout ----
+
+thread 'l9_iii_at_most_one_blank_line' (46719309) panicked at tests/pp2_trivia.rs:354:13:
+L9(iii) w=13: two blank lines in a row
+"\n\n\n\n\ndddd"
+tree: [Hardline, Hardline, Hardline, Hardline, Hardline, Text("dddd")]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    a_boundary_flushes_a_pending_suffix_through_a_hardline
+    a_pending_suffix_across_a_hardline_matches_the_oracle
+    break_parent_breaks_every_enclosing_group
+    l9_i_a_suffix_ends_its_line
+    l9_iii_at_most_one_blank_line
+    l9_trivia_documents_agree_with_the_oracle
+    s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep
+
+test result: FAILED. 1 passed; 7 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `--test pp2_trivia`
+error: 1 target failed:
+    `--test pp2_trivia`
+# rc 101

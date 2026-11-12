@@ -1,0 +1,4 @@
+RED: rust/Cargo.lock pins pprint bc78dd850edb533a9a587f1f6bb7694ff0b358a8
+RED: rust/Cargo.lock pins pprint bc78dd850edb533a9a587f1f6bb7694ff0b358a8
+RED: rust/parse_that/Cargo.toml pins pprint bc78dd850edb533a9a587f1f6bb7694ff0b358a8
+rc=1

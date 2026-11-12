@@ -1,0 +1,111 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=1
+# cmd cargo test --release --test pp2_trivia --test laws --no-fail-fast -- --test-threads=2
+# date 2026-11-12T06:03:41-05:00
+   Compiling pprint_derive v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-mut/rust/derive)
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-mut/rust)
+    Finished `release` profile [optimized] target(s) in 1.71s
+     Running tests/laws.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/laws-6c460f3d7ef35935)
+
+running 15 tests
+test l2_hard_forces_break ... ok
+test l3_later_group_counts_to_its_first_line_not_its_flat_width ... ok
+test l1_group_flat_iff_fits ... ok
+test l4_align_and_hang_on_the_oracle ... ok
+test l3_rest_lookahead ... ok
+test l4_nest_changes_indentation_only ... ok
+test l5_linear_join_is_leijen_fill_sep ... ok
+test l6_if_break_follows_the_innermost_group ... ok
+test l7_i_no_overflow_past_a_breakable_point ... ok
+test l7_ii_infinite_width_is_flatten ... ok
+test l7_iii_oracle_at_every_width ... ok
+test l8_total ... ok
+test l9_l3_rest_lookahead_with_trivia ... FAILED
+test l9_trivia_in_the_g2_generator ... FAILED
+test l5_fill_pairwise ... ok
+
+failures:
+
+---- l9_l3_rest_lookahead_with_trivia stdout ----
+
+thread 'l9_l3_rest_lookahead_with_trivia' (46850344) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L9 L3': renderer diverges from the oracle at w=2
+program: [Softline, Indent([BreakParent, Suffix(" /*e*/"), Text("bb")]), Group([Group([Group([FillSep(""), Hardline, Sep]), Group([Sep]), Hardline, Text("dddd")]), Sep, Suffix(" //c"), BreakLine]), Group([Sep, Text("(y)")])]
+  left: " bb\n\n|\n|\n\ndddd|\n\n|\n(y) /*e*/ //c"
+ right: " bb /*e*/\n\n|\n|\n\ndddd|\n //c\n|\n(y)"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- l9_trivia_in_the_g2_generator stdout ----
+
+thread 'l9_trivia_in_the_g2_generator' (46850345) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L9 (G2): renderer diverges from the oracle at w=0
+program: [Group([Indent([Hardline, Text("ccc")]), Group([Int(-753), Indent([Group([Text("ccc"), Boundary, CommaSep, IfBreak([Hardline], [])])]), IfBreak([Text("dddd"), FillSep(" ")], [BreakLine]), Softline]), Sep, BreakLine, IfBreak([Wrap(40, 41, [Suffix(" #d")]), BreakParent], [Hardline])])]
+  left: "\n    ccc-753ccc,\n\n    dddd\n\n|\n\n(\n\n) #d"
+ right: "\n    ccc-753ccc,\n\n    dddd\n\n|\n\n(\n     #d\n)"
+
+
+failures:
+    l9_l3_rest_lookahead_with_trivia
+    l9_trivia_in_the_g2_generator
+
+test result: FAILED. 13 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.45s
+
+error: test failed, to rerun pass `--test laws`
+     Running tests/pp2_trivia.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp2_trivia-f9d3f1e86b5b83d4)
+
+running 8 tests
+test a_pending_suffix_across_a_hardline_matches_the_oracle ... FAILED
+test a_boundary_flushes_a_pending_suffix_through_a_hardline ... FAILED
+test break_parent_breaks_every_enclosing_group ... ok
+test l9_iii_at_most_one_blank_line ... FAILED
+test l9_trivia_documents_agree_with_the_oracle ... FAILED
+test l9_i_a_suffix_ends_its_line ... ok
+test s8b_fill_sep_equals_its_composition ... ok
+test s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep ... ok
+
+failures:
+
+---- a_pending_suffix_across_a_hardline_matches_the_oracle stdout ----
+
+thread 'a_pending_suffix_across_a_hardline_matches_the_oracle' (46850672) panicked at tests/pp2_trivia.rs:221:5:
+assertion `left == right` failed
+  left: "a b\nz //1"
+ right: "a b //1\nz"
+
+---- a_boundary_flushes_a_pending_suffix_through_a_hardline stdout ----
+
+thread 'a_boundary_flushes_a_pending_suffix_through_a_hardline' (46850671) panicked at tests/pp2_trivia.rs:235:5:
+assertion `left == right` failed
+  left: "a\nb //1"
+ right: "a //1\nb"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- l9_iii_at_most_one_blank_line stdout ----
+
+thread 'l9_iii_at_most_one_blank_line' (46850675) panicked at tests/pp2_trivia.rs:360:13:
+assertion `left == right` failed: L9(iii) w=5: oracle
+tree: [Group([Text("w"), Indent([Text("x;"), Indent([Boundary, Boundary]), BreakParent]), Text("bb"), Text("a"), Suffix(5), Text("w")]), Hardline, Hardline, Hardline]
+  left: "wx;bbaw\n\n ;6"
+ right: "wx;bbaw ;6\n\n"
+
+---- l9_trivia_documents_agree_with_the_oracle stdout ----
+
+thread 'l9_trivia_documents_agree_with_the_oracle' (46850676) panicked at tests/pp2_trivia.rs:269:13:
+assertion `left == right` failed: L9: diverges from the oracle at w=25
+tree: [Text("(y)"), Text("w"), Text("bb"), Indent([Group([Text("(y)"), Indent([Text("bb")])]), Suffix(2), Group([Suffix(2), FillSep(0)])]), Hardline, FillSep(2)]
+  left: "(y)wbb(y)bb\n   /*3*/ /*3*/"
+ right: "(y)wbb(y)bb /*3*/ /*3*/\n"
+
+
+failures:
+    a_boundary_flushes_a_pending_suffix_through_a_hardline
+    a_pending_suffix_across_a_hardline_matches_the_oracle
+    l9_iii_at_most_one_blank_line
+    l9_trivia_documents_agree_with_the_oracle
+
+test result: FAILED. 4 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.19s
+
+error: test failed, to rerun pass `--test pp2_trivia`
+error: 2 targets failed:
+    `--test laws`
+    `--test pp2_trivia`
+# rc 101

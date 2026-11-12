@@ -1,0 +1,26 @@
+# head d98914e349b240deac25363853958a5180e0dcc7 dirty=0
+# cmd cargo test -p gorgeous --features vm --test vm
+# date 2026-11-12T06:17:12-05:00
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-bl-red/crates/ser)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-bl-red/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-bl-red/crates/core)
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-bl-red/crates/gorgeous)
+error[E0560]: struct `GrammarIR` has no field named `shape_dict_templates`
+  --> crates/gorgeous/tests/vm.rs:52:9
+   |
+52 |         shape_dict_templates: Vec::new(),
+   |         ^^^^^^^^^^^^^^^^^^^^ `GrammarIR` does not have this field
+   |
+   = note: all struct fields are already assigned
+
+error[E0560]: struct `GrammarIR` has no field named `shape_dict_selection`
+  --> crates/gorgeous/tests/vm.rs:53:9
+   |
+53 |         shape_dict_selection: Vec::new(),
+   |         ^^^^^^^^^^^^^^^^^^^^ `GrammarIR` does not have this field
+   |
+   = note: all struct fields are already assigned
+
+For more information about this error, try `rustc --explain E0560`.
+error: could not compile `gorgeous` (test "vm") due to 2 previous errors
+# rc 101

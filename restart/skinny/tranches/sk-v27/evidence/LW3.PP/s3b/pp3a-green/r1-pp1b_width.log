@@ -1,0 +1,21 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd cargo test --release --test pp1b_width -- --test-threads=2 --nocapture
+# date 2026-11-12T06:08:35-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.61s
+     Running tests/pp1b_width.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp1b_width-ab3df73f092e429f)
+
+running 5 tests
+CJK: 100000 cells, 0 divergences
+test cjk_leaves_do_not_overflow ... ok
+combining: 100000 cells, 0 divergences
+test combining_mark_leaves_do_not_overflow ... ok
+test multiline_leaf_last_line_width_and_has_hard ... ok
+emoji: 100000 cells, 0 divergences
+test emoji_leaves_do_not_overflow ... ok
+Unicode: 100000 cells, 0 divergences
+test unicode_oracle_and_renderer_agree ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.78s
+
+# rc 0

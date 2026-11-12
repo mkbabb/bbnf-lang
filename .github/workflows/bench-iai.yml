@@ -47,6 +47,7 @@ jobs:
       # lw3/s2-ci-blackhole only (sk-v27 LW3.CI-IAI-1's falsifier): the three
       # Ubuntu archive hosts resolve to nowhere for the rest of the job.
       - name: blackhole the Ubuntu archive hosts
+        if: ${{ false }}  # priming run: hosts reachable
         shell: bash
         run: |
           for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com; do

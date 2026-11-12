@@ -1,0 +1,4 @@
+root = branch, digits, pair*, "x", "!" ;
+branch = (@discarded("a"), "x") | @chosen(("a", "b")) ;
+digits = /[0-9]+/ ;
+pair = "x", "y" ;

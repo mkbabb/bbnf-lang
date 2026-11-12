@@ -14,7 +14,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 use divan::black_box;
 
-#[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 

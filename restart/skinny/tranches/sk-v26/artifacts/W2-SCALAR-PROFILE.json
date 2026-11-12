@@ -1,0 +1,136 @@
+{
+  "schema": "sk-v26.w2.scalar-profile.v1",
+  "disposition": "REJECT",
+  "classifier": "STANDALONE_NONPRODUCTION_PROTOTYPE",
+  "promotion": "PROHIBITED",
+  "subject": {
+    "repository": "/Users/mkbabb/Programming/bbnf-lang-skv26",
+    "branch": "codex/sk-v26-bbnf",
+    "frozen_carrier_commit": "28a91db51177495efb61cd1c664a85b37fdd9529",
+    "frozen_carrier_tree": "df6f1b063acfc49b3e0382fbd4a46892be7e5328",
+    "parse_that_commit": "282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f",
+    "parse_that_tree": "4e813a353251f86906baee44a9c4d28e743fe27b",
+    "measured_source_commit": "cd49c8819190abac9f71743da8d05bf17ce48ab1",
+    "measured_dirty_digest": "a4f45feed53ee127d95e2f87000b980d2e075e2bd4942c6ca9d2fc8ff7a02a7c",
+    "source_manifest_sha256": "a1719c5e9f337779ec4a7a1295d2757c3f5e7bbe1e9b00994752618fb8328092"
+  },
+  "artifacts": {
+    "plan": {
+      "path": "restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/PROFILE-PLAN.md",
+      "sha256": "bb132f2d671c9027b091f55dd1b2fb5affeced2045d754f4e466dac89c46cf2a"
+    },
+    "report": {
+      "path": "restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/PROFILE-REPORT.md",
+      "sha256": "00ca83aeb1dac4f2460902c746bf6cb02a30cd6c5a377553d87bd107c6407eff"
+    },
+    "readme": {
+      "path": "restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/README.md",
+      "sha256": "0f1a004dd3fbcf4562316c737b2edf69c12d650433579f61ec7c9d9ae7b1c972"
+    },
+    "raw_measurements": {
+      "path": "restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/profile.raw.json",
+      "sha256": "51e2341fea923c25fcb645e83ff70f5c81353e10589acdc9fd4b061b7806e497",
+      "rows": 16
+    },
+    "harness_source": {
+      "path": "restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/src/main.rs",
+      "sha256": "e09da5836a4a21b17bf6c6582fbf364fb378bb64a4fec6fe72e3f1b6fbfaf11f"
+    },
+    "manifest": {
+      "path": "restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/Cargo.toml",
+      "sha256": "e9dc40d55f5e0b481cd69a4f03bf38e8e818261eba71cbf8f6af35f48757b18f"
+    },
+    "lockfile": {
+      "path": "restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/Cargo.lock",
+      "sha256": "08a345019768c8c906c61160a4c06f734a28ae741f5096c48a716597580fe29d"
+    }
+  },
+  "method": {
+    "role": "isolated scalar-path profiling control",
+    "correctness_cases": 10532,
+    "generated_documents": 10000,
+    "reported_rows": 16,
+    "raw_rows": 16,
+    "measures": [
+      "one-byte-or-one-UTF-8-scalar oracle inside the standalone harness",
+      "grammar-derived eight-byte scalar classifier inside the same harness"
+    ],
+    "sizes": [
+      "small admitted scalar documents",
+      "64 KiB long scalar",
+      "1 MiB long scalar"
+    ],
+    "statistics": "40 paired samples per row with paired bootstrap simultaneous 95% intervals after the predeclared Bonferroni correction",
+    "replay_rule": "profile.raw.json and PROFILE-REPORT.md are the authoritative historical measurement; a fresh execution is a new run and must not overwrite or be represented as reproducing the frozen samples"
+  },
+  "decisive_results": [
+    {
+      "case": "64 KiB long scalar",
+      "relative_change_percent": 31.493261,
+      "interval_percent": [
+        28.269506,
+        36.516065
+      ],
+      "classification": "CONDITIONAL_IMPROVEMENT"
+    },
+    {
+      "case": "1 MiB long scalar",
+      "relative_change_percent": 37.980901,
+      "interval_percent": [
+        37.57849,
+        38.568074
+      ],
+      "classification": "CONDITIONAL_IMPROVEMENT"
+    }
+  ],
+  "decisive_rejection_witnesses": [
+    {
+      "case": "64 KiB whitespace/punctuation",
+      "relative_change_percent": -23.826144,
+      "interval_percent": [
+        -29.19069,
+        -15.399859
+      ],
+      "classification": "REGRESSION"
+    },
+    {
+      "case": "1 MiB whitespace/punctuation",
+      "relative_change_percent": -17.221056,
+      "interval_percent": [
+        -24.56491,
+        -11.643375
+      ],
+      "classification": "REGRESSION"
+    }
+  ],
+  "rejection_reasons": [
+    "the always-on classifier rejects the standalone prototype for production promotion",
+    "whitespace/punctuation rows and compact 1 KiB violate their predeclared calibrated regression guards",
+    "long-scalar improvements cannot cancel regressions in other admitted families under the predeclared decision rule",
+    "the prototype is an isolated dependency-free Rust correctness and measurement control, not parse-that, a BBNF-emitted parser, the totality backend, or a hybrid Rust/ASM emitter",
+    "the measurement does not establish cross-machine reproducibility, end-to-end generated-parser superiority, or superiority over the broader named SOTA cohort",
+    "a successful correctness gate cannot override the performance rejection"
+  ],
+  "correctness_gate": {
+    "command": "cargo test --locked --manifest-path restart/skinny/tranches/sk-v26/prototypes/w2-scalar-profile/Cargo.toml",
+    "expected_tests": 3,
+    "status": "PASS",
+    "meaning": "the harness and frozen classification contracts are internally coherent; this is not promotion"
+  },
+  "decision": {
+    "production_use": false,
+    "cutover_authority": false,
+    "benchmark_claim": false,
+    "backend_authority": false,
+    "allowed_use": [
+      "retain as a negative performance witness",
+      "use decisive regressions to prioritize scalar-path profiling and code-generation work",
+      "compare future materially different emitters under a newly sealed measurement epoch"
+    ]
+  },
+  "limitations": [
+    "The frozen report belongs to its recorded measured commit and dirty digest, which precede the final frozen carrier commit.",
+    "This receipt preserves reported intervals; it does not recalculate them from raw timing samples.",
+    "The classifier remains REJECT even if a later machine happens to produce faster unsealed measurements."
+  ]
+}

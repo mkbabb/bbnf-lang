@@ -1,0 +1,16 @@
+// Action-free nested-region witness with ordinary error-token continuation.
+document = stylesheet ?w ;
+stylesheet = { item } ;
+item = rule | declaration | @error(error_token) ;
+
+rule = selector, "{" ?w, { item }, "}" ?w ;
+selector = /[.#]?[A-Za-z_][A-Za-z0-9_-]*/ ?w ;
+
+declaration = property, ":" ?w, value, ";" ?w ;
+property = /--?[A-Za-z_][A-Za-z0-9_-]*|[A-Za-z_][A-Za-z0-9_-]*/ ?w ;
+value = double_quoted | single_quoted | bare ;
+double_quoted = /"(?:[^"\\]|\\.)*"/ ?w ;
+single_quoted = /'(?:[^'\\]|\\.)*'/ ?w ;
+bare = /[A-Za-z0-9_.#%-]+/ ?w ;
+
+error_token = /[^;{}]+;/ ?w ;

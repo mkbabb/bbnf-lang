@@ -1,0 +1,121 @@
+{
+  "schema": "sk-v26.w1.transaction-laws.v1",
+  "disposition": "PASS",
+  "subject": {
+    "repository": "/Users/mkbabb/Programming/parse-that-skv26",
+    "branch": "codex/sk-v26-parse-that",
+    "commit": "9c9714dfdfa6d33b70f5738c311a9abccb4a1bdf",
+    "tree": "76141a76dee446249233056e94ea9b043968bdd4",
+    "dirty_porcelain_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "selected_kernel": {
+    "source_files": 7,
+    "source_lines": 854,
+    "normal_dependencies": 0,
+    "production_unsafe_blocks": 0,
+    "transaction_participants": [
+      "checked cursor offset",
+      "one append-only EventSink length"
+    ],
+    "operations": [
+      "literal",
+      "regex terminal",
+      "sequence",
+      "choice",
+      "repeat",
+      "EOF",
+      "prefix parse",
+      "full parse"
+    ],
+    "outcomes": [
+      "Matched",
+      "Mismatch",
+      "Fault"
+    ]
+  },
+  "gates": [
+    {
+      "command": "cargo test --workspace --all-targets --all-features --locked",
+      "working_directory": "/Users/mkbabb/Programming/parse-that-skv26/rust",
+      "laws_passed": 70,
+      "failed": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "cargo test --locked --manifest-path contracts/runtime_bridge/Cargo.toml",
+      "working_directory": "/Users/mkbabb/Programming/parse-that-skv26/rust",
+      "laws_passed": 7,
+      "failed": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
+      "working_directory": "/Users/mkbabb/Programming/parse-that-skv26/rust",
+      "warnings": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "cargo clippy --locked --manifest-path contracts/runtime_bridge/Cargo.toml --all-targets -- -D warnings",
+      "working_directory": "/Users/mkbabb/Programming/parse-that-skv26/rust",
+      "warnings": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "RUSTDOCFLAGS='-D warnings' cargo doc --workspace --no-deps --locked",
+      "working_directory": "/Users/mkbabb/Programming/parse-that-skv26/rust",
+      "warnings": 0,
+      "status": "PASS"
+    }
+  ],
+  "parse_that_laws": {
+    "kernel": {
+      "passed": 37,
+      "sha256": "5a0aa4d3b22aa94dd320063029d33ed027688b6a4f6436d6d88b13512d5222f5",
+      "covers": [
+        "borrowed input and checked cursor/span provenance",
+        "distinct empty-source identity and nonempty reborrow identity",
+        "atomic mismatch and typed-fault rollback",
+        "furthest absolute failure evidence",
+        "progress faults for non-progressing repetition",
+        "checked regex plan dimensions and 256-class boundary",
+        "the same eventful parser under discarding and retaining sinks",
+        "direct generated-shaped control without a runtime parser graph"
+      ]
+    },
+    "allocation": {
+      "passed": 1,
+      "internal_assertions": 4,
+      "sha256": "272f9ced24da96d8e8c84547e7f668e6e56979cd1f6c0ee2dda45df96418f958",
+      "observed_allocations": 0,
+      "covers": [
+        "empty-source identity construction",
+        "successful borrowed NoSink recognition",
+        "erased event construction",
+        "mismatch, choice retry, and progress-fault paths"
+      ]
+    }
+  },
+  "regex_compile_runtime_laws": {
+    "table_plan_passed": 16,
+    "runtime_bridge_passed": 7,
+    "table_plan_sha256": "6c993a8bea549aa092ba2ee698c0886a54004e5c9fb51299660f4d0b58521893",
+    "runtime_bridge_sha256": "479821cab38ff39e4f90275f4bbce4d6907116d6ed67ebe0e60d8de09259ad17"
+  },
+  "scope_correction": {
+    "generated_shaped_control": "ISOMORPHIC_DIRECT_FIXTURE",
+    "genuine_bbnf_generated_control": "FIRST_BLOCKING_W2_GATE",
+    "required_w2_operations": [
+      "literal",
+      "regex",
+      "sequence",
+      "choice",
+      "repeat",
+      "EOF"
+    ],
+    "required_w2_sink_modes": [
+      "discarding",
+      "retaining"
+    ],
+    "failure_disposition": "REOPEN_W1"
+  }
+}

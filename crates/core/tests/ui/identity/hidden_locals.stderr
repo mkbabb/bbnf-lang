@@ -1,0 +1,48 @@
+error[E0432]: unresolved imports `bbnf::compiler::FieldIx`, `bbnf::compiler::NodeIx`, `bbnf::compiler::PlanNodeIx`, `bbnf::compiler::RuleIx`, `bbnf::compiler::SccIx`, `bbnf::compiler::TransformIx`, `bbnf::compiler::TypeIx`
+ --> tests/ui/identity/hidden_locals.rs:2:5
+  |
+2 |     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+  |     ^^^^^^^  ^^^^^^  ^^^^^^^^^^  ^^^^^^  ^^^^^  ^^^^^^^^^^^  ^^^^^^ no `TypeIx` in `compiler`
+  |     |        |       |           |       |      |
+  |     |        |       |           |       |      no `TransformIx` in `compiler`
+  |     |        |       |           |       no `SccIx` in `compiler`
+  |     |        |       |           no `RuleIx` in `compiler`
+  |     |        |       no `PlanNodeIx` in `compiler`
+  |     |        no `NodeIx` in `compiler`
+  |     no `FieldIx` in `compiler`
+  |
+help: a similar name exists in the module
+  |
+2 -     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+2 +     FieldId, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+  |
+help: a similar name exists in the module
+  |
+2 -     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+2 +     FieldIx, NodeId, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+  |
+help: a similar name exists in the module
+  |
+2 -     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+2 +     FieldIx, NodeIx, PlanNodeId, RuleIx, SccIx, TransformIx, TypeIx,
+  |
+help: a similar name exists in the module
+  |
+2 -     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+2 +     FieldIx, NodeIx, PlanNodeIx, RuleId, SccIx, TransformIx, TypeIx,
+  |
+help: a similar name exists in the module
+  |
+2 -     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+2 +     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccId, TransformIx, TypeIx,
+  |
+help: a similar name exists in the module
+  |
+2 -     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+2 +     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformId, TypeIx,
+  |
+help: a similar name exists in the module
+  |
+2 -     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeIx,
+2 +     FieldIx, NodeIx, PlanNodeIx, RuleIx, SccIx, TransformIx, TypeId,
+  |

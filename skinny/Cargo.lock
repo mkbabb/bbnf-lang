@@ -886,7 +886,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c1d5a4c3514d29abc027543ffbce3f88e"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -905,7 +905,7 @@ dependencies = [
 [[package]]
 name = "parse-that-simd"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=1dea59e9e1e8d0d23e428f86c57a16421fe42aae#1dea59e9e1e8d0d23e428f86c57a16421fe42aae"
+source = "git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c1d5a4c3514d29abc027543ffbce3f88e"
 
 [[package]]
 name = "passes"

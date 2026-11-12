@@ -1,0 +1,232 @@
+{
+  "schema": "sk-v26.w2.event-conformance.v1",
+  "disposition": "PASS_FOR_SEALED_W2_EVENT_CONTRACT",
+  "subject": {
+    "repository": "/Users/mkbabb/Programming/bbnf-lang-skv26",
+    "branch": "codex/sk-v26-bbnf",
+    "commit": "28a91db51177495efb61cd1c664a85b37fdd9529",
+    "tree": "df6f1b063acfc49b3e0382fbd4a46892be7e5328",
+    "parse_that_commit": "282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f",
+    "parse_that_tree": "4e813a353251f86906baee44a9c4d28e743fe27b"
+  },
+  "contract": {
+    "event_schema": "bbnf.scalar-events.v4",
+    "generated_schema": "bbnf.generated-rust.v5",
+    "complete_replay_schema": "bbnf.compiled-module.v5",
+    "source": "one admitted Program and separately sealed LoweringPlan under the same source revision",
+    "ordering": "one deterministic depth-first event stream in grammar source order",
+    "terminal_payload": "original-input byte spans only",
+    "record_payload": "stable FieldId carried by EnterField and LeaveField",
+    "transform_payload": "stable TransformId carried by Transform",
+    "transaction": "candidate events become observable only when their enclosing parse transaction commits",
+    "resource_policy": "caller-selected LimitsConfig can only tighten baked input-byte, nesting, logical-event, and work ceilings; typed fault kinds are preserved in both recognition and retained-event calls",
+    "kernel_abi": "generated Rust asserts parse_that::KERNEL_ABI == 2 at compile time and the BBNF carrier requires parse_that =0.4.1 exactly",
+    "runtime_grammar_policy": "generated controls do not deserialize, interpret, or traverse a runtime grammar",
+    "host_action_policy": "generated controls contain no callback, closure, trait object, dynamic dispatch, or host-code execution surface"
+  },
+  "control_law": {
+    "complete_packet": "replay_compilation and CompiledModule::from_replay_json validate bbnf.compiled-module.v5, recompile the carried source under caller-supplied CompileOptions including analysis_work, and reject option, component, generated-byte, revision, or canonical-byte disagreement",
+    "analysis_packet": "the complete packet carries bbnf.analysis-facts.v3 with required iterations and work_units; the recursive nominal-record schema probe records iterations=4 and work_units=78",
+    "generated_source": "GeneratedModule::emit consumes ScalarEventPlan and LoweringPlan as separate revision-equal sealed inputs; ScalarEventPlan does not embed lowering",
+    "stage_packets": "individual replay_json methods are deterministic serializers only and have no public standalone inverse",
+    "stream_comparison": "every claimed equality compares the full ordered event vector, including kind, start, end, rule, node, field, transform, and kind-specific value",
+    "failure_observation": "rejected parses expose no candidate event prefix"
+  },
+  "oracle_independence": {
+    "generated_scalar": {
+      "oracle": "a hand-authored recognizer and expected-event constructor in the generated control test; it neither calls the emitted parser nor imports compiler carriers",
+      "qualification": "the scalar grammar contains no records, so the independent ExpectedEvent shape omits field; no emitted event in this control can carry one"
+    },
+    "recursive": {
+      "oracle": "a literal ten-event vector for the admitted recursive input (x), authored independently of the emitted parser",
+      "qualification": "the additional accepted/rejected corpus asserts complete results and rollback, not an independent event constructor for every input"
+    },
+    "record": {
+      "oracle": "a literal twenty-two-event vector for the admitted retained/discarded-field input (x), including exact FieldId placement",
+      "qualification": "the canonical digest is a test receipt over that exact vector, not a production checksum API"
+    }
+  },
+  "cases": {
+    "generated_scalar": {
+      "path": "contracts/w2-generated-control/tests/generated_control.rs",
+      "sha256": "2393c043b16281dd723aed474f310c59587f5f164234ff31f8905cc6158b4c5f",
+      "grammar_sha256": "d2b61c26fce850abd16fe52d56380110e8bfef62ec08aa81264707cb0f547edb",
+      "tests": 8,
+      "systematic_positive_cases": 70,
+      "fixed_negative_cases": 8,
+      "fixed_seed_random_cases": 2048,
+      "independent_oracle_comparisons": 2126,
+      "fixed_exact_event_vector_length": 19,
+      "coverage": [
+        "both choice branches",
+        "five digit variants",
+        "one through seven repeated pairs",
+        "trailing-input and malformed-token rejection",
+        "fixed-seed accepted and rejected generated documents",
+        "transactional rollback",
+        "logical-event thresholds equal committed stream length across shallow and deep failed speculation",
+        "allocation-free NoSink recognition and EventBuffer retention",
+        "typed InputBytes, Nesting, Events, and Work limits",
+        "stable source identity and imports"
+      ]
+    },
+    "recursive": {
+      "path": "contracts/w2-recursive-control/tests/recursive_control.rs",
+      "sha256": "b9e01e3ff6104e1e05c06cebc2b8d958d761dc9d3f994dd0c73019edb3f36631",
+      "grammar_sha256": "dfb64c5c7803f11fd6192d2bb8894c04c3709076eddcdadd70d3faa8e37b3c42",
+      "tests": 5,
+      "accepted_cases": 4,
+      "rejected_cases": 7,
+      "fixed_exact_event_vector_length": 10,
+      "coverage": [
+        "productive consuming recursion",
+        "exact recursive entry and exit order",
+        "transactional rollback on recursive failure",
+        "mode-invariant typed resource faults",
+        "stable source identity and imports"
+      ]
+    },
+    "record": {
+      "path": "contracts/w2-record-control/tests/record_control.rs",
+      "sha256": "93a8180b51dabbfed990c2811098f5b2929720cd6c5ceb901a7310bdf5fac5f3",
+      "grammar_sha256": "39d0e1386080aa29b556f41f4dd09c58c1072b79b788230c7f040efab16f69b8",
+      "tests": 4,
+      "fixed_exact_event_vector_length": 22,
+      "canonical_event_digest": "55a8a603ffd3b5633f37893d9e9ad0d1d7d8961818adfdc7cb701ccedf60e636",
+      "coverage": [
+        "retained field descriptors are static generated data",
+        "EnterField and LeaveField carry the expected FieldId",
+        "discarded slots remain recognized but emit no field boundary",
+        "rollback removes every candidate field event",
+        "no runtime grammar or host action surface"
+      ]
+    }
+  },
+  "sink_modes": {
+    "recognition": "check and check_with_limits use allocation-free counting NoSink; event closures are not constructed, but logical event length participates in transaction checkpoints",
+    "retained": "parse_events and parse_events_with_limits use EventBuffer over the same borrowed immutable input and retain ScalarEvent values with source-relative byte ranges",
+    "transfer": "EventBuffer::into_stream transfers revision, borrowed source, and the exact retained Vec without changing event order",
+    "equality_law": "NoSink committed length equals EventBuffer committed length, and the minimum successful logical-event limit equals that length even when failed branch speculation differs",
+    "excluded": "generated controls expose no callback mode or host-action sink"
+  },
+  "transaction_laws": [
+    "choice candidates publish only after the selected branch commits",
+    "repeat candidates publish only after each repetition commits",
+    "record field boundaries publish only with their enclosing record candidate",
+    "a rejected complete parse exposes no events",
+    "resource-limit rejection exposes no candidate prefix",
+    "failed alternatives restore both cursor and sink length, including allocation-free NoSink's logical count",
+    "logical-event budget measures committed stream length; speculative event work remains accounted only by the monotone work budget",
+    "no semantic callback can escape before commit because W2 executes no host callbacks"
+  ],
+  "identity_laws": {
+    "schema_revision": "event schema revision is explicitly bbnf.scalar-events.v4",
+    "grammar_revision": "every generated event plan is bound to the compiler Revision carried by the complete packet",
+    "compiler_identity": "public compiler capabilities contain the exact full Revision and a private u32 local ordinal, while persistent event rows retain compact local ordinals; same-index foreign-revision lookups are rejected",
+    "serialization_opacity": "public capabilities and sealed carriers are not serde::Serialize; private replay adapters and generated ScalarEvent fields expose only compact grammar-local u32 ordinals under revision-bearing envelopes",
+    "representation_ceiling": "EventSiteData and TransformSiteData are each capped at 32 bytes and Option<PlanNodeIx> at 8 bytes by colocated representation laws",
+    "wire_version_law": "the in-memory capability/local-index split did not alter the already-compact event wire shape, so ScalarEventPlan remains v4; generated-rust v5 and generated-module v4 remain stable, while analysis-facts v3 and compiled-module v5 advance the repaired analysis and aggregate contracts",
+    "source_identity": "generated modules expose the admitted canonical source identity",
+    "field_identity": "FieldId is assigned by the compiler and preserved through type, lowering, event planning, emission, and the generated static descriptor table",
+    "transform_identity": "TransformId is compiler-assigned and preserved as metadata only"
+  },
+  "checksum_law": {
+    "scope": "record control exact-vector test only",
+    "algorithm": "the test's canonical event-vector serialization followed by SHA-256",
+    "expected": "55a8a603ffd3b5633f37893d9e9ad0d1d7d8961818adfdc7cb701ccedf60e636",
+    "non_claim": "the runtime API does not expose an event checksum and the scalar and recursive controls do not use this digest as their primary oracle"
+  },
+  "gates": {
+    "workspace_tests": {
+      "command": "cargo test --locked --workspace --all-targets",
+      "expected_tests": 57,
+      "breakdown": {
+        "compiler_unit": 13,
+        "carrier_lookup": 3,
+        "dependency": 5,
+        "emitter": 4,
+        "frontend": 9,
+        "identity_trybuild_harness": 1,
+        "record": 2,
+        "replay": 6,
+        "type_analysis": 14
+      },
+      "identity_opacity_compile_fail_cases": 5,
+      "status": "PASS"
+    },
+    "public_nameability": {
+      "command": "RUSTFLAGS='-D unnameable-types' cargo check --locked -p bbnf",
+      "meaning": "all public return types have public re-exported names",
+      "status": "PASS"
+    },
+    "generated_control": {
+      "command": "cargo test --locked --manifest-path contracts/w2-generated-control/Cargo.toml",
+      "expected_tests": 8,
+      "status": "PASS"
+    },
+    "recursive_control": {
+      "command": "cargo test --locked --manifest-path contracts/w2-recursive-control/Cargo.toml",
+      "expected_tests": 5,
+      "status": "PASS"
+    },
+    "record_control": {
+      "command": "cargo test --locked --manifest-path contracts/w2-record-control/Cargo.toml",
+      "expected_tests": 4,
+      "status": "PASS"
+    }
+  },
+  "implementation_evidence": {
+    "event": {
+      "path": "crates/core/src/compiler/event.rs",
+      "sha256": "b3b6e1f6bda3ec5d3cdfb137cf7b45fd6413b38c03aaf0bba68432453926636e"
+    },
+    "emitter": {
+      "path": "crates/core/src/compiler/emit.rs",
+      "sha256": "5619203dfe42f15104d92b147ac728af798ca42d029745c97eb36511f6919ed2"
+    },
+    "emitter_contract": {
+      "path": "crates/core/tests/emitter_contract.rs",
+      "sha256": "5d0cb4d054e1e2f1914c5d2cf5904657adf14aa79fbc420a2e0e5682c6b74dfb",
+      "tests": 4
+    },
+    "analysis": {
+      "path": "crates/core/src/compiler/analysis.rs",
+      "sha256": "5f07b21612c15085c34725c778c341d2bf41e64d9affdf4fae1fbcad5abf447b"
+    },
+    "analysis_budget": {
+      "path": "crates/core/src/compiler/budget.rs",
+      "sha256": "f0c80b8ab048e4264fde9e52377b31cc344086a66a4e379fc1886f5831f54d30"
+    },
+    "analysis_contract": {
+      "path": "crates/core/tests/type_analysis_laws.rs",
+      "sha256": "a5bffd2a245aabbd0dda5505600fdfeac3f30facbc664075ba221825f90c571e",
+      "tests": 14
+    },
+    "complete_replay": {
+      "path": "crates/core/src/compiler/replay.rs",
+      "sha256": "08e6c1db6c65b49b8aa982a4fa2c05e43ff5ad9c8ccce056c9491b4ea417219d"
+    },
+    "public_reexports": {
+      "path": "crates/core/src/compiler/mod.rs",
+      "sha256": "c7ea7bb1e09269cf8920e0e4d080179bb60a58acb69c9ceb18d23e2f167db68e"
+    },
+    "unnameable_types_lint": {
+      "path": "crates/core/src/lib.rs",
+      "sha256": "60afa497826ce59279578842daec7dc30c9069efebb4753d9ca1ed7a89efba9b"
+    },
+    "parse_that_transaction": {
+      "path": "/Users/mkbabb/Programming/parse-that-skv26/rust/parse_that/src/transaction.rs",
+      "sha256": "05254c4f1a9ee44c00a6cf4518be6282db089c48e8d939ead486d72cd9b8a3ac"
+    },
+    "parse_that_transaction_contract": {
+      "path": "/Users/mkbabb/Programming/parse-that-skv26/rust/parse_that/tests/kernel/transaction_laws.rs",
+      "sha256": "cce2d7f20b895bb6f17f5245b9932896d2fa7a024f15640906f5a43f9410f667"
+    }
+  },
+  "limitations": [
+    "The generated Rust controls are correctness controls, not a claim of a finalized totality emitter or hand-rolled assembly backend.",
+    "The independent scalar oracle is grammar-specific test code; it does not establish universal differential equivalence for every future grammar feature.",
+    "The record digest detects change in one canonical vector; it is not a collision-proof semantic proof.",
+    "W2 transforms are declarative event metadata and do not execute host code."
+  ]
+}

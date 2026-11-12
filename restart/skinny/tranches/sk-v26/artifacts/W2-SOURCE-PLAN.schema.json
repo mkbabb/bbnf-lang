@@ -1,0 +1,1871 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mkbabb/bbnf-lang/schemas/sk-v26/w2/compiled-module-v5.json",
+  "title": "SK-V26 W2 complete compilation replay packet",
+  "description": "The exact JSON shape emitted by CompiledModule::replay_json for bbnf.compiled-module.v5. This is a schema for the complete replay carrier; W2 does not expose or claim a separate standalone SourcePlan packet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "revision",
+    "value"
+  ],
+  "properties": {
+    "schema": {
+      "const": "bbnf.compiled-module.v5"
+    },
+    "revision": {
+      "$ref": "#/$defs/revision_hex"
+    },
+    "value": {
+      "$ref": "#/$defs/compilation_replay"
+    }
+  },
+  "x-bbnf-subject": {
+    "repository": "/Users/mkbabb/Programming/bbnf-lang-skv26",
+    "branch": "codex/sk-v26-bbnf",
+    "commit": "28a91db51177495efb61cd1c664a85b37fdd9529",
+    "tree": "df6f1b063acfc49b3e0382fbd4a46892be7e5328",
+    "parse_that_commit": "282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f",
+    "parse_that_tree": "4e813a353251f86906baee44a9c4d28e743fe27b"
+  },
+  "x-bbnf-carrier-schemas": {
+    "complete": "bbnf.compiled-module.v5",
+    "source_map": "bbnf.source-map.v3",
+    "program": "bbnf.program.v2",
+    "node_remap": "bbnf.node-remap.v1",
+    "dependency": "bbnf.dependency-solution.v1",
+    "types": "bbnf.type-solution.v2",
+    "analysis": "bbnf.analysis-facts.v3",
+    "lowering": "bbnf.lowering-plan.v2",
+    "events": "bbnf.scalar-events.v4",
+    "generated_replay": "bbnf.generated-module.v4",
+    "generated_rust_manifest": "bbnf.generated-rust.v5",
+    "source_revision_domain": "bbnf.w2.source.v4"
+  },
+  "x-bbnf-invariants": [
+    "The envelope revision is the lowercase hexadecimal encoding of every embedded Revision byte array.",
+    "The complete packet contains exactly one source module; replay extracts only its logical_path and bytes, recompiles them with caller-supplied CompileOptions, and trusts no serialized carrier.",
+    "The packet options equal the caller-supplied CompileOptions, including the required analysis_work bound; a mismatch is ReplayError::ValueMismatch(CompileOptions).",
+    "Public NodeId, RuleId, FieldId, TransformId, TypeId, SccId, and PlanNodeId capabilities carry the exact full source Revision plus a private u32 local ordinal; every public lookup rejects a revision mismatch before indexing.",
+    "Persistent compiler arenas store only four-byte private local ordinals. Their enforced row ceilings are: SourceNodeData 48 bytes, SourceRuleData 40, SourceRecordSlotData 48, NodeData 56, RuleData 40, FieldData 48, NodeKindData 40, RecordSlotData 12, SemanticTypeData 32, InferenceRuleData 40, TypeConstraint 40, RuleTypeDerivationData 12, NodeTypeDerivationData 48, NodeFactsData 24, RuleFactsData 24, PlanRecordSlotData 12, PlanNodeData 48, LoweredRuleData 40, LoweredFieldData 48, PlanOpData 40, EventSiteData 32, and TransformSiteData 32.",
+    "Public capabilities and sealed carriers deliberately do not implement serde::Serialize. Only private replay adapters serialize compact u32 carrier-local ordinals under an authoritative revision-bearing carrier or envelope; a replay ordinal is not itself a portable public lookup capability.",
+    "The in-memory capability/local-index split did not change the established compact shapes reused by Program v2, NodeRemap v1, DependencySolution v1, TypeSolution v2, LoweringPlan v2, and ScalarEventPlan v4. SourceMap v3 and source domain v4 bind the revised source identity; GeneratedModule v4 and generated-rust v5 bind the emitted ABI and manifest. AnalysisFacts advances freshly to v3 because v2 names the rejected full-capability epoch and the repaired carrier adds work_units plus dependency-first component-pass semantics. compiled-module v5 binds required analysis_work options and the v3 facts. Schema numbers were not inflated for representation-only changes.",
+    "Source nodes are stable postorder: every structural child identity is less than its parent identity.",
+    "Rule and field identities are contiguous lexical ordinals; every record is the complete root of exactly one nominal owner rule; retained field names are unique within that record.",
+    "All source and field spans satisfy start <= end <= source byte length.",
+    "Dependency edges and SCC members are sorted and deduplicated; components are lexicographically ordered; dependency_order is dependency-first with SccId tie breaking.",
+    "Every node derivation carries an executable inference certificate accepted by TypeSolution::verify; every referenced type and certificate operand is in bounds and revision-equal.",
+    "Analysis visits dependency SCCs in deterministic dependency-first order, with stable rule-order tie breaking inside components. Acyclic components take one pass; recursive components iterate monotonically to a fixed point and the selected recursive fixture converges in exactly two passes.",
+    "analysis_work is charged before each node's terminal or regex initialization, during rule-range/component scheduling, and before each node/rule component pass. work_units records the exact deterministic charge; singleton acyclic reference chains of 8, 64, and 256 rules use exactly seven units per rule, the exact cap passes, and one less rejects before exceeding the cap.",
+    "Minimum-consumption arithmetic distinguishes finite, empty-language, and overflow lattice states. Any surviving overflow is a typed MinimumConsumptionOverflow rejection, including sequence, record, and non-entry descendant witnesses; permutation schedules produce identical facts or identical overflow diagnostics.",
+    "Nullable repeats, nonproductive recursion, and zero-consumption recursive cycles remain typed rejections rather than serialized plans.",
+    "PlanNodeId is the checked image of NodeId; lowering retains semantic types, nominal fields, field source slots, transform identities, and compiled regex tables.",
+    "ScalarEventPlan uses bbnf.scalar-events.v4, contains only revision-bound event sites and transform descriptors, and is paired with the separately sealed LoweringPlan when emission occurs.",
+    "NodeRemap is the explicit identity remap in W2 because this selected pipeline performs no node-rewriting transformation.",
+    "generated_manifest is a JSON document encoded as a string; its source_blake3 binds generated_source, its schema is bbnf.generated-rust.v5, and generated Rust asserts parse_that::KERNEL_ABI == 2.",
+    "Cross-field invariants are enforced by replay recompilation and exact component comparison; JSON Schema alone cannot express them.",
+    "serde_json::to_vec field order is the canonical byte encoding. A semantically equivalent JSON encoding with different bytes is rejected as NonCanonical."
+  ],
+  "$defs": {
+    "u8": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "u16": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "u32": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "usize": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "u64": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "id": {
+      "$ref": "#/$defs/u32"
+    },
+    "nullable_id": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/id"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "revision_hex": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "revision": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/u8"
+      }
+    },
+    "byte_array": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/u8"
+      }
+    },
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/u32"
+        },
+        "end": {
+          "$ref": "#/$defs/u32"
+        }
+      }
+    },
+    "repeat_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child",
+        "minimum",
+        "maximum"
+      ],
+      "properties": {
+        "child": {
+          "$ref": "#/$defs/id"
+        },
+        "minimum": {
+          "$ref": "#/$defs/u32"
+        },
+        "maximum": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u32"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "source_record_slot": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Field"
+          ],
+          "properties": {
+            "Field": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "child",
+                "name_span",
+                "span"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "child": {
+                  "$ref": "#/$defs/id"
+                },
+                "name_span": {
+                  "$ref": "#/$defs/span"
+                },
+                "span": {
+                  "$ref": "#/$defs/span"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Discard"
+          ],
+          "properties": {
+            "Discard": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child",
+                "span"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                },
+                "span": {
+                  "$ref": "#/$defs/span"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "source_node_kind": {
+      "oneOf": [
+        {
+          "enum": [
+            "Epsilon"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Literal"
+          ],
+          "properties": {
+            "Literal": {
+              "$ref": "#/$defs/byte_array"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Regex"
+          ],
+          "properties": {
+            "Regex": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Reference"
+          ],
+          "properties": {
+            "Reference": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Sequence"
+          ],
+          "properties": {
+            "Sequence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Choice"
+          ],
+          "properties": {
+            "Choice": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Repeat"
+          ],
+          "properties": {
+            "Repeat": {
+              "$ref": "#/$defs/repeat_payload"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Transform"
+          ],
+          "properties": {
+            "Transform": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child",
+                "transform",
+                "name"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                },
+                "transform": {
+                  "$ref": "#/$defs/id"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Record"
+          ],
+          "properties": {
+            "Record": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/source_record_slot"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "source_node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "span"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/source_node_kind"
+        },
+        "span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    },
+    "source_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "root",
+        "span"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "$ref": "#/$defs/id"
+        },
+        "span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    },
+    "source_module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "logical_path",
+        "bytes",
+        "nodes",
+        "rules"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "logical_path": {
+          "type": "string"
+        },
+        "bytes": {
+          "$ref": "#/$defs/byte_array"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_node"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_rule"
+          }
+        }
+      }
+    },
+    "source_map": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "modules"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "modules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_module"
+          }
+        }
+      }
+    },
+    "record_slot": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Field"
+          ],
+          "properties": {
+            "Field": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "child"
+              ],
+              "properties": {
+                "field": {
+                  "$ref": "#/$defs/id"
+                },
+                "child": {
+                  "$ref": "#/$defs/id"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Discard"
+          ],
+          "properties": {
+            "Discard": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "node_kind": {
+      "oneOf": [
+        {
+          "enum": [
+            "Epsilon"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Literal"
+          ],
+          "properties": {
+            "Literal": {
+              "$ref": "#/$defs/byte_array"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Regex"
+          ],
+          "properties": {
+            "Regex": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RuleRef"
+          ],
+          "properties": {
+            "RuleRef": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Sequence"
+          ],
+          "properties": {
+            "Sequence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Choice"
+          ],
+          "properties": {
+            "Choice": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Repeat"
+          ],
+          "properties": {
+            "Repeat": {
+              "$ref": "#/$defs/repeat_payload"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Transform"
+          ],
+          "properties": {
+            "Transform": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child",
+                "transform",
+                "name"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                },
+                "transform": {
+                  "$ref": "#/$defs/id"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Record"
+          ],
+          "properties": {
+            "Record": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "slots"
+              ],
+              "properties": {
+                "owner": {
+                  "$ref": "#/$defs/id"
+                },
+                "slots": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/record_slot"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "span"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "$ref": "#/$defs/node_kind"
+        },
+        "span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "root",
+        "span"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "$ref": "#/$defs/id"
+        },
+        "span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    },
+    "field_decl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "slot",
+        "name",
+        "child",
+        "span"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "owner": {
+          "$ref": "#/$defs/id"
+        },
+        "slot": {
+          "$ref": "#/$defs/u32"
+        },
+        "name": {
+          "type": "string"
+        },
+        "child": {
+          "$ref": "#/$defs/id"
+        },
+        "span": {
+          "$ref": "#/$defs/span"
+        }
+      }
+    },
+    "program": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "nodes",
+        "rules",
+        "fields",
+        "entry"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/rule"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field_decl"
+          }
+        },
+        "entry": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "node_remap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "nodes"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/revision"
+        },
+        "to": {
+          "$ref": "#/$defs/revision"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nullable_id"
+          }
+        }
+      }
+    },
+    "dependency_graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "edges"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        }
+      }
+    },
+    "dependency_solution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "graph",
+        "components",
+        "component_by_rule",
+        "dependency_order"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "graph": {
+          "$ref": "#/$defs/dependency_graph"
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        "component_by_rule": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "dependency_order": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "record_field_type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "value"
+      ],
+      "properties": {
+        "field": {
+          "$ref": "#/$defs/id"
+        },
+        "value": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "semantic_type": {
+      "oneOf": [
+        {
+          "enum": [
+            "Unit",
+            "Span"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Named"
+          ],
+          "properties": {
+            "Named": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Product"
+          ],
+          "properties": {
+            "Product": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Sum"
+          ],
+          "properties": {
+            "Sum": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Option"
+          ],
+          "properties": {
+            "Option": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "List"
+          ],
+          "properties": {
+            "List": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Record"
+          ],
+          "properties": {
+            "Record": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "fields"
+              ],
+              "properties": {
+                "owner": {
+                  "$ref": "#/$defs/id"
+                },
+                "fields": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/record_field_type"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "record_witness_slot": {
+      "$ref": "#/$defs/record_slot"
+    },
+    "inference_rule": {
+      "oneOf": [
+        {
+          "enum": [
+            "EpsilonUnit",
+            "TerminalSpan"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ReferenceNamed"
+          ],
+          "properties": {
+            "ReferenceNamed": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "rule"
+              ],
+              "properties": {
+                "rule": {
+                  "$ref": "#/$defs/id"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "SequenceProduct"
+          ],
+          "properties": {
+            "SequenceProduct": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "children"
+              ],
+              "properties": {
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/id"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ChoiceSum"
+          ],
+          "properties": {
+            "ChoiceSum": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "children"
+              ],
+              "properties": {
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/id"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Optional"
+          ],
+          "properties": {
+            "Optional": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RepetitionList"
+          ],
+          "properties": {
+            "RepetitionList": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RecordProjection"
+          ],
+          "properties": {
+            "RecordProjection": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "slots"
+              ],
+              "properties": {
+                "owner": {
+                  "$ref": "#/$defs/id"
+                },
+                "slots": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/record_witness_slot"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "TransformPreserves"
+          ],
+          "properties": {
+            "TransformPreserves": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child",
+                "transform"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                },
+                "transform": {
+                  "$ref": "#/$defs/id"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "node_type_derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "node",
+        "type_id",
+        "inference"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "node": {
+          "$ref": "#/$defs/id"
+        },
+        "type_id": {
+          "$ref": "#/$defs/id"
+        },
+        "inference": {
+          "$ref": "#/$defs/inference_rule"
+        }
+      }
+    },
+    "rule_type_derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "rule",
+        "named_type",
+        "root_type"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "rule": {
+          "$ref": "#/$defs/id"
+        },
+        "named_type": {
+          "$ref": "#/$defs/id"
+        },
+        "root_type": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "type_solution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "arena",
+        "nodes",
+        "rules"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "arena": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/semantic_type"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node_type_derivation"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule_type_derivation"
+          }
+        }
+      }
+    },
+    "node_facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "node",
+        "nullable",
+        "minimum_consumption"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "node": {
+          "$ref": "#/$defs/id"
+        },
+        "nullable": {
+          "type": "boolean"
+        },
+        "minimum_consumption": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "rule_facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "rule",
+        "nullable",
+        "minimum_consumption"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "rule": {
+          "$ref": "#/$defs/id"
+        },
+        "nullable": {
+          "type": "boolean"
+        },
+        "minimum_consumption": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/u64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "analysis_facts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "iterations",
+        "work_units",
+        "nodes",
+        "rules"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "iterations": {
+          "$ref": "#/$defs/usize"
+        },
+        "work_units": {
+          "$ref": "#/$defs/usize"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node_facts"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/rule_facts"
+          }
+        }
+      }
+    },
+    "plan_record_slot": {
+      "$ref": "#/$defs/record_slot"
+    },
+    "plan_op": {
+      "oneOf": [
+        {
+          "enum": [
+            "Epsilon"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Literal"
+          ],
+          "properties": {
+            "Literal": {
+              "$ref": "#/$defs/byte_array"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Regex"
+          ],
+          "properties": {
+            "Regex": {
+              "$ref": "#/$defs/usize"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "RuleRef"
+          ],
+          "properties": {
+            "RuleRef": {
+              "$ref": "#/$defs/id"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Sequence"
+          ],
+          "properties": {
+            "Sequence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Choice"
+          ],
+          "properties": {
+            "Choice": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Repeat"
+          ],
+          "properties": {
+            "Repeat": {
+              "$ref": "#/$defs/repeat_payload"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Record"
+          ],
+          "properties": {
+            "Record": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "owner",
+                "slots"
+              ],
+              "properties": {
+                "owner": {
+                  "$ref": "#/$defs/id"
+                },
+                "slots": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/plan_record_slot"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "Transform"
+          ],
+          "properties": {
+            "Transform": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "child",
+                "transform",
+                "name"
+              ],
+              "properties": {
+                "child": {
+                  "$ref": "#/$defs/id"
+                },
+                "transform": {
+                  "$ref": "#/$defs/id"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "plan_node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "op",
+        "semantic_type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "op": {
+          "$ref": "#/$defs/plan_op"
+        },
+        "semantic_type": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "lowered_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "name",
+        "named_type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "root": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "named_type": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "lowered_field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "slot",
+        "child",
+        "name",
+        "semantic_type"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "owner": {
+          "$ref": "#/$defs/id"
+        },
+        "slot": {
+          "$ref": "#/$defs/u32"
+        },
+        "child": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "semantic_type": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "regex_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byte_classes",
+        "transitions",
+        "accepting",
+        "state_count",
+        "class_count",
+        "start_state"
+      ],
+      "properties": {
+        "byte_classes": {
+          "type": "array",
+          "minItems": 256,
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/u8"
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/u32"
+          }
+        },
+        "accepting": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "state_count": {
+          "$ref": "#/$defs/u32"
+        },
+        "class_count": {
+          "$ref": "#/$defs/u16"
+        },
+        "start_state": {
+          "$ref": "#/$defs/u32"
+        }
+      }
+    },
+    "lowering_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "nodes",
+        "rules",
+        "semantic_types",
+        "fields",
+        "regexes",
+        "entry"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/plan_node"
+          }
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lowered_rule"
+          }
+        },
+        "semantic_types": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/semantic_type"
+          }
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/lowered_field"
+          }
+        },
+        "regexes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/regex_plan"
+          }
+        },
+        "entry": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "event_kind": {
+      "enum": [
+        "EnterRule",
+        "LeaveRule",
+        "EnterField",
+        "LeaveField",
+        "Literal",
+        "Regex",
+        "ChoiceBranch",
+        "RepeatCount",
+        "Transform",
+        "EndInput"
+      ]
+    },
+    "event_site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "node",
+        "rule",
+        "field"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/event_kind"
+        },
+        "node": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "rule": {
+          "$ref": "#/$defs/nullable_id"
+        },
+        "field": {
+          "$ref": "#/$defs/nullable_id"
+        }
+      }
+    },
+    "transform_site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "node",
+        "name"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "node": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "scalar_event_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "schema",
+        "sites",
+        "transforms"
+      ],
+      "properties": {
+        "revision": {
+          "$ref": "#/$defs/revision"
+        },
+        "schema": {
+          "const": "bbnf.scalar-events.v4"
+        },
+        "sites": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event_site"
+          }
+        },
+        "transforms": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/transform_site"
+          }
+        }
+      }
+    },
+    "regex_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nesting",
+        "nfa_states",
+        "dfa_states"
+      ],
+      "properties": {
+        "nesting": {
+          "$ref": "#/$defs/usize"
+        },
+        "nfa_states": {
+          "$ref": "#/$defs/usize"
+        },
+        "dfa_states": {
+          "$ref": "#/$defs/usize"
+        }
+      }
+    },
+    "runtime_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_bytes",
+        "nesting",
+        "logical_events",
+        "work"
+      ],
+      "properties": {
+        "input_bytes": {
+          "$ref": "#/$defs/usize"
+        },
+        "nesting": {
+          "$ref": "#/$defs/usize"
+        },
+        "logical_events": {
+          "$ref": "#/$defs/usize"
+        },
+        "work": {
+          "$ref": "#/$defs/usize"
+        }
+      }
+    },
+    "compile_options": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_bytes",
+        "rules",
+        "nodes",
+        "syntax_nesting",
+        "analysis_iterations",
+        "analysis_work",
+        "generated_bytes",
+        "regex",
+        "runtime"
+      ],
+      "properties": {
+        "source_bytes": {
+          "$ref": "#/$defs/usize"
+        },
+        "rules": {
+          "$ref": "#/$defs/usize"
+        },
+        "nodes": {
+          "$ref": "#/$defs/usize"
+        },
+        "syntax_nesting": {
+          "$ref": "#/$defs/usize"
+        },
+        "analysis_iterations": {
+          "$ref": "#/$defs/usize"
+        },
+        "analysis_work": {
+          "$ref": "#/$defs/usize"
+        },
+        "generated_bytes": {
+          "$ref": "#/$defs/usize"
+        },
+        "regex": {
+          "$ref": "#/$defs/regex_budget"
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime_budget"
+        }
+      }
+    },
+    "compilation_replay": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "options",
+        "source_map",
+        "program",
+        "remap",
+        "dependency",
+        "types",
+        "facts",
+        "lowering",
+        "events",
+        "generated_source",
+        "generated_manifest"
+      ],
+      "properties": {
+        "options": {
+          "$ref": "#/$defs/compile_options"
+        },
+        "source_map": {
+          "$ref": "#/$defs/source_map"
+        },
+        "program": {
+          "$ref": "#/$defs/program"
+        },
+        "remap": {
+          "$ref": "#/$defs/node_remap"
+        },
+        "dependency": {
+          "$ref": "#/$defs/dependency_solution"
+        },
+        "types": {
+          "$ref": "#/$defs/type_solution"
+        },
+        "facts": {
+          "$ref": "#/$defs/analysis_facts"
+        },
+        "lowering": {
+          "$ref": "#/$defs/lowering_plan"
+        },
+        "events": {
+          "$ref": "#/$defs/scalar_event_plan"
+        },
+        "generated_source": {
+          "type": "string"
+        },
+        "generated_manifest": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

@@ -132,7 +132,6 @@ mod css_types {
 
 use ::bbnf::grammar::generated::css_l4::*;
 
-#[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 

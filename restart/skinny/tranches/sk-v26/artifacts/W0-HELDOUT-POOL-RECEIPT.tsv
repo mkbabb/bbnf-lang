@@ -1,0 +1,10 @@
+schema	skv26-heldout-pool-v1
+encoding	UTF-8 bytes exactly as stored; LF line endings; final LF present
+ordering	candidate ids in lexical byte order: BNF CSV G4 MATH REGEX
+candidate	BNF	grammar/bnf/bnf.bbnf	472	8d4de97d9a54a1fef6f7ccccdeabd185d66c8614f167fc3ae28225b7994e4a1b
+candidate	CSV	grammar/misc/csv.bbnf	229	e9622489b2ffc31850559bd51f33222127493e14cab0f3cacb85e0537e8837f3
+candidate	G4	grammar/misc/g4.bbnf	505	5464fe4c5f7b5f9675b366d3e48cd5ab8be785d1890e885acc5ad12d63e1e122
+candidate	MATH	grammar/misc/math.bbnf	258	04c7013a9ae394ae007242e51fc27533563fe795381f331893fa188e3bd67e31
+candidate	REGEX	grammar/misc/regex.bbnf	1006	6e0d02995c09c07f33761b9b457a8f8c06a8f24219429220cdd4f3162819fc77
+selection	interpret SHA-256 digest as unsigned big-endian integer; index is digest modulo 5 into the ordering row; no reroll or candidate removal
+preimage	W2-FROZEN-RECEIPT raw bytes followed immediately by this receipt's raw bytes

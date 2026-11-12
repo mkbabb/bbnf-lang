@@ -173,3 +173,137 @@ bbnf_fixture!(misc_math, "grammar/misc/math.bbnf");
 bbnf_fixture!(misc_math_ambiguous, "grammar/misc/math-ambiguous.bbnf");
 bbnf_fixture!(misc_g4, "grammar/misc/g4.bbnf");
 bbnf_fixture!(misc_regex, "grammar/misc/regex.bbnf");
+
+// ── The spine's table-driven form (sk-v26 W3, merged by sk-v27 LW3.COMP-1b) ──
+//
+// The merge keeps both sides' cases: the per-fixture pairs above and the
+// spine's two whole-table tests below, each as its side wrote it.
+
+const FIXTURES: &[(&str, &str)] = &[
+    (
+        "grammar/bbnf/bbnf.bbnf",
+        include_str!("../../../grammar/bbnf/bbnf.bbnf"),
+    ),
+    (
+        "grammar/bbnf/expressions.bbnf",
+        include_str!("../../../grammar/bbnf/expressions.bbnf"),
+    ),
+    (
+        "grammar/bbnf/types.bbnf",
+        include_str!("../../../grammar/bbnf/types.bbnf"),
+    ),
+    (
+        "grammar/bnf/bnf.bbnf",
+        include_str!("../../../grammar/bnf/bnf.bbnf"),
+    ),
+    (
+        "grammar/ebnf/ebnf.bbnf",
+        include_str!("../../../grammar/ebnf/ebnf.bbnf"),
+    ),
+    (
+        "grammar/json/json.bbnf",
+        include_str!("../../../grammar/json/json.bbnf"),
+    ),
+    (
+        "grammar/google-sheets/google-sheets.bbnf",
+        include_str!("../../../grammar/google-sheets/google-sheets.bbnf"),
+    ),
+    (
+        "grammar/css/pretty.bbnf",
+        include_str!("../../../grammar/css/pretty.bbnf"),
+    ),
+    (
+        "grammar/css/l4/stylesheet.bbnf",
+        include_str!("../../../grammar/css/l4/stylesheet.bbnf"),
+    ),
+    (
+        "grammar/css/l4/color.bbnf",
+        include_str!("../../../grammar/css/l4/color.bbnf"),
+    ),
+    (
+        "grammar/css/l4/easing.bbnf",
+        include_str!("../../../grammar/css/l4/easing.bbnf"),
+    ),
+    (
+        "grammar/css/l4/selectors.bbnf",
+        include_str!("../../../grammar/css/l4/selectors.bbnf"),
+    ),
+    (
+        "grammar/css/l4/func-body.bbnf",
+        include_str!("../../../grammar/css/l4/func-body.bbnf"),
+    ),
+    (
+        "grammar/css/l4/keyframes.bbnf",
+        include_str!("../../../grammar/css/l4/keyframes.bbnf"),
+    ),
+    (
+        "grammar/css/l4/properties.bbnf",
+        include_str!("../../../grammar/css/l4/properties.bbnf"),
+    ),
+    (
+        "grammar/css/l4/gradients.bbnf",
+        include_str!("../../../grammar/css/l4/gradients.bbnf"),
+    ),
+    (
+        "grammar/css/l4/media.bbnf",
+        include_str!("../../../grammar/css/l4/media.bbnf"),
+    ),
+    (
+        "grammar/css/l4/transforms.bbnf",
+        include_str!("../../../grammar/css/l4/transforms.bbnf"),
+    ),
+    (
+        "grammar/css/l4/filters.bbnf",
+        include_str!("../../../grammar/css/l4/filters.bbnf"),
+    ),
+    (
+        "grammar/css/l4/tokens.bbnf",
+        include_str!("../../../grammar/css/l4/tokens.bbnf"),
+    ),
+    (
+        "grammar/css/l4/value-unit.bbnf",
+        include_str!("../../../grammar/css/l4/value-unit.bbnf"),
+    ),
+    (
+        "grammar/css/l4/keywords.bbnf",
+        include_str!("../../../grammar/css/l4/keywords.bbnf"),
+    ),
+    (
+        "grammar/css/l4/values.bbnf",
+        include_str!("../../../grammar/css/l4/values.bbnf"),
+    ),
+    (
+        "grammar/misc/csv.bbnf",
+        include_str!("../../../grammar/misc/csv.bbnf"),
+    ),
+    (
+        "grammar/misc/math.bbnf",
+        include_str!("../../../grammar/misc/math.bbnf"),
+    ),
+    (
+        "grammar/misc/math-ambiguous.bbnf",
+        include_str!("../../../grammar/misc/math-ambiguous.bbnf"),
+    ),
+    (
+        "grammar/misc/g4.bbnf",
+        include_str!("../../../grammar/misc/g4.bbnf"),
+    ),
+    (
+        "grammar/misc/regex.bbnf",
+        include_str!("../../../grammar/misc/regex.bbnf"),
+    ),
+];
+
+#[test]
+fn every_fixture_has_stable_ast_projection() {
+    for &(fixture, source) in FIXTURES {
+        assert_ast_roundtrip(fixture, source);
+    }
+}
+
+#[test]
+fn every_fixture_prettifier_is_idempotent() {
+    for &(fixture, source) in FIXTURES {
+        assert_prettify_idempotent(fixture, source);
+    }
+}

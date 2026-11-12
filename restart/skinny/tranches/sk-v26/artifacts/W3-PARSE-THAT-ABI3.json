@@ -1,0 +1,130 @@
+{
+  "schema": "skv26-w3-parse-that-abi3-receipt-v1",
+  "observed_date": "2026-07-29",
+  "repository": "/Users/mkbabb/Programming/parse-that-skv26",
+  "branch": "codex/sk-v26-parse-that",
+  "born_red": {
+    "commit": "88a71c24f22dc8e53ae482aaead2e4865f0dbc36",
+    "tree": "ae06f60f96a4b76410a214d126bdfc700614e048",
+    "kernel_result": {
+      "status": "RED_AS_DESIGNED",
+      "only_errors": [
+        "E0432: absent parse_that::difference",
+        "E0080: KERNEL_ABI 2 does not satisfy required ABI 3"
+      ]
+    },
+    "allocation_result": {
+      "status": "RED_AS_DESIGNED",
+      "only_errors": [
+        "E0432: absent parse_that::difference"
+      ]
+    }
+  },
+  "implementation": {
+    "commit": "e31fbfedc24adcb9110a84b93ff1520cb213912d",
+    "tree": "c64a4d345990be9861cb697214cb58ceaee635c4",
+    "version": "0.5.0",
+    "kernel_abi": 3,
+    "new_public_primitives": [
+      "difference"
+    ],
+    "normal_dependencies": 0,
+    "compatibility_surface_added": false,
+    "bbnf_vocabulary_added": false
+  },
+  "tests": {
+    "workspace_tests_and_doctests": 92,
+    "parse_that_kernel": 58,
+    "difference_laws": 10,
+    "serialized_allocation_process": 1,
+    "bbnf_regex": 32,
+    "runtime_bridge": 7,
+    "result": "PASS"
+  },
+  "gates": [
+    {
+      "command": "cargo test --workspace --all-targets --all-features --locked",
+      "result": "PASS"
+    },
+    {
+      "command": "cargo test --workspace --doc --all-features --locked",
+      "result": "PASS"
+    },
+    {
+      "command": "cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
+      "result": "PASS"
+    },
+    {
+      "command": "RUSTDOCFLAGS='-D warnings' cargo doc --workspace --all-features --no-deps --locked",
+      "result": "PASS"
+    },
+    {
+      "command": "cargo check -p parse_that --target wasm32-unknown-unknown --locked",
+      "result": "PASS"
+    },
+    {
+      "command": "cargo test --manifest-path contracts/runtime_bridge/Cargo.toml --locked",
+      "result": "PASS"
+    },
+    {
+      "command": "cargo clippy --manifest-path contracts/runtime_bridge/Cargo.toml --all-targets --locked -- -D warnings",
+      "result": "PASS"
+    },
+    {
+      "command": "RUSTDOCFLAGS='-D warnings' cargo doc --manifest-path contracts/runtime_bridge/Cargo.toml --no-deps --locked",
+      "result": "PASS"
+    },
+    {
+      "command": "git diff --check",
+      "result": "PASS"
+    }
+  ],
+  "packages": [
+    {
+      "name": "parse_that",
+      "version": "0.5.0",
+      "files": 24,
+      "bytes": 17426,
+      "sha256": "2db9321e0aa076d1366e71e590ac1775f3d35a5bdd72d6f805f2653e4b23a616",
+      "successive_archives_byte_identical": true,
+      "cargo_package_verify": "PASS"
+    },
+    {
+      "name": "bbnf-regex",
+      "version": "0.1.0",
+      "files": 46,
+      "bytes": 82825,
+      "sha256": "db88eb177836f590116caea382baa27789e1216cb9d086ada8208b435c6bfa19",
+      "successive_archives_byte_identical": true,
+      "cargo_package_verify": "PASS"
+    }
+  ],
+  "reviews": [
+    {
+      "task": "/root/skv26_w3_design_adjudicator",
+      "scope": "API, package, ABI, bridge, and law falsifiability",
+      "disposition": "ACCEPT",
+      "p0": 0,
+      "p1": 0,
+      "p2": 0
+    },
+    {
+      "task": "/root/skv26_w3_packet_structural_review",
+      "scope": "transaction semantics, provenance, surface minimality, and version closure",
+      "disposition": "ACCEPT",
+      "p0": 0,
+      "p1": 0,
+      "p2": 0
+    }
+  ],
+  "bbnf_crossing": {
+    "state": "PENDING_CLEAN_BREAK_W3_IMPLEMENTATION",
+    "required_parse_that_version": "=0.5.0",
+    "required_kernel_abi": 3
+  },
+  "heldout": {
+    "candidates_compiled_or_executed": false,
+    "selection_calculated_or_named": false
+  },
+  "disposition": "PARSE_THAT_ABI3_GREEN_GIT_DURABLE_AWAITING_BBNF_CROSSING"
+}

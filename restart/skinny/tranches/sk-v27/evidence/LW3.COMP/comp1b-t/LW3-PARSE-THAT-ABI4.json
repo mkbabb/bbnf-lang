@@ -1,0 +1,85 @@
+{
+  "kernel_abi": 4,
+  "packages": [
+    {
+      "files": 5,
+      "name": "pprint_derive",
+      "path_in_vcs": "rust/derive",
+      "registry_verify": "resolved and built from the local registry by this law",
+      "repository": "pprint",
+      "rev": "69d1fe9fa522f18e129fbedea0288a9c19b5bbf9",
+      "sha256": "c2a1d4edd97208326d3034b9005822a32ab6f91d4f8a7da9a2e83f8d50be3cf1",
+      "successive_archives_byte_identical": true,
+      "version": "0.3.0"
+    },
+    {
+      "files": 105,
+      "name": "pprint",
+      "path_in_vcs": "rust",
+      "registry_verify": "resolved and built from the local registry by this law",
+      "repository": "pprint",
+      "rev": "69d1fe9fa522f18e129fbedea0288a9c19b5bbf9",
+      "sha256": "cd0f8d5570418bf704ca8a8418156807c85e2aae946718dbd58cb958fac9f7c5",
+      "successive_archives_byte_identical": true,
+      "version": "0.5.0-alpha.0"
+    },
+    {
+      "files": 5,
+      "name": "parse-that-egraph-derive",
+      "path_in_vcs": "rust/egraph-derive",
+      "registry_verify": "resolved and built from the local registry by this law",
+      "repository": "parse-that",
+      "rev": "6889b29c1d5a4c3514d29abc027543ffbce3f88e",
+      "sha256": "436c90c07602c1ce40ad3fa715c66f97e18083c81ee29b9f24751826536c3055",
+      "successive_archives_byte_identical": true,
+      "version": "0.1.0"
+    },
+    {
+      "files": 22,
+      "name": "parse-that-egraph",
+      "path_in_vcs": "rust/egraph",
+      "registry_verify": "resolved and built from the local registry by this law",
+      "repository": "parse-that",
+      "rev": "6889b29c1d5a4c3514d29abc027543ffbce3f88e",
+      "sha256": "fd4bbe808e71e590cc7a38c7194fb861b0081043a58e6368846618c0c0e6a559",
+      "successive_archives_byte_identical": true,
+      "version": "0.1.0"
+    },
+    {
+      "files": 34,
+      "name": "parse-that-simd",
+      "path_in_vcs": "rust/simd",
+      "registry_verify": "resolved and built from the local registry by this law",
+      "repository": "parse-that",
+      "rev": "6889b29c1d5a4c3514d29abc027543ffbce3f88e",
+      "sha256": "59f515a4e07693554adc5fcd804002f7bd99bfb8aa60c491c4c1501157eb77be",
+      "successive_archives_byte_identical": true,
+      "version": "0.1.0"
+    },
+    {
+      "files": 89,
+      "name": "parse-that-regex",
+      "path_in_vcs": "rust/regex",
+      "registry_verify": "resolved and built from the local registry by this law",
+      "repository": "parse-that",
+      "rev": "6889b29c1d5a4c3514d29abc027543ffbce3f88e",
+      "sha256": "392013a58504115f157643c16acdae142b9009feac85467611824e33bdfb3742",
+      "successive_archives_byte_identical": true,
+      "version": "0.1.0"
+    },
+    {
+      "files": 136,
+      "name": "parse_that",
+      "path_in_vcs": "rust/parse_that",
+      "registry_verify": "resolved and built from the local registry by this law",
+      "repository": "parse-that",
+      "rev": "6889b29c1d5a4c3514d29abc027543ffbce3f88e",
+      "sha256": "28e9dc9444a48574926f464bf768a364abc7c77d1d7216b1182ec55daa157ba4",
+      "successive_archives_byte_identical": true,
+      "version": "0.4.0"
+    }
+  ],
+  "parse_that_rev": "6889b29c1d5a4c3514d29abc027543ffbce3f88e",
+  "pprint_rev": "69d1fe9fa522f18e129fbedea0288a9c19b5bbf9",
+  "schema": "bbnf.sk-v27.parse-that-abi4-receipt.v1"
+}

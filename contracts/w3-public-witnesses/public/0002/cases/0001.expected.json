@@ -1,0 +1,41 @@
+{
+  "schema": "bbnf.w3.symbolic-expectation.v1",
+  "oracle": {
+    "kind": "INDEPENDENT_LOWERED_PLAN_EVENT_ORACLE",
+    "authority": "hand-derived from sealed grammar, strict instance, and decoded input bytes",
+    "implementation_generated": false,
+    "normalization": "contracts/w3-public-witnesses/README.md"
+  },
+  "outcome": "MATCH",
+  "full_consumption": true,
+  "recovery_policy": "GRAMMAR_ERROR_TOKEN_CONTINUE",
+  "runtime_recovery": "Disabled",
+  "cursor_after": "END_INPUT",
+  "observations": [
+    {"kind": "TRIVIA", "lexeme": "/*top*/ "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": ".outer"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "{"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "color"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ":"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "\"red\""},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ";"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": ".inner"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "{"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "content"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ":"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "'x'"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ";"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "}"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "}"},
+    {"kind": "END_INPUT"}
+  ]
+}

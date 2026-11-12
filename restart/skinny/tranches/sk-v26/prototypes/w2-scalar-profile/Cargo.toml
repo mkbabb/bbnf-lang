@@ -1,0 +1,14 @@
+[package]
+name = "sk-v26-w2-scalar-profile"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[workspace]
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+opt-level = 3
+panic = "abort"
+strip = "symbols"

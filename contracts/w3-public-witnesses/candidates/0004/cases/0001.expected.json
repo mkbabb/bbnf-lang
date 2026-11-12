@@ -1,0 +1,17 @@
+{
+  "schema": "bbnf.w3.symbolic-expectation.v1",
+  "oracle": {"kind": "INDEPENDENT_LOWERED_PLAN_EVENT_ORACLE", "authority": "hand-derived from W0-sealed source, strict instance, and decoded input", "implementation_generated": false, "normalization": "contracts/w3-public-witnesses/README.md"},
+  "outcome": "MATCH",
+  "full_consumption": true,
+  "recovery_policy": "ATOMIC_REJECT",
+  "runtime_recovery": "Disabled",
+  "cursor_after": "END_INPUT",
+  "observations": [
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "1"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "+"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "2"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "*"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "3"},
+    {"kind": "END_INPUT"}
+  ]
+}

@@ -1,0 +1,509 @@
+use core::fmt;
+
+use serde::ser::SerializeStruct;
+use serde::{Serialize, Serializer};
+use serde_json::Value;
+
+use super::analysis::AnalysisFacts;
+use super::dependency::DependencySolution;
+use super::diagnostic::DiagnosticSet;
+use super::emit::GeneratedModule;
+use super::event::ScalarEventPlan;
+use super::instance::{self, GrammarInstance, GrammarInstanceInput};
+use super::lower::LoweringPlan;
+use super::source::{Revision, SourceMap};
+use super::syntax::{NodeRemap, Program};
+use super::typecheck::TypeSolution;
+use super::{CompileOptions, StageResult, compile_validated_instance};
+
+const SOURCE_MAP_REPLAY_SCHEMA: &str = "bbnf.source-map.v4";
+const PROGRAM_REPLAY_SCHEMA: &str = "bbnf.program.v3";
+const DEPENDENCY_REPLAY_SCHEMA: &str = "bbnf.dependency-solution.v2";
+const TYPE_REPLAY_SCHEMA: &str = "bbnf.type-solution.v3";
+const ANALYSIS_REPLAY_SCHEMA: &str = "bbnf.analysis-facts.v4";
+const LOWERING_REPLAY_SCHEMA: &str = "bbnf.lowering-plan.v3";
+const NODE_REMAP_REPLAY_SCHEMA: &str = "bbnf.node-remap.v1";
+const GENERATED_REPLAY_SCHEMA: &str = "bbnf.generated-module.v5";
+const COMPILATION_REPLAY_SCHEMA: &str = "bbnf.compiled-module.v6";
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CompiledModule {
+    pub(super) options: CompileOptions,
+    pub(super) instance: GrammarInstance,
+    pub(super) source: Vec<u8>,
+    pub(super) source_map: SourceMap,
+    pub(super) program: Program,
+    pub(super) remap: NodeRemap,
+    pub(super) dependency: DependencySolution,
+    pub(super) types: TypeSolution,
+    pub(super) facts: AnalysisFacts,
+    pub(super) lowering: LoweringPlan,
+    pub(super) events: ScalarEventPlan,
+    pub(super) generated: GeneratedModule,
+}
+
+impl CompiledModule {
+    pub const fn options(&self) -> CompileOptions {
+        self.options
+    }
+
+    pub const fn source_map(&self) -> &SourceMap {
+        &self.source_map
+    }
+
+    pub const fn program(&self) -> &Program {
+        &self.program
+    }
+
+    pub const fn remap(&self) -> &NodeRemap {
+        &self.remap
+    }
+
+    pub const fn dependency(&self) -> &DependencySolution {
+        &self.dependency
+    }
+
+    pub const fn types(&self) -> &TypeSolution {
+        &self.types
+    }
+
+    pub const fn facts(&self) -> &AnalysisFacts {
+        &self.facts
+    }
+
+    pub const fn lowering(&self) -> &LoweringPlan {
+        &self.lowering
+    }
+
+    pub const fn events(&self) -> &ScalarEventPlan {
+        &self.events
+    }
+
+    pub const fn generated(&self) -> &GeneratedModule {
+        &self.generated
+    }
+}
+
+#[derive(Serialize)]
+struct ReplayEnvelope<'a, T> {
+    schema: &'a str,
+    revision: String,
+    value: T,
+}
+
+fn serialize_stage<T: Serialize>(
+    schema: &str,
+    revision: Revision,
+    value: T,
+) -> Result<Vec<u8>, serde_json::Error> {
+    serde_json::to_vec(&ReplayEnvelope {
+        schema,
+        revision: revision.hex(),
+        value,
+    })
+}
+
+impl SourceMap {
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(
+            SOURCE_MAP_REPLAY_SCHEMA,
+            self.revision(),
+            self.replay_value(),
+        )
+    }
+}
+
+impl Program {
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(PROGRAM_REPLAY_SCHEMA, self.revision(), self.replay_value())
+    }
+}
+
+impl DependencySolution {
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(
+            DEPENDENCY_REPLAY_SCHEMA,
+            self.revision(),
+            self.replay_value(),
+        )
+    }
+}
+
+impl TypeSolution {
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(TYPE_REPLAY_SCHEMA, self.revision(), self.replay_value())
+    }
+}
+
+impl AnalysisFacts {
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(ANALYSIS_REPLAY_SCHEMA, self.revision(), self.replay_value())
+    }
+}
+
+impl LoweringPlan {
+    /// Serialize this sealed lowering product with an explicit schema and
+    /// revision. Field and collection order are deterministic.
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(LOWERING_REPLAY_SCHEMA, self.revision(), self.replay_value())
+    }
+}
+
+impl ScalarEventPlan {
+    /// Serialize this sealed event product with its event schema and revision.
+    ///
+    /// Node identities bind this packet to the separately sealed lowering
+    /// packet carried by a complete compilation replay.
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(self.schema(), self.revision(), self.replay_value())
+    }
+}
+
+impl NodeRemap {
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(
+            NODE_REMAP_REPLAY_SCHEMA,
+            self.to_revision(),
+            self.replay_value(),
+        )
+    }
+}
+
+#[derive(Serialize)]
+struct GeneratedReplay<'a> {
+    source: &'a str,
+    manifest: &'a str,
+}
+
+impl GeneratedModule {
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(
+            GENERATED_REPLAY_SCHEMA,
+            self.revision(),
+            GeneratedReplay {
+                source: self.source(),
+                manifest: self.manifest(),
+            },
+        )
+    }
+}
+
+struct CompilationReplay<'a> {
+    options: CompileOptions,
+    instance: &'a GrammarInstance,
+    source: &'a [u8],
+    source_map: &'a SourceMap,
+    program: &'a Program,
+    remap: &'a NodeRemap,
+    dependency: &'a DependencySolution,
+    types: &'a TypeSolution,
+    facts: &'a AnalysisFacts,
+    lowering: &'a LoweringPlan,
+    events: &'a ScalarEventPlan,
+    generated_source: &'a str,
+    generated_manifest: &'a str,
+}
+
+impl Serialize for CompilationReplay<'_> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("CompilationReplay", 13)?;
+        state.serialize_field("options", &self.options)?;
+        state.serialize_field("instance", self.instance)?;
+        state.serialize_field("source", self.source)?;
+        state.serialize_field("source_map", &self.source_map.replay_value())?;
+        state.serialize_field("program", &self.program.replay_value())?;
+        state.serialize_field("remap", &self.remap.replay_value())?;
+        state.serialize_field("dependency", &self.dependency.replay_value())?;
+        state.serialize_field("types", &self.types.replay_value())?;
+        state.serialize_field("facts", &self.facts.replay_value())?;
+        state.serialize_field("lowering", &self.lowering.replay_value())?;
+        state.serialize_field("events", &self.events.replay_value())?;
+        state.serialize_field("generated_source", self.generated_source)?;
+        state.serialize_field("generated_manifest", self.generated_manifest)?;
+        state.end()
+    }
+}
+
+impl CompiledModule {
+    /// Serialize the complete immutable carrier as one revision-bound replay
+    /// packet. The packet contains every stage and the exact generated product.
+    pub fn replay_json(&self) -> Result<Vec<u8>, serde_json::Error> {
+        serialize_stage(
+            COMPILATION_REPLAY_SCHEMA,
+            self.source_map().revision(),
+            CompilationReplay {
+                options: self.options(),
+                instance: &self.instance,
+                source: &self.source,
+                source_map: self.source_map(),
+                program: self.program(),
+                remap: self.remap(),
+                dependency: self.dependency(),
+                types: self.types(),
+                facts: self.facts(),
+                lowering: self.lowering(),
+                events: self.events(),
+                generated_source: self.generated().source(),
+                generated_manifest: self.generated().manifest(),
+            },
+        )
+    }
+}
+
+/// A canonical field in the complete compilation replay packet.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub enum ReplayComponent {
+    CompileOptions,
+    SourceMap,
+    Program,
+    NodeRemap,
+    Dependency,
+    Types,
+    Analysis,
+    Lowering,
+    Events,
+    GeneratedSource,
+    GeneratedManifest,
+}
+
+impl ReplayComponent {
+    const fn field(self) -> &'static str {
+        match self {
+            Self::CompileOptions => "options",
+            Self::SourceMap => "source_map",
+            Self::Program => "program",
+            Self::NodeRemap => "remap",
+            Self::Dependency => "dependency",
+            Self::Types => "types",
+            Self::Analysis => "facts",
+            Self::Lowering => "lowering",
+            Self::Events => "events",
+            Self::GeneratedSource => "generated_source",
+            Self::GeneratedManifest => "generated_manifest",
+        }
+    }
+}
+
+/// Why a complete compilation replay packet could not be validated.
+///
+/// Replay never trusts serialized compiler carriers. It extracts only the
+/// typed grammar-instance and exact source bytes, recompiles them under
+/// caller-supplied options, and then compares every carrier and generated byte
+/// against the canonical packet produced by that recompilation.
+#[derive(Clone, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub enum ReplayError {
+    InvalidJson {
+        message: String,
+    },
+    InvalidPacket {
+        field: &'static str,
+    },
+    SchemaMismatch {
+        expected: &'static str,
+        found: Option<String>,
+    },
+    InvalidRevision {
+        found: String,
+    },
+    RevisionMismatch {
+        packet: String,
+        rebuilt: String,
+    },
+    CompilationRejected {
+        diagnostics: DiagnosticSet,
+    },
+    ValueMismatch {
+        component: ReplayComponent,
+    },
+    NonCanonical,
+    Serialization {
+        message: String,
+    },
+}
+
+impl fmt::Display for ReplayError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidJson { message } => write!(formatter, "invalid replay JSON: {message}"),
+            Self::InvalidPacket { field } => {
+                write!(formatter, "invalid or missing replay field `{field}`")
+            }
+            Self::SchemaMismatch { expected, found } => write!(
+                formatter,
+                "replay schema mismatch: expected `{expected}`, found {}",
+                found.as_deref().unwrap_or("<non-string or missing>")
+            ),
+            Self::InvalidRevision { found } => {
+                write!(formatter, "invalid canonical replay revision `{found}`")
+            }
+            Self::RevisionMismatch { packet, rebuilt } => write!(
+                formatter,
+                "replay revision mismatch: packet `{packet}`, rebuilt `{rebuilt}`"
+            ),
+            Self::CompilationRejected { diagnostics } => write!(
+                formatter,
+                "replayed source was rejected with {} diagnostic(s)",
+                diagnostics.iter().len()
+            ),
+            Self::ValueMismatch { component } => {
+                write!(
+                    formatter,
+                    "replay field `{}` is not canonical",
+                    component.field()
+                )
+            }
+            Self::NonCanonical => formatter.write_str("replay packet bytes are not canonical"),
+            Self::Serialization { message } => {
+                write!(formatter, "could not serialize rebuilt replay: {message}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for ReplayError {}
+
+/// Validate and reconstruct a complete compilation replay packet.
+///
+/// This is the inverse of [`CompiledModule::replay_json`] for the complete
+/// packet only. Reconstruction is deliberately by compilation rather than by
+/// deserializing internal carriers, so stale or forged stage products cannot
+/// cross the replay boundary.
+pub fn replay_compilation(
+    packet: &[u8],
+    options: CompileOptions,
+) -> Result<CompiledModule, ReplayError> {
+    let supplied =
+        serde_json::from_slice::<Value>(packet).map_err(|error| ReplayError::InvalidJson {
+            message: error.to_string(),
+        })?;
+    let envelope = supplied.as_object().ok_or(ReplayError::InvalidPacket {
+        field: "<envelope>",
+    })?;
+
+    let found_schema = envelope
+        .get("schema")
+        .and_then(Value::as_str)
+        .map(str::to_owned);
+    if found_schema.as_deref() != Some(COMPILATION_REPLAY_SCHEMA) {
+        return Err(ReplayError::SchemaMismatch {
+            expected: COMPILATION_REPLAY_SCHEMA,
+            found: found_schema,
+        });
+    }
+
+    let packet_revision = envelope
+        .get("revision")
+        .and_then(Value::as_str)
+        .ok_or(ReplayError::InvalidPacket { field: "revision" })?;
+    if packet_revision.len() != 64
+        || !packet_revision
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+    {
+        return Err(ReplayError::InvalidRevision {
+            found: packet_revision.to_owned(),
+        });
+    }
+
+    let value = envelope
+        .get("value")
+        .and_then(Value::as_object)
+        .ok_or(ReplayError::InvalidPacket { field: "value" })?;
+    let instance_value = value.get("instance").ok_or(ReplayError::InvalidPacket {
+        field: "value.instance",
+    })?;
+    let manifest_bytes =
+        serde_json::to_vec(instance_value).map_err(|error| ReplayError::Serialization {
+            message: error.to_string(),
+        })?;
+    let encoded_source =
+        value
+            .get("source")
+            .and_then(Value::as_array)
+            .ok_or(ReplayError::InvalidPacket {
+                field: "value.source",
+            })?;
+    let source_bytes = encoded_source
+        .iter()
+        .enumerate()
+        .map(|(index, value)| {
+            value
+                .as_u64()
+                .and_then(|byte| u8::try_from(byte).ok())
+                .ok_or(ReplayError::InvalidPacket {
+                    field: if index == 0 {
+                        "value.source[0]"
+                    } else {
+                        "value.source[*]"
+                    },
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let validated = match instance::decode_instance(
+        GrammarInstanceInput::new(&manifest_bytes, &source_bytes),
+        options,
+    ) {
+        StageResult::Accepted { value, .. } => value,
+        StageResult::Rejected { diagnostics } => {
+            return Err(ReplayError::CompilationRejected { diagnostics });
+        }
+    };
+    let rebuilt = match compile_validated_instance(validated, options) {
+        StageResult::Accepted { value, .. } => value,
+        StageResult::Rejected { diagnostics } => {
+            return Err(ReplayError::CompilationRejected { diagnostics });
+        }
+    };
+    let rebuilt_revision = rebuilt.source_map().revision().hex();
+    if packet_revision != rebuilt_revision {
+        return Err(ReplayError::RevisionMismatch {
+            packet: packet_revision.to_owned(),
+            rebuilt: rebuilt_revision,
+        });
+    }
+
+    let canonical_packet = rebuilt
+        .replay_json()
+        .map_err(|error| ReplayError::Serialization {
+            message: error.to_string(),
+        })?;
+    let canonical = serde_json::from_slice::<Value>(&canonical_packet).map_err(|error| {
+        ReplayError::Serialization {
+            message: error.to_string(),
+        }
+    })?;
+    let canonical_value = canonical
+        .get("value")
+        .and_then(Value::as_object)
+        .expect("compiler replay serialization always contains an object value");
+
+    for component in [
+        ReplayComponent::CompileOptions,
+        ReplayComponent::SourceMap,
+        ReplayComponent::Program,
+        ReplayComponent::NodeRemap,
+        ReplayComponent::Dependency,
+        ReplayComponent::Types,
+        ReplayComponent::Analysis,
+        ReplayComponent::Lowering,
+        ReplayComponent::Events,
+        ReplayComponent::GeneratedSource,
+        ReplayComponent::GeneratedManifest,
+    ] {
+        if value.get(component.field()) != canonical_value.get(component.field()) {
+            return Err(ReplayError::ValueMismatch { component });
+        }
+    }
+
+    if packet != canonical_packet {
+        return Err(ReplayError::NonCanonical);
+    }
+
+    Ok(rebuilt)
+}

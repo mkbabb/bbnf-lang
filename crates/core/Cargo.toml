@@ -11,6 +11,13 @@ name = "bbnf"
 path = "src/lib.rs"
 
 [dependencies]
+# ── The spine's compiler (sk-v26 W3, merged by sk-v27 LW3.COMP-1b) ──
+# `compiler/` reads regex plans from parse-that-regex (sk-v26's bbnf-regex,
+# renamed under X-5) and hashes and serializes its sealed products.
+parse-that-regex.workspace = true
+blake3 = { version = "1.8", default-features = false, features = ["std"] }
+serde = { version = "1", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "1", default-features = false, features = ["std"] }
 pprint.workspace = true
 parse_that.workspace = true
 bbnf-ir = { version = "0.2.0", path = "../ir" }
@@ -75,6 +82,11 @@ iai = []
 wasm-bench = []
 
 [dev-dependencies]
+# ── The spine's laws (sk-v26 W2/W3, merged by sk-v27 LW3.COMP-1b) ──
+jsonschema = { version = "0.49.2", default-features = false }
+sha2 = "0.10"
+syn = { version = "2", features = ["full", "visit"] }
+toml = "1.1.4"
 quote = "1"
 # sk-v27 LW2.TOPO-6: the one corpus resolver for tests, benches and examples.
 bbnf-corpus = { path = "../corpus" }
@@ -272,3 +284,54 @@ required-features = ["wasm-bench"]
 # CI (Linux) activates the feature explicitly via the workflow yml.
 [target.'cfg(target_os = "linux")'.dev-dependencies]
 iai-callgrind = "0.12"
+
+# ── The spine's targets (sk-v26 W3), kept as explicit entries (LW3.COMP-1b,
+# amendment 4); autotests, autobins and autobenches keep master's defaults. ──
+
+[[bin]]
+name = "bbnf-gen"
+path = "src/bin/bbnf-gen.rs"
+
+[[test]]
+name = "frontend_contract"
+path = "tests/frontend_contract.rs"
+
+[[test]]
+name = "dependency_scc_laws"
+path = "tests/dependency_scc_laws.rs"
+
+[[test]]
+name = "type_analysis_laws"
+path = "tests/type_analysis_laws.rs"
+
+[[test]]
+name = "emitter_contract"
+path = "tests/emitter_contract.rs"
+
+[[test]]
+name = "replay_edit_laws"
+path = "tests/replay_edit_laws.rs"
+
+[[test]]
+name = "record_semantic_laws"
+path = "tests/record_semantic_laws.rs"
+
+[[test]]
+name = "carrier_lookup_laws"
+path = "tests/carrier_lookup_laws.rs"
+
+[[test]]
+name = "identity_opacity"
+path = "tests/identity_opacity.rs"
+
+[[test]]
+name = "w3_instance_frontend_contract"
+path = "tests/w3_instance_frontend_contract.rs"
+
+[[test]]
+name = "w3_semantic_pratt_contract"
+path = "tests/w3_semantic_pratt_contract.rs"
+
+[[test]]
+name = "w3_replay_public_contract"
+path = "tests/w3_replay_public_contract.rs"

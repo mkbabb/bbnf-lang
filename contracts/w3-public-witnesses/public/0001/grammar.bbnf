@@ -1,0 +1,17 @@
+// Action-free recursive structured-data witness.
+document = value ?w ;
+
+value = object | array | string | number | true_kw | false_kw | null_kw ;
+object = "{" ?w, [ members ], "}" ?w ;
+members = member, { comma, member } ;
+member = string, colon, value ;
+array = "[" ?w, [ elements ], "]" ?w ;
+elements = value, { comma, value } ;
+
+comma = "," ?w ;
+colon = ":" ?w ;
+string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/ ?w ;
+number = /-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/ ?w ;
+true_kw = "true" ?w ;
+false_kw = "false" ?w ;
+null_kw = "null" ?w ;

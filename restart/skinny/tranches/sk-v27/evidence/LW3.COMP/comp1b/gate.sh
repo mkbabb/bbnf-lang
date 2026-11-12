@@ -36,7 +36,7 @@ cargo nextest run -p bbnf --locked --no-fail-fast --run-ignored only --test w3_r
   --test w3_instance_frontend_contract > "$L/born-red.log" 2>&1; brc=$?
 n=0; for t in active_roots_remain_preselection_only_and_the_guard_self_falsifies \
   every_core_and_external_control_caller_uses_only_the_clean_break_instance_api; do
-  grep -qE "^ +FAIL .*$t" "$L/born-red.log" && n=$((n+1)); done
+  grep -qE "FAIL .*$t" "$L/born-red.log" && n=$((n+1)); done
 [ $brc -ne 0 ] && [ "$n" -ge 2 ]; row born-red-still-red $? "rc=$brc named-fails=$n $(summary "$L/born-red.log")"
 
 # Amendment 4: the test-target set is a superset of master's plus the spine's.

@@ -1,0 +1,180 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=1
+# cmd cargo test --release --test pp2_trivia --test laws --no-fail-fast -- --test-threads=2
+# date 2026-11-12T06:04:08-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-mut/rust)
+    Finished `release` profile [optimized] target(s) in 1.13s
+     Running tests/laws.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/laws-6c460f3d7ef35935)
+
+running 15 tests
+test l2_hard_forces_break ... FAILED
+test l3_later_group_counts_to_its_first_line_not_its_flat_width ... ok
+test l3_rest_lookahead ... FAILED
+test l4_align_and_hang_on_the_oracle ... ok
+test l4_nest_changes_indentation_only ... FAILED
+test l5_fill_pairwise ... FAILED
+test l5_linear_join_is_leijen_fill_sep ... FAILED
+test l6_if_break_follows_the_innermost_group ... FAILED
+test l7_i_no_overflow_past_a_breakable_point ... FAILED
+test l1_group_flat_iff_fits ... ok
+test l7_iii_oracle_at_every_width ... FAILED
+test l8_total ... ok
+test l9_l3_rest_lookahead_with_trivia ... FAILED
+test l9_trivia_in_the_g2_generator ... FAILED
+test l7_ii_infinite_width_is_flatten ... ok
+
+failures:
+
+---- l2_hard_forces_break stdout ----
+
+thread 'l2_hard_forces_break' (46855952) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L2: renderer diverges from the oracle at w=17
+program: [Int(846), Indent([Text("(y)")]), Wrap(91, 93, [Indent([Char(58), Text("a")]), Softline, Group([Text("(y)")])]), FillSep(", "), Text("(y)")]
+  left: "846(y)[:a (y)], (y)"
+ right: "846(y)[:a (y)],\n(y)"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- l3_rest_lookahead stdout ----
+
+thread 'l3_rest_lookahead' (46855954) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L3': renderer diverges from the oracle at w=3
+program: [Group([Sep, FillSep(", ")]), Text("bb"), Char(59), Group([CommaSep, Group([FillSep(", "), Text("(y)"), Text("ffffff"), Int(-903)]), Sep, Softline])]
+  left: "|\n, bb;,\n, (y)ffffff-903|\n\n"
+ right: "|\n,\nbb;,\n,\n(y)ffffff-903|\n\n"
+
+---- l4_nest_changes_indentation_only stdout ----
+
+thread 'l4_nest_changes_indentation_only' (46856064) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L4: renderer diverges from the oracle at w=2
+program: [Text("bb"), Group([Text("(y)"), Softline, FillSep(", ")]), Wrap(40, 41, [Sep, Text("ccc"), Wrap(40, 41, [Sep]), Text("dddd")]), Sep, Wrap(123, 125, [Group([Int(-511)]), Indent([Char(58), Int(-144)])])]
+  left: "bb(y)\n, (\n    |\n    ccc(\n        |\n\n    )dddd\n) | {\n    -511:-144\n}"
+ right: "bb(y)\n,\n(\n    |\n    ccc(\n        |\n\n    )dddd\n) | {\n    -511:-144\n}"
+
+---- l5_fill_pairwise stdout ----
+
+thread 'l5_fill_pairwise' (46856065) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L5: renderer diverges from the oracle at w=13
+program: [Text("xx"), Group([Group([Wrap(40, 41, [Text("x;")])]), FillSep(""), Text("ccc"), FillSep(""), Text("bb"), FillSep(""), Text("ffffff")])]
+  left: "xx(x;)cccbbffffff"
+ right: "xx(x;)cccbb\nffffff"
+
+---- l5_linear_join_is_leijen_fill_sep stdout ----
+
+thread 'l5_linear_join_is_leijen_fill_sep' (46856066) panicked at tests/laws.rs:479:13:
+assertion `left == right` failed: w=10 words=["bb", "eeeee", "ccc", "dddd", "dddd", "a", "bb"]
+  left: "bb eeeee ccc\ndddd dddd a\nbb"
+ right: "bb eeeee\nccc dddd\ndddd a bb"
+
+---- l6_if_break_follows_the_innermost_group stdout ----
+
+thread 'l6_if_break_follows_the_innermost_group' (46856067) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L6: renderer diverges from the oracle at w=5
+program: [Group([FillSep(", "), Int(560), Wrap(40, 41, [FillSep(" "), FillSep("")]), Softline])]
+  left: ", 560(\n\n)\n"
+ right: ",\n560(\n\n)\n"
+
+---- l7_i_no_overflow_past_a_breakable_point stdout ----
+
+thread 'l7_i_no_overflow_past_a_breakable_point' (46856068) panicked at tests/laws.rs:528:21:
+L7(i) w=15: overfull line "ccc  |  |  ffffff:|" holds a flat break
+program: [Group([Group([BreakLine, Group([Text("ccc"), FillSep(" "), Sep, Sep]), FillSep(" ")]), Text("ffffff"), Indent([Char(58), Sep]), BreakLine])]
+
+---- l7_iii_oracle_at_every_width stdout ----
+
+thread 'l7_iii_oracle_at_every_width' (46856498) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L7(iii): renderer diverges from the oracle at w=3
+program: [Group([Indent([FillSep(", ")]), Group([FillSep(" "), Text("bb"), CommaSep, Text("x;")])])]
+  left: ",  bb,\nx;"
+ right: ",\nbb,\nx;"
+
+---- l9_l3_rest_lookahead_with_trivia stdout ----
+
+thread 'l9_l3_rest_lookahead_with_trivia' (46856611) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L9 L3': renderer diverges from the oracle at w=8
+program: [Group([Int(-569), Text("eeeee"), Group([Suffix(" //c"), CommaSep, Char(58), Sep]), Group([Text("ffffff")]), Group([FillSep(", "), FillSep(", ")])])]
+  left: "-569eeeee, //c\n:|\nffffff, ,\n"
+ right: "-569eeeee, //c\n:|\nffffff,\n,"
+
+---- l9_trivia_in_the_g2_generator stdout ----
+
+thread 'l9_trivia_in_the_g2_generator' (46856622) panicked at tests/laws.rs:241:9:
+assertion `left == right` failed: L9 (G2): renderer diverges from the oracle at w=7
+program: [Group([FillSep(", "), Int(609), Text("eeeee"), BreakLine, CommaSep])]
+  left: ", 609eeeee\n,\n"
+ right: ",\n609eeeee\n,\n"
+
+
+failures:
+    l2_hard_forces_break
+    l3_rest_lookahead
+    l4_nest_changes_indentation_only
+    l5_fill_pairwise
+    l5_linear_join_is_leijen_fill_sep
+    l6_if_break_follows_the_innermost_group
+    l7_i_no_overflow_past_a_breakable_point
+    l7_iii_oracle_at_every_width
+    l9_l3_rest_lookahead_with_trivia
+    l9_trivia_in_the_g2_generator
+
+test result: FAILED. 5 passed; 10 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.94s
+
+error: test failed, to rerun pass `--test laws`
+     Running tests/pp2_trivia.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp2_trivia-f9d3f1e86b5b83d4)
+
+running 8 tests
+test a_pending_suffix_across_a_hardline_matches_the_oracle ... ok
+test a_boundary_flushes_a_pending_suffix_through_a_hardline ... ok
+test break_parent_breaks_every_enclosing_group ... ok
+test l9_iii_at_most_one_blank_line ... FAILED
+test l9_trivia_documents_agree_with_the_oracle ... FAILED
+test s8b_fill_sep_equals_its_composition ... FAILED
+test s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep ... FAILED
+test l9_i_a_suffix_ends_its_line ... ok
+
+failures:
+
+---- l9_iii_at_most_one_blank_line stdout ----
+
+thread 'l9_iii_at_most_one_blank_line' (46856773) panicked at tests/pp2_trivia.rs:360:13:
+assertion `left == right` failed: L9(iii) w=6: oracle
+tree: [Group([IfBreak([Softline, Text("dddd")], [Text("(y)"), Softline]), Text("ccc")]), Suffix(0), Hardline, Hardline, Text("a"), Group([Group([Text("a")]), Boundary, FillSep(2), Text("(y)")]), BreakParent]
+  left: "\nddddccc //1\n\naa  (y)"
+ right: "\nddddccc //1\n\naa\n(y)"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- l9_trivia_documents_agree_with_the_oracle stdout ----
+
+thread 'l9_trivia_documents_agree_with_the_oracle' (46856774) panicked at tests/pp2_trivia.rs:269:13:
+assertion `left == right` failed: L9: diverges from the oracle at w=8
+tree: [Text("w"), FillSep(1), Group([Group([Boundary, Indent([Softline, Suffix(2)]), Indent([Boundary, Text("x;"), FillSep(1)]), Softline])]), Group([FillSep(0)]), Group([Text("(y)")])]
+  left: "w   /*3*/\n    x;  (y)"
+ right: "w   /*3*/\n    x;\n(y)"
+
+---- s8b_fill_sep_equals_its_composition stdout ----
+
+thread 's8b_fill_sep_equals_its_composition' (46856775) panicked at tests/pp2_trivia.rs:435:13:
+assertion `left == right` failed: S8-B w=9: the op and its composition differ
+tree: [Group([Boundary, Text("(y)"), Group([Boundary]), Boundary, Suffix(5), Group([Suffix(1), Text("dddd"), Indent([FillSep(1), Group([Text("ccc"), Text("a"), Suffix(3)]), FillSep(2)])])])]
+  left: "(y)dddd ccca ;6 //22 #4\n"
+ right: "(y)dddd ;6 //22\n    ccca #4\n"
+
+---- s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep stdout ----
+
+thread 's8b_fill_sep_is_one_op_equal_to_leijen_fill_sep' (46856776) panicked at tests/pp2_trivia.rs:409:13:
+assertion `left == right` failed: S8-B w=4: items [Text("dddd"), Text("x;"), Group([Text("ccc"), Softline, Text("ccc")]), Text("bb"), Text("ccc"), Group([Text("bb"), Softline, Text("ccc")]), Group([Text("ccc"), Softline, Text("dddd")])]
+  left: "dddd\nx; ccc\nccc bb\nccc bb\nccc ccc\ndddd"
+ right: "dddd\nx;\nccc\nccc\nbb\nccc\nbb\nccc\nccc\ndddd"
+
+
+failures:
+    l9_iii_at_most_one_blank_line
+    l9_trivia_documents_agree_with_the_oracle
+    s8b_fill_sep_equals_its_composition
+    s8b_fill_sep_is_one_op_equal_to_leijen_fill_sep
+
+test result: FAILED. 4 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `--test pp2_trivia`
+error: 2 targets failed:
+    `--test laws`
+    `--test pp2_trivia`
+# rc 101

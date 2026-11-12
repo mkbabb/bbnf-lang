@@ -1,0 +1,60 @@
+   Compiling serde v1.0.228
+   Compiling pprint_derive v0.3.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling parse-that-simd v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ser)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ir)
+   Compiling pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling schemars v0.8.22
+   Compiling biome_diagnostics_categories v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling oxc_resolver v1.12.0
+   Compiling serde_ini v0.2.0
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling rmp-serde v1.3.1
+   Compiling ron v0.12.1
+   Compiling biome_text_size v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling biome_text_edit v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_console v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_rowan v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_diagnostics v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_suppression v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_deserialize v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/core)
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/gorgeous)
+warning: unused import: `std::collections::HashMap`
+ --> crates/gorgeous/tests/vm.rs:3:5
+  |
+3 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `gorgeous` (test "vm") generated 1 warning (run `cargo fix --test "vm" -p gorgeous` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 17.51s
+     Running tests/vm.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/vm-9192664ceb1d549b)
+
+running 12 tests
+test hint_indent_group ... ignored, AV.0.11 Category A: pprint vm indent+group+sep interaction drifted post-AU; forward-ticketed to pprint hint-semantics audit.
+test hint_softbreak ... ignored, AV.0.11 Category A: softbreak flat emitter drifted post-AU (inserts space, expected empty); forward-ticketed to pprint hint-semantics audit.
+test hint_sep ... ok
+test hint_block ... ok
+test hint_compact ... ok
+test hint_fast ... ok
+test hint_blankline ... ok
+test format_ir_convenience ... ok
+test hint_group_sep ... ok
+test hint_nobreak ... ok
+test hint_off ... ok
+test hint_split ... ok
+
+test result: ok. 10 passed; 0 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,1 @@
+=IF(AND(A1>0,B2<10),SUM(C1:C10),VLOOKUP("key",Sheet1!A:B,2,FALSE))

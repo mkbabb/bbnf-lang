@@ -1,0 +1,21 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd cargo test --release --test stream_v1 -- --test-threads=2 --nocapture
+# date 2026-11-12T06:10:46-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 1.32s
+     Running tests/stream_v1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/stream_v1-6c6a42b33214779e)
+
+running 7 tests
+test every_op_has_one_tag_and_the_generator_reaches_it ... ok
+test the_conformance_corpus_is_current ... ok
+decoder: 25000 mutated streams, 1188 accepted, no panic
+test the_decoder_never_panics ... ok
+test the_decoder_refuses_what_is_not_a_canonical_stream ... ok
+test the_freeze_digest_holds ... ok
+test the_specification_names_the_codecs_tags ... ok
+STREAM-v1: 100000 documents (1347227 ops), decode ∘ encode = id, renders byte-equal
+test decode_encode_is_the_identity_and_renders_byte_equal ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.81s
+
+# rc 0

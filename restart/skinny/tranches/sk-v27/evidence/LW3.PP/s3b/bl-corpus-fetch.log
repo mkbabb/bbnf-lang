@@ -1,0 +1,4 @@
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.26s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask corpus fetch`
+corpus fetch: https://github.com/mkbabb/bbnf-lang/releases/download/corpus-v2/corpus-v2.tar.gz
+corpus fetch: 3399 files verified in /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/data

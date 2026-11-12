@@ -1,0 +1,21 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd cargo test --release --test born_red_lw1 -- --test-threads=2 --nocapture
+# date 2026-11-12T06:07:40-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 1.13s
+     Running tests/born_red_lw1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/born_red_lw1-22b9abe263f9178e)
+
+running 9 tests
+test red_group_flat_width_u16_saturation ... ok
+test red_l2_hardline_sentinel_at_wide_width ... ok
+test red_l3_prime_fill_ancestor ... ok
+test red_l3_prime_has_hard_sibling ... ok
+test red_l3_trailing_text_after_group ... ok
+test red_l8_width_zero_indented_newline_panics ... ok
+test red_linear_join_separator_order ... ok
+test red_wrap_flat_width_u16_saturation ... ok
+test red_if_break_count_u16_wrap ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+# rc 0

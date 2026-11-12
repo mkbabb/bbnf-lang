@@ -1,0 +1,41 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test laws -- --test-threads=2 --nocapture
+# date 2026-11-12T06:01:06-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.73s
+     Running tests/laws.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/laws-6c460f3d7ef35935)
+
+running 15 tests
+L2: 100000 cells, 0 divergences
+test l2_hard_forces_break ... ok
+test l3_later_group_counts_to_its_first_line_not_its_flat_width ... ok
+L1: 100000 cells, 0 divergences
+test l1_group_flat_iff_fits ... ok
+L4 align/hang: 100000 cells
+test l4_align_and_hang_on_the_oracle ... ok
+L3': 100000 cells, 0 divergences
+test l3_rest_lookahead ... ok
+L4: 100000 cells, 0 divergences
+test l4_nest_changes_indentation_only ... ok
+L5 linear_join: 100000 cells
+test l5_linear_join_is_leijen_fill_sep ... ok
+L6: 100000 cells, 0 divergences
+test l6_if_break_follows_the_innermost_group ... ok
+L7(i): 100000 cells
+test l7_i_no_overflow_past_a_breakable_point ... ok
+L7(ii): 100000 cells
+test l7_ii_infinite_width_is_flatten ... ok
+L7(iii): 100040 cells, 0 divergences
+test l7_iii_oracle_at_every_width ... ok
+L8: 100002 cells (16667 accepted, 68183 refused)
+test l8_total ... ok
+L5: 100000 cells, 0 divergences
+test l5_fill_pairwise ... ok
+L9 (G2): 100000 cells, 0 divergences
+test l9_trivia_in_the_g2_generator ... ok
+L9 L3': 100000 cells, 0 divergences
+test l9_l3_rest_lookahead_with_trivia ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.31s
+
+# rc 0

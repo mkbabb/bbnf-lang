@@ -1,0 +1,18 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd cargo test --release --test l8_unbalanced -- --test-threads=2 --nocapture
+# date 2026-11-12T06:09:48-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.26s
+     Running tests/l8_unbalanced.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/l8_unbalanced-34e0aa756743f3c4)
+
+running 6 tests
+test l8_close_without_open_is_refused ... ok
+test l8_balanced_streams_are_accepted ... ok
+test l8_indent_close_without_open_is_refused ... ok
+test l8_group_crossing_an_if_break_branch_is_refused ... ok
+test l8_unclosed_group_is_refused ... ok
+test l8_unclosed_indent_is_refused ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+# rc 0

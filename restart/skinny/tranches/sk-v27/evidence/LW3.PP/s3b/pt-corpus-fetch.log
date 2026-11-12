@@ -1,0 +1,6 @@
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/corpus)
+   Compiling xtask v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/xtask)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.42s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/xtask corpus fetch`
+corpus fetch: https://github.com/mkbabb/parse-that/releases/download/corpus-v1/corpus-v1.tar.gz
+corpus fetch: 12 files verified in /Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/data

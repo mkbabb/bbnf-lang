@@ -1,0 +1,1450 @@
+    Checking parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/corpus)
+    Checking parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/simd)
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/egraph-derive)
+    Checking serde v1.0.228
+    Checking pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+    Checking parse-that-egraph v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/egraph)
+   Compiling pest v2.8.6
+    Checking cssparser v0.33.0
+    Checking jiter v0.8.2
+    Checking cssparser v0.34.0
+    Checking regex v1.12.3
+    Checking winnow v0.7.15
+    Checking nom v7.1.3
+    Checking xtask v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/xtask)
+    Checking halfbrown v0.2.5
+    Checking parcel_sourcemap v2.1.1
+    Checking serde-content v0.1.2
+    Checking faststr v0.2.34
+    Checking serde_json_borrow v0.9.0
+    Checking cargo-platform v0.1.9
+    Checking parse-that-regex v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/regex)
+    Checking cssparser-color v0.1.0
+    Checking parcel_selectors v0.28.2
+    Checking sonic-rs v0.5.8
+    Checking cargo_metadata v0.18.1
+    Checking value-trait v0.10.1
+    Checking simd-json v0.14.3
+   Compiling pest_meta v2.8.6
+    Checking lightningcss v1.0.0-alpha.71
+    Checking parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/parse_that)
+   Compiling pest_generator v2.8.6
+   Compiling pest_derive v2.8.6
+    Checking pest_grammars v2.8.6
+    Checking regex-bootstrap v0.1.1 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/bootstrap)
+    Checking parse_that_cli v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/src)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 6.24s
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/corpus)
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/simd)
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/egraph-derive)
+   Compiling serde v1.0.228
+   Compiling pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling parse-that-egraph v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/egraph)
+   Compiling cssparser v0.33.0
+   Compiling pest v2.8.6
+   Compiling jiter v0.8.2
+   Compiling cssparser v0.34.0
+   Compiling regex v1.12.3
+   Compiling winnow v0.7.15
+   Compiling nom v7.1.3
+   Compiling xtask v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/xtask)
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/regex)
+   Compiling halfbrown v0.2.5
+   Compiling cssparser-color v0.1.0
+   Compiling parcel_selectors v0.28.2
+   Compiling faststr v0.2.34
+   Compiling value-trait v0.10.1
+   Compiling parcel_sourcemap v2.1.1
+   Compiling serde-content v0.1.2
+   Compiling sonic-rs v0.5.8
+   Compiling serde_json_borrow v0.9.0
+   Compiling cargo-platform v0.1.9
+   Compiling simd-json v0.14.3
+   Compiling cargo_metadata v0.18.1
+   Compiling pest_grammars v2.8.6
+   Compiling lightningcss v1.0.0-alpha.71
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/parse_that)
+   Compiling regex-bootstrap v0.1.1 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/bootstrap)
+   Compiling parse_that_cli v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/src)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.48s
+────────────
+ Nextest run ID 2df7c0be-7faf-4fa9-9223-c17b05e88f23 with nextest profile: default
+    Starting 642 tests across 62 binaries (8 tests skipped)
+        PASS [   0.014s] (  1/642) parse-that-egraph::derive_language variadic_children_visible
+        PASS [   0.015s] (  2/642) parse-that-egraph::derive_language auto_named_struct_variant
+        PASS [   0.016s] (  3/642) parse-that-egraph::csp_scheduler parent_dirty_prop_propagates_through_ac3
+        PASS [   0.016s] (  4/642) parse-that-egraph::derive_language auto_boxed_slice
+        PASS [   0.019s] (  5/642) parse-that-egraph::derive_language named_single_child_visible
+        PASS [   0.021s] (  6/642) parse-that-egraph::derive_language auto_vec_of_id
+        PASS [   0.021s] (  7/642) parse-that-egraph::csp_scheduler dirty_domain_lattice_semantics
+        PASS [   0.022s] (  8/642) parse-that-egraph::derive_language single_child_visible
+        PASS [   0.024s] (  9/642) parse-that-egraph::derive_language unit_has_no_children
+        PASS [   0.026s] ( 10/642) parse-that-egraph::derive_language leaf_has_no_children
+        PASS [   0.029s] ( 11/642) parse-that-egraph::csp_scheduler csp_scheduler_reaches_saturation
+        PASS [   0.030s] ( 12/642) parse-that-egraph::derive_language auto_single_id
+        PASS [   0.018s] ( 13/642) parse-that-egraph::egraph_basic intern_builds_shared_children
+        PASS [   0.032s] ( 14/642) parse-that-egraph::derive_language children_mut_replaces_ids
+        PASS [   0.018s] ( 15/642) parse-that-egraph::egraph_basic intern_dedupes_identical_nodes
+        PASS [   0.015s] ( 16/642) parse-that-egraph::saturation multi_iteration_flatten_reaches_fixed_point
+        PASS [   0.017s] ( 17/642) parse-that-egraph::unionfind make_set_distinct
+        PASS [   0.027s] ( 18/642) parse-that-egraph::egraph_basic intern_distinct_nodes
+        PASS [   0.043s] ( 19/642) parse-that-egraph::derive_language auto_fixed_array_pair
+        PASS [   0.019s] ( 20/642) parse-that-egraph::unionfind path_compression
+        PASS [   0.018s] ( 21/642) parse-that-regex::abi_fingerprint hir_abi_fingerprint_is_recorded
+        PASS [   0.026s] ( 22/642) parse-that-egraph::saturation pure_union_rule_counted_as_work
+        PASS [   0.018s] ( 23/642) parse-that-regex::algebra_superset superset_equal
+        PASS [   0.030s] ( 24/642) parse-that-egraph::saturation no_op_saturates_in_one_iteration
+        PASS [   0.021s] ( 25/642) parse-that-regex::algebra_superset superset_basic
+        PASS [   0.038s] ( 26/642) parse-that-egraph::egraph_basic saturate_add_zero
+        PASS [   0.056s] ( 27/642) parse-that-egraph::derive_language auto_leaf_scalar
+        PASS [   0.057s] ( 28/642) parse-that-egraph::csp_scheduler csp_scheduler_matches_backoff_scheduler
+        PASS [   0.025s] ( 29/642) parse-that-regex::born_red_lw1 alt_fusion_is_leftmost_first
+        PASS [   0.016s] ( 30/642) parse-that-regex::born_red_lw1 superset_absorb_e_acute_greek_guard
+        PASS [   0.016s] ( 31/642) parse-that-regex::casefold_tables canonicalization_differs_by_reading
+        PASS [   0.028s] ( 32/642) parse-that-regex::born_red_lw1 alt_longer_branch_first_agrees
+        PASS [   0.069s] ( 33/642) parse-that-egraph::egraph_basic extract_smallest_after_saturate
+        PASS [   0.025s] ( 34/642) parse-that-regex::born_red_lw1 latin1_folds_under_i_and_iu
+        PASS [   0.070s] ( 35/642) parse-that-egraph::derive_language auto_children_mut_pair_roundtrip
+        PASS [   0.030s] ( 36/642) parse-that-regex::born_red_lw1 kelvin_does_not_fold_without_u
+        PASS [   0.030s] ( 37/642) parse-that-regex::born_red_lw1 long_s_folds_under_iu
+        PASS [   0.020s] ( 38/642) parse-that-regex::egraph_rules_flatten flatten_nested_alternation_matches
+        PASS [   0.047s] ( 39/642) parse-that-regex::algebra_union union_disjoint
+        PASS [   0.036s] ( 40/642) parse-that-regex::born_red_lw1 kelvin_folds_under_iu
+        PASS [   0.031s] ( 41/642) parse-that-regex::casefold_tables backslash_s_is_the_generated_space_set
+        PASS [   0.036s] ( 42/642) parse-that-regex::born_red_lw1 superset_absorb_ascii_single_class_holds
+        PASS [   0.029s] ( 43/642) parse-that-regex::egraph_rules_flatten flatten_flat_does_not_match
+        PASS [   0.034s] ( 44/642) parse-that-regex::casefold_tables the_tables_are_at_the_pinned_unicode_version
+        PASS [   0.011s] ( 45/642) parse-that-regex::egraph_rules_union union_merges_adjacent_classes
+        PASS [   0.017s] ( 46/642) parse-that-regex::egraph_rules_superset superset_absorbs_subset
+        PASS [   0.024s] ( 47/642) parse-that-regex::egraph_rules_redundant dedup_no_duplicates
+        PASS [   0.027s] ( 48/642) parse-that-regex::egraph_rules_redundant dedup_identical_literal_branches
+        PASS [   0.065s] ( 49/642) parse-that-egraph::unionfind union_and_find
+        PASS [   0.019s] ( 50/642) parse-that-regex::egraph_rules_union union_does_not_match_on_equal_classes
+        PASS [   0.013s] ( 51/642) parse-that-regex::info test_alternation_one_pass
+        PASS [   0.040s] ( 52/642) parse-that-regex::egraph_rules_flatten flatten_nested_concat_matches
+        PASS [   0.084s] ( 53/642) parse-that-egraph::egraph_basic union_merges_classes
+        PASS [   0.016s] ( 54/642) parse-that-regex::info test_anchored
+        PASS [   0.014s] ( 55/642) parse-that-regex::info test_identifier_double_dash_only
+        PASS [   0.014s] ( 56/642) parse-that-regex::info test_json_number_classification
+        PASS [   0.040s] ( 57/642) parse-that-regex::egraph_rules_repetition merge_different_subs_does_not_match
+        PASS [   0.027s] ( 58/642) parse-that-regex::info a_non_ascii_quantified_class_has_no_ascii_info
+        PASS [   0.032s] ( 59/642) parse-that-regex::egraph_simplify simplify_hir_round_trips_leaf
+        PASS [   0.017s] ( 60/642) parse-that-regex::info test_nullable_pattern
+        PASS [   0.046s] ( 61/642) parse-that-regex::egraph_rules_repetition merge_plus_star_to_plus
+        PASS [   0.023s] ( 62/642) parse-that-regex::info test_negated_class
+        PASS [   0.017s] ( 63/642) parse-that-regex::lint_nou a_class_that_can_match_a_surrogate_unit_is_linted
+        PASS [   0.029s] ( 64/642) parse-that-regex::info test_identifier_vendor_prefix
+        PASS [   0.020s] ( 65/642) parse-that-regex::lint_nou a_pattern_that_reads_the_same_is_not_linted
+        PASS [   0.060s] ( 66/642) parse-that-regex::egraph_rules_repetition merge_bounds_arithmetic
+        PASS [   0.023s] ( 67/642) parse-that-regex::lint_nou the_id_is_general
+        PASS [   0.019s] ( 68/642) parse-that-regex::path_lexer error_carries_provided_span
+        PASS [   0.028s] ( 69/642) parse-that-regex::look_conditions anchors_and_boundaries_reproduce_the_oracle
+        PASS [   0.020s] ( 70/642) parse-that-regex::path_lexer lexes_escaped_quote_in_input
+        PASS [   0.040s] ( 71/642) parse-that-regex::info test_width_bounds
+        PASS [   0.016s] ( 72/642) parse-that-regex::path_lexer lexes_jsonpath_style
+        PASS [   0.025s] ( 73/642) parse-that-regex::path_lexer lexes_dotted_path
+        PASS [   0.034s] ( 74/642) parse-that-regex::path_lexer deterministic_span_attribution
+        PASS [   0.060s] ( 75/642) parse-that-regex::info test_identifier_custom_property_fold
+        PASS [   0.035s] ( 76/642) parse-that-regex::path_lexer empty_input_yields_only_eof
+        PASS [   0.063s] ( 77/642) parse-that-regex::info test_identifier_bare
+        PASS [   0.035s] ( 78/642) parse-that-regex::path_lexer ignores_interstitial_whitespace
+        PASS [   0.018s] ( 79/642) parse-that-regex::path_lexer lexes_unicode_identifiers
+        PASS [   0.026s] ( 80/642) parse-that-regex::path_lexer lexes_underscore_idents
+        PASS [   0.087s] ( 81/642) parse-that-regex::egraph_rules_superset disjoint_classes_not_absorbed
+        PASS [   0.081s] ( 82/642) parse-that-regex::egraph_simplify simplify_hir_preserves_structure
+        PASS [   0.015s] ( 83/642) parse-that-regex::word_boundary engine_reproduces_the_oracle
+        PASS [   0.025s] ( 84/642) parse-that-regex::path_lexer rejects_unexpected_punctuation
+        PASS [   0.018s] ( 85/642) parse-that-regex::to_source round_trip_every_accepted_pattern
+        PASS [   0.025s] ( 86/642) parse-that-regex::path_lexer round_trip_text_preserves_input
+        PASS [   0.034s] ( 87/642) parse-that-regex::path_lexer lexes_wildcard_path
+        PASS [   0.017s] ( 88/642) parse-that-regex::word_boundary word_boundary_outside_a_class_is_an_assertion
+        PASS [   0.048s] ( 89/642) parse-that-regex::path_lexer lexes_index_runs_into_brackets
+        PASS [   0.028s] ( 90/642) parse-that-regex::word_boundary backspace_inside_a_class_is_unchanged
+        PASS [   0.024s] ( 91/642) parse-that-regex::word_boundary word_boundary_round_trips_through_to_source
+        PASS [   0.017s] ( 92/642) parse-that-simd::correctness empty_input_yields_empty_index
+        PASS [   0.014s] ( 93/642) parse-that-simd::correctness multi_cmp_alphabet_20_singletons
+        PASS [   0.046s] ( 94/642) parse-that-regex::path_lexer rejects_invalid_utf8_lead_byte
+        PASS [   0.110s] ( 95/642) parse-that-regex::egraph_simplify simplify_hir_dedup_alt_branches
+        PASS [   0.029s] ( 96/642) parse-that-simd::correctness empty_alphabet_yields_empty_index
+        PASS [   0.033s] ( 97/642) parse-that-simd::correctness css_bootstrap_canonical
+        PASS [   0.091s] ( 98/642) parse-that-regex::info test_simple_literal
+        PASS [   0.021s] ( 99/642) parse-that-simd::correctness short_input_below_stripe
+        PASS [   0.018s] (100/642) parse-that-simd::correctness stripe_boundary_64_byte_input
+        PASS [   0.050s] (101/642) parse-that-regex::to_source print_smoke_corpus
+        PASS [   0.028s] (102/642) parse-that-simd::correctness no_quotes_simple
+        PASS [   0.022s] (103/642) parse-that-simd::correctness stripe_plus_one_input
+        PASS [   0.020s] (104/642) parse-that-simd::correctness wide_lut_alphabet_15_singletons
+        PASS [   0.013s] (105/642) parse-that-simd::digraph css_block_comment_open_close
+        PASS [   0.067s] (106/642) parse-that-regex::path_lexer whitespace_only_input_yields_only_eof
+        PASS [   0.027s] (107/642) parse-that-simd::digraph arrow_digraph
+        PASS [   0.017s] (108/642) parse-that-simd::dispatch_tiers selected_tier_is_the_best_supported
+        PASS [   0.028s] (109/642) parse-that-simd::digraph css_real_world_bootstrap_snippet
+        PASS [   0.032s] (110/642) parse-that-simd::digraph css_no_digraph_no_extra_hits
+        PASS [   0.058s] (111/642) parse-that-simd::correctness json_twitter_canonical
+        PASS [   0.030s] (112/642) parse-that-simd::digraph digraph_long_input
+        PASS [   0.029s] (113/642) parse-that-simd::dispatch_tiers every_isa_tier_of_the_target_is_compiled
+        PASS [   0.034s] (114/642) parse-that-simd::digraph digraph_at_stripe_boundary
+        PASS [   0.044s] (115/642) parse-that-simd::digraph arrow_and_paren_star_digraphs
+        PASS [   0.070s] (116/642) parse-that-simd::correctness json_canada_canonical
+        PASS [   0.024s] (117/642) parse-that-simd::guard_page no_tier_reads_past_the_end_of_its_input
+        PASS [   0.047s] (118/642) parse-that-simd::fuzz css_alphabet_random_bytes
+        PASS [   0.044s] (119/642) parse-that-simd::fuzz json_alphabet_random_bytes
+        PASS [   0.092s] (120/642) parse-that-simd::correctness json_citm_canonical
+        PASS [   0.029s] (121/642) parse-that-simd::prim_differential decode_hex_quads
+        PASS [   0.064s] (122/642) parse-that-simd::fuzz arrow_alphabet_random_bytes
+        PASS [   0.018s] (123/642) parse-that-simd::prim_differential string_special_block
+        PASS [   0.048s] (124/642) parse-that-simd::fuzz no_quote_alphabet_random_bytes
+        PASS [   0.012s] (125/642) parse-that-simd::quote_parity double_backslash_quote_closes_string
+        PASS [   0.046s] (126/642) parse-that-simd::prim_differential bracket_depth_mask_64
+        PASS [   0.037s] (127/642) parse-that-simd::prim_differential lo6_classify
+        PASS [   0.015s] (128/642) parse-that-simd::prim_differential the_selected_tier_runs_the_neon_bodies_on_aarch64
+        PASS [   0.016s] (129/642) parse-that-simd::prim_differential validate_utf8_block
+        PASS [   0.013s] (130/642) parse-that-simd::quote_parity empty_input_quote_path
+        PASS [   0.013s] (131/642) parse-that-simd::quote_parity escaped_quote_does_not_close_string
+        PASS [   0.012s] (132/642) parse-that-simd::quote_parity input_starting_with_string
+        PASS [   0.055s] (133/642) parse-that-simd::prim_differential byte_class_from_eq_set_64
+        PASS [   0.013s] (134/642) parse-that-simd::quote_parity long_string_spanning_multiple_stripes
+        PASS [   0.013s] (135/642) parse-that-simd::quote_parity quote_carry_across_64_byte_stripes
+        PASS [   0.014s] (136/642) parse-that-simd::quote_parity many_strings_in_array
+        PASS [   0.014s] (137/642) parse-that-simd::quote_parity quote_filters_braces_inside_string
+        PASS [   0.015s] (138/642) parse-that-simd::quote_parity shift_xor_matches_clmul
+        PASS [   0.013s] (139/642) parse_that::combinator_test tests::chain_basic
+        PASS [   0.013s] (140/642) parse_that::combinator_test tests::chain_failure_propagates
+        PASS [   0.013s] (141/642) parse_that::combinator_test tests::chain_second_failure
+        PASS [   0.013s] (142/642) parse_that::combinator_test tests::chain_state_advances
+        PASS [   0.047s] (143/642) parse-that-simd::prim_differential structural_classify_64
+        PASS [   0.013s] (144/642) parse_that::combinator_test tests::test_add_operator
+        PASS [   0.013s] (145/642) parse_that::combinator_test tests::test_any_span_keywords
+        PASS [   0.014s] (146/642) parse_that::combinator_test tests::test_any_span_no_match
+        PASS [   0.013s] (147/642) parse_that::combinator_test tests::test_bitor_operator
+        PASS [   0.013s] (148/642) parse_that::combinator_test tests::test_dispatch_byte
+        PASS [   0.086s] (149/642) parse-that-simd::fuzz long_inputs
+        PASS [   0.012s] (150/642) parse_that::combinator_test tests::test_dispatch_byte_no_fallback
+        PASS [   0.013s] (151/642) parse_that::combinator_test tests::test_eof_at_end
+        PASS [   0.012s] (152/642) parse_that::combinator_test tests::test_eof_not_at_end
+        PASS [   0.012s] (153/642) parse_that::combinator_test tests::test_epsilon
+        PASS [   0.015s] (154/642) parse_that::combinator_test tests::test_flat_then
+        PASS [   0.015s] (155/642) parse_that::combinator_test tests::test_lazy_basic
+        PASS [   0.014s] (156/642) parse_that::combinator_test tests::test_look_ahead_success
+        PASS [   0.016s] (157/642) parse_that::combinator_test tests::test_look_ahead_failure
+        PASS [   0.015s] (158/642) parse_that::combinator_test tests::test_many_unbounded
+        PASS [   0.014s] (159/642) parse_that::combinator_test tests::test_many_with_max
+        PASS [   0.014s] (160/642) parse_that::combinator_test tests::test_many_zero_matches
+        PASS [   0.016s] (161/642) parse_that::combinator_test tests::test_many_with_min
+        PASS [   0.016s] (162/642) parse_that::combinator_test tests::test_map_failure_propagates
+        PASS [   0.015s] (163/642) parse_that::combinator_test tests::test_negate_failure
+        PASS [   0.013s] (164/642) parse_that::combinator_test tests::test_negate_success
+        PASS [   0.020s] (165/642) parse_that::combinator_test tests::test_map_transform
+        PASS [   0.015s] (166/642) parse_that::combinator_test tests::test_next_combinator
+        PASS [   0.013s] (167/642) parse_that::combinator_test tests::test_next_span_empty_input
+        PASS [   0.013s] (168/642) parse_that::combinator_test tests::test_not_success
+        PASS [   0.018s] (169/642) parse_that::combinator_test tests::test_next_span
+        PASS [   0.017s] (170/642) parse_that::combinator_test tests::test_not_failure
+        PASS [   0.016s] (171/642) parse_that::combinator_test tests::test_number_span_fast_big_exponent
+        PASS [   0.015s] (172/642) parse_that::combinator_test tests::test_number_span_fast_exponent
+        PASS [   0.018s] (173/642) parse_that::combinator_test tests::test_number_span_fast_empty
+        PASS [   0.016s] (174/642) parse_that::combinator_test tests::test_number_span_fast_float
+        PASS [   0.016s] (175/642) parse_that::combinator_test tests::test_number_span_fast_integer
+        PASS [   0.013s] (176/642) parse_that::combinator_test tests::test_number_span_fast_neg_exponent
+        PASS [   0.019s] (177/642) parse_that::combinator_test tests::test_number_span_fast_just_minus
+        PASS [   0.237s] (178/642) parse-that-regex::oracle_leaf_corpus dfa_tier_agrees_with_v8_and_jsc
+        PASS [   0.019s] (179/642) parse_that::combinator_test tests::test_number_span_fast_neg_zero
+        PASS [   0.022s] (180/642) parse_that::combinator_test tests::test_number_span_fast_negative
+        PASS [   0.018s] (181/642) parse_that::combinator_test tests::test_number_span_fast_zero
+        PASS [   0.015s] (182/642) parse_that::combinator_test tests::test_opt_none
+        PASS [   0.024s] (183/642) parse_that::combinator_test tests::test_number_span_fast_no_match
+        PASS [   0.022s] (184/642) parse_that::combinator_test tests::test_one_of
+        PASS [   0.025s] (185/642) parse_that::combinator_test tests::test_number_span_fast_randomized_boundaries
+        PASS [   0.021s] (186/642) parse_that::combinator_test tests::test_opt_some
+        PASS [   0.021s] (187/642) parse_that::combinator_test tests::test_or_backtracking
+        PASS [   0.022s] (188/642) parse_that::combinator_test tests::test_or_first_matches
+        PASS [   0.017s] (189/642) parse_that::combinator_test tests::test_or_second_matches
+        PASS [   0.018s] (190/642) parse_that::combinator_test tests::test_parse_or_error_failure
+        PASS [   0.171s] (191/642) parse-that-simd::dispatch_tiers every_supported_tier_matches_the_scalar_oracle
+        PASS [   0.024s] (192/642) parse_that::combinator_test tests::test_or_neither_matches
+        PASS [   0.019s] (193/642) parse_that::combinator_test tests::test_regex_digits
+        PASS [   0.017s] (194/642) parse_that::combinator_test tests::test_regex_no_match
+        PASS [   0.022s] (195/642) parse_that::combinator_test tests::test_parse_or_error_success
+        PASS [   0.022s] (196/642) parse_that::combinator_test tests::test_regex_empty_input
+        PASS [   0.017s] (197/642) parse_that::combinator_test tests::test_save_state_success
+        PASS [   0.017s] (198/642) parse_that::combinator_test tests::test_sep_by
+        PASS [   0.021s] (199/642) parse_that::combinator_test tests::test_regex_span_match
+        PASS [   0.021s] (200/642) parse_that::combinator_test tests::test_save_state_backtrack
+        PASS [   0.012s] (201/642) parse_that::combinator_test tests::test_sp_bridge_map
+        PASS [   0.019s] (202/642) parse_that::combinator_test tests::test_sep_by_single
+        PASS [   0.018s] (203/642) parse_that::combinator_test tests::test_skip
+        PASS [   0.018s] (204/642) parse_that::combinator_test tests::test_sp_bridge_into_parser
+        PASS [   0.025s] (205/642) parse_that::combinator_test tests::test_sep_by_min_not_met
+        PASS [   0.016s] (206/642) parse_that::combinator_test tests::test_sp_oneof_flattening
+        PASS [   0.014s] (207/642) parse_that::combinator_test tests::test_sp_seq_flattening
+        PASS [   0.019s] (208/642) parse_that::combinator_test tests::test_sp_many
+        PASS [   0.019s] (209/642) parse_that::combinator_test tests::test_sp_opt
+        PASS [   0.019s] (210/642) parse_that::combinator_test tests::test_sp_sep_by
+        PASS [   0.016s] (211/642) parse_that::combinator_test tests::test_sp_string_no_match
+        PASS [   0.016s] (212/642) parse_that::combinator_test tests::test_sp_take_while_byte
+        PASS [   0.020s] (213/642) parse_that::combinator_test tests::test_sp_string_match
+        PASS [   0.016s] (214/642) parse_that::combinator_test tests::test_sp_trim_whitespace
+        PASS [   0.018s] (215/642) parse_that::combinator_test tests::test_sp_take_while_byte_no_match
+        PASS [   0.013s] (216/642) parse_that::combinator_test tests::test_span_sep_by
+        PASS [   0.017s] (217/642) parse_that::combinator_test tests::test_span_many
+        PASS [   0.016s] (218/642) parse_that::combinator_test tests::test_span_opt
+        PASS [   0.021s] (219/642) parse_that::combinator_test tests::test_sp_wrap
+        PASS [   0.017s] (220/642) parse_that::combinator_test tests::test_span_then
+        PASS [   0.018s] (221/642) parse_that::combinator_test tests::test_span_wrap
+        PASS [   0.017s] (222/642) parse_that::combinator_test tests::test_string_empty_input
+        PASS [   0.016s] (223/642) parse_that::combinator_test tests::test_string_match
+        PASS [   0.016s] (224/642) parse_that::combinator_test tests::test_string_no_match
+        PASS [   0.016s] (225/642) parse_that::combinator_test tests::test_string_span_match
+        PASS [   0.021s] (226/642) parse_that::combinator_test tests::test_string_empty_pattern
+        PASS [   0.016s] (227/642) parse_that::combinator_test tests::test_take_until_any_equivalence_specialization_sizes
+        PASS [   0.019s] (228/642) parse_that::combinator_test tests::test_string_utf8
+        PASS [   0.017s] (229/642) parse_that::combinator_test tests::test_take_while_byte_span_digits
+        PASS [   0.017s] (230/642) parse_that::combinator_test tests::test_take_while_byte_span_no_match
+        PASS [   0.016s] (231/642) parse_that::combinator_test tests::test_take_while_span_digits
+        PASS [   0.014s] (232/642) parse_that::combinator_test tests::test_then_first_fails
+        PASS [   0.269s] (233/642) parse-that-simd::correctness css_tailwind_output_canonical
+        PASS [   0.024s] (234/642) parse_that::combinator_test tests::test_take_until_any_randomized_equivalence
+        PASS [   0.018s] (235/642) parse_that::combinator_test tests::test_take_while_span_utf8
+        PASS [   0.021s] (236/642) parse_that::combinator_test tests::test_take_while_span_no_match
+        PASS [   0.016s] (237/642) parse_that::combinator_test tests::test_then_success
+        PASS [   0.020s] (238/642) parse_that::combinator_test tests::test_then_second_fails
+        PASS [   0.015s] (239/642) parse_that::combinator_test tests::test_wrap
+        PASS [   0.018s] (240/642) parse_that::combinator_test tests::test_trim_whitespace_no_ws
+        PASS [   0.015s] (241/642) parse_that::css_parse_test test_at_font_face
+        PASS [   0.021s] (242/642) parse_that::combinator_test tests::test_trim_whitespace
+        PASS [   0.015s] (243/642) parse_that::css_parse_test test_at_import
+        PASS [   0.019s] (244/642) parse_that::combinator_test tests::test_wrap_missing_right
+        PASS [   0.012s] (245/642) parse_that::css_parse_test test_block_comment_fast
+        PASS [   0.015s] (246/642) parse_that::css_parse_test test_attribute_selector
+        PASS [   0.017s] (247/642) parse_that::css_parse_test test_at_media
+        PASS [   0.016s] (248/642) parse_that::css_parse_test test_block_comment_multiline
+        PASS [   0.019s] (249/642) parse_that::css_parse_test test_calc_function
+        PASS [   0.019s] (250/642) parse_that::css_parse_test test_child_combinator
+        PASS [   0.016s] (251/642) parse_that::css_parse_test test_comment
+        PASS [   0.015s] (252/642) parse_that::css_parse_test test_custom_property_declaration
+        PASS [   0.014s] (253/642) parse_that::css_parse_test test_empty_stylesheet
+        PASS [   0.017s] (254/642) parse_that::css_parse_test test_descendant_combinator
+        PASS [   0.024s] (255/642) parse_that::css_parse_test test_class_selector
+        PASS [   0.018s] (256/642) parse_that::css_parse_test test_hex_color_3
+        PASS [   0.037s] (257/642) parse_that::css_parse_test test_at_keyframes
+        PASS [   0.027s] (258/642) parse_that::css_parse_test test_compound_selector
+        PASS [   0.025s] (259/642) parse_that::css_parse_test test_hex_color
+        PASS [   0.023s] (260/642) parse_that::css_parse_test test_hex_color_8
+        PASS [   0.018s] (261/642) parse_that::css_parse_test test_media_query_and_conditions
+        PASS [   0.029s] (262/642) parse_that::css_parse_test test_dimension_values
+        PASS [   0.016s] (263/642) parse_that::css_parse_test test_media_query_screen_and_feature
+        PASS [   0.015s] (264/642) parse_that::css_parse_test test_multiple_declarations
+        PASS [   0.021s] (265/642) parse_that::css_parse_test test_media_query_not_print
+        PASS [   0.028s] (266/642) parse_that::css_parse_test test_id_selector
+        PASS [   0.024s] (267/642) parse_that::css_parse_test test_media_query_list
+        PASS [   0.020s] (268/642) parse_that::css_parse_test test_multiple_rules
+        PASS [   0.025s] (269/642) parse_that::css_parse_test test_media_query_plain_feature
+        PASS [   0.016s] (270/642) parse_that::css_parse_test test_nested_media
+        PASS [   0.021s] (271/642) parse_that::css_parse_test test_negative_dimension
+        PASS [   0.017s] (272/642) parse_that::css_parse_test test_parse_normalize_css
+        PASS [   0.017s] (273/642) parse_that::css_parse_test test_pseudo_class
+        PASS [   0.016s] (274/642) parse_that::css_parse_test test_pseudo_element
+        PASS [   0.017s] (275/642) parse_that::css_parse_test test_selector_list
+        PASS [   0.018s] (276/642) parse_that::css_parse_test test_simple_rule
+        PASS [   0.016s] (277/642) parse_that::css_parse_test test_specificity_complex
+        PASS [   0.015s] (278/642) parse_that::css_parse_test test_specificity_compound
+        PASS [   0.020s] (279/642) parse_that::css_parse_test test_specificity_class
+        PASS [   0.027s] (280/642) parse_that::css_parse_test test_rgb_function
+        PASS [   0.018s] (281/642) parse_that::css_parse_test test_specificity_id
+        PASS [   0.019s] (282/642) parse_that::css_parse_test test_specificity_pseudo_is
+        PASS [   0.016s] (283/642) parse_that::css_parse_test test_specificity_type
+        PASS [   0.019s] (284/642) parse_that::css_parse_test test_specificity_pseudo_where
+        PASS [   0.015s] (285/642) parse_that::css_parse_test test_string_value
+        PASS [   0.036s] (286/642) parse_that::css_parse_test test_parse_bootstrap_css
+        PASS [   0.019s] (287/642) parse_that::css_parse_test test_specificity_universal
+        PASS [   0.015s] (288/642) parse_that::css_parse_test test_supports_declaration
+        PASS [   0.020s] (289/642) parse_that::css_parse_test test_supports_and
+        PASS [   0.016s] (290/642) parse_that::css_parse_test test_supports_not
+        PASS [   0.016s] (291/642) parse_that::css_parse_test test_var_function
+        PASS [   0.011s] (292/642) parse_that::css_stack_depth child_parse_on_sized_stack
+        PASS [   0.015s] (293/642) parse_that::css_parse_test test_whitespace_only
+        PASS [   0.014s] (294/642) parse_that::css_stack_depth nested_at_rules_depth_16_default_stack
+        PASS [   0.021s] (295/642) parse_that::css_parse_test test_universal_selector
+        PASS [   0.016s] (296/642) parse_that::decode_test arena_offset_respects_existing_data
+        PASS [   0.019s] (297/642) parse_that::csv_test tests::test_csv
+        PASS [   0.016s] (298/642) parse_that::decode_test borrowed_no_escapes_at_all
+        PASS [   0.015s] (299/642) parse_that::decode_test error_lone_low_surrogate
+        PASS [   0.024s] (300/642) parse_that::decode_test borrowed_empty
+        PASS [   0.021s] (301/642) parse_that::decode_test error_invalid_escape
+        PASS [   0.018s] (302/642) parse_that::decode_test error_truncated_unicode
+        PASS [   0.023s] (303/642) parse_that::decode_test error_lone_high_surrogate
+        PASS [   0.022s] (304/642) parse_that::decode_test error_no_opening_quote
+        PASS [   0.019s] (305/642) parse_that::decode_test non_zero_start_offset
+        PASS [   0.022s] (306/642) parse_that::decode_test error_unterminated
+        PASS [   0.030s] (307/642) parse_that::decode_test borrowed_simple
+        PASS [   0.020s] (308/642) parse_that::decode_test owned_all_simple_escapes
+        PASS [   0.021s] (309/642) parse_that::decode_test owned_mixed_content
+        PASS [   0.020s] (310/642) parse_that::decode_test owned_newline
+        PASS [   0.018s] (311/642) parse_that::decode_test owned_surrogate_pair
+        PASS [   0.016s] (312/642) parse_that::decode_test owned_unicode_bmp
+        PASS [   0.015s] (313/642) parse_that::decode_test sequential_decodes_share_arena
+        PASS [   0.018s] (314/642) parse_that::decode_test owned_unicode_multibyte
+        PASS [   0.016s] (315/642) parse_that::decode_test simd_borrowed_close_quote_at_second_stripe_offset
+        PASS [   0.017s] (316/642) parse_that::decode_test simd_borrowed_close_quote_at_stripe_high_bit
+        PASS [   0.020s] (317/642) parse_that::decode_test simd_borrowed_close_quote_at_every_stripe_offset
+        PASS [   0.017s] (318/642) parse_that::decode_test simd_borrowed_close_quote_in_scalar_tail
+        PASS [   0.013s] (319/642) parse_that::decode_test simd_borrowed_many_stripes
+        PASS [   0.019s] (320/642) parse_that::decode_test simd_borrowed_exactly_one_stripe
+        PASS [   0.023s] (321/642) parse_that::decode_test simd_borrowed_close_quote_at_stripe_one_start
+        PASS [   0.017s] (322/642) parse_that::decode_test simd_borrowed_utf8_across_stripe_boundary
+        PASS [   0.019s] (323/642) parse_that::decode_test simd_cross_validate_grid
+        PASS [   0.021s] (324/642) parse_that::decode_test simd_borrowed_utf8_multibyte_no_escapes
+        PASS [   0.017s] (325/642) parse_that::decode_test simd_owned_all_escapes_dense
+        PASS [   0.015s] (326/642) parse_that::decode_test simd_owned_escape_at_every_stripe_offset
+        PASS [   0.017s] (327/642) parse_that::decode_test simd_owned_double_backslash_spans_stripe_boundary
+        PASS [   0.026s] (328/642) parse_that::decode_test simd_escape_parity_runs_before_quote
+        PASS [   0.016s] (329/642) parse_that::decode_test simd_owned_escape_in_scalar_tail
+        PASS [   0.021s] (330/642) parse_that::decode_test simd_owned_escape_at_offset_zero
+        PASS [   0.034s] (331/642) parse_that::decode_test simd_borrowed_two_stripes
+        PASS [   0.018s] (332/642) parse_that::decode_test simd_owned_escape_spans_stripe_boundary
+        PASS [   0.018s] (333/642) parse_that::decode_test simd_owned_escape_then_close
+        PASS [   0.029s] (334/642) parse_that::decode_test simd_owned_close_quote_at_stripe_high_bit
+        PASS [   0.018s] (335/642) parse_that::decode_test simd_owned_large_with_periodic_escapes
+        PASS [   0.021s] (336/642) parse_that::decode_test simd_owned_escaped_quote_then_real_quote
+        PASS [   0.015s] (337/642) parse_that::json_test tests::test_empty_array
+        PASS [   0.021s] (338/642) parse_that::decode_test simd_owned_surrogate_pair_across_stripe_boundary
+        PASS [   0.027s] (339/642) parse_that::decode_test simd_owned_escape_then_full_stripe_then_close
+        PASS [   0.020s] (340/642) parse_that::json_test tests::test_boolean_values
+        PASS [   0.026s] (341/642) parse_that::decode_test simd_owned_long_run_then_escape
+        PASS [   0.020s] (342/642) parse_that::json_test tests::test_empty_object
+        PASS [   0.023s] (343/642) parse_that::json_test tests::test_equivalence_apache
+        PASS [   0.022s] (344/642) parse_that::json_test tests::test_equivalence_data
+        PASS [   0.017s] (345/642) parse_that::json_test tests::test_json
+        PASS [   0.022s] (346/642) parse_that::json_test tests::test_integer_values
+        PASS [   0.019s] (347/642) parse_that::json_test tests::test_json_file_print
+        PASS [   0.017s] (348/642) parse_that::json_test tests::test_large_numeric_literals_match_serde_f64
+        PASS [   0.018s] (349/642) parse_that::json_test tests::test_leading_zero_decimal
+        PASS [   0.016s] (350/642) parse_that::json_test tests::test_leading_zero_rejected
+        PASS [   0.016s] (351/642) parse_that::json_test tests::test_leading_zero_standalone
+        PASS [   0.012s] (352/642) parse_that::json_test tests::test_long_string
+        PASS [   0.012s] (353/642) parse_that::json_test tests::test_malformed_backslash_at_end
+        PASS [   0.013s] (354/642) parse_that::json_test tests::test_malformed_not_json
+        PASS [   0.014s] (355/642) parse_that::json_test tests::test_malformed_truncated_unicode
+        PASS [   0.013s] (356/642) parse_that::json_test tests::test_malformed_unterminated_string
+        PASS [   0.016s] (357/642) parse_that::json_test tests::test_malformed_unicode_at_end
+        PASS [   0.013s] (358/642) parse_that::json_test tests::test_negative_number
+        PASS [   0.014s] (359/642) parse_that::json_test tests::test_nested_arrays
+        PASS [   0.015s] (360/642) parse_that::json_test tests::test_null_value
+        PASS [   0.015s] (361/642) parse_that::json_test tests::test_number_edge_cases
+        PASS [   0.017s] (362/642) parse_that::json_test tests::test_scientific_notation
+        PASS [   0.016s] (363/642) parse_that::json_test tests::test_single_element_containers
+        PASS [   0.058s] (364/642) parse_that::json_test tests::test_equivalence_twitter
+        PASS [   0.016s] (365/642) parse_that::json_test tests::test_string_basic_escapes
+        PASS [   0.018s] (366/642) parse_that::json_test tests::test_string_empty
+        PASS [   0.017s] (367/642) parse_that::json_test tests::test_string_nested_escapes
+        PASS [   0.015s] (368/642) parse_that::json_test tests::test_string_only_escapes
+        PASS [   0.014s] (369/642) parse_that::json_test tests::test_string_surrogate_pair_edges
+        PASS [   0.013s] (370/642) parse_that::json_test tests::test_string_unicode_escape
+        PASS [   0.013s] (371/642) parse_that::json_test tests::test_string_with_forward_slash_escape
+        PASS [   0.015s] (372/642) parse_that::json_test tests::test_whitespace_variants
+        PASS [   0.014s] (373/642) parse_that::lanes_test load_round_trips
+        PASS [   0.014s] (374/642) parse_that::lanes_test nibble_mask_matches_definition_for_every_byte_and_lane
+        PASS [   0.013s] (375/642) parse_that::number_fastpath_test fastpath_and_slow_path_agree_in_range
+        PASS [   0.015s] (376/642) parse_that::number_fastpath_test fastpath_canada_shaped_coordinates
+        PASS [   0.015s] (377/642) parse_that::number_fastpath_test fastpath_integers_to_2_53
+        PASS [   0.015s] (378/642) parse_that::number_fastpath_test fastpath_negative_zero
+        PASS [   0.027s] (379/642) parse_that::lanes_test eq_mask_matches_definition_for_every_byte_and_lane
+        PASS [   0.014s] (380/642) parse_that::number_fastpath_test fastpath_out_of_range_falls_through
+        PASS [   0.015s] (381/642) parse_that::number_fastpath_test fastpath_overflow_mantissa_falls_through
+        PASS [   0.014s] (382/642) parse_that::number_fastpath_test fastpath_scientific_in_range
+        PASS [   0.015s] (383/642) parse_that::number_fastpath_test fastpath_short_fractions
+        PASS [   0.012s] (384/642) parse_that::number_fastpath_test integer_cross_validate_all_lengths
+        PASS [   0.011s] (385/642) parse_that::number_fastpath_test integer_digits_followed_by_exponent
+        PASS [   0.011s] (386/642) parse_that::number_fastpath_test integer_digits_followed_by_fraction
+        PASS [   0.013s] (387/642) parse_that::number_fastpath_test integer_eighteen_digits_fits_budget
+        PASS [   0.013s] (388/642) parse_that::number_fastpath_test integer_fifteen_digits_fits_in_single_stripe
+        PASS [   0.109s] (389/642) parse_that::json_test tests::test_equivalence_citm_catalog
+        PASS [   0.012s] (390/642) parse_that::number_fastpath_test integer_four_digits_below_simd_stripe
+        PASS [   0.013s] (391/642) parse_that::number_fastpath_test integer_one_digit
+        PASS [   0.012s] (392/642) parse_that::number_fastpath_test integer_scan_at_nonzero_start_offset
+        PASS [   0.013s] (393/642) parse_that::number_fastpath_test integer_scan_right_up_to_input_boundary
+        PASS [   0.012s] (394/642) parse_that::number_fastpath_test integer_seventeen_digits_crosses_stripe
+        PASS [   0.012s] (395/642) parse_that::number_fastpath_test integer_sixteen_digits_fills_stripe
+        PASS [   0.011s] (396/642) parse_that::number_fastpath_test integer_strict_negative
+        PASS [   0.012s] (397/642) parse_that::number_fastpath_test integer_twenty_digits_budget_guard_fires
+        PASS [   0.013s] (398/642) parse_that::number_fastpath_test parse_number_f64_plus_sign_is_positive
+        PASS [   0.010s] (399/642) parse_that::number_simd_test cross_validate_all_counts
+        PASS [   0.010s] (400/642) parse_that::number_simd_test scan_all_digits_16
+        PASS [   0.011s] (401/642) parse_that::number_simd_test scan_all_nines
+        PASS [   0.013s] (402/642) parse_that::number_simd_test scan_all_zeros
+        PASS [   0.014s] (403/642) parse_that::number_simd_test scan_boundary_above_nine
+        PASS [   0.015s] (404/642) parse_that::number_simd_test scan_boundary_below_zero
+        PASS [   0.014s] (405/642) parse_that::number_simd_test scan_nine_digits
+        PASS [   0.011s] (406/642) parse_that::number_simd_test scan_partial_digits
+        PASS [   0.013s] (407/642) parse_that::number_simd_test scan_no_digits
+        PASS [   0.012s] (408/642) parse_that::number_simd_test scan_short_input_returns_available_digits
+        PASS [   0.011s] (409/642) parse_that::number_simd_test scan_with_offset
+        PASS [   0.014s] (410/642) parse_that::number_simd_test scan_single_digit
+        PASS [   0.012s] (411/642) parse_that::padded_input_test empty_input_padding
+        PASS [   0.011s] (412/642) parse_that::padded_input_test long_input_padding
+        PASS [   0.012s] (413/642) parse_that::padded_input_test padded_bytes_aligned_for_avx512_cache_line
+        PASS [   0.146s] (414/642) parse_that::json_test tests::test_equivalence_canada
+        PASS [   0.012s] (415/642) parse_that::padded_input_test padded_bytes_permit_full_stripe_read_at_end
+        PASS [   0.013s] (416/642) parse_that::padded_input_test public_views_never_leak_padding
+        PASS [   0.014s] (417/642) parse_that::padded_input_test short_input_padding
+        PASS [   0.013s] (418/642) parse_that::padded_input_test single_byte_input_padding
+        PASS [   0.011s] (419/642) parse_that::quote_parity_test escaped_quote
+        PASS [   0.496s] (420/642) parse-that-simd::fuzz quote_escape_sequences
+        PASS [   0.013s] (421/642) parse_that::padded_input_test stripe_boundary_input_padding
+        PASS [   0.543s] (422/642) parse-that-simd::differential every_supported_tier_matches_the_scalar_oracle
+        PASS [   0.012s] (423/642) parse_that::quote_parity_test filter_no_strings
+        PASS [   0.014s] (424/642) parse_that::quote_parity_test filter_basic
+        PASS [   0.012s] (425/642) parse_that::quote_parity_test long_no_escape
+        PASS [   0.013s] (426/642) parse_that::quote_parity_test prefix_xor_basic
+        PASS [   0.014s] (427/642) parse_that::quote_parity_test no_strings
+        PASS [   0.011s] (428/642) parse_that::quoted_simd_test all_bs_even
+        PASS [   0.013s] (429/642) parse_that::quote_parity_test simple_string
+        PASS [   0.013s] (430/642) parse_that::quoted_simd_test all_bs_odd
+        PASS [   0.013s] (431/642) parse_that::quoted_simd_test bs1_before_quote
+        PASS [   0.014s] (432/642) parse_that::quoted_simd_test bs2_before_quote
+        PASS [   0.015s] (433/642) parse_that::quoted_simd_test bs3_before_quote
+        PASS [   0.014s] (434/642) parse_that::quoted_simd_test bs4_before_quote
+        PASS [   0.013s] (435/642) parse_that::quoted_simd_test cross_validate_patterns
+        PASS [   0.016s] (436/642) parse_that::quoted_simd_test cross_validate_generated
+        PASS [   0.014s] (437/642) parse_that::quoted_simd_test em_2bs
+        PASS [   0.017s] (438/642) parse_that::quoted_simd_test em_1bs
+        PASS [   0.015s] (439/642) parse_that::quoted_simd_test em_carry_1bs
+        PASS [   0.017s] (440/642) parse_that::quoted_simd_test em_3bs
+        PASS [   0.016s] (441/642) parse_that::quoted_simd_test em_no_bs
+        PASS [   0.018s] (442/642) parse_that::quoted_simd_test em_carry_2bs
+        PASS [   0.017s] (443/642) parse_that::quoted_simd_test em_no_bs_carry
+        PASS [   0.015s] (444/642) parse_that::quoted_simd_test escape_at_chunk_boundary
+        PASS [   0.014s] (445/642) parse_that::quoted_simd_test escaped_backslash_escaped_quote
+        PASS [   0.020s] (446/642) parse_that::quoted_simd_test empty_string
+        PASS [   0.015s] (447/642) parse_that::quoted_simd_test escaped_quote
+        PASS [   0.022s] (448/642) parse_that::quoted_simd_test escaped_backslash_then_quote
+        PASS [   0.022s] (449/642) parse_that::quoted_simd_test even_run_spanning_then_quote
+        PASS [   0.180s] (450/642) parse_that::json_test tests::test_json_file
+        PASS [   0.021s] (451/642) parse_that::quoted_simd_test long_no_escapes
+        PASS [   0.021s] (452/642) parse_that::quoted_simd_test long_with_escapes
+        PASS [   0.020s] (453/642) parse_that::quoted_simd_test only_escapes
+        PASS [   0.022s] (454/642) parse_that::quoted_simd_test odd_run_spanning_then_quote
+        PASS [   0.019s] (455/642) parse_that::quoted_simd_test two_chunks_bs
+        PASS [   0.033s] (456/642) parse_that::quoted_simd_test exactly_16_byte_content
+        PASS [   0.028s] (457/642) parse_that::quoted_simd_test run_spanning_chunks
+        PASS [   0.024s] (458/642) parse_that::quoted_simd_test unicode_escape
+        PASS [   0.020s] (459/642) parse_that::quoted_simd_test unterminated
+        PASS [   0.028s] (460/642) parse_that::quoted_simd_test two_chunks_bs_odd
+        PASS [   0.034s] (461/642) parse_that::quoted_simd_test simple_string
+        PASS [   0.022s] (462/642) parse_that::quoted_simd_test unterminated_backslash
+        PASS [   0.024s] (463/642) parse_that::regex accel_test::accel_for_wider_negated_class
+        PASS [   0.024s] (464/642) parse_that::regex accel_test::memchr_for_negated_class
+        PASS [   0.022s] (465/642) parse_that::regex accel_test::no_accel_for_non_looping
+        PASS [   0.017s] (466/642) parse_that::regex byteset_test::disjoint
+        PASS [   0.028s] (467/642) parse_that::regex accel_test::memchr2_for_json_string
+        PASS [   0.026s] (468/642) parse_that::regex byteset_test::ascii_set
+        PASS [   0.016s] (469/642) parse_that::regex byteset_test::exit_bytes_over_limit
+        PASS [   0.020s] (470/642) parse_that::regex byteset_test::empty_set
+        PASS [   0.017s] (471/642) parse_that::regex byteset_test::full_set
+        PASS [   0.021s] (472/642) parse_that::regex byteset_test::exit_bytes
+        PASS [   0.031s] (473/642) parse_that::regex byteset_test::difference
+        PASS [   0.024s] (474/642) parse_that::regex byteset_test::exact_size_iterator
+        PASS [   0.019s] (475/642) parse_that::regex byteset_test::high_bytes_utf8_continuation
+        PASS [   0.015s] (476/642) parse_that::regex byteset_test::negate
+        PASS [   0.020s] (477/642) parse_that::regex byteset_test::high_bytes_utf8_leading
+        PASS [   0.018s] (478/642) parse_that::regex byteset_test::insert_remove
+        PASS [   0.015s] (479/642) parse_that::regex byteset_test::range_boundary
+        PASS [   0.022s] (480/642) parse_that::regex byteset_test::iterator_ascending
+        PASS [   0.015s] (481/642) parse_that::regex byteset_test::singleton
+        PASS [   0.021s] (482/642) parse_that::regex byteset_test::range
+        PASS [   0.016s] (483/642) parse_that::regex dfa_test::alternation
+        PASS [   0.015s] (484/642) parse_that::regex dfa_test::case_insensitive
+        PASS [   0.020s] (485/642) parse_that::regex byteset_test::union_and_intersect
+        PASS [   0.019s] (486/642) parse_that::regex dfa_test::bounded_repetition
+        PASS [   0.017s] (487/642) parse_that::regex dfa_test::char_class
+        PASS [   0.016s] (488/642) parse_that::regex dfa_test::css_block_comment_no_dotall_lazy
+        PASS [   0.017s] (489/642) parse_that::regex dfa_test::css_ident_alt_specific
+        PASS [   0.020s] (490/642) parse_that::regex dfa_test::css_block_comment_dotall_lazy
+        PASS [   0.015s] (491/642) parse_that::regex dfa_test::css_ident_pattern
+        PASS [   0.014s] (492/642) parse_that::regex dfa_test::css_value_span_stop_chars
+        PASS [   0.017s] (493/642) parse_that::regex dfa_test::css_value_span
+        PASS [   0.016s] (494/642) parse_that::regex dfa_test::css_ws_comment_adjacent
+        PASS [   0.014s] (495/642) parse_that::regex dfa_test::dot_all
+        PASS [   0.023s] (496/642) parse_that::regex dfa_test::css_ident_alternation
+        PASS [   0.016s] (497/642) parse_that::regex dfa_test::css_ws_comment_regex
+        PASS [   0.015s] (498/642) parse_that::regex dfa_test::dot_no_newline
+        PASS [   0.013s] (499/642) parse_that::regex dfa_test::dotall_plus
+        PASS [   0.015s] (500/642) parse_that::regex dfa_test::dotall_bounded
+        PASS [   0.015s] (501/642) parse_that::regex dfa_test::dotall_star
+        PASS [   0.015s] (502/642) parse_that::regex dfa_test::empty_pattern
+        PASS [   0.016s] (503/642) parse_that::regex dfa_test::hex_color_pattern
+        PASS [   0.017s] (504/642) parse_that::regex dfa_test::json_number_pattern
+        PASS [   0.015s] (505/642) parse_that::regex dfa_test::large_dfa_json_number
+        PASS [   0.015s] (506/642) parse_that::regex dfa_test::lazy_plus_stops_at_first_close
+        PASS [   0.018s] (507/642) parse_that::regex dfa_test::large_dfa_css_ident
+        PASS [   0.013s] (508/642) parse_that::regex dfa_test::minimization_reduces_states
+        PASS [   0.018s] (509/642) parse_that::regex dfa_test::lazy_question_prefers_skipping
+        PASS [   0.014s] (510/642) parse_that::regex dfa_test::offset_matching
+        PASS [   0.018s] (511/642) parse_that::regex dfa_test::negated_class
+        PASS [   0.022s] (512/642) parse_that::regex dfa_test::lazy_star_stops_at_first_close
+        PASS [   0.015s] (513/642) parse_that::regex dfa_test::oracle_css_number
+        PASS [   0.022s] (514/642) parse_that::regex dfa_test::no_dotall_stops_at_newline
+        PASS [   0.016s] (515/642) parse_that::regex dfa_test::oracle_digits
+        PASS [   0.015s] (516/642) parse_that::regex dfa_test::oracle_email_like
+        PASS [   0.016s] (517/642) parse_that::regex dfa_test::oracle_hex_color
+        PASS [   0.022s] (518/642) parse_that::regex dfa_test::optional
+        PASS [   0.016s] (519/642) parse_that::regex dfa_test::oracle_nested_groups
+        PASS [   0.019s] (520/642) parse_that::regex dfa_test::oracle_json_string_body
+        PASS [   0.018s] (521/642) parse_that::regex dfa_test::oracle_pipe_literal
+        PASS [   0.016s] (522/642) parse_that::regex dfa_test::oracle_repetition_boundary
+        PASS [   0.017s] (523/642) parse_that::regex dfa_test::oracle_whitespace
+        PASS [   0.013s] (524/642) parse_that::regex dfa_test::simple_literal
+        PASS [   0.018s] (525/642) parse_that::regex dfa_test::shorthand_classes
+        PASS [   0.014s] (526/642) parse_that::regex dfa_test::unicode_ascii_only
+        PASS [   0.021s] (527/642) parse_that::regex dfa_test::oracle_word_chars
+        PASS [   0.018s] (528/642) parse_that::regex dfa_test::star
+        PASS [   0.016s] (529/642) parse_that::regex dfa_test::zero_width_optional
+        PASS [   0.017s] (530/642) parse_that::regex dfa_test::zero_width_empty_alt
+        PASS [   0.014s] (531/642) parse_that::regex equiv_test::no_byte_sets
+        PASS [   0.019s] (532/642) parse_that::regex dfa_test::zero_width_star
+        PASS [   0.020s] (533/642) parse_that::regex equiv_test::overlapping_ranges
+        PASS [   0.018s] (534/642) parse_that::regex equiv_test::two_disjoint_ranges
+        PASS [   0.014s] (535/642) parse_that::regex equiv_test::word_char_classes
+        PASS [   0.020s] (536/642) parse_that::regex equiv_test::utf8_leading_bytes
+        PASS [   0.019s] (537/642) parse_that::regex hir_test::negate_empty
+        PASS [   0.020s] (538/642) parse_that::regex hir_test::char_class_negated_flag
+        PASS [   0.027s] (539/642) parse_that::regex equiv_test::single_range
+        PASS [   0.019s] (540/642) parse_that::regex hir_test::negate_full
+        PASS [   0.018s] (541/642) parse_that::regex hir_test::negate_middle
+        PASS [   0.017s] (542/642) parse_that::regex nfa_test::backreference_unsupported
+        PASS [   0.022s] (543/642) parse_that::regex nfa_test::alternation
+        PASS [   0.019s] (544/642) parse_that::regex nfa_test::bounded_repetition
+        PASS [   0.015s] (545/642) parse_that::regex nfa_test::char_class_ascii
+        PASS [   0.014s] (546/642) parse_that::regex nfa_test::concat
+        PASS [   0.016s] (547/642) parse_that::regex nfa_test::char_class_unicode
+        PASS [   0.016s] (548/642) parse_that::regex nfa_test::dot_all
+        PASS [   0.013s] (549/642) parse_that::regex nfa_test::empty_pattern
+        PASS [   0.013s] (550/642) parse_that::regex nfa_test::literal_pattern
+        PASS [   0.013s] (551/642) parse_that::regex nfa_test::star_greedy
+        PASS [   0.016s] (552/642) parse_that::regex nfa_test::plus_lazy
+        PASS [   0.052s] (553/642) parse_that::regex dfa_test::state_limit_guard
+        PASS [   0.015s] (554/642) parse_that::regex nfa_test::transition_byte_sets
+        PASS [   0.015s] (555/642) parse_that::regex nfa_test::unicode_property
+        PASS [   0.013s] (556/642) parse_that::regex parser_test::alternation
+        PASS [   0.014s] (557/642) parse_that::regex parser_test::bounded_repetition
+        PASS [   0.014s] (558/642) parse_that::regex parser_test::char_class
+        PASS [   0.015s] (559/642) parse_that::regex parser_test::byte_mode
+        PASS [   0.016s] (560/642) parse_that::regex parser_test::complex_ident
+        PASS [   0.014s] (561/642) parse_that::regex parser_test::dot_default
+        PASS [   0.015s] (562/642) parse_that::regex parser_test::css_ws_comment
+        PASS [   0.014s] (563/642) parse_that::regex parser_test::dotall_flag_byte_mode
+        PASS [   0.018s] (564/642) parse_that::regex parser_test::css_ident
+        PASS [   0.013s] (565/642) parse_that::regex parser_test::escaped_literal
+        PASS [   0.015s] (566/642) parse_that::regex parser_test::empty
+        PASS [   0.017s] (567/642) parse_that::regex parser_test::dotall_flag_unicode
+        PASS [   0.015s] (568/642) parse_that::regex parser_test::json_number
+        PASS [   0.015s] (569/642) parse_that::regex parser_test::json_string
+        PASS [   0.019s] (570/642) parse_that::regex parser_test::hex_color
+        PASS [   0.015s] (571/642) parse_that::regex parser_test::literal
+        PASS [   0.014s] (572/642) parse_that::regex parser_test::negated_class
+        PASS [   0.018s] (573/642) parse_that::regex parser_test::lazy_quantifier
+        PASS [   0.015s] (574/642) parse_that::regex parser_test::quantifiers
+        PASS [   0.017s] (575/642) parse_that::regex parser_test::non_capturing_group
+        PASS [   0.016s] (576/642) parse_that::regex parser_test::shorthand_classes
+        PASS [   0.016s] (577/642) parse_that::regex utf8_test::ascii_range
+        PASS [   0.014s] (578/642) parse_that::regex utf8_test::four_byte
+        PASS [   0.020s] (579/642) parse_that::regex parser_test::quoted_string
+        PASS [   0.018s] (580/642) parse_that::regex utf8_test::cross_boundary
+        PASS [   0.015s] (581/642) parse_that::regex utf8_test::latin_extended_a
+        PASS [   0.017s] (582/642) parse_that::regex utf8_test::full_unicode
+        PASS [   0.016s] (583/642) parse_that::regex utf8_test::roundtrip_ascii
+        PASS [   0.016s] (584/642) parse_that::regex utf8_test::single_char
+        PASS [   0.014s] (585/642) parse_that::regex_empty_match_test many_over_empty_matching_regex_terminates
+        PASS [   0.016s] (586/642) parse_that::regex utf8_test::two_byte_range
+        PASS [   0.014s] (587/642) parse_that::regex_empty_match_test regex_empty_match_at_end_of_input
+        PASS [   0.012s] (588/642) parse_that::regex_empty_match_test regex_nonempty_match_unchanged
+        PASS [   0.015s] (589/642) parse_that::regex_empty_match_test regex_empty_match_is_a_match
+        PASS [   0.013s] (590/642) parse_that::regex_empty_match_test sep_by_progress_still_collects_elements
+        PASS [   0.023s] (591/642) parse_that::regex utf8_test::surrogate_skip
+        PASS [   0.016s] (592/642) parse_that::regex_empty_match_test regex_span_empty_match_is_a_match
+        PASS [   0.015s] (593/642) parse_that::regex_empty_match_test sep_by_with_empty_matching_elem_and_sep_terminates
+        PASS [   0.014s] (594/642) parse_that::regex_look_context_test span_leaf_reads_the_byte_before_too
+        PASS [   0.014s] (595/642) parse_that::regex_look_context_test start_anchor_holds_only_at_the_start_of_the_input
+        PASS [   0.017s] (596/642) parse_that::regex_empty_match_test span_sep_by_over_empty_matching_leaf_terminates
+        PASS [   0.014s] (597/642) parse_that::regex_look_context_test word_boundary_reads_the_byte_before_the_leaf
+        PASS [   0.015s] (598/642) parse_that::split_test basic_split
+        PASS [   0.016s] (599/642) parse_that::split_test deep_nesting
+        PASS [   0.018s] (600/642) parse_that::split_test empty_input
+        PASS [   0.014s] (601/642) parse_that::split_test nested_parens
+        PASS [   0.019s] (602/642) parse_that::split_test empty_segments
+        PASS [   0.018s] (603/642) parse_that::split_test nested_brackets
+        PASS [   0.015s] (604/642) parse_that::split_test single_char
+        PASS [   0.021s] (605/642) parse_that::split_test mixed_nesting_and_quotes
+        PASS [   0.015s] (606/642) parse_that::structural_bitmap_test find_next_basic
+        PASS [   0.020s] (607/642) parse_that::split_test no_delimiter
+        PASS [   0.021s] (608/642) parse_that::split_test quoted_strings
+        PASS [   0.014s] (609/642) parse_that::structural_bitmap_test iter_across_stripe
+        PASS [   0.020s] (610/642) parse_that::split_test single_quoted_strings
+        PASS [   0.015s] (611/642) parse_that::structural_bitmap_test iter_set_offset_skips_forward
+        PASS [   0.015s] (612/642) parse_that::ws_comment_test all_slash_stripe_terminates
+        PASS [   0.025s] (613/642) parse_that::structural_bitmap_test find_next_none
+        PASS [   0.015s] (614/642) parse_that::ws_comment_test empty_input
+        PASS [   0.025s] (615/642) parse_that::structural_bitmap_test find_next_tail_only
+        PASS [   0.023s] (616/642) parse_that::structural_bitmap_test iter_basic
+        PASS [   0.018s] (617/642) parse_that::ws_comment_test exact_stripe_all_ws
+        PASS [   0.018s] (618/642) parse_that::ws_comment_test long_ws_crossing_stripe
+        PASS [   0.020s] (619/642) parse_that::ws_comment_test multiple_comments
+        PASS [   0.020s] (620/642) parse_that::ws_comment_test nested_star_in_comment
+        PASS [   0.018s] (621/642) parse_that::ws_comment_test simple_block_comment
+        PASS [   0.021s] (622/642) parse_that::ws_comment_test no_ws
+        PASS [   0.013s] (623/642) parse_that::ws_comment_test tabs_and_newlines
+        PASS [   0.018s] (624/642) parse_that::ws_comment_test simple_ws
+        PASS [   0.018s] (625/642) parse_that::ws_comment_test slash_without_comment
+        PASS [   0.019s] (626/642) parse_that::ws_comment_test stripe_boundary_comment
+        PASS [   0.019s] (627/642) parse_that::ws_comment_test stripe_boundary_ws_slash
+        PASS [   0.016s] (628/642) parse_that::ws_comment_test ws_slash_non_star
+        PASS [   0.019s] (629/642) parse_that::ws_comment_test unterminated_comment
+        PASS [   0.036s] (630/642) parse_that::ws_comment_test long_comment_crossing_stripe
+        PASS [   0.018s] (631/642) parse_that::ws_comment_test ws_slash_then_x
+        PASS [   0.017s] (632/642) parse_that::ws_comment_test ws_then_comment_then_ws
+        PASS [   0.015s] (633/642) regex-bootstrap tests::parse_comprehensive_patterns
+        PASS [   0.014s] (634/642) regex-bootstrap tests::parse_quantifiers
+        PASS [   0.013s] (635/642) xtask::bin/xtask tests::manifest_needs_one_asset_and_plain_paths
+        PASS [   0.019s] (636/642) regex-bootstrap tests::parse_bounded_repetition
+        PASS [   0.566s] (637/642) parse_that::css_stack_depth nested_at_rule_stack_slope_is_constant
+        PASS [   0.851s] (638/642) parse_that::csv_test tests::test_csv_file
+        PASS [   0.492s] (639/642) xtask::public_api_callers every_pub_item_of_the_audited_crates_has_a_caller
+        PASS [   1.317s] (640/642) parse-that-simd::fuzz json_alphabet_skewed
+        PASS [   1.459s] (641/642) parse-that-simd::fuzz css_with_digraphs
+        PASS [   2.015s] (642/642) parse_that::json_test tests::test_equivalence_data_xl
+────────────
+     Summary [   2.595s] 642 tests run: 642 passed, 8 skipped
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/parse_that)
+   Compiling regex-bootstrap v0.1.1 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/bootstrap)
+   Compiling parse_that_cli v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s3b-pp/rust/src)
+warning: unused import: `SmallVec`
+ --> parse_that/tests/debug_test.rs:4:20
+  |
+4 |     use smallvec::{SmallVec, smallvec};
+  |                    ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `parse_that` (test "debug_test") generated 1 warning (run `cargo fix --test "debug_test" -p parse_that` to apply 1 suggestion)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 2.36s
+────────────
+ Nextest run ID d4fd1fa6-b068-452c-9710-6c4f648b672d with nextest profile: default
+    Starting 716 tests across 62 binaries (8 tests skipped)
+        PASS [   0.012s] (  1/716) parse-that-egraph::derive_language variadic_children_visible
+        PASS [   0.012s] (  2/716) parse-that-egraph::csp_scheduler csp_scheduler_reaches_saturation
+        PASS [   0.013s] (  3/716) parse-that-egraph::derive_language auto_children_mut_pair_roundtrip
+        PASS [   0.014s] (  4/716) parse-that-egraph::csp_scheduler dirty_domain_lattice_semantics
+        PASS [   0.015s] (  5/716) parse-that-egraph::derive_language auto_fixed_array_pair
+        PASS [   0.016s] (  6/716) parse-that-egraph::csp_scheduler parent_dirty_prop_propagates_through_ac3
+        PASS [   0.016s] (  7/716) parse-that-egraph::derive_language children_mut_replaces_ids
+        PASS [   0.018s] (  8/716) parse-that-egraph::derive_language unit_has_no_children
+        PASS [   0.019s] (  9/716) parse-that-egraph::derive_language auto_single_id
+        PASS [   0.020s] ( 10/716) parse-that-egraph::derive_language leaf_has_no_children
+        PASS [   0.021s] ( 11/716) parse-that-egraph::derive_language single_child_visible
+        PASS [   0.022s] ( 12/716) parse-that-egraph::derive_language named_single_child_visible
+        PASS [   0.024s] ( 13/716) parse-that-egraph::csp_scheduler csp_scheduler_matches_backoff_scheduler
+        PASS [   0.024s] ( 14/716) parse-that-egraph::derive_language auto_named_struct_variant
+        PASS [   0.013s] ( 15/716) parse-that-egraph::egraph_basic intern_dedupes_identical_nodes
+        PASS [   0.027s] ( 16/716) parse-that-egraph::derive_language auto_boxed_slice
+        PASS [   0.028s] ( 17/716) parse-that-egraph::derive_language auto_leaf_scalar
+        PASS [   0.013s] ( 18/716) parse-that-egraph::saturation multi_iteration_flatten_reaches_fixed_point
+        PASS [   0.017s] ( 19/716) parse-that-egraph::egraph_basic intern_distinct_nodes
+        PASS [   0.019s] ( 20/716) parse-that-egraph::egraph_basic intern_builds_shared_children
+        PASS [   0.017s] ( 21/716) parse-that-egraph::egraph_basic union_merges_classes
+        PASS [   0.020s] ( 22/716) parse-that-egraph::egraph_basic saturate_add_zero
+        PASS [   0.014s] ( 23/716) parse-that-egraph::unionfind union_and_find
+        PASS [   0.012s] ( 24/716) parse-that-regex::algebra_superset superset_basic
+        PASS [   0.038s] ( 25/716) parse-that-egraph::derive_language auto_vec_of_id
+        PASS [   0.040s] ( 26/716) parse-that-egraph::egraph_basic extract_smallest_after_saturate
+        PASS [   0.014s] ( 27/716) parse-that-regex::born_red_lw1 alt_longer_branch_first_agrees
+        PASS [   0.016s] ( 28/716) parse-that-regex::born_red_lw1 alt_fusion_is_leftmost_first
+        PASS [   0.027s] ( 29/716) parse-that-egraph::saturation no_op_saturates_in_one_iteration
+        PASS [   0.024s] ( 30/716) parse-that-egraph::unionfind path_compression
+        PASS [   0.016s] ( 31/716) parse-that-regex::born_red_lw1 kelvin_does_not_fold_without_u
+        PASS [   0.028s] ( 32/716) parse-that-egraph::saturation pure_union_rule_counted_as_work
+        PASS [   0.013s] ( 33/716) parse-that-regex::born_red_lw1 superset_absorb_ascii_single_class_holds
+        PASS [   0.017s] ( 34/716) parse-that-regex::born_red_lw1 latin1_folds_under_i_and_iu
+        PASS [   0.031s] ( 35/716) parse-that-egraph::unionfind make_set_distinct
+        PASS [   0.029s] ( 36/716) parse-that-regex::abi_fingerprint hir_abi_fingerprint_is_recorded
+        PASS [   0.012s] ( 37/716) parse-that-regex::egraph_rules_flatten flatten_nested_alternation_matches
+        PASS [   0.015s] ( 38/716) parse-that-regex::casefold_tables the_tables_are_at_the_pinned_unicode_version
+        PASS [   0.031s] ( 39/716) parse-that-regex::algebra_superset superset_equal
+        PASS [   0.014s] ( 40/716) parse-that-regex::egraph_rules_flatten flatten_nested_concat_matches
+        PASS [   0.012s] ( 41/716) parse-that-regex::egraph_rules_redundant dedup_no_duplicates
+        PASS [   0.012s] ( 42/716) parse-that-regex::egraph_rules_repetition merge_different_subs_does_not_match
+        PASS [   0.017s] ( 43/716) parse-that-regex::egraph_rules_redundant dedup_identical_literal_branches
+        PASS [   0.030s] ( 44/716) parse-that-regex::born_red_lw1 long_s_folds_under_iu
+        PASS [   0.014s] ( 45/716) parse-that-regex::egraph_rules_repetition merge_plus_star_to_plus
+        PASS [   0.034s] ( 46/716) parse-that-regex::born_red_lw1 kelvin_folds_under_iu
+        PASS [   0.024s] ( 47/716) parse-that-regex::egraph_rules_flatten flatten_flat_does_not_match
+        PASS [   0.012s] ( 48/716) parse-that-regex::egraph_rules_union union_merges_adjacent_classes
+        PASS [   0.030s] ( 49/716) parse-that-regex::casefold_tables canonicalization_differs_by_reading
+        PASS [   0.021s] ( 50/716) parse-that-regex::egraph_rules_superset disjoint_classes_not_absorbed
+        PASS [   0.026s] ( 51/716) parse-that-regex::egraph_rules_repetition merge_bounds_arithmetic
+        PASS [   0.016s] ( 52/716) parse-that-regex::egraph_simplify simplify_hir_preserves_structure
+        PASS [   0.019s] ( 53/716) parse-that-regex::egraph_simplify simplify_hir_dedup_alt_branches
+        PASS [   0.040s] ( 54/716) parse-that-regex::casefold_tables backslash_s_is_the_generated_space_set
+        PASS [   0.016s] ( 55/716) parse-that-regex::info test_anchored
+        PASS [   0.017s] ( 56/716) parse-that-regex::info test_identifier_bare
+        PASS [   0.022s] ( 57/716) parse-that-regex::info a_non_ascii_quantified_class_has_no_ascii_info
+        PASS [   0.030s] ( 58/716) parse-that-regex::egraph_rules_superset superset_absorbs_subset
+        PASS [   0.021s] ( 59/716) parse-that-regex::info test_alternation_one_pass
+        PASS [   0.025s] ( 60/716) parse-that-regex::egraph_simplify simplify_hir_round_trips_leaf
+        PASS [   0.018s] ( 61/716) parse-that-regex::info test_json_number_classification
+        PASS [   0.053s] ( 62/716) parse-that-regex::born_red_lw1 superset_absorb_e_acute_greek_guard
+        PASS [   0.012s] ( 63/716) parse-that-regex::lint_nou a_class_that_can_match_a_surrogate_unit_is_linted
+        PASS [   0.020s] ( 64/716) parse-that-regex::info test_negated_class
+        PASS [   0.014s] ( 65/716) parse-that-regex::lint_nou a_pattern_that_reads_the_same_is_not_linted
+        PASS [   0.026s] ( 66/716) parse-that-regex::info test_identifier_vendor_prefix
+        PASS [   0.011s] ( 67/716) parse-that-regex::path_lexer deterministic_span_attribution
+        PASS [   0.019s] ( 68/716) parse-that-regex::info test_width_bounds
+        PASS [   0.032s] ( 69/716) parse-that-regex::info test_identifier_custom_property_fold
+        PASS [   0.046s] ( 70/716) parse-that-regex::egraph_rules_union union_does_not_match_on_equal_classes
+        PASS [   0.077s] ( 71/716) parse-that-regex::algebra_union union_disjoint
+        PASS [   0.021s] ( 72/716) parse-that-regex::look_conditions anchors_and_boundaries_reproduce_the_oracle
+        PASS [   0.017s] ( 73/716) parse-that-regex::path_lexer error_carries_provided_span
+        PASS [   0.039s] ( 74/716) parse-that-regex::info test_identifier_double_dash_only
+        PASS [   0.014s] ( 75/716) parse-that-regex::path_lexer lexes_index_runs_into_brackets
+        PASS [   0.014s] ( 76/716) parse-that-regex::path_lexer lexes_jsonpath_style
+        PASS [   0.037s] ( 77/716) parse-that-regex::info test_nullable_pattern
+        PASS [   0.026s] ( 78/716) parse-that-regex::path_lexer empty_input_yields_only_eof
+        PASS [   0.031s] ( 79/716) parse-that-regex::lint_nou the_id_is_general
+        PASS [   0.019s] ( 80/716) parse-that-regex::path_lexer lexes_underscore_idents
+        PASS [   0.017s] ( 81/716) parse-that-regex::path_lexer lexes_wildcard_path
+        PASS [   0.028s] ( 82/716) parse-that-regex::path_lexer ignores_interstitial_whitespace
+        PASS [   0.017s] ( 83/716) parse-that-regex::path_lexer rejects_invalid_utf8_lead_byte
+        PASS [   0.014s] ( 84/716) parse-that-regex::to_source print_smoke_corpus
+        PASS [   0.047s] ( 85/716) parse-that-regex::info test_simple_literal
+        PASS [   0.020s] ( 86/716) parse-that-regex::path_lexer rejects_unexpected_punctuation
+        PASS [   0.015s] ( 87/716) parse-that-regex::word_boundary engine_reproduces_the_oracle
+        PASS [   0.016s] ( 88/716) parse-that-regex::word_boundary backspace_inside_a_class_is_unchanged
+        PASS [   0.030s] ( 89/716) parse-that-regex::path_lexer lexes_unicode_identifiers
+        PASS [   0.017s] ( 90/716) parse-that-regex::word_boundary word_boundary_round_trips_through_to_source
+        PASS [   0.021s] ( 91/716) parse-that-regex::word_boundary word_boundary_outside_a_class_is_an_assertion
+        PASS [   0.020s] ( 92/716) parse-that-simd::correctness empty_alphabet_yields_empty_index
+        PASS [   0.018s] ( 93/716) parse-that-simd::correctness empty_input_yields_empty_index
+        PASS [   0.035s] ( 94/716) parse-that-regex::path_lexer whitespace_only_input_yields_only_eof
+        PASS [   0.015s] ( 95/716) parse-that-simd::correctness short_input_below_stripe
+        PASS [   0.016s] ( 96/716) parse-that-simd::correctness stripe_boundary_64_byte_input
+        PASS [   0.021s] ( 97/716) parse-that-simd::correctness multi_cmp_alphabet_20_singletons
+        PASS [   0.033s] ( 98/716) parse-that-simd::correctness css_bootstrap_canonical
+        PASS [   0.056s] ( 99/716) parse-that-regex::path_lexer lexes_dotted_path
+        PASS [   0.017s] (100/716) parse-that-simd::correctness stripe_plus_one_input
+        PASS [   0.024s] (101/716) parse-that-simd::correctness no_quotes_simple
+        PASS [   0.028s] (102/716) parse-that-simd::correctness json_twitter_canonical
+        PASS [   0.014s] (103/716) parse-that-simd::correctness wide_lut_alphabet_15_singletons
+        PASS [   0.065s] (104/716) parse-that-regex::path_lexer lexes_escaped_quote_in_input
+        PASS [   0.052s] (105/716) parse-that-regex::to_source round_trip_every_accepted_pattern
+        PASS [   0.056s] (106/716) parse-that-regex::path_lexer round_trip_text_preserves_input
+        PASS [   0.020s] (107/716) parse-that-simd::digraph arrow_digraph
+        PASS [   0.016s] (108/716) parse-that-simd::digraph css_block_comment_open_close
+        PASS [   0.023s] (109/716) parse-that-simd::digraph arrow_and_paren_star_digraphs
+        PASS [   0.016s] (110/716) parse-that-simd::digraph digraph_at_stripe_boundary
+        PASS [   0.016s] (111/716) parse-that-simd::digraph digraph_long_input
+        PASS [   0.014s] (112/716) parse-that-simd::dispatch_tiers selected_tier_is_the_best_supported
+        PASS [   0.020s] (113/716) parse-that-simd::digraph css_no_digraph_no_extra_hits
+        PASS [   0.022s] (114/716) parse-that-simd::digraph css_real_world_bootstrap_snippet
+        PASS [   0.022s] (115/716) parse-that-simd::dispatch_tiers every_isa_tier_of_the_target_is_compiled
+        PASS [   0.016s] (116/716) parse-that-simd::guard_page no_tier_reads_past_the_end_of_its_input
+        PASS [   0.076s] (117/716) parse-that-simd::correctness json_citm_canonical
+        PASS [   0.029s] (118/716) parse-that-simd::prim_differential decode_hex_quads
+        PASS [   0.039s] (119/716) parse-that-simd::fuzz json_alphabet_random_bytes
+        PASS [   0.046s] (120/716) parse-that-simd::fuzz arrow_alphabet_random_bytes
+        PASS [   0.042s] (121/716) parse-that-simd::prim_differential bracket_depth_mask_64
+        PASS [   0.049s] (122/716) parse-that-simd::fuzz css_alphabet_random_bytes
+        PASS [   0.048s] (123/716) parse-that-simd::fuzz no_quote_alphabet_random_bytes
+        PASS [   0.093s] (124/716) parse-that-simd::correctness json_canada_canonical
+        PASS [   0.013s] (125/716) parse-that-simd::prim_differential the_selected_tier_runs_the_neon_bodies_on_aarch64
+        PASS [   0.018s] (126/716) parse-that-simd::prim_differential string_special_block
+        PASS [   0.048s] (127/716) parse-that-simd::prim_differential byte_class_from_eq_set_64
+        PASS [   0.036s] (128/716) parse-that-simd::prim_differential lo6_classify
+        PASS [   0.018s] (129/716) parse-that-simd::prim_differential validate_utf8_block
+        PASS [   0.013s] (130/716) parse-that-simd::quote_parity empty_input_quote_path
+        PASS [   0.014s] (131/716) parse-that-simd::quote_parity double_backslash_quote_closes_string
+        PASS [   0.013s] (132/716) parse-that-simd::quote_parity escaped_quote_does_not_close_string
+        PASS [   0.015s] (133/716) parse-that-simd::quote_parity input_starting_with_string
+        PASS [   0.014s] (134/716) parse-that-simd::quote_parity long_string_spanning_multiple_stripes
+        PASS [   0.015s] (135/716) parse-that-simd::quote_parity many_strings_in_array
+        PASS [   0.015s] (136/716) parse-that-simd::quote_parity quote_carry_across_64_byte_stripes
+        PASS [   0.014s] (137/716) parse-that-simd::quote_parity quote_filters_braces_inside_string
+        PASS [   0.013s] (138/716) parse-that-simd::quote_parity shift_xor_matches_clmul
+        PASS [   0.013s] (139/716) parse_that::combinator_test tests::chain_basic
+        PASS [   0.013s] (140/716) parse_that::combinator_test tests::chain_failure_propagates
+        PASS [   0.013s] (141/716) parse_that::combinator_test tests::chain_second_failure
+        PASS [   0.012s] (142/716) parse_that::combinator_test tests::chain_state_advances
+        PASS [   0.013s] (143/716) parse_that::combinator_test tests::test_add_operator
+        PASS [   0.043s] (144/716) parse-that-simd::prim_differential structural_classify_64
+        PASS [   0.014s] (145/716) parse_that::combinator_test tests::test_any_span_keywords
+        PASS [   0.013s] (146/716) parse_that::combinator_test tests::test_any_span_no_match
+        PASS [   0.013s] (147/716) parse_that::combinator_test tests::test_bitor_operator
+        PASS [   0.011s] (148/716) parse_that::combinator_test tests::test_dispatch_byte_no_fallback
+        PASS [   0.012s] (149/716) parse_that::combinator_test tests::test_dispatch_byte
+        PASS [   0.013s] (150/716) parse_that::combinator_test tests::test_eof_at_end
+        PASS [   0.011s] (151/716) parse_that::combinator_test tests::test_epsilon
+        PASS [   0.014s] (152/716) parse_that::combinator_test tests::test_eof_not_at_end
+        PASS [   0.012s] (153/716) parse_that::combinator_test tests::test_flat_then
+        PASS [   0.011s] (154/716) parse_that::combinator_test tests::test_lazy_basic
+        PASS [   0.012s] (155/716) parse_that::combinator_test tests::test_look_ahead_success
+        PASS [   0.014s] (156/716) parse_that::combinator_test tests::test_look_ahead_failure
+        PASS [   0.013s] (157/716) parse_that::combinator_test tests::test_many_unbounded
+        PASS [   0.015s] (158/716) parse_that::combinator_test tests::test_many_with_max
+        PASS [   0.016s] (159/716) parse_that::combinator_test tests::test_many_with_min
+        PASS [   0.016s] (160/716) parse_that::combinator_test tests::test_many_zero_matches
+        PASS [   0.016s] (161/716) parse_that::combinator_test tests::test_map_failure_propagates
+        PASS [   0.013s] (162/716) parse_that::combinator_test tests::test_negate_failure
+        PASS [   0.016s] (163/716) parse_that::combinator_test tests::test_map_transform
+        PASS [   0.014s] (164/716) parse_that::combinator_test tests::test_negate_success
+        PASS [   0.012s] (165/716) parse_that::combinator_test tests::test_next_combinator
+        PASS [   0.013s] (166/716) parse_that::combinator_test tests::test_next_span
+        PASS [   0.013s] (167/716) parse_that::combinator_test tests::test_next_span_empty_input
+        PASS [   0.011s] (168/716) parse_that::combinator_test tests::test_not_failure
+        PASS [   0.012s] (169/716) parse_that::combinator_test tests::test_not_success
+        PASS [   0.013s] (170/716) parse_that::combinator_test tests::test_number_span_fast_big_exponent
+        PASS [   0.012s] (171/716) parse_that::combinator_test tests::test_number_span_fast_empty
+        PASS [   0.116s] (172/716) parse-that-simd::fuzz long_inputs
+        PASS [   0.014s] (173/716) parse_that::combinator_test tests::test_number_span_fast_exponent
+        PASS [   0.014s] (174/716) parse_that::combinator_test tests::test_number_span_fast_float
+        PASS [   0.014s] (175/716) parse_that::combinator_test tests::test_number_span_fast_integer
+        PASS [   0.016s] (176/716) parse_that::combinator_test tests::test_number_span_fast_just_minus
+        PASS [   0.014s] (177/716) parse_that::combinator_test tests::test_number_span_fast_neg_exponent
+        PASS [   0.015s] (178/716) parse_that::combinator_test tests::test_number_span_fast_neg_zero
+        PASS [   0.017s] (179/716) parse_that::combinator_test tests::test_number_span_fast_negative
+        PASS [   0.015s] (180/716) parse_that::combinator_test tests::test_number_span_fast_no_match
+        PASS [   0.013s] (181/716) parse_that::combinator_test tests::test_number_span_fast_zero
+        PASS [   0.015s] (182/716) parse_that::combinator_test tests::test_number_span_fast_randomized_boundaries
+        PASS [   0.014s] (183/716) parse_that::combinator_test tests::test_one_of
+        PASS [   0.014s] (184/716) parse_that::combinator_test tests::test_opt_none
+        PASS [   0.013s] (185/716) parse_that::combinator_test tests::test_or_backtracking
+        PASS [   0.017s] (186/716) parse_that::combinator_test tests::test_opt_some
+        PASS [   0.020s] (187/716) parse_that::combinator_test tests::test_or_first_matches
+        PASS [   0.017s] (188/716) parse_that::combinator_test tests::test_parse_or_error_failure
+        PASS [   0.021s] (189/716) parse_that::combinator_test tests::test_or_second_matches
+        PASS [   0.020s] (190/716) parse_that::combinator_test tests::test_parse_or_error_success
+        PASS [   0.027s] (191/716) parse_that::combinator_test tests::test_or_neither_matches
+        PASS [   0.162s] (192/716) parse-that-simd::dispatch_tiers every_supported_tier_matches_the_scalar_oracle
+        PASS [   0.022s] (193/716) parse_that::combinator_test tests::test_regex_digits
+        PASS [   0.022s] (194/716) parse_that::combinator_test tests::test_regex_no_match
+        PASS [   0.022s] (195/716) parse_that::combinator_test tests::test_regex_span_match
+        PASS [   0.019s] (196/716) parse_that::combinator_test tests::test_save_state_success
+        PASS [   0.027s] (197/716) parse_that::combinator_test tests::test_regex_empty_input
+        PASS [   0.014s] (198/716) parse_that::combinator_test tests::test_sep_by_min_not_met
+        PASS [   0.019s] (199/716) parse_that::combinator_test tests::test_sep_by
+        PASS [   0.014s] (200/716) parse_that::combinator_test tests::test_skip
+        PASS [   0.018s] (201/716) parse_that::combinator_test tests::test_sep_by_single
+        PASS [   0.016s] (202/716) parse_that::combinator_test tests::test_sp_bridge_into_parser
+        PASS [   0.033s] (203/716) parse_that::combinator_test tests::test_save_state_backtrack
+        PASS [   0.017s] (204/716) parse_that::combinator_test tests::test_sp_many
+        PASS [   0.018s] (205/716) parse_that::combinator_test tests::test_sp_bridge_map
+        PASS [   0.017s] (206/716) parse_that::combinator_test tests::test_sp_opt
+        PASS [   0.020s] (207/716) parse_that::combinator_test tests::test_sp_oneof_flattening
+        PASS [   0.017s] (208/716) parse_that::combinator_test tests::test_sp_seq_flattening
+        PASS [   0.019s] (209/716) parse_that::combinator_test tests::test_sp_sep_by
+        PASS [   0.017s] (210/716) parse_that::combinator_test tests::test_sp_string_match
+        PASS [   0.012s] (211/716) parse_that::combinator_test tests::test_sp_trim_whitespace
+        PASS [   0.016s] (212/716) parse_that::combinator_test tests::test_sp_take_while_byte
+        PASS [   0.019s] (213/716) parse_that::combinator_test tests::test_sp_string_no_match
+        PASS [   0.015s] (214/716) parse_that::combinator_test tests::test_sp_wrap
+        PASS [   0.015s] (215/716) parse_that::combinator_test tests::test_span_many
+        PASS [   0.264s] (216/716) parse-that-regex::oracle_leaf_corpus dfa_tier_agrees_with_v8_and_jsc
+        PASS [   0.015s] (217/716) parse_that::combinator_test tests::test_span_sep_by
+        PASS [   0.023s] (218/716) parse_that::combinator_test tests::test_sp_take_while_byte_no_match
+        PASS [   0.018s] (219/716) parse_that::combinator_test tests::test_span_opt
+        PASS [   0.016s] (220/716) parse_that::combinator_test tests::test_span_then
+        PASS [   0.016s] (221/716) parse_that::combinator_test tests::test_span_wrap
+        PASS [   0.014s] (222/716) parse_that::combinator_test tests::test_string_match
+        PASS [   0.017s] (223/716) parse_that::combinator_test tests::test_string_empty_pattern
+        PASS [   0.016s] (224/716) parse_that::combinator_test tests::test_string_no_match
+        PASS [   0.015s] (225/716) parse_that::combinator_test tests::test_string_span_match
+        PASS [   0.015s] (226/716) parse_that::combinator_test tests::test_string_utf8
+        PASS [   0.023s] (227/716) parse_that::combinator_test tests::test_string_empty_input
+        PASS [   0.016s] (228/716) parse_that::combinator_test tests::test_take_until_any_randomized_equivalence
+        PASS [   0.015s] (229/716) parse_that::combinator_test tests::test_take_while_byte_span_no_match
+        PASS [   0.019s] (230/716) parse_that::combinator_test tests::test_take_until_any_equivalence_specialization_sizes
+        PASS [   0.016s] (231/716) parse_that::combinator_test tests::test_take_while_span_digits
+        PASS [   0.013s] (232/716) parse_that::combinator_test tests::test_then_first_fails
+        PASS [   0.020s] (233/716) parse_that::combinator_test tests::test_take_while_byte_span_digits
+        PASS [   0.019s] (234/716) parse_that::combinator_test tests::test_take_while_span_no_match
+        PASS [   0.020s] (235/716) parse_that::combinator_test tests::test_take_while_span_utf8
+        PASS [   0.018s] (236/716) parse_that::combinator_test tests::test_then_second_fails
+        PASS [   0.014s] (237/716) parse_that::combinator_test tests::test_wrap
+        PASS [   0.019s] (238/716) parse_that::combinator_test tests::test_then_success
+        PASS [   0.019s] (239/716) parse_that::combinator_test tests::test_trim_whitespace
+        PASS [   0.015s] (240/716) parse_that::combinator_test tests::test_wrap_missing_right
+        PASS [   0.015s] (241/716) parse_that::css_parse_test test_at_font_face
+        PASS [   0.021s] (242/716) parse_that::combinator_test tests::test_trim_whitespace_no_ws
+        PASS [   0.016s] (243/716) parse_that::css_parse_test test_at_import
+        PASS [   0.015s] (244/716) parse_that::css_parse_test test_at_media
+        PASS [   0.017s] (245/716) parse_that::css_parse_test test_at_keyframes
+        PASS [   0.014s] (246/716) parse_that::css_parse_test test_block_comment_fast
+        PASS [   0.014s] (247/716) parse_that::css_parse_test test_calc_function
+        PASS [   0.016s] (248/716) parse_that::css_parse_test test_block_comment_multiline
+        PASS [   0.022s] (249/716) parse_that::css_parse_test test_attribute_selector
+        PASS [   0.013s] (250/716) parse_that::css_parse_test test_compound_selector
+        PASS [   0.018s] (251/716) parse_that::css_parse_test test_class_selector
+        PASS [   0.014s] (252/716) parse_that::css_parse_test test_empty_stylesheet
+        PASS [   0.018s] (253/716) parse_that::css_parse_test test_custom_property_declaration
+        PASS [   0.023s] (254/716) parse_that::css_parse_test test_comment
+        PASS [   0.018s] (255/716) parse_that::css_parse_test test_dimension_values
+        PASS [   0.027s] (256/716) parse_that::css_parse_test test_child_combinator
+        PASS [   0.018s] (257/716) parse_that::css_parse_test test_hex_color_3
+        PASS [   0.022s] (258/716) parse_that::css_parse_test test_hex_color
+        PASS [   0.031s] (259/716) parse_that::css_parse_test test_descendant_combinator
+        PASS [   0.022s] (260/716) parse_that::css_parse_test test_media_query_and_conditions
+        PASS [   0.299s] (261/716) parse-that-simd::correctness css_tailwind_output_canonical
+        PASS [   0.023s] (262/716) parse_that::css_parse_test test_media_query_list
+        PASS [   0.022s] (263/716) parse_that::css_parse_test test_media_query_not_print
+        PASS [   0.030s] (264/716) parse_that::css_parse_test test_hex_color_8
+        PASS [   0.030s] (265/716) parse_that::css_parse_test test_id_selector
+        PASS [   0.024s] (266/716) parse_that::css_parse_test test_media_query_plain_feature
+        PASS [   0.019s] (267/716) parse_that::css_parse_test test_negative_dimension
+        PASS [   0.023s] (268/716) parse_that::css_parse_test test_multiple_declarations
+        PASS [   0.020s] (269/716) parse_that::css_parse_test test_nested_media
+        PASS [   0.028s] (270/716) parse_that::css_parse_test test_media_query_screen_and_feature
+        PASS [   0.016s] (271/716) parse_that::css_parse_test test_parse_normalize_css
+        PASS [   0.016s] (272/716) parse_that::css_parse_test test_pseudo_class
+        PASS [   0.032s] (273/716) parse_that::css_parse_test test_multiple_rules
+        PASS [   0.020s] (274/716) parse_that::css_parse_test test_pseudo_element
+        PASS [   0.016s] (275/716) parse_that::css_parse_test test_specificity_class
+        PASS [   0.022s] (276/716) parse_that::css_parse_test test_rgb_function
+        PASS [   0.016s] (277/716) parse_that::css_parse_test test_specificity_compound
+        PASS [   0.022s] (278/716) parse_that::css_parse_test test_selector_list
+        PASS [   0.022s] (279/716) parse_that::css_parse_test test_simple_rule
+        PASS [   0.017s] (280/716) parse_that::css_parse_test test_specificity_pseudo_is
+        PASS [   0.023s] (281/716) parse_that::css_parse_test test_specificity_complex
+        PASS [   0.017s] (282/716) parse_that::css_parse_test test_specificity_type
+        PASS [   0.041s] (283/716) parse_that::css_parse_test test_parse_bootstrap_css
+        PASS [   0.021s] (284/716) parse_that::css_parse_test test_specificity_pseudo_where
+        PASS [   0.020s] (285/716) parse_that::css_parse_test test_specificity_universal
+        PASS [   0.018s] (286/716) parse_that::css_parse_test test_supports_and
+        PASS [   0.018s] (287/716) parse_that::css_parse_test test_supports_declaration
+        PASS [   0.030s] (288/716) parse_that::css_parse_test test_specificity_id
+        PASS [   0.019s] (289/716) parse_that::css_parse_test test_supports_not
+        PASS [   0.020s] (290/716) parse_that::css_parse_test test_var_function
+        PASS [   0.023s] (291/716) parse_that::css_parse_test test_universal_selector
+        PASS [   0.021s] (292/716) parse_that::css_parse_test test_whitespace_only
+        PASS [   0.016s] (293/716) parse_that::css_recovery_test tests::test_format_all_diagnostics_empty
+        PASS [   0.020s] (294/716) parse_that::css_recovery_test tests::test_complex_css_file_recovers_partial_results
+        PASS [   0.032s] (295/716) parse_that::css_parse_test test_string_value
+        PASS [   0.025s] (296/716) parse_that::css_recovery_test tests::test_complex_css_file_parses_success_rule
+        PASS [   0.023s] (297/716) parse_that::css_recovery_test tests::test_format_all_diagnostics_single
+        PASS [   0.021s] (298/716) parse_that::css_recovery_test tests::test_format_all_diagnostics_summary
+        PASS [   0.026s] (299/716) parse_that::css_recovery_test tests::test_diagnostics_have_valid_line_numbers
+        PASS [   0.015s] (300/716) parse_that::css_recovery_test tests::test_recover_multiple_bad_declarations
+        PASS [   0.021s] (301/716) parse_that::css_recovery_test tests::test_recover_gives_up_if_sync_fails
+        PASS [   0.025s] (302/716) parse_that::css_recovery_test tests::test_recover_declaration_missing_colon
+        PASS [   0.021s] (303/716) parse_that::css_recovery_test tests::test_recover_returns_normal_on_success
+        PASS [   0.031s] (304/716) parse_that::css_recovery_test tests::test_recover_declaration_missing_value
+        PASS [   0.024s] (305/716) parse_that::css_recovery_test tests::test_recover_returns_sentinel_on_failure
+        PASS [   0.021s] (306/716) parse_that::css_stack_depth nested_at_rules_depth_16_default_stack
+        PASS [   0.034s] (307/716) parse_that::css_recovery_test tests::test_individual_diagnostics_format_correctly
+        PASS [   0.021s] (308/716) parse_that::csv_test tests::test_csv
+        PASS [   0.017s] (309/716) parse_that::debug_test tests::test_add_cursor_single_line
+        PASS [   0.015s] (310/716) parse_that::debug_test tests::test_column_number_after_newline
+        PASS [   0.028s] (311/716) parse_that::css_stack_depth child_parse_on_sized_stack
+        PASS [   0.021s] (312/716) parse_that::debug_test tests::test_add_cursor_multiline
+        PASS [   0.016s] (313/716) parse_that::debug_test tests::test_column_number_first_line
+        PASS [   0.028s] (314/716) parse_that::debug_test tests::test_css_attr_selector_unclosed_bracket
+        PASS [   0.022s] (315/716) parse_that::debug_test tests::test_css_color_parse_or_error_expected_set
+        PASS [   0.023s] (316/716) parse_that::debug_test tests::test_css_color_dispatch_failure_lists_alternatives
+        PASS [   0.020s] (317/716) parse_that::debug_test tests::test_css_declaration_error_after_colon
+        PASS [   0.027s] (318/716) parse_that::debug_test tests::test_css_color_byte_dispatch_failure
+        PASS [   0.025s] (319/716) parse_that::debug_test tests::test_css_color_trailing_content
+        PASS [   0.027s] (320/716) parse_that::debug_test tests::test_css_color_oxford_comma_four_plus_alternatives
+        PASS [   0.026s] (321/716) parse_that::debug_test tests::test_css_declaration_trailing_garbage_eof
+        PASS [   0.025s] (322/716) parse_that::debug_test tests::test_css_format_expected_exactly_two
+        PASS [   0.033s] (323/716) parse_that::debug_test tests::test_css_declaration_parse_or_error_deep_failure
+        PASS [   0.032s] (324/716) parse_that::debug_test tests::test_css_expected_only_at_furthest_point
+        PASS [   0.033s] (325/716) parse_that::debug_test tests::test_css_format_expected_six_named_colors
+        PASS [   0.021s] (326/716) parse_that::debug_test tests::test_css_full_rule_parses_successfully
+        PASS [   0.020s] (327/716) parse_that::debug_test tests::test_css_hex_color_no_trailing
+        PASS [   0.023s] (328/716) parse_that::debug_test tests::test_css_hsl_unclosed_paren
+        PASS [   0.026s] (329/716) parse_that::debug_test tests::test_css_furthest_offset_with_alternation
+        PASS [   0.027s] (330/716) parse_that::debug_test tests::test_css_full_rule_with_class_selector
+        PASS [   0.025s] (331/716) parse_that::debug_test tests::test_css_long_line_cursor_still_works
+        PASS [   0.024s] (332/716) parse_that::debug_test tests::test_css_long_property_value_truncated
+        PASS [   0.022s] (333/716) parse_that::debug_test tests::test_css_long_selector_line_truncated
+        PASS [   0.018s] (334/716) parse_that::debug_test tests::test_css_multiline_line_number_tracking
+        PASS [   0.024s] (335/716) parse_that::debug_test tests::test_css_multiline_add_cursor_contains_lines
+        PASS [   0.018s] (336/716) parse_that::debug_test tests::test_css_multiple_declarations
+        PASS [   0.026s] (337/716) parse_that::debug_test tests::test_css_multiline_error_on_inner_line
+        PASS [   0.019s] (338/716) parse_that::debug_test tests::test_css_nested_unclosed_only_innermost
+        PASS [   0.014s] (339/716) parse_that::debug_test tests::test_css_rgb_secondary_span_offset
+        PASS [   0.018s] (340/716) parse_that::debug_test tests::test_css_rgb_error_deep_in_parse
+        PASS [   0.023s] (341/716) parse_that::debug_test tests::test_css_named_color_all_branches_in_expected
+        PASS [   0.019s] (342/716) parse_that::debug_test tests::test_css_rule_unclosed_brace
+        PASS [   0.021s] (343/716) parse_that::debug_test tests::test_css_rule_parse_or_error_success
+        PASS [   0.018s] (344/716) parse_that::debug_test tests::test_css_secondary_span_offset_at_opener
+        PASS [   0.018s] (345/716) parse_that::debug_test tests::test_css_selector_failure_lists_alternatives
+        PASS [   0.025s] (346/716) parse_that::debug_test tests::test_css_rgb_unclosed_paren
+        PASS [   0.021s] (347/716) parse_that::debug_test tests::test_css_selector_parse_or_error_line_col
+        PASS [   0.019s] (348/716) parse_that::debug_test tests::test_css_state_print_shows_expected_colors
+        PASS [   0.018s] (349/716) parse_that::debug_test tests::test_expected_set_clears_on_advance
+        PASS [   0.020s] (350/716) parse_that::debug_test tests::test_eof_trailing_content_suggestion
+        PASS [   0.022s] (351/716) parse_that::debug_test tests::test_css_state_print_shows_suggestions
+        PASS [   0.015s] (352/716) parse_that::debug_test tests::test_expected_set_regex
+        PASS [   0.021s] (353/716) parse_that::debug_test tests::test_expected_set_dispatch_byte
+        PASS [   0.016s] (354/716) parse_that::debug_test tests::test_format_expected_empty
+        PASS [   0.025s] (355/716) parse_that::debug_test tests::test_expected_set_or_accumulates
+        PASS [   0.021s] (356/716) parse_that::debug_test tests::test_expected_set_string_single
+        PASS [   0.015s] (357/716) parse_that::debug_test tests::test_format_expected_two
+        PASS [   0.019s] (358/716) parse_that::debug_test tests::test_format_expected_three_oxford_comma
+        PASS [   0.017s] (359/716) parse_that::debug_test tests::test_parse_or_error_populates_expected
+        PASS [   0.014s] (360/716) parse_that::debug_test tests::test_span_parser_expected_string
+        PASS [   0.018s] (361/716) parse_that::debug_test tests::test_span_parser_expected_regex
+        PASS [   0.014s] (362/716) parse_that::debug_test tests::test_state_print_done
+        PASS [   0.013s] (363/716) parse_that::debug_test tests::test_state_print_err_with_expected
+        PASS [   0.028s] (364/716) parse_that::debug_test tests::test_format_expected_single
+        PASS [   0.019s] (365/716) parse_that::debug_test tests::test_span_parser_wrap_suggestion
+        PASS [   0.019s] (366/716) parse_that::debug_test tests::test_state_print_err
+        PASS [   0.015s] (367/716) parse_that::debug_test tests::test_state_print_ok
+        PASS [   0.012s] (368/716) parse_that::decode_test arena_offset_respects_existing_data
+        PASS [   0.016s] (369/716) parse_that::debug_test tests::test_summarize_line_long
+        PASS [   0.018s] (370/716) parse_that::debug_test tests::test_summarize_line_short
+        PASS [   0.014s] (371/716) parse_that::decode_test borrowed_empty
+        PASS [   0.019s] (372/716) parse_that::debug_test tests::test_wrap_suggestion_unclosed
+        PASS [   0.015s] (373/716) parse_that::decode_test borrowed_no_escapes_at_all
+        PASS [   0.015s] (374/716) parse_that::decode_test borrowed_simple
+        PASS [   0.015s] (375/716) parse_that::decode_test error_invalid_escape
+        PASS [   0.015s] (376/716) parse_that::decode_test error_lone_high_surrogate
+        PASS [   0.016s] (377/716) parse_that::decode_test error_lone_low_surrogate
+        PASS [   0.016s] (378/716) parse_that::decode_test error_no_opening_quote
+        PASS [   0.017s] (379/716) parse_that::decode_test error_truncated_unicode
+        PASS [   0.014s] (380/716) parse_that::decode_test owned_all_simple_escapes
+        PASS [   0.020s] (381/716) parse_that::decode_test error_unterminated
+        PASS [   0.021s] (382/716) parse_that::decode_test non_zero_start_offset
+        PASS [   0.021s] (383/716) parse_that::decode_test owned_mixed_content
+        PASS [   0.018s] (384/716) parse_that::decode_test owned_unicode_bmp
+        PASS [   0.021s] (385/716) parse_that::decode_test owned_surrogate_pair
+        PASS [   0.017s] (386/716) parse_that::decode_test sequential_decodes_share_arena
+        PASS [   0.018s] (387/716) parse_that::decode_test simd_borrowed_close_quote_at_every_stripe_offset
+        PASS [   0.024s] (388/716) parse_that::decode_test owned_unicode_multibyte
+        PASS [   0.029s] (389/716) parse_that::decode_test owned_newline
+        PASS [   0.023s] (390/716) parse_that::decode_test simd_borrowed_close_quote_at_second_stripe_offset
+        PASS [   0.018s] (391/716) parse_that::decode_test simd_borrowed_close_quote_in_scalar_tail
+        PASS [   0.023s] (392/716) parse_that::decode_test simd_borrowed_close_quote_at_stripe_one_start
+        PASS [   0.026s] (393/716) parse_that::decode_test simd_borrowed_close_quote_at_stripe_high_bit
+        PASS [   0.021s] (394/716) parse_that::decode_test simd_borrowed_exactly_one_stripe
+        PASS [   0.020s] (395/716) parse_that::decode_test simd_borrowed_many_stripes
+        PASS [   0.021s] (396/716) parse_that::decode_test simd_borrowed_two_stripes
+        PASS [   0.019s] (397/716) parse_that::decode_test simd_cross_validate_grid
+        PASS [   0.012s] (398/716) parse_that::decode_test simd_owned_close_quote_at_stripe_high_bit
+        PASS [   0.023s] (399/716) parse_that::decode_test simd_borrowed_utf8_across_stripe_boundary
+        PASS [   0.019s] (400/716) parse_that::decode_test simd_escape_parity_runs_before_quote
+        PASS [   0.013s] (401/716) parse_that::decode_test simd_owned_escape_at_offset_zero
+        PASS [   0.028s] (402/716) parse_that::decode_test simd_borrowed_utf8_multibyte_no_escapes
+        PASS [   0.019s] (403/716) parse_that::decode_test simd_owned_double_backslash_spans_stripe_boundary
+        PASS [   0.023s] (404/716) parse_that::decode_test simd_owned_all_escapes_dense
+        PASS [   0.019s] (405/716) parse_that::decode_test simd_owned_escape_at_every_stripe_offset
+        PASS [   0.018s] (406/716) parse_that::decode_test simd_owned_escape_in_scalar_tail
+        PASS [   0.018s] (407/716) parse_that::decode_test simd_owned_escape_spans_stripe_boundary
+        PASS [   0.491s] (408/716) parse-that-simd::fuzz quote_escape_sequences
+        PASS [   0.015s] (409/716) parse_that::decode_test simd_owned_large_with_periodic_escapes
+        PASS [   0.019s] (410/716) parse_that::decode_test simd_owned_escape_then_close
+        PASS [   0.019s] (411/716) parse_that::decode_test simd_owned_escape_then_full_stripe_then_close
+        PASS [   0.018s] (412/716) parse_that::decode_test simd_owned_long_run_then_escape
+        PASS [   0.013s] (413/716) parse_that::json_test tests::test_empty_array
+        PASS [   0.014s] (414/716) parse_that::json_test tests::test_empty_object
+        PASS [   0.019s] (415/716) parse_that::decode_test simd_owned_surrogate_pair_across_stripe_boundary
+        PASS [   0.019s] (416/716) parse_that::json_test tests::test_boolean_values
+        PASS [   0.028s] (417/716) parse_that::decode_test simd_owned_escaped_quote_then_real_quote
+        PASS [   0.023s] (418/716) parse_that::json_test tests::test_equivalence_apache
+        PASS [   0.020s] (419/716) parse_that::json_test tests::test_integer_values
+        PASS [   0.019s] (420/716) parse_that::json_test tests::test_json
+        PASS [   0.012s] (421/716) parse_that::json_test tests::test_leading_zero_rejected
+        PASS [   0.017s] (422/716) parse_that::json_test tests::test_json_file_print
+        PASS [   0.015s] (423/716) parse_that::json_test tests::test_leading_zero_decimal
+        PASS [   0.026s] (424/716) parse_that::json_test tests::test_equivalence_data
+        PASS [   0.018s] (425/716) parse_that::json_test tests::test_large_numeric_literals_match_serde_f64
+        PASS [   0.013s] (426/716) parse_that::json_test tests::test_leading_zero_standalone
+        PASS [   0.014s] (427/716) parse_that::json_test tests::test_long_string
+        PASS [   0.014s] (428/716) parse_that::json_test tests::test_malformed_backslash_at_end
+        PASS [   0.014s] (429/716) parse_that::json_test tests::test_malformed_truncated_unicode
+        PASS [   0.014s] (430/716) parse_that::json_test tests::test_malformed_unicode_at_end
+        PASS [   0.016s] (431/716) parse_that::json_test tests::test_malformed_not_json
+        PASS [   0.015s] (432/716) parse_that::json_test tests::test_malformed_unterminated_string
+        PASS [   0.015s] (433/716) parse_that::json_test tests::test_negative_number
+        PASS [   0.012s] (434/716) parse_that::json_test tests::test_nested_arrays
+        PASS [   0.012s] (435/716) parse_that::json_test tests::test_number_edge_cases
+        PASS [   0.014s] (436/716) parse_that::json_test tests::test_null_value
+        PASS [   0.050s] (437/716) parse_that::json_test tests::test_equivalence_twitter
+        PASS [   0.011s] (438/716) parse_that::json_test tests::test_string_basic_escapes
+        PASS [   0.012s] (439/716) parse_that::json_test tests::test_single_element_containers
+        PASS [   0.014s] (440/716) parse_that::json_test tests::test_scientific_notation
+        PASS [   0.012s] (441/716) parse_that::json_test tests::test_string_empty
+        PASS [   0.012s] (442/716) parse_that::json_test tests::test_string_nested_escapes
+        PASS [   0.012s] (443/716) parse_that::json_test tests::test_string_only_escapes
+        PASS [   0.012s] (444/716) parse_that::json_test tests::test_string_surrogate_pair_edges
+        PASS [   0.016s] (445/716) parse_that::json_test tests::test_whitespace_variants
+        PASS [   0.018s] (446/716) parse_that::json_test tests::test_string_unicode_escape
+        PASS [   0.015s] (447/716) parse_that::number_fastpath_test fastpath_and_slow_path_agree_in_range
+        PASS [   0.018s] (448/716) parse_that::json_test tests::test_string_with_forward_slash_escape
+        PASS [   0.017s] (449/716) parse_that::lanes_test nibble_mask_matches_definition_for_every_byte_and_lane
+        PASS [   0.015s] (450/716) parse_that::number_fastpath_test fastpath_canada_shaped_coordinates
+        PASS [   0.020s] (451/716) parse_that::lanes_test load_round_trips
+        PASS [   0.028s] (452/716) parse_that::lanes_test eq_mask_matches_definition_for_every_byte_and_lane
+        PASS [   0.018s] (453/716) parse_that::number_fastpath_test fastpath_integers_to_2_53
+        PASS [   0.012s] (454/716) parse_that::number_fastpath_test fastpath_negative_zero
+        PASS [   0.012s] (455/716) parse_that::number_fastpath_test fastpath_overflow_mantissa_falls_through
+        PASS [   0.012s] (456/716) parse_that::number_fastpath_test integer_cross_validate_all_lengths
+        PASS [   0.018s] (457/716) parse_that::number_fastpath_test fastpath_out_of_range_falls_through
+        PASS [   0.020s] (458/716) parse_that::number_fastpath_test fastpath_scientific_in_range
+        PASS [   0.021s] (459/716) parse_that::number_fastpath_test fastpath_short_fractions
+        PASS [   0.019s] (460/716) parse_that::number_fastpath_test integer_digits_followed_by_exponent
+        PASS [   0.013s] (461/716) parse_that::number_fastpath_test integer_eighteen_digits_fits_budget
+        PASS [   0.013s] (462/716) parse_that::number_fastpath_test integer_fifteen_digits_fits_in_single_stripe
+        PASS [   0.014s] (463/716) parse_that::number_fastpath_test integer_digits_followed_by_fraction
+        PASS [   0.014s] (464/716) parse_that::number_fastpath_test integer_four_digits_below_simd_stripe
+        PASS [   0.014s] (465/716) parse_that::number_fastpath_test integer_one_digit
+        PASS [   0.011s] (466/716) parse_that::number_fastpath_test integer_scan_at_nonzero_start_offset
+        PASS [   0.011s] (467/716) parse_that::number_fastpath_test integer_scan_right_up_to_input_boundary
+        PASS [   0.013s] (468/716) parse_that::number_fastpath_test integer_seventeen_digits_crosses_stripe
+        PASS [   0.013s] (469/716) parse_that::number_fastpath_test integer_sixteen_digits_fills_stripe
+        PASS [   0.014s] (470/716) parse_that::number_fastpath_test parse_number_f64_plus_sign_is_positive
+        PASS [   0.016s] (471/716) parse_that::number_fastpath_test integer_twenty_digits_budget_guard_fires
+        PASS [   0.017s] (472/716) parse_that::number_fastpath_test integer_strict_negative
+        PASS [   0.015s] (473/716) parse_that::number_simd_test cross_validate_all_counts
+        PASS [   0.015s] (474/716) parse_that::number_simd_test scan_all_digits_16
+        PASS [   0.632s] (475/716) parse-that-simd::differential every_supported_tier_matches_the_scalar_oracle
+        PASS [   0.116s] (476/716) parse_that::json_test tests::test_equivalence_citm_catalog
+        PASS [   0.016s] (477/716) parse_that::number_simd_test scan_all_nines
+        PASS [   0.016s] (478/716) parse_that::number_simd_test scan_all_zeros
+        PASS [   0.014s] (479/716) parse_that::number_simd_test scan_boundary_above_nine
+        PASS [   0.015s] (480/716) parse_that::number_simd_test scan_boundary_below_zero
+        PASS [   0.014s] (481/716) parse_that::number_simd_test scan_nine_digits
+        PASS [   0.015s] (482/716) parse_that::number_simd_test scan_no_digits
+        PASS [   0.015s] (483/716) parse_that::number_simd_test scan_partial_digits
+        PASS [   0.015s] (484/716) parse_that::number_simd_test scan_single_digit
+        PASS [   0.017s] (485/716) parse_that::number_simd_test scan_short_input_returns_available_digits
+        PASS [   0.017s] (486/716) parse_that::number_simd_test scan_with_offset
+        PASS [   0.016s] (487/716) parse_that::padded_input_test long_input_padding
+        PASS [   0.018s] (488/716) parse_that::padded_input_test empty_input_padding
+        PASS [   0.018s] (489/716) parse_that::padded_input_test padded_bytes_permit_full_stripe_read_at_end
+        PASS [   0.020s] (490/716) parse_that::padded_input_test padded_bytes_aligned_for_avx512_cache_line
+        PASS [   0.018s] (491/716) parse_that::padded_input_test public_views_never_leak_padding
+        PASS [   0.017s] (492/716) parse_that::padded_input_test short_input_padding
+        PASS [   0.013s] (493/716) parse_that::quote_parity_test filter_basic
+        PASS [   0.018s] (494/716) parse_that::padded_input_test single_byte_input_padding
+        PASS [   0.015s] (495/716) parse_that::quote_parity_test escaped_quote
+        PASS [   0.018s] (496/716) parse_that::padded_input_test stripe_boundary_input_padding
+        PASS [   0.014s] (497/716) parse_that::quote_parity_test filter_no_strings
+        PASS [   0.016s] (498/716) parse_that::quote_parity_test long_no_escape
+        PASS [   0.015s] (499/716) parse_that::quote_parity_test no_strings
+        PASS [   0.153s] (500/716) parse_that::json_test tests::test_equivalence_canada
+        PASS [   0.014s] (501/716) parse_that::quote_parity_test prefix_xor_basic
+        PASS [   0.016s] (502/716) parse_that::quote_parity_test simple_string
+        PASS [   0.014s] (503/716) parse_that::quoted_simd_test all_bs_odd
+        PASS [   0.016s] (504/716) parse_that::quoted_simd_test all_bs_even
+        PASS [   0.016s] (505/716) parse_that::quoted_simd_test bs1_before_quote
+        PASS [   0.016s] (506/716) parse_that::quoted_simd_test bs2_before_quote
+        PASS [   0.016s] (507/716) parse_that::quoted_simd_test bs3_before_quote
+        PASS [   0.016s] (508/716) parse_that::quoted_simd_test cross_validate_generated
+        PASS [   0.017s] (509/716) parse_that::quoted_simd_test bs4_before_quote
+        PASS [   0.015s] (510/716) parse_that::quoted_simd_test cross_validate_patterns
+        PASS [   0.015s] (511/716) parse_that::quoted_simd_test em_1bs
+        PASS [   0.016s] (512/716) parse_that::quoted_simd_test em_2bs
+        PASS [   0.016s] (513/716) parse_that::quoted_simd_test em_3bs
+        PASS [   0.014s] (514/716) parse_that::quoted_simd_test em_carry_2bs
+        PASS [   0.015s] (515/716) parse_that::quoted_simd_test em_carry_1bs
+        PASS [   0.019s] (516/716) parse_that::quoted_simd_test em_no_bs_carry
+        PASS [   0.018s] (517/716) parse_that::quoted_simd_test escaped_quote
+        PASS [   0.025s] (518/716) parse_that::quoted_simd_test em_no_bs
+        PASS [   0.022s] (519/716) parse_that::quoted_simd_test empty_string
+        PASS [   0.021s] (520/716) parse_that::quoted_simd_test escape_at_chunk_boundary
+        PASS [   0.021s] (521/716) parse_that::quoted_simd_test escaped_backslash_escaped_quote
+        PASS [   0.024s] (522/716) parse_that::quoted_simd_test escaped_backslash_then_quote
+        PASS [   0.022s] (523/716) parse_that::quoted_simd_test exactly_16_byte_content
+        PASS [   0.021s] (524/716) parse_that::quoted_simd_test odd_run_spanning_then_quote
+        PASS [   0.027s] (525/716) parse_that::quoted_simd_test even_run_spanning_then_quote
+        PASS [   0.017s] (526/716) parse_that::quoted_simd_test only_escapes
+        PASS [   0.027s] (527/716) parse_that::quoted_simd_test long_no_escapes
+        PASS [   0.027s] (528/716) parse_that::quoted_simd_test long_with_escapes
+        PASS [   0.016s] (529/716) parse_that::quoted_simd_test run_spanning_chunks
+        PASS [   0.017s] (530/716) parse_that::quoted_simd_test two_chunks_bs
+        PASS [   0.192s] (531/716) parse_that::json_test tests::test_json_file
+        PASS [   0.017s] (532/716) parse_that::quoted_simd_test unicode_escape
+        PASS [   0.020s] (533/716) parse_that::quoted_simd_test simple_string
+        PASS [   0.013s] (534/716) parse_that::regex accel_test::accel_for_wider_negated_class
+        PASS [   0.023s] (535/716) parse_that::quoted_simd_test two_chunks_bs_odd
+        PASS [   0.020s] (536/716) parse_that::quoted_simd_test unterminated
+        PASS [   0.019s] (537/716) parse_that::quoted_simd_test unterminated_backslash
+        PASS [   0.016s] (538/716) parse_that::regex accel_test::memchr_for_negated_class
+        PASS [   0.015s] (539/716) parse_that::regex accel_test::no_accel_for_non_looping
+        PASS [   0.012s] (540/716) parse_that::regex byteset_test::empty_set
+        PASS [   0.021s] (541/716) parse_that::regex accel_test::memchr2_for_json_string
+        PASS [   0.017s] (542/716) parse_that::regex byteset_test::ascii_set
+        PASS [   0.016s] (543/716) parse_that::regex byteset_test::disjoint
+        PASS [   0.019s] (544/716) parse_that::regex byteset_test::difference
+        PASS [   0.016s] (545/716) parse_that::regex byteset_test::exit_bytes
+        PASS [   0.015s] (546/716) parse_that::regex byteset_test::exit_bytes_over_limit
+        PASS [   0.014s] (547/716) parse_that::regex byteset_test::high_bytes_utf8_continuation
+        PASS [   0.017s] (548/716) parse_that::regex byteset_test::full_set
+        PASS [   0.024s] (549/716) parse_that::regex byteset_test::exact_size_iterator
+        PASS [   0.015s] (550/716) parse_that::regex byteset_test::iterator_ascending
+        PASS [   0.014s] (551/716) parse_that::regex byteset_test::range_boundary
+        PASS [   0.017s] (552/716) parse_that::regex byteset_test::negate
+        PASS [   0.023s] (553/716) parse_that::regex byteset_test::high_bytes_utf8_leading
+        PASS [   0.015s] (554/716) parse_that::regex dfa_test::alternation
+        PASS [   0.018s] (555/716) parse_that::regex byteset_test::singleton
+        PASS [   0.022s] (556/716) parse_that::regex byteset_test::range
+        PASS [   0.027s] (557/716) parse_that::regex byteset_test::insert_remove
+        PASS [   0.015s] (558/716) parse_that::regex dfa_test::char_class
+        PASS [   0.025s] (559/716) parse_that::regex byteset_test::union_and_intersect
+        PASS [   0.019s] (560/716) parse_that::regex dfa_test::css_block_comment_no_dotall_lazy
+        PASS [   0.025s] (561/716) parse_that::regex dfa_test::case_insensitive
+        PASS [   0.022s] (562/716) parse_that::regex dfa_test::css_block_comment_dotall_lazy
+        PASS [   0.019s] (563/716) parse_that::regex dfa_test::css_ident_alt_specific
+        PASS [   0.018s] (564/716) parse_that::regex dfa_test::css_ident_pattern
+        PASS [   0.023s] (565/716) parse_that::regex dfa_test::css_ident_alternation
+        PASS [   0.033s] (566/716) parse_that::regex dfa_test::bounded_repetition
+        PASS [   0.023s] (567/716) parse_that::regex dfa_test::css_value_span
+        PASS [   0.022s] (568/716) parse_that::regex dfa_test::css_value_span_stop_chars
+        PASS [   0.019s] (569/716) parse_that::regex dfa_test::dot_all
+        PASS [   0.025s] (570/716) parse_that::regex dfa_test::css_ws_comment_adjacent
+        PASS [   0.018s] (571/716) parse_that::regex dfa_test::dotall_bounded
+        PASS [   0.026s] (572/716) parse_that::regex dfa_test::css_ws_comment_regex
+        PASS [   0.022s] (573/716) parse_that::regex dfa_test::dot_no_newline
+        PASS [   0.018s] (574/716) parse_that::regex dfa_test::empty_pattern
+        PASS [   0.019s] (575/716) parse_that::regex dfa_test::dotall_plus
+        PASS [   0.020s] (576/716) parse_that::regex dfa_test::dotall_star
+        PASS [   0.017s] (577/716) parse_that::regex dfa_test::hex_color_pattern
+        PASS [   0.013s] (578/716) parse_that::regex dfa_test::large_dfa_json_number
+        PASS [   0.018s] (579/716) parse_that::regex dfa_test::json_number_pattern
+        PASS [   0.014s] (580/716) parse_that::regex dfa_test::lazy_question_prefers_skipping
+        PASS [   0.019s] (581/716) parse_that::regex dfa_test::lazy_plus_stops_at_first_close
+        PASS [   0.027s] (582/716) parse_that::regex dfa_test::large_dfa_css_ident
+        PASS [   0.018s] (583/716) parse_that::regex dfa_test::minimization_reduces_states
+        PASS [   0.019s] (584/716) parse_that::regex dfa_test::lazy_star_stops_at_first_close
+        PASS [   0.018s] (585/716) parse_that::regex dfa_test::oracle_css_number
+        PASS [   0.020s] (586/716) parse_that::regex dfa_test::oracle_digits
+        PASS [   0.024s] (587/716) parse_that::regex dfa_test::no_dotall_stops_at_newline
+        PASS [   0.025s] (588/716) parse_that::regex dfa_test::negated_class
+        PASS [   0.021s] (589/716) parse_that::regex dfa_test::oracle_email_like
+        PASS [   0.021s] (590/716) parse_that::regex dfa_test::oracle_hex_color
+        PASS [   0.028s] (591/716) parse_that::regex dfa_test::optional
+        PASS [   0.019s] (592/716) parse_that::regex dfa_test::oracle_nested_groups
+        PASS [   0.016s] (593/716) parse_that::regex dfa_test::oracle_whitespace
+        PASS [   0.016s] (594/716) parse_that::regex dfa_test::oracle_repetition_boundary
+        PASS [   0.033s] (595/716) parse_that::regex dfa_test::offset_matching
+        PASS [   0.021s] (596/716) parse_that::regex dfa_test::oracle_pipe_literal
+        PASS [   0.017s] (597/716) parse_that::regex dfa_test::oracle_word_chars
+        PASS [   0.031s] (598/716) parse_that::regex dfa_test::oracle_json_string_body
+        PASS [   0.018s] (599/716) parse_that::regex dfa_test::shorthand_classes
+        PASS [   0.018s] (600/716) parse_that::regex dfa_test::simple_literal
+        PASS [   0.017s] (601/716) parse_that::regex dfa_test::star
+        PASS [   0.015s] (602/716) parse_that::regex dfa_test::unicode_ascii_only
+        PASS [   0.015s] (603/716) parse_that::regex dfa_test::zero_width_empty_alt
+        PASS [   0.014s] (604/716) parse_that::regex equiv_test::no_byte_sets
+        PASS [   0.017s] (605/716) parse_that::regex dfa_test::zero_width_optional
+        PASS [   0.015s] (606/716) parse_that::regex equiv_test::overlapping_ranges
+        PASS [   0.018s] (607/716) parse_that::regex dfa_test::zero_width_star
+        PASS [   0.014s] (608/716) parse_that::regex equiv_test::single_range
+        PASS [   0.016s] (609/716) parse_that::regex equiv_test::two_disjoint_ranges
+        PASS [   0.016s] (610/716) parse_that::regex equiv_test::utf8_leading_bytes
+        PASS [   0.016s] (611/716) parse_that::regex equiv_test::word_char_classes
+        PASS [   0.016s] (612/716) parse_that::regex hir_test::char_class_negated_flag
+        PASS [   0.017s] (613/716) parse_that::regex hir_test::negate_full
+        PASS [   0.019s] (614/716) parse_that::regex hir_test::negate_empty
+        PASS [   0.018s] (615/716) parse_that::regex hir_test::negate_middle
+        PASS [   0.016s] (616/716) parse_that::regex nfa_test::alternation
+        PASS [   0.016s] (617/716) parse_that::regex nfa_test::bounded_repetition
+        PASS [   0.016s] (618/716) parse_that::regex nfa_test::char_class_ascii
+        PASS [   0.010s] (619/716) parse_that::regex nfa_test::literal_pattern
+        PASS [   0.018s] (620/716) parse_that::regex nfa_test::char_class_unicode
+        PASS [   0.015s] (621/716) parse_that::regex nfa_test::dot_all
+        PASS [   0.019s] (622/716) parse_that::regex nfa_test::concat
+        PASS [   0.014s] (623/716) parse_that::regex nfa_test::plus_lazy
+        PASS [   0.014s] (624/716) parse_that::regex nfa_test::star_greedy
+        PASS [   0.021s] (625/716) parse_that::regex nfa_test::empty_pattern
+        PASS [   0.017s] (626/716) parse_that::regex nfa_test::unicode_property
+        PASS [   0.018s] (627/716) parse_that::regex nfa_test::transition_byte_sets
+        PASS [   0.034s] (628/716) parse_that::regex nfa_test::backreference_unsupported
+        PASS [   0.055s] (629/716) parse_that::regex dfa_test::state_limit_guard
+        PASS [   0.018s] (630/716) parse_that::regex parser_test::alternation
+        PASS [   0.015s] (631/716) parse_that::regex parser_test::char_class
+        PASS [   0.019s] (632/716) parse_that::regex parser_test::bounded_repetition
+        PASS [   0.019s] (633/716) parse_that::regex parser_test::byte_mode
+        PASS [   0.017s] (634/716) parse_that::regex parser_test::complex_ident
+        PASS [   0.014s] (635/716) parse_that::regex parser_test::dot_default
+        PASS [   0.018s] (636/716) parse_that::regex parser_test::css_ident
+        PASS [   0.019s] (637/716) parse_that::regex parser_test::css_ws_comment
+        PASS [   0.015s] (638/716) parse_that::regex parser_test::dotall_flag_byte_mode
+        PASS [   0.015s] (639/716) parse_that::regex parser_test::empty
+        PASS [   0.014s] (640/716) parse_that::regex parser_test::json_string
+        PASS [   0.017s] (641/716) parse_that::regex parser_test::hex_color
+        PASS [   0.019s] (642/716) parse_that::regex parser_test::escaped_literal
+        PASS [   0.023s] (643/716) parse_that::regex parser_test::dotall_flag_unicode
+        PASS [   0.021s] (644/716) parse_that::regex parser_test::json_number
+        PASS [   0.019s] (645/716) parse_that::regex parser_test::literal
+        PASS [   0.022s] (646/716) parse_that::regex parser_test::lazy_quantifier
+        PASS [   0.018s] (647/716) parse_that::regex parser_test::quantifiers
+        PASS [   0.018s] (648/716) parse_that::regex parser_test::quoted_string
+        PASS [   0.016s] (649/716) parse_that::regex utf8_test::ascii_range
+        PASS [   0.025s] (650/716) parse_that::regex parser_test::non_capturing_group
+        PASS [   0.019s] (651/716) parse_that::regex utf8_test::four_byte
+        PASS [   0.025s] (652/716) parse_that::regex parser_test::shorthand_classes
+        PASS [   0.022s] (653/716) parse_that::regex utf8_test::cross_boundary
+        PASS [   0.035s] (654/716) parse_that::regex parser_test::negated_class
+        PASS [   0.020s] (655/716) parse_that::regex utf8_test::roundtrip_ascii
+        PASS [   0.023s] (656/716) parse_that::regex utf8_test::full_unicode
+        PASS [   0.022s] (657/716) parse_that::regex utf8_test::single_char
+        PASS [   0.022s] (658/716) parse_that::regex utf8_test::two_byte_range
+        PASS [   0.018s] (659/716) parse_that::regex_empty_match_test regex_empty_match_is_a_match
+        PASS [   0.024s] (660/716) parse_that::regex_empty_match_test many_over_empty_matching_regex_terminates
+        PASS [   0.027s] (661/716) parse_that::regex utf8_test::surrogate_skip
+        PASS [   0.018s] (662/716) parse_that::regex_empty_match_test regex_nonempty_match_unchanged
+        PASS [   0.034s] (663/716) parse_that::regex utf8_test::latin_extended_a
+        PASS [   0.028s] (664/716) parse_that::regex_empty_match_test regex_empty_match_at_end_of_input
+        PASS [   0.022s] (665/716) parse_that::regex_empty_match_test regex_span_empty_match_is_a_match
+        PASS [   0.021s] (666/716) parse_that::regex_empty_match_test sep_by_with_empty_matching_elem_and_sep_terminates
+        PASS [   0.024s] (667/716) parse_that::regex_empty_match_test sep_by_progress_still_collects_elements
+        PASS [   0.022s] (668/716) parse_that::regex_look_context_test span_leaf_reads_the_byte_before_too
+        PASS [   0.024s] (669/716) parse_that::regex_empty_match_test span_sep_by_over_empty_matching_leaf_terminates
+        PASS [   0.021s] (670/716) parse_that::regex_look_context_test start_anchor_holds_only_at_the_start_of_the_input
+        PASS [   0.019s] (671/716) parse_that::split_test basic_split
+        PASS [   0.017s] (672/716) parse_that::split_test empty_segments
+        PASS [   0.017s] (673/716) parse_that::split_test mixed_nesting_and_quotes
+        PASS [   0.016s] (674/716) parse_that::split_test nested_brackets
+        PASS [   0.022s] (675/716) parse_that::split_test deep_nesting
+        PASS [   0.028s] (676/716) parse_that::regex_look_context_test word_boundary_reads_the_byte_before_the_leaf
+        PASS [   0.017s] (677/716) parse_that::split_test no_delimiter
+        PASS [   0.015s] (678/716) parse_that::split_test single_char
+        PASS [   0.015s] (679/716) parse_that::structural_bitmap_test find_next_basic
+        PASS [   0.025s] (680/716) parse_that::split_test nested_parens
+        PASS [   0.013s] (681/716) parse_that::structural_bitmap_test find_next_tail_only
+        PASS [   0.016s] (682/716) parse_that::structural_bitmap_test find_next_none
+        PASS [   0.024s] (683/716) parse_that::split_test quoted_strings
+        PASS [   0.016s] (684/716) parse_that::structural_bitmap_test iter_across_stripe
+        PASS [   0.038s] (685/716) parse_that::split_test empty_input
+        PASS [   0.026s] (686/716) parse_that::split_test single_quoted_strings
+        PASS [   0.021s] (687/716) parse_that::structural_bitmap_test iter_basic
+        PASS [   0.021s] (688/716) parse_that::structural_bitmap_test iter_set_offset_skips_forward
+        PASS [   0.633s] (689/716) parse_that::css_stack_depth nested_at_rule_stack_slope_is_constant
+        PASS [   0.016s] (690/716) parse_that::ws_comment_test exact_stripe_all_ws
+        PASS [   0.020s] (691/716) parse_that::ws_comment_test all_slash_stripe_terminates
+        PASS [   0.017s] (692/716) parse_that::ws_comment_test long_comment_crossing_stripe
+        PASS [   0.017s] (693/716) parse_that::ws_comment_test multiple_comments
+        PASS [   0.023s] (694/716) parse_that::ws_comment_test empty_input
+        PASS [   0.018s] (695/716) parse_that::ws_comment_test nested_star_in_comment
+        PASS [   0.017s] (696/716) parse_that::ws_comment_test simple_block_comment
+        PASS [   0.020s] (697/716) parse_that::ws_comment_test no_ws
+        PASS [   0.018s] (698/716) parse_that::ws_comment_test simple_ws
+        PASS [   0.015s] (699/716) parse_that::ws_comment_test stripe_boundary_ws_slash
+        PASS [   0.028s] (700/716) parse_that::ws_comment_test long_ws_crossing_stripe
+        PASS [   0.016s] (701/716) parse_that::ws_comment_test ws_slash_non_star
+        PASS [   0.019s] (702/716) parse_that::ws_comment_test tabs_and_newlines
+        PASS [   0.014s] (703/716) regex-bootstrap tests::parse_bounded_repetition
+        PASS [   0.018s] (704/716) parse_that::ws_comment_test ws_slash_then_x
+        PASS [   0.025s] (705/716) parse_that::ws_comment_test stripe_boundary_comment
+        PASS [   0.023s] (706/716) parse_that::ws_comment_test unterminated_comment
+        PASS [   0.020s] (707/716) parse_that::ws_comment_test ws_then_comment_then_ws
+        PASS [   0.013s] (708/716) xtask::bin/xtask tests::manifest_needs_one_asset_and_plain_paths
+        PASS [   0.021s] (709/716) regex-bootstrap tests::parse_quantifiers
+        PASS [   0.023s] (710/716) regex-bootstrap tests::parse_comprehensive_patterns
+        PASS [   0.035s] (711/716) parse_that::ws_comment_test slash_without_comment
+        PASS [   1.021s] (712/716) parse_that::csv_test tests::test_csv_file
+        PASS [   0.492s] (713/716) xtask::public_api_callers every_pub_item_of_the_audited_crates_has_a_caller
+        PASS [   1.576s] (714/716) parse-that-simd::fuzz json_alphabet_skewed
+        PASS [   1.596s] (715/716) parse-that-simd::fuzz css_with_digraphs
+        PASS [   1.997s] (716/716) parse_that::json_test tests::test_equivalence_data_xl
+────────────
+     Summary [   2.652s] 716 tests run: 716 passed, 8 skipped

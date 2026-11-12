@@ -1,0 +1,14 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd cargo test --release --test pp1a_deep_if_break -- --test-threads=2 --nocapture
+# date 2026-11-12T06:10:09-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.22s
+     Running tests/pp1a_deep_if_break.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/pp1a_deep_if_break-518a33f189338133)
+
+running 2 tests
+test if_break_nest_10_6_in_flat_mode ... ok
+test if_break_nest_10_6_in_break_mode ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+# rc 0

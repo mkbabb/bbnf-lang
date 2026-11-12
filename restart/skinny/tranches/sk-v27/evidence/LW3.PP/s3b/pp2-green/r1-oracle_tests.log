@@ -1,0 +1,29 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test oracle_tests -- --test-threads=2 --nocapture
+# date 2026-11-12T06:01:16-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.46s
+     Running tests/oracle_tests.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/oracle_tests-e9bd62699ba0dcba)
+
+running 16 tests
+test l_align_doc_example ... ok
+test l_hang_doc_example ... ok
+test l_indent_doc_example ... ok
+test l_padding_fill_doc_example ... ok
+test lower_refuses_unbalanced ... ok
+test lower_agrees_with_v1_on_a_wrapped_list_without_trailing ... ok
+test p_hardline_forces_the_group_to_break ... ok
+test pretty_rs_departures_from_wadler_are_the_two_known_classes ... ok
+test w3_flatten_line_is_space ... ok
+test w3_group_chooses_flat_iff_it_fits ... ok
+test w3_show_tree_paper_example ... ok
+test w4_fits_negative_width_is_false ... ok
+test w4_rest_lookahead_counts_text_after_the_group ... ok
+test w5_utility_combinators ... ok
+test w_fill_words ... ok
+oracle vs pretty 0.12: 12000 cells, 0 divergences
+test oracle_matches_pretty_0_12_on_the_shared_subset ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+# rc 0

@@ -1,0 +1,56 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=5
+# cmd cargo test --release --test stream_v1 --no-fail-fast -- --test-threads=2
+# date 2026-11-12T06:11:16-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-mut/rust)
+    Finished `release` profile [optimized] target(s) in 1.63s
+     Running tests/stream_v1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/stream_v1-6c6a42b33214779e)
+
+running 7 tests
+test every_op_has_one_tag_and_the_generator_reaches_it ... FAILED
+test the_conformance_corpus_is_current ... ok
+test the_decoder_never_panics ... ok
+test the_decoder_refuses_what_is_not_a_canonical_stream ... FAILED
+test the_freeze_digest_holds ... FAILED
+test the_specification_names_the_codecs_tags ... FAILED
+test decode_encode_is_the_identity_and_renders_byte_equal ... ok
+
+failures:
+
+---- every_op_has_one_tag_and_the_generator_reaches_it stdout ----
+
+thread 'every_op_has_one_tag_and_the_generator_reaches_it' (47004299) panicked at tests/stream_v1.rs:156:9:
+the generator never makes Nop
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- the_decoder_refuses_what_is_not_a_canonical_stream stdout ----
+
+thread 'the_decoder_refuses_what_is_not_a_canonical_stream' (47004341) panicked at tests/stream_v1.rs:474:41:
+called `Result::unwrap_err()` on an `Ok` value: Doc { ops: [Nop], hdrs: [] }
+
+---- the_freeze_digest_holds stdout ----
+
+thread 'the_freeze_digest_holds' (47004342) panicked at tests/stream_v1.rs:406:9:
+assertion `left == right` failed: src/stream.rs differs from the STREAM-v1 freeze
+  left: "64a1c205e69a7915d4aa3f57cc873d65c12a3cb4b00a4d6f1561ad18d5bd28b3"
+ right: "fb544658b370ef271969d2b21485faacbd5e817fbbb8626686e9ec04a6df961e"
+
+---- the_specification_names_the_codecs_tags stdout ----
+
+thread 'the_specification_names_the_codecs_tags' (47004343) panicked at tests/stream_v1.rs:429:5:
+assertion `left == right` failed
+  left: [("Text", 0), ("OwnedText", 1), ("QuotedText", 2), ("Char", 3), ("I64", 4), ("U64", 5), ("I128Hi", 6), ("I128Lo", 7), ("U128Hi", 8), ("U128Lo", 9), ("F64", 10), ("GroupStart", 11), ("GroupEnd", 12), ("IndentStart", 13), ("IndentEnd", 14), ("WrapStart", 15), ("WrapEnd", 16), ("Hardline", 17), ("Softline", 18), ("BreakLine", 19), ("CommaSep", 20), ("Sep", 21), ("IfBreak", 22), ("FillSep", 23), ("LineSuffix", 24), ("LineSuffixBoundary", 25), ("BreakParent", 26)]
+ right: [("Text", 0), ("OwnedText", 1), ("QuotedText", 2), ("Char", 3), ("I64", 4), ("U64", 5), ("I128Hi", 6), ("I128Lo", 7), ("U128Hi", 8), ("U128Lo", 9), ("F64", 10), ("GroupStart", 11), ("GroupEnd", 12), ("IndentStart", 13), ("IndentEnd", 14), ("WrapStart", 15), ("WrapEnd", 16), ("Hardline", 17), ("Softline", 18), ("BreakLine", 19), ("CommaSep", 20), ("Sep", 21), ("IfBreak", 22), ("FillSep", 23), ("LineSuffix", 24), ("LineSuffixBoundary", 25), ("BreakParent", 26), ("Nop", 27)]
+
+
+failures:
+    every_op_has_one_tag_and_the_generator_reaches_it
+    the_decoder_refuses_what_is_not_a_canonical_stream
+    the_freeze_digest_holds
+    the_specification_names_the_codecs_tags
+
+test result: FAILED. 3 passed; 4 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.72s
+
+error: test failed, to rerun pass `--test stream_v1`
+error: 1 target failed:
+    `--test stream_v1`
+# rc 101

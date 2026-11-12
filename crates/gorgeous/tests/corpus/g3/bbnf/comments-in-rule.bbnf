@@ -1,0 +1,4 @@
+// Comments inside a rule: after an alternative and after the rule.
+value = "true" // the first alternative
+      | "false" ;
+list = "[" , value , "]" ; // after a rule

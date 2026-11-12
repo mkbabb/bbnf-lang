@@ -1,0 +1,24 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test digit_count -- --test-threads=2 --nocapture
+# date 2026-11-12T06:00:57-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.61s
+     Running tests/digit_count.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/digit_count-1892dec10ed11fd9)
+
+running 12 tests
+test range_tests::test_i16_range ... ok
+test range_tests::test_i32_range ... ok
+test range_tests::test_i64_range ... ok
+test range_tests::test_i8_range ... ok
+test range_tests::test_isize_range ... ok
+test range_tests::test_i128_range ... ok
+test range_tests::test_u16_range ... ok
+test range_tests::test_u32_range ... ok
+test range_tests::test_u128_range ... ok
+test range_tests::test_u8_range ... ok
+test range_tests::test_u64_range ... ok
+test range_tests::test_usize_range ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+# rc 0

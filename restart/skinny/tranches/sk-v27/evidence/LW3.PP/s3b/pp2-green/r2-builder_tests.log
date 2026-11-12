@@ -1,0 +1,42 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test builder_tests -- --test-threads=2 --nocapture
+# date 2026-11-12T06:02:17-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.59s
+     Running tests/builder_tests.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/builder_tests-b3ee59b60e304f10)
+
+running 30 tests
+test test_basic_text ... ok
+test test_comma_sep_flat ... ok
+test test_custom_sep ... ok
+test test_deep_nesting ... ok
+test test_group_breaks ... ok
+test test_group_fits ... ok
+test test_hardline_forces_break ... ok
+test test_if_break ... ok
+test test_indent ... ok
+test test_join_empty ... ok
+test test_join_single ... ok
+test test_light_checkpoint_restore ... ok
+test test_linear_join_basic ... ok
+test test_mixed_text_numeric ... ok
+test test_nested_groups ... ok
+test test_numeric_f64 ... ok
+test test_numeric_i128 ... ok
+test test_numeric_i64 ... ok
+test test_numeric_in_group ... ok
+test test_numeric_u128 ... ok
+test test_numeric_u64 ... ok
+test test_smart_join_all_fit ... ok
+test test_smart_join_basic ... ok
+test test_text_inline_ws_empty ... ok
+test test_text_inline_ws_newline_suppressed ... ok
+test test_text_inline_ws_spaces ... ok
+test test_use_tabs ... ok
+test test_wrap_breaks ... ok
+test test_wide_flat_width_forces_break ... ok
+test test_wrap_fits ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+# rc 0

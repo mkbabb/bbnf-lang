@@ -1,0 +1,5 @@
+// A grammar with comments between rules.
+foo = "bar" ;
+
+// The second rule.
+baz = "qux" | "quux" ;

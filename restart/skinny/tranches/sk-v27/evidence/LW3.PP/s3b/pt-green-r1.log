@@ -1,0 +1,7 @@
+PT cdceb3049de8ac099fff0803769dfea1546f782a dirty=0
+     Removed 20658 files, 1.2GiB total
+PT clippy+nextest+diagnostics rc=0
+     Summary [   2.595s] 642 tests run: 642 passed, 8 skipped
+     Summary [   2.652s] 716 tests run: 716 passed, 8 skipped
+PT pprint: pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+PT dag rc=0

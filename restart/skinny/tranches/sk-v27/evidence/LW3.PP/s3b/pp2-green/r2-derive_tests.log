@@ -1,0 +1,30 @@
+# head dd43d2f090d545254a42bd09f9924e04cc27dc53 dirty=0
+# cmd cargo test --release --test derive_tests -- --test-threads=2 --nocapture
+# date 2026-11-12T06:02:22-05:00
+   Compiling pprint v0.5.0-alpha.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s3b-pp/wt-pp2/rust)
+    Finished `release` profile [optimized] target(s) in 0.42s
+     Running tests/derive_tests.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-pprint/release/deps/derive_tests-b23cc07c2e51e3aa)
+
+running 14 tests
+test test_enum_single ... ok
+test test_enum_multi ... ok
+
+thread 'test_enum_skip_panics' (46828029) panicked at tests/derive_tests.rs:38:10:
+derive(Pretty): variant `Skipped` is marked #[pprint(skip)] and cannot be formatted
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test test_enum_unit ... ok
+test test_enum_skip_panics - should panic ... ok
+test test_enum_unit_renamed ... ok
+test test_generic_struct ... ok
+test test_nested_derive ... ok
+test test_struct_rename ... ok
+test test_struct_simple ... ok
+test test_struct_skip ... ok
+test test_struct_unit ... ok
+test test_struct_unnamed ... ok
+test test_struct_verbose ... ok
+test test_width_sensitivity ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+# rc 0

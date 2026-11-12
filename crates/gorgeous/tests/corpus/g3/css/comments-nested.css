@@ -1,0 +1,6 @@
+@media (max-width: 768px) {
+  /* hide the sidebar on narrow screens */
+  .sidebar { display: none; }
+}
+.a /* in a selector */ .b { width: 10px; }
+/* trailing comment at the end of the file */

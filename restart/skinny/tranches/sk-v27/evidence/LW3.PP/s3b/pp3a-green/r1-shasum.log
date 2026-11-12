@@ -1,0 +1,8 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd shasum -a 256 -c STREAM-v1.sha256
+# date 2026-11-12T06:09:15-05:00
+STREAM-v1.md: OK
+src/stream.rs: OK
+src/op.rs: OK
+stream-v1/corpus/manifest.json: OK
+# rc 0

@@ -1,0 +1,6 @@
+# head 69d1fe9fa522f18e129fbedea0288a9c19b5bbf9 dirty=0
+# cmd sh -c cargo clean -p pprint --release && cargo clean -p pprint
+# date 2026-11-12T06:07:31-05:00
+     Removed 16 files, 2.0MiB total
+     Removed 201 files, 19.7MiB total
+# rc 0

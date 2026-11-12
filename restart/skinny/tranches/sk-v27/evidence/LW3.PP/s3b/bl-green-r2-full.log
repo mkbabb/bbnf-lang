@@ -1,0 +1,1769 @@
+   Compiling winnow v0.7.15
+   Compiling serde v1.0.228
+   Compiling pprint_derive v0.3.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling parse-that-simd v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/corpus)
+   Compiling pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling toml_datetime v0.6.11
+   Compiling serde_spanned v0.6.9
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling ron v0.12.1
+   Compiling cargo-platform v0.1.9
+   Compiling rmp-serde v1.3.1
+   Compiling cargo_metadata v0.18.1
+   Compiling toml_edit v0.22.27
+   Compiling parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling toml v0.8.23
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ir)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.31s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ser)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/core)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 8.41s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 9.591125ms
+[xtask::regen] bbnf: generate_all done in 39.210667ms
+[xtask::regen] bbnf: prettyplease done in 169.188708ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.68725ms
+[xtask::regen] json: generate_all done in 7.169084ms
+[xtask::regen] json: prettyplease done in 31.496875ms
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 97.030583ms
+[xtask::regen] css_l4: generate_all done in 220.267375ms
+[xtask::regen] css_l4: prettyplease done in 900.296667ms
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 7.053458ms
+[xtask::regen] css_pretty: generate_all done in 37.43925ms
+[xtask::regen] css_pretty: prettyplease done in 99.175042ms
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 11.081583ms
+[xtask::regen] google_sheets: generate_all done in 22.082292ms
+[xtask::regen] google_sheets: prettyplease done in 104.457583ms
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 3.696584ms
+[xtask::regen] ebnf: generate_all done in 7.630083ms
+[xtask::regen] ebnf: prettyplease done in 53.911208ms
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.352167ms
+[xtask::regen] bnf: generate_all done in 6.059125ms
+[xtask::regen] bnf: prettyplease done in 23.582584ms
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 940.542µs
+[xtask::regen] csv: generate_all done in 5.094959ms
+[xtask::regen] csv: prettyplease done in 13.730292ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 820.666µs
+[xtask::regen] math: generate_all done in 1.539125ms
+[xtask::regen] math: prettyplease done in 6.653583ms
+regen --check: clean (9 of 9 grammars matched)
+    Checking parse-that-simd v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+    Checking bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ser)
+   Compiling pprint_derive v0.3.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+    Checking serde v1.0.228
+    Checking bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/corpus)
+    Checking winnow v0.7.15
+   Compiling pest v2.8.6
+    Checking winnow v1.0.2
+    Checking regex v1.12.3
+    Checking nom v7.1.3
+    Checking pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+    Checking toml_parser v1.1.2+spec-1.1.0
+    Checking tree-sitter v0.25.10
+    Checking smallvec v1.15.1
+    Checking rmp-serde v1.3.1
+    Checking ron v0.12.1
+    Checking toml_datetime v0.6.11
+    Checking serde_spanned v0.6.9
+    Checking cranelift-bitset v0.116.1
+    Checking wasmparser v0.221.3
+    Checking postcard v1.1.3
+    Checking cranelift-entity v0.116.1
+   Compiling wit-parser v0.221.3
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+    Checking parse-that-egraph v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling toml_edit v0.22.27
+    Checking parking_lot_core v0.9.12
+    Checking regalloc2 v0.11.2
+    Checking cssparser v0.33.0
+    Checking halfbrown v0.2.5
+    Checking dashmap v5.5.3
+    Checking cranelift-bforest v0.116.1
+   Compiling pest_meta v2.8.6
+    Checking value-trait v0.10.1
+    Checking toml v1.1.2+spec-1.1.0
+    Checking parcel_sourcemap v2.1.1
+    Checking fxprof-processed-profile v0.6.0
+    Checking faststr v0.2.34
+    Checking serde-content v0.1.2
+    Checking cssparser-color v0.1.0
+    Checking parcel_selectors v0.28.2
+    Checking cssparser v0.34.0
+    Checking sonic-rs v0.5.8
+    Checking simd-json v0.14.3
+    Checking jiter v0.8.2
+    Checking serde_json_borrow v0.9.0
+    Checking parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+    Checking cargo-platform v0.1.9
+    Checking dashmap v6.1.0
+    Checking cargo_metadata v0.18.1
+    Checking schemars v0.8.22
+   Compiling pest_generator v2.8.6
+    Checking trybuild v1.0.116
+    Checking ls-types v0.0.6
+    Checking cranelift-codegen v0.116.1
+    Checking lightningcss v1.0.0-alpha.71
+    Checking parking_lot v0.12.5
+    Checking oxc_resolver v1.12.0
+    Checking biome_diagnostics_categories v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking tokio v1.50.0
+    Checking biome_text_size v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking serde_ini v0.2.0
+   Compiling pest_derive v2.8.6
+    Checking biome_text_edit v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_console v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking serde-wasm-bindgen v0.6.5
+   Compiling toml v0.8.23
+    Checking biome_rowan v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking pest_grammars v2.8.6
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ir)
+    Checking wasmtime-cache v29.0.1
+    Checking biome_diagnostics v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling wasmtime-wit-bindgen v29.0.1
+    Checking biome_json_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_css_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_json_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_suppression v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_json_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling wasmtime-component-macro v29.0.1
+    Checking biome_deserialize v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking wasmprinter v0.221.3
+    Checking tokio-util v0.7.18
+    Checking wasmtime-environ v29.0.1
+    Checking biome_css_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_css_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking biome_css_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+    Checking cranelift-frontend v0.116.1
+    Checking cranelift-native v0.116.1
+    Checking bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/core)
+    Checking xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/xtask)
+    Checking bbnf-path-ts v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/bbnf-path-ts)
+    Checking bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/bbnf-path)
+    Checking wasmtime-cranelift v29.0.1
+    Checking tower-lsp-server v0.23.0
+    Checking wasmtime v29.0.1
+    Checking bbnf-analysis v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/analysis)
+    Checking bbnf-bootstrap v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/bootstrap)
+    Checking bbnf-oracle v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/oracle)
+    Checking bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/lsp)
+    Checking gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/gorgeous)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 22.17s
+   Compiling serde v1.0.228
+   Compiling pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ir)
+   Compiling winnow v1.0.2
+   Compiling pest v2.8.6
+   Compiling regex v1.12.3
+   Compiling nom v7.1.3
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/corpus)
+   Compiling toml_parser v1.1.2+spec-1.1.0
+   Compiling tree-sitter v0.25.10
+   Compiling smallvec v1.15.1
+   Compiling ron v0.12.1
+   Compiling rmp-serde v1.3.1
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling cranelift-bitset v0.116.1
+   Compiling postcard v1.1.3
+   Compiling wasmparser v0.221.3
+   Compiling halfbrown v0.2.5
+   Compiling faststr v0.2.34
+   Compiling fxprof-processed-profile v0.6.0
+   Compiling serde-content v0.1.2
+   Compiling toml_edit v0.22.27
+   Compiling parse-that-egraph v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling parking_lot_core v0.9.12
+   Compiling cranelift-entity v0.116.1
+   Compiling regalloc2 v0.11.2
+   Compiling cssparser v0.33.0
+   Compiling value-trait v0.10.1
+   Compiling toml v1.1.2+spec-1.1.0
+   Compiling parcel_sourcemap v2.1.1
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling dashmap v5.5.3
+   Compiling sonic-rs v0.5.8
+   Compiling pest_grammars v2.8.6
+   Compiling cranelift-bforest v0.116.1
+   Compiling simd-json v0.14.3
+   Compiling cssparser v0.34.0
+   Compiling jiter v0.8.2
+   Compiling serde_json_borrow v0.9.0
+   Compiling parcel_selectors v0.28.2
+   Compiling cssparser-color v0.1.0
+   Compiling cargo-platform v0.1.9
+   Compiling dashmap v6.1.0
+   Compiling schemars v0.8.22
+   Compiling ls-types v0.0.6
+   Compiling cargo_metadata v0.18.1
+   Compiling trybuild v1.0.116
+   Compiling parking_lot v0.12.5
+   Compiling oxc_resolver v1.12.0
+   Compiling serde_ini v0.2.0
+   Compiling biome_diagnostics_categories v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+   Compiling tokio v1.50.0
+   Compiling lightningcss v1.0.0-alpha.71
+   Compiling serde-wasm-bindgen v0.6.5
+   Compiling cranelift-codegen v0.116.1
+   Compiling toml v0.8.23
+   Compiling biome_text_size v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_text_edit v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_console v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_rowan v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling wasmtime-cache v29.0.1
+   Compiling biome_diagnostics v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_suppression v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_deserialize v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling wasmprinter v0.221.3
+   Compiling tokio-util v0.7.18
+   Compiling biome_css_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling wasmtime-environ v29.0.1
+   Compiling biome_css_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling cranelift-native v0.116.1
+   Compiling cranelift-frontend v0.116.1
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/core)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/xtask)
+   Compiling tower-lsp-server v0.23.0
+   Compiling wasmtime-cranelift v29.0.1
+   Compiling wasmtime v29.0.1
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/bbnf-path)
+   Compiling bbnf-path-ts v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/bbnf-path-ts)
+   Compiling bbnf-analysis v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/analysis)
+   Compiling bbnf-bootstrap v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/bootstrap)
+   Compiling bbnf-oracle v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/oracle)
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/gorgeous)
+   Compiling bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/lsp)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 40.87s
+────────────
+ Nextest run ID 79ebb3ec-2a51-4486-99cb-fba4d3a6d379 with nextest profile: default
+    Starting 1501 tests across 154 binaries (23 tests skipped)
+        PASS [   0.011s] (   1/1501) bbnf path::cursor::tests::empty_path_terminal_immediately
+        PASS [   0.013s] (   2/1501) bbnf runtime::bbnf::parse_with::tests::parse_with_resolves_root_value
+        PASS [   0.015s] (   3/1501) bbnf path::executor::tests::executor_threads_decision_table
+        PASS [   0.017s] (   4/1501) bbnf path::cursor::tests::cursor_peek_does_not_advance
+        PASS [   0.017s] (   5/1501) bbnf path::cursor::tests::cursor_advance_consumes_segments
+        PASS [   0.018s] (   6/1501) bbnf path::cursor::tests::cursor_decide_walks_decision_plan
+        PASS [   0.019s] (   7/1501) bbnf runtime::json::parse_with::tests::parse_with_resolves_string_leaf
+        PASS [   0.021s] (   8/1501) bbnf path::executor::tests::executor_returns_leaf_on_success
+        PASS [   0.021s] (   9/1501) bbnf runtime::json::parse_with::tests::parse_with_returns_none_on_missing_field
+        PASS [   0.023s] (  10/1501) bbnf path::schema::tests::empty_path_marker
+        PASS [   0.024s] (  11/1501) bbnf path::schema::tests::typed_path_schema_round_trip
+        PASS [   0.025s] (  12/1501) bbnf path::executor::tests::executor_returns_none_on_out_of_bounds
+        PASS [   0.026s] (  13/1501) bbnf runtime::google_sheets::parse_with::tests::parse_with_returns_none_on_invalid_input
+        PASS [   0.029s] (  14/1501) bbnf runtime::bbnf::parse_with::tests::parse_with_returns_none_on_invalid_input
+        PASS [   0.016s] (  15/1501) bbnf::ax_w0a2s_real_css_probe normalize_full_parse
+        PASS [   0.013s] (  16/1501) bbnf::ay_w3b_value_api_smoke empty_path_returns_root
+        PASS [   0.032s] (  17/1501) bbnf path::cursor::tests::cursor_cache_invalidated_by_advance
+        PASS [   0.015s] (  18/1501) bbnf::ay_w3b_value_api_smoke get_bool_by_path_resolves_bool_leaf
+        PASS [   0.033s] (  19/1501) bbnf runtime::json::parse_with::tests::parse_with_resolves_number_leaf
+        PASS [   0.015s] (  20/1501) bbnf::ay_w3b_value_api_smoke get_f64_by_path_resolves_scalar_leaf
+        PASS [   0.016s] (  21/1501) bbnf::ay_w3b_value_api_smoke to_value_returns_value_enum
+        PASS [   0.018s] (  22/1501) bbnf::backend_ts ts_alternation_emits_dispatch_or_checkpoint
+        PASS [   0.016s] (  23/1501) bbnf::backend_ts ts_emits_discriminated_union
+        PASS [   0.018s] (  24/1501) bbnf::backend_ts ts_emits_functions_for_non_inlined_rules
+        PASS [   0.021s] (  25/1501) bbnf::backend_ts ts_emits_create_state_helper
+        PASS [   0.020s] (  26/1501) bbnf::backend_ts ts_emits_span_interface
+        PASS [   0.017s] (  27/1501) bbnf::backend_ts ts_many_emits_while_loop
+        PASS [   0.018s] (  28/1501) bbnf::backend_ts ts_json_grammar_has_key_variants
+        PASS [   0.020s] (  29/1501) bbnf::backend_ts ts_minus_emits_exclusion
+        PASS [   0.025s] (  30/1501) bbnf::backend_ts ts_json_grammar_compiles_complete
+        PASS [   0.030s] (  31/1501) bbnf::backend_ts ts_emits_parser_state_interface
+        PASS [   0.021s] (  32/1501) bbnf::backend_ts ts_multi_byte_literal_uses_starts_with
+        PASS [   0.027s] (  33/1501) bbnf::backend_ts ts_emits_span_helper
+        PASS [   0.023s] (  34/1501) bbnf::backend_ts ts_next_keeps_right
+        PASS [   0.034s] (  35/1501) bbnf::backend_ts ts_emits_public_parse_entry
+        PASS [   0.023s] (  36/1501) bbnf::backend_ts ts_optional_whitespace_trims
+        PASS [   0.024s] (  37/1501) bbnf::backend_ts ts_optional_emits_checkpoint
+        PASS [   0.020s] (  38/1501) bbnf::backend_ts ts_regex_hoisted_with_sticky_flag
+        PASS [   0.022s] (  39/1501) bbnf::backend_ts ts_sequence_chains_parse_calls
+        PASS [   0.016s] (  40/1501) bbnf::backend_ts ts_two_branch_alt_uses_checkpoint
+        PASS [   0.019s] (  41/1501) bbnf::backend_ts ts_skip_keeps_left
+        PASS [   0.021s] (  42/1501) bbnf::backend_ts ts_single_byte_literal_uses_char_code
+        PASS [   0.016s] (  43/1501) bbnf::backend_wasm wat_alternation_uses_blocks
+        PASS [   0.016s] (  44/1501) bbnf::backend_wasm wat_emits_functions_for_non_inlined_rules
+        PASS [   0.017s] (  45/1501) bbnf::backend_wasm wat_alternation_has_control_flow
+        PASS [   0.017s] (  46/1501) bbnf::backend_wasm wat_emits_host_imports
+        PASS [   0.014s] (  47/1501) bbnf::backend_wasm wat_emits_module_declaration
+        PASS [   0.018s] (  48/1501) bbnf::backend_wasm wat_emits_memory_declaration
+        PASS [   0.018s] (  49/1501) bbnf::backend_wasm wat_functions_take_off_and_len_params
+        PASS [   0.019s] (  50/1501) bbnf::backend_wasm wat_emits_parse_export
+        PASS [   0.018s] (  51/1501) bbnf::backend_wasm wat_literal_bounds_checks
+        PASS [   0.019s] (  52/1501) bbnf::backend_wasm wat_many_uses_loop
+        PASS [   0.023s] (  53/1501) bbnf::backend_wasm wat_json_grammar_compiles_complete
+        PASS [   0.015s] (  54/1501) bbnf::backend_wasm wat_minus_restores_offset
+        PASS [   0.018s] (  55/1501) bbnf::backend_wasm wat_minus_checks_exclusion
+        PASS [   0.015s] (  56/1501) bbnf::backend_wasm wat_regex_calls_host_import
+        PASS [   0.015s] (  57/1501) bbnf::backend_wasm wat_sep_by_emits_loop
+        PASS [   0.015s] (  58/1501) bbnf::backend_wasm wat_sequence_chains_with_failure_checks
+        PASS [   0.021s] (  59/1501) bbnf::backend_wasm wat_optional_uses_save_restore
+        PASS [   0.016s] (  60/1501) bbnf::backend_wasm wat_single_byte_literal_loads_byte
+        PASS [   0.015s] (  61/1501) bbnf::backend_wasm wat_skip_preserves_kept_value
+        PASS [   0.015s] (  62/1501) bbnf::backend_wasm wat_whitespace_trim_uses_loop
+        PASS [   0.015s] (  63/1501) bbnf::bbnf_ast_parity bbnf_ast_directive_kinds_match_oracle
+        PASS [   0.027s] (  64/1501) bbnf::backend_wasm wat_multi_byte_literal_checks_each_byte
+        PASS [   0.015s] (  65/1501) bbnf::bbnf_ast_parity bbnf_ast_rule_count_matches_oracle
+        PASS [   0.015s] (  66/1501) bbnf::bbnf_ast_parity bbnf_expressions_grammar_parity
+        PASS [   0.015s] (  67/1501) bbnf::bbnf_ast_parity bbnf_parses_directive
+        PASS [   0.016s] (  68/1501) bbnf::bbnf_ast_parity bbnf_parses_multiple_directives
+        PASS [   0.015s] (  69/1501) bbnf::bbnf_ast_parity bbnf_parses_simple_rule
+        PASS [   0.019s] (  70/1501) bbnf::bbnf_ast_parity bbnf_parses_multi_rule
+        PASS [   0.016s] (  71/1501) bbnf::bbnf_ast_parity bbnf_self_host_parity
+        PASS [   0.015s] (  72/1501) bbnf::bbnf_parity bbnf_parses_its_own_grammar
+        PASS [   0.016s] (  73/1501) bbnf::bbnf_parity bbnf_parses_expressions_grammar
+        PASS [   0.017s] (  74/1501) bbnf::bbnf_self_parity bbnf_bbnf::prettify_idempotent
+        PASS [   0.018s] (  75/1501) bbnf::bbnf_self_parity bbnf_bbnf::ast_roundtrip
+        PASS [   0.014s] (  76/1501) bbnf::bbnf_self_parity bbnf_types::prettify_idempotent
+        PASS [   0.017s] (  77/1501) bbnf::bbnf_self_parity bbnf_expressions::ast_roundtrip
+        PASS [   0.016s] (  78/1501) bbnf::bbnf_self_parity bbnf_types::ast_roundtrip
+        PASS [   0.018s] (  79/1501) bbnf::bbnf_self_parity bbnf_expressions::prettify_idempotent
+        PASS [   0.014s] (  80/1501) bbnf::bbnf_self_parity bnf::prettify_idempotent
+        PASS [   0.016s] (  81/1501) bbnf::bbnf_self_parity bnf::ast_roundtrip
+        PASS [   0.012s] (  82/1501) bbnf::bbnf_self_parity css_l4_easing::ast_roundtrip
+        PASS [   0.019s] (  83/1501) bbnf::bbnf_self_parity css_l4_color::ast_roundtrip
+        PASS [   0.016s] (  84/1501) bbnf::bbnf_self_parity css_l4_color::prettify_idempotent
+        PASS [   0.015s] (  85/1501) bbnf::bbnf_self_parity css_l4_filters::ast_roundtrip
+        PASS [   0.015s] (  86/1501) bbnf::bbnf_self_parity css_l4_easing::prettify_idempotent
+        PASS [   0.015s] (  87/1501) bbnf::bbnf_self_parity css_l4_filters::prettify_idempotent
+        PASS [   0.016s] (  88/1501) bbnf::bbnf_self_parity css_l4_gradients::ast_roundtrip
+        PASS [   0.016s] (  89/1501) bbnf::bbnf_self_parity css_l4_gradients::prettify_idempotent
+        PASS [   0.019s] (  90/1501) bbnf::bbnf_self_parity css_l4_func_body::ast_roundtrip
+        PASS [   0.021s] (  91/1501) bbnf::bbnf_self_parity css_l4_func_body::prettify_idempotent
+        PASS [   0.018s] (  92/1501) bbnf::bbnf_self_parity css_l4_keyframes::ast_roundtrip
+        PASS [   0.015s] (  93/1501) bbnf::bbnf_self_parity css_l4_keyframes::prettify_idempotent
+        PASS [   0.013s] (  94/1501) bbnf::bbnf_self_parity css_l4_keywords::prettify_idempotent
+        PASS [   0.013s] (  95/1501) bbnf::bbnf_self_parity css_l4_media::ast_roundtrip
+        PASS [   0.018s] (  96/1501) bbnf::bbnf_self_parity css_l4_keywords::ast_roundtrip
+        PASS [   0.014s] (  97/1501) bbnf::bbnf_self_parity css_l4_media::prettify_idempotent
+        PASS [   0.022s] (  98/1501) bbnf::bbnf_self_parity css_l4_properties::ast_roundtrip
+        PASS [   0.019s] (  99/1501) bbnf::bbnf_self_parity css_l4_selectors::prettify_idempotent
+        PASS [   0.020s] ( 100/1501) bbnf::bbnf_self_parity css_l4_properties::prettify_idempotent
+        PASS [   0.018s] ( 101/1501) bbnf::bbnf_self_parity css_l4_stylesheet::ast_roundtrip
+        PASS [   0.151s] ( 102/1501) bbnf::ax_w0a2s_real_css_probe bootstrap_full_parse
+        PASS [   0.026s] ( 103/1501) bbnf::bbnf_self_parity css_l4_selectors::ast_roundtrip
+        PASS [   0.024s] ( 104/1501) bbnf::bbnf_self_parity css_l4_stylesheet::prettify_idempotent
+        PASS [   0.023s] ( 105/1501) bbnf::bbnf_self_parity css_l4_tokens::prettify_idempotent
+        PASS [   0.164s] ( 106/1501) bbnf::ax_w0a2b_probe all_grammars_have_zero_entry_reachable_unclassified_refs
+        PASS [   0.027s] ( 107/1501) bbnf::bbnf_self_parity css_l4_tokens::ast_roundtrip
+        PASS [   0.166s] ( 108/1501) bbnf::ax_w0a2b_probe probe_all_grammars
+        PASS [   0.025s] ( 109/1501) bbnf::bbnf_self_parity css_l4_transforms::prettify_idempotent
+        PASS [   0.027s] ( 110/1501) bbnf::bbnf_self_parity css_l4_transforms::ast_roundtrip
+        PASS [   0.016s] ( 111/1501) bbnf::bbnf_self_parity css_l4_values::prettify_idempotent
+        PASS [   0.029s] ( 112/1501) bbnf::bbnf_self_parity css_l4_value_unit::ast_roundtrip
+        PASS [   0.021s] ( 113/1501) bbnf::bbnf_self_parity css_l4_value_unit::prettify_idempotent
+        PASS [   0.021s] ( 114/1501) bbnf::bbnf_self_parity css_l4_values::ast_roundtrip
+        PASS [   0.013s] ( 115/1501) bbnf::bbnf_self_parity css_pretty::prettify_idempotent
+        PASS [   0.015s] ( 116/1501) bbnf::bbnf_self_parity ebnf::prettify_idempotent
+        PASS [   0.013s] ( 117/1501) bbnf::bbnf_self_parity json::ast_roundtrip
+        PASS [   0.016s] ( 118/1501) bbnf::bbnf_self_parity google_sheets::prettify_idempotent
+        PASS [   0.017s] ( 119/1501) bbnf::bbnf_self_parity json::prettify_idempotent
+        PASS [   0.020s] ( 120/1501) bbnf::bbnf_self_parity ebnf::ast_roundtrip
+        PASS [   0.014s] ( 121/1501) bbnf::bbnf_self_parity misc_csv::prettify_idempotent
+        PASS [   0.023s] ( 122/1501) bbnf::bbnf_self_parity google_sheets::ast_roundtrip
+        PASS [   0.031s] ( 123/1501) bbnf::bbnf_self_parity css_pretty::ast_roundtrip
+        PASS [   0.019s] ( 124/1501) bbnf::bbnf_self_parity misc_csv::ast_roundtrip
+        PASS [   0.015s] ( 125/1501) bbnf::bbnf_self_parity misc_json_commented::ast_roundtrip
+        PASS [   0.017s] ( 126/1501) bbnf::bbnf_self_parity misc_g4::prettify_idempotent
+        PASS [   0.014s] ( 127/1501) bbnf::bbnf_self_parity misc_math::prettify_idempotent
+        PASS [   0.018s] ( 128/1501) bbnf::bbnf_self_parity misc_json_commented::prettify_idempotent
+        PASS [   0.022s] ( 129/1501) bbnf::bbnf_self_parity misc_g4::ast_roundtrip
+        PASS [   0.015s] ( 130/1501) bbnf::bbnf_self_parity misc_math_ambiguous::prettify_idempotent
+        PASS [   0.015s] ( 131/1501) bbnf::bbnf_self_parity misc_regex::prettify_idempotent
+        PASS [   0.019s] ( 132/1501) bbnf::bbnf_self_parity misc_math_ambiguous::ast_roundtrip
+        PASS [   0.024s] ( 133/1501) bbnf::bbnf_self_parity misc_math::ast_roundtrip
+        PASS [   0.014s] ( 134/1501) bbnf::bbnf_struct_builder_substrate bbnf_struct_builder_round_trips_a_compound_with_three_children
+        PASS [   0.012s] ( 135/1501) bbnf::bbnf_struct_builder_substrate bbnf_view_kind_classifies_leaves_and_compounds
+        PASS [   0.017s] ( 136/1501) bbnf::bbnf_struct_builder_substrate bbnf_struct_builder_branch_tag_records_alt_index
+        PASS [   0.017s] ( 137/1501) bbnf::bbnf_struct_builder_substrate bbnf_struct_builder_round_trips_a_span_leaf
+        PASS [   0.014s] ( 138/1501) bbnf::bbnf_struct_builder_substrate bbnf_view_runtime_view_trait_compiles
+        PASS [   0.017s] ( 139/1501) bbnf::bbnf_struct_builder_substrate bbnf_struct_builder_round_trips_an_int_leaf
+        PASS [   0.027s] ( 140/1501) bbnf::bbnf_self_parity misc_regex::ast_roundtrip
+        PASS [   0.017s] ( 141/1501) bbnf::bbnf_struct_builder_substrate bbnf_view_span_returns_borrowed_input_slice
+        PASS [   0.013s] ( 142/1501) bbnf::css_color_parity resolver_empty_when_no_named_types
+        PASS [   0.015s] ( 143/1501) bbnf::css_color_parity resolved_color_like_tuple_plans_at_40_bytes_under_large_cap
+        PASS [   0.013s] ( 144/1501) bbnf::css_l4 calc_expression
+        PASS [   0.020s] ( 145/1501) bbnf::css_color_parity regex_body_infers_arena_handle_shape
+        PASS [   0.013s] ( 146/1501) bbnf::css_l4 media_query
+        PASS [   0.032s] ( 147/1501) bbnf::bbnf_struct_builder_substrate bbnf_struct_builder_round_trips_a_bool_leaf
+        PASS [   0.021s] ( 148/1501) bbnf::css_color_parity seq_body_infers_scalar_tuple_from_type_map
+        PASS [   0.017s] ( 149/1501) bbnf::css_l4 hex_color_roundtrip_8digit
+        PASS [   0.012s] ( 150/1501) bbnf::css_l4 unit_deg
+        PASS [   0.015s] ( 151/1501) bbnf::css_l4 two_rules_sequential
+        PASS [   0.010s] ( 152/1501) bbnf::css_l4 unit_ms
+        PASS [   0.016s] ( 153/1501) bbnf::css_l4 unit_fr
+        PASS [   0.021s] ( 154/1501) bbnf::css_l4 parse_normalize_css
+        PASS [   0.030s] ( 155/1501) bbnf::css_l4 hex_color_roundtrip_3digit
+        PASS [   0.031s] ( 156/1501) bbnf::css_l4 hex_color_roundtrip_6digit
+        PASS [   0.015s] ( 157/1501) bbnf::css_l4 unit_percent
+        PASS [   0.013s] ( 158/1501) bbnf::css_l4 var_simple
+        PASS [   0.023s] ( 159/1501) bbnf::css_l4 unit_em
+        PASS [   0.014s] ( 160/1501) bbnf::css_l4 var_with_fallback
+        PASS [   0.018s] ( 161/1501) bbnf::css_l4 unit_rem
+        PASS [   0.016s] ( 162/1501) bbnf::css_l4 vendor_prefix_property
+        PASS [   0.024s] ( 163/1501) bbnf::css_l4 unit_px
+        PASS [   0.012s] ( 164/1501) bbnf::css_l4_color_view color_payload_bytes_matches_40
+        PASS [   0.019s] ( 165/1501) bbnf::css_l4_canonical_parity canonical_parity_normalize
+        PASS [   0.012s] ( 166/1501) bbnf::css_l4_color_view decode_bad_discriminant_panics
+        PASS [   0.014s] ( 167/1501) bbnf::css_l4_color_view colorspace_from_u8_matches_variants
+        PASS [   0.014s] ( 168/1501) bbnf::css_l4_color_view decode_hsl_angle_channel
+        PASS [   0.013s] ( 169/1501) bbnf::css_l4_color_view decode_hwb
+        PASS [   0.015s] ( 170/1501) bbnf::css_l4_color_view decode_hsla_explicit_alpha
+        PASS [   0.013s] ( 171/1501) bbnf::css_l4_color_view decode_lab_negative_channels
+        PASS [   0.015s] ( 172/1501) bbnf::css_l4_color_view decode_lch
+        PASS [   0.015s] ( 173/1501) bbnf::css_l4_color_view decode_oklch_nan_alpha
+        PASS [   0.021s] ( 174/1501) bbnf::css_l4_color_view decode_oklab
+        PASS [   0.019s] ( 175/1501) bbnf::css_l4_color_view decode_rgb_alpha_0_5
+        PASS [   0.017s] ( 176/1501) bbnf::css_l4_color_view from_tuple_roundtrip
+        PASS [   0.021s] ( 177/1501) bbnf::css_l4_color_view decode_short_slice_panics
+        PASS [   0.024s] ( 178/1501) bbnf::css_l4_color_view decode_rgba_u8_max_alpha_passthrough
+        PASS [   0.020s] ( 179/1501) bbnf::css_l4_color_view large_payload_max_admits_color_shape_at_64b_cap
+        PASS [   0.022s] ( 180/1501) bbnf::css_l4_color_view parser_accepts_hsl_value
+        PASS [   0.022s] ( 181/1501) bbnf::css_l4_color_view parser_accepts_oklch_value
+        PASS [   0.016s] ( 182/1501) bbnf::css_l4_color_view rust_named_types_resolver_is_ir_derived
+        PASS [   0.021s] ( 183/1501) bbnf::css_l4_color_view parser_accepts_rgb_value
+        PASS [   0.014s] ( 184/1501) bbnf::css_l4_color_view try_decode_bad_discriminant_returns_none
+        PASS [   0.014s] ( 185/1501) bbnf::css_l4_color_view try_decode_short_slice_returns_none
+        PASS [   0.013s] ( 186/1501) bbnf::css_l4_color_view try_from_tuple_bad_discriminant
+        PASS [   0.012s] ( 187/1501) bbnf::css_l4_comment_probe leading_block_comment_non_empty
+        PASS [   0.014s] ( 188/1501) bbnf::css_l4_comment_probe leading_banner_comment_non_empty
+        PASS [   0.016s] ( 189/1501) bbnf::css_l4_comment_probe inline_comment_between_rules_non_empty
+        PASS [   0.013s] ( 190/1501) bbnf::css_l4_dimensions angle_deg_parses
+        PASS [   0.013s] ( 191/1501) bbnf::css_l4_dimensions angle_turn_parses
+        PASS [   0.012s] ( 192/1501) bbnf::css_l4_dimensions frequency_khz_parses
+        PASS [   0.015s] ( 193/1501) bbnf::css_l4_dimensions consecutive_keyframes_after_leading_dot
+        PASS [   0.013s] ( 194/1501) bbnf::css_l4_dimensions frequency_hz_parses
+        PASS [   0.016s] ( 195/1501) bbnf::css_l4_dimensions flex_fr_parses
+        PASS [   0.015s] ( 196/1501) bbnf::css_l4_dimensions keyframes_with_leading_dot_value
+        PASS [   0.012s] ( 197/1501) bbnf::css_l4_dimensions length_leading_dot_parses
+        PASS [   0.015s] ( 198/1501) bbnf::css_l4_dimensions length_em_parses
+        PASS [   0.014s] ( 199/1501) bbnf::css_l4_dimensions length_negative_parses
+        PASS [   0.014s] ( 200/1501) bbnf::css_l4_dimensions length_pure_decimal_parses
+        PASS [   0.016s] ( 201/1501) bbnf::css_l4_dimensions length_px_parses
+        PASS [   0.013s] ( 202/1501) bbnf::css_l4_dimensions length_rem_parses
+        PASS [   0.015s] ( 203/1501) bbnf::css_l4_dimensions opacity_leading_dot_parses
+        PASS [   0.015s] ( 204/1501) bbnf::css_l4_dimensions percentage_leading_dot_parses
+        PASS [   0.014s] ( 205/1501) bbnf::css_l4_dimensions percentage_parses
+        PASS [   0.015s] ( 206/1501) bbnf::css_l4_dimensions resolution_dpi_parses
+        PASS [   0.017s] ( 207/1501) bbnf::css_l4_dimensions resolution_dppx_parses
+        PASS [   0.015s] ( 208/1501) bbnf::css_l4_dimensions time_ms_parses
+        PASS [   0.017s] ( 209/1501) bbnf::css_l4_dimensions time_s_parses
+        PASS [   0.015s] ( 210/1501) bbnf::css_l4_dimensions unitless_int_parses
+        PASS [   0.019s] ( 211/1501) bbnf::css_l4_dimensions unitless_decimal_parses
+        PASS [   0.016s] ( 212/1501) bbnf::css_l4_dimensions unitless_negative_parses
+        PASS [   0.014s] ( 213/1501) bbnf::css_l4_named_color_parity named_color_grammar_list_is_non_empty
+        PASS [   0.014s] ( 214/1501) bbnf::css_l4_named_color_parity white_materialises
+        PASS [   0.016s] ( 215/1501) bbnf::css_l4_named_color_parity every_named_color_materialises_its_u32_payload
+        PASS [   0.014s] ( 216/1501) bbnf::css_l4_parity color_space_multi_branch_parses
+        PASS [   0.013s] ( 217/1501) bbnf::css_l4_parity combinator_branches_parse_for_every_form
+        PASS [   0.013s] ( 218/1501) bbnf::css_l4_parity dir_pseudo_ltr_branch_fires_payload
+        PASS [   0.011s] ( 219/1501) bbnf::css_l4_parity dir_pseudo_rtl_branch_fires_payload
+        PASS [   0.012s] ( 220/1501) bbnf::css_l4_parity global_keyword_parses_branches
+        PASS [   0.012s] ( 221/1501) bbnf::css_l4_parity hex_color_3digit_expands_u32
+        PASS [   0.011s] ( 222/1501) bbnf::css_l4_parity keyframes_parses
+        PASS [   0.014s] ( 223/1501) bbnf::css_l4_parity hex_color_6digit_materialises_u32
+        PASS [   0.014s] ( 224/1501) bbnf::css_l4_parity hex_color_8digit_alpha_materialises
+        PASS [   0.015s] ( 225/1501) bbnf::css_l4_parity media_query_parses
+        PASS [   0.014s] ( 226/1501) bbnf::css_l4_parity named_color_aliceblue_fires_inline_u32
+        PASS [   0.014s] ( 227/1501) bbnf::css_l4_parity percentage_alongside_non_percentage_properties_materialises
+        PASS [   0.013s] ( 228/1501) bbnf::css_l4_parity percentage_parses_across_contexts
+        PASS [   0.014s] ( 229/1501) bbnf::css_l4_parity percentage_fires_255u8_discriminant
+        PASS [   0.013s] ( 230/1501) bbnf::css_l4_parity percentage_parses_through_width_and_height
+        PASS [   0.013s] ( 231/1501) bbnf::css_l4_parity realistic_block_materialises_typed_leaves
+        PASS [   0.012s] ( 232/1501) bbnf::css_l4_parity selector_parses_without_payload_loss
+        PASS [   0.012s] ( 233/1501) bbnf::css_l4_substrate arena_color_dag_admits_recursive_mix
+        PASS [   0.012s] ( 234/1501) bbnf::css_l4_substrate arena_pushes_and_resolves_rules
+        PASS [   0.012s] ( 235/1501) bbnf::css_l4_substrate css_angle_time_units_admit_grammar_discriminants
+        PASS [   0.012s] ( 236/1501) bbnf::css_l4_substrate css_color_space_round_trips
+        PASS [   0.010s] ( 237/1501) bbnf::css_l4_substrate css_length_unit_discriminants_round_trip
+        PASS [   0.144s] ( 238/1501) bbnf::css_l4 parse_bootstrap_css
+        PASS [   0.012s] ( 239/1501) bbnf::css_l4_substrate css_color_types_round_trip
+        PASS [   0.012s] ( 240/1501) bbnf::css_l4_substrate document_get_path_query_resolves_string
+        PASS [   0.012s] ( 241/1501) bbnf::css_l4_substrate document_view_kind_distinguishes_empty
+        PASS [   0.011s] ( 242/1501) bbnf::css_l4_substrate empty_document_finalises
+        PASS [   0.013s] ( 243/1501) bbnf::css_l4_substrate struct_builder_assembles_simple_stylesheet
+        PASS [   0.012s] ( 244/1501) bbnf::css_l4_substrate struct_builder_checkpoint_discards_nested_rule_attempt
+        PASS [   0.013s] ( 245/1501) bbnf::css_l4_substrate struct_builder_assembles_typed_dimension
+        PASS [   0.012s] ( 246/1501) bbnf::css_l4_substrate struct_builder_threads_color_function
+        PASS [   0.012s] ( 247/1501) bbnf::css_l4_substrate typed_value_alternation_admits_every_branch
+        PASS [   0.012s] ( 248/1501) bbnf::css_l4_w6_typed_retime css_l4_w6_gate_rejects_retired_live_sources
+        PASS [   0.015s] ( 249/1501) bbnf::css_pretty parse_normalize_css
+        PASS [   0.012s] ( 250/1501) bbnf::debug parse_debug_single_rule
+        PASS [   0.016s] ( 251/1501) bbnf::debug parse_debug_multiple_rules
+        PASS [   0.015s] ( 252/1501) bbnf::debug parse_debug_wildcard
+        PASS [   0.017s] ( 253/1501) bbnf::debug parse_debug_with_other_directives
+        PASS [   0.018s] ( 254/1501) bbnf::debug pipeline_debug_single_rule_meta
+        PASS [   0.013s] ( 255/1501) bbnf::debug pipeline_no_debug_default
+        PASS [   0.014s] ( 256/1501) bbnf::debug pipeline_debug_wildcard_sets_all
+        PASS [   0.011s] ( 257/1501) bbnf::debug pipeline_source_span_byte_offsets_valid
+        PASS [   0.011s] ( 258/1501) bbnf::debug pipeline_source_span_populated
+        PASS [   0.012s] ( 259/1501) bbnf::determinism dependency_graph_iteration_is_deterministic
+        PASS [   0.015s] ( 260/1501) bbnf::determinism lowering_is_deterministic_across_runs
+        PASS [   0.014s] ( 261/1501) bbnf::dfa_fidelity bbnf_regex_leaf_stops_at_its_closing_slash
+        PASS [   0.014s] ( 262/1501) bbnf::dfa_fidelity dfa_lazy_star_stops_at_first_close
+        PASS [   0.011s] ( 263/1501) bbnf::ebnf_prettify parse_multi_rule
+        PASS [   0.017s] ( 264/1501) bbnf::dfa_fidelity dfa_compatible_comment_pattern
+        PASS [   0.009s] ( 265/1501) bbnf::ebnf_prettify parse_single_rule
+        PASS [   0.010s] ( 266/1501) bbnf::ebnf_prettify prettify_idempotent
+        PASS [   0.014s] ( 267/1501) bbnf::egraph_semantic egraph_semantic_bnf_grammar
+        PASS [   0.015s] ( 268/1501) bbnf::egraph_semantic egraph_semantic_ebnf_multi_rule_parse
+        PASS [   0.013s] ( 269/1501) bbnf::egraph_semantic egraph_semantic_json_nested_structures
+        PASS [   0.040s] ( 270/1501) bbnf::dfa_fidelity pipeline_css_dfa_fidelity
+        PASS [   0.028s] ( 271/1501) bbnf::egraph_semantic egraph_semantic_bbnf_self_hosting
+        PASS [   0.012s] ( 272/1501) bbnf::egraph_semantic egraph_semantic_json_object_parses
+        PASS [   0.074s] ( 273/1501) bbnf::css_pretty parse_bootstrap_css
+        PASS [   0.011s] ( 274/1501) bbnf::egraph_semantic egraph_semantic_left_recursion_expr_chain
+        PASS [   0.010s] ( 275/1501) bbnf::emit_strategy bbnf_with_empty_registry_panics
+        PASS [   0.013s] ( 276/1501) bbnf::emit_strategy bbnf_with_populated_registry_routes_struct_direct
+        PASS [   0.013s] ( 277/1501) bbnf::emit_strategy css_l4_parser_with_empty_registry_panics
+        PASS [   0.013s] ( 278/1501) bbnf::emit_strategy css_l4_parser_with_populated_registry_routes_struct_direct
+        PASS [   0.015s] ( 279/1501) bbnf::emit_strategy google_sheets_grammar_alias_routes_struct_direct
+        PASS [   0.014s] ( 280/1501) bbnf::emit_strategy google_sheets_parser_with_empty_registry_panics
+        PASS [   0.015s] ( 281/1501) bbnf::emit_strategy google_sheets_parser_with_populated_registry_routes_struct_direct
+        PASS [   0.013s] ( 282/1501) bbnf::emit_strategy json_grammar_alias_routes_struct_direct
+        PASS [   0.014s] ( 283/1501) bbnf::emit_strategy json_parser_with_populated_registry_routes_struct_direct
+        PASS [   0.015s] ( 284/1501) bbnf::emit_strategy json_parser_with_empty_registry_panics
+        PASS [   0.012s] ( 285/1501) bbnf::emit_strategy unknown_grammar_with_populated_registry_panics
+        PASS [   0.017s] ( 286/1501) bbnf::emit_strategy pipeline_resolver_matches_emitter_resolver
+        PASS [   0.020s] ( 287/1501) bbnf::google_sheets_slab parse_arithmetic
+        PASS [   0.243s] ( 288/1501) bbnf::css_l4_canonical_parity scale_interop_bootstrap
+        PASS [   0.017s] ( 289/1501) bbnf::google_sheets_slab parse_index_match
+        PASS [   0.026s] ( 290/1501) bbnf::gen_ts_parser generate_ts_parser_for_bench
+        PASS [   0.019s] ( 291/1501) bbnf::google_sheets_slab parse_if
+        PASS [   0.019s] ( 292/1501) bbnf::google_sheets_slab parse_let_nested
+        PASS [   0.023s] ( 293/1501) bbnf::google_sheets_slab parse_sum
+        PASS [   0.011s] ( 294/1501) bbnf::google_sheets_slab prettify_if_formula
+        PASS [   0.012s] ( 295/1501) bbnf::google_sheets_slab prettify_index_match_formula
+        PASS [   0.013s] ( 296/1501) bbnf::google_sheets_slab prettify_simple_formula
+        PASS [   0.015s] ( 297/1501) bbnf::google_sheets_slab prettify_nested_formula
+        PASS [   0.014s] ( 298/1501) bbnf::google_sheets_slab wire_contract_bool_false_leaf
+        PASS [   0.015s] ( 299/1501) bbnf::google_sheets_slab wire_contract_bool_true_leaf
+        PASS [   0.012s] ( 300/1501) bbnf::google_sheets_slab wire_contract_branch_tag_deposits_as_tag
+        PASS [   0.012s] ( 301/1501) bbnf::google_sheets_slab wire_contract_compound_kind_disambiguates_role
+        PASS [   0.014s] ( 302/1501) bbnf::google_sheets_slab wire_contract_cell_ref_specialised_leaf
+        PASS [   0.012s] ( 303/1501) bbnf::google_sheets_slab wire_contract_compound_with_two_children
+        PASS [   0.012s] ( 304/1501) bbnf::google_sheets_slab wire_contract_error_literal_carries_tag
+        PASS [   0.012s] ( 305/1501) bbnf::google_sheets_slab wire_contract_get_path_resolves_compound_index
+        PASS [   0.014s] ( 306/1501) bbnf::google_sheets_slab wire_contract_identifier_specialised_leaf
+        PASS [   0.012s] ( 307/1501) bbnf::google_sheets_slab wire_contract_number_is_f64_leaf
+        PASS [   0.013s] ( 308/1501) bbnf::google_sheets_slab wire_contract_sheet_prefix_carries_tag_and_text
+        PASS [   0.014s] ( 309/1501) bbnf::google_sheets_slab wire_contract_string_leaf_borrows_input
+        PASS [   0.013s] ( 310/1501) bbnf::google_sheets_slab wire_contract_to_value_borrows_root
+        PASS [   0.015s] ( 311/1501) bbnf::google_sheets_slab wire_contract_view_kind_discriminates_root
+        PASS [   0.013s] ( 312/1501) bbnf::google_sheets_slab wire_contract_wrap_with_one_child_collapses
+        PASS [   0.014s] ( 313/1501) bbnf::graph charset_basic
+        PASS [   0.015s] ( 314/1501) bbnf::graph charset_high_codes
+        PASS [   0.012s] ( 315/1501) bbnf::graph charset_iter
+        PASS [   0.012s] ( 316/1501) bbnf::graph charset_range
+        PASS [   0.013s] ( 317/1501) bbnf::graph regex_first_alternation
+        PASS [   0.016s] ( 318/1501) bbnf::graph charset_union_and_disjoint
+        PASS [   0.015s] ( 319/1501) bbnf::graph regex_first_anchor
+        PASS [   0.017s] ( 320/1501) bbnf::graph regex_first_char_class
+        PASS [   0.014s] ( 321/1501) bbnf::graph regex_first_digit_escape
+        PASS [   0.013s] ( 322/1501) bbnf::graph regex_first_group
+        PASS [   0.016s] ( 323/1501) bbnf::graph regex_first_dot_returns_none
+        PASS [   0.014s] ( 324/1501) bbnf::graph regex_first_literal
+        PASS [   0.017s] ( 325/1501) bbnf::graph regex_first_space_escape
+        PASS [   0.016s] ( 326/1501) bbnf::graph regex_first_word_escape
+        PASS [   0.144s] ( 327/1501) bbnf::egraph_semantic egraph_semantic_css_l4_stylesheet
+        PASS [   0.015s] ( 328/1501) bbnf::graph tarjan_no_cycles
+        PASS [   0.017s] ( 329/1501) bbnf::graph tarjan_mutual_cycle
+        PASS [   0.015s] ( 330/1501) bbnf::hir_emit alternation_literals
+        PASS [   0.017s] ( 331/1501) bbnf::graph tarjan_self_cycle
+        PASS [   0.015s] ( 332/1501) bbnf::hir_emit alternation_mixed
+        PASS [   0.015s] ( 333/1501) bbnf::hir_emit char_class_digit
+        PASS [   0.014s] ( 334/1501) bbnf::hir_emit char_class_multi_range
+        PASS [   0.016s] ( 335/1501) bbnf::hir_emit char_class_simple_range
+        PASS [   0.013s] ( 336/1501) bbnf::hir_emit char_class_small_set
+        PASS [   0.012s] ( 337/1501) bbnf::hir_emit char_class_whitespace
+        PASS [   0.012s] ( 338/1501) bbnf::hir_emit char_class_word
+        PASS [   0.011s] ( 339/1501) bbnf::hir_emit css_anb_full
+        PASS [   0.014s] ( 340/1501) bbnf::hir_emit concat_literal_class
+        PASS [   0.015s] ( 341/1501) bbnf::hir_emit css_anb_short
+        PASS [   0.018s] ( 342/1501) bbnf::hir_emit css_combinator_separators
+        PASS [   0.016s] ( 343/1501) bbnf::hir_emit css_hash_selector
+        PASS [   0.019s] ( 344/1501) bbnf::hir_emit css_ident_with_escapes
+        PASS [   0.018s] ( 345/1501) bbnf::hir_emit literal_simple
+        PASS [   0.019s] ( 346/1501) bbnf::hir_emit literal_single_char
+        PASS [   0.023s] ( 347/1501) bbnf::hir_emit css_signed_integer
+        PASS [   0.019s] ( 348/1501) bbnf::hir_emit negated_class_plus
+        PASS [   0.014s] ( 349/1501) bbnf::hir_emit negated_class_star
+        PASS [   0.013s] ( 350/1501) bbnf::hir_emit quantifier_bounded
+        PASS [   0.009s] ( 351/1501) bbnf::hir_emit quantifier_plus
+        PASS [   0.015s] ( 352/1501) bbnf::hir_emit quantifier_optional
+        PASS [   0.010s] ( 353/1501) bbnf::hir_emit quantifier_star
+        PASS [   0.012s] ( 354/1501) bbnf::hir_emit unicode_property_not_inlinable
+        PASS [   0.013s] ( 355/1501) bbnf::imports test_css_l4_media_file_parses_to_end
+        PASS [   0.014s] ( 356/1501) bbnf::imports test_circular_import_allowed
+        PASS [   0.013s] ( 357/1501) bbnf::imports test_glob_import
+        PASS [   0.015s] ( 358/1501) bbnf::imports test_diamond_dependency
+        PASS [   0.014s] ( 359/1501) bbnf::imports test_missing_file
+        PASS [   0.014s] ( 360/1501) bbnf::imports test_missing_rule_in_selective_import
+        PASS [   0.022s] ( 361/1501) bbnf::imports test_css_l4_media_module_keeps_recursive_local_rules
+        PASS [   0.013s] ( 362/1501) bbnf::imports test_non_transitive
+        PASS [   0.011s] ( 363/1501) bbnf::imports test_self_import
+        PASS [   0.015s] ( 364/1501) bbnf::imports test_selective_import
+        PASS [   0.011s] ( 365/1501) bbnf::inline_analysis tiny_leaf_rules_stay_inline_eligible
+        PASS [   0.012s] ( 366/1501) bbnf::inline_analysis wrapper_heavy_multi_ref_rules_prefer_direct_calls
+        PASS [   0.014s] ( 367/1501) bbnf::imports test_three_way_cycle
+        PASS [   0.011s] ( 368/1501) bbnf::json_canonical_parity normalize_identity_on_already_compact
+        PASS [   0.015s] ( 369/1501) bbnf::json_canonical_parity canonical_parity_data
+        PASS [   0.010s] ( 370/1501) bbnf::json_canonical_parity normalize_preserves_backslash_before_escaped_backslash
+        PASS [   0.011s] ( 371/1501) bbnf::json_canonical_parity normalize_preserves_escaped_quote_inside_string
+        PASS [   0.012s] ( 372/1501) bbnf::json_canonical_parity normalize_preserves_whitespace_inside_strings
+        PASS [   0.279s] ( 373/1501) bbnf::css_o1_checkpoint_bench css_o1_checkpoint_bootstrap_single_sheet_cold
+        PASS [   0.010s] ( 374/1501) bbnf::json_canonical_parity normalize_strips_newlines_and_tabs
+        PASS [   0.011s] ( 375/1501) bbnf::json_canonical_parity normalize_strips_space_between_tokens
+        PASS [   0.012s] ( 376/1501) bbnf::json_decode decode_json_object_string_keys_and_values
+        PASS [   0.010s] ( 377/1501) bbnf::json_decode decode_plain_string_round_trip
+        PASS [   0.011s] ( 378/1501) bbnf::json_decode decode_simple_escapes_round_trip
+        PASS [   0.012s] ( 379/1501) bbnf::json_decode decode_surrogate_pair_round_trip
+        PASS [   0.012s] ( 380/1501) bbnf::json_decode decode_u_escape_round_trip
+        PASS [   0.012s] ( 381/1501) bbnf::json_object_pairs_probe five_pair_object_resolves_in_order
+        PASS [   0.011s] ( 382/1501) bbnf::json_object_pairs_probe single_pair_object_unchanged_by_fix
+        PASS [   0.011s] ( 383/1501) bbnf::json_parity bool_false_materialises_to_bool_false
+        PASS [   0.010s] ( 384/1501) bbnf::json_parity bool_true_materialises_to_bool_true
+        PASS [   0.011s] ( 385/1501) bbnf::json_parity every_declared_leaf_reaches_the_document
+        PASS [   0.042s] ( 386/1501) bbnf::json_canonical_parity canonical_parity_twitter
+        PASS [   0.011s] ( 387/1501) bbnf::json_parity integer_witness_supported_in_struct_layer
+        PASS [   0.011s] ( 388/1501) bbnf::json_parity nested_object_preserves_typed_payloads
+        PASS [   0.012s] ( 389/1501) bbnf::json_parity null_materialises_to_null_value
+        PASS [   0.011s] ( 390/1501) bbnf::json_parity number_materialises_to_f64
+        PASS [   0.012s] ( 391/1501) bbnf::json_parity object_keys_and_values_decode
+        PASS [   0.012s] ( 392/1501) bbnf::json_parity parity_data_json
+        PASS [   0.011s] ( 393/1501) bbnf::json_parity string_materialises_decoded_bytes
+        PASS [   0.072s] ( 394/1501) bbnf::json_canonical_parity canonical_parity_citm_catalog
+        PASS [   0.018s] ( 395/1501) bbnf::json_parity_struct native_parity_serde_data_json
+        PASS [   0.037s] ( 396/1501) bbnf::json_parity parity_twitter_json
+        PASS [   0.015s] ( 397/1501) bbnf::json_parity_struct native_parity_struct_direct_returns_jsondocument
+        PASS [   0.011s] ( 398/1501) bbnf::json_parity_struct wire_contract_arena_handles_distinguish_empty
+        PASS [   0.011s] ( 399/1501) bbnf::json_parity_struct wire_contract_array_of_scalars_collects_in_order
+        PASS [   0.014s] ( 400/1501) bbnf::json_parity_struct wire_contract_bool_is_typed_bool
+        PASS [   0.013s] ( 401/1501) bbnf::json_parity_struct wire_contract_checkpoint_discards_completed_root_attempt
+        PASS [   0.060s] ( 402/1501) bbnf::json_parity parity_citm_catalog_json
+        PASS [   0.013s] ( 403/1501) bbnf::json_parity_struct wire_contract_checkpoint_restores_open_frame
+        PASS [   0.049s] ( 404/1501) bbnf::json_parity_struct native_parity_serde_twitter_json
+        PASS [   0.013s] ( 405/1501) bbnf::json_parity_struct wire_contract_empty_array_resolves_to_empty_slice
+        PASS [   0.012s] ( 406/1501) bbnf::json_parity_struct wire_contract_empty_object_resolves_to_empty_slice
+        PASS [   0.016s] ( 407/1501) bbnf::json_parity_struct wire_contract_field_provenance_on_synth_layout
+        PASS [   0.014s] ( 408/1501) bbnf::json_parity_struct wire_contract_nested_array_of_objects
+        PASS [   0.016s] ( 409/1501) bbnf::json_parity_struct wire_contract_null_is_unit_leaf
+        PASS [   0.014s] ( 410/1501) bbnf::json_parity_struct wire_contract_number_is_typed_f64
+        PASS [   0.013s] ( 411/1501) bbnf::json_parity_struct wire_contract_number_supports_integral_witnesses
+        PASS [   0.012s] ( 412/1501) bbnf::json_parity_struct wire_contract_object_collects_pairs_via_pair_compound
+        PASS [   0.014s] ( 413/1501) bbnf::json_parity_struct wire_contract_string_borrows_input_lifetime
+        PASS [   0.012s] ( 414/1501) bbnf::json_parity_struct wire_contract_value_alt_branch_tag_is_idempotent
+        PASS [   0.087s] ( 415/1501) bbnf::json_parity_struct native_parity_serde_citm_catalog_json
+        PASS [   0.012s] ( 416/1501) bbnf::json_slab parse_data_json
+        PASS [   0.017s] ( 417/1501) bbnf::json_value_parity json_parses_bools
+        PASS [   0.020s] ( 418/1501) bbnf::json_value_parity json_parses_empty_array
+        PASS [   0.018s] ( 419/1501) bbnf::json_value_parity json_parses_empty_object
+        PASS [   0.026s] ( 420/1501) bbnf::json_slab parse_twitter_json
+        PASS [   0.047s] ( 421/1501) bbnf::json_slab parse_citm_catalog_json
+        PASS [   0.024s] ( 422/1501) bbnf::json_value_parity json_parses_flat_object
+        PASS [   0.029s] ( 423/1501) bbnf::json_value_parity json_parses_flat_array
+        PASS [   0.145s] ( 424/1501) bbnf::json_parity parity_canada_json
+        PASS [   0.029s] ( 425/1501) bbnf::json_value_parity json_parses_mixed_value_tree
+        PASS [   0.029s] ( 426/1501) bbnf::json_value_parity json_parses_nested_array
+        PASS [   0.023s] ( 427/1501) bbnf::json_value_parity json_parses_nested_object
+        PASS [   0.018s] ( 428/1501) bbnf::json_value_parity json_parses_numbers
+        PASS [   0.019s] ( 429/1501) bbnf::json_value_parity json_parses_null
+        PASS [   0.017s] ( 430/1501) bbnf::json_value_parity json_parses_strings
+        PASS [   0.018s] ( 431/1501) bbnf::json_value_parity simdjson_parity_flat_object
+        PASS [   0.081s] ( 432/1501) bbnf::json_slab parse_canada_json
+        PASS [   0.158s] ( 433/1501) bbnf::json_parity_struct native_parity_serde_canada_json
+        PASS [   0.018s] ( 434/1501) bbnf::json_value_parity simdjson_parity_mixed_array
+        PASS [   0.013s] ( 435/1501) bbnf::json_value_parity simdjson_parity_scalars
+        PASS [   0.016s] ( 436/1501) bbnf::lightningcss_parity color_channel_parity_rgb_family
+        PASS [   0.229s] ( 437/1501) bbnf::json_canonical_parity canonical_parity_canada
+        PASS [   0.026s] ( 438/1501) bbnf::keyword_ref_branch_wire_contract bbnf_directive_classifies_as_keyword
+        PASS [   0.027s] ( 439/1501) bbnf::keyword_ref_branch_wire_contract bbnf_directive_keyword_emitter_delegates_to_ref_targets
+        PASS [   0.029s] ( 440/1501) bbnf::keyword_ref_branch_wire_contract bbnf_directive_keyword_emitter_produces_named_fn
+        PASS [   0.024s] ( 441/1501) bbnf::lightningcss_parity lightningcss_parity_normalize
+        PASS [   0.025s] ( 442/1501) bbnf::lower json_roundtrip
+        PASS [   0.015s] ( 443/1501) bbnf::lower lower_alternation
+        PASS [   0.014s] ( 444/1501) bbnf::lower lower_concatenation
+        PASS [   0.012s] ( 445/1501) bbnf::lower lower_cyclic_rule_gets_memo
+        PASS [   0.012s] ( 446/1501) bbnf::lower lower_json_grammar
+        PASS [   0.010s] ( 447/1501) bbnf::lower lower_optional
+        PASS [   0.014s] ( 448/1501) bbnf::lower lower_nonterminal_ref
+        PASS [   0.012s] ( 449/1501) bbnf::lower lower_regex
+        PASS [   0.011s] ( 450/1501) bbnf::lower lower_repetition
+        PASS [   0.012s] ( 451/1501) bbnf::lower lower_simple_literal
+        PASS [   0.015s] ( 452/1501) bbnf::lower lower_skip_next
+        PASS [   0.016s] ( 453/1501) bbnf::lower lower_span_eligible
+        PASS [   0.018s] ( 454/1501) bbnf::lower lower_with_pretty_hints
+        PASS [   0.021s] ( 455/1501) bbnf::lower msgpack_roundtrip
+        PASS [   0.026s] ( 456/1501) bbnf::memo json_grammar_memo_assignments
+        PASS [   0.023s] ( 457/1501) bbnf::named_pipeline_probe json_named_pipeline_probe
+        PASS [   0.024s] ( 458/1501) bbnf::named_type_preservation json_named_types
+        PASS [   0.018s] ( 459/1501) bbnf::named_type_preservation named_runtime_documents_preserve_concrete_values
+        PASS [   0.011s] ( 460/1501) bbnf::optimize test_direct_left_recursion
+        PASS [   0.013s] ( 461/1501) bbnf::optimize test_indirect_then_direct
+        PASS [   0.012s] ( 462/1501) bbnf::optimize test_no_left_recursion
+        PASS [   0.012s] ( 463/1501) bbnf::par1_regex_trailing_escape neighbouring_escapes_are_read
+        PASS [   0.041s] ( 464/1501) bbnf::no_grammar_name_branch wave_scan_emits_status
+        PASS [   0.013s] ( 465/1501) bbnf::parse_with_bbnf happy_path_resolves_root_value
+        PASS [   0.012s] ( 466/1501) bbnf::parse_with_bbnf invalid_input_returns_none
+        PASS [   0.014s] ( 467/1501) bbnf::parse_with_bbnf lazy_error_elision_after_path_reach
+        PASS [   0.015s] ( 468/1501) bbnf::parse_with_css_l4 happy_path_parity_against_eager
+        PASS [   0.014s] ( 469/1501) bbnf::parse_with_css_l4 lazy_error_elision_after_path_reach
+        PASS [   0.012s] ( 470/1501) bbnf::parse_with_css_l4 out_of_bounds_path_returns_none
+        PASS [   0.013s] ( 471/1501) bbnf::parse_with_google_sheets happy_path_parity_against_eager
+        PASS [   0.013s] ( 472/1501) bbnf::parse_with_google_sheets invalid_input_returns_none
+        PASS [   0.013s] ( 473/1501) bbnf::parse_with_json happy_path_parity_against_eager
+        PASS [   0.011s] ( 474/1501) bbnf::parse_with_json lazy_error_elision_after_path_reach
+        PASS [   0.012s] ( 475/1501) bbnf::parse_with_json out_of_bounds_path_returns_none
+        PASS [   0.010s] ( 476/1501) bbnf::path_macro_compile bbnf_marker_resolves_through_production_registry
+        PASS [   0.012s] ( 477/1501) bbnf::path_macro_compile css_l4_marker_resolves_through_production_registry
+        PASS [   0.012s] ( 478/1501) bbnf::path_macro_compile fully_qualified_marker_path_compiles
+        PASS [   0.011s] ( 479/1501) bbnf::path_macro_compile json_branch_4_variant_select_compiles
+        PASS [   0.012s] ( 480/1501) bbnf::path_macro_compile json_first_branch_variant_select_compiles
+        PASS [   0.013s] ( 481/1501) bbnf::path_type_errors ambiguous_variant_surfaces_named_diagnostic
+        PASS [   0.012s] ( 482/1501) bbnf::path_type_errors diagnostic_display_renders_full_segment_chain
+        PASS [   0.012s] ( 483/1501) bbnf::path_type_errors empty_path_is_diagnosed
+        PASS [   0.012s] ( 484/1501) bbnf::path_type_errors index_into_non_list_is_diagnosed
+        PASS [   0.011s] ( 485/1501) bbnf::path_type_errors unknown_field_names_segment_and_alternatives
+        PASS [   0.011s] ( 486/1501) bbnf::path_type_errors unknown_variant_lists_branch_alternatives
+        PASS [   0.684s] ( 487/1501) bbnf::css_l4_w5_diag css_l4_w5_per_file_diag
+        PASS [   0.011s] ( 488/1501) bbnf::path_type_errors unregistered_entry_rule_is_diagnosed
+        PASS [   0.177s] ( 489/1501) bbnf::named_type_preservation admitted_projection_surfaces
+        PASS [   0.013s] ( 490/1501) bbnf::path_type_errors variant_name_against_struct_is_diagnosed
+        PASS [   0.013s] ( 491/1501) bbnf::path_typed_compile indexed_step_through_vec_field_resolves
+        PASS [   0.014s] ( 492/1501) bbnf::path_typed_compile check_path_borrowed_entry_composes_with_slice_entry
+        PASS [   0.182s] ( 493/1501) bbnf::named_type_preservation css_l4_named_types
+        PASS [   0.232s] ( 494/1501) bbnf::lightningcss_parity lightningcss_parity_bootstrap
+        PASS [   0.017s] ( 495/1501) bbnf::path_typed_compile single_field_resolves_to_typed_path
+        PASS [   0.014s] ( 496/1501) bbnf::path_typed_compile wildcard_step_resolves_through_array_repeat_element
+        PASS [   0.202s] ( 497/1501) bbnf::named_pipeline_probe css_l4_named_pipeline_probe
+        PASS [   0.017s] ( 498/1501) bbnf::path_typed_compile typed_path_segments_round_trip_through_owned_form
+        PASS [   0.023s] ( 499/1501) bbnf::path_typed_compile variant_name_step_resolves_against_tagged_enum
+        PASS [   0.020s] ( 500/1501) bbnf::path_variant_select matching_variant_resolves_to_branch_field
+        PASS [   0.032s] ( 501/1501) bbnf::path_variant_select ambiguous_variant_surfaces_grammar_author_error
+        PASS [   0.018s] ( 502/1501) bbnf::path_wildcard_iter depth_cap_default_fires_on_overflow
+        PASS [   0.198s] ( 503/1501) bbnf::named_type_preservation no_spurious_named_entries
+        PASS [   0.021s] ( 504/1501) bbnf::path_variant_select unknown_variant_fails_with_alternatives
+        PASS [   0.019s] ( 505/1501) bbnf::path_wildcard_iter collect_is_call_site_choice
+        PASS [   0.012s] ( 506/1501) bbnf::path_wildcard_iter ends_with_wildcard_helper_routes_correctly
+        PASS [   0.023s] ( 507/1501) bbnf::path_variant_select struct_layout_rejects_variant_step
+        PASS [   0.015s] ( 508/1501) bbnf::path_wildcard_iter depth_cap_zero_disables_expansion
+        PASS [   0.014s] ( 509/1501) bbnf::path_wildcard_iter wildcard_iter_size_hint_passes_through
+        PASS [   0.020s] ( 510/1501) bbnf::path_wildcard_iter with_anchors_pairs_every_item_with_prefix
+        PASS [   0.033s] ( 511/1501) bbnf::payload_layouts test_bbnf_payload_layouts_baseline
+        PASS [   0.032s] ( 512/1501) bbnf::payload_layouts test_css_pretty_payload_layouts
+        PASS [   0.037s] ( 513/1501) bbnf::path_wildcard_iter wildcard_iter_yields_every_element_lazily
+        PASS [   0.039s] ( 514/1501) bbnf::payload_layouts test_bbnf_payload_layouts
+        PASS [   0.032s] ( 515/1501) bbnf::payload_layouts test_css_pretty_payload_layouts_baseline
+        PASS [   0.028s] ( 516/1501) bbnf::payload_layouts test_ebnf_payload_layouts
+        PASS [   0.022s] ( 517/1501) bbnf::payload_layouts test_json_payload_layouts
+        PASS [   0.029s] ( 518/1501) bbnf::payload_layouts test_ebnf_payload_layouts_baseline
+        PASS [   0.039s] ( 519/1501) bbnf::payload_layouts test_sheets_payload_layouts
+        PASS [   0.038s] ( 520/1501) bbnf::payload_layouts test_sheets_payload_layouts_baseline
+        PASS [   0.028s] ( 521/1501) bbnf::phf_keyword_dispatch below_threshold_returns_none
+        PASS [   0.025s] ( 522/1501) bbnf::phf_keyword_dispatch grammar_level_accumulation
+        PASS [   0.053s] ( 523/1501) bbnf::payload_layouts test_json_payload_layouts_baseline
+        PASS [   0.017s] ( 524/1501) bbnf::phf_keyword_dispatch threshold_met_emits_phf_table
+        PASS [   0.017s] ( 525/1501) bbnf::phf_keyword_mining json_value_mines_literal_branches_via_ref
+        PASS [   0.016s] ( 526/1501) bbnf::pipeline pipeline_compiles_json_grammar
+        PASS [   0.026s] ( 527/1501) bbnf::phf_keyword_mining bbnf_directive_mines_literal_branches
+        PASS [   0.027s] ( 528/1501) bbnf::phf_keyword_mining bbnf_directive_generates_emitter_phf_table
+        PASS [   0.027s] ( 529/1501) bbnf::pipeline pipeline_css_vm_backdrop_block
+        PASS [   0.013s] ( 530/1501) bbnf::pipeline pipeline_left_recursion_elimination
+        PASS [   0.030s] ( 531/1501) bbnf::pipeline pipeline_css_vm_comment_in_value
+        PASS [   0.051s] ( 532/1501) bbnf::pipeline pipeline_google_sheets_formula
+        PASS [   0.036s] ( 533/1501) bbnf::pipeline pipeline_msgpack_roundtrip
+        PASS [   0.035s] ( 534/1501) bbnf::pipeline pipeline_next_operator
+        PASS [   0.160s] ( 535/1501) bbnf::payload_layouts test_css_l4_payload_layouts
+        PASS [   0.166s] ( 536/1501) bbnf::payload_layouts test_css_l4_payload_layouts_baseline
+        PASS [   0.033s] ( 537/1501) bbnf::pipeline pipeline_parse_array
+        PASS [   0.015s] ( 538/1501) bbnf::pipeline pipeline_parse_bool
+        PASS [   0.014s] ( 539/1501) bbnf::pipeline pipeline_parse_null
+        PASS [   0.018s] ( 540/1501) bbnf::pipeline pipeline_parse_nested
+        PASS [   0.017s] ( 541/1501) bbnf::pipeline pipeline_parse_number
+        PASS [   0.015s] ( 542/1501) bbnf::pipeline pipeline_parse_string
+        PASS [   0.018s] ( 543/1501) bbnf::pipeline pipeline_parse_object
+        PASS [   0.013s] ( 544/1501) bbnf::pipeline pipeline_span_capture_type_inference
+        PASS [   0.014s] ( 545/1501) bbnf::pipeline pipeline_two_regex_alternation
+        PASS [   0.015s] ( 546/1501) bbnf::pipeline pipeline_type_inference_json
+        PASS [   0.018s] ( 547/1501) bbnf::pipeline pipeline_vm_full_json_data
+        PASS [   0.095s] ( 548/1501) bbnf::pipeline pipeline_google_sheets_multiline_let
+        PASS [   0.019s] ( 549/1501) bbnf::pipeline_compile_request compile_paths_preserves_pretty_directives_across_multiple_explicit_paths
+        PASS [   0.027s] ( 550/1501) bbnf::pipeline pipeline_vm_full_css_normalize
+        PASS [   0.015s] ( 551/1501) bbnf::pipeline_compile_request compile_request_preserves_split_pretty_hint_for_codegen_error
+        PASS [   0.018s] ( 552/1501) bbnf::pipeline_compile_request compile_paths_preserves_pretty_directives_through_import_resolution
+        PASS [   0.013s] ( 553/1501) bbnf::pipeline_compile_request compile_request_rejects_unknown_pretty_hint
+        PASS [   0.046s] ( 554/1501) bbnf::pipeline pipeline_vm_full_css_bootstrap
+        PASS [   0.014s] ( 555/1501) bbnf::pipeline_compile_request source_aot_enables_prettify_for_pretty_directive
+        PASS [   0.051s] ( 556/1501) bbnf::pipeline pipeline_vm_full_json_twitter
+        PASS [   0.018s] ( 557/1501) bbnf::pipeline_compile_request source_aot_respects_explicit_prettify_without_directives
+        PASS [   0.021s] ( 558/1501) bbnf::pipeline_compile_request source_aot_skips_prettify_without_flag_or_directive
+        PASS [   0.021s] ( 559/1501) bbnf::pipeline_compile_request ts_backend_emits_discriminated_union
+        PASS [   0.025s] ( 560/1501) bbnf::pipeline_compile_request ts_backend_handles_alternation_dispatch
+        PASS [   0.031s] ( 561/1501) bbnf::pipeline_compile_request ts_backend_produces_valid_structure
+        PASS [   0.021s] ( 562/1501) bbnf::pipeline_compile_request wasm_backend_emits_literal_matching
+        PASS [   0.027s] ( 563/1501) bbnf::pipeline_compile_request wasm_backend_produces_valid_wat
+        PASS [   0.028s] ( 564/1501) bbnf::plan_contract contradictory_call_mode_directives_are_refused
+        PASS [   0.028s] ( 565/1501) bbnf::plan_contract plan_decisions_do_not_read_rule_names
+        PASS [   0.018s] ( 566/1501) bbnf::pratt_const_fold emit_empty_facts_produces_zeroed_lut
+        PASS [   0.014s] ( 567/1501) bbnf::pratt_const_fold emit_populated_facts_produces_nonzero_bytes
+        PASS [   0.013s] ( 568/1501) bbnf::pratt_const_fold emitted_lut_packs_non_operator_bytes_as_zero
+        PASS [   0.037s] ( 569/1501) bbnf::pratt_const_fold bbnf_mines_operators
+        PASS [   0.015s] ( 570/1501) bbnf::pratt_const_fold json_mines_no_operators
+        PASS [   0.013s] ( 571/1501) bbnf::pratt_const_fold mk_facts_constructor_produces_valid_lut
+        PASS [   0.015s] ( 572/1501) bbnf::pratt_const_fold pack_left_assoc_binary_no_second
+        PASS [   0.251s] ( 573/1501) bbnf::payload_layouts test_total_payload_layouts
+        PASS [   0.013s] ( 574/1501) bbnf::pratt_const_fold pack_overlap_byte_unique_in_lut
+        PASS [   0.016s] ( 575/1501) bbnf::pratt_const_fold pack_left_assoc_binary_two_byte
+        PASS [   0.026s] ( 576/1501) bbnf::pratt_const_fold let_call_dispatch_reachable_via_view
+        PASS [   0.014s] ( 577/1501) bbnf::pratt_const_fold pack_postfix_unary
+        PASS [   0.012s] ( 578/1501) bbnf::pratt_const_fold pack_precedence_saturates_at_nibble
+        PASS [   0.015s] ( 579/1501) bbnf::pratt_const_fold pack_prefix_unary
+        PASS [   0.015s] ( 580/1501) bbnf::pratt_const_fold pack_right_assoc_binary_no_second
+        PASS [   0.026s] ( 581/1501) bbnf::project_types_bbnf bbnf_audit_coverage_reports_no_missing_markers
+        PASS [   0.027s] ( 582/1501) bbnf::pratt_const_fold sheets_mines_operators
+        PASS [   0.022s] ( 583/1501) bbnf::project_types_bbnf bbnf_struct_registry_is_non_empty
+        PASS [   0.023s] ( 584/1501) bbnf::project_types_bbnf every_named_bbnf_rule_has_a_struct_layout
+        PASS [   0.018s] ( 585/1501) bbnf::project_types_json array_rule_layout_carries_repeat_element_field
+        PASS [   0.015s] ( 586/1501) bbnf::project_types_json audit_pass_reports_one_hundred_percent_mapped_on_json
+        PASS [   0.014s] ( 587/1501) bbnf::project_types_json bool_rule_projects_bool_payload_type
+        PASS [   0.015s] ( 588/1501) bbnf::project_types_json bool_rule_layout_has_two_branch_tags
+        PASS [   0.014s] ( 589/1501) bbnf::project_types_json every_named_json_rule_has_a_struct_layout
+        PASS [   0.014s] ( 590/1501) bbnf::project_types_json json_struct_registry_has_at_least_seven_layouts
+        PASS [   0.014s] ( 591/1501) bbnf::project_types_json object_rule_layout_carries_repeat_element_field
+        PASS [   0.016s] ( 592/1501) bbnf::project_types_json null_rule_layout_is_newtype_wrapper_with_typed_leaf
+        PASS [   0.016s] ( 593/1501) bbnf::project_types_json pair_rule_layout_is_struct_with_at_least_two_fields
+        PASS [   0.016s] ( 594/1501) bbnf::project_types_json value_rule_layout_is_tagged_enum_with_six_branches
+        PASS [   0.166s] ( 595/1501) bbnf::pratt_const_fold css_l4_mines_math_expr_operators
+        PASS [   0.027s] ( 596/1501) bbnf::project_types_sheets audit_pass_reports_mapped_for_every_sheets_marker
+        PASS [   0.026s] ( 597/1501) bbnf::project_types_sheets cell_related_layouts_carry_expected_layout_kinds
+        PASS [   0.130s] ( 598/1501) bbnf::project_types_css_l4 audit_pass_reports_mapped_for_every_css_l4_marker
+        PASS [   0.029s] ( 599/1501) bbnf::project_types_sheets every_named_sheets_rule_has_non_empty_layout
+        PASS [   0.141s] ( 600/1501) bbnf::project_types_css_l4 every_named_rule_projects_to_non_empty_layout
+        PASS [   0.027s] ( 601/1501) bbnf::project_types_sheets sheets_registry_meets_minimum_layout_count
+        PASS [   0.016s] ( 602/1501) bbnf::projection_totality struct_direct_documents_expose_projection_values
+        PASS [   0.013s] ( 603/1501) bbnf::projection_totality struct_direct_documents_have_concrete_roots
+        PASS [   0.027s] ( 604/1501) bbnf::project_types_sheets typed_leaf_rules_project_to_newtype_or_struct
+        PASS [   0.146s] ( 605/1501) bbnf::project_types_css_l4 typed_value_rules_project_to_aggregate_layouts
+        PASS [   0.015s] ( 606/1501) bbnf::recognizer_consumer_invariant every_recognizer_field_has_a_named_consumer
+        PASS [   0.042s] ( 607/1501) bbnf::project_types_sheets registry_iteration_is_deterministic_across_invocations
+        PASS [   0.013s] ( 608/1501) bbnf::recognizer_decision_consumption every_alt_mode_has_a_consumer
+        PASS [   0.012s] ( 609/1501) bbnf::recognizer_decision_consumption every_call_strategy_has_a_consumer
+        PASS [   0.012s] ( 610/1501) bbnf::recognizer_decision_consumption every_regex_engine_has_a_consumer
+        PASS [   0.013s] ( 611/1501) bbnf::recognizer_decision_consumption every_wrap_mode_has_a_consumer
+        PASS [   0.014s] ( 612/1501) bbnf::recognizer_decisions_smoke alt_mode_checkpoint_is_legal_default
+        PASS [   0.162s] ( 613/1501) bbnf::project_types_css_l4 total_layout_count_meets_floor
+        PASS [   0.016s] ( 614/1501) bbnf::recognizer_decisions_smoke json_grammar_has_regex_engine_decisions
+        PASS [   0.013s] ( 615/1501) bbnf::recognizer_decisions_smoke json_grammar_populates_recognizer_decisions
+        PASS [   0.012s] ( 616/1501) bbnf::recover parse_multiple_recover_directives
+        PASS [   0.014s] ( 617/1501) bbnf::recover parse_recover_directive
+        PASS [   0.014s] ( 618/1501) bbnf::recover parse_recover_mixed_with_imports
+        PASS [   0.012s] ( 619/1501) bbnf::recover parse_recover_with_alternation_sync_expr
+        PASS [   0.014s] ( 620/1501) bbnf::recover parse_recover_nonexistent_target
+        PASS [   0.014s] ( 621/1501) bbnf::regex_charclass regex_charclass_with_backslash_and_slash
+        PASS [   0.020s] ( 622/1501) bbnf::regex_bootstrap regex_cyclic_rules_survive_optimizer
+        PASS [   0.012s] ( 623/1501) bbnf::regex_charclass regex_escaped_bracket_inside_charclass
+        PASS [   0.012s] ( 624/1501) bbnf::regex_charclass regex_escaped_slash_inside_charclass
+        PASS [   0.014s] ( 625/1501) bbnf::regex_charclass regex_close_paren_in_charclass_inside_group
+        PASS [   0.013s] ( 626/1501) bbnf::regex_charclass regex_escaped_slash_outside_charclass
+        PASS [   0.012s] ( 627/1501) bbnf::regex_charclass regex_literal_slash_inside_charclass
+        PASS [   0.012s] ( 628/1501) bbnf::regex_charclass regex_multiple_charclasses_with_slash
+        PASS [   0.036s] ( 629/1501) bbnf::regex_audit audit_all_grammar_regex_patterns
+        PASS [   0.013s] ( 630/1501) bbnf::regex_charclass regex_nested_brackets
+        PASS [   0.013s] ( 631/1501) bbnf::regex_charclass regex_no_charclass
+        PASS [   0.012s] ( 632/1501) bbnf::regex_charclass regex_simple
+        PASS [   0.011s] ( 633/1501) bbnf::regex_charclass regex_single_char
+        PASS [   0.012s] ( 634/1501) bbnf::regex_classify css_number_non_nullable
+        PASS [   0.012s] ( 635/1501) bbnf::regex_classify css_number_required_digits
+        PASS [   0.013s] ( 636/1501) bbnf::regex_classify hex_digits
+        PASS [   0.014s] ( 637/1501) bbnf::regex_classify identifier_known
+        PASS [   0.012s] ( 638/1501) bbnf::regex_classify identifier_structural
+        PASS [   0.012s] ( 639/1501) bbnf::regex_classify json_number_known
+        PASS [   0.011s] ( 640/1501) bbnf::regex_classify quoted_string
+        PASS [   0.017s] ( 641/1501) bbnf::regex_classify simple_decimal
+        PASS [   0.028s] ( 642/1501) bbnf::regex_classify known_patterns
+        PASS [   0.030s] ( 643/1501) bbnf::regex_classify simple_integer
+        PASS [   0.031s] ( 644/1501) bbnf::regex_classify unsigned_integer
+        PASS [   0.033s] ( 645/1501) bbnf::regex_classify unknown_patterns
+        PASS [   0.033s] ( 646/1501) bbnf::regex_engine_authoritative json_regex_decisions_are_populated
+        PASS [   0.016s] ( 647/1501) bbnf::runtime_root bbnf_root_is_document_owned_grammar_view
+        PASS [   0.018s] ( 648/1501) bbnf::runtime_root bnf_root_is_document_owned_grammar_view
+        PASS [   0.420s] ( 649/1501) bbnf::pipeline pipeline_vm_full_json_canada
+        PASS [   0.018s] ( 650/1501) bbnf::runtime_root css_pretty_root_is_document_owned_stylesheet_view
+        PASS [   0.048s] ( 651/1501) bbnf::regex_fast_path_consistency emit_regex_never_panics_on_grammar_patterns
+        PASS [   0.018s] ( 652/1501) bbnf::runtime_root csv_root_is_document_owned_csv_view
+        PASS [   0.025s] ( 653/1501) bbnf::runtime_root css_l4_root_is_document_owned_stylesheet_view
+        PASS [   0.017s] ( 654/1501) bbnf::runtime_root ebnf_root_is_document_owned_grammar_view
+        PASS [   0.016s] ( 655/1501) bbnf::runtime_root json_root_is_document_owned_object_view
+        PASS [   0.015s] ( 656/1501) bbnf::runtime_root math_root_is_document_owned_number_view
+        PASS [   0.016s] ( 657/1501) bbnf::rx4_rust_fusion_absent rust_ir_keeps_the_branches_apart
+        PASS [   0.017s] ( 658/1501) bbnf::runtime_root sheets_root_is_document_owned_formula_view
+        PASS [   0.017s] ( 659/1501) bbnf::rx4_rust_fusion_absent rx4_print_pass_list_rust
+        PASS [   0.065s] ( 660/1501) bbnf::regex_fast_path_consistency solve_regex_strategy_agrees_with_emit_regex_tier
+        PASS [   0.018s] ( 661/1501) bbnf::rx4_rust_fusion_absent rx4_ts_emit_dump
+        PASS [   0.019s] ( 662/1501) bbnf::rx4_rust_fusion_absent rx4_print_pass_list_ts
+        PASS [   0.014s] ( 663/1501) bbnf::rx4_rust_fusion_absent ts_emit_keeps_fusion
+        PASS [   0.017s] ( 664/1501) bbnf::rx4_rust_fusion_absent vm_alt_a_ab_consumes_one_byte
+        PASS [   0.013s] ( 665/1501) bbnf::serialize_roundtrip bbnf_rule
+        PASS [   1.745s] ( 666/1501) bbnf::ax_w0a2s_real_css_probe tailwind_full_parse
+        PASS [   0.014s] ( 667/1501) bbnf::serialize_roundtrip bnf_rule
+        PASS [   0.192s] ( 668/1501) bbnf::regen_shape_goldens struct_direct_generated_files_have_no_tape_view_residue
+        PASS [   0.013s] ( 669/1501) bbnf::serialize_roundtrip css_simple
+        PASS [   0.041s] ( 670/1501) bbnf::separated_list_intent gorgeous_json_lists_require_commas
+        PASS [   0.012s] ( 671/1501) bbnf::serialize_roundtrip csv_multi
+        PASS [   0.144s] ( 672/1501) bbnf::regex_engine_authoritative css_l4_regex_decisions_are_populated
+        PASS [   1.423s] ( 673/1501) bbnf::css_pretty parse_tailwind_css
+        PASS [   0.014s] ( 674/1501) bbnf::serialize_roundtrip csv_quoted
+        PASS [   0.049s] ( 675/1501) bbnf::separated_list_intent keyframe_declarations_are_semicolon_separated
+        PASS [   0.012s] ( 676/1501) bbnf::serialize_roundtrip csv_simple
+        PASS [   0.014s] ( 677/1501) bbnf::serialize_roundtrip csv_single
+        PASS [   0.015s] ( 678/1501) bbnf::serialize_roundtrip ebnf_rule
+        PASS [   0.015s] ( 679/1501) bbnf::serialize_roundtrip json_empty_arr
+        PASS [   0.015s] ( 680/1501) bbnf::serialize_roundtrip json_array
+        PASS [   0.014s] ( 681/1501) bbnf::serialize_roundtrip json_empty_obj
+        PASS [   0.014s] ( 682/1501) bbnf::serialize_roundtrip json_nested
+        PASS [   0.017s] ( 683/1501) bbnf::serialize_roundtrip json_false
+        PASS [   0.013s] ( 684/1501) bbnf::serialize_roundtrip json_null
+        PASS [   0.012s] ( 685/1501) bbnf::serialize_roundtrip json_number
+        PASS [   0.012s] ( 686/1501) bbnf::serialize_roundtrip json_string
+        PASS [   0.012s] ( 687/1501) bbnf::serialize_roundtrip json_true
+        PASS [   0.014s] ( 688/1501) bbnf::serialize_roundtrip json_object
+        PASS [   0.013s] ( 689/1501) bbnf::serialize_roundtrip math_num
+        PASS [   0.011s] ( 690/1501) bbnf::shape_dict_bbnf bbnf_shape_hashes_are_stable
+        PASS [   0.014s] ( 691/1501) bbnf::shape_dict_bbnf bbnf_shape_hashes_are_distinct
+        PASS [   0.026s] ( 692/1501) bbnf::shape_dict_bbnf bbnf_self_hosting_mines_exactly_two_templates
+        PASS [   0.030s] ( 693/1501) bbnf::shape_dict_bbnf bbnf_self_hosting_mines_mapped_factor_template
+        PASS [   0.025s] ( 694/1501) bbnf::shape_dict_bbnf bbnf_self_hosting_profile_carries_templates
+        PASS [   0.033s] ( 695/1501) bbnf::shape_dict_bbnf bbnf_self_hosting_mines_big_comment_template
+        PASS [   0.022s] ( 696/1501) bbnf::shape_dict_bbnf css_pretty_grammar_has_no_bbnf_templates
+        PASS [   0.115s] ( 697/1501) bbnf::separated_list_intent google_sheets_args_are_comma_separated
+        PASS [   0.017s] ( 698/1501) bbnf::shape_dict_bbnf json_grammar_has_no_bbnf_templates
+        PASS [   0.021s] ( 699/1501) bbnf::shape_dict_bbnf ebnf_grammar_has_no_bbnf_templates
+        PASS [   0.019s] ( 700/1501) bbnf::shape_dict_bbnf json_profile_has_empty_bbnf_templates
+        PASS [   0.019s] ( 701/1501) bbnf::shape_dispatch_emission array_shape_classifies_correctly
+        PASS [   0.015s] ( 702/1501) bbnf::shape_dispatch_emission json_fixture_value_is_wrap_pair_is_flat
+        PASS [   0.020s] ( 703/1501) bbnf::shape_dispatch_emission array_shape_emit_matches_golden
+        PASS [   0.020s] ( 704/1501) bbnf::shape_dispatch_emission json_fixture_structural_rules_all_classified
+        PASS [   0.013s] ( 705/1501) bbnf::shape_dispatch_emission keyword_shape_classifies_correctly
+        PASS [   0.021s] ( 706/1501) bbnf::shape_dispatch_emission classified_tags_match_their_category_check
+        PASS [   0.020s] ( 707/1501) bbnf::shape_dispatch_emission keyword_shape_emit_matches_golden
+        PASS [   0.014s] ( 708/1501) bbnf::shape_dispatch_emission number_shape_classifies_correctly
+        PASS [   0.014s] ( 709/1501) bbnf::shape_dispatch_emission number_shape_emit_matches_golden
+        PASS [   0.016s] ( 710/1501) bbnf::shape_dispatch_emission object_shape_classifies_correctly
+        PASS [   0.017s] ( 711/1501) bbnf::shape_dispatch_emission object_shape_emit_matches_golden
+        PASS [   0.016s] ( 712/1501) bbnf::shape_dispatch_emission scalar_shape_detector_admits_literal_body
+        PASS [   0.017s] ( 713/1501) bbnf::shape_dispatch_emission scalar_shape_classifier_routes_literal_to_keyword
+        PASS [   0.018s] ( 714/1501) bbnf::shape_dispatch_emission scalar_shape_emit_matches_golden
+        PASS [   0.017s] ( 715/1501) bbnf::shape_dispatch_emission shape_dispatch_is_idempotent
+        PASS [   0.015s] ( 716/1501) bbnf::shape_dispatch_emission string_shape_classifies_correctly
+        PASS [   0.016s] ( 717/1501) bbnf::shape_dispatch_emission string_shape_emit_matches_golden
+        PASS [   0.014s] ( 718/1501) bbnf::shape_dispatch_emission w4_flat_emitter_produces_parsable_tokens
+        PASS [   0.015s] ( 719/1501) bbnf::shape_dispatch_emission w4_arglist_no_hits_on_json_fixture
+        PASS [   0.015s] ( 720/1501) bbnf::shape_dispatch_emission w4_flat_classifies_json_pair
+        PASS [   0.019s] ( 721/1501) bbnf::shape_dispatch_emission w4_arglist_emitter_produces_parsable_tokens
+        PASS [   0.017s] ( 722/1501) bbnf::shape_dispatch_emission w4_hregex_emitter_produces_parsable_tokens
+        PASS [   0.014s] ( 723/1501) bbnf::shape_dispatch_emission w4_hregex_no_hits_on_json_fixture
+        PASS [   0.015s] ( 724/1501) bbnf::shape_dispatch_emission w4_pratt_emitter_produces_parsable_tokens
+        PASS [   0.014s] ( 725/1501) bbnf::shape_dispatch_emission w4_pratt_no_hits_on_json_fixture
+        PASS [   0.014s] ( 726/1501) bbnf::shape_dispatch_emission w4_unordered_emitter_produces_parsable_tokens
+        PASS [   0.015s] ( 727/1501) bbnf::shape_dispatch_emission w4_unordered_no_hits_on_json_fixture
+        PASS [   0.014s] ( 728/1501) bbnf::shape_dispatch_emission w4_wrap_classifies_json_value
+        PASS [   0.013s] ( 729/1501) bbnf::sheets_expr_parity sheets_exponent_is_right_associative_field_for_field
+        PASS [   0.014s] ( 730/1501) bbnf::shape_dispatch_emission w4_wrap_emitter_produces_parsable_tokens
+        PASS [   0.011s] ( 731/1501) bbnf::sheets_expr_parity sheets_parses_arithmetic_field_for_field
+        PASS [   0.010s] ( 732/1501) bbnf::sheets_expr_parity sheets_parses_cell_field_for_field
+        PASS [   0.174s] ( 733/1501) bbnf::separated_list_intent gorgeous_google_sheets_args_are_comma_separated
+        PASS [   0.012s] ( 734/1501) bbnf::sheets_expr_parity sheets_parses_fn_call_field_for_field
+        PASS [   0.012s] ( 735/1501) bbnf::sheets_expr_parity sheets_parses_let_call_field_for_field
+        PASS [   0.013s] ( 736/1501) bbnf::sheets_expr_parity sheets_parses_number_field_for_field
+        PASS [   0.014s] ( 737/1501) bbnf::sheets_expr_parity sheets_parses_paren_expr_field_for_field
+        PASS [   0.011s] ( 738/1501) bbnf::sheets_expr_parity sheets_parses_string_field_for_field
+        PASS [   0.013s] ( 739/1501) bbnf::sheets_expr_parity sheets_root_offset_valid
+        PASS [   0.014s] ( 740/1501) bbnf::sheets_expr_parity sheets_tape_root_covers_formula
+        PASS [   0.013s] ( 741/1501) bbnf::sheets_expr_parity sheets_view_children_non_empty_for_non_trivial_formula
+        PASS [   0.013s] ( 742/1501) bbnf::sheets_expr_parity struct_direct_wire::document_add_expr_one_plus_two_via_wire_contract
+        PASS [   0.011s] ( 743/1501) bbnf::sheets_expr_parity struct_direct_wire::document_func_call_via_wire_contract
+        PASS [   0.011s] ( 744/1501) bbnf::sheets_expr_parity struct_direct_wire::document_number_leaf_round_trip
+        PASS [   0.012s] ( 745/1501) bbnf::sheets_parity add_op_first_branch_fires_0u8
+        PASS [   0.012s] ( 746/1501) bbnf::sheets_parity boolean_first_branch_fires_true_payload
+        PASS [   0.014s] ( 747/1501) bbnf::sheets_parity boolean_parses_both_cases
+        PASS [   0.015s] ( 748/1501) bbnf::sheets_parity cell_ref_parses_absolute_and_relative
+        PASS [   0.015s] ( 749/1501) bbnf::sheets_parity error_literal_divzero_branch_fires_payload
+        PASS [   0.014s] ( 750/1501) bbnf::sheets_parity error_literal_first_branch_fires
+        PASS [   0.019s] ( 751/1501) bbnf::sheets_parity child_iter_walks_complex_formula
+        PASS [   0.018s] ( 752/1501) bbnf::sheets_parity error_literal_error_branch_fires_payload
+        PASS [   0.017s] ( 753/1501) bbnf::sheets_parity error_literal_factored_branch_fires_payload
+        PASS [   0.015s] ( 754/1501) bbnf::sheets_parity error_literal_name_branch_fires_payload
+        PASS [   0.015s] ( 755/1501) bbnf::sheets_parity error_literal_num_branch_fires_payload
+        PASS [   0.015s] ( 756/1501) bbnf::sheets_parity error_literal_parses_all_branches
+        PASS [   0.016s] ( 757/1501) bbnf::sheets_parity error_literal_ref_branch_fires_payload
+        PASS [   0.019s] ( 758/1501) bbnf::sheets_parity error_literal_spill_branch_fires_payload
+        PASS [   0.017s] ( 759/1501) bbnf::sheets_parity nested_arithmetic_materialises_first_branch_ops
+        PASS [   0.017s] ( 760/1501) bbnf::sheets_parity mul_op_first_branch_fires_0u8
+        PASS [   0.019s] ( 761/1501) bbnf::sheets_parity number_parses_int_and_decimal
+        PASS [   0.018s] ( 762/1501) bbnf::sheets_parity operator_branches_parse
+        PASS [   0.018s] ( 763/1501) bbnf::sheets_parity pinned_add_op_minus_branch_drops_payload
+        PASS [   0.017s] ( 764/1501) bbnf::sheets_parity pinned_mul_op_div_branch_drops_payload
+        PASS [   0.026s] ( 765/1501) bbnf::sheets_parity error_literal_value_branch_fires_payload
+        PASS [   0.017s] ( 766/1501) bbnf::sheets_parity pinned_number_drops_f64_payload
+        PASS [   0.016s] ( 767/1501) bbnf::sheets_parity range_ref_parses_with_and_without_sheet_prefix
+        PASS [   0.018s] ( 768/1501) bbnf::sheets_parity string_parses_quoted_literal
+        PASS [   0.018s] ( 769/1501) bbnf::sheets_parity wire_contract::add_op_first_branch_maps_to_tag_zero
+        PASS [   0.020s] ( 770/1501) bbnf::sheets_parity wire_contract::add_op_second_branch_maps_to_tag_one
+        PASS [   0.020s] ( 771/1501) bbnf::sheets_parity wire_contract::boolean_true_lands_as_bool_leaf
+        PASS [   0.028s] ( 772/1501) bbnf::sheets_parity unary_prefix_first_branch_fires_0u8
+        PASS [   0.021s] ( 773/1501) bbnf::sheets_parity wire_contract::compound_kind_preserves_role_for_operator_alt
+        PASS [   0.026s] ( 774/1501) bbnf::sheets_parity wire_contract::cell_compound_carries_prefix_and_cell_ref
+        PASS [   0.024s] ( 775/1501) bbnf::sheets_parity wire_contract::error_literal_n_a_lands_as_error_zero
+        PASS [   0.019s] ( 776/1501) bbnf::sheets_parity wire_contract::formula_compound_carries_expression_child
+        PASS [   0.023s] ( 777/1501) bbnf::sheets_parity wire_contract::error_literal_null_lands_as_error_four
+        PASS [   0.024s] ( 778/1501) bbnf::sheets_parity wire_contract::func_call_compound_carries_head_and_args
+        PASS [   0.021s] ( 779/1501) bbnf::sheets_self_parity corpus_nested
+        PASS [   0.025s] ( 780/1501) bbnf::sheets_parity wire_contract::number_42_lands_as_f64_leaf
+        PASS [   0.028s] ( 781/1501) bbnf::sheets_self_parity corpus_simple
+        PASS [   0.028s] ( 782/1501) bbnf::sheets_self_parity corpus_stress
+        PASS [   0.025s] ( 783/1501) bbnf::sheets_self_parity prettify_idempotent_array_literal_multi_row
+        PASS [   0.029s] ( 784/1501) bbnf::sheets_self_parity prettify_broken_group_keeps_separators
+        PASS [   0.026s] ( 785/1501) bbnf::sheets_self_parity prettify_idempotent_array_literal_single_row
+        PASS [   0.032s] ( 786/1501) bbnf::sheets_self_parity prettify_idempotent_add_op
+        PASS [   0.021s] ( 787/1501) bbnf::sheets_self_parity prettify_idempotent_cell_ref_absolute
+        PASS [   0.030s] ( 788/1501) bbnf::sheets_self_parity prettify_idempotent_boolean_true
+        PASS [   0.026s] ( 789/1501) bbnf::sheets_self_parity prettify_idempotent_cell_ref_relative
+        PASS [   0.023s] ( 790/1501) bbnf::sheets_self_parity prettify_idempotent_compare_chain
+        PASS [   0.020s] ( 791/1501) bbnf::sheets_self_parity prettify_idempotent_error_na
+        PASS [   0.021s] ( 792/1501) bbnf::sheets_self_parity prettify_idempotent_concat_op
+        PASS [   0.027s] ( 793/1501) bbnf::sheets_self_parity prettify_idempotent_compare_eq
+        PASS [   0.022s] ( 794/1501) bbnf::sheets_self_parity prettify_idempotent_exp_op
+        PASS [   0.023s] ( 795/1501) bbnf::sheets_self_parity prettify_idempotent_fn_call_multi_arg
+        PASS [   0.030s] ( 796/1501) bbnf::sheets_self_parity prettify_idempotent_error_value
+        PASS [   0.021s] ( 797/1501) bbnf::sheets_self_parity prettify_idempotent_fn_call_single_arg
+        PASS [   0.017s] ( 798/1501) bbnf::sheets_self_parity prettify_idempotent_identifier_bare
+        PASS [   0.027s] ( 799/1501) bbnf::sheets_self_parity prettify_idempotent_fn_call_nested
+        PASS [   0.026s] ( 800/1501) bbnf::sheets_self_parity prettify_idempotent_fn_call_zero_args
+        PASS [   0.023s] ( 801/1501) bbnf::sheets_self_parity prettify_idempotent_lambda_call
+        PASS [   1.709s] ( 802/1501) bbnf::css_l4_w6_typed_retime css_l4_w6_typed_same_workload_retime
+        PASS [   0.024s] ( 803/1501) bbnf::sheets_self_parity prettify_idempotent_let_call
+        PASS [   0.026s] ( 804/1501) bbnf::sheets_self_parity prettify_idempotent_mul_op
+        PASS [   0.019s] ( 805/1501) bbnf::sheets_self_parity prettify_idempotent_paren_expr
+        PASS [   0.028s] ( 806/1501) bbnf::sheets_self_parity prettify_idempotent_number_decimal
+        PASS [   0.025s] ( 807/1501) bbnf::sheets_self_parity prettify_idempotent_number_int
+        PASS [   0.022s] ( 808/1501) bbnf::sheets_self_parity prettify_idempotent_range_ref_column
+        PASS [   0.019s] ( 809/1501) bbnf::sheets_self_parity prettify_idempotent_range_ref_sheet_prefixed
+        PASS [   0.022s] ( 810/1501) bbnf::sheets_self_parity prettify_idempotent_string_basic
+        PASS [   0.039s] ( 811/1501) bbnf::sheets_self_parity prettify_idempotent_postfix_percent
+        PASS [   0.050s] ( 812/1501) bbnf::sheets_self_parity prettify_idempotent_range_ref_pair
+        PASS [   0.051s] ( 813/1501) bbnf::sheets_self_parity serialize_roundtrip_add_op_minus
+        PASS [   0.068s] ( 814/1501) bbnf::sheets_self_parity prettify_idempotent_unary_plus
+        PASS [   0.073s] ( 815/1501) bbnf::sheets_self_parity serialize_roundtrip_array_literal_multi_row
+        PASS [   0.085s] ( 816/1501) bbnf::sheets_self_parity prettify_idempotent_unary_minus
+        PASS [   0.081s] ( 817/1501) bbnf::sheets_self_parity serialize_roundtrip_add_op_plus
+        PASS [   0.077s] ( 818/1501) bbnf::sheets_self_parity serialize_roundtrip_array_literal_single_row
+        PASS [   0.049s] ( 819/1501) bbnf::sheets_self_parity serialize_roundtrip_cell_ref_absolute
+        PASS [   0.067s] ( 820/1501) bbnf::sheets_self_parity serialize_roundtrip_boolean_true
+        PASS [   0.085s] ( 821/1501) bbnf::sheets_self_parity serialize_roundtrip_boolean_false
+        PASS [   0.030s] ( 822/1501) bbnf::sheets_self_parity serialize_roundtrip_cell_ref_wide
+        PASS [   0.023s] ( 823/1501) bbnf::sheets_self_parity serialize_roundtrip_compare_eq
+        PASS [   0.058s] ( 824/1501) bbnf::sheets_self_parity serialize_roundtrip_cell_ref_relative
+        PASS [   0.029s] ( 825/1501) bbnf::sheets_self_parity serialize_roundtrip_compare_le
+        PASS [   0.102s] ( 826/1501) bbnf::sheets_self_parity serialize_roundtrip_boolean_lower
+        PASS [   0.033s] ( 827/1501) bbnf::sheets_self_parity serialize_roundtrip_compare_gt
+        PASS [   0.030s] ( 828/1501) bbnf::sheets_self_parity serialize_roundtrip_compare_lt
+        PASS [   0.031s] ( 829/1501) bbnf::sheets_self_parity serialize_roundtrip_compare_ne
+        PASS [   0.030s] ( 830/1501) bbnf::sheets_self_parity serialize_roundtrip_concat_op
+        PASS [   0.026s] ( 831/1501) bbnf::sheets_self_parity serialize_roundtrip_error_generic
+        PASS [   0.020s] ( 832/1501) bbnf::sheets_self_parity serialize_roundtrip_error_na
+        PASS [   0.034s] ( 833/1501) bbnf::sheets_self_parity serialize_roundtrip_error_divzero
+        PASS [   0.056s] ( 834/1501) bbnf::sheets_self_parity serialize_roundtrip_compare_ge
+        PASS [   0.025s] ( 835/1501) bbnf::sheets_self_parity serialize_roundtrip_error_name
+        PASS [   0.025s] ( 836/1501) bbnf::sheets_self_parity serialize_roundtrip_error_num
+        PASS [   0.026s] ( 837/1501) bbnf::sheets_self_parity serialize_roundtrip_error_ref
+        PASS [   0.027s] ( 838/1501) bbnf::sheets_self_parity serialize_roundtrip_error_spill
+        PASS [   0.022s] ( 839/1501) bbnf::sheets_self_parity serialize_roundtrip_fn_call_multi_arg
+        PASS [   0.040s] ( 840/1501) bbnf::sheets_self_parity serialize_roundtrip_error_null
+        PASS [   0.029s] ( 841/1501) bbnf::sheets_self_parity serialize_roundtrip_exp_op
+        PASS [   0.029s] ( 842/1501) bbnf::sheets_self_parity serialize_roundtrip_fn_call_nested
+        PASS [   0.038s] ( 843/1501) bbnf::sheets_self_parity serialize_roundtrip_error_value
+        PASS [   0.026s] ( 844/1501) bbnf::sheets_self_parity serialize_roundtrip_fn_call_zero_args
+        PASS [   0.036s] ( 845/1501) bbnf::sheets_self_parity serialize_roundtrip_fn_call_single_arg
+        PASS [   0.037s] ( 846/1501) bbnf::sheets_self_parity serialize_roundtrip_identifier_bare
+        PASS [   0.033s] ( 847/1501) bbnf::sheets_self_parity serialize_roundtrip_lambda_call
+        PASS [   0.030s] ( 848/1501) bbnf::sheets_self_parity serialize_roundtrip_mul_op_slash
+        PASS [   0.034s] ( 849/1501) bbnf::sheets_self_parity serialize_roundtrip_let_call
+        PASS [   0.027s] ( 850/1501) bbnf::sheets_self_parity serialize_roundtrip_number_decimal
+        PASS [   0.032s] ( 851/1501) bbnf::sheets_self_parity serialize_roundtrip_number_exponent
+        PASS [   0.028s] ( 852/1501) bbnf::sheets_self_parity serialize_roundtrip_number_leading_dot
+        PASS [   0.024s] ( 853/1501) bbnf::sheets_self_parity serialize_roundtrip_number_signed_exponent
+        PASS [   0.033s] ( 854/1501) bbnf::sheets_self_parity serialize_roundtrip_number_int
+        PASS [   0.025s] ( 855/1501) bbnf::sheets_self_parity serialize_roundtrip_range_ref_column
+        PASS [   0.049s] ( 856/1501) bbnf::sheets_self_parity serialize_roundtrip_mul_op_star
+        PASS [   0.033s] ( 857/1501) bbnf::sheets_self_parity serialize_roundtrip_postfix_percent
+        PASS [   0.031s] ( 858/1501) bbnf::sheets_self_parity serialize_roundtrip_range_ref_quoted_sheet
+        PASS [   0.034s] ( 859/1501) bbnf::sheets_self_parity serialize_roundtrip_range_ref_pair
+        PASS [   0.023s] ( 860/1501) bbnf::sheets_self_parity serialize_roundtrip_unary_minus
+        PASS [   0.035s] ( 861/1501) bbnf::sheets_self_parity serialize_roundtrip_range_ref_sheet_prefixed
+        PASS [   0.048s] ( 862/1501) bbnf::sheets_self_parity serialize_roundtrip_paren_expr
+        PASS [   0.033s] ( 863/1501) bbnf::sheets_self_parity serialize_roundtrip_string_empty
+        PASS [   0.035s] ( 864/1501) bbnf::sheets_self_parity serialize_roundtrip_string_basic
+        PASS [   0.028s] ( 865/1501) bbnf::sheets_self_parity serialize_roundtrip_unary_plus
+        PASS [   0.022s] ( 866/1501) bbnf::sonic_rs_parity sonic_rs_parity_data
+        PASS [   0.023s] ( 867/1501) bbnf::struct_direct_snapshots array_output_is_struct_direct
+        PASS [   0.023s] ( 868/1501) bbnf::struct_direct_snapshots flat_output_is_struct_direct
+        PASS [   0.019s] ( 869/1501) bbnf::struct_direct_snapshots number_output_is_struct_direct
+        PASS [   0.025s] ( 870/1501) bbnf::struct_direct_snapshots keyword_output_is_struct_direct
+        PASS [   0.017s] ( 871/1501) bbnf::struct_direct_snapshots object_output_is_struct_direct
+        PASS [   0.030s] ( 872/1501) bbnf::struct_direct_snapshots alt_dispatch_output_is_struct_direct
+        PASS [   0.046s] ( 873/1501) bbnf::sonic_rs_parity sonic_rs_parity_twitter
+        PASS [   0.016s] ( 874/1501) bbnf::struct_direct_snapshots scalar_output_is_struct_direct
+        PASS [   0.015s] ( 875/1501) bbnf::struct_direct_snapshots string_output_is_struct_direct
+        PASS [   0.013s] ( 876/1501) bbnf::structural structural_array_three_numbers
+        PASS [   0.016s] ( 877/1501) bbnf::struct_direct_snapshots wrap_output_is_struct_direct
+        PASS [   0.016s] ( 878/1501) bbnf::structural structural_data_json_sanity
+        PASS [   0.014s] ( 879/1501) bbnf::structural structural_empty_array
+        PASS [   0.012s] ( 880/1501) bbnf::structural structural_empty_object
+        PASS [   0.013s] ( 881/1501) bbnf::structural structural_object_two_pairs
+        PASS [   0.015s] ( 882/1501) bbnf::structural structural_nested_objects
+        PASS [   0.014s] ( 883/1501) bbnf::structural structural_reject_malformed
+        PASS [   0.631s] ( 884/1501) bbnf::separated_list_audit literal_optional_separator_forms_are_ruled
+        PASS [   0.017s] ( 885/1501) bbnf::structural structural_object_with_array
+        PASS [   0.014s] ( 886/1501) bbnf::structural structural_scalar_bool_true
+        PASS [   0.017s] ( 887/1501) bbnf::structural structural_scalar_bool_false
+        PASS [   0.014s] ( 888/1501) bbnf::structural structural_scalar_null
+        PASS [   0.017s] ( 889/1501) bbnf::structural structural_scalar_number_exponent
+        PASS [   0.017s] ( 890/1501) bbnf::structural structural_scalar_number_integer
+        PASS [   0.017s] ( 891/1501) bbnf::structural structural_scalar_number_negative_float
+        PASS [   0.017s] ( 892/1501) bbnf::structural structural_scalar_string_with_escapes
+        PASS [   0.018s] ( 893/1501) bbnf::substrate_path_resolve builder_ty_with_lifetime_emits_apostrophe
+        PASS [   0.023s] ( 894/1501) bbnf::structural structural_scalar_string
+        PASS [   0.020s] ( 895/1501) bbnf::substrate_path_resolve css_l4_path_resolves
+        PASS [   0.016s] ( 896/1501) bbnf::substrate_path_resolve json_path_resolves
+        PASS [   0.018s] ( 897/1501) bbnf::substrate_path_tokens builder_ty_with_lifetime_emits_apostrophe
+        PASS [   0.018s] ( 898/1501) bbnf::substrate_path_tokens css_l4_path_resolves
+        PASS [   0.017s] ( 899/1501) bbnf::substrate_path_tokens json_path_resolves
+        PASS [   0.016s] ( 900/1501) bbnf::synthetic_grammar_strategy for_grammar_routes_json_through_production_manifest_table
+        PASS [   0.015s] ( 901/1501) bbnf::synthetic_grammar_strategy manifest_resolver_panics_on_empty_registry
+        PASS [   0.015s] ( 902/1501) bbnf::synthetic_grammar_strategy manifest_resolver_panics_on_unknown_grammar_with_empty_manifest
+        PASS [   0.016s] ( 903/1501) bbnf::synthetic_grammar_strategy manifest_row_takes_priority_over_source_arm_for_same_ident
+        PASS [   0.018s] ( 904/1501) bbnf::synthetic_grammar_strategy synthetic_grammar_resolves_through_manifest_row_without_source_arm
+        PASS [   0.015s] ( 905/1501) bbnf::tape_substrate branch_round_trips_6_bits
+        PASS [   0.016s] ( 906/1501) bbnf::tape_substrate children_forward_preserves_source_order
+        PASS [   0.123s] ( 907/1501) bbnf::sonic_rs_parity sonic_rs_parity_citm
+        PASS [   0.024s] ( 908/1501) bbnf::tape_substrate checkpoint_rollback_truncates
+        PASS [   0.024s] ( 909/1501) bbnf::tape_substrate meta_idx_round_trips_full_5_bits
+        PASS [   0.023s] ( 910/1501) bbnf::tape_substrate nested_compounds_child_walk
+        PASS [   0.024s] ( 911/1501) bbnf::tape_substrate single_leaf_round_trip
+        PASS [   0.021s] ( 912/1501) bbnf::tape_substrate synthesised_string_uses_arena
+        PASS [   0.026s] ( 913/1501) bbnf::tape_substrate string_borrow_is_zero_copy
+        PASS [   0.020s] ( 914/1501) bbnf::tape_substrate u64_inline_vs_arena
+        PASS [   0.026s] ( 915/1501) bbnf::tape_substrate tape_rec_is_16_bytes_aligned_4
+        PASS [   0.014s] ( 916/1501) bbnf::test_negated_bug test_negated_class_detailed
+        PASS [   0.017s] ( 917/1501) bbnf::test_bug_detailed test_positive_patterns
+        PASS [   0.015s] ( 918/1501) bbnf::test_negated_bug test_negated_class_misclassification
+        PASS [   0.024s] ( 919/1501) bbnf::test_bug_detailed test_negated_patterns_that_trigger_bug
+        PASS [   0.015s] ( 920/1501) bbnf::test_negated_bug test_positive_identifier_class
+        PASS [   0.014s] ( 921/1501) bbnf::test_negated_bug2 test_negated_class_from_regex_classify
+        PASS [   0.018s] ( 922/1501) bbnf::typed_accessor_surface bbnf_compile_time_accessors
+        PASS [   0.016s] ( 923/1501) bbnf::typed_accessor_surface bnf_compile_time_accessors
+        PASS [   0.017s] ( 924/1501) bbnf::typed_accessor_surface bnf_accessor_surface
+        PASS [   0.015s] ( 925/1501) bbnf::typed_accessor_surface css_l4_compile_time_accessors
+        PASS [   0.028s] ( 926/1501) bbnf::typed_accessor_surface bbnf_accessor_surface
+        PASS [   0.014s] ( 927/1501) bbnf::typed_accessor_surface css_l4_document_visitor_reaches_typed_values
+        PASS [   0.018s] ( 928/1501) bbnf::typed_accessor_surface ebnf_compile_time_accessors
+        PASS [   0.028s] ( 929/1501) bbnf::typed_accessor_surface ebnf_accessor_surface
+        PASS [   0.021s] ( 930/1501) bbnf::typed_accessor_surface json_accessor_surface
+        PASS [   0.019s] ( 931/1501) bbnf::typed_accessor_surface json_compile_time_accessors
+        PASS [   0.014s] ( 932/1501) bbnf::typed_accessor_surface rule_kind_enum_dispatch_nonempty
+        PASS [   0.013s] ( 933/1501) bbnf::typed_accessor_surface sheets_compile_time_accessors
+        PASS [   0.013s] ( 934/1501) bbnf::typed_accessor_surface struct_direct_document_projection_surface_per_grammar
+        PASS [   0.019s] ( 935/1501) bbnf::types_heterogeneous_alt json_value_alt_lifts_named_obligation
+        PASS [   0.030s] ( 936/1501) bbnf::typed_accessor_surface sheets_accessor_surface
+        PASS [   0.109s] ( 937/1501) bbnf::ts_node_execute json_text_rfc8259_every_root_backend
+        PASS [   0.118s] ( 938/1501) bbnf::ts_node_execute literal_separated_list_every_backend
+        PASS [   0.066s] ( 939/1501) bbnf::types_heterogeneous_alt json_value_rule_projects_heterogeneous_alt_join
+        PASS [   0.067s] ( 940/1501) bbnf::wrap_compound_elision json_object_of_scalars_record_ceiling
+        PASS [   0.063s] ( 941/1501) bbnf::wrap_compound_elision json_scalar_at_top_level_emits_one_record
+        PASS [   0.033s] ( 942/1501) bbnf::wrap_compound_elision json_wrap_elision_does_not_break_traversal
+        PASS [   0.022s] ( 943/1501) bbnf-analysis::directives debug_directive_has_semantic_tokens
+        PASS [   0.133s] ( 944/1501) bbnf::typed_accessor_surface css_l4_accessor_surface
+        PASS [   0.013s] ( 945/1501) bbnf-analysis::directives debug_directive_no_spurious_diagnostic
+        PASS [   0.013s] ( 946/1501) bbnf-analysis::directives debug_undefined_target_warns
+        PASS [   0.068s] ( 947/1501) bbnf::wrap_compound_elision json_twitter_compound_count_budget
+        PASS [   0.013s] ( 948/1501) bbnf-analysis::directives debug_wildcard_no_warning
+        PASS [   0.016s] ( 949/1501) bbnf-analysis::directives import_directive_has_semantic_tokens
+        PASS [   0.019s] ( 950/1501) bbnf-analysis::directives document_info_has_all_directive_fields
+        PASS [   0.020s] ( 951/1501) bbnf-analysis::directives import_item_spans_correct
+        PASS [   0.016s] ( 952/1501) bbnf-analysis::directives ir_meta_graceful_on_empty_grammar
+        PASS [   0.021s] ( 953/1501) bbnf-analysis::directives ir_meta_populated_for_json_grammar
+        PASS [   0.024s] ( 954/1501) bbnf-analysis::directives ws_directive_extracted
+        PASS [   0.321s] ( 955/1501) bbnf::sonic_rs_parity sonic_rs_parity_canada
+        PASS [   0.023s] ( 956/1501) bbnf-analysis::directives ws_directive_has_semantic_token
+        PASS [   0.018s] ( 957/1501) bbnf-analysis::directives ws_directive_no_spurious_diagnostic
+        PASS [   0.018s] ( 958/1501) bbnf-analysis::regex_reading a_leaf_that_reads_the_same_is_not_linted
+        PASS [   0.017s] ( 959/1501) bbnf-ir passes::call_mode::csp_contract::bitset_lattice_domain_satisfies_the_lattice_laws
+        PASS [   0.018s] ( 960/1501) bbnf-analysis::regex_reading a_leaf_whose_reading_differs_without_u_is_linted
+        PASS [   0.015s] ( 961/1501) bbnf-ir passes::call_mode::csp_contract::conflicting_forced_call_modes_are_unsatisfiable
+        PASS [   0.186s] ( 962/1501) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+        PASS [   0.018s] ( 963/1501) bbnf-ir passes::call_mode::csp_contract::inline_domain_satisfies_the_lattice_laws
+        PASS [   0.019s] ( 964/1501) bbnf-ir passes::call_mode::csp_contract::inline_domain_join_is_a_lattice_join_over_generated_cases
+        PASS [   0.019s] ( 965/1501) bbnf-ir passes::inspect::sep_list::tests::differing_elements_do_not_match
+        PASS [   0.020s] ( 966/1501) bbnf-ir passes::inspect::sep_list::tests::literal_optional_separator_form_does_not_match
+        PASS [   0.020s] ( 967/1501) bbnf-ir passes::inspect::sep_list::tests::strict_spellings_match
+        PASS [   0.019s] ( 968/1501) bbnf-ir::egraph egraph_analysis::eclass_facts_merge_is_monotone
+        PASS [   0.021s] ( 969/1501) bbnf-ir::egraph egraph_analysis::eclass_facts_epsilon_is_nullable
+        PASS [   0.015s] ( 970/1501) bbnf-ir::egraph egraph_analysis::grammar_analysis_activates_in_production_build_and_saturate
+        PASS [   0.014s] ( 971/1501) bbnf-ir::egraph egraph_grammar::build_literal
+        PASS [   0.178s] ( 972/1501) bbnf::typed_accessor_surface every_accessor_class_has_nonzero_coverage
+        PASS [   0.012s] ( 973/1501) bbnf-ir::egraph egraph_grammar::e_node_language_impl
+        PASS [   0.014s] ( 974/1501) bbnf-ir::egraph egraph_grammar::rule_deduplicate_alt_branches
+        PASS [   0.013s] ( 975/1501) bbnf-ir::egraph egraph_grammar::rule_fuse_alt_regex_branches
+        PASS [   0.013s] ( 976/1501) bbnf-ir::egraph egraph_grammar::rule_superset_absorb_alt
+        PASS [   0.013s] ( 977/1501) bbnf-ir::egraph egraph_grammar::rule_union_merge_alt
+        PASS [   0.014s] ( 978/1501) bbnf-ir::egraph egraph_interner::intern_allocates_new
+        PASS [   0.015s] ( 979/1501) bbnf-ir::egraph egraph_interner::intern_dedups_existing
+        PASS [   0.016s] ( 980/1501) bbnf-ir::egraph egraph_interner::into_vec_clones_when_shared
+        PASS [   0.016s] ( 981/1501) bbnf-ir::egraph egraph_interner::sharing_across_clones
+        PASS [   0.017s] ( 982/1501) bbnf-ir::egraph egraph_map_preservation::map_wrapper_preserved_when_inner_equivalent_in_class
+        PASS [   0.014s] ( 983/1501) bbnf-ir::egraph egraph_roundtrip::roundtrip_json_like_grammar
+        PASS [   0.015s] ( 984/1501) bbnf-ir::egraph egraph_suffix::factors_common_trailing_literal
+        PASS [   0.020s] ( 985/1501) bbnf-ir::egraph egraph_interner::write_back_updates_ir
+        PASS [   0.016s] ( 986/1501) bbnf-ir::egraph egraph_suffix::leaves_divergent_tails_alone
+        PASS [   0.015s] ( 987/1501) bbnf-ir::egraph egraph_suffix::leaves_mixed_alt_alone
+        PASS [   0.012s] ( 988/1501) bbnf-ir::egraph egraph_universal::alt_of_single_collapses_to_inner
+        PASS [   0.016s] ( 989/1501) bbnf-ir::egraph egraph_universal::alt_of_single_abstains_on_multi_branch
+        PASS [   0.014s] ( 990/1501) bbnf-ir::egraph egraph_universal::concat_literals_fuses_adjacent_run
+        PASS [   0.014s] ( 991/1501) bbnf-ir::egraph egraph_universal::concat_literals_fuses_multi_run
+        PASS [   0.014s] ( 992/1501) bbnf-ir::egraph egraph_universal::repeat_of_single_abstains_on_bounds
+        PASS [   0.015s] ( 993/1501) bbnf-ir::egraph egraph_universal::concat_literals_leaves_non_adjacent_alone
+        PASS [   0.015s] ( 994/1501) bbnf-ir::egraph egraph_universal::repeat_of_single_collapses_to_inner
+        PASS [   0.016s] ( 995/1501) bbnf-ir::egraph egraph_universal::wrap_of_epsilon_scalar_collapses_to_leaf
+        PASS [   0.018s] ( 996/1501) bbnf-ir::egraph egraph_universal::wrap_of_epsilon_non_scalar_abstains
+        PASS [   0.018s] ( 997/1501) bbnf-ir::egraph egraph_universal::wrap_of_epsilon_three_branch_abstains
+        PASS [   0.019s] ( 998/1501) bbnf-ir::egraph egraph_universal::wrap_of_epsilon_with_ref_scalar_collapses
+        PASS [   0.018s] ( 999/1501) bbnf-ir::egraph type_desc_interner::distinct_shapes_distinct_ids
+        PASS [   0.016s] (1000/1501) bbnf-ir::egraph type_desc_interner::intern_idempotent_nested
+        PASS [   0.014s] (1001/1501) bbnf-ir::egraph type_desc_interner::intern_idempotent_simple
+        PASS [   0.022s] (1002/1501) bbnf-ir::egraph type_desc_interner::grammar_ir_intern_accessor
+        PASS [   0.018s] (1003/1501) bbnf-ir::egraph type_desc_interner::resolve_round_trip
+        PASS [   0.014s] (1004/1501) bbnf-ir::inline_trace fuse_single_use_records_one_substitution
+        PASS [   0.017s] (1005/1501) bbnf-ir::egraph type_desc_interner::tuple_structural_equality
+        PASS [   0.014s] (1006/1501) bbnf-ir::inline_trace inline_acyclic_records_per_absorber
+        PASS [   0.022s] (1007/1501) bbnf-ir::egraph type_desc_interner::serde_round_trip_rebuilds_lookup
+        PASS [   0.015s] (1008/1501) bbnf-ir::inline_trace lookup_helpers_resolve_to_absorber
+        PASS [   0.014s] (1009/1501) bbnf-ir::inline_trace no_inlinable_rules_produces_empty_trace
+        PASS [   0.015s] (1010/1501) bbnf-ir::inline_trace trace_is_deterministic_across_runs
+        PASS [   0.016s] (1011/1501) bbnf-ir::kernel_shape boundary_eight_is_nibble_lut
+        PASS [   0.015s] (1012/1501) bbnf-ir::kernel_shape boundary_seventeen_is_multipass_cmpeq
+        PASS [   0.018s] (1013/1501) bbnf-ir::kernel_shape boundary_nine_is_wide_lut
+        PASS [   0.016s] (1014/1501) bbnf-ir::kernel_shape for_singleton_count_matches_thresholds
+        PASS [   0.020s] (1015/1501) bbnf-ir::kernel_shape boundary_sixteen_is_wide_lut
+        PASS [   0.018s] (1016/1501) bbnf-ir::kernel_shape full_strategy_combines_all_levers
+        PASS [   0.023s] (1017/1501) bbnf-ir::kernel_shape empty_strategy_constant_is_safe_default
+        PASS [   0.022s] (1018/1501) bbnf-ir::kernel_shape has_quote_parity_reflects_alphabet_quote_classes
+        PASS [   0.025s] (1019/1501) bbnf-ir::kernel_shape has_digraphs_reflects_alphabet_digraphs
+        PASS [   0.016s] (1020/1501) bbnf-ir::lattices csp_authority::dispatch_constraint_pins_alt_mode_when_key_dispatch_config_present
+        PASS [   0.024s] (1021/1501) bbnf-ir::kernel_shape nibble_lut_chosen_for_small_singleton_set
+        PASS [   0.028s] (1022/1501) bbnf-ir::kernel_shape multipass_cmpeq_chosen_for_large_singleton_set
+        PASS [   0.024s] (1023/1501) bbnf-ir::kernel_shape wide_lut_chosen_for_medium_singleton_set
+        PASS [   0.020s] (1024/1501) bbnf-ir::lattices csp_authority::layout_constraint_pins_wrap_mode_when_delim_scan_present
+        PASS [   0.028s] (1025/1501) bbnf-ir::lattices csp_authority::layout_constraint_disconnect_picks_generic_without_fact
+        PASS [   0.025s] (1026/1501) bbnf-ir::lattices csp_authority::shape_constraint_disconnect_falls_back_to_checkpoint
+        PASS [   0.014s] (1027/1501) bbnf-ir::lattices csp_components::singleton_components
+        PASS [   0.025s] (1028/1501) bbnf-ir::lattices csp_authority::shape_constraint_pins_alt_mode_for_keyword_prefix
+        PASS [   0.015s] (1029/1501) bbnf-ir::lattices csp_components::union_idempotent
+        PASS [   0.024s] (1030/1501) bbnf-ir::lattices csp_components::linear_chain
+        PASS [   0.014s] (1031/1501) bbnf-ir::lattices csp_materialization::cost_weights_default_shape
+        PASS [   0.025s] (1032/1501) bbnf-ir::lattices csp_components::path_compression_works
+        PASS [   0.021s] (1033/1501) bbnf-ir::lattices csp_materialization::alt_rule_stays_must_tape_after_csp
+        PASS [   0.033s] (1034/1501) bbnf-ir::lattices csp_components::bidirectional_union_is_stable
+        PASS [   0.019s] (1035/1501) bbnf-ir::lattices csp_materialization::debug_all_pins_every_rule_after_csp
+        PASS [   0.019s] (1036/1501) bbnf-ir::lattices csp_materialization::epsilon_rule_stays_transparent_elide_after_csp
+        PASS [   0.020s] (1037/1501) bbnf-ir::lattices csp_materialization::debug_pinned_rule_stays_must_tape_after_csp
+        PASS [   0.021s] (1038/1501) bbnf-ir::lattices csp_materialization::literal_rule_stays_tape_span_only_after_csp
+        PASS [   0.018s] (1039/1501) bbnf-ir::lattices csp_materialization::pretty_pinned_rule_stays_must_tape_after_csp
+        PASS [   0.020s] (1040/1501) bbnf-ir::lattices csp_materialization::solve_returns_decision_map
+        PASS [   0.025s] (1041/1501) bbnf-ir::lattices csp_materialization::preserve_identity_stays_must_tape_after_csp
+        PASS [   0.017s] (1042/1501) bbnf-ir::lattices csp_types::csp_number_convert
+        PASS [   0.024s] (1043/1501) bbnf-ir::lattices csp_types::csp_alt_homogeneous_spans
+        PASS [   0.026s] (1044/1501) bbnf-ir::lattices csp_types::csp_map_overrides_to_named
+        PASS [   0.024s] (1045/1501) bbnf-ir::lattices csp_types::csp_next_keeps_right
+        PASS [   0.016s] (1046/1501) bbnf-ir::lattices csp_types::csp_skip_keeps_left
+        PASS [   0.022s] (1047/1501) bbnf-ir::lattices csp_types::csp_repeat_boxedenum
+        PASS [   0.023s] (1048/1501) bbnf-ir::lattices csp_types::csp_seq_of_spans_compresses
+        PASS [   0.018s] (1049/1501) bbnf-ir::lattices materialization::alt_is_must_tape
+        PASS [   0.029s] (1050/1501) bbnf-ir::lattices csp_types::csp_optional_span_collapses
+        PASS [   0.020s] (1051/1501) bbnf-ir::lattices materialization::debug_all_pins_every_rule
+        PASS [   0.020s] (1052/1501) bbnf-ir::lattices materialization::emits_record_matches_variants
+        PASS [   0.021s] (1053/1501) bbnf-ir::lattices materialization::debug_pinned_rule_must_tape
+        PASS [   0.017s] (1054/1501) bbnf-ir::lattices materialization::literal_leaf_is_tape_span_only
+        PASS [   0.016s] (1055/1501) bbnf-ir::lattices materialization::mat_join_commutative
+        PASS [   0.024s] (1056/1501) bbnf-ir::lattices materialization::epsilon_is_transparent_elide
+        PASS [   0.018s] (1057/1501) bbnf-ir::lattices materialization::mat_join_idempotent
+        PASS [   0.020s] (1058/1501) bbnf-ir::lattices materialization::mat_join_widens_toward_must_tape
+        PASS [   0.030s] (1059/1501) bbnf-ir::lattices materialization::every_rule_body_has_a_class
+        PASS [   0.025s] (1060/1501) bbnf-ir::lattices materialization::negate_is_transparent_elide
+        PASS [   0.024s] (1061/1501) bbnf-ir::lattices materialization::optional_whitespace_passes_through_inner_class
+        PASS [   0.022s] (1062/1501) bbnf-ir::lattices materialization::pretty_pinned_rule_must_tape
+        PASS [   0.024s] (1063/1501) bbnf-ir::lattices materialization::preserve_identity_forces_must_tape
+        PASS [   0.024s] (1064/1501) bbnf-ir::lattices materialization::seq_of_literals_collapses_to_tape_span_only
+        PASS [   0.022s] (1065/1501) bbnf-ir::lattices materialization::top_and_bottom
+        PASS [   0.023s] (1066/1501) bbnf-ir::lattices materialization_eclass_gate::all_descendants_elidable_false_demotes_transparent_elide
+        PASS [   0.033s] (1067/1501) bbnf-ir::lattices materialization::regex_leaf_is_tape_span_only
+        PASS [   0.028s] (1068/1501) bbnf-ir::lattices materialization_eclass_gate::closure_free_false_demotes_transparent_elide
+        PASS [   0.031s] (1069/1501) bbnf-ir::lattices materialization_eclass_gate::compute_eclass_facts_alt_is_not_fixed_shape
+        PASS [   0.027s] (1070/1501) bbnf-ir::lattices materialization_eclass_gate::compute_eclass_facts_literal_all_bits_permissive
+        PASS [   0.026s] (1071/1501) bbnf-ir::lattices materialization_eclass_gate::elision_safe_false_demotes_transparent_elide
+        PASS [   0.032s] (1072/1501) bbnf-ir::lattices materialization_eclass_gate::compute_eclass_facts_epsilon_all_bits_permissive
+        PASS [   0.033s] (1073/1501) bbnf-ir::lattices materialization_eclass_gate::compute_eclass_facts_seq_of_literals_tracks_lattice
+        PASS [   0.025s] (1074/1501) bbnf-ir::lattices materialization_eclass_gate::partial_facts_map_falls_back_per_node
+        PASS [   0.036s] (1075/1501) bbnf-ir::lattices materialization_eclass_gate::is_fixed_shape_false_demotes_transparent_elide_to_tape_span_only
+        PASS [   0.042s] (1076/1501) bbnf-ir::lattices subvariants::heterogeneous_alt_span_u32_emits_two_sub_variants
+        PASS [   0.080s] (1077/1501) bbnf-ir::lattices materialization_eclass_gate::empty_facts_map_falls_back_to_structural_transparent_elide
+        PASS [   0.076s] (1078/1501) bbnf-ir::lattices subvariants::heterogeneous_alt_f64_u8_emits_two_sub_variants
+        PASS [   0.086s] (1079/1501) bbnf-ir::lattices materialization_eclass_gate::structural_and_facts_agree_yields_transparent_elide
+        PASS [   0.091s] (1080/1501) bbnf-ir::lattices subvariants::homogeneous_alt_span_emits_no_sub_variants
+        PASS [   2.867s] (1081/1501) bbnf::backend_ts_typecheck ts_tempdir_typecheck_representative_grammars
+        PASS [   0.094s] (1082/1501) bbnf-ir::lattices subvariants::nested_heterogeneous_alt_inside_seq_emits_sub_variants
+        PASS [   0.092s] (1083/1501) bbnf-ir::lattices types::alt_homogeneous_span
+        PASS [   0.089s] (1084/1501) bbnf-ir::lattices types::cyclic_ref_defaults_to_boxed_enum
+        PASS [   0.083s] (1085/1501) bbnf-ir::lattices types::cyclic_ref_obligation_surfaces
+        PASS [   0.065s] (1086/1501) bbnf-ir::lattices types::factored_prefix_alt_projects_scalar
+        PASS [   0.101s] (1087/1501) bbnf-ir::lattices types::compound_ref_obligation_surfaces
+        PASS [   0.052s] (1088/1501) bbnf-ir::lattices types::heterogeneous_css_alt_surfaces_named_obligation
+        PASS [   0.050s] (1089/1501) bbnf-ir::lattices types::homogeneous_alt_emits_no_obligation
+        PASS [   0.028s] (1090/1501) bbnf-ir::lattices types::many_span_collapses
+        PASS [   0.034s] (1091/1501) bbnf-ir::lattices types::many_non_span_is_vec
+        PASS [   0.034s] (1092/1501) bbnf-ir::lattices types::map_box_wrap
+        PASS [   0.056s] (1093/1501) bbnf-ir::lattices types::literal_is_span
+        PASS [   0.036s] (1094/1501) bbnf-ir::lattices types::map_enum_wrap
+        PASS [   0.036s] (1095/1501) bbnf-ir::lattices types::next_keeps_right
+        PASS [   0.029s] (1096/1501) bbnf-ir::lattices types::ref_projects_target_scalar_type
+        PASS [   0.037s] (1097/1501) bbnf-ir::lattices types::optional_span_collapses
+        PASS [   0.036s] (1098/1501) bbnf-ir::lattices types::pair_flattening
+        PASS [   0.031s] (1099/1501) bbnf-ir::lattices types::regex_is_span
+        PASS [   0.024s] (1100/1501) bbnf-ir::lattices types::seq_consecutive_span_compression
+        PASS [   0.028s] (1101/1501) bbnf-ir::lattices types::scalar_ref_emits_no_obligation
+        PASS [   0.017s] (1102/1501) bbnf-ir::lattices types::skip_keeps_left
+        PASS [   0.023s] (1103/1501) bbnf-ir::lattices types::seq_of_refs_composes_f64_u8_aggregate
+        PASS [   0.021s] (1104/1501) bbnf-ir::lock14_grammar_generalization gate_goes_red_on_reinjected_token
+        PASS [   1.997s] (1105/1501) bbnf::path_macro_errors compile_fail_fixtures
+        PASS [   0.034s] (1106/1501) bbnf-ir::lattices types::seq_mixed_tuple
+        PASS [   0.022s] (1107/1501) bbnf-ir::passes charset::basic_operations
+        PASS [   0.024s] (1108/1501) bbnf-ir::passes charset::iter
+        PASS [   0.022s] (1109/1501) bbnf-ir::passes charset::union_and_disjoint
+        PASS [   0.030s] (1110/1501) bbnf-ir::passes charset::roundtrip_u32x4
+        PASS [   0.028s] (1111/1501) bbnf-ir::passes context_facts::alt_with_dispatch_is_strong
+        PASS [   0.022s] (1112/1501) bbnf-ir::passes dag_invariant::ensure_dag_helper_lives_in_test_support
+        PASS [   0.027s] (1113/1501) bbnf-ir::passes context_facts::wrap_pattern_is_scan_safe
+        PASS [   0.032s] (1114/1501) bbnf-ir::passes context_facts::bare_literal_has_default_facts
+        PASS [   0.033s] (1115/1501) bbnf-ir::passes dag_invariant::exactly_one_production_call_site_for_grammar_dag_from_ir
+        PASS [   0.024s] (1116/1501) bbnf-ir::passes dag_roundtrip::interning_shares_subexpressions
+        PASS [   0.056s] (1117/1501) bbnf-ir::lock14_grammar_generalization no_grammar_name_token_in_generic_crate_code
+        PASS [   0.033s] (1118/1501) bbnf-ir::passes dag_roundtrip::interning_dedupes_identical_literals
+        PASS [   0.038s] (1119/1501) bbnf-ir::passes dag_invariant::no_pointer_identity_outside_dag
+        PASS [   0.037s] (1120/1501) bbnf-ir::passes dag_roundtrip::child_iter_visits_all_children
+        PASS [   0.032s] (1121/1501) bbnf-ir::passes dag_roundtrip::roundtrip_alt
+        PASS [   0.024s] (1122/1501) bbnf-ir::passes dedup_eligibility::mine_returns_sorted_deduplicated_vec
+        PASS [   0.029s] (1123/1501) bbnf-ir::passes dag_roundtrip::roundtrip_seq
+        PASS [   0.029s] (1124/1501) bbnf-ir::passes dedup_eligibility::literal_only_alt_is_admitted
+        PASS [   0.026s] (1125/1501) bbnf-ir::passes dedup_eligibility::mixed_alt_with_non_literal_branch_is_rejected
+        PASS [   0.020s] (1126/1501) bbnf-ir::passes dedup_eligibility::oversized_rule_is_rejected
+        PASS [   0.021s] (1127/1501) bbnf-ir::passes dedup_eligibility::single_literal_is_admitted
+        PASS [   0.015s] (1128/1501) bbnf-ir::passes fact_authority::context_facts_drive_alt_dispatch_admission
+        PASS [   0.020s] (1129/1501) bbnf-ir::passes dedup_eligibility::transparent_rule_is_skipped
+        PASS [   0.021s] (1130/1501) bbnf-ir::passes dedup_eligibility::variable_width_repeat_is_rejected
+        PASS [   0.046s] (1131/1501) bbnf-ir::passes dag_roundtrip::roundtrip_literal
+        PASS [   0.018s] (1132/1501) bbnf-ir::passes fact_authority::node_facts_drive_csp_strategy_domain
+        PASS [   0.015s] (1133/1501) bbnf-ir::passes passes_alias::resolve_direct_alias
+        PASS [   0.019s] (1134/1501) bbnf-ir::passes fact_authority::shape_assignments_drive_classifier_dispatch
+        PASS [   0.017s] (1135/1501) bbnf-ir::passes passes_dispatch::dispatch_for_nested_alt
+        PASS [   0.029s] (1136/1501) bbnf-ir::passes fact_authority::eclass_facts_authority_routes_disconnect_correctly
+        PASS [   0.023s] (1137/1501) bbnf-ir::passes passes_alias::resolve_chain_alias
+        PASS [   0.019s] (1138/1501) bbnf-ir::passes passes_dispatch::dispatch_with_nullable_branch_via_follow
+        PASS [   0.032s] (1139/1501) bbnf-ir::passes fact_authority::has_family_recognizers_gates_driver_probe
+        PASS [   0.019s] (1140/1501) bbnf-ir::passes passes_dispatch::fallback_dispatch_too_few_branches
+        PASS [   0.021s] (1141/1501) bbnf-ir::passes passes_dispatch::fallback_dispatch_not_superset
+        PASS [   0.028s] (1142/1501) bbnf-ir::passes passes_dispatch::dispatch_for_disjoint_branches
+        PASS [   0.019s] (1143/1501) bbnf-ir::passes passes_dispatch::fallback_dispatch_typed_plus_catchall
+        PASS [   0.017s] (1144/1501) bbnf-ir::passes passes_dispatch::no_dispatch_when_nullable_overlaps_follow
+        PASS [   0.017s] (1145/1501) bbnf-ir::passes passes_follow::follow_set_basic_seq
+        PASS [   0.022s] (1146/1501) bbnf-ir::passes passes_dispatch::no_dispatch_for_overlapping_branches
+        PASS [   0.016s] (1147/1501) bbnf-ir::passes passes_inline::cyclic_not_inlined
+        PASS [   0.018s] (1148/1501) bbnf-ir::passes passes_follow::follow_set_propagates_through_nullable
+        PASS [   0.015s] (1149/1501) bbnf-ir::passes passes_inline::large_rule_not_inlined
+        PASS [   0.015s] (1150/1501) bbnf-ir::passes passes_inline::small_acyclic_inlined
+        PASS [   0.015s] (1151/1501) bbnf-ir::passes passes_lr::direct_lr_eliminated
+        PASS [   0.022s] (1152/1501) bbnf-ir::passes passes_inline::entry_point_not_inlined
+        PASS [   0.017s] (1153/1501) bbnf-ir::passes passes_lr::indirect_lr_no_multi_sccs_is_noop
+        PASS [   0.016s] (1154/1501) bbnf-ir::passes passes_lr::indirect_lr_substituted
+        PASS [   0.016s] (1155/1501) bbnf-ir::passes passes_lr::no_lr_unchanged
+        PASS [   0.014s] (1156/1501) bbnf-ir::passes passes_lr::starts_with_ref_checks
+        PASS [   0.014s] (1157/1501) bbnf-ir::passes passes_lr::substitute_no_match
+        PASS [   0.020s] (1158/1501) bbnf-ir::passes passes_lr::non_alt_body_unchanged
+        PASS [   0.016s] (1159/1501) bbnf-ir::passes passes_lr::strip_leading_ref_checks
+        PASS [   0.016s] (1160/1501) bbnf-ir::passes passes_lr::substitute_seq_leading
+        PASS [   0.015s] (1161/1501) bbnf-ir::passes passes_lr::substitute_with_alt_replacement
+        PASS [   0.014s] (1162/1501) bbnf-ir::passes passes_optimize::adjacent_literals_merged
+        PASS [   0.013s] (1163/1501) bbnf-ir::passes passes_optimize::all_epsilon_seq_becomes_epsilon
+        PASS [   0.013s] (1164/1501) bbnf-ir::passes passes_optimize::non_adjacent_literals_not_merged
+        PASS [   0.022s] (1165/1501) bbnf-ir::passes passes_lr::substitute_single_ref
+        PASS [   0.014s] (1166/1501) bbnf-ir::passes passes_optimize::singleton_alt_unwrapped
+        PASS [   0.019s] (1167/1501) bbnf-ir::passes passes_optimize::epsilon_removed_from_seq
+        PASS [   0.015s] (1168/1501) bbnf-ir::passes passes_optimize::singleton_seq_unwrapped
+        PASS [   0.014s] (1169/1501) bbnf-ir::passes passes_payload::non_scalar_field_rejects_layout
+        PASS [   0.014s] (1170/1501) bbnf-ir::passes passes_payload::over_max_bytes_rejects_layout
+        PASS [   0.018s] (1171/1501) bbnf-ir::passes passes_payload::f64_then_u8_packs_with_no_padding_at_end
+        PASS [   0.015s] (1172/1501) bbnf-ir::passes passes_payload::single_f64_field_packs_8_bytes
+        PASS [   0.015s] (1173/1501) bbnf-ir::passes passes_payload::span_field_packs_as_8_bytes
+        PASS [   0.025s] (1174/1501) bbnf-ir::passes passes_optimize::partial_merge
+        PASS [   0.017s] (1175/1501) bbnf-ir::passes passes_payload::u8_then_u32_inserts_alignment_padding
+        PASS [   0.017s] (1176/1501) bbnf-ir::passes passes_prefix::common_prefix_factored
+        PASS [   0.016s] (1177/1501) bbnf-ir::passes passes_prefix::literal_byte_split_basic
+        PASS [   0.019s] (1178/1501) bbnf-ir::passes passes_prefix::depth_two_prefix_factored
+        PASS [   0.017s] (1179/1501) bbnf-ir::passes passes_prefix::literal_byte_split_idempotent
+        PASS [   0.016s] (1180/1501) bbnf-ir::passes passes_prefix::literal_byte_split_mixed_with_non_literal
+        PASS [   0.017s] (1181/1501) bbnf-ir::passes passes_prefix::literal_byte_split_multiple_groups
+        PASS [   0.017s] (1182/1501) bbnf-ir::passes passes_prefix::literal_byte_split_single_byte_not_split
+        PASS [   0.017s] (1183/1501) bbnf-ir::passes passes_prefix::literal_byte_split_with_map_wrapper
+        PASS [   0.017s] (1184/1501) bbnf-ir::passes passes_prefix::no_common_prefix_unchanged
+        PASS [   0.017s] (1185/1501) bbnf-ir::passes passes_prefix::single_node_branches_unchanged
+        PASS [   0.023s] (1186/1501) bbnf-ir::passes passes_prefix::literal_byte_split_recursive_trie
+        PASS [   0.013s] (1187/1501) bbnf-ir::passes passes_prune::prune_keeps_all_when_all_reachable
+        PASS [   0.018s] (1188/1501) bbnf-ir::passes passes_prefix::three_branches_two_shared
+        PASS [   0.017s] (1189/1501) bbnf-ir::passes passes_prune::prune_follows_alt_branches
+        PASS [   0.015s] (1190/1501) bbnf-ir::passes passes_span::literal_is_span_eligible
+        PASS [   0.019s] (1191/1501) bbnf-ir::passes passes_prune::prune_removes_unreachable
+        PASS [   0.018s] (1192/1501) bbnf-ir::passes passes_span::cyclic_not_span_eligible
+        PASS [   0.017s] (1193/1501) bbnf-ir::passes passes_span::map_not_span_eligible
+        PASS [   0.016s] (1194/1501) bbnf-ir::passes passes_span::seq_of_literals_span_eligible
+        PASS [   0.016s] (1195/1501) bbnf-ir::passes passes_span::transitive_span_eligibility
+        PASS [   0.016s] (1196/1501) bbnf-ir::passes pattern_dedup::alt_pattern_hoists
+        PASS [   0.016s] (1197/1501) bbnf-ir::passes pattern_dedup::rule_bodies_are_not_self_hoisted
+        PASS [   0.018s] (1198/1501) bbnf-ir::passes pattern_dedup::non_eligible_nodes_are_not_hoisted
+        PASS [   0.016s] (1199/1501) bbnf-ir::passes pattern_dedup::two_occurrences_do_not_hoist
+        PASS [   0.018s] (1200/1501) bbnf-ir::passes push_fingerprint::bbnf_like_shape_picks_five_eighths_divisor
+        PASS [   0.021s] (1201/1501) bbnf-ir::passes pattern_dedup::three_occurrences_trigger_hoist
+        PASS [   0.018s] (1202/1501) bbnf-ir::passes push_fingerprint::capacity_ratio_just_above_seventy_pct_picks_five_eighths
+        PASS [   0.016s] (1203/1501) bbnf-ir::passes push_fingerprint::capacity_ratio_under_seventy_pct_picks_half
+        PASS [   0.016s] (1204/1501) bbnf-ir::passes push_fingerprint::css_like_shape_picks_unit_divisor
+        PASS [   0.016s] (1205/1501) bbnf-ir::passes push_fingerprint::json_like_shape_picks_half_divisor
+        PASS [   0.022s] (1206/1501) bbnf-ir::passes push_fingerprint::capacity_ratio_total_override_triggers_at_one_fifty
+        PASS [   0.020s] (1207/1501) bbnf-ir::passes push_fingerprint::empty_grammar_falls_back_to_default
+        PASS [   0.015s] (1208/1501) bbnf-ir::passes push_fingerprint::sheets_like_shape_picks_unit_divisor
+        PASS [   0.020s] (1209/1501) bbnf-ir::passes push_fingerprint::must_tape_rule_counts_as_compound_push
+        PASS [   0.020s] (1210/1501) bbnf-ir::passes push_fingerprint::preserve_identity_forces_compound_regardless_of_class
+        PASS [   0.017s] (1211/1501) bbnf-ir::passes push_fingerprint::tape_span_only_rule_with_payload_layout_counts_as_leaf_with
+        PASS [   0.013s] (1212/1501) bbnf-ir::passes recognizer::literal_recognizer_empty
+        PASS [   0.022s] (1213/1501) bbnf-ir::passes push_fingerprint::small_grammar_overrides_high_compound_ratio
+        PASS [   0.020s] (1214/1501) bbnf-ir::passes push_fingerprint::tape_span_only_rule_with_scalar_type_counts_as_leaf_with
+        PASS [   0.018s] (1215/1501) bbnf-ir::passes push_fingerprint::transparent_elide_rule_contributes_zero
+        PASS [   0.020s] (1216/1501) bbnf-ir::passes push_fingerprint::tape_span_only_rule_without_payload_counts_as_leaf
+        PASS [   0.013s] (1217/1501) bbnf-ir::passes regex_first::alternation
+        PASS [   0.019s] (1218/1501) bbnf-ir::passes recognizer::literal_recognizer_reports_width
+        PASS [   0.018s] (1219/1501) bbnf-ir::passes recognizer::regex_recognizer_wraps_regex_info
+        PASS [   0.020s] (1220/1501) bbnf-ir::passes recognizer::regex_recognizer_nullable_pattern
+        PASS [   0.015s] (1221/1501) bbnf-ir::passes regex_first::dot_returns_none
+        PASS [   0.015s] (1222/1501) bbnf-ir::passes regex_first::escape_sequences
+        PASS [   0.015s] (1223/1501) bbnf-ir::passes regex_first::simple_literal
+        PASS [   0.022s] (1224/1501) bbnf-ir::passes regex_first::char_class
+        PASS [   0.016s] (1225/1501) bbnf-ir::path_check chained_substitution_resolves_to_first_surviving_absorber
+        PASS [   0.020s] (1226/1501) bbnf-ir::passes regex_first::optional_prefix
+        PASS [   0.017s] (1227/1501) bbnf-ir::path_check empty_inputs_produce_empty_resolver
+        PASS [   0.017s] (1228/1501) bbnf-ir::path_check fixture_grammar_fused_rule_still_resolves
+        PASS [   0.015s] (1229/1501) bbnf-ir::path_check resolver_first_absorber_is_deterministic
+        PASS [   0.018s] (1230/1501) bbnf-ir::path_check fused_rule_resolves_through_trace_to_absorber
+        PASS [   0.016s] (1231/1501) bbnf-ir::path_check unreachable_source_rule_is_omitted
+        PASS [   0.019s] (1232/1501) bbnf-ir::path_check resolver_iter_is_btreemap_stable
+        PASS [   0.018s] (1233/1501) bbnf-ir::path_seed_rewrites rewrites_path_seed_adjacent_accessor_fusion_fires_on_fixture
+        PASS [   2.963s] (1234/1501) bbnf::css_l4_canonical_parity scale_interop_tailwind
+        PASS [   0.021s] (1235/1501) bbnf-ir::path_check surviving_rule_resolves_to_self
+        PASS [   0.017s] (1236/1501) bbnf-ir::path_seed_rewrites rewrites_path_seed_loader_merges_into_per_grammar_set
+        PASS [   0.016s] (1237/1501) bbnf-ir::path_seed_rewrites rewrites_path_seed_redundant_variant_select_fires_on_fixture
+        PASS [   0.015s] (1238/1501) bbnf-ir::payload_coverage_audit css_l4_fixture_groups_color_and_length_unit_separately
+        PASS [   0.014s] (1239/1501) bbnf-ir::payload_coverage_audit mapped_status_when_layout_admits_marker_type
+        PASS [   0.019s] (1240/1501) bbnf-ir::path_seed_rewrites rewrites_path_seed_ruleset_carries_three_rules
+        PASS [   0.018s] (1241/1501) bbnf-ir::payload_coverage_audit json_per_rule_grouping_lists_value_with_five_markers
+        PASS [   0.024s] (1242/1501) bbnf-ir::path_seed_rewrites rewrites_path_seed_ron_round_trips_intact
+        PASS [   0.013s] (1243/1501) bbnf-ir::payload_coverage_audit pending_and_missing_are_distinguished_in_same_grammar
+        PASS [   0.013s] (1244/1501) bbnf-ir::payload_coverage_audit write_audit_coverage_json_to_w0_path
+        PASS [   0.019s] (1245/1501) bbnf-ir::payload_coverage_audit missing_status_when_layout_fails_to_cover_marker_type
+        PASS [   0.018s] (1246/1501) bbnf-ir::payload_coverage_audit sheets_fixture_produces_seven_markers_across_five_rules
+        PASS [   0.021s] (1247/1501) bbnf-ir::payload_coverage_audit payload_layouts_probe_falls_back_to_pending_when_layouts_empty
+        PASS [   0.019s] (1248/1501) bbnf-ir::payload_coverage_audit w0_baseline_pending_status_for_every_grammar
+        PASS [   0.016s] (1249/1501) bbnf-ir::rewrites_substrate ast_size_counts_every_node
+        PASS [   0.037s] (1250/1501) bbnf-ir::path_seed_rewrites rewrites_path_seed_duplicate_prefix_fires_on_fixture
+        PASS [   0.013s] (1251/1501) bbnf-ir::rewrites_substrate class1_nested_shrink
+        PASS [   0.014s] (1252/1501) bbnf-ir::rewrites_substrate class1_rejects_equal_size
+        PASS [   0.019s] (1253/1501) bbnf-ir::rewrites_substrate atoms_collects_all_leaves
+        PASS [   0.014s] (1254/1501) bbnf-ir::rewrites_substrate empty_ruleset_round_trips
+        PASS [   0.015s] (1255/1501) bbnf-ir::rewrites_substrate ranker_diversifies_via_novelty
+        PASS [   0.018s] (1256/1501) bbnf-ir::rewrites_substrate empty_rulefile_serializes_to_ron
+        PASS [   0.015s] (1257/1501) bbnf-ir::rewrites_substrate ron_round_trip_fixture_rule
+        PASS [   0.011s] (1258/1501) bbnf-ir::rewrites_substrate select_top_k_does_not_mutate
+        PASS [   0.014s] (1259/1501) bbnf-ir::rewrites_substrate ruleset_by_class_partition
+        PASS [   0.013s] (1260/1501) bbnf-ir::rewrites_substrate select_top_k_zero_returns_empty
+        PASS [   0.021s] (1261/1501) bbnf-ir::rewrites_substrate ranker_five_rule_fixture_ordering
+        PASS [   0.014s] (1262/1501) bbnf-ir::rewrites_substrate tier_class1_strict_shrink
+        PASS [   0.012s] (1263/1501) bbnf-ir::rewrites_substrate tier_class3_shape_change
+        PASS [   0.026s] (1264/1501) bbnf-ir::rewrites_substrate ron_load_rejects_wrong_schema_version
+        PASS [   0.013s] (1265/1501) bbnf-ir::rewrites_substrate witness_soundness_egraph_requires_seed
+        PASS [   0.016s] (1266/1501) bbnf-ir::rewrites_substrate witness_soundness_authored_is_unconditional
+        PASS [   0.020s] (1267/1501) bbnf-ir::rewrites_substrate tier_class2_constant_fold
+        PASS [   0.010s] (1268/1501) bbnf-ir::shape_dict_bbnf mapped_factor_recognized_by_arrow_not_name
+        PASS [   0.029s] (1269/1501) bbnf-ir::rewrites_substrate rule_serialized_class_recomputed_from_lhs_rhs
+        PASS [   0.015s] (1270/1501) bbnf-ir::shape_dict_bbnf big_comment_recognized_by_delimiters_not_name
+        PASS [   0.016s] (1271/1501) bbnf-ir::rewrites_substrate witness_soundness_oracle_requires_zero_counterexamples
+        PASS [   0.030s] (1272/1501) bbnf-ir::rewrites_substrate ruleset_push_assigns_sequential_ids
+        PASS [   0.016s] (1273/1501) bbnf-ir::shape_dict_bbnf comment_shape_with_wrong_delimiters_does_not_match
+        PASS [   0.019s] (1274/1501) bbnf-ir::shape_dict_bbnf comment_shape_with_one_wrong_delimiter_does_not_match
+        PASS [   0.015s] (1275/1501) bbnf-ir::shape_dispatch axw0a2b_alt_dispatch_admits_mixed_leaf_alt
+        PASS [   0.017s] (1276/1501) bbnf-ir::shape_dict_bbnf mapped_factor_shape_with_wrong_lead_does_not_match
+        PASS [   0.016s] (1277/1501) bbnf-ir::shape_dispatch axw0a2b_flat_admits_bracketed_seq
+        PASS [   0.016s] (1278/1501) bbnf-ir::shape_dispatch axw0a2b_flat_admits_repeat_max_head
+        PASS [   0.013s] (1279/1501) bbnf-ir::shape_dispatch json_array_classified_as_array
+        PASS [   0.013s] (1280/1501) bbnf-ir::shape_dispatch json_null_classified_as_keyword
+        PASS [   0.014s] (1281/1501) bbnf-ir::shape_dispatch json_number_classified_as_number
+        PASS [   0.019s] (1282/1501) bbnf-ir::shape_dispatch axw0a2b_flat_admits_repeat_rooted_body
+        PASS [   0.014s] (1283/1501) bbnf-ir::shape_dispatch json_object_classified_as_object
+        PASS [   0.019s] (1284/1501) bbnf-ir::shape_dispatch axw0a2b_scalar_admits_transparent_ref_body
+        PASS [   0.015s] (1285/1501) bbnf-ir::shape_dispatch json_six_primary_rules_cover_hard_gate
+        PASS [   0.017s] (1286/1501) bbnf-ir::shape_dispatch json_pair_classifies_as_flat_under_w4_fix
+        PASS [   0.022s] (1287/1501) bbnf-ir::shape_dispatch json_bool_classified_as_keyword
+        PASS [   0.016s] (1288/1501) bbnf-ir::shape_dispatch json_structural_separators_classify_as_keyword_or_scalar
+        PASS [   0.017s] (1289/1501) bbnf-ir::shape_dispatch json_string_classified_as_string
+        PASS [   0.016s] (1290/1501) bbnf-ir::shape_dispatch json_value_classifies_as_wrap_under_w4
+        PASS [   0.014s] (1291/1501) bbnf-ir::shape_dispatch w4_arglist_detector_admits_name_paren_body_paren
+        PASS [   0.018s] (1292/1501) bbnf-ir::shape_dispatch shape_dispatch_is_idempotent
+        PASS [   0.013s] (1293/1501) bbnf-ir::shape_dispatch w4_flat_detector_admits_literal_headed_typed_seq
+        PASS [   0.013s] (1294/1501) bbnf-ir::shape_dispatch w4_hregex_detector_admits_identifier_regex_leaf
+        PASS [   0.017s] (1295/1501) bbnf-ir::shape_dispatch w4_flat_classifies_json_pair
+        PASS [   0.012s] (1296/1501) bbnf-ir::shape_dispatch w4_hregex_rejects_quoted_string_regex_leaf
+        PASS [   0.016s] (1297/1501) bbnf-ir::shape_dispatch w4_hregex_no_hits_on_json_grammar
+        PASS [   0.014s] (1298/1501) bbnf-ir::shape_dispatch w4_pratt_detector_admits_next_based_operator_chain
+        PASS [   0.014s] (1299/1501) bbnf-ir::shape_dispatch w4_pratt_detector_admits_operator_chain_rung
+        PASS [   0.024s] (1300/1501) bbnf-ir::shape_dispatch w4_arglist_no_hits_on_json_grammar
+        PASS [   0.015s] (1301/1501) bbnf-ir::shape_dispatch w4_pratt_detector_admits_skip_based_operator_chain
+        PASS [   0.014s] (1302/1501) bbnf-ir::shape_dispatch w4_unordered_admits_alt_branch_rules
+        PASS [   0.015s] (1303/1501) bbnf-ir::shape_dispatch w4_unordered_detector_admits_kleene_plus_over_disjoint_alt
+        PASS [   0.019s] (1304/1501) bbnf-ir::shape_dispatch w4_pratt_no_hits_on_json_grammar
+        PASS [   0.013s] (1305/1501) bbnf-ir::shape_dispatch w4_unordered_rejects_overlapping_first_alt
+        PASS [   0.013s] (1306/1501) bbnf-ir::shape_dispatch w4_wrap_classifies_json_value_dispatcher
+        PASS [   0.018s] (1307/1501) bbnf-ir::shape_dispatch w4_unordered_no_hits_on_json_grammar
+        PASS [   0.013s] (1308/1501) bbnf-ir::shape_dispatch w4fix_arglist_admits_ref_head_with_separate_paren
+        PASS [   0.011s] (1309/1501) bbnf-ir::shape_dispatch w4fix_flat_admits_ref_to_keyword_head
+        PASS [   0.018s] (1310/1501) bbnf-ir::shape_dispatch w4_unordered_rejects_single_branch_alt
+        PASS [   2.468s] (1311/1501) bbnf::lightningcss_parity lightningcss_parity_tailwind
+        PASS [   0.017s] (1312/1501) bbnf-ir::shape_dispatch w4_wrap_detector_admits_all_ref_alt
+        PASS [   0.023s] (1313/1501) bbnf-ir::shape_dispatch w4_unordered_rejects_optional_repeat
+        PASS [   0.017s] (1314/1501) bbnf-ir::shape_dispatch w4fix_flat_admits_optional_seq
+        PASS [   0.013s] (1315/1501) bbnf-ir::struct_registry audit_pass_reports_pending_when_registry_empty
+        PASS [   0.017s] (1316/1501) bbnf-ir::shape_dispatch w4fix_flat_admits_typed_dimension
+        PASS [   0.013s] (1317/1501) bbnf-ir::struct_registry audit_report_aggregates_across_grammars_with_registry_probe
+        PASS [   3.102s] (1318/1501) bbnf::bench_grammar_parse bench_generated_parser
+        PASS [   0.045s] (1319/1501) bbnf-ir::struct_registry audit_pass_reports_mapped_when_registry_populated
+        PASS [   0.040s] (1320/1501) bbnf-ir::struct_registry registry_clear_resets_to_empty
+        PASS [   0.045s] (1321/1501) bbnf-ir::struct_registry empty_grammar_produces_empty_registry
+        PASS [   0.038s] (1322/1501) bbnf-ir::struct_registry typed_leaf_rule_with_i64_return_produces_newtype_wrapper
+        PASS [   0.042s] (1323/1501) bbnf-ir::struct_registry repeat_rule_with_hi_greater_than_one_produces_repeat_element_field
+        PASS [   0.048s] (1324/1501) bbnf-ir::struct_registry homogeneous_alt_rule_produces_untagged_enum_layout
+        PASS [   0.045s] (1325/1501) bbnf-ir::struct_registry single_alt_rule_produces_tagged_enum_layout
+        PASS [   0.043s] (1326/1501) bbnf-ir::structural_alphabet_extended bbnf_cardinality_bound
+        PASS [   0.042s] (1327/1501) bbnf-ir::structural_alphabet_extended digraph_first_byte_is_in_singletons
+        PASS [   0.048s] (1328/1501) bbnf-ir::struct_registry single_seq_rule_produces_struct_with_three_positions
+        PASS [   0.015s] (1329/1501) bbnf-ir::structural_alphabet_extended digraph_mask_matches_first_bytes
+        PASS [   0.048s] (1330/1501) bbnf-ir::structural_alphabet_extended bbnf_singletons_arrow_digraph_and_quote_classes
+        PASS [   0.047s] (1331/1501) bbnf-ir::structural_alphabet_extended css_l4_singletons_and_digraphs_and_quote_classes
+        PASS [   0.018s] (1332/1501) bbnf-ir::structural_alphabet_extended empty_grammar_produces_no_alphabet
+        PASS [   0.059s] (1333/1501) bbnf-ir::struct_registry registry_iter_returns_layouts_in_rule_id_order
+        PASS [   0.014s] (1334/1501) bbnf-ir::structural_alphabet_extended probe_stress_fixture_mining
+        PASS [   0.018s] (1335/1501) bbnf-ir::structural_alphabet_extended probe_per_grammar_mining
+        PASS [   0.023s] (1336/1501) bbnf-ir::structural_alphabet_extended json_cardinality_bound
+        PASS [   0.066s] (1337/1501) bbnf-ir::struct_registry recursive_rule_layout_carries_rule_reference_field
+        PASS [   0.016s] (1338/1501) bbnf-ir::structural_alphabet_extended sheets_singletons_arithmetic_and_quote_classes
+        PASS [   0.016s] (1339/1501) bbnf-ir::substrate_audit substrate_audit_self_test_detects_synthetic_zero_caller
+        PASS [   0.062s] (1340/1501) bbnf-ir::structural_alphabet_extended css_l4_cardinality_bound
+        PASS [   0.014s] (1341/1501) bbnf-ir::vm compiler::compile_alt_dispatch
+        PASS [   0.015s] (1342/1501) bbnf-ir::vm compiler::compile_alt_fallback_dispatch_uses_dispatch
+        PASS [   0.015s] (1343/1501) bbnf-ir::vm compiler::compile_alt_no_dispatch_uses_backtracking
+        PASS [   0.035s] (1344/1501) bbnf-ir::structural_alphabet_extended mining_is_deterministic_across_runs
+        PASS [   0.014s] (1345/1501) bbnf-ir::vm compiler::compile_direct_left_recursive_rule_keeps_memo
+        PASS [   0.017s] (1346/1501) bbnf-ir::vm compiler::compile_call
+        PASS [   0.038s] (1347/1501) bbnf-ir::structural_alphabet_extended json_singletons_and_quote_classes
+        PASS [   0.027s] (1348/1501) bbnf-ir::vm compiler::compile_alt
+        PASS [   0.017s] (1349/1501) bbnf-ir::vm compiler::compile_memo_rule
+        PASS [   0.020s] (1350/1501) bbnf-ir::vm compiler::compile_literal
+        PASS [   0.016s] (1351/1501) bbnf-ir::vm compiler::compile_seq
+        PASS [   0.037s] (1352/1501) bbnf-ir::structural_alphabet_extended singletons_mask_and_quote_mask_helpers
+        PASS [   0.012s] (1353/1501) bbnf-ir::vm cost_weights_unified::default_weights_pick_byte_dispatch
+        PASS [   0.041s] (1354/1501) bbnf-ir::structural_alphabet_extended sheets_cardinality_bound
+        PASS [   0.012s] (1355/1501) bbnf-ir::vm cost_weights_unified::dispatch_branch_scales_with_arm_count
+        PASS [   0.014s] (1356/1501) bbnf-ir::vm cost_weights_unified::dispatch_mode_flips_under_inverted_dispatch_table
+        PASS [   0.019s] (1357/1501) bbnf-ir::vm compiler::compile_token_dispatch_emits_dispatch_token
+        PASS [   0.013s] (1358/1501) bbnf-ir::vm cost_weights_unified::grammar_cost_model_default_matches_cost_weights_default
+        PASS [   0.013s] (1359/1501) bbnf-ir::vm cost_weights_unified::grammar_cost_model_forwards_all_weight_dimensions
+        PASS [   0.026s] (1360/1501) bbnf-ir::vm compiler::compile_seq_nested_no_cross_patch
+        PASS [   0.030s] (1361/1501) bbnf-ir::vm compiler::compile_repeat
+        PASS [   0.015s] (1362/1501) bbnf-ir::vm cost_weights_unified::materialization_reads_weights_not_hidden_constants
+        PASS [   0.017s] (1363/1501) bbnf-ir::vm cost_weights_unified::hir_extraction_cost_shares_weights_with_grammar_tier
+        PASS [   0.023s] (1364/1501) bbnf-ir::vm cost_weights_unified::egraph_extraction_cost_tracks_dispatch_bonus
+        PASS [   0.015s] (1365/1501) bbnf-ir::vm cost_weights_unified::write_back_optimized_accepts_patched_weights
+        PASS [   0.015s] (1366/1501) bbnf-ir::vm cross_rule_csp::component_partition_is_symmetric
+        PASS [   0.016s] (1367/1501) bbnf-ir::vm cross_rule_csp::component_partition_is_transitive
+        PASS [   0.016s] (1368/1501) bbnf-ir::vm cross_rule_csp::engine_propagation_unifies_component_regex_engines
+        PASS [   0.015s] (1369/1501) bbnf-ir::vm cross_rule_csp::reference_partition_is_deterministic
+        PASS [   0.017s] (1370/1501) bbnf-ir::vm cross_rule_csp::reference_partition_disconnected_graph
+        PASS [   0.031s] (1371/1501) bbnf-ir::vm cost_weights_unified::patched_dispatch_bonus_flips_alt_strategy_to_checkpoint
+        PASS [   0.018s] (1372/1501) bbnf-ir::vm debug::interpreter_debug_snapshot_has_rule_stack
+        PASS [   0.031s] (1373/1501) bbnf-ir::vm cross_rule_csp::bbnf_grammar_forms_expected_components
+        PASS [   0.032s] (1374/1501) bbnf-ir::vm debug::compiler_no_debug_break_without_flag
+        PASS [   0.039s] (1375/1501) bbnf-ir::vm debug::compiler_emits_debug_break_for_debug_rules
+        PASS [   0.053s] (1376/1501) bbnf-ir::vm debug::interpreter_debug_stop_halts_execution
+        PASS [   0.057s] (1377/1501) bbnf-ir::vm debug::interpreter_no_debug_state_no_overhead
+        PASS [   0.077s] (1378/1501) bbnf-ir::vm cost_weights_unified::tiny_dispatch_bonus_still_picks_byte_dispatch
+        PASS [   0.060s] (1379/1501) bbnf-ir::vm debug::interpreter_step_rule_stops_at_every_debug_break
+        PASS [   0.059s] (1380/1501) bbnf-ir::vm debug::source_map_populated_with_debug
+        PASS [   0.053s] (1381/1501) bbnf-ir::vm interpreter::parse_alt_dispatch
+        PASS [   0.071s] (1382/1501) bbnf-ir::vm debug::interpreter_trace_records_entries
+        PASS [   0.071s] (1383/1501) bbnf-ir::vm debug::source_map_empty_without_debug
+        PASS [   0.083s] (1384/1501) bbnf-ir::vm debug::interpreter_debug_break_fires_on_breakpoint
+        PASS [   0.023s] (1385/1501) bbnf-ir::vm interpreter::parse_fallback_dispatch_restores_and_uses_fallback
+        PASS [   0.031s] (1386/1501) bbnf-ir::vm interpreter::parse_dispatch_multi_branch
+        PASS [   0.073s] (1387/1501) bbnf-ir::vm interpreter::end_to_end_json_like_grammar
+        PASS [   0.019s] (1388/1501) bbnf-ir::vm interpreter::parse_memo_correctness
+        PASS [   0.095s] (1389/1501) bbnf-ir::vm debug::compiler_debug_all_instruments_all_rules
+        PASS [   0.061s] (1390/1501) bbnf-ir::vm interpreter::parse_alt_second_branch
+        PASS [   0.031s] (1391/1501) bbnf-ir::vm interpreter::parse_literal
+        PASS [   0.057s] (1392/1501) bbnf-ir::vm interpreter::parse_call
+        PASS [   0.031s] (1393/1501) bbnf-ir::vm interpreter::parse_literal_fail
+        PASS [   0.021s] (1394/1501) bbnf-ir::vm interpreter::parse_negate
+        PASS [   0.082s] (1395/1501) bbnf-ir::vm interpreter::parse_alt_first_branch
+        PASS [   0.022s] (1396/1501) bbnf-ir::vm interpreter::parse_optional
+        PASS [   0.025s] (1397/1501) bbnf-ir::vm interpreter::parse_next_then_skip
+        PASS [   0.038s] (1398/1501) bbnf-ir::vm interpreter::parse_minus
+        PASS [   0.022s] (1399/1501) bbnf-ir::vm interpreter::parse_repeat_many
+        PASS [   0.022s] (1400/1501) bbnf-ir::vm interpreter::parse_repeat_many1_fail
+        PASS [   0.033s] (1401/1501) bbnf-ir::vm interpreter::parse_next
+        PASS [   0.023s] (1402/1501) bbnf-ir::vm interpreter::parse_seq
+        PASS [   0.021s] (1403/1501) bbnf-ir::vm interpreter::parse_seq_nested
+        PASS [   0.028s] (1404/1501) bbnf-ir::vm interpreter::parse_repeat_many_empty
+        PASS [   0.033s] (1405/1501) bbnf-ir::vm interpreter::parse_regex
+        PASS [   0.021s] (1406/1501) bbnf-ir::vm interpreter::parse_whitespace_trimming
+        PASS [   0.025s] (1407/1501) bbnf-ir::vm interpreter::parse_skip
+        PASS [   0.015s] (1408/1501) bbnf-ir::vm interpreter::stress_value_stack_deep_seq
+        PASS [   0.028s] (1409/1501) bbnf-ir::vm interpreter::parse_token_dispatch_matches_pattern_and_falls_back
+        PASS [   0.020s] (1410/1501) bbnf-ir::vm interpreter::stress_long_repeat_10000
+        PASS [   0.016s] (1411/1501) bbnf-lsp::analyze test_analyze_json_grammar
+        PASS [   0.016s] (1412/1501) bbnf-lsp::analyze test_analyze_parse_error
+        PASS [   0.017s] (1413/1501) bbnf-lsp::analyze test_analyze_recover_directive
+        PASS [   0.021s] (1414/1501) bbnf-ir::vm interpreter::stress_wide_alternation_100
+        PASS [   0.016s] (1415/1501) bbnf-lsp::analyze test_analyze_simple_json_grammar
+        PASS [   0.013s] (1416/1501) bbnf-lsp::analyze test_analyze_valid
+        PASS [   0.020s] (1417/1501) bbnf-lsp::analyze test_analyze_recover_undefined_target
+        PASS [   0.035s] (1418/1501) bbnf-ir::vm interpreter::stress_deep_nesting_1000
+        PASS [   0.023s] (1419/1501) bbnf-lsp::analyze test_analyze_undefined_rule
+        PASS [   0.016s] (1420/1501) bbnf-lsp::dap adapter::launch_invalid_path_errors
+        PASS [   0.024s] (1421/1501) bbnf-lsp::analyze test_first_set_conflict_detection
+        PASS [   0.024s] (1422/1501) bbnf-lsp::analyze test_nullable_detection
+        PASS [   0.025s] (1423/1501) bbnf-lsp::analyze test_rules_populated
+        PASS [   0.023s] (1424/1501) bbnf-lsp::dap adapter::build_state_variables
+        PASS [   0.024s] (1425/1501) bbnf-lsp::dap adapter::run_produces_result
+        PASS [   0.029s] (1426/1501) bbnf-lsp::dap adapter::launch_compiles_grammar
+        PASS [   0.025s] (1427/1501) bbnf-lsp::dap adapter::set_function_breakpoint_unknown_rule
+        PASS [   0.022s] (1428/1501) bbnf-lsp::dap mapping::line_index_single_line
+        PASS [   0.023s] (1429/1501) bbnf-lsp::dap mapping::resolve_breakpoint_finds_rule
+        PASS [   0.020s] (1430/1501) bbnf-lsp::dap mapping::rule_at_offset_basic
+        PASS [   0.019s] (1431/1501) bbnf-lsp::dap protocol::capabilities_serialize
+        PASS [   0.016s] (1432/1501) bbnf-lsp::dap protocol::response_serializes_correctly
+        PASS [   0.036s] (1433/1501) bbnf-lsp::dap adapter::set_function_breakpoint
+        PASS [   0.018s] (1434/1501) bbnf-lsp::dap protocol::set_breakpoints_deserialize
+        PASS [   0.025s] (1435/1501) bbnf-lsp::dap protocol::event_serializes_correctly
+        PASS [   0.024s] (1436/1501) bbnf-lsp::dap protocol::launch_args_deserialize_with_defaults
+        PASS [   0.040s] (1437/1501) bbnf-lsp::dap mapping::line_index_multi_line
+        PASS [   0.041s] (1438/1501) bbnf-lsp::dap mapping::line_index_out_of_bounds
+        PASS [   1.397s] (1439/1501) bbnf::sonic_rs_parity sonic_rs_parity_data_xl
+        PASS [   0.316s] (1440/1501) bbnf-lsp::integration test_diagnostics_parse_error
+        PASS [   0.324s] (1441/1501) bbnf-lsp::integration test_cross_file_goto_definition
+        PASS [   0.313s] (1442/1501) bbnf-lsp::integration test_diagnostics_valid_grammar
+        PASS [   0.324s] (1443/1501) bbnf-lsp::integration test_diagnostics_first_set_conflict
+        PASS [   0.319s] (1444/1501) bbnf-lsp::integration test_diagnostics_unreachable_rule
+        PASS [   0.318s] (1445/1501) bbnf-lsp::integration test_diagnostics_unused_rule
+        PASS [   0.334s] (1446/1501) bbnf-lsp::integration test_completion
+        PASS [   0.196s] (1447/1501) bbnf-lsp::integration test_document_symbols
+        PASS [   0.329s] (1448/1501) bbnf-lsp::integration test_diagnostics_no_first_set_conflict
+        PASS [   0.326s] (1449/1501) bbnf-lsp::integration test_diagnostics_undefined_rule
+        PASS [   0.332s] (1450/1501) bbnf-lsp::integration test_cross_file_references
+        PASS [   0.338s] (1451/1501) bbnf-lsp::integration test_cross_file_completion_includes_imported_rules
+        PASS [   0.323s] (1452/1501) bbnf-lsp::integration test_did_change
+        PASS [   0.348s] (1453/1501) bbnf-lsp::integration test_code_actions
+        PASS [   0.344s] (1454/1501) bbnf-lsp::integration test_code_lens
+        PASS [   0.023s] (1455/1501) bbnf-lsp::integration test_folding_ranges
+        PASS [   0.026s] (1456/1501) bbnf-lsp::integration test_goto_definition
+        PASS [   0.029s] (1457/1501) bbnf-lsp::integration test_formatting_produces_valid_output
+        PASS [   0.031s] (1458/1501) bbnf-lsp::integration test_hover_enhanced_info
+        PASS [   0.030s] (1459/1501) bbnf-lsp::integration test_import_parser_valid_syntax
+        PASS [   0.031s] (1460/1501) bbnf-lsp::integration test_hover_recover_keyword
+        PASS [   0.031s] (1461/1501) bbnf-lsp::integration test_hover_on_definition
+        PASS [   0.036s] (1462/1501) bbnf-lsp::integration test_formatting
+        PASS [   0.029s] (1463/1501) bbnf-lsp::integration test_incremental_change
+        PASS [   0.030s] (1464/1501) bbnf-lsp::integration test_import_selective_suppresses_only_named_rules
+        PASS [   0.025s] (1465/1501) bbnf-lsp::integration test_initialize_capabilities
+        PASS [   0.031s] (1466/1501) bbnf-lsp::integration test_incremental_change_delete
+        PASS [   0.034s] (1467/1501) bbnf-lsp::integration test_import_suppresses_undefined_rule
+        PASS [   0.033s] (1468/1501) bbnf-lsp::integration test_initialize_new_capabilities
+        PASS [   0.038s] (1469/1501) bbnf-lsp::integration test_incremental_change_replace
+        PASS [   0.035s] (1470/1501) bbnf-lsp::integration test_inlay_hints
+        PASS [   0.028s] (1471/1501) bbnf-lsp::integration test_inlay_hints_empty_range
+        PASS [   0.026s] (1472/1501) bbnf-lsp::integration test_inlay_hints_nullable
+        PASS [   0.029s] (1473/1501) bbnf-lsp::integration test_range_formatting_no_overlap
+        PASS [   0.018s] (1474/1501) bbnf-oracle::obs_laws an_unsorted_expected_set_fails_to_construct
+        PASS [   0.029s] (1475/1501) bbnf-lsp::integration test_rename
+        PASS [   0.035s] (1476/1501) bbnf-lsp::integration test_large_grammar
+        PASS [   0.016s] (1477/1501) bbnf-oracle::obs_laws left_fold_tells_a_left_chain_from_a_right_nest
+        PASS [   0.037s] (1478/1501) bbnf-lsp::integration test_on_type_formatting
+        PASS [   0.038s] (1479/1501) bbnf-lsp::integration test_real_json_grammar
+        PASS [   0.038s] (1480/1501) bbnf-lsp::integration test_references
+        PASS [   0.039s] (1481/1501) bbnf-lsp::integration test_regex_charclass_slash_parses
+        PASS [   0.036s] (1482/1501) bbnf-lsp::integration test_selection_range
+        PASS [   0.042s] (1483/1501) bbnf-lsp::integration test_range_formatting
+        PASS [   0.032s] (1484/1501) bbnf-lsp::integration test_semantic_tokens
+        PASS [   0.039s] (1485/1501) bbnf-lsp::integration test_selection_range_multiple_positions
+        PASS [   0.013s] (1486/1501) bbnf-path-ts::isomorphic_path_error empty_path_rust_and_ts_match
+        PASS [   0.019s] (1487/1501) bbnf-path-ts::isomorphic_path_error reason_variants_are_isomorphic
+        PASS [   0.020s] (1488/1501) bbnf-path-ts::isomorphic_path_error index_into_scalar_rust_and_ts_match
+        PASS [   0.017s] (1489/1501) xtask::metadata_fail_closed empty_features_passes_validation
+        PASS [   0.020s] (1490/1501) bbnf-path-ts::isomorphic_path_error unknown_field_at_entry_rule_rust_and_ts_match
+        PASS [   0.021s] (1491/1501) bbnf-path-ts::isomorphic_path_error unregistered_grammar_marker_surfaces_unregistered_rule
+        PASS [   0.019s] (1492/1501) xtask::metadata_fail_closed unknown_feature_is_rejected_with_structured_error
+        PASS [   0.020s] (1493/1501) xtask::metadata_fail_closed every_known_feature_passes_validation
+        PASS [   0.042s] (1494/1501) bbnf-oracle::obs_laws merge_keeps_the_furthest_and_unions_at_equal_offset
+        PASS [   0.198s] (1495/1501) bbnf-oracle::obs_laws semantic_sees_a_label_or_text_change
+        PASS [   0.249s] (1496/1501) bbnf-oracle::obs_laws every_class_is_an_idempotent_projection
+        PASS [   0.286s] (1497/1501) bbnf-oracle::obs_laws obs_is_reflexive_for_every_class
+        PASS [   4.466s] (1498/1501) bbnf::bbnf_bootstrap_reproducibility json_regen_is_idempotent
+        PASS [   0.631s] (1499/1501) bbnf-oracle::obs_laws exact_is_contained_in_semantic_and_semantic_in_the_coarser_classes
+        PASS [   4.706s] (1500/1501) bbnf::bbnf_bootstrap_reproducibility bbnf_regen_is_idempotent
+        PASS [   1.480s] (1501/1501) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+────────────
+     Summary [   4.824s] 1501 tests run: 1501 passed, 23 skipped

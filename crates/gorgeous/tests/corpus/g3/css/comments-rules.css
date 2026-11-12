@@ -1,0 +1,5 @@
+/* Header: a comment before every rule. */
+body { color: red; }
+
+/* Between rules. */
+h1 { font-size: 24px; margin: 0; }

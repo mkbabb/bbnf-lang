@@ -1,0 +1,127 @@
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s3b-pp/crates/gorgeous)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.62s
+     Running tests/g3_trivia.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/g3_trivia-1ab29cdfb60ad188)
+
+running 2 tests
+test g3_corpus_bears_comments_where_the_grammar_has_them ... ok
+test g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent ... FAILED
+
+failures:
+
+---- g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent stdout ----
+G3: 14 files, 15 comments in the corpus, 5 failures
+
+thread 'g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent' (47519441) panicked at crates/gorgeous/tests/g3_trivia.rs:234:5:
+G3:
+css/comments-nested.css: fmt . fmt != fmt
+--- once
+@media (max-width: 768px) {
+  /* hide the sidebar on narrow screens */
+
+        .sidebar {
+                display: none;
+            }
+
+}
+
+.a /* in a selector */ .b {
+        width: 10px;
+    }
+/* trailing comment at the end of the file */
+
+--- twice
+@media (max-width: 768px) {
+  /* hide the sidebar on narrow screens */
+
+        .sidebar {
+
+                display: none;
+
+            }
+
+
+}
+
+
+.a /* in a selector */ .b {
+
+        width: 10px;
+
+    }
+/* trailing comment at the end of the file */
+
+
+css/comments-rules.css: fmt . fmt != fmt
+--- once
+/* Header: a comment before every rule. */
+body {
+        color: red;
+    }
+
+
+/* Between rules. */
+h1 {
+        font-size: 24px;
+        margin: 0;
+    }
+
+--- twice
+/* Header: a comment before every rule. */
+body {
+
+        color: red;
+
+    }
+
+
+
+/* Between rules. */
+h1 {
+
+        font-size: 24px;
+
+        margin: 0;
+
+    }
+
+
+css/plain.css: fmt . fmt != fmt
+--- once
+a{
+        color:red;
+        background:white
+    }
+b{
+        margin:0
+    }
+
+--- twice
+a{
+
+        color:red;
+
+        background:white
+
+    }
+
+b{
+
+        margin:0
+
+    }
+
+
+ebnf/rules.ebnf: does not format
+
+bbnf/comments-in-rule.bbnf: the token-and-comment stream differs (lost: [Word("value"), Punct('='), Str("\"true\""), Comment("// the first alternative"), Punct('|'), Str("\"false\""), Punct(';'), Word("list"), Punct('='), Str("\"[\""), Punct(','), Word("value"), Punct(','), Str("\"]\""), Punct(';'), Comment("// after a rule")])
+--- output
+// Comments inside a rule: after an alternative and after the rule.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test g3_trivia`

@@ -132,8 +132,10 @@ def check_fold(rev):
     for h in g.strip().split("\n"):
         if not h:
             continue
-        _, f, ln, _ = h.split(":", 3)
-        if (f, int(ln)) not in listed:
+        _, f, ln, txt = h.split(":", 3)
+        # The dig's reading: every hit is a listed passage, or is itself
+        # amending text that cites DIG-G1 (PLAN §7 quotes the sealed text).
+        if (f, int(ln)) not in listed and "DIG-G1" not in txt:
             bad.append(f"DIG-G1 grep hit {f}:{ln} is not an amended passage")
     # The plan units the dig names, and the 14 amendment-9 ids (DIG-G2).
     units = ["LW5.COMP-1-MINE", "LW5.COMP-1-BRIDGE", "LW5.COMP-5",

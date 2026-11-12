@@ -1,0 +1,53 @@
+fact	claim	order	read	verdict
+F0.master.bbnf-lang	bbnf-lang origin/master	29d4fd5ef	29d4fd5ef	HOLDS
+F0.master.parse-that	parse-that origin/master	f7ac459	f7ac45905	HOLDS
+F0.master.pprint	pprint origin/master	dccbd63	dccbd6342	HOLDS
+F1.spine.ref	origin codex/sk-v26-bbnf	b5fd0ca98	b5fd0ca98	HOLDS
+F1.spine.count	commits on af15f63e0	24	24	HOLDS
+F1.spine.not-ancestor	spine is not an ancestor of master	not ancestor	not ancestor	HOLDS
+F1.integration-backend	integration/backend on origin	absent	absent	HOLDS
+F1.merge-tree	conflicted paths, merge-tree master x spine	15	15	HOLDS
+F2.lib-rs	spine crates/core/src/lib.rs `pub mod` lines	pub mod compiler; only	pub mod compiler;	HOLDS
+F2.xtask	spine deletes xtask/	deleted	deleted	HOLDS
+F2.root-modules	master crates/core/src/lib.rs root modules exported	types grammar generate backend graph imports lower path pipeline runtime	backend generate grammar graph imports lower path pipeline runtime types	HOLDS
+F3.kernel-abi.sk-v26	KERNEL_ABI defined at PT e31fbfedc	present	present	HOLDS
+F3.kernel-abi.master	KERNEL_ABI at PT master	absent	absent	HOLDS
+F3.spine-asserts	spine asserts KERNEL_ABI == 3	== 3	== 3	HOLDS
+F3.pt-conflicts	conflicted paths, merge-tree PT master x e31fbfedc	96	96	HOLDS
+F3.pt-diffstat	e31fbfedc against its merge-base with PT master (+ / -)	+5749 / -26812	+5766 / -26917	DRIFT
+F4.frontend	spine front end is hand-written (compiler/frontend.rs)	hand-written	hand-written	HOLDS
+F4.manifest-compile	about 4 of 63 MANIFEST grammars compile under the spine	~4 / 63	not read here (needs a build)	UNIT-RED: LW3.COMP-1c spine_manifest
+F4.manifest-entries	grammar/MANIFEST entries	63	63	HOLDS
+F5.recursive-rule	spine rejects left recursion as RecursiveRule	present	present	HOLDS
+F5.organs	spine compiler names egraph / csp / OptIR / plan.json / KernelId	0	0	HOLDS
+F6.trials	F-TRIAL-EGRAPH / F-TRIAL-CSP records	0	0	HOLDS
+F7.obs	`fn obs` / `ObsClass` in the three repos' code (records excluded)	0	0	HOLDS
+F8.jsontestsuite	JSONTestSuite in corpus/MANIFEST.sha256	absent	absent	HOLDS
+F8.oracle-crate	crates/oracle	absent	absent	HOLDS
+F9.toml	a TOML grammar under grammar/	absent	absent	HOLDS
+F9.csv-training	grammar/misc/csv.bbnf is one of the 9 (regen entries)	training	training	HOLDS
+F9.prereg-heldout	PREREG held-out section	absent	absent	HOLDS
+F10.hir-fingerprint	Hir ABI v1 fingerprint	0x0c587e007f6ccf7d	0x0c587e007f6ccf7d	HOLDS
+F10.dfa-longest	rust/regex/src/automata/dfa.rs:115 is leftmost-longest	longest at :115	/// Returns the end position of the longest match, or `None`.	HOLDS
+F10.route-a	spike/or7-route-a	5999f9c	5999f9cdc	HOLDS
+F10.parser-lines	rust/regex/src/hir/parser/*.rs lines	799	799	HOLDS
+F10.generality-regex	lines naming bbnf under PT rust/regex (amendment 1)	17	17	HOLDS
+F10.generality-bootstrap	lines naming bbnf under PT rust/bootstrap (amendment 1)	13	13	HOLDS
+F10.born-red-ignores	#[ignore] attributes in PT rust/regex/tests/born_red_lw1.rs	9	9	HOLDS
+F11.unsafe	`unsafe` lines in pprint rust/src	1	1	HOLDS
+F11.width-rs	pprint rust/src/width.rs	absent	absent	HOLDS
+F11.version	pprint master version line	0.5.0-alpha.0	0.5.0-alpha.0	HOLDS
+F11.published	pprint newest on crates.io	0.4.0	0.4.0	HOLDS
+F11.pt-depends-pp	PT depends on pprint (PP-1's reverse-edge fact)	depends	depends	HOLDS
+F12.decision-plan	sha256 of bench/DECISION-PLAN.lw2.json	9882d5a1e004…	9882d5a1e004	HOLDS
+F12.arms	contest arms on disk (node_json_parse.mjs is the one)	1 arm	node_json_parse.mjs	HOLDS
+F13.iai-apt	bench-iai.yml installs valgrind from the live archive	apt-get	apt-get	HOLDS
+F13.iai-stub	docs/benchmarks/iai-baselines/json.json valgrind_instrs	null	null	HOLDS
+F13.iai-trigger	bench-iai.yml triggers (amendment)	pull_request only	pull_request only	HOLDS
+F14.npm-latest	npm @mkbabb/value.js latest	4.3.0	4.3.0	HOLDS
+F14.files	value.js package.json `files` at the latest tag omits the six .bbnf	omits	omits	HOLDS
+A1.stable	rustc +stable on this machine	1.97.0	rustc 1.97.0 (2d8144b78 2026-07-07)	HOLDS
+A1.pin	rust-toolchain.toml channel	1.99.1	1.99.1	HOLDS
+A1.divergence	grammar/DIVERGENCE.tsv absent; SK/grammar/DIVERGENCE.tsv present	absent / present	absent / present	HOLDS
+A1.path-edges	in-repo `path = "../` edges in master *.toml	49	49	HOLDS
+A1.spine-manifest	spine crates/core/Cargo.toml autotests / version	autotests = false, 0.4.0	autotests = false, 0.4.0	HOLDS

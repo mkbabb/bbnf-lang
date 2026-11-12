@@ -1,0 +1,10 @@
+RED
+  31/34 cited commits resolve (1 non-commit object ids, 6 CI run ids, 0 upstream pins verified; 0 of 0 listed mutant tokens re-refused)
+  0badc0de7: not a commit or object in any receipted repo
+  deadbeef1: not a commit or object in any receipted repo
+  fa93a14f3: not a commit or object in any receipted repo
+pprint: origin/master (dccbd6342) ancestor of sk-v27-lw3 (dccbd6342): true
+parse-that: origin/master (f7ac45905) ancestor of sk-v27-lw3 (f7ac45905): true
+bbnf-lang: origin/master (29d4fd5ef) ancestor of sk-v27-lw3 (0c6b31b19): true
+bbnf-lang: sk-v27-lw3-order ancestor of sk-v27-lw3: true
+rc=1

@@ -1,0 +1,25 @@
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/parse_that_simd-eae6270a2b24fdb9)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/ascii_prefix.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/ascii_prefix-c14fa67c30a5e610)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.91s
+     Running tests/correctness.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/correctness-6df5c297c2455364)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.67s
+     Running tests/differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/differential-b067819091d8664e)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.20s
+     Running tests/digraph.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/digraph-f6aabedce346335e)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/dispatch_tiers-629701e61b6dd7d1)
+test required_tiers_are_supported_on_this_host ... ok
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+     Running tests/fuzz.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/fuzz-687fc67e29e2716a)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.28s
+     Running tests/guard_page.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/guard_page-969c7630d95bf0ff)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/prim_differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/prim_differential-f648a885c9982d58)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+     Running tests/quote_parity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/quote_parity-db975aa907b5793c)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/stage1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/stage1-23add7950c9ab77c)
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 18.49s
+     Running tests/wasm_bounds.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/aarch64-apple-darwin/debug/deps/wasm_bounds-6fd546410ee4af53)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

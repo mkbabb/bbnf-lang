@@ -1,0 +1,26 @@
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that_simd-1887b5f6e8513c7c)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/ascii_prefix.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/ascii_prefix-ce110475af3c8f5d)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.00s
+     Running tests/correctness.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/correctness-168d7e638dba576b)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
+     Running tests/differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/differential-9f1bc02fabb511cd)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+     Running tests/digraph.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/digraph-cb6f261501e091b5)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/dispatch_tiers-e4b9bacf9eeeb384)
+tiers this host runs: ["neon", "scalartest every_isa_tier_of_the_target_is_compiled ... ok
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s
+     Running tests/fuzz.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/fuzz-c08c4f861afc9e67)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s
+     Running tests/guard_page.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/guard_page-f58f4921499c3515)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/prim_differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/prim_differential-7f9621f047588671)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests/quote_parity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/quote_parity-a21a26c16eea1ee5)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/stage1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/stage1-e0e7917f55d7d671)
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.37s
+     Running tests/wasm_bounds.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/wasm_bounds-e24b1112a5fa3897)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 31 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s

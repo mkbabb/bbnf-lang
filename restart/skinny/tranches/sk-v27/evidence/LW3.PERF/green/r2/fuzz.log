@@ -1,0 +1,25 @@
+    Finished `release` profile [optimized] target(s) in 0.18s
+     Running tests/ascii_prefix.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/release/deps/ascii_prefix-e4d3554eaa4481cc)
+
+running 1 test
+test fuzz_every_tier_matches_the_oracle ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 9.21s
+
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/release/deps/dispatch_tiers-e2ea18968b8f0c53)
+
+running 1 test
+tiers this host runs: ["neon", "scalar"]
+test required_tiers_are_supported_on_this_host ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+     Running tests/stage1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/release/deps/stage1-adddeaa510b49d0b)
+
+running 3 tests
+test fuzz_raw_bytes_json ... ok
+test fuzz_text_every_tier_every_spec ... ok
+test fuzz_bytes_every_tier_every_spec ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 12 filtered out; finished in 15.31s
+

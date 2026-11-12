@@ -1,0 +1,73 @@
+   Compiling quote v1.0.45
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s9-perf/rust/corpus)
+   Compiling num-traits v0.2.19
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s9-perf/rust/simd)
+   Compiling syn v2.0.117
+   Compiling proptest v1.11.0
+   Compiling divan-macros v0.1.21
+   Compiling divan v0.1.21
+error[E0432]: unresolved imports `parse_that_simd::ascii_prefix_len`, `parse_that_simd::ascii_prefix_len_with`
+  --> simd/tests/ascii_prefix.rs:10:11
+   |
+10 |     Tier, ascii_prefix_len, ascii_prefix_len_with, compiled_tiers, scalar, selected_tier,
+   |           ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^ no `ascii_prefix_len_with` in the root
+   |           |
+   |           no `ascii_prefix_len` in the root
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+  --> simd/tests/ascii_prefix.rs:29:24
+   |
+29 |     assert_eq!(scalar::ascii_prefix_len(b""), 0);
+   |                        ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+  --> simd/tests/ascii_prefix.rs:30:24
+   |
+30 |     assert_eq!(scalar::ascii_prefix_len(b"abc"), 3);
+   |                        ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+  --> simd/tests/ascii_prefix.rs:31:24
+   |
+31 |     assert_eq!(scalar::ascii_prefix_len("ab\u{e9}c".as_bytes()), 2);
+   |                        ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+  --> simd/tests/ascii_prefix.rs:32:24
+   |
+32 |     assert_eq!(scalar::ascii_prefix_len(&[0x7F, 0x80]), 1);
+   |                        ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+  --> simd/tests/ascii_prefix.rs:33:24
+   |
+33 |     assert_eq!(scalar::ascii_prefix_len(&[0xFF]), 0);
+   |                        ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+  --> simd/tests/ascii_prefix.rs:40:24
+   |
+40 |     let want = scalar::ascii_prefix_len(input);
+   |                        ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+  --> simd/tests/ascii_prefix.rs:84:40
+   |
+84 |                     let want = scalar::ascii_prefix_len(s);
+   |                                        ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+   --> simd/tests/ascii_prefix.rs:154:34
+    |
+154 |                     Some(scalar::ascii_prefix_len(s)),
+    |                                  ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+error[E0425]: cannot find function `ascii_prefix_len` in module `scalar`
+   --> simd/tests/ascii_prefix.rs:185:28
+    |
+185 |         let want = scalar::ascii_prefix_len(s);
+    |                            ^^^^^^^^^^^^^^^^ not found in `scalar`
+
+Some errors have detailed explanations: E0425, E0432.
+For more information about an error, try `rustc --explain E0425`.
+error: could not compile `parse-that-simd` (test "ascii_prefix") due to 10 previous errors

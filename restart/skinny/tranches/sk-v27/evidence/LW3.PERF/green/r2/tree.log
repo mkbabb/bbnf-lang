@@ -1,0 +1,49 @@
+parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s9-perf/rust/simd)
+[dev-dependencies]
+├── divan v0.1.21
+│   ├── cfg-if v1.0.4
+│   ├── clap v4.6.1
+│   │   └── clap_builder v4.6.0
+│   │       ├── anstyle v1.0.14
+│   │       ├── clap_lex v1.1.0
+│   │       └── terminal_size v0.4.4
+│   │           └── rustix v1.1.4
+│   │               ├── bitflags v2.11.0
+│   │               ├── errno v0.3.14
+│   │               │   └── libc v0.2.184
+│   │               └── libc v0.2.184
+│   ├── condtype v1.3.0
+│   ├── divan-macros v0.1.21 (proc-macro)
+│   │   ├── proc-macro2 v1.0.106
+│   │   │   └── unicode-ident v1.0.24
+│   │   ├── quote v1.0.45
+│   │   │   └── proc-macro2 v1.0.106 (*)
+│   │   └── syn v2.0.117
+│   │       ├── proc-macro2 v1.0.106 (*)
+│   │       ├── quote v1.0.45 (*)
+│   │       └── unicode-ident v1.0.24
+│   ├── libc v0.2.184
+│   └── regex-lite v0.1.9
+├── libc v0.2.184
+├── parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s9-perf/rust/corpus)
+└── proptest v1.11.0
+    ├── bit-set v0.8.0
+    │   └── bit-vec v0.8.0
+    ├── bit-vec v0.8.0
+    ├── bitflags v2.11.0
+    ├── num-traits v0.2.19
+    │   [build-dependencies]
+    │   └── autocfg v1.5.0
+    ├── rand v0.9.5
+    │   └── rand_core v0.9.5
+    │       └── getrandom v0.3.4
+    │           ├── cfg-if v1.0.4
+    │           └── libc v0.2.184
+    ├── rand_chacha v0.9.0
+    │   ├── ppv-lite86 v0.2.21
+    │   │   └── zerocopy v0.8.48
+    │   └── rand_core v0.9.5 (*)
+    ├── rand_xorshift v0.4.0
+    │   └── rand_core v0.9.5 (*)
+    ├── regex-syntax v0.8.10
+    └── unarray v0.1.4

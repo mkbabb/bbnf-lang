@@ -1,0 +1,9 @@
+Rust — nightly plane (parse_that/nightly)	UNKNOWN STEP	2026-11-12T12:27:34.0156460Z ^[[1m^[[91merror^[[0m^[[1m: this boolean expression can be simplified^[[0m
+Rust — nightly plane (parse_that/nightly)	UNKNOWN STEP	2026-11-12T12:27:34.0301404Z ^[[1m^[[91merror^[[0m^[[1m: this boolean expression can be simplified^[[0m
+Rust — nightly plane (parse_that/nightly)	UNKNOWN STEP	2026-11-12T12:27:34.0650249Z ^[[1m^[[91merror^[[0m^[[1m: this boolean expression can be simplified^[[0m
+Rust (ubuntu-latest) — clippy + nextest	workspace tests (nextest, ax-iter)	2026-11-12T12:27:58.3089135Z     pub items with no caller in this workspace (production code or a compiled doctest):
+Rust (ubuntu-latest) — clippy + nextest	workspace tests (nextest, ax-iter)	2026-11-12T12:27:58.3089874Z       fn portable at /home/runner/work/parse-that/parse-that/rust/simd/src/stage1.rs:684
+Rust (ubuntu-latest) — clippy + nextest	workspace tests (nextest, ax-iter)	2026-11-12T12:27:58.3091059Z       fn ascii_prefix_len_with at /home/runner/work/parse-that/parse-that/rust/simd/src/dispatch.rs:295
+Rust — cargo +stable (latest)	Run cargo +stable test --workspace --locked --no-fail-fast	2026-11-12T12:28:43.8872119Z pub items with no caller in this workspace (production code or a compiled doctest):
+Rust — cargo +stable (latest)	Run cargo +stable test --workspace --locked --no-fail-fast	2026-11-12T12:28:43.8872554Z   fn portable at /home/runner/work/parse-that/parse-that/rust/simd/src/stage1.rs:684
+Rust — cargo +stable (latest)	Run cargo +stable test --workspace --locked --no-fail-fast	2026-11-12T12:28:43.8873022Z   fn ascii_prefix_len_with at /home/runner/work/parse-that/parse-that/rust/simd/src/dispatch.rs:295

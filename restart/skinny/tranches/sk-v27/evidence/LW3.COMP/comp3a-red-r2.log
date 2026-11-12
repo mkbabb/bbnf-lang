@@ -1,0 +1,8 @@
+28c09a0a5875f6680a6f90524f5ece71aa3c2f8b
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.85s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask corpus verify`
+corpus verify: 8/8 files match (corpus-v1)
+verify_rc=0
+jsontestsuite_rows=0
+error: package(s) `bbnf-oracle` not found in workspace `/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s5-oracle`
+g1_rc=101

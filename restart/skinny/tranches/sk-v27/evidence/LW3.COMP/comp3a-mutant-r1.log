@@ -1,0 +1,16 @@
+# COMP-3a MUTANT r1 at ed7b136b6: the constant arm (--features mutants), read by the harness self-check
+$ g1 --grammar json,toml,graphql,r7rs_datum --arms mutant-const
+grammar=json arm=mutant-const oracles=3 inputs=323 accept=323 reject=0 refused=0 crash=0 divergences=386 unruled=386 self-check=REFUSED (323 distinct inputs, one outcome: the arm returns a constant)
+  oracle=jsontestsuite judged=283 agree=95 diverge=188 ruled=0
+  oracle=serde_json judged=0 agree=0 diverge=0 ruled=0
+  oracle=ts-package judged=323 agree=125 diverge=198 ruled=0
+grammar=toml arm=mutant-const oracles=2 inputs=679 accept=679 reject=0 refused=0 crash=0 divergences=1051 unruled=1051 self-check=REFUSED (679 distinct inputs, one outcome: the arm returns a constant)
+  oracle=toml-test judged=679 agree=7 diverge=672 ruled=0
+  oracle=ts-package judged=679 agree=300 diverge=379 ruled=0
+grammar=graphql arm=mutant-const oracles=2 inputs=1725 accept=1725 reject=0 refused=0 crash=0 divergences=2545 unruled=2544 self-check=REFUSED (1725 distinct inputs, one outcome: the arm returns a constant)
+  oracle=graphql-js judged=1725 agree=0 diverge=1725 ruled=1
+  oracle=ts-package judged=1725 agree=905 diverge=820 ruled=0
+grammar=r7rs_datum arm=mutant-const oracles=2 inputs=460 accept=460 reject=0 refused=0 crash=0 divergences=449 unruled=448 self-check=REFUSED (460 distinct inputs, one outcome: the arm returns a constant)
+  oracle=lexpr judged=419 agree=0 diverge=419 ruled=1
+  oracle=ts-package judged=460 agree=430 diverge=30 ruled=0
+rc=2

@@ -1,0 +1,7 @@
+# COMP-5b MUTANT r2 at ed7b136b6: one byte appended to grammar/heldout/toml.bbnf (a later edit to a held-out grammar)
+FAIL: test_the_section_hashes_equal_the_grammar_files (bench.test_prereg.HeldOut.test_the_section_hashes_equal_the_grammar_files)
+                     f"{path} changed after registration (a held-out grammar is frozen)")
+ : grammar/heldout/toml.bbnf changed after registration (a held-out grammar is frozen)
+Ran 14 tests in 0.065s
+FAILED (failures=1)
+rc=1

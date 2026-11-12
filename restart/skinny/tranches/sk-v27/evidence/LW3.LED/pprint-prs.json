@@ -1,0 +1,42 @@
+[
+ {
+  "baseRefName": "master",
+  "headRefName": "sk-v27-pprint",
+  "mergeCommit": {
+   "oid": "ec47846d5d7896dac13c9608b667d9ae915e7fc9"
+  },
+  "mergedAt": "2026-11-11T18:14:27Z",
+  "number": 2,
+  "state": "MERGED"
+ },
+ {
+  "baseRefName": "master",
+  "headRefName": "sk-v27-lw2",
+  "mergeCommit": {
+   "oid": "dccbd63424dee0443df3c9044ef2e026fe0eae11"
+  },
+  "mergedAt": "2026-11-11T18:14:26Z",
+  "number": 3,
+  "state": "MERGED"
+ },
+ {
+  "baseRefName": "master",
+  "headRefName": "lw2/s4-toolchain",
+  "mergeCommit": {
+   "oid": "32e58de34e891240ec15558ef6c80fd9f0c61ba9"
+  },
+  "mergedAt": "2026-11-11T18:14:27Z",
+  "number": 4,
+  "state": "MERGED"
+ },
+ {
+  "baseRefName": "master",
+  "headRefName": "lw2/topo-4e-0.4",
+  "mergeCommit": {
+   "oid": "bc9d47feb512eca3f05b0235b986dac942b23a22"
+  },
+  "mergedAt": "2026-11-11T18:14:27Z",
+  "number": 5,
+  "state": "MERGED"
+ }
+]

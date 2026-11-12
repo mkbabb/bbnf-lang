@@ -1,0 +1,42 @@
+repo	rev	file	line	test	reason
+bbnf-lang	0c6b31b19	crates/analysis/tests/directives.rs	169	ir_meta_has_follow_sets	AV.0.11 Category A: analysis runs structural-mode pipeline which gates compute_follow_sets; FOLLOW labels unreachable. Forward-ticketed to analysis-mode rework.
+bbnf-lang	0c6b31b19	crates/analysis/tests/directives.rs	196	ir_meta_has_memo_and_span_info	AV.0.11 Category A: analysis pipeline is structural; span-eligibility refinement is gated behind !structural. Forward-ticketed to analysis-mode rework.
+bbnf-lang	0c6b31b19	crates/core/src/runtime/google_sheets/parse_with.rs	58	parse_with_resolves_number_leaf	Flat-shape lazy honoring: formula is a flat compound.
+bbnf-lang	0c6b31b19	crates/core/tests/css_l4_color_view.rs	285	color_named_type_admission_or_no_color_rules	AY.W2.2 deferred — named_types resolver layout for heterogeneous Alt bodies; W3 Value API territory
+bbnf-lang	0c6b31b19	crates/core/tests/ebnf_prettify.rs	39	prettify_multi_rule	prettify codegen stops after first rule — pre-existing in gorgeous
+bbnf-lang	0c6b31b19	crates/core/tests/imports.rs	314	test_selective_transitive_unfurling	AV.0.12: module loader does not unfurl transitive deps of selectively-imported rules; forward ticket.
+bbnf-lang	0c6b31b19	crates/core/tests/no_grammar_name_branch.rs	280	no_grammar_name_branch_in_production_runtime_or_shape_emitter	AZ-IV.W1 wave gate — green after W1.1 + W1.7 deletions \ of from_rule_name + (layout.kind, rule_name) match arms \ land; fix-or-merge owner: W1.1 worktree; \ deadline: W1 close commit
+bbnf-lang	0c6b31b19	crates/core/tests/no_subvariant_refs.rs	92	no_hand_written_subvariant_references	AV.0.11 Category A: AF W2 substrate-break closure gate — src/graph/deps.rs leaks remain; forward-ticketed to the wrapper-peel graph-walker migration.
+bbnf-lang	0c6b31b19	crates/core/tests/par1_regex_trailing_escape.rs	9	regex_body_may_end_in_an_escaped_backslash	born-RED sk-v27 LW2.PAR-1: a regex body ending in an escaped backslash is rejected; cured by LW3.COMP-1
+bbnf-lang	0c6b31b19	crates/core/tests/parse_with_google_sheets.rs	27	lazy_error_elision_after_path_reach	Flat-shape lazy honoring: Sheets formula is a Flat compound; the W3-DYNAMIC \ mechanism gates Object/Array loops only. Closing this requires a Flat-shape \ early-bail when cursor reaches terminal mid-body — separate mechanism, slated \ for a focused follow-on (post-W3 tranche carry).
+bbnf-lang	0c6b31b19	crates/core/tests/pipeline.rs	728	closure_single_param	AV.0.11 Category A: lower::expression closure-body lowering gap
+bbnf-lang	0c6b31b19	crates/core/tests/pipeline.rs	739	closure_multi_param	AV.0.11 Category A: lower::expression closure-body lowering gap
+bbnf-lang	0c6b31b19	crates/core/tests/pipeline.rs	750	closure_nested_calls	AV.0.11 Category A: lower::expression closure-body lowering gap
+bbnf-lang	0c6b31b19	crates/core/tests/pipeline.rs	762	closure_with_rule_ref	AV.0.11 Category A: lower::expression closure-body lowering gap
+bbnf-lang	0c6b31b19	crates/core/tests/pipeline.rs	774	closure_composition	AV.0.11 Category A: lower::expression closure-body lowering gap
+bbnf-lang	0c6b31b19	crates/core/tests/pipeline_compile_request.rs	122	compile_request_rejects_unknown_nonterminal	AV.0.11 Category A: validate_ast no longer precedes lower::expression; unknown-nonterminal handling regressed to src-side panic. Forward-ticketed to the pipeline error-surface refresh.
+bbnf-lang	0c6b31b19	crates/core/tests/recover.rs	130	parse_recover_without_terminator	AV.0.11 Category A: bbnf grammar requires trailing `;` after @recover directives; terminator-free form unsupported. Forward-ticketed to directive-syntax refresh.
+bbnf-lang	0c6b31b19	crates/core/tests/regen_shape_goldens.rs	118	regen_shape_goldens	regen-only — run with `--ignored` to refresh shape goldens
+bbnf-lang	0c6b31b19	crates/gorgeous/tests/ebnf.rs	32	test_prettify_multi_rule	prettify codegen stops after first rule — pre-existing issue \ (matches crates/core/tests/ebnf_prettify.rs::prettify_multi_rule)
+bbnf-lang	0c6b31b19	crates/gorgeous/tests/google_sheets.rs	28	test_let_parses_as_let_call	SheetsDocument tree walk overflows stack; cutover.F arena-cycle audit
+bbnf-lang	0c6b31b19	crates/gorgeous/tests/vm.rs	178	hint_indent_group	AV.0.11 Category A: pprint vm indent+group+sep interaction drifted post-AU; forward-ticketed to pprint hint-semantics audit.
+bbnf-lang	0c6b31b19	crates/gorgeous/tests/vm.rs	241	hint_softbreak	AV.0.11 Category A: softbreak flat emitter drifted post-AU (inserts space, expected empty); forward-ticketed to pprint hint-semantics audit.
+bbnf-lang	0c6b31b19	crates/lsp/tests/analyze.rs	177	test_cycle_detection	AV.0.11 Category A: structural-mode analysis does not emit cyclic_rule_paths. Forward-ticketed to analysis-mode rework.
+bbnf-lang	0c6b31b19	crates/lsp/tests/analyze.rs	195	test_alias_detection	AV.0.11 Category A: structural-mode analysis does not emit alias-hint diagnostics. Forward-ticketed to analysis-mode rework.
+bbnf-lang	0c6b31b19	crates/lsp/tests/integration.rs	1335	test_diagnostics_cycle_path	AV.0.11 Category A: LSP cycle-path diagnostic gated on analysis crate cyclic_rule_paths (structural-mode gap). Forward-ticketed to analysis-mode rework.
+bbnf-lang	0c6b31b19	crates/lsp/tests/integration.rs	1365	test_diagnostics_alias_hint	AV.0.11 Category A: LSP alias-hint diagnostic gated on analysis crate structural-mode gap. Forward-ticketed to analysis-mode rework.
+bbnf-lang	0c6b31b19	restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/rust/parse_that/tests/css_parse_test.rs	461	test_parse_tailwind_css	(no reason)
+bbnf-lang	0c6b31b19	restart/skinny/tranches/sk-v24/locks/LOCK-8/pass-3/pt-scratch-8C-regex/rust/parse_that/tests/decode_test.rs	555	decode_microbench	(no reason)
+bbnf-lang	0c6b31b19	xtask/src/regen_simple_runtime.rs	1493	parse_with_resolves_number_leaf	Flat-shape lazy honoring: formula is a flat compound.
+parse-that	f7ac45905	rust/parse_that/tests/css_parse_test.rs	461	test_parse_tailwind_css	(no reason)
+parse-that	f7ac45905	rust/parse_that/tests/decode_test.rs	555	decode_microbench	(no reason)
+parse-that	f7ac45905	rust/parse_that/tests/regex/generated_utf8_test.rs	24	generated_parser_reads_a_non_ascii_class_member	born-RED LW2.RX-3: the generated parser reads a negated-class leaf one byte at a time and slices inside a scalar (Span::as_str panic); cure in the bbnf-lang Rust emitter's negated-class lowering plus a regeneration of src/regex/generated.rs
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	38	c1_1_negative_lookahead_backs_off_greedy_run	born-RED LW1.RX-2 (C1-1): lookaround is rejected by the parser (\"invalid group syntax\"); cure LW3.RX-1
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	45	c1_1_negative_lookahead_full_run_when_unblocked	born-RED LW1.RX-2 (C1-1): lookaround is rejected by the parser; cure LW3.RX-1
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	57	alt_fusion_is_leftmost_first	born-RED LW1.RX-2 (Alt fusion): the DFA is leftmost-longest and returns 2; cure LW3.RX-1 (leftmost-first), LW2.RX-4 disables Rust fusion meanwhile
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	95	superset_absorb_compares_scalar_values	born-RED LW1.RX-2 (SupersetAbsorbAlt): containment is tested on UTF-8 byte sets, not scalar-value sets; cure LW2.RX-4 / LW4.RX-2
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	109	union_merge_keeps_both_branches_languages	born-RED LW1.RX-2 (UnionMergeAlt): the union is printed from UTF-8 bytes as Latin-1 chars; cure LW2.RX-4 / LW4.RX-2
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	137	superset_absorb_requires_equal_consumption	born-RED LW1.RX-2 (SupersetAbsorbAlt, C2-1): repetition is stripped before the containment test; cure LW2.RX-4
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	159	kelvin_folds_under_iu	born-RED LW1.RX-2 (Kelvin /iu): case folding is ASCII-only; cure LW3.RX-1 (u/v semantics)
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	169	long_s_folds_under_iu	born-RED LW1.RX-2 (fold /iu): case folding is ASCII-only; cure LW3.RX-1
+parse-that	f7ac45905	rust/regex/tests/born_red_lw1.rs	177	latin1_folds_under_i_and_iu	born-RED LW1.RX-2 (fold, non-ASCII): case folding is ASCII-only; cure LW3.RX-1

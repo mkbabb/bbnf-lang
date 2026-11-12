@@ -1,0 +1,10 @@
+[package]
+name = "bbnf-oracle"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Independent oracles, obs() and the failure contract for bbnf-lang's G1 reading (sk-v27 LW3.COMP-3a/4a/5b). Dev-only: never a dependency of a published crate."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

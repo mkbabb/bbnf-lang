@@ -1,6 +1,6 @@
 use std::ops::Range;
 
-use bbnf_regex::RegexTablePlan;
+use super::regex_table::RegexTablePlan;
 use serde::Serialize;
 
 use super::analysis::AnalysisFacts;

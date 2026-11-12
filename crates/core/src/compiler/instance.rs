@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 use std::fmt;
 
-use bbnf_regex::RegexTablePlan;
+use super::regex_table::RegexTablePlan;
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
 

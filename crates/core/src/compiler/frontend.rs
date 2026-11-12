@@ -1,5 +1,5 @@
-use bbnf_regex::{RegexTablePlan, TablePlanCompileError};
-use parse_that::{
+use super::regex_table::{RegexTablePlan, TablePlanCompileError};
+use parse_that::kernel::{
     EventSink, Fault, Input, RegexPlan, RegexTerminal, ResourceKind, Run, Step, choice, eof,
     literal, regex, repeat, sequence,
 };

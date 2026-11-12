@@ -8,6 +8,7 @@ mod frontend;
 mod instance;
 mod lower;
 mod pratt;
+mod regex_table;
 mod replay;
 mod source;
 mod syntax;
@@ -15,7 +16,7 @@ mod typecheck;
 
 use instance::ValidatedGrammarInstance;
 
-const _: () = assert!(parse_that::KERNEL_ABI == 3);
+const _: () = assert!(parse_that::kernel::KERNEL_ABI == 4);
 
 pub use analysis::{AnalysisFacts, NodeFacts, NodeFactsRows, RuleFacts, RuleFactsRows};
 pub use budget::{CompileOptions, RegexBudget, RuntimeBudget};

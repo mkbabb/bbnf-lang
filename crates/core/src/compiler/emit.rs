@@ -150,7 +150,7 @@ impl<'a> RustEmitter<'a> {
         )
         .unwrap();
         self.source
-            .push_str("const _: () = assert!(parse_that::KERNEL_ABI == 3);\n");
+            .push_str("const _: () = assert!(parse_that::kernel::KERNEL_ABI == 4);\n");
         writeln!(
             self.source,
             "const MAX_INPUT_BYTES: usize = {};",
@@ -265,7 +265,7 @@ impl<'a> RustEmitter<'a> {
             imports.push("repeat");
         }
         imports.sort_unstable();
-        writeln!(self.source, "use parse_that::{{{}}};", imports.join(", ")).unwrap();
+        writeln!(self.source, "use parse_that::kernel::{{{}}};", imports.join(", ")).unwrap();
     }
 
     fn write_event_surface(&mut self) {

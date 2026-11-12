@@ -1,4 +1,4 @@
-use bbnf_regex::TablePlanOptions;
+use super::regex_table::TablePlanOptions;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]

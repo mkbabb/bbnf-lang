@@ -1,7 +1,7 @@
 use std::collections::{BTreeSet, VecDeque};
 use std::ops::Range;
 
-use bbnf_regex::{DEAD_STATE, RegexTablePlan};
+use super::regex_table::{DEAD_STATE, RegexTablePlan};
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 

@@ -1,0 +1,23 @@
+pprint #2: MERGED at 2026-11-11T18:14:27Z mergeCommit ec47846d5 (order: ec47846) cat-file=commit ancestor-of-master=True -> OK
+pprint #3: MERGED at 2026-11-11T18:14:26Z mergeCommit dccbd6342 (order: dccbd634) cat-file=commit ancestor-of-master=True -> OK
+pprint #4: MERGED at 2026-11-11T18:14:27Z mergeCommit 32e58de34 (order: 32e58de3) cat-file=commit ancestor-of-master=True -> OK
+pprint #5: MERGED at 2026-11-11T18:14:27Z mergeCommit bc9d47feb (order: bc9d47fe) cat-file=commit ancestor-of-master=True -> OK
+master dccbd6342 vs the #3 merge dccbd6342: tree unchanged (empty diff)
+  reading: #2, #4 and #5 made no commit of their own; GitHub recorded each as merged when its head became reachable from master through #3's merge, and records that head as the PR's mergeCommit.
+bbnf 0.3.0: served sha256 b38d99e23c4499b0… == r8
+bbnf-analysis 0.2.0: served sha256 faf08f8758d6c2cd… == r8
+bbnf-ir 0.2.0: served sha256 675cab276805babf… == r8
+bbnf-lsp 0.1.0: served sha256 1746ee1e89864239… == r8
+bbnf-path 0.1.0: served sha256 1c940911889e4566… == r8
+bbnf-ser 0.1.0: served sha256 fdbe6e6937d1c3ab… == r8
+gorgeous 0.2.0: served sha256 01b9e891006ba9b0… == r8
+parse-that-egraph 0.1.0: served sha256 d37361c2f84704c1… == r8
+parse-that-egraph-derive 0.1.0: served sha256 73a3908840290eaf… == r8
+parse-that-regex 0.1.0: served sha256 adbb2c78fc74e970… == r8
+parse-that-simd 0.1.0: served sha256 5c5e4b79c1847715… == r8
+parse_that 0.4.0: served sha256 c39621c3196e9d85… == r8
+pprint 0.4.0: served sha256 e70c9bee6dbce361… == r8
+pprint_derive 0.3.0: served sha256 20dc2da6c14c9d20… == r8
+pprint 0.4.0: vcs sha1 32d73ca44 path_in_vcs='rust'; 21 source files == 32d73ca, 0 differ; Cargo.toml.orig == 32d73ca:rust/Cargo.toml: True; cargo-written files not compared: .cargo_vcs_info.json, Cargo.lock, Cargo.toml, Cargo.toml.orig -> OK
+pprint_derive 0.3.0: vcs sha1 32d73ca44 path_in_vcs='rust/derive'; 1 source files == 32d73ca, 0 differ; Cargo.toml.orig == 32d73ca:rust/derive/Cargo.toml: True; cargo-written files not compared: .cargo_vcs_info.json, Cargo.lock, Cargo.toml, Cargo.toml.orig -> OK
+GREEN

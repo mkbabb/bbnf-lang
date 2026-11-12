@@ -1,0 +1,15 @@
+4b2e265e08d54cf188396e65c7e7215cc9a977fb
+.cargo/config.toml:49:# with `cargo --config 'patch."https://github.com/mkbabb/parse-that".parse_that.path="…"'`;
+Cargo.toml:30:parse_that               = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+Cargo.toml:31:parse-that-regex         = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+Cargo.toml:32:parse-that-egraph        = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+Cargo.toml:33:parse-that-egraph-derive = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+Cargo.toml:34:pprint                   = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
+skinny/Cargo.toml:38:parse-that-egraph = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+skinny/Cargo.toml:40:parse-that-simd = { version = "0.1.0", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+wasm/Cargo.toml:18:pprint = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
+wasm/Cargo.toml:19:parse_that = { version = "0.4", git = "https://github.com/mkbabb/parse-that", rev = "1dea59e9e1e8d0d23e428f86c57a16421fe42aae" }
+[[package]]
+name = "pprint"
+version = "0.4.0"
+source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"

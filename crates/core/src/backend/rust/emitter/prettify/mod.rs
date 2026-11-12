@@ -51,26 +51,30 @@ pub(super) fn emit_separator_ops(policy: &PrettyPolicy) -> TokenStream {
 
 // ─── Helper: emit rule wrapper (group/indent/block around body) ───────────
 
+/// The body runs in a closure, so an early `return false` inside it (a
+/// failed match) still reaches the wrapper's closes: the op stream stays
+/// balanced on every path. pprint's `finish()` refuses an unclosed group
+/// (law L8, ABI v2) instead of closing it at the end of the document.
 pub(super) fn emit_rule_wrapper(policy: &PrettyPolicy, body: TokenStream) -> TokenStream {
     match policy.wrapper {
         WrapperPolicy::GroupIndent => quote! {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = { #body };
+            let __pretty_ok = (|| -> bool { #body })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         },
         WrapperPolicy::Group => quote! {
             __builder.group_open();
-            let __pretty_ok = { #body };
+            let __pretty_ok = (|| -> bool { #body })();
             __builder.group_close();
             __pretty_ok
         },
         WrapperPolicy::BlockIndent => quote! {
             __builder.indent_open();
             __builder.hardline();
-            let __pretty_ok = { #body };
+            let __pretty_ok = (|| -> bool { #body })();
             __builder.indent_close();
             __builder.hardline();
             __pretty_ok

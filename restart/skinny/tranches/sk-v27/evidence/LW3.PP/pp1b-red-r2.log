@@ -1,0 +1,20 @@
+ddb70f643cf43e3bb8ac7f70575566408a7760e4
+test multiline_leaf_last_line_width_and_has_hard ... FAILED
+test unicode_oracle_and_renderer_agree ... FAILED
+test emoji_leaves_do_not_overflow ... FAILED
+test cjk_leaves_do_not_overflow ... FAILED
+test combining_mark_leaves_do_not_overflow ... FAILED
+thread 'multiline_leaf_last_line_width_and_has_hard' (41245374) panicked at tests/pp1b_width.rs:261:53:
+thread 'unicode_oracle_and_renderer_agree' (41245375) panicked at tests/pp1b_width.rs:244:13:
+  left: "\nक\u{94d}ष,\nn\u{303}oa😀"
+ right: "क\u{94d}ष,\nn\u{303}oa😀"
+thread 'emoji_leaves_do_not_overflow' (41245373) panicked at tests/pp1b_width.rs:203:13:
+  left: "a😀🚀🚀\na😀👍🏽\n\"👍🏽\"❤\u{fe0f},\n"
+ right: "a😀🚀🚀 a😀👍🏽 \"👍🏽\"❤\u{fe0f},"
+thread 'cjk_leaves_do_not_overflow' (41245371) panicked at tests/pp1b_width.rs:182:13:
+thread 'combining_mark_leaves_do_not_overflow' (41245372) panicked at tests/pp1b_width.rs:203:13:
+  left: "\nn\u{303}o\nक\u{94d}ष[\n    a\u{300}\u{301}\n]"
+ right: " n\u{303}o क\u{94d}ष[a\u{300}\u{301} ]"
+test result: FAILED. 0 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+error: test failed, to rerun pass `--test pp1b_width`
+error: 1 target failed:

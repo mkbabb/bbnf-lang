@@ -9422,7 +9422,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn number_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn number_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -9430,7 +9430,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__number_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __string_prettify<'a>(
@@ -9451,7 +9451,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn string_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn string_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -9459,7 +9459,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__string_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __boolean_prettify<'a>(
@@ -9598,7 +9598,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn boolean_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn boolean_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -9606,7 +9606,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__boolean_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __error_literal_prettify<'a>(
@@ -9896,7 +9896,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn error_literal_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn error_literal_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -9904,7 +9904,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__error_literal_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __sheet_prefix_prettify<'a>(
@@ -10066,7 +10066,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn sheet_prefix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn sheet_prefix_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10074,7 +10074,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__sheet_prefix_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __cell_ref_prettify<'a>(
@@ -10161,7 +10161,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn cell_ref_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn cell_ref_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10169,7 +10169,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__cell_ref_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __identifier_prettify<'a>(
@@ -10230,7 +10230,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn identifier_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn identifier_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10238,7 +10238,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__identifier_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __compare_op_prettify<'a>(
@@ -10396,7 +10396,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn compare_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn compare_op_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10404,7 +10404,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__compare_op_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __unary_prefix_prettify<'a>(
@@ -10446,7 +10446,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn unary_prefix_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn unary_prefix_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10454,7 +10454,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__unary_prefix_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mul_op_prettify<'a>(
@@ -10496,7 +10496,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn mul_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mul_op_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10504,7 +10504,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__mul_op_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __add_op_prettify<'a>(
@@ -10546,7 +10546,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn add_op_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn add_op_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10554,7 +10554,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__add_op_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __cell_prettify<'a>(
@@ -10809,7 +10809,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn cell_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn cell_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10817,7 +10817,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__cell_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __func_open_prettify<'a>(
@@ -10887,7 +10887,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn func_open_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn func_open_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -10895,7 +10895,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__func_open_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __range_ref_prettify<'a>(
@@ -11515,7 +11515,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn range_ref_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn range_ref_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -11523,7 +11523,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__range_ref_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __cell_or_range_prettify<'a>(
@@ -11555,7 +11555,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn cell_or_range_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn cell_or_range_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -11563,7 +11563,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__cell_or_range_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __comparison_expr_prettify<'a>(
@@ -11684,7 +11684,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn comparison_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn comparison_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -11692,7 +11692,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__comparison_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mul_expr_prettify<'a>(
@@ -11813,7 +11813,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn mul_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mul_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -11821,7 +11821,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__mul_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __unary_expr_prettify<'a>(
@@ -11865,7 +11865,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn unary_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn unary_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -11873,7 +11873,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__unary_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __paren_expr_prettify<'a>(
@@ -11927,7 +11927,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn paren_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn paren_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -11935,7 +11935,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__paren_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __arg_prettify<'a>(
@@ -11964,7 +11964,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn arg_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn arg_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -11972,7 +11972,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__arg_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __func_args_prettify<'a>(
@@ -11981,7 +11981,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         if !Self::__arg_prettify(state, __builder) {
@@ -12050,12 +12050,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn func_args_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn func_args_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12063,7 +12063,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__func_args_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __let_binding_prettify<'a>(
@@ -12072,7 +12072,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -12103,12 +12103,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn let_binding_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn let_binding_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12116,7 +12116,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__let_binding_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __lambda_params_prettify<'a>(
@@ -12125,7 +12125,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         if !Self::__expression_prettify(state, __builder) {
@@ -12194,12 +12194,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn lambda_params_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn lambda_params_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12207,7 +12207,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__lambda_params_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __array_row_prettify<'a>(
@@ -12283,7 +12283,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn array_row_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn array_row_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12291,7 +12291,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__array_row_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __array_rows_prettify<'a>(
@@ -12300,7 +12300,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         if !Self::__array_row_prettify(state, __builder) {
@@ -12370,12 +12370,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn array_rows_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn array_rows_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12383,7 +12383,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__array_rows_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __array_literal_prettify<'a>(
@@ -12392,7 +12392,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -12441,12 +12441,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn array_literal_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn array_literal_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12454,7 +12454,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__array_literal_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __concat_expr_prettify<'a>(
@@ -12570,7 +12570,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn concat_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn concat_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12578,7 +12578,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__concat_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __add_expr_prettify<'a>(
@@ -12705,7 +12705,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn add_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn add_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12713,7 +12713,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__add_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __exp_expr_prettify<'a>(
@@ -12829,7 +12829,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn exp_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn exp_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12837,7 +12837,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__exp_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __lambda_call_prettify<'a>(
@@ -12846,7 +12846,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -12960,12 +12960,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn lambda_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn lambda_call_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12973,7 +12973,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__lambda_call_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __expression_prettify<'a>(
@@ -12987,7 +12987,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn expression_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn expression_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -12995,7 +12995,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__expression_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __func_call_prettify<'a>(
@@ -13004,7 +13004,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         if !Self::__func_open_prettify(state, __builder) {
@@ -13064,12 +13064,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn func_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn func_call_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -13077,7 +13077,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__func_call_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __let_args_prettify<'a>(
@@ -13153,7 +13153,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn let_args_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn let_args_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -13161,7 +13161,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__let_args_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __let_call_prettify<'a>(
@@ -13170,7 +13170,7 @@ mod __googlesheetsparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -13263,12 +13263,12 @@ mod __googlesheetsparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn let_call_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn let_call_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -13276,7 +13276,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__let_call_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __primary_prettify<'a>(
@@ -13653,7 +13653,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn primary_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn primary_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -13661,7 +13661,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__primary_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __postfix_expr_prettify<'a>(
@@ -13710,7 +13710,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn postfix_expr_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn postfix_expr_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -13718,7 +13718,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__postfix_expr_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __formula_prettify<'a>(
@@ -13773,7 +13773,7 @@ mod __googlesheetsparser_emit_impl {
                 true
             }
         }
-        pub fn formula_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn formula_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -13781,7 +13781,7 @@ mod __googlesheetsparser_emit_impl {
                 if !Self::__formula_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         /// Parse an input string and return the grammar-specific

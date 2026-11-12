@@ -1,0 +1,5 @@
+f7ac459051929d64be5e8bc24ddab023f8f10c16
+94:pprint = { version = "0.4", git = "https://github.com/mkbabb/pprint", rev = "32d73ca44921b07eda29ec0d5c0decc430687dd5" }
+name = "pprint"
+version = "0.4.0"
+source = "git+https://github.com/mkbabb/pprint?rev=32d73ca44921b07eda29ec0d5c0decc430687dd5#32d73ca44921b07eda29ec0d5c0decc430687dd5"

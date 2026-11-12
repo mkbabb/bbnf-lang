@@ -2305,7 +2305,7 @@ mod __jsonparser_emit_impl {
                 true
             }
         }
-        pub fn null_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn null_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -2313,7 +2313,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__null_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __bool_prettify<'a>(
@@ -2367,7 +2367,7 @@ mod __jsonparser_emit_impl {
                 true
             }
         }
-        pub fn bool_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn bool_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -2375,7 +2375,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__bool_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __number_prettify<'a>(
@@ -2524,7 +2524,7 @@ mod __jsonparser_emit_impl {
                 true
             }
         }
-        pub fn number_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn number_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -2532,7 +2532,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__number_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __string_prettify<'a>(
@@ -2682,7 +2682,7 @@ mod __jsonparser_emit_impl {
                 true
             }
         }
-        pub fn string_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn string_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -2690,7 +2690,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__string_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __object_prettify<'a>(
@@ -2698,7 +2698,7 @@ mod __jsonparser_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -2812,11 +2812,11 @@ mod __jsonparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn object_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn object_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -2824,7 +2824,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__object_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __array_prettify<'a>(
@@ -2832,7 +2832,7 @@ mod __jsonparser_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -2946,11 +2946,11 @@ mod __jsonparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn array_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn array_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -2958,7 +2958,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__array_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __pair_prettify<'a>(
@@ -2966,7 +2966,7 @@ mod __jsonparser_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -3135,11 +3135,11 @@ mod __jsonparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn pair_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn pair_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -3147,7 +3147,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__pair_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __value_prettify<'a>(
@@ -3484,7 +3484,7 @@ mod __jsonparser_emit_impl {
                 true
             }
         }
-        pub fn value_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn value_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -3492,7 +3492,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__value_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __json_prettify<'a>(
@@ -3566,7 +3566,7 @@ mod __jsonparser_emit_impl {
                 true
             }
         }
-        pub fn json_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn json_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -3574,7 +3574,7 @@ mod __jsonparser_emit_impl {
                 if !Self::__json_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         /// Parse an input string and return the grammar-specific

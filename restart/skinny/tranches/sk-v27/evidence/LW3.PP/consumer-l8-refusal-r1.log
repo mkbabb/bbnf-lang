@@ -1,0 +1,7 @@
+BL lw3/s3-pp before the emit_rule_wrapper cure (regenerated with the template port only): cargo nextest run --workspace
+     Summary [  34.298s] 1496 tests run: 1495 passed (1 leaky), 1 failed, 23 skipped
+    first prettify should succeed
+    thread 'prettify_idempotent' (41514260) panicked at crates/core/tests/ebnf_prettify.rs:61:33:
+    thread 'prettify_idempotent' (41515712) panicked at crates/core/tests/ebnf_prettify.rs:61:33:
+  TRY 1 FAIL [   0.015s] (─────────) bbnf::ebnf_prettify prettify_idempotent
+  TRY 2 FAIL [   0.016s] ( 574/1496) bbnf::ebnf_prettify prettify_idempotent

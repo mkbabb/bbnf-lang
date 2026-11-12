@@ -62,14 +62,14 @@ impl RustEmitter {
         });
 
         methods.extend(quote! {
-            pub fn #pub_ident<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+            pub fn #pub_ident<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
                 Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                     let mut __builder =
                         ::pprint::FmtBuilder::with_capacity(state.src.len().saturating_mul(2));
                     if !Self::#fn_ident(state, &mut __builder) {
                         return None;
                     }
-                    Some(__builder.finish())
+                    __builder.finish().ok()
                 })
             }
         });

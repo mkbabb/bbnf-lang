@@ -1,0 +1,15 @@
+PT 54042ce6b4dfabd04447d6740eb4461c5514168e dirty=       0
+BL 4447b5933c991113e7c1c157c9b30b16fc8e476b dirty=       0
+PT clippy+nextest+diagnostics rc=0
+     Summary [   2.790s] 626 tests run: 626 passed, 12 skipped
+     Summary [   2.808s] 700 tests run: 700 passed, 12 skipped
+PT pprint: pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=bc78dd850edb533a9a587f1f6bb7694ff0b358a8#bc78dd85)
+PT dag rc=0
+BL regen+clippy+nextest rc=0
+regen --check: clean (9 of 9 grammars matched)
+     Summary [   5.584s] 1496 tests run: 1496 passed (1 leaky), 23 skipped
+BL pprint sources: pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=bc78dd850edb533a9a587f1f6bb7694ff0b358a8#bc78dd85) 
+BL dup pprint: 0
+BL dag rc=0
+BL wasm check rc=0
+BL dirty after=       0

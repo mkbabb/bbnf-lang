@@ -5260,7 +5260,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn important_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn important_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -5268,7 +5268,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__important_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __importRule_prettify<'a>(
@@ -5595,7 +5595,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn importRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn importRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -5603,7 +5603,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__importRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __declaration_prettify<'a>(
@@ -5611,7 +5611,7 @@ mod __cssprettyparser_emit_impl {
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
             __builder.group_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -6909,11 +6909,11 @@ mod __cssprettyparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn declaration_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn declaration_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -6921,7 +6921,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__declaration_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __genericAtRule_prettify<'a>(
@@ -7018,7 +7018,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn genericAtRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn genericAtRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -7026,7 +7026,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__genericAtRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __qualifiedRule_prettify<'a>(
@@ -7035,7 +7035,7 @@ mod __cssprettyparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         {
@@ -7267,12 +7267,12 @@ mod __cssprettyparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn qualifiedRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn qualifiedRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -7280,7 +7280,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__qualifiedRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __mediaRule_prettify<'a>(
@@ -7341,7 +7341,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn mediaRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn mediaRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -7349,7 +7349,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__mediaRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __supportsRule_prettify<'a>(
@@ -7410,7 +7410,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn supportsRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn supportsRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -7418,7 +7418,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__supportsRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __fontFaceRule_prettify<'a>(
@@ -7638,7 +7638,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn fontFaceRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn fontFaceRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -7646,7 +7646,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__fontFaceRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __atRuleBody_prettify<'a>(
@@ -7683,7 +7683,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn atRuleBody_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn atRuleBody_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -7691,7 +7691,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__atRuleBody_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ruleBlock_prettify<'a>(
@@ -8109,7 +8109,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn ruleBlock_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ruleBlock_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -8117,7 +8117,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__ruleBlock_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __blockContent_prettify<'a>(
@@ -8126,7 +8126,7 @@ mod __cssprettyparser_emit_impl {
         ) -> bool {
             __builder.indent_open();
             __builder.hardline();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         let mut __rep_count20 = 0usize;
@@ -8381,12 +8381,12 @@ mod __cssprettyparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.hardline();
             __pretty_ok
         }
-        pub fn blockContent_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn blockContent_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -8394,7 +8394,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__blockContent_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __atRule_prettify<'a>(
@@ -8403,7 +8403,7 @@ mod __cssprettyparser_emit_impl {
         ) -> bool {
             __builder.group_open();
             __builder.indent_open();
-            let __pretty_ok = {
+            let __pretty_ok = (|| -> bool {
                 {
                     {
                         if !{
@@ -8498,12 +8498,12 @@ mod __cssprettyparser_emit_impl {
                     };
                     true
                 }
-            };
+            })();
             __builder.indent_close();
             __builder.group_close();
             __pretty_ok
         }
-        pub fn atRule_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn atRule_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -8511,7 +8511,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__atRule_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ruleItem_prettify<'a>(
@@ -8543,7 +8543,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn ruleItem_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ruleItem_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -8551,7 +8551,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__ruleItem_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __ruleList_prettify<'a>(
@@ -8795,7 +8795,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn ruleList_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn ruleList_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -8803,7 +8803,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__ruleList_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         fn __stylesheet_prettify<'a>(
@@ -9203,7 +9203,7 @@ mod __cssprettyparser_emit_impl {
                 true
             }
         }
-        pub fn stylesheet_prettify<'a>() -> Parser<'a, Vec<::pprint::FmtOp<'a>>> {
+        pub fn stylesheet_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
                 let mut __builder = ::pprint::FmtBuilder::with_capacity(
                     state.src.len().saturating_mul(2),
@@ -9211,7 +9211,7 @@ mod __cssprettyparser_emit_impl {
                 if !Self::__stylesheet_prettify(state, &mut __builder) {
                     return None;
                 }
-                Some(__builder.finish())
+                __builder.finish().ok()
             })
         }
         /// Parse an input string and return the grammar-specific

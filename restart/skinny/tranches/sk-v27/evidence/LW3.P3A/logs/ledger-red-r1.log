@@ -1,0 +1,9 @@
+unit=ledger rev=d107ff84dbffec31c5f3292e2ba500910fd95811 reasons=7
+RED LW3.COMP-1b-BR1: 0 LEDGER rows (want 1)
+RED LW3.COMP-1b-BR2: 0 LEDGER rows (want 1)
+RED LW3.COMP-1d amended: 0 LEDGER rows (want 1)
+RED LW3.COMP-1b-W review owed: 0 LEDGER rows (want 1)
+RED LW3.COMP-1b test-target drift: 0 LEDGER rows (want 1)
+RED LW3.COMP-1b semver finding: 0 LEDGER rows (want 1)
+RED LW3.TREE-1 census: 0 LEDGER rows (want 1)
+RED

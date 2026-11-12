@@ -1,0 +1,17 @@
+tgt1-clean	0	cargo clean -p bbnf + 5 parse-that crates
+root_api_present	0	Summary [   0.014s] 1 test run: 1 passed, 0 skipped
+regen-check	0	regen --check: clean (9 of 9 grammars matched)
+w2-laws	0	Summary [   2.220s] 30 tests run: 30 passed, 0 skipped
+w3-type	0	Summary [   0.046s] 16 tests run: 16 passed, 0 skipped
+w3-instance	0	Summary [   0.368s] 19 tests run: 19 passed, 1 skipped
+w3-pratt	0	Summary [  16.138s] 17 tests run: 17 passed, 0 skipped
+w3-replay	0	Summary [  82.000s] 12 tests run: 12 passed (1 slow), 1 skipped
+bootstrap-repro	0	Summary [   4.551s] 2 tests run: 2 passed, 0 skipped
+born-red-still-red	0	rc=100 named-fails=2 Summary [  15.343s] 2 tests run: 0 passed, 2 failed, 31 skipped
+test-targets	0	targets=130 master=111 spine=13 missing=0 []
+build-workspace	0	    Finished `dev` profile [unoptimized + debuginfo] target(s) in 19.97s
+semver-no-removal	0	     Checked [   0.118s] 202 checks: 201 pass, 1 fail, 0 warn, 58 skip --- failure copy_impl_added: type now implements Copy --- 
+check-repo-dag	0	repo DAG: GREEN (every cross-repository edge is parse-that -> pprint, bbnf-lang -> parse-that or bbnf-lang -> pprint)
+pins	0	pins: GREEN
+check-hermetic-build	0	hermetic: clean-clone build GREEN
+abi-laws-at-pin	0	Summary [   0.092s] 78 tests run: 78 passed, 0 skipped

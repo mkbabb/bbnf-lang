@@ -1,0 +1,107 @@
+// R7RS-small external representations (datum syntax), held out
+// (sk-v27 LW3.COMP-5b, ruling H-1).
+//
+// Authored from R7RS-small §7.1.1 (lexical structure) and §7.1.2 (external
+// representations); rule names follow the report's nonterminals. An input is
+// a sequence of data separated by intertoken space, as `read` takes them from
+// a port. Case: booleans and numbers (radix and exactness prefixes, exponent
+// markers, `inf`, `nan`, hexadecimal digits) take either case; identifiers,
+// character names and the `#!fold-case` directives are case-sensitive, and the
+// directives are read as intertoken space (their effect is semantics).
+//
+// An identifier, a number, a character or a boolean ends at a delimiter
+// (§7.1.1): `delimited` matches the empty string only where the next character
+// is not one that could continue the token, so each such token is written with
+// `delimited` at the end of every alternative. The range and exactness of a
+// bytevector element (an exact integer from 0 to 255) and the targets of datum
+// labels are semantics, not syntax.
+// Held out: no compiler pass is tuned against this file (LW3-ORDER COMP-5b).
+
+data = atmosphere , ( datum , atmosphere ) * ;
+
+// Intertoken space.
+atmosphere = ( whitespace | comment | directive ) * ;
+whitespace = /[ \t\n\r]+/ ;
+comment = /;[^\n\r]*/ | nested-comment | "#;" , atmosphere , datum ;
+nested-comment = "#|" , ( nested-comment | comment-char ) * , "|#" ;
+comment-char = /[^|#]/ | "|" , not-hash | "#" , not-bar ;
+not-hash = epsilon - "#" ;
+not-bar = epsilon - "|" ;
+directive = ( "#!fold-case" | "#!no-fold-case" ) , delimited ;
+delimited = epsilon - /[^ \t\n\r|()";]/ ;
+
+// Data (§7.1.2).
+datum = labelled | simple-datum | compound-datum ;
+labelled = label-def , atmosphere , datum | label-ref ;
+label-def = /#[0-9]+=/ ;
+label-ref = /#[0-9]+#/ ;
+simple-datum = boolean | number | character | string | symbol | bytevector ;
+compound-datum = list | vector | abbreviation ;
+
+list = "(" , atmosphere , ( datum , atmosphere ) * , ")"
+     | "(" , atmosphere , ( datum , atmosphere ) + , "." , delimited , atmosphere , datum , atmosphere , ")" ;
+vector = "#(" , atmosphere , ( datum , atmosphere ) * , ")" ;
+abbreviation = abbrev-prefix , atmosphere , datum ;
+abbrev-prefix = ",@" | "'" | "`" | "," ;
+bytevector = "#u8(" , atmosphere , ( byte , atmosphere ) * , ")" ;
+byte = number ;
+
+boolean = /#(?:[Tt][Rr][Uu][Ee]|[Ff][Aa][Ll][Ss][Ee]|[Tt]|[Ff])/ , delimited ;
+
+character = /#\\x[0-9A-Fa-f]+/ , delimited
+          | /#\\(?:alarm|backspace|delete|escape|newline|null|return|space|tab)/ , delimited
+          | /#\\(?:[\uD800-\uDBFF][\uDC00-\uDFFF]|[\s\S])/ , delimited ;
+
+string = /"(?:[^"\\]|\\[abtnr"\\|]|\\[ \t]*(?:\r\n|\n|\r)[ \t]*|\\x[0-9A-Fa-f]+;)*"/ ;
+
+symbol = identifier ;
+identifier = /[A-Za-z!$%&*\/:<=>?^_~][A-Za-z0-9!$%&*\/:<=>?^_~+.@-]*/ , delimited
+           | /\|(?:[^|\\]|\\[abtnr|]|\\x[0-9A-Fa-f]+;)*\|/
+           | peculiar-identifier , delimited ;
+peculiar-identifier = /[+-](?:[A-Za-z!$%&*\/:<=>?^_~+@-]|\.[A-Za-z!$%&*\/:<=>?^_~+@.-])[A-Za-z0-9!$%&*\/:<=>?^_~+.@-]*/
+                    | /\.[A-Za-z!$%&*\/:<=>?^_~+@.-][A-Za-z0-9!$%&*\/:<=>?^_~+.@-]*/
+                    | /[+-]/ ;
+
+// Numbers (§7.1.1 <number>): a prefix and a complex, per radix. Each complex
+// alternative ends at a delimiter, so a shorter reading never shadows a
+// longer one (`+i` against `+inf.0`).
+number = num-16 | num-8 | num-2 | num-10 ;
+num-2 = /(?:#[Bb](?:#[EeIi])?|#[EeIi]#[Bb])/ , complex-2 ;
+num-8 = /(?:#[Oo](?:#[EeIi])?|#[EeIi]#[Oo])/ , complex-8 ;
+num-16 = /(?:#[Xx](?:#[EeIi])?|#[EeIi]#[Xx])/ , complex-16 ;
+num-10 = /(?:#[Dd](?:#[EeIi])?|#[EeIi](?:#[Dd])?)?/ , complex-10 ;
+
+complex-2 = real-2 , "@" , real-2 , delimited
+          | real-2 , /[+-]/ , ( ureal-2 | infnan-tail ) ? , /[Ii]/ , delimited
+          | /[+-]/ , ureal-2 ? , /[Ii]/ , delimited
+          | infnan , /[Ii]/ , delimited
+          | real-2 , delimited ;
+complex-8 = real-8 , "@" , real-8 , delimited
+          | real-8 , /[+-]/ , ( ureal-8 | infnan-tail ) ? , /[Ii]/ , delimited
+          | /[+-]/ , ureal-8 ? , /[Ii]/ , delimited
+          | infnan , /[Ii]/ , delimited
+          | real-8 , delimited ;
+complex-10 = real-10 , "@" , real-10 , delimited
+           | real-10 , /[+-]/ , ( ureal-10 | infnan-tail ) ? , /[Ii]/ , delimited
+           | /[+-]/ , ureal-10 ? , /[Ii]/ , delimited
+           | infnan , /[Ii]/ , delimited
+           | real-10 , delimited ;
+complex-16 = real-16 , "@" , real-16 , delimited
+           | real-16 , /[+-]/ , ( ureal-16 | infnan-tail ) ? , /[Ii]/ , delimited
+           | /[+-]/ , ureal-16 ? , /[Ii]/ , delimited
+           | infnan , /[Ii]/ , delimited
+           | real-16 , delimited ;
+
+infnan = /[+-](?:[Ii][Nn][Ff]|[Nn][Aa][Nn])\.0/ ;
+infnan-tail = /(?:[Ii][Nn][Ff]|[Nn][Aa][Nn])\.0/ ;
+
+real-2 = infnan | /[+-]?/ , ureal-2 ;
+real-8 = infnan | /[+-]?/ , ureal-8 ;
+real-10 = infnan | /[+-]?/ , ureal-10 ;
+real-16 = infnan | /[+-]?/ , ureal-16 ;
+
+ureal-2 = /[01]+(?:\/[01]+)?/ ;
+ureal-8 = /[0-7]+(?:\/[0-7]+)?/ ;
+ureal-16 = /[0-9A-Fa-f]+(?:\/[0-9A-Fa-f]+)?/ ;
+ureal-10 = /[0-9]+\/[0-9]+/ | decimal-10 ;
+decimal-10 = /(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[Ee][+-]?[0-9]+)?/ ;

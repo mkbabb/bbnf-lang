@@ -1,7 +1,9 @@
 """Falsifier for the pre-registration skeleton (sk-v27 LW1.CON-5).  Run: python3 -m unittest bench/test_prereg.py -v"""
 import hashlib
+import json
 import os
 import re
+import subprocess
 import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -111,6 +113,83 @@ class Prereg(unittest.TestCase):
 
     def test_noisy_never_certifies(self):
         self.assertRegex(_text(), r"NOISY[^\n]*never certif")
+
+
+REPO = os.path.dirname(HERE)
+ADDENDUM = os.path.join(HERE, "PREREG.lw3.md")
+ADDENDUM_DIGEST = os.path.join(HERE, "PREREG.lw3.md.sha256")
+
+
+def _sha256_file(path):
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read()).hexdigest()
+
+
+def _addendum():
+    with open(ADDENDUM, encoding="utf-8") as f:
+        return f.read()
+
+
+def _manifest_lines():
+    with open(os.path.join(REPO, "corpus", "MANIFEST.sha256"), encoding="utf-8") as f:
+        return [l.rstrip("\n") for l in f if l.strip() and not l.startswith("#") and "/" in l.split("  ", 1)[1]]
+
+
+class HeldOut(unittest.TestCase):
+    """LW3.COMP-5b: the held-out grammars, their oracles and corpora, frozen before any plan decision is tuned
+    on the spine. PREREG.md is sealed under DECISION-PLAN.lw2.json, so the section lives in the LW3 addendum."""
+
+    NAMES = {"H-TOML": "toml", "H-GRAPHQL": "graphql", "H-R7RS": "r7rs-datum"}
+
+    def test_addendum_exists_and_is_hashed(self):
+        with open(ADDENDUM_DIGEST) as f:
+            want = f.read().split()[0]
+        self.assertEqual(_sha256_file(ADDENDUM), want,
+                         "PREREG.lw3.md changed without its digest (an edit after a hash is an addendum)")
+
+    def test_the_section_hashes_equal_the_grammar_files(self):
+        rows = re.findall(r"^\| (H-[A-Z0-9]+) \| `(grammar/heldout/[^`]+)` \| `([0-9a-f]{64})` \|", _addendum(), re.M)
+        self.assertEqual({r[0] for r in rows}, set(self.NAMES), rows)
+        on_disk = sorted(f for f in os.listdir(os.path.join(REPO, "grammar", "heldout")) if f.endswith(".bbnf"))
+        self.assertEqual(sorted(os.path.basename(r[1]) for r in rows), on_disk,
+                         "every held-out grammar file is registered, and only those")
+        for name, path, digest in rows:
+            self.assertEqual(os.path.basename(path), self.NAMES[name] + ".bbnf", name)
+            self.assertEqual(_sha256_file(os.path.join(REPO, path)), digest,
+                             f"{path} changed after registration (a held-out grammar is frozen)")
+
+    def test_the_section_digests_equal_the_corpora(self):
+        rows = re.findall(r"^\| (H-[A-Z0-9]+) \| `([a-z0-9-]+/)` \| (\d+) \| `([0-9a-f]{64})` \|", _addendum(), re.M)
+        self.assertEqual({r[0] for r in rows}, set(self.NAMES), rows)
+        lines = _manifest_lines()
+        for name, prefix, count, digest in rows:
+            sel = [l for l in lines if l.split("  ", 1)[1].startswith(prefix)]
+            self.assertEqual(len(sel), int(count), f"{name}: the {prefix} corpus changed size")
+            got = hashlib.sha256(("\n".join(sel) + "\n").encode()).hexdigest()
+            self.assertEqual(got, digest, f"{name}: the {prefix} corpus changed after registration")
+
+    def test_the_oracle_pins_agree_with_the_pin_tables(self):
+        t = _addendum()
+        with open(os.path.join(REPO, "crates", "oracle", "ts", "pin.json"), encoding="utf-8") as f:
+            pin = json.load(f)
+        gql = pin["sets"]["graphql-js"][0]
+        self.assertRegex(t, r"\| H-GRAPHQL \| graphql-js \| npm `graphql` %s \| sha256 `%s` \|"
+                         % (re.escape(gql["version"]), gql["sha256"]))
+        with open(os.path.join(HERE, "W0-BENCH-PINS.tsv"), encoding="utf-8") as f:
+            rows = [l.rstrip("\n").split("\t") for l in f if not l.startswith("#")]
+        ix = {c: i for i, c in enumerate(rows[0])}
+        pins = {r[ix["name"]]: (r[ix["pin"]], r[ix["checksum"]]) for r in rows[1:]}
+        self.assertIn("| H-TOML | toml-test | v%s, commit `%s` |" % pins["toml-test"], t)
+        self.assertIn("| H-R7RS | lexpr | crate %s | checksum `%s` |" % pins["lexpr"], t)
+        self.assertEqual(pins["graphql"][0], gql["version"])
+
+    def test_nothing_is_tuned_on_the_held_out_set(self):
+        # Only the oracle crate, the bench registrations, docs and the programme's records may name the
+        # held-out grammars; a pass, rule list or emitter that names one is tuning against it.
+        out = subprocess.run(["git", "grep", "-l", "grammar/heldout", "--", ":!crates/oracle", ":!bench",
+                              ":!docs", ":!restart"], cwd=REPO, capture_output=True, text=True)
+        self.assertEqual(out.stdout.strip(), "", out.stdout)
+        self.assertRegex(_addendum(), r"`grammar/misc/csv.bbnf` is one of the 9 training grammars and is not held out")
 
 
 if __name__ == "__main__":

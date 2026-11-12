@@ -1,0 +1,174 @@
+// GraphQL, October 2021 edition (spec.graphql.org/October2021), held out
+// (sk-v27 LW3.COMP-5b, ruling H-1).
+//
+// Authored from the specification's Appendix B (Grammar Summary); rule names
+// follow it in kebab-case. Every token rule consumes the Ignored tokens that
+// follow it (white space, line terminators, comments, commas and the Unicode
+// BOM), so the syntactic rules read token to token. The lexical lookahead
+// restrictions (a number is not followed by `.`, a name start or a digit; a
+// keyword is not followed by a name character; a definition without a body
+// is not followed by the body's opening brace) are written with minus:
+// `epsilon - X` matches the empty string only where X does not match.
+// Held out: no compiler pass is tuned against this file (LW3-ORDER COMP-5b).
+
+document = ignored >> definition + ;
+
+definition = executable-definition | type-system-definition-or-extension ;
+
+// Lexical tokens. `ignored` is Appendix B's Ignored, repeated.
+ignored = /(?:[\t ,\uFEFF]|\r\n?|\n|#[^\n\r\x00-\x08\x0b\x0c\x0e-\x1f]*)*/ ;
+name-boundary = epsilon - /[_0-9A-Za-z]/ ;
+number-boundary = epsilon - /[._0-9A-Za-z]/ ;
+name = /[_A-Za-z][_0-9A-Za-z]*/ << ignored ;
+int-value = /-?(?:0|[1-9][0-9]*)/ , number-boundary << ignored ;
+float-value = /-?(?:0|[1-9][0-9]*)(?:\.[0-9]+(?:[eE][+-]?[0-9]+)?|[eE][+-]?[0-9]+)/ , number-boundary << ignored ;
+string-value = block-string | quoted-string ;
+quoted-string = /"(?:[^"\\\n\r\x00-\x08\x0b\x0c\x0e-\x1f]|\\(?:u[0-9A-Fa-f]{4}|["\\\/bfnrt]))*"/ << ignored ;
+block-string = /"""(?:"{0,2}[^"\\\x00-\x08\x0b\x0c\x0e-\x1f]|"{0,2}\\"""|(?:"{0,2}\\)+"{0,2}(?:[^"\\\x00-\x08\x0b\x0c\x0e-\x1f]|\\"""))*"{0,2}"""/ << ignored ;
+
+p-bang = "!" << ignored ;
+p-dollar = "$" << ignored ;
+p-amp = "&" << ignored ;
+p-lparen = "(" << ignored ;
+p-rparen = ")" << ignored ;
+p-spread = "..." << ignored ;
+p-colon = ":" << ignored ;
+p-equals = "=" << ignored ;
+p-at = "@" << ignored ;
+p-lbracket = "[" << ignored ;
+p-rbracket = "]" << ignored ;
+p-lbrace = "{" << ignored ;
+p-pipe = "|" << ignored ;
+p-rbrace = "}" << ignored ;
+not-lbrace = epsilon - "{" ;
+
+kw-query = "query" , name-boundary << ignored ;
+kw-mutation = "mutation" , name-boundary << ignored ;
+kw-subscription = "subscription" , name-boundary << ignored ;
+kw-fragment = "fragment" , name-boundary << ignored ;
+kw-on = "on" , name-boundary << ignored ;
+kw-true = "true" , name-boundary << ignored ;
+kw-false = "false" , name-boundary << ignored ;
+kw-null = "null" , name-boundary << ignored ;
+kw-schema = "schema" , name-boundary << ignored ;
+kw-scalar = "scalar" , name-boundary << ignored ;
+kw-type = "type" , name-boundary << ignored ;
+kw-interface = "interface" , name-boundary << ignored ;
+kw-union = "union" , name-boundary << ignored ;
+kw-enum = "enum" , name-boundary << ignored ;
+kw-input = "input" , name-boundary << ignored ;
+kw-directive = "directive" , name-boundary << ignored ;
+kw-repeatable = "repeatable" , name-boundary << ignored ;
+kw-implements = "implements" , name-boundary << ignored ;
+kw-extend = "extend" , name-boundary << ignored ;
+
+// Executable definitions.
+executable-definition = operation-definition | fragment-definition ;
+operation-definition = operation-type , name ? , variable-definitions ? , directives ? , selection-set | selection-set ;
+operation-type = kw-query | kw-mutation | kw-subscription ;
+selection-set = p-lbrace , selection + , p-rbrace ;
+selection = field | fragment-spread | inline-fragment ;
+field = alias ? , name , arguments ? , directives ? , selection-set ? ;
+alias = name , p-colon ;
+arguments = p-lparen , argument + , p-rparen ;
+arguments-const = p-lparen , argument-const + , p-rparen ;
+argument = name , p-colon , value ;
+argument-const = name , p-colon , value-const ;
+fragment-spread = p-spread , fragment-name , directives ? ;
+inline-fragment = p-spread , type-condition ? , directives ? , selection-set ;
+fragment-definition = kw-fragment , fragment-name , type-condition , directives ? , selection-set ;
+fragment-name = name - kw-on ;
+type-condition = kw-on , named-type ;
+
+// Values.
+value = variable | value-const-scalar | list-value | object-value ;
+value-const = value-const-scalar | list-value-const | object-value-const ;
+value-const-scalar = float-value | int-value | string-value | boolean-value | null-value | enum-value ;
+boolean-value = kw-true | kw-false ;
+null-value = kw-null ;
+enum-value = name - ( kw-true | kw-false | kw-null ) ;
+list-value = p-lbracket , value * , p-rbracket ;
+list-value-const = p-lbracket , value-const * , p-rbracket ;
+object-value = p-lbrace , object-field * , p-rbrace ;
+object-value-const = p-lbrace , object-field-const * , p-rbrace ;
+object-field = name , p-colon , value ;
+object-field-const = name , p-colon , value-const ;
+
+// Variables and types.
+variable-definitions = p-lparen , variable-definition + , p-rparen ;
+variable-definition = variable , p-colon , type , default-value ? , directives-const ? ;
+variable = p-dollar , name ;
+default-value = p-equals , value-const ;
+type = non-null-type | list-type | named-type ;
+named-type = name ;
+list-type = p-lbracket , type , p-rbracket ;
+non-null-type = ( list-type | named-type ) , p-bang ;
+
+// Directives.
+directives = directive + ;
+directive = p-at , name , arguments ? ;
+directives-const = directive-const + ;
+directive-const = p-at , name , arguments-const ? ;
+
+// Type system definitions and extensions.
+type-system-definition-or-extension = type-system-definition | type-system-extension ;
+type-system-definition = schema-definition | type-definition | directive-definition ;
+type-system-extension = schema-extension | type-extension ;
+description = string-value ;
+
+schema-definition = description ? , kw-schema , directives-const ? , p-lbrace , root-operation-type-definition + , p-rbrace ;
+schema-extension = kw-extend , kw-schema , directives-const ? , p-lbrace , root-operation-type-definition + , p-rbrace
+                 | kw-extend , kw-schema , directives-const , not-lbrace ;
+root-operation-type-definition = operation-type , p-colon , named-type ;
+
+type-definition = scalar-type-definition | object-type-definition | interface-type-definition
+                | union-type-definition | enum-type-definition | input-object-type-definition ;
+type-extension = scalar-type-extension | object-type-extension | interface-type-extension
+               | union-type-extension | enum-type-extension | input-object-type-extension ;
+
+scalar-type-definition = description ? , kw-scalar , name , directives-const ? ;
+scalar-type-extension = kw-extend , kw-scalar , name , directives-const ;
+
+object-type-definition = description ? , kw-type , name , implements-interfaces ? , directives-const ? , fields-definition
+                       | description ? , kw-type , name , implements-interfaces ? , directives-const ? , not-lbrace ;
+object-type-extension = kw-extend , kw-type , name , implements-interfaces ? , directives-const ? , fields-definition
+                      | kw-extend , kw-type , name , implements-interfaces ? , directives-const , not-lbrace
+                      | kw-extend , kw-type , name , implements-interfaces , not-lbrace ;
+implements-interfaces = kw-implements , p-amp ? , named-type , ( p-amp , named-type ) * ;
+fields-definition = p-lbrace , field-definition + , p-rbrace ;
+field-definition = description ? , name , arguments-definition ? , p-colon , type , directives-const ? ;
+arguments-definition = p-lparen , input-value-definition + , p-rparen ;
+input-value-definition = description ? , name , p-colon , type , default-value ? , directives-const ? ;
+
+interface-type-definition = description ? , kw-interface , name , implements-interfaces ? , directives-const ? , fields-definition
+                          | description ? , kw-interface , name , implements-interfaces ? , directives-const ? , not-lbrace ;
+interface-type-extension = kw-extend , kw-interface , name , implements-interfaces ? , directives-const ? , fields-definition
+                         | kw-extend , kw-interface , name , implements-interfaces ? , directives-const , not-lbrace
+                         | kw-extend , kw-interface , name , implements-interfaces , not-lbrace ;
+
+union-type-definition = description ? , kw-union , name , directives-const ? , union-member-types ? ;
+union-member-types = p-equals , p-pipe ? , named-type , ( p-pipe , named-type ) * ;
+union-type-extension = kw-extend , kw-union , name , directives-const ? , union-member-types
+                     | kw-extend , kw-union , name , directives-const ;
+
+enum-type-definition = description ? , kw-enum , name , directives-const ? , enum-values-definition
+                     | description ? , kw-enum , name , directives-const ? , not-lbrace ;
+enum-values-definition = p-lbrace , enum-value-definition + , p-rbrace ;
+enum-value-definition = description ? , enum-value , directives-const ? ;
+enum-type-extension = kw-extend , kw-enum , name , directives-const ? , enum-values-definition
+                    | kw-extend , kw-enum , name , directives-const , not-lbrace ;
+
+input-object-type-definition = description ? , kw-input , name , directives-const ? , input-fields-definition
+                             | description ? , kw-input , name , directives-const ? , not-lbrace ;
+input-fields-definition = p-lbrace , input-value-definition + , p-rbrace ;
+input-object-type-extension = kw-extend , kw-input , name , directives-const ? , input-fields-definition
+                            | kw-extend , kw-input , name , directives-const , not-lbrace ;
+
+directive-definition = description ? , kw-directive , p-at , name , arguments-definition ? , kw-repeatable ? , kw-on , directive-locations ;
+directive-locations = p-pipe ? , directive-location , ( p-pipe , directive-location ) * ;
+directive-location = executable-directive-location | type-system-directive-location ;
+executable-directive-location = ( "QUERY" | "MUTATION" | "SUBSCRIPTION" | "FIELD" | "FRAGMENT_DEFINITION"
+                                | "FRAGMENT_SPREAD" | "INLINE_FRAGMENT" | "VARIABLE_DEFINITION" ) , name-boundary << ignored ;
+type-system-directive-location = ( "SCHEMA" | "SCALAR" | "OBJECT" | "FIELD_DEFINITION" | "ARGUMENT_DEFINITION"
+                                 | "INTERFACE" | "UNION" | "ENUM_VALUE" | "ENUM" | "INPUT_OBJECT"
+                                 | "INPUT_FIELD_DEFINITION" ) , name-boundary << ignored ;

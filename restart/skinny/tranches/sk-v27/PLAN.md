@@ -336,3 +336,15 @@ Each unit's falsifier is the one written in `AMENDMENTS-FROM-THE-DIG.md` (cited 
 ### 7.3 2026-11-12, a quiet certification window (LW3 R0-FOLD, under RULINGS 2026-11-12a DIG-QW; delegate, owner may overturn)
 
 §6 "Benchmark honesty" and LW5.CON-1 gain: a timing read certifies only inside a scheduled quiet certification window (X-7's load rule; the QoS reading of 2026-11-11); a record outside it is labelled NOISY and decides nothing. The owner's own ruling on the window is the dig's O-7.
+
+### 7.4 2026-11-12, DIG-G1 rows the R0 critic found un-amended (LW3 S3b-PP, the first BL-writing seat of its pair, under RULINGS 2026-11-12a DIG-G1; delegate, owner may overturn)
+
+The R0 critic read `origin/sk-v27-lw3` at `d98914e34` and found five passages that still let a measured or trial verdict delete a kernel or an organ, which §7.1 does not reach. DIG-G1 names "the kernels", so the "outside DIG-G1's four organs" reading of §7.1 "Read, not amended" is corrected for x86 kernels by G1-P25. The rows are the critic's, written as it gave them. G1-P27's amending text reached this seat truncated after "the simp"; its completion from that point follows G1-P01 and is this seat's, marked below.
+
+| Row | Passage | Sealed text | Amended by DIG-G1 to read |
+|---|---|---|---|
+| G1-P23 | `designs/programme.md:483` | "It is deleted. ASM earns its place or goes." | DIG-G1: as G1-P16; an .S kernel that does not beat its intrinsic twin is not selected by default, its record stands and a redesign unit with a re-trial opens (DIG-K-C10); it is not deleted. |
+| G1-P24 | `designs/pprint.md:206-207` (PP-U6) | "With no gain, the kernel is deleted." / "or deletion" | DIG-G1: as G1-P12; with no gain the escape kernel is not selected by default; its slot, oracle and fuzz target stay. |
+| G1-P25 | `designs/compiler.md:114` (R2); `PLAN.md:59` (X-4) | "a measured win on that runner. A kernel missing any of the four is deleted" / "no measured win … is deleted" | DIG-G1: the measured-win clause deletes no x86 kernel; a tier with no measured win is not selected by default. Deletion for a missing oracle, fuzz target or executing CI is a correctness rule and stands. Removing x86 is the owner's O-2 only. This corrects §7.1 "Read, not amended": x86 kernels are inside DIG-G1. |
+| G1-P26 | `PLAN.md:56` (X-1) | "re-admitted only as passes that win a trial (C2-5: a root trial can only *delete*)" | DIG-G1: as G1-P04; a root trial decides only whether the root implementation is ported. The CSP, the e-graph, shape mining and the kernels are built on the spine whatever it reads. |
+| G1-P27 | `LW3-ORDER.md:107`, `:290`, `:299`, `:300`; `LW2-ORDER.md:88` | "(deletion is LW7)"; "CB-13 judges them there"; "would delete the organ"; "(losers deleted)"; "goes to the simpler organ" | DIG-G1: no organ is deleted at LW7 or at any wave; CB-13 judges defaults per named family, never existence; "the simp[lower organ" reads as G1-P01: the simpler arm is on by default for the next build only, and the organ stays on the spine with its redesign unit and re-trial open.] (The bracketed completion is S3b-PP's; the critic's own words end at "the simp".) |

@@ -1,0 +1,186 @@
+# The kernel laws, e31fbfedc -> e1fd8e7 (lw3/s6-kernel). Paths only, plus two generalized doc lines in tests/kernel.rs and tests/kernel/generated_shaped_control.rs (the generality law); rustfmt re-wrapped four lengthened import lines.
+diff --git a/rust/parse_that/tests/kernel.rs b/rust/parse_that/tests/kernel.rs
+index e8075d2..4301999 100644
+--- a/rust/parse_that/tests/kernel.rs
++++ b/rust/parse_that/tests/kernel.rs
+@@ -1,7 +1,8 @@
+-//! External laws for the SK-V26 invocation-owned parser kernel.
++//! External laws for the invocation-owned parser kernel (`parse_that::kernel`).
+ //!
+-//! These tests intentionally use only the crate-root API. The generated-shaped
+-//! control is explicitly isomorphic; genuine BBNF output is a W2 crossing gate.
++//! These tests intentionally use only the kernel module's public API. The
++//! generated-shaped control is explicitly isomorphic; genuine generator output
++//! is checked by the generator's own crossing gate.
+ 
+ mod kernel {
+     mod control_laws;
+diff --git a/rust/parse_that/tests/kernel/control_laws.rs b/rust/parse_that/tests/kernel/control_laws.rs
+index b1f6feb..62efdfc 100644
+--- a/rust/parse_that/tests/kernel/control_laws.rs
++++ b/rust/parse_that/tests/kernel/control_laws.rs
+@@ -1,4 +1,4 @@
+-use parse_that::{Input, Run, Span, Step, choice, literal, repeat, sequence};
++use parse_that::kernel::{Input, Run, Span, Step, choice, literal, repeat, sequence};
+ 
+ fn ax<'i>(run: &mut Run<'i>) -> Step<'i, Span<'i>> {
+     sequence(run, |run| match literal(run, b"a") {
+diff --git a/rust/parse_that/tests/kernel/difference_laws.rs b/rust/parse_that/tests/kernel/difference_laws.rs
+index 46ed7a7..2e4711c 100644
+--- a/rust/parse_that/tests/kernel/difference_laws.rs
++++ b/rust/parse_that/tests/kernel/difference_laws.rs
+@@ -1,11 +1,11 @@
+ use std::cell::Cell;
+ 
+-use parse_that::{
++use parse_that::kernel::{
+     EventSink, Failure, Fault, Input, ResourceKind, Run, Span, Step, difference, literal, repeat,
+     sequence,
+ };
+ 
+-const _: () = assert!(parse_that::KERNEL_ABI == 3);
++const _: () = assert!(parse_that::kernel::KERNEL_ABI == 3);
+ 
+ #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+ struct ProbeEvent {
+diff --git a/rust/parse_that/tests/kernel/generated_shaped_control.rs b/rust/parse_that/tests/kernel/generated_shaped_control.rs
+index 4ee13f5..547fdf5 100644
+--- a/rust/parse_that/tests/kernel/generated_shaped_control.rs
++++ b/rust/parse_that/tests/kernel/generated_shaped_control.rs
+@@ -1,9 +1,11 @@
+ //! A deliberately small generated-shaped control.
+ //!
+ //! This is an isomorphic external API fixture, not generator output. Genuine
+-//! BBNF emitter output is a W2 crossing gate.
++//! generator output is checked by the generator's own crossing gate.
+ 
+-use parse_that::{EventSink, Input, Run, Span, Step, choice, eof, literal, repeat, sequence};
++use parse_that::kernel::{
++    EventSink, Input, Run, Span, Step, choice, eof, literal, repeat, sequence,
++};
+ 
+ macro_rules! matched {
+     ($expression:expr) => {
+diff --git a/rust/parse_that/tests/kernel/input_contract.rs b/rust/parse_that/tests/kernel/input_contract.rs
+index f33f3c1..bfd2a93 100644
+--- a/rust/parse_that/tests/kernel/input_contract.rs
++++ b/rust/parse_that/tests/kernel/input_contract.rs
+@@ -1,4 +1,4 @@
+-use parse_that::Input;
++use parse_that::kernel::Input;
+ 
+ #[test]
+ fn input_borrows_the_callers_bytes_without_copying() {
+diff --git a/rust/parse_that/tests/kernel/module_laws.rs b/rust/parse_that/tests/kernel/module_laws.rs
+index dd57604..bd9c45c 100644
+--- a/rust/parse_that/tests/kernel/module_laws.rs
++++ b/rust/parse_that/tests/kernel/module_laws.rs
+@@ -1,4 +1,6 @@
+-use parse_that::{EventSink, Fault, Input, ResourceKind, Run, Span, Step, eof, literal, repeat};
++use parse_that::kernel::{
++    EventSink, Fault, Input, ResourceKind, Run, Span, Step, eof, literal, repeat,
++};
+ 
+ #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+ struct ModuleEvent {
+diff --git a/rust/parse_that/tests/kernel/outcome_laws.rs b/rust/parse_that/tests/kernel/outcome_laws.rs
+index 80f186a..d70a2b7 100644
+--- a/rust/parse_that/tests/kernel/outcome_laws.rs
++++ b/rust/parse_that/tests/kernel/outcome_laws.rs
+@@ -1,4 +1,4 @@
+-use parse_that::{Fault, Input, Run, Span, Step, choice, literal};
++use parse_that::kernel::{Fault, Input, Run, Span, Step, choice, literal};
+ 
+ fn shallow_failure<'i>(run: &mut Run<'i>) -> Step<'i, Span<'i>> {
+     match literal(run, b"ab") {
+@@ -70,7 +70,8 @@ fn full_recognition_is_whole_source_not_remaining_suffix() {
+ #[test]
+ fn typed_fault_is_not_collapsed_into_mismatch() {
+     let mut run = Run::new(Input::new(b""));
+-    let outcome = run.parse_prefix(|run| parse_that::repeat(run, 0, None, |run| literal(run, b"")));
++    let outcome =
++        run.parse_prefix(|run| parse_that::kernel::repeat(run, 0, None, |run| literal(run, b"")));
+ 
+     assert!(matches!(outcome, Step::Fault(Fault::StalledRepeat { .. })));
+ }
+diff --git a/rust/parse_that/tests/kernel/progress_laws.rs b/rust/parse_that/tests/kernel/progress_laws.rs
+index 0b54248..6bb61a7 100644
+--- a/rust/parse_that/tests/kernel/progress_laws.rs
++++ b/rust/parse_that/tests/kernel/progress_laws.rs
+@@ -1,4 +1,4 @@
+-use parse_that::{Fault, Input, Run, Step, literal, repeat};
++use parse_that::kernel::{Fault, Input, Run, Step, literal, repeat};
+ 
+ #[test]
+ fn unbounded_epsilon_repeat_faults_at_the_absolute_cursor() {
+diff --git a/rust/parse_that/tests/kernel/resource_laws.rs b/rust/parse_that/tests/kernel/resource_laws.rs
+index 99f2dd4..bdb1256 100644
+--- a/rust/parse_that/tests/kernel/resource_laws.rs
++++ b/rust/parse_that/tests/kernel/resource_laws.rs
+@@ -1,6 +1,6 @@
+ use std::cell::Cell;
+ 
+-use parse_that::{EventSink, Fault, Input, ResourceKind, Run, Span, Step, choice, literal};
++use parse_that::kernel::{EventSink, Fault, Input, ResourceKind, Run, Span, Step, choice, literal};
+ 
+ #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+ struct ResourceEvent {
+diff --git a/rust/parse_that/tests/kernel/terminal_laws.rs b/rust/parse_that/tests/kernel/terminal_laws.rs
+index c2e3f93..7a5b344 100644
+--- a/rust/parse_that/tests/kernel/terminal_laws.rs
++++ b/rust/parse_that/tests/kernel/terminal_laws.rs
+@@ -1,4 +1,6 @@
+-use parse_that::{Input, RegexPlan, RegexPlanError, RegexTerminal, Run, Step, eof, literal, regex};
++use parse_that::kernel::{
++    Input, RegexPlan, RegexPlanError, RegexTerminal, Run, Step, eof, literal, regex,
++};
+ 
+ fn ascii_word_terminal() -> RegexTerminal<'static> {
+     static BYTE_CLASSES: [u8; 256] = {
+diff --git a/rust/parse_that/tests/kernel/transaction_laws.rs b/rust/parse_that/tests/kernel/transaction_laws.rs
+index 23efe6f..14bba41 100644
+--- a/rust/parse_that/tests/kernel/transaction_laws.rs
++++ b/rust/parse_that/tests/kernel/transaction_laws.rs
+@@ -1,4 +1,6 @@
+-use parse_that::{EventSink, Fault, Input, Run, Span, Step, choice, literal, repeat, sequence};
++use parse_that::kernel::{
++    EventSink, Fault, Input, Run, Span, Step, choice, literal, repeat, sequence,
++};
+ 
+ #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+ struct ProbeEvent {
+@@ -157,7 +159,9 @@ fn one_eventful_parser_runs_unchanged_with_discarding_and_retaining_sinks() {
+ 
+ #[test]
+ fn discarding_sink_counts_only_transactionally_retained_events() {
+-    fn speculative<'i>(run: &mut Run<'i, parse_that::NoSink<ProbeEvent>>) -> Step<'i, Span<'i>> {
++    fn speculative<'i>(
++        run: &mut Run<'i, parse_that::kernel::NoSink<ProbeEvent>>,
++    ) -> Step<'i, Span<'i>> {
+         sequence(run, |run| {
+             let at = run.cursor().offset();
+             run.emit_with(|| ProbeEvent {
+@@ -168,7 +172,9 @@ fn discarding_sink_counts_only_transactionally_retained_events() {
+         })
+     }
+ 
+-    fn fallback<'i>(run: &mut Run<'i, parse_that::NoSink<ProbeEvent>>) -> Step<'i, Span<'i>> {
++    fn fallback<'i>(
++        run: &mut Run<'i, parse_that::kernel::NoSink<ProbeEvent>>,
++    ) -> Step<'i, Span<'i>> {
+         let span = match literal(run, b"ab") {
+             Step::Matched(span) => span,
+             Step::Mismatch(failure) => return Step::Mismatch(failure),
+diff --git a/rust/parse_that/tests/kernel_allocation.rs b/rust/parse_that/tests/kernel_allocation.rs
+index cee01b8..0063100 100644
+--- a/rust/parse_that/tests/kernel_allocation.rs
++++ b/rust/parse_that/tests/kernel_allocation.rs
+@@ -1,7 +1,7 @@
+ use std::alloc::{GlobalAlloc, Layout, System};
+ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+ 
+-use parse_that::{
++use parse_that::kernel::{
+     EventSink, Input, RegexPlan, RegexTerminal, Run, Span, Step, choice, difference, literal,
+     regex, repeat, sequence,
+ };

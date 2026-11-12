@@ -1,0 +1,11 @@
+   Compiling parse-that-egraph v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/egraph)
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/egraph-derive)
+   Compiling pprint_derive v0.3.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/simd)
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/corpus)
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/regex)
+   Compiling pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/parse_that)
+    Finished `bench` profile [optimized] target(s) in 9.22s
+  Executable benches/kernel/success_path.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/release/deps/kernel_success_path-164bd1e8eeb8baaf)
+# rc 0

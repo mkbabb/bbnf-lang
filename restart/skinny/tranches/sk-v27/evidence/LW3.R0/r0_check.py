@@ -75,6 +75,41 @@ def appended_only(rev, path):
     return new.startswith(old.rstrip("\n"))
 
 
+# Hits of the widened grep that retire something by a ruling or a plan
+# decision, not by a trial verdict. Keyed by file and the retired subject
+# (the phrase before "is retired"), so a moved line keeps its reading and a
+# new retirement is read RED until it is named here with its reason.
+NOT_A_TRIAL = {
+    ("PLAN.md", "grammar/css/l4"): "X-8: value.js's grammars become canonical (consumers P-1)",
+    ("LW3-ORDER.md", "grammar/css/l4"): "LW3.USE-1 carries X-8's retirement",
+    ("designs/consumers.md", "grammar/css/l4"): "P-1, the source of X-8",
+    ("designs/competition.md", "skinny/"): "OR-3: the lab is retired once the spine carries it",
+    ("designs/programme.md", "O033"): "an order superseded by addendum (R2)",
+    ("LW2-ORDER.md", "track1_beats_lightningcss"): "a predicate replaced by the PREREG families",
+}
+
+
+def txt_key(txt):
+    """The retired subject of an `X is retired` hit: the last backticked
+    name before the phrase, or the word before it."""
+    head = txt.split("is retired")[0] if "is retired" in txt else ""
+    names = re.findall(r"`([^`]+)`", head)
+    if names:
+        return names[-1]
+    words = head.split()
+    return words[-1] if words else ""
+
+
+def cites(row, short, n):
+    if f"{short}:{n}" in row:
+        return True
+    for m in re.finditer(re.escape(short) + r":(\d+)(?:-(\d+))?((?:`?, `?:\d+)*)", row):
+        lo, hi = int(m.group(1)), int(m.group(2) or m.group(1))
+        if lo <= n <= hi or n in {int(x) for x in re.findall(r":(\d+)", m.group(3))}:
+            return True
+    return False
+
+
 def check_fold(rev):
     bad = []
     if git("merge-base", "--is-ancestor", DIG_TIP, rev, check=False).returncode != 0:
@@ -117,7 +152,9 @@ def check_fold(rev):
                     if l.startswith(f"| {r['id']} |")]
             if len(rows) != 1:
                 bad.append(f"{r['id']}: {len(rows)} PLAN §7 rows (want 1)")
-            elif "DIG-G1" not in rows[0] or f"{short}:{n}" not in rows[0]:
+            # A row cites `file:line`, or `file:a-b` / `file:a`, `:b` for a
+            # run of lines in one file (S3b's §7.4 cites that way).
+            elif "DIG-G1" not in rows[0] or not cites(rows[0], short, n):
                 bad.append(f"{r['id']}: PLAN §7 row does not cite DIG-G1 and {short}:{n}")
     # The dig's grep (DIG-G1 falsifier): every hit at rev, in the sealed
     # sources, is one of the listed passages.
@@ -125,17 +162,26 @@ def check_fold(rev):
     if pt:
         for r in csv.DictReader(io.StringIO(pt), delimiter="\t"):
             listed.add((r["file"], int(r["line"])))
+    # Widened by the R0 critic (LEDGER "DIG-G1 status corrected", 2026-11-12):
+    # the dig's five phrases cannot see "It is deleted", "earns its place or
+    # goes", "win a trial" or "deletion is LW7", and LW2-ORDER.md is read too.
     g = git("grep", "-nE",
-            "simpler organ wins|keep/delete|trial losers|or the kernel is deleted|off by default or removed",
+            "simpler organ wins|keep/delete|trial losers|or the kernel is deleted|off by default or removed"
+            "|It is deleted|earns its place or goes|win a trial|deletion is LW7|losers deleted"
+            "|kernel is withdrawn|is retired",
             rev, "--", f"{SK}/designs", f"{SK}/PLAN.md", f"{SK}/LW3-ORDER.md",
-            "bench/PREREG.md", check=False).stdout
+            f"{SK}/LW2-ORDER.md", "bench/PREREG.md", check=False).stdout
     for h in g.strip().split("\n"):
         if not h:
             continue
         _, f, ln, txt = h.split(":", 3)
         # The dig's reading: every hit is a listed passage, or is itself
-        # amending text that cites DIG-G1 (PLAN §7 quotes the sealed text).
-        if (f, int(ln)) not in listed and "DIG-G1" not in txt:
+        # amending text that cites DIG-G1 (PLAN §7 quotes the sealed text),
+        # or is a named retirement that no trial decides (NOT_A_TRIAL).
+        if (f, int(ln)) in listed or "DIG-G1" in txt:
+            continue
+        why = NOT_A_TRIAL.get((f.replace(f"{SK}/", ""), txt_key(txt)))
+        if why is None:
             bad.append(f"DIG-G1 grep hit {f}:{ln} is not an amended passage")
     # The plan units the dig names, and the 14 amendment-9 ids (DIG-G2).
     units = ["LW5.COMP-1-MINE", "LW5.COMP-1-BRIDGE", "LW5.COMP-5",

@@ -1,0 +1,7 @@
+unit=fold rev=d98914e349b240deac25363853958a5180e0dcc7 reasons=4
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/LW3-ORDER.md:300 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/PLAN.md:56 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/PLAN.md:59 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/programme.md:483 is not an amended passage
+RED
+rc=1

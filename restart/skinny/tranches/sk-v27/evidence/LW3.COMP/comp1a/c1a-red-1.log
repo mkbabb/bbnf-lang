@@ -1,0 +1,99 @@
+# head aafda415d3c359b7070530fce9980ca6ad50bed9 dirty=2
+# cmd cargo test --locked -p parse_that --test kernel
+# date 2026-11-12T06:06:37-05:00
+   Compiling parse-that-egraph v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/egraph)
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/egraph-derive)
+   Compiling pprint_derive v0.3.0 (https://github.com/mkbabb/pprint?rev=bc78dd850edb533a9a587f1f6bb7694ff0b358a8#bc78dd85)
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/simd)
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/corpus)
+   Compiling pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=bc78dd850edb533a9a587f1f6bb7694ff0b358a8#bc78dd85)
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/regex)
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/control_laws.rs:1:17
+  |
+1 | use parse_that::kernel::{Input, Run, Span, Step, choice, literal, repeat, sequence};
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/difference_laws.rs:3:17
+  |
+3 | use parse_that::kernel::{
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/generated_shaped_control.rs:6:17
+  |
+6 | use parse_that::kernel::{
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/input_contract.rs:1:17
+  |
+1 | use parse_that::kernel::Input;
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/module_laws.rs:1:17
+  |
+1 | use parse_that::kernel::{
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/outcome_laws.rs:1:17
+  |
+1 | use parse_that::kernel::{Fault, Input, Run, Span, Step, choice, literal};
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/progress_laws.rs:1:17
+  |
+1 | use parse_that::kernel::{Fault, Input, Run, Step, literal, repeat};
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/resource_laws.rs:3:17
+  |
+3 | use parse_that::kernel::{EventSink, Fault, Input, ResourceKind, Run, Span, Step, choice, literal};
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/terminal_laws.rs:1:17
+  |
+1 | use parse_that::kernel::{
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0432]: unresolved import `parse_that::kernel`
+ --> parse_that/tests/kernel/transaction_laws.rs:1:17
+  |
+1 | use parse_that::kernel::{
+  |                 ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0433]: cannot find `kernel` in `parse_that`
+ --> parse_that/tests/kernel/difference_laws.rs:8:35
+  |
+8 | const _: () = assert!(parse_that::kernel::KERNEL_ABI == 3);
+  |                                   ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0433]: cannot find `kernel` in `parse_that`
+  --> parse_that/tests/kernel/outcome_laws.rs:74:44
+   |
+74 |         run.parse_prefix(|run| parse_that::kernel::repeat(run, 0, None, |run| literal(run, b"")));
+   |                                            ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0433]: cannot find `kernel` in `parse_that`
+   --> parse_that/tests/kernel/transaction_laws.rs:163:39
+    |
+163 |         run: &mut Run<'i, parse_that::kernel::NoSink<ProbeEvent>>,
+    |                                       ^^^^^^ could not find `kernel` in `parse_that`
+
+error[E0433]: cannot find `kernel` in `parse_that`
+   --> parse_that/tests/kernel/transaction_laws.rs:176:39
+    |
+176 |         run: &mut Run<'i, parse_that::kernel::NoSink<ProbeEvent>>,
+    |                                       ^^^^^^ could not find `kernel` in `parse_that`
+
+Some errors have detailed explanations: E0432, E0433.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `parse_that` (test "kernel") due to 14 previous errors
+# rc 101

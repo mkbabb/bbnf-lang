@@ -1,0 +1,4 @@
+unit=ledger rev=4e4ce90eb927a27a3d4d91424026d3c7b2e1284c reasons=1
+RED DIG-G2 status corrected: status GREEN (want RED)
+RED
+rc=1

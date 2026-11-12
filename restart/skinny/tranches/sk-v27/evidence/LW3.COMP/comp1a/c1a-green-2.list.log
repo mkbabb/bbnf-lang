@@ -1,0 +1,819 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that_corpus-a3aca58f429a3b9c)
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that_egraph-a489a2b6ae83b6e3)
+     Running tests/csp_scheduler.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/csp_scheduler-af657ffa4a6a78fc)
+csp_scheduler_matches_backoff_scheduler: test
+csp_scheduler_reaches_saturation: test
+dirty_domain_lattice_semantics: test
+parent_dirty_prop_propagates_through_ac3: test
+     Running tests/derive_language.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/derive_language-b1b64dac1c73aab6)
+auto_boxed_slice: test
+auto_children_mut_pair_roundtrip: test
+auto_fixed_array_pair: test
+auto_leaf_scalar: test
+auto_named_struct_variant: test
+auto_single_id: test
+auto_vec_of_id: test
+children_mut_replaces_ids: test
+leaf_has_no_children: test
+named_single_child_visible: test
+single_child_visible: test
+unit_has_no_children: test
+variadic_children_visible: test
+     Running tests/egraph_basic.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/egraph_basic-c8e83bfd165553af)
+extract_smallest_after_saturate: test
+intern_builds_shared_children: test
+intern_dedupes_identical_nodes: test
+intern_distinct_nodes: test
+saturate_add_zero: test
+union_merges_classes: test
+     Running tests/saturation.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/saturation-786f00785c11e61d)
+multi_iteration_flatten_reaches_fixed_point: test
+no_op_saturates_in_one_iteration: test
+pure_union_rule_counted_as_work: test
+     Running tests/unionfind.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/unionfind-6e7f4307b73b8f51)
+make_set_distinct: test
+path_compression: test
+union_and_find: test
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that_egraph_derive-25f1f3d2122b054b)
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that_regex-5dedacfd83a0463b)
+     Running tests/abi_fingerprint.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/abi_fingerprint-91bb0ee8fe65e66a)
+hir_abi_fingerprint_is_recorded: test
+     Running tests/algebra_superset.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/algebra_superset-cbdc38bc74a6f866)
+superset_basic: test
+superset_equal: test
+     Running tests/algebra_union.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/algebra_union-346ef8d3bb60361a)
+union_disjoint: test
+     Running tests/born_red_lw1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/born_red_lw1-55bef1a3210bd766)
+alt_fusion_is_leftmost_first: test
+alt_longer_branch_first_agrees: test
+c1_1_negative_lookahead_backs_off_greedy_run: test
+c1_1_negative_lookahead_full_run_when_unblocked: test
+kelvin_does_not_fold_without_u: test
+kelvin_folds_under_iu: test
+latin1_folds_under_i_and_iu: test
+long_s_folds_under_iu: test
+superset_absorb_ascii_single_class_holds: test
+superset_absorb_compares_scalar_values: test
+superset_absorb_e_acute_greek_guard: test
+superset_absorb_requires_equal_consumption: test
+union_merge_keeps_both_branches_languages: test
+     Running tests/casefold_tables.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/casefold_tables-87a6fbf7cb319339)
+backslash_s_is_the_generated_space_set: test
+canonicalization_differs_by_reading: test
+the_tables_are_at_the_pinned_unicode_version: test
+     Running tests/egraph_rules_flatten.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/egraph_rules_flatten-64624a944f7edd8d)
+flatten_flat_does_not_match: test
+flatten_nested_alternation_matches: test
+flatten_nested_concat_matches: test
+     Running tests/egraph_rules_redundant.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/egraph_rules_redundant-90cfe1d3e7737354)
+dedup_identical_literal_branches: test
+dedup_no_duplicates: test
+     Running tests/egraph_rules_repetition.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/egraph_rules_repetition-8fc54c5d27cc1986)
+merge_bounds_arithmetic: test
+merge_different_subs_does_not_match: test
+merge_plus_star_to_plus: test
+     Running tests/egraph_rules_superset.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/egraph_rules_superset-add5c93827088fb0)
+disjoint_classes_not_absorbed: test
+superset_absorbs_subset: test
+     Running tests/egraph_rules_union.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/egraph_rules_union-080c686ba6a04bb5)
+union_does_not_match_on_equal_classes: test
+union_merges_adjacent_classes: test
+     Running tests/egraph_simplify.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/egraph_simplify-98d2459a598c58ff)
+simplify_hir_dedup_alt_branches: test
+simplify_hir_preserves_structure: test
+simplify_hir_round_trips_leaf: test
+     Running tests/info.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/info-50fbba35254b1f51)
+a_non_ascii_quantified_class_has_no_ascii_info: test
+test_alternation_one_pass: test
+test_anchored: test
+test_identifier_bare: test
+test_identifier_custom_property_fold: test
+test_identifier_double_dash_only: test
+test_identifier_vendor_prefix: test
+test_json_number_classification: test
+test_negated_class: test
+test_nullable_pattern: test
+test_simple_literal: test
+test_width_bounds: test
+     Running tests/lint_nou.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/lint_nou-c49abf3f97694c6e)
+a_class_that_can_match_a_surrogate_unit_is_linted: test
+a_pattern_that_reads_the_same_is_not_linted: test
+the_id_is_general: test
+     Running tests/look_conditions.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/look_conditions-bb25c35256c2bf0d)
+anchors_and_boundaries_reproduce_the_oracle: test
+     Running tests/oracle_leaf_corpus.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/oracle_leaf_corpus-95fe77395e029bc2)
+dfa_tier_agrees_with_v8_and_jsc: test
+     Running tests/path_lexer.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/path_lexer-400c121bcbd9ebb9)
+deterministic_span_attribution: test
+empty_input_yields_only_eof: test
+error_carries_provided_span: test
+ignores_interstitial_whitespace: test
+lexes_dotted_path: test
+lexes_escaped_quote_in_input: test
+lexes_index_runs_into_brackets: test
+lexes_jsonpath_style: test
+lexes_underscore_idents: test
+lexes_unicode_identifiers: test
+lexes_wildcard_path: test
+rejects_invalid_utf8_lead_byte: test
+rejects_unexpected_punctuation: test
+round_trip_text_preserves_input: test
+whitespace_only_input_yields_only_eof: test
+     Running tests/to_source.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/to_source-682c8f28e21f7e75)
+print_smoke_corpus: test
+round_trip_every_accepted_pattern: test
+     Running tests/word_boundary.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/word_boundary-1d378494fb65c4a6)
+backspace_inside_a_class_is_unchanged: test
+engine_reproduces_the_oracle: test
+word_boundary_outside_a_class_is_an_assertion: test
+word_boundary_round_trips_through_to_source: test
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that_simd-4635703c79cae84e)
+     Running tests/correctness.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/correctness-9db2d2341bd80942)
+css_bootstrap_canonical: test
+css_tailwind_output_canonical: test
+empty_alphabet_yields_empty_index: test
+empty_input_yields_empty_index: test
+json_canada_canonical: test
+json_citm_canonical: test
+json_twitter_canonical: test
+multi_cmp_alphabet_20_singletons: test
+no_quotes_simple: test
+short_input_below_stripe: test
+stripe_boundary_64_byte_input: test
+stripe_plus_one_input: test
+wide_lut_alphabet_15_singletons: test
+     Running tests/differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/differential-fca62ced0af4c43a)
+every_supported_tier_matches_the_scalar_oracle: test
+     Running tests/digraph.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/digraph-5f5fcd67193739f7)
+arrow_and_paren_star_digraphs: test
+arrow_digraph: test
+css_block_comment_open_close: test
+css_no_digraph_no_extra_hits: test
+css_real_world_bootstrap_snippet: test
+digraph_at_stripe_boundary: test
+digraph_long_input: test
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/dispatch_tiers-4bc1e798d23f374b)
+every_isa_tier_of_the_target_is_compiled: test
+every_supported_tier_matches_the_scalar_oracle: test
+selected_tier_is_the_best_supported: test
+     Running tests/fuzz.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/fuzz-36db32474825d78f)
+arrow_alphabet_random_bytes: test
+css_alphabet_random_bytes: test
+css_with_digraphs: test
+json_alphabet_random_bytes: test
+json_alphabet_skewed: test
+long_inputs: test
+no_quote_alphabet_random_bytes: test
+quote_escape_sequences: test
+     Running tests/guard_page.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/guard_page-6a4298351f9367a0)
+no_tier_reads_past_the_end_of_its_input: test
+     Running tests/prim_differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/prim_differential-346c3190d61da869)
+bracket_depth_mask_64: test
+byte_class_from_eq_set_64: test
+decode_hex_quads: test
+lo6_classify: test
+string_special_block: test
+structural_classify_64: test
+the_selected_tier_runs_the_neon_bodies_on_aarch64: test
+validate_utf8_block: test
+     Running tests/quote_parity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/quote_parity-0f696322cc6b6b5c)
+double_backslash_quote_closes_string: test
+empty_input_quote_path: test
+escaped_quote_does_not_close_string: test
+input_starting_with_string: test
+long_string_spanning_multiple_stripes: test
+many_strings_in_array: test
+quote_carry_across_64_byte_stripes: test
+quote_filters_braces_inside_string: test
+shift_xor_matches_clmul: test
+     Running tests/wasm_bounds.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/wasm_bounds-1801e0cd0d732be7)
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that-a2770e281d2240d9)
+     Running tests/combinator_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/combinator_test-205b8c81bf2ad2b6)
+tests::chain_basic: test
+tests::chain_failure_propagates: test
+tests::chain_second_failure: test
+tests::chain_state_advances: test
+tests::test_add_operator: test
+tests::test_any_span_keywords: test
+tests::test_any_span_no_match: test
+tests::test_bitor_operator: test
+tests::test_dispatch_byte: test
+tests::test_dispatch_byte_no_fallback: test
+tests::test_eof_at_end: test
+tests::test_eof_not_at_end: test
+tests::test_epsilon: test
+tests::test_flat_then: test
+tests::test_lazy_basic: test
+tests::test_look_ahead_failure: test
+tests::test_look_ahead_success: test
+tests::test_many_unbounded: test
+tests::test_many_with_max: test
+tests::test_many_with_min: test
+tests::test_many_zero_matches: test
+tests::test_map_failure_propagates: test
+tests::test_map_transform: test
+tests::test_negate_failure: test
+tests::test_negate_success: test
+tests::test_next_combinator: test
+tests::test_next_span: test
+tests::test_next_span_empty_input: test
+tests::test_not_failure: test
+tests::test_not_success: test
+tests::test_number_span_fast_big_exponent: test
+tests::test_number_span_fast_empty: test
+tests::test_number_span_fast_exponent: test
+tests::test_number_span_fast_float: test
+tests::test_number_span_fast_integer: test
+tests::test_number_span_fast_just_minus: test
+tests::test_number_span_fast_neg_exponent: test
+tests::test_number_span_fast_neg_zero: test
+tests::test_number_span_fast_negative: test
+tests::test_number_span_fast_no_match: test
+tests::test_number_span_fast_randomized_boundaries: test
+tests::test_number_span_fast_zero: test
+tests::test_one_of: test
+tests::test_opt_none: test
+tests::test_opt_some: test
+tests::test_or_backtracking: test
+tests::test_or_first_matches: test
+tests::test_or_neither_matches: test
+tests::test_or_second_matches: test
+tests::test_parse_or_error_failure: test
+tests::test_parse_or_error_success: test
+tests::test_regex_digits: test
+tests::test_regex_empty_input: test
+tests::test_regex_no_match: test
+tests::test_regex_span_match: test
+tests::test_save_state_backtrack: test
+tests::test_save_state_success: test
+tests::test_sep_by: test
+tests::test_sep_by_min_not_met: test
+tests::test_sep_by_single: test
+tests::test_skip: test
+tests::test_sp_bridge_into_parser: test
+tests::test_sp_bridge_map: test
+tests::test_sp_many: test
+tests::test_sp_oneof_flattening: test
+tests::test_sp_opt: test
+tests::test_sp_sep_by: test
+tests::test_sp_seq_flattening: test
+tests::test_sp_string_match: test
+tests::test_sp_string_no_match: test
+tests::test_sp_take_while_byte: test
+tests::test_sp_take_while_byte_no_match: test
+tests::test_sp_trim_whitespace: test
+tests::test_sp_wrap: test
+tests::test_span_many: test
+tests::test_span_opt: test
+tests::test_span_sep_by: test
+tests::test_span_then: test
+tests::test_span_wrap: test
+tests::test_string_empty_input: test
+tests::test_string_empty_pattern: test
+tests::test_string_match: test
+tests::test_string_no_match: test
+tests::test_string_span_match: test
+tests::test_string_utf8: test
+tests::test_take_until_any_equivalence_specialization_sizes: test
+tests::test_take_until_any_randomized_equivalence: test
+tests::test_take_while_byte_span_digits: test
+tests::test_take_while_byte_span_no_match: test
+tests::test_take_while_span_digits: test
+tests::test_take_while_span_no_match: test
+tests::test_take_while_span_utf8: test
+tests::test_then_first_fails: test
+tests::test_then_second_fails: test
+tests::test_then_success: test
+tests::test_trim_whitespace: test
+tests::test_trim_whitespace_no_ws: test
+tests::test_wrap: test
+tests::test_wrap_missing_right: test
+     Running tests/css_parse_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/css_parse_test-ba3e377bd0967ce0)
+test_at_font_face: test
+test_at_import: test
+test_at_keyframes: test
+test_at_media: test
+test_attribute_selector: test
+test_block_comment_fast: test
+test_block_comment_multiline: test
+test_calc_function: test
+test_child_combinator: test
+test_class_selector: test
+test_comment: test
+test_compound_selector: test
+test_custom_property_declaration: test
+test_descendant_combinator: test
+test_dimension_values: test
+test_empty_stylesheet: test
+test_hex_color: test
+test_hex_color_3: test
+test_hex_color_8: test
+test_id_selector: test
+test_media_query_and_conditions: test
+test_media_query_list: test
+test_media_query_not_print: test
+test_media_query_plain_feature: test
+test_media_query_screen_and_feature: test
+test_multiple_declarations: test
+test_multiple_rules: test
+test_negative_dimension: test
+test_nested_media: test
+test_parse_bootstrap_css: test
+test_parse_normalize_css: test
+test_parse_tailwind_css: test
+test_pseudo_class: test
+test_pseudo_element: test
+test_rgb_function: test
+test_selector_list: test
+test_simple_rule: test
+test_specificity_class: test
+test_specificity_complex: test
+test_specificity_compound: test
+test_specificity_id: test
+test_specificity_pseudo_is: test
+test_specificity_pseudo_where: test
+test_specificity_type: test
+test_specificity_universal: test
+test_string_value: test
+test_supports_and: test
+test_supports_declaration: test
+test_supports_not: test
+test_universal_selector: test
+test_var_function: test
+test_whitespace_only: test
+     Running tests/css_recovery_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/css_recovery_test-5353d595eebed214)
+     Running tests/css_stack_depth.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/css_stack_depth-908507eedd75e4c0)
+child_parse_on_sized_stack: test
+nested_at_rule_stack_slope_is_constant: test
+nested_at_rules_depth_16_default_stack: test
+     Running tests/csv_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/csv_test-04c50dfa3cbcc22b)
+tests::test_csv: test
+tests::test_csv_file: test
+     Running tests/debug_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/debug_test-0bc336c88d9adf07)
+     Running tests/decode_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/decode_test-1c557ebe65c081ac)
+arena_offset_respects_existing_data: test
+borrowed_empty: test
+borrowed_no_escapes_at_all: test
+borrowed_simple: test
+decode_microbench: test
+error_invalid_escape: test
+error_lone_high_surrogate: test
+error_lone_low_surrogate: test
+error_no_opening_quote: test
+error_truncated_unicode: test
+error_unterminated: test
+non_zero_start_offset: test
+owned_all_simple_escapes: test
+owned_mixed_content: test
+owned_newline: test
+owned_surrogate_pair: test
+owned_unicode_bmp: test
+owned_unicode_multibyte: test
+sequential_decodes_share_arena: test
+simd_borrowed_close_quote_at_every_stripe_offset: test
+simd_borrowed_close_quote_at_second_stripe_offset: test
+simd_borrowed_close_quote_at_stripe_high_bit: test
+simd_borrowed_close_quote_at_stripe_one_start: test
+simd_borrowed_close_quote_in_scalar_tail: test
+simd_borrowed_exactly_one_stripe: test
+simd_borrowed_many_stripes: test
+simd_borrowed_two_stripes: test
+simd_borrowed_utf8_across_stripe_boundary: test
+simd_borrowed_utf8_multibyte_no_escapes: test
+simd_cross_validate_grid: test
+simd_escape_parity_runs_before_quote: test
+simd_owned_all_escapes_dense: test
+simd_owned_close_quote_at_stripe_high_bit: test
+simd_owned_double_backslash_spans_stripe_boundary: test
+simd_owned_escape_at_every_stripe_offset: test
+simd_owned_escape_at_offset_zero: test
+simd_owned_escape_in_scalar_tail: test
+simd_owned_escape_spans_stripe_boundary: test
+simd_owned_escape_then_close: test
+simd_owned_escape_then_full_stripe_then_close: test
+simd_owned_escaped_quote_then_real_quote: test
+simd_owned_large_with_periodic_escapes: test
+simd_owned_long_run_then_escape: test
+simd_owned_surrogate_pair_across_stripe_boundary: test
+     Running tests/json_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/json_test-86da4b00e345f8b7)
+tests::test_boolean_values: test
+tests::test_empty_array: test
+tests::test_empty_object: test
+tests::test_equivalence_apache: test
+tests::test_equivalence_canada: test
+tests::test_equivalence_citm_catalog: test
+tests::test_equivalence_data: test
+tests::test_equivalence_data_xl: test
+tests::test_equivalence_twitter: test
+tests::test_integer_values: test
+tests::test_json: test
+tests::test_json_file: test
+tests::test_json_file_print: test
+tests::test_large_numeric_literals_match_serde_f64: test
+tests::test_leading_zero_decimal: test
+tests::test_leading_zero_rejected: test
+tests::test_leading_zero_standalone: test
+tests::test_long_string: test
+tests::test_malformed_backslash_at_end: test
+tests::test_malformed_not_json: test
+tests::test_malformed_truncated_unicode: test
+tests::test_malformed_unicode_at_end: test
+tests::test_malformed_unterminated_string: test
+tests::test_negative_number: test
+tests::test_nested_arrays: test
+tests::test_null_value: test
+tests::test_number_edge_cases: test
+tests::test_scientific_notation: test
+tests::test_single_element_containers: test
+tests::test_string_basic_escapes: test
+tests::test_string_empty: test
+tests::test_string_nested_escapes: test
+tests::test_string_only_escapes: test
+tests::test_string_surrogate_pair_edges: test
+tests::test_string_unicode_escape: test
+tests::test_string_with_forward_slash_escape: test
+tests::test_whitespace_variants: test
+     Running tests/kernel.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel-5697bbbc6dcdeb40)
+kernel::control_laws::choice_retries_from_its_entry_cursor: test
+kernel::control_laws::repeat_honors_minimum_maximum_and_rolls_back_final_mismatch: test
+kernel::control_laws::sequence_is_atomic_on_mismatch: test
+kernel::difference_laws::excluded_failure_position_does_not_contaminate_primary_diagnostics: test
+kernel::difference_laws::excluded_fault_rolls_back_and_never_invokes_primary: test
+kernel::difference_laws::excluded_match_rejects_at_the_difference_entry_and_never_invokes_primary: test
+kernel::difference_laws::excluded_mismatch_rolls_back_its_probe_then_primary_success_commits: test
+kernel::difference_laws::failing_primary_restores_cursor_and_every_speculative_event: test
+kernel::difference_laws::foreign_exclusion_failure_and_fault_become_entry_position_faults: test
+kernel::difference_laws::foreign_primary_failure_and_fault_become_entry_position_faults: test
+kernel::difference_laws::nullable_exclusion_blocks_primary_without_leaking_events: test
+kernel::difference_laws::primary_fault_rolls_back_exclusion_and_primary_speculation: test
+kernel::difference_laws::retaining_and_discarding_sinks_have_identical_outcomes_and_counts: test
+kernel::generated_shaped_control::direct_control_shape_accepts_and_rejects_without_a_runtime_graph: test
+kernel::input_contract::cursors_are_checked_and_include_the_one_past_end_position: test
+kernel::input_contract::distinct_empty_inputs_retain_distinct_cursor_and_span_provenance: test
+kernel::input_contract::input_borrows_the_callers_bytes_without_copying: test
+kernel::input_contract::reborrowed_nonempty_byte_region_retains_the_same_source_identity: test
+kernel::input_contract::source_identity_is_absent_from_deterministic_debug_output: test
+kernel::input_contract::span_equality_is_interval_and_source_identity_not_whole_input_content: test
+kernel::input_contract::spans_are_checked_ordered_and_bound_to_their_source: test
+kernel::module_laws::empty_module_result_retains_source_identity_through_into_parts: test
+kernel::module_laws::module_localizes_foreign_failure_evidence_at_its_own_entry: test
+kernel::module_laws::module_localizes_foreign_fault_evidence_at_its_own_entry: test
+kernel::module_laws::module_parser_fault_restores_cursor_transaction_and_sink: test
+kernel::module_laws::module_parser_mismatch_restores_cursor_transaction_and_sink: test
+kernel::module_laws::module_success_replaces_a_foreign_value_with_the_canonical_input_span: test
+kernel::module_laws::module_success_returns_the_original_input_typed_outcome_and_retained_sink: test
+kernel::module_laws::module_trailing_input_is_a_full_parse_mismatch_and_restores_the_sink: test
+kernel::outcome_laws::foreign_empty_failure_evidence_becomes_a_typed_local_fault: test
+kernel::outcome_laws::foreign_failure_evidence_becomes_a_typed_local_fault: test
+kernel::outcome_laws::full_and_prefix_recognition_are_distinct_named_operations: test
+kernel::outcome_laws::full_recognition_is_whole_source_not_remaining_suffix: test
+kernel::outcome_laws::mismatch_preserves_furthest_absolute_failure_evidence: test
+kernel::outcome_laws::typed_fault_is_not_collapsed_into_mismatch: test
+kernel::progress_laws::finite_repeat_still_rejects_a_non_progressing_child: test
+kernel::progress_laws::unbounded_epsilon_repeat_faults_at_the_absolute_cursor: test
+kernel::resource_laws::each_generic_resource_kind_preserves_its_usize_limit_and_absolute_evidence: test
+kernel::resource_laws::resource_fault_rolls_back_events_and_never_tries_a_choice_sibling: test
+kernel::terminal_laws::literal_and_eof_match_checked_spans: test
+kernel::terminal_laws::regex_partial_traversal_without_an_accept_is_atomic: test
+kernel::terminal_laws::regex_plan_accepts_exactly_256_byte_classes_and_rejects_257: test
+kernel::terminal_laws::regex_plan_preserves_explicit_dimensions_and_start_state: test
+kernel::terminal_laws::regex_plan_rejects_malformed_tables_before_recognition: test
+kernel::terminal_laws::regex_returns_the_last_accept_before_a_nonaccepting_traversal: test
+kernel::terminal_laws::regex_terminal_uses_the_longest_accepting_prefix: test
+kernel::terminal_laws::terminal_mismatch_does_not_advance_the_cursor: test
+kernel::transaction_laws::below_minimum_repeat_restores_the_whole_transaction_and_prior_sink_prefix: test
+kernel::transaction_laws::discarding_sink_counts_only_transactionally_retained_events: test
+kernel::transaction_laws::failed_alternative_rolls_back_cursor_and_append_only_sink: test
+kernel::transaction_laws::fault_in_right_choice_branch_rolls_back_without_retry: test
+kernel::transaction_laws::fault_rolls_back_and_never_tries_a_sibling_choice: test
+kernel::transaction_laws::nested_transaction_failure_restores_only_the_preexisting_prefix: test
+kernel::transaction_laws::one_eventful_parser_runs_unchanged_with_discarding_and_retaining_sinks: test
+kernel::transaction_laws::repeat_discards_the_terminating_mismatch_iteration_events: test
+kernel::transaction_laws::retained_output_can_be_recovered_without_clone_or_allocation: test
+kernel::transaction_laws::successful_sequence_commits_its_events: test
+kernel::transaction_laws::trailing_input_full_failure_restores_emitted_events_and_prior_prefix: test
+     Running tests/kernel_allocation.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel_allocation-88805aeccf1bb5ef)
+kernel_allocation_laws: test
+     Running tests/kernel_regex.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel_regex-e36d53f41316fa6e)
+engine_terminal_equals_the_engine_walk_everywhere: test
+engine_terminal_is_leftmost_first: test
+engine_terminal_reads_code_points_in_unicode_mode: test
+engine_terminal_reads_look_ahead_conditions: test
+engine_terminal_reads_look_behind_from_the_whole_input: test
+engine_terminal_recognition_performs_zero_allocations: test
+engine_terminal_refuses_a_malformed_automaton: test
+kernel_pins_the_regex_hir_abi_it_was_built_against: test
+static_table_from_the_engine_equals_the_engine: test
+     Running tests/lanes_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/lanes_test-ce6a13c7725bc497)
+eq_mask_matches_definition_for_every_byte_and_lane: test
+load_round_trips: test
+nibble_mask_matches_definition_for_every_byte_and_lane: test
+     Running tests/number_fastpath_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/number_fastpath_test-592ad05e07106ec7)
+fastpath_and_slow_path_agree_in_range: test
+fastpath_canada_shaped_coordinates: test
+fastpath_integers_to_2_53: test
+fastpath_negative_zero: test
+fastpath_out_of_range_falls_through: test
+fastpath_overflow_mantissa_falls_through: test
+fastpath_scientific_in_range: test
+fastpath_short_fractions: test
+integer_cross_validate_all_lengths: test
+integer_digits_followed_by_exponent: test
+integer_digits_followed_by_fraction: test
+integer_eighteen_digits_fits_budget: test
+integer_fifteen_digits_fits_in_single_stripe: test
+integer_four_digits_below_simd_stripe: test
+integer_one_digit: test
+integer_scan_at_nonzero_start_offset: test
+integer_scan_right_up_to_input_boundary: test
+integer_seventeen_digits_crosses_stripe: test
+integer_sixteen_digits_fills_stripe: test
+integer_strict_negative: test
+integer_twenty_digits_budget_guard_fires: test
+parse_number_f64_plus_sign_is_positive: test
+     Running tests/number_simd_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/number_simd_test-b1873f49b9ad3c86)
+cross_validate_all_counts: test
+scan_all_digits_16: test
+scan_all_nines: test
+scan_all_zeros: test
+scan_boundary_above_nine: test
+scan_boundary_below_zero: test
+scan_nine_digits: test
+scan_no_digits: test
+scan_partial_digits: test
+scan_short_input_returns_available_digits: test
+scan_single_digit: test
+scan_with_offset: test
+     Running tests/padded_input_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/padded_input_test-588d520b4297b29c)
+empty_input_padding: test
+long_input_padding: test
+padded_bytes_aligned_for_avx512_cache_line: test
+padded_bytes_permit_full_stripe_read_at_end: test
+public_views_never_leak_padding: test
+short_input_padding: test
+single_byte_input_padding: test
+stripe_boundary_input_padding: test
+     Running tests/quote_parity_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/quote_parity_test-29119d292bef3a54)
+escaped_quote: test
+filter_basic: test
+filter_no_strings: test
+long_no_escape: test
+no_strings: test
+prefix_xor_basic: test
+simple_string: test
+     Running tests/quoted_simd_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/quoted_simd_test-d0b20478c1d819af)
+all_bs_even: test
+all_bs_odd: test
+bs1_before_quote: test
+bs2_before_quote: test
+bs3_before_quote: test
+bs4_before_quote: test
+cross_validate_generated: test
+cross_validate_patterns: test
+em_1bs: test
+em_2bs: test
+em_3bs: test
+em_carry_1bs: test
+em_carry_2bs: test
+em_no_bs: test
+em_no_bs_carry: test
+empty_string: test
+escape_at_chunk_boundary: test
+escaped_backslash_escaped_quote: test
+escaped_backslash_then_quote: test
+escaped_quote: test
+even_run_spanning_then_quote: test
+exactly_16_byte_content: test
+long_no_escapes: test
+long_with_escapes: test
+odd_run_spanning_then_quote: test
+only_escapes: test
+run_spanning_chunks: test
+simple_string: test
+two_chunks_bs: test
+two_chunks_bs_odd: test
+unicode_escape: test
+unterminated: test
+unterminated_backslash: test
+     Running tests/regex.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex-27a525e414ba9994)
+accel_test::accel_for_wider_negated_class: test
+accel_test::memchr2_for_json_string: test
+accel_test::memchr_for_negated_class: test
+accel_test::no_accel_for_non_looping: test
+byteset_test::ascii_set: test
+byteset_test::difference: test
+byteset_test::disjoint: test
+byteset_test::empty_set: test
+byteset_test::exact_size_iterator: test
+byteset_test::exit_bytes: test
+byteset_test::exit_bytes_over_limit: test
+byteset_test::full_set: test
+byteset_test::high_bytes_utf8_continuation: test
+byteset_test::high_bytes_utf8_leading: test
+byteset_test::insert_remove: test
+byteset_test::iterator_ascending: test
+byteset_test::negate: test
+byteset_test::range: test
+byteset_test::range_boundary: test
+byteset_test::singleton: test
+byteset_test::union_and_intersect: test
+dfa_test::alternation: test
+dfa_test::bounded_repetition: test
+dfa_test::case_insensitive: test
+dfa_test::char_class: test
+dfa_test::css_block_comment_dotall_lazy: test
+dfa_test::css_block_comment_no_dotall_lazy: test
+dfa_test::css_ident_alt_specific: test
+dfa_test::css_ident_alternation: test
+dfa_test::css_ident_pattern: test
+dfa_test::css_value_span: test
+dfa_test::css_value_span_stop_chars: test
+dfa_test::css_ws_comment_adjacent: test
+dfa_test::css_ws_comment_regex: test
+dfa_test::dot_all: test
+dfa_test::dot_no_newline: test
+dfa_test::dotall_bounded: test
+dfa_test::dotall_plus: test
+dfa_test::dotall_star: test
+dfa_test::empty_pattern: test
+dfa_test::hex_color_pattern: test
+dfa_test::json_number_pattern: test
+dfa_test::large_dfa_css_ident: test
+dfa_test::large_dfa_json_number: test
+dfa_test::lazy_plus_stops_at_first_close: test
+dfa_test::lazy_question_prefers_skipping: test
+dfa_test::lazy_star_stops_at_first_close: test
+dfa_test::minimization_reduces_states: test
+dfa_test::negated_class: test
+dfa_test::no_dotall_stops_at_newline: test
+dfa_test::offset_matching: test
+dfa_test::optional: test
+dfa_test::oracle_css_number: test
+dfa_test::oracle_digits: test
+dfa_test::oracle_email_like: test
+dfa_test::oracle_hex_color: test
+dfa_test::oracle_json_string_body: test
+dfa_test::oracle_nested_groups: test
+dfa_test::oracle_pipe_literal: test
+dfa_test::oracle_repetition_boundary: test
+dfa_test::oracle_whitespace: test
+dfa_test::oracle_word_chars: test
+dfa_test::shorthand_classes: test
+dfa_test::simple_literal: test
+dfa_test::star: test
+dfa_test::state_limit_guard: test
+dfa_test::unicode_ascii_only: test
+dfa_test::zero_width_empty_alt: test
+dfa_test::zero_width_optional: test
+dfa_test::zero_width_star: test
+equiv_test::no_byte_sets: test
+equiv_test::overlapping_ranges: test
+equiv_test::single_range: test
+equiv_test::two_disjoint_ranges: test
+equiv_test::utf8_leading_bytes: test
+equiv_test::word_char_classes: test
+generated_utf8_test::generated_parser_reads_a_non_ascii_class_member: test
+hir_test::char_class_negated_flag: test
+hir_test::negate_empty: test
+hir_test::negate_full: test
+hir_test::negate_middle: test
+nfa_test::alternation: test
+nfa_test::backreference_unsupported: test
+nfa_test::bounded_repetition: test
+nfa_test::char_class_ascii: test
+nfa_test::char_class_unicode: test
+nfa_test::concat: test
+nfa_test::dot_all: test
+nfa_test::empty_pattern: test
+nfa_test::literal_pattern: test
+nfa_test::plus_lazy: test
+nfa_test::star_greedy: test
+nfa_test::transition_byte_sets: test
+nfa_test::unicode_property: test
+parser_test::alternation: test
+parser_test::bounded_repetition: test
+parser_test::byte_mode: test
+parser_test::char_class: test
+parser_test::complex_ident: test
+parser_test::css_ident: test
+parser_test::css_ws_comment: test
+parser_test::dot_default: test
+parser_test::dotall_flag_byte_mode: test
+parser_test::dotall_flag_unicode: test
+parser_test::empty: test
+parser_test::escaped_literal: test
+parser_test::hex_color: test
+parser_test::json_number: test
+parser_test::json_string: test
+parser_test::lazy_quantifier: test
+parser_test::literal: test
+parser_test::negated_class: test
+parser_test::non_capturing_group: test
+parser_test::quantifiers: test
+parser_test::quoted_string: test
+parser_test::shorthand_classes: test
+utf8_test::ascii_range: test
+utf8_test::cross_boundary: test
+utf8_test::four_byte: test
+utf8_test::full_unicode: test
+utf8_test::latin_extended_a: test
+utf8_test::roundtrip_ascii: test
+utf8_test::single_char: test
+utf8_test::surrogate_skip: test
+utf8_test::two_byte_range: test
+     Running tests/regex_empty_match_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex_empty_match_test-0a1f6d4d097088b6)
+many_over_empty_matching_regex_terminates: test
+regex_empty_match_at_end_of_input: test
+regex_empty_match_is_a_match: test
+regex_nonempty_match_unchanged: test
+regex_span_empty_match_is_a_match: test
+sep_by_progress_still_collects_elements: test
+sep_by_with_empty_matching_elem_and_sep_terminates: test
+span_sep_by_over_empty_matching_leaf_terminates: test
+     Running tests/regex_look_context_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex_look_context_test-6a18166af9eeb767)
+span_leaf_reads_the_byte_before_too: test
+start_anchor_holds_only_at_the_start_of_the_input: test
+word_boundary_reads_the_byte_before_the_leaf: test
+     Running tests/split_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/split_test-d6f806fff8566e52)
+basic_split: test
+deep_nesting: test
+empty_input: test
+empty_segments: test
+mixed_nesting_and_quotes: test
+nested_brackets: test
+nested_parens: test
+no_delimiter: test
+quoted_strings: test
+single_char: test
+single_quoted_strings: test
+     Running tests/structural_bitmap_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/structural_bitmap_test-e8265ee2f3de13f6)
+find_next_basic: test
+find_next_none: test
+find_next_tail_only: test
+iter_across_stripe: test
+iter_basic: test
+iter_set_offset_skips_forward: test
+     Running tests/ws_comment_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/ws_comment_test-ca73a59982a003e9)
+all_slash_stripe_terminates: test
+empty_input: test
+exact_stripe_all_ws: test
+long_comment_crossing_stripe: test
+long_ws_crossing_stripe: test
+multiple_comments: test
+nested_star_in_comment: test
+no_ws: test
+simple_block_comment: test
+simple_ws: test
+slash_without_comment: test
+stripe_boundary_comment: test
+stripe_boundary_ws_slash: test
+tabs_and_newlines: test
+unterminated_comment: test
+ws_slash_non_star: test
+ws_slash_then_x: test
+ws_then_comment_then_ws: test
+     Running unittests main.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/main-c03e32e77fd8d17f)
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex_bootstrap-66701ed531f3e623)
+tests::parse_bounded_repetition: test
+tests::parse_comprehensive_patterns: test
+tests::parse_quantifiers: test
+     Running unittests src/main.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/xtask-1043f1061abe903a)
+tests::manifest_needs_one_asset_and_plain_paths: test
+     Running tests/public_api_callers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/public_api_callers-d1541c03171633b9)
+every_pub_item_of_the_audited_crates_has_a_caller: test
+   Doc-tests parse_that_corpus
+   Doc-tests parse_that_egraph
+   Doc-tests parse_that_egraph_derive
+egraph-derive/src/lib.rs - (line 26): test
+all doctests ran in 0.31s; merged doctests compilation took 0.16s
+   Doc-tests parse_that_regex
+   Doc-tests parse_that_simd
+simd/src/dispatch.rs - dispatch::Tier::from_name (line 56): test
+simd/src/dispatch.rs - dispatch::compiled_tiers (line 118): test
+simd/src/dispatch.rs - dispatch::scan_with (line 167): test
+simd/src/dispatch.rs - dispatch::selected_tier (line 137): test
+simd/src/lib.rs - scan_structural (line 93): test
+simd/src/parity.rs - parity::compute_inside_string_bytes (line 223): test
+simd/src/prim/mod.rs - prim::Lo6Table::classify (line 171): test
+simd/src/prim/mod.rs - prim::bracket_depth_mask_64 (line 116): test
+simd/src/prim/mod.rs - prim::byte_class_from_eq_set_64 (line 43): test
+simd/src/prim/mod.rs - prim::compact_positions (line 341): test
+simd/src/prim/mod.rs - prim::decode_hex_quads (line 298): test
+simd/src/prim/mod.rs - prim::eob_pad_clamp (line 320): test
+simd/src/prim/mod.rs - prim::string_special_block (line 218): test
+simd/src/prim/mod.rs - prim::structural_classify_64 (line 95): test
+simd/src/prim/mod.rs - prim::validate_utf8_block (line 282): test
+simd/src/prim/scalar.rs - prim::scalar::bracket_depth_mask_64 (line 66): test
+simd/src/prim/scalar.rs - prim::scalar::byte_class_from_eq_set_64 (line 13): test
+simd/src/prim/scalar.rs - prim::scalar::decode_hex_quads (line 221): test
+simd/src/prim/scalar.rs - prim::scalar::lo6_classify (line 109): test
+simd/src/prim/scalar.rs - prim::scalar::string_special_block (line 147): test
+simd/src/prim/scalar.rs - prim::scalar::structural_classify_64 (line 30): test
+simd/src/prim/scalar.rs - prim::scalar::validate_utf8_block (line 174): test
+all doctests ran in 0.45s; merged doctests compilation took 0.31s
+   Doc-tests parse_that
+parse_that/src/split.rs - split::split_balanced (line 21): test
+parse_that/src/kernel/input.rs - kernel::input::Cursor (line 145): test
+   Doc-tests regex_bootstrap
+# rc 0

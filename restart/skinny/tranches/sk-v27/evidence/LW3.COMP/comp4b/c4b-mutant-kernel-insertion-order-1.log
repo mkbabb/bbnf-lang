@@ -1,0 +1,71 @@
+# head a28c2501e22c5473f3a531137080be08a0c7c535 + mutant kernel-insertion-order
+diff --git a/rust/parse_that/src/kernel/outcome.rs b/rust/parse_that/src/kernel/outcome.rs
+index 7c6e847..a8428ee 100644
+--- a/rust/parse_that/src/kernel/outcome.rs
++++ b/rust/parse_that/src/kernel/outcome.rs
+@@ -199,10 +199,7 @@ impl<'i> Failure<'i> {
+         match other.at.offset().cmp(&self.at.offset()) {
+             core::cmp::Ordering::Greater => other,
+             core::cmp::Ordering::Less => self,
+-            core::cmp::Ordering::Equal => Self {
+-                at: self.at,
+-                expected: self.expected.union(other.expected),
+-            },
++            core::cmp::Ordering::Equal => self,
+         }
+     }
+ 
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.67s
+     Running tests/kernel.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel-2a183cdc8b7fe683)
+
+running 7 tests
+test kernel::failure_contract_laws::a_mismatch_past_the_label_entry_keeps_the_inner_set ... ok
+test kernel::failure_contract_laws::an_unlabelled_terminal_reports_an_empty_set ... ok
+test kernel::failure_contract_laws::a_repeat_below_its_minimum_reports_the_failing_iteration ... ok
+test kernel::failure_contract_laws::equal_offset_merge_is_commutative_and_associative ... FAILED
+test kernel::failure_contract_laws::failure_reports_sorted_expected_set ... FAILED
+test kernel::failure_contract_laws::a_label_met_twice_at_one_offset_is_kept_once ... FAILED
+test kernel::failure_contract_laws::labels_span_the_whole_table_and_no_further ... FAILED
+
+failures:
+
+---- kernel::failure_contract_laws::equal_offset_merge_is_commutative_and_associative stdout ----
+
+thread 'kernel::failure_contract_laws::equal_offset_merge_is_commutative_and_associative' (47787645) panicked at parse_that/tests/kernel/failure_contract_laws.rs:101:5:
+assertion failed: sets.iter().all(|s| s == &vec![0, 64, 200])
+
+---- kernel::failure_contract_laws::failure_reports_sorted_expected_set stdout ----
+
+thread 'kernel::failure_contract_laws::failure_reports_sorted_expected_set' (47787646) panicked at parse_that/tests/kernel/failure_contract_laws.rs:38:5:
+assertion `left == right` failed
+  left: [3]
+ right: [3, 9]
+
+---- kernel::failure_contract_laws::a_label_met_twice_at_one_offset_is_kept_once stdout ----
+
+thread 'kernel::failure_contract_laws::a_label_met_twice_at_one_offset_is_kept_once' (47787641) panicked at parse_that/tests/kernel/failure_contract_laws.rs:69:5:
+assertion `left == right` failed
+  left: [4]
+ right: [2, 4]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- kernel::failure_contract_laws::labels_span_the_whole_table_and_no_further stdout ----
+
+thread 'kernel::failure_contract_laws::labels_span_the_whole_table_and_no_further' (47787647) panicked at parse_that/tests/kernel/failure_contract_laws.rs:152:5:
+assertion `left == right` failed
+  left: [255]
+ right: [0, 63, 255]
+
+
+failures:
+    kernel::failure_contract_laws::a_label_met_twice_at_one_offset_is_kept_once
+    kernel::failure_contract_laws::equal_offset_merge_is_commutative_and_associative
+    kernel::failure_contract_laws::failure_reports_sorted_expected_set
+    kernel::failure_contract_laws::labels_span_the_whole_table_and_no_further
+
+test result: FAILED. 3 passed; 4 failed; 0 ignored; 0 measured; 58 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse_that --test kernel`
+# rc 101
+# restored byte-equal

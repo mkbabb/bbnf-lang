@@ -1,0 +1,22 @@
+# head e1fd8e73c3ad7909ef90be7618e6cd1f076885c3 + mutant KERNEL_ABI=2
+diff --git a/rust/parse_that/src/kernel/mod.rs b/rust/parse_that/src/kernel/mod.rs
+index 615b14a..762a264 100644
+--- a/rust/parse_that/src/kernel/mod.rs
++++ b/rust/parse_that/src/kernel/mod.rs
+@@ -30,4 +30,4 @@ pub use transaction::{EventSink, NoSink};
+ ///
+ /// Consumers may assert this integer in const context so an older
+ /// dependency cannot silently satisfy a newer generated-control boundary.
+-pub const KERNEL_ABI: u32 = 3;
++pub const KERNEL_ABI: u32 = 2;
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+error[E0080]: evaluation panicked: assertion failed: parse_that::kernel::KERNEL_ABI == 3
+ --> parse_that/tests/kernel/difference_laws.rs:8:15
+  |
+8 | const _: () = assert!(parse_that::kernel::KERNEL_ABI == 3);
+  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation of `kernel::difference_laws::_` failed here
+
+For more information about this error, try `rustc --explain E0080`.
+error: could not compile `parse_that` (test "kernel") due to 1 previous error
+# rc 101
+# restored byte-equal

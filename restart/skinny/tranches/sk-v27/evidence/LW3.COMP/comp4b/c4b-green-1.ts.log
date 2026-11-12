@@ -1,0 +1,27 @@
+
+ RUN  v3.2.4 /Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/typescript
+
+ ✓ test/json.test.ts (9 tests) 87ms
+ ✓ test/math.test.ts (2 tests) 20ms
+ ✓ test/validate-parsers.test.ts (5 tests) 702ms
+   ✓ Benchmark parser validation > chevrotain produces correct output  415ms
+ ✓ test/verify-parse-output.test.ts (3 tests) 22ms
+ ✓ test/runtime-kernel.probe.test.ts (10 tests) 7ms
+ ✓ test/chain.test.ts (8 tests) 6ms
+ ✓ test/reentrancy.test.ts (6 tests) 5ms
+ ✓ test/x-p-w7-cures.test.ts (9 tests) 5ms
+ ✓ test/memoize.test.ts (10 tests) 4ms
+ ✓ test/csv.test.ts (9 tests) 3ms
+ ✓ test/dist-surface.test.ts (4 tests | 2 skipped) 2ms
+ ✓ test/debug.test.ts (20 tests) 5ms
+ ✓ test/json-vectors.test.ts (33 tests) 4ms
+ ✓ test/split.test.ts (13 tests) 3ms
+ ✓ test/expected-set.test.ts (4 tests) 2ms
+ ✓ test/print.test.ts (2 tests) 1ms
+
+ Test Files  16 passed (16)
+      Tests  145 passed | 2 skipped (147)
+   Start at  06:47:01
+   Duration  2.38s (transform 209ms, setup 38ms, collect 501ms, tests 878ms, environment 2ms, prepare 659ms)
+
+# rc 0

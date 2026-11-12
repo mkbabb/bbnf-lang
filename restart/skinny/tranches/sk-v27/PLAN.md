@@ -348,3 +348,16 @@ The R0 critic read `origin/sk-v27-lw3` at `d98914e34` and found five passages th
 | G1-P25 | `designs/compiler.md:114` (R2); `PLAN.md:59` (X-4) | "a measured win on that runner. A kernel missing any of the four is deleted" / "no measured win … is deleted" | DIG-G1: the measured-win clause deletes no x86 kernel; a tier with no measured win is not selected by default. Deletion for a missing oracle, fuzz target or executing CI is a correctness rule and stands. Removing x86 is the owner's O-2 only. This corrects §7.1 "Read, not amended": x86 kernels are inside DIG-G1. |
 | G1-P26 | `PLAN.md:56` (X-1) | "re-admitted only as passes that win a trial (C2-5: a root trial can only *delete*)" | DIG-G1: as G1-P04; a root trial decides only whether the root implementation is ported. The CSP, the e-graph, shape mining and the kernels are built on the spine whatever it reads. |
 | G1-P27 | `LW3-ORDER.md:107`, `:290`, `:299`, `:300`; `LW2-ORDER.md:88` | "(deletion is LW7)"; "CB-13 judges them there"; "would delete the organ"; "(losers deleted)"; "goes to the simpler organ" | DIG-G1: no organ is deleted at LW7 or at any wave; CB-13 judges defaults per named family, never existence; "the simp[lower organ" reads as G1-P01: the simpler arm is on by default for the next build only, and the organ stays on the spine with its redesign unit and re-trial open.] (The bracketed completion is S3b-PP's; the critic's own words end at "the simp".) |
+
+### 7.5 2026-11-12, the rest of the R0 critic's rows (recorded by LW3 seat S6 KERNEL; delegate, owner may overturn)
+
+Seat S3b PP wrote the critic's five DIG-G1 rows first (§7.4), so they stand and are not repeated here. This section carries the critic's other plan rows and one erratum to §7.4. The critic's full text, read from its own report (`evidence/LW3.R0C/r0-critic.md`), was not truncated: §7.4's G1-P27 completes "the simp" in S3b's own words, and the critic's reading follows as G1-P27-E. Like G1-P25 for x86 kernels, C16-P01 corrects §7.1 "Read, not amended" for the Wasm parse VM.
+
+| Row | Passage | Sealed text | Reading under the addendum |
+|---|---|---|---|
+| G1-P27-E | `LW3-ORDER.md:107`, `LW3-ORDER.md:290`, `LW3-ORDER.md:299`, `LW3-ORDER.md:300`; `LW2-ORDER.md:88` (erratum to §7.4 G1-P27) | "(deletion is LW7)"; "CB-13 judges them there"; "would delete the organ"; "(losers deleted)"; "goes to the simpler organ" | DIG-G1, the critic's own text: no organ is deleted at LW7 or at any wave; CB-13 judges defaults per named family, never existence; "the simpler organ" names the LW3 port default only (G1-P19, G1-P21). This replaces the bracketed completion in §7.4 G1-P27; the two agree that the organ stays. |
+| C16-P01 | `PLAN.md:206` (LW4.COMP-3); `designs/compiler.md:64`, `designs/compiler.md:187` | "a delete-unless-wins trial" / "Wasm parse VM deleted unless it wins" | DIG-C16 (admitted 2026-11-12a): a LOSS switches the VM off by default; the wasm face is not deleted without an owner ruling. |
+
+| Row | Unit | Wave | Work | Source |
+|---|---|---|---|---|
+| A-26 | LW5.COMP-4 | LW5 | Amends A-11: until O-5 is ruled the fuller reading stands: HM and bidirectional inference with the CSP as substrate (DIG-CSP-B7, DIG-C9). First-order only is a narrowing the owner alone may make. | DIG-CSP-B7 |

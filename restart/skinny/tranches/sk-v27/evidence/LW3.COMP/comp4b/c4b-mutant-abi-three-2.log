@@ -1,0 +1,30 @@
+# head a28c2501e22c5473f3a531137080be08a0c7c535 + mutant abi-three
+diff --git a/rust/parse_that/src/kernel/mod.rs b/rust/parse_that/src/kernel/mod.rs
+index 2963f7e..5f119cf 100644
+--- a/rust/parse_that/src/kernel/mod.rs
++++ b/rust/parse_that/src/kernel/mod.rs
+@@ -37,4 +37,4 @@ pub use transaction::{EventSink, NoSink};
+ ///
+ /// ABI 4 (sk-v27 LW3.COMP-4b): [`Failure`] carries the furthest cursor and
+ /// the sorted, deduplicated expected-label set at it; see `KERNEL-ABI.md`.
+-pub const KERNEL_ABI: u32 = 4;
++pub const KERNEL_ABI: u32 = 3;
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+error[E0080]: evaluation panicked: assertion failed: KERNEL_ABI == 4
+  --> parse_that/tests/kernel_abi.rs:10:15
+   |
+10 | const _: () = assert!(KERNEL_ABI == 4);
+   |               ^^^^^^^^^^^^^^^^^^^^^^^^ evaluation of `_` failed here
+
+For more information about this error, try `rustc --explain E0080`.
+error: could not compile `parse_that` (test "kernel_abi") due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error[E0080]: evaluation panicked: assertion failed: parse_that::kernel::KERNEL_ABI == 4
+ --> parse_that/tests/kernel/difference_laws.rs:8:15
+  |
+8 | const _: () = assert!(parse_that::kernel::KERNEL_ABI == 4);
+  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation of `kernel::difference_laws::_` failed here
+
+error: could not compile `parse_that` (test "kernel") due to 1 previous error
+# rc 101
+# restored byte-equal

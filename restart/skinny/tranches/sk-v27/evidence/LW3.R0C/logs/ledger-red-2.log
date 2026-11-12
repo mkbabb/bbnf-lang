@@ -1,0 +1,6 @@
+unit=ledger rev=d98914e349b240deac25363853958a5180e0dcc7 reasons=3
+RED DIG-G1 status corrected: 0 LEDGER rows (want 1)
+RED DIG-CSP-E15 and DIG-EG-D17 re-homed: 0 LEDGER rows (want 1)
+RED DIG-G2 status corrected: 0 LEDGER rows (want 1)
+RED
+rc=1

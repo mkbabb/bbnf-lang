@@ -1,0 +1,104 @@
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+error[E0432]: unresolved imports `parse_that::kernel::Expected`, `parse_that::kernel::LABEL_CAPACITY`, `parse_that::kernel::Label`, `parse_that::kernel::label`
+ --> parse_that/tests/kernel/failure_contract_laws.rs:6:5
+  |
+6 |     Expected, Failure, Input, LABEL_CAPACITY, Label, Run, Span, Step, choice, label, literal,
+  |     ^^^^^^^^                  ^^^^^^^^^^^^^^  ^^^^^ no `Label` in `kernel`    ^^^^^ no `label` in `kernel`
+  |     |                         |
+  |     |                         no `LABEL_CAPACITY` in `kernel`
+  |     no `Expected` in `kernel`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:38:28
+   |
+38 |     assert_eq!(ids(forward.expected()), vec![3, 9]);
+   |                            ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:39:24
+   |
+39 |     assert_eq!(forward.expected(), backward.expected());
+   |                        ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:39:45
+   |
+39 |     assert_eq!(forward.expected(), backward.expected());
+   |                                             ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:58:25
+   |
+58 |     assert_eq!(ids(deep.expected()), vec![5, 7]);
+   |                         ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:69:26
+   |
+69 |     assert_eq!(ids(twice.expected()), vec![2, 4]);
+   |                          ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:70:22
+   |
+70 |     assert_eq!(twice.expected().len(), 2);
+   |                      ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:98:25
+   |
+98 |         assert_eq!(left.expected(), right.expected());
+   |                         ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:98:43
+   |
+98 |         assert_eq!(left.expected(), right.expected());
+   |                                           ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+  --> parse_that/tests/kernel/failure_contract_laws.rs:99:28
+   |
+99 |         sets.push(ids(left.expected()));
+   |                            ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+   --> parse_that/tests/kernel/failure_contract_laws.rs:116:26
+    |
+116 |     assert_eq!(ids(inner.expected()), vec![11]);
+    |                          ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+   --> parse_that/tests/kernel/failure_contract_laws.rs:121:26
+    |
+121 |     assert_eq!(ids(outer.expected()), vec![10]);
+    |                          ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+   --> parse_that/tests/kernel/failure_contract_laws.rs:129:28
+    |
+129 |     assert_eq!(ids(failure.expected()), vec![6]);
+    |                            ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+   --> parse_that/tests/kernel/failure_contract_laws.rs:137:21
+    |
+137 |     assert!(failure.expected().is_empty());
+    |                     ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+   --> parse_that/tests/kernel/failure_contract_laws.rs:138:24
+    |
+138 |     assert_eq!(failure.expected().len(), 0);
+    |                        ^^^^^^^^ method not found in `Failure<'_>`
+
+error[E0599]: no method named `expected` found for struct `Failure<'i>` in the current scope
+   --> parse_that/tests/kernel/failure_contract_laws.rs:152:26
+    |
+152 |     assert_eq!(ids(edges.expected()), vec![0, 63, last]);
+    |                          ^^^^^^^^ method not found in `Failure<'_>`
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `parse_that` (test "kernel") due to 16 previous errors
+# rc 101

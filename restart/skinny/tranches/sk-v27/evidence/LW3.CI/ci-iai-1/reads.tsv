@@ -1,0 +1,13 @@
+read	run_id	branch_sha	what	conclusion	failed_step	reason
+RED-1	43149628046	cb441413b	current workflow (apt), archive blackholed	failure	install valgrind	apt-get install: E: Failed to fetch ... Connection refused; exit code 100
+RED-2	43149643079	cb441413b	current workflow (apt), archive blackholed	failure	install valgrind	apt-get install: E: Failed to fetch ... Connection refused; exit code 100
+lane	43149804413	154058664	cured workflow on lw3/s2-ci, hosts reachable, cold cache	success	-	built pinned valgrind; delta_pct +0.072 within ±1%
+prime	43149835040	3bcc76829	cured workflow, blackhole step off (priming), cold cache	success	-	built pinned valgrind, cache saved key ...-X64-v1; delta_pct +0.061
+GREEN-1	43150671823	4c5e82403	cured workflow, archive blackholed, cache hit	success	-	Cache restored ...-X64-v1; delta_pct -0.021 within ±1%
+GREEN-2	43150687010	4c5e82403	cured workflow, archive blackholed, cache hit	success	-	Cache restored ...-X64-v1; delta_pct -0.030 within ±1%
+cold-1	43150798527	9fde52695	cold key, archive blackholed, correct pin	success	-	Cache not found; built from the pinned tarball; delta_pct -0.048
+cold-2	43150812714	6a6caa17d	cold key, archive blackholed, correct pin	success	-	Cache not found; built from the pinned tarball; delta_pct +0.139
+failclosed-1	43150754220	b91759178	cold key, archive and sourceware.org blackholed	failure	build the pinned valgrind (cache miss)	curl: (7) Failed to connect to sourceware.org port 443; no fallback
+failclosed-2	43150768948	b91759178	cold key, archive and sourceware.org blackholed	failure	build the pinned valgrind (cache miss)	curl: (7) Failed to connect to sourceware.org port 443; no fallback
+mutant-1	43150728558	6e82e97ae	pinned sha256 last digit 7->8, archive blackholed	failure	build the pinned valgrind (cache miss)	sha256sum: valgrind.tar.bz2: FAILED
+mutant-2	43150739703	6e82e97ae	pinned sha256 last digit 7->8, archive blackholed	failure	build the pinned valgrind (cache miss)	sha256sum: valgrind.tar.bz2: FAILED

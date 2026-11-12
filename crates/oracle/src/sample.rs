@@ -50,13 +50,25 @@ fn span(rng: &mut Rng) -> Option<Span> {
 /// A random observation tree of depth at most `depth`.
 pub fn tree(rng: &mut Rng, depth: u32) -> Obs {
     if depth == 0 || rng.chance(1, 3) {
-        let text = if rng.chance(1, 6) { *rng.pick(&TRIVIA) } else { *rng.pick(&TEXTS) };
-        let label = if rng.chance(1, 2) { Some(*rng.pick(&LABELS)) } else { None };
+        let text = if rng.chance(1, 6) {
+            *rng.pick(&TRIVIA)
+        } else {
+            *rng.pick(&TEXTS)
+        };
+        let label = if rng.chance(1, 2) {
+            Some(*rng.pick(&LABELS))
+        } else {
+            None
+        };
         return Obs::leaf(label, span(rng), text);
     }
     let n = rng.below(6) as usize;
     let children = (0..n).map(|_| tree(rng, depth - 1)).collect();
-    let label = if rng.chance(2, 3) { Some(*rng.pick(&LABELS)) } else { None };
+    let label = if rng.chance(2, 3) {
+        Some(*rng.pick(&LABELS))
+    } else {
+        None
+    };
     Obs::node(label, span(rng), children)
 }
 
@@ -66,8 +78,14 @@ pub fn tree(rng: &mut Rng, depth: u32) -> Obs {
 /// exactly equal.
 pub fn semantic_noise(rng: &mut Rng, t: &Obs) -> Obs {
     match t {
-        Obs::Leaf { label, text, .. } => Obs::Leaf { label: label.clone(), span: span(rng), text: text.clone() },
-        Obs::Node { label, children, .. } => {
+        Obs::Leaf { label, text, .. } => Obs::Leaf {
+            label: label.clone(),
+            span: span(rng),
+            text: text.clone(),
+        },
+        Obs::Node {
+            label, children, ..
+        } => {
             let mut kids: Vec<Obs> = children.iter().map(|c| semantic_noise(rng, c)).collect();
             if rng.chance(1, 2) {
                 let at = rng.below(kids.len() as u64 + 1) as usize;
@@ -79,7 +97,11 @@ pub fn semantic_noise(rng: &mut Rng, t: &Obs) -> Obs {
                 let run: Vec<Obs> = kids.drain(a..b).collect();
                 kids.insert(a, Obs::node(None, span(rng), run));
             }
-            Obs::Node { label: label.clone(), span: span(rng), children: kids }
+            Obs::Node {
+                label: label.clone(),
+                span: span(rng),
+                children: kids,
+            }
         }
     }
 }
@@ -118,7 +140,9 @@ fn collect_sites(t: &Obs, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
                 out.push(path.clone())
             }
         }
-        Obs::Node { label, children, .. } => {
+        Obs::Node {
+            label, children, ..
+        } => {
             if label.is_some() && !path.is_empty() {
                 out.push(path.clone());
             }

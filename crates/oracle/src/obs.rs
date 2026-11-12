@@ -48,11 +48,19 @@ pub enum Obs {
 
 impl Obs {
     pub fn leaf(label: Option<&str>, span: Option<Span>, text: impl Into<String>) -> Self {
-        Obs::Leaf { label: label.map(str::to_owned), span, text: text.into() }
+        Obs::Leaf {
+            label: label.map(str::to_owned),
+            span,
+            text: text.into(),
+        }
     }
 
     pub fn node(label: Option<&str>, span: Option<Span>, children: Vec<Obs>) -> Self {
-        Obs::Node { label: label.map(str::to_owned), span, children }
+        Obs::Node {
+            label: label.map(str::to_owned),
+            span,
+            children,
+        }
     }
 
     pub fn label(&self) -> Option<&str> {
@@ -93,8 +101,12 @@ pub enum ObsClass {
 }
 
 impl ObsClass {
-    pub const ALL: [ObsClass; 4] =
-        [ObsClass::Exact, ObsClass::Semantic, ObsClass::ScalarEvents, ObsClass::LeftFold];
+    pub const ALL: [ObsClass; 4] = [
+        ObsClass::Exact,
+        ObsClass::Semantic,
+        ObsClass::ScalarEvents,
+        ObsClass::LeftFold,
+    ];
 
     pub fn name(self) -> &'static str {
         match self {
@@ -119,7 +131,8 @@ impl fmt::Display for ObsClass {
 /// A trivia leaf: empty text, or text made only of the whitespace the
 /// grammar's default `?w` skips (`\s`: space, tab, LF, VT, FF, CR).
 pub fn is_trivia(text: &str) -> bool {
-    text.bytes().all(|b| matches!(b, b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r'))
+    text.bytes()
+        .all(|b| matches!(b, b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r'))
 }
 
 /// The declared CST normalisation behind [`ObsClass::Semantic`]:
@@ -131,11 +144,21 @@ pub fn is_trivia(text: &str) -> bool {
 /// 4. the root keeps its own label (an anonymous root stays a node).
 pub fn normalise(t: &Obs) -> Obs {
     match t {
-        Obs::Leaf { label, text, .. } => Obs::Leaf { label: label.clone(), span: None, text: text.clone() },
-        Obs::Node { label, children, .. } => {
+        Obs::Leaf { label, text, .. } => Obs::Leaf {
+            label: label.clone(),
+            span: None,
+            text: text.clone(),
+        },
+        Obs::Node {
+            label, children, ..
+        } => {
             let mut out = Vec::with_capacity(children.len());
             splice_into(children, &mut out);
-            Obs::Node { label: label.clone(), span: None, children: out }
+            Obs::Node {
+                label: label.clone(),
+                span: None,
+                children: out,
+            }
         }
     }
 }
@@ -144,14 +167,28 @@ fn splice_into(children: &[Obs], out: &mut Vec<Obs>) {
     for c in children {
         match c {
             Obs::Leaf { text, .. } if is_trivia(text) => {}
-            Obs::Leaf { label, text, .. } => {
-                out.push(Obs::Leaf { label: label.clone(), span: None, text: text.clone() })
-            }
-            Obs::Node { label: None, children, .. } => splice_into(children, out),
-            Obs::Node { label: Some(l), children, .. } => {
+            Obs::Leaf { label, text, .. } => out.push(Obs::Leaf {
+                label: label.clone(),
+                span: None,
+                text: text.clone(),
+            }),
+            Obs::Node {
+                label: None,
+                children,
+                ..
+            } => splice_into(children, out),
+            Obs::Node {
+                label: Some(l),
+                children,
+                ..
+            } => {
                 let mut inner = Vec::with_capacity(children.len());
                 splice_into(children, &mut inner);
-                out.push(Obs::Node { label: Some(l.clone()), span: None, children: inner });
+                out.push(Obs::Node {
+                    label: Some(l.clone()),
+                    span: None,
+                    children: inner,
+                });
             }
         }
     }
@@ -160,7 +197,11 @@ fn splice_into(children: &[Obs], out: &mut Vec<Obs>) {
 fn scalar_events(t: &Obs, out: &mut Vec<Obs>) {
     match t {
         Obs::Leaf { text, .. } if is_trivia(text) => {}
-        Obs::Leaf { text, .. } => out.push(Obs::Leaf { label: None, span: None, text: text.clone() }),
+        Obs::Leaf { text, .. } => out.push(Obs::Leaf {
+            label: None,
+            span: None,
+            text: text.clone(),
+        }),
         Obs::Node { children, .. } => children.iter().for_each(|c| scalar_events(c, out)),
     }
 }
@@ -168,17 +209,29 @@ fn scalar_events(t: &Obs, out: &mut Vec<Obs>) {
 fn left_fold(t: Obs) -> Obs {
     match t {
         leaf @ Obs::Leaf { .. } => leaf,
-        Obs::Node { label, span, children } => {
+        Obs::Node {
+            label,
+            span,
+            children,
+        } => {
             let children: Vec<Obs> = children.into_iter().map(left_fold).collect();
             if label.is_some() && children.len() >= 5 && children.len() % 2 == 1 {
                 let mut it = children.into_iter();
                 let mut acc = it.next().expect("odd chain has a head");
                 while let (Some(op), Some(rhs)) = (it.next(), it.next()) {
-                    acc = Obs::Node { label: label.clone(), span: None, children: vec![acc, op, rhs] };
+                    acc = Obs::Node {
+                        label: label.clone(),
+                        span: None,
+                        children: vec![acc, op, rhs],
+                    };
                 }
                 acc
             } else {
-                Obs::Node { label, span, children }
+                Obs::Node {
+                    label,
+                    span,
+                    children,
+                }
             }
         }
     }
@@ -192,7 +245,11 @@ pub fn obs(class: ObsClass, t: &Obs) -> Obs {
         ObsClass::ScalarEvents => {
             let mut out = Vec::new();
             scalar_events(t, &mut out);
-            Obs::Node { label: None, span: None, children: out }
+            Obs::Node {
+                label: None,
+                span: None,
+                children: out,
+            }
         }
         ObsClass::LeftFold => left_fold(normalise(t)),
     }
@@ -207,7 +264,11 @@ pub fn equivalent(class: ObsClass, a: &Obs, b: &Obs) -> bool {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ContractError {
     /// `expected[at] >= expected[at + 1]`: the set is unsorted or repeats a label.
-    NotStrictlySorted { at: usize, left: String, right: String },
+    NotStrictlySorted {
+        at: usize,
+        left: String,
+        right: String,
+    },
 }
 
 impl fmt::Display for ContractError {
@@ -248,7 +309,10 @@ impl FailureContract {
 
     /// The contract with no expected labels (an arm that reports only an offset).
     pub fn at(furthest: u32) -> Self {
-        Self { furthest, expected: Vec::new() }
+        Self {
+            furthest,
+            expected: Vec::new(),
+        }
     }
 
     pub fn furthest(&self) -> u32 {
@@ -269,7 +333,10 @@ impl FailureContract {
             Less => other,
             Equal => {
                 let mut out = Vec::with_capacity(self.expected.len() + other.expected.len());
-                let (mut a, mut b) = (self.expected.into_iter().peekable(), other.expected.into_iter().peekable());
+                let (mut a, mut b) = (
+                    self.expected.into_iter().peekable(),
+                    other.expected.into_iter().peekable(),
+                );
                 loop {
                     match (a.peek(), b.peek()) {
                         (Some(x), Some(y)) => match x.cmp(y) {
@@ -285,7 +352,10 @@ impl FailureContract {
                         (None, None) => break,
                     }
                 }
-                Self { furthest: self.furthest, expected: out }
+                Self {
+                    furthest: self.furthest,
+                    expected: out,
+                }
             }
         }
     }

@@ -39,7 +39,7 @@ jobs:
       IAI_RUNNER_VERSION: "0.12.3"
       VALGRIND_VERSION: "3.26.0"
       VALGRIND_URL: "https://sourceware.org/pub/valgrind/valgrind-3.26.0.tar.bz2"
-      VALGRIND_SHA256: "8d54c717029106f1644aadaf802ab9692e53d93dd015cbd19e74190eba616bd7"
+      VALGRIND_SHA256: "8d54c717029106f1644aadaf802ab9692e53d93dd015cbd19e74190eba616bd8"
     steps:
       - name: checkout
         uses: actions/checkout@v4

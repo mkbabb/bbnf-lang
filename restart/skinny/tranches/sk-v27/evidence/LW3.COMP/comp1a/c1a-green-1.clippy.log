@@ -1,0 +1,28 @@
+    Checking serde v1.0.228
+   Compiling pest v2.8.6
+    Checking cssparser v0.33.0
+    Checking parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+    Checking cssparser v0.34.0
+    Checking regex v1.12.3
+    Checking winnow v0.7.15
+    Checking parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/corpus)
+    Checking jiter v0.8.2
+    Checking nom v7.1.3
+    Checking halfbrown v0.2.5
+    Checking serde-content v0.1.2
+    Checking parcel_sourcemap v2.1.1
+    Checking faststr v0.2.34
+    Checking serde_json_borrow v0.9.0
+    Checking cssparser-color v0.1.0
+    Checking parcel_selectors v0.28.2
+    Checking sonic-rs v0.5.8
+    Checking value-trait v0.10.1
+    Checking simd-json v0.14.3
+   Compiling pest_meta v2.8.6
+    Checking lightningcss v1.0.0-alpha.71
+    Checking regex-bootstrap v0.1.1 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/bootstrap)
+   Compiling pest_generator v2.8.6
+   Compiling pest_derive v2.8.6
+    Checking pest_grammars v2.8.6
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.90s
+# rc 0

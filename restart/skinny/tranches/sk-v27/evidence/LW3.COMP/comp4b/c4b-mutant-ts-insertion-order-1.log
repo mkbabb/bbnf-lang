@@ -1,0 +1,131 @@
+# head a28c2501e22c5473f3a531137080be08a0c7c535 + mutant ts-insertion-order
+diff --git a/typescript/src/parse/state.ts b/typescript/src/parse/state.ts
+index e103b79..7e60962 100644
+--- a/typescript/src/parse/state.ts
++++ b/typescript/src/parse/state.ts
+@@ -73,6 +73,8 @@ export function compareExpected(a: string, b: string): number {
+  * construction, never by a later pass.
+  */
+ export function insertExpected(set: string[], label: string): void {
++    if (!set.includes(label)) { set.push(label); }
++    return;
+     let lo = 0;
+     let hi = set.length;
+     while (lo < hi) {
+
+ RUN  v3.2.4 /Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/typescript
+
+ ❯ test/expected-set.test.ts (4 tests | 4 failed) 9ms
+   × failure_reports_sorted_expected_set > two alternatives failing at one offset give one sorted set in both orders 7ms
+     → expected { furthest: +0, expected: [ …(2) ] } to deeply equal { furthest: +0, expected: [ …(2) ] }
+   × failure_reports_sorted_expected_set > a label met twice at one offset is kept once 1ms
+     → expected [ '"b"', '"a"' ] to deeply equal [ '"a"', '"b"' ]
+   × failure_reports_sorted_expected_set > a later failure at a smaller offset does not replace the set 1ms
+     → expected { furthest: 1, expected: [ …(2) ] } to deeply equal { furthest: 1, expected: [ …(2) ] }
+   × failure_reports_sorted_expected_set > the order is code-point order, not UTF-16 code-unit order 1ms
+     → expected [ '"😀"', '"～"' ] to deeply equal [ '"～"', '"😀"' ]
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  test/expected-set.test.ts > failure_reports_sorted_expected_set > two alternatives failing at one offset give one sorted set in both orders
+AssertionError: expected { furthest: +0, expected: [ …(2) ] } to deeply equal { furthest: +0, expected: [ …(2) ] }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "expected": [[22m
+[32m-     "\"a\"",[39m
+[2m      "\"b\"",[22m
+[31m+     "\"a\"",[39m
+[2m    ],[22m
+[2m    "furthest": 0,[22m
+[2m  }[22m
+
+ ❯ test/expected-set.test.ts:29:20
+     27|         const ba = failAt(any(string("b"), string("a")), "x");
+     28|         expect(ab).toEqual({ furthest: 0, expected: ['"a"', '"b"'] });
+     29|         expect(ba).toEqual(ab);
+       |                    ^
+     30|     });
+     31| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  test/expected-set.test.ts > failure_reports_sorted_expected_set > a label met twice at one offset is kept once
+AssertionError: expected [ '"b"', '"a"' ] to deeply equal [ '"a"', '"b"' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "\"a\"",[39m
+[2m    "\"b\"",[22m
+[31m+   "\"a\"",[39m
+[2m  ][22m
+
+ ❯ test/expected-set.test.ts:34:32
+     32|     it("a label met twice at one offset is kept once", () => {
+     33|         const twice = failAt(any(string("b"), string("a"), string("b")…
+     34|         expect(twice.expected).toEqual(['"a"', '"b"']);
+       |                                ^
+     35|     });
+     36| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  test/expected-set.test.ts > failure_reports_sorted_expected_set > a later failure at a smaller offset does not replace the set
+AssertionError: expected { furthest: 1, expected: [ …(2) ] } to deeply equal { furthest: 1, expected: [ …(2) ] }
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[2m    "expected": [[22m
+[32m-     "\"b\"",[39m
+[2m      "\"c\"",[22m
+[31m+     "\"b\"",[39m
+[2m    ],[22m
+[2m    "furthest": 1,[22m
+[2m  }[22m
+
+ ❯ test/expected-set.test.ts:39:36
+     37|     it("a later failure at a smaller offset does not replace the set",…
+     38|         const deep = any(string("a").then(any(string("c"), string("b")…
+     39|         expect(failAt(deep, "ax")).toEqual({ furthest: 1, expected: ['…
+       |                                    ^
+     40|     });
+     41| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  test/expected-set.test.ts > failure_reports_sorted_expected_set > the order is code-point order, not UTF-16 code-unit order
+AssertionError: expected [ '"😀"', '"～"' ] to deeply equal [ '"～"', '"😀"' ]
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[32m-   "\"～\"",[39m
+[2m    "\"😀\"",[22m
+[31m+   "\"～\"",[39m
+[2m  ][22m
+
+ ❯ test/expected-set.test.ts:46:31
+     44|         // code point and by UTF-8 bytes; by code units it would sort …
+     45|         const wide = failAt(any(string("\u{1F600}"), string("\u{FF5E}"…
+     46|         expect(wide.expected).toEqual(['"\u{FF5E}"', '"\u{1F600}"']);
+       |                               ^
+     47|     });
+     48| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  06:49:07
+   Duration  340ms (transform 83ms, setup 11ms, collect 94ms, tests 9ms, environment 0ms, prepare 56ms)
+
+# rc 1
+# restored byte-equal

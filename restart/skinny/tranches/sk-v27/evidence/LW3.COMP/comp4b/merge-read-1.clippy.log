@@ -1,0 +1,33 @@
+   Compiling pest v2.8.6
+    Checking serde v1.0.228
+    Checking cssparser v0.33.0
+    Checking parse-that-egraph v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/egraph)
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/egraph-derive)
+   Compiling pprint_derive v0.3.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+    Checking parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/simd)
+    Checking nom v7.1.3
+    Checking jiter v0.8.2
+    Checking cssparser v0.34.0
+    Checking regex v1.12.3
+    Checking parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/corpus)
+    Checking winnow v0.7.15
+    Checking pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+    Checking halfbrown v0.2.5
+    Checking serde-content v0.1.2
+    Checking parcel_sourcemap v2.1.1
+    Checking faststr v0.2.34
+    Checking serde_json_borrow v0.9.0
+    Checking parse-that-regex v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/regex)
+    Checking cssparser-color v0.1.0
+    Checking parcel_selectors v0.28.2
+    Checking sonic-rs v0.5.8
+    Checking value-trait v0.10.1
+   Compiling pest_meta v2.8.6
+    Checking simd-json v0.14.3
+    Checking lightningcss v1.0.0-alpha.71
+   Compiling pest_generator v2.8.6
+    Checking parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-merge/rust/parse_that)
+   Compiling pest_derive v2.8.6
+    Checking pest_grammars v2.8.6
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 7.01s
+# rc 0

@@ -1,0 +1,226 @@
+# The kernel modules, e31fbfedc src/<m>.rs -> e1fd8e7 src/kernel/<m>.rs: crate:: -> super:: everywhere; one doctest path; terminal.rs gains the parse-that-regex Dfa source (from_dfa); lib.rs -> kernel/mod.rs.
+diff --git ae31fbfedc:rust/parse_that/src/control.rs b/rust/parse_that/src/kernel/control.rs
+index 0000000..08b615c 100644
+--- ae31fbfedc:rust/parse_that/src/control.rs
++++ b/rust/parse_that/src/kernel/control.rs
+@@ -1,4 +1,4 @@
+-use crate::{EventSink, Failure, Fault, Run, Step};
++use super::{EventSink, Failure, Fault, Run, Step};
+ 
+ /// Run one generated sequence atomically.
+ pub fn sequence<'i, S, T, F>(run: &mut Run<'i, S>, parser: F) -> Step<'i, T>
+diff --git ae31fbfedc:rust/parse_that/src/input.rs b/rust/parse_that/src/kernel/input.rs
+index 0000000..db28f95 100644
+--- ae31fbfedc:rust/parse_that/src/input.rs
++++ b/rust/parse_that/src/kernel/input.rs
+@@ -143,7 +143,7 @@ impl fmt::Debug for Input<'_> {
+ /// A cursor cannot outlive the source that created it:
+ ///
+ /// ```compile_fail
+-/// use parse_that::{Cursor, Input};
++/// use parse_that::kernel::{Cursor, Input};
+ ///
+ /// fn dangling() -> Cursor<'static> {
+ ///     let bytes = Vec::from(b"temporary");
+diff --git ae31fbfedc:rust/parse_that/src/module.rs b/rust/parse_that/src/kernel/module.rs
+index 0000000..1585f06 100644
+--- ae31fbfedc:rust/parse_that/src/module.rs
++++ b/rust/parse_that/src/kernel/module.rs
+@@ -1,4 +1,4 @@
+-use crate::{Input, Span, Step};
++use super::{Input, Span, Step};
+ 
+ /// The complete result of one consuming module parse.
+ ///
+diff --git ae31fbfedc:rust/parse_that/src/outcome.rs b/rust/parse_that/src/kernel/outcome.rs
+index 0000000..36943ed 100644
+--- ae31fbfedc:rust/parse_that/src/outcome.rs
++++ b/rust/parse_that/src/kernel/outcome.rs
+@@ -1,4 +1,4 @@
+-use crate::Cursor;
++use super::Cursor;
+ 
+ /// The generic runtime resource whose configured bound was exhausted.
+ #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+@@ -37,7 +37,7 @@ impl<'i> Failure<'i> {
+     }
+ 
+     #[inline]
+-    pub(crate) fn belongs_to(self, input: crate::Input<'_>) -> bool {
++    pub(crate) fn belongs_to(self, input: super::Input<'_>) -> bool {
+         self.at.belongs_to(input)
+     }
+ }
+@@ -74,7 +74,7 @@ impl<'i> Fault<'i> {
+     }
+ 
+     #[inline]
+-    pub(crate) fn belongs_to(self, input: crate::Input<'_>) -> bool {
++    pub(crate) fn belongs_to(self, input: super::Input<'_>) -> bool {
+         self.at().belongs_to(input)
+     }
+ }
+diff --git ae31fbfedc:rust/parse_that/src/run.rs b/rust/parse_that/src/kernel/run.rs
+index 0000000..8423125 100644
+--- ae31fbfedc:rust/parse_that/src/run.rs
++++ b/rust/parse_that/src/kernel/run.rs
+@@ -1,5 +1,5 @@
+-use crate::transaction::Checkpoint;
+-use crate::{Cursor, EventSink, Failure, Fault, Input, ModuleResult, NoSink, Step};
++use super::transaction::Checkpoint;
++use super::{Cursor, EventSink, Failure, Fault, Input, ModuleResult, NoSink, Step};
+ 
+ /// Mutable state for one borrowed input and one append-only event sink.
+ pub struct Run<'i, S = NoSink> {
+diff --git ae31fbfedc:rust/parse_that/src/terminal.rs b/rust/parse_that/src/kernel/terminal.rs
+index 0000000..f03c9de 100644
+--- ae31fbfedc:rust/parse_that/src/terminal.rs
++++ b/rust/parse_that/src/kernel/terminal.rs
+@@ -1,6 +1,13 @@
+-use crate::{EventSink, Failure, Run, Span, Step};
++use parse_that_regex::{DEAD, Dfa};
++
++use super::{EventSink, Failure, Run, Span, Step};
+ 
+ /// A checked, borrowed DFA table emitted at compile time.
++///
++/// This is the static form of a `parse-that-regex` automaton: generated code
++/// writes a look-free [`Dfa`]'s byte classes, flat transitions and acceptance
++/// as `static` arrays and checks them here in const context. A pattern with
++/// look conditions is recognized through [`RegexTerminal::from_dfa`].
+ #[derive(Clone, Copy, Debug)]
+ pub struct RegexPlan<'p> {
+     byte_classes: &'p [u8; 256],
+@@ -80,14 +87,79 @@ pub enum RegexPlanError {
+ /// A direct terminal backed by one checked regex plan.
+ #[derive(Clone, Copy, Debug)]
+ pub struct RegexTerminal<'p> {
+-    plan: RegexPlan<'p>,
++    plan: Plan<'p>,
++}
++
++/// Where a terminal's automaton lives.
++#[derive(Clone, Copy, Debug)]
++enum Plan<'p> {
++    /// A checked static table.
++    Table(RegexPlan<'p>),
++    /// `parse-that-regex`'s compiled automaton, walked by its own
++    /// leftmost-first [`Dfa::find_at`] (look conditions included).
++    Engine(&'p Dfa),
+ }
+ 
+ impl<'p> RegexTerminal<'p> {
+     #[inline]
+     pub const fn new(plan: RegexPlan<'p>) -> Self {
+-        Self { plan }
++        Self {
++            plan: Plan::Table(plan),
++        }
++    }
++
++    /// A terminal over `parse-that-regex`'s compiled automaton.
++    ///
++    /// The automaton's fields are public, so its shape is checked once here:
++    /// a recognition step never indexes outside the table it walks.
++    pub fn from_dfa(dfa: &'p Dfa) -> Result<Self, RegexPlanError> {
++        check_dfa(dfa)?;
++        Ok(Self {
++            plan: Plan::Engine(dfa),
++        })
++    }
++}
++
++fn check_dfa(dfa: &Dfa) -> Result<(), RegexPlanError> {
++    let class_count = usize::from(dfa.num_classes);
++    if class_count == 0 || class_count > 256 {
++        return Err(RegexPlanError::ClassCount);
++    }
++    let state_count = dfa.states.len();
++    if state_count == 0 || state_count > u32::MAX as usize {
++        return Err(RegexPlanError::StateShape);
++    }
++    // State 0 is the start with no look-behind: the look-free walk begins
++    // there, and every look-behind start names a state.
++    if dfa.starts[0] != 0 || dfa.starts.iter().any(|&s| s as usize >= state_count) {
++        return Err(RegexPlanError::StateShape);
++    }
++    if state_count.checked_mul(class_count) != Some(dfa.flat_transitions.len()) {
++        return Err(RegexPlanError::TransitionShape);
+     }
++    if dfa
++        .byte_classes
++        .iter()
++        .any(|&c| usize::from(c) >= class_count)
++    {
++        return Err(RegexPlanError::ByteClass);
++    }
++    if dfa
++        .flat_transitions
++        .iter()
++        .any(|&t| t != DEAD && t as usize >= state_count)
++    {
++        return Err(RegexPlanError::TransitionTarget);
++    }
++    if dfa.states.iter().any(|state| {
++        state
++            .accept_when
++            .as_ref()
++            .is_some_and(|when| when.classes.len() != class_count)
++    }) {
++        return Err(RegexPlanError::StateShape);
++    }
++    Ok(())
+ }
+ 
+ pub fn literal<'i, S: EventSink>(run: &mut Run<'i, S>, expected: &[u8]) -> Step<'i, Span<'i>> {
+@@ -115,8 +187,20 @@ pub fn regex<'i, S: EventSink>(
+     run: &mut Run<'i, S>,
+     terminal: &RegexTerminal<'_>,
+ ) -> Step<'i, Span<'i>> {
++    let plan = match terminal.plan {
++        Plan::Table(plan) => plan,
++        Plan::Engine(dfa) => {
++            let start = run.offset;
++            return match dfa.find_at(run.input.bytes(), start) {
++                Some(end) => {
++                    run.offset = end;
++                    Step::Matched(run.input.span_unchecked(start, end))
++                }
++                None => Step::Mismatch(Failure::new(run.cursor())),
++            };
++        }
++    };
+     let start = run.offset;
+-    let plan = terminal.plan;
+     let mut state = plan.start_state;
+     let mut scan = start;
+     let mut accepted = plan.accepting[state].then_some(start);
+diff --git ae31fbfedc:rust/parse_that/src/lib.rs b/rust/parse_that/src/kernel/mod.rs
+index 0000000..615b14a 100644
+--- ae31fbfedc:rust/parse_that/src/lib.rs
++++ b/rust/parse_that/src/kernel/mod.rs
+@@ -1,7 +1,14 @@
+ //! The parse-that recognition kernel.
+ //!
+-//! Generated parsers call these direct operations. The runtime deliberately
+-//! owns neither a parser graph nor grammar-specific state.
++//! Generated parsers call these direct operations. The kernel deliberately
++//! owns neither a parser graph nor grammar-specific state. It is additive:
++//! the combinator runtime at the crate root is unchanged beside it.
++//!
++//! Regex terminals take their plan from `parse-that-regex`: either a checked
++//! borrowed table ([`RegexPlan`], the form generated code writes as statics)
++//! or that crate's compiled automaton ([`RegexTerminal::from_dfa`]), whose
++//! walk is leftmost-first and reads look conditions and u/v semantics as the
++//! engine compiled them.
+ 
+ mod control;
+ mod input;
+@@ -21,6 +28,6 @@ pub use transaction::{EventSink, NoSink};
+ 
+ /// Compile-time identity of the selected generated-parser kernel contract.
+ ///
+-/// Consumers may assert this integer in const context so an older path
++/// Consumers may assert this integer in const context so an older
+ /// dependency cannot silently satisfy a newer generated-control boundary.
+ pub const KERNEL_ABI: u32 = 3;

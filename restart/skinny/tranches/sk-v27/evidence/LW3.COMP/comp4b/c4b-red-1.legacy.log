@@ -1,0 +1,44 @@
+   Compiling colored v3.1.1
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.47s
+     Running tests/expected_sorted_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/expected_sorted_test-94cb1ac0731de9fd)
+
+running 3 tests
+test a_label_met_twice_is_kept_once_in_order ... FAILED
+test failure_reports_sorted_expected_set ... FAILED
+test the_state_set_is_sorted_as_it_grows ... FAILED
+
+failures:
+
+---- a_label_met_twice_is_kept_once_in_order stdout ----
+
+thread 'a_label_met_twice_is_kept_once_in_order' (47085542) panicked at parse_that/tests/expected_sorted_test.rs:29:5:
+assertion `left == right` failed
+  left: ["\"c\"", "\"a\"", "\"b\""]
+ right: ["\"a\"", "\"b\"", "\"c\""]
+
+---- failure_reports_sorted_expected_set stdout ----
+
+thread 'failure_reports_sorted_expected_set' (47085543) panicked at parse_that/tests/expected_sorted_test.rs:20:5:
+assertion `left == right` failed
+  left: ["\"b\"", "\"a\""]
+ right: ["\"a\"", "\"b\""]
+
+---- the_state_set_is_sorted_as_it_grows stdout ----
+
+thread 'the_state_set_is_sorted_as_it_grows' (47085544) panicked at parse_that/tests/expected_sorted_test.rs:48:5:
+assertion `left == right` failed
+  left: ["\"d\"", "\"b\"", "\"c\"", "\"a\""]
+ right: ["\"a\"", "\"b\"", "\"c\"", "\"d\""]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    a_label_met_twice_is_kept_once_in_order
+    failure_reports_sorted_expected_set
+    the_state_set_is_sorted_as_it_grows
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse_that --test expected_sorted_test`
+# rc 101

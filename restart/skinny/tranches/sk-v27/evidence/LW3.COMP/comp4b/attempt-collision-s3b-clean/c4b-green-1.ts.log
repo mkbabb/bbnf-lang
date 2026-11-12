@@ -1,0 +1,26 @@
+
+ RUN  v3.2.4 /Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/typescript
+
+ ✓ test/x-p-w7-cures.test.ts (9 tests) 4ms
+ ✓ test/validate-parsers.test.ts (5 tests) 384ms
+ ✓ test/json.test.ts (9 tests) 79ms
+ ✓ test/math.test.ts (2 tests) 21ms
+ ✓ test/verify-parse-output.test.ts (3 tests) 20ms
+ ✓ test/runtime-kernel.probe.test.ts (10 tests) 5ms
+ ✓ test/chain.test.ts (8 tests) 5ms
+ ✓ test/memoize.test.ts (10 tests) 3ms
+ ✓ test/reentrancy.test.ts (6 tests) 4ms
+ ✓ test/json-vectors.test.ts (33 tests) 2ms
+ ✓ test/debug.test.ts (20 tests) 3ms
+ ✓ test/print.test.ts (2 tests) 1ms
+ ✓ test/csv.test.ts (9 tests) 3ms
+ ✓ test/expected-set.test.ts (4 tests) 2ms
+ ✓ test/split.test.ts (13 tests) 2ms
+ ✓ test/dist-surface.test.ts (4 tests | 2 skipped) 3ms
+
+ Test Files  16 passed (16)
+      Tests  145 passed | 2 skipped (147)
+   Start at  06:21:06
+   Duration  1.93s (transform 168ms, setup 36ms, collect 357ms, tests 541ms, environment 1ms, prepare 530ms)
+
+# rc 0

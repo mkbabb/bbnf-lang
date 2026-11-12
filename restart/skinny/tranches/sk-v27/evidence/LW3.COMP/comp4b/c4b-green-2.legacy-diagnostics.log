@@ -1,0 +1,830 @@
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s6-kernel/rust/parse_that)
+warning: unused import: `SmallVec`
+ --> parse_that/tests/debug_test.rs:4:20
+  |
+4 |     use smallvec::{SmallVec, smallvec};
+  |                    ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `parse_that` (test "debug_test") generated 1 warning (run `cargo fix --test "debug_test" -p parse_that` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.67s
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/parse_that-df4ecbc4efd0f479)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/combinator_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/combinator_test-423ea7caf778669f)
+
+running 99 tests
+test tests::chain_failure_propagates ... ok
+test tests::test_add_operator ... ok
+test tests::test_many_with_max ... ok
+test tests::chain_second_failure ... ok
+test tests::test_bitor_operator ... ok
+test tests::test_eof_at_end ... ok
+test tests::test_eof_not_at_end ... ok
+test tests::test_epsilon ... ok
+test tests::test_flat_then ... ok
+test tests::test_dispatch_byte_no_fallback ... ok
+test tests::test_look_ahead_failure ... ok
+test tests::test_lazy_basic ... ok
+test tests::test_look_ahead_success ... ok
+test tests::test_many_unbounded ... ok
+test tests::test_many_with_min ... ok
+test tests::test_many_zero_matches ... ok
+test tests::chain_state_advances ... ok
+test tests::test_dispatch_byte ... ok
+test tests::test_negate_failure ... ok
+test tests::test_negate_success ... ok
+test tests::test_next_combinator ... ok
+test tests::test_next_span ... ok
+test tests::test_next_span_empty_input ... ok
+test tests::test_not_failure ... ok
+test tests::test_number_span_fast_big_exponent ... ok
+test tests::test_any_span_keywords ... ok
+test tests::test_not_success ... ok
+test tests::test_number_span_fast_exponent ... ok
+test tests::test_number_span_fast_float ... ok
+test tests::test_number_span_fast_integer ... ok
+test tests::test_any_span_no_match ... ok
+test tests::test_number_span_fast_empty ... ok
+test tests::test_number_span_fast_just_minus ... ok
+test tests::test_number_span_fast_neg_exponent ... ok
+test tests::test_number_span_fast_neg_zero ... ok
+test tests::test_number_span_fast_negative ... ok
+test tests::test_opt_none ... ok
+test tests::test_map_failure_propagates ... ok
+test tests::test_map_transform ... ok
+test tests::chain_basic ... ok
+test tests::test_number_span_fast_no_match ... ok
+test tests::test_number_span_fast_zero ... ok
+test tests::test_one_of ... ok
+test tests::test_opt_some ... ok
+test tests::test_or_neither_matches ... ok
+test tests::test_or_second_matches ... ok
+test tests::test_or_backtracking ... ok
+test tests::test_number_span_fast_randomized_boundaries ... ok
+test tests::test_parse_or_error_failure ... ok
+test tests::test_or_first_matches ... ok
+test tests::test_parse_or_error_success ... ok
+test tests::test_regex_digits ... ok
+test tests::test_regex_empty_input ... ok
+test tests::test_regex_no_match ... ok
+test tests::test_regex_span_match ... ok
+test tests::test_save_state_backtrack ... ok
+test tests::test_save_state_success ... ok
+test tests::test_sep_by ... ok
+test tests::test_sep_by_min_not_met ... ok
+test tests::test_sep_by_single ... ok
+test tests::test_skip ... ok
+test tests::test_sp_bridge_into_parser ... ok
+test tests::test_sp_many ... ok
+test tests::test_sp_bridge_map ... ok
+test tests::test_sp_oneof_flattening ... ok
+test tests::test_sp_opt ... ok
+test tests::test_sp_sep_by ... ok
+test tests::test_sp_seq_flattening ... ok
+test tests::test_sp_string_match ... ok
+test tests::test_sp_string_no_match ... ok
+test tests::test_sp_take_while_byte ... ok
+test tests::test_sp_take_while_byte_no_match ... ok
+test tests::test_sp_trim_whitespace ... ok
+test tests::test_sp_wrap ... ok
+test tests::test_span_many ... ok
+test tests::test_span_opt ... ok
+test tests::test_span_then ... ok
+test tests::test_span_sep_by ... ok
+test tests::test_span_wrap ... ok
+test tests::test_string_empty_input ... ok
+test tests::test_string_no_match ... ok
+test tests::test_string_span_match ... ok
+test tests::test_string_utf8 ... ok
+test tests::test_take_until_any_equivalence_specialization_sizes ... ok
+test tests::test_string_empty_pattern ... ok
+test tests::test_string_match ... ok
+test tests::test_take_while_byte_span_digits ... ok
+test tests::test_take_while_byte_span_no_match ... ok
+test tests::test_take_while_span_digits ... ok
+test tests::test_take_while_span_no_match ... ok
+test tests::test_take_while_span_utf8 ... ok
+test tests::test_then_first_fails ... ok
+test tests::test_then_second_fails ... ok
+test tests::test_then_success ... ok
+test tests::test_trim_whitespace_no_ws ... ok
+test tests::test_wrap ... ok
+test tests::test_wrap_missing_right ... ok
+test tests::test_trim_whitespace ... ok
+test tests::test_take_until_any_randomized_equivalence ... ok
+
+test result: ok. 99 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/css_parse_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/css_parse_test-75c32853ea5f8e1c)
+
+running 52 tests
+test test_child_combinator ... ok
+test test_at_font_face ... ok
+test test_block_comment_multiline ... ok
+test test_attribute_selector ... ok
+test test_compound_selector ... ok
+test test_at_keyframes ... ok
+test test_descendant_combinator ... ok
+test test_hex_color_8 ... ok
+test test_custom_property_declaration ... ok
+test test_media_query_not_print ... ok
+test test_dimension_values ... ok
+test test_media_query_and_conditions ... ok
+test test_empty_stylesheet ... ok
+test test_media_query_plain_feature ... ok
+test test_hex_color ... ok
+test test_hex_color_3 ... ok
+test test_calc_function ... ok
+test test_block_comment_fast ... ok
+test test_comment ... ok
+test test_class_selector ... ok
+test test_at_import ... ok
+test test_multiple_rules ... ok
+test test_at_media ... ok
+test test_id_selector ... ok
+test test_negative_dimension ... ok
+test test_media_query_list ... ok
+test test_parse_tailwind_css ... ignored
+test test_multiple_declarations ... ok
+test test_media_query_screen_and_feature ... ok
+test test_pseudo_class ... ok
+test test_nested_media ... ok
+test test_pseudo_element ... ok
+test test_rgb_function ... ok
+test test_specificity_complex ... ok
+test test_selector_list ... ok
+test test_specificity_class ... ok
+test test_simple_rule ... ok
+test test_specificity_compound ... ok
+test test_specificity_id ... ok
+test test_specificity_pseudo_is ... ok
+test test_specificity_pseudo_where ... ok
+test test_specificity_type ... ok
+test test_specificity_universal ... ok
+test test_string_value ... ok
+test test_supports_declaration ... ok
+test test_supports_and ... ok
+test test_universal_selector ... ok
+test test_var_function ... ok
+test test_whitespace_only ... ok
+test test_supports_not ... ok
+test test_parse_normalize_css ... ok
+test test_parse_bootstrap_css ... ok
+
+test result: ok. 51 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/css_recovery_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/css_recovery_test-e91eacdce263a463)
+
+running 13 tests
+test tests::test_format_all_diagnostics_empty ... ok
+test tests::test_complex_css_file_recovers_partial_results ... ok
+test tests::test_recover_returns_sentinel_on_failure ... ok
+test tests::test_recover_returns_normal_on_success ... ok
+test tests::test_recover_gives_up_if_sync_fails ... ok
+test tests::test_format_all_diagnostics_summary ... ok
+test tests::test_recover_declaration_missing_colon ... ok
+test tests::test_individual_diagnostics_format_correctly ... ok
+test tests::test_format_all_diagnostics_single ... ok
+test tests::test_recover_multiple_bad_declarations ... ok
+test tests::test_recover_declaration_missing_value ... ok
+test tests::test_complex_css_file_parses_success_rule ... ok
+test tests::test_diagnostics_have_valid_line_numbers ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/css_stack_depth.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/css_stack_depth-5366a51ef0a2efe3)
+
+running 3 tests
+test child_parse_on_sized_stack ... ok
+test nested_at_rules_depth_16_default_stack ... ok
+test nested_at_rule_stack_slope_is_constant ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.83s
+
+     Running tests/csv_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/csv_test-cf59fb2ebacd03d3)
+
+running 2 tests
+test tests::test_csv ... ok
+test tests::test_csv_file ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.35s
+
+     Running tests/debug_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/debug_test-177e7da7c86a40b0)
+
+running 61 tests
+test tests::test_column_number_after_newline ... ok
+test tests::test_column_number_first_line ... ok
+test tests::test_css_color_oxford_comma_four_plus_alternatives ... ok
+test tests::test_css_format_expected_exactly_two ... ok
+test tests::test_css_format_expected_six_named_colors ... ok
+test tests::test_add_cursor_multiline ... ok
+test tests::test_add_cursor_single_line ... ok
+test tests::test_css_long_property_value_truncated ... ok
+test tests::test_css_long_line_cursor_still_works ... ok
+test tests::test_css_long_selector_line_truncated ... ok
+test tests::test_css_multiline_add_cursor_contains_lines ... ok
+test tests::test_css_multiline_line_number_tracking ... ok
+test tests::test_css_named_color_all_branches_in_expected ... ok
+test tests::test_css_rgb_error_deep_in_parse ... ok
+test tests::test_css_color_dispatch_failure_lists_alternatives ... ok
+test tests::test_css_declaration_parse_or_error_deep_failure ... ok
+test tests::test_css_expected_only_at_furthest_point ... ok
+test tests::test_css_color_trailing_content ... ok
+test tests::test_css_full_rule_with_class_selector ... ok
+test tests::test_css_hsl_unclosed_paren ... ok
+test tests::test_css_attr_selector_unclosed_bracket ... ok
+test tests::test_css_full_rule_parses_successfully ... ok
+test tests::test_css_hex_color_no_trailing ... ok
+test tests::test_css_color_byte_dispatch_failure ... ok
+test tests::test_css_declaration_error_after_colon ... ok
+test tests::test_css_multiple_declarations ... ok
+test tests::test_css_furthest_offset_with_alternation ... ok
+test tests::test_css_declaration_trailing_garbage_eof ... ok
+test tests::test_css_multiline_error_on_inner_line ... ok
+test tests::test_css_nested_unclosed_only_innermost ... ok
+test tests::test_css_rgb_secondary_span_offset ... ok
+test tests::test_css_rgb_unclosed_paren ... ok
+test tests::test_css_rule_parse_or_error_success ... ok
+test tests::test_css_color_parse_or_error_expected_set ... ok
+test tests::test_css_rule_unclosed_brace ... ok
+test tests::test_css_secondary_span_offset_at_opener ... ok
+test tests::test_css_selector_failure_lists_alternatives ... ok
+test tests::test_css_selector_parse_or_error_line_col ... ok
+test tests::test_css_state_print_shows_expected_colors ... ok
+test tests::test_css_state_print_shows_suggestions ... ok
+test tests::test_eof_trailing_content_suggestion ... ok
+test tests::test_expected_set_clears_on_advance ... ok
+test tests::test_expected_set_dispatch_byte ... ok
+test tests::test_expected_set_or_accumulates ... ok
+test tests::test_expected_set_string_single ... ok
+test tests::test_format_expected_empty ... ok
+test tests::test_format_expected_single ... ok
+test tests::test_format_expected_three_oxford_comma ... ok
+test tests::test_format_expected_two ... ok
+test tests::test_expected_set_regex ... ok
+test tests::test_parse_or_error_populates_expected ... ok
+test tests::test_span_parser_expected_string ... ok
+test tests::test_state_print_ok ... ok
+test tests::test_span_parser_expected_regex ... ok
+test tests::test_state_print_err_with_expected ... ok
+test tests::test_state_print_done ... ok
+test tests::test_summarize_line_long ... ok
+test tests::test_state_print_err ... ok
+test tests::test_summarize_line_short ... ok
+test tests::test_wrap_suggestion_unclosed ... ok
+test tests::test_span_parser_wrap_suggestion ... ok
+
+test result: ok. 61 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/decode_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/decode_test-c0edcb9f45a77512)
+
+running 44 tests
+test decode_microbench ... ignored
+test borrowed_empty ... ok
+test borrowed_simple ... ok
+test arena_offset_respects_existing_data ... ok
+test borrowed_no_escapes_at_all ... ok
+test error_lone_low_surrogate ... ok
+test error_invalid_escape ... ok
+test error_no_opening_quote ... ok
+test error_lone_high_surrogate ... ok
+test error_truncated_unicode ... ok
+test error_unterminated ... ok
+test non_zero_start_offset ... ok
+test owned_all_simple_escapes ... ok
+test owned_newline ... ok
+test owned_mixed_content ... ok
+test owned_unicode_bmp ... ok
+test owned_surrogate_pair ... ok
+test owned_unicode_multibyte ... ok
+test simd_borrowed_close_quote_at_every_stripe_offset ... ok
+test sequential_decodes_share_arena ... ok
+test simd_borrowed_close_quote_in_scalar_tail ... ok
+test simd_borrowed_close_quote_at_stripe_high_bit ... ok
+test simd_borrowed_close_quote_at_stripe_one_start ... ok
+test simd_borrowed_close_quote_at_second_stripe_offset ... ok
+test simd_borrowed_exactly_one_stripe ... ok
+test simd_borrowed_two_stripes ... ok
+test simd_borrowed_utf8_across_stripe_boundary ... ok
+test simd_borrowed_many_stripes ... ok
+test simd_borrowed_utf8_multibyte_no_escapes ... ok
+test simd_owned_all_escapes_dense ... ok
+test simd_owned_close_quote_at_stripe_high_bit ... ok
+test simd_owned_double_backslash_spans_stripe_boundary ... ok
+test simd_owned_escape_at_offset_zero ... ok
+test simd_owned_escape_at_every_stripe_offset ... ok
+test simd_owned_escape_in_scalar_tail ... ok
+test simd_owned_escape_spans_stripe_boundary ... ok
+test simd_owned_escape_then_close ... ok
+test simd_owned_escaped_quote_then_real_quote ... ok
+test simd_owned_escape_then_full_stripe_then_close ... ok
+test simd_owned_long_run_then_escape ... ok
+test simd_owned_large_with_periodic_escapes ... ok
+test simd_owned_surrogate_pair_across_stripe_boundary ... ok
+test simd_escape_parity_runs_before_quote ... ok
+test simd_cross_validate_grid ... ok
+
+test result: ok. 43 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/expected_sorted_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/expected_sorted_test-94cb1ac0731de9fd)
+
+running 3 tests
+test failure_reports_sorted_expected_set ... ok
+test the_state_set_is_sorted_as_it_grows ... ok
+test a_label_met_twice_is_kept_once_in_order ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/json_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/json_test-19e6f48facddc984)
+
+running 37 tests
+test tests::test_integer_values ... ok
+test tests::test_empty_object ... ok
+test tests::test_empty_array ... ok
+test tests::test_malformed_backslash_at_end ... ok
+test tests::test_malformed_truncated_unicode ... ok
+test tests::test_malformed_unicode_at_end ... ok
+test tests::test_json ... ok
+test tests::test_boolean_values ... ok
+test tests::test_leading_zero_decimal ... ok
+test tests::test_large_numeric_literals_match_serde_f64 ... ok
+test tests::test_leading_zero_rejected ... ok
+test tests::test_malformed_not_json ... ok
+test tests::test_negative_number ... ok
+test tests::test_malformed_unterminated_string ... ok
+test tests::test_nested_arrays ... ok
+test tests::test_leading_zero_standalone ... ok
+test tests::test_long_string ... ok
+test tests::test_number_edge_cases ... ok
+test tests::test_null_value ... ok
+test tests::test_scientific_notation ... ok
+test tests::test_string_basic_escapes ... ok
+test tests::test_single_element_containers ... ok
+test tests::test_string_empty ... ok
+test tests::test_string_unicode_escape ... ok
+test tests::test_string_surrogate_pair_edges ... ok
+test tests::test_string_nested_escapes ... ok
+test tests::test_string_only_escapes ... ok
+test tests::test_string_with_forward_slash_escape ... ok
+test tests::test_whitespace_variants ... ok
+test tests::test_equivalence_data ... ok
+test tests::test_json_file_print ... ok
+test tests::test_equivalence_apache ... ok
+test tests::test_equivalence_twitter ... ok
+test tests::test_equivalence_citm_catalog ... ok
+test tests::test_equivalence_canada ... ok
+test tests::test_json_file ... ok
+test tests::test_equivalence_data_xl ... ok
+
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.56s
+
+     Running tests/kernel.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel-47de20bdadee7658)
+
+running 65 tests
+test kernel::control_laws::sequence_is_atomic_on_mismatch ... ok
+test kernel::control_laws::choice_retries_from_its_entry_cursor ... ok
+test kernel::control_laws::repeat_honors_minimum_maximum_and_rolls_back_final_mismatch ... ok
+test kernel::difference_laws::excluded_failure_position_does_not_contaminate_primary_diagnostics ... ok
+test kernel::difference_laws::excluded_fault_rolls_back_and_never_invokes_primary ... ok
+test kernel::difference_laws::excluded_match_rejects_at_the_difference_entry_and_never_invokes_primary ... ok
+test kernel::difference_laws::foreign_exclusion_failure_and_fault_become_entry_position_faults ... ok
+test kernel::failure_contract_laws::a_label_met_twice_at_one_offset_is_kept_once ... ok
+test kernel::difference_laws::failing_primary_restores_cursor_and_every_speculative_event ... ok
+test kernel::difference_laws::foreign_primary_failure_and_fault_become_entry_position_faults ... ok
+test kernel::difference_laws::nullable_exclusion_blocks_primary_without_leaking_events ... ok
+test kernel::difference_laws::primary_fault_rolls_back_exclusion_and_primary_speculation ... ok
+test kernel::failure_contract_laws::a_repeat_below_its_minimum_reports_the_failing_iteration ... ok
+test kernel::difference_laws::retaining_and_discarding_sinks_have_identical_outcomes_and_counts ... ok
+test kernel::failure_contract_laws::an_unlabelled_terminal_reports_an_empty_set ... ok
+test kernel::failure_contract_laws::a_mismatch_past_the_label_entry_keeps_the_inner_set ... ok
+test kernel::failure_contract_laws::equal_offset_merge_is_commutative_and_associative ... ok
+test kernel::difference_laws::excluded_mismatch_rolls_back_its_probe_then_primary_success_commits ... ok
+test kernel::failure_contract_laws::failure_reports_sorted_expected_set ... ok
+test kernel::failure_contract_laws::labels_span_the_whole_table_and_no_further ... ok
+test kernel::generated_shaped_control::direct_control_shape_accepts_and_rejects_without_a_runtime_graph ... ok
+test kernel::input_contract::cursors_are_checked_and_include_the_one_past_end_position ... ok
+test kernel::input_contract::input_borrows_the_callers_bytes_without_copying ... ok
+test kernel::input_contract::distinct_empty_inputs_retain_distinct_cursor_and_span_provenance ... ok
+test kernel::input_contract::reborrowed_nonempty_byte_region_retains_the_same_source_identity ... ok
+test kernel::input_contract::source_identity_is_absent_from_deterministic_debug_output ... ok
+test kernel::input_contract::span_equality_is_interval_and_source_identity_not_whole_input_content ... ok
+test kernel::module_laws::empty_module_result_retains_source_identity_through_into_parts ... ok
+test kernel::input_contract::spans_are_checked_ordered_and_bound_to_their_source ... ok
+test kernel::module_laws::module_localizes_foreign_failure_evidence_at_its_own_entry ... ok
+test kernel::module_laws::module_localizes_foreign_fault_evidence_at_its_own_entry ... ok
+test kernel::module_laws::module_parser_fault_restores_cursor_transaction_and_sink ... ok
+test kernel::module_laws::module_parser_mismatch_restores_cursor_transaction_and_sink ... ok
+test kernel::module_laws::module_success_replaces_a_foreign_value_with_the_canonical_input_span ... ok
+test kernel::module_laws::module_success_returns_the_original_input_typed_outcome_and_retained_sink ... ok
+test kernel::module_laws::module_trailing_input_is_a_full_parse_mismatch_and_restores_the_sink ... ok
+test kernel::outcome_laws::foreign_empty_failure_evidence_becomes_a_typed_local_fault ... ok
+test kernel::outcome_laws::foreign_failure_evidence_becomes_a_typed_local_fault ... ok
+test kernel::outcome_laws::full_recognition_is_whole_source_not_remaining_suffix ... ok
+test kernel::outcome_laws::full_and_prefix_recognition_are_distinct_named_operations ... ok
+test kernel::outcome_laws::mismatch_preserves_furthest_absolute_failure_evidence ... ok
+test kernel::outcome_laws::typed_fault_is_not_collapsed_into_mismatch ... ok
+test kernel::progress_laws::finite_repeat_still_rejects_a_non_progressing_child ... ok
+test kernel::progress_laws::unbounded_epsilon_repeat_faults_at_the_absolute_cursor ... ok
+test kernel::resource_laws::each_generic_resource_kind_preserves_its_usize_limit_and_absolute_evidence ... ok
+test kernel::resource_laws::resource_fault_rolls_back_events_and_never_tries_a_choice_sibling ... ok
+test kernel::terminal_laws::literal_and_eof_match_checked_spans ... ok
+test kernel::terminal_laws::regex_partial_traversal_without_an_accept_is_atomic ... ok
+test kernel::terminal_laws::regex_plan_accepts_exactly_256_byte_classes_and_rejects_257 ... ok
+test kernel::terminal_laws::regex_plan_preserves_explicit_dimensions_and_start_state ... ok
+test kernel::terminal_laws::regex_plan_rejects_malformed_tables_before_recognition ... ok
+test kernel::terminal_laws::regex_returns_the_last_accept_before_a_nonaccepting_traversal ... ok
+test kernel::terminal_laws::regex_terminal_uses_the_longest_accepting_prefix ... ok
+test kernel::terminal_laws::terminal_mismatch_does_not_advance_the_cursor ... ok
+test kernel::transaction_laws::below_minimum_repeat_restores_the_whole_transaction_and_prior_sink_prefix ... ok
+test kernel::transaction_laws::discarding_sink_counts_only_transactionally_retained_events ... ok
+test kernel::transaction_laws::failed_alternative_rolls_back_cursor_and_append_only_sink ... ok
+test kernel::transaction_laws::fault_in_right_choice_branch_rolls_back_without_retry ... ok
+test kernel::transaction_laws::fault_rolls_back_and_never_tries_a_sibling_choice ... ok
+test kernel::transaction_laws::nested_transaction_failure_restores_only_the_preexisting_prefix ... ok
+test kernel::transaction_laws::one_eventful_parser_runs_unchanged_with_discarding_and_retaining_sinks ... ok
+test kernel::transaction_laws::repeat_discards_the_terminating_mismatch_iteration_events ... ok
+test kernel::transaction_laws::retained_output_can_be_recovered_without_clone_or_allocation ... ok
+test kernel::transaction_laws::successful_sequence_commits_its_events ... ok
+test kernel::transaction_laws::trailing_input_full_failure_restores_emitted_events_and_prior_prefix ... ok
+
+test result: ok. 65 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/kernel_abi.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel_abi-4a1291c29f8be9e5)
+
+running 3 tests
+test kernel_abi_is_four ... ok
+test record_digest_is_pinned ... ok
+test layout_descriptor_equals_the_record ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/kernel_allocation.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel_allocation-028c4297273397c3)
+
+running 1 test
+test kernel_allocation_laws ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/kernel_regex.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/kernel_regex-9c29b9534ca26adc)
+
+running 9 tests
+test kernel_pins_the_regex_hir_abi_it_was_built_against ... ok
+test engine_terminal_reads_look_behind_from_the_whole_input ... ok
+test engine_terminal_refuses_a_malformed_automaton ... ok
+test engine_terminal_is_leftmost_first ... ok
+test engine_terminal_reads_look_ahead_conditions ... ok
+test engine_terminal_recognition_performs_zero_allocations ... ok
+test engine_terminal_reads_code_points_in_unicode_mode ... ok
+test engine_terminal_equals_the_engine_walk_everywhere ... ok
+test static_table_from_the_engine_equals_the_engine ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/lanes_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/lanes_test-b860cc0807a9df7f)
+
+running 3 tests
+test load_round_trips ... ok
+test nibble_mask_matches_definition_for_every_byte_and_lane ... ok
+test eq_mask_matches_definition_for_every_byte_and_lane ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/number_fastpath_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/number_fastpath_test-3d72942dedb298b3)
+
+running 22 tests
+test fastpath_negative_zero ... ok
+test fastpath_and_slow_path_agree_in_range ... ok
+test fastpath_overflow_mantissa_falls_through ... ok
+test fastpath_integers_to_2_53 ... ok
+test fastpath_canada_shaped_coordinates ... ok
+test fastpath_out_of_range_falls_through ... ok
+test integer_digits_followed_by_exponent ... ok
+test integer_digits_followed_by_fraction ... ok
+test fastpath_scientific_in_range ... ok
+test fastpath_short_fractions ... ok
+test integer_one_digit ... ok
+test integer_scan_at_nonzero_start_offset ... ok
+test integer_eighteen_digits_fits_budget ... ok
+test integer_cross_validate_all_lengths ... ok
+test integer_fifteen_digits_fits_in_single_stripe ... ok
+test integer_four_digits_below_simd_stripe ... ok
+test integer_seventeen_digits_crosses_stripe ... ok
+test integer_scan_right_up_to_input_boundary ... ok
+test integer_sixteen_digits_fills_stripe ... ok
+test integer_strict_negative ... ok
+test parse_number_f64_plus_sign_is_positive ... ok
+test integer_twenty_digits_budget_guard_fires ... ok
+
+test result: ok. 22 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/number_simd_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/number_simd_test-7f1e85ff4f561a2d)
+
+running 12 tests
+test scan_all_nines ... ok
+test scan_single_digit ... ok
+test cross_validate_all_counts ... ok
+test scan_all_digits_16 ... ok
+test scan_all_zeros ... ok
+test scan_boundary_above_nine ... ok
+test scan_boundary_below_zero ... ok
+test scan_nine_digits ... ok
+test scan_no_digits ... ok
+test scan_partial_digits ... ok
+test scan_short_input_returns_available_digits ... ok
+test scan_with_offset ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/padded_input_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/padded_input_test-96b543c666ad8083)
+
+running 8 tests
+test single_byte_input_padding ... ok
+test empty_input_padding ... ok
+test padded_bytes_permit_full_stripe_read_at_end ... ok
+test padded_bytes_aligned_for_avx512_cache_line ... ok
+test long_input_padding ... ok
+test public_views_never_leak_padding ... ok
+test short_input_padding ... ok
+test stripe_boundary_input_padding ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/quote_parity_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/quote_parity_test-0fec9c9711bd1da4)
+
+running 7 tests
+test escaped_quote ... ok
+test no_strings ... ok
+test filter_basic ... ok
+test simple_string ... ok
+test long_no_escape ... ok
+test prefix_xor_basic ... ok
+test filter_no_strings ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/quoted_simd_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/quoted_simd_test-046b86b166e97ade)
+
+running 33 tests
+test bs1_before_quote ... ok
+test bs2_before_quote ... ok
+test all_bs_odd ... ok
+test bs3_before_quote ... ok
+test cross_validate_patterns ... ok
+test bs4_before_quote ... ok
+test em_2bs ... ok
+test em_carry_1bs ... ok
+test em_1bs ... ok
+test em_3bs ... ok
+test all_bs_even ... ok
+test em_no_bs_carry ... ok
+test em_no_bs ... ok
+test empty_string ... ok
+test escape_at_chunk_boundary ... ok
+test escaped_backslash_escaped_quote ... ok
+test cross_validate_generated ... ok
+test escaped_backslash_then_quote ... ok
+test escaped_quote ... ok
+test em_carry_2bs ... ok
+test even_run_spanning_then_quote ... ok
+test exactly_16_byte_content ... ok
+test long_no_escapes ... ok
+test long_with_escapes ... ok
+test odd_run_spanning_then_quote ... ok
+test only_escapes ... ok
+test run_spanning_chunks ... ok
+test two_chunks_bs_odd ... ok
+test simple_string ... ok
+test two_chunks_bs ... ok
+test unterminated ... ok
+test unicode_escape ... ok
+test unterminated_backslash ... ok
+
+test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/regex.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex-ec1a734a49c99803)
+
+running 125 tests
+test byteset_test::ascii_set ... ok
+test byteset_test::disjoint ... ok
+test byteset_test::exit_bytes_over_limit ... ok
+test byteset_test::singleton ... ok
+test byteset_test::full_set ... ok
+test byteset_test::high_bytes_utf8_continuation ... ok
+test byteset_test::high_bytes_utf8_leading ... ok
+test byteset_test::iterator_ascending ... ok
+test byteset_test::insert_remove ... ok
+test byteset_test::negate ... ok
+test byteset_test::range ... ok
+test byteset_test::difference ... ok
+test byteset_test::range_boundary ... ok
+test byteset_test::empty_set ... ok
+test byteset_test::exact_size_iterator ... ok
+test byteset_test::exit_bytes ... ok
+test byteset_test::union_and_intersect ... ok
+test accel_test::accel_for_wider_negated_class ... ok
+test accel_test::memchr2_for_json_string ... ok
+test dfa_test::char_class ... ok
+test dfa_test::bounded_repetition ... ok
+test dfa_test::alternation ... ok
+test accel_test::no_accel_for_non_looping ... ok
+test dfa_test::css_ident_alt_specific ... ok
+test dfa_test::case_insensitive ... ok
+test accel_test::memchr_for_negated_class ... ok
+test dfa_test::css_ident_pattern ... ok
+test dfa_test::css_block_comment_no_dotall_lazy ... ok
+test dfa_test::css_block_comment_dotall_lazy ... ok
+test dfa_test::css_value_span_stop_chars ... ok
+test dfa_test::css_value_span ... ok
+test dfa_test::css_ws_comment_adjacent ... ok
+test dfa_test::dot_all ... ok
+test dfa_test::dotall_plus ... ok
+test dfa_test::empty_pattern ... ok
+test dfa_test::dot_no_newline ... ok
+test dfa_test::dotall_star ... ok
+test dfa_test::hex_color_pattern ... ok
+test dfa_test::dotall_bounded ... ok
+test dfa_test::lazy_question_prefers_skipping ... ok
+test dfa_test::json_number_pattern ... ok
+test dfa_test::css_ident_alternation ... ok
+test dfa_test::lazy_plus_stops_at_first_close ... ok
+test dfa_test::minimization_reduces_states ... ok
+test dfa_test::large_dfa_css_ident ... ok
+test dfa_test::offset_matching ... ok
+test dfa_test::lazy_star_stops_at_first_close ... ok
+test dfa_test::large_dfa_json_number ... ok
+test dfa_test::optional ... ok
+test dfa_test::css_ws_comment_regex ... ok
+test dfa_test::negated_class ... ok
+test dfa_test::no_dotall_stops_at_newline ... ok
+test dfa_test::zero_width_empty_alt ... ok
+test dfa_test::oracle_digits ... ok
+test dfa_test::oracle_hex_color ... ok
+test dfa_test::oracle_email_like ... ok
+test dfa_test::oracle_css_number ... ok
+test dfa_test::oracle_repetition_boundary ... ok
+test dfa_test::oracle_nested_groups ... ok
+test dfa_test::simple_literal ... ok
+test dfa_test::star ... ok
+test dfa_test::unicode_ascii_only ... ok
+test generated_utf8_test::generated_parser_reads_a_non_ascii_class_member ... ignored, born-RED LW2.RX-3: the generated parser reads a negated-class leaf one byte at a time and slices inside a scalar (Span::as_str panic); cure in the bbnf-lang Rust emitter's negated-class lowering plus a regeneration of src/regex/generated.rs
+test equiv_test::word_char_classes ... ok
+test dfa_test::zero_width_star ... ok
+test dfa_test::zero_width_optional ... ok
+test equiv_test::no_byte_sets ... ok
+test dfa_test::oracle_word_chars ... ok
+test nfa_test::backreference_unsupported ... ok
+test equiv_test::overlapping_ranges ... ok
+test nfa_test::bounded_repetition ... ok
+test equiv_test::single_range ... ok
+test nfa_test::char_class_ascii ... ok
+test nfa_test::char_class_unicode ... ok
+test equiv_test::two_disjoint_ranges ... ok
+test nfa_test::concat ... ok
+test nfa_test::empty_pattern ... ok
+test nfa_test::dot_all ... ok
+test nfa_test::literal_pattern ... ok
+test nfa_test::plus_lazy ... ok
+test nfa_test::star_greedy ... ok
+test equiv_test::utf8_leading_bytes ... ok
+test nfa_test::transition_byte_sets ... ok
+test hir_test::char_class_negated_flag ... ok
+test parser_test::bounded_repetition ... ok
+test nfa_test::unicode_property ... ok
+test parser_test::char_class ... ok
+test hir_test::negate_empty ... ok
+test hir_test::negate_full ... ok
+test parser_test::css_ident ... ok
+test hir_test::negate_middle ... ok
+test nfa_test::alternation ... ok
+test parser_test::css_ws_comment ... ok
+test parser_test::alternation ... ok
+test parser_test::byte_mode ... ok
+test parser_test::dotall_flag_byte_mode ... ok
+test parser_test::complex_ident ... ok
+test parser_test::dotall_flag_unicode ... ok
+test parser_test::dot_default ... ok
+test parser_test::empty ... ok
+test parser_test::escaped_literal ... ok
+test dfa_test::shorthand_classes ... ok
+test parser_test::hex_color ... ok
+test parser_test::json_number ... ok
+test parser_test::json_string ... ok
+test parser_test::lazy_quantifier ... ok
+test parser_test::literal ... ok
+test dfa_test::oracle_pipe_literal ... ok
+test parser_test::negated_class ... ok
+test parser_test::non_capturing_group ... ok
+test parser_test::quantifiers ... ok
+test parser_test::quoted_string ... ok
+test utf8_test::ascii_range ... ok
+test utf8_test::cross_boundary ... ok
+test utf8_test::four_byte ... ok
+test parser_test::shorthand_classes ... ok
+test utf8_test::full_unicode ... ok
+test utf8_test::latin_extended_a ... ok
+test utf8_test::single_char ... ok
+test utf8_test::surrogate_skip ... ok
+test utf8_test::roundtrip_ascii ... ok
+test utf8_test::two_byte_range ... ok
+test dfa_test::oracle_json_string_body ... ok
+test dfa_test::oracle_whitespace ... ok
+test dfa_test::state_limit_guard ... ok
+
+test result: ok. 124 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/regex_empty_match_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex_empty_match_test-b1c0702ed2162b07)
+
+running 8 tests
+test sep_by_progress_still_collects_elements ... ok
+test regex_span_empty_match_is_a_match ... ok
+test span_sep_by_over_empty_matching_leaf_terminates ... ok
+test regex_empty_match_is_a_match ... ok
+test regex_empty_match_at_end_of_input ... ok
+test many_over_empty_matching_regex_terminates ... ok
+test regex_nonempty_match_unchanged ... ok
+test sep_by_with_empty_matching_elem_and_sep_terminates ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/regex_look_context_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex_look_context_test-f3c641233edd85f5)
+
+running 3 tests
+test span_leaf_reads_the_byte_before_too ... ok
+test word_boundary_reads_the_byte_before_the_leaf ... ok
+test start_anchor_holds_only_at_the_start_of_the_input ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/split_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/split_test-30a20621e1a11e6a)
+
+running 11 tests
+test basic_split ... ok
+test nested_parens ... ok
+test nested_brackets ... ok
+test no_delimiter ... ok
+test deep_nesting ... ok
+test single_char ... ok
+test empty_segments ... ok
+test empty_input ... ok
+test single_quoted_strings ... ok
+test quoted_strings ... ok
+test mixed_nesting_and_quotes ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/structural_bitmap_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/structural_bitmap_test-8dee9b65bf851e26)
+
+running 6 tests
+test find_next_basic ... ok
+test find_next_tail_only ... ok
+test iter_across_stripe ... ok
+test iter_basic ... ok
+test iter_set_offset_skips_forward ... ok
+test find_next_none ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/ws_comment_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/ws_comment_test-1f1d91532e307220)
+
+running 18 tests
+test empty_input ... ok
+test exact_stripe_all_ws ... ok
+test long_comment_crossing_stripe ... ok
+test long_ws_crossing_stripe ... ok
+test all_slash_stripe_terminates ... ok
+test simple_block_comment ... ok
+test simple_ws ... ok
+test multiple_comments ... ok
+test slash_without_comment ... ok
+test nested_star_in_comment ... ok
+test no_ws ... ok
+test unterminated_comment ... ok
+test tabs_and_newlines ... ok
+test stripe_boundary_comment ... ok
+test ws_then_comment_then_ws ... ok
+test ws_slash_non_star ... ok
+test stripe_boundary_ws_slash ... ok
+test ws_slash_then_x ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests parse_that
+
+running 1 test
+test parse_that/src/split.rs - split::split_balanced (line 21) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+test parse_that/src/kernel/input.rs - kernel::input::Cursor (line 145) - compile fail ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+all doctests ran in 0.44s; merged doctests compilation took 0.23s
+# rc 0

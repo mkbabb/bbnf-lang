@@ -1,0 +1,12 @@
+131211987997	success	Rust — Intel SDE (AVX-512, sapphirerapids)
+131211988273	success	Rust (ubuntu-latest) — clippy + nextest
+131211988400	success	typescript
+131211988477	success	Rust — cargo +stable (latest)
+131211988514	success	Rust — parse-that-simd under ASan (ubuntu-latest)
+131211988529	success	Rust (macos-15) — clippy + nextest
+131211988537	success	Rust — repo DAG + hermetic clean-clone build
+131211988589	success	Rust — kernel laws under ASan
+131211988620	success	Rust — wasm32 SIMD128 (parse-that-simd, Node WASI)
+131211988643	success	Rust — nightly plane (parse_that/nightly)
+131211988696	success	Rust — parse-that-simd under ASan (macos-15)
+131217119992	success	ci-ok

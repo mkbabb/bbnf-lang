@@ -1,0 +1,1 @@
+git grep -niE bbnf -- rust/simd: 0

@@ -1,0 +1,24 @@
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/parse_that_simd-28004268dd17b57c.wasm)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/ascii_prefix.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/ascii_prefix-7df1744f42e9a45c.wasm)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.71s
+     Running tests/correctness.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/correctness-d0befe3dff67d629.wasm)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+     Running tests/differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/differential-3292fe71ff8173b0.wasm)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.59s
+     Running tests/digraph.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/digraph-f1e0247659b8a37f.wasm)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/dispatch_tiers-b67022641fdb8e22.wasm)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+     Running tests/fuzz.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/fuzz-936a81f65d0a9652.wasm)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 5.28s
+     Running tests/guard_page.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/guard_page-40b762e803aa7359.wasm)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/prim_differential.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/prim_differential-1405fd71a6a099aa.wasm)
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.19s
+     Running tests/quote_parity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/quote_parity-2acae559c3ff9888.wasm)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/stage1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/stage1-2aa437c99c7297f7.wasm)
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 14.58s
+     Running tests/wasm_bounds.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/wasm32-wasip1/debug/deps/wasm_bounds-48fb2c22450f913e.wasm)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s

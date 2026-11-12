@@ -1,0 +1,24 @@
+1a-comment-mask-dropped (PERF-1a) r1 rc=101 :: test css_brace_inside_a_comment_is_not_structural ... FAILED | thread 'css_brace_inside_a_comment_is_not_structural' (49568930) panicked at simd/tests/stage1.rs:138:5:
+1a-comment-mask-dropped (PERF-1a) r2 rc=101 :: test css_brace_inside_a_comment_is_not_structural ... FAILED | thread 'css_brace_inside_a_comment_is_not_structural' (49569730) panicked at simd/tests/stage1.rs:138:5:
+1a-comment-mask-dropped restored byte-equal sha256 ea2b4709f9a9
+1a-atom-starts-dropped (PERF-1a) r1 rc=101 :: test atom_starts_are_in_the_index ... FAILED | thread 'atom_starts_are_in_the_index' (49570696) panicked at simd/tests/stage1.rs:162:5:
+1a-atom-starts-dropped (PERF-1a) r2 rc=101 :: test atom_starts_are_in_the_index ... FAILED | thread 'atom_starts_are_in_the_index' (49571376) panicked at simd/tests/stage1.rs:162:5:
+1a-atom-starts-dropped restored byte-equal sha256 ea2b4709f9a9
+1a-neon-utf8-accepts-all (PERF-1a) r1 rc=101 :: test every_tier_utf8_sweep ... FAILED | thread 'every_tier_utf8_sweep' (49572632) panicked at simd/tests/stage1.rs:358:21:
+1a-neon-utf8-accepts-all (PERF-1a) r2 rc=101 :: test every_tier_utf8_sweep ... FAILED | thread 'every_tier_utf8_sweep' (49573334) panicked at simd/tests/stage1.rs:358:21:
+1a-neon-utf8-accepts-all restored byte-equal sha256 bc6f6120b246
+1a-utf8-table-surrogate (PERF-1a) r1 rc=101 :: test every_tier_utf8_sweep ... FAILED | thread 'every_tier_utf8_sweep' (49574617) panicked at simd/tests/stage1.rs:358:21:
+1a-utf8-table-surrogate (PERF-1a) r2 rc=101 :: test every_tier_utf8_sweep ... FAILED | thread 'every_tier_utf8_sweep' (49575997) panicked at simd/tests/stage1.rs:358:21:
+1a-utf8-table-surrogate restored byte-equal sha256 ea2b4709f9a9
+1a-empty-shape-digraphs (PERF-1a) r1 rc=101 :: test every_supported_tier_matches_the_scalar_oracle ... FAILED | thread 'every_supported_tier_matches_the_scalar_oracle' (49577497) panicked at simd/tests/dispatch_tiers.rs:124:17:
+1a-empty-shape-digraphs (PERF-1a) r2 rc=101 :: test every_supported_tier_matches_the_scalar_oracle ... FAILED | thread 'every_supported_tier_matches_the_scalar_oracle' (49577978) panicked at simd/tests/dispatch_tiers.rs:124:17:
+1a-empty-shape-digraphs restored byte-equal sha256 bc6f6120b246
+1a-padding-read (PERF-1a) r1 rc=101 :: test no_tier_reads_past_the_padding ... FAILED | thread 'no_tier_reads_past_the_padding' (49580518) panicked at simd/tests/stage1.rs:413:21:
+1a-padding-read (PERF-1a) r2 rc=101 :: test no_tier_reads_past_the_padding ... FAILED | test fuzz_text_every_tier_every_spec ... FAILED | thread 'no_tier_reads_past_the_padding' (49582612) panicked at simd/tests/stage1.rs:413:21:
+1a-padding-read restored byte-equal sha256 ea2b4709f9a9
+2-neon-first-high (PERF-2) r1 rc=101 :: test every_tier_every_length_alignment_and_position ... FAILED | thread 'every_tier_every_length_alignment_and_position' (49583710) panicked at simd/tests/ascii_prefix.rs:86:21:
+2-neon-first-high (PERF-2) r2 rc=101 :: test every_tier_every_length_alignment_and_position ... FAILED | thread 'every_tier_every_length_alignment_and_position' (49584457) panicked at simd/tests/ascii_prefix.rs:86:21:
+2-neon-first-high restored byte-equal sha256 bc6f6120b246
+2-neon-tail-overread (PERF-2) r1 rc=101 ::   process didn't exit successfully: `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/ascii_prefix-ce110475af3c8f5d --test-threads 2 no_tier_reads_past_the_end` (signal: 10, SIGBUS: access to undefined memory)
+2-neon-tail-overread (PERF-2) r2 rc=101 ::   process didn't exit successfully: `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/ascii_prefix-ce110475af3c8f5d --test-threads 2 no_tier_reads_past_the_end` (signal: 10, SIGBUS: access to undefined memory)
+2-neon-tail-overread restored byte-equal sha256 bc6f6120b246

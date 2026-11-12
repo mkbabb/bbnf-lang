@@ -75,7 +75,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/valgrind
-          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-cold-a1
+          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-cold-a2
 
       - name: build the pinned valgrind (cache miss)
         if: steps.valgrind-cache.outputs.cache-hit != 'true'

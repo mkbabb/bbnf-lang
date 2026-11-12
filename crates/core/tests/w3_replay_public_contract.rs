@@ -5800,6 +5800,8 @@ fn generate_external_runtime(output_root: &Path, registry: &Path) -> BTreeMap<St
 
 fn assert_generic_external_runtime_is_dual_root_identical_and_executes_all_public_cases(
     registry: &Path,
+    home: &Path,
+    target: &Path,
 ) {
     let temporary = tempfile::tempdir().expect("external public-witness consumer");
     let first_root = temporary.path().join("first-empty-root");
@@ -5821,15 +5823,13 @@ fn assert_generic_external_runtime_is_dual_root_identical_and_executes_all_publi
         "exactly one generic external harness"
     );
 
-    let isolated_home = temporary.path().join("cargo-home");
-    fs::create_dir(&isolated_home).expect("external runtime isolated Cargo home");
     let cargo = |arguments: &[&str], label: &str| {
         command_output(
             Command::new(env!("CARGO"))
                 .args(arguments)
-                .env("CARGO_HOME", &isolated_home)
+                .env("CARGO_HOME", home)
                 .env("CARGO_NET_OFFLINE", "true")
-                .env("CARGO_TARGET_DIR", temporary.path().join("target"))
+                .env("CARGO_TARGET_DIR", target)
                 .env_remove("RUSTC_WRAPPER")
                 .current_dir(&first_root),
             label,
@@ -6004,7 +6004,7 @@ fn local_registry_record(package: &Value, checksum: &str) -> String {
 const PARSE_THAT_ABI4_RECEIPT: &str =
     "restart/skinny/tranches/sk-v27/evidence/LW3.COMP/comp1b-t/LW3-PARSE-THAT-ABI4.json";
 const PARSE_THAT_ABI4_RECEIPT_SHA256: &str =
-    "d8ffcbd55508569b3054fbd5a4f2fccfe398bc98ef0e9fbc4be0ac22f20a20f5";
+    "073a80705f1c30b79f3c5ce41114e5db439de0526d92da6d6c3f490a1d1ce1a6";
 const PARSE_THAT_ABI4_RECEIPT_SCHEMA: &str = "bbnf.sk-v27.parse-that-abi4-receipt.v1";
 
 /// The upstream packages in publish (dependency) order, and the repository
@@ -6284,8 +6284,12 @@ fn lockstep_registry_flags(registry: &Path) -> Vec<String> {
     ]
 }
 
-/// `cargo package` twice into fresh target directories, verified against the
-/// local registry as it stands, inside the isolated Cargo home.
+/// `cargo package` twice into fresh target directories inside the isolated
+/// Cargo home. Cargo's own verification build is replaced by two stronger
+/// reads the crossing makes of every archive: the unpacked package resolves,
+/// dev-dependencies included, from the local registry as it stands
+/// ([`assert_package_resolves_from_registry`]), and the registry-only consumer
+/// compiles every packaged library from its archive.
 fn package_twice_in(
     home: &Path,
     scratch: &Path,
@@ -6311,7 +6315,13 @@ fn package_twice_in(
             Command::new(env!("CARGO"))
                 .args(["package", "--manifest-path"])
                 .arg(manifest)
-                .args(["--locked", "--offline", "--allow-dirty", "--target-dir"])
+                .args([
+                    "--locked",
+                    "--offline",
+                    "--allow-dirty",
+                    "--no-verify",
+                    "--target-dir",
+                ])
                 .arg(&target)
                 .args(lockstep_registry_flags(registry))
                 .env("CARGO_HOME", home)
@@ -6363,6 +6373,41 @@ fn package_twice_in(
         sha256: sha256_hex(&archives[0].1),
         files: file_lists.remove(0),
     }
+}
+
+/// The unpacked archive is a package of its own: its normalized manifest,
+/// dev-dependencies included, resolves offline from the local registry.
+fn assert_package_resolves_from_registry(
+    home: &Path,
+    scratch: &Path,
+    package: &PackagedCrate,
+    registry: &Path,
+) {
+    let unpacked = scratch.join(format!("resolve-{}", package.name));
+    fs::create_dir_all(&unpacked).expect("resolve directory");
+    command_output(
+        Command::new("tar")
+            .arg("-xzf")
+            .arg(&package.archive)
+            .arg("-C")
+            .arg(&unpacked),
+        &format!("unpack {} for resolution", package.name),
+    );
+    let package_root = unpacked.join(format!("{}-{}", package.name, package.version));
+    fs::remove_file(package_root.join("Cargo.lock")).ok();
+    command_output(
+        Command::new(env!("CARGO"))
+            .args(["generate-lockfile", "--offline"])
+            .args(lockstep_registry_flags(registry))
+            .env("CARGO_HOME", home)
+            .env("CARGO_NET_OFFLINE", "true")
+            .env_remove("RUSTC_WRAPPER")
+            .current_dir(&package_root),
+        &format!(
+            "{}: the packaged manifest resolves from the registry",
+            package.name
+        ),
+    );
 }
 
 /// Identity by tree: every packaged file other than the three Cargo writes
@@ -6479,7 +6524,7 @@ fn assert_archive_is_the_pinned_tree(
     );
 }
 
-fn assert_registry_only_package_consumer(registry: &Path, scratch: &Path) {
+fn assert_registry_only_package_consumer(registry: &Path, scratch: &Path, home: &Path) {
     let consumer = scratch.join("registry-consumer");
     fs::create_dir_all(consumer.join("src")).expect("registry consumer source");
     fs::create_dir_all(consumer.join(".cargo")).expect("registry consumer Cargo config");
@@ -6491,13 +6536,21 @@ publish = false
 
 [dependencies]
 bbnf = { version = "=0.3.0", default-features = false }
+bbnf-path = { version = "=0.1.0" }
 parse_that = { version = "=0.4.0", default-features = false }
 "#;
+    let parsed: toml::Value = toml::from_str(manifest).expect("consumer manifest TOML");
     assert!(
-        !manifest.contains("path =")
-            && !manifest.contains("git =")
-            && !manifest.contains("[patch")
-            && !manifest.contains("workspace"),
+        parsed.get("patch").is_none()
+            && parsed.get("workspace").is_none()
+            && parsed["dependencies"]
+                .as_table()
+                .expect("consumer dependencies")
+                .values()
+                .all(
+                    |dependency| toml_keys(dependency) == string_set(&["version"])
+                        || toml_keys(dependency) == string_set(&["default-features", "version"])
+                ),
         "external consumer inherits no path, git, patch, or workspace authority"
     );
     fs::write(consumer.join("Cargo.toml"), manifest).expect("registry consumer manifest");
@@ -6531,14 +6584,12 @@ fn main() {
     )
     .expect("registry consumer source");
 
-    let isolated_home = scratch.join("isolated-cargo-home");
-    fs::create_dir(&isolated_home).expect("isolated Cargo home");
     let run = |arguments: &[&str], label: &str| {
         command_output(
             Command::new(env!("CARGO"))
                 .args(arguments)
                 .current_dir(&consumer)
-                .env("CARGO_HOME", &isolated_home)
+                .env("CARGO_HOME", home)
                 .env("CARGO_NET_OFFLINE", "true")
                 .env("CARGO_TARGET_DIR", scratch.join("consumer-target"))
                 .env_remove("RUSTC_WRAPPER"),
@@ -6564,6 +6615,7 @@ fn main() {
         ("pprint", "0.5.0-alpha.0"),
         ("bbnf-ir", "0.2.0"),
         ("bbnf-ser", "0.1.0"),
+        ("bbnf-path", "0.1.0"),
     ] {
         let package = consumer_metadata["packages"]
             .as_array()
@@ -6720,7 +6772,7 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
             "sha256": package.sha256,
             "files": package.files.len(),
             "successive_archives_byte_identical": true,
-            "cargo_package_verify": "PASS",
+            "registry_verify": "resolved and built from the local registry by this law",
         }));
         packaged.push(package);
     }
@@ -6770,7 +6822,10 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
             expected["successive_archives_byte_identical"].as_bool(),
             Some(true)
         );
-        assert_eq!(expected["cargo_package_verify"].as_str(), Some("PASS"));
+        assert_eq!(
+            expected["registry_verify"].as_str(),
+            Some("resolved and built from the local registry by this law")
+        );
     }
     let kernel_abi_source = fs::read_to_string(
         owned["parse_that"]
@@ -6800,8 +6855,17 @@ fn exact_packages_cross_a_fresh_local_registry_and_public_runtime() {
         ));
     }
     write_lockstep_registry(&registry, &third_party, &metadata, &packaged);
-    assert_registry_only_package_consumer(&registry, scratch);
-    assert_generic_external_runtime_is_dual_root_identical_and_executes_all_public_cases(&registry);
+    for package in &packaged {
+        assert_package_resolves_from_registry(&home, scratch, package, &registry);
+    }
+    // One isolated home and one target directory for the two registry-only
+    // builds: the consumer compiles every packaged library from its archive.
+    assert_registry_only_package_consumer(&registry, scratch, &home);
+    assert_generic_external_runtime_is_dual_root_identical_and_executes_all_public_cases(
+        &registry,
+        &home,
+        &scratch.join("consumer-target"),
+    );
 }
 
 fn attribute_selects_module_path(attribute: &syn::Attribute) -> bool {

@@ -1,0 +1,37 @@
+{
+  "unit": "LW1.RX-1",
+  "corpus": "sk-v27-LW3-RX1b-anchors",
+  "corpusPath": "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/rx1b/anchors.json",
+  "cases": 27,
+  "reps": 2,
+  "guarded": true,
+  "startedAt": "2026-11-12T05:53:37.920Z",
+  "engines": {
+    "v8": {
+      "version": "node v26.0.0 / v8 14.6.202.33-node.19",
+      "ms": [
+        4504.995208,
+        4612.534
+      ]
+    },
+    "jsc": {
+      "version": "system JavaScriptCore.framework 21624.1.16.11.4 (bun absent)",
+      "ms": [
+        4579.574,
+        7627.251417
+      ]
+    }
+  },
+  "self": {
+    "v8": {
+      "consistent": true
+    },
+    "jsc": {
+      "consistent": true
+    }
+  },
+  "crossAgree": 27,
+  "specAmbiguity": [],
+  "verdict": "SELF-CONSISTENT",
+  "finishedAt": "2026-11-12T05:53:59.246Z"
+}

@@ -1,0 +1,90 @@
+
+running 1 test
+anchors: 13 of 27 agree
+DIFFER start-at-1: ^a at 1: oracle None, engine Some(2)
+DIFFER start-after-nl: ^a at 1: oracle None, engine Some(2)
+DIFFER end-before-x: a$ at 0: oracle None, engine Some(1)
+DIFFER end-before-nl: a$ at 0: oracle None, engine Some(1)
+DIFFER end-star: a*$ at 0: oracle None, engine Some(2)
+DIFFER both-off: ^ab$ at 1: oracle None, engine Some(3)
+DIFFER start-rep: (?:^a)+ at 0: oracle Some(1), engine Some(2)
+DIFFER end-nbsp-i-x: (?i)!important\s*$ at 0: oracle None, engine Some(11)
+DIFFER wb-mid-at: foo\b refused
+DIFFER wb-B-start-off: \Bo refused
+DIFFER wb-nonascii-after: a\b refused
+DIFFER wb-digit: \b\d+\b refused
+DIFFER wb-alt: \ba|b refused
+DIFFER wb-B-end: a\B refused
+
+thread 'anchors_and_boundaries_reproduce_the_oracle' (41606867) panicked at regex/tests/look_conditions.rs:66:5:
+14 of the anchor cases differ
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test anchors_and_boundaries_reproduce_the_oracle ... FAILED
+
+failures:
+
+failures:
+    anchors_and_boundaries_reproduce_the_oracle
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse-that-regex --test look_conditions`
+
+running 1 test
+oracle leaf corpus, DFA tier: 133 leaves, AGREE 114, ENGINE 19; cases compared 17145, differing 206, not compared 0
+ENGINE value.js@8d7bb5b8#1 (64 of 138 cases) first: case 50 "!IMPoRtAnt x": oracle None engine Some(11)
+ENGINE value.js@8d7bb5b8#8 (12 of 138 cases) [owed: LW3.RX-1d] first: case 36 "😀": oracle Some(4) engine None
+ENGINE value.js@8d7bb5b8#10 (12 of 138 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#12 (6 of 137 cases) first: case 59 " /*ZC0*/,\u{c}/*Z\t7*/ /*ZC0*/,\u{c}/*Z\t7*/": oracle Some(25) engine Some(34)
+ENGINE value.js@8d7bb5b8#13 (1 of 95 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#14 (5 of 138 cases) first: case 59 ";/*\u{8}*/\r/**/;/*\u{8}*/\r/**/": oracle Some(11) engine Some(22)
+ENGINE value.js@8d7bb5b8#15 (4 of 104 cases) first: case 59 "/**/ \t)/**/ \t)": oracle Some(7) engine Some(14)
+ENGINE value.js@8d7bb5b8#17 (1 of 138 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE value.js@8d7bb5b8#51 (72 of 138 cases) first: case 50 "@starTiNg-stYLex": oracle None engine Some(15)
+ENGINE value.js@8d7bb5b8#59 (1 of 95 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#60 (1 of 137 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE value.js@8d7bb5b8#69 (11 of 134 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#70 (1 of 133 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#73 (1 of 112 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#80 (3 of 121 cases) first: case 70 "(/*€,*/\n(/*€,*/\n": oracle Some(10) engine Some(20)
+ENGINE value.js@8d7bb5b8#83 (8 of 138 cases) first: case 59 "/*(*//*(*/": oracle Some(5) engine Some(10)
+ENGINE value.js@8d7bb5b8#86 (1 of 96 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#89 (1 of 131 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE sk-v24-56#50 (1 of 132 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+
+thread 'dfa_tier_agrees_with_v8_and_jsc' (41606872) panicked at regex/tests/oracle_leaf_corpus.rs:158:5:
+ENGINE leaves no unit owns: ["value.js@8d7bb5b8#1", "value.js@8d7bb5b8#12", "value.js@8d7bb5b8#14", "value.js@8d7bb5b8#15", "value.js@8d7bb5b8#51", "value.js@8d7bb5b8#80", "value.js@8d7bb5b8#83"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test dfa_tier_agrees_with_v8_and_jsc ... FAILED
+
+failures:
+
+failures:
+    dfa_tier_agrees_with_v8_and_jsc
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `-p parse-that-regex --test oracle_leaf_corpus`
+
+running 4 tests
+test backspace_inside_a_class_is_unchanged ... ok
+test word_boundary_outside_a_class_is_an_assertion ... ok
+test word_boundary_round_trips_through_to_source ... ok
+
+thread 'engine_reproduces_the_oracle' (41606889) panicked at regex/tests/word_boundary.rs:94:59:
+wb-b-foo-start: \bfoo refused
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test engine_reproduces_the_oracle ... FAILED
+
+failures:
+
+failures:
+    engine_reproduces_the_oracle
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse-that-regex --test word_boundary`
+error: 3 targets failed:
+    `-p parse-that-regex --test look_conditions`
+    `-p parse-that-regex --test oracle_leaf_corpus`
+    `-p parse-that-regex --test word_boundary`

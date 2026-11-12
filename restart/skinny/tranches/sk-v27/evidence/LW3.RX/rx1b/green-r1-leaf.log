@@ -1,0 +1,8 @@
+
+running 3 tests
+test word_boundary_reads_the_byte_before_the_leaf ... ok
+test span_leaf_reads_the_byte_before_too ... ok
+test start_anchor_holds_only_at_the_start_of_the_input ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

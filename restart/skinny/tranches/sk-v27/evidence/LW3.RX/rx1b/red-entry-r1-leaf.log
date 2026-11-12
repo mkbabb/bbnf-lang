@@ -1,0 +1,33 @@
+
+running 3 tests
+test span_leaf_reads_the_byte_before_too ... FAILED
+test word_boundary_reads_the_byte_before_the_leaf ... FAILED
+test start_anchor_holds_only_at_the_start_of_the_input ... FAILED
+
+failures:
+
+---- span_leaf_reads_the_byte_before_too stdout ----
+
+thread 'span_leaf_reads_the_byte_before_too' (41577019) panicked at parse_that/src/scanners.rs:76:32:
+Failed to compile regex to DFA: \bfoo
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- word_boundary_reads_the_byte_before_the_leaf stdout ----
+
+thread 'word_boundary_reads_the_byte_before_the_leaf' (41577021) panicked at parse_that/src/scanners.rs:62:32:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+---- start_anchor_holds_only_at_the_start_of_the_input stdout ----
+
+thread 'start_anchor_holds_only_at_the_start_of_the_input' (41577020) panicked at parse_that/src/scanners.rs:62:32:
+called `Result::unwrap()` on an `Err` value: PoisonError { .. }
+
+
+failures:
+    span_leaf_reads_the_byte_before_too
+    start_anchor_holds_only_at_the_start_of_the_input
+    word_boundary_reads_the_byte_before_the_leaf
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse_that --test regex_look_context_test`

@@ -1,0 +1,118 @@
+# sk-v27 LW3.COMP-3a: divergences ruled by an authority of record. A divergence G1 finds that no row here
+# (or of SK/grammar/DIVERGENCE.tsv, for the bbnf grammar against the TS front end) names is unruled.
+# case: a case id, or for the valuejs-leaves oracle a leaf id. owner: the unit that owns the cure.
+arm	grammar	oracle	case	owner	authority
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#1	LW3.RX-1b	LW3-ORDER RX-1b (the $-ignored leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#1	LW3.RX-1b	LW3-ORDER RX-1b (the $-ignored leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#3	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#3	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#4	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#4	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#5	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#5	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#6	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#6	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#7	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#7	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#8	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#8	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#9	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#9	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#10	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#10	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#11	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#11	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#12	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#12	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#13	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#13	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#14	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#14	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#15	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#15	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#16	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#16	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#17	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#17	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#18	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#18	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#20	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#20	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#21	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#21	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#22	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#22	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#23	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#23	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#24	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#24	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#25	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#25	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#26	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#26	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#27	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#27	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#28	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#28	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#29	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#29	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#30	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#30	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#31	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#31	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#32	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#32	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#34	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#34	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#35	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#35	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#36	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#36	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#38	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#38	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#43	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#43	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#51	LW3.RX-1b	LW3-ORDER RX-1b (the $-ignored leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#51	LW3.RX-1b	LW3-ORDER RX-1b (the $-ignored leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#55	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#55	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#59	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#59	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#60	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#60	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#61	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#61	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#69	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#69	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#70	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#70	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#73	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#73	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#77	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#77	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#79	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#79	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#80	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#80	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#83	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#83	LW3.RX-1c	LW3-ORDER RX-1c (the 5 lazy-read-greedy leaves); OR7-SPIKE.md Route B determinizer ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#86	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#86	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#89	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#89	LW3.RX-1d	LW3-ORDER RX-1d (the 12 shared ENGINE leaves); OR7-SPIKE.md shared front-end ENGINE
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#94	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#94	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#97	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#97	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#101	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#101	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#102	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#102	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#107	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#107	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#113	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#113	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_l4	valuejs-leaves	value.js@8d7bb5b8#114	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+root	css_pretty	valuejs-leaves	value.js@8d7bb5b8#114	LW3.RX-1f/RX-1g	LW3-ORDER RX-1f, RX-1g; OR7-SPIKE.md LOOKAROUND tier (38/38 refused by the parser); LOOKAROUND-CENSUS.tsv
+*	graphql	graphql-js	graphql/cases/doc-0043.graphql	H-1 (GraphQL October 2021)	GraphQL October 2021 EscapedUnicode is exactly four hex digits; graphql-js 16.x also reads the later braced \u{...} form, so it accepts this document and the October 2021 grammar does not
+*	r7rs_datum	lexpr	r7rs/cases/lexpr/invalid-14.scm	H-1 (R7RS datum syntax)	R7RS 7.1.1: a boolean must be followed by a delimiter; lexpr 0.2.7 reads #t#f as two data, the R7RS grammar rejects it

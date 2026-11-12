@@ -1,0 +1,30 @@
+{
+  "note": "sk-v27 LW3.COMP-3a/5b: npm tarballs the oracle runs, by sha256 (checked before unpacking) and the registry's own integrity. ts-package is the published @mkbabb/bbnf-lang 0.3.0 (never typescript/ HEAD) with its one dependency. graphql-js is the oracle of the GraphQL October 2021 held-out grammar: 16.11.0, the newest release whose parser reads no syntax added after that edition (16.12.0 onward read descriptions on executable definitions, an addition of the September 2025 edition); it departs from the pin rule (newest release at least 14 days old, 16.14.2 on 2026-11-11) for that reason, and its one remaining departure from the edition (the braced \\u{...} escape) is a ruled row in crates/oracle/ruled.tsv. Its corpus is graphql-js's own tests at the same release's tag (v16.11.0, c18e9f6aada9ae086ddf836e4d822cf1426f3868).",
+  "sets": {
+    "ts-package": [
+      {
+        "name": "@mkbabb/bbnf-lang",
+        "version": "0.3.0",
+        "url": "https://registry.npmjs.org/@mkbabb/bbnf-lang/-/bbnf-lang-0.3.0.tgz",
+        "sha256": "56ae9d8b3ee2bd8ee8e84ce917e46096b4b7856d7f9ee20b5d968c4095900c4e",
+        "integrity": "sha512-dMtZajlZCeuyvHxB1RXt1ViFbuU4BeFlA1WTeamDGSmVGyevtKZDxiqDEhvg1DhXlbmVkymOgfZFItqK7V/qAw=="
+      },
+      {
+        "name": "@mkbabb/parse-that",
+        "version": "2.0.0",
+        "url": "https://registry.npmjs.org/@mkbabb/parse-that/-/parse-that-2.0.0.tgz",
+        "sha256": "cbfc74e3040149b151741dfdb130e03c8bc8921d52d13f5cbb18f0af61bcf926",
+        "integrity": "sha512-naiByrx1GJC1ENlnp71RkHX3yfmM7LCEYRbAvOO0kHbcSyR6vWRur8Ghf/RVRPIwpfzp0tZ5DhsQfiQrBwheCA=="
+      }
+    ],
+    "graphql-js": [
+      {
+        "name": "graphql",
+        "version": "16.11.0",
+        "url": "https://registry.npmjs.org/graphql/-/graphql-16.11.0.tgz",
+        "sha256": "7e34f9274fdf64549b08d23ab7480afbe47add16974de698cd387a36b09db1f6",
+        "integrity": "sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw=="
+      }
+    ]
+  }
+}

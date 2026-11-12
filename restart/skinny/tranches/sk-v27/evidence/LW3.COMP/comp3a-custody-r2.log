@@ -1,0 +1,10 @@
+# COMP-3a custody r2 at ed7b136b6 2026-11-12T05:17:45Z: verify over the corpus fetched from release corpus-v2, then a one-byte tamper
+$ grep -c jsontestsuite/ corpus/MANIFEST.sha256
+320
+$ cargo xtask corpus verify
+corpus verify: 3399/3399 files match (corpus-v2)
+rc=0
+$ (one byte of jsontestsuite/test_parsing/y_object.json overwritten) cargo xtask corpus verify
+  jsontestsuite/test_parsing/y_object.json: sha256 8c34102dc34d023cd3cf044069349e092f0626edf08aec20490f93a7a69fbfdf != manifest 2d2df3a9238ce3d7ee68794dafbca7439308cc9abc685806ab8d80e3f7e6c5a2
+Error: corpus verify: 1 of 3399 files fail against /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s5-oracle/corpus/MANIFEST.sha256 in /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5-oracle/fetch-check; run `cargo xtask corpus fetch`
+rc=1

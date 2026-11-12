@@ -66,6 +66,27 @@ UPSTREAM = [
 ]
 TOOLCHAINS = [("rust-stable", "github", "rust-lang/rust", r"^(\d+\.\d+\.\d+)$", "toolchain for the cargo +stable matrix")]
 
+# G1's independent oracles (sk-v27 LW3.COMP-3a, ruling H-1). Pinned by the language version each
+# one reads, not by the newest-release rule: (kind, name, pin, content address, published_at, departure,
+# source, role). Each is still >= 14 days old, so `check` holds them to the same rule.
+ORACLES = [
+    ("oracle_commit", "JSONTestSuite", "1ef36fa", "1ef36fa01286573e846ac449e8683f8833c5b26a",
+     "2024-11-22T12:55:41Z", "none (no releases; the CON-2 commit)",
+     "github.com/nst/JSONTestSuite commit 1ef36fa (test_parsing/ in corpus-v2)", "JSON y_/n_ verdict oracle (A-10)"),
+    ("oracle_commit", "toml-test", "2.2.0", "ce08da1ddb075d1c7596d663c7fcba9a2ae02c5c",
+     "2026-04-30T16:17:03Z", "none", "github.com/toml-lang/toml-test tag v2.2.0 (files-toml-1.0.0 in corpus-v2)",
+     "TOML 1.0.0 valid/invalid oracle (H-1)"),
+    ("npm", "graphql", "16.11.0",
+     "sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw==",
+     "2025-04-26T08:02:28.166Z", "newest >= 14 d (16.12+) reads post-October-2021 syntax -> pin 16.11.0 (crates/oracle/ts/pin.json)",
+     "npm (tarball sha256 in crates/oracle/ts/pin.json)", "GraphQL October 2021 oracle (H-1)"),
+    ("oracle_commit", "graphql-js", "16.11.0", "c18e9f6aada9ae086ddf836e4d822cf1426f3868",
+     "2025-04-26T07:58:36Z", "none (aligned to the npm pin)",
+     "github.com/graphql/graphql-js tag v16.11.0 (test documents in corpus-v2)", "GraphQL corpus source (H-1)"),
+    ("crate", "lexpr", "0.2.7", "6a84de6a9df442363b08f5dbf0cd5b92edc70097b89c4ce4bfea4679fe48bc67",
+     "2023-03-16T20:47:03.128021Z", "none", "crates.io (crates/oracle, =0.2.7)", "R7RS datum oracle (H-1)"),
+]
+
 COLUMNS = ["kind", "name", "pin", "checksum", "published_at", "age_days", "resolved_on", "locked_root",
            "locked_skinny", "v1_pin", "departure", "source", "role"]
 
@@ -236,7 +257,20 @@ def resolve(on: dt.date) -> list[dict]:
     for name, hostk, project, rx, role in TOOLCHAINS:
         pin, sha, pub, src = resolve_upstream(hostk, project, rx, None, cutoff)
         rows.append(_row("toolchain", name, pin, sha, pub, on, nolock, src, role))
+    rows.extend(oracle_rows(on))
     return rows
+
+
+def oracle_rows(on: dt.date) -> list[dict]:
+    out = []
+    for kind, name, pin, ck, pub, departure, src, role in ORACLES:
+        lock = locked(name) if kind == "crate" else {"root": "-", "skinny": "-"}
+        age = (dt.datetime.combine(on, dt.time(tzinfo=dt.timezone.utc)) - _ts(pub)).days
+        out.append({"kind": kind, "name": name, "pin": pin, "checksum": ck, "published_at": pub,
+                    "age_days": str(age), "resolved_on": on.isoformat(), "locked_root": lock["root"],
+                    "locked_skinny": lock["skinny"], "v1_pin": "-", "departure": departure, "source": src,
+                    "role": role})
+    return out
 
 
 CHECKSUM = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64}|sha512-[A-Za-z0-9+/]{86}==)$")

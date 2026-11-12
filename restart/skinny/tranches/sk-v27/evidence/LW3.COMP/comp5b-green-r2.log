@@ -1,0 +1,27 @@
+# COMP-5b GREEN r2 at ed7b136b6 2026-11-12T05:17:00Z
+$ python3 -m unittest bench/test_prereg.py bench/test_decision_plan.py -v
+test_addendum_exists_and_is_hashed (bench.test_prereg.HeldOut.test_addendum_exists_and_is_hashed) ... ok
+test_nothing_is_tuned_on_the_held_out_set (bench.test_prereg.HeldOut.test_nothing_is_tuned_on_the_held_out_set) ... ok
+test_the_oracle_pins_agree_with_the_pin_tables (bench.test_prereg.HeldOut.test_the_oracle_pins_agree_with_the_pin_tables) ... ok
+test_the_section_digests_equal_the_corpora (bench.test_prereg.HeldOut.test_the_section_digests_equal_the_corpora) ... ok
+test_the_section_hashes_equal_the_grammar_files (bench.test_prereg.HeldOut.test_the_section_hashes_equal_the_grammar_files) ... ok
+test_consumer_cells_are_registered (bench.test_prereg.Prereg.test_consumer_cells_are_registered) ... ok
+test_exists_and_is_hashed (bench.test_prereg.Prereg.test_exists_and_is_hashed) ... ok
+test_names_families_and_matrices (bench.test_prereg.Prereg.test_names_families_and_matrices) ... ok
+test_noisy_never_certifies (bench.test_prereg.Prereg.test_noisy_never_certifies) ... ok
+test_or7_parity_cells_are_registered (bench.test_prereg.Prereg.test_or7_parity_cells_are_registered) ... ok
+test_perf3_paired_cure_cells_are_registered (bench.test_prereg.Prereg.test_perf3_paired_cure_cells_are_registered) ... ok
+test_root_trials_are_registered (bench.test_prereg.Prereg.test_root_trials_are_registered) ... ok
+test_rx4_paired_cure_cells_are_registered (bench.test_prereg.Prereg.test_rx4_paired_cure_cells_are_registered) ... ok
+test_states_the_decision_rule (bench.test_prereg.Prereg.test_states_the_decision_rule) ... ok
+test_every_goal_has_one_row (bench.test_decision_plan.DecisionPlan.test_every_goal_has_one_row) ... ok
+test_every_registered_cell_once (bench.test_decision_plan.DecisionPlan.test_every_registered_cell_once) ... ok
+test_frozen_floors_follow_the_rule (bench.test_decision_plan.DecisionPlan.test_frozen_floors_follow_the_rule) ... ok
+test_sealed_over_the_prereg_of_record (bench.test_decision_plan.DecisionPlan.test_sealed_over_the_prereg_of_record) ... ok
+test_sha256_is_cited_in_rulings (bench.test_decision_plan.DecisionPlan.test_sha256_is_cited_in_rulings) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 0.059s
+
+OK
+rc=0

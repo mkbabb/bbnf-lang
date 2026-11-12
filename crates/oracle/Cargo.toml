@@ -1,0 +1,36 @@
+[package]
+name = "bbnf-oracle"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Independent oracles, obs() and the failure contract for bbnf-lang's G1 reading (sk-v27 LW3.COMP-3a/4a/5b). Dev-only: never a dependency of a published crate."
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+# `float_roundtrip`: the comparator must read every number correctly rounded
+# (without it serde_json reads canada.json's 43.474709000000132 one ULP off).
+# Features unify only within one build: `cargo bench -p bbnf` never selects this
+# crate, so the competitor benches keep serde_json's default float path.
+# `unbounded_depth` adds one method (`disable_recursion_limit`) and changes no
+# default: the root child's outcomes nest as deep as the inputs do
+# (JSONTestSuite's `i_structure_500_nested_arrays`).
+serde_json = { version = "1", features = ["float_roundtrip", "unbounded_depth"] }
+anyhow = "1"
+sha2 = "0.10"
+# The root arm: root `backend/rust`'s generated parsers and the grammar of record's
+# front end (for the TS arm's mapping erasure). Never the reverse edge.
+bbnf = { path = "../core" }
+# The one corpus resolver (R-c custody).
+bbnf-corpus = { path = "../corpus" }
+# The regex engine root `backend/rust` prints (the value.js leaf arm).
+parse-that-regex.workspace = true
+# The R7RS datum oracle (ruling H-1), at its pin (bench/W0-BENCH-PINS.tsv).
+lexpr = "=0.2.7"
+
+[features]
+# Mutant arms for the harness's own falsifiers (an arm that returns a constant).
+mutants = []
+
+[[bin]]
+name = "g1"
+path = "src/bin/g1.rs"

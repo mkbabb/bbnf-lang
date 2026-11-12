@@ -1,0 +1,79 @@
+// TOML 1.0.0, held out (sk-v27 LW3.COMP-5b, ruling H-1).
+//
+// Authored from the TOML 1.0.0 specification (toml.io/en/v1.0.0) and its ABNF
+// (toml-lang/toml, tag 1.0.0, toml.abnf); rule names follow the ABNF. Where
+// the specification's prose is stricter than its ABNF it governs: a comment
+// carries no control character other than tab (U+007F included). Case: ABNF
+// strings are case-insensitive, so the exponent marker, the date-time
+// delimiter, the UTC offset and hexadecimal digits take either case.
+//
+// This grammar is the syntax. Duplicate keys, table redefinition, inline
+// table immutability and the date and time ranges are TOML semantics; the
+// held-out oracle's comparator checks them on the observation tree.
+// Held out: no compiler pass is tuned against this file (LW3-ORDER COMP-5b).
+
+toml = bom ? , expression , ( newline , expression ) * ;
+
+bom = /\uFEFF/ ;
+
+expression = ws , ( keyval , ws , comment ? | table , ws , comment ? | comment ? ) ;
+
+ws = /[ \t]*/ ;
+newline = /\r?\n/ ;
+comment = /#(?:[\t -~]|[^\x00-\x7f])*/ ;
+
+// Key/value pairs.
+keyval = key , keyval-sep , val ;
+key = simple-key , ( dot-sep , simple-key ) * ;
+simple-key = quoted-key | unquoted-key ;
+unquoted-key = /[A-Za-z0-9_-]+/ ;
+quoted-key = basic-string | literal-string ;
+dot-sep = /[ \t]*\.[ \t]*/ ;
+keyval-sep = /[ \t]*=[ \t]*/ ;
+
+val = string | boolean | array | inline-table | date-time | float | integer ;
+
+// Strings.
+string = ml-basic-string | basic-string | ml-literal-string | literal-string ;
+basic-string = /"(?:[\t !#-\[\]-~]|[^\x00-\x7f]|\\(?:["\\bfnrt]|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8}))*"/ ;
+ml-basic-string = /"""(?:\r?\n)?(?:[\t !#-\[\]-~]|[^\x00-\x7f]|\\(?:["\\bfnrt]|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})|\r?\n|\\[ \t]*\r?\n(?:[ \t]|\r?\n)*)*(?:""?(?:[\t !#-\[\]-~]|[^\x00-\x7f]|\\(?:["\\bfnrt]|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})|\r?\n|\\[ \t]*\r?\n(?:[ \t]|\r?\n)*)+)*(?:""?)?"""/ ;
+literal-string = /'(?:[\t -&(-~]|[^\x00-\x7f])*'/ ;
+ml-literal-string = /'''(?:\r?\n)?(?:[\t -&(-~]|[^\x00-\x7f]|\r?\n)*(?:''?(?:[\t -&(-~]|[^\x00-\x7f]|\r?\n)+)*(?:''?)?'''/ ;
+
+// Integers: the prefixed forms first, since a decimal "0" is a prefix of each.
+integer = hex-int | oct-int | bin-int | dec-int ;
+dec-int = /[+-]?(?:[1-9](?:_?[0-9])+|[0-9])/ ;
+hex-int = /0x[0-9A-Fa-f](?:_?[0-9A-Fa-f])*/ ;
+oct-int = /0o[0-7](?:_?[0-7])*/ ;
+bin-int = /0b[01](?:_?[01])*/ ;
+
+// Floats.
+float = /[+-]?(?:[1-9](?:_?[0-9])+|[0-9])(?:[eE][+-]?[0-9](?:_?[0-9])*|\.[0-9](?:_?[0-9])*(?:[eE][+-]?[0-9](?:_?[0-9])*)?)/ | special-float ;
+special-float = /[+-]?(?:inf|nan)/ ;
+
+boolean = "true" | "false" ;
+
+// Date and time (RFC 3339 profiles).
+date-time = offset-date-time | local-date-time | local-date | local-time ;
+offset-date-time = full-date , time-delim , partial-time , time-offset ;
+local-date-time = full-date , time-delim , partial-time ;
+local-date = full-date ;
+local-time = partial-time ;
+full-date = /[0-9]{4}-[0-9]{2}-[0-9]{2}/ ;
+time-delim = /[Tt ]/ ;
+partial-time = /[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?/ ;
+time-offset = /[Zz]|[+-][0-9]{2}:[0-9]{2}/ ;
+
+// Arrays.
+array = "[" , array-values ? , ws-comment-newline , "]" ;
+array-values = ws-comment-newline , val , ws-comment-newline , ( "," , ws-comment-newline , val , ws-comment-newline ) * , "," ? ;
+ws-comment-newline = ( /[ \t]+/ | comment ? , newline ) * ;
+
+// Tables.
+table = array-table | std-table ;
+std-table = "[" , ws , key , ws , "]" ;
+array-table = "[[" , ws , key , ws , "]]" ;
+
+// Inline tables.
+inline-table = "{" , ws , inline-table-keyvals ? , ws , "}" ;
+inline-table-keyvals = keyval , ( ws , "," , ws , keyval ) * ;

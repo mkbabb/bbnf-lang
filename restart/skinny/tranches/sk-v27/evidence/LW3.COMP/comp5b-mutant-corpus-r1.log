@@ -1,0 +1,6 @@
+# COMP-5b MUTANT (corpus) r1 at ed7b136b6: one hex digit of graphql/cases/doc-0000.graphql's manifest line changed
+FAIL: test_the_section_digests_equal_the_corpora (bench.test_prereg.HeldOut.test_the_section_digests_equal_the_corpora)
+    self.assertEqual(got, digest, f"{name}: the {prefix} corpus changed after registration")
+ : H-GRAPHQL: the graphql/ corpus changed after registration
+Ran 14 tests in 0.058s
+FAILED (failures=1)

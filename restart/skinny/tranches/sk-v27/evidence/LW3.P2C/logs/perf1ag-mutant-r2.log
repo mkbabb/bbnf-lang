@@ -1,0 +1,3 @@
+mutant: the word restored at stage1_split.rs:4, unreferenced commit 718938a0f46813fdd483ae60ae971a39fa9d2aa4
+718938a0f46813fdd483ae60ae971a39fa9d2aa4:rust/simd/benches/stage1_split.rs:4://! The arms are registered as PREREG cells by S12 (bbnf-lang
+lines=1

@@ -85,6 +85,15 @@ ORACLES = [
      "github.com/graphql/graphql-js tag v16.11.0 (test documents in corpus-v2)", "GraphQL corpus source (H-1)"),
     ("crate", "lexpr", "0.2.7", "6a84de6a9df442363b08f5dbf0cd5b92edc70097b89c4ce4bfea4679fe48bc67",
      "2023-03-16T20:47:03.128021Z", "none", "crates.io (crates/oracle, =0.2.7)", "R7RS datum oracle (H-1)"),
+    ("npm", "peggy", "5.1.1",
+     "sha512-HhhbwH1MoCq9YNqeC2n1ap6YzLSL1YUgUxGoeiXcmGOlAYTqxwmifPJ7gFZtkR/S2+KXZ6BkJ5FfycTtq9oCRQ==",
+     "2026-10-20T20:44:20.669Z", "none (newest >= 14 d)",
+     "npm (tarball sha256 in crates/oracle/ts/pin.json)",
+     "EBNF, BNF and Math grammar-of-record oracle, a PEG engine over hand transcriptions (ORC-2)"),
+    ("npm", "source-map-generator", "2.0.7",
+     "sha512-DJBSmVt7U50+Z+MihfPJKhrbAAC0VHriNQlufDfgaikQfAmPck05rjJ9BO2LXTabA6644umhFm2+XZ8aRZxTkQ==",
+     "2026-06-07T01:11:58.752Z", "none (the version peggy 5.1.1 requires)",
+     "npm (tarball sha256 in crates/oracle/ts/pin.json)", "peggy's one library dependency (ORC-2)"),
 ]
 
 COLUMNS = ["kind", "name", "pin", "checksum", "published_at", "age_days", "resolved_on", "locked_root",

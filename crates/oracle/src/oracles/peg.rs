@@ -317,11 +317,15 @@ fn math_number(rng: &mut Rng) -> String {
     s
 }
 
+/// One language's corpus recipe: its sentence generator, the alphabet its
+/// one-edit mutations draw from, and its hand cases.
+type CorpusRecipe = (fn(&mut Rng) -> String, &'static [&'static str], &'static [&'static str]);
+
 /// Writes the corpus of one grammar under `dir/<id>/cases/` and returns the
 /// relative paths written. Each language gets 300 generated cases, a seeded
 /// mutation of each, and the hand cases below.
 pub fn write_corpus(id: &str, dir: &Path) -> anyhow::Result<Vec<String>> {
-    let (make, alphabet, hand): (fn(&mut Rng) -> String, &[&str], &[&str]) = match id {
+    let (make, alphabet, hand): CorpusRecipe = match id {
         "ebnf" => (
             ebnf_grammar,
             &["'", "\"", "=", ";", ".", ",", "|", "(", ")", "[", "]", "{", "}", "-", "?", "*", "+", " ", "\n", "a", "_", "1"],

@@ -336,3 +336,20 @@ Each unit's falsifier is the one written in `AMENDMENTS-FROM-THE-DIG.md` (cited 
 ### 7.3 2026-11-12, a quiet certification window (LW3 R0-FOLD, under RULINGS 2026-11-12a DIG-QW; delegate, owner may overturn)
 
 §6 "Benchmark honesty" and LW5.CON-1 gain: a timing read certifies only inside a scheduled quiet certification window (X-7's load rule; the QoS reading of 2026-11-11); a record outside it is labelled NOISY and decides nothing. The owner's own ruling on the window is the dig's O-7.
+
+### 7.4 2026-11-12, the R0 critic's rows (recorded by LW3 seat S6 KERNEL; delegate, owner may overturn)
+
+The R0 critic read `sk-v27-lw3` `d98914e34` and found plan passages that still let a measured verdict delete a kernel or an organ, which §7.1 did not reach. These rows continue §7.1 under DIG-G1 and correct its "Read, not amended" paragraph: x86 kernels are inside DIG-G1, and the Wasm parse VM's trial is ruled by DIG-C16 (admitted 2026-11-12a).
+
+| Row | Passage | Sealed text | Reading under the addendum |
+|---|---|---|---|
+| G1-P23 | `designs/programme.md:483` | "It is deleted. ASM earns its place or goes." | DIG-G1: as G1-P16; an .S kernel that does not beat its intrinsic twin is not selected by default, its record stands and a redesign unit with a re-trial opens (DIG-K-C10); it is not deleted. |
+| G1-P24 | `designs/pprint.md:206`, `designs/pprint.md:207` (PP-U6) | "With no gain, the kernel is deleted." / "or deletion" | DIG-G1: as G1-P12; with no gain the escape kernel is not selected by default; its slot, oracle and fuzz target stay. |
+| G1-P25 | `designs/compiler.md:114` (R2); `PLAN.md:59` (X-4) | "a measured win on that runner. A kernel missing any of the four is deleted" / "an x86 kernel needs a measured win on its runner or it is deleted" | DIG-G1: the measured-win clause deletes no x86 kernel; a tier with no measured win is not selected by default. Deletion for a missing oracle, fuzz target or executing CI is a correctness rule and stands. Removing x86 is the owner's O-2 only. This corrects §7.1 "Read, not amended": x86 kernels are inside DIG-G1. |
+| G1-P26 | `PLAN.md:56` (X-1) | "re-admitted only as passes that win a trial (C2-5: a root trial can only *delete*)" | DIG-G1: as G1-P04; a root trial decides only whether the root implementation is ported. The CSP, the e-graph, shape mining and the kernels are built on the spine whatever it reads. |
+| G1-P27 | `LW3-ORDER.md:107`, `LW3-ORDER.md:290`, `LW3-ORDER.md:299`, `LW3-ORDER.md:300`; `LW2-ORDER.md:88` | "(deletion is LW7)"; "CB-13 judges them there"; "would delete the organ"; "(losers deleted)"; "goes to the simpler organ" | DIG-G1: no organ is deleted at LW7 or at any wave; CB-13 judges defaults per named family, never existence; "the simpler organ" names the LW3 port default only (G1-P19, G1-P21). |
+| C16-P01 | `PLAN.md:206` (LW4.COMP-3); `designs/compiler.md:64`, `designs/compiler.md:187` | "a delete-unless-wins trial" / "Wasm parse VM deleted unless it wins" | DIG-C16 (admitted 2026-11-12a): a LOSS switches the VM off by default; the wasm face is not deleted without an owner ruling. |
+
+| Row | Unit | Wave | Work | Source |
+|---|---|---|---|---|
+| A-26 | LW5.COMP-4 | LW5 | Amends A-11: until O-5 is ruled the fuller reading stands: HM and bidirectional inference with the CSP as substrate (DIG-CSP-B7, DIG-C9). First-order only is a narrowing the owner alone may make. | DIG-CSP-B7 |

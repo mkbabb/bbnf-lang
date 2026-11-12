@@ -21,3 +21,14 @@ G1-P19	restart/skinny/tranches/sk-v27/PLAN.md	151	An UNDECIDED trial goes to the
 G1-P20	restart/skinny/tranches/sk-v27/PLAN.md	227	COMP-2 (CB-13): keep/delete verdicts recorded against the new spine (I6).
 G1-P21	restart/skinny/tranches/sk-v27/PLAN.md	253	Losers live on tagged branches only.
 G1-P22	restart/skinny/tranches/sk-v27/LW3-ORDER.md	107	LOSS or UNDECIDED-by-deadline ports nothing in LW3 and tags `trial/lw2-<organ>-loser`.
+G1-P23	restart/skinny/tranches/sk-v27/designs/programme.md	483	It is deleted. ASM earns its place or goes.
+G1-P24	restart/skinny/tranches/sk-v27/designs/pprint.md	206	With no gain, the kernel is deleted.
+G1-P24	restart/skinny/tranches/sk-v27/designs/pprint.md	207	or deletion
+G1-P25	restart/skinny/tranches/sk-v27/designs/compiler.md	114	A kernel missing any of the four is deleted
+G1-P25	restart/skinny/tranches/sk-v27/PLAN.md	59	an x86 kernel needs a measured win on its runner or it is deleted
+G1-P26	restart/skinny/tranches/sk-v27/PLAN.md	56	re-admitted only as passes that win a trial (C2-5: a root trial can only *delete*)
+G1-P27	restart/skinny/tranches/sk-v27/LW3-ORDER.md	107	(deletion is LW7)
+G1-P27	restart/skinny/tranches/sk-v27/LW3-ORDER.md	290	CB-13 judges them there
+G1-P27	restart/skinny/tranches/sk-v27/LW3-ORDER.md	299	would delete the organ
+G1-P27	restart/skinny/tranches/sk-v27/LW3-ORDER.md	300	(losers deleted)
+G1-P27	restart/skinny/tranches/sk-v27/LW2-ORDER.md	88	goes to the simpler organ

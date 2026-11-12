@@ -1,0 +1,9 @@
+   Compiling xtask v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s9-perf/rust/xtask)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.44s
+     Running tests/public_api_callers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/public_api_callers-9699456b8a442a7e)
+
+running 1 test
+test every_pub_item_of_the_audited_crates_has_a_caller ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.56s
+

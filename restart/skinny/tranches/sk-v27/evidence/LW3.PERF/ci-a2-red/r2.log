@@ -1,0 +1,67 @@
+     Removed 398 files, 25.1MiB total
+   Compiling xtask v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s9-perf/wt-red/rust/xtask)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.50s
+     Running tests/public_api_callers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/public_api_callers-9699456b8a442a7e)
+
+running 1 test
+test every_pub_item_of_the_audited_crates_has_a_caller ... FAILED
+
+failures:
+
+---- every_pub_item_of_the_audited_crates_has_a_caller stdout ----
+
+thread 'every_pub_item_of_the_audited_crates_has_a_caller' (49035271) panicked at xtask/tests/public_api_callers.rs:296:5:
+pub items with no caller in this workspace (production code or a compiled doctest):
+  fn ascii_prefix_len_with at /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s9-perf/wt-red/rust/simd/src/dispatch.rs:295
+  fn portable at /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s9-perf/wt-red/rust/simd/src/stage1.rs:684
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    every_pub_item_of_the_audited_crates_has_a_caller
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.78s
+
+error: test failed, to rerun pass `-p xtask --test public_api_callers`
+audit rc=101
+    Checking parse-that-simd v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s9-perf/wt-red/rust/simd)
+error: this boolean expression can be simplified
+   --> simd/src/scalar.rs:258:20
+    |
+258 |           let atom = !structural
+    |  ____________________^
+259 | |             && !prev_digraph
+260 | |             && !(outside && whitespace[b as usize])
+261 | |             && !in_comment
+262 | |             && !opener;
+    | |______________________^ help: try: `!(structural || prev_digraph || in_comment || opener || outside && whitespace[b as usize])`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#nonminimal_bool
+    = note: `-D clippy::nonminimal-bool` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::nonminimal_bool)]`
+
+error: this boolean expression can be simplified
+   --> simd/src/scalar.rs:258:20
+    |
+258 |           let atom = !structural
+    |  ____________________^
+259 | |             && !prev_digraph
+260 | |             && !(outside && whitespace[b as usize])
+261 | |             && !in_comment
+    | |__________________________^ help: try: `!(structural || prev_digraph || in_comment || outside && whitespace[b as usize])`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#nonminimal_bool
+
+error: this boolean expression can be simplified
+   --> simd/src/scalar.rs:258:20
+    |
+258 |           let atom = !structural
+    |  ____________________^
+259 | |             && !prev_digraph
+260 | |             && !(outside && whitespace[b as usize])
+    | |___________________________________________________^ help: try: `!(structural || prev_digraph || outside && whitespace[b as usize])`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#nonminimal_bool
+
+error: could not compile `parse-that-simd` (lib) due to 3 previous errors
+nightly-clippy rc=101

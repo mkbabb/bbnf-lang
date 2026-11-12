@@ -1,0 +1,40 @@
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s9-perf/wt-red/rust/corpus)
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s9-perf/wt-red/rust/simd)
+warning: method `as_ptr` is never used
+   --> simd/src/padded.rs:162:19
+    |
+126 | impl<'a> PaddedSlice<'a> {
+    | ------------------------ method in this implementation
+...
+162 |     pub(crate) fn as_ptr(&self) -> *const u8 {
+    |                   ^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `parse-that-simd` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.63s
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/dispatch_tiers-e4b9bacf9eeeb384)
+
+running 4 tests
+test selected_tier_is_the_best_supported ... ok
+test every_isa_tier_of_the_target_is_compiled ... ok
+test required_tiers_are_supported_on_this_host ... ok
+test every_supported_tier_matches_the_scalar_oracle ... FAILED
+
+failures:
+
+---- every_supported_tier_matches_the_scalar_oracle stdout ----
+
+thread 'every_supported_tier_matches_the_scalar_oracle' (48372567) panicked at simd/tests/dispatch_tiers.rs:124:17:
+assertion `left == right` failed: tier neon diverges from scalar (digraphs-only alphabet) on "a/*"
+  left: ([], [])
+ right: ([1], [47])
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    every_supported_tier_matches_the_scalar_oracle
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+error: test failed, to rerun pass `-p parse-that-simd --test dispatch_tiers`

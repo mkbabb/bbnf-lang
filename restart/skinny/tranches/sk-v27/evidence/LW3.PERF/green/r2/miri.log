@@ -1,0 +1,49 @@
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s9-perf/rust/simd)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.69s
+     Running unittests src/lib.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/miri/aarch64-apple-darwin/debug/deps/parse_that_simd-c355cf9a1485380f)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/ascii_prefix.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/miri/aarch64-apple-darwin/debug/deps/ascii_prefix-0e596d2e25d61e80)
+
+running 5 tests
+test entry_point_runs_the_selected_tier ... ok
+test every_tier_every_length_alignment_and_position ... ok
+test fuzz_every_tier_matches_the_oracle ... ok
+test oracle_is_the_definition ... ok
+test unsupported_tier_reports_none ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 67.31s
+
+     Running tests/dispatch_tiers.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/miri/aarch64-apple-darwin/debug/deps/dispatch_tiers-c5e4b348912350f4)
+
+running 4 tests
+test every_isa_tier_of_the_target_is_compiled ... ok
+test every_supported_tier_matches_the_scalar_oracle ... ok
+test required_tiers_are_supported_on_this_host ... ok
+test selected_tier_is_the_best_supported ... ignored, Miri selects the scalar tier by design (dispatch::select)
+
+test result: ok. 3 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 134.94s
+
+     Running tests/stage1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/miri/aarch64-apple-darwin/debug/deps/stage1-0beb4aa1afb4643e)
+
+running 14 tests
+test atom_starts_are_in_the_index ... ok
+test css_brace_inside_a_comment_is_not_structural ... ok
+test every_tier_every_length_and_boundary ... ok
+test every_tier_on_hand_witnesses ... ok
+test every_tier_on_the_corpus ... ok
+test every_tier_utf8_sweep ... ok
+test fuzz_bytes_every_tier_every_spec ... ok
+test fuzz_raw_bytes_json ... ok
+test fuzz_text_every_tier_every_spec ... ok
+test invalid_utf8_is_refused ... ok
+test oracle_edge_cases ... ok
+test oracle_structurals_equal_scan_structural_without_comments ... ok
+test padded_input_contract ... ok
+test unsupported_tier_reports_none ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 399.40s
+

@@ -1,0 +1,13 @@
+clean rc=0
+test rc=0
+test-x86 rc=0
+test-wasm rc=0
+check-wasm-scalar rc=0
+clippy rc=0
+fuzz rc=0
+miri rc=0
+asan-neon rc=0
+workspace rc=0
+grep-bbnf rc=0
+tree rc=0
+arch-grep rc=0

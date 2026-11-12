@@ -1,0 +1,16 @@
+head aae676163e686ccfefabf5d43e47e5f3587620c6 tree 29d63d424fa4b53f38c59dbaf24369ba18e02e55 dirty=0
+toolchain nightly-2026-04-11: rustc 1.96.0-nightly (02c7f9bec 2026-04-10)
+== cargo clean -p csp-solver (TGT-1 receipt)
+     Removed 120 files, 44.8MiB total
+== cargo test -p csp-solver --test bounded_sum
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.70s
+     Running tests/bounded_sum.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/bounded_sum-19bb3ff3f50cdd38)
+test bounded_sum_check_rejects_over_budget_full_assignment ... ok
+test bounded_sum_prunes_individually_infeasible_value ... ok
+test bounded_sum_unsat_when_even_cheapest_busts_budget ... ok
+test tight_budget_forces_exact_on_at_least_one_site ... ok
+test slack_budget_equals_per_site_greedy_pick ... ok
+test budget_binds_monotonically_across_the_threshold ... ok
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+dirty-after=0
+GREEN

@@ -1,0 +1,23 @@
+id	file	line	quote
+G1-P01	restart/skinny/tranches/sk-v27/designs/compiler.md	32	the verdict is UNDECIDED and the simpler organ wins: greedy over CSP, direct over e-graph, scalar over kernel
+G1-P02	restart/skinny/tranches/sk-v27/designs/compiler.md	33	an UNDECIDED deletion stays reversible until CB-14
+G1-P03	restart/skinny/tranches/sk-v27/designs/compiler.md	38	The final keep/delete verdict is recorded in CB-13.
+G1-P04	restart/skinny/tranches/sk-v27/designs/compiler.md	89	a root trial result can only *delete*
+G1-P05	restart/skinny/tranches/sk-v27/designs/compiler.md	125	a deletion takes effect only after the organ loses a parity or paired trial
+G1-P06	restart/skinny/tranches/sk-v27/designs/compiler.md	163	the verdict is UNDECIDED and the simpler organ wins, reversibly until CB-14
+G1-P07	restart/skinny/tranches/sk-v27/designs/compiler.md	175	loser or UNDECIDED marked for deletion; only winners enter the port list
+G1-P08	restart/skinny/tranches/sk-v27/designs/compiler.md	182	**CB-7 E-graph port** (only if CB-T kept it)
+G1-P09	restart/skinny/tranches/sk-v27/designs/compiler.md	183	**CB-8 Global decisions port** (only if CB-T kept CSP)
+G1-P10	restart/skinny/tranches/sk-v27/designs/compiler.md	189	final keep/delete verdicts for CB-7, CB-8 and CB-9
+G1-P11	restart/skinny/tranches/sk-v27/designs/compiler.md	190	trial losers
+G1-P12	restart/skinny/tranches/sk-v27/designs/rust-perf.md	131	or the kernel is deleted
+G1-P13	restart/skinny/tranches/sk-v27/designs/rust-perf.md	132	is off by default or removed
+G1-P14	restart/skinny/tranches/sk-v27/designs/rust-perf.md	190	G-K1 holds or the kernel is deleted
+G1-P15	restart/skinny/tranches/sk-v27/designs/rust-perf.md	227	a measured effect, or the pass ships off by default
+G1-P16	restart/skinny/tranches/sk-v27/designs/rust-perf.md	248	or the kernel is withdrawn
+G1-P17	restart/skinny/tranches/sk-v27/designs/programme.md	414	A pass that does not beat it on compile time or parse throughput is retired (O012).
+G1-P18	bench/PREREG.md	135	LOSS and UNDECIDED keep the simpler arm (e-graph off; greedy), and the organ is tagged the loser.
+G1-P19	restart/skinny/tranches/sk-v27/PLAN.md	151	An UNDECIDED trial goes to the simpler organ; the loser is kept on a tagged branch.
+G1-P20	restart/skinny/tranches/sk-v27/PLAN.md	227	COMP-2 (CB-13): keep/delete verdicts recorded against the new spine (I6).
+G1-P21	restart/skinny/tranches/sk-v27/PLAN.md	253	Losers live on tagged branches only.
+G1-P22	restart/skinny/tranches/sk-v27/LW3-ORDER.md	107	LOSS or UNDECIDED-by-deadline ports nothing in LW3 and tags `trial/lw2-<organ>-loser`.

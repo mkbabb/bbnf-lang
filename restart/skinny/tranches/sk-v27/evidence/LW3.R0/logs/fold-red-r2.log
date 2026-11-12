@@ -1,0 +1,43 @@
+unit=fold rev=83f1fd037731a014d43b9775901c279f9ed7d2fa reasons=41
+RED the archive dig 7fc26d0d7 is not merged into 83f1fd037731a014d43b9775901c279f9ed7d2fa
+RED AMENDMENTS-FROM-THE-DIG.md absent at rev
+RED PLAN.md has no `## 7. Addenda` section
+RED dig-g1-passages.tsv absent at rev
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/PLAN.md:227 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/compiler.md:32 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/compiler.md:38 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/compiler.md:163 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/compiler.md:189 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/compiler.md:190 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/rust-perf.md:131 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/rust-perf.md:132 is not an amended passage
+RED DIG-G1 grep hit restart/skinny/tranches/sk-v27/designs/rust-perf.md:190 is not an amended passage
+RED LW5.COMP-1-MINE: no PLAN §7 row
+RED LW5.COMP-1-BRIDGE: no PLAN §7 row
+RED LW5.COMP-5: no PLAN §7 row
+RED LW5.COMP-1-OPTIR: no PLAN §7 row
+RED LW4.TOPO-PIN: no PLAN §7 row
+RED LW4.COMP-5: no PLAN §7 row
+RED LW4.COMP-6: no PLAN §7 row
+RED LW4.PERF-3: no PLAN §7 row
+RED LW4.PERF-4: no PLAN §7 row
+RED LW5.COMP-1-PAT: no PLAN §7 row
+RED LW5.COMP-4: no PLAN §7 row
+RED LW5.COMP-6: no PLAN §7 row
+RED LW4.PERF-2: no PLAN §7 row
+RED LW4.COMP-4: no PLAN §7 row
+RED LW4.CON-2: no PLAN §7 row
+RED LW4.PERF-1-U5: no PLAN §7 row
+RED LW4.CON-1-J: no PLAN §7 row
+RED LW4.RX-2-BR: no PLAN §7 row
+RED LW4.RX-2-DOC: no PLAN §7 row
+RED LW4.PP-1-NAH: no PLAN §7 row
+RED LW4.PP-1-LL: no PLAN §7 row
+RED LW4.PP-3-TS: no PLAN §7 row
+RED LW5.COMP-1-OPTIR: no PLAN §7 row
+RED LW5.COMP-3: no PLAN §7 row
+RED LW5.PP-1-H: no PLAN §7 row
+RED LW7.CON-1-REQ: no PLAN §7 row
+RED PLAN §7 does not home the e-graph BEFORE the normalizer
+RED PLAN §7 does not home the quiet certification window
+RED

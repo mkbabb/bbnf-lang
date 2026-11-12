@@ -265,3 +265,74 @@ Purpose: every repo's history is safe on origin, every claim has a SHA, every kn
 - Machine law: every build, test, fuzz and bench goes through `~/.claude/guard/guarded`, with at most one heavy run per seat. Bench seats use `--cpu-cores 0 --exclusive bench`. Durable scratch goes in `~/.dev-logs/bbnf-lockstep/`, never `/tmp`.
 - Git law: worktrees under `~/Programming/{bbnf-lang,parse-that,pprint}-wt/<unit>` off `origin/master`. Commit by pathspec, push branches, merge to master by an ordinary merge after CI. Never stash, reset, rebase or force. Primary checkouts are never switched.
 - Benchmark honesty: published releases with their recommended flags, the same inputs, ≥ 10 reps (certification ≥ 200 pairs), medians with dispersion, and no win claimed inside noise.
+
+## 7. Addenda
+
+Sections 0–6 are sealed and are not edited. Each row below amends them by addendum, and where a row and the sealed text differ, the row wins. Rows are added at the end, never edited in place.
+
+### 7.1 2026-11-12, DIG-G1: no trial verdict deletes an organ (LW3 R0-FOLD, under RULINGS 2026-11-12a DIG-G1; delegate, owner may overturn)
+
+**The rule.** No trial verdict, at any wave, deletes or drops the CSP solver, the e-graph, shape mining or the kernels (a kernel slot). A LOSS or UNDECIDED changes the order of work, never the scope: it may switch one named rewrite family, constraint family or kernel variant off by default, and it opens a redesign unit with a re-trial. A NOISY record decides nothing in either direction. "Tagged the loser" names a branch tag that keeps the losing arm's code for a re-trial; it never authorises a deletion. DIG-G1 replaces OWN-1 (2026-11-11e). Each passage below deletes, or drops, a trial loser; its amending text follows. The passages' sealed text is not edited; `bench/PREREG.md` stays byte-for-byte as sealed under `DECISION-PLAN.lw2.json` (its decision rule is unchanged; only the consequence of a verdict for the organ's existence is amended here).
+
+| Row | Passage | Sealed text | Amended by DIG-G1 to read |
+|---|---|---|---|
+| G1-P01 | `designs/compiler.md:32` (C1-4) | "the verdict is UNDECIDED and the simpler organ wins: greedy over CSP, direct over e-graph, scalar over kernel" | DIG-G1: an UNDECIDED-by-deadline verdict decides the default for the next build only (greedy, direct or scalar on by default); the organ stays on the spine and its redesign unit and re-trial open. |
+| G1-P02 | `designs/compiler.md:33` (C1-4 amendment) | "an UNDECIDED deletion stays reversible until CB-14" | DIG-G1: there is no UNDECIDED deletion of the CSP, the e-graph, shape mining or a kernel. The tagged branch keeps the trial arm for the re-trial; CB-14 deletes no organ. |
+| G1-P03 | `designs/compiler.md:38` (C1-5) | "The final keep/delete verdict is recorded in CB-13." | DIG-G1: CB-13 records the final on-by-default/off-by-default verdict per named family or variant, never a keep/delete verdict on an organ. |
+| G1-P04 | `designs/compiler.md:89` (C2-4 guard) | "a root trial result can only *delete*" | DIG-G1: a root trial result can only withhold a port of the root implementation (LW3.COMP-1f); it cannot delete the organ, which LW5.COMP-1 builds on the spine regardless. |
+| G1-P05 | `designs/compiler.md:125` (I6 amended) | "a deletion takes effect only after the organ loses a parity or paired trial" | DIG-G1: I6 does not reach the CSP, the e-graph, shape mining or the kernels. A lost trial switches the named family or variant off by default and opens a redesign unit; I6's "never a second path on master" still holds for that family. |
+| G1-P06 | `designs/compiler.md:163` (step 8) | "the verdict is UNDECIDED and the simpler organ wins, reversibly until CB-14" | DIG-G1: as G1-P01; UNDECIDED sets a default and opens a re-trial, and nothing is deleted at CB-14. |
+| G1-P07 | `designs/compiler.md:175` (CB-T) | "loser or UNDECIDED marked for deletion; only winners enter the port list" | DIG-G1: a loser or UNDECIDED is withheld from the LW3 port list and tagged for re-trial, never marked for deletion. |
+| G1-P08 | `designs/compiler.md:182` (CB-7) | "**CB-7 E-graph port** (only if CB-T kept it)" | DIG-G1: CB-7 is unconditional. The e-graph is built on the spine (LW5.COMP-1) whatever CB-T rules; CB-T decides only whether the root implementation is ported in LW3. |
+| G1-P09 | `designs/compiler.md:183` (CB-8) | "**CB-8 Global decisions port** (only if CB-T kept CSP)" | DIG-G1: CB-8 is unconditional, as G1-P08, for the CSP (LW5.COMP-1, LW5.COMP-3). |
+| G1-P10 | `designs/compiler.md:189` (CB-13) | "final keep/delete verdicts for CB-7, CB-8 and CB-9" | DIG-G1: CB-13 gives final on/off-by-default verdicts per named family (CB-7, CB-8) and per kernel variant (CB-9), each with its redesign unit when it loses; it gives no delete verdict. |
+| G1-P11 | `designs/compiler.md:190` (CB-14) | "trial losers" | DIG-G1: CB-14 deletes no trial loser of the CSP, the e-graph, shape mining or a kernel; their tagged branches stay until each re-trial is decided on a QUIET record. |
+| G1-P12 | `designs/rust-perf.md:131` (G-K1) | "or the kernel is deleted" | DIG-G1: a kernel below its G-K1 bar, or one that moves no G-J or G-C cell, is not selected by default and opens a redesign unit with a re-trial; its slot, scalar oracle and harness stay. |
+| G1-P13 | `designs/rust-perf.md:132` (G-Q1) | "is off by default or removed" | DIG-G1: a pass that moves neither G-J1 nor G-C1 beyond noise is off by default, never removed; the stage it belongs to stays. |
+| G1-P14 | `designs/rust-perf.md:190` (U-gate) | "G-K1 holds or the kernel is deleted" | DIG-G1: as G1-P12. |
+| G1-P15 | `designs/rust-perf.md:227` (U-gate, G-Q1 A/B) | "a measured effect, or the pass ships off by default" | DIG-G1: "the pass" is one named rewrite family, constraint family or kernel variant, never the e-graph, CSP or shape-mining stage. |
+| G1-P16 | `designs/rust-perf.md:248` (U12) | "or the kernel is withdrawn" | DIG-G1: as G1-P12; the assembly kernel is not selected by default and its record stands, with a redesign unit (DIG-K-C10). |
+| G1-P17 | `designs/programme.md:414` (O012) | "A pass that does not beat it on compile time or parse throughput is retired (O012)." | DIG-G1: such a pass is off by default with a redesign unit and a re-trial; the CSP and the e-graph are not retired (O012 is amended). |
+| G1-P18 | `bench/PREREG.md:135` (§6 verdict rule) | "LOSS and UNDECIDED keep the simpler arm (e-graph off; greedy), and the organ is tagged the loser." | DIG-G1: the decision rule (rules 1–4) and every registered cell are unchanged. "Keep the simpler arm" governs the default of the LW3 port only, and "the organ is tagged the loser" names the re-trial tag; the organ stays in the programme and on the spine. |
+| G1-P19 | `PLAN.md:151` (LW2.COMP-1) | "An UNDECIDED trial goes to the simpler organ; the loser is kept on a tagged branch." | DIG-G1: an UNDECIDED trial sets the simpler arm as the LW3 default; the organ is not dropped and is built on the spine at LW5. |
+| G1-P20 | `PLAN.md:227` (LW5.COMP-2, CB-13) | "COMP-2 (CB-13): keep/delete verdicts recorded against the new spine (I6)." | DIG-G1: LW5.COMP-2 records on/off-by-default verdicts per named family and kernel variant against the new spine, each loss with its redesign unit; I6 deletes no organ (G1-P05). |
+| G1-P21 | `PLAN.md:253` (LW7.COMP-1, CB-14) | "Losers live on tagged branches only." | DIG-G1: LW7.COMP-1 deletes no CSP, e-graph, shape-mining or kernel code as a trial loser; root code they replace goes only once the spine carries the organ (DIG-H1's pin tests GREEN). |
+| G1-P22 | `LW3-ORDER.md:107` (LW3.COMP-1f) | "LOSS or UNDECIDED-by-deadline ports nothing in LW3 and tags `trial/lw2-<organ>-loser`." | DIG-G1: unchanged in effect (the tag is a re-trial tag); a LOSS moves the organ's work later, never out (LW5.COMP-1). |
+
+**Read, not amended.** Two passages delete on a trial and are outside DIG-G1's four organs, so they are left to the asks filed by seat R0-FOLD: `PLAN.md:206` (LW4.COMP-3, the delete-unless-wins trial of the Wasm parse VM; DIG-C16 asks that it may switch the VM off and never delete the wasm face without an owner ruling) and `PLAN.md:59` (X-4: an x86 kernel without a measured win is deleted; the owner's own words on x86 are the dig's O-2).
+
+### 7.2 2026-11-12, units the dig names, homed to a wave (LW3 R0-FOLD, under RULINGS 2026-11-12a DIG-A9 and 2026-11-11e ADD-2; delegate, owner may overturn)
+
+Each unit's falsifier is the one written in `AMENDMENTS-FROM-THE-DIG.md` (cited by row id) or in LEDGER amendment 9; the wave's order opens it by name. The first four rows are the units RULINGS 2026-11-12a DIG-A9 names.
+
+| Row | Unit | Wave | Work | Source |
+|---|---|---|---|---|
+| A-01 | LW5.COMP-1-MINE | LW5 | Shape mining as a stage on the spine: every recognizer of `crates/ir/src/passes/recognizers/` becomes a `ShapeMiner`, a constraint emitter or a widening e-graph rule; the March techniques survive with a pin test each; miner hints feed the shared cost model; no language name in any miner. | DIG-SM-1..4, H23 |
+| A-02 | LW5.COMP-1-BRIDGE | LW5 | The CSP↔e-graph bridge at `passes/csp_egraph_bridge.rs`, with a justification recorded per accepted or denied rewrite (justification count = accepted + denied). | DIG-CSP-D12, H2 |
+| A-03 | LW5.COMP-5 | LW5 | The measured cost table: kernel × microarchitecture cycles per 64 bytes filled by the harness, the e-graph cost fitted from hardware counters on real hit distributions, objectives that read it (a coefficient-flip mutant changes `plan.json`; the 648-run sweep re-run non-null). | DIG-CSP-C11, DIG-EG-C11, DIG-K-D13, H4 |
+| A-04 | LW5.COMP-1-OPTIR | LW5 | Amendment 9's OptIR stage, extended: **the e-graph runs BEFORE the normalizer** and subsumes the destructive passes (inline, merge, factor, ε-elimination, the G1–G4 duplicates become e-graph rules); saturation also runs in the OptIR islands between Facts and Plan; a destructive pass kept outside the e-graph carries a recorded, measured "not befitting" verdict. Falsifier: the destructive-pass list against a verdict file, `missing=0`, and the stage order read from the spine's pass registry (e-graph before normalizer). | DIG-EG-C9, amendment 9 |
+| A-05 | LW4.TOPO-PIN | LW4 | bbnf-lang and parse-that re-pinned to a csp-solver release that carries the CH-69 cure `58014efd`. | DIG-CSP-A2, H8 |
+| A-06 | LW4.COMP-5 | LW4 | Refutations first, as failing tests, then repair or removal of the rule (never the stage): `WrapOfEpsilonScalar`, `FuseAltRegexBranches`, `SupersetAbsorbAlt`, `UnionMergeAlt` (both halves), `CommonSuffixFactor`, `RepeatOfSingle`, `ConcatLiterals`, the HIR repetition merge. | DIG-EG-A3, N-q |
+| A-07 | LW4.COMP-6 | LW4 | The value API: `as_<T>()`, `try_into()`, typed property, visitor, `path!` and `select!` over one path core, lazy and eager; `bbnf-path` and `bbnf-path-ts` ported. | DIG-T-19, H20, H21 |
+| A-08 | LW4.PERF-3 | LW4 | msac-style cross-chunk refill against its intrinsic twin, a QUIET paired record, win or recorded negative. | DIG-K-C10, H13 |
+| A-09 | LW4.PERF-4 | LW4 | PROVE landings: each PROVE GO result (01, 03, 06, 07, 10, 12) lands as its own unit and is re-measured on the same plane. | DIG-K-PROVE, H25, N-n |
+| A-10 | LW5.COMP-1-PAT | LW5 | One CSP pass for all structural pattern recognition (one CSP instance per grammar carries every pattern variable). | DIG-CSP-B6, H1 |
+| A-11 | LW5.COMP-4 | LW5 | The type-system CSP (finite choice for overloads, layout, materialisation, recogniser eligibility, recovery, backend erasure), with inference on the CSP substrate; scope is the owner's O-5. | DIG-CSP-B7, H3 |
+| A-12 | LW5.COMP-6 | LW5 | Tuning, validation and visibility of optimizer decisions (`CostDecision` count = decision count; playground view). | DIG-CSP-E16, H16 |
+| A-13 | LW4.PERF-2 | LW4 | The tape union (amendment 9), widened to DIG-T-14..18: one tape, node identity shared with direct-to-struct, all five shapes chosen by the CSP, lazy numbers a flavour, every consumer on one node id. | amendment 9, DIG-T-14..18, N-f |
+| A-14 | LW4.COMP-4 | LW4 | LIR completion (amendment 9): `memo`, `plane` and `alloc` join `dispatch`, `RegexPlan` and `KernelId`. | amendment 9, DIG-C4 |
+| A-15 | LW4.CON-2 | LW4 | The same-plane simdjson C++ arm on the PORTABLE build plane (amendment 9). | amendment 9 |
+| A-16 | LW4.PERF-1-U5 | LW4 | `parsers/scan/{number_simd,lanes}.rs` behind `rust/simd` (amendment 9). | amendment 9, DIG-CERT-NUM |
+| A-17 | LW4.CON-1-J | LW4 | The JSON and F-COMB witness modes and adapters (amendment 9). | amendment 9 |
+| A-18 | LW4.RX-2-BR | LW4 | The BackRef bounded tier (amendment 9). | amendment 9 |
+| A-19 | LW4.RX-2-DOC | LW4 | `Hir::to_doc` round-trip through pprint (amendment 9). | amendment 9 |
+| A-20 | LW4.PP-1-NAH | LW4 | Nest, Align and Hang with their laws (amendment 9). | amendment 9 |
+| A-21 | LW4.PP-1-LL | LW4 | `LiteralLine` with its laws (amendment 9). | amendment 9 |
+| A-22 | LW4.PP-3-TS | LW4 | The TS renderer, byte-equal to the Rust renderer on STREAM-v1 (amendment 9). | amendment 9, DIG-C8 |
+| A-23 | LW5.COMP-3 | LW5 | CSP completeness (amendment 9), widened to DIG-CSP-A1: nogoods, conflict-directed backjumping, Luby restarts, `bounded_sum` (from the DIG-CUST-1 custody refs), cardinality and global-sum, soft constraints, LCV, lex-leader symmetry breaking, incremental re-solve, min-conflicts, Unsat explanations; plus the coupled solve of DIG-CSP-C9. | amendment 9, DIG-CSP-A1, C9, N-d, N-e |
+| A-24 | LW5.PP-1-H | LW5 | The pprint bench harness LW5.PP-1 needs (amendment 9). | amendment 9 |
+| A-25 | LW7.CON-1-REQ | LW7 | JSON P3, P5 and P6 required certification cells, not stretch (amendment 9), with P7 (DIG-CERT-P7). | amendment 9, DIG-CERT-P3..P7 |
+
+### 7.3 2026-11-12, a quiet certification window (LW3 R0-FOLD, under RULINGS 2026-11-12a DIG-QW; delegate, owner may overturn)
+
+§6 "Benchmark honesty" and LW5.CON-1 gain: a timing read certifies only inside a scheduled quiet certification window (X-7's load rule; the QoS reading of 2026-11-11); a record outside it is labelled NOISY and decides nothing. The owner's own ruling on the window is the dig's O-7.

@@ -1,0 +1,20 @@
+head 68f16d0a96f77723d3b5263d7747c882456abaa8 tree b06a4d01036784f219207d3b9ffea898e684d1d2 dirty=0
+toolchain nightly-2026-04-11: rustc 1.96.0-nightly (02c7f9bec 2026-04-10)
+== cargo clean -p csp-solver (TGT-1 receipt)
+     Removed 181 files, 49.1MiB total
+== cargo test -p csp-solver --test bounded_sum
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.76s
+     Running tests/bounded_sum.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/bounded_sum-19bb3ff3f50cdd38)
+test propagator_reports_infeasible_when_floor_busts ... ok
+test propagator_leaves_slack_budget_untouched ... ok
+test propagator_prunes_unaffordable_prefilter ... ok
+test slack_budget_matches_per_rule_pick ... ok
+test tight_budget_forces_exact_on_legal_sites ... ok
+test solve_is_deterministic ... ok
+test budget_sweep_is_monotone_in_exact_count ... ok
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+== cargo build -p csp-solver --example scan_plan_budget
+   Compiling csp-solver v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-r0-fold-cust-wf28/crates/csp-solver)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.34s
+dirty-after=0
+GREEN

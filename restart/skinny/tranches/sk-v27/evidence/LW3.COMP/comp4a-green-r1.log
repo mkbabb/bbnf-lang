@@ -1,0 +1,13 @@
+[guarded] waiting for headroom (load 36 > 36)
+3e28e1d413350782a9ee7ef5309ed5818fe308a1
+test left_fold_tells_a_left_chain_from_a_right_nest ... ok
+test an_unsorted_expected_set_fails_to_construct ... ok
+test merge_keeps_the_furthest_and_unions_at_equal_offset ... ok
+test semantic_sees_a_label_or_text_change ... ok
+test every_class_is_an_idempotent_projection ... ok
+test obs_is_reflexive_for_every_class ... ok
+test exact_is_contained_in_semantic_and_semantic_in_the_coarser_classes ... ok
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.77s
+grep_hits:
+crates/oracle/src/obs.rs:18
+crates/oracle/tests/obs_laws.rs:15

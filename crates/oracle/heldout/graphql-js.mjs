@@ -20,7 +20,7 @@ const out = [];
 for (const input of req.inputs) {
     let src;
     try {
-        src = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(input));
+        src = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(readFileSync(input));
     } catch {
         out.push({ input, verdict: "unreadable" });
         continue;

@@ -21,6 +21,9 @@
 // terminal matched. A rejection reports parse-that's furthest offset and its
 // expected set, sorted and deduplicated here: the TS state keeps the set
 // unsorted (LW3.COMP-4b sorts it at the source).
+// Each input is decoded with its bytes kept: a leading byte-order mark is a
+// character of the input (ignoreBOM), never removed before the parse
+// (LW3.ORC1-BOM).
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -60,7 +63,7 @@ for (const job of req.jobs) {
         for (const input of job.inputs) {
             let src;
             try {
-                src = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(input));
+                src = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(readFileSync(input));
             } catch {
                 out.push({ job: job.id, input, verdict: "unreadable", message: "not UTF-8" });
                 continue;
@@ -97,7 +100,7 @@ for (const job of req.jobs) {
     for (const input of job.inputs) {
         let src;
         try {
-            src = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(input));
+            src = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(readFileSync(input));
         } catch {
             out.push({ job: job.id, input, verdict: "unreadable", message: "not UTF-8" });
             continue;

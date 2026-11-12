@@ -1,0 +1,23 @@
+exists  bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/rx/RX-4-ADDENDUM.md
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/LEDGER.md:25 matches /^\| LW1\.RX-4 .*\| UNREAD \|$/
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/rx/RX-4-ADDENDUM.md:3 matches /Status:\*\* RULED/
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/rx/RX-4-ADDENDUM.md:11 matches /Ruling: ACCEPTED\./
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/rx/RX-4-ADDENDUM.md:24 matches /Ruling: ACCEPTED IN PART\./
+exists  pprint@dccbd6342:rust/tests/born_red_lw1.rs
+line    pprint@dccbd6342:rust/tests/born_red_lw1.rs:242 matches /^fn red_l8_width_zero_indented_newline_panics\(/
+line    pprint@dccbd6342:rust/tests/born_red_lw1.rs:241 matches /^#\[test\]$/
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/LEDGER.md:200 matches /Also cured here: LW1's `red_l8_width_zero_indented_newline_panics` \(routed to LW3\.PP-1\)/
+exists  bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/designs/consumers.md
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/designs/consumers.md:78 matches /#7, ACCEPT as far as I can see it/
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/LEDGER.md:115 matches /consumers #7 \(truncated\) \| UNREAD/
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/LEDGER.md:133 matches /consumers critic 2 #7 \(the part past its cut\)/
+exists  parse-that@f7ac45905:rust/regex/tests/born_red_lw1.rs
+line    parse-that@f7ac45905:rust/regex/tests/born_red_lw1.rs:95 matches /^#\[ignore = .*cure LW2\.RX-4 / LW4\.RX-2"\]$/
+line    parse-that@f7ac45905:rust/regex/tests/born_red_lw1.rs:96 matches /^fn superset_absorb_compares_scalar_values\(/
+line    parse-that@f7ac45905:rust/regex/tests/born_red_lw1.rs:109 matches /^#\[ignore = .*cure LW2\.RX-4 / LW4\.RX-2"\]$/
+line    parse-that@f7ac45905:rust/regex/tests/born_red_lw1.rs:110 matches /^fn union_merge_keeps_both_branches_languages\(/
+line    parse-that@f7ac45905:rust/regex/tests/born_red_lw1.rs:137 matches /^#\[ignore = .*\(SupersetAbsorbAlt, C2-1\).*cure LW2\.RX-4"\]$/
+line    parse-that@f7ac45905:rust/regex/tests/born_red_lw1.rs:138 matches /^fn superset_absorb_requires_equal_consumption\(/
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/LEDGER.md:73 matches /^\| regex C2-1 \(`L_cut` certificate; absorb preconditions\) \| LW1\.RX-2; LW2\.RX-4; LW4\.RX-2 \|$/
+line    bbnf-lang@0c6b31b19:restart/skinny/tranches/sk-v27/LEDGER.md:208 matches /RX-4 removes the rewrite, not the DFA/
+rc=0

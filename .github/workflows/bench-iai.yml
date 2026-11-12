@@ -37,6 +37,9 @@ jobs:
       SCCACHE_GHA_ENABLED: "true"
       # Must match the iai-callgrind library version in Cargo.lock.
       IAI_RUNNER_VERSION: "0.12.3"
+      VALGRIND_VERSION: "3.26.0"
+      VALGRIND_URL: "https://sourceware.org/pub/valgrind/valgrind-3.26.0.tar.bz2"
+      VALGRIND_SHA256: "8d54c717029106f1644aadaf802ab9692e53d93dd015cbd19e74190eba616bd7"
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -46,10 +49,43 @@ jobs:
       - name: install sccache
         uses: mozilla-actions/sccache-action@v0.0.9
 
-      - name: install valgrind
+      # valgrind comes from its pinned upstream release tarball, never from the
+      # Ubuntu archive (sk-v27 LW3.CI-IAI-1): the sha256 below is checked
+      # before the build, the build is cached by version, sha256 and image, and
+      # any failure (fetch, checksum, build, version) fails the job; there is
+      # no fallback. The sha256 equals the Checksums-Sha256 of
+      # valgrind_3.26.0.orig.tar.bz2 in Ubuntu's valgrind 1:3.26.0-0ubuntu1.
+      - name: restore the pinned valgrind build
+        id: valgrind-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/valgrind
+          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-v1
+
+      - name: build the pinned valgrind (cache miss)
+        if: steps.valgrind-cache.outputs.cache-hit != 'true'
+        shell: bash
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y valgrind
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSL --retry 3 --retry-all-errors -o valgrind.tar.bz2 "$VALGRIND_URL"
+          echo "$VALGRIND_SHA256  valgrind.tar.bz2" | sha256sum -c -
+          tar xjf valgrind.tar.bz2
+          cd "valgrind-$VALGRIND_VERSION"
+          ./configure --prefix="$HOME/.local/valgrind"
+          make -j"$(nproc)"
+          make install
+
+      - name: put the pinned valgrind on PATH
+        shell: bash
+        run: |
+          set -euo pipefail
+          got="$("$HOME/.local/valgrind/bin/valgrind" --version)"
+          if [ "$got" != "valgrind-$VALGRIND_VERSION" ]; then
+            echo "pinned valgrind reads '$got', want valgrind-$VALGRIND_VERSION"; exit 1
+          fi
+          echo "$HOME/.local/valgrind/bin" >> "$GITHUB_PATH"
+          echo "IAI_VALGRIND_SOURCE=$VALGRIND_URL sha256=$VALGRIND_SHA256 cache-hit=${{ steps.valgrind-cache.outputs.cache-hit == 'true' }}" >> "$GITHUB_ENV"
 
       - name: install rust toolchain from rust-toolchain.toml
         run: |

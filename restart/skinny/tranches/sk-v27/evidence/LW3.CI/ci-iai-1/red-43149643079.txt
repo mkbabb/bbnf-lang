@@ -1,0 +1,22 @@
+install valgrind	2026-11-12T03:39:33.5720257Z   Unable to connect to archive.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5720521Z   Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5721086Z Err:4 https://security.ubuntu.com/ubuntu resolute/main amd64v3 libsource-highlight4t64 amd64 3.1.9-4.3build2
+install valgrind	2026-11-12T03:39:33.5721506Z   Unable to connect to azure.archive.ubuntu.com:http:
+install valgrind	2026-11-12T03:39:33.5721765Z   Unable to connect to archive.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5722017Z   Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5722419Z Err:3 https://security.ubuntu.com/ubuntu resolute/main amd64v3 libsource-highlight-common all 3.1.9-4.3build2
+install valgrind	2026-11-12T03:39:33.5722848Z   Unable to connect to azure.archive.ubuntu.com:http:
+install valgrind	2026-11-12T03:39:33.5723108Z   Unable to connect to archive.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5723353Z   Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5723717Z Err:2 https://security.ubuntu.com/ubuntu resolute/main amd64v3 libbabeltrace1 amd64 1.5.11-5build1
+install valgrind	2026-11-12T03:39:33.5724428Z   Could not connect to azure.archive.ubuntu.com:80 (0.0.0.0). - connect (111: Connection refused) Could not connect to azure.archive.ubuntu.com:80 (::). - connect (111: Connection refused)
+install valgrind	2026-11-12T03:39:33.5725257Z   Unable to connect to azure.archive.ubuntu.com:http:
+install valgrind	2026-11-12T03:39:33.5725513Z   Unable to connect to archive.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5725766Z   Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5756230Z E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/main/b/babeltrace/libbabeltrace1_1.5.11-5build1_amd64v3.deb  Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5757709Z E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/main/s/source-highlight/libsource-highlight-common_3.1.9-4.3build2_all.deb  Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5759284Z E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/main/s/source-highlight/libsource-highlight4t64_3.1.9-4.3build2_amd64v3.deb  Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5761133Z E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/main/g/gdb/gdb_17.1-2ubuntu1_amd64v3.deb  Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5762443Z E: Failed to fetch mirror+file:/etc/apt/apt-mirrors.txt/pool/main/g/glibc/libc6-dbg_2.43-2ubuntu2.4_amd64v3.deb  Unable to connect to security.ubuntu.com:https:
+install valgrind	2026-11-12T03:39:33.5764360Z E: Failed to fetch https://security.ubuntu.com/ubuntu/pool/main/v/valgrind/valgrind_3.26.0-0ubuntu1_amd64v3.deb  Could not connect to security.ubuntu.com:443 (0.0.0.0). - connect (111: Connection refused) Could not connect to security.ubuntu.com:443 (::). - connect (111: Connection refused)
+install valgrind	2026-11-12T03:39:33.5766075Z E: Unable to fetch some archives, maybe run apt update or try with --fix-missing?

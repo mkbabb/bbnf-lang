@@ -4,7 +4,7 @@
 //! (typically macOS) can compile the bench target as a no-op. Invoked by
 //! `.github/workflows/bench-iai.yml` with
 //! `cargo bench -p bbnf --bench json_callgrind --features callgrind` on a
-//! Linux runner after `sudo apt-get install valgrind`.
+//! Linux runner with the pinned valgrind the workflow builds from source.
 
 #[cfg(not(all(feature = "callgrind", target_os = "linux")))]
 fn main() {}

@@ -1,0 +1,5 @@
+checker: substrate-fates-check.sh at 28eeed1c4; tree 28eeed1c4
+control: rows=32 routes=0 sanctioned=0 refused=0
+witness: rows=33 routes=1 sanctioned=1 refused=1
+  REFUSED CommentWsMiner: ROUTE unit 'LW5.COMP-1-MINE' is not an LW2..LW4 unit id
+rc=1

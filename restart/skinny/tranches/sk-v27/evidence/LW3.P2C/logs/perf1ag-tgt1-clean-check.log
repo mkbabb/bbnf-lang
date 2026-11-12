@@ -1,0 +1,4 @@
+     Removed 4493 files, 202.5MiB total
+    Checking parse-that-corpus v0.0.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s7/rust/corpus)
+    Checking parse-that-simd v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s7/rust/simd)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.59s

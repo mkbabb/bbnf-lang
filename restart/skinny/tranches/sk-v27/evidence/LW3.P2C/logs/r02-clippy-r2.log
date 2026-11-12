@@ -1,0 +1,20 @@
+    Checking bbnf-oracle v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/oracle)
+    Checking bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/lsp)
+    Checking bbnf-path-ts v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/bbnf-path-ts)
+    Checking gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/gorgeous)
+    Checking bbnf-analysis v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/analysis)
+    Checking bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/core)
+error: very complex type used. Consider factoring parts into `type` definitions
+   --> crates/oracle/src/oracles/peg.rs:324:33
+    |
+324 |     let (make, alphabet, hand): (fn(&mut Rng) -> String, &[&str], &[&str]) = match id {
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#type_complexity
+    = note: `-D clippy::type-complexity` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::type_complexity)]`
+
+error: could not compile `bbnf-oracle` (lib test) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `bbnf-oracle` (lib) due to 1 previous error
+rc=101

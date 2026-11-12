@@ -1,0 +1,5 @@
+mutant: ORC2-WS row's 'delegate, owner may overturn' dropped; commit c7b4edeecd7d25d9574ce779a36b580d39cc9257 (unreferenced)
+unit=rulings rev=c7b4edeecd7d25d9574ce779a36b580d39cc9257 reasons=1
+RED ORC2-WS: row is not marked "delegate, owner may overturn"
+RED
+rc=1

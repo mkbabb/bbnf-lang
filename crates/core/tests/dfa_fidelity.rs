@@ -2,36 +2,30 @@
 //! on the CSS grammar's compiled bytecode patterns, probing for mismatches at
 //! critical offsets in tailwind.css (where the VM stalls at byte 3633741/3642321).
 //!
-//! Root cause: the DFA engine treats `.*?` (non-greedy) as greedy `.*`.
-//! The CSS whitespace pattern `(?s)(?:\s|\/\*.*?\*\/)*` relies on non-greedy
-//! matching inside comments. The greedy DFA makes `.*` eat through `*/` boundaries,
-//! consuming from the first `/*` all the way to the last `*/` in the entire file.
+//! History: the leftmost-longest DFA read `.*?` as greedy `.*`, so the CSS
+//! whitespace pattern `(?s)(?:\s|\/\*.*?\*\/)*` ran from the first `/*` to
+//! the last `*/` of the file. Since sk-v27 LW3.RX-1c the engine is
+//! leftmost-first and the laziness holds.
 
 use bbnf::pipeline::{PipelineOptions, compile_grammar};
 use bbnf_ir::compiler::compile as compile_bytecode;
 use regex::Regex;
 
-/// Known DFA limitation: `.*?` (non-greedy) is treated as greedy `.*`.
-/// DFA engines inherently produce leftmost-longest matches — they cannot
-/// distinguish greedy from non-greedy quantifiers.
-///
-/// Grammars must avoid `.*?` in patterns compiled to DFA. The CSS grammar
-/// uses `[^*]*(\*+[^/][^*]*)*\*+/` instead of `.*?\*/` for comment matching.
+/// A lazy quantifier stops at the first close (sk-v27 LW3.RX-1c): the DFA is
+/// regex-automata's leftmost-first automaton, so `.*?` is lazy by priority.
+/// The expected end is the V8 + JavaScriptCore answer for the sticky leaf
+/// `/\/\*.*?\*\//sy` at 0 (`SK/evidence/LW3.RX/rx1c/lazy-answers.json`,
+/// `comment-dotall-0`, same shape), and the `regex` crate's.
 #[test]
-fn dfa_greedy_star_is_documented() {
+fn dfa_lazy_star_stops_at_first_close() {
     let pattern = r"(?s)\/\*.*?\*\/";
     let input = "/* c1 */ code; /* c2 */";
 
     let dfa = parse_that::regex::Dfa::compile(pattern).expect("DFA should compile");
+    let re = Regex::new(&format!(r"\A(?:{})", pattern)).unwrap();
 
-    let dfa_end = dfa.find_at(input.as_bytes(), 0);
-    // DFA matches greedily: from first /* to LAST */ = entire string (22 chars + trailing)
-    assert!(
-        dfa_end.unwrap() >= 22,
-        "DFA greedy: should consume through last */"
-    );
-    // regex crate would match non-greedy: first /* to first */ = 8 bytes
-    // This divergence is expected — grammar patterns must be DFA-compatible.
+    assert_eq!(dfa.find_at(input.as_bytes(), 0), Some(8), "first /* to first */");
+    assert_eq!(re.find(input).map(|m| m.end()), Some(8));
 }
 
 /// The DFA-compatible CSS comment pattern stops at the first `*/`.

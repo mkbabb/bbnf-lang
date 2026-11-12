@@ -1,0 +1,9 @@
+{
+  "_note": "Seed baseline — populated by first CI run of bench-iai.yml. The workflow seeds this file on first run when it is empty; subsequent runs compare against it. B1.W2.a lands the file as a tracked stub so the workflow's path-exists branch fires cleanly.",
+  "bench_name": "json_callgrind",
+  "grammar": "json/json.bbnf",
+  "valgrind_instrs": null,
+  "seeded_at": null,
+  "commit_sha": null,
+  "threshold_pct": 1.0
+}

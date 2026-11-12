@@ -60,7 +60,8 @@ baseline = {
     "source_run": f"https://github.com/mkbabb/bbnf-lang/actions/runs/{env['run_id']}/attempts/{env['run_attempt']}",
     "source_artifact_sha256": hashlib.sha256(pr).hexdigest(),
     "valgrind_version": env["valgrind_version"],
-    "valgrind_source": env.get("valgrind_source", ""),
+    "valgrind_source": env.get("valgrind_source") or (
+        f"distribution package at {env.get('valgrind_path')}" if env.get("valgrind_path") else "unrecorded"),
     "runner_image": env["runner_image"],
     "rustc": env["rustc"],
     "iai_callgrind_runner": env["iai_callgrind_runner"],

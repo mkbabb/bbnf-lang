@@ -1,0 +1,14 @@
+{
+  "commit_sha": "2e74a0e095e431229d84075625c2913876120811",
+  "ref": "refs/heads/lw3/s2-ci",
+  "run_id": "43148549427",
+  "run_attempt": "1",
+  "event": "workflow_dispatch",
+  "valgrind_version": "valgrind-3.26.0",
+  "valgrind_path": "/usr/bin/valgrind",
+  "valgrind_source": "",
+  "runner_image": "ubuntu26 20261101.186.1",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "iai_callgrind_runner": "0.12.3",
+  "finished_at": "2026-11-12T03:36:38Z"
+}

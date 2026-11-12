@@ -1,0 +1,7 @@
+json_callgrind::compile::compile_json_iai
+  Instructions:             3839402|N/A             (*********)
+  L1 Hits:                  5336346|N/A             (*********)
+  L2 Hits:                    21846|N/A             (*********)
+  RAM Hits:                   12046|N/A             (*********)
+  Total read+write:         5370238|N/A             (*********)
+  Estimated Cycles:         5867186|N/A             (*********)

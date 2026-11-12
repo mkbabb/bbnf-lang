@@ -1,0 +1,45 @@
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.14s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 11.326625ms
+[xtask::regen] bbnf: generate_all done in 49.678334ms
+[xtask::regen] bbnf: prettyplease done in 226.477375ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 2.557792ms
+[xtask::regen] json: generate_all done in 9.751459ms
+[xtask::regen] json: prettyplease done in 43.4855ms
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 109.538542ms
+[xtask::regen] css_l4: generate_all done in 214.039458ms
+[xtask::regen] css_l4: prettyplease done in 955.497292ms
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 8.188958ms
+[xtask::regen] css_pretty: generate_all done in 38.042125ms
+[xtask::regen] css_pretty: prettyplease done in 89.912417ms
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 15.8415ms
+[xtask::regen] google_sheets: generate_all done in 26.492625ms
+[xtask::regen] google_sheets: prettyplease done in 118.563375ms
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 4.730583ms
+[xtask::regen] ebnf: generate_all done in 10.820917ms
+[xtask::regen] ebnf: prettyplease done in 74.686041ms
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.709916ms
+[xtask::regen] bnf: generate_all done in 8.880208ms
+[xtask::regen] bnf: prettyplease done in 35.073ms
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 1.37775ms
+[xtask::regen] csv: generate_all done in 6.833792ms
+[xtask::regen] csv: prettyplease done in 20.886875ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 1.184833ms
+[xtask::regen] math: generate_all done in 2.131958ms
+[xtask::regen] math: prettyplease done in 10.139041ms
+regen --check: clean (9 of 9 grammars matched)

@@ -1,0 +1,22 @@
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-2d98e56/rust/regex)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running tests/info.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/info-9ae18341140c0fb4)
+
+running 1 test
+test a_non_ascii_quantified_class_has_no_ascii_info ... FAILED
+
+failures:
+
+---- a_non_ascii_quantified_class_has_no_ascii_info stdout ----
+
+thread 'a_non_ascii_quantified_class_has_no_ascii_info' (44952014) panicked at regex/src/hir/mod.rs:84:17:
+to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    a_non_ascii_quantified_class_has_no_ascii_info
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse-that-regex --test info`

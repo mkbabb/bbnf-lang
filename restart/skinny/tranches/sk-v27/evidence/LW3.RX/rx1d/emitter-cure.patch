@@ -1,0 +1,212 @@
+diff --git a/crates/core/src/generate/regex/emit/dfa/mod.rs b/crates/core/src/generate/regex/emit/dfa/mod.rs
+index 235ce4182..92b1b882f 100644
+--- a/crates/core/src/generate/regex/emit/dfa/mod.rs
++++ b/crates/core/src/generate/regex/emit/dfa/mod.rs
+@@ -260,13 +260,29 @@ fn emit_general_state_machine(
+                 quote! { #(#self_pred)||* }
+             };
+ 
+-            // Non-self transitions.
++            // Non-self transitions: consume the exit byte, record the
++            // target's acceptance, and resume the outer walk in the target
++            // (a bare `continue` would resume the self-loop's `while` on
++            // the same byte, and the target must not re-read the byte that
++            // led to it; sk-v27 LW3.RX-1d).
+             let other_arms: Vec<TokenStream> = transitions
+                 .iter()
+                 .filter(|(_, t)| *t != sid as u32)
+                 .map(|(pred, target)| {
+                     let t_lit = proc_macro2::Literal::u8_unsuffixed(*target as u8);
+-                    quote! { if #pred { __s = #t_lit; continue; } }
++                    let update_accept = if dfa.states[*target as usize].is_accept {
++                        quote! { __last_accept = Some(__pos); }
++                    } else {
++                        quote! {}
++                    };
++                    quote! {
++                        if #pred {
++                            __pos += 1;
++                            #update_accept
++                            __s = #t_lit;
++                            continue '__dfa;
++                        }
++                    }
+                 })
+                 .collect();
+ 
+@@ -335,8 +351,12 @@ fn emit_general_state_machine(
+             let mut checks: Vec<TokenStream> = Vec::new();
+             for (pred, target) in transitions {
+                 let t_lit = proc_macro2::Literal::u8_unsuffixed(*target as u8);
++                // The byte is consumed before the acceptance is recorded,
++                // so the match ends at `__pos` (sk-v27 LW3.RX-1d: the
++                // `+ 1` here ended a match one byte past its last byte
++                // whenever the accepting target stops the walk).
+                 let update_accept = if dfa.states[*target as usize].is_accept {
+-                    quote! { __last_accept = Some(__pos + 1); }
++                    quote! { __last_accept = Some(__pos); }
+                 } else {
+                     quote! {}
+                 };
+@@ -375,7 +395,7 @@ fn emit_general_state_machine(
+             let mut __s: u8 = 0;
+             #start_accept
+ 
+-            loop {
++            '__dfa: loop {
+                 match __s {
+                     #(#arms)*
+                     _ => { break; }
+diff --git a/crates/core/src/generate/regex/emit/hir/leaf.rs b/crates/core/src/generate/regex/emit/hir/leaf.rs
+index 97a701e1f..0574921c8 100644
+--- a/crates/core/src/generate/regex/emit/hir/leaf.rs
++++ b/crates/core/src/generate/regex/emit/hir/leaf.rs
+@@ -47,17 +47,32 @@ pub(super) fn emit_literal(bytes: &[u8]) -> Option<TokenStream> {
+ /// the `Repetition` handler calls `emit_class_predicate` for the loop body.
+ pub(super) fn emit_class_single(class: &CharClass) -> Option<TokenStream> {
+     let predicate = emit_class_predicate(class)?;
++    let step = scalar_step(class);
+     Some(quote! {
+         {
+             let __b = *state.src_bytes.get(state.offset)?;
+             if !(#predicate) {
+                 return None;
+             }
+-            state.offset += 1;
++            state.offset += #step;
+         }
+     })
+ }
+ 
++/// How far one match of `class` advances from a lead byte `__b`. A negated
++/// class admits every non-ASCII scalar, and the leaf reads one scalar, not
++/// one byte of one (u/v semantics, sk-v27 LW3.RX-1d): its step is the UTF-8
++/// width of the scalar. Every other class this tier takes is ASCII.
++pub(super) fn scalar_step(class: &CharClass) -> TokenStream {
++    if class.negated() {
++        quote! {
++            (if __b < 0x80 { 1 } else if __b >= 0xF0 { 4 } else if __b >= 0xE0 { 3 } else { 2 })
++        }
++    } else {
++        quote! { 1 }
++    }
++}
++
+ /// Emit a boolean predicate expression that checks if `__b: u8` matches the class.
+ ///
+ /// Returns `None` for Unicode classes with non-ASCII ranges.
+@@ -69,7 +84,14 @@ pub(super) fn emit_class_predicate(class: &CharClass) -> Option<TokenStream> {
+ }
+ 
+ /// Emit a predicate for a byte-mode character class.
++///
++/// A class with a non-ASCII member has no lead-byte predicate: matched one
++/// byte at a time it would read one byte of a scalar, so the leaf goes to
++/// the DFA tier, which reads it one scalar at a time (sk-v27 LW3.RX-1d).
+ fn emit_bytes_class_predicate(ranges: &[ByteRange], negated: bool) -> Option<TokenStream> {
++    if ranges.iter().any(|r| r.end >= 0x80) {
++        return None;
++    }
+     if ranges.is_empty() {
+         return if negated {
+             Some(quote! { true })
+diff --git a/crates/core/src/generate/regex/emit/hir/repetition.rs b/crates/core/src/generate/regex/emit/hir/repetition.rs
+index 0df55006d..3b6201006 100644
+--- a/crates/core/src/generate/regex/emit/hir/repetition.rs
++++ b/crates/core/src/generate/regex/emit/hir/repetition.rs
+@@ -8,7 +8,7 @@ use proc_macro2::TokenStream;
+ use quote::quote;
+ 
+ use super::emit_hir;
+-use super::leaf::emit_class_predicate;
++use super::leaf::{emit_class_predicate, scalar_step};
+ use crate::backend::kernels;
+ 
+ // ── Repetition ──────────────────────────────────────────────────────────────
+@@ -48,7 +48,7 @@ pub(super) fn emit_repetition(rep: &Repetition) -> Option<TokenStream> {
+             return Some(stmt);
+         }
+         if let Some(predicate) = emit_class_predicate(class) {
+-            return emit_class_loop(&predicate, min, max);
++            return emit_class_loop(&predicate, &scalar_step(class), class.negated(), min, max);
+         }
+     }
+ 
+@@ -76,13 +76,38 @@ fn emit_optional(sub: &Hir) -> Option<TokenStream> {
+ /// Emit a tight byte-predicate loop for a character class quantifier.
+ ///
+ /// No checkpoint save/restore per iteration -- just a while loop with
+-/// direct byte checks.
+-fn emit_class_loop(predicate: &TokenStream, min: u32, max: Option<u32>) -> Option<TokenStream> {
++/// direct byte checks. `step` advances one match; when it steps whole
++/// scalars (`steps_scalars`, a negated class), the minimum counts scalars.
++fn emit_class_loop(
++    predicate: &TokenStream,
++    step: &TokenStream,
++    steps_scalars: bool,
++    min: u32,
++    max: Option<u32>,
++) -> Option<TokenStream> {
+     match max {
+         None => {
+             // Unbounded: `+` or `*`
+             if min >= 1 {
+                 let min_lit = proc_macro2::Literal::u32_unsuffixed(min);
++                if steps_scalars && min >= 2 {
++                    // A scalar-stepping class: `min` counts scalars, not bytes.
++                    return Some(quote! {
++                        {
++                            let __end = state.src_bytes.len();
++                            let mut __pos = state.offset;
++                            let mut __count: u32 = 0;
++                            while __pos < __end {
++                                let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
++                                if #predicate { __pos += #step; __count += 1; } else { break; }
++                            }
++                            if __count < #min_lit {
++                                return None;
++                            }
++                            state.offset = __pos;
++                        }
++                    });
++                }
+                 Some(quote! {
+                     {
+                         let __loop_start = state.offset;
+@@ -90,7 +115,7 @@ fn emit_class_loop(predicate: &TokenStream, min: u32, max: Option<u32>) -> Optio
+                         let mut __pos = state.offset;
+                         while __pos < __end {
+                             let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+-                            if #predicate { __pos += 1; } else { break; }
++                            if #predicate { __pos += #step; } else { break; }
+                         }
+                         if __pos < __loop_start + #min_lit as usize {
+                             return None;
+@@ -106,7 +131,7 @@ fn emit_class_loop(predicate: &TokenStream, min: u32, max: Option<u32>) -> Optio
+                         let mut __pos = state.offset;
+                         while __pos < __end {
+                             let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+-                            if #predicate { __pos += 1; } else { break; }
++                            if #predicate { __pos += #step; } else { break; }
+                         }
+                         state.offset = __pos;
+                     }
+@@ -124,7 +149,7 @@ fn emit_class_loop(predicate: &TokenStream, min: u32, max: Option<u32>) -> Optio
+                     let mut __count: u32 = 0;
+                     while __pos < __end && __count < #max_lit {
+                         let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+-                        if #predicate { __pos += 1; __count += 1; } else { break; }
++                        if #predicate { __pos += #step; __count += 1; } else { break; }
+                     }
+                     if __count < #min_lit {
+                         return None;
+@@ -151,7 +176,8 @@ fn try_kernel_class_loop(class: &CharClass, min: u32, max: Option<u32>) -> Optio
+     let CharClass::Bytes { ranges, negated } = class else {
+         return None;
+     };
+-    if *negated {
++    // A non-ASCII member has no place in the kernel's ASCII set.
++    if *negated || ranges.iter().any(|r| r.end >= 0x80) {
+         return None;
+     }
+     let chars = kernels::charclass::charset_from_byte_ranges(ranges);

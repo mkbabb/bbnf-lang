@@ -1,0 +1,11 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running tests/oracle_leaf_corpus.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/oracle_leaf_corpus-db4b9a71aa124060)
+
+running 1 test
+oracle leaf corpus, DFA tier: 133 leaves, AGREE 133, ENGINE 0; cases compared 17145, ENGINE 0, DIALECT-EXCLUDED 1, ENCODING-EXCLUDED 0
+DIALECT value.js@8d7bb5b8#8 (1 cases)
+RX-NOU linted leaves: 35
+test dfa_tier_agrees_with_v8_and_jsc ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+

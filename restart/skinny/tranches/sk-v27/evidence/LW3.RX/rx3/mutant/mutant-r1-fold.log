@@ -1,0 +1,29 @@
+DIFFER f55 /k/iu on "K": oracle Some(3) engine None
+DIFFER f260 /K/iu on "K": oracle Some(3) engine None
+DIFFER f618 /K/iu on "K": oracle Some(3) engine None
+DIFFER f659 /K/iu on "K": oracle Some(3) engine None
+DIFFER f819 /K/iu on "K": oracle Some(3) engine None
+DIFFER f980 /k/iu on "K": oracle Some(3) engine None
+DIFFER f981 /K/iu on "K": oracle Some(3) engine None
+DIFFER f1456 /K/iu on "K": oracle Some(3) engine None
+DIFFER f2296 /K/iu on "K": oracle Some(3) engine None
+DIFFER f2730 /K/iu on "K": oracle Some(3) engine None
+DIFFER f2739 /k/iu on "K": oracle Some(3) engine None
+DIFFER f3416 /k/iu on "K": oracle Some(3) engine None
+DIFFER f4033 /K/iu on "K": oracle Some(3) engine None
+DIFFER f5067 /K/iu on "K": oracle Some(3) engine None
+DIFFER f6004 /k/iu on "K": oracle Some(3) engine None
+SPEC-AMBIGUITY f6236 /꟔/i on "ꟕ"
+DIFFER f6383 /K/iu on "K": oracle Some(3) engine None
+DIFFER f6440 /K/iu on "K": oracle Some(3) engine None
+DIFFER f7174 /K/iu on "K": oracle Some(3) engine None
+DIFFER f7287 /K/iu on "K": oracle Some(3) engine None
+DIFFER f7541 /K/iu on "K": oracle Some(3) engine None
+SPEC-AMBIGUITY f54882 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f67008 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f70072 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f74149 /Ꟛ/i on "ꟛ"
+SPEC-AMBIGUITY f79354 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f83164 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f98652 /ƛ/i on "Ƛ"
+fold corpus: 100000 cases; agree 99745; differ 247; spec-ambiguity 8

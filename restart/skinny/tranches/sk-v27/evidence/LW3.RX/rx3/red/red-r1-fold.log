@@ -1,0 +1,1 @@
+usage: generate <leaf-corpus.json> <per-leaf> <seed> <out.json> <out-u.json> | compare <out.json> <answers.json> <answers-u.json>

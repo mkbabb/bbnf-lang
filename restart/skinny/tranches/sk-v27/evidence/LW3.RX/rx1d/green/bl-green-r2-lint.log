@@ -1,0 +1,9 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.17s
+     Running tests/regex_reading.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/regex_reading-1972709890ba8683)
+
+running 2 tests
+test a_leaf_whose_reading_differs_without_u_is_linted ... ok
+test a_leaf_that_reads_the_same_is_not_linted ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

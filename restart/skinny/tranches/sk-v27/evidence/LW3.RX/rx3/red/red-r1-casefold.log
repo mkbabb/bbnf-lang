@@ -1,0 +1,19 @@
+error: no test target named `casefold_tables` in `parse-that-regex` package
+help: available test targets:
+    abi_fingerprint
+    algebra_superset
+    algebra_union
+    born_red_lw1
+    egraph_rules_flatten
+    egraph_rules_redundant
+    egraph_rules_repetition
+    egraph_rules_superset
+    egraph_rules_union
+    egraph_simplify
+    info
+    lint_nou
+    look_conditions
+    oracle_leaf_corpus
+    path_lexer
+    to_source
+    word_boundary

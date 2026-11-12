@@ -1,0 +1,42 @@
+generated corpus: 101080 cases; AGREE 87308; DIALECT-EXCLUDED 40; ENCODING-EXCLUDED 0; SPEC-AMBIGUITY 0; ENGINE 13732
+ENGINE sk-v24-56#38 (7 cases) first: "*.\r)*\u{2000}": oracle None engine Some(5)
+ENGINE sk-v24-56#50 (571 cases) first: "\u{b}\u{2008}\u{3000}\u{3000}": oracle Some(10) engine Some(1)
+ENGINE sk-v24-56#53 (444 cases) first: "O9O\u{b}=\u{205f}\u{a0}\u{1680}dOW\\": oracle Some(16) engine None
+ENGINE value.js@8d7bb5b8#1 (158 cases) first: "!IMPoRtANt\u{a0}": oracle Some(12) engine None
+ENGINE value.js@8d7bb5b8#10 (102 cases) first: "\\\u{b}!;K\u{202f}\u{a0}": oracle Some(7) engine Some(12)
+ENGINE value.js@8d7bb5b8#100 (336 cases) first: "hwb(\u{1680}": oracle Some(7) engine Some(4)
+ENGINE value.js@8d7bb5b8#103 (355 cases) first: "laB(\u{a0}": oracle Some(6) engine Some(4)
+ENGINE value.js@8d7bb5b8#104 (359 cases) first: "lCH(\u{202f}\u{2028}\rlCH(\u{202f}\u{2028}\r": oracle Some(11) engine Some(4)
+ENGINE value.js@8d7bb5b8#105 (277 cases) first: "lIgHT-DARK(\u{205f}\u{a0}ÿ": oracle Some(16) engine Some(11)
+ENGINE value.js@8d7bb5b8#106 (288 cases) first: "lInEAR(\u{a0}\u{1680}": oracle Some(12) engine Some(7)
+ENGINE value.js@8d7bb5b8#108 (332 cases) first: "OkLAB(\u{3000}\u{3000}\u{feff}OkLAB(\u{3000}\u{3000}\u{feff}": oracle Some(15) engine Some(6)
+ENGINE value.js@8d7bb5b8#109 (334 cases) first: "oklch( \u{a0}\r": oracle Some(10) engine Some(7)
+ENGINE value.js@8d7bb5b8#110 (357 cases) first: "rGBa(\u{b}\u{3000} rGBa(\u{b}\u{3000} ": oracle Some(10) engine Some(6)
+ENGINE value.js@8d7bb5b8#112 (329 cases) first: "StePS(\u{feff}\u{2007}ſ": oracle Some(12) engine Some(6)
+ENGINE value.js@8d7bb5b8#12 (421 cases) first: ",\u{3000}/*\u{c6442}䀖*//*况*/,\u{3000}/*\u{c6442}䀖*//*况*/": oracle Some(22) engine Some(1)
+ENGINE value.js@8d7bb5b8#13 (302 cases) first: "\u{2006}/*\u{8a3ed}*//*웻\u{71f2f}𑆲*": oracle Some(11) engine Some(0)
+ENGINE value.js@8d7bb5b8#14 (426 cases) first: "/**/\u{2000};\u{1680}": oracle Some(11) engine None
+ENGINE value.js@8d7bb5b8#15 (256 cases) first: "\u{3000}/**'*/)": oracle Some(10) engine None
+ENGINE value.js@8d7bb5b8#17 (414 cases) first: "\u{205f}/*\u{f5a63}\u{45039}*/": oracle Some(15) engine None
+ENGINE value.js@8d7bb5b8#39 (305 cases) first: "ELEmenT(\u{3000}\u{205f}\u{2028}* \t\u{205f})": oracle Some(24) engine None
+ENGINE value.js@8d7bb5b8#46 (418 cases) first: "@funCTIoN\u{2002}\u{feff}": oracle Some(15) engine None
+ENGINE value.js@8d7bb5b8#59 (505 cases) first: "\n\u{2009} \n\u{2009} ": oracle Some(10) engine Some(1)
+ENGINE value.js@8d7bb5b8#60 (572 cases) first: "\u{3000}\u{feff}\u{205f}\u{3000}": oracle Some(12) engine None
+ENGINE value.js@8d7bb5b8#69 (120 cases) first: ".😀\u{a0}": oracle Some(5) engine Some(7)
+ENGINE value.js@8d7bb5b8#70 (96 cases) first: "éa\\a\u{3000}": oracle Some(5) engine Some(8)
+ENGINE value.js@8d7bb5b8#73 (95 cases) first: "Ωa#*!\u{205f}": oracle Some(6) engine Some(9)
+ENGINE value.js@8d7bb5b8#8 (143 cases) first: "-\\K-\\": oracle Some(6) engine Some(3)
+ENGINE value.js@8d7bb5b8#80 (264 cases) first: "(/**/\u{2007}": oracle Some(8) engine Some(5)
+ENGINE value.js@8d7bb5b8#81 (388 cases) first: "(\u{1680}\u{3000}\u{2029}": oracle Some(10) engine Some(1)
+ENGINE value.js@8d7bb5b8#85 (358 cases) first: "\u{1680}\u{b},": oracle Some(5) engine None
+ENGINE value.js@8d7bb5b8#86 (486 cases) first: "\u{2029}\u{a0}": oracle Some(5) engine Some(0)
+ENGINE value.js@8d7bb5b8#87 (510 cases) first: " \u{a0}\u{205f}*\u{3000}\u{c}": oracle Some(11) engine None
+ENGINE value.js@8d7bb5b8#88 (362 cases) first: "\u{2000}(;\u{ffff}": oracle Some(4) engine None
+ENGINE value.js@8d7bb5b8#89 (565 cases) first: "\u{2028}\u{1680}%": oracle Some(6) engine None
+ENGINE value.js@8d7bb5b8#90 (549 cases) first: "\u{1680}\u{feff} +\u{1680}": oracle Some(11) engine None
+ENGINE value.js@8d7bb5b8#92 (343 cases) first: "cAlc(\u{202f}\u{2028} @": oracle Some(12) engine Some(5)
+ENGINE value.js@8d7bb5b8#93 (336 cases) first: "cLAmp(\u{202f}Z": oracle Some(9) engine Some(6)
+ENGINE value.js@8d7bb5b8#95 (294 cases) first: "COLOr-mIX(\u{feff}\u{a0}\nCOLOr-mIX(\u{feff}\u{a0}\n": oracle Some(16) engine Some(10)
+ENGINE value.js@8d7bb5b8#96 (308 cases) first: "coLoR(\u{205f}\u{2009}": oracle Some(12) engine Some(6)
+ENGINE value.js@8d7bb5b8#98 (278 cases) first: "CubIC-bEZIEr(\u{1680}\u{1680} ": oracle Some(20) engine Some(13)
+ENGINE value.js@8d7bb5b8#99 (369 cases) first: "hsl(\u{3000}": oracle Some(7) engine Some(4)

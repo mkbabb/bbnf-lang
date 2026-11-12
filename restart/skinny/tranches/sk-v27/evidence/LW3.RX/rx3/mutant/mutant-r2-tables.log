@@ -1,0 +1,2 @@
+case tables: Unicode 17.0.0; u classes 1482, non-u classes 1144, iu word extra ['0x17f', '0x212a'], Zs ranges 7 -> /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/rx3/v/mutant-r2-case_tables.rs
+/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/rx3/v/mutant-r2-case_tables.rs src/case_tables.rs differ: char 1064, line 25

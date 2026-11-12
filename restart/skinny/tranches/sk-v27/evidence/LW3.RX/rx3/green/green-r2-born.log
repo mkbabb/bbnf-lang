@@ -1,0 +1,11 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running tests/born_red_lw1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/born_red_lw1-0401935f1d9c4a8f)
+
+running 4 tests
+test kelvin_does_not_fold_without_u ... ok
+test long_s_folds_under_iu ... ok
+test latin1_folds_under_i_and_iu ... ok
+test kelvin_folds_under_iu ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+

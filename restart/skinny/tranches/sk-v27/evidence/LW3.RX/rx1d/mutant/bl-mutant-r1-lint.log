@@ -1,0 +1,55 @@
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/ser)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/core)
+   Compiling bbnf-analysis v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/analysis)
+warning: function `code` is never used
+  --> crates/analysis/src/state/diagnostics/regex_reading.rs:22:8
+   |
+22 | pub fn code() -> String {
+   |        ^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `lint_non_u_leaves` is never used
+  --> crates/analysis/src/state/diagnostics/regex_reading.rs:26:15
+   |
+26 | pub(super) fn lint_non_u_leaves(
+   |               ^^^^^^^^^^^^^^^^^
+
+warning: function `regex_leaves` is never used
+  --> crates/analysis/src/state/diagnostics/regex_reading.rs:59:4
+   |
+59 | fn regex_leaves<'a>(node: BbnfView<'a, 'a>, out: &mut Vec<((usize, usize), &'a str)>) {
+   |    ^^^^^^^^^^^^
+
+warning: `bbnf-analysis` (lib) generated 3 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.30s
+     Running tests/regex_reading.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/regex_reading-1972709890ba8683)
+
+running 2 tests
+test a_leaf_that_reads_the_same_is_not_linted ... ok
+test a_leaf_whose_reading_differs_without_u_is_linted ... FAILED
+
+failures:
+
+---- a_leaf_whose_reading_differs_without_u_is_linted stdout ----
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44996062) panicked at /Users/mkbabb/.cargo/git/checkouts/parse-that-887dffd37a6c99df/661edc6/rust/regex/src/hir/mod.rs:84:17:
+to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44996062) panicked at /Users/mkbabb/.cargo/git/checkouts/parse-that-887dffd37a6c99df/661edc6/rust/regex/src/hir/mod.rs:84:17:
+to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44996062) panicked at crates/analysis/tests/regex_reading.rs:27:5:
+assertion `left == right` failed: []
+  left: 0
+ right: 3
+
+
+failures:
+    a_leaf_whose_reading_differs_without_u_is_linted
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-analysis --test regex_reading`

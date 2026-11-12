@@ -1,0 +1,3 @@
+unit=cust rev=7c0ab7023dbef64d0bef7e91868e0ba695ac142d reasons=1
+RED ledger row does not cite sha256 of wf_63419230-36d-28/examples/scan_plan_budget.rs
+RED

@@ -1,0 +1,53 @@
+kind	seat	lw2_analogues	heavy_runs	basis
+lw2	s7-rx	-	81	guard attribution (cwd or cmd names the seat)
+lw2	s6-perf	-	71	guard attribution (cwd or cmd names the seat)
+lw2	s1-custody	-	65	guard attribution (cwd or cmd names the seat)
+lw2	s15-freeze	-	25	guard attribution (cwd or cmd names the seat)
+lw2	r6	-	16	guard attribution (cwd or cmd names the seat)
+lw2	s4b-regex	-	14	guard attribution (cwd or cmd names the seat)
+lw2	lg2-r5	-	13	guard attribution (cwd or cmd names the seat)
+lw2	r5	-	12	guard attribution (cwd or cmd names the seat)
+lw2	s11-bench	-	12	guard attribution (cwd or cmd names the seat)
+lw2	typescript	-	9	guard attribution (cwd or cmd names the seat)
+lw2	s2-census	-	8	guard attribution (cwd or cmd names the seat)
+lw2	s8-pp	-	8	guard attribution (cwd or cmd names the seat)
+lw2	topo-4d	-	8	guard attribution (cwd or cmd names the seat)
+lw2	rust	-	7	guard attribution (cwd or cmd names the seat)
+lw2	s3-dag	-	5	guard attribution (cwd or cmd names the seat)
+lw2	s9-con-spec	-	5	guard attribution (cwd or cmd names the seat)
+lw2	topo-4b	-	5	guard attribution (cwd or cmd names the seat)
+lw2	topo-4e	-	5	guard attribution (cwd or cmd names the seat)
+lw2	topo-4e-0.4	-	5	guard attribution (cwd or cmd names the seat)
+lw2	r8	-	4	guard attribution (cwd or cmd names the seat)
+lw2	s1b	-	4	guard attribution (cwd or cmd names the seat)
+lw2	s5-comp	-	4	guard attribution (cwd or cmd names the seat)
+lw2	skinny	-	4	guard attribution (cwd or cmd names the seat)
+lw2	wasm	-	4	guard attribution (cwd or cmd names the seat)
+lw2	r8-verify	-	3	guard attribution (cwd or cmd names the seat)
+lw2	lg2-r4	-	2	guard attribution (cwd or cmd names the seat)
+lw2	s4b	-	2	guard attribution (cwd or cmd names the seat)
+lw2	topo-4d-0.4	-	2	guard attribution (cwd or cmd names the seat)
+lw2	r7	-	1	guard attribution (cwd or cmd names the seat)
+lw2	s4-toolchain	-	1	guard attribution (cwd or cmd names the seat)
+lw2	topo-4b-0.3	-	1	guard attribution (cwd or cmd names the seat)
+lw2	(unattributed, LW2 window)	-	3245	heavy runs machine-wide 2026-11-09 00:00 to 11-11 21:30 naming no lw2 seat (other programmes included)
+lw3	S1 ENTRY	s1-custody	65	entry/custody; S1 in LW3 reads only (0 cargo builds planned); lower bound
+lw3	S2 CI	s4-toolchain	1	CI and workflow work; most reads are CI runs, not local; lower bound
+lw3	S3 PP (+S3b, S21)	s8-pp	8	pprint lane; lower bound
+lw3	S4 RX (+S4b, S4c)	s7-rx,s4b-regex	95	regex lane, read worktrees included; lower bound
+lw3	S5 ORACLE	s5-comp	4	BL test-crate work; lower bound
+lw3	S6 KERNEL	s3-dag	5	PT crate move with law suites; lower bound
+lw3	S7 SPINE (+S7b..d)	s1-custody,s3-dag	70	the merge and its full workspace reads; lower bound
+lw3	S8 SEM (+S8b)	s5-comp	4	compiler semantics on BL; lower bound
+lw3	S9 PERF (+S9b..d)	s6-perf	71	SIMD tiers, Miri, guard-page, regen; lower bound
+lw3	S10 GEN (+S10b)	s2-census	8	lints and law tests over the workspace; lower bound
+lw3	S11 USE	s10-use	0	consumer reads (published artifacts); lower bound
+lw3	S12 CON-SPEC	s9-con-spec	5	contest arms and witnesses; lower bound
+lw3	S13 MIG	s7-rx	81	every grammar parsed at two commits; lower bound
+lw3	S14 BENCH	s11-bench	12	the bench window (exclusive); lower bound
+lw3	S15 CRITIC-A	s12-critic	0	review; reads only; lower bound
+lw3	S16 CRITIC-B	s13-critic	0	review; reads only; lower bound
+lw3	S17 ADJ	s14-adjudicator	0	no product code; lower bound
+lw3	S18 FREEZE	s15-freeze	25	digest tests; lower bound
+lw3	S19 PINS	topo-4b,topo-4d,topo-4e,topo-4f	26	re-pin and semver probes; lower bound
+lw3	S20 GATE (per reading)	r8,r8-verify	10	one full LG reading (r8 was the TAKEN one); lower bound

@@ -1,0 +1,46 @@
+# LG-3.3 path-edge read at bbnf-lang sk-v27-lw3 0c6b31b192616e7f785ae52cd5c25cde1c232fc0 (entry, amendment 7)
+## read 1: amended pattern (git grep -nE 'path = "(\.\./){2,}|path = "\.\./(parse-that|pprint)' -- '*.toml' ':!restart/')
+origin/sk-v27-lw3:docs/tranches/AZ-II/archive/json-prototype/Cargo.toml:15:tape = { path = "../../../tape" }
+origin/sk-v27-lw3:docs/tranches/AZ-II/archive/json-prototype/Cargo.toml:16:simd-scan = { path = "../../../simd-scan" }
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:20:path = "../../../../test_data/apache_builds.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:26:path = "../../../../test_data/github_events.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:32:path = "../../../../test_data/update-center.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:38:path = "../../../../test_data/mesh.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:44:path = "../../../../test_data/random.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:50:path = "../../../../test_data/gsoc-2018.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:56:path = "../../../../test_data/marine_ik.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:62:path = "../../../../test_data/instruments.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:68:path = "../../../../test_data/numbers.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:74:path = "../../../../test_data/unicode_mixed.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:80:path = "../../../../test_data/unicode_escapes.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:86:path = "../../../../test_data/unicode_basic.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:92:path = "../../../../test_data/distinct_values.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:98:path = "../../../../test_data/y_string_unicode.json"
+count=16
+## read 1: the order's original pattern (git grep -n 'path = "\.\./' -- '*.toml'), for the record
+count=49 (of which outside restart/: 41)
+## read 2: amended pattern (git grep -nE 'path = "(\.\./){2,}|path = "\.\./(parse-that|pprint)' -- '*.toml' ':!restart/')
+origin/sk-v27-lw3:docs/tranches/AZ-II/archive/json-prototype/Cargo.toml:15:tape = { path = "../../../tape" }
+origin/sk-v27-lw3:docs/tranches/AZ-II/archive/json-prototype/Cargo.toml:16:simd-scan = { path = "../../../simd-scan" }
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:20:path = "../../../../test_data/apache_builds.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:26:path = "../../../../test_data/github_events.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:32:path = "../../../../test_data/update-center.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:38:path = "../../../../test_data/mesh.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:44:path = "../../../../test_data/random.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:50:path = "../../../../test_data/gsoc-2018.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:56:path = "../../../../test_data/marine_ik.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:62:path = "../../../../test_data/instruments.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:68:path = "../../../../test_data/numbers.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:74:path = "../../../../test_data/unicode_mixed.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:80:path = "../../../../test_data/unicode_escapes.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:86:path = "../../../../test_data/unicode_basic.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:92:path = "../../../../test_data/distinct_values.json"
+origin/sk-v27-lw3:skinny/crates/test-fixtures/corpus/json/manifest.toml:98:path = "../../../../test_data/y_string_unicode.json"
+count=16
+## read 2: the order's original pattern (git grep -n 'path = "\.\./' -- '*.toml'), for the record
+count=49 (of which outside restart/: 41)
+## for the record: every `path = "…"` in a tracked *.toml outside restart/, resolved against its file's directory
+in-repo 114 escaping the repo 1
+  escaping: Cargo.toml 10 ... ...
+  (Cargo.toml:10 is the comment text `#[parser(path = "...")]`, not an edge: 0 real escaping paths)
+## reading: all 16 hits of the amended pattern are in-repo paths (14 skinny fixture data paths to skinny/test_data, 2 dangling archive edges to docs/tranches/{tape,simd-scan}); none is a cross-repo edge. The amended read is RED at entry for a reason that is not its stated defect: ask LG33-A.

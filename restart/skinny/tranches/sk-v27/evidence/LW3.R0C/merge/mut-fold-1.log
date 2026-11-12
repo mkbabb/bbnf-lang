@@ -1,0 +1,6 @@
+unit=fold rev=4ca5d43e843e86558f76321f5499a2b22fff8610 reasons=3
+RED G1-P24: 0 PLAN §7 rows (want 1)
+RED G1-P24: 0 PLAN §7 rows (want 1)
+RED restart/skinny/tranches/sk-v27/PLAN.md: sealed text changed (not append-only)
+RED
+rc=1

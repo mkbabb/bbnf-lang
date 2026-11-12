@@ -1,0 +1,47 @@
+mutant fc1ad88ded4afe1b3f0d67fe71b98601a5223b4a: the corpus recipe tuple re-inlined at peg.rs (the defect)
+    Checking proc-macro2 v1.0.106
+    Checking regex-syntax v0.8.10
+    Checking smallvec v1.15.1
+    Checking serde_core v1.0.228
+   Compiling serde_json v1.0.149
+   Compiling libc v0.2.183
+    Checking num-traits v0.2.19
+    Checking include_dir v0.7.4
+    Checking once_cell v1.21.4
+    Checking either v1.15.0
+    Checking pprint v0.5.0-alpha.0 (https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9#69d1fe9f)
+    Checking indexmap v2.13.0
+   Compiling lexpr-macros v0.2.2
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/ir)
+    Checking rayon v1.11.0
+    Checking csp-solver v0.4.0
+    Checking quote v1.0.45
+    Checking syn v2.0.117
+    Checking rmp v0.8.15
+    Checking lexpr v0.2.7
+    Checking regex-automata v0.4.14
+    Checking parse-that-egraph v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+    Checking cpufeatures v0.2.17
+    Checking serde v1.0.228
+    Checking bitflags v2.11.0
+    Checking sha2 v0.10.9
+    Checking parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+    Checking ron v0.12.1
+    Checking rmp-serde v1.3.1
+    Checking parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb304)
+    Checking bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/core)
+    Checking bbnf-oracle v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s7-read/crates/oracle)
+error: very complex type used. Consider factoring parts into `type` definitions
+   --> crates/oracle/src/oracles/peg.rs:324:33
+    |
+324 |     let (make, alphabet, hand): (fn(&mut Rng) -> String, &[&str], &[&str]) = match id {
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#type_complexity
+    = note: `-D clippy::type-complexity` implied by `-D warnings`
+    = help: to override `-D warnings` add `#[allow(clippy::type_complexity)]`
+
+error: could not compile `bbnf-oracle` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `bbnf-oracle` (lib test) due to 1 previous error
+rc=101

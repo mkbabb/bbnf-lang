@@ -1,0 +1,30 @@
+        PASS [   0.032s] (1494/1520) bbnf-lsp::integration test_references
+        PASS [   0.033s] (1495/1520) bbnf-lsp::integration test_regex_charclass_slash_parses
+        PASS [   0.036s] (1496/1520) bbnf-lsp::integration test_real_json_grammar
+        PASS [   0.033s] (1497/1520) bbnf-lsp::integration test_rename
+        PASS [   0.034s] (1498/1520) bbnf-lsp::integration test_selection_range
+        PASS [   0.036s] (1499/1520) bbnf-lsp::integration test_selection_range_multiple_positions
+        PASS [   0.066s] (1500/1520) bbnf-lsp::integration test_inlay_hints_nullable
+        PASS [   0.034s] (1501/1520) bbnf-lsp::integration test_semantic_tokens
+        PASS [   0.209s] (1502/1520) bbnf-oracle::obs_laws an_unsorted_expected_set_fails_to_construct
+        PASS [   0.233s] (1503/1520) bbnf-oracle::obs_laws left_fold_tells_a_left_chain_from_a_right_nest
+        PASS [   0.239s] (1504/1520) bbnf-path-ts::isomorphic_path_error index_into_scalar_rust_and_ts_match
+        PASS [   0.232s] (1505/1520) bbnf-path-ts::isomorphic_path_error unknown_field_at_entry_rule_rust_and_ts_match
+        PASS [   0.232s] (1506/1520) bbnf-path-ts::isomorphic_path_error unregistered_grammar_marker_surfaces_unregistered_rule
+        PASS [   0.243s] (1507/1520) bbnf-path-ts::isomorphic_path_error empty_path_rust_and_ts_match
+        PASS [   0.240s] (1508/1520) bbnf-path-ts::isomorphic_path_error reason_variants_are_isomorphic
+        PASS [   0.253s] (1509/1520) bbnf-oracle::orc1_bom every_driver_decodes_with_the_bom_kept
+        PASS [   0.237s] (1510/1520) xtask::metadata_fail_closed empty_features_passes_validation
+        PASS [   0.235s] (1511/1520) xtask::metadata_fail_closed every_known_feature_passes_validation
+        PASS [   0.061s] (1512/1520) xtask::metadata_fail_closed unknown_feature_is_rejected_with_structured_error
+        PASS [   0.270s] (1513/1520) bbnf-oracle::obs_laws merge_keeps_the_furthest_and_unions_at_equal_offset
+        PASS [   0.361s] (1514/1520) bbnf-oracle::orc1_bom the_ts_package_arm_reads_a_leading_bom_as_a_character
+        PASS [   0.365s] (1515/1520) bbnf-oracle::rb_ts_literal_escapes the_ts_package_reads_a_backslash_escape_and_plain_characters
+        PASS [   0.433s] (1516/1520) bbnf-oracle::obs_laws semantic_sees_a_label_or_text_change
+        PASS [   0.482s] (1517/1520) bbnf-oracle::obs_laws every_class_is_an_idempotent_projection
+        PASS [   0.545s] (1518/1520) bbnf-oracle::obs_laws obs_is_reflexive_for_every_class
+        PASS [   0.908s] (1519/1520) bbnf-oracle::obs_laws exact_is_contained_in_semantic_and_semantic_in_the_coarser_classes
+        PASS [   2.569s] (1520/1520) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+────────────
+     Summary [  15.295s] 1520 tests run: 1520 passed (1 leaky), 28 skipped
+rc=0

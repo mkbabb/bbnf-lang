@@ -1951,7 +1951,13 @@ fn preselection_findings(base: &Path) -> Vec<String> {
     scan.findings
 }
 
+// Named born-RED gate (RULINGS 2026-11-12d COMP1B-W3 (b); LEDGER LW3.COMP-1b-BR1): its
+// findings at the spine merge (master's grammar copies under crates/core/grammar/ and
+// typescript/test/fixtures/grammar/lang/, the reverse-dependency crates, the symlink
+// inventory) are cured in LW3 by COMP-1d (vi), which removes this attribute. LG-3
+// cannot close while it is ignored.
 #[test]
+#[ignore = "LW3.COMP-1d"]
 fn active_roots_remain_preselection_only_and_the_guard_self_falsifies() {
     let repository = root();
     assert_eq!(

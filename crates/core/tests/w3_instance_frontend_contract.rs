@@ -11413,7 +11413,12 @@ mod Iterator {
     }
 }
 
+// Named born-RED gate (RULINGS 2026-11-12d COMP1B-W3 (c); LEDGER LW3.COMP-1b-BR2): master's
+// restored root pipeline reads as legacy surface until the clean break, PLAN LW7.COMP-1,
+// deletes it. An OPEN carry the owner sees at LW3's close; LW7.COMP-1 removes this
+// attribute (re-trigger row in the ledger).
 #[test]
+#[ignore = "LW7.COMP-1"]
 fn every_core_and_external_control_caller_uses_only_the_clean_break_instance_api() {
     let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
     let repository_root = manifest_dir

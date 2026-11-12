@@ -31,6 +31,11 @@ nt w3-instance --test w3_instance_frontend_contract
 nt w3-pratt --test w3_semantic_pratt_contract
 nt w3-replay --test w3_replay_public_contract
 nt bootstrap-repro --test bbnf_bootstrap_reproducibility
+# The two named born-RED gates (RULINGS 2026-11-12d COMP1B-W3 (b), (c)) still fail for their reasons.
+cargo nextest run -p bbnf --locked --no-fail-fast --run-ignored only --test w3_replay_public_contract \
+  --test w3_instance_frontend_contract > "$L/born-red.log" 2>&1; brc=$?
+n=$(grep -cE '^ +FAIL .*(active_roots_remain_preselection_only_and_the_guard_self_falsifies|every_core_and_external_control_caller_uses_only_the_clean_break_instance_api)' "$L/born-red.log")
+[ $brc -ne 0 ] && [ "$n" -ge 2 ]; row born-red-still-red $? "rc=$brc named-fails=$n $(summary "$L/born-red.log")"
 
 # Amendment 4: the test-target set is a superset of master's plus the spine's.
 cargo test -p bbnf --locked --no-run --message-format=json 2> "$L/targets.err" \

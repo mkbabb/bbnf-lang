@@ -1,0 +1,17 @@
+rust/regex/ABI-HIR.md:18:digests), cited in the API-freeze seam record (bbnf-lang
+rust/regex/oracle/census.mjs:6://   --bbnf <dir-or-file>...  BBNF grammars, parsed by bbnf-lang's own parser
+rust/regex/oracle/census.mjs:7://                           (`BBNFToASTWithImports`); every `regex` node is a
+rust/regex/oracle/census.mjs:9://                           root that provides `@mkbabb/bbnf-lang`.
+rust/regex/oracle/census.mjs:21://     --bbnf ~/Programming/value.js/src/css/grammar \
+rust/regex/oracle/census.mjs:67:function bbnfFiles(path) {
+rust/regex/oracle/census.mjs:71:    .filter((f) => f.endsWith(".bbnf"))
+rust/regex/oracle/census.mjs:89:function leavesFromBbnf(paths, resolveFrom) {
+rust/regex/oracle/census.mjs:91:  const bbnf = req("@mkbabb/bbnf-lang");
+rust/regex/oracle/census.mjs:93:  for (const p of paths.flatMap(bbnfFiles)) {
+rust/regex/oracle/census.mjs:94:    const parsed = bbnf.BBNFToASTWithImports(readFileSync(p, "utf8"));
+rust/regex/oracle/census.mjs:95:    if (parsed.length < 2) throw new Error(`bbnf-lang could not parse ${p}`);
+rust/regex/oracle/census.mjs:113:// Argument groups: each --name opens a corpus; --bbnf / --list feed it.
+rust/regex/oracle/census.mjs:120:  if (a === "--name") corpora.push({ name: argv[++i], bbnf: [], list: [] });
+rust/regex/oracle/census.mjs:121:  else if (a === "--bbnf") corpora.at(-1).bbnf.push(argv[++i]);
+rust/regex/oracle/census.mjs:132:  const raw = [...leavesFromBbnf(corpus.bbnf, resolveFrom), ...corpus.list.flatMap(leavesFromList)];
+rust/regex/oracle/oracle.mjs:39:const outDir = resolve(flag("--out", join(homedir(), ".dev-logs/bbnf-lockstep/rx/oracle")));

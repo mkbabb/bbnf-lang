@@ -1,0 +1,26 @@
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-rx1c/rust/egraph-derive)
+   Compiling parse-that-egraph v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-rx1c/rust/egraph)
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-rx1c/rust/regex)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.74s
+     Running tests/born_red_lw1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/born_red_lw1-ae91726d82b5da39)
+
+running 1 test
+test alt_fusion_is_leftmost_first ... FAILED
+
+failures:
+
+---- alt_fusion_is_leftmost_first stdout ----
+
+thread 'alt_fusion_is_leftmost_first' (41376998) panicked at regex/tests/born_red_lw1.rs:59:5:
+assertion `left == right` failed
+  left: Some(2)
+ right: Some(1)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    alt_fusion_is_leftmost_first
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse-that-regex --test born_red_lw1`

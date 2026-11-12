@@ -1,0 +1,29 @@
+   Compiling parse-that-egraph v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/egraph)
+   Compiling parse-that-simd v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/simd)
+   Compiling parse-that-corpus v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/corpus)
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/regex)
+   Compiling parse_that v0.4.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/parse_that)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.01s
+     Running tests/regex.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex-21d8f47246be99bf)
+
+running 1 test
+test generated_utf8_test::generated_parser_reads_a_non_ascii_class_member ... FAILED
+
+failures:
+
+---- generated_utf8_test::generated_parser_reads_a_non_ascii_class_member stdout ----
+
+thread 'generated_utf8_test::generated_parser_reads_a_non_ascii_class_member' (43957974) panicked at parse_that/src/state.rs:187:9:
+Span::as_str: invalid bounds 1..2 for src len 4
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'generated_utf8_test::generated_parser_reads_a_non_ascii_class_member' (43957974) panicked at parse_that/tests/regex/generated_utf8_test.rs:28:9:
+parse_generated("[é]") must read the pattern without panicking
+
+
+failures:
+    generated_utf8_test::generated_parser_reads_a_non_ascii_class_member
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 124 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse_that --test regex`

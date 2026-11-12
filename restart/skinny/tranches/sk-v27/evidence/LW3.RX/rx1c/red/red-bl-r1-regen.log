@@ -1,0 +1,51 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/ir)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/corpus)
+   Compiling xtask v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 11.30s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/ser)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/core)
+   Compiling xtask v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 12.11s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 10.426709ms
+[xtask::regen] bbnf: generate_all done in 26.117125ms
+[xtask::regen] bbnf: prettyplease done in 169.937375ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.869042ms
+[xtask::regen] json: generate_all done in 4.277083ms
+[xtask::regen] json: prettyplease done in 28.709583ms
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `value::value_1` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `mathValue::mathValue_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 80.66425ms
+[xtask::regen] css_l4: generate_all done in 98.397875ms
+[xtask::regen] css_l4: prettyplease done in 927.208417ms
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 3.976792ms
+[xtask::regen] css_pretty: generate_all done in 13.069042ms
+[xtask::regen] css_pretty: prettyplease done in 98.994334ms
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 15.226292ms
+[xtask::regen] google_sheets: generate_all done in 21.5275ms
+[xtask::regen] google_sheets: prettyplease done in 133.809708ms
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 5.31625ms
+[xtask::regen] ebnf: generate_all done in 8.921916ms
+[xtask::regen] ebnf: prettyplease done in 61.716042ms
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 2.157ms
+[xtask::regen] bnf: generate_all done in 3.552292ms
+[xtask::regen] bnf: prettyplease done in 27.030375ms
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 1.234125ms
+[xtask::regen] csv: generate_all done in 2.4535ms
+[xtask::regen] csv: prettyplease done in 16.364667ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 1.445292ms
+[xtask::regen] math: generate_all done in 1.401375ms
+[xtask::regen] math: prettyplease done in 8.909042ms
+regen --check: clean (9 of 9 grammars matched)

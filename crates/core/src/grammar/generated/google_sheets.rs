@@ -2295,6 +2295,134 @@ mod __googlesheetsparser_emit_impl {
     static __DTA_REGEX_146: &str = "[lL][aA][mM][bB][dD][aA]\\(";
     static __DTA_REGEX_171: &str = "[lL][eE][tT]\\(";
     static __DTA_REGEX_182: &str = "=?";
+    /// AY.W4.3 — hoisted DFA byte-class equivalence table.
+    /// Consumed by `emit_dfa_body_table_driven` emitted in
+    /// the same translation unit; AY-II.W0'.c retired the
+    /// `#[allow(dead_code)]` marker — the emission pairs the
+    /// tables with their consumer 1:1 at
+    /// `emit_regex_scan_adapter`'s `state_count >=
+    /// DFA_HOIST_MIN_STATES` branch.
+    pub(crate) const __DFA_CLASSES_GoogleSheetsParser_0: [u8; 256] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 6, 6, 6, 6, 6,
+        6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
+        9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+    ];
+    /// AY.W4.3 — hoisted DFA flat transition table
+    /// (state * num_classes + class -> target_state |
+    /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
+    /// as the byte-class table above.
+    pub(crate) const __DFA_TRANS_GoogleSheetsParser_0: [u8; 120] = [
+        255, 255, 255, 255, 1, 255, 2, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 3, 255, 255, 255, 255, 255, 255, 255, 255, 255, 4, 255, 5, 255, 6, 255, 6,
+        255, 255, 255, 255, 255, 255, 255, 4, 255, 6, 255, 6, 255, 255, 255, 255, 255,
+        255, 255, 4, 255, 6, 255, 6, 255, 255, 255, 255, 255, 4, 255, 5, 255, 6, 255, 6,
+        255, 255, 7, 255, 7, 255, 255, 8, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 8, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 9, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 9, 255, 255, 255, 255, 255,
+    ];
+    /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
+    /// via the same hoist-branch pairing as the byte-class
+    /// table above.
+    pub(crate) const __DFA_ACCEPT_GoogleSheetsParser_0: [u64; 1] = [828];
+    /// AY.W4.3 — hoisted DFA byte-class equivalence table.
+    /// Consumed by `emit_dfa_body_table_driven` emitted in
+    /// the same translation unit; AY-II.W0'.c retired the
+    /// `#[allow(dead_code)]` marker — the emission pairs the
+    /// tables with their consumer 1:1 at
+    /// `emit_regex_scan_adapter`'s `state_count >=
+    /// DFA_HOIST_MIN_STATES` branch.
+    pub(crate) const __DFA_CLASSES_GoogleSheetsParser_1: [u8; 256] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3,
+        3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5,
+        5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 11, 11, 12,
+        13, 13, 13, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    ];
+    /// AY.W4.3 — hoisted DFA flat transition table
+    /// (state * num_classes + class -> target_state |
+    /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
+    /// as the byte-class table above.
+    pub(crate) const __DFA_TRANS_GoogleSheetsParser_1: [u8; 176] = [
+        255, 1, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1,
+        2, 1, 255, 255, 255, 255, 3, 4, 5, 6, 5, 7, 8, 9, 255, 255, 10, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1, 1, 1,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 3,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 3, 3, 3, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 3, 3, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 5, 5, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 5, 5, 5, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 5, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 1, 2, 1, 255, 255, 255, 255, 3, 4, 5, 6, 5, 7, 8,
+        9, 255,
+    ];
+    /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
+    /// via the same hoist-branch pairing as the byte-class
+    /// table above.
+    pub(crate) const __DFA_ACCEPT_GoogleSheetsParser_1: [u64; 1] = [4];
+    /// AY.W4.3 — hoisted DFA byte-class equivalence table.
+    /// Consumed by `emit_dfa_body_table_driven` emitted in
+    /// the same translation unit; AY-II.W0'.c retired the
+    /// `#[allow(dead_code)]` marker — the emission pairs the
+    /// tables with their consumer 1:1 at
+    /// `emit_regex_scan_adapter`'s `state_count >=
+    /// DFA_HOIST_MIN_STATES` branch.
+    pub(crate) const __DFA_CLASSES_GoogleSheetsParser_4: [u8; 256] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11, 11,
+        11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12,
+        12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 14,
+        14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17,
+        17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 18,
+        19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 20, 21, 21, 22, 23, 23, 23, 24,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+    ];
+    /// AY.W4.3 — hoisted DFA flat transition table
+    /// (state * num_classes + class -> target_state |
+    /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
+    /// as the byte-class table above.
+    pub(crate) const __DFA_TRANS_GoogleSheetsParser_4: [u8; 312] = [
+        255, 255, 255, 1, 255, 255, 255, 2, 255, 2, 255, 2, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        255, 255, 255, 255, 4, 5, 6, 7, 6, 8, 9, 10, 255, 255, 11, 255, 255, 255, 2, 255,
+        2, 255, 2, 255, 2, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 11, 255, 1, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 1, 1, 1, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 4, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 4, 4, 4, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 4, 4, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 6, 6, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 6, 6, 6, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 6,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255,
+    ];
+    /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
+    /// via the same hoist-branch pairing as the byte-class
+    /// table above.
+    pub(crate) const __DFA_ACCEPT_GoogleSheetsParser_4: [u64; 1] = [2048];
     /// AY.W4.3 — first-byte → admissible-pattern bitmap LUT.
     ///
     /// Each entry holds a u32 bitmap; bit `i` set means pattern
@@ -2381,86 +2509,28 @@ mod __googlesheetsparser_emit_impl {
                 }
             }
             return '__dfa: {
-                let mut __dfa_state: u32 = 0;
+                let mut __dfa_state: u8 = 0;
                 let mut __dfa_p: usize = pos;
                 let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
+                let __end = input.len();
+                while __dfa_p < __end {
+                    let __b = unsafe { *input.get_unchecked(__dfa_p) };
+                    let __c = unsafe {
+                        *__DFA_CLASSES_GoogleSheetsParser_0.get_unchecked(__b as usize)
                     };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
-                                46 => __dfa_state = 4,
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
-                                46 => __dfa_state = 2,
-                                69 | 101 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 2;
-                                }
-                                69 | 101 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        3 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 5;
-                                }
-                                43 | 45 => __dfa_state = 6,
-                                _ => break,
-                            }
-                        }
-                        4 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 2;
-                                }
-                                _ => break,
-                            }
-                        }
-                        5 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 5;
-                                }
-                                _ => break,
-                            }
-                        }
-                        6 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 5;
-                                }
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    let __next = unsafe {
+                        *__DFA_TRANS_GoogleSheetsParser_0
+                            .get_unchecked(__dfa_state as usize * 12 + __c as usize)
+                    };
+                    if __next == 0xFF {
+                        break;
                     }
+                    __dfa_state = __next;
                     __dfa_p += 1;
-                    match __dfa_state {
-                        1 | 2 | 5 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
+                    if (__DFA_ACCEPT_GoogleSheetsParser_0[__dfa_state as usize / 64]
+                        >> (__dfa_state as usize % 64)) & 1 != 0
+                    {
+                        __dfa_last_match = ::core::option::Option::Some(__dfa_p as u32);
                     }
                 }
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
@@ -2501,67 +2571,28 @@ mod __googlesheetsparser_emit_impl {
                 }
             }
             return '__dfa: {
-                let mut __dfa_state: u32 = 0;
+                let mut __dfa_state: u8 = 0;
                 let mut __dfa_p: usize = pos;
                 let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
+                let __end = input.len();
+                while __dfa_p < __end {
+                    let __b = unsafe { *input.get_unchecked(__dfa_p) };
+                    let __c = unsafe {
+                        *__DFA_CLASSES_GoogleSheetsParser_1.get_unchecked(__b as usize)
                     };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                34 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                34 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                34 => __dfa_state = 1,
-                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
-                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
-                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 35 | 36 | 37 | 38
-                                | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
-                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
-                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
-                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
-                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
-                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
-                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
-                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
-                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
-                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
-                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
-                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
-                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
-                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
-                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
-                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
-                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
-                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
-                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
-                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
-                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    let __next = unsafe {
+                        *__DFA_TRANS_GoogleSheetsParser_1
+                            .get_unchecked(__dfa_state as usize * 16 + __c as usize)
+                    };
+                    if __next == 0xFF {
+                        break;
                     }
+                    __dfa_state = __next;
                     __dfa_p += 1;
-                    match __dfa_state {
-                        1 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
+                    if (__DFA_ACCEPT_GoogleSheetsParser_1[__dfa_state as usize / 64]
+                        >> (__dfa_state as usize % 64)) & 1 != 0
+                    {
+                        __dfa_last_match = ::core::option::Option::Some(__dfa_p as u32);
                     }
                 }
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
@@ -2613,30 +2644,30 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                84 | 116 => __dfa_state = 3,
+                                84 | 116 => __dfa_state = 1,
                                 _ => break,
                             }
                         }
                         1 => {
                             match b {
+                                82 | 114 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         2 => {
                             match b {
-                                69 | 101 => __dfa_state = 1,
+                                85 | 117 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
                         3 => {
                             match b {
-                                82 | 114 => __dfa_state = 4,
+                                69 | 101 => __dfa_state = 4,
                                 _ => break,
                             }
                         }
                         4 => {
                             match b {
-                                85 | 117 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
@@ -2644,7 +2675,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 => {
+                        4 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );
@@ -2701,36 +2732,36 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                70 | 102 => __dfa_state = 2,
+                                70 | 102 => __dfa_state = 1,
                                 _ => break,
                             }
                         }
                         1 => {
                             match b {
+                                65 | 97 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         2 => {
                             match b {
-                                65 | 97 => __dfa_state = 4,
+                                76 | 108 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
                         3 => {
                             match b {
-                                69 | 101 => __dfa_state = 1,
+                                83 | 115 => __dfa_state = 4,
                                 _ => break,
                             }
                         }
                         4 => {
                             match b {
-                                76 | 108 => __dfa_state = 5,
+                                69 | 101 => __dfa_state = 5,
                                 _ => break,
                             }
                         }
                         5 => {
                             match b {
-                                83 | 115 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
@@ -2738,7 +2769,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 => {
+                        5 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );
@@ -2784,92 +2815,28 @@ mod __googlesheetsparser_emit_impl {
                 }
             }
             return '__dfa: {
-                let mut __dfa_state: u32 = 0;
+                let mut __dfa_state: u8 = 0;
                 let mut __dfa_p: usize = pos;
                 let mut __dfa_last_match: ::core::option::Option<u32> = ::core::option::Option::None;
-                loop {
-                    let b = match input.get(__dfa_p) {
-                        ::core::option::Option::Some(&b) => b,
-                        ::core::option::Option::None => break,
+                let __end = input.len();
+                while __dfa_p < __end {
+                    let __b = unsafe { *input.get_unchecked(__dfa_p) };
+                    let __c = unsafe {
+                        *__DFA_CLASSES_GoogleSheetsParser_4.get_unchecked(__b as usize)
                     };
-                    match __dfa_state {
-                        0 => {
-                            match b {
-                                39 => __dfa_state = 2,
-                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
-                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
-                                | 89 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104
-                                | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114
-                                | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 => {
-                                    __dfa_state = 3;
-                                }
-                                _ => break,
-                            }
-                        }
-                        1 => {
-                            match b {
-                                _ => break,
-                            }
-                        }
-                        2 => {
-                            match b {
-                                0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13
-                                | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25
-                                | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37
-                                | 38 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50
-                                | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62
-                                | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74
-                                | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86
-                                | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98
-                                | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108
-                                | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118
-                                | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128
-                                | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138
-                                | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148
-                                | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158
-                                | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168
-                                | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178
-                                | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188
-                                | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198
-                                | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208
-                                | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218
-                                | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228
-                                | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238
-                                | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248
-                                | 249 | 250 | 251 | 252 | 253 | 254 | 255 => __dfa_state = 2,
-                                39 => __dfa_state = 4,
-                                _ => break,
-                            }
-                        }
-                        3 => {
-                            match b {
-                                33 => __dfa_state = 1,
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65 | 66
-                                | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78
-                                | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90
-                                | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        4 => {
-                            match b {
-                                33 => __dfa_state = 1,
-                                39 => __dfa_state = 2,
-                                _ => break,
-                            }
-                        }
-                        _ => unsafe { ::core::hint::unreachable_unchecked() }
+                    let __next = unsafe {
+                        *__DFA_TRANS_GoogleSheetsParser_4
+                            .get_unchecked(__dfa_state as usize * 26 + __c as usize)
+                    };
+                    if __next == 0xFF {
+                        break;
                     }
+                    __dfa_state = __next;
                     __dfa_p += 1;
-                    match __dfa_state {
-                        1 => {
-                            __dfa_last_match = ::core::option::Option::Some(
-                                __dfa_p as u32,
-                            );
-                        }
-                        _ => {}
+                    if (__DFA_ACCEPT_GoogleSheetsParser_4[__dfa_state as usize / 64]
+                        >> (__dfa_state as usize % 64)) & 1 != 0
+                    {
+                        __dfa_last_match = ::core::option::Option::Some(__dfa_p as u32);
                     }
                 }
                 break '__dfa __dfa_last_match.map(|end| end - pos as u32);
@@ -2921,70 +2888,31 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                36 => __dfa_state = 2,
+                                36 => __dfa_state = 1,
                                 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
                                 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
                                 | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
                                 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         1 => {
                             match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         2 => {
                             match b {
-                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
-                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
-                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
-                                _ => break,
-                            }
-                        }
-                        3 => {
-                            match b {
+                                36 => __dfa_state = 3,
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
+                                    __dfa_state = 4;
                                 }
-                                36 => __dfa_state = 4,
-                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
-                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
-                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 6,
-                                _ => break,
-                            }
-                        }
-                        4 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
-                                _ => break,
-                            }
-                        }
-                        5 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
-                                36 => __dfa_state = 4,
-                                _ => break,
-                            }
-                        }
-                        6 => {
-                            match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
-                                }
-                                36 => __dfa_state = 4,
                                 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
                                 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
                                 | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
@@ -2993,11 +2921,58 @@ mod __googlesheetsparser_emit_impl {
                                 _ => break,
                             }
                         }
+                        3 => {
+                            match b {
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 4;
+                                }
+                                _ => break,
+                            }
+                        }
+                        4 => {
+                            match b {
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 6;
+                                }
+                                _ => break,
+                            }
+                        }
+                        5 => {
+                            match b {
+                                36 => __dfa_state = 3,
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 4;
+                                }
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 7,
+                                _ => break,
+                            }
+                        }
+                        6 => {
+                            match b {
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 6;
+                                }
+                                _ => break,
+                            }
+                        }
+                        7 => {
+                            match b {
+                                36 => __dfa_state = 3,
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 4;
+                                }
+                                _ => break,
+                            }
+                        }
                         _ => unsafe { ::core::hint::unreachable_unchecked() }
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 => {
+                        4 | 6 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );
@@ -3071,7 +3046,18 @@ mod __googlesheetsparser_emit_impl {
                                 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
                                 | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
                                 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
+                                _ => break,
+                            }
+                        }
+                        2 => {
+                            match b {
+                                46 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 65
+                                | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77
+                                | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89
+                                | 90 | 95 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
@@ -3079,7 +3065,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 => {
+                        1 | 2 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );
@@ -3136,12 +3122,12 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
+                                36 => __dfa_state = 1,
                                 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
                                 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
                                 | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
                                 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
-                                36 => __dfa_state = 4,
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
@@ -3151,12 +3137,17 @@ mod __googlesheetsparser_emit_impl {
                                 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
                                 | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
                                 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         2 => {
                             match b {
+                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
+                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
+                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
+                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
@@ -3166,17 +3157,12 @@ mod __googlesheetsparser_emit_impl {
                                 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
                                 | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
                                 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 2,
+                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 4,
                                 _ => break,
                             }
                         }
                         4 => {
                             match b {
-                                65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76
-                                | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88
-                                | 89 | 90 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105
-                                | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115
-                                | 116 | 117 | 118 | 119 | 120 | 121 | 122 => __dfa_state = 1,
                                 _ => break,
                             }
                         }
@@ -3184,7 +3170,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 | 2 | 3 => {
+                        2 | 3 | 4 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );
@@ -3241,17 +3227,17 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
+                                36 => __dfa_state = 1,
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
+                                    __dfa_state = 2;
                                 }
-                                36 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         1 => {
                             match b {
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
+                                    __dfa_state = 2;
                                 }
                                 _ => break,
                             }
@@ -3259,7 +3245,15 @@ mod __googlesheetsparser_emit_impl {
                         2 => {
                             match b {
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 1;
+                                    __dfa_state = 3;
+                                }
+                                _ => break,
+                            }
+                        }
+                        3 => {
+                            match b {
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 3;
                                 }
                                 _ => break,
                             }
@@ -3268,7 +3262,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 => {
+                        2 | 3 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );
@@ -3325,48 +3319,48 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                76 | 108 => __dfa_state = 3,
+                                76 | 108 => __dfa_state = 1,
                                 _ => break,
                             }
                         }
                         1 => {
                             match b {
+                                65 | 97 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         2 => {
                             match b {
-                                40 => __dfa_state = 1,
+                                77 | 109 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
                         3 => {
                             match b {
-                                65 | 97 => __dfa_state = 6,
+                                66 | 98 => __dfa_state = 4,
                                 _ => break,
                             }
                         }
                         4 => {
                             match b {
-                                66 | 98 => __dfa_state = 5,
+                                68 | 100 => __dfa_state = 5,
                                 _ => break,
                             }
                         }
                         5 => {
                             match b {
-                                68 | 100 => __dfa_state = 7,
+                                65 | 97 => __dfa_state = 6,
                                 _ => break,
                             }
                         }
                         6 => {
                             match b {
-                                77 | 109 => __dfa_state = 4,
+                                40 => __dfa_state = 7,
                                 _ => break,
                             }
                         }
                         7 => {
                             match b {
-                                65 | 97 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
@@ -3374,7 +3368,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 => {
+                        7 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );
@@ -3431,30 +3425,30 @@ mod __googlesheetsparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                76 | 108 => __dfa_state = 3,
+                                76 | 108 => __dfa_state = 1,
                                 _ => break,
                             }
                         }
                         1 => {
                             match b {
+                                69 | 101 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
                         2 => {
                             match b {
-                                40 => __dfa_state = 1,
+                                84 | 116 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
                         3 => {
                             match b {
-                                69 | 101 => __dfa_state = 4,
+                                40 => __dfa_state = 4,
                                 _ => break,
                             }
                         }
                         4 => {
                             match b {
-                                84 | 116 => __dfa_state = 2,
                                 _ => break,
                             }
                         }
@@ -3462,7 +3456,7 @@ mod __googlesheetsparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        1 => {
+                        4 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );

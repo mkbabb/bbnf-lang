@@ -1,0 +1,9 @@
+SPEC-AMBIGUITY f6236 /꟔/i on "ꟕ"
+SPEC-AMBIGUITY f54882 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f67008 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f70072 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f74149 /Ꟛ/i on "ꟛ"
+SPEC-AMBIGUITY f79354 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f83164 /ƛ/i on "Ƛ"
+SPEC-AMBIGUITY f98652 /ƛ/i on "Ƛ"
+fold corpus: 100000 cases; agree 99992; differ 0; spec-ambiguity 8

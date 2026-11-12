@@ -1,0 +1,11 @@
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-mut/rust/regex)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.20s
+     Running tests/lint_nou.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/lint_nou-31ccb86fd098e158)
+
+running 3 tests
+test the_id_is_general ... ok
+test a_pattern_that_reads_the_same_is_not_linted ... ok
+test a_class_that_can_match_a_surrogate_unit_is_linted ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

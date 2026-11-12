@@ -1,0 +1,37 @@
+{
+  "unit": "LW1.RX-1",
+  "corpus": "sk-v27-LW3-RX1d-or7-u",
+  "corpusPath": "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/rx1d/or7-corpus-u.json",
+  "cases": 21722,
+  "reps": 2,
+  "guarded": true,
+  "startedAt": "2026-11-12T06:43:21.923Z",
+  "engines": {
+    "v8": {
+      "version": "node v26.0.0 / v8 14.6.202.33-node.19",
+      "ms": [
+        3835.315458,
+        3928.801125
+      ]
+    },
+    "jsc": {
+      "version": "system JavaScriptCore.framework 21624.1.16.11.4 (bun absent)",
+      "ms": [
+        4326.916417,
+        4104.818125
+      ]
+    }
+  },
+  "self": {
+    "v8": {
+      "consistent": true
+    },
+    "jsc": {
+      "consistent": true
+    }
+  },
+  "crossAgree": 21722,
+  "specAmbiguity": [],
+  "verdict": "SELF-CONSISTENT",
+  "finishedAt": "2026-11-12T06:43:38.157Z"
+}

@@ -1,0 +1,26 @@
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-mut/rust/regex)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.17s
+     Running tests/casefold_tables.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/casefold_tables-b6ffafbfe780a411)
+
+running 3 tests
+test the_tables_are_at_the_pinned_unicode_version ... ok
+test backslash_s_is_the_generated_space_set ... ok
+test canonicalization_differs_by_reading ... FAILED
+
+failures:
+
+---- canonicalization_differs_by_reading stdout ----
+
+thread 'canonicalization_differs_by_reading' (44961817) panicked at regex/tests/casefold_tables.rs:41:5:
+assertion `left == right` failed
+  left: ['K', 'k']
+ right: ['K', 'k', 'K']
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    canonicalization_differs_by_reading
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse-that-regex --test casefold_tables`

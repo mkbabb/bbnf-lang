@@ -1,0 +1,59 @@
+diff --git a/crates/core/src/generate/regex/emit/dfa/mod.rs b/crates/core/src/generate/regex/emit/dfa/mod.rs
+index 235ce4182..92b1b882f 100644
+--- a/crates/core/src/generate/regex/emit/dfa/mod.rs
++++ b/crates/core/src/generate/regex/emit/dfa/mod.rs
+@@ -260,13 +260,29 @@ fn emit_general_state_machine(
+                 quote! { #(#self_pred)||* }
+             };
+ 
+-            // Non-self transitions.
++            // Non-self transitions: consume the exit byte, record the
++            // target's acceptance, and resume the outer walk in the target
++            // (a bare `continue` would resume the self-loop's `while` on
++            // the same byte, and the target must not re-read the byte that
++            // led to it; sk-v27 LW3.RX-1d).
+             let other_arms: Vec<TokenStream> = transitions
+                 .iter()
+                 .filter(|(_, t)| *t != sid as u32)
+                 .map(|(pred, target)| {
+                     let t_lit = proc_macro2::Literal::u8_unsuffixed(*target as u8);
+-                    quote! { if #pred { __s = #t_lit; continue; } }
++                    let update_accept = if dfa.states[*target as usize].is_accept {
++                        quote! { __last_accept = Some(__pos); }
++                    } else {
++                        quote! {}
++                    };
++                    quote! {
++                        if #pred {
++                            __pos += 1;
++                            #update_accept
++                            __s = #t_lit;
++                            continue '__dfa;
++                        }
++                    }
+                 })
+                 .collect();
+ 
+@@ -335,8 +351,12 @@ fn emit_general_state_machine(
+             let mut checks: Vec<TokenStream> = Vec::new();
+             for (pred, target) in transitions {
+                 let t_lit = proc_macro2::Literal::u8_unsuffixed(*target as u8);
++                // The byte is consumed before the acceptance is recorded,
++                // so the match ends at `__pos` (sk-v27 LW3.RX-1d: the
++                // `+ 1` here ended a match one byte past its last byte
++                // whenever the accepting target stops the walk).
+                 let update_accept = if dfa.states[*target as usize].is_accept {
+-                    quote! { __last_accept = Some(__pos + 1); }
++                    quote! { __last_accept = Some(__pos); }
+                 } else {
+                     quote! {}
+                 };
+@@ -375,7 +395,7 @@ fn emit_general_state_machine(
+             let mut __s: u8 = 0;
+             #start_accept
+ 
+-            loop {
++            '__dfa: loop {
+                 match __s {
+                     #(#arms)*
+                     _ => { break; }

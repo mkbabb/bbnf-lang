@@ -1,0 +1,59 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running tests/regex.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex-8ea2dff5cef58285)
+
+running 5 tests
+test dfa_test::lazy_star_stops_at_first_close ... FAILED
+test dfa_test::lazy_question_prefers_skipping ... FAILED
+test dfa_test::css_block_comment_no_dotall_lazy ... FAILED
+test dfa_test::lazy_plus_stops_at_first_close ... FAILED
+test dfa_test::css_block_comment_dotall_lazy ... FAILED
+
+failures:
+
+---- dfa_test::lazy_star_stops_at_first_close stdout ----
+
+thread 'dfa_test::lazy_star_stops_at_first_close' (41387591) panicked at parse_that/tests/regex/dfa_test.rs:206:5:
+assertion `left == right` failed
+  left: Some(5)
+ right: Some(3)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- dfa_test::lazy_question_prefers_skipping stdout ----
+
+thread 'dfa_test::lazy_question_prefers_skipping' (41387590) panicked at parse_that/tests/regex/dfa_test.rs:231:5:
+assertion `left == right` failed
+  left: Some(3)
+ right: Some(2)
+
+---- dfa_test::css_block_comment_no_dotall_lazy stdout ----
+
+thread 'dfa_test::css_block_comment_no_dotall_lazy' (41387588) panicked at parse_that/tests/regex/dfa_test.rs:253:5:
+assertion `left == right` failed
+  left: Some(20)
+ right: Some(7)
+
+---- dfa_test::lazy_plus_stops_at_first_close stdout ----
+
+thread 'dfa_test::lazy_plus_stops_at_first_close' (41387589) panicked at parse_that/tests/regex/dfa_test.rs:220:5:
+assertion `left == right` failed
+  left: Some(5)
+ right: Some(3)
+
+---- dfa_test::css_block_comment_dotall_lazy stdout ----
+
+thread 'dfa_test::css_block_comment_dotall_lazy' (41387587) panicked at parse_that/tests/regex/dfa_test.rs:238:5:
+assertion `left == right` failed
+  left: Some(17)
+ right: Some(7)
+
+
+failures:
+    dfa_test::css_block_comment_dotall_lazy
+    dfa_test::css_block_comment_no_dotall_lazy
+    dfa_test::lazy_plus_stops_at_first_close
+    dfa_test::lazy_question_prefers_skipping
+    dfa_test::lazy_star_stops_at_first_close
+
+test result: FAILED. 0 passed; 5 failed; 0 ignored; 0 measured; 120 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse_that --test regex`

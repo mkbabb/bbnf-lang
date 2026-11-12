@@ -1,0 +1,38 @@
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/ser)
+   Compiling parse-that-egraph-derive v0.1.0 (https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e)
+   Compiling parse-that-egraph v0.1.0 (https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/ir)
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e)
+   Compiling parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=c1b8d83e55a58fb8f0d4886d92ee93e2d20e3e61#c1b8d83e)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/core)
+   Compiling bbnf-analysis v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/analysis)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.93s
+     Running tests/regex_reading.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/regex_reading-6c9e533145663a5a)
+
+running 2 tests
+test a_leaf_that_reads_the_same_is_not_linted ... ok
+test a_leaf_whose_reading_differs_without_u_is_linted ... FAILED
+
+failures:
+
+---- a_leaf_whose_reading_differs_without_u_is_linted stdout ----
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44973551) panicked at /Users/mkbabb/.cargo/git/checkouts/parse-that-887dffd37a6c99df/c1b8d83/rust/regex/src/hir/mod.rs:84:17:
+to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44973551) panicked at /Users/mkbabb/.cargo/git/checkouts/parse-that-887dffd37a6c99df/c1b8d83/rust/regex/src/hir/mod.rs:84:17:
+to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44973551) panicked at crates/analysis/tests/regex_reading.rs:27:5:
+assertion `left == right` failed: []
+  left: 0
+ right: 3
+
+
+failures:
+    a_leaf_whose_reading_differs_without_u_is_linted
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-analysis --test regex_reading`

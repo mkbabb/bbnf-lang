@@ -1294,7 +1294,13 @@ mod __ebnfparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                9 | 10 | 12 | 13 | 32 => __dfa_state = 0,
+                                9 | 10 | 12 | 13 | 32 => __dfa_state = 1,
+                                _ => break,
+                            }
+                        }
+                        1 => {
+                            match b {
+                                9 | 10 | 12 | 13 | 32 => __dfa_state = 1,
                                 _ => break,
                             }
                         }
@@ -1302,7 +1308,7 @@ mod __ebnfparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        0 => {
+                        0 | 1 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );

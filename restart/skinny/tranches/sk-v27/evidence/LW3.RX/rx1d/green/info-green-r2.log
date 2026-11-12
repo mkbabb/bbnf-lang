@@ -1,0 +1,19 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s
+     Running tests/info.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/info-9ae18341140c0fb4)
+
+running 12 tests
+test test_simple_literal ... ok
+test test_anchored ... ok
+test test_identifier_bare ... ok
+test test_identifier_vendor_prefix ... ok
+test test_negated_class ... ok
+test test_nullable_pattern ... ok
+test test_identifier_custom_property_fold ... ok
+test test_alternation_one_pass ... ok
+test test_json_number_classification ... ok
+test test_width_bounds ... ok
+test a_non_ascii_quantified_class_has_no_ascii_info ... ok
+test test_identifier_double_dash_only ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,35 @@
+
+running 1 test
+anchors: 27 of 27 agree
+test anchors_and_boundaries_reproduce_the_oracle ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 1 test
+oracle leaf corpus, DFA tier: 133 leaves, AGREE 121, ENGINE 12; cases compared 17145, differing 44, not compared 0
+ENGINE value.js@8d7bb5b8#8 (12 of 138 cases) [owed: LW3.RX-1d] first: case 36 "😀": oracle Some(4) engine None
+ENGINE value.js@8d7bb5b8#10 (12 of 138 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#13 (1 of 95 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#17 (1 of 138 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE value.js@8d7bb5b8#59 (1 of 95 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#60 (1 of 137 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE value.js@8d7bb5b8#69 (11 of 134 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#70 (1 of 133 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#73 (1 of 112 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#86 (1 of 96 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#89 (1 of 131 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE sk-v24-56#50 (1 of 132 cases) [owed: LW3.RX-1d] first: case 37 "\u{a0}": oracle Some(2) engine None
+test dfa_tier_agrees_with_v8_and_jsc ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+
+running 4 tests
+test backspace_inside_a_class_is_unchanged ... ok
+test word_boundary_outside_a_class_is_an_assertion ... ok
+test word_boundary_round_trips_through_to_source ... ok
+test engine_reproduces_the_oracle ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

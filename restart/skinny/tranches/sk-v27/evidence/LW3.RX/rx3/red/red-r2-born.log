@@ -1,0 +1,42 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running tests/born_red_lw1.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/born_red_lw1-0401935f1d9c4a8f)
+
+running 4 tests
+test kelvin_folds_under_iu ... FAILED
+test long_s_folds_under_iu ... FAILED
+test latin1_folds_under_i_and_iu ... FAILED
+test kelvin_does_not_fold_without_u ... ok
+
+failures:
+
+---- kelvin_folds_under_iu stdout ----
+
+thread 'kelvin_folds_under_iu' (44951621) panicked at regex/tests/born_red_lw1.rs:162:5:
+assertion `left == right` failed
+  left: None
+ right: Some(3)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- long_s_folds_under_iu stdout ----
+
+thread 'long_s_folds_under_iu' (44951623) panicked at regex/tests/born_red_lw1.rs:172:5:
+assertion `left == right` failed
+  left: None
+ right: Some(1)
+
+---- latin1_folds_under_i_and_iu stdout ----
+
+thread 'latin1_folds_under_i_and_iu' (44951622) panicked at regex/tests/born_red_lw1.rs:180:5:
+assertion `left == right` failed
+  left: None
+ right: Some(2)
+
+
+failures:
+    kelvin_folds_under_iu
+    latin1_folds_under_i_and_iu
+    long_s_folds_under_iu
+
+test result: FAILED. 1 passed; 3 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p parse-that-regex --test born_red_lw1`

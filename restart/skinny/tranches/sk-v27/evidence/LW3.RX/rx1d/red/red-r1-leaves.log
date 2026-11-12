@@ -1,0 +1,35 @@
+   Compiling parse-that-egraph-derive v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/egraph-derive)
+   Compiling parse-that-egraph v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/egraph)
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-397681b/rust/regex)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.45s
+     Running tests/oracle_leaf_corpus.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/oracle_leaf_corpus-db4b9a71aa124060)
+
+running 1 test
+oracle leaf corpus, DFA tier: 133 leaves, AGREE 121, ENGINE 12; cases compared 17145, ENGINE 43, DIALECT-EXCLUDED 1, ENCODING-EXCLUDED 0
+DIALECT value.js@8d7bb5b8#8 (1 cases)
+ENGINE value.js@8d7bb5b8#8 (11 of 138 cases) first: case 61 "-\\_P\\\u{a0}ሃx": oracle Some(11) engine Some(6)
+ENGINE value.js@8d7bb5b8#10 (12 of 138 cases) first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#13 (1 of 95 cases) first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#17 (1 of 138 cases) first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE value.js@8d7bb5b8#59 (1 of 95 cases) first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#60 (1 of 137 cases) first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE value.js@8d7bb5b8#69 (11 of 134 cases) first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#70 (1 of 133 cases) first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#73 (1 of 112 cases) first: case 37 "\u{a0}": oracle None engine Some(2)
+ENGINE value.js@8d7bb5b8#86 (1 of 96 cases) first: case 37 "\u{a0}": oracle Some(2) engine Some(0)
+ENGINE value.js@8d7bb5b8#89 (1 of 131 cases) first: case 37 "\u{a0}": oracle Some(2) engine None
+ENGINE sk-v24-56#50 (1 of 132 cases) first: case 37 "\u{a0}": oracle Some(2) engine None
+
+thread 'dfa_tier_agrees_with_v8_and_jsc' (43955228) panicked at regex/tests/oracle_leaf_corpus.rs:169:5:
+ENGINE leaves no unit owns: ["value.js@8d7bb5b8#8", "value.js@8d7bb5b8#10", "value.js@8d7bb5b8#13", "value.js@8d7bb5b8#17", "value.js@8d7bb5b8#59", "value.js@8d7bb5b8#60", "value.js@8d7bb5b8#69", "value.js@8d7bb5b8#70", "value.js@8d7bb5b8#73", "value.js@8d7bb5b8#86", "value.js@8d7bb5b8#89", "sk-v24-56#50"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test dfa_tier_agrees_with_v8_and_jsc ... FAILED
+
+failures:
+
+failures:
+    dfa_tier_agrees_with_v8_and_jsc
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
+
+error: test failed, to rerun pass `-p parse-that-regex --test oracle_leaf_corpus`

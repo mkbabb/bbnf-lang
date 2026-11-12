@@ -35,9 +35,11 @@
 //!   terminals. The BBNF `identifier` rule is `/[_a-zA-Z][_a-zA-Z0-9-]*/`
 //!   and the `literal` rule requires quoting; unquoted emoji glyphs are
 //!   lexically inexpressible. Excluded from the parity set.
-//! - `grammar/misc/json-commented.bbnf` embeds `/*a*/` big-comments in
-//!   RHS positions the BBNF grammar does not accept there. Also
-//!   excluded.
+//! - `grammar/misc/json-commented.bbnf` is in the set since sk-v27
+//!   LW3.RX-1c. It was excluded while the self-hosted `regex` leaf was
+//!   read leftmost-longest: its `char` rule's `/\\\\/` ran past the
+//!   closing slash to the next `//` and the file did not parse (the
+//!   exclusion blamed its `/*a*/` comments).
 
 use bbnf::grammar;
 use bbnf::grammar::generated::bbnf::BbnfBootstrap;
@@ -163,8 +165,9 @@ bbnf_fixture!(css_l4_value_unit, "grammar/css/l4/value-unit.bbnf");
 bbnf_fixture!(css_l4_keywords, "grammar/css/l4/keywords.bbnf");
 bbnf_fixture!(css_l4_values, "grammar/css/l4/values.bbnf");
 
-// Misc grammars (excluding emoji.bbnf + json-commented.bbnf per header
-// caveats — both represent pre-existing BBNF grammar-coverage gaps).
+// Misc grammars (excluding emoji.bbnf per the header caveat, a
+// pre-existing BBNF grammar-coverage gap).
+bbnf_fixture!(misc_json_commented, "grammar/misc/json-commented.bbnf");
 bbnf_fixture!(misc_csv, "grammar/misc/csv.bbnf");
 bbnf_fixture!(misc_math, "grammar/misc/math.bbnf");
 bbnf_fixture!(misc_math_ambiguous, "grammar/misc/math-ambiguous.bbnf");

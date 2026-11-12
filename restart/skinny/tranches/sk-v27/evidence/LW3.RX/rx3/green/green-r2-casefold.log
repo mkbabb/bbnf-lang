@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running tests/casefold_tables.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/casefold_tables-b6ffafbfe780a411)
+
+running 3 tests
+test canonicalization_differs_by_reading ... ok
+test the_tables_are_at_the_pinned_unicode_version ... ok
+test backslash_s_is_the_generated_space_set ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

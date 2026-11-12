@@ -1,0 +1,11 @@
+   Compiling parse-that-regex v0.1.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s4-rx/rust/regex)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running tests/casefold_tables.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/casefold_tables-b6ffafbfe780a411)
+
+running 3 tests
+test the_tables_are_at_the_pinned_unicode_version ... ok
+test backslash_s_is_the_generated_space_set ... ok
+test canonicalization_differs_by_reading ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

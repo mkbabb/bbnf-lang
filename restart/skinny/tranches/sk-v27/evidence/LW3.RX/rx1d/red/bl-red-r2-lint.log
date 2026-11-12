@@ -1,0 +1,30 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running tests/regex_reading.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/regex_reading-6c9e533145663a5a)
+
+running 2 tests
+test a_leaf_whose_reading_differs_without_u_is_linted ... FAILED
+test a_leaf_that_reads_the_same_is_not_linted ... ok
+
+failures:
+
+---- a_leaf_whose_reading_differs_without_u_is_linted stdout ----
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44983794) panicked at /Users/mkbabb/.cargo/git/checkouts/parse-that-887dffd37a6c99df/c1b8d83/rust/regex/src/hir/mod.rs:84:17:
+to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44983794) panicked at /Users/mkbabb/.cargo/git/checkouts/parse-that-887dffd37a6c99df/c1b8d83/rust/regex/src/hir/mod.rs:84:17:
+to_positive_byte_ranges() not valid for Unicode classes; use UTF-8 expansion
+
+thread 'a_leaf_whose_reading_differs_without_u_is_linted' (44983794) panicked at crates/analysis/tests/regex_reading.rs:27:5:
+assertion `left == right` failed: []
+  left: 0
+ right: 3
+
+
+failures:
+    a_leaf_whose_reading_differs_without_u_is_linted
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf-analysis --test regex_reading`

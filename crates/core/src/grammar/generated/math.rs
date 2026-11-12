@@ -194,10 +194,10 @@ mod __mathparser_emit_impl {
                     match __dfa_state {
                         0 => {
                             match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 0;
-                                }
                                 46 => __dfa_state = 1,
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 2;
+                                }
                                 69 | 101 => __dfa_state = 3,
                                 _ => break,
                             }
@@ -212,18 +212,20 @@ mod __mathparser_emit_impl {
                         }
                         2 => {
                             match b {
+                                46 => __dfa_state = 1,
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
                                     __dfa_state = 2;
                                 }
+                                69 | 101 => __dfa_state = 3,
                                 _ => break,
                             }
                         }
                         3 => {
                             match b {
-                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 2;
-                                }
                                 43 | 45 => __dfa_state = 5,
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 6;
+                                }
                                 _ => break,
                             }
                         }
@@ -231,7 +233,7 @@ mod __mathparser_emit_impl {
                             match b {
                                 69 | 101 => __dfa_state = 3,
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 4;
+                                    __dfa_state = 7;
                                 }
                                 _ => break,
                             }
@@ -239,7 +241,32 @@ mod __mathparser_emit_impl {
                         5 => {
                             match b {
                                 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
-                                    __dfa_state = 2;
+                                    __dfa_state = 6;
+                                }
+                                _ => break,
+                            }
+                        }
+                        6 => {
+                            match b {
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 8;
+                                }
+                                _ => break,
+                            }
+                        }
+                        7 => {
+                            match b {
+                                69 | 101 => __dfa_state = 3,
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 7;
+                                }
+                                _ => break,
+                            }
+                        }
+                        8 => {
+                            match b {
+                                48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 => {
+                                    __dfa_state = 8;
                                 }
                                 _ => break,
                             }
@@ -248,7 +275,7 @@ mod __mathparser_emit_impl {
                     }
                     __dfa_p += 1;
                     match __dfa_state {
-                        0 | 2 | 4 => {
+                        0 | 2 | 4 | 6 | 7 | 8 => {
                             __dfa_last_match = ::core::option::Option::Some(
                                 __dfa_p as u32,
                             );

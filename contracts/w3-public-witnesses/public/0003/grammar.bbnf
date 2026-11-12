@@ -1,0 +1,13 @@
+// Action-free Pratt witness. The instance, not the source, attaches operators.
+document = expression ?w ;
+expression = atom ;
+atom = number | "(" ?w, expression, ")" ?w ;
+
+number = /(?:0|[1-9][0-9]*)(?:\.[0-9]+)?/ ?w ;
+op_prefix_minus = "-" ?w ;
+op_factorial = "!" ?w ;
+op_power = "^" ?w ;
+op_product = "*" ?w ;
+op_quotient = "/" ?w ;
+op_sum = "+" ?w ;
+op_difference = "-" ?w ;

@@ -1,3 +1,5 @@
+//! JSON pathological input generators colocated with the stress consumer.
+
 /// Deeply nested objects: {"a":{"a":{"a":...}}} to depth N
 pub fn deeply_nested_objects(depth: usize) -> String {
     let mut s = String::with_capacity(depth * 6 + 10);

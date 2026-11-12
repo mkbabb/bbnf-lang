@@ -12,7 +12,6 @@ use std::hint::black_box;
 
 use bbnf::grammar::generated::BbnfBootstrap;
 
-#[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 

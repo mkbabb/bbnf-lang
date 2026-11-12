@@ -1,0 +1,56 @@
+{
+  "schema": "bbnf.grammar-instance.v1",
+  "logical_path": "contracts/w3-public-witnesses/public/0003/grammar.bbnf",
+  "entry": "document",
+  "trivia_regex": "[ \\t\\r\\n]*",
+  "pratt_tables": [
+    {
+      "site_rule": "expression",
+      "atom_rule": "atom",
+      "operators": [
+        {
+          "matcher_rule": "op_prefix_minus",
+          "fixity": "prefix",
+          "left_binding_power": null,
+          "right_binding_power": 60
+        },
+        {
+          "matcher_rule": "op_factorial",
+          "fixity": "postfix",
+          "left_binding_power": 90,
+          "right_binding_power": null
+        },
+        {
+          "matcher_rule": "op_power",
+          "fixity": "infix",
+          "left_binding_power": 70,
+          "right_binding_power": 70
+        },
+        {
+          "matcher_rule": "op_product",
+          "fixity": "infix",
+          "left_binding_power": 50,
+          "right_binding_power": 51
+        },
+        {
+          "matcher_rule": "op_quotient",
+          "fixity": "infix",
+          "left_binding_power": 50,
+          "right_binding_power": 51
+        },
+        {
+          "matcher_rule": "op_sum",
+          "fixity": "infix",
+          "left_binding_power": 30,
+          "right_binding_power": 31
+        },
+        {
+          "matcher_rule": "op_difference",
+          "fixity": "infix",
+          "left_binding_power": 30,
+          "right_binding_power": 31
+        }
+      ]
+    }
+  ]
+}

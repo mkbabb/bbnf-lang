@@ -1,0 +1,30 @@
+id	class	facility	locations	disposition
+DEP-01	REQUIRED	BBNF parse_that package patch	.cargo/config.toml:51	bind only ../parse-that-skv26/rust/parse_that
+DEP-02	REPLACEABLE	BBNF bbnf-regex package patch	.cargo/config.toml:52	selected crossing must not expose the whole engine
+DEP-03	REQUIRED	bbnf core parse_that dependency	crates/core/Cargo.toml:15	retain until minimal runtime contract replaces it
+DEP-04	RETIRE	duplicate bbnf dev parse_that dependency	crates/core/Cargo.toml:85	normal dependency already supplies it
+DEP-05	REPLACEABLE	bbnf-ir parse_that dependency	crates/ir/Cargo.toml:13	sealed terminal facts and plans replace VM and compatibility imports
+DEP-06	REPLACEABLE	bbnf-ir bbnf-regex dependency	crates/ir/Cargo.toml:14	distill required analysis capability
+DEP-07	RETIRE	bbnf-path bbnf-regex dependency	crates/bbnf-path/Cargo.toml:26	path sink is banked
+DEP-08	RETIRE	bbnf-path-ts bbnf-regex dependency	crates/bbnf-path-ts/Cargo.toml:39	path and TypeScript lanes are banked
+DEP-09	RETIRE	gorgeous parse_that dependency	crates/gorgeous/Cargo.toml:78	no direct source use; diagnostics are outside scalar crossing
+DEP-10	RETIRE	wasm parse_that dependency	wasm/Cargo.toml:17	no direct source use; Wasm is outside first vertical
+DEP-11	REPLACEABLE	xtask parse_that dependency	xtask/Cargo.toml:33;xtask/src/regen.rs:567	replace wildcard generated import with explicit runtime contract
+DEP-12	REQUIRED	parse_that to bbnf-regex edge	rust/parse_that/Cargo.toml:90	regex terminal may own an independently packaged core
+DEP-13	RETIRE	parse-that to BBNF infrastructure backedge	rust/regex/Cargo.toml:35-37;parse-that .cargo/config.toml	cyclic unpublished egraph/CSP edge blocks independent packaging
+API-01	RETIRE	parse_that wildcard imports	emitter/grammar.rs:299;xtask/src/regen.rs:567;generated grammars	replace with explicit generated imports
+API-02	RETIRE	mutable Parser and ParserState generated ABI	generated grammar fleet; 638 Parser/ParserState sites	replace with invocation-owned Run and opaque transactions
+API-03	REPLACEABLE	Span and unchecked Span::new	core types/host/emitter; 200 generated Span::new sites	checked source-bound spans are required
+API-04	REPLACEABLE	scanner helper catalogue	backend/kernels; generated calls	literal and regex terminals consume sealed TerminalPlan
+API-05	REPLACEABLE	number and string scalar codecs	kernels/number.rs;shapes/number.rs;shapes/string.rs	explicit internal scalar-codec operations
+API-06	RETIRE	public acceleration calls	regex emitters; generated bbnf	acceleration stays internal and profile-gated
+REGEX-01	REPLACEABLE	RegexInfo RegexClass EngineSet	ir recognizer/types/passes	distill immutable TerminalFacts
+REGEX-02	REPLACEABLE	CharSet128 FIRST NFA	ir types/passes/materialization	byte and first-set facts remain; raw engine collections do not cross
+REGEX-03	RETIRE	regex egraph and algebra crossing	ir cost_config;passes/regex_info;egraph/rules/regex	direct algorithms are the W2 oracle
+REGEX-04	RETIRE	path lexer crossing	bbnf-path;bbnf-path-ts	banked path API
+REGEX-05	RETIRE	parse_that::regex compatibility authority	parse_that/src/regex/mod.rs; BBNF direct sites	one bbnf-regex construction authority; no wholesale re-export
+REGEX-06	REPLACEABLE	HIR DFA acceleration emitter surface	core generate/regex and regex_scan_adapter	opaque compiled terminal contract
+TEST-01	REPLACEABLE	regex analysis tests	ir tests	recast against TerminalFacts and TerminalPlan
+TEST-02	REPLACEABLE	DFA and HIR fidelity tests	core tests	retain cases against opaque terminal contract
+BENCH-01	RETIRE	parse_that JSON domain-parser bench	core benches/json/parse_that.rs	domain parser excluded by W1
+BENCH-02	REPLACEABLE	Wasm DFA benches	core benches json/css wasm	recast only after scalar semantic work plane exists

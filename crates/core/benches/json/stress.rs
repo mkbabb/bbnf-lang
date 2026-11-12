@@ -8,8 +8,7 @@
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
-#[path = "../generators/mod.rs"]
-mod generators;
+mod json_gen;
 
 use divan::black_box;
 
@@ -21,7 +20,7 @@ macro_rules! bench_depth_obj {
     ($name:ident, $depth:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::json_gen::deeply_nested_objects($depth);
+            let input = json_gen::deeply_nested_objects($depth);
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!("depth_obj_{}: parse failed: {:?}", $depth, e));
@@ -45,7 +44,7 @@ macro_rules! bench_depth_arr {
     ($name:ident, $depth:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::json_gen::deeply_nested_arrays($depth);
+            let input = json_gen::deeply_nested_arrays($depth);
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!("depth_arr_{}: parse failed: {:?}", $depth, e));
@@ -69,7 +68,7 @@ macro_rules! bench_wide_arr {
     ($name:ident, $count:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::json_gen::wide_array($count);
+            let input = json_gen::wide_array($count);
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!("wide_arr_{}: parse failed: {:?}", $count, e));
@@ -93,7 +92,7 @@ macro_rules! bench_wide_obj {
     ($name:ident, $count:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::json_gen::wide_object($count);
+            let input = json_gen::wide_object($count);
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!("wide_obj_{}: parse failed: {:?}", $count, e));
@@ -117,7 +116,7 @@ macro_rules! bench_strings {
     ($name:ident, $count:expr, $len:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::json_gen::long_strings($count, $len);
+            let input = json_gen::long_strings($count, $len);
             {
                 let parsed = JsonParser::parse(&input).unwrap_or_else(|e| {
                     panic!("strings_{}x{}: parse failed: {:?}", $count, $len, e)
@@ -142,7 +141,7 @@ macro_rules! bench_escapes {
     ($name:ident, $count:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::json_gen::escape_heavy($count);
+            let input = json_gen::escape_heavy($count);
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!("escapes_{}: parse failed: {:?}", $count, e));
@@ -165,7 +164,7 @@ macro_rules! bench_mixed {
     ($name:ident, $count:expr) => {
         #[divan::bench]
         fn $name(b: divan::Bencher) {
-            let input = generators::json_gen::mixed_types($count);
+            let input = json_gen::mixed_types($count);
             {
                 let parsed = JsonParser::parse(&input)
                     .unwrap_or_else(|e| panic!("mixed_{}: parse failed: {:?}", $count, e));

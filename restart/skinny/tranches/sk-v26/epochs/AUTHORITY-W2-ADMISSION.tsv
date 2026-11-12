@@ -1,0 +1,34 @@
+id	path	authority_class	dispatchable	current_wave	sha256	durability	disposition
+A001	restart/skinny/tranches/sk-v26/STATE.md	STATE	YES	W3	12163a47af3e57d25d719445ca249e123d53e07c116628e5923bc8684cd8c3f0	GIT_DURABLE	sole current dispatch authority
+A002	restart/skinny/tranches/sk-v26/README.md	ACTIVE_CHARTER	NO	W3	03bafd754948ea403ca7f7cbb6fa7a7d0847882f53acbf16658f97accc4f222d	GIT_DURABLE	admitted charter; non-dispatchable
+A003	restart/skinny/tranches/sk-v26/waves/W0-TRUTH-SEAL.md	COMPLETED_CONTRACT	NO	W0	45ab08139e589ac1eedb6d15f265248be2ba027e9d2eb28ec21a1eacba5f1ac6	GIT_DURABLE	W0 admitted by W0-ADMISSION.md
+A004	restart/skinny/tranches/sk-v26/BENCHMARK-CONSTITUTION.md	POLICY	NO	W3	fdd8ea9f1ed3d1e8be67129bdc2e92d01efdb72fc7a23fe64d3131ce7b3dc643	GIT_DURABLE	performance acceptance policy
+A005	restart/skinny/tranches/sk-v26/SESSION-PROTOCOL.md	POLICY	NO	W3	d4c2aeafff0e2c6a207abeda31958da76bd7ff515fe51eaeac63abac3e3b7196	GIT_DURABLE	operational durability policy
+A006	restart/skinny/tranches/sk-v26/OBLIGATION-LEDGER.tsv	MUTABLE_LEDGER	NO	W3	c9135ef0072474ad9d905f8e5cd1b3dbed07b77ba2fcfd424dc9efcfcaed9321	GIT_DURABLE	obligation dimensions; never dispatch
+A007	restart/skinny/tranches/sk-v26/EVIDENCE-LEDGER.tsv	APPEND_ONLY_EVIDENCE	NO	W3	91f0be622d940ca51016cea942e584004f71ac76b31b8f8bbb4fa8040b80ea0e	GIT_DURABLE	evidence only
+A008	restart/skinny/tranches/sk-v26/AUDIT-COVERAGE.tsv	APPEND_ONLY_EVIDENCE	NO	W3	24c6166c2eb99ad4b7e59e3e32fb2b0c8fd5ab141daba1ee27fefab422311a4e	GIT_DURABLE	coverage only
+A009	restart/skinny/tranches/sk-v26/waves/W1-PARSE-THAT-TRANSACTION.md	COMPLETED_CONTRACT	NO	W1	c75ae3c4168a1e3414884f982b030edbef9ed2ab31442d8f186439a58b3c0d73	GIT_DURABLE	W1 admitted by W1-ADMISSION.md
+A010	restart/skinny/tranches/sk-v26/waves/W2-BBNF-SEMANTIC-SPINE.md	COMPLETED_CONTRACT	NO	W2	70741036f776e1680d4226c6ab609f8dc6716c4cdfe2abaca87c30351f6c2a6e	GIT_DURABLE	W2 admitted by W2-ADMISSION.md
+A011	restart/skinny/tranches/sk-v26/waves/W3-GRAMMAR-NEUTRAL-VERTICAL.md	ACTIVE_CONTRACT	NO	W3	d7df7332e0b2f9b2bc0650ff4adde4cee013832614b96b9845f83bc7281dd7cf	GIT_DURABLE	active immutable wave contract; dispatch only through STATE
+A012	restart/skinny/tranches/sk-v26/waves/W4-PROFILE-CUTOVER.md	BANKED_CONTRACT	NO	W4	1dd3f6335a3c9137b1f6519a0f5e40f6be179f01425bbe2f05dc08da2e937e10	GIT_DURABLE	non-dispatchable
+A013	restart/skinny/tranches/sk-v26/REVIEW-ADJUDICATION.md	FORMATION_EVIDENCE	NO	NA	e22e24537a3b711e367b69f749861ea5e464ccaaba3817a461a0438771720bb9	GIT_DURABLE	evidence only
+A014	restart/skinny/tranches/sk-v26/LANE-CONSUMERS-AND-PLAYGROUND.md	BANKED_LANE	NO	NA	7b78534bb5911bf54b88cd2eb9d771c6c97cc76a04d5387abd68adfb0c4c9fe9	GIT_DURABLE	triggered lane; non-dispatchable
+A015	restart/skinny/tranches/sk-v26/artifacts/W1-ADMISSION.md	ADMISSION_EVIDENCE	NO	W1	cdea56365e41b3a6d8688a11435cdfc11d0e5494b3cada0f023464234305b464	GIT_DURABLE	W1 admission judgment; non-dispatchable
+A016	restart/skinny/tranches/sk-v26/artifacts/W1-REPLAY.md	REPLAY_EVIDENCE	NO	W1	b4948b5bd91fb0486c23d0ab6064513f0b25ac19a128a7d769fc3baf317ceb10	GIT_DURABLE	W1 replay; non-dispatchable
+A017	restart/skinny/tranches/sk-v26/artifacts/W2-ADMISSION.md	ADMISSION_EVIDENCE	NO	W2	a7c3e793467b0c9cf7f26edaf230afbcaebcf4a0da48c269d27a06026e40ff46	GIT_DURABLE	W2 admission judgment; non-dispatchable
+A018	restart/skinny/tranches/sk-v26/artifacts/W2-REPLAY.md	REPLAY_EVIDENCE	NO	W2	2d0c51679c7f23b9008c7acc8d3d5b1a8ce78876b9924270548bf95069e05218	GIT_DURABLE	W2 replay; non-dispatchable
+A019	restart/skinny/tranches/sk-v26/artifacts/W2-REVIEW-A.md	REVIEW_EVIDENCE	NO	W2	f10b3cd260d33437676e9ad389a889762341980a5a552940060360a06bcae350	GIT_DURABLE	hostile review A ACCEPT
+A020	restart/skinny/tranches/sk-v26/artifacts/W2-REVIEW-B.md	REVIEW_EVIDENCE	NO	W2	1825f2995cd7109ff51fabc36b54a23612fe85eec9fa0a39c7f40818b9ba7761	GIT_DURABLE	hostile review B ACCEPT
+A021	restart/skinny/tranches/sk-v26/artifacts/W2-ADJUDICATION.md	ADJUDICATION_EVIDENCE	NO	W2	e95ecc7c03dd4710ff20432c8fe5aa5768e10dec01118da132ff9058891ed3a5	GIT_DURABLE	terminal adjudication ACCEPT
+A022	restart/skinny/tranches/sk-v26/artifacts/W2-SOURCE-PLAN.schema.json	SCHEMA_EVIDENCE	NO	W2	7a4c5fc6bdac4d2eff23c82707838d694ff4cbc901f6b3453052851e46945d7e	GIT_DURABLE	complete-packet schema
+A023	restart/skinny/tranches/sk-v26/artifacts/W2-EVENT-SCHEMA.json	SCHEMA_EVIDENCE	NO	W2	710c956b87a24f870a061452ed12d48662ac62308483a8d9ac20d28ee09dea7a	GIT_DURABLE	scalar-event schema
+A024	restart/skinny/tranches/sk-v26/artifacts/W2-TYPE-LAWS.json	LAW_EVIDENCE	NO	W2	e92c34b29320f0ccf853a36ea8372f998382bd8ed711ed1b6f40595c108906cb	GIT_DURABLE	type and analysis laws
+A025	restart/skinny/tranches/sk-v26/artifacts/W2-EVENT-CONFORMANCE.json	CONFORMANCE_EVIDENCE	NO	W2	4e5720600eebb8869c4120e991e75549426f0e840b1cb5c8db5b46530cb6df10	GIT_DURABLE	generated event conformance
+A026	restart/skinny/tranches/sk-v26/artifacts/W2-SCALAR-PROFILE.json	PROFILE_EVIDENCE	NO	W2	ca74a0c6079a654ac6877f310a4a77d5190bec4801faae178d0a6dcfd70f2cd5	GIT_DURABLE	REJECT nonproduction scalar prototype
+H001	/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/CAMPAIGN-STATE.md	EVIDENCE_ONLY	NO	NA	3f0eea04a0575671d8e9326a14081d34f9a222def9759224898c344fd51f1e13	PROTECTED_FILESYSTEM	historical state
+H002	restart/skinny/tranches/sk-v25/HANDOFF.md	EVIDENCE_ONLY	NO	NA	9be82e72d82c09aae2e1dd251c9d516a6843a39868ce9853ef656ea44a9b9786	GIT_BASE	historical handoff
+H003	/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/EVIDENCE-CENSUS.md	EVIDENCE_ONLY	NO	NA	5f06c7aca00b9048f5a62e55307a3795fc95a1ea38cf5a489a4072c6a4892e50	PROTECTED_FILESYSTEM	historical census
+H004	/Users/mkbabb/Programming/bbnf-lang/restart/skinny/tranches/sk-v25/APOTHEOSIS.md	EVIDENCE_ONLY	NO	NA	77e94807d33930be637cb7dbf582965e887643ab3c8a474d032c9ae7f7080360	PROTECTED_FILESYSTEM	historical synthesis
+H005	/Users/mkbabb/Programming/parse-that/docs/tranches/T	EVIDENCE_ONLY	NO	NA	e7718bf1b2d8470908d8dba6551ddc61571c5fec22a849572125e2e35e06e1ea	PROTECTED_FILESYSTEM	formation/prototype evidence; excludes dist and test-dist
+H006	/Users/mkbabb/Programming/parse-that/docs/tranches/U	EVIDENCE_ONLY	NO	NA	ed92fdbffa52d577a30ade4905f7b2a6f1f14a612193120df15b3ede5fc7ce04	PROTECTED_FILESYSTEM	formation evidence; excludes dist and test-dist
+H007	/Users/mkbabb/Programming/parse-that/docs/tranches/B	EVIDENCE_ONLY	NO	NA	56892ed2ad131532cd79b0f93e90bf96dcd0da48bdbafbbb9f183d7fd21fb1aa	PROTECTED_FILESYSTEM	banked evidence; excludes dist and test-dist

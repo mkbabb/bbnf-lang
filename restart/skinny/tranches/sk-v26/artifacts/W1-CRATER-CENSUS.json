@@ -1,0 +1,57 @@
+{
+  "schema": "sk-v26-w1-crater-census-v1",
+  "source": {
+    "w0_payload_commit": "47d51a190fda7f51686d5bad1be149191bbfeba6",
+    "w0_payload_tree": "00af42256deb5a49d5c1ccf1e9cbef3107cc6589",
+    "w0_admission_commit": "f819a9657966e66493fc2be26bf80d5fe876259a",
+    "w0_crossing_path": "restart/skinny/tranches/sk-v26/artifacts/W0-CROSSING-SITES.tsv",
+    "w0_crossing_sha256": "232bbb1a1a3d1eeb021b7d1030a4b0afc18944aca122bf22731c837464d83b2b",
+    "w0_contract_path": "restart/skinny/tranches/sk-v26/artifacts/W0-CROSSING.tsv",
+    "w0_contract_sha256": "09ad6c0cf72f17c5f1f9b416d8e02e2281b38c9c5af8e2c6cf03fbd5bb19a419"
+  },
+  "totals": {
+    "canonical_w0_paths": 147,
+    "canonical_w0_sites": 3928,
+    "coarse_contract_supplement_paths": 1,
+    "coarse_contract_supplement_sites": 2,
+    "paths": 148,
+    "sites": 3930
+  },
+  "path_dispositions": {
+    "BANKED": 29,
+    "REPLACED": 77,
+    "REQUIRED": 3,
+    "RETIRED": 33,
+    "UNREACHABLE": 6
+  },
+  "site_dispositions": {
+    "BANKED": 169,
+    "REPLACED": 215,
+    "REQUIRED": 8,
+    "RETIRED": 1829,
+    "UNREACHABLE": 1709
+  },
+  "facilities": {
+    "BBNF_REGEX_CRATE_EDGE": 11,
+    "LEGACY_GENERATED_PARSER_ABI": 1749,
+    "LEGACY_MUTABLE_PARSE_ABI": 913,
+    "PARSE_THAT_CRATE_EDGE": 13,
+    "REGEX_COMPILER_OR_ENGINE_SURFACE": 144,
+    "SCANNER_OR_RUNTIME_HELPER": 1093,
+    "WILDCARD_RUNTIME_IMPORT": 7
+  },
+  "current_states": {
+    "SAME_AS_W0": 148
+  },
+  "artifacts": {
+    "W1-CRATER.tsv": "2b0fcc10a351898f029205e1bf5bd5763a1f55773ba227bc96493b16cb9ab66a",
+    "W1-CRATER-SITES.tsv": "627a0cfb7ac8c58243590ab67725f03184f5278f5a24d5b569776f3e6fe7e862"
+  },
+  "interpretation": {
+    "required": "retained minimal package/runtime crossing for the selected Rust vertical",
+    "replaced": "active legacy crossing that W2 must substitute with the admitted W1 contract",
+    "retired": "legacy crossing deleted rather than preserved or adapted",
+    "banked": "owned non-W1 lane with a later trigger; not a hidden W1 deliverable",
+    "unreachable": "tracked evidence/source snapshot outside the selected production build graph"
+  }
+}

@@ -1,3 +1,5 @@
+//! CSS pathological input generators colocated with the stress consumer.
+
 /// N separate CSS rules with single declarations
 pub fn many_rules(count: usize) -> String {
     let mut s = String::with_capacity(count * 30);

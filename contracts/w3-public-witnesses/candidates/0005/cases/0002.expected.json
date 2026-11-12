@@ -1,0 +1,11 @@
+{
+  "schema": "bbnf.w3.symbolic-expectation.v1",
+  "oracle": {"kind": "INDEPENDENT_LOWERED_PLAN_EVENT_ORACLE", "authority": "the character class and range are unterminated", "implementation_generated": false, "normalization": "contracts/w3-public-witnesses/README.md"},
+  "outcome": "MISMATCH",
+  "full_consumption": false,
+  "recovery_policy": "ATOMIC_REJECT",
+  "runtime_recovery": "Disabled",
+  "cursor_after": "ENTRY",
+  "observations": [],
+  "reason": "the excluded end probe and failed class candidates publish no event"
+}

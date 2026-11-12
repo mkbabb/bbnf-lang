@@ -1,0 +1,7 @@
+{
+  "schema": "bbnf.grammar-instance.v1",
+  "logical_path": "grammar/misc/csv.bbnf",
+  "entry": "csv",
+  "trivia_regex": null,
+  "pratt_tables": []
+}

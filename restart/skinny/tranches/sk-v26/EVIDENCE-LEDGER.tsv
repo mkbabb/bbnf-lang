@@ -1,0 +1,80 @@
+id	repository	kind	observation	evidence	disposition
+E001	bbnf-lang	MACHINE_FACT	HEAD is af15f63e0 and master is 71 commits ahead of origin	git status/log on 2026-07-28	ADMITTED
+E002	bbnf-lang	MACHINE_FACT	current filesystem has 204 tracked changes with +9201/-9670	git diff --stat on 2026-07-28	ADMITTED_PROTECTED
+E003	bbnf-lang	MACHINE_FACT	clean HEAD bbnf library check passes with 190 warnings	cargo check -p bbnf --lib --locked in isolated sibling worktree	ADMITTED
+E004	bbnf-lang	MACHINE_FACT	current dirty locked all-target check fails at generated/runtime ABI	push_branch_tag; AltBranchId/u32; from_u8; CSS host rename	ADMITTED_RED
+E005	bbnf-lang	MACHINE_FACT	clean checkout lacks JSON/CSS benchmark corpora	clean worktree data/ contains only Sheets fixtures	ADMITTED_RED
+E006	bbnf-lang	OBSERVATION	clean-HEAD BBNF JSON medians on ignored local data are 9.864ms canada; 2.637ms citm; 34.97us data; 970.5us twitter	json_monolithic built from af15f63e0; local unsealed corpus	NON_CERTIFYING
+E007	bbnf-lang	OBSERVATION	sonic-rs medians on same local files are 4.611ms; 1.135ms; 25.83us; 433.1us	json_competitors built from af15f63e0; different retained-value semantics	NON_CERTIFYING
+E008	bbnf-lang	MACHINE_FACT	always-on JSON bench build took 6m54s and competitor build took 5m07s	unconditional dev-dependency/LTO build on audit host	ADMITTED_FRICTION
+E009	bbnf-lang	MACHINE_FACT	latest 120 SK/tranche commits: 77 docs-only; 23 code; 16 test/bench; 4 other	git history cohort audit	ADMITTED
+E010	bbnf-lang	MACHINE_FACT	34 of latest 120 use narrow closure language later superseded by SK-V25	git subjects plus SK-V25 ratification	ADMITTED
+E011	bbnf-lang	MACHINE_FACT	SK-V25 filesystem is about 15983 files/1.7GiB but only 3 files are tracked	find/du/git ls-files	ADMITTED_RED
+E012	bbnf-lang	MACHINE_FACT	SK-V25 ratifies 0/18 PT waves; 0/4 VT candidates; 0/6 gestalts; 0 competitive proofs	SK-V25 CAMPAIGN-STATE.md	ADMITTED
+E013	bbnf-lang	MACHINE_FACT	skinny runtime and bbnf-simd test fleets pass current local tests	isolated agent replay	ADMITTED_NARROW
+E014	bbnf-lang	MACHINE_FACT	skinny codegen reproducibility fails on config.rs	cargo test --manifest-path skinny/Cargo.toml -p codegen --lib	ADMITTED_RED
+E015	bbnf-lang	SOURCE_FACT	skinny generator retains CSS/JSON-specific modules and raw grammar reparsing	skinny/crates/codegen/src/**	ADMITTED_RED
+E016	bbnf-lang	SOURCE_FACT	Lock 14 can pass while nine grammar runtime/strategy rows remain	LOCKS.md; Cargo.toml; runtime dirs; lock14 test	ADMITTED_RED
+E017	parse-that	MACHINE_FACT	main is ef10d5b, origin-equal but dirty during audit	git status/log	ADMITTED_PROTECTED
+E018	parse-that	MACHINE_FACT	TS source matches v1.0; build passes; ordinary tests have 112 pass 2 skip and 4 file/suite failures	isolated audit replay	ADMITTED_RED
+E019	parse-that	MACHINE_FACT	proof:perf JSON result is about 6.65-10.01us vs unproven 1.742us baseline	npm performance proof replay	ADMITTED_RED
+E020	parse-that	MACHINE_FACT	live Rust fails capture/noncapture; multiline; Unicode-word regex laws	cargo test isolated target	ADMITTED_RED
+E021	parse-that	MACHINE_FACT	committed Rust test imports nonexistent regex parser module	clean committed Rust test inspection/replay	ADMITTED_RED
+E022	parse-that	MACHINE_FACT	invocation v4 passes 24 semantic tests and large oracle; remains private/unprofiled	isolated prototype replay	ADMITTED_PROTOTYPE
+E023	parse-that	SOURCE_FACT	Span and PaddedView safe APIs rely on debug-only checks before unchecked access	rust/parse_that source audit	ADMITTED_RED
+E024	parse-that	SOURCE_FACT	ParserState copies full input into aligned padding per construction	rust/parse_that source audit	ADMITTED_RED
+E025	parse-that	SOURCE_FACT	handwritten regex path remains primary; generated path is verification-only	regex source/bootstrap audit	ADMITTED_RED
+E026	value.js	MACHINE_FACT	Value 4.0 has zero parse-that dependencies/imports	current f36f780c package/source/test/bench search	ADMITTED
+E027	value.js	HISTORY_FACT	Value 2.0.1 consumed parse-that; 2026-07-17 v4 cut removed it	a7eabcc7 and 164343c1 history	ADMITTED
+E028	value.js	PROTOTYPE_FACT	cand-F 210/210; cand-O 355/355; 30000 fuzz no disagreement; 172 throw cases removed	value V parser-band evidence	ADMITTED_PROTOTYPE
+E029	sessions	MACHINE_FACT	60 relevant independent owner sessions received semantic treatment: 13 Claude + 47 Codex	AUDIT-COVERAGE.tsv	FORMATION_PENDING_RECEIPT
+E030	sessions	MACHINE_FACT	100 newest Codex subagent rollouts were separately treated as execution evidence; 17 turn_aborted	AUDIT-COVERAGE.tsv	FORMATION_PENDING_RECEIPT
+E031	sessions	MACHINE_FACT	446 stratified tranche artifacts were treated from 8768 eligible artifacts; files are not tranche roots	AUDIT-COVERAGE.tsv	FORMATION_PENDING_RECEIPT
+E032	playground	MACHINE_FACT	current source/package search has zero shadcn references	rg across manifests and source	ADMITTED
+E033	SOTA	RESEARCH_FACT	current leading systems separate work planes and specialize bounded kernels	simdjson/yyjson/sonic-rs/cssparser/lightningcss/dav1d audits	FORMATION
+E034	value.js	HISTORY_FACT	approximately 250 wall/redeployment; 217 no-legacy; 192 no-workaround; 110 KISS; 90 no-deferral restatements	/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/excavation/EXHORTATION-CENSUS.md	ADMITTED_QUALIFIED
+E035	value.js	HISTORY_FACT	registers identify 29 half-baked units; 17 silent drops; 16 explicit rejections	/Users/mkbabb/Programming/value.js/docs/tranches/V/megatranche/excavation/TRUTH-TABLE.md	ADMITTED_QUALIFIED
+E036	sessions	HISTORY_FACT	glass archaeology supplies a broader differently-scoped transcript census	/Users/mkbabb/Programming/glass-ui/docs/tranches/BJ/audits/2026-07-28-session-archaeology/HISTORY-ARCHAEOLOGY-TERRA.md	ADMITTED_SCOPE_WARNING
+E037	sessions	MACHINE_FACT	60 is the relevant semantically treated owner-root corpus, not all globally retained roots	AUDIT-COVERAGE.tsv	ADMITTED_QUALIFIED
+E038	tranches	MACHINE_FACT	446 artifacts and 120 commits are not 100 distinct tranche roots	AUDIT-COVERAGE.tsv	QUALIFIED_PENDING_RECEIPT
+E039	review	MACHINE_FACT	first hostile review task is /root/v26_critic_architecture	collaboration task receipt	ADMITTED
+E040	review	MACHINE_FACT	second hostile review task is /root/v26_critic_history	collaboration task receipt	ADMITTED
+E041	review	MACHINE_FACT	final adjudicator task /root/v26_adjudicator returns PROVISIONAL_ACCEPT	REVIEW-ADJUDICATION.md	ADMITTED
+E042	review	OPERATIONAL_FACT	history critic accidentally reran codex-anamnesis and rewrote an already-untracked external output; no revert attempted	REVIEW-ADJUDICATION.md	ADMITTED_PROTECTED
+E043	W0	MACHINE_FACT	separate clean BBNF and parse-that worktrees were created at the selected heads and protected mains were not mutated	W0-EPOCH.tsv	ADMITTED
+E044	W0	MACHINE_FACT	frozen audit epoch contains 13 Claude identities 106 Codex identities and 109 chronological tranche roots; most rows remain mechanically identified rather than semantically adjudicated	W0-AUDIT-SOURCE-EPOCH.json;W0-AUDIT-MANIFEST.tsv	ADMITTED_QUALIFIED
+E045	W0	MACHINE_FACT	thirteen JSON CSS and CSV fixtures totaling 16487826 bytes are content-addressed and deterministically materialize into both isolated worktrees	corpora/MANIFEST.tsv;W0-CORPUS-MATERIALIZATION.tsv	ADMITTED_NONCERTIFYING_PROVENANCE
+E046	parse-that	MACHINE_FACT	materialized TypeScript baseline builds and passes 13 files and 122 tests	npm run build; npm test from parse-that-skv26/typescript	ADMITTED
+E047	parse-that	MACHINE_FACT	after fixture materialization full committed Rust tests compile until the test-only import of nonexistent parse_that::regex::parser	cargo test -p parse_that --tests --locked	ADMITTED_RED
+E048	BBNF	MACHINE_FACT	mechanical crossing census classifies 3928 matching sites across 147 Rust/manifest files with zero unclassified disposition	W0-CROSSING-SITES.tsv	ADMITTED
+E049	parse-that	SOURCE_FACT	bbnf-regex pulls BBNF egraph/egraph-derive/CSP infrastructure while csp-solver has zero source use; parse_that package verification inherits this backedge	W0-CROSSING.tsv; cargo tree/package audit	ADMITTED_RED
+E050	pprint	MACHINE_FACT	baseline-only pprint compatibility dependency is pinned to clean detached 2b4d2d4 tree 9361413 instead of the dirty protected main	W0-EPOCH.tsv	ADMITTED
+E051	BBNF	OBSERVATION	materialized canonical JSON bench ran all four inputs successfully; medians 6.413ms canada 1.95ms citm 26.64us data and 693.2us twitter	cargo bench -p bbnf --bench json_monolithic --locked -- data_s	NON_CERTIFYING
+E052	parse-that	MACHINE_FACT	W1 replaces the legacy Rust surface with a seven-file 854-line borrowed transactional kernel with zero normal dependencies and no production unsafe block	9c9714dfdfa6d33b70f5738c311a9abccb4a1bdf;W1-TRANSACTION-LAWS.json	ADMITTED
+E053	parse-that	MACHINE_FACT	37 kernel laws four allocation assertions 16 table-plan laws and seven standalone real compiler-runtime bridge laws pass	W1-TRANSACTION-LAWS.json;W1-REGEX-AUTHORITY.tsv	ADMITTED
+E054	parse-that	MACHINE_FACT	clean parse_that and bbnf-regex packages verify at 12419 and 82831 compressed bytes with zero and one default normal dependency respectively	W1-PACKAGE.json	ADMITTED
+E055	BBNF	MACHINE_FACT	corrected W1 crater classifies 3930 crossing sites across 148 paths and stops honestly at gorgeous requesting the removed diagnostics feature	W1-CRATER-CENSUS.json;W1-CRATER-COMPILE.tsv	ADMITTED_RED
+E056	parse-that	OBSERVATION	twenty clean-compile and fixed recognition samples are sealed under a prehashed decision plan and explicitly cannot promote performance	W1-PROFILE-PLAN.md;W1-PROFILE.json	NON_PROMOTING
+E057	review	MACHINE_FACT	two hostile reviewers and a fresh final adjudicator independently accept the committed W1 public API and regex seam	W1-REVIEW-A.md;W1-REVIEW-B.md;W1-ADJUDICATION.md	ADMITTED
+E058	BBNF	CONTRACT_FACT	W1 direct control is isomorphic rather than generator-produced; genuine emitted control in both sink modes is the first blocking W2 gate	W1-PARSE-THAT-TRANSACTION.md;W1-ADMISSION.md	ADMITTED_RED_GATE
+E059	parse-that	MACHINE_FACT	W2 admits a consuming ModuleResult boundary, transactional retaining and counting sinks, typed input/nesting/event/work resources, exact version 0.4.1, and KERNEL_ABI 2	282ccb6f6da15ef1e5b355b5588a23cc6a76ae7f;W2-ADMISSION.md	ADMITTED
+E060	BBNF	MACHINE_FACT	the immutable W2 carrier seals source, syntax, remap, dependency, type certificates, analysis, lowering, scalar events, direct Rust emission, replay, and stateful full-invalidation edits	28a91db51177495efb61cd1c664a85b37fdd9529;W2-REPLAY.md	ADMITTED
+E061	BBNF	MACHINE_FACT	57 workspace tests plus 8 generated, 5 recursive, and 4 nominal-record external controls pass with strict lint/docs/scoped-wasm/nameability gates	W2-EVENT-CONFORMANCE.json;W2-REPLAY.md	ADMITTED
+E062	BBNF	CONTRACT_FACT	first-order structural principality, executable certificates, dependency-first bounded SCC analysis, deterministic work charging, and typed minimum-consumption overflow are witnessed	W2-TYPE-LAWS.json;W2-REVIEW-A.md;W2-REVIEW-B.md	ADMITTED_BOUNDED
+E063	BBNF	MACHINE_FACT	compiled-module v5 and analysis-facts v3 replay validate against a real 39934-byte recursive record packet with exact carrier and digest reproduction	W2-SOURCE-PLAN.schema.json;W2-REPLAY.md	ADMITTED
+E064	BBNF	CONTRACT_FACT	persistent rows retain compact private ordinals while public full-revision capabilities reject foreign lookups and remain opaque to construction and serde	W2-TYPE-LAWS.json;W2-ADJUDICATION.md	ADMITTED
+E065	BBNF	OBSERVATION	the standalone scalar classifier fails the predeclared profile rule despite long-scalar wins and is prohibited from production promotion	W2-SCALAR-PROFILE.json;W2-ADMISSION.md	ADMITTED_REJECTED_PROMOTION
+E066	parse-that	MACHINE_FACT	parse_that and bbnf-regex packages reproduce byte-identically at 15270 and 82832 bytes; final bbnf packaging remains externally blocked only because bbnf-regex 0.1.0 is unpublished	W2-REPLAY.md;W2-ADJUDICATION.md	ADMITTED_QUALIFIED
+E067	review	MACHINE_FACT	two independent hostile reviewers accept the exact W2 carrier, paired kernel, and six-artifact evidence tree with no P0 P1 or P2 finding	W2-REVIEW-A.md;W2-REVIEW-B.md	ADMITTED
+E068	review	MACHINE_FACT	a fresh clean-clone adjudicator independently replays W2 semantics packages controls schemas scaling and rejected-epoch exclusion and returns ACCEPT	W2-ADJUDICATION.md	ADMITTED
+E069	BBNF	HISTORY_FACT	full-capability carrier 3fbfc1b3 and analysis-facts v2 are rejected; 3faf768e and 00967fb5 are referenced only for qualified wire-lineage comparison	W2-ADJUDICATION.md;W2-ADMISSION.md	REJECTED_NOT_AUTHORITY
+E070	W3	DESIGN_FACT	independent design A identifies seven pre-freeze gaps and proposes explicit instances transactional difference generic Pratt public witnesses and a git-object freeze without selecting the held-out grammar	W3-DESIGN-A.md	ADMITTED_INPUT
+E071	W3	DESIGN_FACT	independent skeptical design B retains the necessary spine while rejecting normalization automatic recovery duplicate projection/event and plugin-registry ceremony and requiring candidate preseal	W3-DESIGN-B.md	ADMITTED_INPUT
+E072	W3	ADJUDICATION_FACT	final design adjudication selects a strict five-field instance canonical typed Revision ABI-3 difference Projection Difference two-sided Trim genuine Pratt one generic harness candidate preseal and exact freeze/zero-diff proof	W3-DESIGN-ADJUDICATION.md	ADMITTED
+E073	W3	CONTRACT_FACT	three public witness instances and all five held-out candidate manifests plus four exact case classes are presealed through 172 hash edges without candidate execution or selection	1ab3e56408c7c92e931d18b2b0bbb9848fd8595c;W0-PUBLIC-WITNESS-ADDENDUM.tsv;W3-CANDIDATE-PRESEAL.tsv	ADMITTED_PRESELECTION
+E074	parse-that	MACHINE_FACT	exactly one public difference primitive advances parse_that to 0.5.0 and KERNEL_ABI 3 with 58 kernel laws zero allocations 32 regex laws seven bridge laws strict lint docs wasm and reproducible packages	ed1ffa24e862b797b01dc4f9215d6be8f7fa0955;W3-PARSE-THAT-ABI3.json	ADMITTED_W3_SLICE
+E075	review	MACHINE_FACT	two independent hostile reviewers accept the ABI-3 difference semantics provenance minimal public surface version bridge locks tests and package closure with no P0 P1 or P2 finding	W3-PARSE-THAT-ABI3.json	ADMITTED_W3_SLICE
+E076	BBNF	CONTRACT_FACT	exact instance frontend replay public semantic and Pratt born-RED contracts freeze the five-field grammar instance canonical generated-v6 shape clean-break seam and only the intended 39 4 and 57 missing-production diagnostics	dadd6fa775a78d9adf08aa9c40699bc89775a689;W3-BBNF-BORN-RED.json	ADMITTED_BORN_RED_GIT_DURABLE
+E077	review	MACHINE_FACT	independent terminal reviewers accept the exact three BBNF W3 born-RED subjects with no P0 P1 or P2 after preserving every rejected intermediate finding and repair	W3-BBNF-BORN-RED-REVIEWS.md	ADMITTED_BORN_RED_GIT_DURABLE
+E078	BBNF	MACHINE_FACT	root union replay reproduces 57 incumbent green tests 8 plus 5 plus 4 external controls exact RED distributions formatting schema locked metadata diff and candidate-free boundaries	W3-BBNF-BORN-RED.json	ADMITTED_BORN_RED_GIT_DURABLE
+E079	W3	OPERATIONAL_FACT	no W3 production source held-out selection candidate materialization or postselection artifact exists at the born-RED durability boundary	git status;W3-BBNF-BORN-RED.json	ADMITTED_PREIMPLEMENTATION_BOUNDARY

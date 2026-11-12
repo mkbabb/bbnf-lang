@@ -1,0 +1,6 @@
+{
+  "schema": "bbnf.w3.input-bytes.v1",
+  "encoding": "hex",
+  "bytes": "3c64696769743e203a3d202230220a",
+  "decoded_sha256": "2f4019654d4e334be3a7e70e86fe8abeb6d4a40503df5c71190ce6d7d8b46d1d"
+}

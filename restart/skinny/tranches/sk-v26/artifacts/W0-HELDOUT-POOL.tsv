@@ -1,0 +1,7 @@
+id	path	bytes	sha256	historical_novelty	semantic_corpus	disposition
+G4	grammar/misc/g4.bbnf	505	5464fe4c5f7b5f9675b366d3e48cd5ab8be785d1890e885acc5ad12d63e1e122	NO	ABSENT	post-freeze process challenge only
+CSV	grammar/misc/csv.bbnf	229	e9622489b2ffc31850559bd51f33222127493e14cab0f3cacb85e0537e8837f3	NO	PRESENT_EXISTING	already generated and tested
+MATH	grammar/misc/math.bbnf	258	04c7013a9ae394ae007242e51fc27533563fe795381f331893fa188e3bd67e31	NO	PRESENT_EXISTING	already generated and tested
+REGEX	grammar/misc/regex.bbnf	1006	6e0d02995c09c07f33761b9b457a8f8c06a8f24219429220cdd4f3162819fc77	NO	ABSENT	post-freeze process challenge only
+BNF	grammar/bnf/bnf.bbnf	472	8d4de97d9a54a1fef6f7ccccdeabd185d66c8614f167fc3ae28225b7994e4a1b	NO	PRESENT_EXISTING	already generated and tested
+POOL_RULE	sha256(W2-FROZEN-RECEIPT raw bytes || artifacts/W0-HELDOUT-POOL-RECEIPT.tsv raw bytes)	5	a5ee96cb91a55d88c733874dfc2c2e484748d3d64b04addf83d6506ac688d589	NO	N_A	unsigned big-endian digest modulo 5 over lexical candidate order BNF CSV G4 MATH REGEX; no reroll or candidate removal

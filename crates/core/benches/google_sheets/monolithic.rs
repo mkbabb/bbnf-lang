@@ -11,7 +11,6 @@ use divan::counter::BytesCount;
 
 use ::bbnf::grammar::generated::google_sheets::*;
 
-#[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 

@@ -8,7 +8,6 @@ use divan::black_box;
 use ::bbnf::grammar::generated::json::*;
 use ::bbnf::runtime::JsonKind;
 
-#[path = "../common/timeout.rs"]
 mod timeout;
 use timeout::{bench_with_timeout, limits};
 

@@ -1,0 +1,10 @@
+component	value	disposition
+rustc	1.96.0-nightly 02c7f9bec 2026-04-10	pinned by rust-toolchain
+LLVM	22.1.2	host observation
+cargo	1.96.0-nightly eb94155a9 2026-04-09	pinned with rustc
+node	v26.0.0	host observation
+npm	11.12.1	host observation
+python	3.14.5	host observation
+OS	macOS 26.4.1 build 25E253	host observation
+CPU	Apple M5 Max	host observation
+target	aarch64-apple-darwin	sole native low-level target

@@ -1,0 +1,30 @@
+{
+  "schema": "bbnf.w3.symbolic-expectation.v1",
+  "oracle": {
+    "kind": "INDEPENDENT_LOWERED_PLAN_EVENT_ORACLE",
+    "authority": "the ordinary @error(error_token) choice commits, then the following declaration continues",
+    "implementation_generated": false,
+    "normalization": "contracts/w3-public-witnesses/README.md"
+  },
+  "outcome": "MATCH",
+  "full_consumption": true,
+  "recovery_policy": "GRAMMAR_ERROR_TOKEN_CONTINUE",
+  "runtime_recovery": "Disabled",
+  "cursor_after": "END_INPUT",
+  "observations": [
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": ".a"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "{"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "broken ???;"},
+    {"kind": "ERROR_TOKEN", "transform": "error", "lexeme": "broken ???;"},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "color"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ":"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "regex", "lexeme": "red"},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": ";"},
+    {"kind": "TRIVIA", "lexeme": " "},
+    {"kind": "TOKEN", "symbol": "literal", "lexeme": "}"},
+    {"kind": "END_INPUT"}
+  ]
+}

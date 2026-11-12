@@ -2242,10 +2242,7 @@ fn active_roots_remain_preselection_only_and_the_guard_self_falsifies() {
     for (index, (package, owned_path)) in [
         (
             "parse_that",
-            root()
-                .parent()
-                .expect("BBNF worktree parent")
-                .join("parse-that-skv26/rust/parse_that"),
+            pinned_parse_that_package_dir(),
         ),
         ("bbnf", root().join("crates/core")),
     ]
@@ -4519,12 +4516,41 @@ fn assert_owned_parse_that_parse_module_contract(source: &str) {
     );
 }
 
+/// The parse_that package directory this workspace's lock pins (LW3.COMP-1b:
+/// the sk-v26 `../parse-that-skv26` sibling edge became a git+rev edge),
+/// resolved through `cargo metadata` rather than a sibling checkout.
+fn pinned_parse_that_package_dir() -> PathBuf {
+    let output = command_output(
+        Command::new(env!("CARGO"))
+            .args(["metadata", "--locked", "--offline", "--format-version", "1"])
+            .current_dir(root()),
+        "pinned parse_that metadata",
+    );
+    let metadata: Value =
+        serde_json::from_slice(&output.stdout).expect("pinned parse_that metadata JSON");
+    let packages = metadata["packages"]
+        .as_array()
+        .expect("metadata packages")
+        .iter()
+        .filter(|package| package["name"] == "parse_that")
+        .collect::<Vec<_>>();
+    assert_eq!(packages.len(), 1, "the lock resolves exactly one parse_that");
+    assert!(
+        packages[0]["source"]
+            .as_str()
+            .is_some_and(|source| source.starts_with("git+https://github.com/mkbabb/parse-that?rev=")),
+        "parse_that is a git+rev edge: {}",
+        packages[0]["source"]
+    );
+    PathBuf::from(packages[0]["manifest_path"].as_str().expect("parse_that manifest path"))
+        .parent()
+        .expect("parse_that package dir")
+        .to_path_buf()
+}
+
 #[test]
 fn owned_parse_that_parse_module_shape_is_live_name_agnostic_and_self_falsifying() {
-    let run_source = root()
-        .parent()
-        .expect("BBNF worktree parent")
-        .join("parse-that-skv26/rust/parse_that/src/run.rs");
+    let run_source = pinned_parse_that_package_dir().join("src/kernel/run.rs");
     let owned = fs::read_to_string(&run_source)
         .unwrap_or_else(|error| panic!("{}: {error}", run_source.display()));
     assert_owned_parse_that_parse_module_contract(&owned);
@@ -5143,7 +5169,7 @@ fn runtime_runner_source() -> String {
     let public_ordinals = discovered_public_ordinals();
     let public_case_rows = read_tsv(PUBLIC_CASES, &CASE_HEADER);
     let mut source = String::from(
-        r#"use parse_that::{EventSink, Input, Run, Span, Step, literal};
+        r#"use parse_that::kernel::{EventSink, Input, Run, Span, Step, literal};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum ExpectedOutcome { Match, Mismatch }
@@ -5658,7 +5684,7 @@ macro_rules! define_runner {
     writeln!(
         source,
         r#"fn main() {{
-    assert_eq!(parse_that::KERNEL_ABI, 3);
+    assert_eq!(parse_that::kernel::KERNEL_ABI, 4);
     exact_parse_full_cursor_and_sink_law();
     assert_eq!(CASES.len(), {case_count});
     for case in CASES {{
@@ -6191,7 +6217,7 @@ parse_that = { version = "=0.5.0", default-features = false }
         r##"use bbnf::{CompileOptions, GrammarInstanceInput, StageResult, compile_instance};
 
 fn main() {
-    assert_eq!(parse_that::KERNEL_ABI, 3);
+    assert_eq!(parse_that::kernel::KERNEL_ABI, 4);
     let instance = br#"{"schema":"bbnf.grammar-instance.v1","logical_path":"registry/crossing.bbnf","entry":"document","trivia_regex":null,"pratt_tables":[]}"#;
     let grammar = br#"document = "x";"#;
     let StageResult::Accepted { value, diagnostics } =

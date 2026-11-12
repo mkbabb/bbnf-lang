@@ -1,7 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use std::fmt::Write as _;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use bbnf::compiler::{
@@ -1214,7 +1214,7 @@ impl<'ast> Visit<'ast> for CanonicalSurface {
         let path = path_segments(&macro_.path);
         let tokens = macro_.tokens.to_string();
         let canonical = match path.as_slice() {
-            [name] if name == "assert" => tokens == "parse_that :: KERNEL_ABI == 3",
+            [name] if name == "assert" => tokens == "parse_that :: kernel :: KERNEL_ABI == 4",
             [name] if name == "panic" => tokens == "\"compiler emitted invalid regex table\"",
             _ => false,
         };
@@ -1853,7 +1853,7 @@ fn assert_parser_primitive_provenance(
         let owners = imports
             .iter()
             .filter(|(path, renamed)| {
-                !renamed && path.as_slice() == ["parse_that", primitive.as_str()]
+                !renamed && path.as_slice() == ["parse_that", "kernel", primitive.as_str()]
             })
             .count();
         assert_eq!(
@@ -1864,7 +1864,7 @@ fn assert_parser_primitive_provenance(
             imports.iter().all(|(path, renamed)| {
                 path.last().is_none_or(|name| {
                     name != &primitive
-                        || (!renamed && path.as_slice() == ["parse_that", primitive.as_str()])
+                        || (!renamed && path.as_slice() == ["parse_that", "kernel", primitive.as_str()])
                 })
             }),
             "canonical primitive `{primitive}` has no foreign or aliased import"
@@ -7310,31 +7310,31 @@ fn recursive_minimal_import_closure_findings(source: &str) -> BTreeSet<String> {
         if path.first().map(String::as_str) != Some("parse_that") {
             continue;
         }
-        if renamed || path.len() != 2 {
+        if renamed || path.len() != 3 || path[1] != "kernel" {
             findings.insert(format!(
                 "noncanonical parse_that import {}",
                 path.join("::")
             ));
             continue;
         }
-        *imports.entry(path[1].clone()).or_default() += 1;
+        *imports.entry(path[2].clone()).or_default() += 1;
     }
     for expected in &expected_imports {
         match imports.get(*expected) {
             Some(1) => {}
             Some(count) => {
                 findings.insert(format!(
-                    "duplicate import parse_that::{expected} ({count} owners)"
+                    "duplicate import parse_that::kernel::{expected} ({count} owners)"
                 ));
             }
             None => {
-                findings.insert(format!("missing import parse_that::{expected}"));
+                findings.insert(format!("missing import parse_that::kernel::{expected}"));
             }
         }
     }
     for actual in imports.keys() {
         if !expected_imports.contains(actual.as_str()) {
-            findings.insert(format!("unexpected import parse_that::{actual}"));
+            findings.insert(format!("unexpected import parse_that::kernel::{actual}"));
         }
     }
 
@@ -7368,7 +7368,7 @@ fn assert_recursive_minimal_import_closure(source: &str) {
 }
 
 fn assert_recursive_minimal_import_gate_is_mutation_sensitive(source: &str) {
-    const IMPORT_HEAD: &str = "use parse_that::{";
+    const IMPORT_HEAD: &str = "use parse_that::kernel::{";
     assert_eq!(
         source.matches(IMPORT_HEAD).count(),
         1,
@@ -7379,7 +7379,7 @@ fn assert_recursive_minimal_import_gate_is_mutation_sensitive(source: &str) {
         let mutated = source.replacen(IMPORT_HEAD, &replacement, 1);
         let findings = recursive_minimal_import_closure_findings(&mutated);
         assert!(
-            findings.contains(&format!("unexpected import parse_that::{forbidden}")),
+            findings.contains(&format!("unexpected import parse_that::kernel::{forbidden}")),
             "born-red recursive import mutation `{forbidden}` escaped the exact closure: {findings:?}"
         );
     }
@@ -7799,7 +7799,7 @@ fn generated_v6_canonical_verifier_rejects_control_indirection_and_decoys() {
         ),
         (
             "imported-control-alias",
-            "use parse_that::difference as manual_difference;",
+            "use parse_that::kernel::difference as manual_difference;",
         ),
         (
             "type-alias",
@@ -7926,7 +7926,7 @@ fn generated_v6_canonical_verifier_rejects_control_indirection_and_decoys() {
     for source in [
         "fn node_0() { let _ = Step::Matched(()); let _ = Input::new(b\"\"); }",
         "extern crate core;",
-        "const _: () = assert!(parse_that::KERNEL_ABI == 3);",
+        "const _: () = assert!(parse_that::kernel::KERNEL_ABI == 4);",
         "const PLAN: P = match RegexPlan::new(&[], 0, 0, 0, &[], &[]) {
              Ok(plan) => plan,
              Err(_) => panic!(\"compiler emitted invalid regex table\"),
@@ -10170,11 +10170,19 @@ fn analysis_surface_adds_no_first_or_exact_language_difference_carrier() {
                 _ => None,
             })
             .collect::<Vec<_>>(),
-        ["compiler"],
-        "the production crate root exposes only the compiler module graph"
+        // LW3.COMP-1b (LW3-ORDER row COMP-1b): the hand-written crate root
+        // exports `compiler` and every root module master exports, so the
+        // root module set is sealed exactly; the compiler graph below stays
+        // closed and carrier-free on its own.
+        [
+            "types", "grammar", "generate", "backend", "graph", "imports", "lower", "path",
+            "pipeline", "runtime", "compiler",
+        ],
+        "the production crate root exposes exactly the root modules plus the compiler module graph"
     );
-    let files = active_compiler_source_closure(&lib);
-    let mut physical = vec![lib];
+    let compiler_root = manifest_dir.join("src/compiler/mod.rs");
+    let files = active_compiler_source_closure(&compiler_root);
+    let mut physical = Vec::new();
     compiler_rust_sources(&manifest_dir.join("src/compiler"), &mut physical);
     physical.sort();
     physical.dedup();
@@ -10182,7 +10190,7 @@ fn analysis_surface_adds_no_first_or_exact_language_difference_carrier() {
         files, physical,
         "the exact active compiler module graph equals the complete compiler source closure"
     );
-    for path in files {
+    for path in std::iter::once(lib).chain(files) {
         let source = fs::read_to_string(&path)
             .unwrap_or_else(|error| panic!("read {}: {error}", path.display()));
         assert!(
@@ -10644,10 +10652,10 @@ mod baseline_left {
     include!("../baseline_left_generated.rs");
 }
 
-use parse_that::{EventSink, Fault, ResourceKind, Span, Step};
+use parse_that::kernel::{EventSink, Fault, ResourceKind, Span, Step};
 use std::collections::BTreeSet;
 
-const _: () = assert!(parse_that::KERNEL_ABI == 3);
+const _: () = assert!(parse_that::kernel::KERNEL_ABI == 4);
 const PRATT_NODE: u32 = __PRATT_NODE__;
 const PRATT_DOCUMENT_TRIM: u32 = __PRATT_DOCUMENT_TRIM__;
 const PRATT_NUMBER_TRIM: u32 = __PRATT_NUMBER_TRIM__;
@@ -13284,14 +13292,54 @@ fn render_generated_runtime_main(
     rendered
 }
 
+/// The exact parse_that package this workspace's lock pins (LW3.COMP-1b: the
+/// sk-v26 `../parse-that-skv26` sibling edge became a git+rev edge), read from
+/// `cargo metadata` so the generated runtime compiles against the pinned
+/// kernel and nothing else.
+fn pinned_parse_that_package() -> (PathBuf, String) {
+    let output = Command::new(option_env!("CARGO").unwrap_or("cargo"))
+        .args(["metadata", "--format-version", "1", "--locked", "--offline"])
+        .current_dir(env!("CARGO_MANIFEST_DIR"))
+        .output()
+        .expect("run cargo metadata for the pinned parse_that");
+    assert!(
+        output.status.success(),
+        "cargo metadata failed: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let metadata: serde_json::Value =
+        serde_json::from_slice(&output.stdout).expect("cargo metadata is JSON");
+    let packages = metadata["packages"]
+        .as_array()
+        .expect("cargo metadata lists packages")
+        .iter()
+        .filter(|package| package["name"] == "parse_that")
+        .collect::<Vec<_>>();
+    assert_eq!(packages.len(), 1, "the lock resolves exactly one parse_that");
+    let package = packages[0];
+    assert!(
+        package["source"]
+            .as_str()
+            .is_some_and(|source| source.starts_with("git+https://github.com/mkbabb/parse-that?rev=")),
+        "parse_that is a git+rev edge: {}",
+        package["source"]
+    );
+    let manifest = PathBuf::from(
+        package["manifest_path"]
+            .as_str()
+            .expect("parse_that manifest path"),
+    );
+    (
+        manifest.parent().expect("parse_that package dir").to_path_buf(),
+        package["version"].as_str().expect("parse_that version").to_owned(),
+    )
+}
+
 fn write_runtime_project(root: &Path, generated_sources: &[(&str, &str)], runtime_main: &str) {
     fs::create_dir(root.join("src")).expect("create generated runtime source directory");
-    let parse_that = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../parse-that-skv26/rust/parse_that")
-        .canonicalize()
-        .expect("resolve exact parse-that 0.5.0 sibling");
+    let (parse_that, version) = pinned_parse_that_package();
     let cargo_toml = format!(
-        "[package]\nname = \"w3-semantic-pratt-generated-runtime\"\nversion = \"0.0.0\"\nedition = \"2024\"\npublish = false\n\n[dependencies]\nparse_that = {{ version = \"=0.5.0\", path = {:?} }}\n",
+        "[package]\nname = \"w3-semantic-pratt-generated-runtime\"\nversion = \"0.0.0\"\nedition = \"2024\"\npublish = false\n\n[dependencies]\nparse_that = {{ version = \"={version}\", path = {:?} }}\n",
         parse_that
     );
     fs::write(root.join("Cargo.toml"), cargo_toml).expect("write runtime Cargo.toml");

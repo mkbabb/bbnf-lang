@@ -39,7 +39,7 @@ jobs:
       IAI_RUNNER_VERSION: "0.12.3"
       VALGRIND_VERSION: "3.26.0"
       VALGRIND_URL: "https://sourceware.org/pub/valgrind/valgrind-3.26.0.tar.bz2"
-      VALGRIND_SHA256: "8d54c717029106f1644aadaf802ab9692e53d93dd015cbd19e74190eba616bd8"
+      VALGRIND_SHA256: "8d54c717029106f1644aadaf802ab9692e53d93dd015cbd19e74190eba616bd7"
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -49,10 +49,10 @@ jobs:
       - name: blackhole the Ubuntu archive hosts
         shell: bash
         run: |
-          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com; do
+          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com sourceware.org; do
             printf '0.0.0.0 %s\n:: %s\n' "$h" "$h" | sudo tee -a /etc/hosts >/dev/null
           done
-          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com; do
+          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com sourceware.org; do
             echo "$h -> $(getent ahosts "$h" | awk '{print $1}' | sort -u | tr '\n' ' ')"
             if curl -fsS --max-time 10 -o /dev/null "http://$h/ubuntu/"; then
               echo "blackhole failed: $h is reachable"; exit 1
@@ -75,7 +75,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/valgrind
-          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-v1
+          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-cold-fc
 
       - name: build the pinned valgrind (cache miss)
         if: steps.valgrind-cache.outputs.cache-hit != 'true'

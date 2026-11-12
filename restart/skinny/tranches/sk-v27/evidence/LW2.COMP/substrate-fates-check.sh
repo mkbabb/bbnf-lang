@@ -8,9 +8,18 @@
 # census row (tree = `substrate`, path = file:line, role = `<kind> <name>`)
 # whose fate is in {DELETE, ROUTE, MOVE-with-crate}. SANCTION is not a fate.
 #   DELETE           the item's `pub` definition is gone from its crate's src/.
-#   ROUTE            owning_unit is an LW2..LW4 unit that PLAN.md carries, and
-#                    the PLAN.md line carrying that unit names the item; plus one
-#                    SANCTIONED_SUBSTRATES entry whose reason cites the unit.
+#   ROUTE            owning_unit is an LW2..LW7 unit id (LWn.LANE-n, a letter
+#                    after the number allowed, and an optional -SUFFIX:
+#                    LW5.COMP-1-MINE) that the record admits: PLAN.md carries an
+#                    unsuffixed id; PLAN.md (its §7 addenda) or LEDGER.md carries
+#                    a suffixed one (RULINGS 2026-11-12b Z32-W, unit
+#                    LW3.COMP-1b-W). A line of that record carrying the id as a
+#                    whole token names the item: by its identifier, or by its
+#                    source file or a directory holding it, written in
+#                    backticks and at least four components deep
+#                    (`crates/<crate>/src/<module>/`), so no row covers a whole
+#                    crate. Plus one SANCTIONED_SUBSTRATES entry whose reason
+#                    cites the unit.
 #   MOVE-with-crate  crate is csp-solver (LW2.TOPO-1) or simd-scan (LW2.PERF-1);
 #                    with FATES_AT=gate (S16) the crate's directory must also be
 #                    gone from this repository, i.e. the move has happened.
@@ -21,6 +30,7 @@
 # The SANCTIONED_SUBSTRATES list holds exactly as many entries as ROUTE rows.
 T=${1:?census tsv}; Z=${2:?zero-caller tsv}; R=${3:-$(git rev-parse --show-toplevel)}
 PLAN=$R/restart/skinny/tranches/sk-v27/PLAN.md
+LEDGER=$R/restart/skinny/tranches/sk-v27/LEDGER.md
 AUDIT=$R/crates/ir/tests/substrate_audit.rs
 bad=0; routes=0
 fail() { echo "REFUSED $*"; bad=$((bad+1)); }
@@ -41,9 +51,27 @@ while IFS="$tab" read -r kind name loc; do
       fi ;;
     ROUTE)
       routes=$((routes+1))
-      echo "$unit" | grep -Eq '^LW[234]\.[A-Z]+-[0-9]+[a-z]?$' || { fail "$name: ROUTE unit '$unit' is not an LW2..LW4 unit id"; continue; }
-      grep -Fq "$unit" "$PLAN" || { fail "$name: ROUTE unit $unit absent from PLAN.md"; continue; }
-      grep -F "$unit" "$PLAN" | grep -Fwq "$name" || fail "$name: PLAN.md row of $unit does not name the item"
+      echo "$unit" | grep -Eq '^LW[2-7]\.[A-Z]+-[0-9]+[a-z]?(-[A-Z0-9]+)?$' || { fail "$name: ROUTE unit '$unit' is not an LW2..LW7 unit id"; continue; }
+      # the id as a whole token: LW5.COMP-1 does not match inside LW5.COMP-1-MINE or LW5.COMP-1b
+      tok="(^|[^A-Za-z0-9.-])$(printf '%s' "$unit" | sed 's/\./\\./g')([^A-Za-z0-9-]|\$)"
+      case $unit in
+        *-*-*) src="$PLAN $LEDGER"; where="PLAN.md or LEDGER.md" ;;
+        *)     src="$PLAN";         where="PLAN.md" ;;
+      esac
+      # shellcheck disable=SC2086
+      lines=$(cat $src | grep -E "$tok")
+      [ -n "$lines" ] || { fail "$name: ROUTE unit $unit absent from $where"; continue; }
+      if printf '%s\n' "$lines" | grep -Fwq "$name"; then :; else
+        named=0; d=$file
+        while :; do
+          case $d in */*) ;; *) break ;; esac
+          if [ "$d" = "$file" ]; then pat="\`$d\`"; else pat="\`$d/\`"; fi
+          depth=$(printf '%s' "$d" | awk -F/ '{print NF}')
+          if [ "$depth" -ge 4 ] && printf '%s\n' "$lines" | grep -Fq "$pat"; then named=1; break; fi
+          d=${d%/*}
+        done
+        [ "$named" -eq 1 ] || fail "$name: no $where line of $unit names the item (by identifier, or by its file or a directory holding it)"
+      fi
       grep -E "^\s*\"$name\",\s*//.*$unit" "$AUDIT" >/dev/null || fail "$name: no SANCTIONED_SUBSTRATES entry citing $unit" ;;
     MOVE-with-crate)
       case "$crate:$unit" in

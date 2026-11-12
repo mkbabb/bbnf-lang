@@ -66,7 +66,8 @@ for seat, n in sorted(lw2.items(), key=lambda x: (-x[1], x[0])):
     rows.append(f"lw2\t{seat}\t-\t{n}\tguard attribution (cwd or cmd names the seat)")
 rows.append(f"lw2\t(unattributed, LW2 window)\t-\t{unattributed}\theavy runs machine-wide 2026-11-09 00:00 to 11-11 21:30 naming no lw2 seat (other programmes included)")
 for seat, an, why in LW3:
-    n = sum(lw2.get(a, 0) + sum(v for k, v in lw2.items() if k.startswith(a + "-")) for a in an)
+    keys = {k for k in lw2 for a in an if k == a or k.startswith(a + "-")}  # each LW2 seat counted once
+    n = sum(lw2[k] for k in keys)
     rows.append(f"lw3\t{seat}\t{','.join(an)}\t{n}\t{why}; lower bound")
 out.write_text("\n".join(rows) + "\n")
 print("\n".join(rows))

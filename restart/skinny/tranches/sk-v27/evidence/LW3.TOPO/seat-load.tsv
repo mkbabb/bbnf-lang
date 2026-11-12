@@ -50,4 +50,4 @@ lw3	S16 CRITIC-B	s13-critic	0	review; reads only; lower bound
 lw3	S17 ADJ	s14-adjudicator	0	no product code; lower bound
 lw3	S18 FREEZE	s15-freeze	25	digest tests; lower bound
 lw3	S19 PINS	topo-4b,topo-4d,topo-4e,topo-4f	26	re-pin and semver probes; lower bound
-lw3	S20 GATE (per reading)	r8,r8-verify	10	one full LG reading (r8 was the TAKEN one); lower bound
+lw3	S20 GATE (per reading)	r8,r8-verify	7	one full LG reading (r8 was the TAKEN one); lower bound

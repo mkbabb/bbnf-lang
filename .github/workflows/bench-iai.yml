@@ -41,6 +41,21 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
+      # lw3/s2-ci-blackhole only (sk-v27 LW3.CI-IAI-1's falsifier): the three
+      # Ubuntu archive hosts resolve to nowhere for the rest of the job.
+      - name: blackhole the Ubuntu archive hosts
+        shell: bash
+        run: |
+          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com; do
+            printf '0.0.0.0 %s\n:: %s\n' "$h" "$h" | sudo tee -a /etc/hosts >/dev/null
+          done
+          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com; do
+            echo "$h -> $(getent ahosts "$h" | awk '{print $1}' | sort -u | tr '\n' ' ')"
+            if curl -fsS --max-time 10 -o /dev/null "http://$h/ubuntu/"; then
+              echo "blackhole failed: $h is reachable"; exit 1
+            fi
+          done
+
       # The build wrapper is CI env (RUSTC_WRAPPER above), not repository
       # config (sk-v27 LW2.TOPO-2).
       - name: install sccache

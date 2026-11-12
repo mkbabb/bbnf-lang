@@ -1,0 +1,12 @@
+crates/core/src/generate/regex/emit/dfa/mod.rs:34:enum MatchMode {
+crates/core/src/generate/regex/emit/dfa/mod.rs:49:    let mode = if super::hir::contains_lazy_quantifier(&hir) {
+crates/core/src/generate/regex/emit/dfa/mod.rs:50:        MatchMode::Shortest
+crates/core/src/generate/regex/emit/dfa/mod.rs:52:        MatchMode::Greedy
+crates/core/src/generate/regex/emit/dfa/mod.rs:65:fn emit_dfa(dfa: &Dfa, mode: MatchMode, opts: &EmitOpts) -> TokenStream {
+crates/core/src/generate/regex/emit/dfa/mod.rs:71:    if mode == MatchMode::Shortest {
+crates/core/src/generate/regex/emit/dfa/mod.rs:72:        return emit_dfa_shortest(dfa);
+crates/core/src/generate/regex/emit/dfa/mod.rs:86:fn emit_dfa_shortest(dfa: &Dfa) -> TokenStream {
+crates/core/src/generate/regex/emit/hir/mod.rs:31:pub(crate) fn contains_lazy_quantifier(hir: &Hir) -> bool {
+crates/core/src/generate/regex/emit/hir/mod.rs:33:        Hir::Repetition(rep) => !rep.greedy || contains_lazy_quantifier(&rep.sub),
+crates/core/src/generate/regex/emit/hir/mod.rs:34:        Hir::Concat(subs) | Hir::Alternation(subs) => subs.iter().any(contains_lazy_quantifier),
+crates/core/src/generate/regex/emit/hir/mod.rs:35:        Hir::Group(sub) => contains_lazy_quantifier(sub),

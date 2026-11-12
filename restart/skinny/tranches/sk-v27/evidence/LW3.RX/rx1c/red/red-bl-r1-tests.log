@@ -1,0 +1,30 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/ir)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/corpus)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/red-bl-rx1c/crates/bbnf-path)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 20.37s
+     Running tests/dfa_fidelity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/dfa_fidelity-e23623613ba2f0d6)
+
+running 3 tests
+test dfa_lazy_star_stops_at_first_close ... FAILED
+test dfa_compatible_comment_pattern ... ok
+test pipeline_css_dfa_fidelity ... ok
+
+failures:
+
+---- dfa_lazy_star_stops_at_first_close stdout ----
+
+thread 'dfa_lazy_star_stops_at_first_close' (42803602) panicked at crates/core/tests/dfa_fidelity.rs:27:5:
+assertion `left == right` failed: first /* to first */
+  left: Some(23)
+ right: Some(8)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    dfa_lazy_star_stops_at_first_close
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `-p bbnf --test dfa_fidelity`

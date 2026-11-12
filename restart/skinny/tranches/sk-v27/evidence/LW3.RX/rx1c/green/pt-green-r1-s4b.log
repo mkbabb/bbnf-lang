@@ -1,0 +1,16 @@
+   Compiling parse_that v0.4.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/pt-c1b8d83/rust/parse_that)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.66s
+     Running tests/regex_empty_match_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex_empty_match_test-ed80c30ff9e5faa4)
+
+running 8 tests
+test regex_nonempty_match_unchanged ... ok
+test regex_span_empty_match_is_a_match ... ok
+test span_sep_by_over_empty_matching_leaf_terminates ... ok
+test many_over_empty_matching_regex_terminates ... ok
+test regex_empty_match_at_end_of_input ... ok
+test regex_empty_match_is_a_match ... ok
+test sep_by_progress_still_collects_elements ... ok
+test sep_by_with_empty_matching_elem_and_sep_terminates ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

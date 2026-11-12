@@ -1,0 +1,28 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/ir)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/corpus)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-entry/crates/bbnf-path)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 20.59s
+     Running tests/dfa_fidelity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/dfa_fidelity-e23623613ba2f0d6)
+
+running 1 test
+test bbnf_regex_leaf_stops_at_its_closing_slash ... FAILED
+
+failures:
+
+---- bbnf_regex_leaf_stops_at_its_closing_slash stdout ----
+
+thread 'bbnf_regex_leaf_stops_at_its_closing_slash' (43521893) panicked at crates/core/tests/dfa_fidelity.rs:45:5:
+assertion `left == right` failed: the body is the four backslashes
+  left: Some(8)
+ right: Some(4)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    bbnf_regex_leaf_stops_at_its_closing_slash
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf --test dfa_fidelity`

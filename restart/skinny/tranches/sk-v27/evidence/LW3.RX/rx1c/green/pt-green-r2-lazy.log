@@ -1,0 +1,12 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running tests/regex.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/regex-21d8f47246be99bf)
+
+running 5 tests
+test dfa_test::css_block_comment_no_dotall_lazy ... ok
+test dfa_test::lazy_plus_stops_at_first_close ... ok
+test dfa_test::lazy_question_prefers_skipping ... ok
+test dfa_test::lazy_star_stops_at_first_close ... ok
+test dfa_test::css_block_comment_dotall_lazy ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 120 filtered out; finished in 0.00s
+

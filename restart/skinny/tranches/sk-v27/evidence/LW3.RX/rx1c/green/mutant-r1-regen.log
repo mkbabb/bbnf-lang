@@ -1,0 +1,53 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/ir)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/corpus)
+   Compiling xtask v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 11.03s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/ser)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/core)
+   Compiling xtask v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 11.47s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 10.62325ms
+[xtask::regen] bbnf: generate_all done in 34.946958ms
+[xtask::regen] bbnf: prettyplease done in 222.526208ms
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 2.012125ms
+[xtask::regen] json: generate_all done in 6.701333ms
+[xtask::regen] json: prettyplease done in 33.624708ms
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 94.022792ms
+[xtask::regen] css_l4: generate_all done in 118.886625ms
+[xtask::regen] css_l4: prettyplease done in 920.884083ms
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 4.587458ms
+[xtask::regen] css_pretty: generate_all done in 14.984458ms
+[xtask::regen] css_pretty: prettyplease done in 94.890417ms
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 13.342875ms
+[xtask::regen] google_sheets: generate_all done in 25.027292ms
+[xtask::regen] google_sheets: prettyplease done in 146.785917ms
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 4.841333ms
+[xtask::regen] ebnf: generate_all done in 10.041916ms
+[xtask::regen] ebnf: prettyplease done in 72.456792ms
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.953125ms
+[xtask::regen] bnf: generate_all done in 4.532875ms
+[xtask::regen] bnf: prettyplease done in 32.402458ms
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 1.282916ms
+[xtask::regen] csv: generate_all done in 3.899292ms
+[xtask::regen] csv: prettyplease done in 19.786875ms
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 1.76975ms
+[xtask::regen] math: generate_all done in 2.25025ms
+[xtask::regen] math: prettyplease done in 9.890208ms
+drift: `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s4-rx/bl-mut/crates/core/src/grammar/generated/bbnf.rs` differs from `cargo xtask regen --grammar bbnf` output
+Error: regen --check: 1 drift finding(s) over 9 grammars
+Error: grammar-regeneration xtask exited with exit status: 1

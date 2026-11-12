@@ -1,0 +1,95 @@
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s4-rx/crates/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.87s
+     Running tests/bbnf_self_parity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/bbnf_self_parity-c85bb4ad755b99ed)
+
+running 58 tests
+test bbnf_types::prettify_idempotent ... ok
+test bnf::prettify_idempotent ... ok
+test css_l4_easing::prettify_idempotent ... ok
+test css_l4_func_body::prettify_idempotent ... ok
+test bbnf_expressions::prettify_idempotent ... ok
+test css_l4_gradients::prettify_idempotent ... ok
+test css_l4_filters::prettify_idempotent ... ok
+test bbnf_bbnf::prettify_idempotent ... ok
+test css_l4_keyframes::prettify_idempotent ... ok
+test bbnf_types::ast_roundtrip ... ok
+test bnf::ast_roundtrip ... ok
+test css_l4_keywords::prettify_idempotent ... ok
+test css_l4_color::prettify_idempotent ... ok
+test css_l4_easing::ast_roundtrip ... ok
+test css_l4_media::prettify_idempotent ... ok
+test css_l4_stylesheet::prettify_idempotent ... ok
+test css_l4_keyframes::ast_roundtrip ... ok
+test css_l4_transforms::prettify_idempotent ... ok
+test css_l4_func_body::ast_roundtrip ... ok
+test css_l4_media::ast_roundtrip ... ok
+test css_l4_tokens::ast_roundtrip ... ok
+test css_l4_selectors::prettify_idempotent ... ok
+test css_l4_gradients::ast_roundtrip ... ok
+test css_l4_tokens::prettify_idempotent ... ok
+test css_l4_filters::ast_roundtrip ... ok
+test css_l4_keywords::ast_roundtrip ... ok
+test css_l4_stylesheet::ast_roundtrip ... ok
+test bbnf_expressions::ast_roundtrip ... ok
+test bbnf_bbnf::ast_roundtrip ... ok
+test css_l4_values::prettify_idempotent ... ok
+test css_l4_transforms::ast_roundtrip ... ok
+test css_l4_properties::prettify_idempotent ... ok
+test css_l4_value_unit::ast_roundtrip ... ok
+test css_pretty::prettify_idempotent ... ok
+test css_l4_value_unit::prettify_idempotent ... ok
+test json::prettify_idempotent ... ok
+test ebnf::prettify_idempotent ... ok
+test css_l4_selectors::ast_roundtrip ... ok
+test google_sheets::prettify_idempotent ... ok
+test misc_csv::prettify_idempotent ... ok
+test css_pretty::ast_roundtrip ... ok
+test json::ast_roundtrip ... ok
+test misc_g4::prettify_idempotent ... ok
+test misc_json_commented::prettify_idempotent ... ok
+test misc_csv::ast_roundtrip ... ok
+test misc_math::prettify_idempotent ... ok
+test misc_math_ambiguous::prettify_idempotent ... ok
+test css_l4_values::ast_roundtrip ... ok
+test misc_g4::ast_roundtrip ... ok
+test misc_math::ast_roundtrip ... ok
+test misc_math_ambiguous::ast_roundtrip ... ok
+test misc_regex::prettify_idempotent ... ok
+test misc_json_commented::ast_roundtrip ... ok
+test google_sheets::ast_roundtrip ... ok
+test ebnf::ast_roundtrip ... ok
+test misc_regex::ast_roundtrip ... ok
+test css_l4_color::ast_roundtrip ... ok
+test css_l4_properties::ast_roundtrip ... ok
+
+test result: ok. 58 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/dfa_fidelity.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/dfa_fidelity-c104913e6d26a8e5)
+
+running 4 tests
+test bbnf_regex_leaf_stops_at_its_closing_slash ... ok
+test dfa_compatible_comment_pattern ... ok
+test dfa_lazy_star_stops_at_first_close ... ok
+test pipeline_css_dfa_fidelity ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests/rx4_rust_fusion_absent.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/rx4_rust_fusion_absent-b2b1a7f227931dc3)
+
+running 6 tests
+test rx4_ts_emit_dump ... ok
+test rx4_print_pass_list_ts ... ok
+test ts_emit_keeps_fusion ... ok
+test rust_ir_keeps_the_branches_apart ... ok
+test rx4_print_pass_list_rust ... ok
+test vm_alt_a_ab_consumes_one_byte ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/separated_list_audit.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/separated_list_audit-c9605223f5bd8600)
+
+running 1 test
+test literal_optional_separator_forms_are_ruled ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.60s
+

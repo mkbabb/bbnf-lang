@@ -1,0 +1,144 @@
+{
+ "name": "sk-v27-LW3-RX1c-lazy",
+ "note": "LW3.RX-1c: lazy quantifiers and ordered alternation, sticky at 0.",
+ "cases": [
+  {
+   "id": "lazy-star-0",
+   "pattern": "a.*?b",
+   "flags": "",
+   "input": "aXb"
+  },
+  {
+   "id": "lazy-star-1",
+   "pattern": "a.*?b",
+   "flags": "",
+   "input": "aXbYb"
+  },
+  {
+   "id": "lazy-star-2",
+   "pattern": "a.*?b",
+   "flags": "",
+   "input": "ab"
+  },
+  {
+   "id": "lazy-star-3",
+   "pattern": "a.*?b",
+   "flags": "",
+   "input": "aXYZb"
+  },
+  {
+   "id": "lazy-star-4",
+   "pattern": "a.*?b",
+   "flags": "",
+   "input": "a"
+  },
+  {
+   "id": "lazy-plus-0",
+   "pattern": "a.+?b",
+   "flags": "",
+   "input": "aXb"
+  },
+  {
+   "id": "lazy-plus-1",
+   "pattern": "a.+?b",
+   "flags": "",
+   "input": "aXbYb"
+  },
+  {
+   "id": "lazy-plus-2",
+   "pattern": "a.+?b",
+   "flags": "",
+   "input": "ab"
+  },
+  {
+   "id": "lazy-plus-3",
+   "pattern": "a.+?b",
+   "flags": "",
+   "input": "aXYZb"
+  },
+  {
+   "id": "lazy-question-0",
+   "pattern": "a.??b",
+   "flags": "",
+   "input": "ab"
+  },
+  {
+   "id": "lazy-question-1",
+   "pattern": "a.??b",
+   "flags": "",
+   "input": "aXb"
+  },
+  {
+   "id": "lazy-question-2",
+   "pattern": "a.??b",
+   "flags": "",
+   "input": "b"
+  },
+  {
+   "id": "lazy-question-3",
+   "pattern": "a.??b",
+   "flags": "",
+   "input": "abb"
+  },
+  {
+   "id": "comment-dotall-0",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "s",
+   "input": "/* a */ b /* c */"
+  },
+  {
+   "id": "comment-dotall-1",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "s",
+   "input": "/* short */"
+  },
+  {
+   "id": "comment-dotall-2",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "s",
+   "input": "/**/"
+  },
+  {
+   "id": "comment-dotall-3",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "s",
+   "input": "/* multi\nline */"
+  },
+  {
+   "id": "comment-dotall-4",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "s",
+   "input": "/* no close"
+  },
+  {
+   "id": "comment-0",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "",
+   "input": "/* single line */"
+  },
+  {
+   "id": "comment-1",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "",
+   "input": "/* a */ more /* b */"
+  },
+  {
+   "id": "comment-2",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "",
+   "input": "/* no\nnewline */"
+  },
+  {
+   "id": "comment-3",
+   "pattern": "/\\*.*?\\*/",
+   "flags": "",
+   "input": "/**/"
+  },
+  {
+   "id": "alt-a-ab-0",
+   "pattern": "a|ab",
+   "flags": "",
+   "input": "ab"
+  }
+ ]
+}

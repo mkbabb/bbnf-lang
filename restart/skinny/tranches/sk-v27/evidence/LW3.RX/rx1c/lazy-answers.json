@@ -1,0 +1,166 @@
+{
+  "lazy-star-0": {
+    "id": "lazy-star-0",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "lazy-star-1": {
+    "id": "lazy-star-1",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "lazy-star-2": {
+    "id": "lazy-star-2",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 2,
+    "len8": 2
+  },
+  "lazy-star-3": {
+    "id": "lazy-star-3",
+    "status": "MATCH",
+    "end16": 5,
+    "len16": 5,
+    "end8": 5,
+    "len8": 5
+  },
+  "lazy-star-4": {
+    "id": "lazy-star-4",
+    "status": "NO_MATCH"
+  },
+  "lazy-plus-0": {
+    "id": "lazy-plus-0",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "lazy-plus-1": {
+    "id": "lazy-plus-1",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "lazy-plus-2": {
+    "id": "lazy-plus-2",
+    "status": "NO_MATCH"
+  },
+  "lazy-plus-3": {
+    "id": "lazy-plus-3",
+    "status": "MATCH",
+    "end16": 5,
+    "len16": 5,
+    "end8": 5,
+    "len8": 5
+  },
+  "lazy-question-0": {
+    "id": "lazy-question-0",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 2,
+    "len8": 2
+  },
+  "lazy-question-1": {
+    "id": "lazy-question-1",
+    "status": "MATCH",
+    "end16": 3,
+    "len16": 3,
+    "end8": 3,
+    "len8": 3
+  },
+  "lazy-question-2": {
+    "id": "lazy-question-2",
+    "status": "NO_MATCH"
+  },
+  "lazy-question-3": {
+    "id": "lazy-question-3",
+    "status": "MATCH",
+    "end16": 2,
+    "len16": 2,
+    "end8": 2,
+    "len8": 2
+  },
+  "comment-dotall-0": {
+    "id": "comment-dotall-0",
+    "status": "MATCH",
+    "end16": 7,
+    "len16": 7,
+    "end8": 7,
+    "len8": 7
+  },
+  "comment-dotall-1": {
+    "id": "comment-dotall-1",
+    "status": "MATCH",
+    "end16": 11,
+    "len16": 11,
+    "end8": 11,
+    "len8": 11
+  },
+  "comment-dotall-2": {
+    "id": "comment-dotall-2",
+    "status": "MATCH",
+    "end16": 4,
+    "len16": 4,
+    "end8": 4,
+    "len8": 4
+  },
+  "comment-dotall-3": {
+    "id": "comment-dotall-3",
+    "status": "MATCH",
+    "end16": 16,
+    "len16": 16,
+    "end8": 16,
+    "len8": 16
+  },
+  "comment-dotall-4": {
+    "id": "comment-dotall-4",
+    "status": "NO_MATCH"
+  },
+  "comment-0": {
+    "id": "comment-0",
+    "status": "MATCH",
+    "end16": 17,
+    "len16": 17,
+    "end8": 17,
+    "len8": 17
+  },
+  "comment-1": {
+    "id": "comment-1",
+    "status": "MATCH",
+    "end16": 7,
+    "len16": 7,
+    "end8": 7,
+    "len8": 7
+  },
+  "comment-2": {
+    "id": "comment-2",
+    "status": "NO_MATCH"
+  },
+  "comment-3": {
+    "id": "comment-3",
+    "status": "MATCH",
+    "end16": 4,
+    "len16": 4,
+    "end8": 4,
+    "len8": 4
+  },
+  "alt-a-ab-0": {
+    "id": "alt-a-ab-0",
+    "status": "MATCH",
+    "end16": 1,
+    "len16": 1,
+    "end8": 1,
+    "len8": 1
+  }
+}

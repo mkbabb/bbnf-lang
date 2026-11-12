@@ -1,0 +1,117 @@
+id	section	home	status	note
+DIG-CUST-1	0	LW3 R0-FOLD (this seat)	OPEN	custody branches pushed; see the LW3.R0 DIG-CUST-1 row
+DIG-CUST-2	0	LW4 entry (adjudication of `d2e169794` written into RULINGS before the LW5 order seals)	PLANNED	the fail-closed `csp_strategy` rewrite; X-6 keeps its fate at LW7 only for what LW4 entry does not adopt
+DIG-G1	1	standing from 2026-11-12a; LG-g reads its grep at every gate from LG-3 on; every loser-deleting passage amended by PLAN §7 (P01–P22)	GREEN	REPLACES OWN-1 (2026-11-11e); owner O-1 may overturn
+DIG-G2	1	PLAN §7 carries the 14 amendment-9 ids (each grep ≥ 1)	GREEN	the census checker's LW2..LW4 ROUTE window still refuses LW5+ ids: ask Z32-W
+DIG-G3	1	LW4 order (paired perf cell against the AU table on every substrate change, BL and PT); LW3.CI-IAI-0/1 unchanged	PLANNED	for the LW4 order, as the dig worded it
+DIG-G4	1	standing from 2026-11-12a; the census refusal is built with DIG-H1's `DIG-CARRY.tsv` (LW4)	PLANNED	no DELETE fate on a named requirement
+DIG-G5	1	LW5.COMP-1 (C10, B6) and every LG from LG-3 (the grep)	PLANNED	restores programme IF-2
+DIG-G6	1	LW3 S12 CON (`admit.py` refuses a cell missing a field), an LG-3 addition	PLANNED	claims name plane, unit, run and build
+DIG-G7	1	every order, plan or spec sealed after 2026-11-12a; first reader the LW4 order seal	PLANNED	narrowing a requirement is an owner act
+DIG-G8	1	LG-3 addition (generality gate without an exclusion list) and LW4.PERF-1 (the label)	PLANNED	read with DIG-K-B6
+DIG-G9	1	every LG from LG-3 (the S20 census of judgment-seat model receipts)	PLANNED	standing law made a gate row
+DIG-G10	1	every LG from LG-3 (dirty and unpushed worktrees, `.claude/worktrees/*` included, `uncaptured=0`)	PLANNED	LG-3 reads it
+DIG-G11	1	every LG from LG-3 (deferral counts; ≥ 3 needs an owner ask)	PLANNED	code closes a wave
+DIG-G12	1	LW3.COMP-4c (the declared class) and LW5.COMP-1 (witness, arms, mutant)	PLANNED	read by DIG-EG-A1..A3
+DIG-CSP-A1	2	LW5.COMP-3	PLANNED	solver completeness, the full list
+DIG-CSP-A2	2	LW4.TOPO-PIN (new, PLAN §7)	PLANNED	both consumers re-pinned past `58014efd`
+DIG-CSP-A3	2	LW5.COMP-1	PLANNED	≤ 1 s per grammar, exceeding fails the build
+DIG-CSP-B4	2	LW5.COMP-1	PLANNED	one `propagate()` on the spine
+DIG-CSP-B4b	2	LG-3 addition and the LW5 order text (COMP-7's fixed point is provisional)	PLANNED	LW3.COMP-7's seat work is not changed
+DIG-CSP-B5	2	LW3.COMP-6 (5/5 domains) then LW5	PLANNED	lattice laws
+DIG-CSP-B6	2	LW5.COMP-1-PAT (new, PLAN §7)	PLANNED	one CSP pass for structural patterns
+DIG-CSP-B7	2	LW5.COMP-4 (new, PLAN §7)	PLANNED	type-system CSP; scope owner O-5
+DIG-CSP-C8	2	LW5.COMP-1	PLANNED	the plan decides, the emitter decides nothing
+DIG-CSP-C9	2	LW5.COMP-3 and LW5.COMP-1	PLANNED	per-component COP plus the coupled solve; `bounded_sum` from the DIG-CUST-1 refs
+DIG-CSP-C10	2	LW5.COMP-1	PLANNED	no silent fallback (DIG-G5)
+DIG-CSP-C11	2	LW5.COMP-5 (new, PLAN §7: the measured cost table)	PLANNED	objectives read measured costs
+DIG-CSP-D12	2	LW5.COMP-1-BRIDGE (new, PLAN §7)	PLANNED	CSP↔e-graph bridge with justifications
+DIG-CSP-D13	2	LW5.COMP-1	PLANNED	scheduler gain recorded on a QUIET record
+DIG-CSP-D14	2	LW5.RX (with LW5.RX-1)	PLANNED	regex tier on the same solver
+DIG-CSP-E15	2	PREREG addendum registered before the LW5 re-trial; the LW3 JSON trial runs as sealed and governs the port only	PLANNED	ask E15-W (whether it must precede LW3's S14 trial run)
+DIG-CSP-E16	2	LW5.COMP-6 (new, PLAN §7)	PLANNED	tuning, validation, visibility
+DIG-EG-A1	3	LW3.COMP-4c	PLANNED	each rule declares class and contract
+DIG-EG-A2	3	LW5.COMP-1	PLANNED	a witness per rule with a seeded unsound mutant
+DIG-EG-A3	3	LW4.RX-2 and LW4.COMP-5 (new, PLAN §7)	PLANNED	refutations first
+DIG-EG-B6	3	LW5.COMP-1	PLANNED	saturation outcome consumed, fail-closed, numeric budgets
+DIG-EG-B8	3	LW4.COMP-2	PLANNED	no surface without a consumer
+DIG-EG-C9	3	LW5.COMP-1-OPTIR, extended by PLAN §7: the e-graph runs BEFORE the normalizer and subsumes it	PLANNED	destructive passes subsumed or carry a measured verdict
+DIG-EG-C10	3	LW5.COMP-1	PLANNED	the seven categories
+DIG-EG-C11	3	LW5.COMP-5 (new, PLAN §7)	PLANNED	cost fitted from hardware counters
+DIG-EG-C13	3	LW5.COMP-1	PLANNED	every default rule fires on a production grammar
+DIG-EG-C14	3	LW5.COMP-1	PLANNED	changes emitted code, deterministic
+DIG-EG-D15	3	LW5.COMP-1 (parse-that-egraph)	PLANNED	one grammar e-node, e-matching, explanations
+DIG-EG-D17	3	PREREG addendum with DIG-CSP-E15 (before the LW5 re-trial)	PLANNED	ask E15-W
+DIG-EG-REC	3	LW3 (a documents unit; the orchestrator names its seat)	PLANNED	ask EGREC-S: no LW3 seat carries it yet
+DIG-SM-1	3	LW5.COMP-1-MINE (new, PLAN §7)	PLANNED	shape mining is a spine stage
+DIG-SM-2	3	LW5.COMP-1-MINE	PLANNED	the March techniques, a pin test each
+DIG-SM-3	3	LW5.COMP-1-MINE	PLANNED	miner hints feed the cost model
+DIG-SM-4	3	LW5.COMP-1-MINE	PLANNED	no language name in a miner
+DIG-T-14	4	LW4.PERF-2	PLANNED	one tape
+DIG-T-15	4	LW4.PERF-2	PLANNED	direct-to-struct carries node identity
+DIG-T-16	4	LW4.PERF-2	PLANNED	five shapes, CSP-chosen
+DIG-T-17	4	LW4.PERF-2	PLANNED	lazy numbers a flavour
+DIG-T-18	4	LW4.PERF-2	PLANNED	consumers key on one node id
+DIG-T-19	4	LW4.COMP-6 (new, PLAN §7: the value API)	PLANNED	`bbnf-path`, `bbnf-path-ts` ported, not deleted
+DIG-K-B5	5	LW4.PERF-1	PLANNED	kernel harness complete
+DIG-K-B6	5	LG-3 addition (liveness trace) and LW4.PERF-1	PLANNED	a seeded dead kernel turns the gate RED
+DIG-K-B7	5	LW4.PERF-1	PLANNED	the kernel set; a miss opens a redesign unit (DIG-G1)
+DIG-K-B8	5	LW3.PERF-1a (its record opens with the committed cycle split), an LG-3 addition	PLANNED	S9 has not opened; ask K-B8-S
+DIG-K-C9	5	LW4.PERF-1	PLANNED	the hybrid emitter; scope owner O-3
+DIG-K-C10	5	LW4.PERF-3 (new, PLAN §7: msac-style cross-chunk refill)	PLANNED	win or recorded negative
+DIG-K-C10a	5	LW4.PERF-1	PLANNED	ISA census `unverdicted=0`
+DIG-K-C12	5	LW4.PERF-1	PLANNED	the 05-13 question answered by one committed experiment
+DIG-K-D13	5	LW5.COMP-5 (new, PLAN §7)	PLANNED	kernel cost table read by CSP and extractor
+DIG-K-F	5	LW4.PERF-1	PLANNED	build discipline with a symbol-size reader
+DIG-K-PROVE	5	LW4.PERF-4 (new, PLAN §7)	PLANNED	PROVE-01, 03, 06, 07, 10, 12 landings
+DIG-CERT-0	6	LW5.CON-1 (rules for every cell), from the LW3 PREREG §12 on	PLANNED	QUIET window only (2026-11-12a QW)
+DIG-CERT-P1	6	LW5.CON-1	PLANNED	G-J1
+DIG-CERT-P3	6	LW7.CON-1-REQ after LW4.PERF-2	PLANNED	G-J2
+DIG-CERT-P4	6	LW5.CON-1	PLANNED	G-J3; "≥ 5/8" owner O-13
+DIG-CERT-P5	6	LW7.CON-1-REQ after LW4.COMP-6	PLANNED	G-J4
+DIG-CERT-P6	6	LW7.CON-1-REQ	PLANNED	G-J5
+DIG-CERT-P7	6	LW7.CON-1-REQ	PLANNED	G-J6
+DIG-CERT-NUM	6	LW4.PERF-1-U5 and LW5.PERF-1	PLANNED	canada
+DIG-CERT-ERR	6	LW5.CON-1	PLANNED	G-E1
+DIG-CERT-CSS	6	LW3.CON-1 (cells) then LW5.CON-1 (certification)	PLANNED	G-C1, G-C2
+DIG-CERT-GEN	6	LW3.COMP-5b (the H-1 grammars) then LW5.CON-1	PLANNED	generality
+DIG-CERT-REG	6	LW4 order (with DIG-G3)	PLANNED	no cell below AU or PROVE
+DIG-C1	7	LW7.CON-1-REQ	PLANNED	simdjson in full generality
+DIG-C2	7	LW5.COMP-1 and LW5.COMP-3	PLANNED	full CSP
+DIG-C3	7	LW5.COMP-1, LW5.COMP-1-MINE	PLANNED	e-graph and shape mining
+DIG-C4	7	LW4.COMP-4	PLANNED	TS and Rust over the IR
+DIG-C5	7	LW4.PERF-2	PLANNED	tape union
+DIG-C6	7	LW4.COMP-1, LW4.COMP-2, LW7.COMP-1	PLANNED	the new IR as the build
+DIG-C7	7	LW3.RX-5 and LW4.RX	PLANNED	regex; determinizer owner O-4
+DIG-C8	7	LW3.PP and LW4.PP	PLANNED	pprint
+DIG-C9	7	LW5.COMP-4	PLANNED	type inference; scope owner O-5
+DIG-C10	7	LW3.RX-5 and every LG	PLANNED	no custom grammar unless BBNF
+DIG-C11	7	LW4.PERF-1, LW4.PERF-3	PLANNED	dav1d-style union; owner O-2, O-3
+DIG-C12	7	USE at every wave	PLANNED	TS emitter benefit
+DIG-C13	7	LW6	PLANNED	release cascade; owner O-8
+DIG-C14	7	LW6.USE-1	PLANNED	value.js release condition
+DIG-C15	7	owner O-9	RULING	parser floor
+DIG-C16	7	LW4.COMP-3 (may switch the VM off, never delete the wasm face without an owner ruling)	PLANNED	ask VM-1
+DIG-C17	7	every LG (DIG-G1, G2, G3, G7 added to LG-g's list)	PLANNED	lockstep gate
+DIG-C18	7	LW5 trials (DIG-CSP-E15, DIG-EG-D17)	PLANNED	organ trials
+DIG-C19	7	LW5.CON-1 under the quiet window (2026-11-12a QW)	PLANNED	certification seam
+DIG-C20	7	every LG (DIG-G9)	PLANNED	model receipts
+DIG-C21	7	LW4.COMP-4 and the R-b divergence table	PLANNED	TS ↔ Rust isomorphism
+DIG-C22	7	every LG (DIG-G11; the `#[ignore]` census)	PLANNED	no V2, no deferral
+DIG-C23	7	DIG-H1..H3 (LW4, LW7)	PLANNED	nothing proven is lost
+DIG-H1	8	LW4.COMP-1 builds `DIG-CARRY.tsv` and the pin tests; LW7.COMP-1 reads it	PLANNED	carry list
+DIG-H2	8	LW4 order seal (`unmapped=0`)	PLANNED	post-cut crosswalk
+DIG-H3	8	owner O-12, before LW4.COMP-2	RULING	DAP and source maps
+DIG-O-1	9	owner; the delegate ruled it as DIG-G1 (2026-11-12a)	RULING	existence of the organs
+DIG-O-2	9	owner	RULING	x86 (X-4 against his words)
+DIG-O-3	9	owner	RULING	what the ASM union obliges
+DIG-O-4	9	owner (OR-7 Route A provisional)	RULING	regex determinizer
+DIG-O-5	9	owner	RULING	type system scope
+DIG-O-6	9	owner; the delegate's ADD-2 plus PLAN §7 stand meanwhile	RULING	amendment 9 as law
+DIG-O-7	9	owner; the delegate's quiet-window row (2026-11-12a QW) stands meanwhile	RULING	quiet certification window
+DIG-O-8	9	owner	RULING	the early publish
+DIG-O-9	9	owner	RULING	value.js parser floor
+DIG-O-10	9	owner	RULING	generated-size ceiling
+DIG-O-11	9	owner	RULING	kernel speed threshold
+DIG-O-12	9	owner	RULING	DAP and source maps
+DIG-O-13	9	owner	RULING	every path >SOTA

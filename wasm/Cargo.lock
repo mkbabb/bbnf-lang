@@ -12,6 +12,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "arrayvec"
+version = "0.7.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3fb67a6e08acf24fdeccbac2cb6ac4305825bd1f117462e0e6f2f193345ad56"
+
+[[package]]
 name = "autocfg"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -23,13 +29,17 @@ version = "0.3.0"
 dependencies = [
  "bbnf-ir",
  "bbnf-ser",
+ "blake3",
  "indexmap",
  "parse-that-egraph",
+ "parse-that-regex",
  "parse_that",
  "pprint",
  "proc-macro2",
  "quote",
  "rustc-hash",
+ "serde",
+ "serde_json",
  "syn",
 ]
 
@@ -102,6 +112,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "blake3"
+version = "1.8.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d9e454fc11f76977dc803893aff6304ed33d6a26efae8696573bea74baa27ae"
+dependencies = [
+ "arrayvec",
+ "cc",
+ "cfg-if",
+ "constant_time_eq",
+ "cpufeatures",
+]
+
+[[package]]
 name = "borrow-or-share"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -146,6 +169,21 @@ checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
 dependencies = [
  "cfg-if",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "constant_time_eq"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d52eff69cd5e647efe296129160853a42795992097e8af39800e1060caeea9b"
+
+[[package]]
+name = "cpufeatures"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5ca28b0ae3115b884660db4118d803791fd6756b6e88f39c0f3f7859060d7566"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
@@ -347,7 +385,7 @@ checksum = "42f5e15c9953c5e4ccceeb2e7382a716482c34515315f7b03532b8b4e8393d2d"
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb3049de8ac099fff0803769dfea1546f782a"
+source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
 dependencies = [
  "csp-solver",
  "rustc-hash",
@@ -357,7 +395,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb3049de8ac099fff0803769dfea1546f782a"
+source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -367,7 +405,7 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb3049de8ac099fff0803769dfea1546f782a"
+source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
@@ -382,12 +420,12 @@ dependencies = [
 [[package]]
 name = "parse-that-simd"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb3049de8ac099fff0803769dfea1546f782a"
+source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
 
 [[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=cdceb3049de8ac099fff0803769dfea1546f782a#cdceb3049de8ac099fff0803769dfea1546f782a"
+source = "git+https://github.com/mkbabb/parse-that?rev=b4bd710373f6889a3d8ca328cd791850268688bc#b4bd710373f6889a3d8ca328cd791850268688bc"
 dependencies = [
  "aho-corasick",
  "colored",

@@ -1,0 +1,5 @@
+mutant unnamed; cured checker; tree f8929090b
+control: rows=32 routes=0 sanctioned=0 refused=0
+witness [unnamed]: rows=33 routes=1 sanctioned=1 refused=1
+  REFUSED find_aliases: no PLAN.md or LEDGER.md line of LW5.COMP-1-MINE names the item (by identifier, or by its file or a directory holding it)
+rc=0

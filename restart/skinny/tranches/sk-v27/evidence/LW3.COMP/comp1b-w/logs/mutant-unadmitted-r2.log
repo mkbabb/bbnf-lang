@@ -1,0 +1,5 @@
+mutant unadmitted; cured checker; tree f8929090b3db6a647dc21e91a50647d24f95cb5c
+control: rows=32 routes=0 sanctioned=0 refused=0
+witness [unadmitted]: rows=33 routes=1 sanctioned=1 refused=1
+  REFUSED CommentWsMiner: ROUTE unit LW5.COMP-1-NOPE absent from PLAN.md or LEDGER.md
+rc=0

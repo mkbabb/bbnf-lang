@@ -1,0 +1,4 @@
+checker: substrate-fates-check.sh at f8929090b (unchanged at 7acb562f888a2b7bc40f39f50505df4454d1b972); witness script and tree 7acb562f888a2b7bc40f39f50505df4454d1b972
+control: rows=32 routes=0 sanctioned=0 refused=0
+witness: rows=33 routes=1 sanctioned=1 refused=0
+rc=0

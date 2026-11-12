@@ -2,6 +2,7 @@
 
 pub mod all_different;
 pub mod all_different_except;
+pub mod bounded_sum;
 pub mod cardinality;
 pub mod dispatch;
 pub mod implication;
@@ -12,6 +13,7 @@ pub mod traits;
 
 pub use all_different::AllDifferent;
 pub use all_different_except::AllDifferentExcept;
+pub use bounded_sum::BoundedSumConstraint;
 pub use cardinality::CardinalityConstraint;
 pub use dispatch::ConstraintEnum;
 pub use implication::ImplicationConstraint;

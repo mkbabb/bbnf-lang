@@ -1,0 +1,14 @@
+{
+  "commit_sha": "4c5e8240373ab3b579f7a28f181f7a2652ffdfb4",
+  "ref": "refs/heads/lw3/s2-ci-blackhole",
+  "run_id": "43150687010",
+  "run_attempt": "1",
+  "event": "workflow_dispatch",
+  "valgrind_version": "valgrind-3.26.0",
+  "valgrind_path": "/home/runner/.local/valgrind/bin/valgrind",
+  "valgrind_source": "https://sourceware.org/pub/valgrind/valgrind-3.26.0.tar.bz2 sha256=8d54c717029106f1644aadaf802ab9692e53d93dd015cbd19e74190eba616bd7 cache-hit=true",
+  "runner_image": "ubuntu26 20261101.186.1",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "iai_callgrind_runner": "0.12.3",
+  "finished_at": "2026-11-12T03:50:12Z"
+}

@@ -1,8 +1,13 @@
 # .github/workflows/bench-iai.yml — iai-callgrind instruction-count regression gate.
 #
-# Triggered on pull_request; runs the `json_callgrind` bench under valgrind on
-# a Linux runner and posts the instruction-count delta vs the baseline committed
-# at `docs/benchmarks/iai-baselines/json.json`. Threshold: ±1%.
+# Runs the `json_callgrind` bench under valgrind on a pinned Linux image and
+# compares every bench's instruction count with the baseline committed at
+# `docs/benchmarks/iai-baselines/json.json` (threshold ±1 %, both directions).
+# The job fails on the compare's exit status: 1 outside the threshold, 2 when
+# the gate cannot decide (a null baseline is refused). The run's output and
+# environment are uploaded as the `iai-pr` artifact; the baseline is seeded
+# from that artifact by `scripts/iai-seed.sh` on a branch, never from CI
+# (sk-v27 LW3.CI-IAI-0).
 
 name: iai-callgrind regression
 
@@ -15,6 +20,9 @@ on:
       - "Cargo.lock"
       - "rust-toolchain.toml"
       - ".github/workflows/bench-iai.yml"
+      - "scripts/iai-compare.sh"
+      - "docs/benchmarks/iai-baselines/**"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,10 +30,16 @@ permissions:
 
 jobs:
   iai-bench:
-    runs-on: ubuntu-latest
+    # The baseline is per image: a new image is a re-seed, not drift.
+    runs-on: ubuntu-26.04
     env:
       RUSTC_WRAPPER: sccache
       SCCACHE_GHA_ENABLED: "true"
+      # Must match the iai-callgrind library version in Cargo.lock.
+      IAI_RUNNER_VERSION: "0.12.3"
+      VALGRIND_VERSION: "3.26.0"
+      VALGRIND_URL: "https://sourceware.org/pub/valgrind/valgrind-3.26.0.tar.bz2"
+      VALGRIND_SHA256: "8d54c717029106f1644aadaf802ab9692e53d93dd015cbd19e74190eba616bd7"
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -35,10 +49,43 @@ jobs:
       - name: install sccache
         uses: mozilla-actions/sccache-action@v0.0.9
 
-      - name: install valgrind
+      # valgrind comes from its pinned upstream release tarball, never from the
+      # Ubuntu archive (sk-v27 LW3.CI-IAI-1): the sha256 below is checked
+      # before the build, the build is cached by version, sha256 and image, and
+      # any failure (fetch, checksum, build, version) fails the job; there is
+      # no fallback. The sha256 equals the Checksums-Sha256 of
+      # valgrind_3.26.0.orig.tar.bz2 in Ubuntu's valgrind 1:3.26.0-0ubuntu1.
+      - name: restore the pinned valgrind build
+        id: valgrind-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/valgrind
+          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-v1
+
+      - name: build the pinned valgrind (cache miss)
+        if: steps.valgrind-cache.outputs.cache-hit != 'true'
+        shell: bash
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y valgrind
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          curl -fsSL --retry 3 --retry-all-errors -o valgrind.tar.bz2 "$VALGRIND_URL"
+          echo "$VALGRIND_SHA256  valgrind.tar.bz2" | sha256sum -c -
+          tar xjf valgrind.tar.bz2
+          cd "valgrind-$VALGRIND_VERSION"
+          ./configure --prefix="$HOME/.local/valgrind"
+          make -j"$(nproc)"
+          make install
+
+      - name: put the pinned valgrind on PATH
+        shell: bash
+        run: |
+          set -euo pipefail
+          got="$("$HOME/.local/valgrind/bin/valgrind" --version)"
+          if [ "$got" != "valgrind-$VALGRIND_VERSION" ]; then
+            echo "pinned valgrind reads '$got', want valgrind-$VALGRIND_VERSION"; exit 1
+          fi
+          echo "$HOME/.local/valgrind/bin" >> "$GITHUB_PATH"
+          echo "IAI_VALGRIND_SOURCE=$VALGRIND_URL sha256=$VALGRIND_SHA256 cache-hit=${{ steps.valgrind-cache.outputs.cache-hit == 'true' }}" >> "$GITHUB_ENV"
 
       - name: install rust toolchain from rust-toolchain.toml
         run: |
@@ -54,55 +101,96 @@ jobs:
       # The bench harness execs iai-callgrind-runner, which must match the
       # iai-callgrind library version in Cargo.lock.
       - name: install iai-callgrind-runner
-        run: cargo install iai-callgrind-runner --version 0.12.3 --locked
+        run: cargo install iai-callgrind-runner --version "$IAI_RUNNER_VERSION" --locked
 
       # tee, not a redirect then cat: under `bash -e` a failing bench
       # exits before the cat, so its error never reached the log.
-      - name: run iai-callgrind bench on PR branch
+      - name: run iai-callgrind bench
         shell: bash
         run: |
           set -o pipefail
+          mkdir -p "$RUNNER_TEMP/iai"
           cargo bench -p bbnf --bench json_callgrind --features callgrind --profile bench-ci \
-            2>&1 | tee /tmp/iai-pr.txt
+            2>&1 | tee "$RUNNER_TEMP/iai/iai-pr.txt"
 
-      - name: checkout master baseline
+      - name: record the run environment
+        if: always()
+        shell: bash
         run: |
-          git fetch origin master
-          git worktree add /tmp/master-baseline origin/master
+          mkdir -p "$RUNNER_TEMP/iai"
+          python3 - "$RUNNER_TEMP/iai/iai-env.json" <<'PY'
+          import datetime, json, os, shutil, subprocess, sys
+          def out(*cmd):
+              try:
+                  return subprocess.run(cmd, capture_output=True, text=True, check=True).stdout.strip()
+              except Exception:
+                  return ""
+          env = {
+              "commit_sha": os.environ["GITHUB_SHA"],
+              "ref": os.environ.get("GITHUB_REF", ""),
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "event": os.environ["GITHUB_EVENT_NAME"],
+              "valgrind_version": out("valgrind", "--version"),
+              "valgrind_path": shutil.which("valgrind") or "",
+              "valgrind_source": os.environ.get("IAI_VALGRIND_SOURCE", ""),
+              "runner_image": f"{os.environ.get('ImageOS', '')} {os.environ.get('ImageVersion', '')}".strip(),
+              "rustc": out("rustc", "-V"),
+              "iai_callgrind_runner": os.environ.get("IAI_RUNNER_VERSION", ""),
+              "finished_at": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+          }
+          open(sys.argv[1], "w").write(json.dumps(env, indent=2) + "\n")
+          print(json.dumps(env, indent=2))
+          PY
 
-      - name: diff against committed baseline
+      - name: upload the iai-pr artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iai-pr
+          path: |
+            ${{ runner.temp }}/iai/iai-pr.txt
+            ${{ runner.temp }}/iai/iai-env.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: compare with the committed baseline
+        id: compare
+        shell: bash
         run: |
-          if [ -f "docs/benchmarks/iai-baselines/json.json" ]; then
-            scripts/iai-compare.sh docs/benchmarks/iai-baselines/json.json /tmp/iai-pr.txt \
-              > /tmp/iai-delta.txt
-            cat /tmp/iai-delta.txt
-          else
-            echo "No committed baseline yet; seeding from this run."
-            mkdir -p docs/benchmarks/iai-baselines
-            cp /tmp/iai-pr.txt docs/benchmarks/iai-baselines/json.json
-          fi
+          set +e
+          scripts/iai-compare.sh docs/benchmarks/iai-baselines/json.json "$RUNNER_TEMP/iai/iai-pr.txt" \
+            > "$RUNNER_TEMP/iai/iai-delta.txt" 2>&1
+          rc=$?
+          cat "$RUNNER_TEMP/iai/iai-delta.txt"
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
 
       - name: comment-bot delta summary
         uses: actions/github-script@v7
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         with:
           script: |
             const fs = require('fs');
-            const delta = fs.existsSync('/tmp/iai-delta.txt')
-              ? fs.readFileSync('/tmp/iai-delta.txt', 'utf8')
-              : 'no delta computed (first baseline run)';
-            const threshold = 1.0;
-            const body = `## iai-callgrind instruction-count delta\n\n\`\`\`\n${delta}\n\`\`\`\n\nThreshold: ±${threshold}%. Failing benches block the PR.\n`;
-            github.rest.issues.createComment({
+            const p = `${process.env.RUNNER_TEMP}/iai/iai-delta.txt`;
+            const delta = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : 'no delta computed (the job failed before the compare)';
+            const body = `## iai-callgrind instruction-count delta\n\n\`\`\`\n${delta}\n\`\`\`\n\nThreshold: ±1% in either direction. A null baseline or an undecidable run blocks the PR.\n`;
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
               body: body
             });
 
-      - name: fail on regression > 1%
+      # Keys on the compare's exit status. An empty status (the compare never
+      # ran) fails closed.
+      - name: block on the compare's exit status
+        if: always()
+        shell: bash
         run: |
-          if grep -E 'regression.*>\s*1\.0' /tmp/iai-delta.txt 2>/dev/null; then
-            echo "iai-callgrind instruction-count regression > 1% — blocking PR"
-            exit 1
-          fi
+          rc="${{ steps.compare.outputs.rc }}"
+          case "$rc" in
+            0) echo "iai: every bench within the threshold of the baseline" ;;
+            1) echo "iai: instruction count outside ±1% of the baseline (exit 1)"; exit 1 ;;
+            2) echo "iai: the gate cannot decide (exit 2): a null baseline or an undecidable run"; exit 2 ;;
+            *) echo "iai: the compare did not run (status '$rc')"; exit 2 ;;
+          esac

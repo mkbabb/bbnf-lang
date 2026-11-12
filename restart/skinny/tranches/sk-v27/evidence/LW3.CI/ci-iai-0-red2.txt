@@ -1,0 +1,6 @@
+bench: json_callgrind
+threshold_pct: 1
+current_valgrind_instrs: 3839402
+baseline_valgrind_instrs: null
+status: baseline is unseeded; regression decision skipped
+rc=0

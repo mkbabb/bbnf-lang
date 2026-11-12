@@ -25,7 +25,7 @@
 //! backslashes via the SIMD scan; the borrow path is the fast case
 //! (~90% of real-world inputs).
 
-use bbnf_ir::{GrammarIR, IrRule, TypeDesc};
+use bbnf_ir::{GrammarIR, IrNode, IrRule, TypeDesc};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -50,6 +50,75 @@ fn rule_is_span_typed(rule: &IrRule, ir: &GrammarIR) -> bool {
             false
         }
     })
+}
+
+/// The bytes the rule's plain-content class refuses besides the quote and
+/// the backslash (sk-v27 LW3.ORC1-STR). The scanner finds the closing quote
+/// by the quote and the backslash alone, so without this a class such as
+/// `[^"\\\x00-\x1F]` (RFC 8259: no unescaped U+0000 to U+001F) was read as
+/// `[^"\\]`. The class is the one negated class among the alternatives of
+/// the body's repetition (`"(?:[^…]|\\…)*"`); every byte it refuses must be
+/// one no escape can hold, so the scanner can test the raw body for it.
+fn refused_plain_bytes(rule: &IrRule, ir: &GrammarIR, quote: u8) -> Vec<u8> {
+    use parse_that::regex::hir::{CharClass, Hir};
+    fn regex(node: &IrNode) -> Option<u32> {
+        match node {
+            IrNode::Regex(sid) => Some(*sid),
+            IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => regex(inner),
+            _ => None,
+        }
+    }
+    fn ungroup(h: &Hir) -> &Hir {
+        match h {
+            Hir::Group(sub) => ungroup(sub),
+            _ => h,
+        }
+    }
+    let Some(sid) = regex(&rule.body) else {
+        return Vec::new();
+    };
+    let pattern = ir.get_string(sid);
+    let Ok(hir) =
+        parse_that::regex::parse_with(pattern, &parse_that::regex::ParseOptions::byte_mode())
+    else {
+        return Vec::new();
+    };
+    let Hir::Concat(parts) = ungroup(&hir) else {
+        return Vec::new();
+    };
+    let mut refused = Vec::new();
+    for part in &parts[1..parts.len().saturating_sub(1)] {
+        let Hir::Repetition(rep) = ungroup(part) else {
+            continue;
+        };
+        let branches: Vec<&Hir> = match ungroup(&rep.sub) {
+            Hir::Alternation(alts) => alts.iter().map(ungroup).collect(),
+            one => vec![one],
+        };
+        for b in branches {
+            if let Hir::Class(CharClass::Bytes { ranges, negated: true }) = b {
+                for r in ranges {
+                    for byte in r.start..=r.end {
+                        if byte != quote && byte != b'\\' && !refused.contains(&byte) {
+                            refused.push(byte);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    refused.sort_unstable();
+    // An escape's bytes (`\"`, `\\`, `\/`, `\b`, `\f`, `\n`, `\r`, `\t`,
+    // `\uXXXX`) are read by the decoder, not by the class: a refused byte the
+    // decoder can consume would make the raw-body test wrong.
+    let escape_bytes = b"\"\\/bfnrtu0123456789abcdefABCDEF";
+    assert!(
+        refused.iter().all(|b| !escape_bytes.contains(b) && *b < 0x80),
+        "String shape on rule `{}`: its class refuses a byte an escape or a UTF-8 sequence holds ({:?}); the raw-body test cannot read it",
+        ir.get_string(rule.name),
+        refused
+    );
+    refused
 }
 
 /// Emit `pub fn parse_string_<grammar>_<rule>(input, p, state, builder)
@@ -95,6 +164,47 @@ pub fn emit_parse_string(
     };
     let cursor_p = cursor_param();
     let cursor_where = cursor_where_clause();
+    // The class's refused bytes, tested over the raw body once its end is
+    // known (the borrow path's `[body_start..end]`, the escape path's
+    // `[body_start..end_pos - 1]`); empty for a class that refuses only the
+    // quote and the backslash.
+    let refused = refused_plain_bytes(rule, ir, b'"');
+    let (refused_check_borrow, refused_check_escape) = if refused.is_empty() {
+        (quote! {}, quote! {})
+    } else {
+        let mut table = [false; 256];
+        for b in &refused {
+            table[*b as usize] = true;
+        }
+        let table = table.iter();
+        let decl = quote! {
+            const __REFUSED: [bool; 256] = [#(#table),*];
+        };
+        (
+            quote! {
+                #decl
+                if let Some(__at) = input[body_start..end]
+                    .iter()
+                    .position(|&__b| __REFUSED[__b as usize])
+                {
+                    return Err(crate::runtime::DtaError::Syntax {
+                        offset: (body_start + __at) as u32,
+                    });
+                }
+            },
+            quote! {
+                #decl
+                if let Some(__at) = input[body_start..end_pos - 1]
+                    .iter()
+                    .position(|&__b| __REFUSED[__b as usize])
+                {
+                    return Err(crate::runtime::DtaError::Syntax {
+                        offset: (body_start + __at) as u32,
+                    });
+                }
+            },
+        )
+    };
     quote! {
         /// AZ-I.W2.RC — per-grammar String-shape parse function
         /// (struct-direct substrate).
@@ -141,6 +251,7 @@ pub fn emit_parse_string(
             match #support_mod::first_quote_or_backslash(tail) {
                 Some((off, b'"')) => {
                     let end = body_start + off;
+                    #refused_check_borrow
                     *p = end + 1;
                     // Borrow path: slice directly from the
                     // input. The `'p` lifetime threads through
@@ -178,6 +289,7 @@ pub fn emit_parse_string(
                             ::parse_that::parsers::scan::StringPayload::Owned { .. },
                             end_pos,
                         )) => {
+                            #refused_check_escape
                             *p = end_pos;
                             let bytes: Box<[u8]> = buf.into_boxed_slice();
                             let leaked: &'static [u8] = Box::leak(bytes);
@@ -193,6 +305,7 @@ pub fn emit_parse_string(
                             },
                             end_pos,
                         )) => {
+                            #refused_check_escape
                             *p = end_pos;
                             let body: &'p str = unsafe {
                                 ::core::str::from_utf8_unchecked(

@@ -450,7 +450,7 @@ mod __jsonparser_emit_impl {
     /// the start production of the grammar's top-level production).
     pub const REGISTRY_ENTRY_RULE: &str = "json";
     static __DTA_REGEX_4: &str = "-?(0|[1-9]\\d*)(\\.\\d+)?([eE][+-]?\\d+)?";
-    static __DTA_REGEX_5: &str = "\"(?:[^\"\\\\]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"";
+    static __DTA_REGEX_5: &str = "\"(?:[^\"\\\\\\x00-\\x1F]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"";
     static __DTA_REGEX_48: &str = "[ \\t\\n\\r]*";
     /// AY.W4.3 — hoisted DFA byte-class equivalence table.
     /// Consumed by `emit_dfa_body_table_driven` emitted in
@@ -501,55 +501,56 @@ mod __jsonparser_emit_impl {
     /// DFA_HOIST_MIN_STATES` branch.
     pub(crate) const __DFA_CLASSES_JsonParser_1: [u8; 256] = [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-        7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 8, 9, 9, 9, 9, 10, 11, 12, 12, 12, 13, 14, 14,
-        14, 14, 14, 14, 14, 15, 16, 16, 16, 17, 18, 19, 20, 21, 21, 21, 21, 21, 21, 21,
-        21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 23,
-        23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
-        24, 24, 24, 24, 24, 24, 24, 25, 25, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
-        26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 27,
-        28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 28, 29, 30, 30, 31, 32, 32, 32, 33,
-        34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34,
+        0, 0, 0, 0, 0, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 5, 5, 5, 5, 5, 5,
+        5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
+        8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 10, 10, 10, 10, 11, 12, 13, 13, 13, 14, 15,
+        15, 15, 15, 15, 15, 15, 16, 17, 17, 17, 18, 19, 20, 21, 22, 22, 22, 22, 22, 22,
+        22, 22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+        24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        25, 25, 25, 25, 25, 25, 25, 25, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 30, 31, 31, 32, 33, 33, 33,
+        34, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35,
     ];
     /// AY.W4.3 — hoisted DFA flat transition table
     /// (state * num_classes + class -> target_state |
     /// 0xFF=DEAD). Consumed via the same hoist-branch pairing
     /// as the byte-class table above.
-    pub(crate) const __DFA_TRANS_JsonParser_1: [u8; 525] = [
-        255, 1, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    pub(crate) const __DFA_TRANS_JsonParser_1: [u8; 540] = [
+        255, 255, 1, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 1, 2, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        255, 255, 255, 255, 4, 5, 6, 7, 6, 8, 9, 10, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 1, 255, 1,
-        255, 255, 255, 255, 1, 255, 255, 1, 255, 1, 255, 1, 255, 1, 255, 1, 11, 255, 255,
+        255, 255, 255, 255, 255, 1, 2, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 255, 255, 255, 255, 4, 5, 6, 7, 6, 8, 9, 10, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 1, 1, 1, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 1, 255, 1, 255, 255, 255, 255, 1, 255, 255, 1, 255, 1, 255, 1, 255, 1,
+        255, 1, 11, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 4, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 1, 1, 1, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 4, 4, 4, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 4, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 4, 4, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 4, 4, 4,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 6, 6, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 6, 6, 6, 255,
+        255, 4, 4, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 6,
+        255, 255, 255, 255, 255, 6, 6, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        12, 255, 12, 255, 255, 255, 12, 12, 12, 12, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 6, 6, 6, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 13, 255, 13, 255, 255, 255, 13, 13, 13, 13, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 6, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 12, 255, 12, 255,
+        255, 255, 12, 12, 12, 12, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 13,
+        255, 13, 255, 255, 255, 13, 13, 13, 13, 255, 255, 255, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 14, 255, 14, 255, 255, 255, 14, 14, 14, 14, 255, 255, 255,
+        255, 255, 14, 255, 14, 255, 255, 255, 14, 14, 14, 14, 255, 255, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255, 255, 255, 255, 1, 255, 1, 255, 255, 255, 1, 1, 1, 1, 255, 255,
+        255, 255, 255, 255, 255, 1, 255, 1, 255, 255, 255, 1, 1, 1, 1, 255, 255, 255,
         255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
-        255, 255, 255,
+        255, 255,
     ];
     /// AY.W4.3 — hoisted DFA accept-state bitset. Consumed
     /// via the same hoist-branch pairing as the byte-class
@@ -608,7 +609,7 @@ mod __jsonparser_emit_impl {
                     };
                     let __next = unsafe {
                         *__DFA_TRANS_JsonParser_1
-                            .get_unchecked(__dfa_state as usize * 35 + __c as usize)
+                            .get_unchecked(__dfa_state as usize * 36 + __c as usize)
                     };
                     if __next == 0xFF {
                         break;
@@ -1411,6 +1412,42 @@ mod __jsonparser_emit_impl {
         match __shape_support_JsonParser::first_quote_or_backslash(tail) {
             Some((off, b'"')) => {
                 let end = body_start + off;
+                const __REFUSED: [bool; 256] = [
+                    true, true, true, true, true, true, true, true, true, true, true,
+                    true, true, true, true, true, true, true, true, true, true, true,
+                    true, true, true, true, true, true, true, true, true, true, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false, false, false, false, false, false, false,
+                    false, false, false,
+                ];
+                if let Some(__at) = input[body_start..end]
+                    .iter()
+                    .position(|&__b| __REFUSED[__b as usize])
+                {
+                    return Err(crate::runtime::DtaError::Syntax {
+                        offset: (body_start + __at) as u32,
+                    });
+                }
                 *p = end + 1;
                 let body: &'p str = unsafe {
                     ::core::str::from_utf8_unchecked(&input[body_start..end])
@@ -1433,6 +1470,47 @@ mod __jsonparser_emit_impl {
                             end_pos,
                         ),
                     ) => {
+                        const __REFUSED: [bool; 256] = [
+                            true, true, true, true, true, true, true, true, true, true,
+                            true, true, true, true, true, true, true, true, true, true,
+                            true, true, true, true, true, true, true, true, true, true,
+                            true, true, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false, false,
+                        ];
+                        if let Some(__at) = input[body_start..end_pos - 1]
+                            .iter()
+                            .position(|&__b| __REFUSED[__b as usize])
+                        {
+                            return Err(crate::runtime::DtaError::Syntax {
+                                offset: (body_start + __at) as u32,
+                            });
+                        }
                         *p = end_pos;
                         let bytes: Box<[u8]> = buf.into_boxed_slice();
                         let leaked: &'static [u8] = Box::leak(bytes);
@@ -1451,6 +1529,47 @@ mod __jsonparser_emit_impl {
                             end_pos,
                         ),
                     ) => {
+                        const __REFUSED: [bool; 256] = [
+                            true, true, true, true, true, true, true, true, true, true,
+                            true, true, true, true, true, true, true, true, true, true,
+                            true, true, true, true, true, true, true, true, true, true,
+                            true, true, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false,
+                            false, false, false, false, false, false, false, false, false,
+                        ];
+                        if let Some(__at) = input[body_start..end_pos - 1]
+                            .iter()
+                            .position(|&__b| __REFUSED[__b as usize])
+                        {
+                            return Err(crate::runtime::DtaError::Syntax {
+                                offset: (body_start + __at) as u32,
+                            });
+                        }
                         *p = end_pos;
                         let body: &'p str = unsafe {
                             ::core::str::from_utf8_unchecked(
@@ -2502,7 +2621,9 @@ mod __jsonparser_emit_impl {
                                             let __alt_ok = (|| -> Option<()> {
                                                 {
                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                    if !(!((__b == b'"' || __b == b'\\'))) {
+                                                    if !(!(((__b >= b'\0' && __b <= b'\x1F') || __b == b'"'
+                                                        || __b == b'\\')))
+                                                    {
                                                         return None;
                                                     }
                                                     state.offset += 1;
@@ -2932,7 +3053,9 @@ mod __jsonparser_emit_impl {
                                                     let __alt_ok = (|| -> Option<()> {
                                                         {
                                                             let __b = *state.src_bytes.get(state.offset)?;
-                                                            if !(!((__b == b'"' || __b == b'\\'))) {
+                                                            if !(!(((__b >= b'\0' && __b <= b'\x1F') || __b == b'"'
+                                                                || __b == b'\\')))
+                                                            {
                                                                 return None;
                                                             }
                                                             state.offset += 1;
@@ -3135,7 +3258,9 @@ mod __jsonparser_emit_impl {
                                                         let __alt_ok = (|| -> Option<()> {
                                                             {
                                                                 let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(!((__b == b'"' || __b == b'\\'))) {
+                                                                if !(!(((__b >= b'\0' && __b <= b'\x1F') || __b == b'"'
+                                                                    || __b == b'\\')))
+                                                                {
                                                                     return None;
                                                                 }
                                                                 state.offset += 1;

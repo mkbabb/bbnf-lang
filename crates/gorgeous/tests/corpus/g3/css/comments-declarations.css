@@ -1,0 +1,6 @@
+.card {
+  color: blue; /* a trailing comment */
+  /* a leading comment */
+  margin: 0 auto;
+  padding: 4px /* inside a value */ 8px;
+}

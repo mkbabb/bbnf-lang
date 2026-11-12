@@ -1,0 +1,4 @@
+/* a block comment before the first rule */
+value = /* before a factor */ number | string ;
+number = /[0-9]+/ ;
+string = "\"" , /[^"]*/ , "\"" ;

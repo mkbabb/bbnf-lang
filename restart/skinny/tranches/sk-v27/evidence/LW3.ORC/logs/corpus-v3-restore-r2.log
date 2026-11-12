@@ -1,0 +1,6 @@
+# corpus-v3 restored r2 at ea8997adb 2026-11-12T16:26:06Z (tree 0 modified tracked files)
+$ cargo xtask corpus verify
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.54s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask corpus verify`
+corpus verify: 5255/5255 files match (corpus-v3)
+rc=0

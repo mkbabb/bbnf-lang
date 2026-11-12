@@ -1,0 +1,37 @@
+# LW3.ORC1-BOM MUTANT r1 (the TS driver decodes with the default, BOM removed) at 118e9d097 2026-11-12T13:21:54Z (tree 1 modified tracked files)
+$ cargo test -p bbnf-oracle --test orc1_bom
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/core)
+   Compiling bbnf-oracle v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/oracle)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.46s
+     Running tests/orc1_bom.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_bom-1cc8123f2ebeffad)
+
+running 2 tests
+test every_driver_decodes_with_the_bom_kept ... FAILED
+test the_ts_package_arm_reads_a_leading_bom_as_a_character ... FAILED
+
+failures:
+
+---- every_driver_decodes_with_the_bom_kept stdout ----
+
+thread 'every_driver_decodes_with_the_bom_kept' (49210621) panicked at crates/oracle/tests/orc1_bom.rs:57:9:
+assertion `left == right` failed: crates/oracle/ts/driver.mjs: 2 decoders, 0 keep the BOM
+  left: 2
+ right: 0
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- the_ts_package_arm_reads_a_leading_bom_as_a_character stdout ----
+
+thread 'the_ts_package_arm_reads_a_leading_bom_as_a_character' (49210622) panicked at crates/oracle/tests/orc1_bom.rs:38:5:
+assertion `left == right` failed: U+FEFF{} is not JSON by grammar/json/json.bbnf (ws = /[ \t\n\r]*/), yet the arm accepted it: Accept { obs: Node { label: Some("json"), span: Some((0, 2)), children: [Node { label: Some("value"), span: Some((0, 2)), children: [Node { label: Some("object"), span: Some((0, 2)), children: [] }] }] }, value: None }
+  left: Some(true)
+ right: Some(false)
+
+
+failures:
+    every_driver_decodes_with_the_bom_kept
+    the_ts_package_arm_reads_a_leading_bom_as_a_character
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+error: test failed, to rerun pass `-p bbnf-oracle --test orc1_bom`
+rc=101

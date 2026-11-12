@@ -1,0 +1,15 @@
+# LW3.ORC2 MUTANT r1 (ebnf.bbnf gains a byte; its transcription is stale) at 355276cdc 2026-11-12T17:30:40Z (tree 1 modified tracked files)
+$ restart/skinny/tranches/sk-v27/evidence/LW3.ORC/orc2_check.sh /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/g1
+grammar=bbnf oracles=1 [ts-frontend] inputs=70
+grammar=json oracles=3 [jsontestsuite,serde_json,ts-package] inputs=323
+grammar=css_l4 oracles=1 [valuejs-leaves] inputs=3
+grammar=css_pretty oracles=1 [valuejs-leaves] inputs=3
+grammar=google_sheets oracles=1 [ts-package] inputs=3
+g1: grammar/ebnf/ebnf.bbnf moved since its transcription was written (sha256 20160d3e327eed8d0f8faf4cb11cc1c0412389b947b5290201687ec5f9a7b6f3, transcription 42ddc265529c5662cd667e44b051ba129bbe36bc3b8abc743c26b8826d58de52): read the grammar again into /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/oracle/peg/ebnf.peggy
+RED: g1 --list-oracles exited 2
+RED: ebnf not listed
+RED: bnf not listed
+RED: csv not listed
+RED: math not listed
+orc2: RED
+rc=1

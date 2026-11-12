@@ -801,19 +801,27 @@ use crate::runtime::handle::CompoundHandle;
 // container-owning frame holds only a `*_base: usize` cursor into the
 // matching scratch; interior pushes append to the scratch top, and
 // `end_compound` drains the `[base..]` suffix as one contiguous list.
-// Because frames now carry only `Copy` scalars + cursor indices, the
-// `OpenFrame` is `Copy`, so `stack.clone()` at checkpoint time is an
-// O(stack-depth) memcpy of small frames rather than an O(document) deep
-// clone of the growing `StyleSheet.rules` Vec — the prior O(N^2) cause.
+// Frames carry only `Copy` scalars + cursor indices, so no growing
+// container is held by a frame (the earlier O(document) deep clone of
+// `StyleSheet.rules` per checkpoint).
 // Scratch rollback is the count-marker truncate the arena slabs already
 // use, so the speculative below-marker deposits (rules/decls/values
 // pushed by a committed inline-Repeat iteration or recursive Ref inside a
 // structural Alt branch that later fails) are undone exactly: the scratch
 // is append-only, the checkpoint records its length, and rollback
-// truncates it. Frames below the checkpoint marker keep their `*_base`
-// cursor (restored by the cheap `stack.clone()`), so their drain range is
-// unchanged. Truncate is the precise inverse of append; soundness is
+// truncates it. Truncate is the precise inverse of append; soundness is
 // parametric in the deposit alphabet.
+//
+// The stack itself is not copied (sk-v27 LW3.ORC1-CKPT). A speculative
+// region is balanced (every compound it begins it ends or rolls back, and
+// it ends none that was open at its checkpoint), so the frames below the
+// top keep their scalars and `*_base` cursors untouched, and only the frame
+// on top at the checkpoint can be written inside the region (every write
+// goes through `last_mut()`). The checkpoint holds the stack length and a
+// copy of that one frame: a stack copy per checkpoint, with every enclosing
+// level's checkpoint live, held memory quadratic in depth. `serials` holds
+// each open frame's handle; rollback checks the top frame's serial and
+// panics on an unbalanced region instead of restoring a wrong stack.
 #[derive(Debug, Clone, Copy)]
 enum OpenFrame<'p> {{
     StyleSheet {{ rules_base: usize }},
@@ -871,6 +879,8 @@ pub(crate) enum FunctionKind {{
 pub struct CssStructBuilder<'p> {{
     arena: CssArena<'p>,
     stack: Vec<OpenFrame<'p>>,
+    /// The handle of each open frame, parallel to `stack`.
+    serials: Vec<u64>,
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
@@ -896,13 +906,10 @@ pub struct CssStructBuilder<'p> {{
     pending_components: Vec<f64>,
 }}
 
-// O(1) checkpoint: pure `Copy`/length markers. `stack` is cloned, but the
-// frames are now `Copy` scalars + cursor indices (the growing containers
-// live in the builder's append-only scratch stacks), so the clone is an
-// O(stack-depth) memcpy rather than the prior O(document) deep clone of
-// `StyleSheet.rules`. Every other field is a `usize` length marker or a
-// `Copy` snapshot; rollback truncates the scratch stacks to these markers.
-#[derive(Debug, Clone)]
+// O(1) checkpoint: pure `Copy`/length markers and a copy of the frame on
+// top (see the `OpenFrame` note); rollback truncates the stack and the
+// scratch stacks to these markers.
+#[derive(Debug, Clone, Copy)]
 pub struct CssStructCheckpoint<'p> {{
     rules: usize,
     decls: usize,
@@ -910,7 +917,9 @@ pub struct CssStructCheckpoint<'p> {{
     values: usize,
     keyframes: usize,
     colors: usize,
-    stack: Vec<OpenFrame<'p>>,
+    stack_len: usize,
+    /// `(serial, frame)` of the frame on top at the checkpoint.
+    top: Option<(u64, OpenFrame<'p>)>,
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
@@ -934,6 +943,7 @@ impl<'p> CssStructBuilder<'p> {{
         Self {{
             arena: CssArena::new(),
             stack: Vec::with_capacity(16),
+            serials: Vec::with_capacity(16),
             root: None,
             next_handle: 0,
             pending_value: None,
@@ -958,6 +968,7 @@ impl<'p> CssStructBuilder<'p> {{
         Self {{
             arena: CssArena::with_capacity(rules, decls, selectors, values, keyframes),
             stack: Vec::with_capacity(16),
+            serials: Vec::with_capacity(16),
             root: None,
             next_handle: 0,
             pending_value: None,
@@ -1038,11 +1049,11 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             values: self.arena.value_slab_count(),
             keyframes: self.arena.keyframe_slab_count(),
             colors: self.arena.color_count(),
-            // O(stack-depth) memcpy of `Copy` frames (growing containers
-            // hoisted to the scratch stacks below). This restores the
-            // exact below-marker frame scalars + `*_base` cursors on
-            // rollback.
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: match (self.serials.last(), self.stack.last()) {{
+                (Some(&serial), Some(&frame)) => Some((serial, frame)),
+                _ => None,
+            }},
             root: self.root,
             next_handle: self.next_handle,
             pending_value: self.pending_value,
@@ -1065,16 +1076,30 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
             checkpoint.keyframes,
             checkpoint.colors,
         );
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "CssStructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        self.serials.truncate(checkpoint.stack_len);
+        if let Some((serial, frame)) = checkpoint.top {{
+            assert_eq!(
+                self.serials.last().copied(),
+                Some(serial),
+                "CssStructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+            );
+            if let Some(top) = self.stack.last_mut() {{
+                *top = frame;
+            }}
+        }}
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_value = checkpoint.pending_value;
         // Truncate every append-only scratch stack to its checkpoint
         // length. This is the precise inverse of the speculative appends
         // (rules / decls / selectors / values / blocks / components and
-        // the span-start cursor); below-marker frames keep their `*_base`
-        // cursors via the restored `stack`, so their drain ranges are
-        // unchanged.
+        // the span-start cursor); frames below the checkpoint are untouched
+        // by a balanced region, so their drain ranges are unchanged.
         self.span_starts.truncate(checkpoint.span_starts_len);
         self.pending_rules.truncate(checkpoint.pending_rules_len);
         self.pending_decls.truncate(checkpoint.pending_decls_len);
@@ -1131,13 +1156,15 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {{
                 OpenFrame::Wrap {{ value: None }}
             }}
         }};
-        self.stack.push(frame);
         self.next_handle = self.next_handle.wrapping_add(1);
+        self.stack.push(frame);
+        self.serials.push(self.next_handle);
         CompoundHandle::new(self.next_handle, 0)
     }}
 
     fn end_compound(&mut self, _handle: CompoundHandle) {{
         let frame = self.stack.pop().expect("CssStructBuilder::end_compound on empty stack");
+        self.serials.pop();
         match frame {{
             OpenFrame::StyleSheet {{ rules_base }} => {{
                 let rules: Vec<CssRule<'p>> = self.pending_rules.split_off(rules_base);

@@ -4,7 +4,7 @@
 //! g1 [--arms root,ts-package] [--all] [--heldout grammar/heldout] [--grammar <id>,...]
 //!    [--manifest grammar/MANIFEST] [--case <substring>,...]
 //! g1 --list-oracles [--grammar <id>,...]
-//! g1 corpus-gen r7rs --out <dir>          # write the R7RS held-out corpus
+//! g1 corpus-gen r7rs|ebnf|bnf|math --out <dir>   # write a generated custody corpus
 //! ```
 //!
 //! `--dump` prints each case's outcome as JSON instead of judging it.
@@ -168,11 +168,14 @@ fn run() -> anyhow::Result<u8> {
         let out = arg_values(&args, "--out")
             .pop()
             .ok_or_else(|| anyhow::anyhow!("--out <dir>"))?;
-        anyhow::ensure!(
-            what == "r7rs",
-            "corpus-gen: only r7rs is generated here (graphql: heldout/graphql-corpus.mjs)"
-        );
-        for rel in oracles::r7rs::write_corpus(std::path::Path::new(&out))? {
+        let rels = match what {
+            "r7rs" => oracles::r7rs::write_corpus(std::path::Path::new(&out))?,
+            "ebnf" | "bnf" | "math" => oracles::peg::write_corpus(what, std::path::Path::new(&out))?,
+            _ => anyhow::bail!(
+                "corpus-gen: r7rs, ebnf, bnf or math (graphql: heldout/graphql-corpus.mjs)"
+            ),
+        };
+        for rel in rels {
             println!("{rel}");
         }
         return Ok(0);

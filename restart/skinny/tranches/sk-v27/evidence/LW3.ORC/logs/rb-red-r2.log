@@ -1,0 +1,5 @@
+# LW3.ORC1-RB rows RED r2 at 118e9d097 2026-11-12T14:03:48Z (tree 10 modified tracked files)
+$ python3 restart/skinny/tranches/sk-v27/evidence/LW3.ORC/orc_check.py rows HEAD
+RED: DIVERGENCE.tsv has no g1 column: no G1 case row can be read
+rows at HEAD: RED
+rc=1

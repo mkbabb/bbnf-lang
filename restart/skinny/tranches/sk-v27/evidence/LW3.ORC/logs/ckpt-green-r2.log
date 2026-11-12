@@ -1,0 +1,16 @@
+# LW3.ORC1-CKPT GREEN r2 at 517a587e9 2026-11-12T12:19:25Z (tree 0 modified tracked files)
+$ zsh -c cargo test -p bbnf --test orc1_checkpoint_depth -- --test-threads=1 --nocapture 2>&1 | grep -E "ratio|test result|panicked"; for c in regen-css regen-json regen-bbnf regen-google-sheets regen-math regen-csv regen-bnf regen-ebnf regen-css-pretty; do cargo xtask $c >/dev/null 2>&1 || exit 3; done; echo "runtime regen: $(git status --porcelain --untracked-files=no | wc -l | tr -d " ") files differ from the commit"; git diff --exit-code --stat
+test bbnf_checkpoint_is_independent_of_depth ... bbnf balanced: peak 233710 B at depth 250, 931471 B at depth 1000; ratio 3.99
+bbnf unclosed: peak 103869 B at depth 250, 411531 B at depth 1000; ratio 3.96
+test css_l4_checkpoint_is_independent_of_depth ... css_l4 balanced: peak 132056 B at depth 250, 505248 B at depth 1000; ratio 3.83
+css_l4 unclosed: peak 94940 B at depth 250, 346844 B at depth 1000; ratio 3.65
+test google_sheets_checkpoint_is_independent_of_depth ... google_sheets balanced: peak 163735 B at depth 250, 651712 B at depth 1000; ratio 3.98
+google_sheets unclosed: peak 62859 B at depth 250, 247815 B at depth 1000; ratio 3.94
+test json_checkpoint_is_independent_of_depth ... json unclosed: peak 15586 B at depth 250, 56200 B at depth 1000; ratio 3.61
+json balanced: peak 26461 B at depth 250, 99757 B at depth 1000; ratio 3.77
+json objects unclosed: peak 29374 B at depth 250, 111352 B at depth 1000; ratio 3.79
+test simple_template_checkpoint_is_independent_of_depth ... ebnf unclosed: peak 125518 B at depth 250, 498038 B at depth 1000; ratio 3.97
+ebnf balanced: peak 180670 B at depth 250, 719614 B at depth 1000; ratio 3.98
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+runtime regen: 0 files differ from the commit
+rc=0

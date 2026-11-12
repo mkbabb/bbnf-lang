@@ -1,0 +1,35 @@
+# LW3.ORC1-CSV RED r1 at 05c2de8fa 2026-11-12T13:13:31Z (tree 0 modified tracked files)
+$ cargo test -p bbnf --test orc1_entry_eof
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/bbnf-path)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 20.81s
+     Running tests/orc1_entry_eof.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_entry_eof-f134ebf9177199ca)
+
+running 3 tests
+test a_grammar_that_reads_its_trailing_whitespace_still_does ... ok
+test csv_reads_no_line_break_after_the_last_record ... FAILED
+test math_number_reads_no_trailing_whitespace ... FAILED
+
+failures:
+
+---- csv_reads_no_line_break_after_the_last_record stdout ----
+
+thread 'csv_reads_no_line_break_after_the_last_record' (49052541) panicked at crates/core/tests/orc1_entry_eof.rs:19:9:
+accepted "a,b\n"
+
+---- math_number_reads_no_trailing_whitespace stdout ----
+
+thread 'math_number_reads_no_trailing_whitespace' (49052542) panicked at crates/core/tests/orc1_entry_eof.rs:29:9:
+accepted "1\n"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    csv_reads_no_line_break_after_the_last_record
+    math_number_reads_no_trailing_whitespace
+
+test result: FAILED. 1 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf --test orc1_entry_eof`
+rc=101

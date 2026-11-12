@@ -1,0 +1,50 @@
+# LW3.ORC1-NUM RED r1 at 507d7e0bb 2026-11-12T12:24:09Z (tree 0 modified tracked files)
+$ cargo test -p bbnf --test orc1_json_number -- --nocapture
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/bbnf-path)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 12.98s
+     Running tests/orc1_json_number.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_json_number-470f4405c79b0362)
+
+running 2 tests
+
+thread 'jsontestsuite_leading_zero_cases_are_rejected' (48357274) panicked at crates/core/tests/orc1_json_number.rs:89:9:
+accepted [-01]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test jsontestsuite_leading_zero_cases_are_rejected ... FAILED
+read 411720 texts (48 out of f64's range not judged), 1404 diverging
+
+thread 'number_scanner_equals_rfc_8259_on_every_short_string' (48357275) panicked at crates/core/tests/orc1_json_number.rs:77:5:
+1404 of 411720 texts diverge from RFC 8259; first 20:
+"00": root accepts / serde_json rejects
+"[00]": root accepts / serde_json rejects
+"{\"k\":00}": root accepts / serde_json rejects
+"01": root accepts / serde_json rejects
+"[01]": root accepts / serde_json rejects
+"{\"k\":01}": root accepts / serde_json rejects
+"000": root accepts / serde_json rejects
+"[000]": root accepts / serde_json rejects
+"{\"k\":000}": root accepts / serde_json rejects
+"001": root accepts / serde_json rejects
+"[001]": root accepts / serde_json rejects
+"{\"k\":001}": root accepts / serde_json rejects
+"010": root accepts / serde_json rejects
+"[010]": root accepts / serde_json rejects
+"{\"k\":010}": root accepts / serde_json rejects
+"011": root accepts / serde_json rejects
+"[011]": root accepts / serde_json rejects
+"{\"k\":011}": root accepts / serde_json rejects
+"-00": root accepts / serde_json rejects
+"[-00]": root accepts / serde_json rejects
+test number_scanner_equals_rfc_8259_on_every_short_string ... FAILED
+
+failures:
+
+failures:
+    jsontestsuite_leading_zero_cases_are_rejected
+    number_scanner_equals_rfc_8259_on_every_short_string
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+
+error: test failed, to rerun pass `-p bbnf --test orc1_json_number`
+rc=101

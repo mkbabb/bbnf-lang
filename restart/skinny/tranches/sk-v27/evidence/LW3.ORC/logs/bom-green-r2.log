@@ -1,0 +1,12 @@
+# LW3.ORC1-BOM GREEN r2 at 118e9d097 2026-11-12T13:21:33Z (tree 0 modified tracked files)
+$ cargo test -p bbnf-oracle --test orc1_bom
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.30s
+     Running tests/orc1_bom.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_bom-1cc8123f2ebeffad)
+
+running 2 tests
+test every_driver_decodes_with_the_bom_kept ... ok
+test the_ts_package_arm_reads_a_leading_bom_as_a_character ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.10s
+
+rc=0

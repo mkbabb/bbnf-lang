@@ -1,5 +1,5 @@
 {
-  "note": "sk-v27 LW3.COMP-3a/5b: npm tarballs the oracle runs, by sha256 (checked before unpacking) and the registry's own integrity. ts-package is the published @mkbabb/bbnf-lang 0.3.0 (never typescript/ HEAD) with its one dependency. graphql-js is the oracle of the GraphQL October 2021 held-out grammar: 16.11.0, the newest release whose parser reads no syntax added after that edition (16.12.0 onward read descriptions on executable definitions, an addition of the September 2025 edition); it departs from the pin rule (newest release at least 14 days old, 16.14.2 on 2026-11-11) for that reason, and its one remaining departure from the edition (the braced \\u{...} escape) is a ruled row in crates/oracle/ruled.tsv. Its corpus is graphql-js's own tests at the same release's tag (v16.11.0, c18e9f6aada9ae086ddf836e4d822cf1426f3868).",
+  "note": "sk-v27 LW3.COMP-3a/5b: npm tarballs the oracle runs, by sha256 (checked before unpacking) and the registry's own integrity. ts-package is the published @mkbabb/bbnf-lang 0.3.0 (never typescript/ HEAD) with its one dependency. graphql-js is the oracle of the GraphQL October 2021 held-out grammar: 16.11.0, the newest release whose parser reads no syntax added after that edition (16.12.0 onward read descriptions on executable definitions, an addition of the September 2025 edition); it departs from the pin rule (newest release at least 14 days old, 16.14.2 on 2026-11-11) for that reason, and its one remaining departure from the edition (the braced \\u{...} escape) is a ruled row in crates/oracle/ruled.tsv. Its corpus is graphql-js's own tests at the same release's tag (v16.11.0, c18e9f6aada9ae086ddf836e4d822cf1426f3868). peggy is the oracle of the EBNF, BNF and Math grammars of record (ruling ORC-2): 5.1.1 (2026-10-20), the newest release at least 14 days old on 2026-11-12, with source-map-generator 2.0.7, the one package its library requires (the CLI's commander and @peggyjs/from-mem are not loaded).",
   "sets": {
     "ts-package": [
       {
@@ -24,6 +24,22 @@
         "url": "https://registry.npmjs.org/graphql/-/graphql-16.11.0.tgz",
         "sha256": "7e34f9274fdf64549b08d23ab7480afbe47add16974de698cd387a36b09db1f6",
         "integrity": "sha512-mS1lbMsxgQj6hge1XZ6p7GPhbrtFwUFYi3wRzXAC/FmYnyXMTvvI3td3rjmQ2u8ewXueaSvRPWaEcgVVOT9Jnw=="
+      }
+    ],
+    "peggy": [
+      {
+        "name": "peggy",
+        "version": "5.1.1",
+        "url": "https://registry.npmjs.org/peggy/-/peggy-5.1.1.tgz",
+        "sha256": "2c22753d7f6040d59b0761b0d27f22057b4e69c8e3777497325b6ef2981bb848",
+        "integrity": "sha512-HhhbwH1MoCq9YNqeC2n1ap6YzLSL1YUgUxGoeiXcmGOlAYTqxwmifPJ7gFZtkR/S2+KXZ6BkJ5FfycTtq9oCRQ=="
+      },
+      {
+        "name": "source-map-generator",
+        "version": "2.0.7",
+        "url": "https://registry.npmjs.org/source-map-generator/-/source-map-generator-2.0.7.tgz",
+        "sha256": "e3cca83118859e09bf7251a27f15d41e36cb88e9aea610c494f7d5dc3c2f4de3",
+        "integrity": "sha512-DJBSmVt7U50+Z+MihfPJKhrbAAC0VHriNQlufDfgaikQfAmPck05rjJ9BO2LXTabA6644umhFm2+XZ8aRZxTkQ=="
       }
     ]
   }

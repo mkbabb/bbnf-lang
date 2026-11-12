@@ -4,12 +4,14 @@
 //! (with the reason), or it has nothing to say about that case. An oracle is
 //! independent when it shares no front end with the spine: the TS 0.3.0
 //! package, JSONTestSuite's verdicts, serde_json, the value.js leaves' V8/JSC
-//! answers, toml-test, graphql-js and lexpr. Root `backend/rust` is an arm,
+//! answers, toml-test, graphql-js, lexpr, and peggy reading a hand
+//! transcription of the EBNF, BNF and Math grammars of record. Root `backend/rust` is an arm,
 //! never counted here.
 
 pub mod graphql;
 pub mod json;
 pub mod leaves;
+pub mod peg;
 pub mod r7rs;
 pub mod toml;
 pub mod ts;
@@ -65,5 +67,6 @@ pub fn all() -> Vec<Box<dyn Oracle>> {
         Box::new(toml::TomlTest),
         Box::new(graphql::GraphqlJs::default()),
         Box::new(r7rs::Lexpr),
+        Box::new(peg::Peggy::default()),
     ]
 }

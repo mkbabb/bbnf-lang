@@ -1,0 +1,10 @@
+# corpus-v3 custody r2: fetch from the release into an empty dir, verify at ea8997adb 2026-11-12T16:25:35Z (tree 0 modified tracked files)
+$ zsh -c cargo xtask corpus fetch && cargo xtask corpus verify
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.61s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask corpus fetch`
+corpus fetch: https://github.com/mkbabb/bbnf-lang/releases/download/corpus-v3/corpus-v3.tar.gz
+corpus fetch: 5255 files verified in /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/corpus-v3-r2
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1.02s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask corpus verify`
+corpus verify: 5255/5255 files match (corpus-v3)
+rc=0

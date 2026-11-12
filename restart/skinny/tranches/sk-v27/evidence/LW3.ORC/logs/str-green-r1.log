@@ -1,0 +1,10 @@
+# LW3.ORC1-STR GREEN r1 at c7d99e431 2026-11-12T12:34:14Z (tree 0 modified tracked files)
+$ zsh -c cargo test -p bbnf --test orc1_json_string --test orc1_json_number --test shape_dispatch_emission -- --nocapture 2>&1 | grep -E "^read |test result|panicked"; cargo xtask regen --check 2>&1 | tail -1; python3 restart/skinny/tranches/sk-v27/topo/topo4.py manifest . --check && echo "MANIFEST check rc 0"
+read 411720 texts (48 out of f64's range not judged), 0 diverging
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.47s
+read 1080 texts, 0 diverging
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+regen --check: clean (9 of 9 grammars matched)
+MANIFEST check rc 0
+rc=0

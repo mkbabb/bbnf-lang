@@ -70,6 +70,8 @@ pub(crate) enum FunctionKind {
 pub struct CssStructBuilder<'p> {
     arena: CssArena<'p>,
     stack: Vec<OpenFrame<'p>>,
+    /// The handle of each open frame, parallel to `stack`.
+    serials: Vec<u64>,
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
@@ -82,7 +84,7 @@ pub struct CssStructBuilder<'p> {
     pending_blocks: Vec<KeyframeBlock<'p>>,
     pending_components: Vec<f64>,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct CssStructCheckpoint<'p> {
     rules: usize,
     decls: usize,
@@ -90,7 +92,9 @@ pub struct CssStructCheckpoint<'p> {
     values: usize,
     keyframes: usize,
     colors: usize,
-    stack: Vec<OpenFrame<'p>>,
+    stack_len: usize,
+    /// `(serial, frame)` of the frame on top at the checkpoint.
+    top: Option<(u64, OpenFrame<'p>)>,
     root: Option<StyleSheet>,
     next_handle: u64,
     pending_value: Option<CssTypedValue<'p>>,
@@ -112,6 +116,7 @@ impl<'p> CssStructBuilder<'p> {
         Self {
             arena: CssArena::new(),
             stack: Vec::with_capacity(16),
+            serials: Vec::with_capacity(16),
             root: None,
             next_handle: 0,
             pending_value: None,
@@ -135,6 +140,7 @@ impl<'p> CssStructBuilder<'p> {
         Self {
             arena: CssArena::with_capacity(rules, decls, selectors, values, keyframes),
             stack: Vec::with_capacity(16),
+            serials: Vec::with_capacity(16),
             root: None,
             next_handle: 0,
             pending_value: None,
@@ -211,7 +217,11 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             values: self.arena.value_slab_count(),
             keyframes: self.arena.keyframe_slab_count(),
             colors: self.arena.color_count(),
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: match (self.serials.last(), self.stack.last()) {
+                (Some(&serial), Some(&frame)) => Some((serial, frame)),
+                _ => None,
+            },
             root: self.root,
             next_handle: self.next_handle,
             pending_value: self.pending_value,
@@ -234,7 +244,21 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 checkpoint.keyframes,
                 checkpoint.colors,
             );
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "CssStructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        self.serials.truncate(checkpoint.stack_len);
+        if let Some((serial, frame)) = checkpoint.top {
+            assert_eq!(
+                self.serials.last().copied(), Some(serial),
+                "CssStructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+            );
+            if let Some(top) = self.stack.last_mut() {
+                *top = frame;
+            }
+        }
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_value = checkpoint.pending_value;
@@ -459,8 +483,9 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
                 OpenFrame::Wrap { value: None }
             }
         };
-        self.stack.push(frame);
         self.next_handle = self.next_handle.wrapping_add(1);
+        self.stack.push(frame);
+        self.serials.push(self.next_handle);
         CompoundHandle::new(self.next_handle, 0)
     }
     fn end_compound(&mut self, _handle: CompoundHandle) {
@@ -468,6 +493,7 @@ impl<'p> StructBuilder for CssStructBuilder<'p> {
             .stack
             .pop()
             .expect("CssStructBuilder::end_compound on empty stack");
+        self.serials.pop();
         match frame {
             OpenFrame::StyleSheet { rules_base } => {
                 let rules: Vec<CssRule<'p>> = self.pending_rules.split_off(rules_base);

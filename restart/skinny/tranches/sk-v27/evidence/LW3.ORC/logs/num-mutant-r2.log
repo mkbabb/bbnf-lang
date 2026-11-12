@@ -1,0 +1,6 @@
+# LW3.ORC1-NUM MUTANT r2 (the scanner ignores reject_leading_zero; json regenerated) at b563412a5 2026-11-12T12:25:30Z (tree 2 modified tracked files)
+$ zsh -c cargo xtask regen --grammar json >/dev/null 2>&1; cargo test -p bbnf --test orc1_json_number -- --nocapture 2>&1 | grep -E "^read |accepted|test result"
+accepted [-01]
+read 411720 texts (48 out of f64's range not judged), 1404 diverging
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.46s
+rc=0

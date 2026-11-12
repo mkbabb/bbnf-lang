@@ -12,6 +12,8 @@ struct OpenFrame {
     start_offset: Option<u32>,
     end_offset: Option<u32>,
     children_base: usize,
+    /// The handle `begin_compound` returned for this frame.
+    serial: u64,
 }
 #[derive(Debug)]
 pub struct BbnfStructBuilder<'p> {
@@ -21,10 +23,12 @@ pub struct BbnfStructBuilder<'p> {
     root: Option<BbnfValue<'p>>,
     next_handle: u64,
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct BbnfStructCheckpoint<'p> {
     compounds: usize,
-    stack: Vec<OpenFrame>,
+    stack_len: usize,
+    /// The frame on top at the checkpoint.
+    top: Option<OpenFrame>,
     root: Option<BbnfValue<'p>>,
     next_handle: u64,
     pending_children_len: usize,
@@ -82,7 +86,8 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
     fn checkpoint(&self) -> Self::Checkpoint {
         BbnfStructCheckpoint {
             compounds: self.arena.compound_count(),
-            stack: self.stack.clone(),
+            stack_len: self.stack.len(),
+            top: self.stack.last().copied(),
             root: self.root,
             next_handle: self.next_handle,
             pending_children_len: self.pending_children.len(),
@@ -91,12 +96,28 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
     #[inline]
     fn rollback(&mut self, checkpoint: Self::Checkpoint) {
         self.arena.truncate(checkpoint.compounds);
-        self.stack = checkpoint.stack;
+        assert!(
+            self.stack.len() >= checkpoint.stack_len,
+            "BbnfStructBuilder::rollback: a compound open at the checkpoint was ended inside the speculative region"
+        );
+        self.stack.truncate(checkpoint.stack_len);
+        if let Some(frame) = checkpoint.top {
+            let top = self
+                .stack
+                .last_mut()
+                .expect("BbnfStructBuilder::rollback: stack_len > 0");
+            assert_eq!(
+                top.serial, frame.serial,
+                "BbnfStructBuilder::rollback: the frame on top at the checkpoint was replaced inside the speculative region"
+            );
+            *top = frame;
+        }
         self.root = checkpoint.root;
         self.next_handle = checkpoint.next_handle;
         self.pending_children.truncate(checkpoint.pending_children_len);
     }
     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
+        self.next_handle = self.next_handle.wrapping_add(1);
         self.stack
             .push(OpenFrame {
                 kind: BbnfCompoundKind::from_layout(layout),
@@ -104,8 +125,8 @@ impl<'p> StructBuilder for BbnfStructBuilder<'p> {
                 start_offset: None,
                 end_offset: None,
                 children_base: self.pending_children.len(),
+                serial: self.next_handle,
             });
-        self.next_handle = self.next_handle.wrapping_add(1);
         CompoundHandle::new(self.next_handle, 0)
     }
     fn end_compound(&mut self, _handle: CompoundHandle) {

@@ -9,8 +9,8 @@
 //! when the oracles expect both accepts and rejects among them.
 //!
 //! A divergence is ruled only by a row of `crates/oracle/ruled.tsv` or of
-//! `SK/grammar/DIVERGENCE.tsv` (for the `bbnf` grammar against the TS front
-//! end); every other divergence is unruled. A row's arm `*` rules the case
+//! `SK/grammar/DIVERGENCE.tsv` (the grammar and oracle its `g1` column
+//! names); every other divergence is unruled. A row's arm `*` rules the case
 //! for every arm. A row names the unit or ruling that owns the divergence and
 //! the authority it rests on; a row never makes a divergence agree.
 
@@ -52,26 +52,40 @@ pub fn rulings() -> anyhow::Result<Vec<Ruling>> {
             authority: f[5].into(),
         });
     }
-    // The TS<->Rust front-end divergences ruled under R-b (LW2.PAR-1): each
-    // row is the TS front end's own reading of a grammar file, so it rules
-    // that file for every arm the TS front end judges (`*`).
+    // The TS<->Rust divergences ruled under R-b. A row's `g1` column names
+    // the grammar and oracle it rules (`<grammar>/<oracle>`). The LW2.PAR-1
+    // rows (`bbnf/ts-frontend`) are the TS front end's own reading of a
+    // grammar file, so each rules that file (`in-tree:<file>`); the rows
+    // filed under ORC-1 (LW3.ORC1-RB) rule G1 cases by their case id, each
+    // with a cure unit and a born-RED falsifier (ORC-1a). A row rules the
+    // case for every arm the oracle judges (`*`).
     let div = std::fs::read_to_string(
         repo_root().join("restart/skinny/tranches/sk-v27/grammar/DIVERGENCE.tsv"),
     )?;
     let mut rows = div.lines().filter(|l| !l.is_empty() && !l.starts_with('#'));
     let head: Vec<&str> = rows.next().unwrap_or("").split('\t').collect();
     let col = |n: &str| head.iter().position(|h| *h == n);
-    let (Some(id), Some(files), Some(fate)) = (col("id"), col("files"), col("fate")) else {
-        anyhow::bail!("DIVERGENCE.tsv: header lacks id/files/fate");
+    let (Some(id), Some(files), Some(fate), Some(g1)) =
+        (col("id"), col("files"), col("fate"), col("g1"))
+    else {
+        anyhow::bail!("DIVERGENCE.tsv: header lacks id/files/fate/g1");
     };
     for r in rows {
         let f: Vec<&str> = r.split('\t').collect();
+        anyhow::ensure!(f.len() == head.len(), "DIVERGENCE.tsv: {} cells in {r}", f.len());
+        let (grammar, oracle) = f[g1]
+            .split_once('/')
+            .ok_or_else(|| anyhow::anyhow!("DIVERGENCE.tsv {}: g1 is not <grammar>/<oracle>", f[id]))?;
         for file in f[files].split(',') {
             out.push(Ruling {
                 arm: "*".into(),
-                grammar: "bbnf".into(),
-                oracle: "ts-frontend".into(),
-                case: format!("in-tree:{file}"),
+                grammar: grammar.into(),
+                oracle: oracle.into(),
+                case: if f[g1] == "bbnf/ts-frontend" {
+                    format!("in-tree:{file}")
+                } else {
+                    file.to_string()
+                },
                 owner: f[fate].into(),
                 authority: format!("SK/grammar/DIVERGENCE.tsv {}", f[id]),
             });

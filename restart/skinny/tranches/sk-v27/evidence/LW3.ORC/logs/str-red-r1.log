@@ -1,0 +1,55 @@
+# LW3.ORC1-STR RED r1 at b1784102c 2026-11-12T12:26:05Z (tree 0 modified tracked files)
+$ cargo test -p bbnf --test orc1_json_string -- --nocapture
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/bbnf-path)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.54s
+     Running tests/orc1_json_string.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_json_string-0dca8e701296e0cf)
+
+running 3 tests
+
+thread 'jsontestsuite_unescaped_control_cases_are_rejected' (48384104) panicked at crates/core/tests/orc1_json_string.rs:68:9:
+accepted "[\"a\0a\"]"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test jsontestsuite_unescaped_control_cases_are_rejected ... FAILED
+read 1080 texts, 256 diverging
+
+thread 'string_bodies_equal_rfc_8259_for_every_ascii_byte' (48384105) panicked at crates/core/tests/orc1_json_string.rs:56:5:
+256 of 1080 texts diverge from RFC 8259; first 20:
+"[\"\0\"]" (U+0000): root accepts / serde_json rejects
+"{\"\0\":1}" (U+0000): root accepts / serde_json rejects
+"[\"a\0b\"]" (U+0000): root accepts / serde_json rejects
+"{\"a\0b\":1}" (U+0000): root accepts / serde_json rejects
+"[\"\\n\0\"]" (U+0000): root accepts / serde_json rejects
+"{\"\\n\0\":1}" (U+0000): root accepts / serde_json rejects
+"[\"\0\\t\"]" (U+0000): root accepts / serde_json rejects
+"{\"\0\\t\":1}" (U+0000): root accepts / serde_json rejects
+"[\"\u{1}\"]" (U+0001): root accepts / serde_json rejects
+"{\"\u{1}\":1}" (U+0001): root accepts / serde_json rejects
+"[\"a\u{1}b\"]" (U+0001): root accepts / serde_json rejects
+"{\"a\u{1}b\":1}" (U+0001): root accepts / serde_json rejects
+"[\"\\n\u{1}\"]" (U+0001): root accepts / serde_json rejects
+"{\"\\n\u{1}\":1}" (U+0001): root accepts / serde_json rejects
+"[\"\u{1}\\t\"]" (U+0001): root accepts / serde_json rejects
+"{\"\u{1}\\t\":1}" (U+0001): root accepts / serde_json rejects
+"[\"\u{2}\"]" (U+0002): root accepts / serde_json rejects
+"{\"\u{2}\":1}" (U+0002): root accepts / serde_json rejects
+"[\"a\u{2}b\"]" (U+0002): root accepts / serde_json rejects
+"{\"a\u{2}b\":1}" (U+0002): root accepts / serde_json rejects
+test string_bodies_equal_rfc_8259_for_every_ascii_byte ... FAILED
+
+thread 'the_grammar_of_record_excludes_the_control_characters' (48384106) panicked at crates/core/tests/orc1_json_string.rs:83:5:
+grammar/json/json.bbnf's string regex admits U+0000-U+001F: string = /"(?:[^"\\]|\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4}))*"/
+test the_grammar_of_record_excludes_the_control_characters ... FAILED
+
+failures:
+
+failures:
+    jsontestsuite_unescaped_control_cases_are_rejected
+    string_bodies_equal_rfc_8259_for_every_ascii_byte
+    the_grammar_of_record_excludes_the_control_characters
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf --test orc1_json_string`
+rc=101

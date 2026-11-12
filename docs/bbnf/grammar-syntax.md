@@ -32,6 +32,8 @@ Match an exact sequence of characters. Delimited by double quotes, single quotes
 `template`
 ```
 
+Inside a string literal, `\n`, `\t`, `\r`, `\f` and `\b` are the line feed, tab, carriage return, form feed and backspace characters, and `\\` is a backslash.
+
 ### Regular Expressions
 
 Match a pattern. Delimited by forward slashes:

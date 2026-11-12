@@ -126,14 +126,20 @@ pub fn grammars() -> Vec<Grammar> {
             path: "grammar/ebnf/ebnf.bbnf",
             entry: Some("grammar"),
             heldout: false,
-            sources: &[],
+            sources: &[Custody {
+                prefix: "ebnf/cases/",
+                suffix: ".txt",
+            }],
         },
         Grammar {
             id: "bnf",
             path: "grammar/bnf/bnf.bbnf",
             entry: Some("grammar"),
             heldout: false,
-            sources: &[],
+            sources: &[Custody {
+                prefix: "bnf/cases/",
+                suffix: ".txt",
+            }],
         },
         Grammar {
             id: "csv",
@@ -150,7 +156,10 @@ pub fn grammars() -> Vec<Grammar> {
             path: "grammar/misc/math.bbnf",
             entry: Some("number"),
             heldout: false,
-            sources: &[],
+            sources: &[Custody {
+                prefix: "math/cases/",
+                suffix: ".txt",
+            }],
         },
         Grammar {
             id: "toml",

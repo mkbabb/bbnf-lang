@@ -1,0 +1,62 @@
+# LW3.ORC1-CKPT RED r1 at cffa076b8 2026-11-12T12:14:15Z (tree 0 modified tracked files)
+$ cargo test -p bbnf --test orc1_checkpoint_depth -- --test-threads=1
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/ir)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/corpus)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/s5b-oracle/red-wt/crates/bbnf-path)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.36s
+     Running tests/orc1_checkpoint_depth.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/orc1_checkpoint_depth-bfd3f78f2e2bc97b)
+
+running 5 tests
+test bbnf_checkpoint_is_independent_of_depth ... FAILED
+test css_l4_checkpoint_is_independent_of_depth ... FAILED
+test google_sheets_checkpoint_is_independent_of_depth ... FAILED
+test json_checkpoint_is_independent_of_depth ... FAILED
+test simple_template_checkpoint_is_independent_of_depth ... FAILED
+
+failures:
+
+---- bbnf_checkpoint_is_independent_of_depth stdout ----
+bbnf balanced: peak 68448901 B at depth 250, 1083781588 B at depth 1000; ratio 15.83
+
+thread 'bbnf_checkpoint_is_independent_of_depth' (48195294) panicked at crates/core/tests/orc1_checkpoint_depth.rs:93:5:
+bbnf balanced: peak heap grows faster than linearly in depth (68448901 B at 250, 1083781588 B at 1000, ratio 15.83): a checkpoint copies the open-frame stack
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- css_l4_checkpoint_is_independent_of_depth stdout ----
+css_l4 balanced: peak 36454426 B at depth 250, 577781020 B at depth 1000; ratio 15.85
+
+thread 'css_l4_checkpoint_is_independent_of_depth' (48195394) panicked at crates/core/tests/orc1_checkpoint_depth.rs:93:5:
+css_l4 balanced: peak heap grows faster than linearly in depth (36454426 B at 250, 577781020 B at 1000, ratio 15.85): a checkpoint copies the open-frame stack
+
+---- google_sheets_checkpoint_is_independent_of_depth stdout ----
+google_sheets balanced: peak 24428662 B at depth 250, 385708075 B at depth 1000; ratio 15.79
+
+thread 'google_sheets_checkpoint_is_independent_of_depth' (48195419) panicked at crates/core/tests/orc1_checkpoint_depth.rs:93:5:
+google_sheets balanced: peak heap grows faster than linearly in depth (24428662 B at 250, 385708075 B at 1000, ratio 15.79): a checkpoint copies the open-frame stack
+
+---- json_checkpoint_is_independent_of_depth stdout ----
+json unclosed: peak 2503538 B at depth 250, 40008008 B at depth 1000; ratio 15.98
+
+thread 'json_checkpoint_is_independent_of_depth' (48195428) panicked at crates/core/tests/orc1_checkpoint_depth.rs:93:5:
+json unclosed: peak heap grows faster than linearly in depth (2503538 B at 250, 40008008 B at 1000, ratio 15.98): a checkpoint copies the open-frame stack
+
+---- simple_template_checkpoint_is_independent_of_depth stdout ----
+ebnf unclosed: peak 100262229 B at depth 250, 1582272685 B at depth 1000; ratio 15.78
+
+thread 'simple_template_checkpoint_is_independent_of_depth' (48195431) panicked at crates/core/tests/orc1_checkpoint_depth.rs:93:5:
+ebnf unclosed: peak heap grows faster than linearly in depth (100262229 B at 250, 1582272685 B at 1000, ratio 15.78): a checkpoint copies the open-frame stack
+
+
+failures:
+    bbnf_checkpoint_is_independent_of_depth
+    css_l4_checkpoint_is_independent_of_depth
+    google_sheets_checkpoint_is_independent_of_depth
+    json_checkpoint_is_independent_of_depth
+    simple_template_checkpoint_is_independent_of_depth
+
+test result: FAILED. 0 passed; 5 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.67s
+
+error: test failed, to rerun pass `-p bbnf --test orc1_checkpoint_depth`
+rc=101

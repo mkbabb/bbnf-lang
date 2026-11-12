@@ -1,0 +1,126 @@
+# COMP-3a G1 reading r2 (release g1; corpus-v3 verified) at ea8997adb 2026-11-12T16:31:59Z (tree 0 modified tracked files)
+$ /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/release/g1 --all --heldout --manifest grammar/MANIFEST
+manifest=grammar/MANIFEST sha256=a153e3e3e18029c95333e85952f54546d9af6f28d16a7e5774a5e4aa982bdbd8
+grammar=bbnf arm=root oracles=1 inputs=70 accept=67 reject=3 refused=0 crash=0 divergences=22 unruled=0 self-check=ok
+  oracle=ts-frontend judged=70 agree=48 diverge=22 ruled=22
+grammar=bbnf arm=ts-package oracles=1 inputs=70 accept=67 reject=3 refused=0 crash=0 divergences=22 unruled=0 self-check=ok
+  oracle=ts-frontend judged=70 agree=48 diverge=22 ruled=22
+grammar=json arm=root oracles=3 inputs=323 accept=111 reject=212 refused=0 crash=0 divergences=12 unruled=0 self-check=ok
+  oracle=jsontestsuite judged=283 agree=283 diverge=0 ruled=0
+  oracle=serde_json judged=104 agree=104 diverge=0 ruled=0
+  oracle=ts-package judged=323 agree=311 diverge=12 ruled=12
+grammar=json arm=ts-package oracles=2 inputs=323 accept=121 reject=202 refused=0 crash=0 divergences=1 unruled=0 self-check=ok
+  oracle=jsontestsuite judged=283 agree=282 diverge=1 ruled=1
+  oracle=serde_json judged=0 agree=0 diverge=0 ruled=0
+grammar=css_l4 arm=root oracles=1 inputs=3 accept=3 reject=0 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=valuejs-leaves judged=0 agree=0 diverge=0 ruled=0
+grammar=css_l4 arm=ts-package oracles=1 inputs=3 accept=0 reject=0 refused=3 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=valuejs-leaves judged=0 agree=0 diverge=0 ruled=0
+grammar=css_l4 arm=root oracle=valuejs-leaves leaves=115 cases=14386 refused-leaves=38 diverging-leaves=39 diverging-cases=4578 ruled-leaves=39 unruled=0
+grammar=css_pretty arm=root oracles=1 inputs=3 accept=3 reject=0 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=valuejs-leaves judged=0 agree=0 diverge=0 ruled=0
+grammar=css_pretty arm=ts-package oracles=1 inputs=3 accept=0 reject=0 refused=3 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=valuejs-leaves judged=0 agree=0 diverge=0 ruled=0
+grammar=css_pretty arm=root oracle=valuejs-leaves leaves=115 cases=14386 refused-leaves=38 diverging-leaves=39 diverging-cases=4578 ruled-leaves=39 unruled=0
+grammar=google_sheets arm=root oracles=1 inputs=3 accept=3 reject=0 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=ts-package judged=3 agree=3 diverge=0 ruled=0
+grammar=google_sheets arm=ts-package oracles=0 inputs=3 accept=3 reject=0 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+grammar=ebnf arm=root oracles=2 inputs=617 accept=90 reject=527 refused=0 crash=0 divergences=384 unruled=0 self-check=ok
+  oracle=peggy judged=617 agree=264 diverge=353 ruled=353
+  oracle=ts-package judged=617 agree=586 diverge=31 ruled=31
+grammar=ebnf arm=ts-package oracles=1 inputs=617 accept=61 reject=556 refused=0 crash=0 divergences=374 unruled=0 self-check=ok
+  oracle=peggy judged=617 agree=243 diverge=374 ruled=374
+grammar=bnf arm=root oracles=2 inputs=616 accept=139 reject=477 refused=0 crash=0 divergences=280 unruled=0 self-check=ok
+  oracle=peggy judged=616 agree=476 diverge=140 ruled=140
+  oracle=ts-package judged=616 agree=476 diverge=140 ruled=140
+grammar=bnf arm=ts-package oracles=1 inputs=616 accept=233 reject=383 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=peggy judged=616 agree=616 diverge=0 ruled=0
+grammar=csv arm=root oracles=1 inputs=2 accept=0 reject=2 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=ts-package judged=2 agree=2 diverge=0 ruled=0
+grammar=csv arm=ts-package oracles=0 inputs=2 accept=0 reject=2 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+grammar=math arm=root oracles=2 inputs=623 accept=459 reject=164 refused=0 crash=0 divergences=12 unruled=0 self-check=ok
+  oracle=peggy judged=623 agree=617 diverge=6 ruled=6
+  oracle=ts-package judged=623 agree=617 diverge=6 ruled=6
+grammar=math arm=ts-package oracles=1 inputs=623 accept=453 reject=170 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=peggy judged=623 agree=623 diverge=0 ruled=0
+grammar=toml arm=root unsupported
+grammar=toml arm=ts-package oracles=1 inputs=679 accept=300 reject=379 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=toml-test judged=679 agree=679 diverge=0 ruled=0
+grammar=graphql arm=root unsupported
+grammar=graphql arm=ts-package oracles=1 inputs=1725 accept=905 reject=820 refused=0 crash=0 divergences=1 unruled=0 self-check=ok
+  oracle=graphql-js judged=1725 agree=1724 diverge=1 ruled=1
+grammar=r7rs_datum arm=root unsupported
+grammar=r7rs_datum arm=ts-package oracles=1 inputs=460 accept=430 reject=30 refused=0 crash=0 divergences=1 unruled=0 self-check=ok
+  oracle=lexpr judged=419 agree=418 diverge=1 ruled=1
+manifest=crates/core/tests/fixtures/deterministic.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=crates/gorgeous/grammar/bbnf/bbnf.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=crates/gorgeous/grammar/bnf/bnf.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=crates/gorgeous/grammar/css/pretty.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=crates/gorgeous/grammar/ebnf/ebnf.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=crates/gorgeous/grammar/google-sheets/google-sheets.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=crates/gorgeous/grammar/json/json.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=crates/gorgeous/tests/corpus/g3/bbnf/comments-factor.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=crates/gorgeous/tests/corpus/g3/bbnf/comments-top.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=crates/gorgeous/tests/corpus/g3/bbnf/plain.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/bbnf/bbnf.bbnf arm=ts-package compiled=yes inputs=70 accept=67 reject=3
+manifest=grammar/bbnf/expressions.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/bbnf/types.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/bnf/bnf.bbnf arm=ts-package compiled=yes inputs=616 accept=233 reject=383
+manifest=grammar/css/l4/color.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=grammar/css/l4/easing.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/filters.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/func-body.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=grammar/css/l4/gradients.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=grammar/css/l4/keyframes.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/keywords.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/media.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/properties.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=grammar/css/l4/selectors.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/stylesheet.bbnf arm=ts-package compiled=no inputs=3 accept=0 reject=0
+manifest=grammar/css/l4/tokens.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/transforms.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/value-unit.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/css/l4/values.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=grammar/css/pretty.bbnf arm=ts-package compiled=no inputs=3 accept=0 reject=0
+manifest=grammar/ebnf/ebnf.bbnf arm=ts-package compiled=yes inputs=617 accept=61 reject=556
+manifest=grammar/google-sheets/google-sheets.bbnf arm=ts-package compiled=yes inputs=3 accept=3 reject=0
+manifest=grammar/heldout/graphql.bbnf arm=ts-package compiled=yes inputs=1725 accept=905 reject=820
+manifest=grammar/heldout/r7rs-datum.bbnf arm=ts-package compiled=yes inputs=460 accept=430 reject=30
+manifest=grammar/heldout/toml.bbnf arm=ts-package compiled=yes inputs=679 accept=300 reject=379
+manifest=grammar/json/json.bbnf arm=ts-package compiled=yes inputs=323 accept=121 reject=202
+manifest=grammar/misc/csv.bbnf arm=ts-package compiled=yes inputs=2 accept=0 reject=2
+manifest=grammar/misc/emoji.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=grammar/misc/g4.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/misc/json-commented.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/misc/math-ambiguous.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=grammar/misc/math.bbnf arm=ts-package compiled=yes inputs=623 accept=453 reject=170
+manifest=grammar/misc/regex.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=skinny/grammars/json.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=typescript/test/fixtures/grammar/css/css-color.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/grammar/css/css-keyframes.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/grammar/css/css-selectors.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/css/css-stylesheet.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/css/css-tokens.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/css/css-value-unit.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/grammar/css/css-values.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/bbnf.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/bnf.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/csv.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/ebnf.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/emoji.bbnf arm=ts-package compiled=no inputs=1 accept=0 reject=0
+manifest=typescript/test/fixtures/grammar/lang/g4.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/google-sheets.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/json-commented.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/json.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/grammar/lang/math.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/grammar/lang/regex.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/value-js/color.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/value-js/css.bbnf arm=ts-package compiled=yes inputs=1 accept=0 reject=1
+manifest=typescript/test/fixtures/value-js/math.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/value-js/stylesheet.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/value-js/tokens.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest=typescript/test/fixtures/value-js/value.bbnf arm=ts-package compiled=yes inputs=1 accept=1 reject=0
+manifest-total arm=ts-package grammars=70 compiled=57 refused=13
+rc=0

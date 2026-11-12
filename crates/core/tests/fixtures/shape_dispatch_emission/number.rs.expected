@@ -8,7 +8,7 @@
 /// is the byte the dispatcher already matched; passing it
 /// avoids a redundant re-read for the sign check.
 #[inline(always)]
-#[allow(non_snake_case, clippy::too_many_arguments, unused_variables)]
+#[allow(non_snake_case, clippy::too_many_arguments, unused_variables, unused_mut)]
 pub fn parse_number_JsonFixture_number<'p>(
     input: &'p [u8],
     p: &mut usize,
@@ -32,13 +32,17 @@ pub fn parse_number_JsonFixture_number<'p>(
     let int_start = *p;
     let mut mantissa: u64 = 0;
     let mut many_digits = false;
-    while *p < len {
-        let b = input[*p];
-        if b.is_ascii_digit() {
-            mantissa = mantissa.wrapping_mul(10).wrapping_add((b - b'0') as u64);
-            *p += 1;
-        } else {
-            break;
+    if input.get(*p) == Some(&b'0') {
+        *p += 1;
+    } else {
+        while *p < len {
+            let b = input[*p];
+            if b.is_ascii_digit() {
+                mantissa = mantissa.wrapping_mul(10).wrapping_add((b - b'0') as u64);
+                *p += 1;
+            } else {
+                break;
+            }
         }
     }
     if *p == int_start {
@@ -51,7 +55,8 @@ pub fn parse_number_JsonFixture_number<'p>(
         many_digits = true;
     }
     let mut fractional_digit_count: i64 = 0;
-    if input.get(*p) == Some(&b'.') {
+    if input.get(*p) == Some(&b'.') && input.get(*p + 1).is_some_and(u8::is_ascii_digit)
+    {
         *p += 1;
         let frac_start = *p;
         while *p < len {
@@ -64,11 +69,6 @@ pub fn parse_number_JsonFixture_number<'p>(
             }
         }
         fractional_digit_count = (*p - frac_start) as i64;
-        if fractional_digit_count == 0 {
-            return Err(crate::runtime::DtaError::Syntax {
-                offset: start as u32,
-            });
-        }
         if int_digit_count as i64 + fractional_digit_count > 19 {
             many_digits = true;
         }
@@ -76,35 +76,27 @@ pub fn parse_number_JsonFixture_number<'p>(
     let mut exponent: i64 = -fractional_digit_count;
     let exp_byte = input.get(*p).copied();
     if exp_byte == Some(b'e') || exp_byte == Some(b'E') {
-        *p += 1;
-        let exp_negative = match input.get(*p) {
-            Some(b'+') => {
-                *p += 1;
-                false
-            }
-            Some(b'-') => {
-                *p += 1;
-                true
-            }
-            _ => false,
+        let (exp_negative, digits_at) = match input.get(*p + 1) {
+            Some(b'+') => (false, *p + 2),
+            Some(b'-') => (true, *p + 2),
+            _ => (false, *p + 1),
         };
-        let exp_start = *p;
-        let mut exp_val: i64 = 0;
-        while *p < len {
-            let b = input[*p];
-            if b.is_ascii_digit() {
-                exp_val = exp_val.saturating_mul(10).saturating_add((b - b'0') as i64);
-                *p += 1;
-            } else {
-                break;
+        if input.get(digits_at).is_some_and(u8::is_ascii_digit) {
+            *p = digits_at;
+            let mut exp_val: i64 = 0;
+            while *p < len {
+                let b = input[*p];
+                if b.is_ascii_digit() {
+                    exp_val = exp_val
+                        .saturating_mul(10)
+                        .saturating_add((b - b'0') as i64);
+                    *p += 1;
+                } else {
+                    break;
+                }
             }
+            exponent += if exp_negative { -exp_val } else { exp_val };
         }
-        if *p == exp_start {
-            return Err(crate::runtime::DtaError::Syntax {
-                offset: start as u32,
-            });
-        }
-        exponent += if exp_negative { -exp_val } else { exp_val };
     }
     let end = *p;
     let bytes = &input[start..end];

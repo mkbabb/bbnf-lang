@@ -49,10 +49,10 @@ jobs:
       - name: blackhole the Ubuntu archive hosts
         shell: bash
         run: |
-          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com sourceware.org; do
+          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com; do
             printf '0.0.0.0 %s\n:: %s\n' "$h" "$h" | sudo tee -a /etc/hosts >/dev/null
           done
-          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com sourceware.org; do
+          for h in azure.archive.ubuntu.com archive.ubuntu.com security.ubuntu.com; do
             echo "$h -> $(getent ahosts "$h" | awk '{print $1}' | sort -u | tr '\n' ' ')"
             if curl -fsS --max-time 10 -o /dev/null "http://$h/ubuntu/"; then
               echo "blackhole failed: $h is reachable"; exit 1
@@ -75,7 +75,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/valgrind
-          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-cold-fc
+          key: valgrind-${{ env.VALGRIND_VERSION }}-${{ env.VALGRIND_SHA256 }}-ubuntu-26.04-${{ runner.arch }}-cold-a1
 
       - name: build the pinned valgrind (cache miss)
         if: steps.valgrind-cache.outputs.cache-hit != 'true'

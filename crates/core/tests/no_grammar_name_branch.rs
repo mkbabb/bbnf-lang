@@ -8,16 +8,23 @@
 //! and `EmitStrategy::for_grammar_with_manifest` against
 //! `PRODUCTION_MANIFEST_TABLE`.
 //!
-//! This file is the gate. It walks the production source tree under
+//! This file is the gate. It walks the plan-deciding source tree under
 //!
-//! - `crates/core/src/runtime/**`
-//! - `crates/core/src/backend/rust/emitter/shapes/**`
+//! - `crates/ir/src/passes/**`
+//! - `crates/core/src/backend/**`
+//! - `crates/core/src/compiler/**`
 //!
-//! (excluding `generated/`, `tests/`, and `#[cfg(test)]` blocks) and
-//! fails closed if any literal-rule-name match arm appears. The
-//! exclusions cover code that legitimately ships rule-name keys for
-//! diagnostic / serialisation purposes (e.g. layout names emitted into
-//! the JSON audit artefact).
+//! (the roots of LW3-ORDER row COMP-5a; excluding `generated/`,
+//! `tests/`, and `#[cfg(test)]` blocks) and fails closed on any of
+//! three detectors (sk-v27 LW3.COMP-5a):
+//!
+//! - **arm**: a match arm whose pattern holds a literal rule-name or
+//!   parser-ident string (the AZ-IV.W1 detector);
+//! - **(a) ident-keyed lookup**: a call into a table keyed by the
+//!   grammar's parser ident (`for_grammar`, `for_grammar_with_manifest`,
+//!   `matches_ident`, `PRODUCTION_MANIFEST_TABLE`);
+//! - **(b) grammar-named variant**: an enum variant declared, or matched
+//!   in an arm, whose name folds (case and `_` ignored) to a grammar name.
 //!
 //! When this test fails, the offending file:line and matched literal
 //! are printed; the fix is to migrate the branch to a registry/typed
@@ -99,12 +106,37 @@ const FORBIDDEN_PARSER_IDENTS: &[&str] = &[
     "CssPrettyGrammar",
 ];
 
+/// sk-v27 LW3.COMP-5a detector (b): grammar names (the F6 aliases of
+/// [`FORBIDDEN_RULE_NAMES`] that name a grammar, and `bbnf`). An enum
+/// variant spelled as one of these is a grammar-keyed tag. `value` is an
+/// entry-rule name, not a grammar name, and stays with the arm detector.
+const FORBIDDEN_GRAMMAR_NAMES: &[&str] = &[
+    "json",
+    "css_l4",
+    "cssL4",
+    "spreadsheet",
+    "sheets",
+    "google_sheets",
+    "bbnf",
+];
+
+/// sk-v27 LW3.COMP-5a detector (a): the API of a table keyed by the
+/// grammar's parser ident. Any call into it resolves behaviour from the
+/// grammar's name.
+const IDENT_KEYED_LOOKUPS: &[&str] = &[
+    "for_grammar(",
+    "for_grammar_with_manifest(",
+    "matches_ident(",
+    "PRODUCTION_MANIFEST_TABLE",
+];
+
 /// Source roots covered by the static scan, relative to the
-/// workspace root. Per AZ-IV §Hard Gates 17, the production runtime
-/// + shape emitter modules are the gate scope.
+/// workspace root: LW3-ORDER row COMP-5a's three roots, every module
+/// that takes a plan or emission decision.
 const SCAN_ROOTS: &[&str] = &[
-    "crates/core/src/runtime",
-    "crates/core/src/backend/rust/emitter/shapes",
+    "crates/ir/src/passes",
+    "crates/core/src/backend",
+    "crates/core/src/compiler",
 ];
 
 /// Path-fragment exclusions inside the scan roots. `generated/` is
@@ -225,62 +257,103 @@ fn scan_file(path: &Path, ws_root: &Path) -> Vec<OverFitHit> {
         Err(_) => return Vec::new(),
     };
     let src = strip_cfg_test(&raw);
+    let rel = path
+        .strip_prefix(ws_root)
+        .map(Path::to_string_lossy)
+        .unwrap_or_else(|_| path.to_string_lossy())
+        .into_owned();
     let mut hits = Vec::new();
-    for (idx, line) in src.lines().enumerate() {
+    for (idx, full_line) in src.lines().enumerate() {
+        // Comments name the retired sites; only code is read.
+        let line = full_line.split("//").next().unwrap_or_default();
+        let mut hit = |matched: String| {
+            hits.push(OverFitHit {
+                file: rel.clone(),
+                line: idx + 1,
+                matched,
+                excerpt: line.trim().to_string(),
+            })
+        };
+        // Detector (a): a call into an ident-keyed table.
+        for lookup in IDENT_KEYED_LOOKUPS {
+            if contains_word(line, lookup) {
+                hit(format!("ident-keyed lookup `{lookup}`"));
+            }
+        }
+        // Detector (b): a variant declaration (`Name,` `Name(` `Name {`
+        // `Name = 0` opening the line) or a `Path::Name` in an arm pattern.
+        let mut variants: Vec<&str> = Vec::new();
+        let trimmed = line.trim_start();
+        let head = leading_ident(trimmed);
+        if head.starts_with(|c: char| c.is_ascii_uppercase()) {
+            let rest = trimmed[head.len()..].trim_start();
+            if rest.is_empty() || rest.starts_with([',', '(', '{', '=']) && !rest.starts_with("=>")
+            {
+                variants.push(head);
+            }
+        }
         // Look for `match arm` patterns: a quoted literal that the
         // FORBIDDEN_* tables identifies, on a line containing `=>`
         // (the match-arm anchor).
-        let arrow_pos = match line.find("=>") {
-            Some(p) => p,
-            None => continue,
-        };
-        let pattern_part = &line[..arrow_pos];
-        for needle in FORBIDDEN_RULE_NAMES
-            .iter()
-            .chain(FORBIDDEN_PARSER_IDENTS.iter())
-        {
-            let quoted = format!("\"{needle}\"");
-            if pattern_part.contains(quoted.as_str()) {
-                let rel = path
-                    .strip_prefix(ws_root)
-                    .map(Path::to_string_lossy)
-                    .unwrap_or_else(|_| path.to_string_lossy())
-                    .into_owned();
-                hits.push(OverFitHit {
-                    file: rel,
-                    line: idx + 1,
-                    matched: (*needle).to_string(),
-                    excerpt: line.trim().to_string(),
-                });
+        if let Some(arrow_pos) = line.find("=>") {
+            let pattern_part = &line[..arrow_pos];
+            for needle in FORBIDDEN_RULE_NAMES
+                .iter()
+                .chain(FORBIDDEN_PARSER_IDENTS.iter())
+            {
+                let quoted = format!("\"{needle}\"");
+                if pattern_part.contains(quoted.as_str()) {
+                    hit((*needle).to_string());
+                }
+            }
+            variants.extend(
+                pattern_part
+                    .split("::")
+                    .skip(1)
+                    .map(leading_ident)
+                    .filter(|name| name.starts_with(|c: char| c.is_ascii_uppercase())),
+            );
+        }
+        for variant in variants {
+            if FORBIDDEN_GRAMMAR_NAMES
+                .iter()
+                .any(|name| fold(name) == fold(variant))
+            {
+                hit(format!("grammar-named variant `{variant}`"));
             }
         }
     }
     hits
 }
 
-/// AZ-IV.W1 wave-level closure: the W1.1 + W1.7 slices delete the
-/// `from_rule_name` discriminator tables and the
-/// `(layout.kind, rule_name)` builder dispatches. Until those slices
-/// merge, the static scan reports the audit's known hit population
-/// (Fermat F1 / F2 / F3) — those hits are owned by W1.1 / W1.7,
-/// not by W1.5. The W1.5 / W1.8 contributions tracked here are
-/// EmitStrategy (F5, replaced by `PRODUCTION_MANIFEST_TABLE`) and
-/// pipeline audit-tag aliasing (F6, replaced by
-/// `GrammarAuditTag::Custom(entry_name)`); both have already
-/// migrated.
-///
-/// The test runs the scan unconditionally and reports its result;
-/// the assertion fails closed at W1 wave close, which is when
-/// every slice's deletions land. Until the runtime slice merges,
-/// the assertion is `#[ignore]`d with a deadline tracking the W1
-/// hard-gate close. The scan body still runs as the
-/// `wave_scan_emits_status` companion test below so the gate stays
-/// alive (no-op) for CI artefact purposes.
+fn leading_ident(s: &str) -> &str {
+    let end = s
+        .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+        .unwrap_or(s.len());
+    &s[..end]
+}
+
+fn fold(name: &str) -> String {
+    name.chars()
+        .filter(|&c| c != '_')
+        .map(|c| c.to_ascii_lowercase())
+        .collect()
+}
+
+/// `needle` occurs in `line` not as the tail of a longer identifier.
+fn contains_word(line: &str, needle: &str) -> bool {
+    line.match_indices(needle).any(|(at, _)| {
+        !line[..at]
+            .chars()
+            .next_back()
+            .is_some_and(|c| c.is_ascii_alphanumeric() || c == '_')
+    })
+}
+
+/// The I7 gate (sk-v27 LW3.COMP-5a): it runs in the suite and fails
+/// closed on any hit of the three detectors over [`SCAN_ROOTS`]. No
+/// hit is allow-listed; a hit is cured at its site.
 #[test]
-#[ignore = "AZ-IV.W1 wave gate — green after W1.1 + W1.7 deletions \
-            of from_rule_name + (layout.kind, rule_name) match arms \
-            land; fix-or-merge owner: W1.1 worktree; \
-            deadline: W1 close commit"]
 fn no_grammar_name_branch_in_production_runtime_or_shape_emitter() {
     let (hits, files) = run_scan();
     if !hits.is_empty() {
@@ -289,7 +362,7 @@ fn no_grammar_name_branch_in_production_runtime_or_shape_emitter() {
              branches on a literal grammar parser-struct ident or rule-name string. Per \
              `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a \
              registry/typed-inference discriminator (StructRegistry::compound_kind, \
-             TypeDesc::*, or PRODUCTION_MANIFEST_TABLE). Hits:\n",
+             TypeDesc::*) or data the caller supplies with the grammar. Hits:\n",
         );
         for hit in &hits {
             report.push_str(&format!(
@@ -303,13 +376,10 @@ fn no_grammar_name_branch_in_production_runtime_or_shape_emitter() {
     }
 }
 
-/// Companion test that always runs and emits the scan summary as a
-/// status line in nextest output. Lets CI capture file count +
-/// hit count even while the wave-level gate above is `#[ignore]`d.
-/// Asserts the scan finds at least one production source root —
-/// the runtime + shape-emitter trees must exist and contain Rust
-/// files; an empty scan is a path-resolution defect, not an
-/// overfit-clean signal.
+/// Companion test that emits the scan summary as a status line in
+/// nextest output (file count + hit count). Asserts the scan finds at
+/// least one production source file; an empty scan is a
+/// path-resolution defect, not an overfit-clean signal.
 #[test]
 fn wave_scan_emits_status() {
     let (hits, files) = run_scan();
@@ -320,8 +390,7 @@ fn wave_scan_emits_status() {
     );
     eprintln!(
         "no-grammar-name-branch scan: {files} files under {} roots, {} hits \
-         (gate green = 0 hits at W1 close; current hits are W1.1/W1.7 \
-         carries)",
+         (gate green = 0 hits)",
         SCAN_ROOTS.len(),
         hits.len(),
     );

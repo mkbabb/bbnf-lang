@@ -1,0 +1,4 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+(lldb) target create "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/manifest_digest-c336db186ea44e96"
+Current executable set to '/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/manifest_digest-c336db186ea44e96' (arm64).
+(lldb) process launch -- --exact manifest_digest --test-threads 1

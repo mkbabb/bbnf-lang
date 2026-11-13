@@ -1,0 +1,8 @@
+bl=12847b8b4c1448fa655c8e5df2f39565a3502a22 tree=c4e54026756a7a8c38f0aca0e44244c793d775c2
+rc=0 pass=6 fail=0
+PASS bbnf-ir passes::call_mode::csp_contract::inline_domain_join_is_a_lattice_join_over_generated_cases
+PASS bbnf-ir passes::call_mode::csp_contract::inline_domain_satisfies_the_lattice_laws
+PASS bbnf-ir passes::csp_domains::lattice_laws::bool_domain_join_is_a_lattice_join
+PASS bbnf-ir passes::csp_domains::lattice_laws::charset_domain_join_is_a_lattice_join
+PASS bbnf-ir passes::lattice_laws::bitset_lattice_domain_satisfies_the_lattice_laws
+PASS bbnf-ir passes::sets::dispatch::domain::lattice_laws::dispatch_domain_join_is_a_lattice_join

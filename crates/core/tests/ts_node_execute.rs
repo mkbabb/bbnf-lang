@@ -22,11 +22,11 @@
 //!
 //! ## Audit
 //!
-//! On success the test writes a one-line audit summary to
-//! `docs/tranches/AZ-IV/audit/W5-node-execute.txt` capturing the Node
-//! version, the leaf bytes (as JSON-quoted), the commit hash, and a
-//! UTC timestamp. The orchestrator consumes this artefact in the W5
-//! verification matrix.
+//! The test writes a one-line audit summary to `W5-node-execute.txt`
+//! under `CARGO_TARGET_TMPDIR` capturing the Node version, the leaf bytes
+//! (as JSON-quoted), the commit hash, and a UTC timestamp. A test run never
+//! writes a tracked file (LW3.TREE-1); the AZ-IV record
+//! `docs/tranches/AZ-IV/audit/W5-node-execute.txt` stays as committed.
 
 use bbnf::grammar::generated::json::JsonParser;
 use bbnf::path::ir::{OwnedPathSegment, TypedPath};
@@ -38,11 +38,10 @@ use bbnf::runtime::json::parse_with;
 use bbnf::runtime::path::{Path as LegacyPath, PathSegment as LegacySegment};
 
 /// Best-effort audit writer. Records the W5.2 outcome (pass or
-/// W1-gap evidence) to `docs/tranches/AZ-IV/audit/W5-node-execute.txt`
-/// regardless of whether the byte-for-byte assertion holds. The
-/// orchestrator consumes the artefact in the W5 verification matrix.
+/// W1-gap evidence) to `W5-node-execute.txt` under `CARGO_TARGET_TMPDIR`
+/// regardless of whether the byte-for-byte assertion holds.
 fn write_audit(node_version: &str, body: &str) {
-    let audit_dir = std::path::Path::new("../../docs/tranches/AZ-IV/audit");
+    let audit_dir = std::path::Path::new(env!("CARGO_TARGET_TMPDIR"));
     if std::fs::create_dir_all(audit_dir).is_ok() {
         let commit = current_commit_hash();
         let ts_now = std::time::SystemTime::now()

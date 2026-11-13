@@ -530,6 +530,13 @@ pub trait Emitter {
     fn emit_prettify_silent(&mut self, _expr: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
         unimplemented!("prettify not supported")
     }
+    /// Negative lookahead: succeed, consuming nothing and emitting nothing,
+    /// iff the expression fails here; state and builder are restored win
+    /// or lose. The recognizer's `Minus` excluded side and `Negate` read
+    /// the same way (sk-v27 LW3.S3c-PP).
+    fn emit_prettify_not(&mut self, _expr: Self::Output, _ctx: &mut Self::Ctx) -> Self::Output {
+        unimplemented!("prettify not supported")
+    }
     /// Emit a pprint custom-sep call inline at this position. `sep` is the
     /// flat-mode text; break-mode uses empty `brk` (newline + indent) per
     /// the convention established in `emit_separator_ops`.

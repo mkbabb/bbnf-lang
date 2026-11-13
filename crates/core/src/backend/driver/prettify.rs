@@ -196,17 +196,19 @@ fn compile_prettify_node<E: Emitter>(
         }
 
         IrNode::Minus(left, right) => {
-            // Minus: try right (excluded set), reject if match, else try left.
+            // Minus: if the excluded side matches here, reject; else parse
+            // the left. The excluded side was an optional attempt that kept
+            // its match, so `character - '"'` consumed the closing quote
+            // and ran on (sk-v27 LW3.S3c-PP: ebnf stopped after a rule).
             let right_out = compile_prettify_node(right, current_rule, plans, ir, emitter, ctx);
             let left_out = compile_prettify_node(left, current_rule, plans, ir, emitter, ctx);
-            // Wrap in checkpoint: try right, rollback, then left.
-            let right_attempt = emitter.emit_prettify_attempt(right_out, true, false, ctx);
-            emitter.emit_prettify_seq(vec![right_attempt, left_out], ctx)
+            let excluded = emitter.emit_prettify_not(right_out, ctx);
+            emitter.emit_prettify_seq(vec![excluded, left_out], ctx)
         }
 
         IrNode::Negate(inner) => {
             let inner_out = compile_prettify_node(inner, current_rule, plans, ir, emitter, ctx);
-            emitter.emit_prettify_attempt(inner_out, true, false, ctx)
+            emitter.emit_prettify_not(inner_out, ctx)
         }
 
         IrNode::TokenDispatch {

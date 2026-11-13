@@ -70,6 +70,25 @@ impl RustEmitter {
         }}
     }
 
+    pub(in crate::backend::rust::emitter) fn emit_prettify_not_impl(
+        &mut self,
+        expr: TokenStream,
+        ctx: &mut RustEmitCtx,
+    ) -> TokenStream {
+        let state_cp = ctx.fresh("not_cp");
+        let builder_cp = ctx.fresh("not_bcp");
+        quote! {{
+            let #state_cp = state.offset;
+            let #builder_cp = __builder.checkpoint();
+            let __ok = (|| -> bool { #expr; true })();
+            __builder.restore(#builder_cp);
+            state.offset = #state_cp;
+            if __ok {
+                return false;
+            }
+        }}
+    }
+
     pub(in crate::backend::rust::emitter) fn emit_prettify_attempt_impl(
         &mut self,
         expr: TokenStream,

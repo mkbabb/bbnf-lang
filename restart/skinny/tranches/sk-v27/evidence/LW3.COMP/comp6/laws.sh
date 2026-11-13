@@ -13,7 +13,7 @@ git diff --quiet HEAD -- crates/ir/src || echo "worktree edits under crates/ir/s
 cargo nextest run -p bbnf-ir --lib --locked --no-fail-fast --retries 0 \
   -E 'test(lattice) | test(/csp_contract::inline_domain/)' > "$L/nextest.log" 2>&1
 rc=$?
-grep -E '^ +(PASS|FAIL) ' "$L/nextest.log" | sed -E 's/^ +//; s/\[[^]]*\] \([^)]*\) //' | sort > "$L/tests.txt"
+grep -E '^ +(PASS|FAIL) ' "$L/nextest.log" | sed -E 's/^ +//; s/\[[^]]*\] \([^)]*\) //' | sort -u > "$L/tests.txt"
 grep -oE 'law: "[^"]*"' "$L/nextest.log" | sort | uniq -c > "$L/laws-broken.txt"
 pass=$(grep -c '^PASS' "$L/tests.txt"); fail=$(grep -c '^FAIL' "$L/tests.txt")
 echo "rc=$rc pass=$pass fail=$fail" | tee "$L/result.txt"; cat "$L/tests.txt" "$L/laws-broken.txt"

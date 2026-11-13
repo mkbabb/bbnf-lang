@@ -1,0 +1,152 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.79s
+────────────
+ Nextest run ID 376532ab-4019-4421-9f1b-333019244bf0 with nextest profile: default
+    Starting 63 tests across 1 binary (31 tests skipped)
+        PASS [   0.019s] ( 1/63) bbnf compiler::verify::mutants::dependency_order_drops_a_component
+        PASS [   0.020s] ( 2/63) bbnf compiler::verify::mutants::dependency_edges_unsorted
+        PASS [   0.022s] ( 3/63) bbnf compiler::verify::mutants::dependency_recursive_component_split
+        PASS [   0.023s] ( 4/63) bbnf compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator
+        PASS [   0.027s] ( 5/63) bbnf compiler::verify::mutants::dependency_component_index_wrong
+        PASS [   0.027s] ( 6/63) bbnf compiler::verify::mutants::dependency_rule_in_two_components
+        PASS [   0.028s] ( 7/63) bbnf compiler::verify::mutants::events_literal_site_names_a_choice
+        PASS [   0.033s] ( 8/63) bbnf compiler::verify::mutants::events_field_site_names_another_rule
+        PASS [   0.035s] ( 9/63) bbnf compiler::verify::mutants::events_input_ends_before_the_last_site
+        PASS [   0.035s] (10/63) bbnf compiler::verify::mutants::events_from_another_revision
+        PASS [   0.037s] (11/63) bbnf compiler::verify::mutants::dependency_edge_row_missing
+        PASS [   0.036s] (12/63) bbnf compiler::verify::mutants::events_site_node_dangles
+        PASS [   0.040s] (13/63) bbnf compiler::verify::mutants::dependency_order_reversed
+        PASS [   0.040s] (14/63) bbnf compiler::verify::mutants::events_rule_entered_twice
+        PASS [   0.044s] (15/63) bbnf compiler::verify::mutants::events_schema_drifts
+        PASS [   0.047s] (16/63) bbnf compiler::verify::mutants::dependency_unrelated_rules_merged
+        PASS [   0.047s] (17/63) bbnf compiler::verify::mutants::dependency_from_another_revision
+        PASS [   0.029s] (18/63) bbnf compiler::verify::mutants::facts_epsilon_not_nullable
+        PASS [   0.031s] (19/63) bbnf compiler::verify::mutants::events_transform_site_names_another_node
+        PASS [   0.028s] (20/63) bbnf compiler::verify::mutants::facts_nullable_row_consumes
+        PASS [   0.026s] (21/63) bbnf compiler::verify::mutants::facts_rule_fact_is_not_its_root
+        PASS [   0.028s] (22/63) bbnf compiler::verify::mutants::facts_row_identity_swapped
+        PASS [   0.035s] (23/63) bbnf compiler::verify::mutants::facts_literal_minimum_wrong
+        PASS [   0.031s] (24/63) bbnf compiler::verify::mutants::facts_sequence_nullable_wrong
+        PASS [   0.024s] (25/63) bbnf compiler::verify::mutants::plan_node_type_dangles
+        PASS [   0.028s] (26/63) bbnf compiler::verify::mutants::plan_renames_a_rule
+        PASS [   0.028s] (27/63) bbnf compiler::verify::mutants::plan_regex_transition_dangles
+        PASS [   0.028s] (28/63) bbnf compiler::verify::mutants::plan_rule_body_has_a_cycle
+        PASS [   0.069s] (29/63) bbnf compiler::verify::mutants::dependency_edge_dropped
+        FAIL [   0.030s] (30/63) bbnf compiler::verify::mutants::plan_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_rule_reference_dangles' (16055630) panicked at crates/core/src/compiler/verify/mutants.rs:755:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        PASS [   0.039s] (31/63) bbnf compiler::verify::mutants::plan_named_type_is_another_binder
+        PASS [   0.029s] (32/63) bbnf compiler::verify::mutants::program_choice_is_empty
+        PASS [   0.032s] (33/63) bbnf compiler::verify::mutants::plan_trim_without_trivia
+        PASS [   0.031s] (34/63) bbnf compiler::verify::mutants::program_entry_dangles
+        PASS [   0.032s] (35/63) bbnf compiler::verify::mutants::program_field_owner_dangles
+        PASS [   0.046s] (36/63) bbnf compiler::verify::mutants::plan_regex_table_dangles
+        PASS [   0.032s] (37/63) bbnf compiler::verify::mutants::program_node_is_orphaned
+        PASS [   0.034s] (38/63) bbnf compiler::verify::mutants::program_node_identity_swapped
+        PASS [   0.032s] (39/63) bbnf compiler::verify::mutants::program_operator_claims_another_table
+        PASS [   0.032s] (40/63) bbnf compiler::verify::mutants::program_pratt_table_dangles
+        PASS [   0.036s] (41/63) bbnf compiler::verify::mutants::program_node_owner_misnamed
+        PASS [   0.031s] (42/63) bbnf compiler::verify::mutants::program_record_moves_to_another_rule
+        PASS [   0.023s] (43/63) bbnf compiler::verify::mutants::program_rule_bodies_share_a_node
+        PASS [   0.024s] (44/63) bbnf compiler::verify::mutants::program_repeat_bounds_inverted
+        PASS [   0.030s] (45/63) bbnf compiler::verify::mutants::program_record_slot_field_dangles
+        PASS [   0.026s] (46/63) bbnf compiler::verify::mutants::program_rule_body_has_a_cycle
+        PASS [   0.027s] (47/63) bbnf compiler::verify::mutants::program_rule_name_repeats
+        PASS [   0.026s] (48/63) bbnf compiler::verify::mutants::program_rule_root_dangles
+        PASS [   0.038s] (49/63) bbnf compiler::verify::mutants::program_record_slot_names_another_field
+        FAIL [   0.028s] (50/63) bbnf compiler::verify::mutants::program_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_reference_dangles' (16055689) panicked at crates/core/src/compiler/verify/mutants.rs:210:1:
+    assertion `left == right` failed
+      left: Err((Dependency, EdgesAreReferences))
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        PASS [   0.026s] (51/63) bbnf compiler::verify::mutants::program_sequence_child_dangles
+        PASS [   0.026s] (52/63) bbnf compiler::verify::mutants::program_transform_ordinal_skips
+        PASS [   0.027s] (53/63) bbnf compiler::verify::mutants::the_fixture_is_lawful
+        PASS [   0.027s] (54/63) bbnf compiler::verify::mutants::the_fixture_reaches_every_kind
+        PASS [   0.027s] (55/63) bbnf compiler::verify::mutants::types_arena_child_dangles
+        PASS [   0.022s] (56/63) bbnf compiler::verify::mutants::types_derivation_row_missing
+        PASS [   0.026s] (57/63) bbnf compiler::verify::mutants::types_arena_repeats_a_witness
+        PASS [   0.021s] (58/63) bbnf compiler::verify::mutants::types_named_type_is_another_binder
+        PASS [   0.025s] (59/63) bbnf compiler::verify::mutants::types_named_rule_dangles
+        PASS [   0.023s] (60/63) bbnf compiler::verify::mutants::types_record_holds_a_foreign_field
+        PASS [   0.022s] (61/63) bbnf compiler::verify::mutants::types_root_conclusion_wrong
+        PASS [   0.025s] (62/63) bbnf compiler::verify::mutants::types_node_type_dangles
+        PASS [   0.059s] (63/63) bbnf compiler::verify::mutants::program_prefix_operator_binds_left
+────────────
+     Summary [   0.120s] 63 tests run: 61 passed, 2 failed, 31 skipped
+        FAIL [   0.030s] (30/63) bbnf compiler::verify::mutants::plan_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_rule_reference_dangles' (16055630) panicked at crates/core/src/compiler/verify/mutants.rs:755:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (50/63) bbnf compiler::verify::mutants::program_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_reference_dangles' (16055689) panicked at crates/core/src/compiler/verify/mutants.rs:210:1:
+    assertion `left == right` failed
+      left: Err((Dependency, EdgesAreReferences))
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

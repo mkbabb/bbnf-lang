@@ -1,0 +1,2630 @@
+warning: function `spine` is never used
+  --> crates/core/src/compiler/verify.rs:41:15
+   |
+41 | pub(super) fn spine(
+   |               ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `children` is never used
+   --> crates/core/src/compiler/verify.rs:186:8
+    |
+185 | impl Op {
+    | ------- method in this implementation
+186 |     fn children(&self) -> Vec<usize> {
+    |        ^^^^^^^^
+
+warning: field `graph_revision` is never read
+   --> crates/core/src/compiler/verify.rs:256:5
+    |
+254 | struct DependencyRead {
+    |        -------------- field in this struct
+255 |     revision: Revision,
+256 |     graph_revision: Revision,
+    |     ^^^^^^^^^^^^^^
+    |
+    = note: `DependencyRead` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `revision` is never read
+   --> crates/core/src/compiler/verify.rs:287:5
+    |
+286 | struct TypesRead {
+    |        --------- field in this struct
+287 |     revision: Revision,
+    |     ^^^^^^^^
+    |
+    = note: `TypesRead` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `revision` is never read
+   --> crates/core/src/compiler/verify.rs:303:5
+    |
+302 | struct FactsRead {
+    |        --------- field in this struct
+303 |     revision: Revision,
+    |     ^^^^^^^^
+    |
+    = note: `FactsRead` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: field `field_types` is never read
+   --> crates/core/src/compiler/verify.rs:323:5
+    |
+319 | struct PlanRead {
+    |        -------- field in this struct
+...
+323 |     field_types: Vec<usize>,
+    |     ^^^^^^^^^^^
+    |
+    = note: `PlanRead` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: `bbnf` (lib test) generated 6 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.46s
+────────────
+ Nextest run ID fe056081-334c-46cb-bd91-7bc6dd68a166 with nextest profile: default
+    Starting 63 tests across 1 binary (31 tests skipped)
+        FAIL [   0.025s] ( 1/63) bbnf compiler::verify::mutants::dependency_rule_in_two_components
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_rule_in_two_components ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_rule_in_two_components
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_rule_in_two_components' (16024453) panicked at crates/core/src/compiler/verify/mutants.rs:369:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, ComponentsPartitionRules))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 2/63) bbnf compiler::verify::mutants::events_literal_site_names_a_choice
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_literal_site_names_a_choice ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_literal_site_names_a_choice
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_literal_site_names_a_choice' (16024455) panicked at crates/core/src/compiler/verify/mutants.rs:571:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, SiteShape))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] ( 3/63) bbnf compiler::verify::mutants::events_schema_drifts
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_schema_drifts ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_schema_drifts
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_schema_drifts' (16024447) panicked at crates/core/src/compiler/verify/mutants.rs:567:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, EventSchema))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] ( 4/63) bbnf compiler::verify::mutants::dependency_edges_unsorted
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_edges_unsorted ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_edges_unsorted
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_edges_unsorted' (16024462) panicked at crates/core/src/compiler/verify/mutants.rs:359:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, EdgesSortedUnique))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 5/63) bbnf compiler::verify::mutants::events_field_site_names_another_rule
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_field_site_names_another_rule ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_field_site_names_another_rule
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_field_site_names_another_rule' (16024465) panicked at crates/core/src/compiler/verify/mutants.rs:583:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, FieldSiteIsItsField))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 6/63) bbnf compiler::verify::mutants::dependency_unrelated_rules_merged
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_unrelated_rules_merged ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_unrelated_rules_merged
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_unrelated_rules_merged' (16024466) panicked at crates/core/src/compiler/verify/mutants.rs:382:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, ComponentsStronglyConnected))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 7/63) bbnf compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator' (16024461) panicked at crates/core/src/compiler/verify/mutants.rs:590:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, PrattReduceIsItsTable))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 8/63) bbnf compiler::verify::mutants::events_rule_entered_twice
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_rule_entered_twice ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_rule_entered_twice
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_rule_entered_twice' (16024464) panicked at crates/core/src/compiler/verify/mutants.rs:602:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, RuleEnteredAndLeftOnce))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 9/63) bbnf compiler::verify::mutants::dependency_edge_row_missing
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_edge_row_missing ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_edge_row_missing
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_edge_row_missing' (16024463) panicked at crates/core/src/compiler/verify/mutants.rs:365:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, EdgeRowPerRule))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] (10/63) bbnf compiler::verify::mutants::events_site_node_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_site_node_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_site_node_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_site_node_dangles' (16024467) panicked at crates/core/src/compiler/verify/mutants.rs:577:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, SiteShape))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (11/63) bbnf compiler::verify::mutants::dependency_edge_dropped
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_edge_dropped ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_edge_dropped
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_edge_dropped' (16024469) panicked at crates/core/src/compiler/verify/mutants.rs:353:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, EdgesAreReferences))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (12/63) bbnf compiler::verify::mutants::dependency_component_index_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_component_index_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_component_index_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_component_index_wrong' (16024468) panicked at crates/core/src/compiler/verify/mutants.rs:377:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, ComponentIndex))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (13/63) bbnf compiler::verify::mutants::dependency_from_another_revision
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_from_another_revision ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_from_another_revision
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_from_another_revision' (16024450) panicked at crates/core/src/compiler/verify/mutants.rs:412:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, OneRevision))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (14/63) bbnf compiler::verify::mutants::events_from_another_revision
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_from_another_revision ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_from_another_revision
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_from_another_revision' (16024457) panicked at crates/core/src/compiler/verify/mutants.rs:619:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, OneRevision))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (15/63) bbnf compiler::verify::mutants::dependency_recursive_component_split
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_recursive_component_split ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_recursive_component_split
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_recursive_component_split' (16024470) panicked at crates/core/src/compiler/verify/mutants.rs:396:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, DependencyFirstOrder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (16/63) bbnf compiler::verify::mutants::events_input_ends_before_the_last_site
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_input_ends_before_the_last_site ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_input_ends_before_the_last_site
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_input_ends_before_the_last_site' (16024471) panicked at crates/core/src/compiler/verify/mutants.rs:608:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, InputEndsOnceLast))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.029s] (17/63) bbnf compiler::verify::mutants::dependency_order_drops_a_component
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_order_drops_a_component ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_order_drops_a_component
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_order_drops_a_component' (16024472) panicked at crates/core/src/compiler/verify/mutants.rs:408:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, DependencyFirstOrder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.030s] (18/63) bbnf compiler::verify::mutants::dependency_order_reversed
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_order_reversed ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_order_reversed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_order_reversed' (16024475) panicked at crates/core/src/compiler/verify/mutants.rs:404:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, DependencyFirstOrder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (19/63) bbnf compiler::verify::mutants::facts_epsilon_not_nullable
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_epsilon_not_nullable ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_epsilon_not_nullable
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_epsilon_not_nullable' (16024501) panicked at crates/core/src/compiler/verify/mutants.rs:499:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, FactTransfer))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (20/63) bbnf compiler::verify::mutants::plan_regex_transition_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_regex_transition_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_regex_transition_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_regex_transition_dangles' (16024504) panicked at crates/core/src/compiler/verify/mutants.rs:534:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RegexTableWellFormed))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (21/63) bbnf compiler::verify::mutants::facts_row_identity_swapped
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_row_identity_swapped ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_row_identity_swapped
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_row_identity_swapped' (16024506) panicked at crates/core/src/compiler/verify/mutants.rs:515:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, RowIdentity))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (22/63) bbnf compiler::verify::mutants::plan_trim_without_trivia
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_trim_without_trivia ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_trim_without_trivia
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_trim_without_trivia' (16024508) panicked at crates/core/src/compiler/verify/mutants.rs:539:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, TrimNeedsTrivia))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (23/63) bbnf compiler::verify::mutants::plan_rule_body_has_a_cycle
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_rule_body_has_a_cycle ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_rule_body_has_a_cycle
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_rule_body_has_a_cycle' (16024510) panicked at crates/core/src/compiler/verify/mutants.rs:557:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.023s] (24/63) bbnf compiler::verify::mutants::plan_node_type_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_node_type_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_node_type_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_node_type_dangles' (16024513) panicked at crates/core/src/compiler/verify/mutants.rs:547:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, TypeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.023s] (25/63) bbnf compiler::verify::mutants::plan_named_type_is_another_binder
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_named_type_is_another_binder ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_named_type_is_another_binder
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_named_type_is_another_binder' (16024516) panicked at crates/core/src/compiler/verify/mutants.rs:552:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, NamedBinder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.024s] (26/63) bbnf compiler::verify::mutants::facts_rule_fact_is_not_its_root
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_rule_fact_is_not_its_root ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_rule_fact_is_not_its_root
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_rule_fact_is_not_its_root' (16024519) panicked at crates/core/src/compiler/verify/mutants.rs:487:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, RuleFactIsRootFact))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] (27/63) bbnf compiler::verify::mutants::facts_literal_minimum_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_literal_minimum_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_literal_minimum_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_literal_minimum_wrong' (16024520) panicked at crates/core/src/compiler/verify/mutants.rs:493:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, FactTransfer))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.021s] (28/63) bbnf compiler::verify::mutants::program_field_owner_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_field_owner_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_field_owner_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_field_owner_dangles' (16024524) panicked at crates/core/src/compiler/verify/mutants.rs:230:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (29/63) bbnf compiler::verify::mutants::facts_nullable_row_consumes
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_nullable_row_consumes ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_nullable_row_consumes
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_nullable_row_consumes' (16024525) panicked at crates/core/src/compiler/verify/mutants.rs:477:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, NullableHasZeroMinimum))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] (30/63) bbnf compiler::verify::mutants::plan_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_rule_reference_dangles' (16024526) panicked at crates/core/src/compiler/verify/mutants.rs:521:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (31/63) bbnf compiler::verify::mutants::plan_renames_a_rule
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_renames_a_rule ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_renames_a_rule
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_renames_a_rule' (16024530) panicked at crates/core/src/compiler/verify/mutants.rs:543:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, PlanKeepsRules))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] (32/63) bbnf compiler::verify::mutants::program_entry_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_entry_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_entry_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_entry_dangles' (16024534) panicked at crates/core/src/compiler/verify/mutants.rs:225:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (33/63) bbnf compiler::verify::mutants::program_choice_is_empty
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_choice_is_empty ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_choice_is_empty
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_choice_is_empty' (16024537) panicked at crates/core/src/compiler/verify/mutants.rs:313:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, AggregateHasChildren))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.032s] (34/63) bbnf compiler::verify::mutants::plan_regex_table_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_regex_table_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_regex_table_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_regex_table_dangles' (16024540) panicked at crates/core/src/compiler/verify/mutants.rs:527:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RegexInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.032s] (35/63) bbnf compiler::verify::mutants::facts_sequence_nullable_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_sequence_nullable_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_sequence_nullable_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_sequence_nullable_wrong' (16024543) panicked at crates/core/src/compiler/verify/mutants.rs:507:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, FactTransfer))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (36/63) bbnf compiler::verify::mutants::program_node_identity_swapped
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_node_identity_swapped ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_node_identity_swapped
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_node_identity_swapped' (16024545) panicked at crates/core/src/compiler/verify/mutants.rs:207:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RowIdentity))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (37/63) bbnf compiler::verify::mutants::program_node_is_orphaned
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_node_is_orphaned ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_node_is_orphaned
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_node_is_orphaned' (16024549) panicked at crates/core/src/compiler/verify/mutants.rs:295:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.037s] (38/63) bbnf compiler::verify::mutants::events_transform_site_names_another_node
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_transform_site_names_another_node ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_transform_site_names_another_node
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_transform_site_names_another_node' (16024552) panicked at crates/core/src/compiler/verify/mutants.rs:614:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, TransformSites))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (39/63) bbnf compiler::verify::mutants::program_operator_claims_another_table
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_operator_claims_another_table ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_operator_claims_another_table
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_operator_claims_another_table' (16024555) panicked at crates/core/src/compiler/verify/mutants.rs:265:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, PrattOperatorInItsTable))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.020s] (40/63) bbnf compiler::verify::mutants::program_node_owner_misnamed
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_node_owner_misnamed ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_node_owner_misnamed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_node_owner_misnamed' (16024559) panicked at crates/core/src/compiler/verify/mutants.rs:302:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, NodeOwners))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (41/63) bbnf compiler::verify::mutants::program_pratt_table_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_pratt_table_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_pratt_table_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_pratt_table_dangles' (16024562) panicked at crates/core/src/compiler/verify/mutants.rs:256:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, PrattInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (42/63) bbnf compiler::verify::mutants::program_prefix_operator_binds_left
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_prefix_operator_binds_left ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_prefix_operator_binds_left
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_prefix_operator_binds_left' (16024564) panicked at crates/core/src/compiler/verify/mutants.rs:269:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, PrattFixityShape))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (43/63) bbnf compiler::verify::mutants::program_record_slot_field_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_record_slot_field_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_record_slot_field_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_record_slot_field_dangles' (16024567) panicked at crates/core/src/compiler/verify/mutants.rs:235:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, FieldInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (44/63) bbnf compiler::verify::mutants::program_record_slot_names_another_field
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_record_slot_names_another_field ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_record_slot_names_another_field
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_record_slot_names_another_field' (16024570) panicked at crates/core/src/compiler/verify/mutants.rs:245:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RecordSlotIsItsField))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.020s] (45/63) bbnf compiler::verify::mutants::program_record_moves_to_another_rule
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_record_moves_to_another_rule ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_record_moves_to_another_rule
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_record_moves_to_another_rule' (16024572) panicked at crates/core/src/compiler/verify/mutants.rs:336:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RecordBelongsToItsRule))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (46/63) bbnf compiler::verify::mutants::program_rule_body_has_a_cycle
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_body_has_a_cycle ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_body_has_a_cycle
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_body_has_a_cycle' (16024580) panicked at crates/core/src/compiler/verify/mutants.rs:287:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.020s] (47/63) bbnf compiler::verify::mutants::program_rule_bodies_share_a_node
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_bodies_share_a_node ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_bodies_share_a_node
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_bodies_share_a_node' (16024578) panicked at crates/core/src/compiler/verify/mutants.rs:279:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (48/63) bbnf compiler::verify::mutants::program_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_reference_dangles' (16024595) panicked at crates/core/src/compiler/verify/mutants.rs:201:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (49/63) bbnf compiler::verify::mutants::program_rule_root_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_root_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_root_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_root_dangles' (16024600) panicked at crates/core/src/compiler/verify/mutants.rs:220:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, NodeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (50/63) bbnf compiler::verify::mutants::program_sequence_child_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_sequence_child_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_sequence_child_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_sequence_child_dangles' (16024602) panicked at crates/core/src/compiler/verify/mutants.rs:211:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, NodeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (51/63) bbnf compiler::verify::mutants::program_transform_ordinal_skips
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_transform_ordinal_skips ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_transform_ordinal_skips
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_transform_ordinal_skips' (16024604) panicked at crates/core/src/compiler/verify/mutants.rs:328:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, TransformOrdinals))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        PASS [   0.020s] (52/63) bbnf compiler::verify::mutants::the_fixture_is_lawful
+        PASS [   0.020s] (53/63) bbnf compiler::verify::mutants::the_fixture_reaches_every_kind
+        FAIL [   0.030s] (54/63) bbnf compiler::verify::mutants::program_repeat_bounds_inverted
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_repeat_bounds_inverted ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_repeat_bounds_inverted
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_repeat_bounds_inverted' (16024610) panicked at crates/core/src/compiler/verify/mutants.rs:319:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RepeatBounds))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.029s] (55/63) bbnf compiler::verify::mutants::program_rule_name_repeats
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_name_repeats ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_name_repeats
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_name_repeats' (16024612) panicked at crates/core/src/compiler/verify/mutants.rs:308:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleNamesUnique))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (56/63) bbnf compiler::verify::mutants::types_named_rule_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_named_rule_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_named_rule_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_named_rule_dangles' (16024613) panicked at crates/core/src/compiler/verify/mutants.rs:455:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.022s] (57/63) bbnf compiler::verify::mutants::types_arena_child_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_arena_child_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_arena_child_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_arena_child_dangles' (16024616) panicked at crates/core/src/compiler/verify/mutants.rs:436:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, TypeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.022s] (58/63) bbnf compiler::verify::mutants::types_arena_repeats_a_witness
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_arena_repeats_a_witness ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_arena_repeats_a_witness
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_arena_repeats_a_witness' (16024618) panicked at crates/core/src/compiler/verify/mutants.rs:446:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, ArenaCanonical))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (59/63) bbnf compiler::verify::mutants::types_named_type_is_another_binder
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_named_type_is_another_binder ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_named_type_is_another_binder
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_named_type_is_another_binder' (16024615) panicked at crates/core/src/compiler/verify/mutants.rs:425:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, NamedBinder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.021s] (60/63) bbnf compiler::verify::mutants::types_derivation_row_missing
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_derivation_row_missing ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_derivation_row_missing
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_derivation_row_missing' (16024621) panicked at crates/core/src/compiler/verify/mutants.rs:451:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, RowPerProgramRow))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (61/63) bbnf compiler::verify::mutants::types_node_type_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_node_type_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_node_type_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_node_type_dangles' (16024622) panicked at crates/core/src/compiler/verify/mutants.rs:420:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, TypeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (62/63) bbnf compiler::verify::mutants::types_root_conclusion_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_root_conclusion_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_root_conclusion_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_root_conclusion_wrong' (16024623) panicked at crates/core/src/compiler/verify/mutants.rs:430:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, RootConclusion))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (63/63) bbnf compiler::verify::mutants::types_record_holds_a_foreign_field
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_record_holds_a_foreign_field ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_record_holds_a_foreign_field
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_record_holds_a_foreign_field' (16024624) panicked at crates/core/src/compiler/verify/mutants.rs:462:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, FieldInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   0.089s] 63 tests run: 2 passed, 61 failed, 31 skipped
+        FAIL [   0.025s] ( 1/63) bbnf compiler::verify::mutants::dependency_rule_in_two_components
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_rule_in_two_components ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_rule_in_two_components
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_rule_in_two_components' (16024453) panicked at crates/core/src/compiler/verify/mutants.rs:369:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, ComponentsPartitionRules))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 2/63) bbnf compiler::verify::mutants::events_literal_site_names_a_choice
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_literal_site_names_a_choice ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_literal_site_names_a_choice
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_literal_site_names_a_choice' (16024455) panicked at crates/core/src/compiler/verify/mutants.rs:571:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, SiteShape))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] ( 3/63) bbnf compiler::verify::mutants::events_schema_drifts
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_schema_drifts ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_schema_drifts
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_schema_drifts' (16024447) panicked at crates/core/src/compiler/verify/mutants.rs:567:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, EventSchema))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] ( 4/63) bbnf compiler::verify::mutants::dependency_edges_unsorted
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_edges_unsorted ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_edges_unsorted
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_edges_unsorted' (16024462) panicked at crates/core/src/compiler/verify/mutants.rs:359:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, EdgesSortedUnique))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 5/63) bbnf compiler::verify::mutants::events_field_site_names_another_rule
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_field_site_names_another_rule ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_field_site_names_another_rule
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_field_site_names_another_rule' (16024465) panicked at crates/core/src/compiler/verify/mutants.rs:583:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, FieldSiteIsItsField))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 6/63) bbnf compiler::verify::mutants::dependency_unrelated_rules_merged
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_unrelated_rules_merged ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_unrelated_rules_merged
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_unrelated_rules_merged' (16024466) panicked at crates/core/src/compiler/verify/mutants.rs:382:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, ComponentsStronglyConnected))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 7/63) bbnf compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_pratt_reduce_names_a_foreign_operator' (16024461) panicked at crates/core/src/compiler/verify/mutants.rs:590:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, PrattReduceIsItsTable))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 8/63) bbnf compiler::verify::mutants::events_rule_entered_twice
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_rule_entered_twice ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_rule_entered_twice
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_rule_entered_twice' (16024464) panicked at crates/core/src/compiler/verify/mutants.rs:602:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, RuleEnteredAndLeftOnce))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] ( 9/63) bbnf compiler::verify::mutants::dependency_edge_row_missing
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_edge_row_missing ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_edge_row_missing
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_edge_row_missing' (16024463) panicked at crates/core/src/compiler/verify/mutants.rs:365:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, EdgeRowPerRule))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] (10/63) bbnf compiler::verify::mutants::events_site_node_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_site_node_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_site_node_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_site_node_dangles' (16024467) panicked at crates/core/src/compiler/verify/mutants.rs:577:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, SiteShape))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (11/63) bbnf compiler::verify::mutants::dependency_edge_dropped
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_edge_dropped ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_edge_dropped
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_edge_dropped' (16024469) panicked at crates/core/src/compiler/verify/mutants.rs:353:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, EdgesAreReferences))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (12/63) bbnf compiler::verify::mutants::dependency_component_index_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_component_index_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_component_index_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_component_index_wrong' (16024468) panicked at crates/core/src/compiler/verify/mutants.rs:377:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, ComponentIndex))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (13/63) bbnf compiler::verify::mutants::dependency_from_another_revision
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_from_another_revision ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_from_another_revision
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_from_another_revision' (16024450) panicked at crates/core/src/compiler/verify/mutants.rs:412:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, OneRevision))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (14/63) bbnf compiler::verify::mutants::events_from_another_revision
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_from_another_revision ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_from_another_revision
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_from_another_revision' (16024457) panicked at crates/core/src/compiler/verify/mutants.rs:619:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, OneRevision))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (15/63) bbnf compiler::verify::mutants::dependency_recursive_component_split
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_recursive_component_split ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_recursive_component_split
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_recursive_component_split' (16024470) panicked at crates/core/src/compiler/verify/mutants.rs:396:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, DependencyFirstOrder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (16/63) bbnf compiler::verify::mutants::events_input_ends_before_the_last_site
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_input_ends_before_the_last_site ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_input_ends_before_the_last_site
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_input_ends_before_the_last_site' (16024471) panicked at crates/core/src/compiler/verify/mutants.rs:608:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, InputEndsOnceLast))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.029s] (17/63) bbnf compiler::verify::mutants::dependency_order_drops_a_component
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_order_drops_a_component ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_order_drops_a_component
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_order_drops_a_component' (16024472) panicked at crates/core/src/compiler/verify/mutants.rs:408:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, DependencyFirstOrder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.030s] (18/63) bbnf compiler::verify::mutants::dependency_order_reversed
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::dependency_order_reversed ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::dependency_order_reversed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::dependency_order_reversed' (16024475) panicked at crates/core/src/compiler/verify/mutants.rs:404:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Dependency, DependencyFirstOrder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (19/63) bbnf compiler::verify::mutants::facts_epsilon_not_nullable
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_epsilon_not_nullable ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_epsilon_not_nullable
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_epsilon_not_nullable' (16024501) panicked at crates/core/src/compiler/verify/mutants.rs:499:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, FactTransfer))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (20/63) bbnf compiler::verify::mutants::plan_regex_transition_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_regex_transition_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_regex_transition_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_regex_transition_dangles' (16024504) panicked at crates/core/src/compiler/verify/mutants.rs:534:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RegexTableWellFormed))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (21/63) bbnf compiler::verify::mutants::facts_row_identity_swapped
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_row_identity_swapped ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_row_identity_swapped
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_row_identity_swapped' (16024506) panicked at crates/core/src/compiler/verify/mutants.rs:515:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, RowIdentity))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (22/63) bbnf compiler::verify::mutants::plan_trim_without_trivia
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_trim_without_trivia ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_trim_without_trivia
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_trim_without_trivia' (16024508) panicked at crates/core/src/compiler/verify/mutants.rs:539:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, TrimNeedsTrivia))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (23/63) bbnf compiler::verify::mutants::plan_rule_body_has_a_cycle
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_rule_body_has_a_cycle ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_rule_body_has_a_cycle
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_rule_body_has_a_cycle' (16024510) panicked at crates/core/src/compiler/verify/mutants.rs:557:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.023s] (24/63) bbnf compiler::verify::mutants::plan_node_type_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_node_type_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_node_type_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_node_type_dangles' (16024513) panicked at crates/core/src/compiler/verify/mutants.rs:547:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, TypeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.023s] (25/63) bbnf compiler::verify::mutants::plan_named_type_is_another_binder
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_named_type_is_another_binder ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_named_type_is_another_binder
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_named_type_is_another_binder' (16024516) panicked at crates/core/src/compiler/verify/mutants.rs:552:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, NamedBinder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.024s] (26/63) bbnf compiler::verify::mutants::facts_rule_fact_is_not_its_root
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_rule_fact_is_not_its_root ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_rule_fact_is_not_its_root
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_rule_fact_is_not_its_root' (16024519) panicked at crates/core/src/compiler/verify/mutants.rs:487:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, RuleFactIsRootFact))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.025s] (27/63) bbnf compiler::verify::mutants::facts_literal_minimum_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_literal_minimum_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_literal_minimum_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_literal_minimum_wrong' (16024520) panicked at crates/core/src/compiler/verify/mutants.rs:493:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, FactTransfer))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.021s] (28/63) bbnf compiler::verify::mutants::program_field_owner_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_field_owner_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_field_owner_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_field_owner_dangles' (16024524) panicked at crates/core/src/compiler/verify/mutants.rs:230:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.027s] (29/63) bbnf compiler::verify::mutants::facts_nullable_row_consumes
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_nullable_row_consumes ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_nullable_row_consumes
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_nullable_row_consumes' (16024525) panicked at crates/core/src/compiler/verify/mutants.rs:477:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, NullableHasZeroMinimum))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] (30/63) bbnf compiler::verify::mutants::plan_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_rule_reference_dangles' (16024526) panicked at crates/core/src/compiler/verify/mutants.rs:521:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (31/63) bbnf compiler::verify::mutants::plan_renames_a_rule
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_renames_a_rule ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_renames_a_rule
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_renames_a_rule' (16024530) panicked at crates/core/src/compiler/verify/mutants.rs:543:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, PlanKeepsRules))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.026s] (32/63) bbnf compiler::verify::mutants::program_entry_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_entry_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_entry_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_entry_dangles' (16024534) panicked at crates/core/src/compiler/verify/mutants.rs:225:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.028s] (33/63) bbnf compiler::verify::mutants::program_choice_is_empty
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_choice_is_empty ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_choice_is_empty
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_choice_is_empty' (16024537) panicked at crates/core/src/compiler/verify/mutants.rs:313:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, AggregateHasChildren))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.032s] (34/63) bbnf compiler::verify::mutants::plan_regex_table_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::plan_regex_table_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::plan_regex_table_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::plan_regex_table_dangles' (16024540) panicked at crates/core/src/compiler/verify/mutants.rs:527:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Lowering, RegexInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.032s] (35/63) bbnf compiler::verify::mutants::facts_sequence_nullable_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::facts_sequence_nullable_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::facts_sequence_nullable_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::facts_sequence_nullable_wrong' (16024543) panicked at crates/core/src/compiler/verify/mutants.rs:507:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Analysis, FactTransfer))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (36/63) bbnf compiler::verify::mutants::program_node_identity_swapped
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_node_identity_swapped ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_node_identity_swapped
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_node_identity_swapped' (16024545) panicked at crates/core/src/compiler/verify/mutants.rs:207:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RowIdentity))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (37/63) bbnf compiler::verify::mutants::program_node_is_orphaned
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_node_is_orphaned ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_node_is_orphaned
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_node_is_orphaned' (16024549) panicked at crates/core/src/compiler/verify/mutants.rs:295:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.037s] (38/63) bbnf compiler::verify::mutants::events_transform_site_names_another_node
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::events_transform_site_names_another_node ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::events_transform_site_names_another_node
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::events_transform_site_names_another_node' (16024552) panicked at crates/core/src/compiler/verify/mutants.rs:614:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Events, TransformSites))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.017s] (39/63) bbnf compiler::verify::mutants::program_operator_claims_another_table
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_operator_claims_another_table ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_operator_claims_another_table
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_operator_claims_another_table' (16024555) panicked at crates/core/src/compiler/verify/mutants.rs:265:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, PrattOperatorInItsTable))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.020s] (40/63) bbnf compiler::verify::mutants::program_node_owner_misnamed
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_node_owner_misnamed ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_node_owner_misnamed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_node_owner_misnamed' (16024559) panicked at crates/core/src/compiler/verify/mutants.rs:302:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, NodeOwners))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (41/63) bbnf compiler::verify::mutants::program_pratt_table_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_pratt_table_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_pratt_table_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_pratt_table_dangles' (16024562) panicked at crates/core/src/compiler/verify/mutants.rs:256:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, PrattInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (42/63) bbnf compiler::verify::mutants::program_prefix_operator_binds_left
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_prefix_operator_binds_left ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_prefix_operator_binds_left
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_prefix_operator_binds_left' (16024564) panicked at crates/core/src/compiler/verify/mutants.rs:269:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, PrattFixityShape))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (43/63) bbnf compiler::verify::mutants::program_record_slot_field_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_record_slot_field_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_record_slot_field_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_record_slot_field_dangles' (16024567) panicked at crates/core/src/compiler/verify/mutants.rs:235:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, FieldInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (44/63) bbnf compiler::verify::mutants::program_record_slot_names_another_field
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_record_slot_names_another_field ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_record_slot_names_another_field
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_record_slot_names_another_field' (16024570) panicked at crates/core/src/compiler/verify/mutants.rs:245:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RecordSlotIsItsField))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.020s] (45/63) bbnf compiler::verify::mutants::program_record_moves_to_another_rule
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_record_moves_to_another_rule ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_record_moves_to_another_rule
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_record_moves_to_another_rule' (16024572) panicked at crates/core/src/compiler/verify/mutants.rs:336:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RecordBelongsToItsRule))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (46/63) bbnf compiler::verify::mutants::program_rule_body_has_a_cycle
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_body_has_a_cycle ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_body_has_a_cycle
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_body_has_a_cycle' (16024580) panicked at crates/core/src/compiler/verify/mutants.rs:287:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.020s] (47/63) bbnf compiler::verify::mutants::program_rule_bodies_share_a_node
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_bodies_share_a_node ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_bodies_share_a_node
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_bodies_share_a_node' (16024578) panicked at crates/core/src/compiler/verify/mutants.rs:279:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleBodiesAreTrees))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (48/63) bbnf compiler::verify::mutants::program_rule_reference_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_reference_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_reference_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_reference_dangles' (16024595) panicked at crates/core/src/compiler/verify/mutants.rs:201:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (49/63) bbnf compiler::verify::mutants::program_rule_root_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_root_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_root_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_root_dangles' (16024600) panicked at crates/core/src/compiler/verify/mutants.rs:220:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, NodeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (50/63) bbnf compiler::verify::mutants::program_sequence_child_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_sequence_child_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_sequence_child_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_sequence_child_dangles' (16024602) panicked at crates/core/src/compiler/verify/mutants.rs:211:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, NodeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (51/63) bbnf compiler::verify::mutants::program_transform_ordinal_skips
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_transform_ordinal_skips ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_transform_ordinal_skips
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_transform_ordinal_skips' (16024604) panicked at crates/core/src/compiler/verify/mutants.rs:328:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, TransformOrdinals))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.030s] (54/63) bbnf compiler::verify::mutants::program_repeat_bounds_inverted
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_repeat_bounds_inverted ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_repeat_bounds_inverted
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_repeat_bounds_inverted' (16024610) panicked at crates/core/src/compiler/verify/mutants.rs:319:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RepeatBounds))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.029s] (55/63) bbnf compiler::verify::mutants::program_rule_name_repeats
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::program_rule_name_repeats ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::program_rule_name_repeats
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::program_rule_name_repeats' (16024612) panicked at crates/core/src/compiler/verify/mutants.rs:308:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Program, RuleNamesUnique))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (56/63) bbnf compiler::verify::mutants::types_named_rule_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_named_rule_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_named_rule_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_named_rule_dangles' (16024613) panicked at crates/core/src/compiler/verify/mutants.rs:455:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, RuleInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.022s] (57/63) bbnf compiler::verify::mutants::types_arena_child_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_arena_child_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_arena_child_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_arena_child_dangles' (16024616) panicked at crates/core/src/compiler/verify/mutants.rs:436:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, TypeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.022s] (58/63) bbnf compiler::verify::mutants::types_arena_repeats_a_witness
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_arena_repeats_a_witness ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_arena_repeats_a_witness
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_arena_repeats_a_witness' (16024618) panicked at crates/core/src/compiler/verify/mutants.rs:446:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, ArenaCanonical))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (59/63) bbnf compiler::verify::mutants::types_named_type_is_another_binder
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_named_type_is_another_binder ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_named_type_is_another_binder
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_named_type_is_another_binder' (16024615) panicked at crates/core/src/compiler/verify/mutants.rs:425:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, NamedBinder))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.021s] (60/63) bbnf compiler::verify::mutants::types_derivation_row_missing
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_derivation_row_missing ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_derivation_row_missing
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_derivation_row_missing' (16024621) panicked at crates/core/src/compiler/verify/mutants.rs:451:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, RowPerProgramRow))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (61/63) bbnf compiler::verify::mutants::types_node_type_dangles
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_node_type_dangles ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_node_type_dangles
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_node_type_dangles' (16024622) panicked at crates/core/src/compiler/verify/mutants.rs:420:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, TypeInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.018s] (62/63) bbnf compiler::verify::mutants::types_root_conclusion_wrong
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_root_conclusion_wrong ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_root_conclusion_wrong
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_root_conclusion_wrong' (16024623) panicked at crates/core/src/compiler/verify/mutants.rs:430:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, RootConclusion))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        FAIL [   0.019s] (63/63) bbnf compiler::verify::mutants::types_record_holds_a_foreign_field
+  stdout ───
+
+    running 1 test
+    test compiler::verify::mutants::types_record_holds_a_foreign_field ... FAILED
+
+    failures:
+
+    failures:
+        compiler::verify::mutants::types_record_holds_a_foreign_field
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 93 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'compiler::verify::mutants::types_record_holds_a_foreign_field' (16024624) panicked at crates/core/src/compiler/verify/mutants.rs:462:1:
+    assertion `left == right` failed
+      left: Ok(())
+     right: Err((Types, FieldInRange))
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

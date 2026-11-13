@@ -1,0 +1,13 @@
+diff --git a/crates/core/src/compiler/verify/laws.rs b/crates/core/src/compiler/verify/laws.rs
+index 1906bc390..9cd35484b 100644
+--- a/crates/core/src/compiler/verify/laws.rs
++++ b/crates/core/src/compiler/verify/laws.rs
+@@ -592,7 +592,7 @@ fn check_graph(
+             index,
+         )?;
+         match op {
+-            Op::RuleRef(rule) => ensure(*rule < rules, stage, Law::RuleInRange, index)?,
++            Op::RuleRef(_) => {}
+             Op::Record { owner, slots } => {
+                 ensure(*owner < rules, stage, Law::RuleInRange, index)?;
+                 for slot in slots {

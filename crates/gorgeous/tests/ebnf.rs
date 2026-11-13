@@ -29,8 +29,6 @@ fn test_prettify_repetition() {
 }
 
 #[test]
-#[ignore = "prettify codegen stops after first rule — pre-existing issue \
-            (matches crates/core/tests/ebnf_prettify.rs::prettify_multi_rule)"]
 fn test_prettify_multi_rule() {
     let config = PrinterConfig::default();
     let input = r#"digit = "0" | "1" | "2" ;
@@ -49,4 +47,20 @@ fn test_prettify_idempotent() {
     let first = prettify_ebnf(input, &config).unwrap();
     let second = prettify_ebnf(&first, &config).unwrap();
     assert_eq!(first, second, "prettify should be idempotent");
+}
+
+/// sk-v27 LW3.S3c-PP (RULINGS 2026-11-12c PP2-G3, QX-1 clause 4): the ebnf
+/// prettifier keeps every rule and every terminal (`r = "a" ;` formatted to
+/// `r =`), and formatting is idempotent on a multi-rule grammar.
+#[test]
+fn ebnf_prettify_keeps_every_rule_and_terminal() {
+    let config = PrinterConfig::default();
+    let input = "r = \"a\" ;\ndigit = \"0\" | \"1\" ;\nnumber = digit , { digit } ;\n";
+    let once = prettify_ebnf(input, &config).expect("the input formats");
+    for t in ["r", "\"a\"", "digit", "\"0\"", "\"1\"", "number", "{", "}"] {
+        assert!(once.contains(t), "{t:?} lost: got {once:?}");
+    }
+    assert_eq!(once.matches(';').count(), 3, "a terminator lost: got {once:?}");
+    let twice = prettify_ebnf(&once, &config).expect("its own output formats");
+    assert_eq!(once, twice, "fmt . fmt != fmt");
 }

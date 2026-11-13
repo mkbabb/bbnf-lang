@@ -80,3 +80,24 @@ impl LatticeDomain for DispatchDomain {
         }
     }
 }
+
+#[cfg(test)]
+mod lattice_laws {
+    use super::{DispatchDecision, DispatchDomain};
+    use crate::passes::lattice_laws::generated_violations;
+
+    /// sk-v27 LW3.COMP-6: `DispatchDomain::join` is a lattice join, read
+    /// over 10⁵ generated cases. Born RED: two different decisions join
+    /// to whichever came first, so the join is not commutative.
+    #[test]
+    fn dispatch_domain_join_is_a_lattice_join() {
+        let violations = generated_violations(0x5eed_0d15, |rng| DispatchDomain {
+            decision: match rng.below(3) {
+                0 => DispatchDecision::Unknown,
+                1 => DispatchDecision::Dispatchable,
+                _ => DispatchDecision::NonDispatchable,
+            },
+        });
+        assert!(violations.is_empty(), "{violations:#?}");
+    }
+}

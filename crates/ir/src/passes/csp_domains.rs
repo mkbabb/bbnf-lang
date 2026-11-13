@@ -523,3 +523,37 @@ fn charset_union(vars: &mut [Variable<CharSetDomain>], var: VarId, cs: &CharSet1
     vars[var as usize].domain.solved.union(cs);
     vars[var as usize].domain.solved.bits != old
 }
+
+#[cfg(test)]
+mod lattice_laws {
+    use super::{BoolDomain, CharSetDomain};
+    use crate::CharSet128;
+    use crate::passes::lattice_laws::generated_violations;
+    use csp_solver::domain::LatticeDomain;
+
+    /// sk-v27 LW3.COMP-6: `BoolDomain::join` (the chain
+    /// `None ⊑ Some(true) ⊑ Some(false)`) is a lattice join over 10⁵ cases.
+    #[test]
+    fn bool_domain_join_is_a_lattice_join() {
+        let violations = generated_violations(0x5eed_b001, |rng| match rng.below(3) {
+            0 => BoolDomain::bottom(),
+            1 => BoolDomain::ground(true),
+            _ => BoolDomain::ground(false),
+        });
+        assert!(violations.is_empty(), "{violations:#?}");
+    }
+
+    /// sk-v27 LW3.COMP-6: `CharSetDomain::join` (union) is a lattice join
+    /// over 10⁵ cases.
+    #[test]
+    fn charset_domain_join_is_a_lattice_join() {
+        let violations = generated_violations(0x5eed_c5e7, |rng| {
+            let mut cs = CharSet128::new();
+            for _ in 0..rng.below(6) {
+                cs.add(rng.below(128) as u8);
+            }
+            CharSetDomain::from(cs)
+        });
+        assert!(violations.is_empty(), "{violations:#?}");
+    }
+}

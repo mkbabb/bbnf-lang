@@ -1,0 +1,307 @@
+diff --git a/crates/ir/src/passes/types/constraint/alt.rs b/crates/ir/src/passes/types/constraint/alt.rs
+index b8f1fcfaa..a44a56960 100644
+--- a/crates/ir/src/passes/types/constraint/alt.rs
++++ b/crates/ir/src/passes/types/constraint/alt.rs
+@@ -60,11 +60,7 @@ impl Constraint<TypeDomain> for AltConstraint {
+             join_types(&branch_types)
+         };
+ 
+-        if assign(vars, self.var, result) {
+-            Revision::Changed
+-        } else {
+-            Revision::Unchanged
+-        }
++        assign(vars, self.var, result)
+     }
+ }
+ 
+@@ -134,18 +130,20 @@ impl Constraint<TypeDomain> for AltInVecConstraint {
+ 
+         match decision {
+             Decision::Homogeneous(ty) => {
+-                if assign(vars, self.var, ty) {
+-                    return Revision::Changed;
++                let revision = assign(vars, self.var, ty);
++                if revision != Revision::Unchanged {
++                    return revision;
+                 }
+             }
+             Decision::Heterogeneous => {
+                 // Fall back to standard Alt projection. One clone for
+                 // the owned `std_ty` we pass into `assign`.
+                 let std_ty = vars[self.standard_var as usize].domain.solved.clone();
+-                if let Some(std_ty) = std_ty
+-                    && assign(vars, self.var, std_ty)
+-                {
+-                    return Revision::Changed;
++                if let Some(std_ty) = std_ty {
++                    let revision = assign(vars, self.var, std_ty);
++                    if revision != Revision::Unchanged {
++                        return revision;
++                    }
+                 }
+                 // Standard var not yet solved -- wait.
+             }
+diff --git a/crates/ir/src/passes/types/constraint/domain.rs b/crates/ir/src/passes/types/constraint/domain.rs
+index 284a1205d..286e413d2 100644
+--- a/crates/ir/src/passes/types/constraint/domain.rs
++++ b/crates/ir/src/passes/types/constraint/domain.rs
+@@ -12,15 +12,20 @@ use crate::TypeDesc;
+ #[derive(Clone, Debug, PartialEq)]
+ pub struct TypeDomain {
+     pub solved: Option<TypeDesc>,
++    conflict: bool,
+ }
+ 
+ impl TypeDomain {
+     pub fn unsolved() -> Self {
+-        Self { solved: None }
++        Self { solved: None, conflict: false }
+     }
+ 
+     pub fn ground(ty: TypeDesc) -> Self {
+-        Self { solved: Some(ty) }
++        Self { solved: Some(ty), conflict: false }
++    }
++
++    pub fn is_conflict(&self) -> bool {
++        self.conflict
+     }
+ }
+ 
+@@ -60,65 +65,18 @@ impl Domain for TypeDomain {
+ 
+ impl LatticeDomain for TypeDomain {
+     fn bottom() -> Self {
+-        Self { solved: None }
++        Self::unsolved()
+     }
+ 
+     fn join(&mut self, other: &Self) -> bool {
+-        match (&self.solved, &other.solved) {
+-            (None, Some(ty)) => {
+-                self.solved = Some(ty.clone());
+-                true
+-            }
+-            (Some(existing), Some(ty)) if existing != ty => {
+-                // Re-assignment to a different type: allow it (the solver
+-                // may refine types during convergence).
+-                self.solved = Some(ty.clone());
+-                true
+-            }
+-            _ => false,
++        if self.conflict || *other == Self::bottom() || *self == *other {
++            return false;
+         }
+-    }
+-}
+-
+-#[cfg(test)]
+-mod lattice_laws {
+-    use super::TypeDomain;
+-    use crate::TypeDesc;
+-    use crate::passes::lattice_laws::{Rng, generated_violations};
+-
+-    fn ty(rng: &mut Rng, depth: usize) -> TypeDesc {
+-        let leaf = |rng: &mut Rng| match rng.below(6) {
+-            0 => TypeDesc::Span,
+-            1 => TypeDesc::F64,
+-            2 => TypeDesc::Bool,
+-            3 => TypeDesc::U32,
+-            4 => TypeDesc::BoxedEnum,
+-            _ => TypeDesc::Enum,
+-        };
+-        if depth == 0 {
+-            return leaf(rng);
++        if *self == Self::bottom() {
++            *self = other.clone();
++        } else {
++            *self = Self { solved: None, conflict: true };
+         }
+-        match rng.below(5) {
+-            0 => TypeDesc::Option(Box::new(ty(rng, depth - 1))),
+-            1 => TypeDesc::Vec(Box::new(ty(rng, depth - 1))),
+-            2 => TypeDesc::Tuple(vec![ty(rng, depth - 1), ty(rng, depth - 1)]),
+-            _ => leaf(rng),
+-        }
+-    }
+-
+-    /// sk-v27 LW3.COMP-6: `TypeDomain::join` is a lattice join, read over
+-    /// 10⁵ generated cases. Born RED: a decided type joined with a
+-    /// different one is overwritten (`a ⊔ b = b`, `b ⊔ a = a`), so the
+-    /// join is not commutative.
+-    #[test]
+-    fn type_domain_join_is_a_lattice_join() {
+-        let violations = generated_violations(0x5eed_7e9e, |rng| {
+-            if rng.below(4) == 0 {
+-                TypeDomain::unsolved()
+-            } else {
+-                TypeDomain::ground(ty(rng, 2))
+-            }
+-        });
+-        assert!(violations.is_empty(), "{violations:#?}");
++        true
+     }
+ }
+diff --git a/crates/ir/src/passes/types/constraint/grounds.rs b/crates/ir/src/passes/types/constraint/grounds.rs
+index 88c8df8a2..6afd309e3 100644
+--- a/crates/ir/src/passes/types/constraint/grounds.rs
++++ b/crates/ir/src/passes/types/constraint/grounds.rs
+@@ -42,11 +42,7 @@ impl Constraint<TypeDomain> for GroundConstraint {
+     }
+ 
+     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
+-        if assign(vars, self.var, self.ty.clone()) {
+-            Revision::Changed
+-        } else {
+-            Revision::Unchanged
+-        }
++        assign(vars, self.var, self.ty.clone())
+     }
+ }
+ 
+@@ -91,18 +87,12 @@ impl Constraint<TypeDomain> for EqualConstraint {
+         let source_some = vars[self.source as usize].domain.solved.is_some();
+         let target_some = vars[self.target as usize].domain.solved.is_some();
+ 
+-        let changed = if source_some {
++        if source_some {
+             let ty = vars[self.source as usize].domain.solved.clone().unwrap();
+             assign(vars, self.target, ty)
+         } else if target_some {
+             let ty = vars[self.target as usize].domain.solved.clone().unwrap();
+             assign(vars, self.source, ty)
+-        } else {
+-            false
+-        };
+-
+-        if changed {
+-            Revision::Changed
+         } else {
+             Revision::Unchanged
+         }
+diff --git a/crates/ir/src/passes/types/constraint/operators.rs b/crates/ir/src/passes/types/constraint/operators.rs
+index 55be1380f..a7de5459c 100644
+--- a/crates/ir/src/passes/types/constraint/operators.rs
++++ b/crates/ir/src/passes/types/constraint/operators.rs
+@@ -55,11 +55,7 @@ impl Constraint<TypeDomain> for OptionalConstraint {
+                 Some(ty) => TypeDesc::Option(Box::new(ty.clone())),
+             }
+         };
+-        if assign(vars, self.var, result) {
+-            Revision::Changed
+-        } else {
+-            Revision::Unchanged
+-        }
++        assign(vars, self.var, result)
+     }
+ }
+ 
+@@ -103,11 +99,7 @@ impl Constraint<TypeDomain> for RepeatConstraint {
+                 Some(ty) => TypeDesc::Vec(Box::new(ty.clone())),
+             }
+         };
+-        if assign(vars, self.var, result) {
+-            Revision::Changed
+-        } else {
+-            Revision::Unchanged
+-        }
++        assign(vars, self.var, result)
+     }
+ }
+ 
+@@ -163,11 +155,7 @@ impl Constraint<TypeDomain> for ProjectConstraint {
+             Some(false) => Revision::Unchanged,
+             Some(true) => {
+                 let ty = vars[self.kept as usize].domain.solved.clone().unwrap();
+-                if assign(vars, self.var, ty) {
+-                    Revision::Changed
+-                } else {
+-                    Revision::Unchanged
+-                }
++                assign(vars, self.var, ty)
+             }
+         }
+     }
+@@ -204,10 +192,6 @@ impl Constraint<TypeDomain> for MapConstraint {
+     }
+ 
+     fn revise(&self, vars: &mut [Variable<TypeDomain>], _depth: usize) -> Revision {
+-        if assign(vars, self.var, self.return_type.clone()) {
+-            Revision::Changed
+-        } else {
+-            Revision::Unchanged
+-        }
++        assign(vars, self.var, self.return_type.clone())
+     }
+ }
+diff --git a/crates/ir/src/passes/types/constraint/reference.rs b/crates/ir/src/passes/types/constraint/reference.rs
+index b42128139..8c63a8ec8 100644
+--- a/crates/ir/src/passes/types/constraint/reference.rs
++++ b/crates/ir/src/passes/types/constraint/reference.rs
+@@ -123,11 +123,7 @@ impl Constraint<TypeDomain> for RefConstraint {
+             self.sink.record(o);
+         }
+ 
+-        if assign(vars, self.var, result) {
+-            Revision::Changed
+-        } else {
+-            Revision::Unchanged
+-        }
++        assign(vars, self.var, result)
+     }
+ }
+ 
+diff --git a/crates/ir/src/passes/types/constraint/revise.rs b/crates/ir/src/passes/types/constraint/revise.rs
+index 5895de6a7..949633b2d 100644
+--- a/crates/ir/src/passes/types/constraint/revise.rs
++++ b/crates/ir/src/passes/types/constraint/revise.rs
+@@ -14,6 +14,8 @@
+ //! 2N TypeDesc clones per Seq revise and N+1 clones per Alt revise;
+ //! the new contract trims those to N and 1 respectively.
+ 
++use csp_solver::constraint::Revision;
++use csp_solver::domain::LatticeDomain;
+ use csp_solver::variable::Variable;
+ 
+ use crate::TypeDesc;
+@@ -23,14 +25,16 @@ use crate::passes::types::type_map::try_flatten_pair;
+ use super::TypeVarId;
+ use super::domain::TypeDomain;
+ 
+-/// Assign a type to a variable's domain. Returns true if the type changed.
+-pub(super) fn assign(vars: &mut [Variable<TypeDomain>], var: TypeVarId, ty: TypeDesc) -> bool {
+-    let slot = &mut vars[var as usize].domain.solved;
+-    if slot.as_ref() == Some(&ty) {
+-        false
++/// Join a type into a variable's domain. A different type than the one
++/// already decided reaches ⊤ and is `Unsatisfiable` (LW3.COMP-6).
++pub(super) fn assign(vars: &mut [Variable<TypeDomain>], var: TypeVarId, ty: TypeDesc) -> Revision {
++    let domain = &mut vars[var as usize].domain;
++    if !domain.join(&TypeDomain::ground(ty)) {
++        Revision::Unchanged
++    } else if domain.is_conflict() {
++        Revision::Unsatisfiable
+     } else {
+-        *slot = Some(ty);
+-        true
++        Revision::Changed
+     }
+ }
+ 
+diff --git a/crates/ir/src/passes/types/constraint/seq.rs b/crates/ir/src/passes/types/constraint/seq.rs
+index cf3dfcb42..4b5899372 100644
+--- a/crates/ir/src/passes/types/constraint/seq.rs
++++ b/crates/ir/src/passes/types/constraint/seq.rs
+@@ -136,10 +136,6 @@ impl Constraint<TypeDomain> for SeqConstraint {
+             }
+         };
+ 
+-        if assign(vars, self.var, result) {
+-            Revision::Changed
+-        } else {
+-            Revision::Unchanged
+-        }
++        assign(vars, self.var, result)
+     }
+ }

@@ -3,11 +3,14 @@
 //! Each Alt node becomes a CSP variable whose domain monotonically converges
 //! from the bottom (`Unknown`) to a singleton concrete decision
 //! (`Dispatchable` or `NonDispatchable`). AC-3 propagation is sufficient —
-//! no search/backtracking is needed.
+//! no search/backtracking is needed. The two decisions are incomparable and
+//! join to the top, `Conflict`, which a constraint reports as
+//! `Revision::Unsatisfiable` (sk-v27 LW3.COMP-6, RULINGS 2026-11-13a).
 
 use csp_solver::domain::{Domain, LatticeDomain};
 
-/// Tri-state dispatch eligibility: Unknown → Dispatchable or NonDispatchable.
+/// Dispatch eligibility: `Unknown` (⊥) → `Dispatchable` or
+/// `NonDispatchable` → `Conflict` (⊤, both decisions asserted).
 ///
 /// Models each Alt node as a CSP variable whose domain monotonically
 /// converges from `Unknown` to a concrete decision.
@@ -16,6 +19,7 @@ pub enum DispatchDecision {
     Unknown,
     Dispatchable,
     NonDispatchable,
+    Conflict,
 }
 
 /// Lattice domain wrapping `DispatchDecision`.
@@ -32,6 +36,10 @@ impl DispatchDomain {
         Self {
             decision: DispatchDecision::Unknown,
         }
+    }
+
+    pub(super) fn decided(decision: DispatchDecision) -> Self {
+        Self { decision }
     }
 }
 
@@ -71,12 +79,35 @@ impl LatticeDomain for DispatchDomain {
     }
 
     fn join(&mut self, other: &Self) -> bool {
-        match (&self.decision, &other.decision) {
-            (DispatchDecision::Unknown, d) if *d != DispatchDecision::Unknown => {
-                self.decision = d.clone();
-                true
-            }
-            _ => false,
-        }
+        use DispatchDecision::{Conflict, Unknown};
+        let joined = match (&self.decision, &other.decision) {
+            (_, Unknown) | (Conflict, _) => return false,
+            (a, b) if a == b => return false,
+            (Unknown, b) => b.clone(),
+            _ => Conflict,
+        };
+        self.decision = joined;
+        true
+    }
+}
+
+#[cfg(test)]
+mod lattice_laws {
+    use super::{DispatchDecision, DispatchDomain};
+    use crate::passes::lattice_laws::generated_violations;
+
+    /// sk-v27 LW3.COMP-6: `DispatchDomain::join` is a lattice join, read
+    /// over 10⁵ generated cases. Born RED: two different decisions join
+    /// to whichever came first, so the join is not commutative.
+    #[test]
+    fn dispatch_domain_join_is_a_lattice_join() {
+        let violations = generated_violations(0x5eed_0d15, |rng| DispatchDomain {
+            decision: match rng.below(3) {
+                0 => DispatchDecision::Unknown,
+                1 => DispatchDecision::Dispatchable,
+                _ => DispatchDecision::NonDispatchable,
+            },
+        });
+        assert!(violations.is_empty(), "{violations:#?}");
     }
 }

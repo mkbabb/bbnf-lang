@@ -1,0 +1,210 @@
+crates/core/tests/fixtures/deterministic.bbnf	ts	PANIC
+crates/core/tests/fixtures/deterministic.bbnf	wasm	PANIC
+crates/core/tests/fixtures/deterministic.bbnf	rust	PANIC
+crates/gorgeous/grammar/bbnf/bbnf.bbnf	ts	PANIC
+crates/gorgeous/grammar/bbnf/bbnf.bbnf	wasm	PANIC
+crates/gorgeous/grammar/bbnf/bbnf.bbnf	rust	PANIC
+crates/gorgeous/grammar/bnf/bnf.bbnf	ts	ok 01cd904b03d51b61
+crates/gorgeous/grammar/bnf/bnf.bbnf	wasm	ok 3bbae3574dd31498
+crates/gorgeous/grammar/bnf/bnf.bbnf	rust	ok types=6096e7b6631550ce
+crates/gorgeous/grammar/css/pretty.bbnf	ts	PANIC
+crates/gorgeous/grammar/css/pretty.bbnf	wasm	PANIC
+crates/gorgeous/grammar/css/pretty.bbnf	rust	PANIC
+crates/gorgeous/grammar/ebnf/ebnf.bbnf	ts	PANIC
+crates/gorgeous/grammar/ebnf/ebnf.bbnf	wasm	PANIC
+crates/gorgeous/grammar/ebnf/ebnf.bbnf	rust	PANIC
+crates/gorgeous/grammar/google-sheets/google-sheets.bbnf	ts	PANIC
+crates/gorgeous/grammar/google-sheets/google-sheets.bbnf	wasm	PANIC
+crates/gorgeous/grammar/google-sheets/google-sheets.bbnf	rust	PANIC
+crates/gorgeous/grammar/json/json.bbnf	ts	ok 86e8a9376e0148b1
+crates/gorgeous/grammar/json/json.bbnf	wasm	ok 1619a18799cedcfd
+crates/gorgeous/grammar/json/json.bbnf	rust	ok types=85f65f21af372e0c
+crates/gorgeous/tests/corpus/g3/bbnf/comments-factor.bbnf	ts	ok eee566a1ff13d1b8
+crates/gorgeous/tests/corpus/g3/bbnf/comments-factor.bbnf	wasm	ok 5bafe7225973bd4d
+crates/gorgeous/tests/corpus/g3/bbnf/comments-factor.bbnf	rust	ok types=2af47c0452d32d70
+crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf	ts	err 91d0a03a8c8b0798
+crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf	wasm	err 91d0a03a8c8b0798
+crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf	rust	err 91d0a03a8c8b0798
+crates/gorgeous/tests/corpus/g3/bbnf/comments-top.bbnf	ts	ok 78a2f65639011546
+crates/gorgeous/tests/corpus/g3/bbnf/comments-top.bbnf	wasm	ok 39750d156ad7e467
+crates/gorgeous/tests/corpus/g3/bbnf/comments-top.bbnf	rust	ok types=2af47c0452d32d70
+crates/gorgeous/tests/corpus/g3/bbnf/plain.bbnf	ts	ok 77f0dd4ffd2cd52d
+crates/gorgeous/tests/corpus/g3/bbnf/plain.bbnf	wasm	ok c97467e2d2a07b20
+crates/gorgeous/tests/corpus/g3/bbnf/plain.bbnf	rust	ok types=2af47c0452d32d70
+grammar/bbnf/bbnf.bbnf	ts	PANIC
+grammar/bbnf/bbnf.bbnf	wasm	PANIC
+grammar/bbnf/bbnf.bbnf	rust	PANIC
+grammar/bbnf/expressions.bbnf	ts	ok da6aa17b6f82b7a3
+grammar/bbnf/expressions.bbnf	wasm	ok 60970a5469d9e1f7
+grammar/bbnf/expressions.bbnf	rust	ok types=2af47c0452d32d70
+grammar/bbnf/types.bbnf	ts	ok a7c51a7480262c56
+grammar/bbnf/types.bbnf	wasm	ok 968eeb69ba032faf
+grammar/bbnf/types.bbnf	rust	ok types=2af47c0452d32d70
+grammar/bnf/bnf.bbnf	ts	ok 01cd904b03d51b61
+grammar/bnf/bnf.bbnf	wasm	ok 3bbae3574dd31498
+grammar/bnf/bnf.bbnf	rust	ok types=6096e7b6631550ce
+grammar/css/l4/color.bbnf	ts	ok 249a769805a6a28a
+grammar/css/l4/color.bbnf	wasm	ok c2fd9f372889ff5a
+grammar/css/l4/color.bbnf	rust	ok types=449bef6d852c8706
+grammar/css/l4/easing.bbnf	ts	ok 812a811f989b9617
+grammar/css/l4/easing.bbnf	wasm	ok 783966fdf0827ec4
+grammar/css/l4/easing.bbnf	rust	ok types=ab7c24534803959c
+grammar/css/l4/filters.bbnf	ts	ok 4766ac4a1ec78fca
+grammar/css/l4/filters.bbnf	wasm	ok a1b496207b743401
+grammar/css/l4/filters.bbnf	rust	ok types=6162e185c6bcd09a
+grammar/css/l4/func-body.bbnf	ts	err 1bc4887fcada5cf0
+grammar/css/l4/func-body.bbnf	wasm	err 1bc4887fcada5cf0
+grammar/css/l4/func-body.bbnf	rust	err 1bc4887fcada5cf0
+grammar/css/l4/gradients.bbnf	ts	ok 7bb6f2fa7867f9b5
+grammar/css/l4/gradients.bbnf	wasm	ok e9404a0ef76a811a
+grammar/css/l4/gradients.bbnf	rust	ok types=cab700109ce05214
+grammar/css/l4/keyframes.bbnf	ts	PANIC
+grammar/css/l4/keyframes.bbnf	wasm	PANIC
+grammar/css/l4/keyframes.bbnf	rust	PANIC
+grammar/css/l4/keywords.bbnf	ts	ok eb005be3f7c58f51
+grammar/css/l4/keywords.bbnf	wasm	ok ff25b29ef69052bc
+grammar/css/l4/keywords.bbnf	rust	ok types=2af47c0452d32d70
+grammar/css/l4/media.bbnf	ts	PANIC
+grammar/css/l4/media.bbnf	wasm	PANIC
+grammar/css/l4/media.bbnf	rust	PANIC
+grammar/css/l4/properties.bbnf	ts	PANIC
+grammar/css/l4/properties.bbnf	wasm	PANIC
+grammar/css/l4/properties.bbnf	rust	PANIC
+grammar/css/l4/selectors.bbnf	ts	ok 5370e15abed360fc
+grammar/css/l4/selectors.bbnf	wasm	ok 6d875829bcf27325
+grammar/css/l4/selectors.bbnf	rust	ok types=013a506ab520b772
+grammar/css/l4/stylesheet.bbnf	ts	PANIC
+grammar/css/l4/stylesheet.bbnf	wasm	PANIC
+grammar/css/l4/stylesheet.bbnf	rust	PANIC
+grammar/css/l4/tokens.bbnf	ts	ok a2da4ef15ad90734
+grammar/css/l4/tokens.bbnf	wasm	ok 375dc05dcd5c1f0c
+grammar/css/l4/tokens.bbnf	rust	ok types=2af47c0452d32d70
+grammar/css/l4/transforms.bbnf	ts	ok 65626a4fd36ec4ea
+grammar/css/l4/transforms.bbnf	wasm	ok 61eb7fe2b3409de3
+grammar/css/l4/transforms.bbnf	rust	ok types=f0e02a08085dbeee
+grammar/css/l4/value-unit.bbnf	ts	ok 13884f1cab5909df
+grammar/css/l4/value-unit.bbnf	wasm	ok 69b13252f348dd35
+grammar/css/l4/value-unit.bbnf	rust	ok types=663f13f3de9f202a
+grammar/css/l4/values.bbnf	ts	PANIC
+grammar/css/l4/values.bbnf	wasm	PANIC
+grammar/css/l4/values.bbnf	rust	PANIC
+grammar/css/pretty.bbnf	ts	ok 6167e698a82a3852
+grammar/css/pretty.bbnf	wasm	ok fc6331dd23eeee6d
+grammar/css/pretty.bbnf	rust	ok types=cd0a632fb0a75662
+grammar/ebnf/ebnf.bbnf	ts	PANIC
+grammar/ebnf/ebnf.bbnf	wasm	PANIC
+grammar/ebnf/ebnf.bbnf	rust	PANIC
+grammar/google-sheets/google-sheets.bbnf	ts	PANIC
+grammar/google-sheets/google-sheets.bbnf	wasm	PANIC
+grammar/google-sheets/google-sheets.bbnf	rust	PANIC
+grammar/heldout/graphql.bbnf	ts	err 938133dd0ee9c8ae
+grammar/heldout/graphql.bbnf	wasm	err 938133dd0ee9c8ae
+grammar/heldout/graphql.bbnf	rust	err 938133dd0ee9c8ae
+grammar/heldout/r7rs-datum.bbnf	ts	err b0d5bdae344adf19
+grammar/heldout/r7rs-datum.bbnf	wasm	err b0d5bdae344adf19
+grammar/heldout/r7rs-datum.bbnf	rust	err b0d5bdae344adf19
+grammar/heldout/toml.bbnf	ts	err 579b87fcb3d0f6a4
+grammar/heldout/toml.bbnf	wasm	err 579b87fcb3d0f6a4
+grammar/heldout/toml.bbnf	rust	err 579b87fcb3d0f6a4
+grammar/json/json.bbnf	ts	ok fc77026127f20f15
+grammar/json/json.bbnf	wasm	ok dcdf51e9fca340b8
+grammar/json/json.bbnf	rust	ok types=7b4ebc3c514013c9
+grammar/misc/csv.bbnf	ts	ok 2bd1f736dbd536ca
+grammar/misc/csv.bbnf	wasm	ok f4dc62da28dcc2f4
+grammar/misc/csv.bbnf	rust	ok types=f654c9a19c452bfd
+grammar/misc/emoji.bbnf	ts	err add71a2e6e0e3191
+grammar/misc/emoji.bbnf	wasm	err add71a2e6e0e3191
+grammar/misc/emoji.bbnf	rust	err add71a2e6e0e3191
+grammar/misc/g4.bbnf	ts	ok 93c44cc4a53ec9e1
+grammar/misc/g4.bbnf	wasm	ok 0e9ebd2a4d346bb0
+grammar/misc/g4.bbnf	rust	ok types=9b52a9a0219ae266
+grammar/misc/json-commented.bbnf	ts	ok 041f7c9002f6bc54
+grammar/misc/json-commented.bbnf	wasm	ok 93d552f13f006579
+grammar/misc/json-commented.bbnf	rust	ok types=fe226cd62c42f6ca
+grammar/misc/math-ambiguous.bbnf	ts	ok 25bda4187d1d73b3
+grammar/misc/math-ambiguous.bbnf	wasm	ok 5db91b42beae7592
+grammar/misc/math-ambiguous.bbnf	rust	ok types=2af47c0452d32d70
+grammar/misc/math.bbnf	ts	ok 40a2a39098783bbb
+grammar/misc/math.bbnf	wasm	ok 5db91b42beae7592
+grammar/misc/math.bbnf	rust	ok types=2af47c0452d32d70
+grammar/misc/regex.bbnf	ts	ok 6842375de535e191
+grammar/misc/regex.bbnf	wasm	ok 57e3179bcb183b1f
+grammar/misc/regex.bbnf	rust	ok types=01b7334b4054bf53
+skinny/grammars/json.bbnf	ts	PANIC
+skinny/grammars/json.bbnf	wasm	PANIC
+skinny/grammars/json.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/css/css-color.bbnf	ts	PANIC
+typescript/test/fixtures/grammar/css/css-color.bbnf	wasm	PANIC
+typescript/test/fixtures/grammar/css/css-color.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/css/css-keyframes.bbnf	ts	PANIC
+typescript/test/fixtures/grammar/css/css-keyframes.bbnf	wasm	PANIC
+typescript/test/fixtures/grammar/css/css-keyframes.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/css/css-selectors.bbnf	ts	ok bad92cbe43d6dabd
+typescript/test/fixtures/grammar/css/css-selectors.bbnf	wasm	ok 8de0563b262e87df
+typescript/test/fixtures/grammar/css/css-selectors.bbnf	rust	ok types=c7f2ced5cddedb7f
+typescript/test/fixtures/grammar/css/css-stylesheet.bbnf	ts	PANIC
+typescript/test/fixtures/grammar/css/css-stylesheet.bbnf	wasm	PANIC
+typescript/test/fixtures/grammar/css/css-stylesheet.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/css/css-tokens.bbnf	ts	ok a2da4ef15ad90734
+typescript/test/fixtures/grammar/css/css-tokens.bbnf	wasm	ok 375dc05dcd5c1f0c
+typescript/test/fixtures/grammar/css/css-tokens.bbnf	rust	ok types=2af47c0452d32d70
+typescript/test/fixtures/grammar/css/css-value-unit.bbnf	ts	ok 2612f54ba7a72547
+typescript/test/fixtures/grammar/css/css-value-unit.bbnf	wasm	ok 4cb90d13f46fef9b
+typescript/test/fixtures/grammar/css/css-value-unit.bbnf	rust	ok types=4633d96320c26953
+typescript/test/fixtures/grammar/css/css-values.bbnf	ts	PANIC
+typescript/test/fixtures/grammar/css/css-values.bbnf	wasm	PANIC
+typescript/test/fixtures/grammar/css/css-values.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/lang/bbnf.bbnf	ts	PANIC
+typescript/test/fixtures/grammar/lang/bbnf.bbnf	wasm	PANIC
+typescript/test/fixtures/grammar/lang/bbnf.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/lang/bnf.bbnf	ts	ok 01cd904b03d51b61
+typescript/test/fixtures/grammar/lang/bnf.bbnf	wasm	ok 3bbae3574dd31498
+typescript/test/fixtures/grammar/lang/bnf.bbnf	rust	ok types=6096e7b6631550ce
+typescript/test/fixtures/grammar/lang/csv.bbnf	ts	ok 2bd1f736dbd536ca
+typescript/test/fixtures/grammar/lang/csv.bbnf	wasm	ok f4dc62da28dcc2f4
+typescript/test/fixtures/grammar/lang/csv.bbnf	rust	ok types=f654c9a19c452bfd
+typescript/test/fixtures/grammar/lang/ebnf.bbnf	ts	PANIC
+typescript/test/fixtures/grammar/lang/ebnf.bbnf	wasm	PANIC
+typescript/test/fixtures/grammar/lang/ebnf.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/lang/emoji.bbnf	ts	err 2eac800bf244aba3
+typescript/test/fixtures/grammar/lang/emoji.bbnf	wasm	err 2eac800bf244aba3
+typescript/test/fixtures/grammar/lang/emoji.bbnf	rust	err 2eac800bf244aba3
+typescript/test/fixtures/grammar/lang/g4.bbnf	ts	ok 93c44cc4a53ec9e1
+typescript/test/fixtures/grammar/lang/g4.bbnf	wasm	ok 0e9ebd2a4d346bb0
+typescript/test/fixtures/grammar/lang/g4.bbnf	rust	ok types=9b52a9a0219ae266
+typescript/test/fixtures/grammar/lang/google-sheets.bbnf	ts	PANIC
+typescript/test/fixtures/grammar/lang/google-sheets.bbnf	wasm	PANIC
+typescript/test/fixtures/grammar/lang/google-sheets.bbnf	rust	PANIC
+typescript/test/fixtures/grammar/lang/json-commented.bbnf	ts	ok 041f7c9002f6bc54
+typescript/test/fixtures/grammar/lang/json-commented.bbnf	wasm	ok 93d552f13f006579
+typescript/test/fixtures/grammar/lang/json-commented.bbnf	rust	ok types=fe226cd62c42f6ca
+typescript/test/fixtures/grammar/lang/json.bbnf	ts	ok 2613a16a016a5509
+typescript/test/fixtures/grammar/lang/json.bbnf	wasm	ok dc9f71650b53fbce
+typescript/test/fixtures/grammar/lang/json.bbnf	rust	ok types=85f65f21af372e0c
+typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf	ts	ok 25bda4187d1d73b3
+typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf	wasm	ok 5db91b42beae7592
+typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf	rust	ok types=2af47c0452d32d70
+typescript/test/fixtures/grammar/lang/math.bbnf	ts	ok 40a2a39098783bbb
+typescript/test/fixtures/grammar/lang/math.bbnf	wasm	ok 5db91b42beae7592
+typescript/test/fixtures/grammar/lang/math.bbnf	rust	ok types=2af47c0452d32d70
+typescript/test/fixtures/grammar/lang/regex.bbnf	ts	ok 6842375de535e191
+typescript/test/fixtures/grammar/lang/regex.bbnf	wasm	ok 57e3179bcb183b1f
+typescript/test/fixtures/grammar/lang/regex.bbnf	rust	ok types=01b7334b4054bf53
+typescript/test/fixtures/value-js/color.bbnf	ts	err 5ea4a157279c3c78
+typescript/test/fixtures/value-js/color.bbnf	wasm	err 5ea4a157279c3c78
+typescript/test/fixtures/value-js/color.bbnf	rust	err 5ea4a157279c3c78
+typescript/test/fixtures/value-js/css.bbnf	ts	err 656541995d33844b
+typescript/test/fixtures/value-js/css.bbnf	wasm	err 656541995d33844b
+typescript/test/fixtures/value-js/css.bbnf	rust	err 656541995d33844b
+typescript/test/fixtures/value-js/math.bbnf	ts	err e5742eeff1775649
+typescript/test/fixtures/value-js/math.bbnf	wasm	err e5742eeff1775649
+typescript/test/fixtures/value-js/math.bbnf	rust	err e5742eeff1775649
+typescript/test/fixtures/value-js/stylesheet.bbnf	ts	err e5742eeff1775649
+typescript/test/fixtures/value-js/stylesheet.bbnf	wasm	err e5742eeff1775649
+typescript/test/fixtures/value-js/stylesheet.bbnf	rust	err e5742eeff1775649
+typescript/test/fixtures/value-js/tokens.bbnf	ts	err e5742eeff1775649
+typescript/test/fixtures/value-js/tokens.bbnf	wasm	err e5742eeff1775649
+typescript/test/fixtures/value-js/tokens.bbnf	rust	err e5742eeff1775649
+typescript/test/fixtures/value-js/value.bbnf	ts	err 656541995d33844b
+typescript/test/fixtures/value-js/value.bbnf	wasm	err 656541995d33844b
+typescript/test/fixtures/value-js/value.bbnf	rust	err 656541995d33844b

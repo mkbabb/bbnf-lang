@@ -1,0 +1,4 @@
+gate	ledger	form	read by	cure unit	status
+LW3.COMP-1b-BR1	LW3.COMP-1b-BR1	#[ignore = "LW3.COMP-1d"] crates/core/tests/w3_replay_public_contract.rs active_roots_remain_preselection_only_and_the_guard_self_falsifies	cargo nextest run -p bbnf --run-ignored only --test w3_replay_public_contract	LW3.COMP-1d (vi)	OPEN
+LW3.COMP-1b-BR2	LW3.COMP-1b-BR2	#[ignore = "LW7.COMP-1"] crates/core/tests/w3_instance_frontend_contract.rs every_core_and_external_control_caller_uses_only_the_clean_break_instance_api	cargo nextest run -p bbnf --run-ignored only --test w3_instance_frontend_contract	LW7.COMP-1	OPEN
+LW3.COMP-6-BR3	LW3.COMP-6-BR3	evidence script (no test in the suite, no #[ignore]) restart/skinny/tranches/sk-v27/evidence/LW3.COMP/comp6/br3/br3.sh	sh restart/skinny/tranches/sk-v27/evidence/LW3.COMP/comp6/br3/br3.sh <worktree> <log dir>	LW5.COMP-1 "TypeDomain on its real refinement order"	OPEN

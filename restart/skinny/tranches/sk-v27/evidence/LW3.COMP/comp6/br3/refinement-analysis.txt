@@ -1,0 +1,44 @@
+events=672 distinct_pairs=39 entries_with_overwrites=21
+antisymmetry violations (a->b and b->a): 0
+nodes=40 cycles(SCC>1)=0
+
+pairs (count, entries, old -> new):
+99	8	BoxedEnum	->	Tuple([BoxedEnum, Vec(Tuple([Span, BoxedEnum]))])
+93	13	BoxedEnum	->	Tuple([Span, BoxedEnum, Span])
+88	9	BoxedEnum	->	Tuple([BoxedEnum, Vec(Enum)])
+61	13	BoxedEnum	->	Tuple([Span, BoxedEnum])
+39	5	BoxedEnum	->	Tuple([Span, Option(BoxedEnum)])
+36	7	BoxedEnum	->	HeterogeneousAltJoin([BoxedEnum, Span])
+27	3	BoxedEnum	->	Vec(Tuple([Span, BoxedEnum, Span]))
+25	6	BoxedEnum	->	Tuple([Span, Tuple([BoxedEnum, Vec(Enum)])])
+21	3	BoxedEnum	->	Vec(Tuple([BoxedEnum, Span]))
+15	5	BoxedEnum	->	HeterogeneousAltJoin([Span, BoxedEnum])
+12	4	BoxedEnum	->	Option(BoxedEnum)
+12	3	BoxedEnum	->	Tuple([Vec(Enum), BoxedEnum])
+10	4	BoxedEnum	->	HeterogeneousAltJoin([BoxedEnum, Span, F64])
+9	3	BoxedEnum	->	HeterogeneousAltJoin([Tuple([Span, BoxedEnum, Span]), BoxedEnum, Sp...
+9	3	BoxedEnum	->	Tuple([BoxedEnum, Tuple([Span, HeterogeneousAltJoin([Span, Tuple([S...
+9	3	BoxedEnum	->	Tuple([BoxedEnum, BoxedEnum])
+9	3	BoxedEnum	->	Tuple([BoxedEnum, Span])
+9	3	BoxedEnum	->	Tuple([Span, BoxedEnum, BoxedEnum, BoxedEnum])
+9	3	BoxedEnum	->	HeterogeneousAltJoin([BoxedEnum, F64])
+9	3	BoxedEnum	->	Tuple([BoxedEnum, BoxedEnum, BoxedEnum])
+9	3	BoxedEnum	->	Tuple([Span, BoxedEnum, Span, BoxedEnum, Span])
+6	2	BoxedEnum	->	HeterogeneousAltJoin([Span, Tuple([Span, BoxedEnum, Span])])
+6	2	BoxedEnum	->	Vec(Tuple([Span, HeterogeneousAltJoin([Span, BoxedEnum]), Span]))
+6	1	BoxedEnum	->	Vec(Tuple([Span, BoxedEnum]))
+6	2	BoxedEnum	->	Vec(HeterogeneousAltJoin([Tuple([Span, BoxedEnum, Span]), Span]))
+3	1	BoxedEnum	->	Tuple([Span, Option(BoxedEnum), Span])
+3	1	BoxedEnum	->	Tuple([Span, Option(Tuple([BoxedEnum, Vec(Tuple([Span, BoxedEnum]))...
+3	1	BoxedEnum	->	HeterogeneousAltJoin([I64, F64, Span, BoxedEnum, Tuple([Span, Boxed...
+3	1	BoxedEnum	->	HeterogeneousAltJoin([Tuple([Span, BoxedEnum]), BoxedEnum])
+3	1	BoxedEnum	->	HeterogeneousAltJoin([Span, Tuple([Span, Option(Tuple([Span, BoxedE...
+3	1	BoxedEnum	->	Tuple([BoxedEnum, Option(Tuple([Span, Tuple([BoxedEnum, Span])]))])
+3	1	BoxedEnum	->	Tuple([Span, BoxedEnum, BoxedEnum])
+3	1	BoxedEnum	->	Tuple([BoxedEnum, Option(BoxedEnum), Span])
+3	1	BoxedEnum	->	HeterogeneousAltJoin([BoxedEnum, F64, Bool, Span])
+3	1	BoxedEnum	->	Tuple([Span, HeterogeneousAltJoin([BoxedEnum, Span]), Span])
+3	1	BoxedEnum	->	Option(Tuple([BoxedEnum, Vec(Tuple([Span, BoxedEnum]))]))
+3	1	BoxedEnum	->	Tuple([Span, BoxedEnum, Vec(Enum), Span])
+1	1	BoxedEnum	->	Tuple([HeterogeneousAltJoin([BoxedEnum, Tuple([BoxedEnum, Vec(Enum)...
+1	1	BoxedEnum	->	Tuple([Span, Vec(Tuple([Span, BoxedEnum]))])

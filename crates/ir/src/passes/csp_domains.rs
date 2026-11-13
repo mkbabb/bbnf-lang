@@ -19,13 +19,15 @@ use crate::CharSet128;
 /// Propagate a fixed-point pass's CSP to its fixed point.
 ///
 /// Every pass that calls this builds its CSP from monotone joins into a
-/// lattice that has no conflict element (`BoolDomain`, `CharSetDomain`,
-/// `DispatchDomain`, `TypeDomain`), and none of their constraints'
-/// `revise` returns `Revision::Unsatisfiable`. Propagation therefore
-/// always reaches the fixed point, and `Unsatisfiable` here is a broken
-/// invariant of the named pass, not a property of the grammar. (The
-/// one CSP whose domain does have a conflict element, the inline plan,
-/// reports it as a typed `CallModeConflict` instead.)
+/// lattice (`BoolDomain`, `CharSetDomain`, `DispatchDomain`, `TypeDomain`).
+/// `DispatchDomain` has a conflict element (⊤, both decisions asserted;
+/// LW3.COMP-6), which its constraint reports as `Revision::Unsatisfiable`;
+/// the dispatch pass asserts one decision per Alt, and no constraint of the
+/// other passes reports `Unsatisfiable`, so propagation reaches the fixed
+/// point, and `Unsatisfiable`
+/// here is a broken invariant of the named pass, not a property of the
+/// grammar. (The inline plan, whose forces can genuinely disagree, reports
+/// its conflict as a typed `CallModeConflict` instead.)
 pub(crate) fn propagate_to_fixed_point<D>(csp: &mut Csp<D>, pass: &'static str)
 where
     D: Domain,
@@ -522,4 +524,38 @@ fn charset_union(vars: &mut [Variable<CharSetDomain>], var: VarId, cs: &CharSet1
     let old = vars[var as usize].domain.solved.bits;
     vars[var as usize].domain.solved.union(cs);
     vars[var as usize].domain.solved.bits != old
+}
+
+#[cfg(test)]
+mod lattice_laws {
+    use super::{BoolDomain, CharSetDomain};
+    use crate::CharSet128;
+    use crate::passes::lattice_laws::generated_violations;
+    use csp_solver::domain::LatticeDomain;
+
+    /// sk-v27 LW3.COMP-6: `BoolDomain::join` (the chain
+    /// `None ⊑ Some(true) ⊑ Some(false)`) is a lattice join over 10⁵ cases.
+    #[test]
+    fn bool_domain_join_is_a_lattice_join() {
+        let violations = generated_violations(0x5eed_b001, |rng| match rng.below(3) {
+            0 => BoolDomain::bottom(),
+            1 => BoolDomain::ground(true),
+            _ => BoolDomain::ground(false),
+        });
+        assert!(violations.is_empty(), "{violations:#?}");
+    }
+
+    /// sk-v27 LW3.COMP-6: `CharSetDomain::join` (union) is a lattice join
+    /// over 10⁵ cases.
+    #[test]
+    fn charset_domain_join_is_a_lattice_join() {
+        let violations = generated_violations(0x5eed_c5e7, |rng| {
+            let mut cs = CharSet128::new();
+            for _ in 0..rng.below(6) {
+                cs.add(rng.below(128) as u8);
+            }
+            CharSetDomain::from(cs)
+        });
+        assert!(violations.is_empty(), "{violations:#?}");
+    }
 }

@@ -11,6 +11,8 @@ pub mod csp_strategy;
 pub mod facts;
 pub mod inline_trace;
 pub mod inspect;
+#[cfg(test)]
+pub(crate) mod lattice_laws;
 pub mod lr;
 pub mod materialization;
 pub mod metadata;

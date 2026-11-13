@@ -1,0 +1,16 @@
+diff --git a/crates/core/src/backend/rust/emitter/shapes/mod.rs b/crates/core/src/backend/rust/emitter/shapes/mod.rs
+index b79ad5644..130403a5f 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/mod.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/mod.rs
+@@ -368,3 +368,11 @@ pub fn root_rule_name(ir: &GrammarIR) -> Option<String> {
+         .find(|r| r.id == ir.entry)
+         .map(|r| ir.get_string(r.name).to_string())
+ }
++
++#[allow(dead_code)]
++fn i7_mutant(rule_name: &str) -> bool {
++    match rule_name {
++        "value" => true,
++        _ => false,
++    }
++}

@@ -1,0 +1,3 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+    Checking xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 1.57s

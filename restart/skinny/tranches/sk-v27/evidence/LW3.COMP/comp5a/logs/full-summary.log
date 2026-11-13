@@ -1,0 +1,5 @@
+  TRY 1 FAIL [   0.019s] (─────────) xtask::metadata_fail_closed empty_features_passes_validation
+  TRY 1 FAIL [   0.024s] (─────────) xtask::metadata_fail_closed every_known_feature_passes_validation
+  TRY 1 FAIL [   0.024s] (─────────) xtask::metadata_fail_closed unknown_feature_is_rejected_with_structured_error
+   TRY 1 TMT [  90.010s] (─────────) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+     Summary [ 194.802s] 1575 tests run: 1571 passed (6 slow), 3 failed, 1 timed out, 19 skipped

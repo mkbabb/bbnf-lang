@@ -1,0 +1,80 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.95s
+────────────
+ Nextest run ID 98d9b5b1-0ea5-4d71-8a9f-a4589b46a320 with nextest profile: default
+    Starting 2 tests across 1 binary
+        PASS [   0.241s] (1/2) bbnf::no_grammar_name_branch wave_scan_emits_status
+  TRY 1 FAIL [   0.241s] (───) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  stdout ───
+
+    running 1 test
+    test no_grammar_name_branch_in_production_runtime_or_shape_emitter ... FAILED
+
+    failures:
+
+    failures:
+        no_grammar_name_branch_in_production_runtime_or_shape_emitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.23s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:375 — matched `value` in arm `"value" => true,`
+
+    (scanned 249 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (17146555) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  TRY 2 FAIL [   0.202s] (2/2) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  stdout ───
+
+    running 1 test
+    test no_grammar_name_branch_in_production_runtime_or_shape_emitter ... FAILED
+
+    failures:
+
+    failures:
+        no_grammar_name_branch_in_production_runtime_or_shape_emitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.19s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:375 — matched `value` in arm `"value" => true,`
+
+    (scanned 249 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (17146845) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.447s] 2 tests run: 1 passed, 1 failed, 0 skipped
+  TRY 2 FAIL [   0.202s] (2/2) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  stdout ───
+
+    running 1 test
+    test no_grammar_name_branch_in_production_runtime_or_shape_emitter ... FAILED
+
+    failures:
+
+    failures:
+        no_grammar_name_branch_in_production_runtime_or_shape_emitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.19s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:375 — matched `value` in arm `"value" => true,`
+
+    (scanned 249 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (17146845) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

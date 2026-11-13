@@ -1,0 +1,22 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.49s
+────────────
+ Nextest run ID 611b4653-208a-4faf-a50c-07bf3cfd583c with nextest profile: default
+    Starting 12 tests across 1 binary (1 test skipped)
+        PASS [   0.023s] ( 1/12) bbnf::w3_replay_public_contract packet_json_decoder_rejects_duplicate_keys_at_every_depth
+        PASS [   0.023s] ( 2/12) bbnf::w3_replay_public_contract packet_inventory_ordinals_modes_and_preselection_paths_are_exact
+        PASS [   0.039s] ( 3/12) bbnf::w3_replay_public_contract grammar_instance_schema_and_all_sealed_instances_are_strict
+        PASS [   0.068s] ( 4/12) bbnf::w3_replay_public_contract packet_authorities_hash_envelopes_and_symbol_ledgers_close_independently
+        PASS [   0.086s] ( 5/12) bbnf::w3_replay_public_contract exactly_three_public_instances_compile_twice_to_byte_identical_carriers
+        PASS [   0.128s] ( 6/12) bbnf::w3_replay_public_contract trusted_replay_rejects_every_w3_authority_carrier_and_encoding_tamper
+        PASS [   0.158s] ( 7/12) bbnf::w3_replay_public_contract synthetic_genericity_controls_have_fresh_hash_path_entry_and_order_identities
+        PASS [   0.295s] ( 8/12) bbnf::w3_replay_public_contract w3_schema_matrix_and_trusted_replay_retain_instance_and_source
+        PASS [   0.793s] ( 9/12) bbnf::w3_replay_public_contract owned_parse_that_parse_module_shape_is_live_name_agnostic_and_self_falsifying
+        PASS [   1.388s] (10/12) bbnf::w3_replay_public_contract compiler_library_ingress_policy_self_falsifies_pure_and_effectful_surfaces
+        PASS [   4.165s] (11/12) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+        SLOW [> 30.000s] (─────) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+        SLOW [> 60.000s] (─────) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+        PASS [  79.702s] (12/12) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+────────────
+     Summary [  79.704s] 12 tests run: 12 passed (1 slow), 1 skipped

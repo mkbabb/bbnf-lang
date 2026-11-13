@@ -1,0 +1,206 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.22s
+────────────
+ Nextest run ID cb5c5b77-d532-4a87-aef0-f218a48e3caa with nextest profile: default
+    Starting 1 test across 1 binary (2 tests skipped)
+  TRY 1 FAIL [   1.461s] (───) bbnf::plan_contract renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+  stdout ───
+
+    running 1 test
+    test renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission ... FAILED
+
+    failures:
+
+    failures:
+        renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 1.45s
+
+  stderr ───
+    Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r35::i7r35_2` and `i7r41::i7r41_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+    Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r143::i7r143_1` and `i7r144::i7r144_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r83::i7r83_0` and `i7r144::i7r144_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `i7r144::i7r144_0` (F64). Codegen will resolve by rule-scoped lookup.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16811879) panicked at crates/core/tests/plan_contract.rs:511:5:
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/bbnf/bbnf.bbnf: emission under `BbnfBootstrap`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/json/json.bbnf: emission under `JsonParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/css/l4/stylesheet.bbnf: emission under `CssL4Parser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/css/pretty.bbnf: emission under `CssPrettyParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/google-sheets/google-sheets.bbnf: emission under `GoogleSheetsParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/ebnf/ebnf.bbnf: emission under `EbnfParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/bnf/bnf.bbnf: emission under `BnfParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/misc/csv.bbnf: emission under `CsvParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/misc/math.bbnf: emission under `MathParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/graphql.bbnf: root does not compile the grammar: rule `definition` references unknown nonterminal `executable-definition`
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/r7rs-datum.bbnf: root does not compile the grammar: rule `comment` references unknown nonterminal `not-hash`
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/toml.bbnf: root does not compile the grammar: rule `key` references unknown nonterminal `simple-key`
+
+   DELAY 2/2 by   1.000s (───) bbnf::plan_contract renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+  TRY 2 FAIL [   1.222s] (1/1) bbnf::plan_contract renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+  stdout ───
+
+    running 1 test
+    test renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission ... FAILED
+
+    failures:
+
+    failures:
+        renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 1.21s
+
+  stderr ───
+    Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r35::i7r35_2` and `i7r41::i7r41_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+    Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r144::i7r144_0` and `i7r143::i7r143_1` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r83::i7r83_0` and `i7r143::i7r143_1` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `i7r143::i7r143_1` (F64). Codegen will resolve by rule-scoped lookup.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/core/tests/plan_contract.rs:511:5:
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/bbnf/bbnf.bbnf: emission under `BbnfBootstrap`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/json/json.bbnf: emission under `JsonParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/css/l4/stylesheet.bbnf: emission under `CssL4Parser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/css/pretty.bbnf: emission under `CssPrettyParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/google-sheets/google-sheets.bbnf: emission under `GoogleSheetsParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/ebnf/ebnf.bbnf: emission under `EbnfParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/bnf/bnf.bbnf: emission under `BnfParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/misc/csv.bbnf: emission under `CsvParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/misc/math.bbnf: emission under `MathParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/graphql.bbnf: root does not compile the grammar: rule `definition` references unknown nonterminal `executable-definition`
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/r7rs-datum.bbnf: root does not compile the grammar: rule `comment` references unknown nonterminal `not-hash`
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/toml.bbnf: root does not compile the grammar: rule `key` references unknown nonterminal `simple-key`
+
+  Cancelling due to test failure: 
+────────────
+     Summary [   3.687s] 1 test run: 0 passed, 1 failed, 2 skipped
+  TRY 2 FAIL [   1.222s] (1/1) bbnf::plan_contract renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+  stdout ───
+
+    running 1 test
+    test renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission ... FAILED
+
+    failures:
+
+    failures:
+        renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 1.21s
+
+  stderr ───
+    Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r35::i7r35_2` and `i7r41::i7r41_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+    Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r144::i7r144_0` and `i7r143::i7r143_1` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `i7r83::i7r83_0` and `i7r143::i7r143_1` (F64). Codegen will resolve by rule-scoped lookup.
+    Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `i7r143::i7r143_1` (F64). Codegen will resolve by rule-scoped lookup.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/ir/src/registry/strategy.rs:226:9:
+    EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.
+
+    thread 'renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission' (16812583) panicked at crates/core/tests/plan_contract.rs:511:5:
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/bbnf/bbnf.bbnf: emission under `BbnfBootstrap`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/json/json.bbnf: emission under `JsonParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/css/l4/stylesheet.bbnf: emission under `CssL4Parser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/css/pretty.bbnf: emission under `CssPrettyParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/google-sheets/google-sheets.bbnf: emission under `GoogleSheetsParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/ebnf/ebnf.bbnf: emission under `EbnfParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/bnf/bnf.bbnf: emission under `BnfParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/misc/csv.bbnf: emission under `CsvParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/misc/math.bbnf: emission under `MathParser`: None; under `I7RenamedParser`: Some("EmitStrategy::for_grammar_with_manifest: unknown production grammar `I7RenamedParser`; add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs (or thread a fixture manifest table for synthetic-grammar tests). Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; a missing entry is a manifest defect, not a runtime fallback.")
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/graphql.bbnf: root does not compile the grammar: rule `definition` references unknown nonterminal `executable-definition`
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/r7rs-datum.bbnf: root does not compile the grammar: rule `comment` references unknown nonterminal `not-hash`
+    /Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/grammar/heldout/toml.bbnf: root does not compile the grammar: rule `key` references unknown nonterminal `simple-key`
+
+error: test run failed

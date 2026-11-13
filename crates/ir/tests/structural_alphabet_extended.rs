@@ -1099,19 +1099,16 @@ fn empty_grammar_produces_no_alphabet() {
 
 #[test]
 fn probe_per_grammar_mining() {
-    use bbnf_ir::passes::recognizers::kernel_shape::select_kernel_strategy;
+    // The kernel shape is parse-that-simd's `KernelShape::select`, read
+    // from the singleton count printed here (LW3.PERF-1c).
     fn report(name: &str, mut ir: GrammarIR) {
         compute_structural_alphabet(&mut ir);
         let alphabet = ir.structural_alphabet.unwrap_or_default();
-        let strategy = select_kernel_strategy(&alphabet);
         eprintln!(
-            "{name}: |singletons|={} |digraph_pairs|={} |quote_classes|={} | shape={:?} digraphs={} quote_parity={}",
+            "{name}: |singletons|={} |digraph_pairs|={} |quote_classes|={}",
             alphabet.single_bytes.len(),
             alphabet.digraphs.len(),
             alphabet.quote_classes.len(),
-            strategy.singleton_kernel,
-            strategy.has_digraphs,
-            strategy.has_quote_parity,
         );
     }
     report("JSON  ", json_fixture());
@@ -1381,21 +1378,17 @@ fn sheets_cardinality_bound() {
 /// over-flagging-prone stress fixtures.
 #[test]
 fn probe_stress_fixture_mining() {
-    use bbnf_ir::passes::recognizers::kernel_shape::select_kernel_strategy;
+    // The kernel shape is parse-that-simd's `KernelShape::select`, read
+    // from the singleton count printed here (LW3.PERF-1c).
     fn report(name: &str, mut ir: GrammarIR) {
         compute_structural_alphabet(&mut ir);
         let alphabet = ir.structural_alphabet.unwrap_or_default();
-        let strategy = select_kernel_strategy(&alphabet);
         eprintln!(
             "{name}: |singletons|={} |digraph_pairs|={} |quote_classes|={} \
-             | shape={:?} digraphs={} quote_parity={} \
              | singletons={:?}",
             alphabet.single_bytes.len(),
             alphabet.digraphs.len(),
             alphabet.quote_classes.len(),
-            strategy.singleton_kernel,
-            strategy.has_digraphs,
-            strategy.has_quote_parity,
             alphabet
                 .single_bytes_vec()
                 .into_iter()

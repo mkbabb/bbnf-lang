@@ -24,7 +24,7 @@ declare function decode_json_string_to_arena(__input: any): any;
 
 // ── Hoisted regex constants ──────────────────────────────────────
 
-const __RE0 = new RegExp("\"(?:[^\"\\\\]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"", "y");
+const __RE0 = new RegExp("\"(?:[^\"\\\\\\x00-\\x1F]|\\\\(?:[\"\\\\\\/bfnrt]|u[0-9a-fA-F]{4}))*\"", "y");
 const __RE1 = new RegExp("[ \\t\\n\\r]*", "y");
 
 // ── Parser functions ─────────────────────────────────────────────

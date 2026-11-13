@@ -1,7 +1,10 @@
-//! Generator: compiles JSON grammar to TypeScript and writes the output
-//! to `benches/ts/generated_json.mjs` for the Node.js benchmark.
+//! The Node.js benchmark's parser: compiles the JSON grammar to TypeScript,
+//! strips the types, and checks the result equals the tracked bench input
+//! `benches/ts/generated_json.mjs`.
 //!
-//! Run: `cargo test -p bbnf --test gen_ts_parser -- --nocapture`
+//! A test run never writes a tracked file (LW3.TREE-1): the module is written
+//! under `CARGO_TARGET_TMPDIR`. After a generator change, rewrite the tracked
+//! input with `BLESS_TS_BENCH_PARSER=1 cargo test -p bbnf --test gen_ts_parser`.
 
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
@@ -26,9 +29,22 @@ fn generate_ts_parser_for_bench() {
     // Strip TypeScript type annotations to produce valid JS (ESM).
     let js = strip_ts_types(&source);
 
-    let out_path = std::path::Path::new("benches/ts/generated_json.mjs");
-    std::fs::write(out_path, &js).expect("failed to write generated_json.mjs");
+    let out_path = std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("generated_json.mjs");
+    std::fs::write(&out_path, &js).expect("failed to write generated_json.mjs");
     eprintln!("Wrote {} bytes to {}", js.len(), out_path.display());
+
+    let tracked = std::path::Path::new("benches/ts/generated_json.mjs");
+    if std::env::var_os("BLESS_TS_BENCH_PARSER").is_some() {
+        std::fs::write(tracked, &js).expect("failed to bless benches/ts/generated_json.mjs");
+        return;
+    }
+    let committed = std::fs::read_to_string(tracked).expect("failed to read the tracked bench parser");
+    assert!(
+        committed == js,
+        "benches/ts/generated_json.mjs is stale against the generator (fresh copy at {}); \
+         rewrite it with BLESS_TS_BENCH_PARSER=1",
+        out_path.display()
+    );
 }
 
 /// Strip TypeScript type annotations to produce valid ESM JavaScript.

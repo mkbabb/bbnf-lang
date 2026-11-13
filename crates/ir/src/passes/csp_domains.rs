@@ -19,13 +19,14 @@ use crate::CharSet128;
 /// Propagate a fixed-point pass's CSP to its fixed point.
 ///
 /// Every pass that calls this builds its CSP from monotone joins into a
-/// lattice that has no conflict element (`BoolDomain`, `CharSetDomain`,
-/// `DispatchDomain`, `TypeDomain`), and none of their constraints'
-/// `revise` returns `Revision::Unsatisfiable`. Propagation therefore
-/// always reaches the fixed point, and `Unsatisfiable` here is a broken
-/// invariant of the named pass, not a property of the grammar. (The
-/// one CSP whose domain does have a conflict element, the inline plan,
-/// reports it as a typed `CallModeConflict` instead.)
+/// lattice (`BoolDomain`, `CharSetDomain`, `DispatchDomain`, `TypeDomain`).
+/// `DispatchDomain` and `TypeDomain` have a conflict element (⊤, two
+/// different decisions asserted; LW3.COMP-6), which their constraints
+/// report as `Revision::Unsatisfiable`; the passes assert one decision per
+/// variable, so propagation reaches the fixed point, and `Unsatisfiable`
+/// here is a broken invariant of the named pass, not a property of the
+/// grammar. (The inline plan, whose forces can genuinely disagree, reports
+/// its conflict as a typed `CallModeConflict` instead.)
 pub(crate) fn propagate_to_fixed_point<D>(csp: &mut Csp<D>, pass: &'static str)
 where
     D: Domain,

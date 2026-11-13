@@ -3,6 +3,7 @@
 //! `Dispatchable` / `NonDispatchable` decision via AC-3.
 
 use csp_solver::constraint::{Constraint, Revision, VarId};
+use csp_solver::domain::LatticeDomain;
 use csp_solver::variable::Variable;
 
 use super::domain::{DispatchDecision, DispatchDomain};
@@ -45,12 +46,13 @@ impl Constraint<DispatchDomain> for DisjointConstraint {
         } else {
             DispatchDecision::NonDispatchable
         };
-        let slot = &mut vars[self.var as usize].domain.decision;
-        if *slot == DispatchDecision::Unknown {
-            *slot = target;
-            Revision::Changed
-        } else {
+        let domain = &mut vars[self.var as usize].domain;
+        if !domain.join(&DispatchDomain::decided(target)) {
             Revision::Unchanged
+        } else if domain.decision == DispatchDecision::Conflict {
+            Revision::Unsatisfiable
+        } else {
+            Revision::Changed
         }
     }
 }

@@ -12,6 +12,8 @@ use csp_solver::domain::LatticeDomain;
 
 /// One law a sample set breaks, with the operands that break it.
 #[derive(Debug)]
+// Read only through `Debug`, in the assertion message.
+#[allow(dead_code)]
 pub(crate) struct LawViolation<D> {
     pub(crate) law: &'static str,
     pub(crate) operands: Vec<D>,

@@ -20,10 +20,11 @@ use crate::CharSet128;
 ///
 /// Every pass that calls this builds its CSP from monotone joins into a
 /// lattice (`BoolDomain`, `CharSetDomain`, `DispatchDomain`, `TypeDomain`).
-/// `DispatchDomain` and `TypeDomain` have a conflict element (⊤, two
-/// different decisions asserted; LW3.COMP-6), which their constraints
-/// report as `Revision::Unsatisfiable`; the passes assert one decision per
-/// variable, so propagation reaches the fixed point, and `Unsatisfiable`
+/// `DispatchDomain` has a conflict element (⊤, both decisions asserted;
+/// LW3.COMP-6), which its constraint reports as `Revision::Unsatisfiable`;
+/// the dispatch pass asserts one decision per Alt, and no constraint of the
+/// other passes reports `Unsatisfiable`, so propagation reaches the fixed
+/// point, and `Unsatisfiable`
 /// here is a broken invariant of the named pass, not a property of the
 /// grammar. (The inline plan, whose forces can genuinely disagree, reports
 /// its conflict as a typed `CallModeConflict` instead.)

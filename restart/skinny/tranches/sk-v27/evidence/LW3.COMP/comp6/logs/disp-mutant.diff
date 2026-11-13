@@ -1,0 +1,13 @@
+diff --git a/crates/ir/src/passes/sets/dispatch/domain.rs b/crates/ir/src/passes/sets/dispatch/domain.rs
+index 2ec77ca13..df22fa7de 100644
+--- a/crates/ir/src/passes/sets/dispatch/domain.rs
++++ b/crates/ir/src/passes/sets/dispatch/domain.rs
+@@ -84,7 +84,7 @@ impl LatticeDomain for DispatchDomain {
+             (_, Unknown) | (Conflict, _) => return false,
+             (a, b) if a == b => return false,
+             (Unknown, b) => b.clone(),
+-            _ => Conflict,
++            _ => return false,
+         };
+         self.decision = joined;
+         true

@@ -1,0 +1,15 @@
+bl=e6520ab193eb2f71564b0061bc2dcfadc727e099 tree=16256921abf97325b78cf30dc38bc88ed3c8f6a0
+rc=100 pass=5 fail=4
+exit=1
+FAIL bbnf-ir passes::sets::dispatch::domain::lattice_laws::dispatch_domain_join_is_a_lattice_join
+FAIL bbnf-ir passes::sets::dispatch::domain::lattice_laws::dispatch_domain_join_is_a_lattice_join
+FAIL bbnf-ir passes::types::constraint::domain::lattice_laws::type_domain_join_is_a_lattice_join
+FAIL bbnf-ir passes::types::constraint::domain::lattice_laws::type_domain_join_is_a_lattice_join
+PASS bbnf-ir passes::call_mode::csp_contract::inline_domain_join_is_a_lattice_join_over_generated_cases
+PASS bbnf-ir passes::call_mode::csp_contract::inline_domain_satisfies_the_lattice_laws
+PASS bbnf-ir passes::csp_domains::lattice_laws::bool_domain_join_is_a_lattice_join
+PASS bbnf-ir passes::csp_domains::lattice_laws::charset_domain_join_is_a_lattice_join
+PASS bbnf-ir passes::lattice_laws::bitset_lattice_domain_satisfies_the_lattice_laws
+   4 law: "commutative: a ⊔ b = b ⊔ a"
+   2 law: "extensive: a ⊑ a ⊔ b and b ⊑ a ⊔ b"
+   2 law: "monotone: a ⊑ b gives a ⊔ c ⊑ b ⊔ c"

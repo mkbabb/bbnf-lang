@@ -1,0 +1,4 @@
+        FAIL [   2.396s] (438/439) bbnf-ir passes::types::constraint::domain::lattice_laws::type_domain_join_is_a_lattice_join
+     Summary [   4.446s] 439 tests run: 438 passed, 1 failed, 0 skipped
+    test passes::types::constraint::domain::lattice_laws::type_domain_join_is_a_lattice_join ... FAILED
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 2.37s

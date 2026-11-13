@@ -5051,6 +5051,240 @@ mod __cssprettyparser_emit_impl {
         parse_flat_CssPrettyParser_stylesheet(input, p, state, builder, cursor)
     }
     impl CssPrettyParser {
+        fn __prettify_trivia<'a>(
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+            __t: &'a str,
+        ) {
+            let __rest = __t.trim_start_matches(char::is_whitespace);
+            let __lead = &__t[..__t.len() - __rest.len()];
+            let __core = __rest.trim_end_matches(char::is_whitespace);
+            let __trail = &__rest[__core.len()..];
+            let __after_line = __builder
+                .ops()
+                .iter()
+                .rev()
+                .find(|op| {
+                    !matches!(
+                        op, ::pprint::FmtOp::GroupStart { .. } |
+                        ::pprint::FmtOp::GroupEnd | ::pprint::FmtOp::IndentStart |
+                        ::pprint::FmtOp::IndentEnd
+                    )
+                })
+                .is_some_and(|op| {
+                    matches!(
+                        op, ::pprint::FmtOp::Hardline | ::pprint::FmtOp::Softline |
+                        ::pprint::FmtOp::BreakLine | ::pprint::FmtOp::CommaSep |
+                        ::pprint::FmtOp::Sep { .. } | ::pprint::FmtOp::FillSep { .. }
+                    )
+                });
+            if __core.is_empty() {
+                if !__after_line {
+                    __builder.text_inline_ws(__lead);
+                }
+                return;
+            }
+            if !__after_line {
+                if __lead.contains('\n') {
+                    __builder.hardline();
+                } else {
+                    __builder.text_inline_ws(__lead);
+                }
+            }
+            __builder.text(__core);
+            if !__trail.contains('\n') {
+                __builder.text_inline_ws(__trail);
+                return;
+            }
+            let __probe = ::std::format!("{__core}x");
+            let __swallows = {
+                let mut __ps = ::parse_that::ParserState::new(&__probe);
+                let state = &mut __ps;
+                let _ = {
+                    let __start = state.offset;
+                    let __result: Option<()> = (|| {
+                        {
+                            let mut __rep_count: u32 = 0;
+                            loop {
+                                let __save = state.offset;
+                                let __ok = (|| -> Option<()> {
+                                    {
+                                        let __save_dispatch = state.offset;
+                                        let __dispatch_b = *state.src_bytes.get(state.offset)?;
+                                        match __dispatch_b {
+                                            b'\t' | b'\n' | b'\x0B' | b'\x0C' | b'\r' | b' ' => {
+                                                let __ok = (|| -> Option<()> {
+                                                    {
+                                                        let __b = *state.src_bytes.get(state.offset)?;
+                                                        if !(__b.is_ascii_whitespace()) {
+                                                            return None;
+                                                        }
+                                                        state.offset += 1;
+                                                    }
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save_dispatch;
+                                                    return None;
+                                                }
+                                            }
+                                            b'/' => {
+                                                let __ok = (|| -> Option<()> {
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                    {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                    {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                    {
+                                                        let __end = state.src_bytes.len();
+                                                        let mut __pos = state.offset;
+                                                        while __pos < __end {
+                                                            let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                            if !(__b == b'*') {
+                                                                __pos += 1;
+                                                            } else {
+                                                                break;
+                                                            }
+                                                        }
+                                                        state.offset = __pos;
+                                                    }
+                                                    {
+                                                        let mut __rep_count: u32 = 0;
+                                                        loop {
+                                                            let __save = state.offset;
+                                                            let __ok = (|| -> Option<()> {
+                                                                {
+                                                                    let mut __rep_count: u32 = 0;
+                                                                    loop {
+                                                                        let __save = state.offset;
+                                                                        let __ok = (|| -> Option<()> {
+                                                                            if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                            {
+                                                                                return None;
+                                                                            }
+                                                                            state.offset += 1;
+                                                                            Some(())
+                                                                        })();
+                                                                        if __ok.is_none() {
+                                                                            state.offset = __save;
+                                                                            break;
+                                                                        }
+                                                                        if state.offset == __save {
+                                                                            break;
+                                                                        }
+                                                                        __rep_count += 1;
+                                                                    }
+                                                                    if __rep_count < 1 {
+                                                                        return None;
+                                                                    }
+                                                                }
+                                                                {
+                                                                    let __b = *state.src_bytes.get(state.offset)?;
+                                                                    if !(!(__b == b'/')) {
+                                                                        return None;
+                                                                    }
+                                                                    state.offset += 1;
+                                                                }
+                                                                {
+                                                                    let __end = state.src_bytes.len();
+                                                                    let mut __pos = state.offset;
+                                                                    while __pos < __end {
+                                                                        let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
+                                                                        if !(__b == b'*') {
+                                                                            __pos += 1;
+                                                                        } else {
+                                                                            break;
+                                                                        }
+                                                                    }
+                                                                    state.offset = __pos;
+                                                                }
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save;
+                                                                break;
+                                                            }
+                                                            if state.offset == __save {
+                                                                break;
+                                                            }
+                                                            __rep_count += 1;
+                                                        }
+                                                    }
+                                                    {
+                                                        let mut __rep_count: u32 = 0;
+                                                        loop {
+                                                            let __save = state.offset;
+                                                            let __ok = (|| -> Option<()> {
+                                                                if state.src_bytes.get(state.offset).copied() != Some(b'*')
+                                                                {
+                                                                    return None;
+                                                                }
+                                                                state.offset += 1;
+                                                                Some(())
+                                                            })();
+                                                            if __ok.is_none() {
+                                                                state.offset = __save;
+                                                                break;
+                                                            }
+                                                            if state.offset == __save {
+                                                                break;
+                                                            }
+                                                            __rep_count += 1;
+                                                        }
+                                                        if __rep_count < 1 {
+                                                            return None;
+                                                        }
+                                                    }
+                                                    if state.src_bytes.get(state.offset).copied() != Some(b'/')
+                                                    {
+                                                        return None;
+                                                    }
+                                                    state.offset += 1;
+                                                    Some(())
+                                                })();
+                                                if __ok.is_none() {
+                                                    state.offset = __save_dispatch;
+                                                    return None;
+                                                }
+                                            }
+                                            _ => {
+                                                return None;
+                                            }
+                                        }
+                                    }
+                                    Some(())
+                                })();
+                                if __ok.is_none() {
+                                    state.offset = __save;
+                                    break;
+                                }
+                                if state.offset == __save {
+                                    break;
+                                }
+                                __rep_count += 1;
+                            }
+                        }
+                        Some(())
+                    })();
+                    if __result.is_some() {
+                        Some(::parse_that::Span::new(__start, state.offset, state.src))
+                    } else {
+                        state.offset = __start;
+                        None
+                    }
+                };
+                state.offset > __core.len()
+            };
+            if __swallows {
+                __builder.hardline();
+            } else {
+                __builder.text(" ");
+            }
+        }
         fn __important_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -5250,10 +5484,10 @@ mod __cssprettyparser_emit_impl {
                         {
                             return false;
                         }
-                        let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
-                            __builder.text(__matched);
-                        }
+                        Self::__prettify_trivia(
+                            __builder,
+                            &state.src[__start..state.offset],
+                        );
                     };
                     {
                         let __s = "important";
@@ -5332,7 +5566,11 @@ mod __cssprettyparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -5539,10 +5777,10 @@ mod __cssprettyparser_emit_impl {
                                             {
                                                 return false;
                                             }
-                                            let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
-                                                __builder.text(__matched);
-                                            }
+                                            Self::__prettify_trivia(
+                                                __builder,
+                                                &state.src[__start..state.offset],
+                                            );
                                         };
                                         {
                                             let __start = state.offset;
@@ -5574,7 +5812,12 @@ mod __cssprettyparser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -5664,7 +5907,12 @@ mod __cssprettyparser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };
@@ -5728,7 +5976,12 @@ mod __cssprettyparser_emit_impl {
                                                     return false;
                                                 }
                                                 let __matched = &state.src[__start..state.offset];
-                                                if !__matched.is_empty() {
+                                                let __body = __matched
+                                                    .trim_end_matches(char::is_whitespace);
+                                                if __matched[__body.len()..].contains('\n') {
+                                                    __builder.text(__body);
+                                                    __builder.text(" ");
+                                                } else if !__matched.is_empty() {
                                                     __builder.text(__matched);
                                                 }
                                             };
@@ -5754,7 +6007,12 @@ mod __cssprettyparser_emit_impl {
                                                             return false;
                                                         }
                                                         let __matched = &state.src[__start..state.offset];
-                                                        if !__matched.is_empty() {
+                                                        let __body = __matched
+                                                            .trim_end_matches(char::is_whitespace);
+                                                        if __matched[__body.len()..].contains('\n') {
+                                                            __builder.text(__body);
+                                                            __builder.text(" ");
+                                                        } else if !__matched.is_empty() {
                                                             __builder.text(__matched);
                                                         }
                                                     };
@@ -5958,10 +6216,10 @@ mod __cssprettyparser_emit_impl {
                             {
                                 return false;
                             }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
+                            Self::__prettify_trivia(
+                                __builder,
+                                &state.src[__start..state.offset],
+                            );
                         };
                         {
                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
@@ -6156,10 +6414,10 @@ mod __cssprettyparser_emit_impl {
                             {
                                 return false;
                             }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
+                            Self::__prettify_trivia(
+                                __builder,
+                                &state.src[__start..state.offset],
+                            );
                         };
                         {
                             let _ = {
@@ -6197,7 +6455,12 @@ mod __cssprettyparser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -6404,10 +6667,10 @@ mod __cssprettyparser_emit_impl {
                                                                 {
                                                                     return false;
                                                                 }
-                                                                let __matched = &state.src[__start..state.offset];
-                                                                if !__matched.is_empty() {
-                                                                    __builder.text(__matched);
-                                                                }
+                                                                Self::__prettify_trivia(
+                                                                    __builder,
+                                                                    &state.src[__start..state.offset],
+                                                                );
                                                             };
                                                             {
                                                                 let __start = state.offset;
@@ -6439,7 +6702,12 @@ mod __cssprettyparser_emit_impl {
                                                                     return false;
                                                                 }
                                                                 let __matched = &state.src[__start..state.offset];
-                                                                if !__matched.is_empty() {
+                                                                let __body = __matched
+                                                                    .trim_end_matches(char::is_whitespace);
+                                                                if __matched[__body.len()..].contains('\n') {
+                                                                    __builder.text(__body);
+                                                                    __builder.text(" ");
+                                                                } else if !__matched.is_empty() {
                                                                     __builder.text(__matched);
                                                                 }
                                                             };
@@ -6672,10 +6940,10 @@ mod __cssprettyparser_emit_impl {
                                             {
                                                 return false;
                                             }
-                                            let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
-                                                __builder.text(__matched);
-                                            }
+                                            Self::__prettify_trivia(
+                                                __builder,
+                                                &state.src[__start..state.offset],
+                                            );
                                         };
                                         {
                                             let __s = "important";
@@ -6912,10 +7180,10 @@ mod __cssprettyparser_emit_impl {
                                 {
                                     return false;
                                 }
-                                let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
-                                    __builder.text(__matched);
-                                }
+                                Self::__prettify_trivia(
+                                    __builder,
+                                    &state.src[__start..state.offset],
+                                );
                             };
                         };
                     };
@@ -6991,7 +7259,11 @@ mod __cssprettyparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -7019,7 +7291,11 @@ mod __cssprettyparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -7078,7 +7354,11 @@ mod __cssprettyparser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -7268,10 +7548,10 @@ mod __cssprettyparser_emit_impl {
                             {
                                 return false;
                             }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
+                            Self::__prettify_trivia(
+                                __builder,
+                                &state.src[__start..state.offset],
+                            );
                         };
                         if !Self::__ruleBlock_prettify(state, __builder) {
                             return false;
@@ -7342,7 +7622,11 @@ mod __cssprettyparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -7411,7 +7695,11 @@ mod __cssprettyparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -7638,10 +7926,10 @@ mod __cssprettyparser_emit_impl {
                         {
                             return false;
                         }
-                        let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
-                            __builder.text(__matched);
-                        }
+                        Self::__prettify_trivia(
+                            __builder,
+                            &state.src[__start..state.offset],
+                        );
                     };
                     if !Self::__ruleBlock_prettify(state, __builder) {
                         return false;
@@ -7908,10 +8196,10 @@ mod __cssprettyparser_emit_impl {
                                     {
                                         return false;
                                     }
-                                    let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
-                                        __builder.text(__matched);
-                                    }
+                                    Self::__prettify_trivia(
+                                        __builder,
+                                        &state.src[__start..state.offset],
+                                    );
                                 };
                                 if !Self::__blockContent_prettify(state, __builder) {
                                     return false;
@@ -8103,10 +8391,10 @@ mod __cssprettyparser_emit_impl {
                                 {
                                     return false;
                                 }
-                                let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
-                                    __builder.text(__matched);
-                                }
+                                Self::__prettify_trivia(
+                                    __builder,
+                                    &state.src[__start..state.offset],
+                                );
                             };
                         };
                     };
@@ -8342,10 +8630,10 @@ mod __cssprettyparser_emit_impl {
                                             {
                                                 return false;
                                             }
-                                            let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
-                                                __builder.text(__matched);
-                                            }
+                                            Self::__prettify_trivia(
+                                                __builder,
+                                                &state.src[__start..state.offset],
+                                            );
                                         };
                                         {
                                             if !{
@@ -8773,10 +9061,10 @@ mod __cssprettyparser_emit_impl {
                                         {
                                             return false;
                                         }
-                                        let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
-                                            __builder.text(__matched);
-                                        }
+                                        Self::__prettify_trivia(
+                                            __builder,
+                                            &state.src[__start..state.offset],
+                                        );
                                     };
                                     if !Self::__ruleItem_prettify(state, __builder) {
                                         return false;
@@ -9011,10 +9299,10 @@ mod __cssprettyparser_emit_impl {
                             {
                                 return false;
                             }
-                            let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
-                                __builder.text(__matched);
-                            }
+                            Self::__prettify_trivia(
+                                __builder,
+                                &state.src[__start..state.offset],
+                            );
                         };
                         if !Self::__ruleList_prettify(state, __builder) {
                             return false;
@@ -9206,10 +9494,10 @@ mod __cssprettyparser_emit_impl {
                         {
                             return false;
                         }
-                        let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
-                            __builder.text(__matched);
-                        }
+                        Self::__prettify_trivia(
+                            __builder,
+                            &state.src[__start..state.offset],
+                        );
                     };
                 };
                 true

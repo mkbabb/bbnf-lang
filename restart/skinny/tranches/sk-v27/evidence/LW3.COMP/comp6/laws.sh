@@ -1,9 +1,9 @@
 #!/bin/sh
 # sk-v27 LW3.COMP-6 lattice-law falsifier (RULINGS 2026-11-13a COMP6-Q): every LatticeDomain
-# of bbnf-ir (Inline, Bool, CharSet, Dispatch, Type) and the Bitset control satisfy the
+# of bbnf-ir (Inline, Bool, CharSet, Dispatch; Type is the born-RED gate BR3) and the Bitset control satisfy the
 # join-semilattice laws over 10^5 generated cases (`passes::lattice_laws`).
 # Usage: laws.sh <bl worktree> <log dir>. Prints one line per law test and the laws broken;
-# exit 0 iff every one of the 7 law tests passes.
+# exit 0 iff every one of the 6 law tests passes (Type is carried as BR3, br3/br3.sh).
 set -u
 BL=$1; L=$2; mkdir -p "$L"
 export CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-$HOME/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang}
@@ -17,4 +17,4 @@ grep -E '^ +(PASS|FAIL) ' "$L/nextest.log" | sed -E 's/^ +//; s/\[[^]]*\] \([^)]
 grep -oE 'law: "[^"]*"' "$L/nextest.log" | sort | uniq -c > "$L/laws-broken.txt"
 pass=$(grep -c '^PASS' "$L/tests.txt"); fail=$(grep -c '^FAIL' "$L/tests.txt")
 echo "rc=$rc pass=$pass fail=$fail" | tee "$L/result.txt"; cat "$L/tests.txt" "$L/laws-broken.txt"
-[ "$rc" -eq 0 ] && [ "$pass" -eq 7 ] && [ "$fail" -eq 0 ]
+[ "$rc" -eq 0 ] && [ "$pass" -eq 6 ] && [ "$fail" -eq 0 ]

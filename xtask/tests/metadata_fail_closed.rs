@@ -50,7 +50,7 @@ fn unknown_feature_is_rejected_with_structured_error() {
 [workspace.metadata]
 [workspace.metadata.bbnf]
 grammars = [
-    { ident = "json", path = "grammar/json/json.bbnf", features = ["pretify"] },
+    { ident = "json", path = "grammar/json/json.bbnf", features = ["pretify"], builder = "crate::runtime::json::JsonStructBuilder", document = "crate::runtime::json::JsonDocument" },
 ]
 "#;
     let grammars = parse_grammars(synthetic);
@@ -94,7 +94,7 @@ fn every_known_feature_passes_validation() {
 [workspace.metadata]
 [workspace.metadata.bbnf]
 grammars = [
-    {{ ident = "json", path = "grammar/json/json.bbnf", features = [{features_inline}] }},
+    {{ ident = "json", path = "grammar/json/json.bbnf", features = [{features_inline}], builder = "crate::runtime::json::JsonStructBuilder", document = "crate::runtime::json::JsonDocument" }},
 ]
 "#
     );
@@ -112,7 +112,7 @@ fn empty_features_passes_validation() {
 [workspace.metadata]
 [workspace.metadata.bbnf]
 grammars = [
-    { ident = "csv", path = "grammar/misc/csv.bbnf" },
+    { ident = "csv", path = "grammar/misc/csv.bbnf", builder = "crate::runtime::csv::CsvStructBuilder", document = "crate::runtime::csv::CsvDocument" },
 ]
 "#;
     let grammars = parse_grammars(synthetic);

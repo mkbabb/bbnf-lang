@@ -14,6 +14,11 @@ resolver = "2"
 # skip_recover) as features so consumer-side derive attrs can reduce
 # to `include!` + marker struct (W1 scope).
 #
+# `builder` and `document` are the grammar's Rust runtime binding, the
+# `StructBuilder` and `Document` paths its generated `parse()` splices in;
+# the caller supplies them with the grammar, so no table keyed by a parser
+# ident resolves them (sk-v27 LW3.COMP-5a, RULINGS 2026-11-13c COMP5A-S).
+#
 # `path` is workspace-relative. `cargo xtask regen` also writes each
 # grammar's source to `crates/core/<path>`, the in-crate copy the generated
 # parser `include_str!`s, so `bbnf` builds from its published package;
@@ -38,15 +43,15 @@ csp-solver               = "0.4.0"
 
 [workspace.metadata.bbnf]
 grammars = [
-    { ident = "bbnf",          path = "grammar/bbnf/bbnf.bbnf",                   features = ["structural", "prettify", "serialize"] },
-    { ident = "json",          path = "grammar/json/json.bbnf",                   features = ["prettify", "serialize"] },
-    { ident = "css_l4",        path = "grammar/css/l4/stylesheet.bbnf",           features = ["skip_recover", "prettify", "serialize"] },
-    { ident = "css_pretty",    path = "grammar/css/pretty.bbnf",                  features = ["skip_recover", "prettify", "serialize"] },
-    { ident = "google_sheets", path = "grammar/google-sheets/google-sheets.bbnf", features = ["skip_recover", "prettify", "serialize"] },
-    { ident = "ebnf",          path = "grammar/ebnf/ebnf.bbnf",                   features = ["prettify", "serialize"] },
-    { ident = "bnf",           path = "grammar/bnf/bnf.bbnf",                     features = ["prettify", "serialize"] },
-    { ident = "csv",           path = "grammar/misc/csv.bbnf",                    features = ["serialize"] },
-    { ident = "math",          path = "grammar/misc/math.bbnf",                   features = ["serialize"] },
+    { ident = "bbnf",          path = "grammar/bbnf/bbnf.bbnf",                   features = ["structural", "prettify", "serialize"], builder = "crate::runtime::bbnf::BbnfStructBuilder", document = "crate::runtime::bbnf::BbnfDocument" },
+    { ident = "json",          path = "grammar/json/json.bbnf",                   features = ["prettify", "serialize"], builder = "crate::runtime::json::JsonStructBuilder", document = "crate::runtime::json::JsonDocument" },
+    { ident = "css_l4",        path = "grammar/css/l4/stylesheet.bbnf",           features = ["skip_recover", "prettify", "serialize"], builder = "crate::runtime::css_l4::CssStructBuilder", document = "crate::runtime::css_l4::CssDocument" },
+    { ident = "css_pretty",    path = "grammar/css/pretty.bbnf",                  features = ["skip_recover", "prettify", "serialize"], builder = "crate::runtime::css_pretty::CssPrettyStructBuilder", document = "crate::runtime::css_pretty::CssPrettyDocument" },
+    { ident = "google_sheets", path = "grammar/google-sheets/google-sheets.bbnf", features = ["skip_recover", "prettify", "serialize"], builder = "crate::runtime::google_sheets::SheetsStructBuilder", document = "crate::runtime::google_sheets::SheetsDocument" },
+    { ident = "ebnf",          path = "grammar/ebnf/ebnf.bbnf",                   features = ["prettify", "serialize"], builder = "crate::runtime::ebnf::EbnfStructBuilder", document = "crate::runtime::ebnf::EbnfDocument" },
+    { ident = "bnf",           path = "grammar/bnf/bnf.bbnf",                     features = ["prettify", "serialize"], builder = "crate::runtime::bnf::BnfStructBuilder", document = "crate::runtime::bnf::BnfDocument" },
+    { ident = "csv",           path = "grammar/misc/csv.bbnf",                    features = ["serialize"], builder = "crate::runtime::csv::CsvStructBuilder", document = "crate::runtime::csv::CsvDocument" },
+    { ident = "math",          path = "grammar/misc/math.bbnf",                   features = ["serialize"], builder = "crate::runtime::math::MathStructBuilder", document = "crate::runtime::math::MathDocument" },
 ]
 
 # ─── Profile tiers (B0.W1.a) ────────────────────────────────────────────

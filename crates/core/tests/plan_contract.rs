@@ -126,6 +126,9 @@ struct Subject {
     ident: String,
     path: PathBuf,
     features: Vec<String>,
+    /// The runtime binding the regen entry supplies with the grammar.
+    builder: String,
+    document: String,
 }
 
 fn workspace_root() -> PathBuf {
@@ -164,6 +167,8 @@ fn subjects() -> Vec<Subject> {
         .map(|entry| Subject {
             ident: marker_ident(entry["ident"].as_str().unwrap()),
             path: root.join(entry["path"].as_str().unwrap()),
+            builder: entry["builder"].as_str().unwrap().to_string(),
+            document: entry["document"].as_str().unwrap().to_string(),
             features: entry["features"]
                 .as_array()
                 .unwrap()
@@ -177,6 +182,8 @@ fn subjects() -> Vec<Subject> {
 
 fn attrs_for(subject: &Subject, path: &Path) -> ParserAttributes {
     let mut attrs = ParserAttributes::with_paths(vec![path.to_path_buf()]);
+    attrs.builder_path = Some(subject.builder.clone());
+    attrs.document_path = Some(subject.document.clone());
     for feature in &subject.features {
         match feature.as_str() {
             "structural" => attrs.structural = true,

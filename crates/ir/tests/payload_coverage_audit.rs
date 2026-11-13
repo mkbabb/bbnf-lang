@@ -308,9 +308,9 @@ fn scalar_layout(ty: TypeDesc) -> PayloadLayout {
 fn w0_baseline_pending_status_for_every_grammar() {
     let absent = AbsentRegistryProbe;
     for (tag, ir) in [
-        (GrammarAuditTag::Json, json_fixture()),
-        (GrammarAuditTag::CssL4, css_l4_fixture()),
-        (GrammarAuditTag::Sheets, sheets_fixture()),
+        (GrammarAuditTag::Custom("json"), json_fixture()),
+        (GrammarAuditTag::Custom("css_l4"), css_l4_fixture()),
+        (GrammarAuditTag::Custom("sheets"), sheets_fixture()),
     ] {
         let coverage = audit_payload_coverage(&ir, tag.clone(), &absent);
         assert!(
@@ -346,7 +346,8 @@ fn w0_baseline_pending_status_for_every_grammar() {
 #[test]
 fn json_per_rule_grouping_lists_value_with_five_markers() {
     let ir = json_fixture();
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Json, &AbsentRegistryProbe);
+    let coverage =
+        audit_payload_coverage(&ir, GrammarAuditTag::Custom("json"), &AbsentRegistryProbe);
     assert_eq!(coverage.total_markers, 5);
     assert_eq!(coverage.markers_per_rule.len(), 1);
     let (rule_name, count) = &coverage.markers_per_rule[0];
@@ -357,7 +358,8 @@ fn json_per_rule_grouping_lists_value_with_five_markers() {
 #[test]
 fn sheets_fixture_produces_seven_markers_across_five_rules() {
     let ir = sheets_fixture();
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Sheets, &AbsentRegistryProbe);
+    let coverage =
+        audit_payload_coverage(&ir, GrammarAuditTag::Custom("sheets"), &AbsentRegistryProbe);
     assert_eq!(coverage.total_markers, 7);
     assert_eq!(coverage.markers_per_rule.len(), 5);
     let names: Vec<&str> = coverage
@@ -375,7 +377,8 @@ fn sheets_fixture_produces_seven_markers_across_five_rules() {
 #[test]
 fn css_l4_fixture_groups_color_and_length_unit_separately() {
     let ir = css_l4_fixture();
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::CssL4, &AbsentRegistryProbe);
+    let coverage =
+        audit_payload_coverage(&ir, GrammarAuditTag::Custom("css_l4"), &AbsentRegistryProbe);
     // 3 length_unit + 1 percentage + 2 color = 6.
     assert_eq!(coverage.total_markers, 6);
     let length_unit_count: usize = coverage
@@ -406,7 +409,7 @@ fn mapped_status_when_layout_admits_marker_type() {
         layouts.insert(rule.id, scalar_layout(TypeDesc::U8));
     }
     let probe = StaticLayoutProbe { layouts };
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Sheets, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("sheets"), &probe);
     assert_eq!(coverage.mapped_markers, coverage.total_markers);
     assert_eq!(coverage.pending_markers, 0);
     assert_eq!(coverage.missing_markers, 0);
@@ -422,7 +425,7 @@ fn pending_and_missing_are_distinguished_in_same_grammar() {
     let mut layouts = HashMap::new();
     layouts.insert(0u32, scalar_layout(TypeDesc::U8));
     let probe = StaticLayoutProbe { layouts };
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Sheets, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("sheets"), &probe);
     assert!(coverage.mapped_markers > 0);
     assert!(coverage.pending_markers > 0);
     assert_eq!(coverage.missing_markers, 0);
@@ -453,7 +456,7 @@ fn missing_status_when_layout_fails_to_cover_marker_type() {
         );
     }
     let probe = StaticLayoutProbe { layouts };
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Json, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("json"), &probe);
     // 3 markers (true/false/null with typed leaf U8 / Bool) project
     // Missing under the default `layout_covers`. The number /
     // string markers (NumberConvert → F64, SpanCapture → Span) are
@@ -474,9 +477,9 @@ fn write_audit_coverage_json_to_w0_path() {
     let absent = AbsentRegistryProbe;
     let mut report = AuditCoverageReport::new();
     for (tag, ir) in [
-        (GrammarAuditTag::Json, json_fixture()),
-        (GrammarAuditTag::CssL4, css_l4_fixture()),
-        (GrammarAuditTag::Sheets, sheets_fixture()),
+        (GrammarAuditTag::Custom("json"), json_fixture()),
+        (GrammarAuditTag::Custom("css_l4"), css_l4_fixture()),
+        (GrammarAuditTag::Custom("sheets"), sheets_fixture()),
     ] {
         let coverage = audit_payload_coverage(&ir, tag, &absent);
         report.push(coverage);
@@ -508,7 +511,7 @@ fn write_audit_coverage_json_to_w0_path() {
 fn payload_layouts_probe_falls_back_to_pending_when_layouts_empty() {
     let ir = json_fixture();
     let probe = PayloadLayoutsProbe::new(&ir);
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Json, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("json"), &probe);
     // Empty payload_layouts on the synthetic IR ⇒ every marker
     // projects as Pending — same as AbsentRegistryProbe.
     assert_eq!(coverage.mapped_markers, 0);

@@ -44,7 +44,7 @@ fn generated_path(name: &str) -> std::path::PathBuf {
         .join(name)
 }
 
-fn json_strategy() -> EmitStrategy {
+fn json_strategy() -> EmitStrategy<'static> {
     EmitStrategy::StructDirect {
         rust: SubstrateBinding {
             builder_path: "crate::runtime::json::JsonStructBuilder",

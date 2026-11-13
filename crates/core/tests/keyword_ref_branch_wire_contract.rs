@@ -55,7 +55,7 @@ fn compile_bbnf() -> GrammarIR {
     }
 }
 
-fn bbnf_strategy() -> EmitStrategy {
+fn bbnf_strategy() -> EmitStrategy<'static> {
     EmitStrategy::StructDirect {
         rust: SubstrateBinding {
             builder_path: "crate::runtime::bbnf::BbnfStructBuilder",

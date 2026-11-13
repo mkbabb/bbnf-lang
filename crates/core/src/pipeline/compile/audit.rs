@@ -1,5 +1,4 @@
-//! Audit-coverage artefact emission, path-check pass wiring, and the
-//! pipeline-level [`bbnf_ir::registry::EmitStrategy`] adapter.
+//! Audit-coverage artefact emission and path-check pass wiring.
 //!
 //! Per `audit/AUDIT-2-SUBSTRATE-CONSUMER.md` §6.B (path a) the W0 audit
 //! pass becomes load-bearing: every pipeline-compile run emits a
@@ -8,35 +7,6 @@
 //! coverage gate input.
 
 use bbnf_ir::GrammarIR;
-
-/// AZ-I.W2.RA — Pipeline-level dispatch hook for the codegen
-/// substrate selector.
-///
-/// Delegates to [`bbnf_ir::registry::EmitStrategy::for_grammar`] —
-/// the single source of truth for "which substrate does this grammar
-/// emit?" The pipeline does not branch on the result; the strategy
-/// is consumed at the per-grammar emit site (`emit_grammar_impl`)
-/// and at the per-shape dispatcher entry (`emit_shapes_for_grammar`).
-///
-/// `grammar_ident` is the parser-struct ident the bootstrap regen
-/// emits (e.g. `"JsonParser"`, `"BbnfBootstrap"`). The pipeline
-/// derives this from the grammar's entry-rule name capitalised plus
-/// `"Parser"`; downstream consumers (the Rust emitter, test
-/// fixtures) call this helper before codegen to record the resolved
-/// substrate alongside the prepared IR.
-///
-/// AZ-I.W2-act.A — `EmitStrategy` lives in `bbnf-ir` per
-/// `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1; the resolver is
-/// backend-shared. Per `feedback_pluggable-components` the resolver
-/// is the boundary; this fn is a thin pipeline-side adapter so test
-/// harnesses can drive the resolver without reaching into the IR
-/// module path directly.
-pub fn resolve_emit_strategy(
-    grammar_ident: &str,
-    ir: &GrammarIR,
-) -> bbnf_ir::registry::EmitStrategy {
-    bbnf_ir::registry::EmitStrategy::for_grammar(grammar_ident, &ir.struct_registry)
-}
 
 /// AZ-I.W2-act.A — `audit_payload_coverage` artefact emission.
 ///

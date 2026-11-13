@@ -247,7 +247,7 @@ fn typed_value_rules_project_to_aggregate_layouts() {
 fn audit_pass_reports_mapped_for_every_css_l4_marker() {
     let ir = compile_css_l4_ir();
     let probe = &ir.struct_registry;
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::CssL4, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("css_l4"), &probe);
 
     eprintln!(
         "project_types_css_l4: total markers={}, mapped={}, pending={}, missing={}",

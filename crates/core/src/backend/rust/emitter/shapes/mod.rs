@@ -132,7 +132,11 @@ pub(crate) fn sanitise_grammar(grammar: &str) -> String {
 /// the end, producing the grammar's top-level
 /// `parse_<grammar>_<root>` entry point that `parse()` routes
 /// through.
-pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> TokenStream {
+pub fn emit_shapes_for_grammar(
+    grammar_ident_str: &str,
+    ir: &GrammarIR,
+    strategy: &EmitStrategy,
+) -> TokenStream {
     // AX.W0b.A — the coverage gate retired alongside the walker;
     // every grammar admits shape emission post-W0a.2.h. Unclassified
     // rules (`ShapeTag::None`) contribute nothing to the stream —
@@ -140,14 +144,11 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     // (JSON Alt-of-Refs) or inline per-Ref routing.
     let grammar_suffix = sanitise_grammar(grammar_ident_str);
 
-    // AZ-I.W2.RA / AZ-II.cutover.O4 — codegen-time substrate
-    // selection is fail-closed. `EmitStrategy::for_grammar` resolves
-    // the grammar identity plus registry-population state to the
-    // concrete StructDirect binding. The strategy is bound here once
-    // and propagated to per-shape emitter call sites; the strategy
-    // decision lives at codegen time, with no runtime conditional
-    // inside a single emitted parse fn.
-    let strategy = EmitStrategy::for_grammar(grammar_ident_str, &ir.struct_registry);
+    // AZ-I.W2.RA / AZ-II.cutover.O4 — the caller's strategy (the
+    // grammar's supplied binding over a populated registry) is
+    // propagated to per-shape emitter call sites; the strategy decision
+    // lives at codegen time, with no runtime conditional inside a
+    // single emitted parse fn.
     debug_assert!(strategy.is_struct_direct());
 
     let mut per_rule: Vec<TokenStream> = Vec::new();
@@ -239,9 +240,9 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
         let _registry_layout: Option<&bbnf_ir::StructLayout> = layout;
 
         let fragment = match tag {
-            ShapeTag::Object => object::emit_parse_object(&grammar_suffix, rule, ir, &strategy),
-            ShapeTag::Array => array::emit_parse_array(&grammar_suffix, rule, ir, &strategy),
-            ShapeTag::String => string::emit_parse_string(&grammar_suffix, rule, ir, &strategy),
+            ShapeTag::Object => object::emit_parse_object(&grammar_suffix, rule, ir, strategy),
+            ShapeTag::Array => array::emit_parse_array(&grammar_suffix, rule, ir, strategy),
+            ShapeTag::String => string::emit_parse_string(&grammar_suffix, rule, ir, strategy),
             ShapeTag::Number => {
                 // AX.W0a.2.q — lenient-number routing: when the rule's
                 // regex classification admits leading-dot literals
@@ -254,23 +255,23 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
                 // without modifying the strict scanner CSS's other
                 // callers (JSON) depend on.
                 if hregex::number_rule_allows_leading_dot(rule, ir) {
-                    hregex::emit_parse_number_via_hregex(&strategy, &grammar_suffix, rule, ir)
+                    hregex::emit_parse_number_via_hregex(strategy, &grammar_suffix, rule, ir)
                 } else {
-                    number::emit_parse_number(&grammar_suffix, rule, ir, &strategy)
+                    number::emit_parse_number(&grammar_suffix, rule, ir, strategy)
                 }
             }
-            ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir, &strategy),
-            ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir, &strategy),
-            ShapeTag::Pratt => pratt::emit_parse_pratt(&strategy, &grammar_suffix, rule, ir),
+            ShapeTag::Keyword => keyword::emit_parse_keyword(&grammar_suffix, rule, ir, strategy),
+            ShapeTag::Scalar => scalar::emit_parse_scalar(&grammar_suffix, rule, ir, strategy),
+            ShapeTag::Pratt => pratt::emit_parse_pratt(strategy, &grammar_suffix, rule, ir),
             ShapeTag::Unordered => {
-                unordered::emit_parse_unordered(&strategy, &grammar_suffix, rule, ir)
+                unordered::emit_parse_unordered(strategy, &grammar_suffix, rule, ir)
             }
-            ShapeTag::ArgList => arglist::emit_parse_arglist(&strategy, &grammar_suffix, rule, ir),
-            ShapeTag::Flat => flat::emit_parse_flat(&strategy, &grammar_suffix, rule, ir),
-            ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir, &strategy),
-            ShapeTag::HRegex => hregex::emit_parse_hregex(&strategy, &grammar_suffix, rule, ir),
+            ShapeTag::ArgList => arglist::emit_parse_arglist(strategy, &grammar_suffix, rule, ir),
+            ShapeTag::Flat => flat::emit_parse_flat(strategy, &grammar_suffix, rule, ir),
+            ShapeTag::Wrap => wrap::emit_parse_wrap(&grammar_suffix, rule, ir, strategy),
+            ShapeTag::HRegex => hregex::emit_parse_hregex(strategy, &grammar_suffix, rule, ir),
             ShapeTag::AltDispatch => {
-                alt_dispatch::emit_parse_alt_dispatch(&grammar_suffix, rule, ir, &strategy)
+                alt_dispatch::emit_parse_alt_dispatch(&grammar_suffix, rule, ir, strategy)
             }
             ShapeTag::None => continue,
         };
@@ -282,7 +283,7 @@ pub fn emit_shapes_for_grammar(grammar_ident_str: &str, ir: &GrammarIR) -> Token
     }
 
     let support = dispatcher::emit_support_module(&grammar_suffix, ir);
-    let dispatcher_fn = dispatcher::emit_dispatcher(&grammar_suffix, ir, &strategy);
+    let dispatcher_fn = dispatcher::emit_dispatcher(&grammar_suffix, ir, strategy);
     quote! {
         #support
         #(#per_rule)*

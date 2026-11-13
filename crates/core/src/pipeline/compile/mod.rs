@@ -34,7 +34,6 @@ use crate::pipeline::{
 };
 use crate::types::AST;
 
-pub use self::audit::resolve_emit_strategy;
 pub use self::pipeline::{compile_ast_common, compute_call_strategies, install_pattern_caches};
 pub use self::target::finalize_compile;
 

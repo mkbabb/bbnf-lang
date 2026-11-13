@@ -20,7 +20,7 @@ mod fixtures;
 
 use fixtures::*;
 
-fn json_strategy() -> EmitStrategy {
+fn json_strategy() -> EmitStrategy<'static> {
     EmitStrategy::StructDirect {
         rust: SubstrateBinding {
             builder_path: "crate::runtime::json::JsonStructBuilder",

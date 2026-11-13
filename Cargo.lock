@@ -281,7 +281,6 @@ dependencies = [
  "serde_json",
  "smallvec",
  "syn 2.0.117",
- "toml 0.8.23",
 ]
 
 [[package]]

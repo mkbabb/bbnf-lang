@@ -14,9 +14,17 @@ fn aot_request(requested_prettify: bool) -> CompileRequest {
     }
 }
 
+/// Renders under the BBNF runtime binding, supplied with the grammar
+/// (sk-v27 LW3.COMP-5a): these fixtures were emitted as `BbnfParser`,
+/// whose binding the deleted ident-keyed table used to resolve.
 fn render_tokens(prepared: &PreparedGrammar, attrs: &ParserAttributes, ident: &str) -> String {
     let ident = quote::format_ident!("{ident}");
-    generate_all(prepared, attrs, &ident).to_string()
+    let attrs = ParserAttributes {
+        builder_path: Some("crate::runtime::bbnf::BbnfStructBuilder".to_string()),
+        document_path: Some("crate::runtime::bbnf::BbnfDocument".to_string()),
+        ..attrs.clone()
+    };
+    generate_all(prepared, &attrs, &ident).to_string()
 }
 
 #[test]

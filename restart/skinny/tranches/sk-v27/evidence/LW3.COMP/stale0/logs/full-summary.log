@@ -1,0 +1,4 @@
+   TRY 1 TMT [  90.008s] (─────────) bbnf::bbnf_bootstrap_reproducibility bbnf_regen_is_idempotent
+   TRY 1 TMT [  90.009s] (─────────) bbnf::bbnf_bootstrap_reproducibility json_regen_is_idempotent
+   TRY 1 TMT [  90.010s] (─────────) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+     Summary [ 193.221s] 1145 tests run: 1145 passed (5 slow, 3 flaky), 20 skipped

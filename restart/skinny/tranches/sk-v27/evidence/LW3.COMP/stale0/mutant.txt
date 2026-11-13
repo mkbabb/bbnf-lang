@@ -1,0 +1,1 @@
+mutant (worktree edit, no ref moved): crates/ir/tests/stale0_mutant.rs = `#[test] fn mutant() {}` (one added bbnf-ir test target); the law FAILs x2 with identity 6ac7c62f…; file removed after.

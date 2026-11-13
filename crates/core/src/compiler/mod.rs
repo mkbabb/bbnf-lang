@@ -13,6 +13,7 @@ mod replay;
 mod source;
 mod syntax;
 mod typecheck;
+mod verify;
 
 use instance::ValidatedGrammarInstance;
 

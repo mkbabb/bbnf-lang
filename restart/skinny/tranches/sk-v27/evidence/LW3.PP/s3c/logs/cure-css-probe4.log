@@ -1,0 +1,65 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/gorgeous)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 10.03s
+     Running tests/css.rs (target/debug/deps/css-aaa9f408aa77c32e)
+
+running 11 tests
+test test_css_formatting_output ... ok
+test test_prettify_multi_rule ... ok
+test test_prettify_multi_declaration ... ok
+test test_prettify_simple_rule ... ok
+test test_prettify_css_idempotent ... ok
+test test_prettify_minified_css ... ok
+test test_prettify_multi_selector ... ok
+test test_prettify_media_query ... ok
+test test_prettify_no_trailing_semicolon ... ok
+test test_prettify_selector_with_pseudo_class ... ok
+test css_ws_leaves_are_trivia_so_formatting_is_idempotent ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/g3_trivia.rs (target/debug/deps/g3_trivia-a22a3232db30f4c3)
+
+running 2 tests
+test g3_corpus_bears_comments_where_the_grammar_has_them ... ok
+G3: 14 files, 15 comments in the corpus, 2 failures
+
+thread 'g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent' (17559862) panicked at crates/gorgeous/tests/g3_trivia.rs:234:5:
+G3:
+ebnf/rules.ebnf: does not format
+
+bbnf/comments-in-rule.bbnf: the token-and-comment stream differs (lost: [Word("value"), Punct('='), Str("\"true\""), Comment("// the first alternative"), Punct('|'), Str("\"false\""), Punct(';'), Word("list"), Punct('='), Str("\"[\""), Punct(','), Word("value"), Punct(','), Str("\"]\""), Punct(';'), Comment("// after a rule")])
+--- output
+// Comments inside a rule: after an alternative and after the rule.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent ... FAILED
+
+failures:
+
+failures:
+    g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test g3_trivia`
+     Running tests/zz_probe.rs (target/debug/deps/zz_probe-d52aaa1691a786ac)
+
+running 1 test
+EBNF "r = \"a\" ;" => Some("r =")
+EBNF "digit = \"0\" | \"1\" ;\nnumber = digit , { digit } ;" => None
+EBNF "a = b ;\nc = d ;" => Some("a = b ;\nc = d ;")
+BBNF => Some("// Comments inside a rule: after an alternative and after the rule.")
+BBNF parse => false
+BBNF "a = \"x\" // c\n | \"y\" ;\n" => Some("")
+BBNF "// top\na = \"x\" ;\n" => Some("// top\na=  \"x\" ;")
+BBNF "a = \"x\" ; // after\nb = \"y\" ;\n" => Some("a=  \"x\" ;\n// after\nb=  \"y\" ;")
+CSS "a{color:red}" => Some("a{\n        color:red\n    }")
+CSS "a { color: red; }\n\nb {\n  margin: 0;\n}\n" => Some("a {\n        color: red;\n    }\nb {\n        margin: 0;\n    }")
+CSS "/* head */\na { /* in */ color: red; /* tail */ }\n" => Some("/* head */ a { /* in */\n        color: red; /* tail */\n    }")
+test probe ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: 1 target failed:
+    `-p gorgeous --test g3_trivia`

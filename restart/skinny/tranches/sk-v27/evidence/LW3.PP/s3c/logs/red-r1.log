@@ -1,0 +1,76 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.08s
+     Running tests/css.rs (target/debug/deps/css-aaa9f408aa77c32e)
+
+running 2 tests
+test test_prettify_multi_rule ... ok
+test css_ws_leaves_are_trivia_so_formatting_is_idempotent ... FAILED
+
+failures:
+
+---- css_ws_leaves_are_trivia_so_formatting_is_idempotent stdout ----
+
+thread 'css_ws_leaves_are_trivia_so_formatting_is_idempotent' (17467452) panicked at crates/gorgeous/tests/css.rs:183:9:
+assertion `left == right` failed: fmt . fmt != fmt for "a{color:red;background:white}b{margin:0}"
+  left: "a{\n        color:red;\n        background:white\n    }\nb{\n        margin:0\n    }"
+ right: "a{\n\n        color:red;\n\n        background:white\n\n    }\n\nb{\n\n        margin:0\n\n    }"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    css_ws_leaves_are_trivia_so_formatting_is_idempotent
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test css`
+     Running tests/ebnf.rs (target/debug/deps/ebnf-78d43eac95a6f103)
+
+running 2 tests
+test ebnf_prettify_keeps_every_rule_and_terminal ... FAILED
+test test_prettify_multi_rule ... FAILED
+
+failures:
+
+---- ebnf_prettify_keeps_every_rule_and_terminal stdout ----
+
+thread 'ebnf_prettify_keeps_every_rule_and_terminal' (17467597) panicked at crates/gorgeous/tests/ebnf.rs:59:46:
+the input formats
+
+---- test_prettify_multi_rule stdout ----
+
+thread 'test_prettify_multi_rule' (17467598) panicked at crates/gorgeous/tests/ebnf.rs:37:5:
+should parse multiple rules
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    ebnf_prettify_keeps_every_rule_and_terminal
+    test_prettify_multi_rule
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test ebnf`
+error: 2 targets failed:
+    `-p gorgeous --test css`
+    `-p gorgeous --test ebnf`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.82s
+     Running tests/ebnf_prettify.rs (target/debug/deps/ebnf_prettify-af914843309d62ee)
+
+running 1 test
+test prettify_multi_rule ... FAILED
+
+failures:
+
+---- prettify_multi_rule stdout ----
+
+thread 'prettify_multi_rule' (17468036) panicked at crates/core/tests/ebnf_prettify.rs:42:5:
+prettify should succeed for multi-rule input
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    prettify_multi_rule
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf --test ebnf_prettify`

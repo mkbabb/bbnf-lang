@@ -6442,27 +6442,27 @@ fn assert_archive_is_the_pinned_tree(
     .expect("Cargo.toml.orig TOML");
     let mut relocated = BTreeMap::new();
     for field in ["readme", "license-file"] {
-        if let Some(named) = original["package"].get(field).and_then(toml::Value::as_str) {
-            if named.split('/').any(|component| component == "..") {
-                let mut components: Vec<&str> = path_in_vcs
-                    .split('/')
-                    .filter(|part| !part.is_empty())
-                    .collect();
-                for part in named.split('/') {
-                    match part {
-                        ".." => assert!(
-                            components.pop().is_some(),
-                            "named file stays inside the repository"
-                        ),
-                        "." | "" => {}
-                        other => components.push(other),
-                    }
+        if let Some(named) = original["package"].get(field).and_then(toml::Value::as_str)
+            && named.split('/').any(|component| component == "..")
+        {
+            let mut components: Vec<&str> = path_in_vcs
+                .split('/')
+                .filter(|part| !part.is_empty())
+                .collect();
+            for part in named.split('/') {
+                match part {
+                    ".." => assert!(
+                        components.pop().is_some(),
+                        "named file stays inside the repository"
+                    ),
+                    "." | "" => {}
+                    other => components.push(other),
                 }
-                relocated.insert(
-                    named.rsplit('/').next().expect("file name").to_owned(),
-                    components.join("/"),
-                );
             }
+            relocated.insert(
+                named.rsplit('/').next().expect("file name").to_owned(),
+                components.join("/"),
+            );
         }
     }
     let mut expected: Vec<(String, String, Vec<u8>)> = Vec::new();
@@ -9124,8 +9124,10 @@ const SK_V27_BBNF_TARGETS_SHA256: &str =
 const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
     "c1db28fb8c440b855d8afc374e27dd148b1e43c56ab88e6996c27e5466909199";
 /// sha256 over the complete resolved package/feature/target identity rows.
+/// Re-taken at LW3.STALE-0: LW3.PERF-1c deleted the `bbnf-ir` test target
+/// `kernel_shape` (`crates/ir/tests/kernel_shape.rs`), the sole row difference.
 const SK_V27_METADATA_IDENTITY_SHA256: &str =
-    "298a46979443dd1767744d85c4d18cbb624c23b64f3d239755596992c91db9af";
+    "1db88390f5b065dcba6ca3aaaa630f991a1d3732843b9f000375ed3d366aeeb7";
 /// sha256 of the complete Cargo.lock.
 const SK_V27_LOCK_SHA256: &str = "2d62609d85c3162a2e8973af89a3b9a3e6e698852eee9fb13c821bb0e345a351";
 

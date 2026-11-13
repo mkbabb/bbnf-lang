@@ -1,0 +1,27 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+    Checking bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s9b/crates/core)
+error: this `if` statement can be collapsed
+    --> crates/core/tests/w3_replay_public_contract.rs:6445:9
+     |
+6445 | /         if let Some(named) = original["package"].get(field).and_then(toml::Value::as_str) {
+6446 | |             if named.split('/').any(|component| component == "..") {
+6447 | |                 let mut components: Vec<&str> = path_in_vcs
+6448 | |                     .split('/')
+...    |
+6466 | |         }
+     | |_________^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/rust-1.99.0/index.html#collapsible_if
+     = note: `-D clippy::collapsible-if` implied by `-D warnings`
+     = help: to override `-D warnings` add `#[allow(clippy::collapsible_if)]`
+help: collapse nested if block
+     |
+6445 ~         if let Some(named) = original["package"].get(field).and_then(toml::Value::as_str)
+6446 ~             && named.split('/').any(|component| component == "..") {
+6447 |                 let mut components: Vec<&str> = path_in_vcs
+ ...
+6464 |                 );
+6465 ~             }
+     |
+
+error: could not compile `bbnf` (test "w3_replay_public_contract") due to 1 previous error

@@ -1,0 +1,73 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.21s
+────────────
+ Nextest run ID 0125d2d1-3c5a-4c40-a246-a760799696cb with nextest profile: default
+    Starting 1 test across 1 binary (12 tests skipped)
+  TRY 1 FAIL [   0.850s] (───) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+  stdout ───
+
+    running 1 test
+    test cargo_graph_build_feature_surfaces_and_generated_products_are_closed ... FAILED
+
+    failures:
+
+    failures:
+        cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.83s
+
+  stderr ───
+
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (16378471) panicked at crates/core/tests/w3_replay_public_contract.rs:10379:5:
+    assertion `left == right` failed: complete resolved package/feature/target metadata identity
+      left: "6ac7c62f3ee83d8366f5092755bc6f589456effe77f1966c044f97488867497c"
+     right: "1db88390f5b065dcba6ca3aaaa630f991a1d3732843b9f000375ed3d366aeeb7"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+  TRY 2 FAIL [   0.670s] (1/1) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+  stdout ───
+
+    running 1 test
+    test cargo_graph_build_feature_surfaces_and_generated_products_are_closed ... FAILED
+
+    failures:
+
+    failures:
+        cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.65s
+
+  stderr ───
+
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (16378960) panicked at crates/core/tests/w3_replay_public_contract.rs:10379:5:
+    assertion `left == right` failed: complete resolved package/feature/target metadata identity
+      left: "6ac7c62f3ee83d8366f5092755bc6f589456effe77f1966c044f97488867497c"
+     right: "1db88390f5b065dcba6ca3aaaa630f991a1d3732843b9f000375ed3d366aeeb7"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  Cancelling due to test failure: 
+────────────
+     Summary [   2.526s] 1 test run: 0 passed, 1 failed, 12 skipped
+  TRY 2 FAIL [   0.670s] (1/1) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+  stdout ───
+
+    running 1 test
+    test cargo_graph_build_feature_surfaces_and_generated_products_are_closed ... FAILED
+
+    failures:
+
+    failures:
+        cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.65s
+
+  stderr ───
+
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (16378960) panicked at crates/core/tests/w3_replay_public_contract.rs:10379:5:
+    assertion `left == right` failed: complete resolved package/feature/target metadata identity
+      left: "6ac7c62f3ee83d8366f5092755bc6f589456effe77f1966c044f97488867497c"
+     right: "1db88390f5b065dcba6ca3aaaa630f991a1d3732843b9f000375ed3d366aeeb7"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

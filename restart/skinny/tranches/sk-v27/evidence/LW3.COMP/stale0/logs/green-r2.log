@@ -1,0 +1,8 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.95s
+────────────
+ Nextest run ID 857260a8-1055-4030-b8a1-4f94aa347f93 with nextest profile: default
+    Starting 1 test across 1 binary (12 tests skipped)
+        PASS [   4.119s] (1/1) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+────────────
+     Summary [   4.122s] 1 test run: 1 passed, 12 skipped

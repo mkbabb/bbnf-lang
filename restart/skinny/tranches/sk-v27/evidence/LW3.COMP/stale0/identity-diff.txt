@@ -1,0 +1,8 @@
+# identity rows rebuilt from cargo metadata at the tip d9606e68a (lw3-s9b), by identity_rows.py
+tip sha256: 1db88390f5b065dcba6ca3aaaa630f991a1d3732843b9f000375ed3d366aeeb7
+tip + bbnf-ir target kernel_shape:test:bin:2024:false:false:true: 298a46979443dd1767744d85c4d18cbb624c23b64f3d239755596992c91db9af
+pinned (SK_V27_METADATA_IDENTITY_SHA256 before the cure): 298a46979443dd1767744d85c4d18cbb624c23b64f3d239755596992c91db9af
+
+# row diff (pinned graph reconstruction vs present)
+267d266
+< kernel_shape:test:bin:2024:false:false:true

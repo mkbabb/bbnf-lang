@@ -1,0 +1,6 @@
+head=d897ed550274e99dcfcc17fb36da5c075b8618ab tree=d0c7e38d29f464a801e14185f8fbeb8f94cfa7ec
+clean:      Removed 953 files, 514.7MiB total rc=0
+regen:      Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen --check`
+regen --check: clean (9 of 9 grammars matched) rc=0
+nextest bbnf-ir: Summary [   4.027s] 435 tests run: 435 passed, 0 skipped rc=0

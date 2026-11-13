@@ -1,0 +1,4 @@
+bl=2222ca567ef32a05c1500b08f1e6dda553d4d35e pt=6889b29c1d5a4c3514d29abc027543ffbce3f88e files=2
+bbnf-lang:2222ca567:crates/ir/src/passes/recognizers/kernel_shape.rs
+parse-that:6889b29c1:rust/simd/src/alphabet.rs
+rc=1

@@ -143,6 +143,11 @@ fn compile_validated_instance(
             return StageResult::Rejected { diagnostics };
         }
     };
+    if let StageResult::Rejected { diagnostics } =
+        verify::spine(&program, &dependency, &types, &facts, &lowering, &events)
+    {
+        return StageResult::Rejected { diagnostics };
+    }
     let generated = match GeneratedModule::emit(&events, &lowering, options) {
         StageResult::Accepted { value, .. } => value,
         StageResult::Rejected { diagnostics } => {

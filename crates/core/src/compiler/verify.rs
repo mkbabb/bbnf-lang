@@ -34,6 +34,7 @@ use super::source::Revision;
 use super::syntax::{NodeKind, Program, RecordSlot, RuleIx, SccIx};
 use super::typecheck::{SemanticType, TypeSolution};
 
+mod laws;
 #[cfg(test)]
 mod mutants;
 
@@ -418,15 +419,25 @@ impl Spine {
                     .collect(),
                 transforms: events
                     .transforms()
-                    .map(|site| (site.id().index(), site.node().index(), site.name().to_owned()))
+                    .map(|site| {
+                        (
+                            site.id().index(),
+                            site.node().index(),
+                            site.name().to_owned(),
+                        )
+                    })
                     .collect(),
             },
         }
     }
 
-    /// Born RED (LW3.COMP-6): no law is read yet, so every mutant passes.
     fn check(&self) -> Result<(), Violation> {
-        Ok(())
+        self.check_program()?;
+        self.check_dependency()?;
+        self.check_types()?;
+        self.check_facts()?;
+        self.check_lowering()?;
+        self.check_events()
     }
 }
 
@@ -693,7 +704,11 @@ fn read_plan(lowering: &LoweringPlan) -> PlanRead {
                 })
                 .collect(),
             tables: lowering.pratt_tables().iter().map(table_row).collect(),
-            operators: lowering.pratt_operators().iter().map(operator_row).collect(),
+            operators: lowering
+                .pratt_operators()
+                .iter()
+                .map(operator_row)
+                .collect(),
             entry: lowering.entry().index(),
         },
         node_types: lowering

@@ -1,0 +1,9 @@
+bl=31f889d2a6528be0a9fe393149118823868f1ba9 tree=6535e8a076add2a1cedf3a5d4e9a11add025a42e
+worktree edits to the two tests (a mutant read):  1 file changed, 1 insertion(+), 1 deletion(-)
+rc=0 dirty=0 touched=1 Summary [   0.228s] 4 tests run: 4 passed, 0 skipped
+exit=1
+        PASS [   0.037s] (1/4) bbnf::gen_ts_parser generate_ts_parser_for_bench
+        PASS [   0.126s] (2/4) bbnf::ts_node_execute literal_separated_list_every_backend
+        PASS [   0.128s] (3/4) bbnf::ts_node_execute json_text_rfc8259_every_root_backend
+        PASS [   0.227s] (4/4) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+     Summary [   0.228s] 4 tests run: 4 passed, 0 skipped

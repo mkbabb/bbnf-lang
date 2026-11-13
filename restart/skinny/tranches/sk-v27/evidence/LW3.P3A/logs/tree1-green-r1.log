@@ -1,0 +1,8 @@
+bl=31f889d2a6528be0a9fe393149118823868f1ba9 tree=6535e8a076add2a1cedf3a5d4e9a11add025a42e
+rc=0 dirty=0 touched=0 Summary [   0.242s] 4 tests run: 4 passed, 0 skipped
+exit=0
+        PASS [   0.033s] (1/4) bbnf::gen_ts_parser generate_ts_parser_for_bench
+        PASS [   0.138s] (2/4) bbnf::ts_node_execute literal_separated_list_every_backend
+        PASS [   0.148s] (3/4) bbnf::ts_node_execute json_text_rfc8259_every_root_backend
+        PASS [   0.236s] (4/4) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+     Summary [   0.242s] 4 tests run: 4 passed, 0 skipped

@@ -1,0 +1,10 @@
+bl=44cf16a1fc5b301d0be45c7b5a8a65bbe1551630 tree=95973da3e95cc79a64803e0d6d458b123b158d8e
+rc=0 dirty=2 touched=2 Summary [   0.224s] 4 tests run: 4 passed, 0 skipped
+exit=1
+ M crates/core/benches/ts/generated_json.mjs
+ M docs/tranches/AZ-IV/audit/W5-node-execute.txt
+        PASS [   0.055s] (1/4) bbnf::gen_ts_parser generate_ts_parser_for_bench
+        PASS [   0.154s] (2/4) bbnf::ts_node_execute literal_separated_list_every_backend
+        PASS [   0.166s] (3/4) bbnf::ts_node_execute json_text_rfc8259_every_root_backend
+        PASS [   0.222s] (4/4) bbnf::ts_node_execute node_execute_twitter_statuses_zero_text
+     Summary [   0.224s] 4 tests run: 4 passed, 0 skipped

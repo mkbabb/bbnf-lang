@@ -16,7 +16,7 @@
 use bbnf::backend::rust::emitter::shapes::substrate::{builder_path, builder_ty_with_lifetime};
 use bbnf_ir::registry::{EmitStrategy, SubstrateBinding};
 
-fn make_strategy(builder: &'static str, document: &'static str) -> EmitStrategy {
+fn make_strategy(builder: &'static str, document: &'static str) -> EmitStrategy<'static> {
     EmitStrategy::StructDirect {
         rust: SubstrateBinding {
             builder_path: builder,

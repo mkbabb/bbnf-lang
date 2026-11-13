@@ -1,0 +1,79 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.68s
+────────────
+ Nextest run ID 78ce62ff-792b-47dc-bf1e-5957de6cf7ff with nextest profile: default
+    Starting 2 tests across 1 binary
+        PASS [   0.249s] (1/2) bbnf::no_grammar_name_branch wave_scan_emits_status
+  TRY 1 FAIL [   0.249s] (───) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  stdout ───
+
+    running 1 test
+    test no_grammar_name_branch_in_production_runtime_or_shape_emitter ... FAILED
+
+    failures:
+
+    failures:
+        no_grammar_name_branch_in_production_runtime_or_shape_emitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.24s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:375 — matched `value` in arm `"value" => true,`
+
+    (scanned 249 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (17148440) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  TRY 2 FAIL [   0.215s] (2/2) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  stdout ───
+
+    running 1 test
+    test no_grammar_name_branch_in_production_runtime_or_shape_emitter ... FAILED
+
+    failures:
+
+    failures:
+        no_grammar_name_branch_in_production_runtime_or_shape_emitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.20s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:375 — matched `value` in arm `"value" => true,`
+
+    (scanned 249 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (17148811) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.467s] 2 tests run: 1 passed, 1 failed, 0 skipped
+  TRY 2 FAIL [   0.215s] (2/2) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  stdout ───
+
+    running 1 test
+    test no_grammar_name_branch_in_production_runtime_or_shape_emitter ... FAILED
+
+    failures:
+
+    failures:
+        no_grammar_name_branch_in_production_runtime_or_shape_emitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.20s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:375 — matched `value` in arm `"value" => true,`
+
+    (scanned 249 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (17148811) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed

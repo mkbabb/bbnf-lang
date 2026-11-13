@@ -56,9 +56,36 @@ pub struct ParserAttributes {
     /// by `RuleKind` keep a stable surface. Drives the pipeline's
     /// `preserve_identity` gate.
     pub structural: bool,
+    /// The grammar's Rust runtime binding: the `StructBuilder` and
+    /// `Document` paths the emitted `parse()` splices in. The caller
+    /// supplies them with the grammar (the regen entry's `builder` and
+    /// `document`); no table keyed by the parser ident resolves them
+    /// (sk-v27 LW3.COMP-5a, RULINGS 2026-11-13c COMP5A-S).
+    pub builder_path: Option<String>,
+    pub document_path: Option<String>,
 }
 
 impl ParserAttributes {
+    /// The struct-direct [`bbnf_ir::registry::EmitStrategy`] over the
+    /// caller-supplied binding. Panics when the caller supplied none:
+    /// a grammar without a runtime binding cannot be emitted.
+    pub fn emit_strategy<'a>(&'a self, ir: &GrammarIR) -> bbnf_ir::registry::EmitStrategy<'a> {
+        let (Some(builder_path), Some(document_path)) = (&self.builder_path, &self.document_path)
+        else {
+            panic!(
+                "ParserAttributes: the caller supplies the grammar's `builder_path` and \
+                 `document_path` (the regen entry's `builder` and `document`)"
+            );
+        };
+        bbnf_ir::registry::EmitStrategy::struct_direct(
+            bbnf_ir::registry::SubstrateBinding {
+                builder_path,
+                document_path,
+            },
+            &ir.struct_registry,
+        )
+    }
+
     /// Construct a [`ParserAttributes`] whose `paths` and
     /// `grammar_rel_paths` are populated atomically from a single
     /// `Vec<PathBuf>`. The relative paths are derived by lossy

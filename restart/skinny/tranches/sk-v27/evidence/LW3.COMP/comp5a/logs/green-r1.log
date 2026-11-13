@@ -1,0 +1,13 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 18.17s
+────────────
+ Nextest run ID e6a3310e-db9f-4561-a4bb-dbc996a55701 with nextest profile: default
+    Starting 5 tests across 2 binaries
+        PASS [   0.027s] (1/5) bbnf::plan_contract plan_decisions_do_not_read_rule_names
+        PASS [   0.028s] (2/5) bbnf::plan_contract contradictory_call_mode_directives_are_refused
+        PASS [   0.339s] (3/5) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+        PASS [   0.339s] (4/5) bbnf::no_grammar_name_branch wave_scan_emits_status
+        PASS [   2.080s] (5/5) bbnf::plan_contract renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+────────────
+     Summary [   2.083s] 5 tests run: 5 passed, 0 skipped

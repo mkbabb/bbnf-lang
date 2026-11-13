@@ -9118,18 +9118,25 @@ const SK_V27_PPRINT_GIT: &str = "https://github.com/mkbabb/pprint";
 /// The exact width of the locked metadata package graph (every platform).
 const SK_V27_METADATA_PACKAGE_COUNT: usize = 511;
 /// sha256 over the sorted `bbnf` target inventory (`name:kind`, one per line).
+/// Re-taken at LW3.COMP-5a: the test target `synthetic_grammar_strategy`
+/// (the deleted ident-keyed table's tests) left, the sole difference.
 const SK_V27_BBNF_TARGETS_SHA256: &str =
-    "469c15d04df9cc6fef59ec95badf9a29cd6fc59712965be7afaca62c2fcd8b6d";
+    "2390e4e652d49ab7359256b9ca22602a5e797ced809967c61a515fd7c0ac8a7a";
 /// sha256 over the sorted `bbnf` metadata dependency rows.
 const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
     "c1db28fb8c440b855d8afc374e27dd148b1e43c56ab88e6996c27e5466909199";
 /// sha256 over the complete resolved package/feature/target identity rows.
 /// Re-taken at LW3.STALE-0: LW3.PERF-1c deleted the `bbnf-ir` test target
 /// `kernel_shape` (`crates/ir/tests/kernel_shape.rs`), the sole row difference.
+/// Re-taken at LW3.COMP-5a: `bbnf-ir`'s `build-script-build` (the deleted
+/// strategy-table build script) and `bbnf`'s `synthetic_grammar_strategy`
+/// test target left, the sole row differences.
 const SK_V27_METADATA_IDENTITY_SHA256: &str =
-    "1db88390f5b065dcba6ca3aaaa630f991a1d3732843b9f000375ed3d366aeeb7";
-/// sha256 of the complete Cargo.lock.
-const SK_V27_LOCK_SHA256: &str = "2d62609d85c3162a2e8973af89a3b9a3e6e698852eee9fb13c821bb0e345a351";
+    "2572498fda8bcfb753e56d23c15d80109cb7aad18b10a8d2ba11a3bdb5f43e10";
+/// sha256 of the complete Cargo.lock. Re-taken at LW3.COMP-5a: `bbnf-ir`
+/// lost its `toml 0.8.23` build dependency with the strategy-table build
+/// script, the sole lockfile line that moved.
+const SK_V27_LOCK_SHA256: &str = "da02047eb5a065fa614f57cd0c2c6121f6b22b6b0a8f601d08f503b703136c4a";
 
 fn toml_keys(value: &toml::Value) -> BTreeSet<String> {
     value
@@ -9340,7 +9347,12 @@ fn cargo_graph_build_feature_surfaces_and_generated_products_are_closed() {
         "the nine regenerated grammars, in order"
     );
     for row in regen_grammars {
-        assert_eq!(keys(row), string_set(&["features", "ident", "path"]));
+        // sk-v27 LW3.COMP-5a (RULINGS 2026-11-13c COMP5A-S): the entry
+        // supplies the grammar's runtime binding (`builder`, `document`).
+        assert_eq!(
+            keys(row),
+            string_set(&["builder", "document", "features", "ident", "path"])
+        );
         let path = row["path"].as_str().expect("regen grammar path");
         assert!(
             root().join(path).is_file(),

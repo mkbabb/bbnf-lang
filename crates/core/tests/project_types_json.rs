@@ -366,7 +366,7 @@ fn bool_rule_projects_bool_payload_type() {
 fn audit_pass_reports_one_hundred_percent_mapped_on_json() {
     let ir = compile_json_ir();
     let probe = &ir.struct_registry;
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Json, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("json"), &probe);
 
     assert!(
         coverage.total_markers > 0,

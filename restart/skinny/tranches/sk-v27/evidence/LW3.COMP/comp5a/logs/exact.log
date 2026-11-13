@@ -1,0 +1,11 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8.69s
+────────────
+ Nextest run ID a1376c10-b912-4add-a075-03229e8102b9 with nextest profile: default
+    Starting 1 test across 1 binary (12 tests skipped)
+        SLOW [> 30.000s] (───) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+        SLOW [> 60.000s] (───) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+        PASS [  85.839s] (1/1) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+────────────
+     Summary [  85.840s] 1 test run: 1 passed (1 slow), 12 skipped

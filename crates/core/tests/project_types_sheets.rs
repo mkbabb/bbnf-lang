@@ -200,7 +200,7 @@ fn audit_pass_reports_mapped_for_every_sheets_marker() {
     let ir = compile_sheets_ir();
 
     let probe = &ir.struct_registry;
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Sheets, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("sheets"), &probe);
 
     assert!(
         coverage.is_clean(),

@@ -365,7 +365,7 @@ fn audit_pass_reports_mapped_when_registry_populated() {
 
     // Use the &StructRegistry probe — its impl bypasses PayloadLayout.
     let probe = &ir.struct_registry;
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Json, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("json"), &probe);
 
     assert_eq!(coverage.total_markers, 1, "fixture has one typed marker");
     assert_eq!(
@@ -391,7 +391,7 @@ fn audit_pass_reports_pending_when_registry_empty() {
     // Do NOT populate the registry — leave it empty.
 
     let probe = &ir.struct_registry;
-    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Json, &probe);
+    let coverage = audit_payload_coverage(&ir, GrammarAuditTag::Custom("json"), &probe);
     assert_eq!(coverage.total_markers, 1);
     assert_eq!(coverage.mapped_markers, 0);
     assert_eq!(coverage.pending_markers, 1);
@@ -461,12 +461,12 @@ fn audit_report_aggregates_across_grammars_with_registry_probe() {
     let probe_sheets = &ir_sheets.struct_registry;
     report.push(audit_payload_coverage(
         &ir_json,
-        GrammarAuditTag::Json,
+        GrammarAuditTag::Custom("json"),
         &probe_json,
     ));
     report.push(audit_payload_coverage(
         &ir_sheets,
-        GrammarAuditTag::Sheets,
+        GrammarAuditTag::Custom("sheets"),
         &probe_sheets,
     ));
     assert_eq!(report.total_markers, 2);

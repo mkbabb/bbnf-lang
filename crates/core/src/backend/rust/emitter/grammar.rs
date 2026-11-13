@@ -100,11 +100,7 @@ impl RustEmitter {
         ctx: &mut RustEmitCtx,
     ) -> TokenStream {
         let ir_ctx = ctx.ir_ctx();
-        let grammar_name_s = ir_ctx.ident.to_string();
-        let strategy = bbnf_ir::registry::EmitStrategy::for_grammar(
-            grammar_name_s.as_str(),
-            &ir.struct_registry,
-        );
+        let strategy = ir_ctx.parser_attrs.emit_strategy(ir);
 
         let bbnf_ir::registry::EmitStrategy::StructDirect { .. } = strategy;
 
@@ -230,7 +226,12 @@ impl RustEmitter {
         // `parse_<grammar>_<root>` dispatcher. Every non-transparent
         // rule routes through the shape dispatcher; the dispatcher
         // owns EOF, root dispatch, and capacity derivation.
-        let shape_emitters = super::shapes::emit_shapes_for_grammar(ident.to_string().as_str(), ir);
+        // AZ-II.cutover.O4 — codegen-time substrate selection is
+        // fail-closed: the caller-supplied binding (sk-v27 LW3.COMP-5a)
+        // and a populated registry, or a panic before emission.
+        let strategy = parser_attrs.emit_strategy(ir);
+        let shape_emitters =
+            super::shapes::emit_shapes_for_grammar(ident.to_string().as_str(), ir, &strategy);
         let shape_helpers = emit_shape_helpers(ident.to_string().as_str(), ir);
         let shape_dispatcher_ident = super::shapes::root_rule_name(ir)
             .map(|root| super::shapes::dispatcher_fn_ident(ident.to_string().as_str(), &root));
@@ -246,14 +247,6 @@ impl RustEmitter {
         // survives.
         let _ = rule_functions;
 
-        // AZ-II.cutover.O4 — codegen-time substrate selection is
-        // fail-closed. `EmitStrategy::for_grammar` must return a
-        // StructDirect binding for every production grammar; unknown
-        // grammars and empty registries panic before emission.
-        let strategy = bbnf_ir::registry::EmitStrategy::for_grammar(
-            ident.to_string().as_str(),
-            &ir.struct_registry,
-        );
         let bbnf_ir::registry::EmitStrategy::StructDirect { rust, .. } = strategy;
         let parse_body: TokenStream = {
             let dispatcher = shape_dispatcher_ident
@@ -385,9 +378,9 @@ impl RustEmitter {
 /// The pre-stage-2 dispatcher emits tape bodies that take `&mut tape`;
 /// until B/C/D/E land, this struct-direct body is exercised only
 /// when the same regen and per-shape activation cherry-pick onto
-/// master together. The activation gate below (`for_grammar`'s
-/// JSON arm + populated registry) governs when this path is
-/// selected at codegen time.
+/// master together. The activation gate is the caller-supplied
+/// binding plus a populated registry
+/// (`ParserAttributes::emit_strategy`).
 fn emit_parse_body_struct_direct(
     dispatcher: &syn::Ident,
     support_mod_ident: &syn::Ident,

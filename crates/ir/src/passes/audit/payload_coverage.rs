@@ -66,13 +66,9 @@ use crate::types::{FnDescriptor, FnId, GrammarIR, IrNode, IrRule, RuleId, TypeDe
 /// `&'static str` ride-along is the JSON output's row key.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum GrammarAuditTag {
-    Json,
-    CssL4,
-    Sheets,
-    /// AZ-II.cutover.A — BBNF self-hosted grammar; admitted as a
-    /// fleet-wide tag so the audit's coverage roll-up covers the
-    /// fourth direct-to-struct grammar.
-    Bbnf,
+    /// The grammar's report key, supplied by the caller (the pipeline
+    /// passes the entry rule's name). sk-v27 LW3.COMP-5a deleted the
+    /// grammar-named variants: no tag names a grammar.
     Custom(&'static str),
 }
 
@@ -80,10 +76,6 @@ impl GrammarAuditTag {
     /// Stable key used in the JSON output.
     pub fn key(&self) -> &'static str {
         match self {
-            GrammarAuditTag::Json => "json",
-            GrammarAuditTag::CssL4 => "css_l4",
-            GrammarAuditTag::Sheets => "sheets",
-            GrammarAuditTag::Bbnf => "bbnf",
             GrammarAuditTag::Custom(s) => s,
         }
     }

@@ -73,7 +73,7 @@ pub fn document_path(strategy: &EmitStrategy) -> TokenStream {
 /// `JsonStructBuilder` fallback emitted code that drove JSON's
 /// compound family for non-JSON grammars — exactly the substrate the
 /// AZ-IV thesis names as a deletion target.
-fn substrate_path(path: &'static str) -> TokenStream {
+fn substrate_path(path: &str) -> TokenStream {
     match syn::parse_str::<syn::Path>(path) {
         Ok(parsed) => quote! { #parsed },
         Err(err) => panic!(

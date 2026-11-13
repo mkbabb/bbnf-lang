@@ -2,15 +2,9 @@
 //! selector.
 //!
 //! Per `audit/AUDIT-6-ARCHITECTURE.md` §4 + §8.1, the substrate-
-//! selection decision is **backend-shared, not Rust-specific**. The
-//! pre-W2-act home at `crates/core/src/backend/rust/emitter/strategy.rs`
-//! coupled the selector to the Rust backend and would have forced
-//! per-backend duplicates when TS / WASM host bindings activate the
-//! same struct-direct grammar at BA. Hoisting the enum + resolver to
-//! `bbnf_ir::registry::strategy` makes the decision native at the IR
-//! layer; each backend reads the resolved [`EmitStrategy`] off the
-//! prepared grammar and consults its own [`SubstrateBinding`] field
-//! ([`SubstrateBinding::rust`] today; `ts` / `wasm` populated at
+//! selection decision is **backend-shared, not Rust-specific**: each
+//! backend reads its own [`SubstrateBinding`] field of the
+//! [`EmitStrategy`] (`rust` today; `ts` / `wasm` populated at
 //! BA-host-bindings time).
 //!
 //! The Rust emitter writes the struct-builder parse-fn body for every
@@ -27,28 +21,13 @@
 //! per grammar; the dispatch is data, not branches threaded through
 //! every emitted shape body.
 //!
-//! # Pluggability
+//! # The binding is the caller's data
 //!
-//! Per `feedback_pluggable-components`, the resolver
-//! [`EmitStrategy::for_grammar`] is data-driven: the variant carries
-//! per-backend [`SubstrateBinding`] records as `&'static str` data;
-//! future grammars extend the resolver match by adding new arms —
-//! they do not modify existing call sites.
-//!
-//! # Wire contract
-//!
-//! `for_grammar(grammar_ident, &registry)` is invoked by:
-//!
-//! - `pipeline::compile::resolve_emit_strategy` — the pipeline-level
-//!   adapter so test harnesses can drive the resolver without reaching
-//!   into the backend module path directly.
-//! - `backend::rust::emitter::shapes::emit_shapes_for_grammar` — to
-//!   thread `&EmitStrategy` to per-shape emitter call sites.
-//! - `backend::rust::emitter::grammar::emit_grammar_impl` — to choose
-//!   the matching `parse_body` arm.
-//!
-//! The resolver is the single decision surface; per-shape emitters
-//! consume the result, they do not re-derive it.
+//! sk-v27 LW3.COMP-5a (RULINGS 2026-11-13c COMP5A-S, QX-1 clause 6): the
+//! caller supplies a grammar's builder and document paths with the
+//! grammar (the regen entry's `builder` and `document`, carried on
+//! `ParserAttributes`). No table keyed by the grammar's parser ident
+//! resolves them, so renaming a grammar keeps its binding.
 
 use crate::registry::StructRegistry;
 
@@ -74,212 +53,43 @@ use crate::registry::StructRegistry;
 ///   signature as the builder; per-grammar code threads `'p` for
 ///   arena-borrowed slices.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct SubstrateBinding {
-    /// Rust path of the grammar's `StructBuilder` implementor — e.g.
-    /// `"crate::runtime::json::JsonStructBuilder"`.
-    pub builder_path: &'static str,
-    /// Rust path of the grammar's `Document` return type — e.g.
-    /// `"crate::runtime::json::JsonDocument"`.
-    pub document_path: &'static str,
+pub struct SubstrateBinding<'a> {
+    pub builder_path: &'a str,
+    pub document_path: &'a str,
 }
 
-/// Per-grammar codegen-time substrate selector.
-///
-/// Variants are data, not behaviour: the [`SubstrateBinding`] payloads
-/// carry fully-qualified type paths the emitter splices into the
-/// generated `parse()` body. Adding a new struct-builder grammar
-/// (Sheets, CSS L4) extends the [`EmitStrategy::for_grammar`]
-/// resolver with a new arm — no existing arm changes.
-///
-/// # Per-backend bindings
-///
-/// The `rust` field is populated for every active struct-direct
-/// grammar; `ts` / `wasm` are reserved for BA host-bindings when
-/// the per-backend native runtime types land. Today's resolver
-/// returns `None` for `ts` / `wasm` on every arm — the BA wave
-/// extends the resolver with backend-specific bindings; backends
-/// failing to find their slot fail codegen loudly; there is no
-/// production fallback substrate after AZ-II.cutover.O4.
+/// The codegen-time substrate decision for one grammar.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum EmitStrategy {
-    /// Generated `parse()` builds the grammar's typed document via a
-    /// concrete `StructBuilder` impl.
+pub enum EmitStrategy<'a> {
     StructDirect {
-        /// Rust-backend binding — consumed by
-        /// `crates/core/src/backend/rust/emitter/`.
-        rust: SubstrateBinding,
-        /// TS-backend binding — reserved for BA host bindings; the
-        /// per-grammar resolver arm fills this when the TS runtime
-        /// types land.
-        ts: Option<SubstrateBinding>,
-        /// WASM-backend binding — reserved for BA host bindings;
-        /// same dynamic as `ts`.
-        wasm: Option<SubstrateBinding>,
+        rust: SubstrateBinding<'a>,
+        ts: Option<SubstrateBinding<'a>>,
+        wasm: Option<SubstrateBinding<'a>>,
     },
 }
 
-// SK-V19.W6a — canonical manifest-driven strategy table
-// (`PRODUCTION_MANIFEST_TABLE`), generated from manifest metadata.
-//
-// Per Fermat hardening pass §F5 + AZ-IV §Hard Gates 18 + 22 and the
-// SK-V19 Lock-14 close (zero grammar-specific code in generic crates),
-// the per-grammar strategy binding is DATA, not a Rust source-side
-// arm-list — and the data lives in `[package.metadata.bbnf-strategy]`
-// of this crate's `Cargo.toml` (shipped in the package; sk-v27
-// LW2.TOPO-4b), NOT as a grammar-named const in this generic crate.
-// `crates/ir`'s `build.rs` reads that table and emits the
-// `PRODUCTION_MANIFEST_TABLE` const below into
-// `$OUT_DIR/production_manifest_table.rs`. Adding a new grammar adds a
-// row to that manifest table — no edit lands in this file.
-//
-// Each row's `idents` slice carries every parser-struct alias the
-// grammar advertises (so a grammar's `"…Parser"` and `"…Grammar"`
-// aliases continue to resolve to the same binding without a literal
-// arm). The generated table references `ManifestStrategyEntry` (defined
-// below, in scope at module level).
-include!(concat!(env!("OUT_DIR"), "/production_manifest_table.rs"));
-
-impl EmitStrategy {
-    /// Resolve the codegen substrate for `grammar_ident` against the
-    /// canonical [`PRODUCTION_MANIFEST_TABLE`].
+impl<'a> EmitStrategy<'a> {
+    /// The struct-direct strategy over the caller-supplied Rust binding.
     ///
-    /// `grammar_ident` is the parser-struct identifier the emitter
-    /// passes to `emit_shapes_for_grammar` — the literal Rust ident
-    /// that names the generated parser (one of the `idents` advertised
-    /// by a workspace-metadata strategy row).
-    ///
-    /// `registry` is the rule-id → layout map populated by
-    /// `bbnf_ir::passes::project_types`. The struct-direct path
-    /// requires a populated registry; an empty registry is a hard
-    /// generation error rather than a tape fallback.
-    ///
-    /// # AZ-IV.W1.8 — manifest-driven binding
-    ///
-    /// Pre-W1.8 this method shipped a 9-arm match expression listing
-    /// every production grammar by literal parser-name. Per Fermat
-    /// §F5 + AZ-IV §Hard Gates 18 the arm-list violated grammar
-    /// generality (a synthetic grammar rename test fails if a new
-    /// arm is required). The arm-list is replaced with a single
-    /// lookup against [`PRODUCTION_MANIFEST_TABLE`] — the data is
-    /// the discriminator, not behaviour. Adding a grammar adds one
-    /// row; no source-side dispatch arm changes.
-    pub fn for_grammar(grammar_ident: &str, registry: &StructRegistry) -> Self {
-        Self::for_grammar_with_manifest(grammar_ident, registry, PRODUCTION_MANIFEST_TABLE)
+    /// Fail-closed (AZ-II.cutover.O4): struct-direct generation needs the
+    /// `project_types` registry closure, so an empty registry panics
+    /// before emission.
+    pub fn struct_direct(rust: SubstrateBinding<'a>, registry: &StructRegistry) -> Self {
+        if registry.is_empty() {
+            panic!(
+                "EmitStrategy::struct_direct: empty StructRegistry; StructDirect generation \
+                 requires project_types registry closure"
+            );
+        }
+        EmitStrategy::StructDirect {
+            rust,
+            ts: None,
+            wasm: None,
+        }
     }
 
-    /// Returns `true` when the strategy emits the struct-direct
-    /// parse-body path. Used by the dispatcher and `parse_body`
-    /// arms to pick the matching emission template.
     #[inline]
     pub fn is_struct_direct(&self) -> bool {
         matches!(self, EmitStrategy::StructDirect { .. })
-    }
-
-    /// AZ-IV.W0.3 / W1.8 — manifest-driven strategy resolver.
-    ///
-    /// Looks up `grammar_ident` in `manifest_table` (per-row entries
-    /// constructed from `[package.metadata.bbnf-strategy]` or the
-    /// canonical [`PRODUCTION_MANIFEST_TABLE`]). When a row matches,
-    /// the strategy is constructed directly from the row's Rust
-    /// binding paths — no literal arm in this source file is
-    /// consulted. When no row matches, the call panics with a
-    /// structured error naming the offending grammar ident.
-    ///
-    /// `registry` is the rule-id → layout map populated by
-    /// `bbnf_ir::passes::project_types`. The struct-direct path
-    /// requires a populated registry; an empty registry is a hard
-    /// generation error rather than a tape fallback.
-    ///
-    /// W1.8 closes the W0.3 scaffold by routing
-    /// [`EmitStrategy::for_grammar`] through this resolver against
-    /// [`PRODUCTION_MANIFEST_TABLE`]. The synthetic-grammar test
-    /// (`crates/core/tests/synthetic_grammar_strategy.rs`) registers
-    /// a row and resolves it without needing a new literal arm to
-    /// land — proving manifest-only round-trip per AZ-IV §Hard
-    /// Gates 22.
-    pub fn for_grammar_with_manifest(
-        grammar_ident: &str,
-        registry: &StructRegistry,
-        manifest_table: &[ManifestStrategyEntry],
-    ) -> Self {
-        if registry.is_empty() {
-            panic!(
-                "EmitStrategy::for_grammar_with_manifest: `{grammar_ident}` has an empty StructRegistry; \
-                 StructDirect generation requires project_types registry closure"
-            );
-        }
-
-        if let Some(row) = manifest_table
-            .iter()
-            .find(|entry| entry.matches_ident(grammar_ident))
-        {
-            return EmitStrategy::StructDirect {
-                rust: SubstrateBinding {
-                    builder_path: row.rust_builder_path,
-                    document_path: row.rust_document_path,
-                },
-                ts: None,
-                wasm: None,
-            };
-        }
-
-        panic!(
-            "EmitStrategy::for_grammar_with_manifest: unknown production grammar `{grammar_ident}`; \
-             add a row to PRODUCTION_MANIFEST_TABLE in crates/ir/src/registry/strategy.rs \
-             (or thread a fixture manifest table for synthetic-grammar tests). \
-             Per AZ-IV §Hard Gates 18, parser strategy binding is manifest/registry driven; \
-             a missing entry is a manifest defect, not a runtime fallback."
-        );
-    }
-}
-
-/// AZ-IV.W0.3 — one row of the manifest-driven strategy table.
-///
-/// Per Fermat hardening pass (`docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md`
-/// §F5), the literal parser-name arm-list at
-/// [`EmitStrategy::for_grammar`] must be replaced with manifest-driven
-/// data. This row carries the same payload an arm carries today,
-/// keyed by every parser-ident alias the grammar advertises (so a
-/// grammar's `"…Parser"` and `"…Grammar"` aliases continue to resolve
-/// to the same binding without a literal arm in source).
-///
-/// Rows are constructed by the manifest reader (consumer side, not
-/// this crate). The reader normalises rows from
-/// `[package.metadata.bbnf-strategy]` or an in-memory test fixture;
-/// either source produces the same row shape, so the resolver is
-/// identical regardless of provenance.
-///
-/// # Field semantics
-///
-/// - `idents` — every parser-struct ident the grammar registers. The
-///   resolver matches if `grammar_ident` is in this slice; the slice
-///   is `&'static [&'static str]` so rows live in the consumer's
-///   static memory without per-call allocation.
-/// - `rust_builder_path` / `rust_document_path` — same shape as
-///   [`SubstrateBinding`]'s fields; spliced verbatim into the
-///   generated `parse()` body when this row matches.
-///
-/// W1.5/W1.8 extends the row with `ts` / `wasm` substrate bindings
-/// once the host-binding template lands.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct ManifestStrategyEntry {
-    /// Parser-struct idents the grammar registers (e.g. a grammar's
-    /// `&["…Parser", "…Grammar"]` alias slice). The resolver matches
-    /// when `grammar_ident` is in the slice.
-    pub idents: &'static [&'static str],
-    /// Rust-backend `StructBuilder` path — same shape as
-    /// [`SubstrateBinding::builder_path`].
-    pub rust_builder_path: &'static str,
-    /// Rust-backend `Document` path — same shape as
-    /// [`SubstrateBinding::document_path`].
-    pub rust_document_path: &'static str,
-}
-
-impl ManifestStrategyEntry {
-    /// True when `ident` is one of the parser-struct names this row
-    /// covers.
-    #[inline]
-    pub fn matches_ident(&self, ident: &str) -> bool {
-        self.idents.contains(&ident)
     }
 }

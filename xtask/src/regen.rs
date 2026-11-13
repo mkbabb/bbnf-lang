@@ -65,6 +65,12 @@ pub struct GrammarEntry {
     pub path: String,
     #[serde(default)]
     pub features: Vec<String>,
+    /// The grammar's Rust runtime binding, supplied with the grammar
+    /// (sk-v27 LW3.COMP-5a, RULINGS 2026-11-13c COMP5A-S): the
+    /// `StructBuilder` and `Document` paths its generated `parse()`
+    /// splices in.
+    pub builder: String,
+    pub document: String,
 }
 
 impl GrammarEntry {
@@ -120,7 +126,11 @@ impl GrammarEntry {
     /// uphold the fail-closed invariant even under direct reuse.
     #[cfg(feature = "grammar-regen")]
     fn parser_attributes(&self, grammar_path: PathBuf) -> Result<ParserAttributes> {
-        let mut attrs = ParserAttributes::default();
+        let mut attrs = ParserAttributes {
+            builder_path: Some(self.builder.clone()),
+            document_path: Some(self.document.clone()),
+            ..ParserAttributes::default()
+        };
         attrs.paths.push(grammar_path);
         // The manifest's raw `path` is workspace-relative (e.g.
         // `grammar/bbnf/bbnf.bbnf`), and the in-crate copy sits at the

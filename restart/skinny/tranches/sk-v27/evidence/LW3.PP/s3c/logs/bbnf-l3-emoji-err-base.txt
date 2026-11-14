@@ -1,0 +1,4 @@
+ERR
+Import(
+    "Parse error in `/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s9b/grammar/misc/emoji.bbnf`: Failed to parse grammar",
+)

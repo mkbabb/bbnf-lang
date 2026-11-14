@@ -31,6 +31,10 @@ pub struct PrettyPolicy {
     pub separator: SeparatorPolicy,
     pub is_ws_rule: bool,
     pub split: Option<String>,
+    /// The rule's text ends in a token that reads to its line end (a regex
+    /// ending in `.*`), so nothing may follow it on its output line
+    /// (RULINGS 2026-11-14a S3CPP-L).
+    pub reads_to_line_end: bool,
 }
 
 /// Planning result for a single rule's prettify codegen.

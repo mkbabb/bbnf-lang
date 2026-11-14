@@ -3466,16 +3466,17 @@ mod __bbnfbootstrap_emit_impl {
                 kind: ::bbnf_ir::registry::LayoutKind::Struct,
                 rule_type: ::bbnf_ir::TypeDesc::Tuple(
                     ::std::vec![
-                        ::bbnf_ir::TypeDesc::Span, ::bbnf_ir::TypeDesc::BoxedEnum,
-                        ::bbnf_ir::TypeDesc::Span
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                        ::bbnf_ir::TypeDesc::BoxedEnum, ::bbnf_ir::TypeDesc::Span,
+                        ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum))
                     ],
                 ),
                 fields: ::std::vec![
                     ::bbnf_ir::registry::StructField { name :
                     ::std::string::String::from("field_0"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 0u32, },
-                    }, ::bbnf_ir::registry::StructField { name :
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    0u32, }, }, ::bbnf_ir::registry::StructField { name :
                     ::std::string::String::from("field_1"), type_desc :
                     ::bbnf_ir::TypeDesc::BoxedEnum, source :
                     ::bbnf_ir::registry::FieldSource::SeqPosition { position : 1u32, },
@@ -3485,8 +3486,9 @@ mod __bbnfbootstrap_emit_impl {
                     ::bbnf_ir::registry::FieldSource::SeqPosition { position : 2u32, },
                     }, ::bbnf_ir::registry::StructField { name :
                     ::std::string::String::from("field_3"), type_desc :
-                    ::bbnf_ir::TypeDesc::Span, source :
-                    ::bbnf_ir::registry::FieldSource::SeqPosition { position : 3u32, }, }
+                    ::bbnf_ir::TypeDesc::Vec(::std::boxed::Box::new(::bbnf_ir::TypeDesc::Enum)),
+                    source : ::bbnf_ir::registry::FieldSource::SeqPosition { position :
+                    3u32, }, }
                 ],
             });
         __registry
@@ -13028,9 +13030,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -13040,20 +13039,79 @@ mod __bbnfbootstrap_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
-                            let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_flat_BbnfBootstrap_big_comment(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
+                            'try_branches: loop {
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_flat_BbnfBootstrap_big_comment(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_flat_BbnfBootstrap_comment(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                });
+                            }
                             Ok(())
                         })();
                         match __iter_result {
@@ -13146,9 +13204,6 @@ mod __bbnfbootstrap_emit_impl {
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
-                        if __iter_count >= 1u32 {
-                            break;
-                        }
                         let __iter_save_p = *p;
                         if input.get(*p).is_none() {
                             break;
@@ -13158,20 +13213,79 @@ mod __bbnfbootstrap_emit_impl {
                             (),
                             crate::runtime::DtaError,
                         > = (|| {
-                            let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
-                                parse_flat_BbnfBootstrap_big_comment(
-                                    input,
-                                    p,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
-                            })?;
+                            'try_branches: loop {
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_flat_BbnfBootstrap_big_comment(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                {
+                                    let __alt_save_p = *p;
+                                    let __alt_builder_checkpoint = builder.checkpoint();
+                                    let __alt_result: ::core::result::Result<
+                                        (),
+                                        crate::runtime::DtaError,
+                                    > = (|| {
+                                        let _ = ({
+                                            let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                input,
+                                                p,
+                                                state,
+                                            );
+                                            parse_flat_BbnfBootstrap_comment(
+                                                input,
+                                                p,
+                                                state,
+                                                builder,
+                                                cursor,
+                                            )
+                                        })?;
+                                        Ok(())
+                                    })();
+                                    match __alt_result {
+                                        Ok(()) => {
+                                            builder.commit(__alt_builder_checkpoint);
+                                            break 'try_branches;
+                                        }
+                                        Err(_) => {
+                                            *p = __alt_save_p;
+                                            builder.rollback(__alt_builder_checkpoint);
+                                        }
+                                    }
+                                }
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: *p as u32,
+                                });
+                            }
                             Ok(())
                         })();
                         match __iter_result {
@@ -16227,156 +16341,181 @@ mod __bbnfbootstrap_emit_impl {
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
         ) -> bool {
-            {
+            let mut __before = __builder
+                .ops()
+                .iter()
+                .rev()
+                .filter(|op| {
+                    !matches!(
+                        op, ::pprint::FmtOp::GroupStart { .. } |
+                        ::pprint::FmtOp::GroupEnd | ::pprint::FmtOp::IndentStart |
+                        ::pprint::FmtOp::IndentEnd
+                    )
+                });
+            let __began_line = match __before.next() {
+                None => true,
+                Some(::pprint::FmtOp::Hardline) => {
+                    !matches!(__before.next(), Some(::pprint::FmtOp::BreakParent))
+                }
+                Some(_) => false,
+            };
+            let __line_ok = (|| -> bool {
                 {
-                    if !{
-                        let __pretty_cp34 = state.offset;
-                        let __pretty_bcp35 = __builder.checkpoint();
-                        let __ok = (|| -> bool {
-                            {
-                                let __ows32 = state.offset;
-                                ::parse_that::trim_leading_whitespace_mut(state);
-                                __builder.text_inline_ws(&state.src[__ows32..state.offset]);
+                    {
+                        if !{
+                            let __pretty_cp34 = state.offset;
+                            let __pretty_bcp35 = __builder.checkpoint();
+                            let __ok = (|| -> bool {
                                 {
+                                    let __ows32 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder.text_inline_ws(&state.src[__ows32..state.offset]);
                                     {
-                                        let __s = "//";
-                                        let __bytes = __s.as_bytes();
-                                        let __slc = match state.src_bytes.get(state.offset..) {
-                                            Some(s) if s.len() >= 2usize => s,
-                                            _ => return false,
-                                        };
-                                        if &__slc[..2usize] != __bytes {
-                                            return false;
-                                        }
-                                        __builder
-                                            .text(&state.src[state.offset..state.offset + 2usize]);
-                                        state.offset += 2usize;
-                                    };
-                                    {
-                                        let __start = state.offset;
-                                        if {
-                                            let __start = state.offset;
-                                            let __scan = if __start >= state.src_bytes.len() {
-                                                0
-                                            } else {
-                                                ({
-                                                    static __LO_LUT: [u8; 16] = [
-                                                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                                                    ];
-                                                    static __HI_LUT: [u8; 16] = [
-                                                        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                    ];
-                                                    #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-                                                    let __result: ::core::option::Option<usize> = 'avx2_scan: {
-                                                        use ::core::arch::x86_64::*;
-                                                        unsafe {
-                                                            let __bytes = state.src_bytes.as_slice();
-                                                            let __len = __bytes.len();
-                                                            let __ptr = __bytes.as_ptr();
-                                                            let __lo_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __hi_v = _mm256_broadcastsi128_si256(
-                                                                _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
-                                                            );
-                                                            let __lo_mask = _mm256_set1_epi8(0x0F);
-                                                            let __zero = _mm256_setzero_si256();
-                                                            let mut __i = __start;
-                                                            while __i + 32 <= __len {
-                                                                let __chunk = _mm256_loadu_si256(
-                                                                    __ptr.add(__i) as *const __m256i,
-                                                                );
-                                                                let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
-                                                                let __hi_n = _mm256_and_si256(
-                                                                    _mm256_srli_epi16(__chunk, 4),
-                                                                    __lo_mask,
-                                                                );
-                                                                let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
-                                                                let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
-                                                                let __matched = _mm256_and_si256(__lo_r, __hi_r);
-                                                                let __nz = _mm256_cmpgt_epi8(__matched, __zero);
-                                                                let __mask = _mm256_movemask_epi8(__nz) as u32;
-                                                                if __mask != 0 {
-                                                                    let __rel = __mask.trailing_zeros() as usize;
-                                                                    let __found = ::core::option::Option::Some(
-                                                                        (__i + __rel) - __start,
-                                                                    );
-                                                                    break 'avx2_scan __found;
-                                                                }
-                                                                __i += 32;
-                                                            }
-                                                            let mut __byte_lut = [false; 256];
-                                                            {
-                                                                let mut __b: u16 = 0;
-                                                                while __b < 256 {
-                                                                    let __blo = __LO_LUT[(__b & 0x0F) as usize];
-                                                                    let __bhi = __HI_LUT[(__b >> 4) as usize];
-                                                                    __byte_lut[__b as usize] = (__blo & __bhi) != 0;
-                                                                    __b += 1;
-                                                                }
-                                                            }
-                                                            while __i < __len {
-                                                                let __b = *__ptr.add(__i);
-                                                                if __byte_lut[__b as usize] {
-                                                                    let __found = ::core::option::Option::Some(__i - __start);
-                                                                    break 'avx2_scan __found;
-                                                                }
-                                                                __i += 1;
-                                                            }
-                                                            ::core::option::Option::None
-                                                        }
-                                                    };
-                                                    #[cfg(
-                                                        not(all(target_arch = "x86_64", target_feature = "avx2"))
-                                                    )]
-                                                    let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
-                                                            state.padded(),
-                                                            __start,
-                                                            &__LO_LUT,
-                                                            &__HI_LUT,
-                                                        )
-                                                        .map(|(pos, _)| pos - __start);
-                                                    __result
-                                                })
-                                                    .unwrap_or(state.src_bytes.len() - __start)
-                                            };
-                                            state.offset = __start + __scan;
-                                            Some(
-                                                ::parse_that::Span::new(__start, state.offset, state.src),
-                                            )
-                                        }
-                                            .is_none()
                                         {
-                                            return false;
-                                        }
-                                        let __matched = &state.src[__start..state.offset];
-                                        let __body = __matched
-                                            .trim_end_matches(char::is_whitespace);
-                                        if __matched[__body.len()..].contains('\n') {
-                                            __builder.text(__body);
-                                            __builder.text(" ");
-                                        } else if !__matched.is_empty() {
-                                            __builder.text(__matched);
-                                        }
+                                            let __s = "//";
+                                            let __bytes = __s.as_bytes();
+                                            let __slc = match state.src_bytes.get(state.offset..) {
+                                                Some(s) if s.len() >= 2usize => s,
+                                                _ => return false,
+                                            };
+                                            if &__slc[..2usize] != __bytes {
+                                                return false;
+                                            }
+                                            __builder
+                                                .text(&state.src[state.offset..state.offset + 2usize]);
+                                            state.offset += 2usize;
+                                        };
+                                        {
+                                            let __start = state.offset;
+                                            if {
+                                                let __start = state.offset;
+                                                let __scan = if __start >= state.src_bytes.len() {
+                                                    0
+                                                } else {
+                                                    ({
+                                                        static __LO_LUT: [u8; 16] = [
+                                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
+                                                        ];
+                                                        static __HI_LUT: [u8; 16] = [
+                                                            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                        ];
+                                                        #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+                                                        let __result: ::core::option::Option<usize> = 'avx2_scan: {
+                                                            use ::core::arch::x86_64::*;
+                                                            unsafe {
+                                                                let __bytes = state.src_bytes.as_slice();
+                                                                let __len = __bytes.len();
+                                                                let __ptr = __bytes.as_ptr();
+                                                                let __lo_v = _mm256_broadcastsi128_si256(
+                                                                    _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
+                                                                );
+                                                                let __hi_v = _mm256_broadcastsi128_si256(
+                                                                    _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
+                                                                );
+                                                                let __lo_mask = _mm256_set1_epi8(0x0F);
+                                                                let __zero = _mm256_setzero_si256();
+                                                                let mut __i = __start;
+                                                                while __i + 32 <= __len {
+                                                                    let __chunk = _mm256_loadu_si256(
+                                                                        __ptr.add(__i) as *const __m256i,
+                                                                    );
+                                                                    let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
+                                                                    let __hi_n = _mm256_and_si256(
+                                                                        _mm256_srli_epi16(__chunk, 4),
+                                                                        __lo_mask,
+                                                                    );
+                                                                    let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
+                                                                    let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
+                                                                    let __matched = _mm256_and_si256(__lo_r, __hi_r);
+                                                                    let __nz = _mm256_cmpgt_epi8(__matched, __zero);
+                                                                    let __mask = _mm256_movemask_epi8(__nz) as u32;
+                                                                    if __mask != 0 {
+                                                                        let __rel = __mask.trailing_zeros() as usize;
+                                                                        let __found = ::core::option::Option::Some(
+                                                                            (__i + __rel) - __start,
+                                                                        );
+                                                                        break 'avx2_scan __found;
+                                                                    }
+                                                                    __i += 32;
+                                                                }
+                                                                let mut __byte_lut = [false; 256];
+                                                                {
+                                                                    let mut __b: u16 = 0;
+                                                                    while __b < 256 {
+                                                                        let __blo = __LO_LUT[(__b & 0x0F) as usize];
+                                                                        let __bhi = __HI_LUT[(__b >> 4) as usize];
+                                                                        __byte_lut[__b as usize] = (__blo & __bhi) != 0;
+                                                                        __b += 1;
+                                                                    }
+                                                                }
+                                                                while __i < __len {
+                                                                    let __b = *__ptr.add(__i);
+                                                                    if __byte_lut[__b as usize] {
+                                                                        let __found = ::core::option::Option::Some(__i - __start);
+                                                                        break 'avx2_scan __found;
+                                                                    }
+                                                                    __i += 1;
+                                                                }
+                                                                ::core::option::Option::None
+                                                            }
+                                                        };
+                                                        #[cfg(
+                                                            not(all(target_arch = "x86_64", target_feature = "avx2"))
+                                                        )]
+                                                        let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
+                                                                state.padded(),
+                                                                __start,
+                                                                &__LO_LUT,
+                                                                &__HI_LUT,
+                                                            )
+                                                            .map(|(pos, _)| pos - __start);
+                                                        __result
+                                                    })
+                                                        .unwrap_or(state.src_bytes.len() - __start)
+                                                };
+                                                state.offset = __start + __scan;
+                                                Some(
+                                                    ::parse_that::Span::new(__start, state.offset, state.src),
+                                                )
+                                            }
+                                                .is_none()
+                                            {
+                                                return false;
+                                            }
+                                            let __matched = &state.src[__start..state.offset];
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
+                                                __builder.text(__matched);
+                                            }
+                                        };
                                     };
+                                    let __ows33 = state.offset;
+                                    ::parse_that::trim_leading_whitespace_mut(state);
+                                    __builder.text_inline_ws(&state.src[__ows33..state.offset]);
                                 };
-                                let __ows33 = state.offset;
-                                ::parse_that::trim_leading_whitespace_mut(state);
-                                __builder.text_inline_ws(&state.src[__ows33..state.offset]);
-                            };
-                            true
-                        })();
-                        if !__ok {
-                            state.offset = __pretty_cp34;
-                            __builder.restore(__pretty_bcp35);
+                                true
+                            })();
+                            if !__ok {
+                                state.offset = __pretty_cp34;
+                                __builder.restore(__pretty_bcp35);
+                            }
+                            __ok
+                        } {
+                            return false;
                         }
-                        __ok
-                    } {
-                        return false;
-                    }
-                };
-                true
+                    };
+                    true
+                }
+            })();
+            if __line_ok && !__began_line {
+                __builder.break_parent();
+                __builder.hardline();
             }
+            __line_ok
         }
         pub fn comment_prettify<'a>() -> Parser<'a, ::pprint::Doc<'a>> {
             Parser::new(|state: &mut ::parse_that::ParserState<'a>| {
@@ -20693,46 +20832,74 @@ mod __bbnfbootstrap_emit_impl {
             {
                 {
                     {
-                        let _ = {
-                            let __pretty_cp342 = state.offset;
-                            let __pretty_bcp343 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                if !Self::__big_comment_prettify(state, __builder) {
-                                    return false;
+                        let mut __rep_count346 = 0usize;
+                        while __rep_count346 < 4294967295 {
+                            let __rep_cp347 = state.offset;
+                            if !{
+                                let __pretty_cp344 = state.offset;
+                                let __pretty_bcp345 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        if !{
+                                            let __pretty_cp342 = state.offset;
+                                            let __pretty_bcp343 = __builder.checkpoint();
+                                            let __ok = (|| -> bool {
+                                                if !Self::__big_comment_prettify(state, __builder) {
+                                                    return false;
+                                                }
+                                                true
+                                            })();
+                                            if !__ok {
+                                                state.offset = __pretty_cp342;
+                                                __builder.restore(__pretty_bcp343);
+                                            }
+                                            __ok
+                                        } {
+                                            if !Self::__comment_prettify(state, __builder) {
+                                                return false;
+                                            }
+                                        }
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp344;
+                                    __builder.restore(__pretty_bcp345);
                                 }
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp342;
-                                __builder.restore(__pretty_bcp343);
+                                __ok
+                            } {
+                                state.offset = __rep_cp347;
+                                break;
                             }
-                            __ok
-                        };
-                        true
+                            if state.offset == __rep_cp347 {
+                                break;
+                            }
+                            __rep_count346 += 1;
+                        }
                     };
                     {
                         if !{
-                            let __pretty_cp346 = state.offset;
-                            let __pretty_bcp347 = __builder.checkpoint();
+                            let __pretty_cp350 = state.offset;
+                            let __pretty_bcp351 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
-                                    let __ows344 = state.offset;
+                                    let __ows348 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows344..state.offset]);
+                                        .text_inline_ws(&state.src[__ows348..state.offset]);
                                     if !Self::__term_prettify(state, __builder) {
                                         return false;
                                     }
-                                    let __ows345 = state.offset;
+                                    let __ows349 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows345..state.offset]);
+                                        .text_inline_ws(&state.src[__ows349..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp346;
-                                __builder.restore(__pretty_bcp347);
+                                state.offset = __pretty_cp350;
+                                __builder.restore(__pretty_bcp351);
                             }
                             __ok
                         } {
@@ -20741,8 +20908,8 @@ mod __bbnfbootstrap_emit_impl {
                     };
                     {
                         let _ = {
-                            let __pretty_cp348 = state.offset;
-                            let __pretty_bcp349 = __builder.checkpoint();
+                            let __pretty_cp352 = state.offset;
+                            let __pretty_bcp353 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 if !Self::__modifier_prettify(state, __builder) {
                                     return false;
@@ -20750,30 +20917,58 @@ mod __bbnfbootstrap_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp348;
-                                __builder.restore(__pretty_bcp349);
+                                state.offset = __pretty_cp352;
+                                __builder.restore(__pretty_bcp353);
                             }
                             __ok
                         };
                         true
                     };
                     {
-                        let _ = {
-                            let __pretty_cp350 = state.offset;
-                            let __pretty_bcp351 = __builder.checkpoint();
-                            let __ok = (|| -> bool {
-                                if !Self::__big_comment_prettify(state, __builder) {
-                                    return false;
+                        let mut __rep_count358 = 0usize;
+                        while __rep_count358 < 4294967295 {
+                            let __rep_cp359 = state.offset;
+                            if !{
+                                let __pretty_cp356 = state.offset;
+                                let __pretty_bcp357 = __builder.checkpoint();
+                                let __ok = (|| -> bool {
+                                    {
+                                        if !{
+                                            let __pretty_cp354 = state.offset;
+                                            let __pretty_bcp355 = __builder.checkpoint();
+                                            let __ok = (|| -> bool {
+                                                if !Self::__big_comment_prettify(state, __builder) {
+                                                    return false;
+                                                }
+                                                true
+                                            })();
+                                            if !__ok {
+                                                state.offset = __pretty_cp354;
+                                                __builder.restore(__pretty_bcp355);
+                                            }
+                                            __ok
+                                        } {
+                                            if !Self::__comment_prettify(state, __builder) {
+                                                return false;
+                                            }
+                                        }
+                                    };
+                                    true
+                                })();
+                                if !__ok {
+                                    state.offset = __pretty_cp356;
+                                    __builder.restore(__pretty_bcp357);
                                 }
-                                true
-                            })();
-                            if !__ok {
-                                state.offset = __pretty_cp350;
-                                __builder.restore(__pretty_bcp351);
+                                __ok
+                            } {
+                                state.offset = __rep_cp359;
+                                break;
                             }
-                            __ok
-                        };
-                        true
+                            if state.offset == __rep_cp359 {
+                                break;
+                            }
+                            __rep_count358 += 1;
+                        }
                     };
                 };
                 true
@@ -20801,14 +20996,14 @@ mod __bbnfbootstrap_emit_impl {
                     }
                     {
                         let _ = {
-                            let __pretty_cp357 = state.offset;
-                            let __pretty_bcp358 = __builder.checkpoint();
+                            let __pretty_cp365 = state.offset;
+                            let __pretty_bcp366 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     {
-                                        let __ows352 = state.offset;
+                                        let __ows360 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
-                                        let __ows353 = state.offset;
+                                        let __ows361 = state.offset;
                                         {
                                             let __s = "->";
                                             let __bytes = __s.as_bytes();
@@ -20823,11 +21018,11 @@ mod __bbnfbootstrap_emit_impl {
                                                 .text(&state.src[state.offset..state.offset + 2usize]);
                                             state.offset += 2usize;
                                         };
-                                        __builder.text_inline_ws(&state.src[__ows352..__ows353]);
-                                        let __ows354 = state.offset;
+                                        __builder.text_inline_ws(&state.src[__ows360..__ows361]);
+                                        let __ows362 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows354..state.offset]);
+                                            .text_inline_ws(&state.src[__ows362..state.offset]);
                                     };
                                     {
                                         if !Self::__value_expr_prettify(state, __builder) {
@@ -20835,8 +21030,8 @@ mod __bbnfbootstrap_emit_impl {
                                         }
                                         {
                                             let _ = {
-                                                let __pretty_cp355 = state.offset;
-                                                let __pretty_bcp356 = __builder.checkpoint();
+                                                let __pretty_cp363 = state.offset;
+                                                let __pretty_bcp364 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__type_annotation_prettify(state, __builder) {
                                                         return false;
@@ -20844,8 +21039,8 @@ mod __bbnfbootstrap_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp355;
-                                                    __builder.restore(__pretty_bcp356);
+                                                    state.offset = __pretty_cp363;
+                                                    __builder.restore(__pretty_bcp364);
                                                 }
                                                 __ok
                                             };
@@ -20856,8 +21051,8 @@ mod __bbnfbootstrap_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp357;
-                                __builder.restore(__pretty_bcp358);
+                                state.offset = __pretty_cp365;
+                                __builder.restore(__pretty_bcp366);
                             }
                             __ok
                         };
@@ -20906,9 +21101,9 @@ mod __bbnfbootstrap_emit_impl {
                             }
                         };
                         {
-                            let __ows359 = state.offset;
+                            let __ows367 = state.offset;
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            let __ows360 = state.offset;
+                            let __ows368 = state.offset;
                             {
                                 if state.src_bytes.get(state.offset).copied() != Some(b'=')
                                 {
@@ -20917,34 +21112,34 @@ mod __bbnfbootstrap_emit_impl {
                                 state.offset += 1;
                                 __builder.char(b'=');
                             };
-                            __builder.text_inline_ws(&state.src[__ows359..__ows360]);
-                            let __ows361 = state.offset;
+                            __builder.text_inline_ws(&state.src[__ows367..__ows368]);
+                            let __ows369 = state.offset;
                             ::parse_that::trim_leading_whitespace_mut(state);
-                            __builder.text_inline_ws(&state.src[__ows361..state.offset]);
+                            __builder.text_inline_ws(&state.src[__ows369..state.offset]);
                         };
                         {
                             if !{
-                                let __pretty_cp364 = state.offset;
-                                let __pretty_bcp365 = __builder.checkpoint();
+                                let __pretty_cp372 = state.offset;
+                                let __pretty_bcp373 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     {
-                                        let __ows362 = state.offset;
+                                        let __ows370 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows362..state.offset]);
+                                            .text_inline_ws(&state.src[__ows370..state.offset]);
                                         if !Self::__rhs_prettify(state, __builder) {
                                             return false;
                                         }
-                                        let __ows363 = state.offset;
+                                        let __ows371 = state.offset;
                                         ::parse_that::trim_leading_whitespace_mut(state);
                                         __builder
-                                            .text_inline_ws(&state.src[__ows363..state.offset]);
+                                            .text_inline_ws(&state.src[__ows371..state.offset]);
                                     };
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp364;
-                                    __builder.restore(__pretty_bcp365);
+                                    state.offset = __pretty_cp372;
+                                    __builder.restore(__pretty_bcp373);
                                 }
                                 __ok
                             } {
@@ -20953,7 +21148,7 @@ mod __bbnfbootstrap_emit_impl {
                         };
                         {
                             if !{
-                                let __pretty_cp366 = state.offset;
+                                let __pretty_cp374 = state.offset;
                                 let __ok = (|| -> bool {
                                     {
                                         if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -20966,7 +21161,7 @@ mod __bbnfbootstrap_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp366;
+                                    state.offset = __pretty_cp374;
                                 }
                                 __ok
                             } {
@@ -21005,9 +21200,9 @@ mod __bbnfbootstrap_emit_impl {
             {
                 {
                     {
-                        let __ows367 = state.offset;
+                        let __ows375 = state.offset;
                         ::parse_that::trim_leading_whitespace_mut(state);
-                        let __ows368 = state.offset;
+                        let __ows376 = state.offset;
                         {
                             let __s = "@recover";
                             let __bytes = __s.as_bytes();
@@ -21022,15 +21217,15 @@ mod __bbnfbootstrap_emit_impl {
                                 .text(&state.src[state.offset..state.offset + 8usize]);
                             state.offset += 8usize;
                         };
-                        __builder.text_inline_ws(&state.src[__ows367..__ows368]);
-                        let __ows369 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows375..__ows376]);
+                        let __ows377 = state.offset;
                         ::parse_that::trim_leading_whitespace_mut(state);
-                        __builder.text_inline_ws(&state.src[__ows369..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows377..state.offset]);
                     };
                     {
-                        let __ows370 = state.offset;
+                        let __ows378 = state.offset;
                         ::parse_that::trim_leading_whitespace_mut(state);
-                        let __ows371 = state.offset;
+                        let __ows379 = state.offset;
                         {
                             let __start = state.offset;
                             if ::parse_that::scan_ident(
@@ -21050,34 +21245,34 @@ mod __bbnfbootstrap_emit_impl {
                                 __builder.text(__matched);
                             }
                         };
-                        __builder.text_inline_ws(&state.src[__ows370..__ows371]);
-                        let __ows372 = state.offset;
+                        __builder.text_inline_ws(&state.src[__ows378..__ows379]);
+                        let __ows380 = state.offset;
                         ::parse_that::trim_leading_whitespace_mut(state);
-                        __builder.text_inline_ws(&state.src[__ows372..state.offset]);
+                        __builder.text_inline_ws(&state.src[__ows380..state.offset]);
                     };
                     {
                         if !{
-                            let __pretty_cp375 = state.offset;
-                            let __pretty_bcp376 = __builder.checkpoint();
+                            let __pretty_cp383 = state.offset;
+                            let __pretty_bcp384 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
-                                    let __ows373 = state.offset;
+                                    let __ows381 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows373..state.offset]);
+                                        .text_inline_ws(&state.src[__ows381..state.offset]);
                                     if !Self::__rhs_prettify(state, __builder) {
                                         return false;
                                     }
-                                    let __ows374 = state.offset;
+                                    let __ows382 = state.offset;
                                     ::parse_that::trim_leading_whitespace_mut(state);
                                     __builder
-                                        .text_inline_ws(&state.src[__ows374..state.offset]);
+                                        .text_inline_ws(&state.src[__ows382..state.offset]);
                                 };
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp375;
-                                __builder.restore(__pretty_bcp376);
+                                state.offset = __pretty_cp383;
+                                __builder.restore(__pretty_bcp384);
                             }
                             __ok
                         } {
@@ -21086,12 +21281,12 @@ mod __bbnfbootstrap_emit_impl {
                     };
                     {
                         let _ = {
-                            let __pretty_cp378 = state.offset;
-                            let __pretty_bcp379 = __builder.checkpoint();
+                            let __pretty_cp386 = state.offset;
+                            let __pretty_bcp387 = __builder.checkpoint();
                             let __ok = (|| -> bool {
                                 {
                                     if !{
-                                        let __pretty_cp377 = state.offset;
+                                        let __pretty_cp385 = state.offset;
                                         let __ok = (|| -> bool {
                                             {
                                                 if state.src_bytes.get(state.offset).copied() != Some(b';')
@@ -21104,7 +21299,7 @@ mod __bbnfbootstrap_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp377;
+                                            state.offset = __pretty_cp385;
                                         }
                                         __ok
                                     } {
@@ -21121,8 +21316,8 @@ mod __bbnfbootstrap_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp378;
-                                __builder.restore(__pretty_bcp379);
+                                state.offset = __pretty_cp386;
+                                __builder.restore(__pretty_bcp387);
                             }
                             __ok
                         };
@@ -21150,8 +21345,8 @@ mod __bbnfbootstrap_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp392 = state.offset;
-                        let __pretty_bcp393 = __builder.checkpoint();
+                        let __pretty_cp400 = state.offset;
+                        let __pretty_bcp401 = __builder.checkpoint();
                         let __ok = (|| -> bool {
                             if !Self::__import_directive_prettify(state, __builder) {
                                 return false;
@@ -21159,15 +21354,15 @@ mod __bbnfbootstrap_emit_impl {
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp392;
-                            __builder.restore(__pretty_bcp393);
+                            state.offset = __pretty_cp400;
+                            __builder.restore(__pretty_bcp401);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp390 = state.offset;
-                                let __pretty_bcp391 = __builder.checkpoint();
+                                let __pretty_cp398 = state.offset;
+                                let __pretty_bcp399 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__recover_directive_prettify(state, __builder) {
                                         return false;
@@ -21175,15 +21370,15 @@ mod __bbnfbootstrap_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp390;
-                                    __builder.restore(__pretty_bcp391);
+                                    state.offset = __pretty_cp398;
+                                    __builder.restore(__pretty_bcp399);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp388 = state.offset;
-                                        let __pretty_bcp389 = __builder.checkpoint();
+                                        let __pretty_cp396 = state.offset;
+                                        let __pretty_bcp397 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__pretty_directive_prettify(state, __builder) {
                                                 return false;
@@ -21191,15 +21386,15 @@ mod __bbnfbootstrap_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp388;
-                                            __builder.restore(__pretty_bcp389);
+                                            state.offset = __pretty_cp396;
+                                            __builder.restore(__pretty_bcp397);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp386 = state.offset;
-                                                let __pretty_bcp387 = __builder.checkpoint();
+                                                let __pretty_cp394 = state.offset;
+                                                let __pretty_bcp395 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__ws_directive_prettify(state, __builder) {
                                                         return false;
@@ -21207,15 +21402,15 @@ mod __bbnfbootstrap_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp386;
-                                                    __builder.restore(__pretty_bcp387);
+                                                    state.offset = __pretty_cp394;
+                                                    __builder.restore(__pretty_bcp395);
                                                 }
                                                 __ok
                                             } {
                                                 {
                                                     if !{
-                                                        let __pretty_cp384 = state.offset;
-                                                        let __pretty_bcp385 = __builder.checkpoint();
+                                                        let __pretty_cp392 = state.offset;
+                                                        let __pretty_bcp393 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             if !Self::__token_directive_prettify(state, __builder) {
                                                                 return false;
@@ -21223,15 +21418,15 @@ mod __bbnfbootstrap_emit_impl {
                                                             true
                                                         })();
                                                         if !__ok {
-                                                            state.offset = __pretty_cp384;
-                                                            __builder.restore(__pretty_bcp385);
+                                                            state.offset = __pretty_cp392;
+                                                            __builder.restore(__pretty_bcp393);
                                                         }
                                                         __ok
                                                     } {
                                                         {
                                                             if !{
-                                                                let __pretty_cp382 = state.offset;
-                                                                let __pretty_bcp383 = __builder.checkpoint();
+                                                                let __pretty_cp390 = state.offset;
+                                                                let __pretty_bcp391 = __builder.checkpoint();
                                                                 let __ok = (|| -> bool {
                                                                     if !Self::__debug_directive_prettify(state, __builder) {
                                                                         return false;
@@ -21239,15 +21434,15 @@ mod __bbnfbootstrap_emit_impl {
                                                                     true
                                                                 })();
                                                                 if !__ok {
-                                                                    state.offset = __pretty_cp382;
-                                                                    __builder.restore(__pretty_bcp383);
+                                                                    state.offset = __pretty_cp390;
+                                                                    __builder.restore(__pretty_bcp391);
                                                                 }
                                                                 __ok
                                                             } {
                                                                 {
                                                                     if !{
-                                                                        let __pretty_cp380 = state.offset;
-                                                                        let __pretty_bcp381 = __builder.checkpoint();
+                                                                        let __pretty_cp388 = state.offset;
+                                                                        let __pretty_bcp389 = __builder.checkpoint();
                                                                         let __ok = (|| -> bool {
                                                                             if !Self::__host_directive_prettify(state, __builder) {
                                                                                 return false;
@@ -21255,8 +21450,8 @@ mod __bbnfbootstrap_emit_impl {
                                                                             true
                                                                         })();
                                                                         if !__ok {
-                                                                            state.offset = __pretty_cp380;
-                                                                            __builder.restore(__pretty_bcp381);
+                                                                            state.offset = __pretty_cp388;
+                                                                            __builder.restore(__pretty_bcp389);
                                                                         }
                                                                         __ok
                                                                     } {
@@ -21296,170 +21491,24 @@ mod __bbnfbootstrap_emit_impl {
             {
                 {
                     if !{
-                        let __pretty_cp404 = state.offset;
-                        let __pretty_bcp405 = __builder.checkpoint();
+                        let __pretty_cp408 = state.offset;
+                        let __pretty_bcp409 = __builder.checkpoint();
                         let __ok = (|| -> bool {
-                            {
-                                if !{
-                                    let __pretty_cp396 = state.offset;
-                                    let __pretty_bcp397 = __builder.checkpoint();
-                                    let __ok = (|| -> bool {
-                                        {
-                                            let __ows394 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __builder
-                                                .text_inline_ws(&state.src[__ows394..state.offset]);
-                                            {
-                                                {
-                                                    let __s = "//";
-                                                    let __bytes = __s.as_bytes();
-                                                    let __slc = match state.src_bytes.get(state.offset..) {
-                                                        Some(s) if s.len() >= 2usize => s,
-                                                        _ => return false,
-                                                    };
-                                                    if &__slc[..2usize] != __bytes {
-                                                        return false;
-                                                    }
-                                                    __builder
-                                                        .text(&state.src[state.offset..state.offset + 2usize]);
-                                                    state.offset += 2usize;
-                                                };
-                                                {
-                                                    let __start = state.offset;
-                                                    if {
-                                                        let __start = state.offset;
-                                                        let __scan = if __start >= state.src_bytes.len() {
-                                                            0
-                                                        } else {
-                                                            ({
-                                                                static __LO_LUT: [u8; 16] = [
-                                                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-                                                                ];
-                                                                static __HI_LUT: [u8; 16] = [
-                                                                    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                                                ];
-                                                                #[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
-                                                                let __result: ::core::option::Option<usize> = 'avx2_scan: {
-                                                                    use ::core::arch::x86_64::*;
-                                                                    unsafe {
-                                                                        let __bytes = state.src_bytes.as_slice();
-                                                                        let __len = __bytes.len();
-                                                                        let __ptr = __bytes.as_ptr();
-                                                                        let __lo_v = _mm256_broadcastsi128_si256(
-                                                                            _mm_loadu_si128(__LO_LUT.as_ptr() as *const __m128i),
-                                                                        );
-                                                                        let __hi_v = _mm256_broadcastsi128_si256(
-                                                                            _mm_loadu_si128(__HI_LUT.as_ptr() as *const __m128i),
-                                                                        );
-                                                                        let __lo_mask = _mm256_set1_epi8(0x0F);
-                                                                        let __zero = _mm256_setzero_si256();
-                                                                        let mut __i = __start;
-                                                                        while __i + 32 <= __len {
-                                                                            let __chunk = _mm256_loadu_si256(
-                                                                                __ptr.add(__i) as *const __m256i,
-                                                                            );
-                                                                            let __lo_n = _mm256_and_si256(__chunk, __lo_mask);
-                                                                            let __hi_n = _mm256_and_si256(
-                                                                                _mm256_srli_epi16(__chunk, 4),
-                                                                                __lo_mask,
-                                                                            );
-                                                                            let __lo_r = _mm256_shuffle_epi8(__lo_v, __lo_n);
-                                                                            let __hi_r = _mm256_shuffle_epi8(__hi_v, __hi_n);
-                                                                            let __matched = _mm256_and_si256(__lo_r, __hi_r);
-                                                                            let __nz = _mm256_cmpgt_epi8(__matched, __zero);
-                                                                            let __mask = _mm256_movemask_epi8(__nz) as u32;
-                                                                            if __mask != 0 {
-                                                                                let __rel = __mask.trailing_zeros() as usize;
-                                                                                let __found = ::core::option::Option::Some(
-                                                                                    (__i + __rel) - __start,
-                                                                                );
-                                                                                break 'avx2_scan __found;
-                                                                            }
-                                                                            __i += 32;
-                                                                        }
-                                                                        let mut __byte_lut = [false; 256];
-                                                                        {
-                                                                            let mut __b: u16 = 0;
-                                                                            while __b < 256 {
-                                                                                let __blo = __LO_LUT[(__b & 0x0F) as usize];
-                                                                                let __bhi = __HI_LUT[(__b >> 4) as usize];
-                                                                                __byte_lut[__b as usize] = (__blo & __bhi) != 0;
-                                                                                __b += 1;
-                                                                            }
-                                                                        }
-                                                                        while __i < __len {
-                                                                            let __b = *__ptr.add(__i);
-                                                                            if __byte_lut[__b as usize] {
-                                                                                let __found = ::core::option::Option::Some(__i - __start);
-                                                                                break 'avx2_scan __found;
-                                                                            }
-                                                                            __i += 1;
-                                                                        }
-                                                                        ::core::option::Option::None
-                                                                    }
-                                                                };
-                                                                #[cfg(
-                                                                    not(all(target_arch = "x86_64", target_feature = "avx2"))
-                                                                )]
-                                                                let __result: ::core::option::Option<usize> = ::parse_that::find_next_structural_from(
-                                                                        state.padded(),
-                                                                        __start,
-                                                                        &__LO_LUT,
-                                                                        &__HI_LUT,
-                                                                    )
-                                                                    .map(|(pos, _)| pos - __start);
-                                                                __result
-                                                            })
-                                                                .unwrap_or(state.src_bytes.len() - __start)
-                                                        };
-                                                        state.offset = __start + __scan;
-                                                        Some(
-                                                            ::parse_that::Span::new(__start, state.offset, state.src),
-                                                        )
-                                                    }
-                                                        .is_none()
-                                                    {
-                                                        return false;
-                                                    }
-                                                    let __matched = &state.src[__start..state.offset];
-                                                    let __body = __matched
-                                                        .trim_end_matches(char::is_whitespace);
-                                                    if __matched[__body.len()..].contains('\n') {
-                                                        __builder.text(__body);
-                                                        __builder.text(" ");
-                                                    } else if !__matched.is_empty() {
-                                                        __builder.text(__matched);
-                                                    }
-                                                };
-                                            };
-                                            let __ows395 = state.offset;
-                                            ::parse_that::trim_leading_whitespace_mut(state);
-                                            __builder
-                                                .text_inline_ws(&state.src[__ows395..state.offset]);
-                                        };
-                                        true
-                                    })();
-                                    if !__ok {
-                                        state.offset = __pretty_cp396;
-                                        __builder.restore(__pretty_bcp397);
-                                    }
-                                    __ok
-                                } {
-                                    return false;
-                                }
-                            };
+                            if !Self::__comment_prettify(state, __builder) {
+                                return false;
+                            }
                             true
                         })();
                         if !__ok {
-                            state.offset = __pretty_cp404;
-                            __builder.restore(__pretty_bcp405);
+                            state.offset = __pretty_cp408;
+                            __builder.restore(__pretty_bcp409);
                         }
                         __ok
                     } {
                         {
                             if !{
-                                let __pretty_cp402 = state.offset;
-                                let __pretty_bcp403 = __builder.checkpoint();
+                                let __pretty_cp406 = state.offset;
+                                let __pretty_bcp407 = __builder.checkpoint();
                                 let __ok = (|| -> bool {
                                     if !Self::__big_comment_prettify(state, __builder) {
                                         return false;
@@ -21467,15 +21516,15 @@ mod __bbnfbootstrap_emit_impl {
                                     true
                                 })();
                                 if !__ok {
-                                    state.offset = __pretty_cp402;
-                                    __builder.restore(__pretty_bcp403);
+                                    state.offset = __pretty_cp406;
+                                    __builder.restore(__pretty_bcp407);
                                 }
                                 __ok
                             } {
                                 {
                                     if !{
-                                        let __pretty_cp400 = state.offset;
-                                        let __pretty_bcp401 = __builder.checkpoint();
+                                        let __pretty_cp404 = state.offset;
+                                        let __pretty_bcp405 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             if !Self::__directive_prettify(state, __builder) {
                                                 return false;
@@ -21483,15 +21532,15 @@ mod __bbnfbootstrap_emit_impl {
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp400;
-                                            __builder.restore(__pretty_bcp401);
+                                            state.offset = __pretty_cp404;
+                                            __builder.restore(__pretty_bcp405);
                                         }
                                         __ok
                                     } {
                                         {
                                             if !{
-                                                let __pretty_cp398 = state.offset;
-                                                let __pretty_bcp399 = __builder.checkpoint();
+                                                let __pretty_cp402 = state.offset;
+                                                let __pretty_bcp403 = __builder.checkpoint();
                                                 let __ok = (|| -> bool {
                                                     if !Self::__rule_prettify(state, __builder) {
                                                         return false;
@@ -21499,8 +21548,8 @@ mod __bbnfbootstrap_emit_impl {
                                                     true
                                                 })();
                                                 if !__ok {
-                                                    state.offset = __pretty_cp398;
-                                                    __builder.restore(__pretty_bcp399);
+                                                    state.offset = __pretty_cp402;
+                                                    __builder.restore(__pretty_bcp403);
                                                 }
                                                 __ok
                                             } {
@@ -21533,43 +21582,43 @@ mod __bbnfbootstrap_emit_impl {
         ) -> bool {
             {
                 {
-                    let mut __rep_count411 = 0usize;
-                    while __rep_count411 < 4294967295 {
-                        let __rep_cp412 = state.offset;
-                        let __iter_cp = if __rep_count411 > 0 {
+                    let mut __rep_count415 = 0usize;
+                    while __rep_count415 < 4294967295 {
+                        let __rep_cp416 = state.offset;
+                        let __iter_cp = if __rep_count415 > 0 {
                             Some(__builder.checkpoint())
                         } else {
                             None
                         };
-                        if __rep_count411 > 0 {
+                        if __rep_count415 > 0 {
                             __builder.hardline();
                         }
                         if !{
-                            let __pretty_cp410 = state.offset;
+                            let __pretty_cp414 = state.offset;
                             let __ok = (|| -> bool {
                                 {
                                     if !{
-                                        let __pretty_cp408 = state.offset;
-                                        let __pretty_bcp409 = __builder.checkpoint();
+                                        let __pretty_cp412 = state.offset;
+                                        let __pretty_bcp413 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             {
-                                                let __ows406 = state.offset;
+                                                let __ows410 = state.offset;
                                                 ::parse_that::trim_leading_whitespace_mut(state);
                                                 __builder
-                                                    .text_inline_ws(&state.src[__ows406..state.offset]);
+                                                    .text_inline_ws(&state.src[__ows410..state.offset]);
                                                 if !Self::__grammar_item_prettify(state, __builder) {
                                                     return false;
                                                 }
-                                                let __ows407 = state.offset;
+                                                let __ows411 = state.offset;
                                                 ::parse_that::trim_leading_whitespace_mut(state);
                                                 __builder
-                                                    .text_inline_ws(&state.src[__ows407..state.offset]);
+                                                    .text_inline_ws(&state.src[__ows411..state.offset]);
                                             };
                                             true
                                         })();
                                         if !__ok {
-                                            state.offset = __pretty_cp408;
-                                            __builder.restore(__pretty_bcp409);
+                                            state.offset = __pretty_cp412;
+                                            __builder.restore(__pretty_bcp413);
                                         }
                                         __ok
                                     } {
@@ -21579,23 +21628,23 @@ mod __bbnfbootstrap_emit_impl {
                                 true
                             })();
                             if !__ok {
-                                state.offset = __pretty_cp410;
+                                state.offset = __pretty_cp414;
                             }
                             __ok
                         } {
-                            state.offset = __rep_cp412;
+                            state.offset = __rep_cp416;
                             if let Some(__bcp) = __iter_cp {
                                 __builder.restore(__bcp);
                             }
                             break;
                         }
-                        if state.offset == __rep_cp412 {
+                        if state.offset == __rep_cp416 {
                             if let Some(__bcp) = __iter_cp {
                                 __builder.restore(__bcp);
                             }
                             break;
                         }
-                        __rep_count411 += 1;
+                        __rep_count415 += 1;
                     }
                 };
                 true

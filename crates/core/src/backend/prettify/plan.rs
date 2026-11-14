@@ -58,18 +58,59 @@ impl PrettyPolicy {
             };
 
         let split = hints.and_then(|h| h.split.clone());
+        let reads_to_line_end = !is_ws_rule && ends_reading_to_line_end(&rule.body, ir);
 
         Self {
             wrapper,
             separator,
             is_ws_rule,
             split,
+            reads_to_line_end,
         }
     }
 }
 
+/// Whether every way `node` can end is a regex that ends in `.*`: an
+/// unbounded repetition of the class `.` reads (every byte but a line feed),
+/// so the match runs to its line end.
+fn ends_reading_to_line_end(node: &IrNode, ir: &GrammarIR) -> bool {
+    match node {
+        IrNode::Regex(sid) => regex_reads_to_line_end(ir.get_string(*sid)),
+        IrNode::Seq(items) => items
+            .last()
+            .is_some_and(|last| ends_reading_to_line_end(last, ir)),
+        IrNode::Alt(branches, _) => {
+            !branches.is_empty()
+                && branches
+                    .iter()
+                    .all(|branch| ends_reading_to_line_end(&branch.node, ir))
+        }
+        IrNode::OptionalWhitespace(inner) | IrNode::Map { inner, .. } => {
+            ends_reading_to_line_end(inner, ir)
+        }
+        _ => false,
+    }
+}
+
+fn regex_reads_to_line_end(pattern: &str) -> bool {
+    use parse_that_regex::Hir;
+    fn last(hir: &Hir) -> &Hir {
+        match hir {
+            Hir::Group(inner) => last(inner),
+            Hir::Concat(items) => items.last().map_or(hir, last),
+            _ => hir,
+        }
+    }
+    let (Ok(hir), Ok(dot)) = (parse_that_regex::parse(pattern), parse_that_regex::parse(".")) else {
+        return false;
+    };
+    matches!(last(&hir), Hir::Repetition(rep) if rep.max.is_none() && *last(&rep.sub) == dot)
+}
+
 fn should_inline_rule(rule: &IrRule, policy: &PrettyPolicy, ref_count: u32) -> bool {
-    if policy.split.is_some() || policy.is_ws_rule {
+    // A rule that reads to its line end keeps its own function: the line
+    // break it owes is placed there (grammar.rs).
+    if policy.split.is_some() || policy.is_ws_rule || policy.reads_to_line_end {
         return false;
     }
     if rule.meta.is_cyclic || rule.meta.directives.recover.is_some() {

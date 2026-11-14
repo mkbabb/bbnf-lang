@@ -1,1 +1,11 @@
-[guarded] REFUSED: kernel zone data.kalloc.1024 at 8.01M (panics near 20.8M; heavy and browser runs stop at 8M): reboot the Mac
+     Removed 129 files, 469.6MiB total
+test css_ws_leaves_are_trivia_so_formatting_is_idempotent ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+css rc=0
+test test_prettify_multi_rule ... ok
+test ebnf_prettify_keeps_every_rule_and_terminal ... ok
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+ebnf rc=0
+test prettify_multi_rule ... ok
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+core rc=0

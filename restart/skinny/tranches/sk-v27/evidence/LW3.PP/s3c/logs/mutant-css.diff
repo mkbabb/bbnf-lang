@@ -1,0 +1,319 @@
+diff --git a/crates/core/src/backend/rust/emitter/prettify/literal.rs b/crates/core/src/backend/rust/emitter/prettify/literal.rs
+index 4354c1980..c4dd01b3a 100644
+--- a/crates/core/src/backend/rust/emitter/prettify/literal.rs
++++ b/crates/core/src/backend/rust/emitter/prettify/literal.rs
+@@ -56,17 +56,6 @@ impl RustEmitter {
+                 .with_ir(ir)
+                 .with_ws_pattern(ws_pat);
+         let code = crate::generate::regex::emit_regex(pattern, &opts);
+-        if ws_pat == Some(pattern) {
+-            let emit = super::emit_trivia_segment(&syn::Ident::new(
+-                "__start",
+-                proc_macro2::Span::call_site(),
+-            ));
+-            return quote! { {
+-                let __start = state.offset;
+-                if #code.is_none() { return false; };
+-                #emit
+-            } };
+-        }
+         // A leaf whose match ends in a whitespace run holding a line feed
+         // (an opaque span such as css's `valueSpan` before `}`) prints that
+         // run as one space: line feeds belong to the layout, and a raw one
+diff --git a/crates/core/src/grammar/generated/css_pretty.rs b/crates/core/src/grammar/generated/css_pretty.rs
+index cb089a304..717be3f76 100644
+--- a/crates/core/src/grammar/generated/css_pretty.rs
++++ b/crates/core/src/grammar/generated/css_pretty.rs
+@@ -5484,10 +5484,14 @@ mod __cssprettyparser_emit_impl {
+                         {
+                             return false;
+                         }
+-                        Self::__prettify_trivia(
+-                            __builder,
+-                            &state.src[__start..state.offset],
+-                        );
++                        let __matched = &state.src[__start..state.offset];
++                        let __body = __matched.trim_end_matches(char::is_whitespace);
++                        if __matched[__body.len()..].contains('\n') {
++                            __builder.text(__body);
++                            __builder.text(" ");
++                        } else if !__matched.is_empty() {
++                            __builder.text(__matched);
++                        }
+                     };
+                     {
+                         let __s = "important";
+@@ -5777,10 +5781,15 @@ mod __cssprettyparser_emit_impl {
+                                             {
+                                                 return false;
+                                             }
+-                                            Self::__prettify_trivia(
+-                                                __builder,
+-                                                &state.src[__start..state.offset],
+-                                            );
++                                            let __matched = &state.src[__start..state.offset];
++                                            let __body = __matched
++                                                .trim_end_matches(char::is_whitespace);
++                                            if __matched[__body.len()..].contains('\n') {
++                                                __builder.text(__body);
++                                                __builder.text(" ");
++                                            } else if !__matched.is_empty() {
++                                                __builder.text(__matched);
++                                            }
+                                         };
+                                         {
+                                             let __start = state.offset;
+@@ -6216,10 +6225,14 @@ mod __cssprettyparser_emit_impl {
+                             {
+                                 return false;
+                             }
+-                            Self::__prettify_trivia(
+-                                __builder,
+-                                &state.src[__start..state.offset],
+-                            );
++                            let __matched = &state.src[__start..state.offset];
++                            let __body = __matched.trim_end_matches(char::is_whitespace);
++                            if __matched[__body.len()..].contains('\n') {
++                                __builder.text(__body);
++                                __builder.text(" ");
++                            } else if !__matched.is_empty() {
++                                __builder.text(__matched);
++                            }
+                         };
+                         {
+                             if state.src_bytes.get(state.offset).copied() != Some(b':') {
+@@ -6414,10 +6427,14 @@ mod __cssprettyparser_emit_impl {
+                             {
+                                 return false;
+                             }
+-                            Self::__prettify_trivia(
+-                                __builder,
+-                                &state.src[__start..state.offset],
+-                            );
++                            let __matched = &state.src[__start..state.offset];
++                            let __body = __matched.trim_end_matches(char::is_whitespace);
++                            if __matched[__body.len()..].contains('\n') {
++                                __builder.text(__body);
++                                __builder.text(" ");
++                            } else if !__matched.is_empty() {
++                                __builder.text(__matched);
++                            }
+                         };
+                         {
+                             let _ = {
+@@ -6667,10 +6684,15 @@ mod __cssprettyparser_emit_impl {
+                                                                 {
+                                                                     return false;
+                                                                 }
+-                                                                Self::__prettify_trivia(
+-                                                                    __builder,
+-                                                                    &state.src[__start..state.offset],
+-                                                                );
++                                                                let __matched = &state.src[__start..state.offset];
++                                                                let __body = __matched
++                                                                    .trim_end_matches(char::is_whitespace);
++                                                                if __matched[__body.len()..].contains('\n') {
++                                                                    __builder.text(__body);
++                                                                    __builder.text(" ");
++                                                                } else if !__matched.is_empty() {
++                                                                    __builder.text(__matched);
++                                                                }
+                                                             };
+                                                             {
+                                                                 let __start = state.offset;
+@@ -6940,10 +6962,15 @@ mod __cssprettyparser_emit_impl {
+                                             {
+                                                 return false;
+                                             }
+-                                            Self::__prettify_trivia(
+-                                                __builder,
+-                                                &state.src[__start..state.offset],
+-                                            );
++                                            let __matched = &state.src[__start..state.offset];
++                                            let __body = __matched
++                                                .trim_end_matches(char::is_whitespace);
++                                            if __matched[__body.len()..].contains('\n') {
++                                                __builder.text(__body);
++                                                __builder.text(" ");
++                                            } else if !__matched.is_empty() {
++                                                __builder.text(__matched);
++                                            }
+                                         };
+                                         {
+                                             let __s = "important";
+@@ -7180,10 +7207,15 @@ mod __cssprettyparser_emit_impl {
+                                 {
+                                     return false;
+                                 }
+-                                Self::__prettify_trivia(
+-                                    __builder,
+-                                    &state.src[__start..state.offset],
+-                                );
++                                let __matched = &state.src[__start..state.offset];
++                                let __body = __matched
++                                    .trim_end_matches(char::is_whitespace);
++                                if __matched[__body.len()..].contains('\n') {
++                                    __builder.text(__body);
++                                    __builder.text(" ");
++                                } else if !__matched.is_empty() {
++                                    __builder.text(__matched);
++                                }
+                             };
+                         };
+                     };
+@@ -7548,10 +7580,14 @@ mod __cssprettyparser_emit_impl {
+                             {
+                                 return false;
+                             }
+-                            Self::__prettify_trivia(
+-                                __builder,
+-                                &state.src[__start..state.offset],
+-                            );
++                            let __matched = &state.src[__start..state.offset];
++                            let __body = __matched.trim_end_matches(char::is_whitespace);
++                            if __matched[__body.len()..].contains('\n') {
++                                __builder.text(__body);
++                                __builder.text(" ");
++                            } else if !__matched.is_empty() {
++                                __builder.text(__matched);
++                            }
+                         };
+                         if !Self::__ruleBlock_prettify(state, __builder) {
+                             return false;
+@@ -7926,10 +7962,14 @@ mod __cssprettyparser_emit_impl {
+                         {
+                             return false;
+                         }
+-                        Self::__prettify_trivia(
+-                            __builder,
+-                            &state.src[__start..state.offset],
+-                        );
++                        let __matched = &state.src[__start..state.offset];
++                        let __body = __matched.trim_end_matches(char::is_whitespace);
++                        if __matched[__body.len()..].contains('\n') {
++                            __builder.text(__body);
++                            __builder.text(" ");
++                        } else if !__matched.is_empty() {
++                            __builder.text(__matched);
++                        }
+                     };
+                     if !Self::__ruleBlock_prettify(state, __builder) {
+                         return false;
+@@ -8196,10 +8236,15 @@ mod __cssprettyparser_emit_impl {
+                                     {
+                                         return false;
+                                     }
+-                                    Self::__prettify_trivia(
+-                                        __builder,
+-                                        &state.src[__start..state.offset],
+-                                    );
++                                    let __matched = &state.src[__start..state.offset];
++                                    let __body = __matched
++                                        .trim_end_matches(char::is_whitespace);
++                                    if __matched[__body.len()..].contains('\n') {
++                                        __builder.text(__body);
++                                        __builder.text(" ");
++                                    } else if !__matched.is_empty() {
++                                        __builder.text(__matched);
++                                    }
+                                 };
+                                 if !Self::__blockContent_prettify(state, __builder) {
+                                     return false;
+@@ -8391,10 +8436,15 @@ mod __cssprettyparser_emit_impl {
+                                 {
+                                     return false;
+                                 }
+-                                Self::__prettify_trivia(
+-                                    __builder,
+-                                    &state.src[__start..state.offset],
+-                                );
++                                let __matched = &state.src[__start..state.offset];
++                                let __body = __matched
++                                    .trim_end_matches(char::is_whitespace);
++                                if __matched[__body.len()..].contains('\n') {
++                                    __builder.text(__body);
++                                    __builder.text(" ");
++                                } else if !__matched.is_empty() {
++                                    __builder.text(__matched);
++                                }
+                             };
+                         };
+                     };
+@@ -8630,10 +8680,15 @@ mod __cssprettyparser_emit_impl {
+                                             {
+                                                 return false;
+                                             }
+-                                            Self::__prettify_trivia(
+-                                                __builder,
+-                                                &state.src[__start..state.offset],
+-                                            );
++                                            let __matched = &state.src[__start..state.offset];
++                                            let __body = __matched
++                                                .trim_end_matches(char::is_whitespace);
++                                            if __matched[__body.len()..].contains('\n') {
++                                                __builder.text(__body);
++                                                __builder.text(" ");
++                                            } else if !__matched.is_empty() {
++                                                __builder.text(__matched);
++                                            }
+                                         };
+                                         {
+                                             if !{
+@@ -9061,10 +9116,15 @@ mod __cssprettyparser_emit_impl {
+                                         {
+                                             return false;
+                                         }
+-                                        Self::__prettify_trivia(
+-                                            __builder,
+-                                            &state.src[__start..state.offset],
+-                                        );
++                                        let __matched = &state.src[__start..state.offset];
++                                        let __body = __matched
++                                            .trim_end_matches(char::is_whitespace);
++                                        if __matched[__body.len()..].contains('\n') {
++                                            __builder.text(__body);
++                                            __builder.text(" ");
++                                        } else if !__matched.is_empty() {
++                                            __builder.text(__matched);
++                                        }
+                                     };
+                                     if !Self::__ruleItem_prettify(state, __builder) {
+                                         return false;
+@@ -9299,10 +9359,14 @@ mod __cssprettyparser_emit_impl {
+                             {
+                                 return false;
+                             }
+-                            Self::__prettify_trivia(
+-                                __builder,
+-                                &state.src[__start..state.offset],
+-                            );
++                            let __matched = &state.src[__start..state.offset];
++                            let __body = __matched.trim_end_matches(char::is_whitespace);
++                            if __matched[__body.len()..].contains('\n') {
++                                __builder.text(__body);
++                                __builder.text(" ");
++                            } else if !__matched.is_empty() {
++                                __builder.text(__matched);
++                            }
+                         };
+                         if !Self::__ruleList_prettify(state, __builder) {
+                             return false;
+@@ -9494,10 +9558,14 @@ mod __cssprettyparser_emit_impl {
+                         {
+                             return false;
+                         }
+-                        Self::__prettify_trivia(
+-                            __builder,
+-                            &state.src[__start..state.offset],
+-                        );
++                        let __matched = &state.src[__start..state.offset];
++                        let __body = __matched.trim_end_matches(char::is_whitespace);
++                        if __matched[__body.len()..].contains('\n') {
++                            __builder.text(__body);
++                            __builder.text(" ");
++                        } else if !__matched.is_empty() {
++                            __builder.text(__matched);
++                        }
+                     };
+                 };
+                 true

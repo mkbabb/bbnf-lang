@@ -83,8 +83,8 @@ pub(super) fn is_closure_rhs(view: BbnfView<'_, '_>) -> bool {
             view.child(0).map(is_closure_rhs).unwrap_or(false)
         }
         Some(BbnfCompoundKind::Factor) => {
-            // `factor = big_comment ? , term ?w , modifier ? ,
-            //   big_comment ?`. The modifier slot manifests as a
+            // `factor = ( big_comment | comment ) * , term ?w ,
+            //   modifier ? , ( big_comment | comment ) *`. The modifier slot manifests as a
             // trailing `?` / `*` / `+` byte on the compound's text.
             // Comments embed `/*` markers; recurse only when neither
             // is present.

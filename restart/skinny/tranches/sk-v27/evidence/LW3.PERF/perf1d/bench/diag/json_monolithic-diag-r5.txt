@@ -1,0 +1,7 @@
+Timer precision: 41 ns
+json_monolithic  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ canada        3.277 ms      │ 4.866 ms      │ 3.906 ms      │ 3.91 ms       │ 100     │ 100
+├─ citm          1.076 ms      │ 2.379 ms      │ 1.181 ms      │ 1.232 ms      │ 100     │ 100
+├─ data_s        26.04 µs      │ 136.5 µs      │ 26.58 µs      │ 29.67 µs      │ 100     │ 100
+╰─ twitter       469.3 µs      │ 1.367 ms      │ 526.5 µs      │ 548.1 µs      │ 100     │ 100
+

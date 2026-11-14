@@ -1,0 +1,5 @@
+case	base_med	cure_med	diag_med	cure/base	diag/base	fastest:cure/base	diag/base
+canada	3347.0	3932.0	3906.0	1.175	1.167	1.046	1.046
+citm	1054.0	1168.0	1181.0	1.108	1.120	1.074	1.051
+data_s	24.6	26.9	26.4	1.095	1.073	1.097	1.029
+twitter	507.2	521.2	520.9	1.028	1.027	1.071	1.029

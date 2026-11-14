@@ -1,0 +1,8 @@
+bench	case	base_median_us(r1,r2,r3)	cure_median_us(r1,r2,r3)	median_of_medians_ratio_cure/base	min_fastest_ratio_cure/base
+css_l4	bootstrap	12210.0,11340.0,12490.0	12860.0,12810.0,13300.0	1.053	1.125
+css_l4	normalize	119.5,126.0,124.1	137.0,122.2,125.4	1.010	1.114
+css_l4	tailwind	117500.0,118800.0,118500.0	119300.0,120300.0,120000.0	1.013	1.020
+json_monolithic	canada	3947.0,4294.0,3824.0	3909.0,4271.0,4314.0	1.082	0.979
+json_monolithic	citm	1036.0,1291.0,1028.0	1027.0,1215.0,1320.0	1.173	1.012
+json_monolithic	data_s	25.2,25.7,25.5	38.4,28.4,27.9	1.113	1.108
+json_monolithic	twitter	432.7,500.1,468.7	706.3,607.5,629.6	1.343	1.220

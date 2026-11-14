@@ -1,0 +1,10 @@
+17,20c17,20
+< parse-that-egraph	^0.1.0	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e
+< parse-that-regex	^0.1.0	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e
+< parse_that	^0.4	dev	true		false		git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e
+< parse_that	^0.4	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e
+---
+> parse-that-egraph	^0.1.0	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8
+> parse-that-regex	^0.1.0	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8
+> parse_that	^0.4	dev	true		false		git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8
+> parse_that	^0.4	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8

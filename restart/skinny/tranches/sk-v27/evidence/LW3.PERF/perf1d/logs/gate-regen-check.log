@@ -1,0 +1,5 @@
+[xtask::regen] math: compile_paths_request done in 973.416µs
+[xtask::regen] math: generate_all done in 1.514375ms
+[xtask::regen] math: prettyplease done in 5.880625ms
+regen --check: clean (9 of 9 grammars matched)
+rc=0

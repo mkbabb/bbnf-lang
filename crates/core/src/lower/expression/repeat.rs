@@ -1,6 +1,6 @@
 //! Factor + quantifier-modifier lowering.
 //!
-//! `factor = big_comment? term ?w modifier? big_comment?`
+//! `factor = ( big_comment | comment ) * , term ?w , modifier ? , ( big_comment | comment ) *`
 //!
 //! Children occupy fixed positional slots; under struct-direct
 //! emission, comment / modifier slots project to typed leaves
@@ -27,10 +27,11 @@ use super::super::LowerCtx;
 use super::super::view_walk::find_sibling_by_kind;
 use super::lower_term;
 
-/// Lower a `factor = big_comment? term ?w modifier? big_comment?` view.
+/// Lower a `factor = ( big_comment | comment ) * , term ?w , modifier ? , ( big_comment | comment ) *` view.
 ///
-/// Children occupy fixed positional slots `[big_comment?, term-wrapper,
-/// modifier-wrapper, big_comment?]`. Dispatch by role from the
+/// Children occupy fixed positional slots `[comments*, term-wrapper,
+/// modifier-wrapper, comments*]` (each comment slot a run of zero or
+/// more block or line comments). Dispatch by role from the
 /// direct-child sequence:
 ///
 /// 1. Walk direct children once, classifying each by its trimmed
@@ -127,7 +128,7 @@ fn is_comment_span(trimmed: &str) -> bool {
 /// Locate the term child of a `factor` compound by eliminating the
 /// known metadata / placeholder children.
 ///
-/// The factor body is `big_comment? term ?w modifier? big_comment?`,
+/// The factor body is `( big_comment | comment ) * , term ?w , modifier ? , ( big_comment | comment ) *`,
 /// so any child whose compound kind is not a comment/modifier slot
 /// and whose span is non-empty carries the term.
 fn find_term_child_by_elimination<'a>(node: BbnfView<'a, 'a>) -> Option<BbnfView<'a, 'a>> {

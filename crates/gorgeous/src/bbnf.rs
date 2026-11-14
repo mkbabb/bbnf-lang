@@ -5,8 +5,9 @@ use crate::PrinterConfig;
 // preserved via alias so existing callers compile unchanged.
 pub use ::bbnf::grammar::generated::bbnf::BbnfBootstrap as BbnfParser;
 
-/// Pretty-print a BBNF grammar string.
+/// Pretty-print a BBNF grammar string. Input the grammar does not consume
+/// is refused, not formatted as its parsed prefix (sk-v27 LW3.S3c-PP).
 pub fn prettify_bbnf(input: &str, config: &PrinterConfig) -> Option<String> {
-    let ops = BbnfParser::grammar_prettify().parse(input)?;
+    let ops = BbnfParser::grammar_prettify().eof().parse(input)?;
     Some(pprint::render(&ops, config.to_printer()))
 }

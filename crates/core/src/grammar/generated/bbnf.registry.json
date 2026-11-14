@@ -1889,15 +1889,22 @@
         "kind": "Struct",
         "rule_type": {
           "Tuple": [
-            "Span",
+            {
+              "Vec": "Enum"
+            },
             "BoxedEnum",
-            "Span"
+            "Span",
+            {
+              "Vec": "Enum"
+            }
           ]
         },
         "fields": [
           {
             "name": "field_0",
-            "type_desc": "Span",
+            "type_desc": {
+              "Vec": "Enum"
+            },
             "source": {
               "SeqPosition": {
                 "position": 0
@@ -1924,7 +1931,9 @@
           },
           {
             "name": "field_3",
-            "type_desc": "Span",
+            "type_desc": {
+              "Vec": "Enum"
+            },
             "source": {
               "SeqPosition": {
                 "position": 3

@@ -1,0 +1,52 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.72s
+
+running 9 tests
+test bbnf_prettify_refuses_unconsumed_input ... ok
+test test_prettify_parse_that_regex ... ok
+test test_prettify_simple_rule ... ok
+test test_prettify_bbnf_alternation ... ok
+test test_prettify_bbnf_multi_rule ... ok
+test test_prettify_bbnf_idempotent ... ok
+test bbnf_top_level_line_comment_output_is_unchanged ... FAILED
+test bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token ... FAILED
+test bbnf_line_comment_inside_a_rule_is_read_and_kept ... FAILED
+
+failures:
+
+---- bbnf_top_level_line_comment_output_is_unchanged stdout ----
+
+thread 'bbnf_top_level_line_comment_output_is_unchanged' (2883001) panicked at crates/gorgeous/tests/bbnf.rs:91:5:
+assertion `left == right` failed
+  left: "// A grammar with comments between rules.\nfoo=  \"bar\" ;\n// The second rule.\nbaz=  \"qux\" | \"quux\" ;"
+ right: "TOP-LEVEL-BASELINE"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token stdout ----
+
+thread 'bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token' (2882998) panicked at crates/gorgeous/tests/bbnf.rs:104:49:
+the formatted output formats
+
+---- bbnf_line_comment_inside_a_rule_is_read_and_kept stdout ----
+
+thread 'bbnf_line_comment_inside_a_rule_is_read_and_kept' (2882999) panicked at crates/gorgeous/tests/bbnf.rs:71:49:
+the formatted output formats
+
+
+failures:
+    bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token
+    bbnf_line_comment_inside_a_rule_is_read_and_kept
+    bbnf_top_level_line_comment_output_is_unchanged
+
+test result: FAILED. 6 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test bbnf`
+bbnf rc=101
+test g3_corpus_bears_comments_where_the_grammar_has_them ... ok
+test g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent ... FAILED
+failures:
+G3: 14 files, 15 comments in the corpus, 1 failures
+thread 'g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent' (2883374) panicked at crates/gorgeous/tests/g3_trivia.rs:234:5:
+failures:
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+error: test failed, to rerun pass `-p gorgeous --test g3_trivia`
+g3 rc=101

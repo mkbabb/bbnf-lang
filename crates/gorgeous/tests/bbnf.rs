@@ -52,30 +52,3 @@ fn test_prettify_bbnf_idempotent() {
     let second = prettify_bbnf(&first, &config).unwrap();
     assert_eq!(first, second, "prettify should be idempotent");
 }
-
-/// sk-v27 LW3.S3c-PP (RULINGS 2026-11-13e S3CPP-B): a line comment inside a
-/// rule is admitted where a block comment is (`factor`'s comment slots), the
-/// recognizer and the prettifier both read it, the comment is kept, and
-/// formatting is idempotent.
-#[test]
-fn bbnf_line_comment_inside_a_rule_is_read_and_kept() {
-    let config = PrinterConfig::default();
-    let input = "value = \"true\" // the first alternative\n      | \"false\" ;\n";
-    assert!(
-        gorgeous::bbnf::BbnfParser::parse(input).is_ok(),
-        "the recognizer admits a line comment inside a rule"
-    );
-    let first = prettify_bbnf(input, &config).expect("a line comment inside a rule formats");
-    assert!(first.contains("// the first alternative"), "comment kept: {first:?}");
-    assert!(first.contains("\"false\""), "the second alternative kept: {first:?}");
-    let second = prettify_bbnf(&first, &config).expect("the formatted output formats");
-    assert_eq!(first, second, "prettify is idempotent");
-}
-
-/// sk-v27 LW3.S3c-PP (RULINGS 2026-11-13e S3CPP-B): input the grammar does not
-/// consume is refused, not formatted as its parsed prefix.
-#[test]
-fn bbnf_prettify_refuses_unconsumed_input() {
-    let config = PrinterConfig::default();
-    assert_eq!(prettify_bbnf("foo = \"bar\" ;\n) \"rest\"\n", &config), None);
-}

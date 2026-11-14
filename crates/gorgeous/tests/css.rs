@@ -162,3 +162,27 @@ fn test_prettify_selector_with_pseudo_class() {
          blank-line insertion)",
     );
 }
+
+/// sk-v27 LW3.S3c-PP (RULINGS 2026-11-12c PP2-G3, QX-1 clause 4): the css
+/// prettifier reads the grammar's `@ws` leaves (whitespace with comments) as
+/// trivia, not as raw text. Raw re-emission made `fmt . fmt != fmt`: each
+/// pass re-printed the previous pass's line breaks beside its own. A
+/// formatter is idempotent and keeps every comment.
+#[test]
+fn css_ws_leaves_are_trivia_so_formatting_is_idempotent() {
+    let config = PrinterConfig::default();
+    let comments = ["/* head */", "/* in */", "/* tail */", "/* a\n   b */"];
+    for input in [
+        "a{color:red;background:white}b{margin:0}",
+        "a { color: red; }\n\nb {\n  margin: 0;\n}\n",
+        "/* head */\na { /* in */ color: red; /* tail */ }\n",
+        "a {\n  color: red; /* a\n   b */\n  margin: 0;\n}\n",
+    ] {
+        let once = prettify_css(input, &config).expect("the input formats");
+        let twice = prettify_css(&once, &config).expect("its own output formats");
+        assert_eq!(once, twice, "fmt . fmt != fmt for {input:?}");
+        for c in comments.iter().filter(|c| input.contains(*c)) {
+            assert!(once.contains(c), "{c:?} lost from {input:?}: got {once:?}");
+        }
+    }
+}

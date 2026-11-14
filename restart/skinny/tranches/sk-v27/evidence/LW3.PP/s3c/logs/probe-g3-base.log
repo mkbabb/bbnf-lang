@@ -1,0 +1,203 @@
+[guarded] WARNING: the kernel zone leak is ARMED (armed 1794521931 slope=31.8/s inuse=25856 net=- kext=nfs); see ~/.claude/guard/ZONE-ARMED. A warning only (owner, 2026-11-09): carry on, long runs included; only a REFUSED line stops a run.
+   Compiling schemars v0.8.22
+   Compiling dyn-clone v1.0.20
+   Compiling serde_json v1.0.149
+   Compiling libc v0.2.183
+   Compiling unicode-segmentation v1.13.2
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling tracing-core v0.1.36
+   Compiling pin-project-lite v0.2.17
+   Compiling hashbrown v0.14.5
+   Compiling proc-macro-error v1.0.4
+   Compiling rustc-hash v1.1.0
+   Compiling countme v3.0.1
+   Compiling syn v1.0.109
+   Compiling object v0.37.3
+   Compiling serde_derive_internals v0.29.1
+   Compiling tracing-attributes v0.1.31
+   Compiling cc v1.2.58
+   Compiling biome_diagnostics_categories v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling gimli v0.32.3
+   Compiling adler2 v2.0.1
+   Compiling bpaf_derive v0.5.23
+   Compiling similar v2.7.0
+   Compiling miniz_oxide v0.8.9
+   Compiling enumflags2_derive v0.7.12
+   Compiling parking_lot_core v0.9.12
+   Compiling json-strip-comments v1.0.4
+   Compiling biome_string_case v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling schemars_derive v0.8.22
+   Compiling dashmap v6.1.0
+   Compiling void v1.0.2
+   Compiling result v1.0.0
+   Compiling unicode-width v0.1.14
+   Compiling simdutf8 v0.1.5
+   Compiling dunce v1.0.5
+   Compiling serde_ini v0.2.0
+   Compiling enumflags2 v0.7.12
+   Compiling drop_bomb v0.1.5
+   Compiling unicode-bom v2.0.3
+   Compiling tracing v0.1.44
+   Compiling biome_unicode_table v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling libmimalloc-sys v0.1.44
+   Compiling blake3 v1.8.7
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c)
+   Compiling bitflags v2.11.0
+   Compiling colored v3.1.1
+   Compiling bpaf v0.9.24
+   Compiling ron v0.12.1
+   Compiling rmp-serde v1.3.1
+   Compiling syn v2.0.117
+   Compiling oxc_resolver v1.12.0
+   Compiling parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=6889b29c1d5a4c3514d29abc027543ffbce3f88e#6889b29c)
+   Compiling addr2line v0.25.1
+   Compiling biome_markup v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_diagnostics_macros v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_deserialize_macros v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling mimalloc v0.1.48
+   Compiling biome_text_size v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_text_edit v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_console v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/ir)
+   Compiling biome_rowan v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling backtrace v0.3.76
+   Compiling biome_diagnostics v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_suppression v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_deserialize v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/gorgeous)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 32.21s
+     Running tests/g3_trivia.rs (target/debug/deps/g3_trivia-a22a3232db30f4c3)
+
+running 2 tests
+test g3_corpus_bears_comments_where_the_grammar_has_them ... ok
+test g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent ... FAILED
+
+failures:
+
+---- g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent stdout ----
+G3: 14 files, 15 comments in the corpus, 5 failures
+
+thread 'g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent' (17395425) panicked at crates/gorgeous/tests/g3_trivia.rs:234:5:
+G3:
+css/comments-nested.css: fmt . fmt != fmt
+--- once
+@media (max-width: 768px) {
+  /* hide the sidebar on narrow screens */
+
+        .sidebar {
+                display: none;
+            }
+
+}
+
+.a /* in a selector */ .b {
+        width: 10px;
+    }
+/* trailing comment at the end of the file */
+
+--- twice
+@media (max-width: 768px) {
+  /* hide the sidebar on narrow screens */
+
+        .sidebar {
+
+                display: none;
+
+            }
+
+
+}
+
+
+.a /* in a selector */ .b {
+
+        width: 10px;
+
+    }
+/* trailing comment at the end of the file */
+
+
+css/comments-rules.css: fmt . fmt != fmt
+--- once
+/* Header: a comment before every rule. */
+body {
+        color: red;
+    }
+
+
+/* Between rules. */
+h1 {
+        font-size: 24px;
+        margin: 0;
+    }
+
+--- twice
+/* Header: a comment before every rule. */
+body {
+
+        color: red;
+
+    }
+
+
+
+/* Between rules. */
+h1 {
+
+        font-size: 24px;
+
+        margin: 0;
+
+    }
+
+
+css/plain.css: fmt . fmt != fmt
+--- once
+a{
+        color:red;
+        background:white
+    }
+b{
+        margin:0
+    }
+
+--- twice
+a{
+
+        color:red;
+
+        background:white
+
+    }
+
+b{
+
+        margin:0
+
+    }
+
+
+ebnf/rules.ebnf: does not format
+
+bbnf/comments-in-rule.bbnf: the token-and-comment stream differs (lost: [Word("value"), Punct('='), Str("\"true\""), Comment("// the first alternative"), Punct('|'), Str("\"false\""), Punct(';'), Word("list"), Punct('='), Str("\"[\""), Punct(','), Word("value"), Punct(','), Str("\"]\""), Punct(';'), Comment("// after a rule")])
+--- output
+// Comments inside a rule: after an alternative and after the rule.
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test g3_trivia`

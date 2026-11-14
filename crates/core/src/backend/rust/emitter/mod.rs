@@ -354,6 +354,9 @@ impl Emitter for RustEmitter {
     fn emit_prettify_silent(&mut self, expr: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
         self.emit_prettify_silent_impl(expr, ctx)
     }
+    fn emit_prettify_not(&mut self, expr: TokenStream, ctx: &mut Self::Ctx) -> TokenStream {
+        self.emit_prettify_not_impl(expr, ctx)
+    }
     fn emit_prettify_sep_inline(&mut self, sep: &str, _ctx: &mut Self::Ctx) -> TokenStream {
         let sep_lit = proc_macro2::Literal::string(sep);
         let brk_lit = proc_macro2::Literal::string(sep.trim_end());

@@ -1,0 +1,13 @@
+    Checking bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/ser)
+    Checking bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/corpus)
+    Checking bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/ir)
+    Checking bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/core)
+    Checking xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/xtask)
+    Checking bbnf-path-ts v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/bbnf-path-ts)
+    Checking bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/bbnf-path)
+    Checking bbnf-analysis v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/analysis)
+    Checking bbnf-oracle v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/oracle)
+    Checking bbnf-bootstrap v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/bootstrap)
+    Checking gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/gorgeous)
+    Checking bbnf-lsp v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-s10/crates/lsp)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 12.01s

@@ -4,7 +4,10 @@ use bbnf_ir::{GrammarIR, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use super::{emit_rule_wrapper, emit_whitespace_segment, prettify_fn_ident, split_compile_error};
+use super::{
+    emit_rule_wrapper, emit_trivia_fn, emit_trivia_segment, prettify_fn_ident,
+    split_compile_error,
+};
 use crate::backend::prettify::PrettyPolicy;
 use crate::backend::rust::emitter::{RustEmitCtx, RustEmitter};
 
@@ -25,10 +28,10 @@ impl RustEmitter {
             split_compile_error(name, split)
         } else if policy.is_ws_rule {
             // Ws rule: run body under light checkpoint to discard builder ops,
-            // then re-emit the consumed span as text_inline_ws.
+            // then re-emit the consumed span as trivia.
             let ws_start = ctx.fresh("ws_start");
             let ws_cp = ctx.fresh("ws_cp");
-            let ws_emit = emit_whitespace_segment(&ws_start);
+            let ws_emit = emit_trivia_segment(&ws_start);
             quote! {{
                 let #ws_start = state.offset;
                 let #ws_cp = __builder.light_checkpoint();
@@ -80,9 +83,17 @@ impl RustEmitter {
     pub(in crate::backend::rust::emitter) fn emit_prettify_grammar_impl(
         &mut self,
         rule_functions: Vec<TokenStream>,
-        _ir: &GrammarIR,
+        ir: &GrammarIR,
         _ctx: &mut RustEmitCtx,
     ) -> TokenStream {
-        quote! { #(#rule_functions)* }
+        let trivia_fn = ir.ws_pattern.map(|sid| {
+            let pattern = ir.get_string(sid);
+            let opts =
+                crate::generate::regex::EmitOpts::new(&crate::generate::regex::CostModel::DEFAULT)
+                    .with_ir(ir)
+                    .with_ws_pattern(Some(pattern));
+            emit_trivia_fn(crate::generate::regex::emit_regex(pattern, &opts))
+        });
+        quote! { #trivia_fn #(#rule_functions)* }
     }
 }

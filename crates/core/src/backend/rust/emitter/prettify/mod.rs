@@ -92,6 +92,93 @@ pub(super) fn emit_whitespace_segment(start_var: &syn::Ident) -> TokenStream {
     }
 }
 
+// ─── Helper: emit `@ws` trivia (whitespace with comments) ────────────────
+
+/// A span the grammar's `@ws` pattern matched is trivia, not text (sk-v27
+/// LW3.S3c-PP, QX-1 clause 4). Re-emitting the span raw printed each
+/// pass's line breaks beside the layout's own, so `fmt . fmt != fmt`.
+pub(super) fn emit_trivia_segment(start_var: &syn::Ident) -> TokenStream {
+    quote! {
+        Self::__prettify_trivia(__builder, &state.src[#start_var..state.offset]);
+    }
+}
+
+/// The trivia function, emitted once per grammar that declares `@ws`;
+/// `ws_code` is that pattern's matcher over `state`. Comments are kept
+/// verbatim. A whitespace run is kept inline when it holds no line feed.
+/// A run with a line feed is a hard line before a comment (an own-line
+/// comment stays on its own line) and one space after one (the layout
+/// places the lines around tokens; the renderer trims the space at a line
+/// end, and a hard line there would stack on the layout's own line in the
+/// next pass), except after a comment that would swallow the next token
+/// on its line (a line comment: the `@ws` matcher reads past its end),
+/// which keeps its hard line. A run right after a line or separator op is
+/// dropped: the layout already placed that line.
+pub(super) fn emit_trivia_fn(ws_code: TokenStream) -> TokenStream {
+    quote! {
+        fn __prettify_trivia<'a>(__builder: &mut ::pprint::FmtBuilder<'a>, __t: &'a str) {
+            let __rest = __t.trim_start_matches(char::is_whitespace);
+            let __lead = &__t[..__t.len() - __rest.len()];
+            let __core = __rest.trim_end_matches(char::is_whitespace);
+            let __trail = &__rest[__core.len()..];
+            let __after_line = __builder
+                .ops()
+                .iter()
+                .rev()
+                .find(|op| {
+                    !matches!(
+                        op,
+                        ::pprint::FmtOp::GroupStart { .. }
+                            | ::pprint::FmtOp::GroupEnd
+                            | ::pprint::FmtOp::IndentStart
+                            | ::pprint::FmtOp::IndentEnd
+                    )
+                })
+                .is_some_and(|op| {
+                    matches!(
+                        op,
+                        ::pprint::FmtOp::Hardline
+                            | ::pprint::FmtOp::Softline
+                            | ::pprint::FmtOp::BreakLine
+                            | ::pprint::FmtOp::CommaSep
+                            | ::pprint::FmtOp::Sep { .. }
+                            | ::pprint::FmtOp::FillSep { .. }
+                    )
+                });
+            if __core.is_empty() {
+                if !__after_line {
+                    __builder.text_inline_ws(__lead);
+                }
+                return;
+            }
+            if !__after_line {
+                if __lead.contains('\n') {
+                    __builder.hardline();
+                } else {
+                    __builder.text_inline_ws(__lead);
+                }
+            }
+            __builder.text(__core);
+            if !__trail.contains('\n') {
+                __builder.text_inline_ws(__trail);
+                return;
+            }
+            let __probe = ::std::format!("{__core}x");
+            let __swallows = {
+                let mut __ps = ::parse_that::ParserState::new(&__probe);
+                let state = &mut __ps;
+                let _ = #ws_code;
+                state.offset > __core.len()
+            };
+            if __swallows {
+                __builder.hardline();
+            } else {
+                __builder.text(" ");
+            }
+        }
+    }
+}
+
 // ─── Helper: split compile error ──────────────────────────────────────────
 
 pub(super) fn split_compile_error(rule_name: &str, split: &str) -> TokenStream {

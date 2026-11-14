@@ -1,0 +1,7 @@
+     Summary [ 130.543s] 1675 tests run: 1675 passed (2 slow), 28 skipped
+        PASS [   1.068s] ( 264/1675) bbnf::css_l4_canonical_parity canonical_parity_normalize
+        PASS [   1.231s] ( 267/1675) bbnf::css_l4_canonical_parity scale_interop_bootstrap
+        PASS [   0.969s] ( 274/1675) bbnf::css_l4_comment_probe leading_block_comment_non_empty
+        PASS [   0.998s] ( 275/1675) bbnf::css_l4_comment_probe inline_comment_between_rules_non_empty
+        PASS [   1.001s] ( 276/1675) bbnf::css_l4_comment_probe leading_banner_comment_non_empty
+        PASS [   4.015s] ( 325/1675) bbnf::css_l4_canonical_parity scale_interop_tailwind

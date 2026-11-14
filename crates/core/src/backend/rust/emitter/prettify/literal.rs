@@ -56,11 +56,32 @@ impl RustEmitter {
                 .with_ir(ir)
                 .with_ws_pattern(ws_pat);
         let code = crate::generate::regex::emit_regex(pattern, &opts);
+        if ws_pat == Some(pattern) {
+            let emit = super::emit_trivia_segment(&syn::Ident::new(
+                "__start",
+                proc_macro2::Span::call_site(),
+            ));
+            return quote! { {
+                let __start = state.offset;
+                if #code.is_none() { return false; };
+                #emit
+            } };
+        }
+        // A leaf whose match ends in a whitespace run holding a line feed
+        // (an opaque span such as css's `valueSpan` before `}`) prints that
+        // run as one space: line feeds belong to the layout, and a raw one
+        // beside the layout's own grew a blank line on every pass (sk-v27
+        // LW3.S3c-PP). The space keeps the leaf apart from the next token;
+        // the renderer trims it at a line end.
         quote! { {
             let __start = state.offset;
             if #code.is_none() { return false; };
             let __matched = &state.src[__start..state.offset];
-            if !__matched.is_empty() {
+            let __body = __matched.trim_end_matches(char::is_whitespace);
+            if __matched[__body.len()..].contains('\n') {
+                __builder.text(__body);
+                __builder.text(" ");
+            } else if !__matched.is_empty() {
                 __builder.text(__matched);
             }
         } }

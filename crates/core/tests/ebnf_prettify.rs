@@ -36,7 +36,6 @@ fn parse_multi_rule() {
 // ── Prettify ─────────────────────────────────────────────────────────
 
 #[test]
-#[ignore = "prettify codegen stops after first rule — pre-existing in gorgeous"]
 fn prettify_multi_rule() {
     let input = "digit = \"0\" | \"1\" | \"2\" ;\nnumber = digit , { digit } ;";
     let result = prettify(input);

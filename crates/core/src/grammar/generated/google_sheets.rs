@@ -9409,7 +9409,11 @@ mod __googlesheetsparser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -9438,7 +9442,11 @@ mod __googlesheetsparser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -9517,7 +9525,12 @@ mod __googlesheetsparser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -9579,7 +9592,12 @@ mod __googlesheetsparser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -10053,7 +10071,11 @@ mod __googlesheetsparser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -10148,7 +10170,11 @@ mod __googlesheetsparser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -10217,7 +10243,11 @@ mod __googlesheetsparser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -10709,7 +10739,12 @@ mod __googlesheetsparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -10795,7 +10830,11 @@ mod __googlesheetsparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -10866,7 +10905,11 @@ mod __googlesheetsparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -11050,7 +11093,12 @@ mod __googlesheetsparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -11140,7 +11188,12 @@ mod __googlesheetsparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -11208,7 +11261,12 @@ mod __googlesheetsparser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -11263,7 +11321,12 @@ mod __googlesheetsparser_emit_impl {
                                                         return false;
                                                     }
                                                     let __matched = &state.src[__start..state.offset];
-                                                    if !__matched.is_empty() {
+                                                    let __body = __matched
+                                                        .trim_end_matches(char::is_whitespace);
+                                                    if __matched[__body.len()..].contains('\n') {
+                                                        __builder.text(__body);
+                                                        __builder.text(" ");
+                                                    } else if !__matched.is_empty() {
                                                         __builder.text(__matched);
                                                     }
                                                 };
@@ -11364,7 +11427,12 @@ mod __googlesheetsparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -11432,7 +11500,12 @@ mod __googlesheetsparser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -11487,7 +11560,12 @@ mod __googlesheetsparser_emit_impl {
                                                         return false;
                                                     }
                                                     let __matched = &state.src[__start..state.offset];
-                                                    if !__matched.is_empty() {
+                                                    let __body = __matched
+                                                        .trim_end_matches(char::is_whitespace);
+                                                    if __matched[__body.len()..].contains('\n') {
+                                                        __builder.text(__body);
+                                                        __builder.text(" ");
+                                                    } else if !__matched.is_empty() {
                                                         __builder.text(__matched);
                                                     }
                                                 };
@@ -12911,7 +12989,11 @@ mod __googlesheetsparser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -13214,7 +13296,11 @@ mod __googlesheetsparser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -13448,7 +13534,12 @@ mod __googlesheetsparser_emit_impl {
                                                             return false;
                                                         }
                                                         let __matched = &state.src[__start..state.offset];
-                                                        if !__matched.is_empty() {
+                                                        let __body = __matched
+                                                            .trim_end_matches(char::is_whitespace);
+                                                        if __matched[__body.len()..].contains('\n') {
+                                                            __builder.text(__body);
+                                                            __builder.text(" ");
+                                                        } else if !__matched.is_empty() {
                                                             __builder.text(__matched);
                                                         }
                                                     };
@@ -13541,7 +13632,12 @@ mod __googlesheetsparser_emit_impl {
                                                                                     return false;
                                                                                 }
                                                                                 let __matched = &state.src[__start..state.offset];
-                                                                                if !__matched.is_empty() {
+                                                                                let __body = __matched
+                                                                                    .trim_end_matches(char::is_whitespace);
+                                                                                if __matched[__body.len()..].contains('\n') {
+                                                                                    __builder.text(__body);
+                                                                                    __builder.text(" ");
+                                                                                } else if !__matched.is_empty() {
                                                                                     __builder.text(__matched);
                                                                                 }
                                                                             };
@@ -13562,7 +13658,12 @@ mod __googlesheetsparser_emit_impl {
                                                                                             return false;
                                                                                         }
                                                                                         let __matched = &state.src[__start..state.offset];
-                                                                                        if !__matched.is_empty() {
+                                                                                        let __body = __matched
+                                                                                            .trim_end_matches(char::is_whitespace);
+                                                                                        if __matched[__body.len()..].contains('\n') {
+                                                                                            __builder.text(__body);
+                                                                                            __builder.text(" ");
+                                                                                        } else if !__matched.is_empty() {
                                                                                             __builder.text(__matched);
                                                                                         }
                                                                                     };
@@ -13756,7 +13857,11 @@ mod __googlesheetsparser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };

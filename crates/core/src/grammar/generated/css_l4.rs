@@ -72264,6 +72264,63 @@ mod __cssl4parser_emit_impl {
         parse_scalar_CssL4Parser_stylesheet(input, p, state, builder, cursor)
     }
     impl CssL4Parser {
+        fn __prettify_trivia<'a>(
+            __builder: &mut ::pprint::FmtBuilder<'a>,
+            __t: &'a str,
+        ) {
+            let __rest = __t.trim_start_matches(char::is_whitespace);
+            let __lead = &__t[..__t.len() - __rest.len()];
+            let __core = __rest.trim_end_matches(char::is_whitespace);
+            let __trail = &__rest[__core.len()..];
+            let __after_line = __builder
+                .ops()
+                .iter()
+                .rev()
+                .find(|op| {
+                    !matches!(
+                        op, ::pprint::FmtOp::GroupStart { .. } |
+                        ::pprint::FmtOp::GroupEnd | ::pprint::FmtOp::IndentStart |
+                        ::pprint::FmtOp::IndentEnd
+                    )
+                })
+                .is_some_and(|op| {
+                    matches!(
+                        op, ::pprint::FmtOp::Hardline | ::pprint::FmtOp::Softline |
+                        ::pprint::FmtOp::BreakLine | ::pprint::FmtOp::CommaSep |
+                        ::pprint::FmtOp::Sep { .. } | ::pprint::FmtOp::FillSep { .. }
+                    )
+                });
+            if __core.is_empty() {
+                if !__after_line {
+                    __builder.text_inline_ws(__lead);
+                }
+                return;
+            }
+            if !__after_line {
+                if __lead.contains('\n') {
+                    __builder.hardline();
+                } else {
+                    __builder.text_inline_ws(__lead);
+                }
+            }
+            __builder.text(__core);
+            if !__trail.contains('\n') {
+                __builder.text_inline_ws(__trail);
+                return;
+            }
+            let __probe = ::std::format!("{__core}x");
+            let __swallows = {
+                let mut __ps = ::parse_that::ParserState::new(&__probe);
+                let state = &mut __ps;
+                let _ = ::parse_that::scan_ws_block_comments(state);
+                state.offset > __core.len()
+            };
+            if __swallows {
+                __builder.hardline();
+            } else {
+                __builder.text(" ");
+            }
+        }
         fn __number_prettify<'a>(
             state: &mut ::parse_that::ParserState<'a>,
             __builder: &mut ::pprint::FmtBuilder<'a>,
@@ -72275,7 +72332,11 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -76837,7 +76898,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -77231,7 +77296,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -77243,7 +77313,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -81956,7 +82031,11 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -82137,7 +82216,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -82149,7 +82233,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -82226,7 +82315,11 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -86041,7 +86134,11 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -86195,7 +86292,11 @@ mod __cssl4parser_emit_impl {
                         return false;
                     }
                     let __matched = &state.src[__start..state.offset];
-                    if !__matched.is_empty() {
+                    let __body = __matched.trim_end_matches(char::is_whitespace);
+                    if __matched[__body.len()..].contains('\n') {
+                        __builder.text(__body);
+                        __builder.text(" ");
+                    } else if !__matched.is_empty() {
                         __builder.text(__matched);
                     }
                 };
@@ -86425,7 +86526,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -86485,7 +86591,12 @@ mod __cssl4parser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };
@@ -86506,7 +86617,12 @@ mod __cssl4parser_emit_impl {
                                                     return false;
                                                 }
                                                 let __matched = &state.src[__start..state.offset];
-                                                if !__matched.is_empty() {
+                                                let __body = __matched
+                                                    .trim_end_matches(char::is_whitespace);
+                                                if __matched[__body.len()..].contains('\n') {
+                                                    __builder.text(__body);
+                                                    __builder.text(" ");
+                                                } else if !__matched.is_empty() {
                                                     __builder.text(__matched);
                                                 }
                                             };
@@ -86633,7 +86749,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -86680,7 +86801,12 @@ mod __cssl4parser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };
@@ -86727,7 +86853,12 @@ mod __cssl4parser_emit_impl {
                                                     return false;
                                                 }
                                                 let __matched = &state.src[__start..state.offset];
-                                                if !__matched.is_empty() {
+                                                let __body = __matched
+                                                    .trim_end_matches(char::is_whitespace);
+                                                if __matched[__body.len()..].contains('\n') {
+                                                    __builder.text(__body);
+                                                    __builder.text(" ");
+                                                } else if !__matched.is_empty() {
                                                     __builder.text(__matched);
                                                 }
                                             };
@@ -86768,7 +86899,12 @@ mod __cssl4parser_emit_impl {
                                                             return false;
                                                         }
                                                         let __matched = &state.src[__start..state.offset];
-                                                        if !__matched.is_empty() {
+                                                        let __body = __matched
+                                                            .trim_end_matches(char::is_whitespace);
+                                                        if __matched[__body.len()..].contains('\n') {
+                                                            __builder.text(__body);
+                                                            __builder.text(" ");
+                                                        } else if !__matched.is_empty() {
                                                             __builder.text(__matched);
                                                         }
                                                     };
@@ -87154,7 +87290,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -87190,7 +87331,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -87309,7 +87454,12 @@ mod __cssl4parser_emit_impl {
                                                     return false;
                                                 }
                                                 let __matched = &state.src[__start..state.offset];
-                                                if !__matched.is_empty() {
+                                                let __body = __matched
+                                                    .trim_end_matches(char::is_whitespace);
+                                                if __matched[__body.len()..].contains('\n') {
+                                                    __builder.text(__body);
+                                                    __builder.text(" ");
+                                                } else if !__matched.is_empty() {
                                                     __builder.text(__matched);
                                                 }
                                             };
@@ -87438,7 +87588,12 @@ mod __cssl4parser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -87558,7 +87713,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -87592,7 +87751,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -87626,7 +87789,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -87660,7 +87827,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -87694,7 +87865,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -87828,7 +88003,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -87893,7 +88072,12 @@ mod __cssl4parser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -87976,7 +88160,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -88195,7 +88383,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -88294,7 +88486,12 @@ mod __cssl4parser_emit_impl {
                                                         return false;
                                                     }
                                                     let __matched = &state.src[__start..state.offset];
-                                                    if !__matched.is_empty() {
+                                                    let __body = __matched
+                                                        .trim_end_matches(char::is_whitespace);
+                                                    if __matched[__body.len()..].contains('\n') {
+                                                        __builder.text(__body);
+                                                        __builder.text(" ");
+                                                    } else if !__matched.is_empty() {
                                                         __builder.text(__matched);
                                                     }
                                                 };
@@ -88365,7 +88562,12 @@ mod __cssl4parser_emit_impl {
                                                     return false;
                                                 }
                                                 let __matched = &state.src[__start..state.offset];
-                                                if !__matched.is_empty() {
+                                                let __body = __matched
+                                                    .trim_end_matches(char::is_whitespace);
+                                                if __matched[__body.len()..].contains('\n') {
+                                                    __builder.text(__body);
+                                                    __builder.text(" ");
+                                                } else if !__matched.is_empty() {
                                                     __builder.text(__matched);
                                                 }
                                             };
@@ -88413,7 +88615,12 @@ mod __cssl4parser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };
@@ -88634,7 +88841,12 @@ mod __cssl4parser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -88810,7 +89022,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -88990,7 +89206,12 @@ mod __cssl4parser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -89142,7 +89363,12 @@ mod __cssl4parser_emit_impl {
                                                             return false;
                                                         }
                                                         let __matched = &state.src[__start..state.offset];
-                                                        if !__matched.is_empty() {
+                                                        let __body = __matched
+                                                            .trim_end_matches(char::is_whitespace);
+                                                        if __matched[__body.len()..].contains('\n') {
+                                                            __builder.text(__body);
+                                                            __builder.text(" ");
+                                                        } else if !__matched.is_empty() {
                                                             __builder.text(__matched);
                                                         }
                                                     };
@@ -89349,7 +89575,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -89527,7 +89758,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -89707,7 +89942,12 @@ mod __cssl4parser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -89859,7 +90099,12 @@ mod __cssl4parser_emit_impl {
                                                             return false;
                                                         }
                                                         let __matched = &state.src[__start..state.offset];
-                                                        if !__matched.is_empty() {
+                                                        let __body = __matched
+                                                            .trim_end_matches(char::is_whitespace);
+                                                        if __matched[__body.len()..].contains('\n') {
+                                                            __builder.text(__body);
+                                                            __builder.text(" ");
+                                                        } else if !__matched.is_empty() {
                                                             __builder.text(__matched);
                                                         }
                                                     };
@@ -90050,7 +90295,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -90175,7 +90424,12 @@ mod __cssl4parser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -90265,7 +90519,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -90861,7 +91119,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -91049,7 +91311,12 @@ mod __cssl4parser_emit_impl {
                                                             return false;
                                                         }
                                                         let __matched = &state.src[__start..state.offset];
-                                                        if !__matched.is_empty() {
+                                                        let __body = __matched
+                                                            .trim_end_matches(char::is_whitespace);
+                                                        if __matched[__body.len()..].contains('\n') {
+                                                            __builder.text(__body);
+                                                            __builder.text(" ");
+                                                        } else if !__matched.is_empty() {
                                                             __builder.text(__matched);
                                                         }
                                                     };
@@ -91192,7 +91459,12 @@ mod __cssl4parser_emit_impl {
                                                             return false;
                                                         }
                                                         let __matched = &state.src[__start..state.offset];
-                                                        if !__matched.is_empty() {
+                                                        let __body = __matched
+                                                            .trim_end_matches(char::is_whitespace);
+                                                        if __matched[__body.len()..].contains('\n') {
+                                                            __builder.text(__body);
+                                                            __builder.text(" ");
+                                                        } else if !__matched.is_empty() {
                                                             __builder.text(__matched);
                                                         }
                                                     };
@@ -91340,7 +91612,12 @@ mod __cssl4parser_emit_impl {
                                                                 return false;
                                                             }
                                                             let __matched = &state.src[__start..state.offset];
-                                                            if !__matched.is_empty() {
+                                                            let __body = __matched
+                                                                .trim_end_matches(char::is_whitespace);
+                                                            if __matched[__body.len()..].contains('\n') {
+                                                                __builder.text(__body);
+                                                                __builder.text(" ");
+                                                            } else if !__matched.is_empty() {
                                                                 __builder.text(__matched);
                                                             }
                                                         };
@@ -91502,7 +91779,12 @@ mod __cssl4parser_emit_impl {
                                                                             return false;
                                                                         }
                                                                         let __matched = &state.src[__start..state.offset];
-                                                                        if !__matched.is_empty() {
+                                                                        let __body = __matched
+                                                                            .trim_end_matches(char::is_whitespace);
+                                                                        if __matched[__body.len()..].contains('\n') {
+                                                                            __builder.text(__body);
+                                                                            __builder.text(" ");
+                                                                        } else if !__matched.is_empty() {
                                                                             __builder.text(__matched);
                                                                         }
                                                                     };
@@ -91660,7 +91942,12 @@ mod __cssl4parser_emit_impl {
                                                                                     return false;
                                                                                 }
                                                                                 let __matched = &state.src[__start..state.offset];
-                                                                                if !__matched.is_empty() {
+                                                                                let __body = __matched
+                                                                                    .trim_end_matches(char::is_whitespace);
+                                                                                if __matched[__body.len()..].contains('\n') {
+                                                                                    __builder.text(__body);
+                                                                                    __builder.text(" ");
+                                                                                } else if !__matched.is_empty() {
                                                                                     __builder.text(__matched);
                                                                                 }
                                                                             };
@@ -91892,7 +92179,12 @@ mod __cssl4parser_emit_impl {
                                                                         return false;
                                                                     }
                                                                     let __matched = &state.src[__start..state.offset];
-                                                                    if !__matched.is_empty() {
+                                                                    let __body = __matched
+                                                                        .trim_end_matches(char::is_whitespace);
+                                                                    if __matched[__body.len()..].contains('\n') {
+                                                                        __builder.text(__body);
+                                                                        __builder.text(" ");
+                                                                    } else if !__matched.is_empty() {
                                                                         __builder.text(__matched);
                                                                     }
                                                                 };
@@ -91946,7 +92238,12 @@ mod __cssl4parser_emit_impl {
                                                         return false;
                                                     }
                                                     let __matched = &state.src[__start..state.offset];
-                                                    if !__matched.is_empty() {
+                                                    let __body = __matched
+                                                        .trim_end_matches(char::is_whitespace);
+                                                    if __matched[__body.len()..].contains('\n') {
+                                                        __builder.text(__body);
+                                                        __builder.text(" ");
+                                                    } else if !__matched.is_empty() {
                                                         __builder.text(__matched);
                                                     }
                                                 };
@@ -92054,7 +92351,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -92184,7 +92485,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -92253,7 +92558,11 @@ mod __cssl4parser_emit_impl {
                             return false;
                         }
                         let __matched = &state.src[__start..state.offset];
-                        if !__matched.is_empty() {
+                        let __body = __matched.trim_end_matches(char::is_whitespace);
+                        if __matched[__body.len()..].contains('\n') {
+                            __builder.text(__body);
+                            __builder.text(" ");
+                        } else if !__matched.is_empty() {
                             __builder.text(__matched);
                         }
                     };
@@ -92691,7 +93000,12 @@ mod __cssl4parser_emit_impl {
                                                                                             return false;
                                                                                         }
                                                                                         let __matched = &state.src[__start..state.offset];
-                                                                                        if !__matched.is_empty() {
+                                                                                        let __body = __matched
+                                                                                            .trim_end_matches(char::is_whitespace);
+                                                                                        if __matched[__body.len()..].contains('\n') {
+                                                                                            __builder.text(__body);
+                                                                                            __builder.text(" ");
+                                                                                        } else if !__matched.is_empty() {
                                                                                             __builder.text(__matched);
                                                                                         }
                                                                                     };
@@ -93131,7 +93445,12 @@ mod __cssl4parser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -93221,7 +93540,12 @@ mod __cssl4parser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -93783,7 +94107,12 @@ mod __cssl4parser_emit_impl {
                                                                             return false;
                                                                         }
                                                                         let __matched = &state.src[__start..state.offset];
-                                                                        if !__matched.is_empty() {
+                                                                        let __body = __matched
+                                                                            .trim_end_matches(char::is_whitespace);
+                                                                        if __matched[__body.len()..].contains('\n') {
+                                                                            __builder.text(__body);
+                                                                            __builder.text(" ");
+                                                                        } else if !__matched.is_empty() {
                                                                             __builder.text(__matched);
                                                                         }
                                                                     };
@@ -94556,7 +94885,12 @@ mod __cssl4parser_emit_impl {
                                                                             return false;
                                                                         }
                                                                         let __matched = &state.src[__start..state.offset];
-                                                                        if !__matched.is_empty() {
+                                                                        let __body = __matched
+                                                                            .trim_end_matches(char::is_whitespace);
+                                                                        if __matched[__body.len()..].contains('\n') {
+                                                                            __builder.text(__body);
+                                                                            __builder.text(" ");
+                                                                        } else if !__matched.is_empty() {
                                                                             __builder.text(__matched);
                                                                         }
                                                                     };
@@ -94779,7 +95113,12 @@ mod __cssl4parser_emit_impl {
                                                                                     return false;
                                                                                 }
                                                                                 let __matched = &state.src[__start..state.offset];
-                                                                                if !__matched.is_empty() {
+                                                                                let __body = __matched
+                                                                                    .trim_end_matches(char::is_whitespace);
+                                                                                if __matched[__body.len()..].contains('\n') {
+                                                                                    __builder.text(__body);
+                                                                                    __builder.text(" ");
+                                                                                } else if !__matched.is_empty() {
                                                                                     __builder.text(__matched);
                                                                                 }
                                                                             };
@@ -94875,7 +95214,12 @@ mod __cssl4parser_emit_impl {
                                                                                                             return false;
                                                                                                         }
                                                                                                         let __matched = &state.src[__start..state.offset];
-                                                                                                        if !__matched.is_empty() {
+                                                                                                        let __body = __matched
+                                                                                                            .trim_end_matches(char::is_whitespace);
+                                                                                                        if __matched[__body.len()..].contains('\n') {
+                                                                                                            __builder.text(__body);
+                                                                                                            __builder.text(" ");
+                                                                                                        } else if !__matched.is_empty() {
                                                                                                             __builder.text(__matched);
                                                                                                         }
                                                                                                     };
@@ -94938,7 +95282,12 @@ mod __cssl4parser_emit_impl {
                                                                                                                     return false;
                                                                                                                 }
                                                                                                                 let __matched = &state.src[__start..state.offset];
-                                                                                                                if !__matched.is_empty() {
+                                                                                                                let __body = __matched
+                                                                                                                    .trim_end_matches(char::is_whitespace);
+                                                                                                                if __matched[__body.len()..].contains('\n') {
+                                                                                                                    __builder.text(__body);
+                                                                                                                    __builder.text(" ");
+                                                                                                                } else if !__matched.is_empty() {
                                                                                                                     __builder.text(__matched);
                                                                                                                 }
                                                                                                             };
@@ -95040,7 +95389,12 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                 return false;
                                                                                                                                             }
                                                                                                                                             let __matched = &state.src[__start..state.offset];
-                                                                                                                                            if !__matched.is_empty() {
+                                                                                                                                            let __body = __matched
+                                                                                                                                                .trim_end_matches(char::is_whitespace);
+                                                                                                                                            if __matched[__body.len()..].contains('\n') {
+                                                                                                                                                __builder.text(__body);
+                                                                                                                                                __builder.text(" ");
+                                                                                                                                            } else if !__matched.is_empty() {
                                                                                                                                                 __builder.text(__matched);
                                                                                                                                             }
                                                                                                                                         };
@@ -95149,7 +95503,12 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                 return false;
                                                                                                                                                             }
                                                                                                                                                             let __matched = &state.src[__start..state.offset];
-                                                                                                                                                            if !__matched.is_empty() {
+                                                                                                                                                            let __body = __matched
+                                                                                                                                                                .trim_end_matches(char::is_whitespace);
+                                                                                                                                                            if __matched[__body.len()..].contains('\n') {
+                                                                                                                                                                __builder.text(__body);
+                                                                                                                                                                __builder.text(" ");
+                                                                                                                                                            } else if !__matched.is_empty() {
                                                                                                                                                                 __builder.text(__matched);
                                                                                                                                                             }
                                                                                                                                                         };
@@ -95161,7 +95520,12 @@ mod __cssl4parser_emit_impl {
                                                                                                                                                                 return false;
                                                                                                                                                             }
                                                                                                                                                             let __matched = &state.src[__start..state.offset];
-                                                                                                                                                            if !__matched.is_empty() {
+                                                                                                                                                            let __body = __matched
+                                                                                                                                                                .trim_end_matches(char::is_whitespace);
+                                                                                                                                                            if __matched[__body.len()..].contains('\n') {
+                                                                                                                                                                __builder.text(__body);
+                                                                                                                                                                __builder.text(" ");
+                                                                                                                                                            } else if !__matched.is_empty() {
                                                                                                                                                                 __builder.text(__matched);
                                                                                                                                                             }
                                                                                                                                                         };
@@ -100676,7 +101040,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -100737,7 +101106,12 @@ mod __cssl4parser_emit_impl {
                                     return false;
                                 }
                                 let __matched = &state.src[__start..state.offset];
-                                if !__matched.is_empty() {
+                                let __body = __matched
+                                    .trim_end_matches(char::is_whitespace);
+                                if __matched[__body.len()..].contains('\n') {
+                                    __builder.text(__body);
+                                    __builder.text(" ");
+                                } else if !__matched.is_empty() {
                                     __builder.text(__matched);
                                 }
                             };
@@ -100981,7 +101355,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -101009,7 +101387,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -101657,7 +102039,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -102009,7 +102395,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -102126,7 +102516,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -102231,7 +102625,11 @@ mod __cssl4parser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -102401,7 +102799,12 @@ mod __cssl4parser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };

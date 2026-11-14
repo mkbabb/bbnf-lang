@@ -6371,8 +6371,8 @@ mod __ebnfparser_emit_impl {
                                 };
                                 {
                                     {
-                                        let __pretty_cp4 = state.offset;
-                                        let __pretty_bcp5 = __builder.checkpoint();
+                                        let __not_cp4 = state.offset;
+                                        let __not_bcp5 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             {
                                                 if state.src_bytes.get(state.offset).copied() != Some(b'\'')
@@ -6384,11 +6384,11 @@ mod __ebnfparser_emit_impl {
                                             };
                                             true
                                         })();
-                                        if !__ok {
-                                            state.offset = __pretty_cp4;
-                                            __builder.restore(__pretty_bcp5);
+                                        __builder.restore(__not_bcp5);
+                                        state.offset = __not_cp4;
+                                        if __ok {
+                                            return false;
                                         }
-                                        __ok
                                     };
                                     if !Self::__character_prettify(state, __builder) {
                                         return false;
@@ -6404,8 +6404,8 @@ mod __ebnfparser_emit_impl {
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
-                                                        let __pretty_cp6 = state.offset;
-                                                        let __pretty_bcp7 = __builder.checkpoint();
+                                                        let __not_cp6 = state.offset;
+                                                        let __not_bcp7 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             {
                                                                 if state.src_bytes.get(state.offset).copied() != Some(b'\'')
@@ -6417,11 +6417,11 @@ mod __ebnfparser_emit_impl {
                                                             };
                                                             true
                                                         })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp6;
-                                                            __builder.restore(__pretty_bcp7);
+                                                        __builder.restore(__not_bcp7);
+                                                        state.offset = __not_cp6;
+                                                        if __ok {
+                                                            return false;
                                                         }
-                                                        __ok
                                                     };
                                                     if !Self::__character_prettify(state, __builder) {
                                                         return false;
@@ -6466,8 +6466,8 @@ mod __ebnfparser_emit_impl {
                                 };
                                 {
                                     {
-                                        let __pretty_cp12 = state.offset;
-                                        let __pretty_bcp13 = __builder.checkpoint();
+                                        let __not_cp12 = state.offset;
+                                        let __not_bcp13 = __builder.checkpoint();
                                         let __ok = (|| -> bool {
                                             {
                                                 if state.src_bytes.get(state.offset).copied() != Some(b'"')
@@ -6479,11 +6479,11 @@ mod __ebnfparser_emit_impl {
                                             };
                                             true
                                         })();
-                                        if !__ok {
-                                            state.offset = __pretty_cp12;
-                                            __builder.restore(__pretty_bcp13);
+                                        __builder.restore(__not_bcp13);
+                                        state.offset = __not_cp12;
+                                        if __ok {
+                                            return false;
                                         }
-                                        __ok
                                     };
                                     if !Self::__character_prettify(state, __builder) {
                                         return false;
@@ -6499,8 +6499,8 @@ mod __ebnfparser_emit_impl {
                                             let __ok = (|| -> bool {
                                                 {
                                                     {
-                                                        let __pretty_cp14 = state.offset;
-                                                        let __pretty_bcp15 = __builder.checkpoint();
+                                                        let __not_cp14 = state.offset;
+                                                        let __not_bcp15 = __builder.checkpoint();
                                                         let __ok = (|| -> bool {
                                                             {
                                                                 if state.src_bytes.get(state.offset).copied() != Some(b'"')
@@ -6512,11 +6512,11 @@ mod __ebnfparser_emit_impl {
                                                             };
                                                             true
                                                         })();
-                                                        if !__ok {
-                                                            state.offset = __pretty_cp14;
-                                                            __builder.restore(__pretty_bcp15);
+                                                        __builder.restore(__not_bcp15);
+                                                        state.offset = __not_cp14;
+                                                        if __ok {
+                                                            return false;
                                                         }
-                                                        __ok
                                                     };
                                                     if !Self::__character_prettify(state, __builder) {
                                                         return false;
@@ -6608,7 +6608,12 @@ mod __ebnfparser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };
@@ -6639,7 +6644,12 @@ mod __ebnfparser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };
@@ -6745,7 +6755,12 @@ mod __ebnfparser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -6776,7 +6791,12 @@ mod __ebnfparser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -6910,7 +6930,12 @@ mod __ebnfparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -6941,7 +6966,12 @@ mod __ebnfparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -6989,7 +7019,12 @@ mod __ebnfparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -7020,7 +7055,12 @@ mod __ebnfparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -7068,7 +7108,12 @@ mod __ebnfparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -7099,7 +7144,12 @@ mod __ebnfparser_emit_impl {
                                         return false;
                                     }
                                     let __matched = &state.src[__start..state.offset];
-                                    if !__matched.is_empty() {
+                                    let __body = __matched
+                                        .trim_end_matches(char::is_whitespace);
+                                    if __matched[__body.len()..].contains('\n') {
+                                        __builder.text(__body);
+                                        __builder.text(" ");
+                                    } else if !__matched.is_empty() {
                                         __builder.text(__matched);
                                     }
                                 };
@@ -7181,7 +7231,11 @@ mod __ebnfparser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -7254,7 +7308,12 @@ mod __ebnfparser_emit_impl {
                                                 return false;
                                             }
                                             let __matched = &state.src[__start..state.offset];
-                                            if !__matched.is_empty() {
+                                            let __body = __matched
+                                                .trim_end_matches(char::is_whitespace);
+                                            if __matched[__body.len()..].contains('\n') {
+                                                __builder.text(__body);
+                                                __builder.text(" ");
+                                            } else if !__matched.is_empty() {
                                                 __builder.text(__matched);
                                             }
                                         };
@@ -7318,7 +7377,11 @@ mod __ebnfparser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -7353,7 +7416,11 @@ mod __ebnfparser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -7384,7 +7451,11 @@ mod __ebnfparser_emit_impl {
                                 return false;
                             }
                             let __matched = &state.src[__start..state.offset];
-                            if !__matched.is_empty() {
+                            let __body = __matched.trim_end_matches(char::is_whitespace);
+                            if __matched[__body.len()..].contains('\n') {
+                                __builder.text(__body);
+                                __builder.text(" ");
+                            } else if !__matched.is_empty() {
                                 __builder.text(__matched);
                             }
                         };
@@ -7482,7 +7553,12 @@ mod __ebnfparser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };
@@ -7513,7 +7589,12 @@ mod __ebnfparser_emit_impl {
                                             return false;
                                         }
                                         let __matched = &state.src[__start..state.offset];
-                                        if !__matched.is_empty() {
+                                        let __body = __matched
+                                            .trim_end_matches(char::is_whitespace);
+                                        if __matched[__body.len()..].contains('\n') {
+                                            __builder.text(__body);
+                                            __builder.text(" ");
+                                        } else if !__matched.is_empty() {
                                             __builder.text(__matched);
                                         }
                                     };

@@ -1,0 +1,100 @@
+   Compiling schemars v0.8.22
+   Compiling dyn-clone v1.0.20
+   Compiling serde_json v1.0.149
+   Compiling libc v0.2.183
+   Compiling unicode-segmentation v1.13.2
+   Compiling tracing-core v0.1.36
+   Compiling proc-macro-error-attr v1.0.4
+   Compiling pin-project-lite v0.2.17
+   Compiling hashbrown v0.14.5
+   Compiling proc-macro-error v1.0.4
+   Compiling rustc-hash v1.1.0
+   Compiling countme v3.0.1
+   Compiling syn v1.0.109
+   Compiling object v0.37.3
+   Compiling serde_derive_internals v0.29.1
+   Compiling tracing-attributes v0.1.31
+   Compiling biome_diagnostics_categories v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling adler2 v2.0.1
+   Compiling gimli v0.32.3
+   Compiling miniz_oxide v0.8.9
+   Compiling enumflags2_derive v0.7.12
+   Compiling bpaf_derive v0.5.23
+   Compiling json-strip-comments v1.0.4
+   Compiling similar v2.7.0
+   Compiling biome_string_case v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling void v1.0.2
+   Compiling result v1.0.0
+   Compiling simdutf8 v0.1.5
+   Compiling dunce v1.0.5
+   Compiling unicode-width v0.1.14
+   Compiling serde_ini v0.2.0
+   Compiling enumflags2 v0.7.12
+   Compiling unicode-bom v2.0.3
+   Compiling parking_lot_core v0.9.12
+   Compiling biome_unicode_table v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling drop_bomb v0.1.5
+   Compiling parse-that-regex v0.1.0 (https://github.com/mkbabb/parse-that?rev=d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae#d5a6baee)
+   Compiling libmimalloc-sys v0.1.44
+   Compiling schemars_derive v0.8.22
+   Compiling dashmap v6.1.0
+   Compiling colored v3.1.1
+   Compiling ron v0.12.1
+   Compiling bpaf v0.9.24
+   Compiling tracing v0.1.44
+   Compiling rmp-serde v1.3.1
+   Compiling parse_that v0.4.0 (https://github.com/mkbabb/parse-that?rev=d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae#d5a6baee)
+   Compiling addr2line v0.25.1
+   Compiling oxc_resolver v1.12.0
+   Compiling biome_markup v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_diagnostics_macros v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_deserialize_macros v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/ir)
+   Compiling mimalloc v0.1.48
+   Compiling biome_text_size v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_text_edit v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_console v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling backtrace v0.3.76
+   Compiling biome_rowan v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_diagnostics v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_syntax v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_suppression v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_json_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_deserialize v0.6.0 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_factory v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_parser v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling biome_css_formatter v0.5.7 (https://github.com/biomejs/biome?tag=cli%2Fv1.9.4#fa93a147)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/core)
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/gorgeous)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 17.54s
+     Running tests/css.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/css-6e2bc43e3492d00c)
+
+running 1 test
+test css_ws_leaves_are_trivia_so_formatting_is_idempotent ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/gorgeous)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.67s
+     Running tests/ebnf.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/ebnf-47ebe148e22b6df4)
+
+running 2 tests
+test test_prettify_multi_rule ... ok
+test ebnf_prettify_keeps_every_rule_and_terminal ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.94s
+     Running tests/ebnf_prettify.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/ebnf_prettify-1544af39aeff54ba)
+
+running 1 test
+test prettify_multi_rule ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+css=0 ebnf=0 core=0

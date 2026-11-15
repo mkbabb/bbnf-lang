@@ -1,0 +1,1 @@
+rc=0 mutants=61 rejected=61 fixture=2/2

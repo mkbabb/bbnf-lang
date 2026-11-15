@@ -1,0 +1,64 @@
+warning: unused doc comment
+  --> crates/core/src/backend/driver/alt.rs:32:1
+   |
+32 | / /// Returns `true` when this IR node's codegen will push child tape
+33 | | /// records. Leaf branches (literals, regex, epsilon, pure-conversion
+34 | | /// maps over leaves) return `false`.
+35 | | ///
+...  |
+41 | | /// the branch's children are the inlined body — check that body
+42 | | /// recursively, not the Ref target's function.
+   | |_----------------------------------------------^
+   |   |
+   |   rustdoc does not generate documentation for macro invocations
+   |
+   = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+   = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `bbnf` (lib) generated 1 warning
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.32s
+────────────
+ Nextest run ID ecb3cf77-00d4-4fc3-a76b-f32476aa8636 with nextest profile: default
+    Starting 1 test across 1 binary
+        FAIL [   0.027s] (1/1) bbnf::gen_recurse_repro a_value_cycle_through_inlined_rules_generates
+  stdout ───
+
+    running 1 test
+    test a_value_cycle_through_inlined_rules_generates ... FAILED
+
+    failures:
+
+    failures:
+        a_value_cycle_through_inlined_rules_generates
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+  stderr ───
+
+    thread 'a_value_cycle_through_inlined_rules_generates' (12639981) panicked at crates/core/src/backend/driver/alt.rs:46:57:
+    GEN-RECURSE probe: alt.rs::branch_pushes_children depth > 4096
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   0.027s] 1 test run: 0 passed, 1 failed, 0 skipped
+        FAIL [   0.027s] (1/1) bbnf::gen_recurse_repro a_value_cycle_through_inlined_rules_generates
+  stdout ───
+
+    running 1 test
+    test a_value_cycle_through_inlined_rules_generates ... FAILED
+
+    failures:
+
+    failures:
+        a_value_cycle_through_inlined_rules_generates
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+  stderr ───
+
+    thread 'a_value_cycle_through_inlined_rules_generates' (12639981) panicked at crates/core/src/backend/driver/alt.rs:46:57:
+    GEN-RECURSE probe: alt.rs::branch_pushes_children depth > 4096
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100

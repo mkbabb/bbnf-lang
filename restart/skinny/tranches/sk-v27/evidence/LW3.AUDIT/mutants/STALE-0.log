@@ -1,0 +1,40 @@
+    failures:
+
+    failures:
+        cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.53s
+
+  stderr ───
+
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (12541802) panicked at crates/core/tests/w3_replay_public_contract.rs:10408:5:
+    assertion `left == right` failed: complete resolved package/feature/target metadata identity
+      left: "5bee3f013dfaeffc4579470b3c988d9ec951ee291ab6286db7046fe1f2dbf243"
+     right: "1ccac8f4905e11c81f6c7b58715c43046397b058ba16ddcb2d1f08f4aff513cb"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   0.553s] 1 test run: 0 passed, 1 failed, 12 skipped
+        FAIL [   0.544s] (1/1) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+  stdout ───
+
+    running 1 test
+    test cargo_graph_build_feature_surfaces_and_generated_products_are_closed ... FAILED
+
+    failures:
+
+    failures:
+        cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 12 filtered out; finished in 0.53s
+
+  stderr ───
+
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (12541802) panicked at crates/core/tests/w3_replay_public_contract.rs:10408:5:
+    assertion `left == right` failed: complete resolved package/feature/target metadata identity
+      left: "5bee3f013dfaeffc4579470b3c988d9ec951ee291ab6286db7046fe1f2dbf243"
+     right: "1ccac8f4905e11c81f6c7b58715c43046397b058ba16ddcb2d1f08f4aff513cb"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+restored dirty=0

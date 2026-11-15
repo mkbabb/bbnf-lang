@@ -1,0 +1,33 @@
+# LAYOUT-HM-V2 §4 mapping census; regenerate from the failure text of crates/oracle/tests/mapping_census.rs
+files	33
+1 literal hex u32	grammar/css/l4/color.bbnf	150
+1 literal u8	grammar/css/l4/color.bbnf	37
+1 literal u8	grammar/css/l4/easing.bbnf	13
+1 literal u8	grammar/css/l4/filters.bbnf	10
+1 literal u8	grammar/css/l4/func-body.bbnf	8
+1 literal u8	grammar/css/l4/gradients.bbnf	16
+1 literal u8	grammar/css/l4/keyframes.bbnf	2
+1 literal u8	grammar/css/l4/keywords.bbnf	86
+1 literal u8	grammar/css/l4/media.bbnf	6
+1 literal u8	grammar/css/l4/properties.bbnf	98
+1 literal u8	grammar/css/l4/selectors.bbnf	18
+1 literal u8	grammar/css/l4/stylesheet.bbnf	3
+1 literal u8	grammar/css/l4/transforms.bbnf	19
+1 literal u8	grammar/css/l4/value-unit.bbnf	63
+1 literal u8	grammar/css/l4/values.bbnf	9
+1 literal u8	grammar/google-sheets/google-sheets.bbnf	21
+1 literal u8	grammar/json/json.bbnf	1
+2 bool	grammar/google-sheets/google-sheets.bbnf	2
+2 bool	grammar/json/json.bbnf	2
+3 span	grammar/bbnf/bbnf.bbnf	5
+3 span	grammar/bbnf/expressions.bbnf	1
+4 conv f64	grammar/bbnf/expressions.bbnf	1
+4 conv f64	grammar/css/l4/value-unit.bbnf	1
+4 conv f64	grammar/google-sheets/google-sheets.bbnf	1
+4 conv f64	grammar/json/json.bbnf	1
+4 conv i64	grammar/bbnf/expressions.bbnf	1
+4 conv i64	grammar/css/l4/value-unit.bbnf	1
+5 input-span	grammar/google-sheets/google-sheets.bbnf	4
+6 host-ascribe	grammar/css/l4/color.bbnf	3
+7 host-call	grammar/css/l4/color.bbnf	1
+7 host-call	grammar/json/json.bbnf	1

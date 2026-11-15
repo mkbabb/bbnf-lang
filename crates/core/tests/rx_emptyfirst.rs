@@ -1,0 +1,113 @@
+//! sk-v27 LW3.RX-EMPTYFIRST (RULINGS 2026-11-14i GSEQ-F (b)): a regex that
+//! can match the empty string is never refused by the first-byte pre-check.
+//!
+//! Root's regex scan adapter (AY.W4.3, `regex_scan_adapter.rs`) consults a
+//! per-byte LUT before running a pattern's DFA and returns `None` when the
+//! byte at `pos` is not in the pattern's FIRST set. The FIRST set came from
+//! `regex_first_chars`, which holds the bytes a non-empty match can begin
+//! with, so a nullable pattern such as `/=?/` was refused at every byte
+//! outside `{=}`, though it matches the empty string there. google_sheets
+//! (`formula = /=?/ , expression ;`) refused `1+2` for that reason.
+//!
+//! The first test reproduces the defect on a minimal grammar of five
+//! adapter patterns (the LUT is emitted at four or more), reading the
+//! emitted adapter: the nullable pattern's branch must admit every byte.
+//! The second pins google_sheets reading its text as written.
+
+use bbnf::ParserAttributes;
+use bbnf::generate::generate_all;
+use bbnf::grammar::generated::google_sheets::GoogleSheetsParser;
+use bbnf::pipeline::{
+    CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_grammar_request,
+};
+
+const MINIMAL: &str = r#"
+value = number | text | name | quoted ;
+number = /[0-9]+(\.[0-9]+)?/ ;
+text = /"([^"]|"")*"/ ;
+name = /[A-Za-z_][A-Za-z0-9_]*/ ;
+quoted = /'[^']*'/ ;
+cell = /=?/ , value ;
+"#;
+
+fn emitted(grammar: &str) -> String {
+    let request = CompileRequest {
+        options: PipelineOptions::default(),
+        target: CompileTarget::Rust {
+            requested_prettify: false,
+        },
+    };
+    let prepared = match compile_grammar_request(grammar, &request).expect("grammar compiles") {
+        CompileOutput::Rust(prepared) => *prepared,
+        _ => panic!("expected Rust output"),
+    };
+    let attrs = ParserAttributes {
+        builder_path: Some("crate::runtime::bbnf::BbnfStructBuilder".to_string()),
+        document_path: Some("crate::runtime::bbnf::BbnfDocument".to_string()),
+        ..ParserAttributes::default()
+    };
+    generate_all(&prepared, &attrs, &quote::format_ident!("EmptyFirstParser")).to_string()
+}
+
+/// The `[u32; 256]` LUT literal named `ident`, if emitted.
+fn lut(source: &str, ident: &str) -> Option<Vec<u32>> {
+    let at = source.find(&format!("const {ident} : [u32 ; 256] = ["))?;
+    let body = &source[at..];
+    let open = body.find("= [")? + 3;
+    let close = body[open..].find(']')? + open;
+    Some(
+        body[open..close]
+            .split(',')
+            .map(|cell| cell.trim().trim_end_matches("u32").parse().expect("LUT cell is a u32"))
+            .collect(),
+    )
+}
+
+/// The body of the adapter branch for the static whose pattern text is `pattern`.
+fn branch<'a>(source: &'a str, pattern: &str) -> &'a str {
+    let decl = format!(": & str = {pattern:?} ;");
+    let at = source.find(&decl).unwrap_or_else(|| panic!("no static for {pattern:?}"));
+    let name_start = source[..at].rfind("static ").expect("static keyword") + "static ".len();
+    let name = source[name_start..at].trim();
+    let test = format!("pattern == {name} {{");
+    let start = source.find(&test).unwrap_or_else(|| panic!("no adapter branch for {name}"));
+    let rest = &source[start + test.len()..];
+    let end = rest.find("pattern == __DTA_REGEX_").unwrap_or(rest.len());
+    &rest[..end]
+}
+
+#[test]
+fn nullable_regex_is_not_refused_by_first_byte_check() {
+    let source = emitted(MINIMAL);
+    let lut_ident = "__REGEX_FIRST_BYTE_LUT_EmptyFirstParser";
+    let body = branch(&source, "=?");
+    let probe = format!("{lut_ident} [__byte as usize] >> ");
+    let Some(at) = body.find(&probe) else {
+        // No first-byte check in the nullable pattern's branch: nothing refuses it.
+        return;
+    };
+    let shift: u32 = body[at + probe.len()..]
+        .split(|c: char| !c.is_ascii_digit())
+        .next()
+        .and_then(|digits| digits.parse().ok())
+        .expect("LUT shift is a literal");
+    let table = lut(&source, lut_ident).expect("the branch reads a LUT the module emits");
+    let refused: Vec<usize> = (0..256).filter(|&b| (table[b] >> shift) & 1 == 0).collect();
+    assert!(
+        refused.is_empty(),
+        "the nullable pattern `=?` (LUT bit {shift}) is refused before its DFA at {} of 256 bytes, \
+         e.g. {:?}; it matches the empty string at every one of them",
+        refused.len(),
+        refused.iter().take(8).map(|&b| b as u8 as char).collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq() {
+    // grammar/google-sheets/google-sheets.bbnf: `formula = /=?/ , expression ;`.
+    let refused: Vec<&str> = ["1+2", "A1", "42", "=1+2"]
+        .into_iter()
+        .filter(|src| GoogleSheetsParser::parse(src).is_err())
+        .collect();
+    assert!(refused.is_empty(), "google_sheets refused {refused:?}");
+}

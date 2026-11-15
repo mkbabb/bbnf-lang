@@ -1,0 +1,22 @@
+61c61,63
+< grammar/css/l4/keyframes.bbnf	all	ABORT
+---
+> grammar/css/l4/keyframes.bbnf	ts	ok 3c6b51bb7cb0c7ff
+> grammar/css/l4/keyframes.bbnf	wasm	ok ecc0133cccaf3358
+> grammar/css/l4/keyframes.bbnf	rust	ok types=56e710baba1bb150
+113,115c115,117
+< grammar/misc/emoji.bbnf	ts	err de6ca9ff3838e3ac
+< grammar/misc/emoji.bbnf	wasm	err de6ca9ff3838e3ac
+< grammar/misc/emoji.bbnf	rust	err de6ca9ff3838e3ac
+---
+> grammar/misc/emoji.bbnf	ts	err 2bf75168784f20ae
+> grammar/misc/emoji.bbnf	wasm	err 2bf75168784f20ae
+> grammar/misc/emoji.bbnf	rust	err 2bf75168784f20ae
+167,169c169,171
+< typescript/test/fixtures/grammar/lang/emoji.bbnf	ts	err 211dffe8d7a5498d
+< typescript/test/fixtures/grammar/lang/emoji.bbnf	wasm	err 211dffe8d7a5498d
+< typescript/test/fixtures/grammar/lang/emoji.bbnf	rust	err 211dffe8d7a5498d
+---
+> typescript/test/fixtures/grammar/lang/emoji.bbnf	ts	err e292bb5c7c3e75f3
+> typescript/test/fixtures/grammar/lang/emoji.bbnf	wasm	err e292bb5c7c3e75f3
+> typescript/test/fixtures/grammar/lang/emoji.bbnf	rust	err e292bb5c7c3e75f3

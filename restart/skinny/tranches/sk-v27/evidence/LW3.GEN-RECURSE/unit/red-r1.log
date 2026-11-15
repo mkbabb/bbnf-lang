@@ -1,0 +1,60 @@
+head=46ae61f1f2155ce78341b3b974dfb0283cf5cf6b dirty=0
+clean ax-iter bbnf removed=8824 left=0
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/ir)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/corpus)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/bbnf-path)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 17.00s
+────────────
+ Nextest run ID af94a6fe-2d0a-4f86-8071-aebfbeba50a5 with nextest profile: default
+    Starting 2 tests across 1 binary
+     SIGABRT [   0.030s] (1/2) bbnf::gen_recurse a_value_cycle_through_inlined_rules_generates
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'a_value_cycle_through_inlined_rules_generates' (13816570) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+     SIGABRT [   0.041s] (2/2) bbnf::gen_recurse css_l4_keyframes_compiles_and_generates_without_overflow
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'css_l4_keyframes_compiles_and_generates_without_overflow' (13816571) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+────────────
+     Summary [   0.042s] 2 tests run: 0 passed, 2 failed, 0 skipped
+     SIGABRT [   0.030s] (1/2) bbnf::gen_recurse a_value_cycle_through_inlined_rules_generates
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'a_value_cycle_through_inlined_rules_generates' (13816570) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+     SIGABRT [   0.041s] (2/2) bbnf::gen_recurse css_l4_keyframes_compiles_and_generates_without_overflow
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'css_l4_keyframes_compiles_and_generates_without_overflow' (13816571) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+error: test run failed
+rc=100
+hash ax-iter bbnf a1793855fa067f13 mtime=2026-11-15T00:25:48 libbbnf-4fbb40c6651444e7.rlib

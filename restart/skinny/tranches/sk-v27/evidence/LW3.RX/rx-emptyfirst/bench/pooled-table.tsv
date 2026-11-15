@@ -1,0 +1,14 @@
+bench	case	read-A_rounds	read-A_base_min_us	read-A_cure_min_us	read-A_cure/base	read-B_rounds	read-B_base_min_us	read-B_cure_min_us	read-B_cure/base	pooled
+css_l4	bootstrap	12	9116.00	6523.00	0.716	12	9099.00	6540.00	0.719	0.716
+css_l4	normalize	12	99.16	83.04	0.837	12	99.49	83.37	0.838	0.837
+css_l4	tailwind	12	91240.00	67340.00	0.738	12	91180.00	67480.00	0.740	0.738
+google_sheets_monolithic	format_simple	12	0.21	0.21	1.000	12	0.21	0.21	1.000	1.000
+google_sheets_monolithic	format_stress	12	5.87	5.87	1.000	12	5.92	5.92	1.000	1.000
+google_sheets_monolithic	parse_nested	12	53.49	54.33	1.016	12	50.70	54.54	1.076	1.016
+google_sheets_monolithic	parse_simple	12	21.12	21.37	1.012	12	20.95	21.54	1.028	1.012
+google_sheets_monolithic	parse_stress	12	72.12	80.83	1.121	12	68.54	81.70	1.192	1.121
+json_monolithic	canada	12	2786.00	2795.00	1.003	12	2826.00	2840.00	1.005	1.003
+json_monolithic	citm	12	855.50	859.20	1.004	12	854.70	861.60	1.008	1.004
+json_monolithic	data_s	12	22.24	22.37	1.006	12	21.12	22.45	1.063	1.006
+json_monolithic	twitter	12	384.60	384.30	0.999	12	379.80	389.50	1.026	0.999
+# worst pooled 1.121

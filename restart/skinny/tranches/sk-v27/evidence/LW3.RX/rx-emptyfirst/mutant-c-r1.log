@@ -1,0 +1,60 @@
+    running 1 test
+    test named_runtime_documents_preserve_concrete_values ... FAILED
+
+    failures:
+
+    failures:
+        named_runtime_documents_preserve_concrete_values
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'named_runtime_documents_preserve_concrete_values' (12965657) panicked at crates/core/tests/named_type_preservation.rs:422:5:
+    CSS colorFn document value list must retain color() as a function named by its head, got [Function(Generic { name: "", args: CssValueListId(1) }), Span("")]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.023s] 7 tests run: 5 passed, 2 failed, 0 skipped
+  TRY 2 FAIL [   0.009s] (6/7) bbnf::projection_totality struct_direct_documents_expose_projection_values
+  stdout ───
+
+    running 1 test
+    test struct_direct_documents_expose_projection_values ... FAILED
+
+    failures:
+
+    failures:
+        struct_direct_documents_expose_projection_values
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'struct_direct_documents_expose_projection_values' (12965656) panicked at crates/core/tests/projection_totality.rs:143:5:
+    CssDocument value-list accessor must expose rgb() as a function named by its head, got [Function(Generic { name: "", args: CssValueListId(1) }), Span("")]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.009s] (7/7) bbnf::named_type_preservation named_runtime_documents_preserve_concrete_values
+  stdout ───
+
+    running 1 test
+    test named_runtime_documents_preserve_concrete_values ... FAILED
+
+    failures:
+
+    failures:
+        named_runtime_documents_preserve_concrete_values
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'named_runtime_documents_preserve_concrete_values' (12965657) panicked at crates/core/tests/named_type_preservation.rs:422:5:
+    CSS colorFn document value list must retain color() as a function named by its head, got [Function(Generic { name: "", args: CssValueListId(1) }), Span("")]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100
+hash ax-iter bbnf b3fdaa896ce717a1 mtime=2026-11-14T23:31:05 libbbnf-4fbb40c6651444e7.rlib
+hash ax-iter bbnf 89b7992b0ea919cb mtime=2026-11-14T23:30:49 libbbnf-b2df91a193184691.rlib

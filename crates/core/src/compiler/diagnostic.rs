@@ -26,6 +26,11 @@ pub enum DiagnosticCode {
     /// that this stage cannot yet give a meaning; the message names the form
     /// and the LEDGER row that owns it.
     FormWithoutMeaning,
+    /// sk-v27 LW3.COMP-1c: a grammar function misused (a call of a rule that
+    /// is not one, the wrong number of arguments, a function reaching itself
+    /// through calls, a function named as a rule, a definition that is not a
+    /// rule's whole right side); the message names the misuse.
+    GrammarFunction,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]

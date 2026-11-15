@@ -99,19 +99,22 @@ pub(crate) enum SourceNodeKindData {
     // stage that cannot yet give one a meaning refuses it with
     // `DiagnosticCode::FormWithoutMeaning`, naming the form.
     /// `child -> value [: Type]`.
+    /// The value and type are boxed so a source row stays within its width
+    /// (`representation_laws`: a `SourceNodeData` is at most 48 bytes).
     Mapping {
         child: NodeIx,
-        value: SourceValueData,
-        ty: Option<String>,
+        value: Box<SourceValueData>,
+        ty: Option<Box<str>>,
     },
     /// `@{ child }`: the source span `child` matched.
     SpanCapture {
         child: NodeIx,
     },
-    /// `callee(arg, ...)`: a grammar-function application.
+    /// `callee(arg, ...)`: a grammar-function application (boxed slices, so
+    /// a source row stays within its width).
     Call {
-        callee: String,
-        args: Vec<NodeIx>,
+        callee: Box<str>,
+        args: Box<[NodeIx]>,
     },
     /// `|param, ...| body`: a grammar-function definition (a rule's whole right side).
     Closure {

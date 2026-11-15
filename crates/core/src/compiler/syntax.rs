@@ -550,6 +550,13 @@ pub struct Program {
 
 impl Program {
     pub(super) fn resolve(module: &SourceModule, instance: &GrammarInstance) -> StageResult<Self> {
+        // sk-v27 LW3.COMP-1c: grammar functions mean their expansion; resolve
+        // reads the module with every call expanded and the function rules gone.
+        let expanded = match super::functions::expand(module) {
+            StageResult::Accepted { value, .. } => value,
+            StageResult::Rejected { diagnostics } => return StageResult::Rejected { diagnostics },
+        };
+        let module: &SourceModule = &expanded;
         let mut names = BTreeMap::new();
         let mut diagnostics = Vec::new();
         for rule in &module.rules {

@@ -51,6 +51,15 @@ pub(crate) fn read_source(
         ));
     };
     let Ok(doc) = BbnfBootstrap::parse(text) else {
+        // A line that begins with a documented-only directive names the cause.
+        let mut offset = 0;
+        for line in text.split_inclusive('\n') {
+            let indent = line.len() - line.trim_start().len();
+            if let Some(name) = documented_only_directive(line.trim_start()) {
+                return StageResult::rejected(documented_only_diagnostic(name, offset + indent));
+            }
+            offset += line.len();
+        }
         return StageResult::rejected(Diagnostic::new(
             DiagnosticCode::Syntax,
             0,
@@ -73,12 +82,21 @@ pub(crate) fn read_source(
     if reader.diagnostics.is_empty() && !text[reader.read_to..].trim().is_empty() {
         let at = reader.read_to
             + (text[reader.read_to..].len() - text[reader.read_to..].trim_start().len());
-        reader.diagnostics.push(Diagnostic::new(
-            DiagnosticCode::Syntax,
-            at,
-            (at + 1).min(text.len()),
-            "expected a complete BBNF rule, directive or comment",
-        ));
+        reader
+            .diagnostics
+            .push(match documented_only_directive(&text[at..]) {
+                // RULINGS 2026-11-14k COMP1C-5: two directives the docs name but
+                // the grammar of record does not; refused by name, not as syntax,
+                // until the owner rules (LEDGER "Owner decision: `@inline` and
+                // `@no_collapse`").
+                Some(name) => documented_only_diagnostic(name, at),
+                None => Diagnostic::new(
+                    DiagnosticCode::Syntax,
+                    at,
+                    (at + 1).min(text.len()),
+                    "expected a complete BBNF rule, directive or comment",
+                ),
+            });
     }
     if !reader.diagnostics.is_empty() {
         return StageResult::rejected_set(super::diagnostic::DiagnosticSet::from_vec(
@@ -90,6 +108,28 @@ pub(crate) fn read_source(
         presentation: reader.presentation,
         directives: reader.directives,
     })
+}
+
+/// `@inline` or `@no_collapse` at the start of `rest`, as a whole word.
+fn documented_only_directive(rest: &str) -> Option<&'static str> {
+    ["@no_collapse", "@inline"].into_iter().find(|name| {
+        rest.strip_prefix(name).is_some_and(|after| {
+            !after.starts_with(|c: char| c == '_' || c.is_ascii_alphanumeric())
+        })
+    })
+}
+
+fn documented_only_diagnostic(name: &str, at: usize) -> Diagnostic {
+    Diagnostic::new(
+        DiagnosticCode::FormWithoutMeaning,
+        at,
+        at + name.len(),
+        format!(
+            "`{name}` is documented (docs/bbnf/grammar-syntax.md) but is not in the grammar of \
+             record (grammar/bbnf/bbnf.bbnf) and is not implemented; owner decision pending \
+             (LEDGER \"Owner decision: `@inline` and `@no_collapse`\")"
+        ),
+    )
 }
 
 struct Reader<'d, 'p> {
@@ -357,15 +397,15 @@ impl<'d, 'p> Reader<'d, 'p> {
                 .trim()
                 .trim_start_matches(':')
                 .trim()
-                .to_string()
+                .into()
         });
         Some(self.push(
             SourceNodeKindData::Mapping {
                 child,
-                value: SourceValueData {
+                value: Box::new(SourceValueData {
                     head,
                     text: value_text,
-                },
+                }),
                 ty,
             },
             bounds,
@@ -509,8 +549,8 @@ impl<'d, 'p> Reader<'d, 'p> {
                 }
                 Some(self.push(
                     SourceNodeKindData::Call {
-                        callee: name,
-                        args: read,
+                        callee: name.into(),
+                        args: read.into(),
                     },
                     bounds,
                 ))
@@ -838,6 +878,33 @@ flags = /(?i)abc/ ;
 done = ident .
 "#;
 
+    #[test]
+    fn documented_only_directives_are_refused_by_name() {
+        for (text, name) in [
+            ("a = \"a\" ;\n@inline a ;\n", "@inline"),
+            ("@no_collapse a ;\na = \"a\" ;\n", "@no_collapse"),
+        ] {
+            match read(text) {
+                StageResult::Rejected { diagnostics } => {
+                    let d = diagnostics.iter().next().expect("one diagnostic");
+                    assert_eq!(
+                        d.code(),
+                        DiagnosticCode::FormWithoutMeaning,
+                        "{text:?}: {d}"
+                    );
+                    assert!(d.message().contains(&format!("`{name}`")), "{d}");
+                    assert!(d.message().contains("not in the grammar of record"), "{d}");
+                }
+                StageResult::Accepted { .. } => panic!("{text:?} accepted"),
+            }
+        }
+        // A rule whose name merely begins with the word is not the directive.
+        assert!(matches!(
+            read("inline_x = \"a\" ;\n"),
+            StageResult::Accepted { .. }
+        ));
+    }
+
     fn read(text: &str) -> StageResult<BootstrapRead> {
         read_source(
             text.as_bytes(),
@@ -885,7 +952,7 @@ done = ident .
                 );
                 assert_eq!(value.head, SourceValueHead::Path(vec!["Span".into()]));
                 assert_eq!(value.text, "Span");
-                assert_eq!(ty, &None);
+                assert_eq!(ty.as_deref(), None);
             }
             other => panic!("ident: {other:?}"),
         }
@@ -1005,7 +1072,7 @@ done = ident .
         }
         match root(&read, "use") {
             SourceNodeKindData::Call { callee, args } => {
-                assert_eq!(callee, "wrap");
+                assert_eq!(&**callee, "wrap");
                 assert_eq!(args.len(), 2);
                 assert!(
                     matches!(kind(&read, args[0]), SourceNodeKindData::Reference(n) if n == "ident")
@@ -1040,7 +1107,7 @@ done = ident .
                 | SourceNodeKindData::Mapping { child, .. } => vec![*child],
                 SourceNodeKindData::Projection { left, right, .. } => vec![*left, *right],
                 SourceNodeKindData::Difference { include, exclude } => vec![*include, *exclude],
-                SourceNodeKindData::Call { args, .. } => args.clone(),
+                SourceNodeKindData::Call { args, .. } => args.to_vec(),
                 SourceNodeKindData::Closure { body, .. } => vec![*body],
                 _ => Vec::new(),
             };

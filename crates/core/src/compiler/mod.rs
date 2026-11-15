@@ -6,6 +6,7 @@ mod diagnostic;
 mod emit;
 mod event;
 mod frontend;
+mod functions;
 mod instance;
 mod lower;
 mod pratt;

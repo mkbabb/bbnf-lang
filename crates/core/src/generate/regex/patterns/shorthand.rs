@@ -77,7 +77,7 @@ pub fn emit_predicate(class: ShorthandClass) -> TokenStream {
     match class {
         ShorthandClass::Digit => quote! { __b.is_ascii_digit() },
         ShorthandClass::Word => quote! { (__b.is_ascii_alphanumeric() || __b == b'_') },
-        ShorthandClass::Whitespace => quote! { __b.is_ascii_whitespace() },
+        ShorthandClass::Whitespace => quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) },
         ShorthandClass::Alpha => quote! { __b.is_ascii_alphabetic() },
         ShorthandClass::Alphanumeric => quote! { __b.is_ascii_alphanumeric() },
         ShorthandClass::Hex => quote! { __b.is_ascii_hexdigit() },

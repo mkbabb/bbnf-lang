@@ -508,7 +508,6 @@ fn emit_alt_struct_dispatch(
     rule: &IrRule,
     strategy: &EmitStrategy,
 ) -> TokenStream {
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let layout_literal = quote_layout_literal(rule, ir);
     let builder_ty_e = builder_ty_elided(strategy);
 
@@ -540,7 +539,7 @@ fn emit_alt_struct_dispatch(
             (),
             crate::runtime::DtaError,
         > = (|| {
-            let first = #support_mod::skip_space(input, p, state)
+            let first = input.get(*p).copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -594,7 +593,6 @@ fn emit_alt_struct_dispatch_transparent(
     ir: &GrammarIR,
     strategy: &EmitStrategy,
 ) -> TokenStream {
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
     let _ = strategy;
 
     let DispatchPartition {
@@ -609,7 +607,7 @@ fn emit_alt_struct_dispatch_transparent(
         // AZ-II.cutover.H Phase 1 — transparent-rule passthrough.
         // No outer compound. Dispatch to the chosen branch; the
         // branch's per-shape fn carries its own record emission.
-        let first = #support_mod::skip_space(input, p, state)
+        let first = input.get(*p).copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;

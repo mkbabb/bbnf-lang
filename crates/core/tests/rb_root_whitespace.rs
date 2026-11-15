@@ -14,14 +14,15 @@
 //! (restart/skinny/tranches/sk-v27/evidence/LW3.ORC/ws_model.mjs), so the
 //! class is the whole of root's divergence there.
 //!
-//! The cure is the spine's (LW4.COMP-1, the plan-driven Rust emitter), which
-//! reads whitespace by the grammar's text; root is the quarry. Each case below
-//! is a minimal corpus case (the ids name the custody file it reduces).
+//! Cured in root's generator by LW3.ORC2-WS-C (RULINGS 2026-11-12c ORC2-WS,
+//! QX-1 clause (3); 2026-11-14f PERF1D-B2 (c)): root reads whitespace only
+//! where the grammar's text reads it (the rule is written in the sk-v27
+//! LEDGER, row "LW3.ORC2-WS-C: the rule the cure implements"). Each case
+//! below is a minimal corpus case (the ids name the custody file it reduces).
 
 use bbnf::grammar::generated::{bnf::BnfParser, ebnf::EbnfParser, math::MathParser};
 
 #[test]
-#[ignore = "born-RED LW3.ORC2 root whitespace class (crates/oracle/ruled.tsv; SK/grammar/DIVERGENCE.tsv J-14 J-15 J-16): root reads [ \\t\\n\\r]* where the grammar reads none; cure LW4.COMP-1 at LW4"]
 fn root_reads_only_the_whitespace_the_grammar_reads() {
     let mut wrong = Vec::new();
     // math/cases/hand-15, mut-0173: `number` reads no leading whitespace,
@@ -67,4 +68,20 @@ fn the_cases_the_class_does_not_touch_are_read() {
     assert!(MathParser::parse("1.5e3").is_ok());
     assert!(EbnfParser::parse("a = b , 'c' | { d } ;").is_ok());
     assert!(BnfParser::parse("<a> ::= \"x\" | <b>").is_ok());
+}
+
+/// LW3.ORC2-WS-C, the ruled behaviour where the cure moves json's reading
+/// (the rule in the sk-v27 LEDGER; DIVERGENCE J-12/J-13): `json.bbnf` writes
+/// `?w` after `[` `{` `,` `:` and before `]` `}`, which reads the six bytes
+/// (U+000B and U+000C among them), and writes its own `ws = /[ \t\n\r]*/`
+/// before and after the value, which does not.
+#[test]
+fn json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set() {
+    use bbnf::grammar::generated::json::JsonParser;
+    for t in ["[\u{c}1]", "[1\u{b},2]", "{\"a\"\u{c}:\u{b}1}", " [1] "] {
+        assert!(JsonParser::parse(t).is_ok(), "json refused {t:?}");
+    }
+    for t in ["\u{c}[1]", "[1]\u{b}"] {
+        assert!(JsonParser::parse(t).is_err(), "json accepted {t:?}");
+    }
 }

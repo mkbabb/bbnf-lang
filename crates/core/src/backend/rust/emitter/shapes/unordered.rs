@@ -284,6 +284,34 @@ fn emit_parse_unordered_struct_direct(
         None => return quote! {},
     };
 
+    // sk-v27 LW3.ORC2-WS-C: the repetition reads whitespace only where
+    // its item writes `?w`: before the first item when the item leads
+    // with it, between items when it leads or trails with it, after the
+    // last only when it trails with it (a skip no next item follows is
+    // given back otherwise).
+    let (ws_lead, ws_trail) = match unwrap_map_ow(&rule.body) {
+        IrNode::Repeat { inner, .. } => (
+            super::ws_read::leads_ow(inner, ir),
+            super::ws_read::trails_ow(inner, ir),
+        ),
+        _ => (false, false),
+    };
+    let skip_lead = if ws_lead {
+        quote! { let _ = #support_mod::skip_space(input, p, state); }
+    } else {
+        quote! {}
+    };
+    let skip_between = if ws_lead || ws_trail {
+        quote! { let _ = #support_mod::skip_space(input, p, state); }
+    } else {
+        quote! {}
+    };
+    let restore_gap = if ws_trail {
+        quote! { let _ = __gap; }
+    } else {
+        quote! { *p = __gap; }
+    };
+
     let Some(body_info) = introspect_unordered(rule, ir) else {
         // Defensive fallback: a malformed Unordered rule under
         // StructDirect emits a stub that delegates to the dispatcher.
@@ -368,9 +396,10 @@ fn emit_parse_unordered_struct_direct(
                 (),
                 crate::runtime::DtaError,
             > = (|| {
-                let _ = #support_mod::skip_space(input, p, state);
+                #skip_lead
 
                 let mut __iters: u32 = 0;
+                let mut __gap = *p;
                 'unordered: loop {
                     let __byte = match input.get(*p).copied() {
                         Some(b) => b,
@@ -380,8 +409,10 @@ fn emit_parse_unordered_struct_direct(
                         #(#branch_arms)*
                         _ => break 'unordered,
                     }
-                    let _ = #support_mod::skip_space(input, p, state);
+                    __gap = *p;
+                    #skip_between
                 }
+                #restore_gap
 
                 if __iters < #iters_lo_lit {
                     return Err(crate::runtime::DtaError::Syntax {

@@ -129,7 +129,7 @@ fn emit_parse_alt_dispatch_struct_direct(
             use crate::runtime::builder::StructBuilder;
             let _ = cursor;
 
-            let first = #support_mod::skip_space(input, p, state)
+            let first = input.get(*p).copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;

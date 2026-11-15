@@ -2076,9 +2076,7 @@ mod __cssprettyparser_emit_impl {
             state: &mut ScanState,
         ) -> Option<u8> {
             match input.get(*p) {
-                Some(
-                    &b,
-                ) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' && b != b'/' => {
+                Some(&b) if b != b' ' && b.wrapping_sub(b'\t') > 4 && b != b'/' => {
                     Some(b)
                 }
                 Some(&b'/') if input.get(*p + 1) != Some(&b'*') => Some(b'/'),
@@ -2125,7 +2123,7 @@ mod __cssprettyparser_emit_impl {
                 }
                 if *p + 64 > input.len() {
                     while let Some(&b) = input.get(*p) {
-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
                             break;
                         }
                         *p += 1;
@@ -2177,13 +2175,14 @@ mod __cssprettyparser_emit_impl {
             }
         }
         /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
-        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
-        /// `{b' ', b'\t', b'\n', b'\r'}`. The kernel is parse-that's
+        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT one of the six
+        /// `?w` bytes (space, `\t`, `\n`, U+000B, U+000C, `\r`;
+        /// sk-v27 LW3.ORC2-WS-C). The kernel is parse-that's
         /// (NEON under the runtime tier on aarch64, the scalar oracle
         /// elsewhere); no ISA intrinsic is emitted (X-3).
         #[inline(always)]
         pub(crate) fn nospace_bitmap_64(stripe: &[u8; 64]) -> u64 {
-            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
+            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\x0B\x0C\r")
         }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
         /// parse-that's quote-or-backslash kernel (NEON under the runtime
@@ -3081,11 +3080,6 @@ mod __cssprettyparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssPrettyParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssPrettyParser_important(
                                     input,
                                     p,
@@ -3297,22 +3291,22 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssPrettyParser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssPrettyParser_atRuleBody(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssPrettyParser_atRuleBody(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -3439,7 +3433,6 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
                     parse_flat_CssPrettyParser_ruleBlock(
                         input,
                         p,
@@ -3570,7 +3563,6 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
                     parse_flat_CssPrettyParser_ruleBlock(
                         input,
                         p,
@@ -3702,7 +3694,6 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
                     parse_flat_CssPrettyParser_ruleBlock(
                         input,
                         p,
@@ -3837,7 +3828,6 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
                     parse_flat_CssPrettyParser_ruleBlock(
                         input,
                         p,
@@ -3917,11 +3907,6 @@ mod __cssprettyparser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssPrettyParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_CssPrettyParser_ruleBlock(
                             input,
                             p,
@@ -4046,7 +4031,6 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
                     parse_flat_CssPrettyParser_blockContent(
                         input,
                         p,
@@ -4208,11 +4192,6 @@ mod __cssprettyparser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssPrettyParser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_flat_CssPrettyParser_declaration(
                                                 input,
                                                 p,
@@ -4347,7 +4326,9 @@ mod __cssprettyparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(11u32 as u32);
-        let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -4499,7 +4480,9 @@ mod __cssprettyparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(12u32 as u32);
-        let first = __shape_support_CssPrettyParser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -4785,7 +4768,6 @@ mod __cssprettyparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
                     parse_flat_CssPrettyParser_ruleList(input, p, state, builder, cursor)
                 })?;
             }
@@ -4830,8 +4812,9 @@ mod __cssprettyparser_emit_impl {
     }
     /// AW-V.W3.2 — top-level shape dispatcher.
     ///
-    /// Mirrors the walker's `value` rule ByteDispatch: skip leading
-    /// whitespace, dispatch on the first byte to the chosen branch
+    /// Mirrors the walker's `value` rule ByteDispatch: dispatch on
+    /// the first byte (no whitespace skipped but what the grammar
+    /// writes, sk-v27 LW3.ORC2-WS-C) to the chosen branch
     /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
@@ -4870,7 +4853,6 @@ mod __cssprettyparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
-        let _ = __shape_support_CssPrettyParser::skip_space(input, p, state);
         let _ = cursor.decide(14u32);
         parse_flat_CssPrettyParser_stylesheet(input, p, state, builder, cursor)
     }
@@ -4939,7 +4921,7 @@ mod __cssprettyparser_emit_impl {
                                                 let __ok = (|| -> Option<()> {
                                                     {
                                                         let __b = *state.src_bytes.get(state.offset)?;
-                                                        if !(__b.is_ascii_whitespace()) {
+                                                        if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                             return None;
                                                         }
                                                         state.offset += 1;
@@ -5140,7 +5122,7 @@ mod __cssprettyparser_emit_impl {
                                                         let __ok = (|| -> Option<()> {
                                                             {
                                                                 let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(__b.is_ascii_whitespace()) {
+                                                                if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                     return None;
                                                                 }
                                                                 state.offset += 1;
@@ -5433,7 +5415,7 @@ mod __cssprettyparser_emit_impl {
                                                                             let __ok = (|| -> Option<()> {
                                                                                 {
                                                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                                    if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                                         return None;
                                                                                     }
                                                                                     state.offset += 1;
@@ -5872,7 +5854,7 @@ mod __cssprettyparser_emit_impl {
                                                             let __ok = (|| -> Option<()> {
                                                                 {
                                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                    if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                         return None;
                                                                     }
                                                                     state.offset += 1;
@@ -6070,7 +6052,7 @@ mod __cssprettyparser_emit_impl {
                                                             let __ok = (|| -> Option<()> {
                                                                 {
                                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                    if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                         return None;
                                                                     }
                                                                     state.offset += 1;
@@ -6323,7 +6305,7 @@ mod __cssprettyparser_emit_impl {
                                                                                                 let __ok = (|| -> Option<()> {
                                                                                                     {
                                                                                                         let __b = *state.src_bytes.get(state.offset)?;
-                                                                                                        if !(__b.is_ascii_whitespace()) {
+                                                                                                        if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                                                             return None;
                                                                                                         }
                                                                                                         state.offset += 1;
@@ -6596,7 +6578,7 @@ mod __cssprettyparser_emit_impl {
                                                                             let __ok = (|| -> Option<()> {
                                                                                 {
                                                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                                    if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                                         return None;
                                                                                     }
                                                                                     state.offset += 1;
@@ -6836,7 +6818,7 @@ mod __cssprettyparser_emit_impl {
                                                                 let __ok = (|| -> Option<()> {
                                                                     {
                                                                         let __b = *state.src_bytes.get(state.offset)?;
-                                                                        if !(__b.is_ascii_whitespace()) {
+                                                                        if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                             return None;
                                                                         }
                                                                         state.offset += 1;
@@ -7204,7 +7186,7 @@ mod __cssprettyparser_emit_impl {
                                                             let __ok = (|| -> Option<()> {
                                                                 {
                                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                    if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                         return None;
                                                                     }
                                                                     state.offset += 1;
@@ -7582,7 +7564,7 @@ mod __cssprettyparser_emit_impl {
                                                         let __ok = (|| -> Option<()> {
                                                             {
                                                                 let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(__b.is_ascii_whitespace()) {
+                                                                if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                     return None;
                                                                 }
                                                                 state.offset += 1;
@@ -7852,7 +7834,7 @@ mod __cssprettyparser_emit_impl {
                                                                     let __ok = (|| -> Option<()> {
                                                                         {
                                                                             let __b = *state.src_bytes.get(state.offset)?;
-                                                                            if !(__b.is_ascii_whitespace()) {
+                                                                            if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                                 return None;
                                                                             }
                                                                             state.offset += 1;
@@ -8047,7 +8029,7 @@ mod __cssprettyparser_emit_impl {
                                                                 let __ok = (|| -> Option<()> {
                                                                     {
                                                                         let __b = *state.src_bytes.get(state.offset)?;
-                                                                        if !(__b.is_ascii_whitespace()) {
+                                                                        if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                             return None;
                                                                         }
                                                                         state.offset += 1;
@@ -8286,7 +8268,7 @@ mod __cssprettyparser_emit_impl {
                                                                             let __ok = (|| -> Option<()> {
                                                                                 {
                                                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                                    if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                                         return None;
                                                                                     }
                                                                                     state.offset += 1;
@@ -8717,7 +8699,7 @@ mod __cssprettyparser_emit_impl {
                                                                         let __ok = (|| -> Option<()> {
                                                                             {
                                                                                 let __b = *state.src_bytes.get(state.offset)?;
-                                                                                if !(__b.is_ascii_whitespace()) {
+                                                                                if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                                     return None;
                                                                                 }
                                                                                 state.offset += 1;
@@ -8955,7 +8937,7 @@ mod __cssprettyparser_emit_impl {
                                                             let __ok = (|| -> Option<()> {
                                                                 {
                                                                     let __b = *state.src_bytes.get(state.offset)?;
-                                                                    if !(__b.is_ascii_whitespace()) {
+                                                                    if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                         return None;
                                                                     }
                                                                     state.offset += 1;
@@ -9150,7 +9132,7 @@ mod __cssprettyparser_emit_impl {
                                                         let __ok = (|| -> Option<()> {
                                                             {
                                                                 let __b = *state.src_bytes.get(state.offset)?;
-                                                                if !(__b.is_ascii_whitespace()) {
+                                                                if !((__b == b' ' || __b.wrapping_sub(b'\t') < 5)) {
                                                                     return None;
                                                                 }
                                                                 state.offset += 1;

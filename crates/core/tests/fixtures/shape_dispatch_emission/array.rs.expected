@@ -56,10 +56,7 @@ where
             if __is_index_seg && !__matched {
                 __shape_support_JsonFixture::byte_skip_value(input, p)?;
             } else {
-                ({
-                    let _ = __shape_support_JsonFixture::skip_space(input, p, state);
-                    parse_wrap_JsonFixture_value(input, p, state, builder, cursor)
-                })?;
+                ({ parse_wrap_JsonFixture_value(input, p, state, builder, cursor) })?;
             }
             if __matched {
                 return Ok(());

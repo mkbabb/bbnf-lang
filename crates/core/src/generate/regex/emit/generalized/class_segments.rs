@@ -358,7 +358,7 @@ fn try_shorthand_predicate(chars: &CharSet128, ranges: &[(u8, u8)]) -> Option<To
     ws_chars.add_range(0x09, 0x0D);
     ws_chars.add(b' ');
     if *chars == ws_chars {
-        return Some(quote! { __b.is_ascii_whitespace() });
+        return Some(quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) });
     }
 
     None

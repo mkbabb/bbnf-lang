@@ -56,12 +56,12 @@ pub fn emit_generalized_regex_direct(pattern: &str, opts: &EmitOpts) -> Option<T
                 let __start = state.offset;
                 let mut __pos = __start;
                 while __pos < state.src_bytes.len()
-                    && unsafe { *state.src_bytes.get_unchecked(__pos) }.is_ascii_whitespace()
+                    && { let __c: u8 = unsafe { *state.src_bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
                 { __pos += 1; }
                 if #check {
                     __pos += #inner_len;
                     while __pos < state.src_bytes.len()
-                        && unsafe { *state.src_bytes.get_unchecked(__pos) }.is_ascii_whitespace()
+                        && { let __c: u8 = unsafe { *state.src_bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
                     { __pos += 1; }
                     state.offset = __pos;
                     Some(::parse_that::Span::new(__start, __pos, state.src))
@@ -134,7 +134,7 @@ pub(crate) fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
 
     // Must be exactly a shorthand: \s, \d, \w
     let predicate = match shorthand {
-        r"\s" => quote! { __b.is_ascii_whitespace() },
+        r"\s" => quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) },
         r"\d" => quote! { __b.is_ascii_digit() },
         r"\w" => quote! { (__b.is_ascii_alphanumeric() || __b == b'_') },
         _ => return None,

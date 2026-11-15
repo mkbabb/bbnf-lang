@@ -1,0 +1,221 @@
+head=f5e8eab01a32dc3c6d12d1e7a8c5f528795fedb1 mutant=reverse(cure-generator.diff) files=      23
+     Removed 23 files, 166.4MiB total
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.32s
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.42s
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 11.406708ms
+[xtask::regen] bbnf: generate_all done in 53.91175ms
+[xtask::regen] bbnf: prettyplease done in 212.085ms
+regen bbnf: wrote 1074081 bytes to crates/core/src/grammar/generated/bbnf.rs
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 1.927125ms
+[xtask::regen] json: generate_all done in 7.29525ms
+[xtask::regen] json: prettyplease done in 32.394875ms
+regen json: wrote 182688 bytes to crates/core/src/grammar/generated/json.rs
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 88.354875ms
+[xtask::regen] css_l4: generate_all done in 162.617208ms
+[xtask::regen] css_l4: prettyplease done in 850.511375ms
+regen css_l4: wrote 5939734 bytes to crates/core/src/grammar/generated/css_l4.rs
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 5.894958ms
+[xtask::regen] css_pretty: generate_all done in 32.544667ms
+[xtask::regen] css_pretty: prettyplease done in 85.564042ms
+regen css_pretty: wrote 558312 bytes to crates/core/src/grammar/generated/css_pretty.rs
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 11.430541ms
+[xtask::regen] google_sheets: generate_all done in 22.641ms
+[xtask::regen] google_sheets: prettyplease done in 107.7095ms
+regen google_sheets: wrote 679236 bytes to crates/core/src/grammar/generated/google_sheets.rs
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 3.8ms
+[xtask::regen] ebnf: generate_all done in 7.590166ms
+[xtask::regen] ebnf: prettyplease done in 51.933542ms
+regen ebnf: wrote 353692 bytes to crates/core/src/grammar/generated/ebnf.rs
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.594625ms
+[xtask::regen] bnf: generate_all done in 5.872583ms
+[xtask::regen] bnf: prettyplease done in 23.349458ms
+regen bnf: wrote 150314 bytes to crates/core/src/grammar/generated/bnf.rs
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 1.40675ms
+[xtask::regen] csv: generate_all done in 4.839ms
+[xtask::regen] csv: prettyplease done in 12.210916ms
+regen csv: wrote 68496 bytes to crates/core/src/grammar/generated/csv.rs
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 905.208µs
+[xtask::regen] math: generate_all done in 1.398958ms
+[xtask::regen] math: prettyplease done in 4.779667ms
+regen math: wrote 29876 bytes to crates/core/src/grammar/generated/math.rs
+regen rc=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 15.21s
+────────────
+ Nextest run ID 174e45e5-ed82-4554-9c43-84c4be2863e4 with nextest profile: default
+    Starting 3 tests across 1 binary
+  TRY 1 FAIL [   0.013s] (───) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  stdout ───
+
+    running 1 test
+    test root_reads_only_the_whitespace_the_grammar_reads ... FAILED
+
+    failures:
+
+    failures:
+        root_reads_only_the_whitespace_the_grammar_reads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'root_reads_only_the_whitespace_the_grammar_reads' (11090405) panicked at crates/core/tests/rb_root_whitespace.rs:63:5:
+    14 verdicts differ from the grammar's text:
+    math accepted "  1"
+    math accepted "  "
+    math accepted "\t.5"
+    ebnf refused "\u{c}a = b ;\u{c}"
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    ebnf refused "a = '\t' ;"
+    ebnf accepted "\n"
+    ebnf accepted " "
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    bnf refused "\u{c}<Z0> ::=\t\"\"\n"
+    bnf accepted "\t\n"
+    bnf accepted "\n"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+        PASS [   0.014s] (1/3) bbnf::rb_root_whitespace the_cases_the_class_does_not_touch_are_read
+  TRY 1 FAIL [   0.014s] (───) bbnf::rb_root_whitespace json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+  stdout ───
+
+    running 1 test
+    test json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set ... FAILED
+
+    failures:
+
+    failures:
+        json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set' (11090406) panicked at crates/core/tests/rb_root_whitespace.rs:82:9:
+    json refused "[\u{c}1]"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rb_root_whitespace json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+  TRY 2 FAIL [   0.012s] (2/3) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  stdout ───
+
+    running 1 test
+    test root_reads_only_the_whitespace_the_grammar_reads ... FAILED
+
+    failures:
+
+    failures:
+        root_reads_only_the_whitespace_the_grammar_reads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'root_reads_only_the_whitespace_the_grammar_reads' (11090812) panicked at crates/core/tests/rb_root_whitespace.rs:63:5:
+    14 verdicts differ from the grammar's text:
+    math accepted "  1"
+    math accepted "  "
+    math accepted "\t.5"
+    ebnf refused "\u{c}a = b ;\u{c}"
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    ebnf refused "a = '\t' ;"
+    ebnf accepted "\n"
+    ebnf accepted " "
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    bnf refused "\u{c}<Z0> ::=\t\"\"\n"
+    bnf accepted "\t\n"
+    bnf accepted "\n"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] (3/3) bbnf::rb_root_whitespace json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+  stdout ───
+
+    running 1 test
+    test json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set ... FAILED
+
+    failures:
+
+    failures:
+        json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set' (11090813) panicked at crates/core/tests/rb_root_whitespace.rs:82:9:
+    json refused "[\u{c}1]"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.030s] 3 tests run: 1 passed, 2 failed, 0 skipped
+  TRY 2 FAIL [   0.012s] (2/3) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  stdout ───
+
+    running 1 test
+    test root_reads_only_the_whitespace_the_grammar_reads ... FAILED
+
+    failures:
+
+    failures:
+        root_reads_only_the_whitespace_the_grammar_reads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'root_reads_only_the_whitespace_the_grammar_reads' (11090812) panicked at crates/core/tests/rb_root_whitespace.rs:63:5:
+    14 verdicts differ from the grammar's text:
+    math accepted "  1"
+    math accepted "  "
+    math accepted "\t.5"
+    ebnf refused "\u{c}a = b ;\u{c}"
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    ebnf refused "a = '\t' ;"
+    ebnf accepted "\n"
+    ebnf accepted " "
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    bnf refused "\u{c}<Z0> ::=\t\"\"\n"
+    bnf accepted "\t\n"
+    bnf accepted "\n"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.013s] (3/3) bbnf::rb_root_whitespace json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+  stdout ───
+
+    running 1 test
+    test json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set ... FAILED
+
+    failures:
+
+    failures:
+        json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set' (11090813) panicked at crates/core/tests/rb_root_whitespace.rs:82:9:
+    json refused "[\u{c}1]"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100

@@ -261,7 +261,7 @@ impl RustEmitter {
                 &support_mod_ident,
                 rust.builder_path,
                 rust.document_path,
-                super::shapes::ws_alias_entry_target(ir).is_some(),
+                super::shapes::ws_alias_entry(ir).map(|(_, class)| class),
             )
         };
         // Every production parser returns the grammar-specific
@@ -386,24 +386,22 @@ fn emit_parse_body_struct_direct(
     support_mod_ident: &syn::Ident,
     builder_path: &str,
     _document_path: &str,
-    ws_alias_entry: bool,
+    ws_alias_entry: Option<Vec<u8>>,
 ) -> TokenStream {
     let builder_ty: syn::Path = syn::parse_str(builder_path)
         .expect("EmitStrategy::StructDirect.builder_path must parse as a Rust path");
     // The entry rule must read the whole input: whitespace after it is
     // read only when the grammar reads it (sk-v27 LW3.ORC1-CSV). A
     // whitespace-alias entry (`json = ws >> value << ws`,
-    // `shapes::ws_alias_entry_target`) has no shape fn: its trailing `ws`
-    // is this skip, so the skip is emitted for it and for nothing else
-    // (`csv.bbnf` reads no line break after its last record).
-    let trailing_ws = if ws_alias_entry {
-        quote! {
-            let _ = #support_mod_ident::skip_space(
-                __input_bytes, &mut pos, &mut state,
-            );
+    // `shapes::ws_alias_entry`) has no shape fn: its trailing `ws` is
+    // this skip, so the skip is emitted for it and for nothing else
+    // (`csv.bbnf` reads no line break after its last record). It reads
+    // the alias's own class, not the `?w` set (sk-v27 LW3.ORC2-WS-C).
+    let trailing_ws = match &ws_alias_entry {
+        Some(class) => {
+            super::shapes::emit_class_skip(class, quote! { __input_bytes }, quote! { pos })
         }
-    } else {
-        quote! {}
+        None => quote! {},
     };
     quote! {
         let __input_bytes = input.as_bytes();

@@ -76,7 +76,7 @@
 //! confirms it.
 
 use bbnf_ir::registry::{EmitStrategy, LayoutKind};
-use bbnf_ir::{GrammarIR, IrRule};
+use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -195,6 +195,28 @@ pub(super) fn emit_parse_pratt_struct_direct(
             }
         });
 
+    // sk-v27 LW3.ORC2-WS-C: whitespace around an operator is read only
+    // where the grammar writes `?w` there (the operand trailing or the
+    // operator leading with it before; the operator trailing or the
+    // operand leading with it after). The chain reads none before its
+    // first operand: a `?w` there is the operand's own.
+    let ws = pratt_op_ws(rule, ir);
+    let skip_if = |on: bool| {
+        if on {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        }
+    };
+    // The operands' own `?w` is read unconditionally around each
+    // operand; only the operator's leading `?w` is tentative (given back
+    // when no operator follows).
+    let skip_head_lead = skip_if(ws.head_lead);
+    let skip_head_trail = skip_if(ws.head_trail);
+    let skip_rhs_trail = skip_if(ws.rhs_trail);
+    let skip_post_op = skip_if(ws.post_op);
+    let ws_pre_op = ws.pre_op;
+
     // AZ-I.W2-act.B3 — substrate-binding splice: the function
     // signature carries the grammar's concrete builder type rather
     // than the JSON-specific path.
@@ -240,7 +262,6 @@ pub(super) fn emit_parse_pratt_struct_direct(
             __P: for<'__c> crate::path::schema::PathSchema<'__c>,
         {
             let _ = cursor;
-            let _ = #support_mod::skip_space(input, p, state);
 
             // ── Open the rule compound ──────────────────────────────
             let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
@@ -262,7 +283,9 @@ pub(super) fn emit_parse_pratt_struct_direct(
             // Recurses through the operand's per-shape parse fn,
             // which deposits its own value (scalar or compound) onto
             // this rule's open frame as the first child.
+            #skip_head_lead
             #operand_call
+            #skip_head_trail
 
             // ── Operator + RHS loop ─────────────────────────────────
             //
@@ -275,14 +298,18 @@ pub(super) fn emit_parse_pratt_struct_direct(
             // Lower-precedence / EOF operators terminate the loop,
             // closing the rule compound below.
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = #rule_lut_ident[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && #ws_pre_op {
                     let _ = #support_mod::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = #rule_lut_ident[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    // sk-v27 LW3.ORC2-WS-C: no operator follows, so the
+                    // whitespace read looking for one is given back.
+                    *p = __gap;
                     break;
                 }
 
@@ -346,8 +373,9 @@ pub(super) fn emit_parse_pratt_struct_direct(
                 *p = (*p).saturating_add(op_width as usize);
 
                 // ── RHS operand ─────────────────────────────────
-                let _ = #support_mod::skip_space(input, p, state);
+                #skip_post_op
                 #rhs_call
+                #skip_rhs_trail
             }
             ::core::result::Result::Ok(())
             })();
@@ -360,5 +388,53 @@ pub(super) fn emit_parse_pratt_struct_direct(
             __body_result?;
             ::core::result::Result::Ok(())
         }
+    }
+}
+
+/// sk-v27 LW3.ORC2-WS-C: where the grammar writes `?w` in
+/// `operand (op operand)*`.
+struct PrattWs {
+    /// `?w` before the head operand (its own leading `?w`).
+    head_lead: bool,
+    /// `?w` after the head operand (its own trailing `?w`).
+    head_trail: bool,
+    /// `?w` after each right operand (its own trailing `?w`).
+    rhs_trail: bool,
+    /// The operator leads with `?w` (read only when an operator follows).
+    pre_op: bool,
+    /// `?w` between the operator and the right operand.
+    post_op: bool,
+}
+
+fn pratt_op_ws(rule: &IrRule, ir: &GrammarIR) -> PrattWs {
+    use super::super::ws_read::{leads_ow, trails_ow};
+    use bbnf_ir::passes::inspect::unwrap_map_ow;
+    let none = PrattWs {
+        head_lead: false,
+        head_trail: false,
+        rhs_trail: false,
+        pre_op: false,
+        post_op: false,
+    };
+    let IrNode::Seq(children) = unwrap_map_ow(&rule.body) else {
+        return none;
+    };
+    let [operand, IrNode::Repeat { inner, .. }] = children.as_slice() else {
+        return none;
+    };
+    let (op, rhs) = match unwrap_map_ow(inner) {
+        IrNode::Seq(items) => match items.as_slice() {
+            [op, rhs] => (op, rhs),
+            _ => return none,
+        },
+        IrNode::Next(op, rhs) => (op.as_ref(), rhs.as_ref()),
+        _ => return none,
+    };
+    PrattWs {
+        head_lead: leads_ow(operand, ir),
+        head_trail: trails_ow(operand, ir),
+        rhs_trail: trails_ow(rhs, ir),
+        pre_op: leads_ow(op, ir),
+        post_op: trails_ow(op, ir) || leads_ow(rhs, ir),
     }
 }

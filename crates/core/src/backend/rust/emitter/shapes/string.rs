@@ -96,7 +96,11 @@ fn refused_plain_bytes(rule: &IrRule, ir: &GrammarIR, quote: u8) -> Vec<u8> {
             one => vec![one],
         };
         for b in branches {
-            if let Hir::Class(CharClass::Bytes { ranges, negated: true }) = b {
+            if let Hir::Class(CharClass::Bytes {
+                ranges,
+                negated: true,
+            }) = b
+            {
                 for r in ranges {
                     for byte in r.start..=r.end {
                         if byte != quote && byte != b'\\' && !refused.contains(&byte) {
@@ -113,7 +117,9 @@ fn refused_plain_bytes(rule: &IrRule, ir: &GrammarIR, quote: u8) -> Vec<u8> {
     // decoder can consume would make the raw-body test wrong.
     let escape_bytes = b"\"\\/bfnrtu0123456789abcdefABCDEF";
     assert!(
-        refused.iter().all(|b| !escape_bytes.contains(b) && *b < 0x80),
+        refused
+            .iter()
+            .all(|b| !escape_bytes.contains(b) && *b < 0x80),
         "String shape on rule `{}`: its class refuses a byte an escape or a UTF-8 sequence holds ({:?}); the raw-body test cannot read it",
         ir.get_string(rule.name),
         refused

@@ -148,7 +148,7 @@ fn detect_shorthand_bytes(ranges: &[ByteRange]) -> Option<TokenStream> {
         && ranges[0] == ByteRange::new(0x09, 0x0D)
         && ranges[1] == ByteRange::new(0x20, 0x20)
     {
-        return Some(quote! { __b.is_ascii_whitespace() });
+        return Some(quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) });
     }
 
     // [a-zA-Z] -- 2 ranges for alpha

@@ -117,6 +117,37 @@ fn emit_parse_object_struct_direct(
     let cursor_p = cursor_param();
     let cursor_where = cursor_where_clause();
 
+    // sk-v27 LW3.ORC2-WS-C: each gap reads whitespace only where the
+    // grammar writes `?w` there (after `{` / before `}` when the middle
+    // is `x ?w`; around the separator and the pair's colon when they or
+    // their neighbours lead or trail with `?w`).
+    let gaps = object_ws_gaps(rule, ir);
+    let skip = quote! { let _ = #support_mod::skip_space(input, p, state); };
+    let none = quote! {};
+    let pick = |on: bool| if on { skip.clone() } else { none.clone() };
+    let skip_open = pick(gaps.open);
+    let skip_pre_colon = pick(gaps.pre_colon);
+    let skip_post_colon = pick(gaps.post_colon);
+    let skip_pre_sep = pick(gaps.pre_sep || gaps.close);
+    let skip_post_sep = pick(gaps.post_sep);
+    let (ws_pre_sep, ws_close) = (gaps.pre_sep, gaps.close);
+    // A single skip serves the separator and the close; when only one of
+    // them is preceded by `?w`, the other is admitted only where no
+    // whitespace was read.
+    let guard = |ws: bool| {
+        if ws || !(ws_pre_sep || ws_close) {
+            quote! {}
+        } else {
+            quote! { if *p == __gap }
+        }
+    };
+    let (guard_sep, guard_close) = (guard(ws_pre_sep), guard(ws_close));
+    let gap_decl = if ws_pre_sep == ws_close {
+        quote! {}
+    } else {
+        quote! { let __gap = *p; }
+    };
+
     quote! {
         /// AZ-I.W2.RB — per-grammar Object-shape parse function,
         /// **struct-direct body**. Targets [`JsonStructBuilder`].
@@ -167,7 +198,7 @@ fn emit_parse_object_struct_direct(
             let __handle = builder.begin_compound(&__layout);
 
             *p += 1;
-            let _ = #support_mod::skip_space(input, p, state);
+            #skip_open
 
             if input.get(*p).copied() == Some(b'}') {
                 *p += 1;
@@ -212,14 +243,14 @@ fn emit_parse_object_struct_direct(
                 #string_fn(input, p, state, builder, cursor)?;
 
                 // Colon.
-                let _ = #support_mod::skip_space(input, p, state);
+                #skip_pre_colon
                 if input.get(*p).copied() != Some(b':') {
                     return Err(crate::runtime::DtaError::Syntax {
                         offset: *p as u32,
                     });
                 }
                 *p += 1;
-                let _ = #support_mod::skip_space(input, p, state);
+                #skip_post_colon
 
                 // AZ-IV.W3-DYNAMIC — per-iteration field match. The
                 // parsed key bytes live at
@@ -277,13 +308,14 @@ fn emit_parse_object_struct_direct(
                 }
 
                 // Comma / close.
-                let _ = #support_mod::skip_space(input, p, state);
+                #gap_decl
+                #skip_pre_sep
                 match input.get(*p).copied() {
-                    Some(b',') => {
+                    Some(b',') #guard_sep => {
                         *p += 1;
-                        let _ = #support_mod::skip_space(input, p, state);
+                        #skip_post_sep
                     }
-                    Some(b'}') => {
+                    Some(b'}') #guard_close => {
                         *p += 1;
                         builder.end_compound(__handle);
                         return Ok(());
@@ -432,4 +464,60 @@ fn extract_value_ref_from_pair_body(
         }
     }
     walk(node, string_rid, ir)
+}
+
+/// sk-v27 LW3.ORC2-WS-C: where the object's grammar writes `?w` at the
+/// gaps the shape reads.
+struct ObjectWsGaps {
+    open: bool,
+    close: bool,
+    pre_sep: bool,
+    post_sep: bool,
+    pre_colon: bool,
+    post_colon: bool,
+}
+
+fn object_ws_gaps(rule: &IrRule, ir: &GrammarIR) -> ObjectWsGaps {
+    use super::ws_read::{leads_ow, trails_ow};
+    use bbnf_ir::IrNode;
+    use bbnf_ir::passes::inspect::{sep_list, unwrap_map_ow, unwrap_wrap};
+    let middle = unwrap_wrap(unwrap_map_ow(&rule.body)).map(|(_, m, _)| m);
+    let list = middle.and_then(|m| sep_list(unwrap_map_ow(m)));
+    // Before the close, whitespace is read by the middle's trailing `?w`
+    // or by the last pair's own.
+    let (open, close) = middle.map_or((false, false), |m| {
+        (
+            leads_ow(m, ir),
+            trails_ow(m, ir) || list.as_ref().is_some_and(|l| trails_ow(l.element, ir)),
+        )
+    });
+    let (pre_sep, post_sep) = list.as_ref().map_or((false, false), |l| {
+        (
+            trails_ow(l.element, ir) || leads_ow(l.separator, ir),
+            trails_ow(l.separator, ir) || leads_ow(l.element, ir),
+        )
+    });
+    // The pair: `key , colon >> value` (through one rule reference).
+    let pair_body = list.as_ref().and_then(|l| match unwrap_map_ow(l.element) {
+        IrNode::Ref(rid) => ir.rules.iter().find(|r| r.id == *rid).map(|r| &r.body),
+        other => Some(other),
+    });
+    let (pre_colon, post_colon) = match pair_body.map(unwrap_map_ow) {
+        Some(IrNode::Seq(children)) => match children.as_slice() {
+            [key, IrNode::Next(colon, value)] => (
+                trails_ow(key, ir) || leads_ow(colon, ir),
+                trails_ow(colon, ir) || leads_ow(value, ir),
+            ),
+            _ => (false, false),
+        },
+        _ => (false, false),
+    };
+    ObjectWsGaps {
+        open,
+        close,
+        pre_sep,
+        post_sep,
+        pre_colon,
+        post_colon,
+    }
 }

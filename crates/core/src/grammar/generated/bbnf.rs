@@ -4940,9 +4940,11 @@ mod __bbnfbootstrap_emit_impl {
                     ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
-        /// Skip JSON whitespace at `*p`, returning the first
-        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
-        /// exit when the next byte is non-whitespace.
+        /// Read `?w` whitespace at `*p` (the six bytes space, `\t`,
+        /// `\n`, U+000B, U+000C, `\r`; sk-v27 LW3.ORC2-WS-C), returning
+        /// the first other byte (or `None` on EOF). Emitted only where
+        /// the grammar writes `?w`. Hot-path fast-exit when the next
+        /// byte is not whitespace.
         #[inline(always)]
         pub fn skip_space(
             input: &[u8],
@@ -4950,9 +4952,7 @@ mod __bbnfbootstrap_emit_impl {
             state: &mut ScanState,
         ) -> Option<u8> {
             match input.get(*p) {
-                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => {
-                    Some(b)
-                }
+                Some(&b) if b != b' ' && b.wrapping_sub(b'\t') > 4 => Some(b),
                 None => None,
                 _ => {
                     skip_space_slow(input, p, state);
@@ -4982,7 +4982,7 @@ mod __bbnfbootstrap_emit_impl {
                 }
                 if *p + 64 > input.len() {
                     while let Some(&b) = input.get(*p) {
-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
                             return;
                         }
                         *p += 1;
@@ -5004,13 +5004,14 @@ mod __bbnfbootstrap_emit_impl {
             }
         }
         /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
-        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
-        /// `{b' ', b'\t', b'\n', b'\r'}`. The kernel is parse-that's
+        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT one of the six
+        /// `?w` bytes (space, `\t`, `\n`, U+000B, U+000C, `\r`;
+        /// sk-v27 LW3.ORC2-WS-C). The kernel is parse-that's
         /// (NEON under the runtime tier on aarch64, the scalar oracle
         /// elsewhere); no ISA intrinsic is emitted (X-3).
         #[inline(always)]
         pub(crate) fn nospace_bitmap_64(stripe: &[u8; 64]) -> u64 {
-            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
+            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\x0B\x0C\r")
         }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
         /// parse-that's quote-or-backslash kernel (NEON under the runtime
@@ -5814,7 +5815,9 @@ mod __bbnfbootstrap_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -6474,10 +6477,8 @@ mod __bbnfbootstrap_emit_impl {
                     });
                 }
                 *p = end;
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 {
                     let __scan_start = *p;
                     let Some(match_len) = __regex_scan_BbnfBootstrap(
@@ -6491,10 +6492,8 @@ mod __bbnfbootstrap_emit_impl {
                     };
                     *p += match_len as usize;
                 }
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let at = *p;
                 let end = at + 2usize;
                 if input.len() < end || input[at..end] != [42u8, 47u8] {
@@ -6616,10 +6615,8 @@ mod __bbnfbootstrap_emit_impl {
                     });
                 }
                 *p = end;
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 {
                     let __scan_start = *p;
                     let Some(match_len) = __regex_scan_BbnfBootstrap(".*", input, *p)
@@ -7012,7 +7009,6 @@ mod __bbnfbootstrap_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_path_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 17u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_path"),
@@ -7028,18 +7024,19 @@ mod __bbnfbootstrap_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_hregex_BbnfBootstrap_value_ident(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_value_path[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && false {
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_value_path[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -7088,9 +7085,7 @@ mod __bbnfbootstrap_emit_impl {
                     op_discriminant as u32,
                 );
                 *p = (*p).saturating_add(op_width as usize);
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_value_ident(
                         input,
                         p,
@@ -7210,11 +7205,6 @@ mod __bbnfbootstrap_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_BbnfBootstrap_value_ident(
                                     input,
                                     p,
@@ -7349,7 +7339,6 @@ mod __bbnfbootstrap_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_altdispatch_BbnfBootstrap_type_name(
                         input,
                         p,
@@ -7401,10 +7390,7 @@ mod __bbnfbootstrap_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
-        {
-            let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
-            parse_hregex_BbnfBootstrap_identifier(input, p, state, builder, cursor)
-        }
+        { parse_hregex_BbnfBootstrap_identifier(input, p, state, builder, cursor) }
     }
     /// AZ-I.W2.RF — per-grammar Flat-shape parse function,
     /// **struct-direct body**. Targets the grammar's concrete
@@ -7489,7 +7475,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_identifier(
                         input,
                         p,
@@ -7498,10 +7483,8 @@ mod __bbnfbootstrap_emit_impl {
                         cursor,
                     )
                 })?;
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
@@ -7533,11 +7516,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_BbnfBootstrap_identifier(
                                     input,
                                     p,
@@ -7671,7 +7649,6 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_identifier(
                         input,
                         p,
@@ -7855,7 +7832,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_identifier(
                         input,
                         p,
@@ -8144,11 +8120,6 @@ mod __bbnfbootstrap_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_BbnfBootstrap_identifier(
                                     input,
                                     p,
@@ -8406,7 +8377,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_identifier(
                         input,
                         p,
@@ -8457,11 +8427,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_BbnfBootstrap_type_name(
                                     input,
                                     p,
@@ -8723,7 +8688,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_flat_BbnfBootstrap_regex(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -8912,7 +8876,6 @@ mod __bbnfbootstrap_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_mul_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_mul"),
@@ -8928,7 +8891,6 @@ mod __bbnfbootstrap_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_altdispatch_BbnfBootstrap_value_unary(
                     input,
                     p,
@@ -8938,14 +8900,16 @@ mod __bbnfbootstrap_emit_impl {
                 )
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_value_mul[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_value_mul[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -8996,7 +8960,6 @@ mod __bbnfbootstrap_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_altdispatch_BbnfBootstrap_value_unary(
                         input,
                         p,
@@ -9053,7 +9016,6 @@ mod __bbnfbootstrap_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_or_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_or"),
@@ -9066,18 +9028,19 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__value_or_layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_and(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_value_or[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_value_or[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -9128,7 +9091,6 @@ mod __bbnfbootstrap_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_pratt_BbnfBootstrap_value_and(input, p, state, builder, cursor)
                 })?;
             }
@@ -9179,7 +9141,6 @@ mod __bbnfbootstrap_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_add_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_add"),
@@ -9195,18 +9156,19 @@ mod __bbnfbootstrap_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_value_add[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_value_add[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -9257,7 +9219,6 @@ mod __bbnfbootstrap_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_pratt_BbnfBootstrap_value_mul(input, p, state, builder, cursor)
                 })?;
             }
@@ -9308,7 +9269,6 @@ mod __bbnfbootstrap_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_cmp_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 30u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_cmp"),
@@ -9324,18 +9284,19 @@ mod __bbnfbootstrap_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_add(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_value_cmp[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_value_cmp[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -9386,7 +9347,6 @@ mod __bbnfbootstrap_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_pratt_BbnfBootstrap_value_add(input, p, state, builder, cursor)
                 })?;
             }
@@ -9437,7 +9397,6 @@ mod __bbnfbootstrap_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __value_and_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("value_and"),
@@ -9453,18 +9412,19 @@ mod __bbnfbootstrap_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_value_and[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_value_and[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -9515,7 +9475,6 @@ mod __bbnfbootstrap_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_pratt_BbnfBootstrap_value_cmp(input, p, state, builder, cursor)
                 })?;
             }
@@ -9607,7 +9566,6 @@ mod __bbnfbootstrap_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_value_ident(
                         input,
                         p,
@@ -9649,11 +9607,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_BbnfBootstrap_value_ident(
                                     input,
                                     p,
@@ -9694,7 +9647,6 @@ mod __bbnfbootstrap_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_wrap_BbnfBootstrap_value_expr(input, p, state, builder, cursor)
                 })?;
             }
@@ -9759,7 +9711,6 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_pratt_BbnfBootstrap_value_path(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -9775,11 +9726,6 @@ mod __bbnfbootstrap_emit_impl {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let _ = ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_wrap_BbnfBootstrap_value_expr(
                             input,
                             p,
@@ -9814,11 +9760,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_wrap_BbnfBootstrap_value_expr(
                                     input,
                                     p,
@@ -9913,7 +9854,9 @@ mod __bbnfbootstrap_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(34u32 as u32);
-        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -9992,7 +9935,9 @@ mod __bbnfbootstrap_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -10012,11 +9957,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_hregex_BbnfBootstrap_int_lit(
                             input,
                             p,
@@ -10040,11 +9980,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_hregex_BbnfBootstrap_float_lit(
                             input,
                             p,
@@ -10068,22 +10003,22 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let __first = __shape_support_BbnfBootstrap::skip_space(
+                        {
+                            let __first = input
+                                .get(*p)
+                                .copied()
+                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_keyword_BbnfBootstrap_bool_lit(
                                 input,
                                 p,
+                                __first,
                                 state,
+                                builder,
+                                cursor,
                             )
-                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_BbnfBootstrap_bool_lit(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            builder,
-                            cursor,
-                        )
+                        }
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(2u32);
@@ -10100,11 +10035,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_string_lit(
                             input,
                             p,
@@ -10128,11 +10058,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_arglist_BbnfBootstrap_value_fn_call(
                             input,
                             p,
@@ -10156,11 +10081,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_value_input(
                             input,
                             p,
@@ -10184,11 +10104,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_pratt_BbnfBootstrap_value_path(
                             input,
                             p,
@@ -10229,11 +10144,6 @@ mod __bbnfbootstrap_emit_impl {
                             state,
                         );
                         let _ = ({
-                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_wrap_BbnfBootstrap_value_expr(
                                 input,
                                 p,
@@ -10313,7 +10223,9 @@ mod __bbnfbootstrap_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -10406,11 +10318,6 @@ mod __bbnfbootstrap_emit_impl {
                             });
                         }
                         let _ = ({
-                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_altdispatch_BbnfBootstrap_value_atom(
                                 input,
                                 p,
@@ -10437,11 +10344,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_altdispatch_BbnfBootstrap_value_atom(
                             input,
                             p,
@@ -10576,11 +10478,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_BbnfBootstrap_import_items(
                                     input,
                                     p,
@@ -10615,11 +10512,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_BbnfBootstrap_import_path(
                                     input,
                                     p,
@@ -10649,11 +10541,6 @@ mod __bbnfbootstrap_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_BbnfBootstrap_import_path(
                                     input,
                                     p,
@@ -10959,11 +10846,6 @@ mod __bbnfbootstrap_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_BbnfBootstrap_identifier(
                                     input,
                                     p,
@@ -11010,11 +10892,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_BbnfBootstrap_pretty_hint(
                                     input,
                                     p,
@@ -11285,11 +11162,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_BbnfBootstrap_concatenation(
                                     input,
                                     p,
@@ -11481,11 +11353,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_pratt_BbnfBootstrap_binary_factor(
                                     input,
                                     p,
@@ -11677,11 +11544,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_pratt_BbnfBootstrap_binary_factor(
                                     input,
                                     p,
@@ -11863,7 +11725,6 @@ mod __bbnfbootstrap_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_identifier(
                         input,
                         p,
@@ -11905,11 +11766,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_BbnfBootstrap_identifier(
                                     input,
                                     p,
@@ -11952,7 +11808,6 @@ mod __bbnfbootstrap_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_wrap_BbnfBootstrap_rhs(input, p, state, builder, cursor)
                 })?;
             }
@@ -12005,7 +11860,9 @@ mod __bbnfbootstrap_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -12054,11 +11911,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt: ::core::result::Result<(), crate::runtime::DtaError> = (||
                     {
                         let _ = ({
-                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_hregex_BbnfBootstrap_identifier(
                                 input,
                                 p,
@@ -12098,11 +11950,6 @@ mod __bbnfbootstrap_emit_impl {
                                         state,
                                     );
                                     let _ = ({
-                                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
                                         parse_flat_BbnfBootstrap_call_arg(
                                             input,
                                             p,
@@ -12154,11 +12001,6 @@ mod __bbnfbootstrap_emit_impl {
                                                     state,
                                                 );
                                                 let _ = ({
-                                                    let _ = __shape_support_BbnfBootstrap::skip_space(
-                                                        input,
-                                                        p,
-                                                        state,
-                                                    );
                                                     parse_flat_BbnfBootstrap_call_arg(
                                                         input,
                                                         p,
@@ -12238,22 +12080,22 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let __first = __shape_support_BbnfBootstrap::skip_space(
+                        {
+                            let __first = input
+                                .get(*p)
+                                .copied()
+                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_keyword_BbnfBootstrap_literal(
                                 input,
                                 p,
+                                __first,
                                 state,
+                                builder,
+                                cursor,
                             )
-                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_BbnfBootstrap_literal(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            builder,
-                            cursor,
-                        )
+                        }
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(3u32);
@@ -12270,11 +12112,6 @@ mod __bbnfbootstrap_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_regex(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
@@ -12309,11 +12146,6 @@ mod __bbnfbootstrap_emit_impl {
                             state,
                         );
                         let _ = ({
-                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_wrap_BbnfBootstrap_rhs(
                                 input,
                                 p,
@@ -12372,11 +12204,6 @@ mod __bbnfbootstrap_emit_impl {
                             state,
                         );
                         let _ = ({
-                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_wrap_BbnfBootstrap_rhs(
                                 input,
                                 p,
@@ -12435,11 +12262,6 @@ mod __bbnfbootstrap_emit_impl {
                             state,
                         );
                         let _ = ({
-                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_wrap_BbnfBootstrap_rhs(
                                 input,
                                 p,
@@ -12498,11 +12320,6 @@ mod __bbnfbootstrap_emit_impl {
                             state,
                         );
                         let _ = ({
-                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_wrap_BbnfBootstrap_rhs(
                                 input,
                                 p,
@@ -12596,7 +12413,6 @@ mod __bbnfbootstrap_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let __binary_factor_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 44u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("binary_factor"),
@@ -12612,18 +12428,19 @@ mod __bbnfbootstrap_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 parse_flat_BbnfBootstrap_mapped_factor(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_binary_factor[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_binary_factor[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -12674,7 +12491,6 @@ mod __bbnfbootstrap_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_flat_BbnfBootstrap_mapped_factor(
                         input,
                         p,
@@ -12731,7 +12547,9 @@ mod __bbnfbootstrap_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(45u32 as u32);
-        let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -12877,13 +12695,21 @@ mod __bbnfbootstrap_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_BbnfBootstrap_big_comment(
+                                            let __r = parse_flat_BbnfBootstrap_big_comment(
                                                 input,
                                                 p,
                                                 state,
                                                 builder,
                                                 cursor,
-                                            )
+                                            );
+                                            if __r.is_ok() {
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                            }
+                                            __r
                                         })?;
                                         Ok(())
                                     })();
@@ -12911,13 +12737,21 @@ mod __bbnfbootstrap_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_BbnfBootstrap_comment(
+                                            let __r = parse_flat_BbnfBootstrap_comment(
                                                 input,
                                                 p,
                                                 state,
                                                 builder,
                                                 cursor,
-                                            )
+                                            );
+                                            if __r.is_ok() {
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                            }
+                                            __r
                                         })?;
                                         Ok(())
                                     })();
@@ -12959,7 +12793,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_altdispatch_BbnfBootstrap_term(
                         input,
                         p,
@@ -12987,22 +12820,22 @@ mod __bbnfbootstrap_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let __first = __shape_support_BbnfBootstrap::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_BbnfBootstrap_modifier(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_BbnfBootstrap_modifier(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -13051,13 +12884,21 @@ mod __bbnfbootstrap_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_BbnfBootstrap_big_comment(
+                                            let __r = parse_flat_BbnfBootstrap_big_comment(
                                                 input,
                                                 p,
                                                 state,
                                                 builder,
                                                 cursor,
-                                            )
+                                            );
+                                            if __r.is_ok() {
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                            }
+                                            __r
                                         })?;
                                         Ok(())
                                     })();
@@ -13085,13 +12926,21 @@ mod __bbnfbootstrap_emit_impl {
                                                 p,
                                                 state,
                                             );
-                                            parse_flat_BbnfBootstrap_comment(
+                                            let __r = parse_flat_BbnfBootstrap_comment(
                                                 input,
                                                 p,
                                                 state,
                                                 builder,
                                                 cursor,
-                                            )
+                                            );
+                                            if __r.is_ok() {
+                                                let _ = __shape_support_BbnfBootstrap::skip_space(
+                                                    input,
+                                                    p,
+                                                    state,
+                                                );
+                                            }
+                                            __r
                                         })?;
                                         Ok(())
                                     })();
@@ -13224,7 +13073,6 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_flat_BbnfBootstrap_factor(input, p, state, builder, cursor)
                 })?;
             }
@@ -13263,11 +13111,6 @@ mod __bbnfbootstrap_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_BbnfBootstrap::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_wrap_BbnfBootstrap_value_expr(
                                     input,
                                     p,
@@ -13292,11 +13135,6 @@ mod __bbnfbootstrap_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_BbnfBootstrap::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_flat_BbnfBootstrap_type_annotation(
                                                 input,
                                                 p,
@@ -13434,7 +13272,6 @@ mod __bbnfbootstrap_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_scalar_BbnfBootstrap_lhs(input, p, state, builder, cursor)
                 })?;
             }
@@ -13453,7 +13290,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_wrap_BbnfBootstrap_rhs(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -13655,7 +13491,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_hregex_BbnfBootstrap_identifier(
                         input,
                         p,
@@ -13669,7 +13504,6 @@ mod __bbnfbootstrap_emit_impl {
             {
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
                     parse_wrap_BbnfBootstrap_rhs(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
@@ -13853,11 +13687,6 @@ mod __bbnfbootstrap_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_recover_directive(
                             input,
                             p,
@@ -13883,11 +13712,6 @@ mod __bbnfbootstrap_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_import_directive(
                             input,
                             p,
@@ -13913,11 +13737,6 @@ mod __bbnfbootstrap_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_pretty_directive(
                             input,
                             p,
@@ -13943,11 +13762,6 @@ mod __bbnfbootstrap_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_token_directive(
                             input,
                             p,
@@ -13972,11 +13786,6 @@ mod __bbnfbootstrap_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_debug_directive(
                             input,
                             p,
@@ -14001,11 +13810,6 @@ mod __bbnfbootstrap_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_host_directive(
                             input,
                             p,
@@ -14030,11 +13834,6 @@ mod __bbnfbootstrap_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_BbnfBootstrap_ws_directive(
                             input,
                             p,
@@ -14113,7 +13912,9 @@ mod __bbnfbootstrap_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_BbnfBootstrap::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -14304,11 +14105,6 @@ mod __bbnfbootstrap_emit_impl {
                     __shape_support_BbnfBootstrap::byte_skip_value(input, p)?;
                 } else {
                     ({
-                        let _ = __shape_support_BbnfBootstrap::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_wrap_BbnfBootstrap_grammar_item(
                             input,
                             p,
@@ -14349,8 +14145,9 @@ mod __bbnfbootstrap_emit_impl {
     }
     /// AW-V.W3.2 — top-level shape dispatcher.
     ///
-    /// Mirrors the walker's `value` rule ByteDispatch: skip leading
-    /// whitespace, dispatch on the first byte to the chosen branch
+    /// Mirrors the walker's `value` rule ByteDispatch: dispatch on
+    /// the first byte (no whitespace skipped but what the grammar
+    /// writes, sk-v27 LW3.ORC2-WS-C) to the chosen branch
     /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
@@ -14389,7 +14186,6 @@ mod __bbnfbootstrap_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
-        let _ = __shape_support_BbnfBootstrap::skip_space(input, p, state);
         let _ = cursor.decide(52u32);
         parse_array_BbnfBootstrap_grammar(input, p, state, builder, cursor)
     }

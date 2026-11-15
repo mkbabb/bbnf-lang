@@ -1,0 +1,12 @@
+     Summary [  63.712s] 1680 tests run: 1678 passed (1 slow), 2 failed, 27 skipped
+  TRY 1 FAIL [   0.039s] (─────────) bbnf::projection_totality struct_direct_documents_expose_projection_values
+  TRY 1 FAIL [   0.079s] (─────────) bbnf::named_type_preservation named_runtime_documents_preserve_concrete_values
+  TRY 2 FAIL [   0.016s] (1067/1680) bbnf::projection_totality struct_direct_documents_expose_projection_values
+  TRY 2 FAIL [   0.021s] ( 756/1680) bbnf::named_type_preservation named_runtime_documents_preserve_concrete_values
+    CSS colorFn document value list must retain the color() function head, got [Function(Generic { name: "", args: CssValueListId(1) }), Span("")]
+    CssDocument value-list accessor must expose the rgb() function head, got [Function(Generic { name: "", args: CssValueListId(1) }), Span("")]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+    thread 'named_runtime_documents_preserve_concrete_values' (12067425) panicked at crates/core/tests/named_type_preservation.rs:416:5:
+    thread 'named_runtime_documents_preserve_concrete_values' (12068567) panicked at crates/core/tests/named_type_preservation.rs:416:5:
+    thread 'struct_direct_documents_expose_projection_values' (12068411) panicked at crates/core/tests/projection_totality.rs:136:5:
+    thread 'struct_direct_documents_expose_projection_values' (12069742) panicked at crates/core/tests/projection_totality.rs:136:5:

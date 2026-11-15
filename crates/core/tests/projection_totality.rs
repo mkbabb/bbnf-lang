@@ -24,8 +24,8 @@ use bbnf::grammar::generated::css_l4::CssL4Parser;
 use bbnf::grammar::generated::google_sheets::GoogleSheetsParser;
 use bbnf::grammar::generated::json::JsonParser;
 use bbnf::runtime::{
-    BbnfCompoundKind, BbnfValue, CssDimension, CssTypedValue, JsonValue, Path, PathSegment,
-    SheetsCompoundKind, SheetsDocument, SheetsValue,
+    BbnfCompoundKind, BbnfValue, CssDimension, CssFunction, CssTypedValue, JsonValue, Path,
+    PathSegment, SheetsCompoundKind, SheetsDocument, SheetsValue,
 };
 
 fn path<'a>(segments: &'a [PathSegment<'a>]) -> Path<'a> {
@@ -133,11 +133,19 @@ fn struct_direct_documents_expose_projection_values() {
         })
         .expect("CssDocument value walk should reach a color value list");
     let color_list = css.values(color_list_id);
+    // sk-v27 LW3.RX-EMPTYFIRST-B (RULINGS 2026-11-14k RXEFB-C (a)): a corrected
+    // expectation, not a weakening. This read `Span("rgb")`, the head of a
+    // misparse: the ArgList emitter parsed `genericFunction`'s regex head with
+    // the root rule's dispatcher, which always failed, so `value` fell to
+    // `ident` and `rgb` stood alone before its arguments. The grammar's text
+    // (`genericFunction = /[a-zA-Z][\w-]*/ , "(" , funcBody , ")"`) makes the
+    // head the call's name.
     assert!(
-        color_list
-            .iter()
-            .any(|value| matches!(value, CssTypedValue::Span(name) if *name == "rgb")),
-        "CssDocument value-list accessor must expose the rgb() function head, got {color_list:?}"
+        color_list.iter().any(|value| matches!(
+            value,
+            CssTypedValue::Function(CssFunction::Generic { name, .. }) if *name == "rgb"
+        )),
+        "CssDocument value-list accessor must expose rgb() as a function named by its head, got {color_list:?}"
     );
     let width_percentage = css.walk_values().any(|(_property, value)| {
         matches!(

@@ -1,0 +1,14 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/ir)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/corpus)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-gen-recurse/crates/bbnf-path)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 13.82s
+────────────
+ Nextest run ID c7914bad-bfea-47d3-9ee7-3b9a68bdf2d4 with nextest profile: default
+    Starting 2 tests across 1 binary
+        PASS [   0.020s] (1/2) bbnf::gen_recurse a_value_cycle_through_inlined_rules_generates
+        PASS [   0.033s] (2/2) bbnf::gen_recurse css_l4_keyframes_compiles_and_generates_without_overflow
+────────────
+     Summary [   0.033s] 2 tests run: 2 passed, 0 skipped
+rc=0

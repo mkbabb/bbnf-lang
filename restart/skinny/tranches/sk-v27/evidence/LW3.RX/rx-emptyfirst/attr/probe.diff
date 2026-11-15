@@ -1,0 +1,24 @@
+diff --git a/crates/core/src/runtime/google_sheets/builder.rs b/crates/core/src/runtime/google_sheets/builder.rs
+index 787a68f74..ab5de19d4 100644
+--- a/crates/core/src/runtime/google_sheets/builder.rs
++++ b/crates/core/src/runtime/google_sheets/builder.rs
+@@ -106,6 +106,7 @@ impl<'p> StructBuilder for SheetsStructBuilder<'p> {
+         self.pending_children.truncate(checkpoint.pending_children_len);
+     }
+     fn begin_compound(&mut self, layout: &StructLayout) -> CompoundHandle {
++        __PROBE_ENTRIES.with(|m| *m.borrow_mut().entry(layout.rule_name.clone()).or_default() += 1);
+         let kind = SheetsCompoundKind::from_layout(layout);
+         self.next_handle = self.next_handle.wrapping_add(1);
+         let handle_token = self.next_handle;
+@@ -188,3 +189,11 @@ impl<'p> SheetsStructBuilder<'p> {
+         self.deposit(SheetsValue::Error(value));
+     }
+ }
++
++thread_local! {
++    static __PROBE_ENTRIES: ::std::cell::RefCell<::std::collections::BTreeMap<String, u64>> = ::std::cell::RefCell::new(::std::collections::BTreeMap::new());
++}
++/// RXEF-BENCH probe: rule entries (begin_compound calls) by rule name since the last take.
++pub fn __probe_take_entries() -> Vec<(String, u64)> {
++    __PROBE_ENTRIES.with(|m| ::std::mem::take(&mut *m.borrow_mut()).into_iter().collect())
++}

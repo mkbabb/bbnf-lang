@@ -1,0 +1,134 @@
+head=8944ee77a981d78eb47bd660ead52494680c5066 dirty=1
+diff --git a/crates/core/src/backend/rust/emitter/shapes/arglist.rs b/crates/core/src/backend/rust/emitter/shapes/arglist.rs
+index df1edcc80..eed57f619 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/arglist.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/arglist.rs
+@@ -310,7 +310,7 @@ fn is_name_head(node: &IrNode, next: Option<&IrNode>, ir: &GrammarIR) -> bool {
+     }
+     let opens_after =
+         matches!(next.map(strip), Some(IrNode::Literal(sid)) if ir.get_string(*sid) == "(");
+-    opens_after && matches!(strip(node), IrNode::Regex(_) | IrNode::Literal(_))
++    let _ = opens_after; matches!(strip(node), IrNode::Regex(_) | IrNode::Literal(_))
+ }
+ 
+ /// Emit one position's struct-direct core.
+diff --git a/crates/core/tests/rx_emptyfirst.rs b/crates/core/tests/rx_emptyfirst.rs
+index 56075679b..38d435b26 100644
+--- a/crates/core/tests/rx_emptyfirst.rs
++++ b/crates/core/tests/rx_emptyfirst.rs
+@@ -167,3 +167,43 @@ fn google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq() {
+         .collect();
+     assert!(refused.is_empty(), "google_sheets refused {refused:?}");
+ }
++
++/// RULINGS 2026-11-15a RXEFB-D (a): an ArgList head is recorded (its matched
++/// text deposited on the call's compound) only when the call's `(` is its own
++/// next position. A head written as a regex or a literal and followed by a
++/// separate `"("` is the callee's name; a head whose match takes the `(` itself
++/// is the call's opening token, which the rule already names, and deposits
++/// nothing.
++const HEADS: &str = r#"
++number = /[0-9]+/ ;
++args = number , ("," >> number) * ;
++opened = /[oO][pP][eE][nN]\(/ , args ?w , ")" ;
++named = /[a-z]+/ , "(" , args ?w , ")" ;
++value = opened | named | number ;
++cell = /=?/ , value ;
++"#;
++
++#[test]
++fn arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position() {
++    let source = emitted(HEADS);
++    let marker = "pub fn parse_arglist_EmptyFirstParser_";
++    let body = |rule: &str| -> String {
++        let at = source
++            .find(&format!("{marker}{rule} <"))
++            .unwrap_or_else(|| panic!("`{rule}` is not emitted as an ArgList shape"));
++        let after = &source[at + marker.len()..];
++        let end = after.find("pub fn ").unwrap_or(after.len());
++        after[..end].to_string()
++    };
++    let deposit = "__head_text";
++    assert!(
++        body("named").contains(deposit),
++        "`named = /[a-z]+/ , \"(\" , …`: the head is followed by its own `(` position, so its \
++         text is the call's name and must be deposited on the call's compound"
++    );
++    assert!(
++        !body("opened").contains(deposit),
++        "`opened = /[oO][pP][eE][nN]\\(/ , …`: the head takes the `(` itself; it is the call's \
++         opening token and must deposit nothing"
++    );
++}
+clean ax-iter bbnf removed=337 left=0
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/core)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.48s
+────────────
+ Nextest run ID 1ad788c4-36ca-48a4-9d71-71dfac63371d with nextest profile: default
+    Starting 4 tests across 1 binary
+        PASS [   0.015s] (1/4) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+        PASS [   0.021s] (2/4) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+  TRY 1 FAIL [   0.021s] (───) bbnf::rx_emptyfirst arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+  stdout ───
+
+    running 1 test
+    test arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position ... FAILED
+
+    failures:
+
+    failures:
+        arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position' (13631704) panicked at crates/core/tests/rx_emptyfirst.rs:204:5:
+    `opened = /[oO][pP][eE][nN]\(/ , …`: the head takes the `(` itself; it is the call's opening token and must deposit nothing
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rx_emptyfirst arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+        PASS [   0.024s] (3/4) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  TRY 2 FAIL [   0.015s] (4/4) bbnf::rx_emptyfirst arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+  stdout ───
+
+    running 1 test
+    test arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position ... FAILED
+
+    failures:
+
+    failures:
+        arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position' (13631945) panicked at crates/core/tests/rx_emptyfirst.rs:204:5:
+    `opened = /[oO][pP][eE][nN]\(/ , …`: the head takes the `(` itself; it is the call's opening token and must deposit nothing
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.037s] 4 tests run: 3 passed, 1 failed, 0 skipped
+  TRY 2 FAIL [   0.015s] (4/4) bbnf::rx_emptyfirst arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+  stdout ───
+
+    running 1 test
+    test arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position ... FAILED
+
+    failures:
+
+    failures:
+        arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position' (13631945) panicked at crates/core/tests/rx_emptyfirst.rs:204:5:
+    `opened = /[oO][pP][eE][nN]\(/ , …`: the head takes the `(` itself; it is the call's opening token and must deposit nothing
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100
+after dirty=1

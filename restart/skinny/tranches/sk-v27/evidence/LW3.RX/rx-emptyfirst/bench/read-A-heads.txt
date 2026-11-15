@@ -1,0 +1,12 @@
+base head=e5d705a47b8a105126eef46b17a734b16cee2b24 dirty=0
+clean bench bbnf removed=0 left=0
+6de65c92e9c040bd619103d0a293844fac0b37e49a757302946b7e721fad2068  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/rx-emptyfirst/bench/bins/css_l4-base
+c368dae3a8d7635f8d9a719d4170136e78bf20f57193e468233ac42fa5f9038d  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/rx-emptyfirst/bench/bins/google_sheets_monolithic-base
+d53531a50f1c0a656ed410b15ec8c92e7eb700dcc7a8cd1dee95a9397af784af  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/rx-emptyfirst/bench/bins/json_monolithic-base
+cure head=b5fb29b612be118a24ef375a4570fe33514e9c16 dirty=0
+clean bench bbnf removed=45 left=0
+c05c383ff2a39cd187c6bd0e739820966e8e5cfb716370ce28888bdb1775f452  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/rx-emptyfirst/bench/bins/css_l4-cure
+a44750e603d95f6872d5a15b87eb973bbafd1dd67a81e02aeed299b089b44c9d  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/rx-emptyfirst/bench/bins/google_sheets_monolithic-cure
+6d23e19c105d81168b3d0bdd3b059b26bbdaaef18932df938a276d59516d0a14  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/rx-emptyfirst/bench/bins/json_monolithic-cure
+read A start 2026-11-14 23:38:49 load { 9.57 14.92 15.47 }
+read A end 2026-11-14 23:42:56 load { 9.93 11.22 13.59 }

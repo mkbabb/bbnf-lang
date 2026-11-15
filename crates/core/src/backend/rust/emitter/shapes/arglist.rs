@@ -4,9 +4,10 @@
 //!
 //! Emits per-grammar ArgList-shape parse functions for
 //! `name(arg, arg, …)` positional function calls. The emitted body
-//! matches the function-name head, consumes the `(`, runs the
-//! positional-arg body via the grammar's value-position dispatcher,
-//! matches the `)`, and emits a `Rule` outer compound covering the
+//! matches the function-name head, consumes the `(`, parses each
+//! position by the rule or terminal the grammar's text names there
+//! (never by the root rule's dispatcher; LW3.RX-EMPTYFIRST-B), matches
+//! the `)`, and emits a `Rule` outer compound covering the
 //! whole call site.
 //!
 //! # Head variants
@@ -35,7 +36,7 @@
 //!   span_lo = *p
 //!   <head match — Literal byte-seq / dispatcher call for Ref / Regex>
 //!   [ "(" Literal leaf — when head doesn't consume the paren ]
-//!   <arg body — each inter-paren position via dispatcher>
+//!   <arg body — each inter-paren position by its own rule or terminal>
 //!   ")" Literal leaf
 //!   span_hi = *p
 //! }
@@ -196,6 +197,9 @@ fn emit_parse_arglist_struct_direct(
         where
             __P: for<'__c> crate::path::schema::PathSchema<'__c>,
         {
+            // The inline positions (LW3.RX-EMPTYFIRST-B) checkpoint and
+            // roll back through the builder's trait methods.
+            use crate::runtime::builder::StructBuilder as _;
             let _ = cursor;
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
@@ -247,7 +251,7 @@ fn emit_struct_direct_body(
     ir: &GrammarIR,
 ) -> TokenStream {
     let mut emissions = Vec::with_capacity(positions.len());
-    for pos in positions {
+    for (index, pos) in positions.iter().enumerate() {
         let leading = if pos.leading_ws {
             quote! { let _ = #support_mod::skip_space(input, p, state); }
         } else {
@@ -265,9 +269,48 @@ fn emit_struct_direct_body(
             grammar_suffix,
             ir,
         );
+        // sk-v27 LW3.RX-EMPTYFIRST-B (RULINGS 2026-11-14k RXEFB-C (a)): the
+        // call's name is part of the call, so a head the grammar writes as a
+        // regex or a literal, followed by the call's own `(` position, deposits
+        // its matched text on the call's compound (a `Ref` head deposits through
+        // its rule), as the Flat emitter's Span-typed alternatives do. Without it
+        // CSS `genericFunction = /[a-zA-Z][\w-]*/ , "(" , …` read `rgb(…)` as a
+        // function with an empty name. A head whose match takes the `(` itself
+        // (head variant 2, Sheets `/[lL][eE][tT]\(/`) is the call's opening
+        // token, which the rule already names; it deposits nothing (ask RXEFB-D).
+        let core = if index == 0
+            && is_name_head(pos.node, positions.get(1).map(|next| next.node), ir)
+        {
+            quote! {
+                let __head_lo: usize = *p;
+                #core
+                {
+                    let __head_text: &str =
+                        ::core::str::from_utf8(&input[__head_lo..*p]).unwrap_or("");
+                    <_ as crate::runtime::StructBuilder>::push_leaf_with_str(builder, __head_text);
+                }
+            }
+        } else {
+            core
+        };
         emissions.push(quote! { #leading #core #trailing });
     }
     quote! { #(#emissions)* }
+}
+
+/// A head position the grammar writes as a regex or a literal (through any
+/// `?w` wrapper), followed by the call's `(` as its own position: its text
+/// is the call's name.
+fn is_name_head(node: &IrNode, next: Option<&IrNode>, ir: &GrammarIR) -> bool {
+    fn strip(node: &IrNode) -> &IrNode {
+        match node {
+            IrNode::OptionalWhitespace(inner) => strip(inner),
+            other => other,
+        }
+    }
+    let opens_after =
+        matches!(next.map(strip), Some(IrNode::Literal(sid)) if ir.get_string(*sid) == "(");
+    opens_after && matches!(strip(node), IrNode::Regex(_) | IrNode::Literal(_))
 }
 
 /// Emit one position's struct-direct core.
@@ -407,17 +450,23 @@ fn emit_struct_direct_position_core(
                 #floor
             }
         }
-        // Alt / Regex / Negate / Minus / TokenDispatch — fall through
-        // to the dispatcher; the dispatcher's body under StructDirect
-        // takes the same builder argument.
+        // sk-v27 LW3.RX-EMPTYFIRST-B (RULINGS 2026-11-14j RXEF-A (a), QX-1
+        // clause 7): Alt / Regex / Negate / Minus / TokenDispatch are
+        // parsed as the grammar's text writes them at this position (the
+        // regex scanned, each alternative tried), by the Flat emitter's
+        // inline walker. These positions once called the root rule's value
+        // dispatcher, which parsed an argument (or a regex head such as
+        // Sheets' `/[lL][eE][tT]\(/`) as a whole entry-rule match.
         IrNode::Alt(_, _)
         | IrNode::Regex(_)
         | IrNode::Negate(_)
         | IrNode::Minus(_, _)
-        | IrNode::TokenDispatch { .. } => {
-            quote! {
-                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
-            }
-        }
+        | IrNode::TokenDispatch { .. } => super::flat::emit_position_core_struct_direct(
+            node,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
+        ),
     }
 }

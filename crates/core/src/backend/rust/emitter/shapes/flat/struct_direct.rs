@@ -525,7 +525,7 @@ pub(crate) fn emit_position_struct_direct(
 /// regex positions delegate to the dispatcher unchanged, which under
 /// StructDirect must already accept the builder argument from the
 /// per-grammar admission contract.
-fn emit_position_core_struct_direct(
+pub(crate) fn emit_position_core_struct_direct(
     node: &IrNode,
     support_mod: &proc_macro2::Ident,
     dispatcher_ident: &proc_macro2::Ident,

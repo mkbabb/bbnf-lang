@@ -1,0 +1,60 @@
+  stdout ───
+
+    running 1 test
+    test nullable_regex_is_not_refused_by_first_byte_check ... FAILED
+
+    failures:
+
+    failures:
+        nullable_regex_is_not_refused_by_first_byte_check
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'nullable_regex_is_not_refused_by_first_byte_check' (12936667) panicked at crates/core/tests/rx_emptyfirst.rs:104:5:
+    the nullable pattern `=?` (LUT bit 4) is refused before its DFA at 255 of 256 bytes, e.g. ['\0', '\u{1}', '\u{2}', '\u{3}', '\u{4}', '\u{5}', '\u{6}', '\u{7}']; it matches the empty string at every one of them
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.040s] 3 tests run: 1 passed, 2 failed, 0 skipped
+  TRY 2 FAIL [   0.010s] (2/3) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+  stdout ───
+
+    running 1 test
+    test google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq ... FAILED
+
+    failures:
+
+    failures:
+        google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq' (12936665) panicked at crates/core/tests/rx_emptyfirst.rs:168:5:
+    google_sheets refused ["1+2", "A1", "42"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.017s] (3/3) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  stdout ───
+
+    running 1 test
+    test nullable_regex_is_not_refused_by_first_byte_check ... FAILED
+
+    failures:
+
+    failures:
+        nullable_regex_is_not_refused_by_first_byte_check
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'nullable_regex_is_not_refused_by_first_byte_check' (12936667) panicked at crates/core/tests/rx_emptyfirst.rs:104:5:
+    the nullable pattern `=?` (LUT bit 4) is refused before its DFA at 255 of 256 bytes, e.g. ['\0', '\u{1}', '\u{2}', '\u{3}', '\u{4}', '\u{5}', '\u{6}', '\u{7}']; it matches the empty string at every one of them
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100

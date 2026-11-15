@@ -1,0 +1,71 @@
+head=cd65b278eab541c5db7e3fbb5c668008d284a9e9 dirty=0
+     Removed 337 files, 157.3MiB total
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/core)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.22s
+────────────
+ Nextest run ID dc5bf96a-271a-4bba-99eb-b0799c621860 with nextest profile: default
+    Starting 3 tests across 1 binary
+        PASS [   0.013s] (1/3) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+  TRY 1 FAIL [   0.021s] (───) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+  stdout ───
+
+    running 1 test
+    test arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher ... FAILED
+
+    failures:
+
+    failures:
+        arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher' (11953032) panicked at crates/core/tests/rx_emptyfirst.rs:154:5:
+    ArgList bodies ["wrap", "call"] parse a position with the root rule's dispatcher (`parse_EmptyFirstParser_cell__value (`), not the rule or terminal the grammar names there
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+        PASS [   0.024s] (2/3) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  TRY 2 FAIL [   0.018s] (3/3) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+  stdout ───
+
+    running 1 test
+    test arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher ... FAILED
+
+    failures:
+
+    failures:
+        arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher' (11953411) panicked at crates/core/tests/rx_emptyfirst.rs:154:5:
+    ArgList bodies ["wrap", "call"] parse a position with the root rule's dispatcher (`parse_EmptyFirstParser_cell__value (`), not the rule or terminal the grammar names there
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.042s] 3 tests run: 2 passed, 1 failed, 0 skipped
+  TRY 2 FAIL [   0.018s] (3/3) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+  stdout ───
+
+    running 1 test
+    test arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher ... FAILED
+
+    failures:
+
+    failures:
+        arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher' (11953411) panicked at crates/core/tests/rx_emptyfirst.rs:154:5:
+    ArgList bodies ["wrap", "call"] parse a position with the root rule's dispatcher (`parse_EmptyFirstParser_cell__value (`), not the rule or terminal the grammar names there
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100

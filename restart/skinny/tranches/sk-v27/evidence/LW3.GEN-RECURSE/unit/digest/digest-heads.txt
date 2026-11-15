@@ -1,0 +1,5 @@
+clean dev bbnf removed=0 left=0
+base head=ea8d51d9309719ddf88bac6605be21e7578521b5 dirty=0
+clean dev bbnf removed=50 left=0
+cure head=3498d8d35f186a8159bb60f56f184a92b55518d7 dirty=0
+diff rc=1 lines=16

@@ -55,7 +55,7 @@ pub(crate) fn read_source(
         let mut offset = 0;
         for line in text.split_inclusive('\n') {
             let indent = line.len() - line.trim_start().len();
-            if let Some(name) = documented_only_directive(line.trim_start()) {
+            if let Some(name) = removed_directive(line.trim_start()) {
                 return StageResult::rejected(documented_only_diagnostic(name, offset + indent));
             }
             offset += line.len();
@@ -84,11 +84,10 @@ pub(crate) fn read_source(
             + (text[reader.read_to..].len() - text[reader.read_to..].trim_start().len());
         reader
             .diagnostics
-            .push(match documented_only_directive(&text[at..]) {
-                // RULINGS 2026-11-14k COMP1C-5: two directives the docs name but
-                // the grammar of record does not; refused by name, not as syntax,
-                // until the owner rules (LEDGER "Owner decision: `@inline` and
-                // `@no_collapse`").
+            .push(match removed_directive(&text[at..]) {
+                // RULINGS 2026-11-15b OWN-INLINE (the owner): two directives
+                // removed from the language; refused by name, not as syntax, so
+                // a grammar that still writes one is told why.
                 Some(name) => documented_only_diagnostic(name, at),
                 None => Diagnostic::new(
                     DiagnosticCode::Syntax,
@@ -110,8 +109,9 @@ pub(crate) fn read_source(
     })
 }
 
-/// `@inline` or `@no_collapse` at the start of `rest`, as a whole word.
-fn documented_only_directive(rest: &str) -> Option<&'static str> {
+/// `@inline` or `@no_collapse` (removed from the language, RULINGS 2026-11-15b)
+/// at the start of `rest`, as a whole word.
+fn removed_directive(rest: &str) -> Option<&'static str> {
     ["@no_collapse", "@inline"].into_iter().find(|name| {
         rest.strip_prefix(name).is_some_and(|after| {
             !after.starts_with(|c: char| c == '_' || c.is_ascii_alphanumeric())
@@ -125,9 +125,9 @@ fn documented_only_diagnostic(name: &str, at: usize) -> Diagnostic {
         at,
         at + name.len(),
         format!(
-            "`{name}` is documented (docs/bbnf/grammar-syntax.md) but is not in the grammar of \
-             record (grammar/bbnf/bbnf.bbnf) and is not implemented; owner decision pending \
-             (LEDGER \"Owner decision: `@inline` and `@no_collapse`\")"
+            "`{name}` is not a BBNF directive: it was removed from the language by the owner \
+             (RULINGS 2026-11-15b OWN-INLINE); it is not in the grammar of record \
+             (grammar/bbnf/bbnf.bbnf), which names seven directives"
         ),
     )
 }
@@ -879,7 +879,7 @@ done = ident .
 "#;
 
     #[test]
-    fn documented_only_directives_are_refused_by_name() {
+    fn removed_directives_are_refused_by_name() {
         for (text, name) in [
             ("a = \"a\" ;\n@inline a ;\n", "@inline"),
             ("@no_collapse a ;\na = \"a\" ;\n", "@no_collapse"),
@@ -894,6 +894,7 @@ done = ident .
                     );
                     assert!(d.message().contains(&format!("`{name}`")), "{d}");
                     assert!(d.message().contains("not in the grammar of record"), "{d}");
+                    assert!(d.message().contains("removed from the language"), "{d}");
                 }
                 StageResult::Accepted { .. } => panic!("{text:?} accepted"),
             }

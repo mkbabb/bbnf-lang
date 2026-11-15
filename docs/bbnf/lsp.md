@@ -143,7 +143,6 @@ On every `textDocument/didChange` notification, the server runs a full re-parse 
 
 All BBNF directives receive first-class LSP treatment—semantic tokens, hover, completion, and validation.
 
-- **`@inline`**: Semantic tokens for the keyword and target rule reference. Hover explains force-inlining behavior ("Splices rule body at every call site—no enum variant generated"). Completion suggests eligible rule names. Undefined target produces an ERROR diagnostic.
 - **`@debug`**: Same token + hover + completion pattern. Hover explains tracing behavior across compiled and VM paths. The `*` wildcard is recognized and highlighted as a keyword.
 - **`@ws`**: KEYWORD semantic token. Hover displays the overriding regex pattern.
 - **`@import`**: KEYWORD token for `@import` and `from`; RULE_REFERENCE tokens for each selectively imported name. Hover on imported names shows the source file path.

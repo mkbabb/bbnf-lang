@@ -1,0 +1,3 @@
+regen-check rc=0 
+clippy rc=0 
+nextest rc=0 Summary [ 121.167s] 1692 tests run: 1692 passed (2 slow), 27 skipped

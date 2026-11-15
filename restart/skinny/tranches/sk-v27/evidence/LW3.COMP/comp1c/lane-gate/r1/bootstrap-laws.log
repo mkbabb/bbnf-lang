@@ -1,0 +1,13 @@
+clean ax-iter bbnf removed=8649 left=0
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-comp1c/crates/core)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.63s
+────────────
+ Nextest run ID e9939d2e-f918-48c5-b316-8c16f8ce34af with nextest profile: default
+    Starting 5 tests across 1 binary (98 tests skipped)
+        PASS [   0.011s] (1/5) bbnf compiler::bootstrap::tests::text_that_is_not_a_grammar_is_refused_as_syntax
+        PASS [   0.011s] (2/5) bbnf compiler::bootstrap::tests::an_invalid_regex_is_refused_as_regex
+        PASS [   0.011s] (3/5) bbnf compiler::bootstrap::tests::removed_directives_are_refused_by_name
+        PASS [   0.013s] (4/5) bbnf compiler::bootstrap::tests::every_rule_form_reads_to_a_typed_node
+        PASS [   0.013s] (5/5) bbnf compiler::bootstrap::tests::every_directive_and_comment_is_read
+────────────
+     Summary [   0.013s] 5 tests run: 5 passed, 98 skipped

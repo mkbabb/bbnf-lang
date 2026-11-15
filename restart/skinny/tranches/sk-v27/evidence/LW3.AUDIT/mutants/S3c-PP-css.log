@@ -1,0 +1,25 @@
+regen rc=0 generated:  1 file changed, 128 insertions(+), 60 deletions(-)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 13.13s
+     Running tests/css.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/css-6e2bc43e3492d00c)
+
+running 1 test
+test css_ws_leaves_are_trivia_so_formatting_is_idempotent ... FAILED
+
+failures:
+
+---- css_ws_leaves_are_trivia_so_formatting_is_idempotent stdout ----
+
+thread 'css_ws_leaves_are_trivia_so_formatting_is_idempotent' (12565126) panicked at crates/gorgeous/tests/css.rs:183:9:
+assertion `left == right` failed: fmt . fmt != fmt for "a{color:red;background:white}b{margin:0}"
+  left: "a{\n        color:red;\n        background:white\n    }\nb{\n        margin:0\n    }"
+ right: "a{\n        color:red;\n        background:white\n    }\n b{\n        margin:0\n    }"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    css_ws_leaves_are_trivia_so_formatting_is_idempotent
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test css`
+restored dirty=0

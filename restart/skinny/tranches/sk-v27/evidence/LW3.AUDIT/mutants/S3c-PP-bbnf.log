@@ -1,0 +1,40 @@
+     Running tests/bbnf.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/bbnf-00d839627e264694)
+
+running 12 tests
+test bbnf_prettify_refuses_unconsumed_input ... ok
+test test_prettify_parse_that_regex ... ok
+test test_prettify_bbnf_alternation ... ok
+test test_prettify_bbnf_multi_rule ... ok
+test test_prettify_simple_rule ... ok
+test bbnf_top_level_line_comment_output_is_unchanged ... ok
+test bbnf_five_mixed_comments_in_a_row_inside_a_rule_keep_the_next_token ... ok
+test test_prettify_bbnf_idempotent ... ok
+test bbnf_line_comment_before_the_rule_terminator_keeps_the_terminator ... ok
+test bbnf_three_line_comments_in_a_row_inside_a_rule_keep_the_next_token ... FAILED
+test bbnf_line_comment_inside_a_rule_is_read_and_kept ... ok
+test bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token ... FAILED
+
+failures:
+
+---- bbnf_three_line_comments_in_a_row_inside_a_rule_keep_the_next_token stdout ----
+
+thread 'bbnf_three_line_comments_in_a_row_inside_a_rule_keep_the_next_token' (12584351) panicked at crates/gorgeous/tests/bbnf.rs:127:5:
+assertion `left == right` failed: prettify is idempotent
+  left: "value=  \"a\" // one\n// two// three\n\"b\" ;"
+ right: "value=  \"a\" // one\n// two// three\"b\" ;"
+
+---- bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token stdout ----
+
+thread 'bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token' (12584348) panicked at crates/gorgeous/tests/bbnf.rs:107:49:
+the formatted output formats
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token
+    bbnf_three_line_comments_in_a_row_inside_a_rule_keep_the_next_token
+
+test result: FAILED. 10 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test bbnf`
+restored dirty=0

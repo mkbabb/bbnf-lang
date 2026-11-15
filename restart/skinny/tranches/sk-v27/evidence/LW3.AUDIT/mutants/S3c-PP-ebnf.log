@@ -1,0 +1,40 @@
+thread 'ebnf_prettify_keeps_every_rule_and_terminal' (12573713) panicked at crates/gorgeous/tests/ebnf.rs:59:46:
+the input formats
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- test_prettify_multi_rule stdout ----
+
+thread 'test_prettify_multi_rule' (12573714) panicked at crates/gorgeous/tests/ebnf.rs:37:5:
+should parse multiple rules
+
+
+failures:
+    ebnf_prettify_keeps_every_rule_and_terminal
+    test_prettify_multi_rule
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p gorgeous --test ebnf`
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.86s
+     Running tests/ebnf_prettify.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/ebnf_prettify-1544af39aeff54ba)
+
+running 1 test
+test prettify_multi_rule ... FAILED
+
+failures:
+
+---- prettify_multi_rule stdout ----
+
+thread 'prettify_multi_rule' (12576123) panicked at crates/core/tests/ebnf_prettify.rs:42:5:
+prettify should succeed for multi-rule input
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    prettify_multi_rule
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p bbnf --test ebnf_prettify`
+ebnf=101 core=101
+restored dirty=0

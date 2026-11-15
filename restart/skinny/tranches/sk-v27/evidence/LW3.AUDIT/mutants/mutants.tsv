@@ -1,0 +1,11 @@
+TREE-1	1	rc=0 dirty=0 touched=1 Summary [   0.240s] 4 tests run: 4 passed, 0 skipped
+PERF-1c	1	2 files listed (commit 35572f3dce8adeae4aa73c80e9bbd7c5faaa251c)
+COMP-6-lattice	1	rc=100 pass=5 fail=1
+COMP-6-verifier	1	rc=100 mutants=61 rejected=59 fixture=2/2
+STALE-0	100	Summary [   0.553s] 1 test run: 0 passed, 1 failed, 12 skipped left: "5bee3f01
+COMP-5a	100	Summary [   1.447s] 5 tests run: 4 passed, 1 failed, 0 skipped shapes/mod.rs:402
+S3c-PP-css	101	test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 10 filtered out; finished in 0.00s regen rc=0 generated:  1 file changed, 128 insertions(+), 60 deletions(-)
+S3c-PP-ebnf	1	ebnf=101 core=101 regen rc=0 generated:  1 file changed, 24 insertions(+), 24 deletions(-)
+S3c-PP-bbnf	101	test result: FAILED. 10 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s regen rc=0 generated:  1 file changed, 1 deletion(-)
+PERF-1d	1	generated files naming core::arch=9 regen rc=0 generated:  9 files changed, 9 insertions(+)
+ORC2-WS-C	100	Summary [   1.025s] 3 tests run: 1 passed, 2 failed, 0 skipped regen rc=0 generated:  9 files changed, 2191 insertions(+), 1319 deletions(-)

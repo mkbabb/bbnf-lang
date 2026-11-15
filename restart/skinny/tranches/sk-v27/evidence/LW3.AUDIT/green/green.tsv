@@ -1,0 +1,10 @@
+TREE-1	0	rc=0 dirty=0 touched=0 Summary [   0.247s] 4 tests run: 4 passed, 0 skipped
+PERF-1c	0	bl=7472ebe20c9fa412003d93eaa53f39983b05aaa1 pt=d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae files=1
+COMP-6-lattice	0	rc=0 pass=6 fail=0
+COMP-6-verifier	0	rc=0 mutants=61 rejected=61 fixture=2/2
+STALE-0	0	Summary [   2.763s] 1 test run: 1 passed, 12 skipped
+COMP-5a	0	Summary [   1.528s] 5 tests run: 5 passed, 0 skipped
+S3c-PP-css-ebnf	0	css=0 ebnf=0 core=0 4 ok
+S3c-PP-bbnf	0	bbnf=0 g3=0 test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s 
+PERF-1d	0	grep files=0 regen-check rc=0
+ORC2-WS-C	0	Summary [   0.016s] 3 tests run: 3 passed, 0 skipped

@@ -14,7 +14,7 @@
 //! - `nospace_bitmap_64` — the whitespace bitmap, a call into
 //!   `parse_that::scan::byte_class_from_eq_set_64` (no intrinsics here).
 //! - `first_quote_or_backslash` — string-scanner primitive, a call
-//!   into `parse_that::find_first_of`.
+//!   into `parse_that::scan::find_quote_or_backslash`.
 //! - `shape_byte_arm`, `expect_keyword` — small dispatch helpers.
 //!
 //! Emitted once per grammar with shape dispatch; every per-shape
@@ -541,10 +541,11 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             }
 
             /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
-            /// parse-that's `find_first_of` (`memchr2`).
+            /// parse-that's quote-or-backslash kernel (NEON under the runtime
+            /// tier on aarch64, the scalar oracle elsewhere).
             #[inline(always)]
             pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
-                ::parse_that::find_first_of(bytes, b"\"\\")
+                ::parse_that::scan::find_quote_or_backslash(bytes)
             }
 
             /// Map a byte into one of six arms: object `{` → 0,

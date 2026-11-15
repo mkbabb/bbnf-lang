@@ -2593,7 +2593,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8#3642613134eb7e40febc8832cd53bda958ccf5a8"
+source = "git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387#bacc888a46e6c397bf119adecd69e0f0beb7c387"
 dependencies = [
  "csp-solver",
  "rustc-hash 2.1.2",
@@ -2603,7 +2603,7 @@ dependencies = [
 [[package]]
 name = "parse-that-egraph-derive"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8#3642613134eb7e40febc8832cd53bda958ccf5a8"
+source = "git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387#bacc888a46e6c397bf119adecd69e0f0beb7c387"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2613,7 +2613,7 @@ dependencies = [
 [[package]]
 name = "parse-that-regex"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8#3642613134eb7e40febc8832cd53bda958ccf5a8"
+source = "git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387#bacc888a46e6c397bf119adecd69e0f0beb7c387"
 dependencies = [
  "parse-that-egraph",
  "parse-that-egraph-derive",
@@ -2628,12 +2628,12 @@ dependencies = [
 [[package]]
 name = "parse-that-simd"
 version = "0.1.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8#3642613134eb7e40febc8832cd53bda958ccf5a8"
+source = "git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387#bacc888a46e6c397bf119adecd69e0f0beb7c387"
 
 [[package]]
 name = "parse_that"
 version = "0.4.0"
-source = "git+https://github.com/mkbabb/parse-that?rev=3642613134eb7e40febc8832cd53bda958ccf5a8#3642613134eb7e40febc8832cd53bda958ccf5a8"
+source = "git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387#bacc888a46e6c397bf119adecd69e0f0beb7c387"
 dependencies = [
  "aho-corasick",
  "colored",

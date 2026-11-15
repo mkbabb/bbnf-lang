@@ -2186,10 +2186,11 @@ mod __cssprettyparser_emit_impl {
             !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
         }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
-        /// parse-that's `find_first_of` (`memchr2`).
+        /// parse-that's quote-or-backslash kernel (NEON under the runtime
+        /// tier on aarch64, the scalar oracle elsewhere).
         #[inline(always)]
         pub fn first_quote_or_backslash(bytes: &[u8]) -> Option<(usize, u8)> {
-            ::parse_that::find_first_of(bytes, b"\"\\")
+            ::parse_that::scan::find_quote_or_backslash(bytes)
         }
         /// Map a byte into one of six arms: object `{` → 0,
         /// array `[` → 1, string `"` → 2, digit/`-` (number) → 3,

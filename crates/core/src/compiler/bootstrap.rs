@@ -329,9 +329,9 @@ impl<'d, 'p> Reader<'d, 'p> {
     fn binary_factor(&mut self, value: &BbnfValue<'p>, outer: Bounds) -> Option<NodeIx> {
         let node = self.compound(value)?;
         let mut operands = node.children.iter();
-        let first = operands.next()?;
-        let mut left_bounds = self.bounds(first).unwrap_or(outer);
-        let mut left = self.mapped_factor(first, left_bounds)?;
+        let leading = operands.next()?;
+        let mut left_bounds = self.bounds(leading).unwrap_or(outer);
+        let mut left = self.mapped_factor(leading, left_bounds)?;
         for right_value in operands {
             let right_bounds = self.bounds(right_value).unwrap_or(outer);
             let right = self.mapped_factor(right_value, right_bounds)?;

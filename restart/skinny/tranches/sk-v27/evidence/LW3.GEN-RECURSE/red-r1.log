@@ -1,0 +1,43 @@
+head=62e2fa89f46c79c709174c149ac95fea6afa784c dirty=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.72s
+────────────
+ Nextest run ID e96d535b-fb0e-4d53-a6d5-d4fd4a7a9ffe with nextest profile: default
+    Starting 1 test across 1 binary
+  TRY 1 ABRT [   0.029s] (───) bbnf::gen_recurse_repro a_value_cycle_through_inlined_rules_generates
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'a_value_cycle_through_inlined_rules_generates' (12619461) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+   DELAY 2/2 by   1.000s (───) bbnf::gen_recurse_repro a_value_cycle_through_inlined_rules_generates
+  TRY 2 ABRT [   0.019s] (1/1) bbnf::gen_recurse_repro a_value_cycle_through_inlined_rules_generates
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'a_value_cycle_through_inlined_rules_generates' (12619665) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+────────────
+     Summary [   1.050s] 1 test run: 0 passed, 1 failed, 0 skipped
+  TRY 2 ABRT [   0.019s] (1/1) bbnf::gen_recurse_repro a_value_cycle_through_inlined_rules_generates
+  stdout ───
+
+    running 1 test
+  stderr ───
+
+    thread 'a_value_cycle_through_inlined_rules_generates' (12619665) has overflowed its stack
+    fatal runtime error: stack overflow, aborting
+
+    (test aborted with signal 6: SIGABRT)
+
+error: test run failed
+rc=100

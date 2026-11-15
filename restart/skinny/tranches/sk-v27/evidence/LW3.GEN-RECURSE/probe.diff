@@ -1,0 +1,20 @@
+diff --git a/crates/core/src/backend/driver/alt.rs b/crates/core/src/backend/driver/alt.rs
+index 8cb475e38..b4b0a8fd6 100644
+--- a/crates/core/src/backend/driver/alt.rs
++++ b/crates/core/src/backend/driver/alt.rs
+@@ -40,7 +40,15 @@ use crate::backend::{AltBranchInfo, CallStrategy, Emitter, KeyDispatchBranch, Va
+ /// records. When the driver inlines a Ref (CallStrategy::InlineBody),
+ /// the branch's children are the inlined body — check that body
+ /// recursively, not the Ref target's function.
++thread_local!(static GEN_RECURSE_DEPTH: std::cell::Cell<u32> = const { std::cell::Cell::new(0) });
+ pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode, dstate: &DriverState) -> bool {
++    let d = GEN_RECURSE_DEPTH.with(|c| { c.set(c.get() + 1); c.get() });
++    if d > 4096 { GEN_RECURSE_DEPTH.with(|c| c.set(0)); panic!("GEN-RECURSE probe: alt.rs::branch_pushes_children depth > 4096"); }
++    let r = branch_pushes_children_probe(ir, node, dstate);
++    GEN_RECURSE_DEPTH.with(|c| c.set(c.get().saturating_sub(1)));
++    r
++}
++fn branch_pushes_children_probe(ir: &GrammarIR, node: &IrNode, dstate: &DriverState) -> bool {
+     match node {
+         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
+         IrNode::Map { inner, .. } => branch_pushes_children(ir, inner, dstate),

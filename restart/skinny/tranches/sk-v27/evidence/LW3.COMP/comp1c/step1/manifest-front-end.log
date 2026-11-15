@@ -1,0 +1,71 @@
+READ crates/core/tests/fixtures/deterministic.bbnf rules=8 nodes=38
+READ crates/gorgeous/grammar/bbnf/bbnf.bbnf rules=22 nodes=160
+READ crates/gorgeous/grammar/bnf/bnf.bbnf rules=10 nodes=39
+READ crates/gorgeous/grammar/css/pretty.bbnf rules=20 nodes=91
+READ crates/gorgeous/grammar/ebnf/ebnf.bbnf rules=16 nodes=200
+READ crates/gorgeous/grammar/google-sheets/google-sheets.bbnf rules=39 nodes=190
+READ crates/gorgeous/grammar/json/json.bbnf rules=10 nodes=46
+READ crates/gorgeous/tests/corpus/g3/bbnf/comments-factor.bbnf rules=3 nodes=8
+READ crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf rules=2 nodes=7
+READ crates/gorgeous/tests/corpus/g3/bbnf/comments-top.bbnf rules=2 nodes=4
+READ crates/gorgeous/tests/corpus/g3/bbnf/plain.bbnf rules=2 nodes=11
+READ grammar/bbnf/bbnf.bbnf rules=31 nodes=276
+READ grammar/bbnf/expressions.bbnf rules=21 nodes=123
+READ grammar/bbnf/types.bbnf rules=1 nodes=12
+READ grammar/bnf/bnf.bbnf rules=10 nodes=39
+READ grammar/css/l4/color.bbnf rules=19 nodes=459
+READ grammar/css/l4/easing.bbnf rules=6 nodes=77
+READ grammar/css/l4/filters.bbnf rules=12 nodes=129
+READ grammar/css/l4/func-body.bbnf rules=18 nodes=138
+READ grammar/css/l4/gradients.bbnf rules=19 nodes=164
+READ grammar/css/l4/keyframes.bbnf rules=18 nodes=101
+READ grammar/css/l4/keywords.bbnf rules=14 nodes=186
+READ grammar/css/l4/media.bbnf rules=13 nodes=80
+READ grammar/css/l4/properties.bbnf rules=44 nodes=596
+READ grammar/css/l4/selectors.bbnf rules=34 nodes=228
+READ grammar/css/l4/stylesheet.bbnf rules=14 nodes=78
+READ grammar/css/l4/tokens.bbnf rules=3 nodes=5
+READ grammar/css/l4/transforms.bbnf rules=23 nodes=204
+READ grammar/css/l4/value-unit.bbnf rules=23 nodes=176
+READ grammar/css/l4/values.bbnf rules=16 nodes=160
+READ grammar/css/pretty.bbnf rules=20 nodes=99
+READ grammar/ebnf/ebnf.bbnf rules=16 nodes=200
+READ grammar/google-sheets/google-sheets.bbnf rules=39 nodes=218
+READ grammar/heldout/graphql.bbnf rules=120 nodes=716
+REFUSED grammar/heldout/r7rs-datum.bbnf Regex 2599..2645 regex parse error at byte 13: invalid codepoint U+D800
+READ grammar/heldout/toml.bbnf rules=44 nodes=154
+READ grammar/json/json.bbnf rules=12 nodes=57
+READ grammar/misc/csv.bbnf rules=6 nodes=22
+REFUSED grammar/misc/emoji.bbnf Syntax 0..354 expected a complete BBNF grammar
+READ grammar/misc/g4.bbnf rules=9 nodes=58
+READ grammar/misc/json-commented.bbnf rules=9 nodes=51
+READ grammar/misc/math-ambiguous.bbnf rules=2 nodes=13
+READ grammar/misc/math.bbnf rules=11 nodes=30
+READ grammar/misc/regex.bbnf rules=25 nodes=100
+READ skinny/grammars/json.bbnf rules=15 nodes=57
+READ typescript/test/fixtures/grammar/css/css-color.bbnf rules=19 nodes=292
+READ typescript/test/fixtures/grammar/css/css-keyframes.bbnf rules=18 nodes=97
+READ typescript/test/fixtures/grammar/css/css-selectors.bbnf rules=31 nodes=181
+READ typescript/test/fixtures/grammar/css/css-stylesheet.bbnf rules=18 nodes=121
+READ typescript/test/fixtures/grammar/css/css-tokens.bbnf rules=2 nodes=4
+READ typescript/test/fixtures/grammar/css/css-value-unit.bbnf rules=23 nodes=112
+READ typescript/test/fixtures/grammar/css/css-values.bbnf rules=15 nodes=125
+READ typescript/test/fixtures/grammar/lang/bbnf.bbnf rules=22 nodes=160
+READ typescript/test/fixtures/grammar/lang/bnf.bbnf rules=10 nodes=39
+READ typescript/test/fixtures/grammar/lang/csv.bbnf rules=6 nodes=22
+READ typescript/test/fixtures/grammar/lang/ebnf.bbnf rules=16 nodes=207
+REFUSED typescript/test/fixtures/grammar/lang/emoji.bbnf Syntax 0..354 expected a complete BBNF grammar
+READ typescript/test/fixtures/grammar/lang/g4.bbnf rules=9 nodes=58
+READ typescript/test/fixtures/grammar/lang/google-sheets.bbnf rules=38 nodes=182
+READ typescript/test/fixtures/grammar/lang/json-commented.bbnf rules=9 nodes=51
+READ typescript/test/fixtures/grammar/lang/json.bbnf rules=10 nodes=42
+READ typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf rules=2 nodes=13
+READ typescript/test/fixtures/grammar/lang/math.bbnf rules=11 nodes=30
+READ typescript/test/fixtures/grammar/lang/regex.bbnf rules=25 nodes=100
+REFUSED typescript/test/fixtures/value-js/color.bbnf Regex 3085..3224 regex parse error at byte 130: invalid group syntax
+READ typescript/test/fixtures/value-js/css.bbnf rules=0 nodes=0
+REFUSED typescript/test/fixtures/value-js/math.bbnf Regex 623..648 regex parse error at byte 19: invalid group syntax
+REFUSED typescript/test/fixtures/value-js/stylesheet.bbnf Regex 3725..3746 a position assertion has no byte-table semantics
+REFUSED typescript/test/fixtures/value-js/tokens.bbnf Regex 1567..1626 regex parse error at byte 22: invalid group syntax
+REFUSED typescript/test/fixtures/value-js/value.bbnf Regex 1048..1072 regex parse error at byte 6: invalid group syntax
+PROBE read=62 refused=8

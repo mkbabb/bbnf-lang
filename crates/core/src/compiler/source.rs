@@ -93,6 +93,95 @@ pub(crate) enum SourceNodeKindData {
         child: NodeIx,
     },
     Record(Vec<SourceRecordSlotData>),
+    // sk-v27 LW3.COMP-1c step 1 (RULINGS 2026-11-14i COMP1C-1 (b)): the forms
+    // `grammar/bbnf/bbnf.bbnf` names that the spine's own dialect had no node
+    // for, read by the bootstrap front end (`bootstrap.rs`) to typed nodes. A
+    // stage that cannot yet give one a meaning refuses it with
+    // `DiagnosticCode::FormWithoutMeaning`, naming the form.
+    /// `child -> value [: Type]`.
+    Mapping {
+        child: NodeIx,
+        value: SourceValueData,
+        ty: Option<String>,
+    },
+    /// `@{ child }`: the source span `child` matched.
+    SpanCapture {
+        child: NodeIx,
+    },
+    /// `callee(arg, ...)`: a grammar-function application.
+    Call {
+        callee: String,
+        args: Vec<NodeIx>,
+    },
+    /// `|param, ...| body`: a grammar-function definition (a rule's whole right side).
+    Closure {
+        params: Vec<String>,
+        body: NodeIx,
+    },
+}
+
+/// The value expression right of `->` (`grammar/bbnf/expressions.bbnf`). The
+/// head is typed from the bootstrap tree; `text` is the exact source, which
+/// carries what the bootstrap tree does not keep (an integer literal's suffix,
+/// a binary operator).
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) struct SourceValueData {
+    pub(crate) head: SourceValueHead,
+    pub(crate) text: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) enum SourceValueHead {
+    Int,
+    Float,
+    Bool,
+    String,
+    /// `a::b::c`.
+    Path(Vec<String>),
+    /// `input` and its fields.
+    Input(Vec<String>),
+    /// `path(args)`.
+    Call(Vec<String>),
+    /// `|params| body`.
+    Closure(Vec<String>),
+    /// A unary, binary or parenthesised expression.
+    Expression,
+}
+
+/// The directives, comments and other grammar items `bbnf.bbnf` names that are
+/// not rule nodes (LW3.COMP-1c step 1), each with its span.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize)]
+pub(crate) struct SourceDirectives {
+    pub(crate) imports: Vec<SourceImport>,
+    pub(crate) ws: Vec<(String, SourceSpan)>,
+    pub(crate) tokens: Vec<(String, SourceSpan)>,
+    /// `@debug name ;` (`Some`) or `@debug * ;` (`None`).
+    pub(crate) debug: Vec<(Option<String>, SourceSpan)>,
+    pub(crate) hosts: Vec<SourceHost>,
+    pub(crate) recovers: Vec<SourceRecover>,
+    pub(crate) comments: Vec<SourceSpan>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) struct SourceImport {
+    /// `None` for `@import "path"`; the named items otherwise.
+    pub(crate) items: Option<Vec<String>>,
+    pub(crate) path: String,
+    pub(crate) span: SourceSpan,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) struct SourceHost {
+    pub(crate) name: String,
+    pub(crate) ty: Option<String>,
+    pub(crate) span: SourceSpan,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+pub(crate) struct SourceRecover {
+    pub(crate) rule: String,
+    pub(crate) sync: NodeIx,
+    pub(crate) span: SourceSpan,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -121,6 +210,13 @@ pub(crate) enum SourcePresentationHintData {
     Blankline,
     Compact,
     Sep { literal: Vec<u8> },
+    // sk-v27 LW3.COMP-1c step 1: the hints `docs/bbnf/pretty-directives.md`
+    // names that the spine's dialect spelt otherwise or did not carry.
+    Hardbreak,
+    Softbreak,
+    Nobreak,
+    Fast,
+    Off,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]

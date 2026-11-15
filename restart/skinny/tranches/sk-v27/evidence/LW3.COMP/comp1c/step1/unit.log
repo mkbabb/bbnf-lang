@@ -1,0 +1,5 @@
+        PASS [   0.013s] (1/4) bbnf compiler::bootstrap::tests::an_invalid_regex_is_refused_as_regex
+        PASS [   0.013s] (2/4) bbnf compiler::bootstrap::tests::text_that_is_not_a_grammar_is_refused_as_syntax
+        PASS [   0.015s] (3/4) bbnf compiler::bootstrap::tests::every_directive_and_comment_is_read
+        PASS [   0.016s] (4/4) bbnf compiler::bootstrap::tests::every_rule_form_reads_to_a_typed_node
+     Summary [   0.016s] 4 tests run: 4 passed, 94 skipped

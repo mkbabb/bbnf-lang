@@ -638,6 +638,27 @@ impl Program {
                     exclude: *exclude,
                 },
                 SourceNodeKindData::Trim { child } => NodeKindData::Trim { child: *child },
+                SourceNodeKindData::Mapping { .. }
+                | SourceNodeKindData::SpanCapture { .. }
+                | SourceNodeKindData::Call { .. }
+                | SourceNodeKindData::Closure { .. } => {
+                    let form = match &source.kind {
+                        SourceNodeKindData::Mapping { .. } => "`->` mapping",
+                        SourceNodeKindData::SpanCapture { .. } => "`@{ }` span capture",
+                        SourceNodeKindData::Call { .. } => "grammar-function call",
+                        _ => "grammar-function definition",
+                    };
+                    diagnostics.push(Diagnostic::new(
+                        DiagnosticCode::FormWithoutMeaning,
+                        source.span.start() as usize,
+                        source.span.end() as usize,
+                        format!(
+                            "{form} is read by the front end but resolve gives it no meaning yet \
+                             (LEDGER \"LW3.COMP-1c\", step 1 carry)"
+                        ),
+                    ));
+                    continue;
+                }
                 SourceNodeKindData::Record(source_slots) => {
                     let Some(&owner) = record_owners.get(&id) else {
                         diagnostics.push(Diagnostic::new(

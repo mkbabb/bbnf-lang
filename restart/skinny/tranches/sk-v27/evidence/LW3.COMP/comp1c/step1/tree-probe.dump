@@ -1,0 +1,361 @@
+Grammar tag=None bounds=None None
+  GrammarItem tag=Some(2) bounds=None None
+    ImportDirective tag=None bounds=Some((0, 29)) Some("@import { a, b } from \"lib\" ;")
+      ImportItems tag=None bounds=Some((8, 16)) Some("{ a, b }")
+        Span("a")
+        Span("b")
+      ImportPath tag=None bounds=Some((22, 27)) Some("\"lib\"")
+        Span("\"lib\"")
+      Span(";")
+  GrammarItem tag=Some(2) bounds=None None
+    ImportDirective tag=None bounds=Some((30, 47)) Some("@import \"other\" ;")
+      ImportPath tag=None bounds=Some((38, 45)) Some("\"other\"")
+        Span("\"other\"")
+      Span(";")
+  GrammarItem tag=Some(2) bounds=None None
+    WsDirective tag=None bounds=Some((48, 62)) Some("@ws /[ \\t]+/ ;")
+      Other tag=None bounds=Some((52, 60)) Some("/[ \\t]+/")
+        Span("/[ \\t]+/")
+      Span(";")
+  GrammarItem tag=Some(2) bounds=None None
+    TokenDirective tag=None bounds=Some((63, 77)) Some("@token ident ;")
+      Span("ident")
+      Span(";")
+  GrammarItem tag=Some(2) bounds=None None
+    DebugDirective tag=None bounds=Some((78, 88)) Some("@debug * ;")
+      Span("*")
+      Span(";")
+  GrammarItem tag=Some(2) bounds=None None
+    HostDirective tag=None bounds=Some((89, 106)) Some("@host Env : Map ;")
+      Span("Env")
+      Other tag=Some(10) bounds=None None
+        Unit
+      Span(";")
+  GrammarItem tag=Some(2) bounds=None None
+    RecoverDirective tag=None bounds=Some((107, 130)) Some("@recover stmt /[^;]*/ ;")
+      Span("stmt")
+      Alternation tag=None bounds=Some((121, 129)) Some("/[^;]*/ ")
+        Concatenation tag=None bounds=Some((121, 129)) Some("/[^;]*/ ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((121, 129)) Some("/[^;]*/ ")
+              Factor tag=None bounds=Some((121, 129)) Some("/[^;]*/ ")
+                Term tag=Some(4) bounds=None None
+                  Other tag=None bounds=Some((121, 128)) Some("/[^;]*/")
+                    Span("/[^;]*/")
+      Span(";")
+  GrammarItem tag=Some(2) bounds=None None
+    PrettyDirective tag=None bounds=Some((131, 168)) Some("@pretty rule group indent sep(\", \") ;")
+      Span("rule")
+      PrettyHint tag=None bounds=Some((144, 149)) Some("group")
+        Span("group")
+      PrettyHint tag=None bounds=Some((150, 156)) Some("indent")
+        Span("indent")
+      PrettyHint tag=None bounds=Some((157, 166)) Some("sep(\", \")")
+        Span("sep")
+      Span(";")
+  GrammarItem tag=Some(0) bounds=None None
+    Other tag=None bounds=Some((169, 187)) Some("// a line comment\\n")
+      Span("// a line comment\n")
+  GrammarItem tag=Some(1) bounds=None None
+    Other tag=None bounds=Some((187, 209)) Some("/* a block comment */\\n")
+      Span("/* a block comment */\n")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((209, 235)) Some("ident = /[a-z]+/ -> Span ;")
+      Span("ident")
+      Alternation tag=None bounds=Some((217, 234)) Some("/[a-z]+/ -> Span ")
+        Concatenation tag=None bounds=Some((217, 234)) Some("/[a-z]+/ -> Span ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((217, 233)) Some("/[a-z]+/ -> Span")
+              Factor tag=None bounds=Some((217, 226)) Some("/[a-z]+/ ")
+                Term tag=Some(4) bounds=None None
+                  Other tag=None bounds=Some((217, 225)) Some("/[a-z]+/")
+                    Span("/[a-z]+/")
+              ValueOr tag=None bounds=None None
+                ValueAnd tag=None bounds=None None
+                  ValueCmp tag=None bounds=None None
+                    ValueAdd tag=None bounds=None None
+                      ValueMul tag=None bounds=None None
+                        ValueUnary tag=Some(1) bounds=None None
+                          ValueAtom tag=Some(6) bounds=None None
+                            ValuePath tag=None bounds=None None
+                              Span("Span")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((236, 274)) Some("num = /[0-9]+/ -> parse(input) : i64 ;")
+      Span("num")
+      Alternation tag=None bounds=Some((242, 273)) Some("/[0-9]+/ -> parse(input) : i64 ")
+        Concatenation tag=None bounds=Some((242, 273)) Some("/[0-9]+/ -> parse(input) : i64 ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((242, 272)) Some("/[0-9]+/ -> parse(input) : i64")
+              Factor tag=None bounds=Some((242, 251)) Some("/[0-9]+/ ")
+                Term tag=Some(4) bounds=None None
+                  Other tag=None bounds=Some((242, 250)) Some("/[0-9]+/")
+                    Span("/[0-9]+/")
+              ValueOr tag=None bounds=None None
+                ValueAnd tag=None bounds=None None
+                  ValueCmp tag=None bounds=None None
+                    ValueAdd tag=None bounds=None None
+                      ValueMul tag=None bounds=None None
+                        ValueUnary tag=Some(1) bounds=None None
+                          ValueAtom tag=Some(4) bounds=None None
+                            ValueFnCall tag=None bounds=None None
+                              ValuePath tag=None bounds=None None
+                                Span("parse")
+                              ValueOr tag=None bounds=None None
+                                ValueAnd tag=None bounds=None None
+                                  ValueCmp tag=None bounds=None None
+                                    ValueAdd tag=None bounds=None None
+                                      ValueMul tag=None bounds=None None
+                                        ValueUnary tag=Some(1) bounds=None None
+                                          ValueAtom tag=Some(5) bounds=None None
+                                            ValueInput tag=None bounds=Some((260, 265)) Some("input")
+              TypeAnnotation tag=None bounds=Some((266, 272)) Some(" : i64")
+                Other tag=Some(5) bounds=None None
+                  Unit
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((275, 296)) Some("tagged = \"x\" -> 3u8 ;")
+      Span("tagged")
+      Alternation tag=None bounds=Some((284, 295)) Some("\"x\" -> 3u8 ")
+        Concatenation tag=None bounds=Some((284, 295)) Some("\"x\" -> 3u8 ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((284, 294)) Some("\"x\" -> 3u8")
+              Factor tag=None bounds=Some((284, 288)) Some("\"x\" ")
+                Term tag=Some(3) bounds=None None
+                  Span("\"x\"")
+              ValueOr tag=None bounds=None None
+                ValueAnd tag=None bounds=None None
+                  ValueCmp tag=None bounds=None None
+                    ValueAdd tag=None bounds=None None
+                      ValueMul tag=None bounds=None None
+                        ValueUnary tag=Some(1) bounds=None None
+                          ValueAtom tag=Some(0) bounds=None None
+                            Int(3)
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((297, 325)) Some("pair = ident << \":\" >> num ;")
+      Span("pair")
+      Alternation tag=None bounds=Some((304, 324)) Some("ident << \":\" >> num ")
+        Concatenation tag=None bounds=Some((304, 324)) Some("ident << \":\" >> num ")
+          BinaryFactor tag=Some(1) bounds=None None
+            MappedFactor tag=None bounds=Some((304, 310)) Some("ident ")
+              Factor tag=None bounds=Some((304, 310)) Some("ident ")
+                Term tag=Some(2) bounds=None None
+                  Span("ident")
+            MappedFactor tag=None bounds=Some((313, 317)) Some("\":\" ")
+              Factor tag=None bounds=Some((313, 317)) Some("\":\" ")
+                Term tag=Some(3) bounds=None None
+                  Span("\":\"")
+            MappedFactor tag=None bounds=Some((320, 324)) Some("num ")
+              Factor tag=None bounds=Some((320, 324)) Some("num ")
+                Term tag=Some(2) bounds=None None
+                  Span("num")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((326, 346)) Some("diff = ident - \"x\" ;")
+      Span("diff")
+      Alternation tag=None bounds=Some((333, 345)) Some("ident - \"x\" ")
+        Concatenation tag=None bounds=Some((333, 345)) Some("ident - \"x\" ")
+          BinaryFactor tag=Some(2) bounds=None None
+            MappedFactor tag=None bounds=Some((333, 339)) Some("ident ")
+              Factor tag=None bounds=Some((333, 339)) Some("ident ")
+                Term tag=Some(2) bounds=None None
+                  Span("ident")
+            MappedFactor tag=None bounds=Some((341, 345)) Some("\"x\" ")
+              Factor tag=None bounds=Some((341, 345)) Some("\"x\" ")
+                Term tag=Some(3) bounds=None None
+                  Span("\"x\"")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((347, 365)) Some("juxt = ident num ;")
+      Span("juxt")
+      Alternation tag=None bounds=Some((354, 364)) Some("ident num ")
+        Concatenation tag=None bounds=Some((354, 364)) Some("ident num ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((354, 360)) Some("ident ")
+              Factor tag=None bounds=Some((354, 360)) Some("ident ")
+                Term tag=Some(2) bounds=None None
+                  Span("ident")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((360, 364)) Some("num ")
+              Factor tag=None bounds=Some((360, 364)) Some("num ")
+                Term tag=Some(2) bounds=None None
+                  Span("num")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((366, 430)) Some("opt = [ ident ] , { num } , @{ ident , num } , ( ident | num ) ;")
+      Span("opt")
+      Alternation tag=None bounds=Some((372, 429)) Some("[ ident ] , { num } , @{ ident , num } , ( ident | num ) ")
+        Concatenation tag=None bounds=Some((372, 429)) Some("[ ident ] , { num } , @{ ident , num } , ( ident | num ) ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((372, 382)) Some("[ ident ] ")
+              Factor tag=None bounds=Some((372, 382)) Some("[ ident ] ")
+                Term tag=Some(7) bounds=None None
+                  Alternation tag=None bounds=Some((374, 380)) Some("ident ")
+                    Concatenation tag=None bounds=Some((374, 380)) Some("ident ")
+                      BinaryFactor tag=None bounds=None None
+                        MappedFactor tag=None bounds=Some((374, 380)) Some("ident ")
+                          Factor tag=None bounds=Some((374, 380)) Some("ident ")
+                            Term tag=Some(2) bounds=None None
+                              Span("ident")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((384, 392)) Some("{ num } ")
+              Factor tag=None bounds=Some((384, 392)) Some("{ num } ")
+                Term tag=Some(8) bounds=None None
+                  Alternation tag=None bounds=Some((386, 390)) Some("num ")
+                    Concatenation tag=None bounds=Some((386, 390)) Some("num ")
+                      BinaryFactor tag=None bounds=None None
+                        MappedFactor tag=None bounds=Some((386, 390)) Some("num ")
+                          Factor tag=None bounds=Some((386, 390)) Some("num ")
+                            Term tag=Some(2) bounds=None None
+                              Span("num")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((394, 411)) Some("@{ ident , num } ")
+              Factor tag=None bounds=Some((394, 411)) Some("@{ ident , num } ")
+                Term tag=Some(5) bounds=None None
+                  Alternation tag=None bounds=Some((397, 409)) Some("ident , num ")
+                    Concatenation tag=None bounds=Some((397, 409)) Some("ident , num ")
+                      BinaryFactor tag=None bounds=None None
+                        MappedFactor tag=None bounds=Some((397, 403)) Some("ident ")
+                          Factor tag=None bounds=Some((397, 403)) Some("ident ")
+                            Term tag=Some(2) bounds=None None
+                              Span("ident")
+                      BinaryFactor tag=None bounds=None None
+                        MappedFactor tag=None bounds=Some((405, 409)) Some("num ")
+                          Factor tag=None bounds=Some((405, 409)) Some("num ")
+                            Term tag=Some(2) bounds=None None
+                              Span("num")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((413, 429)) Some("( ident | num ) ")
+              Factor tag=None bounds=Some((413, 429)) Some("( ident | num ) ")
+                Term tag=Some(6) bounds=None None
+                  Alternation tag=None bounds=Some((415, 427)) Some("ident | num ")
+                    Concatenation tag=None bounds=Some((415, 421)) Some("ident ")
+                      BinaryFactor tag=None bounds=None None
+                        MappedFactor tag=None bounds=Some((415, 421)) Some("ident ")
+                          Factor tag=None bounds=Some((415, 421)) Some("ident ")
+                            Term tag=Some(2) bounds=None None
+                              Span("ident")
+                    Concatenation tag=None bounds=Some((423, 427)) Some("num ")
+                      BinaryFactor tag=None bounds=None None
+                        MappedFactor tag=None bounds=Some((423, 427)) Some("num ")
+                          Factor tag=None bounds=Some((423, 427)) Some("num ")
+                            Term tag=Some(2) bounds=None None
+                              Span("num")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((431, 474)) Some("mods = ident ?w , num ? , ident * , num + ;")
+      Span("mods")
+      Alternation tag=None bounds=Some((438, 473)) Some("ident ?w , num ? , ident * , num + ")
+        Concatenation tag=None bounds=Some((438, 473)) Some("ident ?w , num ? , ident * , num + ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((438, 446)) Some("ident ?w")
+              Factor tag=None bounds=Some((438, 446)) Some("ident ?w")
+                Term tag=Some(2) bounds=None None
+                  Span("ident")
+                Span("?w")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((449, 454)) Some("num ?")
+              Factor tag=None bounds=Some((449, 454)) Some("num ?")
+                Term tag=Some(2) bounds=None None
+                  Span("num")
+                Span("?")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((457, 464)) Some("ident *")
+              Factor tag=None bounds=Some((457, 464)) Some("ident *")
+                Term tag=Some(2) bounds=None None
+                  Span("ident")
+                Span("*")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((467, 472)) Some("num +")
+              Factor tag=None bounds=Some((467, 472)) Some("num +")
+                Term tag=Some(2) bounds=None None
+                  Span("num")
+                Span("+")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((475, 508)) Some("wrap = |x, y| \"(\" , x , y , \")\" ;")
+      Span("wrap")
+      Closure tag=None bounds=Some((482, 507)) Some("|x, y| \"(\" , x , y , \")\" ")
+        Span("x")
+        Span("y")
+        Alternation tag=None bounds=Some((489, 507)) Some("\"(\" , x , y , \")\" ")
+          Concatenation tag=None bounds=Some((489, 507)) Some("\"(\" , x , y , \")\" ")
+            BinaryFactor tag=None bounds=None None
+              MappedFactor tag=None bounds=Some((489, 493)) Some("\"(\" ")
+                Factor tag=None bounds=Some((489, 493)) Some("\"(\" ")
+                  Term tag=Some(3) bounds=None None
+                    Span("\"(\"")
+            BinaryFactor tag=None bounds=None None
+              MappedFactor tag=None bounds=Some((495, 497)) Some("x ")
+                Factor tag=None bounds=Some((495, 497)) Some("x ")
+                  Term tag=Some(2) bounds=None None
+                    Span("x")
+            BinaryFactor tag=None bounds=None None
+              MappedFactor tag=None bounds=Some((499, 501)) Some("y ")
+                Factor tag=None bounds=Some((499, 501)) Some("y ")
+                  Term tag=Some(2) bounds=None None
+                    Span("y")
+            BinaryFactor tag=None bounds=None None
+              MappedFactor tag=None bounds=Some((503, 507)) Some("\")\" ")
+                Factor tag=None bounds=Some((503, 507)) Some("\")\" ")
+                  Term tag=Some(3) bounds=None None
+                    Span("\")\"")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((509, 541)) Some("use = wrap(ident, num | ident) ;")
+      Span("use")
+      Alternation tag=None bounds=Some((515, 540)) Some("wrap(ident, num | ident) ")
+        Concatenation tag=None bounds=Some((515, 540)) Some("wrap(ident, num | ident) ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((515, 540)) Some("wrap(ident, num | ident) ")
+              Factor tag=None bounds=Some((515, 540)) Some("wrap(ident, num | ident) ")
+                Term tag=Some(2) bounds=None None
+                  Span("wrap")
+                  CallArg tag=None bounds=Some((520, 525)) Some("ident")
+                    BinaryFactor tag=None bounds=None None
+                      MappedFactor tag=None bounds=Some((520, 525)) Some("ident")
+                        Factor tag=None bounds=Some((520, 525)) Some("ident")
+                          Term tag=Some(2) bounds=None None
+                            Span("ident")
+                  CallArg tag=None bounds=Some((527, 538)) Some("num | ident")
+                    BinaryFactor tag=None bounds=None None
+                      MappedFactor tag=None bounds=Some((527, 531)) Some("num ")
+                        Factor tag=None bounds=Some((527, 531)) Some("num ")
+                          Term tag=Some(2) bounds=None None
+                            Span("num")
+                    BinaryFactor tag=None bounds=None None
+                      MappedFactor tag=None bounds=Some((533, 538)) Some("ident")
+                        Factor tag=None bounds=Some((533, 538)) Some("ident")
+                          Term tag=Some(2) bounds=None None
+                            Span("ident")
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((542, 562)) Some("eps = ε | epsilon ;")
+      Span("eps")
+      Alternation tag=None bounds=Some((548, 561)) Some("ε | epsilon ")
+        Concatenation tag=None bounds=Some((548, 551)) Some("ε ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((548, 551)) Some("ε ")
+              Factor tag=None bounds=Some((548, 551)) Some("ε ")
+                Term tag=Some(0) bounds=None None
+                  Unit
+        Concatenation tag=None bounds=Some((553, 561)) Some("epsilon ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((553, 561)) Some("epsilon ")
+              Factor tag=None bounds=Some((553, 561)) Some("epsilon ")
+                Term tag=Some(1) bounds=None None
+                  Unit
+      Span(";")
+  GrammarItem tag=Some(3) bounds=None None
+    Rule tag=None bounds=Some((563, 577)) Some("done = ident .")
+      Span("done")
+      Alternation tag=None bounds=Some((570, 576)) Some("ident ")
+        Concatenation tag=None bounds=Some((570, 576)) Some("ident ")
+          BinaryFactor tag=None bounds=None None
+            MappedFactor tag=None bounds=Some((570, 576)) Some("ident ")
+              Factor tag=None bounds=Some((570, 576)) Some("ident ")
+                Term tag=Some(2) bounds=None None
+                  Span("ident")
+      Span(".")
+

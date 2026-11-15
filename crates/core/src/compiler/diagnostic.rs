@@ -22,6 +22,10 @@ pub enum DiagnosticCode {
     RevisionMismatch,
     GeneratedSourceTooLarge,
     InternalInvariant,
+    /// sk-v27 LW3.COMP-1c: a form the language names, read by the front end,
+    /// that this stage cannot yet give a meaning; the message names the form
+    /// and the LEDGER row that owns it.
+    FormWithoutMeaning,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]

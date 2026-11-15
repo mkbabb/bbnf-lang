@@ -1,4 +1,5 @@
 mod analysis;
+mod bootstrap;
 mod budget;
 mod dependency;
 mod diagnostic;

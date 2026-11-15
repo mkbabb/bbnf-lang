@@ -21,3 +21,7 @@ pub mod obs;
 pub mod oracles;
 pub mod registry;
 pub mod sample;
+// The reference unifier (LAYOUT-HM-V2 §11 item 2). Private and not a pass
+// (Lock 2): nothing outside its own law suite reads it until H1's checker.
+#[allow(dead_code)]
+mod unify;

@@ -1,0 +1,12 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/bbnf-path)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 19.87s
+────────────
+ Nextest run ID 6a715fb6-2b7a-4b55-a8c2-ebb3acbc2d46 with nextest profile: default
+    Starting 3 tests across 1 binary
+        PASS [   0.012s] (1/3) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+        PASS [   0.012s] (2/3) bbnf::rb_root_whitespace the_cases_the_class_does_not_touch_are_read
+        PASS [   0.014s] (3/3) bbnf::rb_root_whitespace json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+────────────
+     Summary [   0.016s] 3 tests run: 3 passed, 0 skipped

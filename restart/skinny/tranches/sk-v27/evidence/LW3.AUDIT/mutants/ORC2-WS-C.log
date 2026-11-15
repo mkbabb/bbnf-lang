@@ -1,0 +1,40 @@
+
+    thread 'json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set' (12598721) panicked at crates/core/tests/rb_root_whitespace.rs:82:9:
+    json refused "[\u{c}1]"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.010s] (3/3) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  stdout ───
+
+    running 1 test
+    test root_reads_only_the_whitespace_the_grammar_reads ... FAILED
+
+    failures:
+
+    failures:
+        root_reads_only_the_whitespace_the_grammar_reads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'root_reads_only_the_whitespace_the_grammar_reads' (12598722) panicked at crates/core/tests/rb_root_whitespace.rs:63:5:
+    14 verdicts differ from the grammar's text:
+    math accepted "  1"
+    math accepted "  "
+    math accepted "\t.5"
+    ebnf refused "\u{c}a = b ;\u{c}"
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    ebnf refused "a = '\t' ;"
+    ebnf accepted "\n"
+    ebnf accepted " "
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    bnf refused "\u{c}<Z0> ::=\t\"\"\n"
+    bnf accepted "\t\n"
+    bnf accepted "\n"
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+restored dirty=0

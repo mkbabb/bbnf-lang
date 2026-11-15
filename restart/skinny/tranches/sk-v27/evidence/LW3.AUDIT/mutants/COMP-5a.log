@@ -1,0 +1,40 @@
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.22s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:402 — matched `value` in arm `"value" => true,`
+
+    (scanned 250 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (12552005) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+        PASS [   1.447s] (5/5) bbnf::plan_contract renaming_every_rule_and_the_grammar_ident_changes_no_root_plan_or_emission
+────────────
+     Summary [   1.447s] 5 tests run: 4 passed, 1 failed, 0 skipped
+        FAIL [   0.232s] (4/5) bbnf::no_grammar_name_branch no_grammar_name_branch_in_production_runtime_or_shape_emitter
+  stdout ───
+
+    running 1 test
+    test no_grammar_name_branch_in_production_runtime_or_shape_emitter ... FAILED
+
+    failures:
+
+    failures:
+        no_grammar_name_branch_in_production_runtime_or_shape_emitter
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.22s
+
+  stderr ───
+    AZ-IV.W1 grammar-overfit static scan failed — production runtime or shape emitter branches on a literal grammar parser-struct ident or rule-name string. Per `docs/tranches/AZ-IV/audit/HARDENING-2026-05-01-fermat.md` the replacement is a registry/typed-inference discriminator (StructRegistry::compound_kind, TypeDesc::*) or data the caller supplies with the grammar. Hits:
+      crates/core/src/backend/rust/emitter/shapes/mod.rs:402 — matched `value` in arm `"value" => true,`
+
+    (scanned 250 production files)
+
+    thread 'no_grammar_name_branch_in_production_runtime_or_shape_emitter' (12552005) panicked at crates/core/tests/no_grammar_name_branch.rs:375:9:
+    1 hit(s) — see eprintln above
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+restored dirty=0

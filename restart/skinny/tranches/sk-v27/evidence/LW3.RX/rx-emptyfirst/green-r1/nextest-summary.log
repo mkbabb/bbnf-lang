@@ -1,0 +1,19 @@
+     Summary [  64.038s] 1679 tests run: 1670 passed (1 slow), 9 failed, 27 skipped
+    assertion `left == right` failed: BBNF metadata target inventory is exact (158 targets)
+    thread 'corpus_nested' (11670211) has overflowed its stack
+    thread 'corpus_nested' (11671060) has overflowed its stack
+    thread 'corpus_simple' (11670212) has overflowed its stack
+    thread 'corpus_simple' (11671069) has overflowed its stack
+    thread 'corpus_stress' (11670215) has overflowed its stack
+    thread 'corpus_stress' (11671078) has overflowed its stack
+    thread 'google_sheets_args_are_comma_separated' (11669743) has overflowed its stack
+    thread 'google_sheets_args_are_comma_separated' (11670704) has overflowed its stack
+    thread 'parse_let_nested' (11667707) has overflowed its stack
+    thread 'parse_let_nested' (11668975) has overflowed its stack
+    thread 'serialize_roundtrip_lambda_call' (11670564) has overflowed its stack
+    thread 'serialize_roundtrip_lambda_call' (11671395) has overflowed its stack
+    thread 'serialize_roundtrip_let_call' (11670563) has overflowed its stack
+    thread 'serialize_roundtrip_let_call' (11671387) has overflowed its stack
+    thread 'sheets_parses_let_call_field_for_field' (11670062) has overflowed its stack
+    thread 'sheets_parses_let_call_field_for_field' (11670917) has overflowed its stack
+rc=100

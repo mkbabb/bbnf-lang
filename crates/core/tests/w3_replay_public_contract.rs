@@ -9120,8 +9120,11 @@ const SK_V27_METADATA_PACKAGE_COUNT: usize = 511;
 /// sha256 over the sorted `bbnf` target inventory (`name:kind`, one per line).
 /// Re-taken at LW3.COMP-5a: the test target `synthetic_grammar_strategy`
 /// (the deleted ident-keyed table's tests) left, the sole difference.
+/// Re-taken at LW3.RX-EMPTYFIRST (RULINGS 2026-11-14j INVENTORY): the test
+/// target `rx_emptyfirst` (`tests/rx_emptyfirst.rs`, the falsifiers of
+/// LW3.RX-EMPTYFIRST and LW3.RX-EMPTYFIRST-B) entered, the sole difference.
 const SK_V27_BBNF_TARGETS_SHA256: &str =
-    "2390e4e652d49ab7359256b9ca22602a5e797ced809967c61a515fd7c0ac8a7a";
+    "839e0f063b1389c9bee3b52132d158f376acbcf82de75fb356a8896a4ac485bb";
 /// sha256 over the sorted `bbnf` metadata dependency rows.
 /// Re-taken at LW3.PERF-1d: the parse-that pin moved 6889b29 -> 3642613
 /// (RULINGS 2026-11-14d PERF1D-PT); the four parse-that `source` rows
@@ -9145,8 +9148,12 @@ const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
 /// `quote_or_backslash_test` (the relocated kernel's equivalence tests).
 /// Re-taken again (RULINGS 2026-11-14f PERF1D-B2): pin bacc888 -> d5a6bae,
 /// the five sources only (no target added or removed).
+/// Re-taken at LW3.RX-EMPTYFIRST (RULINGS 2026-11-14j INVENTORY): `bbnf`'s
+/// test target `rx_emptyfirst` entered, the sole row difference (proved by
+/// `evidence/LW3.RX/rx-emptyfirst/identity_diff.py`: without that target both
+/// digests read the values sealed before).
 const SK_V27_METADATA_IDENTITY_SHA256: &str =
-    "1ccac8f4905e11c81f6c7b58715c43046397b058ba16ddcb2d1f08f4aff513cb";
+    "fa56f9e1120f99656309a04f7e9b281df49fd495ea4a401810d61b494127ed70";
 /// sha256 of the complete Cargo.lock. Re-taken at LW3.COMP-5a: `bbnf-ir`
 /// lost its `toml 0.8.23` build dependency with the strategy-table build
 /// script, the sole lockfile line that moved. Re-taken at LW3.PERF-1d: the

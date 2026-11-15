@@ -1,0 +1,62 @@
+(lldb) target create "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/deps/rx_emptyfirst-dc6f53c8e8c087fc"
+Current executable set to '/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/deps/rx_emptyfirst-dc6f53c8e8c087fc' (arm64).
+(lldb) settings set -- target.run-args  "arglist" "--test-threads" "1"
+(lldb) run
+
+running 1 test
+test arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher ... warning: This version of LLDB has no plugin for the language "rust". Inspection of frame variables will be limited.
+Process 22472 launched: '/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/deps/rx_emptyfirst-dc6f53c8e8c087fc' (arm64)
+Process 22472 stopped
+* thread #2, name = 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatc', stop reason = EXC_BAD_ACCESS (code=2, address=0x16fe03ff8)
+    frame #0: 0x0000000100074c68 rx_emptyfirst-dc6f53c8e8c087fc`new<bbnf_ir::types::rule::IrRule> at iter.rs:94
+   91  	
+   92  	impl<'a, T> Iter<'a, T> {
+   93  	    #[inline]
+-> 94  	    pub(super) const fn new(slice: &'a [T]) -> Self {
+   95  	        let len = slice.len();
+   96  	        let ptr: NonNull<T> = NonNull::from_ref(slice).cast();
+   97  	        // SAFETY: Similar to `IterMut::new`.
+Target 0: (rx_emptyfirst-dc6f53c8e8c087fc) stopped.
+(lldb) thread backtrace -c 40
+* thread #2, name = 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatc', stop reason = EXC_BAD_ACCESS (code=2, address=0x16fe03ff8)
+  * frame #0: 0x0000000100074c68 rx_emptyfirst-dc6f53c8e8c087fc`new<bbnf_ir::types::rule::IrRule> at iter.rs:94
+    frame #1: 0x000000010025db54 rx_emptyfirst-dc6f53c8e8c087fc`iter<bbnf_ir::types::rule::IrRule> at mod.rs:1040:9
+    frame #2: 0x00000001001d1114 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:51:42
+    frame #3: 0x00000001001d0fb0 rx_emptyfirst-dc6f53c8e8c087fc`{closure#1} at alt.rs:63:22
+    frame #4: 0x000000010006a0d8 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::AltBranch, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#1}> at macros.rs:327:24
+    frame #5: 0x00000001001d10f4 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:63:14
+    frame #6: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #7: 0x00000001001d0f8c rx_emptyfirst-dc6f53c8e8c087fc`{closure#2} at alt.rs:74:22
+    frame #8: 0x00000001000688a0 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::IrNode, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#2}> at macros.rs:327:24
+    frame #9: 0x00000001001d10c0 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:74:14
+    frame #10: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #11: 0x00000001001d13ec rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:47:46
+    frame #12: 0x00000001001d0f8c rx_emptyfirst-dc6f53c8e8c087fc`{closure#2} at alt.rs:74:22
+    frame #13: 0x00000001000688a0 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::IrNode, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#2}> at macros.rs:327:24
+    frame #14: 0x00000001001d10c0 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:74:14
+    frame #15: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #16: 0x00000001001d0fb0 rx_emptyfirst-dc6f53c8e8c087fc`{closure#1} at alt.rs:63:22
+    frame #17: 0x000000010006a0d8 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::AltBranch, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#1}> at macros.rs:327:24
+    frame #18: 0x00000001001d10f4 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:63:14
+    frame #19: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #20: 0x00000001001d0f8c rx_emptyfirst-dc6f53c8e8c087fc`{closure#2} at alt.rs:74:22
+    frame #21: 0x00000001000688a0 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::IrNode, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#2}> at macros.rs:327:24
+    frame #22: 0x00000001001d10c0 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:74:14
+    frame #23: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #24: 0x00000001001d13ec rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:47:46
+    frame #25: 0x00000001001d0f8c rx_emptyfirst-dc6f53c8e8c087fc`{closure#2} at alt.rs:74:22
+    frame #26: 0x00000001000688a0 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::IrNode, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#2}> at macros.rs:327:24
+    frame #27: 0x00000001001d10c0 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:74:14
+    frame #28: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #29: 0x00000001001d0fb0 rx_emptyfirst-dc6f53c8e8c087fc`{closure#1} at alt.rs:63:22
+    frame #30: 0x000000010006a0d8 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::AltBranch, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#1}> at macros.rs:327:24
+    frame #31: 0x00000001001d10f4 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:63:14
+    frame #32: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #33: 0x00000001001d0f8c rx_emptyfirst-dc6f53c8e8c087fc`{closure#2} at alt.rs:74:22
+    frame #34: 0x00000001000688a0 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::IrNode, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#2}> at macros.rs:327:24
+    frame #35: 0x00000001001d10c0 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:74:14
+    frame #36: 0x00000001001d1268 rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:55:28
+    frame #37: 0x00000001001d13ec rx_emptyfirst-dc6f53c8e8c087fc`branch_pushes_children at alt.rs:47:46
+    frame #38: 0x00000001001d0f8c rx_emptyfirst-dc6f53c8e8c087fc`{closure#2} at alt.rs:74:22
+    frame #39: 0x00000001000688a0 rx_emptyfirst-dc6f53c8e8c087fc`any<bbnf_ir::types::node::IrNode, bbnf::backend::driver::alt::branch_pushes_children::{closure_env#2}> at macros.rs:327:24
+(lldb) quit

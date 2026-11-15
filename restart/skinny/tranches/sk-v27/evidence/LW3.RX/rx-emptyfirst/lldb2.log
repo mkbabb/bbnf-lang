@@ -1,0 +1,53 @@
+(lldb) target create "/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/deps/google_sheets_slab-cb5b20e2c90c37f1"
+Current executable set to '/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/deps/google_sheets_slab-cb5b20e2c90c37f1' (arm64).
+(lldb) settings set -- target.run-args  "parse_let_nested" "--exact" "--test-threads" "1"
+(lldb) run
+
+running 1 test
+test parse_let_nested ... warning: This version of LLDB has no plugin for the language "rust". Inspection of frame variables will be limited.
+Process 99690 launched: '/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/deps/google_sheets_slab-cb5b20e2c90c37f1' (arm64)
+Process 99690 stopped
+* thread #2, name = 'parse_let_nested', stop reason = EXC_BAD_ACCESS (code=2, address=0x16fe03f40)
+    frame #0: 0x00000001000e8c18 google_sheets_slab-cb5b20e2c90c37f1`__regex_scan_GoogleSheetsParser at google_sheets.rs:2480
+   2477	    ];
+   2478	    #[inline]
+   2479	    #[cold]
+-> 2480	    fn __regex_scan_GoogleSheetsParser(
+   2481	        pattern: &str,
+   2482	        input: &[u8],
+   2483	        pos: usize,
+Target 0: (google_sheets_slab-cb5b20e2c90c37f1) stopped.
+(lldb) register read sp lr
+      sp = 0x000000016fe03f40
+      lr = 0x0000000100040ab8  google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> + 64 at google_sheets.rs:8907:43
+(lldb) image lookup -a $lr
+      Address: google_sheets_slab-cb5b20e2c90c37f1[0x0000000100040ab8] (google_sheets_slab-cb5b20e2c90c37f1.__TEXT.__text + 262648)
+      Summary: google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> + 64 at google_sheets.rs:8907:43
+(lldb) thread backtrace -c 25
+* thread #2, name = 'parse_let_nested', stop reason = EXC_BAD_ACCESS (code=2, address=0x16fe03f40)
+  * frame #0: 0x00000001000e8c18 google_sheets_slab-cb5b20e2c90c37f1`__regex_scan_GoogleSheetsParser at google_sheets.rs:2480
+    frame #1: 0x0000000100040ab8 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8907:43
+    frame #2: 0x000000010003c7cc google_sheets_slab-cb5b20e2c90c37f1`parse_flat_GoogleSheetsParser_formula<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8903:83
+    frame #3: 0x000000010003ddc4 google_sheets_slab-cb5b20e2c90c37f1`parse_GoogleSheetsParser_formula__value<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8998:9
+    frame #4: 0x00000001000499d0 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8339:21
+    frame #5: 0x000000010003ef70 google_sheets_slab-cb5b20e2c90c37f1`parse_arglist_GoogleSheetsParser_let_call<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8338:83
+    frame #6: 0x000000010003cbf4 google_sheets_slab-cb5b20e2c90c37f1`parse_wrap_GoogleSheetsParser_primary<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8427:31
+    frame #7: 0x000000010004d180 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8765:21
+    frame #8: 0x000000010003f664 google_sheets_slab-cb5b20e2c90c37f1`parse_flat_GoogleSheetsParser_postfix_expr<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8762:83
+    frame #9: 0x0000000100048454 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:6365:21
+    frame #10: 0x000000010003ea0c google_sheets_slab-cb5b20e2c90c37f1`parse_flat_GoogleSheetsParser_unary_expr<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:6311:83
+    frame #11: 0x00000001000440f8 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:7845:17
+    frame #12: 0x000000010003e518 google_sheets_slab-cb5b20e2c90c37f1`parse_pratt_GoogleSheetsParser_exp_expr<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:7842:83
+    frame #13: 0x0000000100045e9c google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:6158:17
+    frame #14: 0x000000010003e714 google_sheets_slab-cb5b20e2c90c37f1`parse_pratt_GoogleSheetsParser_mul_expr<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:6155:83
+    frame #15: 0x0000000100042354 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:7707:17
+    frame #16: 0x000000010003e31c google_sheets_slab-cb5b20e2c90c37f1`parse_pratt_GoogleSheetsParser_add_expr<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:7704:83
+    frame #17: 0x000000010004d86c google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:7569:17
+    frame #18: 0x000000010003f9b8 google_sheets_slab-cb5b20e2c90c37f1`parse_pratt_GoogleSheetsParser_concat_expr<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:7566:83
+    frame #19: 0x0000000100051984 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:6011:17
+    frame #20: 0x0000000100040598 google_sheets_slab-cb5b20e2c90c37f1`parse_pratt_GoogleSheetsParser_comparison_expr<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:6008:83
+    frame #21: 0x000000010003faa0 google_sheets_slab-cb5b20e2c90c37f1`parse_scalar_GoogleSheetsParser_expression<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8038:13
+    frame #22: 0x0000000100040b34 google_sheets_slab-cb5b20e2c90c37f1`{closure#0}<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8921:21
+    frame #23: 0x000000010003c7cc google_sheets_slab-cb5b20e2c90c37f1`parse_flat_GoogleSheetsParser_formula<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8903:83
+    frame #24: 0x000000010003ddc4 google_sheets_slab-cb5b20e2c90c37f1`parse_GoogleSheetsParser_formula__value<bbnf::path::ir::TypedPath<bbnf::path::markers::Json, &str>> at google_sheets.rs:8998:9
+(lldb) quit

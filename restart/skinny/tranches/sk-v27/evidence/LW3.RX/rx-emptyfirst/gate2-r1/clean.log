@@ -1,0 +1,25 @@
+clean dev bbnf removed=0 left=0
+clean dev bbnf-ir removed=0 left=0
+clean dev bbnf-ser removed=0 left=0
+clean dev bbnf-corpus removed=0 left=0
+clean dev bbnf-path removed=0 left=0
+clean dev bbnf-analysis removed=0 left=0
+clean dev bbnf-lsp removed=0 left=0
+clean dev gorgeous removed=0 left=0
+clean dev bbnf-bootstrap removed=0 left=0
+clean dev bbnf-path-ts removed=0 left=0
+clean dev bbnf-oracle removed=0 left=0
+clean dev xtask removed=0 left=0
+clean ax-iter bbnf removed=7421 left=0
+clean ax-iter bbnf-ir removed=1030 left=0
+clean ax-iter bbnf-ser removed=50 left=0
+clean ax-iter bbnf-corpus removed=45 left=0
+clean ax-iter bbnf-path removed=20 left=0
+clean ax-iter bbnf-analysis removed=230 left=0
+clean ax-iter bbnf-lsp removed=495 left=0
+clean ax-iter gorgeous removed=23 left=0
+clean ax-iter bbnf-bootstrap removed=52 left=0
+clean ax-iter bbnf-path-ts removed=144 left=0
+clean ax-iter bbnf-oracle removed=505 left=0
+clean ax-iter xtask removed=700 left=0
+rc=0

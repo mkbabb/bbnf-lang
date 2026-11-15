@@ -1,0 +1,205 @@
+cure=b5fc5493de58d6088dce85a35d7d91ab0be55682 mutant-diff:
+diff --git a/crates/core/src/generate/regex/byte_class.rs b/crates/core/src/generate/regex/byte_class.rs
+index ba7e6fd3b..01345272c 100644
+--- a/crates/core/src/generate/regex/byte_class.rs
++++ b/crates/core/src/generate/regex/byte_class.rs
+@@ -60,7 +60,7 @@ impl PatternFirstBytes {
+         Self {
+             pattern_idx,
+             first_bytes: regex_first_chars(pattern),
+-            nullable: regex_is_nullable(pattern),
++            nullable: false && regex_is_nullable(pattern),
+         }
+     }
+ }
+     Removed 0 files
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/crates/corpus)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/crates/ir)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.04s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen`
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/crates/ser)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/crates/core)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 12.46s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 9.6535ms
+[xtask::regen] bbnf: generate_all done in 49.434041ms
+[xtask::regen] bbnf: prettyplease done in 214.540625ms
+regen bbnf: wrote 1062705 bytes to crates/core/src/grammar/generated/bbnf.rs
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 2.126417ms
+[xtask::regen] json: generate_all done in 8.826333ms
+[xtask::regen] json: prettyplease done in 39.888708ms
+regen json: wrote 182709 bytes to crates/core/src/grammar/generated/json.rs
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 105.60825ms
+[xtask::regen] css_l4: generate_all done in 199.702958ms
+[xtask::regen] css_l4: prettyplease done in 1.053168667s
+regen css_l4: wrote 5905888 bytes to crates/core/src/grammar/generated/css_l4.rs
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 5.811292ms
+[xtask::regen] css_pretty: generate_all done in 37.368417ms
+[xtask::regen] css_pretty: prettyplease done in 91.494208ms
+regen css_pretty: wrote 557289 bytes to crates/core/src/grammar/generated/css_pretty.rs
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 12.994583ms
+[xtask::regen] google_sheets: generate_all done in 23.99975ms
+[xtask::regen] google_sheets: prettyplease done in 111.877541ms
+regen google_sheets: wrote 673975 bytes to crates/core/src/grammar/generated/google_sheets.rs
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 3.749083ms
+[xtask::regen] ebnf: generate_all done in 7.882167ms
+[xtask::regen] ebnf: prettyplease done in 55.970666ms
+regen ebnf: wrote 353534 bytes to crates/core/src/grammar/generated/ebnf.rs
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.417792ms
+[xtask::regen] bnf: generate_all done in 6.35825ms
+[xtask::regen] bnf: prettyplease done in 24.532292ms
+regen bnf: wrote 148831 bytes to crates/core/src/grammar/generated/bnf.rs
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 1.052583ms
+[xtask::regen] csv: generate_all done in 5.074667ms
+[xtask::regen] csv: prettyplease done in 12.625291ms
+regen csv: wrote 68091 bytes to crates/core/src/grammar/generated/csv.rs
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 841.667µs
+[xtask::regen] math: generate_all done in 1.464292ms
+[xtask::regen] math: prettyplease done in 5.582541ms
+regen math: wrote 30008 bytes to crates/core/src/grammar/generated/math.rs
+regen rc=0
+ crates/core/src/generate/regex/byte_class.rs       |  2 +-
+ crates/core/src/grammar/generated/google_sheets.rs | 32 ++++++++--------------
+ 2 files changed, 13 insertions(+), 21 deletions(-)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant/crates/bbnf-path)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 17.74s
+────────────
+ Nextest run ID 7b59eb19-620c-4837-ad6e-371e5db08ac7 with nextest profile: default
+    Starting 2 tests across 1 binary
+  TRY 1 FAIL [   0.014s] (───) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+  stdout ───
+
+    running 1 test
+    test google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq ... FAILED
+
+    failures:
+
+    failures:
+        google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq' (11828707) panicked at crates/core/tests/rx_emptyfirst.rs:112:5:
+    google_sheets refused ["1+2", "A1", "42"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+  TRY 1 FAIL [   0.028s] (───) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  stdout ───
+
+    running 1 test
+    test nullable_regex_is_not_refused_by_first_byte_check ... FAILED
+
+    failures:
+
+    failures:
+        nullable_regex_is_not_refused_by_first_byte_check
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'nullable_regex_is_not_refused_by_first_byte_check' (11828708) panicked at crates/core/tests/rx_emptyfirst.rs:96:5:
+    the nullable pattern `=?` (LUT bit 4) is refused before its DFA at 255 of 256 bytes, e.g. ['\0', '\u{1}', '\u{2}', '\u{3}', '\u{4}', '\u{5}', '\u{6}', '\u{7}']; it matches the empty string at every one of them
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  TRY 2 FAIL [   0.012s] (1/2) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+  stdout ───
+
+    running 1 test
+    test google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq ... FAILED
+
+    failures:
+
+    failures:
+        google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq' (11828946) panicked at crates/core/tests/rx_emptyfirst.rs:112:5:
+    google_sheets refused ["1+2", "A1", "42"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.023s] (2/2) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  stdout ───
+
+    running 1 test
+    test nullable_regex_is_not_refused_by_first_byte_check ... FAILED
+
+    failures:
+
+    failures:
+        nullable_regex_is_not_refused_by_first_byte_check
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'nullable_regex_is_not_refused_by_first_byte_check' (11828969) panicked at crates/core/tests/rx_emptyfirst.rs:96:5:
+    the nullable pattern `=?` (LUT bit 4) is refused before its DFA at 255 of 256 bytes, e.g. ['\0', '\u{1}', '\u{2}', '\u{3}', '\u{4}', '\u{5}', '\u{6}', '\u{7}']; it matches the empty string at every one of them
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.052s] 2 tests run: 0 passed, 2 failed, 0 skipped
+  TRY 2 FAIL [   0.012s] (1/2) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+  stdout ───
+
+    running 1 test
+    test google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq ... FAILED
+
+    failures:
+
+    failures:
+        google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq' (11828946) panicked at crates/core/tests/rx_emptyfirst.rs:112:5:
+    google_sheets refused ["1+2", "A1", "42"]
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  TRY 2 FAIL [   0.023s] (2/2) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  stdout ───
+
+    running 1 test
+    test nullable_regex_is_not_refused_by_first_byte_check ... FAILED
+
+    failures:
+
+    failures:
+        nullable_regex_is_not_refused_by_first_byte_check
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'nullable_regex_is_not_refused_by_first_byte_check' (11828969) panicked at crates/core/tests/rx_emptyfirst.rs:96:5:
+    the nullable pattern `=?` (LUT bit 4) is refused before its DFA at 255 of 256 bytes, e.g. ['\0', '\u{1}', '\u{2}', '\u{3}', '\u{4}', '\u{5}', '\u{6}', '\u{7}']; it matches the empty string at every one of them
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100

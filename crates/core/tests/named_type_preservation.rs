@@ -63,7 +63,7 @@ use std::path::PathBuf;
 use bbnf::pipeline::{
     CompileOutput, CompileRequest, CompileTarget, PipelineOptions, compile_paths_request,
 };
-use bbnf::runtime::{CssTypedValue, JsonValue};
+use bbnf::runtime::{CssFunction, CssTypedValue, JsonValue};
 use bbnf_ir::{GrammarIR, TypeDesc};
 
 // ───────────────────────────────────────────────────────────────────
@@ -413,10 +413,17 @@ fn named_runtime_documents_preserve_concrete_values() {
         })
         .expect("CSS colorFn fixture must expose an arena-backed value list");
     let values = css.values(list_id);
+    // sk-v27 LW3.RX-EMPTYFIRST-B (RULINGS 2026-11-14k RXEFB-C (a)): a corrected
+    // expectation, not a weakening. This read `Span("color")`, the head of a
+    // misparse (the ArgList emitter parsed `genericFunction`'s regex head with
+    // the root rule's dispatcher, so `color` fell to `ident`). `colorFn`
+    // refuses this text (carried row "colorFn refuses `color(srgb 1 0 1 / 0.75)`"),
+    // so the call reads as `genericFunction`, named by its head.
     assert!(
-        values
-            .iter()
-            .any(|value| matches!(value, CssTypedValue::Span(name) if *name == "color")),
-        "CSS colorFn document value list must retain the color() function head, got {values:?}"
+        values.iter().any(|value| matches!(
+            value,
+            CssTypedValue::Function(CssFunction::Generic { name, .. }) if *name == "color"
+        )),
+        "CSS colorFn document value list must retain color() as a function named by its head, got {values:?}"
     );
 }

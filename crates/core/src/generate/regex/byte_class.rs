@@ -48,6 +48,10 @@ pub struct PatternFirstBytes {
     /// First-byte bitmap; `None` when the pattern admits any byte
     /// (wildcard-led) and cannot be filtered.
     pub first_bytes: Option<CharSet128>,
+    /// Whether the pattern can match the empty string. A nullable
+    /// pattern matches at every position, whatever byte is there, so
+    /// the pre-filter admits it at every byte (LW3.RX-EMPTYFIRST).
+    pub nullable: bool,
 }
 
 impl PatternFirstBytes {
@@ -56,8 +60,18 @@ impl PatternFirstBytes {
         Self {
             pattern_idx,
             first_bytes: regex_first_chars(pattern),
+            nullable: regex_is_nullable(pattern),
         }
     }
+}
+
+/// Whether `pattern` can match the empty string, read in the same byte
+/// mode `regex_first_chars` parses it in. A pattern that does not parse
+/// is read as nullable: the pre-filter then admits it everywhere and the
+/// DFA decides, which can never refuse a match the DFA would make.
+fn regex_is_nullable(pattern: &str) -> bool {
+    parse_that::regex::parse_with(pattern, &parse_that::regex::hir::ParseOptions::byte_mode())
+        .map_or(true, |hir| parse_that::regex::info::is_nullable(&hir))
 }
 
 /// Build a 256-byte byte → `&[u8]` mapping where each entry holds
@@ -81,6 +95,13 @@ fn build_byte_to_patterns(patterns: &[PatternFirstBytes]) -> Option<[Vec<u8>; 25
     let mut byte_to_pats: [Vec<u8>; 256] = std::array::from_fn(|_| Vec::new());
 
     for p in patterns {
+        if p.nullable {
+            // Matches the empty string at any byte: never refused here.
+            for slot in &mut byte_to_pats {
+                slot.push(p.pattern_idx as u8);
+            }
+            continue;
+        }
         let bytes = p.first_bytes.as_ref().unwrap();
         for b in 0u8..=127 {
             if bytes.has(b) {

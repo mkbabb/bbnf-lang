@@ -1,0 +1,175 @@
+cure=941f48ec88d39cae3f60f913c3c4407c6aaec15a mutant-diff:
+diff --git a/crates/core/src/backend/rust/emitter/shapes/arglist.rs b/crates/core/src/backend/rust/emitter/shapes/arglist.rs
+index 3a623cc08..58f176e3d 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/arglist.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/arglist.rs
+@@ -422,12 +422,8 @@ fn emit_struct_direct_position_core(
+         | IrNode::Regex(_)
+         | IrNode::Negate(_)
+         | IrNode::Minus(_, _)
+-        | IrNode::TokenDispatch { .. } => super::flat::emit_position_core_struct_direct(
+-            node,
+-            support_mod,
+-            dispatcher_ident,
+-            grammar_suffix,
+-            ir,
+-        ),
++        | IrNode::TokenDispatch { .. } => quote! {
++            let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
++        },
+     }
+ }
+     Removed 8635 files, 1.4GiB total
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/crates/corpus)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/crates/ir)
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/xtask)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.30s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen`
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/crates/ser)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/crates/core)
+warning: unused import: `emit_position_core_struct_direct`
+  --> crates/core/src/backend/rust/emitter/shapes/flat/mod.rs:58:32
+   |
+58 | pub(crate) use struct_direct::{emit_position_core_struct_direct, emit_position_struct_direct};
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling xtask v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/xtask)
+warning: `bbnf` (lib) generated 1 warning (run `cargo fix --lib -p bbnf` to apply 1 suggestion)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 10.19s
+     Running `/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/ax-iter/xtask regen`
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `value_atom::value_atom_3` and `term::term_2` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 9.571ms
+[xtask::regen] bbnf: generate_all done in 43.415375ms
+[xtask::regen] bbnf: prettyplease done in 194.190791ms
+regen bbnf: wrote 1062762 bytes to crates/core/src/grammar/generated/bbnf.rs
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 2.103166ms
+[xtask::regen] json: generate_all done in 8.231708ms
+[xtask::regen] json: prettyplease done in 36.527708ms
+regen json: wrote 182709 bytes to crates/core/src/grammar/generated/json.rs
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `value::value_1` and `valueUnit::valueUnit_0` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 96.678625ms
+[xtask::regen] css_l4: generate_all done in 186.394709ms
+[xtask::regen] css_l4: prettyplease done in 961.09725ms
+regen css_l4: wrote 5906914 bytes to crates/core/src/grammar/generated/css_l4.rs
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 5.879417ms
+[xtask::regen] css_pretty: generate_all done in 32.307708ms
+[xtask::regen] css_pretty: prettyplease done in 94.282417ms
+regen css_pretty: wrote 557289 bytes to crates/core/src/grammar/generated/css_pretty.rs
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 13.696375ms
+[xtask::regen] google_sheets: generate_all done in 25.376459ms
+[xtask::regen] google_sheets: prettyplease done in 123.064959ms
+regen google_sheets: wrote 674845 bytes to crates/core/src/grammar/generated/google_sheets.rs
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 4.581833ms
+[xtask::regen] ebnf: generate_all done in 9.293875ms
+[xtask::regen] ebnf: prettyplease done in 62.066084ms
+regen ebnf: wrote 353534 bytes to crates/core/src/grammar/generated/ebnf.rs
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 2.005083ms
+[xtask::regen] bnf: generate_all done in 6.794ms
+[xtask::regen] bnf: prettyplease done in 28.040041ms
+regen bnf: wrote 148831 bytes to crates/core/src/grammar/generated/bnf.rs
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 1.373334ms
+[xtask::regen] csv: generate_all done in 5.553208ms
+[xtask::regen] csv: prettyplease done in 14.651083ms
+regen csv: wrote 68091 bytes to crates/core/src/grammar/generated/csv.rs
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 1.264ms
+[xtask::regen] math: generate_all done in 1.693167ms
+[xtask::regen] math: prettyplease done in 6.275667ms
+regen math: wrote 30008 bytes to crates/core/src/grammar/generated/math.rs
+regen rc=0
+ .../src/backend/rust/emitter/shapes/arglist.rs     |  10 +-
+ crates/core/src/grammar/generated/css_l4.rs        | 143 ++++-----------------
+ crates/core/src/grammar/generated/google_sheets.rs |  40 ++----
+ 3 files changed, 45 insertions(+), 148 deletions(-)
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/crates/ir)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/crates/core)
+warning: unused import: `emit_position_core_struct_direct`
+  --> crates/core/src/backend/rust/emitter/shapes/flat/mod.rs:58:32
+   |
+58 | pub(crate) use struct_direct::{emit_position_core_struct_direct, emit_position_struct_direct};
+   |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-mutant-b/crates/bbnf-path)
+warning: `bbnf` (lib) generated 1 warning (run `cargo fix --lib -p bbnf` to apply 1 suggestion)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 15.84s
+────────────
+ Nextest run ID d9df107c-1166-457b-a459-98ee8d7e935d with nextest profile: default
+    Starting 3 tests across 1 binary
+        PASS [   0.023s] (1/3) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+  TRY 1 FAIL [   0.031s] (───) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+  stdout ───
+
+    running 1 test
+    test arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher ... FAILED
+
+    failures:
+
+    failures:
+        arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher' (12145641) panicked at crates/core/tests/rx_emptyfirst.rs:154:5:
+    ArgList bodies ["wrap", "call"] parse a position with the root rule's dispatcher (`parse_EmptyFirstParser_cell__value (`), not the rule or terminal the grammar names there
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+        PASS [   0.035s] (2/3) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+  TRY 2 FAIL [   0.044s] (3/3) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+  stdout ───
+
+    running 1 test
+    test arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher ... FAILED
+
+    failures:
+
+    failures:
+        arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher' (12145893) panicked at crates/core/tests/rx_emptyfirst.rs:154:5:
+    ArgList bodies ["wrap", "call"] parse a position with the root rule's dispatcher (`parse_EmptyFirstParser_cell__value (`), not the rule or terminal the grammar names there
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.083s] 3 tests run: 2 passed, 1 failed, 0 skipped
+  TRY 2 FAIL [   0.044s] (3/3) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+  stdout ───
+
+    running 1 test
+    test arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher ... FAILED
+
+    failures:
+
+    failures:
+        arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.01s
+
+  stderr ───
+
+    thread 'arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher' (12145893) panicked at crates/core/tests/rx_emptyfirst.rs:154:5:
+    ArgList bodies ["wrap", "call"] parse a position with the root rule's dispatcher (`parse_EmptyFirstParser_cell__value (`), not the rule or terminal the grammar names there
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100

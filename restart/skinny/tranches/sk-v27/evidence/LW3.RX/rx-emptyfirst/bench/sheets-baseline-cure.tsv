@@ -1,0 +1,8 @@
+# google_sheets bench baseline re-recorded from the cure (RULINGS 2026-11-15a RXEF-BENCH): the cure build b5fb29b61 (code identical to the merged lane),
+# pooled minimum over read A and read B of the RX-EMPTYFIRST merge-gate bench (bench/gate-bench.sh, 12 rounds each). Later Sheets bench gates compare against these.
+bench	case	read-A_cure_min_us	read-B_cure_min_us	pooled_min_us
+google_sheets_monolithic	format_simple	0.21	0.21	0.21
+google_sheets_monolithic	format_stress	5.87	5.92	5.87
+google_sheets_monolithic	parse_nested	54.33	54.54	54.33
+google_sheets_monolithic	parse_simple	21.37	21.54	21.37
+google_sheets_monolithic	parse_stress	80.83	81.70	80.83

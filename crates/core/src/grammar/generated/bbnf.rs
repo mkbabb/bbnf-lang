@@ -9695,6 +9695,7 @@ mod __bbnfbootstrap_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,

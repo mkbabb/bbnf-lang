@@ -2431,18 +2431,26 @@ mod __googlesheetsparser_emit_impl {
     /// dispatch cascade visits only patterns whose bit is set.
     #[allow(dead_code)]
     pub(crate) const __REGEX_FIRST_BYTE_LUT_GoogleSheetsParser: [u32; 256] = [
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 2, 0, 416, 0, 0, 16, 0, 0, 0, 0, 0, 0, 1, 0, 257, 257, 257,
-        257, 257, 257, 257, 257, 257, 257, 0, 0, 0, 2048, 0, 0, 0, 240, 240, 240, 240,
-        240, 248, 240, 240, 240, 240, 240, 1776, 240, 240, 240, 240, 240, 240, 240, 244,
-        240, 240, 240, 240, 240, 240, 0, 0, 0, 0, 80, 0, 240, 240, 240, 240, 240, 248,
-        240, 240, 240, 240, 240, 1776, 240, 240, 240, 240, 240, 240, 240, 244, 240, 240,
-        240, 240, 240, 240, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2050, 2048, 2464, 2048, 2048,
+        2064, 2048, 2048, 2048, 2048, 2048, 2048, 2049, 2048, 2305, 2305, 2305, 2305,
+        2305, 2305, 2305, 2305, 2305, 2305, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2288, 2288, 2288, 2288, 2288, 2296, 2288, 2288, 2288, 2288, 2288, 3824, 2288,
+        2288, 2288, 2288, 2288, 2288, 2288, 2292, 2288, 2288, 2288, 2288, 2288, 2288,
+        2048, 2048, 2048, 2048, 2128, 2048, 2288, 2288, 2288, 2288, 2288, 2296, 2288,
+        2288, 2288, 2288, 2288, 3824, 2288, 2288, 2288, 2288, 2288, 2288, 2288, 2292,
+        2288, 2288, 2288, 2288, 2288, 2288, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
+        2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048,
     ];
     /// AY.W4.3 — per-pattern (LAST-byte-set lo, hi) packed
     /// `CharSet128` tuples. `(0, 0)` means narrowing is
@@ -7947,6 +7955,7 @@ mod __googlesheetsparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
@@ -7962,13 +7971,19 @@ mod __googlesheetsparser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_GoogleSheetsParser_formula__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            {
+                let __scan_start = *p;
+                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                    "[lL][aA][mM][bB][dD][aA]\\(",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                    });
+                };
+                *p += match_len as usize;
+            }
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
                 parse_flat_GoogleSheetsParser_lambda_params(
@@ -8057,6 +8072,7 @@ mod __googlesheetsparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
@@ -8313,6 +8329,7 @@ mod __googlesheetsparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,
@@ -8328,13 +8345,19 @@ mod __googlesheetsparser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_GoogleSheetsParser_formula__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            {
+                let __scan_start = *p;
+                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                    "[lL][eE][tT]\\(",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                    });
+                };
+                *p += match_len as usize;
+            }
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
                 parse_flat_GoogleSheetsParser_let_args(input, p, state, builder, cursor)

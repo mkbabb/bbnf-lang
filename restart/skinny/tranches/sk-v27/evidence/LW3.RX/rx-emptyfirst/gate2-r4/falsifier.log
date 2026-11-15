@@ -1,0 +1,16 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/ir)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/corpus)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/bbnf-path)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 14.96s
+────────────
+ Nextest run ID cc7346e8-eaf2-4858-946f-b656121a8276 with nextest profile: default
+    Starting 4 tests across 1 binary
+        PASS [   0.013s] (1/4) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+        PASS [   0.022s] (2/4) bbnf::rx_emptyfirst arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+        PASS [   0.022s] (3/4) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+        PASS [   0.024s] (4/4) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+────────────
+     Summary [   0.025s] 4 tests run: 4 passed, 0 skipped
+rc=0

@@ -9123,8 +9123,11 @@ const SK_V27_METADATA_PACKAGE_COUNT: usize = 511;
 /// Re-taken at LW3.RX-EMPTYFIRST (RULINGS 2026-11-14j INVENTORY): the test
 /// target `rx_emptyfirst` (`tests/rx_emptyfirst.rs`, the falsifiers of
 /// LW3.RX-EMPTYFIRST and LW3.RX-EMPTYFIRST-B) entered, the sole difference.
+/// Re-taken at LW3.GEN-RECURSE (RULINGS 2026-11-14j INVENTORY, 2026-11-15a
+/// GENREC-Q): the test target `gen_recurse` (`tests/gen_recurse.rs`, the
+/// falsifier of LW3.GEN-RECURSE) entered, the sole difference.
 const SK_V27_BBNF_TARGETS_SHA256: &str =
-    "839e0f063b1389c9bee3b52132d158f376acbcf82de75fb356a8896a4ac485bb";
+    "b676d576168f08ab6b5a4f30b207ca0d241a013484d9c6437876a2f39f17a465";
 /// sha256 over the sorted `bbnf` metadata dependency rows.
 /// Re-taken at LW3.PERF-1d: the parse-that pin moved 6889b29 -> 3642613
 /// (RULINGS 2026-11-14d PERF1D-PT); the four parse-that `source` rows
@@ -9152,8 +9155,12 @@ const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
 /// test target `rx_emptyfirst` entered, the sole row difference (proved by
 /// `evidence/LW3.RX/rx-emptyfirst/identity_diff.py`: without that target both
 /// digests read the values sealed before).
+/// Re-taken at LW3.GEN-RECURSE (RULINGS 2026-11-14j INVENTORY, 2026-11-15a
+/// GENREC-Q): `bbnf`'s test target `gen_recurse` entered, the sole row
+/// difference (proved by `evidence/LW3.GEN-RECURSE/unit/identity_diff.py`:
+/// without that target both digests read the values sealed before).
 const SK_V27_METADATA_IDENTITY_SHA256: &str =
-    "fa56f9e1120f99656309a04f7e9b281df49fd495ea4a401810d61b494127ed70";
+    "329e1ea61ce5934afd8c1eebbd5017239ce755f990ce87b4d10f17c3a97426e5";
 /// sha256 of the complete Cargo.lock. Re-taken at LW3.COMP-5a: `bbnf-ir`
 /// lost its `toml 0.8.23` build dependency with the strategy-table build
 /// script, the sole lockfile line that moved. Re-taken at LW3.PERF-1d: the

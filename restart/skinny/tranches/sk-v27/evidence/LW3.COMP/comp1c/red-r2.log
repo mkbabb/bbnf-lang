@@ -1,0 +1,189 @@
+head=c51178be9ae123e1bd49788d9cd82d3826296e5d dirty=0 falsifier-sha256=0a0ef341ebe772d6
+     Removed 0 files
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-comp1c/crates/core)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.60s
+────────────
+ Nextest run ID 860c5c18-6481-4a82-be70-56325a71649d with nextest profile: default
+    Starting 1 test across 1 binary
+       START [         ] (1/1) bbnf::spine_manifest every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+
+running 1 test
+ok   crates/core/tests/fixtures/deterministic.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/grammar/bbnf/bbnf.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/grammar/bnf/bnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF crates/gorgeous/grammar/css/pretty.bbnf expected=ACCEPT spine=REJECT Syntax at 657..658: expected a complete BBNF rule or expression
+ok   crates/gorgeous/grammar/ebnf/ebnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF crates/gorgeous/grammar/google-sheets/google-sheets.bbnf expected=ACCEPT spine=REJECT Syntax at 3965..3966: expected a complete BBNF rule or expression
+ok   crates/gorgeous/grammar/json/json.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/comments-factor.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/comments-top.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/plain.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/bbnf/bbnf.bbnf expected=ACCEPT spine=REJECT Syntax at 72..73: expected a complete BBNF rule or expression
+DIFF grammar/bbnf/expressions.bbnf expected=ACCEPT spine=REJECT Syntax at 62..63: expected a complete BBNF rule or expression
+ok   grammar/bbnf/types.bbnf expected=ACCEPT spine=ACCEPT 
+ok   grammar/bnf/bnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/css/l4/color.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/easing.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/filters.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/func-body.bbnf expected=ACCEPT spine=REJECT Syntax at 164..165: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/gradients.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/keyframes.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/keywords.bbnf expected=ACCEPT spine=REJECT Syntax at 217..218: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/media.bbnf expected=ACCEPT spine=REJECT Syntax at 255..256: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/properties.bbnf expected=ACCEPT spine=REJECT Syntax at 576..577: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/selectors.bbnf expected=ACCEPT spine=REJECT Syntax at 204..205: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/stylesheet.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+ok   grammar/css/l4/tokens.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/css/l4/transforms.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/value-unit.bbnf expected=ACCEPT spine=REJECT Syntax at 763..764: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/values.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/pretty.bbnf expected=ACCEPT spine=REJECT Syntax at 666..667: expected a complete BBNF rule or expression
+ok   grammar/ebnf/ebnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/google-sheets/google-sheets.bbnf expected=ACCEPT spine=REJECT Syntax at 329..330: expected a complete BBNF rule or expression
+ok   grammar/heldout/graphql.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/heldout/r7rs-datum.bbnf expected=ACCEPT spine=REJECT Regex at 2599..2645: regex parse error at byte 13: invalid codepoint U+D800
+ok   grammar/heldout/toml.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/json/json.bbnf expected=ACCEPT spine=REJECT Syntax at 14..15: expected a complete BBNF rule or expression
+ok   grammar/misc/csv.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/misc/emoji.bbnf expected=ACCEPT spine=REJECT Syntax at 21..22: expected a complete BBNF rule or expression
+ok   grammar/misc/g4.bbnf expected=ACCEPT spine=ACCEPT 
+ok   grammar/misc/json-commented.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/misc/math-ambiguous.bbnf expected=ACCEPT spine=REJECT RecursiveRule at 18..88: recursive call cycle can re-enter without consuming input: expression; every recursive cycle must cross a consuming terminal
+ok   grammar/misc/math.bbnf expected=ACCEPT spine=ACCEPT 
+ok   grammar/misc/regex.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF skinny/grammars/json.bbnf expected=ACCEPT spine=REJECT Syntax at 185..186: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-color.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-keyframes.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-selectors.bbnf expected=ACCEPT spine=REJECT Syntax at 468..469: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-stylesheet.bbnf expected=ACCEPT spine=REJECT Syntax at 149..150: expected a complete BBNF rule or expression
+ok   typescript/test/fixtures/grammar/css/css-tokens.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/css/css-value-unit.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/css/css-values.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+ok   typescript/test/fixtures/grammar/lang/bbnf.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/bnf.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/csv.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/ebnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/lang/emoji.bbnf expected=ACCEPT spine=REJECT Syntax at 21..22: expected a complete BBNF rule or expression
+ok   typescript/test/fixtures/grammar/lang/g4.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/lang/google-sheets.bbnf expected=ACCEPT spine=REJECT NullableRepeat at 2431..2449: repetition of a nullable expression is rejected because parse-that requires every repeated match to advance input
+ok   typescript/test/fixtures/grammar/lang/json-commented.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/json.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf expected=ACCEPT spine=REJECT RecursiveRule at 18..88: recursive call cycle can re-enter without consuming input: expression; every recursive cycle must cross a consuming terminal
+ok   typescript/test/fixtures/grammar/lang/math.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/regex.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/value-js/color.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/css.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/math.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/stylesheet.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/tokens.bbnf expected=ACCEPT spine=REJECT Syntax at 1757..1758: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/value.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+spine_manifest: entries=70 accepted=31 refused=39 wrong=39 first-diagnostic-codes={"NullableRepeat": 1, "RecursiveRule": 2, "Regex": 1, "Syntax": 35}
+
+thread 'every_manifest_grammar_gets_its_recorded_verdict_from_the_spine' (11402784) panicked at crates/core/tests/spine_manifest.rs:206:5:
+39 of 70 MANIFEST entries do not get their recorded verdict from the spine: ["crates/gorgeous/grammar/css/pretty.bbnf", "crates/gorgeous/grammar/google-sheets/google-sheets.bbnf", "grammar/bbnf/bbnf.bbnf", "grammar/bbnf/expressions.bbnf", "grammar/css/l4/color.bbnf", "grammar/css/l4/easing.bbnf", "grammar/css/l4/filters.bbnf", "grammar/css/l4/func-body.bbnf", "grammar/css/l4/gradients.bbnf", "grammar/css/l4/keyframes.bbnf", "grammar/css/l4/keywords.bbnf", "grammar/css/l4/media.bbnf", "grammar/css/l4/properties.bbnf", "grammar/css/l4/selectors.bbnf", "grammar/css/l4/stylesheet.bbnf", "grammar/css/l4/transforms.bbnf", "grammar/css/l4/value-unit.bbnf", "grammar/css/l4/values.bbnf", "grammar/css/pretty.bbnf", "grammar/google-sheets/google-sheets.bbnf", "grammar/heldout/r7rs-datum.bbnf", "grammar/json/json.bbnf", "grammar/misc/emoji.bbnf", "grammar/misc/math-ambiguous.bbnf", "skinny/grammars/json.bbnf", "typescript/test/fixtures/grammar/css/css-color.bbnf", "typescript/test/fixtures/grammar/css/css-keyframes.bbnf", "typescript/test/fixtures/grammar/css/css-selectors.bbnf", "typescript/test/fixtures/grammar/css/css-stylesheet.bbnf", "typescript/test/fixtures/grammar/css/css-values.bbnf", "typescript/test/fixtures/grammar/lang/emoji.bbnf", "typescript/test/fixtures/grammar/lang/google-sheets.bbnf", "typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf", "typescript/test/fixtures/value-js/color.bbnf", "typescript/test/fixtures/value-js/css.bbnf", "typescript/test/fixtures/value-js/math.bbnf", "typescript/test/fixtures/value-js/stylesheet.bbnf", "typescript/test/fixtures/value-js/tokens.bbnf", "typescript/test/fixtures/value-js/value.bbnf"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test every_manifest_grammar_gets_its_recorded_verdict_from_the_spine ... FAILED
+
+failures:
+
+failures:
+    every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.17s
+
+  TRY 1 FAIL [   0.180s] (───) bbnf::spine_manifest every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+   DELAY 2/2 by   1.000s (───) bbnf::spine_manifest every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+ TRY 2 START [         ] (───) bbnf::spine_manifest every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+
+running 1 test
+ok   crates/core/tests/fixtures/deterministic.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/grammar/bbnf/bbnf.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/grammar/bnf/bnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF crates/gorgeous/grammar/css/pretty.bbnf expected=ACCEPT spine=REJECT Syntax at 657..658: expected a complete BBNF rule or expression
+ok   crates/gorgeous/grammar/ebnf/ebnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF crates/gorgeous/grammar/google-sheets/google-sheets.bbnf expected=ACCEPT spine=REJECT Syntax at 3965..3966: expected a complete BBNF rule or expression
+ok   crates/gorgeous/grammar/json/json.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/comments-factor.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/comments-top.bbnf expected=ACCEPT spine=ACCEPT 
+ok   crates/gorgeous/tests/corpus/g3/bbnf/plain.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/bbnf/bbnf.bbnf expected=ACCEPT spine=REJECT Syntax at 72..73: expected a complete BBNF rule or expression
+DIFF grammar/bbnf/expressions.bbnf expected=ACCEPT spine=REJECT Syntax at 62..63: expected a complete BBNF rule or expression
+ok   grammar/bbnf/types.bbnf expected=ACCEPT spine=ACCEPT 
+ok   grammar/bnf/bnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/css/l4/color.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/easing.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/filters.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/func-body.bbnf expected=ACCEPT spine=REJECT Syntax at 164..165: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/gradients.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/keyframes.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/keywords.bbnf expected=ACCEPT spine=REJECT Syntax at 217..218: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/media.bbnf expected=ACCEPT spine=REJECT Syntax at 255..256: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/properties.bbnf expected=ACCEPT spine=REJECT Syntax at 576..577: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/selectors.bbnf expected=ACCEPT spine=REJECT Syntax at 204..205: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/stylesheet.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+ok   grammar/css/l4/tokens.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/css/l4/transforms.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/value-unit.bbnf expected=ACCEPT spine=REJECT Syntax at 763..764: expected a complete BBNF rule or expression
+DIFF grammar/css/l4/values.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF grammar/css/pretty.bbnf expected=ACCEPT spine=REJECT Syntax at 666..667: expected a complete BBNF rule or expression
+ok   grammar/ebnf/ebnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/google-sheets/google-sheets.bbnf expected=ACCEPT spine=REJECT Syntax at 329..330: expected a complete BBNF rule or expression
+ok   grammar/heldout/graphql.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/heldout/r7rs-datum.bbnf expected=ACCEPT spine=REJECT Regex at 2599..2645: regex parse error at byte 13: invalid codepoint U+D800
+ok   grammar/heldout/toml.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/json/json.bbnf expected=ACCEPT spine=REJECT Syntax at 14..15: expected a complete BBNF rule or expression
+ok   grammar/misc/csv.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/misc/emoji.bbnf expected=ACCEPT spine=REJECT Syntax at 21..22: expected a complete BBNF rule or expression
+ok   grammar/misc/g4.bbnf expected=ACCEPT spine=ACCEPT 
+ok   grammar/misc/json-commented.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF grammar/misc/math-ambiguous.bbnf expected=ACCEPT spine=REJECT RecursiveRule at 18..88: recursive call cycle can re-enter without consuming input: expression; every recursive cycle must cross a consuming terminal
+ok   grammar/misc/math.bbnf expected=ACCEPT spine=ACCEPT 
+ok   grammar/misc/regex.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF skinny/grammars/json.bbnf expected=ACCEPT spine=REJECT Syntax at 185..186: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-color.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-keyframes.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-selectors.bbnf expected=ACCEPT spine=REJECT Syntax at 468..469: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/grammar/css/css-stylesheet.bbnf expected=ACCEPT spine=REJECT Syntax at 149..150: expected a complete BBNF rule or expression
+ok   typescript/test/fixtures/grammar/css/css-tokens.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/css/css-value-unit.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/css/css-values.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+ok   typescript/test/fixtures/grammar/lang/bbnf.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/bnf.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/csv.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/ebnf.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/lang/emoji.bbnf expected=ACCEPT spine=REJECT Syntax at 21..22: expected a complete BBNF rule or expression
+ok   typescript/test/fixtures/grammar/lang/g4.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/lang/google-sheets.bbnf expected=ACCEPT spine=REJECT NullableRepeat at 2431..2449: repetition of a nullable expression is rejected because parse-that requires every repeated match to advance input
+ok   typescript/test/fixtures/grammar/lang/json-commented.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/json.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf expected=ACCEPT spine=REJECT RecursiveRule at 18..88: recursive call cycle can re-enter without consuming input: expression; every recursive cycle must cross a consuming terminal
+ok   typescript/test/fixtures/grammar/lang/math.bbnf expected=ACCEPT spine=ACCEPT 
+ok   typescript/test/fixtures/grammar/lang/regex.bbnf expected=ACCEPT spine=ACCEPT 
+DIFF typescript/test/fixtures/value-js/color.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/css.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/math.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/stylesheet.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/tokens.bbnf expected=ACCEPT spine=REJECT Syntax at 1757..1758: expected a complete BBNF rule or expression
+DIFF typescript/test/fixtures/value-js/value.bbnf expected=ACCEPT spine=REJECT Syntax at 0..1: expected a complete BBNF rule or expression
+spine_manifest: entries=70 accepted=31 refused=39 wrong=39 first-diagnostic-codes={"NullableRepeat": 1, "RecursiveRule": 2, "Regex": 1, "Syntax": 35}
+
+thread 'every_manifest_grammar_gets_its_recorded_verdict_from_the_spine' (11403381) panicked at crates/core/tests/spine_manifest.rs:206:5:
+39 of 70 MANIFEST entries do not get their recorded verdict from the spine: ["crates/gorgeous/grammar/css/pretty.bbnf", "crates/gorgeous/grammar/google-sheets/google-sheets.bbnf", "grammar/bbnf/bbnf.bbnf", "grammar/bbnf/expressions.bbnf", "grammar/css/l4/color.bbnf", "grammar/css/l4/easing.bbnf", "grammar/css/l4/filters.bbnf", "grammar/css/l4/func-body.bbnf", "grammar/css/l4/gradients.bbnf", "grammar/css/l4/keyframes.bbnf", "grammar/css/l4/keywords.bbnf", "grammar/css/l4/media.bbnf", "grammar/css/l4/properties.bbnf", "grammar/css/l4/selectors.bbnf", "grammar/css/l4/stylesheet.bbnf", "grammar/css/l4/transforms.bbnf", "grammar/css/l4/value-unit.bbnf", "grammar/css/l4/values.bbnf", "grammar/css/pretty.bbnf", "grammar/google-sheets/google-sheets.bbnf", "grammar/heldout/r7rs-datum.bbnf", "grammar/json/json.bbnf", "grammar/misc/emoji.bbnf", "grammar/misc/math-ambiguous.bbnf", "skinny/grammars/json.bbnf", "typescript/test/fixtures/grammar/css/css-color.bbnf", "typescript/test/fixtures/grammar/css/css-keyframes.bbnf", "typescript/test/fixtures/grammar/css/css-selectors.bbnf", "typescript/test/fixtures/grammar/css/css-stylesheet.bbnf", "typescript/test/fixtures/grammar/css/css-values.bbnf", "typescript/test/fixtures/grammar/lang/emoji.bbnf", "typescript/test/fixtures/grammar/lang/google-sheets.bbnf", "typescript/test/fixtures/grammar/lang/math-ambiguous.bbnf", "typescript/test/fixtures/value-js/color.bbnf", "typescript/test/fixtures/value-js/css.bbnf", "typescript/test/fixtures/value-js/math.bbnf", "typescript/test/fixtures/value-js/stylesheet.bbnf", "typescript/test/fixtures/value-js/tokens.bbnf", "typescript/test/fixtures/value-js/value.bbnf"]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test every_manifest_grammar_gets_its_recorded_verdict_from_the_spine ... FAILED
+
+failures:
+
+failures:
+    every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.16s
+
+  TRY 2 FAIL [   0.175s] (1/1) bbnf::spine_manifest every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+────────────
+     Summary [   1.356s] 1 test run: 0 passed, 1 failed, 0 skipped
+  TRY 2 FAIL [   0.175s] (1/1) bbnf::spine_manifest every_manifest_grammar_gets_its_recorded_verdict_from_the_spine
+error: test run failed
+rc=100

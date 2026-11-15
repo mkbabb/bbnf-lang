@@ -1,0 +1,7 @@
+==> /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/gate-regen-check.log <==
+regen --check: clean (9 of 9 grammars matched)
+rc=0
+
+==> /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/gate-clippy.log <==
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 26.65s
+rc=0

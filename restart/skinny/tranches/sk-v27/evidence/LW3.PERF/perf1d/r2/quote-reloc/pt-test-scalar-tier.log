@@ -1,0 +1,13 @@
+   Compiling parse_that v0.4.0 (/Users/mkbabb/Programming/parse-that-wt/lw3-s9b-q/rust/parse_that)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.04s
+     Running tests/quote_or_backslash_test.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-parse-that/debug/deps/quote_or_backslash_test-1b0771dd710086ba)
+
+running 4 tests
+test hit_free_inputs_of_every_length ... ok
+test unaligned_windows_of_one_buffer ... ok
+test a_hit_at_every_offset_of_every_length ... ok
+test random_inputs ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+rc=0

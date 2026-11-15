@@ -18,7 +18,7 @@ name = expression ;
 
 The left-hand side is an **identifier**: `[_a-zA-Z][_a-zA-Z0-9-]*`. Hyphens are allowed (e.g. `color-value`).
 
-The first rule in a grammar is treated as the start symbol by convention.
+The **last** rule in a grammar is its entry (start symbol). Grammars are written leaves first, with the start symbol at the bottom; root's generator and the spine read the entry through one shared definition. An explicit entry, where an API or an instance manifest names one, overrides.
 
 ## Terminal Expressions
 
@@ -97,18 +97,19 @@ Import rules from other `.bbnf` files:
 
 ## Directives Summary
 
-BBNF defines eight directives, all prefixed with `@` and terminated by `;`:
+The grammar of record (`grammar/bbnf/bbnf.bbnf`) defines seven directives, all prefixed with `@` and terminated by `;`. Two more rows, `@no_collapse` and `@inline`, are documented here but are **not in the grammar of record and not implemented**: the front end refuses both with a named diagnostic until the owner decides whether they are kept and implemented or removed.
 
 | Directive | Syntax | Purpose |
 |-----------|--------|---------|
 | `@import` | `@import "path" ;` / `@import { names } from "path" ;` | Compose grammars from other files |
 | `@recover` | `@recover ruleName syncExpr ;` | Per-rule error recovery with sync expression |
 | `@pretty` | `@pretty ruleName hints ;` | Control pretty-printing Doc emission |
-| `@no_collapse` | `@no_collapse ruleName ;` | Preserve rule identity in AST (prevent Span compression) |
+| `@no_collapse` | `@no_collapse ruleName ;` | *Documented, not in the grammar of record, not implemented.* Preserve rule identity in AST (prevent Span compression) |
 | `@ws` | `@ws /regex/ ;` | Override `?w` whitespace operator grammar-wide |
-| `@inline` | `@inline ruleName ;` | Force-inline rule body at every call site |
+| `@inline` | `@inline ruleName ;` | *Documented, not in the grammar of record, not implemented.* Force-inline rule body at every call site |
 | `@token` | `@token ruleName ;` | Mark rule as lexical token (span-eligible, fusion-inlined, variant preserved) |
 | `@debug` | `@debug ruleName ;` / `@debug * ;` | Instrument rules for debug tracing across compiled and VM paths |
+| `@host` | `@host name ;` / `@host name : Type ;` | Declare a host function the grammar's `->` expressions may call, optionally with its type (resolved by the host runtime) |
 
 ## Operators
 

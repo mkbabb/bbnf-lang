@@ -1,0 +1,40 @@
+        PASS [   0.025s] (1641/1675) bbnf-lsp::integration test_range_formatting_no_overlap
+        PASS [   0.033s] (1642/1675) bbnf-lsp::integration test_large_grammar
+        PASS [   0.025s] (1643/1675) bbnf-lsp::integration test_real_json_grammar
+        PASS [   0.020s] (1644/1675) bbnf-lsp::integration test_regex_charclass_slash_parses
+        PASS [   0.023s] (1645/1675) bbnf-lsp::integration test_references
+        PASS [   0.022s] (1646/1675) bbnf-lsp::integration test_rename
+        PASS [   0.016s] (1647/1675) bbnf-oracle::obs_laws left_fold_tells_a_left_chain_from_a_right_nest
+        PASS [   0.020s] (1648/1675) bbnf-oracle::obs_laws an_unsorted_expected_set_fails_to_construct
+        PASS [   0.025s] (1649/1675) bbnf-lsp::integration test_selection_range_multiple_positions
+        PASS [   0.026s] (1650/1675) bbnf-lsp::integration test_selection_range
+        PASS [   0.024s] (1651/1675) bbnf-lsp::integration test_semantic_tokens
+        PASS [   0.019s] (1652/1675) bbnf-oracle::orc1_bom every_driver_decodes_with_the_bom_kept
+        PASS [   0.019s] (1653/1675) bbnf-path-ts::isomorphic_path_error index_into_scalar_rust_and_ts_match
+        PASS [   0.022s] (1654/1675) bbnf-path-ts::isomorphic_path_error empty_path_rust_and_ts_match
+        PASS [   0.038s] (1655/1675) bbnf-oracle::obs_laws merge_keeps_the_furthest_and_unions_at_equal_offset
+        PASS [   0.014s] (1656/1675) bbnf-path-ts::isomorphic_path_error reason_variants_are_isomorphic
+        PASS [   0.018s] (1657/1675) bbnf-path-ts::isomorphic_path_error unknown_field_at_entry_rule_rust_and_ts_match
+        PASS [   0.017s] (1658/1675) bbnf-path-ts::isomorphic_path_error unregistered_grammar_marker_surfaces_unregistered_rule
+        PASS [   0.016s] (1659/1675) xtask::metadata_fail_closed empty_features_passes_validation
+        PASS [   0.018s] (1660/1675) xtask::metadata_fail_closed every_known_feature_passes_validation
+        PASS [   0.016s] (1661/1675) xtask::metadata_fail_closed unknown_feature_is_rejected_with_structured_error
+        PASS [   0.166s] (1662/1675) bbnf-oracle::orc1_bom the_ts_package_arm_reads_a_leading_bom_as_a_character
+        PASS [   0.180s] (1663/1675) bbnf-oracle::rb_ts_literal_escapes the_ts_package_reads_a_backslash_escape_and_plain_characters
+        PASS [   0.227s] (1664/1675) bbnf-oracle::obs_laws semantic_sees_a_label_or_text_change
+        PASS [   0.320s] (1665/1675) bbnf-oracle::obs_laws every_class_is_an_idempotent_projection
+        PASS [   0.353s] (1666/1675) bbnf-oracle::obs_laws obs_is_reflexive_for_every_class
+        PASS [   0.892s] (1667/1675) bbnf-oracle::obs_laws exact_is_contained_in_semantic_and_semantic_in_the_coarser_classes
+        PASS [   2.168s] (1668/1675) bbnf-ir::substrate_audit substrate_audit_zero_caller_substrates
+        PASS [   8.397s] (1669/1675) bbnf::bbnf_bootstrap_reproducibility json_regen_is_idempotent
+        PASS [   8.818s] (1670/1675) bbnf::bbnf_bootstrap_reproducibility bbnf_regen_is_idempotent
+        PASS [   7.148s] (1671/1675) bbnf::path_macro_errors compile_fail_fixtures
+        PASS [   6.335s] (1672/1675) bbnf::w3_replay_public_contract cargo_graph_build_feature_surfaces_and_generated_products_are_closed
+        PASS [  12.606s] (1673/1675) bbnf::w3_semantic_pratt_contract canonical_generated_v6_rejects_full_product_control_and_pratt_mutations
+        PASS [  15.800s] (1674/1675) bbnf::w3_semantic_pratt_contract emitted_runtime_executes_all_w3_semantic_and_pratt_transaction_laws
+        SLOW [> 30.000s] (─────────) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+        SLOW [> 60.000s] (─────────) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+        PASS [  67.001s] (1675/1675) bbnf::w3_replay_public_contract exact_packages_cross_a_fresh_local_registry_and_public_runtime
+────────────
+     Summary [  71.210s] 1675 tests run: 1675 passed (1 slow), 28 skipped
+rc=0

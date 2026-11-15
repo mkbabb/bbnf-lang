@@ -1,0 +1,19 @@
+    thread 'exact_packages_cross_a_fresh_local_registry_and_public_runtime' (4347926) panicked at crates/core/tests/w3_replay_public_contract.rs:2705:5:
+      left: "879470ad2f879f9a301a042d3de65b76dfdcc7a103f01cbd03e70349d9b35aaa"
+     right: "073a80705f1c30b79f3c5ce41114e5db439de0526d92da6d6c3f490a1d1ce1a6"
+    thread 'exact_packages_cross_a_fresh_local_registry_and_public_runtime' (4349102) panicked at crates/core/tests/w3_replay_public_contract.rs:2705:5:
+      left: "879470ad2f879f9a301a042d3de65b76dfdcc7a103f01cbd03e70349d9b35aaa"
+     right: "073a80705f1c30b79f3c5ce41114e5db439de0526d92da6d6c3f490a1d1ce1a6"
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (4347898) panicked at crates/core/tests/w3_replay_public_contract.rs:10395:5:
+      left: "c135c5facdf48149f7ca26af862e738add5a493bd52a91af0ff2b8846513c2a2"
+     right: "2572498fda8bcfb753e56d23c15d80109cb7aad18b10a8d2ba11a3bdb5f43e10"
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (4352004) panicked at crates/core/tests/w3_replay_public_contract.rs:10395:5:
+      left: "c135c5facdf48149f7ca26af862e738add5a493bd52a91af0ff2b8846513c2a2"
+     right: "2572498fda8bcfb753e56d23c15d80109cb7aad18b10a8d2ba11a3bdb5f43e10"
+     Summary [  20.367s] 1675 tests run: 1673 passed, 2 failed, 28 skipped
+    thread 'exact_packages_cross_a_fresh_local_registry_and_public_runtime' (4349102) panicked at crates/core/tests/w3_replay_public_contract.rs:2705:5:
+      left: "879470ad2f879f9a301a042d3de65b76dfdcc7a103f01cbd03e70349d9b35aaa"
+     right: "073a80705f1c30b79f3c5ce41114e5db439de0526d92da6d6c3f490a1d1ce1a6"
+    thread 'cargo_graph_build_feature_surfaces_and_generated_products_are_closed' (4352004) panicked at crates/core/tests/w3_replay_public_contract.rs:10395:5:
+      left: "c135c5facdf48149f7ca26af862e738add5a493bd52a91af0ff2b8846513c2a2"
+     right: "2572498fda8bcfb753e56d23c15d80109cb7aad18b10a8d2ba11a3bdb5f43e10"

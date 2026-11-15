@@ -131,6 +131,22 @@ fn emit_parse_object_struct_direct(
     let skip_pre_sep = pick(gaps.pre_sep || gaps.close);
     let skip_post_sep = pick(gaps.post_sep);
     let (ws_pre_sep, ws_close) = (gaps.pre_sep, gaps.close);
+    // A single skip serves the separator and the close; when only one of
+    // them is preceded by `?w`, the other is admitted only where no
+    // whitespace was read.
+    let guard = |ws: bool| {
+        if ws || !(ws_pre_sep || ws_close) {
+            quote! {}
+        } else {
+            quote! { if *p == __gap }
+        }
+    };
+    let (guard_sep, guard_close) = (guard(ws_pre_sep), guard(ws_close));
+    let gap_decl = if ws_pre_sep == ws_close {
+        quote! {}
+    } else {
+        quote! { let __gap = *p; }
+    };
 
     quote! {
         /// AZ-I.W2.RB — per-grammar Object-shape parse function,
@@ -292,14 +308,14 @@ fn emit_parse_object_struct_direct(
                 }
 
                 // Comma / close.
-                let __gap = *p;
+                #gap_decl
                 #skip_pre_sep
                 match input.get(*p).copied() {
-                    Some(b',') if #ws_pre_sep || *p == __gap => {
+                    Some(b',') #guard_sep => {
                         *p += 1;
                         #skip_post_sep
                     }
-                    Some(b'}') if #ws_close || *p == __gap => {
+                    Some(b'}') #guard_close => {
                         *p += 1;
                         builder.end_compound(__handle);
                         return Ok(());
@@ -467,7 +483,14 @@ fn object_ws_gaps(rule: &IrRule, ir: &GrammarIR) -> ObjectWsGaps {
     use bbnf_ir::passes::inspect::{sep_list, unwrap_map_ow, unwrap_wrap};
     let middle = unwrap_wrap(unwrap_map_ow(&rule.body)).map(|(_, m, _)| m);
     let list = middle.and_then(|m| sep_list(unwrap_map_ow(m)));
-    let (open, close) = middle.map_or((false, false), |m| (leads_ow(m, ir), trails_ow(m, ir)));
+    // Before the close, whitespace is read by the middle's trailing `?w`
+    // or by the last pair's own.
+    let (open, close) = middle.map_or((false, false), |m| {
+        (
+            leads_ow(m, ir),
+            trails_ow(m, ir) || list.as_ref().is_some_and(|l| trails_ow(l.element, ir)),
+        )
+    });
     let (pre_sep, post_sep) = list.as_ref().map_or((false, false), |l| {
         (
             trails_ow(l.element, ir) || leads_ow(l.separator, ir),
@@ -489,5 +512,12 @@ fn object_ws_gaps(rule: &IrRule, ir: &GrammarIR) -> ObjectWsGaps {
         },
         _ => (false, false),
     };
-    ObjectWsGaps { open, close, pre_sep, post_sep, pre_colon, post_colon }
+    ObjectWsGaps {
+        open,
+        close,
+        pre_sep,
+        post_sep,
+        pre_colon,
+        post_colon,
+    }
 }

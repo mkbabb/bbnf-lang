@@ -306,7 +306,11 @@ fn emit_parse_unordered_struct_direct(
     } else {
         quote! {}
     };
-    let restore_gap = if ws_trail { quote! { let _ = __gap; } } else { quote! { *p = __gap; } };
+    let restore_gap = if ws_trail {
+        quote! { let _ = __gap; }
+    } else {
+        quote! { *p = __gap; }
+    };
 
     let Some(body_info) = introspect_unordered(rule, ir) else {
         // Defensive fallback: a malformed Unordered rule under

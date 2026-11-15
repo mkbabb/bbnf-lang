@@ -157,7 +157,14 @@ fn emit_parse_array_struct_direct_wrapped(
     let none = quote! {};
     let middle = unwrap_wrap(unwrap_map_ow(&rule.body)).map(|(_, m, _)| m);
     let list = middle.and_then(|m| sep_list(unwrap_map_ow(m)));
-    let (ws_open, ws_close) = middle.map_or((false, false), |m| (leads_ow(m, ir), trails_ow(m, ir)));
+    // Before the close, whitespace is read by the middle's trailing `?w`
+    // or by the last element's own.
+    let (ws_open, ws_close) = middle.map_or((false, false), |m| {
+        (
+            leads_ow(m, ir),
+            trails_ow(m, ir) || list.as_ref().is_some_and(|l| trails_ow(l.element, ir)),
+        )
+    });
     let (ws_pre_sep, ws_post_sep) = list.as_ref().map_or((false, false), |l| {
         (
             trails_ow(l.element, ir) || leads_ow(l.separator, ir),
@@ -167,6 +174,22 @@ fn emit_parse_array_struct_direct_wrapped(
     let skip_open = if ws_open { &skip } else { &none };
     let skip_pre_sep = if ws_pre_sep || ws_close { &skip } else { &none };
     let skip_post_sep = if ws_post_sep { &skip } else { &none };
+    // A single skip serves the separator and the close; when only one of
+    // them is preceded by `?w`, the other is admitted only where no
+    // whitespace was read.
+    let guard = |ws: bool| {
+        if ws || !(ws_pre_sep || ws_close) {
+            quote! {}
+        } else {
+            quote! { if *p == __gap }
+        }
+    };
+    let (guard_sep, guard_close) = (guard(ws_pre_sep), guard(ws_close));
+    let gap_decl = if ws_pre_sep == ws_close {
+        quote! {}
+    } else {
+        quote! { let __gap = *p; }
+    };
 
     quote! {
         /// AZ-I.W2.RB — per-grammar Array-shape parse function,
@@ -271,14 +294,14 @@ fn emit_parse_array_struct_direct_wrapped(
                     }
                     __elem_idx = __elem_idx.saturating_add(1);
 
-                    let __gap = *p;
+                    #gap_decl
                     #skip_pre_sep
                     match input.get(*p).copied() {
-                        Some(b',') if #ws_pre_sep || *p == __gap => {
+                        Some(b',') #guard_sep => {
                             *p += 1;
                             #skip_post_sep
                         }
-                        Some(b']') if #ws_close || *p == __gap => {
+                        Some(b']') #guard_close => {
                             *p += 1;
                             return Ok(());
                         }
@@ -327,7 +350,6 @@ fn emit_parse_array_struct_direct_list(
     ir: &GrammarIR,
     strategy: &EmitStrategy,
 ) -> TokenStream {
-
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("array", grammar_suffix, rule_name);
     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
@@ -399,15 +421,29 @@ fn emit_parse_array_struct_direct_list(
     let value_at = positions.iter().position(|pos| is_value(pos.node));
     let skip = quote! { let _ = #support_mod::skip_space(input, p, state); };
     let item = |pos: &super::flat::PositionedNode<'_>| {
-        super::flat::emit_position_struct_direct(pos, &support_mod, &dispatcher_ident, grammar_suffix, ir)
+        super::flat::emit_position_struct_direct(
+            pos,
+            &support_mod,
+            &dispatcher_ident,
+            grammar_suffix,
+            ir,
+        )
     };
     let iteration = match value_at {
         Some(vi) => {
             let before = positions[..vi].iter().map(item);
             let after = positions[vi + 1..].iter().map(item);
             let v = &positions[vi];
-            let lead = if v.leading_ws { skip.clone() } else { quote! {} };
-            let trail = if v.trailing_ws { skip.clone() } else { quote! {} };
+            let lead = if v.leading_ws {
+                skip.clone()
+            } else {
+                quote! {}
+            };
+            let trail = if v.trailing_ws {
+                skip.clone()
+            } else {
+                quote! {}
+            };
             quote! {
                 #(#before)*
                 #lead

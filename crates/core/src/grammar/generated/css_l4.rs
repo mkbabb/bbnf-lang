@@ -16447,9 +16447,7 @@ mod __cssl4parser_emit_impl {
             state: &mut ScanState,
         ) -> Option<u8> {
             match input.get(*p) {
-                Some(
-                    &b,
-                ) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' && b != b'/' => {
+                Some(&b) if b != b' ' && b.wrapping_sub(b'\t') > 4 && b != b'/' => {
                     Some(b)
                 }
                 Some(&b'/') if input.get(*p + 1) != Some(&b'*') => Some(b'/'),
@@ -16496,7 +16494,7 @@ mod __cssl4parser_emit_impl {
                 }
                 if *p + 64 > input.len() {
                     while let Some(&b) = input.get(*p) {
-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
                             break;
                         }
                         *p += 1;
@@ -16548,13 +16546,14 @@ mod __cssl4parser_emit_impl {
             }
         }
         /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
-        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
-        /// `{b' ', b'\t', b'\n', b'\r'}`. The kernel is parse-that's
+        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT one of the six
+        /// `?w` bytes (space, `\t`, `\n`, U+000B, U+000C, `\r`;
+        /// sk-v27 LW3.ORC2-WS-C). The kernel is parse-that's
         /// (NEON under the runtime tier on aarch64, the scalar oracle
         /// elsewhere); no ISA intrinsic is emitted (X-3).
         #[inline(always)]
         pub(crate) fn nospace_bitmap_64(stripe: &[u8; 64]) -> u64 {
-            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
+            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\x0B\x0C\r")
         }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
         /// parse-that's quote-or-backslash kernel (NEON under the runtime
@@ -16816,7 +16815,9 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -25661,7 +25662,9 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -32144,7 +32147,9 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -37894,7 +37899,9 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -38046,7 +38053,9 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -39460,7 +39469,9 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -39606,35 +39617,35 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    }
                 })?;
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_percentageUnit(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_percentageUnit(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -39759,11 +39770,6 @@ mod __cssl4parser_emit_impl {
                                         }
                                         *p = end;
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_flat_CssL4Parser_funcBody(
                                                 input,
                                                 p,
@@ -39801,11 +39807,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_wrap_CssL4Parser_string(
                                                 input,
                                                 p,
@@ -40056,7 +40057,9 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -40387,35 +40390,35 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    }
                 })?;
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_angleUnit(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_angleUnit(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -40508,35 +40511,35 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    }
                 })?;
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_timeUnit(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_timeUnit(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -40633,35 +40636,35 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    }
                 })?;
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_frequencyUnit(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_frequencyUnit(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -40758,35 +40761,35 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    }
                 })?;
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_resolutionUnit(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_resolutionUnit(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -40879,35 +40882,35 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    }
                 })?;
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_flexUnit(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_flexUnit(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -41266,7 +41269,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -41509,7 +41511,6 @@ mod __cssl4parser_emit_impl {
                         offset: *p as u32,
                     });
                 }
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -41524,7 +41525,6 @@ mod __cssl4parser_emit_impl {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 {
                     let __scan_start = *p;
                     let Some(match_len) = __regex_scan_CssL4Parser("[^;!}]*", input, *p)
@@ -41535,12 +41535,9 @@ mod __cssl4parser_emit_impl {
                     };
                     *p += match_len as usize;
                 }
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -41549,10 +41546,8 @@ mod __cssl4parser_emit_impl {
                         cursor,
                     )
                 })?;
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             }
             {
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 {
                     let mut __iter_count: u32 = 0;
                     loop {
@@ -41739,11 +41734,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_CssL4Parser_selectorIdent(
                                     input,
                                     p,
@@ -41884,7 +41874,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_hregex_CssL4Parser_selectorIdent(
                         input,
                         p,
@@ -41973,7 +41962,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
             let mut __reps: u32 = 0;
@@ -41989,7 +41977,6 @@ mod __cssl4parser_emit_impl {
                     }
                     *p = end;
                     let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_hregex_CssL4Parser_selectorIdent(
                             input,
                             p,
@@ -42096,7 +42083,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -42207,7 +42193,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_hregex_CssL4Parser_selectorIdent(
                         input,
                         p,
@@ -42294,7 +42279,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_hregex_CssL4Parser_selectorIdent(input, p, state, builder, cursor)
             })?;
             let mut __reps: u32 = 0;
@@ -42310,7 +42294,6 @@ mod __cssl4parser_emit_impl {
                     }
                     *p = end;
                     let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_hregex_CssL4Parser_selectorIdent(
                             input,
                             p,
@@ -42438,7 +42421,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_hregex_CssL4Parser_selectorIdent(
                         input,
                         p,
@@ -42525,18 +42507,22 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
-                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                        offset: *p as u32,
-                    })?;
-                parse_keyword_CssL4Parser_dirKeyword(
-                    input,
-                    p,
-                    __first,
-                    state,
-                    builder,
-                    cursor,
-                )
+                {
+                    let __first = input
+                        .get(*p)
+                        .copied()
+                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                            offset: *p as u32,
+                        })?;
+                    parse_keyword_CssL4Parser_dirKeyword(
+                        input,
+                        p,
+                        __first,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                }
             })?;
             let at = *p;
             let end = at + 1usize;
@@ -42636,7 +42622,6 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_altdispatch_CssL4Parser_keyframeStop(
                         input,
                         p,
@@ -42673,11 +42658,6 @@ mod __cssl4parser_emit_impl {
                                 *p += match_len as usize;
                             }
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_keyframeStop(
                                     input,
                                     p,
@@ -42782,7 +42762,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -42895,22 +42874,22 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_mediaInParens(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_mediaInParens(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -43007,22 +42986,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_mediaInParens(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_mediaInParens(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -43059,22 +43038,22 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_CssL4Parser_mediaInParens(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaInParens(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -43192,22 +43171,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_mediaInParens(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_mediaInParens(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -43242,22 +43221,22 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_CssL4Parser_mediaInParens(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaInParens(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -43344,7 +43323,9 @@ mod __cssl4parser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(78u32 as u32);
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -43741,7 +43722,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_mediaFeature(
                             input,
                             p,
@@ -43781,11 +43761,6 @@ mod __cssl4parser_emit_impl {
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_wrap_CssL4Parser_mediaCondition(
                                 input,
                                 p,
@@ -43919,11 +43894,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_nsPrefix(
                                     input,
                                     p,
@@ -43954,7 +43924,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_hregex_CssL4Parser_selectorIdent(
                         input,
                         p,
@@ -44079,11 +44048,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_CssL4Parser_selectorIdent(
                                     input,
                                     p,
@@ -44101,11 +44065,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_CssL4Parser_selectorIdent(
                                     input,
                                     p,
@@ -44135,11 +44094,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_CssL4Parser_selectorIdent(
                                     input,
                                     p,
@@ -44177,11 +44131,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_CssL4Parser_selectorIdent(
                                     input,
                                     p,
@@ -44219,11 +44168,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_CssL4Parser_selectorIdent(
                                     input,
                                     p,
@@ -44273,22 +44217,22 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_CssL4Parser_attrMatcher(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_attrMatcher(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             let _ = __shape_support_CssL4Parser::skip_space(
                                 input,
@@ -44309,11 +44253,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_wrap_CssL4Parser_string(
                                                 input,
                                                 p,
@@ -44343,11 +44282,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_hregex_CssL4Parser_selectorIdent(
                                                 input,
                                                 p,
@@ -44551,7 +44485,6 @@ mod __cssl4parser_emit_impl {
                     }
                     *p = end;
                     let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
                     })?;
                     Ok(())
@@ -44665,7 +44598,6 @@ mod __cssl4parser_emit_impl {
                     }
                     *p = end;
                     let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
                     })?;
                     Ok(())
@@ -44774,15 +44706,15 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
-                            input,
-                            p,
-                            state,
-                        )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_number_CssL4Parser_number(input, p, __first, builder)
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                    }
                 })?;
             }
             {
@@ -44795,22 +44727,22 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_CssL4Parser_absoluteLengthUnit(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_absoluteLengthUnit(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -44833,11 +44765,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_wrap_CssL4Parser_relativeLengthUnit(
                                     input,
                                     p,
@@ -44973,22 +44900,22 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_CssL4Parser_mediaQualifier(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaQualifier(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -45027,22 +44954,22 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_CssL4Parser_mediaType(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaType(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -45098,22 +45025,22 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let __first = __shape_support_CssL4Parser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_CssL4Parser_mediaInParens(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_CssL4Parser_mediaInParens(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -45184,7 +45111,9 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -45204,7 +45133,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_wqName(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
@@ -45239,11 +45167,6 @@ mod __cssl4parser_emit_impl {
                                     crate::runtime::DtaError,
                                 > = (|| {
                                     let _ = ({
-                                        let _ = __shape_support_CssL4Parser::skip_space(
-                                            input,
-                                            p,
-                                            state,
-                                        );
                                         parse_flat_CssL4Parser_nsPrefix(
                                             input,
                                             p,
@@ -45366,21 +45289,24 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let __first = __shape_support_CssL4Parser::skip_space(input, p, state)
-                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                        offset: *p as u32,
-                    })?;
-                parse_keyword_CssL4Parser_colorSpace(
-                    input,
-                    p,
-                    __first,
-                    state,
-                    builder,
-                    cursor,
-                )
+                {
+                    let __first = input
+                        .get(*p)
+                        .copied()
+                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                            offset: *p as u32,
+                        })?;
+                    parse_keyword_CssL4Parser_colorSpace(
+                        input,
+                        p,
+                        __first,
+                        state,
+                        builder,
+                        cursor,
+                    )
+                }
             })?;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c(
                     input,
                     p,
@@ -45390,7 +45316,6 @@ mod __cssl4parser_emit_impl {
                 )
             })?;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c(
                     input,
                     p,
@@ -45400,7 +45325,6 @@ mod __cssl4parser_emit_impl {
                 )
             })?;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c(
                     input,
                     p,
@@ -45422,7 +45346,6 @@ mod __cssl4parser_emit_impl {
                     }
                     *p = end;
                     let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_wrap_CssL4Parser___pattern_90b9f441ae92fa6c(
                             input,
                             p,
@@ -45519,7 +45442,9 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -47810,7 +47735,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -47896,7 +47820,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -47980,7 +47903,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -48064,7 +47986,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_flat_CssL4Parser_relativeSelectorList(
                     input,
                     p,
@@ -48181,7 +48102,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_nthFunctionName(
                         input,
                         p,
@@ -48203,7 +48123,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_altdispatch_CssL4Parser_anPlusB(
                         input,
                         p,
@@ -48238,11 +48157,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_selectorList(
                                     input,
                                     p,
@@ -48420,7 +48334,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_complexSelector(
                         input,
                         p,
@@ -48524,7 +48437,6 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_relativeSelector(
                         input,
                         p,
@@ -48561,11 +48473,6 @@ mod __cssl4parser_emit_impl {
                                 *p += match_len as usize;
                             }
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_relativeSelector(
                                     input,
                                     p,
@@ -48688,7 +48595,6 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_complexSelector(
                         input,
                         p,
@@ -48725,11 +48631,6 @@ mod __cssl4parser_emit_impl {
                                 *p += match_len as usize;
                             }
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_complexSelector(
                                     input,
                                     p,
@@ -48819,7 +48720,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_highlightPseudo(
                             input,
                             p,
@@ -48845,7 +48745,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_slottedPseudo(
                             input,
                             p,
@@ -48870,7 +48769,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_partPseudo(
                             input,
                             p,
@@ -48893,7 +48791,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_simplePseudoElement(
                             input,
                             p,
@@ -48979,7 +48876,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_unordered_CssL4Parser_compoundSelector(
                     input,
                     p,
@@ -49086,7 +48982,6 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_unordered_CssL4Parser_compoundSelector(
                         input,
                         p,
@@ -49119,11 +49014,6 @@ mod __cssl4parser_emit_impl {
                                 )
                             })?;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_unordered_CssL4Parser_compoundSelector(
                                     input,
                                     p,
@@ -49210,7 +49100,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_wherePseudo(
                             input,
                             p,
@@ -49235,7 +49124,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_langPseudo(
                             input,
                             p,
@@ -49260,7 +49148,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_notPseudo(
                             input,
                             p,
@@ -49285,7 +49172,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_hasPseudo(
                             input,
                             p,
@@ -49310,7 +49196,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_dirPseudo(
                             input,
                             p,
@@ -49335,7 +49220,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_isPseudo(
                             input,
                             p,
@@ -49358,7 +49242,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_nthPseudo(
                             input,
                             p,
@@ -49381,7 +49264,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_simplePseudoClass(
                             input,
                             p,
@@ -49447,8 +49329,8 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __unordered_result: ::core::result::Result<(), crate::runtime::DtaError> = (||
         {
-            let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
             let mut __iters: u32 = 0;
+            let mut __gap = *p;
             'unordered: loop {
                 let __byte = match input.get(*p).copied() {
                     Some(b) => b,
@@ -49457,11 +49339,6 @@ mod __cssl4parser_emit_impl {
                 match __byte {
                     91 => {
                         let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_flat_CssL4Parser_attrSelector(
                                 input,
                                 p,
@@ -49478,11 +49355,6 @@ mod __cssl4parser_emit_impl {
                     | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117
                     | 118 | 119 | 120 | 121 | 122 => {
                         let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_altdispatch_CssL4Parser_typeSelector(
                                 input,
                                 p,
@@ -49495,11 +49367,6 @@ mod __cssl4parser_emit_impl {
                     }
                     46 => {
                         let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_flat_CssL4Parser_classSelector(
                                 input,
                                 p,
@@ -49512,11 +49379,6 @@ mod __cssl4parser_emit_impl {
                     }
                     35 => {
                         let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_hregex_CssL4Parser_hash(
                                 input,
                                 p,
@@ -49529,11 +49391,6 @@ mod __cssl4parser_emit_impl {
                     }
                     58 => {
                         let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_wrap_CssL4Parser_colonSelector(
                                 input,
                                 p,
@@ -49546,8 +49403,9 @@ mod __cssl4parser_emit_impl {
                     }
                     _ => break 'unordered,
                 }
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+                __gap = *p;
             }
+            *p = __gap;
             if __iters < 1 {
                 return Err(crate::runtime::DtaError::Syntax {
                     offset: *p as u32,
@@ -49609,7 +49467,9 @@ mod __cssl4parser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(102u32 as u32);
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -49745,11 +49605,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_wrap_CssL4Parser_mediaCondition(
                                     input,
                                     p,
@@ -49779,11 +49634,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_mediaTypedQuery(
                                     input,
                                     p,
@@ -49850,11 +49700,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_wrap_CssL4Parser_mediaCondition(
                                                 input,
                                                 p,
@@ -49884,11 +49729,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_flat_CssL4Parser_mediaTypedQuery(
                                                 input,
                                                 p,
@@ -49997,7 +49837,6 @@ mod __cssl4parser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathExpr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 104u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathExpr"),
@@ -50010,18 +49849,19 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__mathExpr_layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathProduct(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_mathExpr[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && false {
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_mathExpr[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -50070,9 +49910,7 @@ mod __cssl4parser_emit_impl {
                     op_discriminant as u32,
                 );
                 *p = (*p).saturating_add(op_width as usize);
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathProduct(input, p, state, builder, cursor)
                 })?;
             }
@@ -50137,7 +49975,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -50221,7 +50058,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let mut __reps: u32 = 0;
@@ -50237,7 +50073,6 @@ mod __cssl4parser_emit_impl {
                     }
                     *p = end;
                     let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_pratt_CssL4Parser_mathExpr(
                             input,
                             p,
@@ -50343,7 +50178,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let mut __reps: u32 = 0;
@@ -50359,7 +50193,6 @@ mod __cssl4parser_emit_impl {
                     }
                     *p = end;
                     let _ = ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_pratt_CssL4Parser_mathExpr(
                             input,
                             p,
@@ -50465,7 +50298,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -50477,7 +50309,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -50489,7 +50320,6 @@ mod __cssl4parser_emit_impl {
             }
             *p = end;
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
             })?;
             let at = *p;
@@ -50559,7 +50389,6 @@ mod __cssl4parser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let __mathProduct_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 109u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mathProduct"),
@@ -50575,18 +50404,19 @@ mod __cssl4parser_emit_impl {
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 parse_altdispatch_CssL4Parser_mathValue(input, p, state, builder, cursor)
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_mathProduct[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && false {
                     let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     op_byte = input.get(*p).copied().unwrap_or(0);
                     lut_byte = PRECEDENCE_LUT_mathProduct[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -50635,9 +50465,7 @@ mod __cssl4parser_emit_impl {
                     op_discriminant as u32,
                 );
                 *p = (*p).saturating_add(op_width as usize);
-                let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_altdispatch_CssL4Parser_mathValue(
                         input,
                         p,
@@ -50680,7 +50508,9 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -50700,7 +50530,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_calcFunction(
                             input,
                             p,
@@ -50724,7 +50553,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_minFunction(
                             input,
                             p,
@@ -50748,7 +50576,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_maxFunction(
                             input,
                             p,
@@ -50772,7 +50599,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_clampFunction(
                             input,
                             p,
@@ -50796,7 +50622,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_wrap_CssL4Parser_valueUnit(
                             input,
                             p,
@@ -50820,15 +50645,15 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let __first = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                        {
+                            let __first = input
+                                .get(*p)
+                                .copied()
+                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_number_CssL4Parser_number(input, p, __first, builder)
+                        }
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(5u32);
@@ -50857,11 +50682,6 @@ mod __cssl4parser_emit_impl {
                             *p = end;
                         }
                         let _ = ({
-                            let _ = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            );
                             parse_pratt_CssL4Parser_mathExpr(
                                 input,
                                 p,
@@ -50898,7 +50718,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_varFunction(
                             input,
                             p,
@@ -50922,7 +50741,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_envFunction(
                             input,
                             p,
@@ -50984,7 +50802,9 @@ mod __cssl4parser_emit_impl {
     {
         use crate::runtime::builder::StructBuilder;
         let _ = cursor;
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -51004,7 +50824,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_varFunction(
                             input,
                             p,
@@ -51028,7 +50847,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_calcFunction(
                             input,
                             p,
@@ -51052,7 +50870,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_urlFunction(
                             input,
                             p,
@@ -51076,7 +50893,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_colorFn(
                             input,
                             p,
@@ -51100,7 +50916,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_arglist_CssL4Parser_genericFunction(
                             input,
                             p,
@@ -51124,7 +50939,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_wrap_CssL4Parser_valueUnit(
                             input,
                             p,
@@ -51148,15 +50962,15 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let __first = __shape_support_CssL4Parser::skip_space(
-                                input,
-                                p,
-                                state,
-                            )
-                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_number_CssL4Parser_number(input, p, __first, builder)
+                        {
+                            let __first = input
+                                .get(*p)
+                                .copied()
+                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_number_CssL4Parser_number(input, p, __first, builder)
+                        }
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(6u32);
@@ -51173,7 +50987,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_altdispatch_CssL4Parser_namedColor(
                             input,
                             p,
@@ -51197,22 +51010,22 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let __first = __shape_support_CssL4Parser::skip_space(
+                        {
+                            let __first = input
+                                .get(*p)
+                                .copied()
+                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                    offset: *p as u32,
+                                })?;
+                            parse_keyword_CssL4Parser_globalKeyword(
                                 input,
                                 p,
+                                __first,
                                 state,
+                                builder,
+                                cursor,
                             )
-                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                offset: *p as u32,
-                            })?;
-                        parse_keyword_CssL4Parser_globalKeyword(
-                            input,
-                            p,
-                            __first,
-                            state,
-                            builder,
-                            cursor,
-                        )
+                        }
                     } {
                         Ok(_) => {
                             builder.push_branch_tag(8u32);
@@ -51229,7 +51042,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_hregex_CssL4Parser_dashIdent(
                             input,
                             p,
@@ -51253,7 +51065,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_hregex_CssL4Parser_ident(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
@@ -51295,7 +51106,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_hex(input, p, state, builder, cursor)
                     } {
                         Ok(_) => {
@@ -51313,7 +51123,6 @@ mod __cssl4parser_emit_impl {
                     let attempt_p = *p;
                     let attempt_builder = builder.checkpoint();
                     match {
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_wrap_CssL4Parser_cssString(
                             input,
                             p,
@@ -51420,22 +51229,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_colorProps(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_colorProps(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -51469,11 +51278,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -51509,7 +51313,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -51657,22 +51460,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_sizeProps(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_sizeProps(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -51706,11 +51509,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -51746,7 +51544,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -51894,22 +51691,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_spacingProps(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_spacingProps(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -51943,11 +51740,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -51983,7 +51775,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -52131,22 +51922,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_fontProps(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_fontProps(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -52188,22 +51979,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_fontWeightKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_fontWeightKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -52226,11 +52017,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -52283,7 +52069,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -52428,7 +52213,6 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_bgProps(input, p, state, builder, cursor)
                 })?;
             }
@@ -52463,11 +52247,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -52503,7 +52282,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -52651,22 +52429,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_transformProps(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_transformProps(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -52700,11 +52478,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -52740,7 +52513,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -52888,22 +52660,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_transitionProps(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_transitionProps(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -52937,11 +52709,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -52977,7 +52744,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -53125,22 +52891,22 @@ mod __cssl4parser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_listTableProps(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_listTableProps(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             {
@@ -53174,11 +52940,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -53214,7 +52975,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -53411,22 +53171,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_displayKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_displayKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -53449,11 +53209,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -53506,7 +53261,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -53704,22 +53458,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_positionKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_positionKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -53742,11 +53496,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -53799,7 +53548,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -54202,22 +53950,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_overflowKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_overflowKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -54240,11 +53988,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -54297,7 +54040,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -54498,22 +54240,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_visibilityKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_visibilityKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -54536,11 +54278,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -54593,7 +54330,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -54794,22 +54530,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_flexDirKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_flexDirKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -54832,11 +54568,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -54889,7 +54620,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -55087,22 +54817,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_flexWrapKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_flexWrapKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -55125,11 +54855,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -55182,7 +54907,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -55793,22 +55517,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_alignKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_alignKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -55831,11 +55555,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -55888,7 +55607,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -56307,11 +56025,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -56347,7 +56060,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -56537,11 +56249,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -56577,7 +56284,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -56778,22 +56484,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_fontWeightKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_fontWeightKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -56816,11 +56522,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -56873,7 +56574,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -57066,11 +56766,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -57106,7 +56801,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -57593,22 +57287,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_borderWidthKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_borderWidthKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -57631,11 +57325,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -57688,7 +57377,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -58175,22 +57863,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_borderStyleKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_borderStyleKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -58213,11 +57901,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -58270,7 +57953,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -58889,11 +58571,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -58929,7 +58606,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -59118,11 +58794,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -59158,7 +58829,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -59359,22 +59029,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_textAlignKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_textAlignKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -59397,11 +59067,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -59454,7 +59119,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -59655,22 +59319,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_boxSizingKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_boxSizingKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -59693,11 +59357,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -59750,7 +59409,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -59947,22 +59605,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_cursorKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_cursorKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -59985,11 +59643,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -60042,7 +59695,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -60169,7 +59821,9 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -61588,7 +61242,6 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_keyframeSel(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -61623,11 +61276,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_wrap_CssL4Parser_declaration(
                                     input,
                                     p,
@@ -61784,7 +61432,6 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_hregex_CssL4Parser_ident(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -61819,11 +61466,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_keyframeBlock(
                                     input,
                                     p,
@@ -61938,7 +61580,6 @@ mod __cssl4parser_emit_impl {
                     let __ref_save_p = *p;
                     let __ref_builder_checkpoint = builder.checkpoint();
                     match ({
-                        let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                         parse_flat_CssL4Parser_ruleBlock(
                             input,
                             p,
@@ -62065,22 +61706,22 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let __first = __shape_support_CssL4Parser::skip_space(
+                    {
+                        let __first = input
+                            .get(*p)
+                            .copied()
+                            .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                offset: *p as u32,
+                            })?;
+                        parse_keyword_CssL4Parser_atRuleBody(
                             input,
                             p,
+                            __first,
                             state,
+                            builder,
+                            cursor,
                         )
-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                            offset: *p as u32,
-                        })?;
-                    parse_keyword_CssL4Parser_atRuleBody(
-                        input,
-                        p,
-                        __first,
-                        state,
-                        builder,
-                        cursor,
-                    )
+                    }
                 })?;
             }
             ::core::result::Result::Ok(())
@@ -62188,7 +61829,6 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_blockContent(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -62298,7 +61938,6 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_selectorList(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -62306,7 +61945,6 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_ruleBlock(input, p, state, builder, cursor)
                 })?;
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
@@ -62420,7 +62058,6 @@ mod __cssl4parser_emit_impl {
             {
                 let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_mediaQueryList(
                         input,
                         p,
@@ -62433,7 +62070,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_ruleBlock(input, p, state, builder, cursor)
                 })?;
             }
@@ -62497,7 +62133,9 @@ mod __cssl4parser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(146u32 as u32);
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -62827,7 +62465,9 @@ mod __cssl4parser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(147u32 as u32);
-        let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -62970,11 +62610,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_wrap_CssL4Parser_declaration(
                                                 input,
                                                 p,
@@ -63004,11 +62639,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_wrap_CssL4Parser_ruleItem(
                                                 input,
                                                 p,
@@ -63170,11 +62800,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_wrap_CssL4Parser_ruleItem(
                                     input,
                                     p,
@@ -63250,10 +62875,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
-        {
-            let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
-            parse_flat_CssL4Parser_ruleList(input, p, state, builder, cursor)
-        }
+        { parse_flat_CssL4Parser_ruleList(input, p, state, builder, cursor) }
     }
     /// AZ-I.W2.RD — struct-direct Wrap-shape parse function.
     ///
@@ -63304,7 +62926,9 @@ mod __cssl4parser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_CssL4Parser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -63984,7 +63608,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
@@ -64102,7 +63725,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
@@ -64128,11 +63750,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_pratt_CssL4Parser_mathExpr(
                                     input,
                                     p,
@@ -64280,7 +63897,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
@@ -64306,11 +63922,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_pratt_CssL4Parser_mathExpr(
                                     input,
                                     p,
@@ -64458,7 +64069,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
@@ -64474,7 +64084,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
@@ -64490,7 +64099,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
@@ -64646,11 +64254,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_funcBody(
                                     input,
                                     p,
@@ -64831,11 +64434,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_funcBody(
                                     input,
                                     p,
@@ -65016,11 +64614,6 @@ mod __cssl4parser_emit_impl {
                             }
                             *p = end;
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_CssL4Parser_funcBody(
                                     input,
                                     p,
@@ -65163,7 +64756,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_pratt_CssL4Parser_mathExpr(input, p, state, builder, cursor)
                 })?;
             }
@@ -65289,11 +64881,6 @@ mod __cssl4parser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_wrap_CssL4Parser_string(
                                     input,
                                     p,
@@ -65479,7 +65066,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_funcBody(input, p, state, builder, cursor)
                 })?;
             }
@@ -65616,11 +65202,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -65656,7 +65237,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -65833,11 +65413,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -65873,7 +65448,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -66050,11 +65624,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -66090,7 +65659,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -66275,22 +65843,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_fontWeightKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_fontWeightKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -66313,11 +65881,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -66370,7 +65933,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -66547,11 +66109,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -66587,7 +66144,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -66764,11 +66320,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -66804,7 +66355,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -66981,11 +66531,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -67021,7 +66566,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -67198,11 +66742,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -67238,7 +66777,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -67423,22 +66961,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_displayKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_displayKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -67461,11 +66999,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -67518,7 +67051,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -67703,22 +67235,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_positionKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_positionKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -67741,11 +67273,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -67798,7 +67325,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -67983,22 +67509,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_overflowKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_overflowKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -68021,11 +67547,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -68078,7 +67599,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -68263,22 +67783,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_visibilityKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_visibilityKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -68301,11 +67821,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -68358,7 +67873,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -68543,22 +68057,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_flexDirKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_flexDirKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -68581,11 +68095,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -68638,7 +68147,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -68823,22 +68331,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_flexWrapKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_flexWrapKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -68861,11 +68369,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -68918,7 +68421,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -69103,22 +68605,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_alignKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_alignKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -69141,11 +68643,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -69198,7 +68695,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -69375,11 +68871,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -69415,7 +68906,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -69592,11 +69082,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -69632,7 +69117,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -69817,22 +69301,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_fontWeightKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_fontWeightKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -69855,11 +69339,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -69912,7 +69391,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -70089,11 +69567,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -70129,7 +69602,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -70314,22 +69786,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_borderWidthKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_borderWidthKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -70352,11 +69824,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -70409,7 +69876,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -70594,22 +70060,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_borderStyleKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_borderStyleKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -70632,11 +70098,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -70689,7 +70150,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -70866,11 +70326,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -70906,7 +70361,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -71083,11 +70537,6 @@ mod __cssl4parser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_CssL4Parser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_altdispatch_CssL4Parser_value(
                                     input,
                                     p,
@@ -71123,7 +70572,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -71308,22 +70756,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_textAlignKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_textAlignKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -71346,11 +70794,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -71403,7 +70846,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -71588,22 +71030,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_boxSizingKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_boxSizingKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -71626,11 +71068,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -71683,7 +71120,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -71868,22 +71304,22 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let __first = __shape_support_CssL4Parser::skip_space(
+                                            {
+                                                let __first = input
+                                                    .get(*p)
+                                                    .copied()
+                                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                                        offset: *p as u32,
+                                                    })?;
+                                                parse_keyword_CssL4Parser_cursorKeyword(
                                                     input,
                                                     p,
+                                                    __first,
                                                     state,
+                                                    builder,
+                                                    cursor,
                                                 )
-                                                .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                                    offset: *p as u32,
-                                                })?;
-                                            parse_keyword_CssL4Parser_cursorKeyword(
-                                                input,
-                                                p,
-                                                __first,
-                                                state,
-                                                builder,
-                                                cursor,
-                                            )
+                                            }
                                         })?;
                                         Ok(())
                                     })();
@@ -71906,11 +71342,6 @@ mod __cssl4parser_emit_impl {
                                         crate::runtime::DtaError,
                                     > = (|| {
                                         let _ = ({
-                                            let _ = __shape_support_CssL4Parser::skip_space(
-                                                input,
-                                                p,
-                                                state,
-                                            );
                                             parse_altdispatch_CssL4Parser_value(
                                                 input,
                                                 p,
@@ -71963,7 +71394,6 @@ mod __cssl4parser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
                     parse_flat_CssL4Parser_importantSuffix(
                         input,
                         p,
@@ -72043,8 +71473,9 @@ mod __cssl4parser_emit_impl {
     }
     /// AW-V.W3.2 — top-level shape dispatcher.
     ///
-    /// Mirrors the walker's `value` rule ByteDispatch: skip leading
-    /// whitespace, dispatch on the first byte to the chosen branch
+    /// Mirrors the walker's `value` rule ByteDispatch: dispatch on
+    /// the first byte (no whitespace skipped but what the grammar
+    /// writes, sk-v27 LW3.ORC2-WS-C) to the chosen branch
     /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
@@ -72085,7 +71516,11 @@ mod __cssl4parser_emit_impl {
     {
         let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
         let _ = cursor.decide(150u32);
-        parse_scalar_CssL4Parser_stylesheet(input, p, state, builder, cursor)
+        let __r = parse_scalar_CssL4Parser_stylesheet(input, p, state, builder, cursor);
+        if __r.is_ok() {
+            let _ = __shape_support_CssL4Parser::skip_space(input, p, state);
+        }
+        __r
     }
     impl CssL4Parser {
         fn __prettify_trivia<'a>(
@@ -86301,7 +85736,7 @@ mod __cssl4parser_emit_impl {
                                             let mut __pos = state.offset;
                                             while __pos < __end {
                                                 let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                if __b.is_ascii_whitespace() {
+                                                if (__b == b' ' || __b.wrapping_sub(b'\t') < 5) {
                                                     __pos += 1;
                                                 } else {
                                                     break;
@@ -86321,7 +85756,7 @@ mod __cssl4parser_emit_impl {
                                             let mut __pos = state.offset;
                                             while __pos < __end {
                                                 let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                if __b.is_ascii_whitespace() {
+                                                if (__b == b' ' || __b.wrapping_sub(b'\t') < 5) {
                                                     __pos += 1;
                                                 } else {
                                                     break;
@@ -86547,8 +85982,12 @@ mod __cssl4parser_emit_impl {
                                     let __start = state.offset;
                                     let mut __pos = __start;
                                     while __pos < state.src_bytes.len()
-                                        && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                            .is_ascii_whitespace()
+                                        && {
+                                            let __c: u8 = unsafe {
+                                                *state.src_bytes.get_unchecked(__pos)
+                                            };
+                                            __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                        }
                                     {
                                         __pos += 1;
                                     }
@@ -86557,8 +85996,12 @@ mod __cssl4parser_emit_impl {
                                     {
                                         __pos += 1usize;
                                         while __pos < state.src_bytes.len()
-                                            && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                .is_ascii_whitespace()
+                                            && {
+                                                let __c: u8 = unsafe {
+                                                    *state.src_bytes.get_unchecked(__pos)
+                                                };
+                                                __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                            }
                                         {
                                             __pos += 1;
                                         }
@@ -86599,8 +86042,12 @@ mod __cssl4parser_emit_impl {
                                             let __start = state.offset;
                                             let mut __pos = __start;
                                             while __pos < state.src_bytes.len()
-                                                && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                    .is_ascii_whitespace()
+                                                && {
+                                                    let __c: u8 = unsafe {
+                                                        *state.src_bytes.get_unchecked(__pos)
+                                                    };
+                                                    __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                }
                                             {
                                                 __pos += 1;
                                             }
@@ -86609,8 +86056,12 @@ mod __cssl4parser_emit_impl {
                                             {
                                                 __pos += 1usize;
                                                 while __pos < state.src_bytes.len()
-                                                    && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                        .is_ascii_whitespace()
+                                                    && {
+                                                        let __c: u8 = unsafe {
+                                                            *state.src_bytes.get_unchecked(__pos)
+                                                        };
+                                                        __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                    }
                                                 {
                                                     __pos += 1;
                                                 }
@@ -86651,8 +86102,12 @@ mod __cssl4parser_emit_impl {
                                                     let __start = state.offset;
                                                     let mut __pos = __start;
                                                     while __pos < state.src_bytes.len()
-                                                        && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                            .is_ascii_whitespace()
+                                                        && {
+                                                            let __c: u8 = unsafe {
+                                                                *state.src_bytes.get_unchecked(__pos)
+                                                            };
+                                                            __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                        }
                                                     {
                                                         __pos += 1;
                                                     }
@@ -86661,8 +86116,12 @@ mod __cssl4parser_emit_impl {
                                                     {
                                                         __pos += 1usize;
                                                         while __pos < state.src_bytes.len()
-                                                            && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                                .is_ascii_whitespace()
+                                                            && {
+                                                                let __c: u8 = unsafe {
+                                                                    *state.src_bytes.get_unchecked(__pos)
+                                                                };
+                                                                __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                            }
                                                         {
                                                             __pos += 1;
                                                         }
@@ -86705,7 +86164,7 @@ mod __cssl4parser_emit_impl {
                                                             let mut __pos = __start;
                                                             while __pos < __end {
                                                                 let __b = unsafe { *state.src_bytes.get_unchecked(__pos) };
-                                                                if __b.is_ascii_whitespace() {
+                                                                if (__b == b' ' || __b.wrapping_sub(b'\t') < 5) {
                                                                     __pos += 1;
                                                                 } else {
                                                                     break;
@@ -90222,8 +89681,12 @@ mod __cssl4parser_emit_impl {
                                                 let __start = state.offset;
                                                 let mut __pos = __start;
                                                 while __pos < state.src_bytes.len()
-                                                    && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                        .is_ascii_whitespace()
+                                                    && {
+                                                        let __c: u8 = unsafe {
+                                                            *state.src_bytes.get_unchecked(__pos)
+                                                        };
+                                                        __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                    }
                                                 {
                                                     __pos += 1;
                                                 }
@@ -90232,8 +89695,12 @@ mod __cssl4parser_emit_impl {
                                                 {
                                                     __pos += 1usize;
                                                     while __pos < state.src_bytes.len()
-                                                        && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                            .is_ascii_whitespace()
+                                                        && {
+                                                            let __c: u8 = unsafe {
+                                                                *state.src_bytes.get_unchecked(__pos)
+                                                            };
+                                                            __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                        }
                                                     {
                                                         __pos += 1;
                                                     }
@@ -93243,8 +92710,12 @@ mod __cssl4parser_emit_impl {
                                                 let __start = state.offset;
                                                 let mut __pos = __start;
                                                 while __pos < state.src_bytes.len()
-                                                    && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                        .is_ascii_whitespace()
+                                                    && {
+                                                        let __c: u8 = unsafe {
+                                                            *state.src_bytes.get_unchecked(__pos)
+                                                        };
+                                                        __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                    }
                                                 {
                                                     __pos += 1;
                                                 }
@@ -93253,8 +92724,12 @@ mod __cssl4parser_emit_impl {
                                                 {
                                                     __pos += 1usize;
                                                     while __pos < state.src_bytes.len()
-                                                        && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                            .is_ascii_whitespace()
+                                                        && {
+                                                            let __c: u8 = unsafe {
+                                                                *state.src_bytes.get_unchecked(__pos)
+                                                            };
+                                                            __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                        }
                                                     {
                                                         __pos += 1;
                                                     }
@@ -93338,8 +92813,12 @@ mod __cssl4parser_emit_impl {
                                                 let __start = state.offset;
                                                 let mut __pos = __start;
                                                 while __pos < state.src_bytes.len()
-                                                    && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                        .is_ascii_whitespace()
+                                                    && {
+                                                        let __c: u8 = unsafe {
+                                                            *state.src_bytes.get_unchecked(__pos)
+                                                        };
+                                                        __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                    }
                                                 {
                                                     __pos += 1;
                                                 }
@@ -93348,8 +92827,12 @@ mod __cssl4parser_emit_impl {
                                                 {
                                                     __pos += 1usize;
                                                     while __pos < state.src_bytes.len()
-                                                        && unsafe { *state.src_bytes.get_unchecked(__pos) }
-                                                            .is_ascii_whitespace()
+                                                        && {
+                                                            let __c: u8 = unsafe {
+                                                                *state.src_bytes.get_unchecked(__pos)
+                                                            };
+                                                            __c == b' ' || __c.wrapping_sub(b'\t') < 5
+                                                        }
                                                     {
                                                         __pos += 1;
                                                     }

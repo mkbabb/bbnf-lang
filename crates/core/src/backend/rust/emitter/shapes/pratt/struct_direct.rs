@@ -200,12 +200,22 @@ pub(super) fn emit_parse_pratt_struct_direct(
     // operator leading with it before; the operator trailing or the
     // operand leading with it after). The chain reads none before its
     // first operand: a `?w` there is the operand's own.
-    let (ws_pre_op, ws_post_op) = pratt_op_ws(rule, ir);
-    let skip_post_op = if ws_post_op {
-        quote! { let _ = #support_mod::skip_space(input, p, state); }
-    } else {
-        quote! {}
+    let ws = pratt_op_ws(rule, ir);
+    let skip_if = |on: bool| {
+        if on {
+            quote! { let _ = #support_mod::skip_space(input, p, state); }
+        } else {
+            quote! {}
+        }
     };
+    // The operands' own `?w` is read unconditionally around each
+    // operand; only the operator's leading `?w` is tentative (given back
+    // when no operator follows).
+    let skip_head_lead = skip_if(ws.head_lead);
+    let skip_head_trail = skip_if(ws.head_trail);
+    let skip_rhs_trail = skip_if(ws.rhs_trail);
+    let skip_post_op = skip_if(ws.post_op);
+    let ws_pre_op = ws.pre_op;
 
     // AZ-I.W2-act.B3 — substrate-binding splice: the function
     // signature carries the grammar's concrete builder type rather
@@ -273,7 +283,9 @@ pub(super) fn emit_parse_pratt_struct_direct(
             // Recurses through the operand's per-shape parse fn,
             // which deposits its own value (scalar or compound) onto
             // this rule's open frame as the first child.
+            #skip_head_lead
             #operand_call
+            #skip_head_trail
 
             // ── Operator + RHS loop ─────────────────────────────────
             //
@@ -363,6 +375,7 @@ pub(super) fn emit_parse_pratt_struct_direct(
                 // ── RHS operand ─────────────────────────────────
                 #skip_post_op
                 #rhs_call
+                #skip_rhs_trail
             }
             ::core::result::Result::Ok(())
             })();
@@ -378,27 +391,50 @@ pub(super) fn emit_parse_pratt_struct_direct(
     }
 }
 
-/// sk-v27 LW3.ORC2-WS-C: whether the grammar writes `?w` before and
-/// after the operator of `operand (op operand)*`.
-fn pratt_op_ws(rule: &IrRule, ir: &GrammarIR) -> (bool, bool) {
+/// sk-v27 LW3.ORC2-WS-C: where the grammar writes `?w` in
+/// `operand (op operand)*`.
+struct PrattWs {
+    /// `?w` before the head operand (its own leading `?w`).
+    head_lead: bool,
+    /// `?w` after the head operand (its own trailing `?w`).
+    head_trail: bool,
+    /// `?w` after each right operand (its own trailing `?w`).
+    rhs_trail: bool,
+    /// The operator leads with `?w` (read only when an operator follows).
+    pre_op: bool,
+    /// `?w` between the operator and the right operand.
+    post_op: bool,
+}
+
+fn pratt_op_ws(rule: &IrRule, ir: &GrammarIR) -> PrattWs {
     use super::super::ws_read::{leads_ow, trails_ow};
     use bbnf_ir::passes::inspect::unwrap_map_ow;
+    let none = PrattWs {
+        head_lead: false,
+        head_trail: false,
+        rhs_trail: false,
+        pre_op: false,
+        post_op: false,
+    };
     let IrNode::Seq(children) = unwrap_map_ow(&rule.body) else {
-        return (false, false);
+        return none;
     };
     let [operand, IrNode::Repeat { inner, .. }] = children.as_slice() else {
-        return (false, false);
+        return none;
     };
     let (op, rhs) = match unwrap_map_ow(inner) {
         IrNode::Seq(items) => match items.as_slice() {
             [op, rhs] => (op, rhs),
-            _ => return (false, false),
+            _ => return none,
         },
         IrNode::Next(op, rhs) => (op.as_ref(), rhs.as_ref()),
-        _ => return (false, false),
+        _ => return none,
     };
-    (
-        trails_ow(operand, ir) || leads_ow(op, ir),
-        trails_ow(op, ir) || leads_ow(rhs, ir),
-    )
+    PrattWs {
+        head_lead: leads_ow(operand, ir),
+        head_trail: trails_ow(operand, ir),
+        rhs_trail: trails_ow(rhs, ir),
+        pre_op: leads_ow(op, ir),
+        post_op: trails_ow(op, ir) || leads_ow(rhs, ir),
+    }
 }

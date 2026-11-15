@@ -3605,9 +3605,11 @@ mod __googlesheetsparser_emit_impl {
                     ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
-        /// Skip JSON whitespace at `*p`, returning the first
-        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
-        /// exit when the next byte is non-whitespace.
+        /// Read `?w` whitespace at `*p` (the six bytes space, `\t`,
+        /// `\n`, U+000B, U+000C, `\r`; sk-v27 LW3.ORC2-WS-C), returning
+        /// the first other byte (or `None` on EOF). Emitted only where
+        /// the grammar writes `?w`. Hot-path fast-exit when the next
+        /// byte is not whitespace.
         #[inline(always)]
         pub fn skip_space(
             input: &[u8],
@@ -3615,9 +3617,7 @@ mod __googlesheetsparser_emit_impl {
             state: &mut ScanState,
         ) -> Option<u8> {
             match input.get(*p) {
-                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => {
-                    Some(b)
-                }
+                Some(&b) if b != b' ' && b.wrapping_sub(b'\t') > 4 => Some(b),
                 None => None,
                 _ => {
                     skip_space_slow(input, p, state);
@@ -3641,7 +3641,7 @@ mod __googlesheetsparser_emit_impl {
                     let __slice = unsafe { input.get_unchecked(*p..__next) };
                     let mut __all_ws = true;
                     for &__b in __slice {
-                        if __b != b' ' && __b != b'\t' && __b != b'\n' && __b != b'\r' {
+                        if __b != b' ' && __b.wrapping_sub(b'\t') > 4 {
                             __all_ws = false;
                             break;
                         }
@@ -3668,7 +3668,7 @@ mod __googlesheetsparser_emit_impl {
                 }
                 if *p + 64 > input.len() {
                     while let Some(&b) = input.get(*p) {
-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
                             return;
                         }
                         *p += 1;
@@ -3690,13 +3690,14 @@ mod __googlesheetsparser_emit_impl {
             }
         }
         /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
-        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
-        /// `{b' ', b'\t', b'\n', b'\r'}`. The kernel is parse-that's
+        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT one of the six
+        /// `?w` bytes (space, `\t`, `\n`, U+000B, U+000C, `\r`;
+        /// sk-v27 LW3.ORC2-WS-C). The kernel is parse-that's
         /// (NEON under the runtime tier on aarch64, the scalar oracle
         /// elsewhere); no ISA intrinsic is emitted (X-3).
         #[inline(always)]
         pub(crate) fn nospace_bitmap_64(stripe: &[u8; 64]) -> u64 {
-            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
+            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\x0B\x0C\r")
         }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
         /// parse-that's quote-or-backslash kernel (NEON under the runtime
@@ -4065,7 +4066,9 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -5233,11 +5236,6 @@ mod __googlesheetsparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_GoogleSheetsParser_sheet_prefix(
                                     input,
                                     p,
@@ -5268,11 +5266,6 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_hregex_GoogleSheetsParser_cell_ref(
                         input,
                         p,
@@ -5376,11 +5369,6 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_hregex_GoogleSheetsParser_identifier(
                         input,
                         p,
@@ -5509,11 +5497,6 @@ mod __googlesheetsparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_GoogleSheetsParser_sheet_prefix(
                                     input,
                                     p,
@@ -5552,11 +5535,6 @@ mod __googlesheetsparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_GoogleSheetsParser_cell_ref(
                                     input,
                                     p,
@@ -5693,11 +5671,6 @@ mod __googlesheetsparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_hregex_GoogleSheetsParser_cell_ref(
                                     input,
                                     p,
@@ -5887,7 +5860,9 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__wrap_layout);
         let mut __wrap_branch_idx: u32 = 0;
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
+            let first = input
+                .get(*p)
+                .copied()
                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                     offset: *p as u32,
                 })?;
@@ -6009,7 +5984,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __comparison_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 15u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("comparison_expr"),
@@ -6024,8 +5998,8 @@ mod __googlesheetsparser_emit_impl {
             &__comparison_expr_layout,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_concat_expr(
                     input,
                     p,
@@ -6034,10 +6008,12 @@ mod __googlesheetsparser_emit_impl {
                     cursor,
                 )
             })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
                         p,
@@ -6047,6 +6023,7 @@ mod __googlesheetsparser_emit_impl {
                     lut_byte = PRECEDENCE_LUT_comparison_expr[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -6097,11 +6074,6 @@ mod __googlesheetsparser_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_pratt_GoogleSheetsParser_concat_expr(
                         input,
                         p,
@@ -6110,6 +6082,7 @@ mod __googlesheetsparser_emit_impl {
                         cursor,
                     )
                 })?;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
             ::core::result::Result::Ok(())
         })();
@@ -6161,7 +6134,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __mul_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 16u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("mul_expr"),
@@ -6173,14 +6145,16 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__mul_expr_layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_exp_expr(input, p, state, builder, cursor)
             })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_mul_expr[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
                         p,
@@ -6190,6 +6164,7 @@ mod __googlesheetsparser_emit_impl {
                     lut_byte = PRECEDENCE_LUT_mul_expr[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -6240,11 +6215,6 @@ mod __googlesheetsparser_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_pratt_GoogleSheetsParser_exp_expr(
                         input,
                         p,
@@ -6253,6 +6223,7 @@ mod __googlesheetsparser_emit_impl {
                         cursor,
                     )
                 })?;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
             ::core::result::Result::Ok(())
         })();
@@ -6344,22 +6315,22 @@ mod __googlesheetsparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let __first = __shape_support_GoogleSheetsParser::skip_space(
+                                {
+                                    let __first = input
+                                        .get(*p)
+                                        .copied()
+                                        .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                                            offset: *p as u32,
+                                        })?;
+                                    parse_keyword_GoogleSheetsParser_unary_prefix(
                                         input,
                                         p,
+                                        __first,
                                         state,
+                                        builder,
+                                        cursor,
                                     )
-                                    .ok_or(crate::runtime::DtaError::UnexpectedEnd {
-                                        offset: *p as u32,
-                                    })?;
-                                parse_keyword_GoogleSheetsParser_unary_prefix(
-                                    input,
-                                    p,
-                                    __first,
-                                    state,
-                                    builder,
-                                    cursor,
-                                )
+                                }
                             })?;
                             Ok(())
                         })();
@@ -6383,11 +6354,6 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_flat_GoogleSheetsParser_postfix_expr(
                         input,
                         p,
@@ -6502,11 +6468,6 @@ mod __googlesheetsparser_emit_impl {
             {
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_scalar_GoogleSheetsParser_expression(
                         input,
                         p,
@@ -6632,11 +6593,6 @@ mod __googlesheetsparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_scalar_GoogleSheetsParser_expression(
                                     input,
                                     p,
@@ -6756,11 +6712,6 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_flat_GoogleSheetsParser_arg(input, p, state, builder, cursor)
                 })?;
             }
@@ -6796,11 +6747,6 @@ mod __googlesheetsparser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_GoogleSheetsParser_arg(
                                     input,
                                     p,
@@ -6923,11 +6869,6 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_scalar_GoogleSheetsParser_expression(
                         input,
                         p,
@@ -6951,11 +6892,6 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_scalar_GoogleSheetsParser_expression(
                         input,
                         p,
@@ -7059,11 +6995,6 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_scalar_GoogleSheetsParser_expression(
                         input,
                         p,
@@ -7105,11 +7036,6 @@ mod __googlesheetsparser_emit_impl {
                                 state,
                             );
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_scalar_GoogleSheetsParser_expression(
                                     input,
                                     p,
@@ -7201,7 +7127,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_row_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 23u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_row"),
@@ -7216,8 +7141,8 @@ mod __googlesheetsparser_emit_impl {
             &__array_row_layout,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_scalar_GoogleSheetsParser_expression(
                     input,
                     p,
@@ -7227,9 +7152,10 @@ mod __googlesheetsparser_emit_impl {
                 )
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_array_row[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
                         p,
@@ -7239,6 +7165,7 @@ mod __googlesheetsparser_emit_impl {
                     lut_byte = PRECEDENCE_LUT_array_row[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -7289,11 +7216,6 @@ mod __googlesheetsparser_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_scalar_GoogleSheetsParser_expression(
                         input,
                         p,
@@ -7350,7 +7272,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __array_rows_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 24u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("array_rows"),
@@ -7365,8 +7286,8 @@ mod __googlesheetsparser_emit_impl {
             &__array_rows_layout,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_array_row(
                     input,
                     p,
@@ -7376,9 +7297,10 @@ mod __googlesheetsparser_emit_impl {
                 )
             })?;
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_array_rows[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
                         p,
@@ -7388,6 +7310,7 @@ mod __googlesheetsparser_emit_impl {
                     lut_byte = PRECEDENCE_LUT_array_rows[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -7438,11 +7361,6 @@ mod __googlesheetsparser_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_pratt_GoogleSheetsParser_array_row(
                         input,
                         p,
@@ -7541,11 +7459,6 @@ mod __googlesheetsparser_emit_impl {
             {
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_pratt_GoogleSheetsParser_array_rows(
                         input,
                         p,
@@ -7629,7 +7542,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __concat_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 26u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("concat_expr"),
@@ -7644,14 +7556,16 @@ mod __googlesheetsparser_emit_impl {
             &__concat_expr_layout,
         );
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_add_expr(input, p, state, builder, cursor)
             })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_concat_expr[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
                         p,
@@ -7661,6 +7575,7 @@ mod __googlesheetsparser_emit_impl {
                     lut_byte = PRECEDENCE_LUT_concat_expr[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -7711,11 +7626,6 @@ mod __googlesheetsparser_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_pratt_GoogleSheetsParser_add_expr(
                         input,
                         p,
@@ -7724,6 +7634,7 @@ mod __googlesheetsparser_emit_impl {
                         cursor,
                     )
                 })?;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
             ::core::result::Result::Ok(())
         })();
@@ -7772,7 +7683,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __add_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 27u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("add_expr"),
@@ -7784,14 +7694,16 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__add_expr_layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_pratt_GoogleSheetsParser_mul_expr(input, p, state, builder, cursor)
             })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_add_expr[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
                         p,
@@ -7801,6 +7713,7 @@ mod __googlesheetsparser_emit_impl {
                     lut_byte = PRECEDENCE_LUT_add_expr[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -7851,11 +7764,6 @@ mod __googlesheetsparser_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_pratt_GoogleSheetsParser_mul_expr(
                         input,
                         p,
@@ -7864,6 +7772,7 @@ mod __googlesheetsparser_emit_impl {
                         cursor,
                     )
                 })?;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
             ::core::result::Result::Ok(())
         })();
@@ -7912,7 +7821,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         let _ = cursor;
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let __exp_expr_layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 28u32 as ::bbnf_ir::RuleId,
             rule_name: ::std::string::String::from("exp_expr"),
@@ -7924,8 +7832,8 @@ mod __googlesheetsparser_emit_impl {
             '_,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__exp_expr_layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_flat_GoogleSheetsParser_unary_expr(
                     input,
                     p,
@@ -7934,10 +7842,12 @@ mod __googlesheetsparser_emit_impl {
                     cursor,
                 )
             })?;
+            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             loop {
+                let __gap = *p;
                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
                 let mut lut_byte: u8 = PRECEDENCE_LUT_exp_expr[op_byte as usize];
-                if lut_byte == 0 {
+                if lut_byte == 0 && true {
                     let _ = __shape_support_GoogleSheetsParser::skip_space(
                         input,
                         p,
@@ -7947,6 +7857,7 @@ mod __googlesheetsparser_emit_impl {
                     lut_byte = PRECEDENCE_LUT_exp_expr[op_byte as usize];
                 }
                 if lut_byte == 0 {
+                    *p = __gap;
                     break;
                 }
                 let two_byte: u8 = (lut_byte >> 7) & 0x01u8;
@@ -7997,11 +7908,6 @@ mod __googlesheetsparser_emit_impl {
                 *p = (*p).saturating_add(op_width as usize);
                 let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_flat_GoogleSheetsParser_unary_expr(
                         input,
                         p,
@@ -8010,6 +7916,7 @@ mod __googlesheetsparser_emit_impl {
                         cursor,
                     )
                 })?;
+                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             }
             ::core::result::Result::Ok(())
         })();
@@ -8064,7 +7971,6 @@ mod __googlesheetsparser_emit_impl {
             )?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_flat_GoogleSheetsParser_lambda_params(
                     input,
                     p,
@@ -8121,7 +8027,6 @@ mod __googlesheetsparser_emit_impl {
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
         {
-            let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             parse_pratt_GoogleSheetsParser_comparison_expr(
                 input,
                 p,
@@ -8168,7 +8073,6 @@ mod __googlesheetsparser_emit_impl {
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_flat_GoogleSheetsParser_func_open(input, p, state, builder, cursor)
             })?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -8177,11 +8081,6 @@ mod __googlesheetsparser_emit_impl {
                 let __save = *p;
                 let __res: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
                     let _ = ({
-                        let _ = __shape_support_GoogleSheetsParser::skip_space(
-                            input,
-                            p,
-                            state,
-                        );
                         parse_flat_GoogleSheetsParser_func_args(
                             input,
                             p,
@@ -8312,11 +8211,6 @@ mod __googlesheetsparser_emit_impl {
                             crate::runtime::DtaError,
                         > = (|| {
                             let _ = ({
-                                let _ = __shape_support_GoogleSheetsParser::skip_space(
-                                    input,
-                                    p,
-                                    state,
-                                );
                                 parse_flat_GoogleSheetsParser_let_binding(
                                     input,
                                     p,
@@ -8365,11 +8259,6 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_scalar_GoogleSheetsParser_expression(
                         input,
                         p,
@@ -8448,7 +8337,6 @@ mod __googlesheetsparser_emit_impl {
             )?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
-                let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
                 parse_flat_GoogleSheetsParser_let_args(input, p, state, builder, cursor)
             })?;
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
@@ -8516,7 +8404,9 @@ mod __googlesheetsparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(34u32 as u32);
-        let first = __shape_support_GoogleSheetsParser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -8864,11 +8754,6 @@ mod __googlesheetsparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_wrap_GoogleSheetsParser_primary(
                         input,
                         p,
@@ -9025,11 +8910,6 @@ mod __googlesheetsparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_GoogleSheetsParser::skip_space(
-                        input,
-                        p,
-                        state,
-                    );
                     parse_scalar_GoogleSheetsParser_expression(
                         input,
                         p,
@@ -9065,8 +8945,9 @@ mod __googlesheetsparser_emit_impl {
     }
     /// AW-V.W3.2 — top-level shape dispatcher.
     ///
-    /// Mirrors the walker's `value` rule ByteDispatch: skip leading
-    /// whitespace, dispatch on the first byte to the chosen branch
+    /// Mirrors the walker's `value` rule ByteDispatch: dispatch on
+    /// the first byte (no whitespace skipped but what the grammar
+    /// writes, sk-v27 LW3.ORC2-WS-C) to the chosen branch
     /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
@@ -9105,7 +8986,6 @@ mod __googlesheetsparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
-        let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
         let _ = cursor.decide(36u32);
         parse_flat_GoogleSheetsParser_formula(input, p, state, builder, cursor)
     }

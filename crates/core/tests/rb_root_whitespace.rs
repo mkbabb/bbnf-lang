@@ -69,3 +69,19 @@ fn the_cases_the_class_does_not_touch_are_read() {
     assert!(EbnfParser::parse("a = b , 'c' | { d } ;").is_ok());
     assert!(BnfParser::parse("<a> ::= \"x\" | <b>").is_ok());
 }
+
+/// LW3.ORC2-WS-C, the ruled behaviour where the cure moves json's reading
+/// (the rule in the sk-v27 LEDGER; DIVERGENCE J-12/J-13): `json.bbnf` writes
+/// `?w` after `[` `{` `,` `:` and before `]` `}`, which reads the six bytes
+/// (U+000B and U+000C among them), and writes its own `ws = /[ \t\n\r]*/`
+/// before and after the value, which does not.
+#[test]
+fn json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set() {
+    use bbnf::grammar::generated::json::JsonParser;
+    for t in ["[\u{c}1]", "[1\u{b},2]", "{\"a\"\u{c}:\u{b}1}", " [1] "] {
+        assert!(JsonParser::parse(t).is_ok(), "json refused {t:?}");
+    }
+    for t in ["\u{c}[1]", "[1]\u{b}"] {
+        assert!(JsonParser::parse(t).is_err(), "json accepted {t:?}");
+    }
+}

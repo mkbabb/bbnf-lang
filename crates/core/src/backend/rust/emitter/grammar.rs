@@ -398,7 +398,9 @@ fn emit_parse_body_struct_direct(
     // (`csv.bbnf` reads no line break after its last record). It reads
     // the alias's own class, not the `?w` set (sk-v27 LW3.ORC2-WS-C).
     let trailing_ws = match &ws_alias_entry {
-        Some(class) => super::shapes::emit_class_skip(class, quote! { __input_bytes }, quote! { pos }),
+        Some(class) => {
+            super::shapes::emit_class_skip(class, quote! { __input_bytes }, quote! { pos })
+        }
         None => quote! {},
     };
     quote! {

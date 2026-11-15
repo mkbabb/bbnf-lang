@@ -50,16 +50,26 @@ fn edge_ow(node: &IrNode, ir: &GrammarIR, edge: Edge, budget: u32) -> bool {
         IrNode::Map { inner, .. } => next(inner),
         IrNode::Seq(children) => {
             let mut kept = children.iter().filter(|c| !matches!(c, IrNode::Epsilon));
-            let end = if edge == Edge::Lead { kept.next() } else { kept.next_back() };
+            let end = if edge == Edge::Lead {
+                kept.next()
+            } else {
+                kept.next_back()
+            };
             end.is_some_and(next)
         }
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            let (near, far) = if edge == Edge::Lead { (lhs, rhs) } else { (rhs, lhs) };
-            if matches!(near.as_ref(), IrNode::Epsilon) { next(far) } else { next(near) }
+            let (near, far) = if edge == Edge::Lead {
+                (lhs, rhs)
+            } else {
+                (rhs, lhs)
+            };
+            if matches!(near.as_ref(), IrNode::Epsilon) {
+                next(far)
+            } else {
+                next(near)
+            }
         }
-        IrNode::Alt(branches, _) => {
-            !branches.is_empty() && branches.iter().all(|b| next(&b.node))
-        }
+        IrNode::Alt(branches, _) => !branches.is_empty() && branches.iter().all(|b| next(&b.node)),
         IrNode::Repeat { inner, lo, .. } if *lo > 0 => next(inner),
         IrNode::Ref(rid) if budget > 0 => ir
             .rules

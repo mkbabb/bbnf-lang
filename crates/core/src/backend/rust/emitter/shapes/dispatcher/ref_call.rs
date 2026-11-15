@@ -105,13 +105,17 @@ pub fn emit_ref_call_shape(
             #target_fn(input, p, state, builder, cursor)
         },
     };
-    let expr = quote! {
-        {
-            #pre
-            let __r = #call;
-            #post
-            __r
+    let expr = if super::super::ws_read::root_reads_ow(&target.body) {
+        quote! {
+            {
+                #pre
+                let __r = #call;
+                #post
+                __r
+            }
         }
+    } else {
+        quote! { { #call } }
     };
     Some(expr)
 }

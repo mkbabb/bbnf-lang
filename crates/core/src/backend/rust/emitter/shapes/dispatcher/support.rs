@@ -74,7 +74,7 @@ fn ctns_probe_admits(ir: &GrammarIR) -> bool {
     }
     if alphabet
         .iter()
-        .any(|&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r')
+        .any(|&b| b == b' ' || b.wrapping_sub(b'\t') < 5)
     {
         return false;
     }
@@ -119,9 +119,7 @@ fn ctns_probe_tokens() -> TokenStream {
                 };
                 let mut __all_ws = true;
                 for &__b in __slice {
-                    if __b != b' ' && __b != b'\t'
-                        && __b != b'\n' && __b != b'\r'
-                    {
+                    if __b != b' ' && __b.wrapping_sub(b'\t') > 4 {
                         __all_ws = false;
                         break;
                     }
@@ -145,9 +143,11 @@ fn ctns_probe_tokens() -> TokenStream {
 /// decision to keep the plain path probe-free).
 fn emit_skip_space_plain_inner(ctns_probe: TokenStream) -> TokenStream {
     quote! {
-        /// Skip JSON whitespace at `*p`, returning the first
-        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
-        /// exit when the next byte is non-whitespace.
+        /// Read `?w` whitespace at `*p` (the six bytes space, `\t`,
+        /// `\n`, U+000B, U+000C, `\r`; sk-v27 LW3.ORC2-WS-C), returning
+        /// the first other byte (or `None` on EOF). Emitted only where
+        /// the grammar writes `?w`. Hot-path fast-exit when the next
+        /// byte is not whitespace.
         #[inline(always)]
         pub fn skip_space(
             input: &[u8],
@@ -160,7 +160,7 @@ fn emit_skip_space_plain_inner(ctns_probe: TokenStream) -> TokenStream {
             // attribute on an expression (unstable, E0658) —
             // surfaced by the bootstrap's `cargo expand` step.
             match input.get(*p) {
-                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => Some(b),
+                Some(&b) if b != b' ' && b.wrapping_sub(b'\t') > 4 => Some(b),
                 None => None,
                 _ => {
                     skip_space_slow(input, p, state);
@@ -198,7 +198,7 @@ fn emit_skip_space_plain_inner(ctns_probe: TokenStream) -> TokenStream {
                 if *p + 64 > input.len() {
                     while let Some(&b) = input.get(*p) {
                         // Direct boolean form (see `skip_space`).
-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
                             return;
                         }
                         *p += 1;
@@ -260,11 +260,7 @@ fn emit_skip_space_comment_aware_inner(ctns_probe: TokenStream) -> TokenStream {
         ) -> Option<u8> {
             match input.get(*p) {
                 Some(&b)
-                    if b != b' '
-                        && b != b'\t'
-                        && b != b'\n'
-                        && b != b'\r'
-                        && b != b'/' =>
+                    if b != b' ' && b.wrapping_sub(b'\t') > 4 && b != b'/' =>
                 {
                     Some(b)
                 }
@@ -321,7 +317,7 @@ fn emit_skip_space_comment_aware_inner(ctns_probe: TokenStream) -> TokenStream {
                 if *p + 64 > input.len() {
                     // Tail — direct byte loop.
                     while let Some(&b) = input.get(*p) {
-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
                             break;
                         }
                         *p += 1;
@@ -531,13 +527,14 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream 
             #skip_space_body
 
             /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
-            /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
-            /// `{b' ', b'\t', b'\n', b'\r'}`. The kernel is parse-that's
+            /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT one of the six
+            /// `?w` bytes (space, `\t`, `\n`, U+000B, U+000C, `\r`;
+            /// sk-v27 LW3.ORC2-WS-C). The kernel is parse-that's
             /// (NEON under the runtime tier on aarch64, the scalar oracle
             /// elsewhere); no ISA intrinsic is emitted (X-3).
             #[inline(always)]
             pub(crate) fn nospace_bitmap_64(stripe: &[u8; 64]) -> u64 {
-                !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
+                !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\x0B\x0C\r")
             }
 
             /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through

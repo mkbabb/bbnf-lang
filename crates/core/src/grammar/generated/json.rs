@@ -740,9 +740,11 @@ mod __jsonparser_emit_impl {
                     ::parse_that::scan::scan_structural(input, &alphabet)
                 })
         }
-        /// Skip JSON whitespace at `*p`, returning the first
-        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
-        /// exit when the next byte is non-whitespace.
+        /// Read `?w` whitespace at `*p` (the six bytes space, `\t`,
+        /// `\n`, U+000B, U+000C, `\r`; sk-v27 LW3.ORC2-WS-C), returning
+        /// the first other byte (or `None` on EOF). Emitted only where
+        /// the grammar writes `?w`. Hot-path fast-exit when the next
+        /// byte is not whitespace.
         #[inline(always)]
         pub fn skip_space(
             input: &[u8],
@@ -750,9 +752,7 @@ mod __jsonparser_emit_impl {
             state: &mut ScanState,
         ) -> Option<u8> {
             match input.get(*p) {
-                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => {
-                    Some(b)
-                }
+                Some(&b) if b != b' ' && b.wrapping_sub(b'\t') > 4 => Some(b),
                 None => None,
                 _ => {
                     skip_space_slow(input, p, state);
@@ -782,7 +782,7 @@ mod __jsonparser_emit_impl {
                 }
                 if *p + 64 > input.len() {
                     while let Some(&b) = input.get(*p) {
-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
+                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
                             return;
                         }
                         *p += 1;
@@ -804,13 +804,14 @@ mod __jsonparser_emit_impl {
             }
         }
         /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
-        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
-        /// `{b' ', b'\t', b'\n', b'\r'}`. The kernel is parse-that's
+        /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT one of the six
+        /// `?w` bytes (space, `\t`, `\n`, U+000B, U+000C, `\r`;
+        /// sk-v27 LW3.ORC2-WS-C). The kernel is parse-that's
         /// (NEON under the runtime tier on aarch64, the scalar oracle
         /// elsewhere); no ISA intrinsic is emitted (X-3).
         #[inline(always)]
         pub(crate) fn nospace_bitmap_64(stripe: &[u8; 64]) -> u64 {
-            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
+            !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\x0B\x0C\r")
         }
         /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
         /// parse-that's quote-or-backslash kernel (NEON under the runtime
@@ -1523,10 +1524,7 @@ mod __jsonparser_emit_impl {
                 }
                 __shape_support_JsonParser::byte_skip_value(input, p)?;
             } else {
-                ({
-                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                    parse_wrap_JsonParser_value(input, p, state, builder, cursor)
-                })?;
+                ({ parse_wrap_JsonParser_value(input, p, state, builder, cursor) })?;
             }
             let _ = __shape_support_JsonParser::skip_space(input, p, state);
             match input.get(*p).copied() {
@@ -1620,10 +1618,7 @@ mod __jsonparser_emit_impl {
                 if __is_index_seg && !__matched {
                     __shape_support_JsonParser::byte_skip_value(input, p)?;
                 } else {
-                    ({
-                        let _ = __shape_support_JsonParser::skip_space(input, p, state);
-                        parse_wrap_JsonParser_value(input, p, state, builder, cursor)
-                    })?;
+                    ({ parse_wrap_JsonParser_value(input, p, state, builder, cursor) })?;
                 }
                 if __matched {
                     return Ok(());
@@ -1729,7 +1724,6 @@ mod __jsonparser_emit_impl {
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
             {
                 let _ = ({
-                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
                     parse_string_JsonParser_string(input, p, state, builder, cursor)
                 })?;
             }
@@ -1747,7 +1741,6 @@ mod __jsonparser_emit_impl {
             }
             {
                 let _ = ({
-                    let _ = __shape_support_JsonParser::skip_space(input, p, state);
                     parse_wrap_JsonParser_value(input, p, state, builder, cursor)
                 })?;
             }
@@ -1811,7 +1804,9 @@ mod __jsonparser_emit_impl {
         use crate::runtime::builder::StructBuilder as _;
         use crate::path::cursor::Decision as __Decision;
         let _ = cursor.decide(7u32 as u32);
-        let first = __shape_support_JsonParser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -2104,8 +2099,9 @@ mod __jsonparser_emit_impl {
     }
     /// AW-V.W3.2 — top-level shape dispatcher.
     ///
-    /// Mirrors the walker's `value` rule ByteDispatch: skip leading
-    /// whitespace, dispatch on the first byte to the chosen branch
+    /// Mirrors the walker's `value` rule ByteDispatch: dispatch on
+    /// the first byte (no whitespace skipped but what the grammar
+    /// writes, sk-v27 LW3.ORC2-WS-C) to the chosen branch
     /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
     /// Alt compound is pushed — the DTA's ByteDispatch state for
     /// `value` emits no compound either, and the target rule's Ref
@@ -2126,6 +2122,12 @@ mod __jsonparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        while let Some(&__b) = input.get(*p) {
+            if __b != 9u8 && __b != 10u8 && __b != 13u8 && __b != 32u8 {
+                break;
+            }
+            *p += 1;
+        }
         parse_JsonParser_json__value(input, p, state, builder, cursor)
     }
     /// AW-V.W3.2 — value-position shape dispatcher. Called both at
@@ -2144,7 +2146,9 @@ mod __jsonparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
-        let first = __shape_support_JsonParser::skip_space(input, p, state)
+        let first = input
+            .get(*p)
+            .copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                 offset: *p as u32,
             })?;
@@ -3555,11 +3559,12 @@ mod __jsonparser_emit_impl {
                             }
                         }
                     })?;
-                let _ = __shape_support_JsonParser::skip_space(
-                    __input_bytes,
-                    &mut pos,
-                    &mut state,
-                );
+                while let Some(&__b) = __input_bytes.get(pos) {
+                    if __b != 9u8 && __b != 10u8 && __b != 13u8 && __b != 32u8 {
+                        break;
+                    }
+                    pos += 1;
+                }
                 if pos != input.len() {
                     return Err(crate::runtime::ParseErr::Syntax {
                         offset: pos as u32,

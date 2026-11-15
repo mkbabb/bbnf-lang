@@ -9159,8 +9159,13 @@ const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
 /// GENREC-Q): `bbnf`'s test target `gen_recurse` entered, the sole row
 /// difference (proved by `evidence/LW3.GEN-RECURSE/unit/identity_diff.py`:
 /// without that target both digests read the values sealed before).
+/// Re-taken at LW3.HM-PREWORK (RULINGS 2026-11-14j INVENTORY):
+/// `bbnf-oracle`'s test target `mapping_census` (`tests/mapping_census.rs`,
+/// the LAYOUT-HM-V2 §11 `->` census gate) entered, the sole row difference
+/// (proved by `evidence/LW3.HM-PREWORK/identity_diff.py`: without that target
+/// the digest reads the value sealed before).
 const SK_V27_METADATA_IDENTITY_SHA256: &str =
-    "329e1ea61ce5934afd8c1eebbd5017239ce755f990ce87b4d10f17c3a97426e5";
+    "b0c9ca2f5695a2c848d999b6ed8f85bc6b568202716bed2b53264a1b74b81962";
 /// sha256 of the complete Cargo.lock. Re-taken at LW3.COMP-5a: `bbnf-ir`
 /// lost its `toml 0.8.23` build dependency with the strategy-table build
 /// script, the sole lockfile line that moved. Re-taken at LW3.PERF-1d: the

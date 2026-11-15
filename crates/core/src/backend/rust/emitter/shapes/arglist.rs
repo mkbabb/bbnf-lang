@@ -251,7 +251,7 @@ fn emit_struct_direct_body(
     ir: &GrammarIR,
 ) -> TokenStream {
     let mut emissions = Vec::with_capacity(positions.len());
-    for pos in positions {
+    for (index, pos) in positions.iter().enumerate() {
         let leading = if pos.leading_ws {
             quote! { let _ = #support_mod::skip_space(input, p, state); }
         } else {
@@ -269,9 +269,48 @@ fn emit_struct_direct_body(
             grammar_suffix,
             ir,
         );
+        // sk-v27 LW3.RX-EMPTYFIRST-B (RULINGS 2026-11-14k RXEFB-C (a)): the
+        // call's name is part of the call, so a head the grammar writes as a
+        // regex or a literal, followed by the call's own `(` position, deposits
+        // its matched text on the call's compound (a `Ref` head deposits through
+        // its rule), as the Flat emitter's Span-typed alternatives do. Without it
+        // CSS `genericFunction = /[a-zA-Z][\w-]*/ , "(" , …` read `rgb(…)` as a
+        // function with an empty name. A head whose match takes the `(` itself
+        // (head variant 2, Sheets `/[lL][eE][tT]\(/`) is the call's opening
+        // token, which the rule already names; it deposits nothing (ask RXEFB-D).
+        let core = if index == 0
+            && is_name_head(pos.node, positions.get(1).map(|next| next.node), ir)
+        {
+            quote! {
+                let __head_lo: usize = *p;
+                #core
+                {
+                    let __head_text: &str =
+                        ::core::str::from_utf8(&input[__head_lo..*p]).unwrap_or("");
+                    <_ as crate::runtime::StructBuilder>::push_leaf_with_str(builder, __head_text);
+                }
+            }
+        } else {
+            core
+        };
         emissions.push(quote! { #leading #core #trailing });
     }
     quote! { #(#emissions)* }
+}
+
+/// A head position the grammar writes as a regex or a literal (through any
+/// `?w` wrapper), followed by the call's `(` as its own position: its text
+/// is the call's name.
+fn is_name_head(node: &IrNode, next: Option<&IrNode>, ir: &GrammarIR) -> bool {
+    fn strip(node: &IrNode) -> &IrNode {
+        match node {
+            IrNode::OptionalWhitespace(inner) => strip(inner),
+            other => other,
+        }
+    }
+    let opens_after =
+        matches!(next.map(strip), Some(IrNode::Literal(sid)) if ir.get_string(*sid) == "(");
+    opens_after && matches!(strip(node), IrNode::Regex(_) | IrNode::Literal(_))
 }
 
 /// Emit one position's struct-direct core.

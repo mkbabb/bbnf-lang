@@ -39958,6 +39958,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [117u8, 114u8, 108u8] {
@@ -39966,6 +39967,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -42017,6 +42026,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 6usize;
             if input.len() < end
@@ -42027,6 +42037,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -42135,6 +42153,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 11usize;
             if input.len() < end
@@ -42149,6 +42168,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -42338,6 +42365,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 5usize;
             if input.len() < end || input[at..end] != [58u8, 108u8, 97u8, 110u8, 103u8] {
@@ -42346,6 +42374,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -42567,6 +42603,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 4usize;
             if input.len() < end || input[at..end] != [58u8, 100u8, 105u8, 114u8] {
@@ -42575,6 +42612,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -42824,6 +42869,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             {
                 let __scan_start = *p;
                 let Some(match_len) = __regex_scan_CssL4Parser(
@@ -42836,6 +42882,14 @@ mod __cssl4parser_emit_impl {
                     });
                 };
                 *p += match_len as usize;
+            }
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
             }
             let at = *p;
             let end = at + 1usize;
@@ -44534,6 +44588,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [118u8, 97u8, 114u8] {
@@ -44542,6 +44597,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -44651,6 +44714,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [101u8, 110u8, 118u8] {
@@ -44659,6 +44723,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -45367,6 +45439,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 5usize;
             if input.len() < end || input[at..end] != [99u8, 111u8, 108u8, 111u8, 114u8]
@@ -45376,6 +45449,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -47815,6 +47896,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [58u8, 105u8, 115u8] {
@@ -47823,6 +47905,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -47899,6 +47989,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 6usize;
             if input.len() < end
@@ -47909,6 +48000,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -47985,6 +48084,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 4usize;
             if input.len() < end || input[at..end] != [58u8, 110u8, 111u8, 116u8] {
@@ -47993,6 +48093,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -48069,6 +48177,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 4usize;
             if input.len() < end || input[at..end] != [58u8, 104u8, 97u8, 115u8] {
@@ -48077,6 +48186,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -48957,6 +49074,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 9usize;
             if input.len() < end
@@ -48968,6 +49086,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -50060,6 +50186,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 4usize;
             if input.len() < end || input[at..end] != [99u8, 97u8, 108u8, 99u8] {
@@ -50068,6 +50195,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -50144,6 +50279,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [109u8, 105u8, 110u8] {
@@ -50152,6 +50288,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -50265,6 +50409,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 3usize;
             if input.len() < end || input[at..end] != [109u8, 97u8, 120u8] {
@@ -50273,6 +50418,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -50386,6 +50539,7 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
+            let __head_lo: usize = *p;
             let at = *p;
             let end = at + 5usize;
             if input.len() < end || input[at..end] != [99u8, 108u8, 97u8, 109u8, 112u8] {
@@ -50394,6 +50548,14 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
+            {
+                let __head_text: &str = ::core::str::from_utf8(&input[__head_lo..*p])
+                    .unwrap_or("");
+                <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                    builder,
+                    __head_text,
+                );
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {

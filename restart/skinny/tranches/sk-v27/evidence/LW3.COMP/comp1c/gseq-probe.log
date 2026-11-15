@@ -1,0 +1,30 @@
+   Compiling bbnf-ir v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-comp1c/crates/ir)
+   Compiling bbnf-ser v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-comp1c/crates/ser)
+   Compiling bbnf-corpus v0.0.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-comp1c/crates/corpus)
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-comp1c/crates/core)
+   Compiling bbnf-path v0.1.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-comp1c/crates/bbnf-path)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 21.04s
+────────────
+ Nextest run ID 00e89b03-c0d4-4f34-b90d-7eb367d64c2c with nextest profile: default
+    Starting 1 test across 1 binary
+       START [         ] (1/1) bbnf::google_sheets_formula_leading_eq probe_leading_eq
+
+running 1 test
+PROBE "=1+2" -> true
+PROBE "1+2" -> false
+PROBE "=A1" -> true
+PROBE "A1" -> false
+PROBE "=SUM(A1:B2)" -> true
+PROBE "SUM(A1:B2)" -> false
+PROBE "42" -> false
+PROBE "=42" -> true
+PROBE " =1" -> false
+PROBE "\"x\"" -> false
+PROBE "=\"x\"" -> true
+test probe_leading_eq ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+        PASS [   0.013s] (1/1) bbnf::google_sheets_formula_leading_eq probe_leading_eq
+────────────
+     Summary [   0.015s] 1 test run: 1 passed, 0 skipped

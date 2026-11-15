@@ -34,8 +34,10 @@
 //! Each value position is emitted by grammar-derived dispatch only; no
 //! legacy record stream fallback is selected by this module.
 
-use bbnf_ir::passes::inspect::{single_byte_literal, unwrap_map_ow, unwrap_wrap};
-use bbnf_ir::{GrammarIR, IrRule};
+use bbnf_ir::passes::inspect::{sep_list, single_byte_literal, unwrap_map_ow, unwrap_wrap};
+
+use super::ws_read::{leads_ow, trails_ow};
+use bbnf_ir::{GrammarIR, IrNode, IrRule};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -147,6 +149,25 @@ fn emit_parse_array_struct_direct_wrapped(
     let cursor_p = cursor_param();
     let cursor_where = cursor_where_clause();
 
+    // sk-v27 LW3.ORC2-WS-C: each gap reads whitespace only where the
+    // grammar writes `?w` there: after the open and before the close
+    // when the middle is `x ?w`; around the separator when the
+    // separator or the element leads or trails with `?w`.
+    let skip = quote! { let _ = #support_mod::skip_space(input, p, state); };
+    let none = quote! {};
+    let middle = unwrap_wrap(unwrap_map_ow(&rule.body)).map(|(_, m, _)| m);
+    let list = middle.and_then(|m| sep_list(unwrap_map_ow(m)));
+    let (ws_open, ws_close) = middle.map_or((false, false), |m| (leads_ow(m, ir), trails_ow(m, ir)));
+    let (ws_pre_sep, ws_post_sep) = list.as_ref().map_or((false, false), |l| {
+        (
+            trails_ow(l.element, ir) || leads_ow(l.separator, ir),
+            trails_ow(l.separator, ir) || leads_ow(l.element, ir),
+        )
+    });
+    let skip_open = if ws_open { &skip } else { &none };
+    let skip_pre_sep = if ws_pre_sep || ws_close { &skip } else { &none };
+    let skip_post_sep = if ws_post_sep { &skip } else { &none };
+
     quote! {
         /// AZ-I.W2.RB — per-grammar Array-shape parse function,
         /// **struct-direct body** (Shape 1 — wrapped homogeneous repeat).
@@ -203,7 +224,7 @@ fn emit_parse_array_struct_direct_wrapped(
                 crate::runtime::DtaError,
             > = (|| {
                 *p += 1;
-                let _ = #support_mod::skip_space(input, p, state);
+                #skip_open
 
                 if input.get(*p).copied() == Some(b']') {
                     *p += 1;
@@ -250,13 +271,14 @@ fn emit_parse_array_struct_direct_wrapped(
                     }
                     __elem_idx = __elem_idx.saturating_add(1);
 
-                    let _ = #support_mod::skip_space(input, p, state);
+                    let __gap = *p;
+                    #skip_pre_sep
                     match input.get(*p).copied() {
-                        Some(b',') => {
+                        Some(b',') if #ws_pre_sep || *p == __gap => {
                             *p += 1;
-                            let _ = #support_mod::skip_space(input, p, state);
+                            #skip_post_sep
                         }
-                        Some(b']') => {
+                        Some(b']') if #ws_close || *p == __gap => {
                             *p += 1;
                             return Ok(());
                         }
@@ -305,7 +327,6 @@ fn emit_parse_array_struct_direct_list(
     ir: &GrammarIR,
     strategy: &EmitStrategy,
 ) -> TokenStream {
-    use bbnf_ir::IrNode;
 
     let rule_name = ir.get_string(rule.name);
     let fn_ident = shape_fn_ident("array", grammar_suffix, rule_name);
@@ -355,27 +376,62 @@ fn emit_parse_array_struct_direct_list(
             }
         });
 
-    // Skip the leading whitespace in OW-wrapped variants so the
-    // first-set check below sees the iter's actual leading byte.
-    // For the bare-Repeat shape the inner iterator's own dispatcher
-    // handles whitespace via the per-Ref pre-skip.
+    // sk-v27 LW3.ORC2-WS-C: the list reads whitespace only where the
+    // grammar writes it. An outer `x ?w` reads it before and after the
+    // whole list. One iteration reads its own items in order, each as
+    // the grammar writes it (a whitespace rule such as `ebnf`'s `S` by
+    // its own regex, a `?w` mark around exactly its operand), the value
+    // position with the cursor's index handling; no other skip.
     let leading_ow_skip = if has_outer_ow {
         quote! { let _ = #support_mod::skip_space(input, p, state); }
     } else {
         quote! {}
     };
     let trailing_ow_skip = leading_ow_skip.clone();
-
-    // Whether the Repeat's inner carries an OW wrapper that admits
-    // intra-iteration whitespace. Mirrors `list::has_iter_ow`.
-    let has_iter_ow = matches!(
-        repeat_inner,
-        IrNode::OptionalWhitespace(_) | IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _),
-    );
-    let intra_iter_ws = if has_iter_ow {
-        quote! { let _ = #support_mod::skip_space(input, p, state); }
-    } else {
-        quote! {}
+    let positions = super::flat::collect_positions(repeat_inner);
+    let is_value = |n: &IrNode| {
+        let mut n = n;
+        while let IrNode::Map { inner, .. } = n {
+            n = inner;
+        }
+        matches!((n, value_ref), (IrNode::Ref(r), Some(v)) if *r == v)
+    };
+    let value_at = positions.iter().position(|pos| is_value(pos.node));
+    let skip = quote! { let _ = #support_mod::skip_space(input, p, state); };
+    let item = |pos: &super::flat::PositionedNode<'_>| {
+        super::flat::emit_position_struct_direct(pos, &support_mod, &dispatcher_ident, grammar_suffix, ir)
+    };
+    let iteration = match value_at {
+        Some(vi) => {
+            let before = positions[..vi].iter().map(item);
+            let after = positions[vi + 1..].iter().map(item);
+            let v = &positions[vi];
+            let lead = if v.leading_ws { skip.clone() } else { quote! {} };
+            let trail = if v.trailing_ws { skip.clone() } else { quote! {} };
+            quote! {
+                #(#before)*
+                #lead
+                if __is_index_seg && !__matched {
+                    // Mismatched index: byte-skip element bytes
+                    // without builder push.
+                    #support_mod::byte_skip_value(input, p)?;
+                } else {
+                    #value_call
+                }
+                #trail
+                #(#after)*
+            }
+        }
+        None => {
+            let all = positions.iter().map(item);
+            quote! {
+                if __is_index_seg && !__matched {
+                    #support_mod::byte_skip_value(input, p)?;
+                } else {
+                    #(#all)*
+                }
+            }
+        }
     };
 
     let cursor_p = cursor_param();
@@ -463,15 +519,7 @@ fn emit_parse_array_struct_direct_list(
                     (),
                     crate::runtime::DtaError,
                 > = (|| {
-                    #intra_iter_ws
-                    if __is_index_seg && !__matched {
-                        // Mismatched index: byte-skip element bytes
-                        // without builder push.
-                        #support_mod::byte_skip_value(input, p)?;
-                    } else {
-                        #value_call
-                    }
-                    #intra_iter_ws
+                    #iteration
                     Ok(())
                 })();
                 match __iter_result {

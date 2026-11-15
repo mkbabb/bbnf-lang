@@ -55,6 +55,7 @@ use proc_macro2::TokenStream;
 use bbnf_ir::registry::EmitStrategy;
 
 mod struct_direct;
+pub(crate) use struct_direct::emit_position_struct_direct;
 
 /// Emit `pub fn parse_flat_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<(), DtaError>`.
@@ -83,14 +84,14 @@ pub fn emit_parse_flat(
 /// A single flattened position in the rule body with leading/trailing
 /// ws-trim markers inherited from enclosing `OptionalWhitespace`s.
 #[derive(Clone)]
-pub(super) struct PositionedNode<'a> {
-    pub(super) node: &'a IrNode,
-    pub(super) leading_ws: bool,
-    pub(super) trailing_ws: bool,
+pub(crate) struct PositionedNode<'a> {
+    pub(crate) node: &'a IrNode,
+    pub(crate) leading_ws: bool,
+    pub(crate) trailing_ws: bool,
 }
 
 /// Flatten a rule body into a list of positional nodes.
-fn collect_positions<'a>(node: &'a IrNode) -> Vec<PositionedNode<'a>> {
+pub(crate) fn collect_positions<'a>(node: &'a IrNode) -> Vec<PositionedNode<'a>> {
     let mut out = Vec::new();
     walk_positions(node, false, false, &mut out);
     out
@@ -118,15 +119,23 @@ fn walk_positions<'a>(
             });
         }
         IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
+        // sk-v27 LW3.ORC2-WS-C: `x ?w` reads whitespace before and after
+        // `x`, not between `x`'s own items: the leading mark goes to the
+        // first position and the trailing mark to the last.
         IrNode::OptionalWhitespace(inner) => walk_positions(inner, true, true, out),
         IrNode::Seq(children) => {
-            for child in children {
-                walk_positions(child, leading, trailing, out);
+            let kept: Vec<&IrNode> =
+                children.iter().filter(|c| !matches!(c, IrNode::Epsilon)).collect();
+            let last = kept.len().saturating_sub(1);
+            for (i, child) in kept.into_iter().enumerate() {
+                walk_positions(child, leading && i == 0, trailing && i == last, out);
             }
         }
         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
-            walk_positions(lhs, leading, trailing, out);
-            walk_positions(rhs, leading, trailing, out);
+            let (l_empty, r_empty) =
+                (matches!(lhs.as_ref(), IrNode::Epsilon), matches!(rhs.as_ref(), IrNode::Epsilon));
+            walk_positions(lhs, leading, trailing && r_empty, out);
+            walk_positions(rhs, leading && l_empty, trailing, out);
         }
         IrNode::Epsilon => {}
         _ => out.push(PositionedNode {

@@ -465,7 +465,7 @@ pub(super) fn emit_parse_flat_struct_direct(
 
 /// Emit one position's struct-direct body. Threads ws-skip around the
 /// position's record-producing core.
-fn emit_position_struct_direct(
+pub(crate) fn emit_position_struct_direct(
     pos: &PositionedNode,
     support_mod: &proc_macro2::Ident,
     dispatcher_ident: &proc_macro2::Ident,

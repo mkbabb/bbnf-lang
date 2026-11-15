@@ -85,6 +85,7 @@ pub mod string;
 pub mod substrate;
 pub mod unordered;
 pub mod wrap;
+pub(crate) mod ws_read;
 
 use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
 use bbnf_ir::{GrammarIR, IrNode, IrRule};
@@ -304,15 +305,22 @@ pub(super) fn has_shape_dispatch(ir: &GrammarIR) -> bool {
 /// whitespace alias `ws >> r << ws` (RFC 8259's `JSON-text = ws value
 /// ws`, root `grammar/json/json.bbnf`).
 ///
-/// The struct-direct `parse()` entry skips the support module's
-/// whitespace set (`' '`, `\t`, `\n`, `\r`) before the dispatcher
-/// and again before its end-of-input check, and the dispatcher skips
-/// it before the first byte. An entry whose only kept child is one
-/// `Ref` between two copies of exactly that set therefore parses the
-/// same language as dispatching the referenced rule at the root; the
+/// An entry whose only kept child is one `Ref` between two copies of
+/// the same whitespace class `/[...]*/` (its members ASCII whitespace
+/// written as ` `, `\t`, `\n`, `\r`, `\f`, `\v`) parses the same
+/// language as dispatching the referenced rule at the root with that
+/// class read before it and again before the end-of-input check; the
 /// entry rule adds no compound frame (its registry layout stays, so
-/// `path!` roots at it). Anything else returns `None`.
+/// `path!` roots at it). sk-v27 LW3.ORC2-WS-C: the class is read by
+/// its own bytes ([`ws_alias_entry`], [`emit_class_skip`]), never by the
+/// `?w` skip, whose set differs. Anything else returns `None`.
 pub(crate) fn ws_alias_entry_target(ir: &GrammarIR) -> Option<&IrRule> {
+    ws_alias_entry(ir).map(|(rule, _)| rule)
+}
+
+/// [`ws_alias_entry_target`] with the alias's whitespace class (its
+/// bytes, ascending).
+pub(crate) fn ws_alias_entry(ir: &GrammarIR) -> Option<(&IrRule, Vec<u8>)> {
     let entry = ir.rules.iter().find(|r| r.id == ir.entry)?;
     let (pre, kept, post) = match &entry.body {
         IrNode::Skip(lhs, post) => match lhs.as_ref() {
@@ -328,35 +336,54 @@ pub(crate) fn ws_alias_entry_target(ir: &GrammarIR) -> Option<&IrRule> {
     let IrNode::Ref(target) = kept else {
         return None;
     };
-    let is_json_ws = |n: &IrNode| match n {
-        IrNode::Regex(sid) => {
-            let pat = ir.get_string(*sid);
-            let Some(class) = pat.strip_prefix('[').and_then(|r| r.strip_suffix("]*")) else {
-                return false;
+    let ws_class = |n: &IrNode| -> Option<std::collections::BTreeSet<u8>> {
+        let IrNode::Regex(sid) = n else {
+            return None;
+        };
+        let class = ir.get_string(*sid).strip_prefix('[')?.strip_suffix("]*")?;
+        let mut set = std::collections::BTreeSet::new();
+        let mut chars = class.chars();
+        while let Some(c) = chars.next() {
+            let b = match c {
+                '\\' => match chars.next()? {
+                    't' => b'\t',
+                    'n' => b'\n',
+                    'r' => b'\r',
+                    'f' => 0x0C,
+                    'v' => 0x0B,
+                    _ => return None,
+                },
+                ' ' => b' ',
+                _ => return None,
             };
-            let mut set = std::collections::BTreeSet::new();
-            let mut chars = class.chars();
-            while let Some(c) = chars.next() {
-                let b = match c {
-                    '\\' => match chars.next() {
-                        Some('t') => '\t',
-                        Some('n') => '\n',
-                        Some('r') => '\r',
-                        _ => return false,
-                    },
-                    ' ' => ' ',
-                    _ => return false,
-                };
-                set.insert(b);
-            }
-            set == [' ', '\t', '\n', '\r'].into_iter().collect()
+            set.insert(b);
         }
-        _ => false,
+        (!set.is_empty()).then_some(set)
     };
-    if !is_json_ws(pre) || !is_json_ws(post) {
+    let (pre, post) = (ws_class(pre)?, ws_class(post)?);
+    if pre != post {
         return None;
     }
-    ir.rules.iter().find(|r| r.id == *target)
+    let rule = ir.rules.iter().find(|r| r.id == *target)?;
+    Some((rule, pre.into_iter().collect()))
+}
+
+/// Read `bytes` (a whitespace class) at `*pos` of `input`, as many as
+/// stand there: the lowering of `/[...]*/` for a whitespace-alias entry
+/// ([`ws_alias_entry`]).
+pub(crate) fn emit_class_skip(bytes: &[u8], input: TokenStream, pos: TokenStream) -> TokenStream {
+    // Direct boolean form, not `matches!` (see the support module's
+    // `skip_space`: the nightly expansion of `matches!` is refused by the
+    // bootstrap's `cargo expand` step).
+    let lits = bytes.iter().map(|b| proc_macro2::Literal::u8_suffixed(*b));
+    quote! {
+        while let Some(&__b) = #input.get(#pos) {
+            if #(__b != #lits)&&* {
+                break;
+            }
+            #pos += 1;
+        }
+    }
 }
 
 /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns

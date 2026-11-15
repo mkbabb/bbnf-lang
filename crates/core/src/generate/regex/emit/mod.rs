@@ -110,7 +110,7 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
                     } else {
                         let mut __pos = __start;
                         while __pos < state.src_bytes.len()
-                            && unsafe { *state.src_bytes.get_unchecked(__pos) }.is_ascii_whitespace()
+                            && { let __c: u8 = unsafe { *state.src_bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
                         {
                             __pos += 1;
                         }

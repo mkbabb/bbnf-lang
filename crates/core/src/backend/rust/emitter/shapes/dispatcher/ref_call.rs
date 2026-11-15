@@ -61,23 +61,31 @@ pub fn emit_ref_call_shape(
     };
     let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
     let support_mod = support_mod_ident(grammar_suffix);
-    // AX.W0a.2.s — Rules whose body admits whitespace as a leading
-    // byte (CSS `combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ |
-    // /\s+/`) handle whitespace internally. Pre-skipping at the Ref
-    // call site erases the significant whitespace the rule needs —
-    // `/\s+/` loses its match input and the descendant combinator
-    // silently fails (bootstrap.css offset 8163, tailwind.css deep
-    // selector sites). Suppress pre-skip when the target's leading
-    // byte set includes any ASCII whitespace byte.
-    let pre_skip_needed = !target_rule_accepts_leading_ws(&target.body, ir);
+    // sk-v27 LW3.ORC2-WS-C (RULINGS 2026-11-14f PERF1D-B2 (c); the rule
+    // in the LEDGER): a Ref reads no whitespace of its own. The call
+    // site skips only where the grammar's text reads `?w`: around a
+    // target whose body is `x ?w` (through `->`), which every shape fn
+    // may have unwrapped. Every other `?w` is read where it is written.
+    let (pre, post) = if super::super::ws_read::root_reads_ow(&target.body) {
+        (
+            quote! { let _ = #support_mod::skip_space(input, p, state); },
+            quote! {
+                if __r.is_ok() {
+                    let _ = #support_mod::skip_space(input, p, state);
+                }
+            },
+        )
+    } else {
+        (quote! {}, quote! {})
+    };
     // AX.W0a.2.g — Keyword's signature gained a `state` parameter so
     // Ref-led Alt branches can delegate via this helper. Number keeps
     // the `(input, p, first, builder)` shape since its body never
     // recurses.
-    let expr = match tag {
+    let call = match tag {
         ShapeTag::Number => quote! {
             {
-                let __first = #support_mod::skip_space(input, p, state)
+                let __first = input.get(*p).copied()
                     .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
@@ -86,99 +94,26 @@ pub fn emit_ref_call_shape(
         },
         ShapeTag::Keyword => quote! {
             {
-                let __first = #support_mod::skip_space(input, p, state)
+                let __first = input.get(*p).copied()
                     .ok_or(crate::runtime::DtaError::UnexpectedEnd {
                         offset: *p as u32,
                     })?;
                 #target_fn(input, p, __first, state, builder, cursor)
             }
         },
-        _ if pre_skip_needed => quote! {
-            {
-                let _ = #support_mod::skip_space(input, p, state);
-                #target_fn(input, p, state, builder, cursor)
-            }
-        },
         _ => quote! {
-            {
-                #target_fn(input, p, state, builder, cursor)
-            }
+            #target_fn(input, p, state, builder, cursor)
         },
     };
+    let expr = quote! {
+        {
+            #pre
+            let __r = #call;
+            #post
+            __r
+        }
+    };
     Some(expr)
-}
-
-/// Returns `true` if `body` can match an ASCII-whitespace byte as its
-/// first input byte. Used by [`emit_ref_call_shape`] to suppress the
-/// pre-skip ws step when the rule itself handles whitespace (CSS
-/// `combinator`, where `/\s+/` IS a combinator branch).
-///
-/// Walks `Alt`, `OptionalWhitespace`, `Map`, and transparent `Seq` /
-/// `Next` / `Skip` / `Repeat` structures to find the leading node in
-/// each path. `Regex` nodes consult `ir.regex_info[sid].first_chars`;
-/// `Literal` nodes check the first byte; `Ref` nodes recurse once
-/// into the referenced rule.
-fn target_rule_accepts_leading_ws(body: &bbnf_ir::IrNode, ir: &GrammarIR) -> bool {
-    // Conservative recursion bound: `Ref` cycles are possible through
-    // mutual recursion. One-level follow is sufficient for the CSS
-    // `combinator`-shaped case; deeper chains fall back to the
-    // existing pre-skip behaviour.
-    target_rule_accepts_leading_ws_bounded(body, ir, 3)
-}
-
-fn target_rule_accepts_leading_ws_bounded(
-    body: &bbnf_ir::IrNode,
-    ir: &GrammarIR,
-    budget: usize,
-) -> bool {
-    use bbnf_ir::IrNode;
-    if budget == 0 {
-        return false;
-    }
-    match body {
-        IrNode::Literal(sid) => {
-            let bytes = ir.strings[*sid as usize].as_bytes();
-            bytes
-                .first()
-                .map(|&b| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C))
-                .unwrap_or(false)
-        }
-        IrNode::Regex(sid) => {
-            if let Some(info) = ir.regex_info.get(sid) {
-                // Check whether any whitespace byte is in the
-                // first-byte set of the pattern.
-                info.first_chars.has(b' ')
-                    || info.first_chars.has(b'\t')
-                    || info.first_chars.has(b'\n')
-                    || info.first_chars.has(b'\r')
-            } else {
-                false
-            }
-        }
-        IrNode::Alt(branches, _) => branches
-            .iter()
-            .any(|b| target_rule_accepts_leading_ws_bounded(&b.node, ir, budget)),
-        IrNode::Seq(children) => children
-            .first()
-            .map(|c| target_rule_accepts_leading_ws_bounded(c, ir, budget))
-            .unwrap_or(false),
-        IrNode::Next(a, _) | IrNode::Skip(a, _) => {
-            target_rule_accepts_leading_ws_bounded(a, ir, budget)
-        }
-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
-            target_rule_accepts_leading_ws_bounded(inner, ir, budget)
-        }
-        IrNode::Repeat { inner, lo, .. } if *lo > 0 => {
-            target_rule_accepts_leading_ws_bounded(inner, ir, budget)
-        }
-        IrNode::Ref(rid) => {
-            let Some(target) = ir.rules.iter().find(|r| r.id == *rid) else {
-                return false;
-            };
-            target_rule_accepts_leading_ws_bounded(&target.body, ir, budget - 1)
-        }
-        _ => false,
-    }
 }
 
 /// Walk `node` and collect the target `RuleId` of every `Ref(rid)` at a

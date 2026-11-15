@@ -14,14 +14,15 @@
 //! (restart/skinny/tranches/sk-v27/evidence/LW3.ORC/ws_model.mjs), so the
 //! class is the whole of root's divergence there.
 //!
-//! The cure is the spine's (LW4.COMP-1, the plan-driven Rust emitter), which
-//! reads whitespace by the grammar's text; root is the quarry. Each case below
-//! is a minimal corpus case (the ids name the custody file it reduces).
+//! Cured in root's generator by LW3.ORC2-WS-C (RULINGS 2026-11-12c ORC2-WS,
+//! QX-1 clause (3); 2026-11-14f PERF1D-B2 (c)): root reads whitespace only
+//! where the grammar's text reads it (the rule is written in the sk-v27
+//! LEDGER, row "LW3.ORC2-WS-C: the rule the cure implements"). Each case
+//! below is a minimal corpus case (the ids name the custody file it reduces).
 
 use bbnf::grammar::generated::{bnf::BnfParser, ebnf::EbnfParser, math::MathParser};
 
 #[test]
-#[ignore = "born-RED LW3.ORC2 root whitespace class (crates/oracle/ruled.tsv; SK/grammar/DIVERGENCE.tsv J-14 J-15 J-16): root reads [ \\t\\n\\r]* where the grammar reads none; cure LW4.COMP-1 at LW4"]
 fn root_reads_only_the_whitespace_the_grammar_reads() {
     let mut wrong = Vec::new();
     // math/cases/hand-15, mut-0173: `number` reads no leading whitespace,

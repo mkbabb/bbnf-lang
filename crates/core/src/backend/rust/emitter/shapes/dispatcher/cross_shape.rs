@@ -76,6 +76,27 @@ pub fn emit_dispatcher(
     // dispatch over the Alt branches. If the root is itself a shape
     // (e.g. a top-level Object), we emit a delegator to that shape fn.
     let root_tag = ir.shape_assignments.get(entry);
+    // sk-v27 LW3.ORC2-WS-C: the dispatcher reads whitespace only where
+    // the grammar writes it: the alias class of a whitespace-alias entry
+    // before the dispatched rule (its trailing copy is read by `parse()`
+    // before the end-of-input check), and the `?w` of a root rule whose
+    // body is `x ?w` around it. No other whitespace is read here.
+    let alias_pre = match super::super::ws_alias_entry(ir) {
+        Some((_, class)) => super::super::emit_class_skip(&class, quote! { input }, quote! { *p }),
+        None => quote! {},
+    };
+    let (root_pre, root_post) = if super::super::ws_read::root_reads_ow(&entry_rule.body) {
+        (
+            quote! { let _ = #support_mod::skip_space(input, p, state); },
+            quote! {
+                if __r.is_ok() {
+                    let _ = #support_mod::skip_space(input, p, state);
+                }
+            },
+        )
+    } else {
+        (quote! {}, quote! {})
+    };
 
     let dispatch_body =
         if matches!(&entry_rule.body, bbnf_ir::IrNode::Alt(_, _)) && has_shape_dispatch(ir) {
@@ -89,10 +110,11 @@ pub fn emit_dispatcher(
             // dispatcher delegates directly to `parse_<shape>_<grammar>_<root>`.
             // Shape-fn arg shapes:
             //   - Number / Keyword take `first_byte` — the dispatcher peeks
-            //     first non-ws byte, passes it in.
+            //     the first byte, passes it in.
             //   - Object / Array / String / Scalar / Pratt / Unordered /
             //     ArgList / Flat / Wrap / HRegex take `(input, p, state,
-            //     builder, cursor)` — the dispatcher skips leading ws and delegates.
+            //     builder, cursor)` — the dispatcher delegates. Whitespace
+            //     is read only as the root's own `?w` (LW3.ORC2-WS-C).
             let shape_name = shape_tag_name(root_tag);
             let target_ident = shape_fn_ident(shape_name, grammar_suffix, &root_name);
             match root_tag {
@@ -101,21 +123,29 @@ pub fn emit_dispatcher(
                 // takes `(input, p, first, state, builder)`. The split
                 // mirrors the Ref-call emitter's per-shape switch.
                 ShapeTag::Number => quote! {
-                    let first = #support_mod::skip_space(input, p, state)
+                    #root_pre
+                    let first = input.get(*p).copied()
                         .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
                     let _ = cursor.decide(#entry_rule_id_lit);
-                    #target_ident(input, p, first, builder)
+                    let __r = #target_ident(input, p, first, builder);
+                    #root_post
+                    __r
                 },
                 ShapeTag::Keyword => quote! {
-                    let first = #support_mod::skip_space(input, p, state)
+                    #root_pre
+                    let first = input.get(*p).copied()
                         .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
                     let _ = cursor.decide(#entry_rule_id_lit);
-                    #target_ident(input, p, first, state, builder, cursor)
+                    let __r = #target_ident(input, p, first, state, builder, cursor);
+                    #root_post
+                    __r
                 },
                 _ => quote! {
-                    let _ = #support_mod::skip_space(input, p, state);
+                    #root_pre
                     let _ = cursor.decide(#entry_rule_id_lit);
-                    #target_ident(input, p, state, builder, cursor)
+                    let __r = #target_ident(input, p, state, builder, cursor);
+                    #root_post
+                    __r
                 },
             }
         } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
@@ -157,8 +187,9 @@ pub fn emit_dispatcher(
     quote! {
         /// AW-V.W3.2 — top-level shape dispatcher.
         ///
-        /// Mirrors the walker's `value` rule ByteDispatch: skip leading
-        /// whitespace, dispatch on the first byte to the chosen branch
+        /// Mirrors the walker's `value` rule ByteDispatch: dispatch on
+        /// the first byte (no whitespace skipped but what the grammar
+        /// writes, sk-v27 LW3.ORC2-WS-C) to the chosen branch
         /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
         /// Alt compound is pushed — the DTA's ByteDispatch state for
         /// `value` emits no compound either, and the target rule's Ref
@@ -179,6 +210,7 @@ pub fn emit_dispatcher(
         where
             #cursor_where,
         {
+            #alias_pre
             #nonroot_ident(input, p, state, builder, cursor)
         }
 
@@ -213,7 +245,6 @@ pub(super) fn emit_alt_dispatch_body(
 ) -> TokenStream {
     use bbnf_ir::IrNode;
 
-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
 
     // Walk the Alt branches (or single body) and collect per-branch
     // (first-byte(s), shape-fn-ident) pairs.
@@ -306,7 +337,7 @@ pub(super) fn emit_alt_dispatch_body(
         .unwrap_or_else(|| quote! {});
 
     quote! {
-        let first = #support_mod::skip_space(input, p, state)
+        let first = input.get(*p).copied()
             .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
         let __result = match first {
             #object_arm

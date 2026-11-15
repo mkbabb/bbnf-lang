@@ -103,7 +103,7 @@ pub(super) fn detect_shorthand(bytes: &[u8]) -> Option<TokenStream> {
         .copied()
         .collect();
     if set == ws {
-        return Some(quote! { __b.is_ascii_whitespace() });
+        return Some(quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) });
     }
 
     // [0-9a-fA-F]

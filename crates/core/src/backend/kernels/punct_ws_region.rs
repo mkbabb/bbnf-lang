@@ -47,7 +47,7 @@ fn emit_ws_skip(comment_aware: bool) -> TokenStream {
     } else {
         quote! {
             while __pos < __end
-                && unsafe { *__bytes.get_unchecked(__pos) }.is_ascii_whitespace()
+                && { let __c: u8 = unsafe { *__bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
             {
                 __pos += 1;
             }

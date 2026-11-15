@@ -1,0 +1,21 @@
+        PASS [   0.012s] (1/2) bbnf::rb_root_whitespace the_cases_the_class_does_not_touch_are_read
+     Summary [   1.030s] 2 tests run: 1 passed, 1 failed, 0 skipped
+    14 verdicts differ from the grammar's text:
+    bnf accepted "\n"
+    bnf accepted "\t\n"
+    bnf refused "\u{c}<Z0> ::=\t\"\"\n"
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    ebnf accepted " "
+    ebnf accepted "\n"
+    ebnf refused "\u{c}a = b ;\u{c}"
+    ebnf refused "a = '\t' ;"
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    math accepted "  "
+    math accepted "  1"
+    math accepted "\t.5"
+  TRY 1 FAIL [   0.012s] (───) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  TRY 2 FAIL [   0.014s] (2/2) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+head=ca2e00b0ad87d96c68f8e75894169d7d117d5d3e dirty=0
+rc=100

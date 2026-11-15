@@ -1,0 +1,1574 @@
+diff --git a/crates/core/src/backend/kernels/punct_ws_region.rs b/crates/core/src/backend/kernels/punct_ws_region.rs
+index ad10f54c2..7bc9e1fe9 100644
+--- a/crates/core/src/backend/kernels/punct_ws_region.rs
++++ b/crates/core/src/backend/kernels/punct_ws_region.rs
+@@ -47,7 +47,7 @@ fn emit_ws_skip(comment_aware: bool) -> TokenStream {
+     } else {
+         quote! {
+             while __pos < __end
+-                && unsafe { *__bytes.get_unchecked(__pos) }.is_ascii_whitespace()
++                && { let __c: u8 = unsafe { *__bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
+             {
+                 __pos += 1;
+             }
+diff --git a/crates/core/src/backend/rust/emitter/grammar.rs b/crates/core/src/backend/rust/emitter/grammar.rs
+index 30abbdb91..a42098b4c 100644
+--- a/crates/core/src/backend/rust/emitter/grammar.rs
++++ b/crates/core/src/backend/rust/emitter/grammar.rs
+@@ -261,7 +261,7 @@ impl RustEmitter {
+                 &support_mod_ident,
+                 rust.builder_path,
+                 rust.document_path,
+-                super::shapes::ws_alias_entry_target(ir).is_some(),
++                super::shapes::ws_alias_entry(ir).map(|(_, class)| class),
+             )
+         };
+         // Every production parser returns the grammar-specific
+@@ -386,24 +386,22 @@ fn emit_parse_body_struct_direct(
+     support_mod_ident: &syn::Ident,
+     builder_path: &str,
+     _document_path: &str,
+-    ws_alias_entry: bool,
++    ws_alias_entry: Option<Vec<u8>>,
+ ) -> TokenStream {
+     let builder_ty: syn::Path = syn::parse_str(builder_path)
+         .expect("EmitStrategy::StructDirect.builder_path must parse as a Rust path");
+     // The entry rule must read the whole input: whitespace after it is
+     // read only when the grammar reads it (sk-v27 LW3.ORC1-CSV). A
+     // whitespace-alias entry (`json = ws >> value << ws`,
+-    // `shapes::ws_alias_entry_target`) has no shape fn: its trailing `ws`
+-    // is this skip, so the skip is emitted for it and for nothing else
+-    // (`csv.bbnf` reads no line break after its last record).
+-    let trailing_ws = if ws_alias_entry {
+-        quote! {
+-            let _ = #support_mod_ident::skip_space(
+-                __input_bytes, &mut pos, &mut state,
+-            );
++    // `shapes::ws_alias_entry`) has no shape fn: its trailing `ws` is
++    // this skip, so the skip is emitted for it and for nothing else
++    // (`csv.bbnf` reads no line break after its last record). It reads
++    // the alias's own class, not the `?w` set (sk-v27 LW3.ORC2-WS-C).
++    let trailing_ws = match &ws_alias_entry {
++        Some(class) => {
++            super::shapes::emit_class_skip(class, quote! { __input_bytes }, quote! { pos })
+         }
+-    } else {
+-        quote! {}
++        None => quote! {},
+     };
+     quote! {
+         let __input_bytes = input.as_bytes();
+diff --git a/crates/core/src/backend/rust/emitter/shapes/alt_dispatch/mod.rs b/crates/core/src/backend/rust/emitter/shapes/alt_dispatch/mod.rs
+index 361680673..82a6a1bb0 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/alt_dispatch/mod.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/alt_dispatch/mod.rs
+@@ -129,7 +129,7 @@ fn emit_parse_alt_dispatch_struct_direct(
+             use crate::runtime::builder::StructBuilder;
+             let _ = cursor;
+ 
+-            let first = #support_mod::skip_space(input, p, state)
++            let first = input.get(*p).copied()
+                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                     offset: *p as u32,
+                 })?;
+diff --git a/crates/core/src/backend/rust/emitter/shapes/arglist.rs b/crates/core/src/backend/rust/emitter/shapes/arglist.rs
+index 7e10b1059..652494596 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/arglist.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/arglist.rs
+@@ -100,15 +100,27 @@ fn walk_positions<'a>(
+ ) {
+     match node {
+         IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
++        // sk-v27 LW3.ORC2-WS-C: `x ?w` reads whitespace before and after
++        // `x`, not between `x`'s own items: the leading mark goes to the
++        // first position and the trailing mark to the last.
+         IrNode::OptionalWhitespace(inner) => walk_positions(inner, true, true, out),
+         IrNode::Seq(children) => {
+-            for child in children {
+-                walk_positions(child, leading, trailing, out);
++            let kept: Vec<&IrNode> = children
++                .iter()
++                .filter(|c| !matches!(c, IrNode::Epsilon))
++                .collect();
++            let last = kept.len().saturating_sub(1);
++            for (i, child) in kept.into_iter().enumerate() {
++                walk_positions(child, leading && i == 0, trailing && i == last, out);
+             }
+         }
+         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+-            walk_positions(lhs, leading, trailing, out);
+-            walk_positions(rhs, leading, trailing, out);
++            let (l_empty, r_empty) = (
++                matches!(lhs.as_ref(), IrNode::Epsilon),
++                matches!(rhs.as_ref(), IrNode::Epsilon),
++            );
++            walk_positions(lhs, leading, trailing && r_empty, out);
++            walk_positions(rhs, leading && l_empty, trailing, out);
+         }
+         IrNode::Epsilon => {}
+         _ => out.push(PositionedNode {
+diff --git a/crates/core/src/backend/rust/emitter/shapes/array/mod.rs b/crates/core/src/backend/rust/emitter/shapes/array/mod.rs
+index ea562ed55..259b077c2 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/array/mod.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/array/mod.rs
+@@ -34,8 +34,10 @@
+ //! Each value position is emitted by grammar-derived dispatch only; no
+ //! legacy record stream fallback is selected by this module.
+ 
+-use bbnf_ir::passes::inspect::{single_byte_literal, unwrap_map_ow, unwrap_wrap};
+-use bbnf_ir::{GrammarIR, IrRule};
++use bbnf_ir::passes::inspect::{sep_list, single_byte_literal, unwrap_map_ow, unwrap_wrap};
++
++use super::ws_read::{leads_ow, trails_ow};
++use bbnf_ir::{GrammarIR, IrNode, IrRule};
+ use proc_macro2::TokenStream;
+ use quote::{format_ident, quote};
+ 
+@@ -147,6 +149,48 @@ fn emit_parse_array_struct_direct_wrapped(
+     let cursor_p = cursor_param();
+     let cursor_where = cursor_where_clause();
+ 
++    // sk-v27 LW3.ORC2-WS-C: each gap reads whitespace only where the
++    // grammar writes `?w` there: after the open and before the close
++    // when the middle is `x ?w`; around the separator when the
++    // separator or the element leads or trails with `?w`.
++    let skip = quote! { let _ = #support_mod::skip_space(input, p, state); };
++    let none = quote! {};
++    let middle = unwrap_wrap(unwrap_map_ow(&rule.body)).map(|(_, m, _)| m);
++    let list = middle.and_then(|m| sep_list(unwrap_map_ow(m)));
++    // Before the close, whitespace is read by the middle's trailing `?w`
++    // or by the last element's own.
++    let (ws_open, ws_close) = middle.map_or((false, false), |m| {
++        (
++            leads_ow(m, ir),
++            trails_ow(m, ir) || list.as_ref().is_some_and(|l| trails_ow(l.element, ir)),
++        )
++    });
++    let (ws_pre_sep, ws_post_sep) = list.as_ref().map_or((false, false), |l| {
++        (
++            trails_ow(l.element, ir) || leads_ow(l.separator, ir),
++            trails_ow(l.separator, ir) || leads_ow(l.element, ir),
++        )
++    });
++    let skip_open = if ws_open { &skip } else { &none };
++    let skip_pre_sep = if ws_pre_sep || ws_close { &skip } else { &none };
++    let skip_post_sep = if ws_post_sep { &skip } else { &none };
++    // A single skip serves the separator and the close; when only one of
++    // them is preceded by `?w`, the other is admitted only where no
++    // whitespace was read.
++    let guard = |ws: bool| {
++        if ws || !(ws_pre_sep || ws_close) {
++            quote! {}
++        } else {
++            quote! { if *p == __gap }
++        }
++    };
++    let (guard_sep, guard_close) = (guard(ws_pre_sep), guard(ws_close));
++    let gap_decl = if ws_pre_sep == ws_close {
++        quote! {}
++    } else {
++        quote! { let __gap = *p; }
++    };
++
+     quote! {
+         /// AZ-I.W2.RB — per-grammar Array-shape parse function,
+         /// **struct-direct body** (Shape 1 — wrapped homogeneous repeat).
+@@ -203,7 +247,7 @@ fn emit_parse_array_struct_direct_wrapped(
+                 crate::runtime::DtaError,
+             > = (|| {
+                 *p += 1;
+-                let _ = #support_mod::skip_space(input, p, state);
++                #skip_open
+ 
+                 if input.get(*p).copied() == Some(b']') {
+                     *p += 1;
+@@ -250,13 +294,14 @@ fn emit_parse_array_struct_direct_wrapped(
+                     }
+                     __elem_idx = __elem_idx.saturating_add(1);
+ 
+-                    let _ = #support_mod::skip_space(input, p, state);
++                    #gap_decl
++                    #skip_pre_sep
+                     match input.get(*p).copied() {
+-                        Some(b',') => {
++                        Some(b',') #guard_sep => {
+                             *p += 1;
+-                            let _ = #support_mod::skip_space(input, p, state);
++                            #skip_post_sep
+                         }
+-                        Some(b']') => {
++                        Some(b']') #guard_close => {
+                             *p += 1;
+                             return Ok(());
+                         }
+@@ -305,8 +350,6 @@ fn emit_parse_array_struct_direct_list(
+     ir: &GrammarIR,
+     strategy: &EmitStrategy,
+ ) -> TokenStream {
+-    use bbnf_ir::IrNode;
+-
+     let rule_name = ir.get_string(rule.name);
+     let fn_ident = shape_fn_ident("array", grammar_suffix, rule_name);
+     let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+@@ -355,27 +398,76 @@ fn emit_parse_array_struct_direct_list(
+             }
+         });
+ 
+-    // Skip the leading whitespace in OW-wrapped variants so the
+-    // first-set check below sees the iter's actual leading byte.
+-    // For the bare-Repeat shape the inner iterator's own dispatcher
+-    // handles whitespace via the per-Ref pre-skip.
++    // sk-v27 LW3.ORC2-WS-C: the list reads whitespace only where the
++    // grammar writes it. An outer `x ?w` reads it before and after the
++    // whole list. One iteration reads its own items in order, each as
++    // the grammar writes it (a whitespace rule such as `ebnf`'s `S` by
++    // its own regex, a `?w` mark around exactly its operand), the value
++    // position with the cursor's index handling; no other skip.
+     let leading_ow_skip = if has_outer_ow {
+         quote! { let _ = #support_mod::skip_space(input, p, state); }
+     } else {
+         quote! {}
+     };
+     let trailing_ow_skip = leading_ow_skip.clone();
+-
+-    // Whether the Repeat's inner carries an OW wrapper that admits
+-    // intra-iteration whitespace. Mirrors `list::has_iter_ow`.
+-    let has_iter_ow = matches!(
+-        repeat_inner,
+-        IrNode::OptionalWhitespace(_) | IrNode::Seq(_) | IrNode::Next(_, _) | IrNode::Skip(_, _),
+-    );
+-    let intra_iter_ws = if has_iter_ow {
+-        quote! { let _ = #support_mod::skip_space(input, p, state); }
+-    } else {
+-        quote! {}
++    let positions = super::flat::collect_positions(repeat_inner);
++    let is_value = |n: &IrNode| {
++        let mut n = n;
++        while let IrNode::Map { inner, .. } = n {
++            n = inner;
++        }
++        matches!((n, value_ref), (IrNode::Ref(r), Some(v)) if *r == v)
++    };
++    let value_at = positions.iter().position(|pos| is_value(pos.node));
++    let skip = quote! { let _ = #support_mod::skip_space(input, p, state); };
++    let item = |pos: &super::flat::PositionedNode<'_>| {
++        super::flat::emit_position_struct_direct(
++            pos,
++            &support_mod,
++            &dispatcher_ident,
++            grammar_suffix,
++            ir,
++        )
++    };
++    let iteration = match value_at {
++        Some(vi) => {
++            let before = positions[..vi].iter().map(item);
++            let after = positions[vi + 1..].iter().map(item);
++            let v = &positions[vi];
++            let lead = if v.leading_ws {
++                skip.clone()
++            } else {
++                quote! {}
++            };
++            let trail = if v.trailing_ws {
++                skip.clone()
++            } else {
++                quote! {}
++            };
++            quote! {
++                #(#before)*
++                #lead
++                if __is_index_seg && !__matched {
++                    // Mismatched index: byte-skip element bytes
++                    // without builder push.
++                    #support_mod::byte_skip_value(input, p)?;
++                } else {
++                    #value_call
++                }
++                #trail
++                #(#after)*
++            }
++        }
++        None => {
++            let all = positions.iter().map(item);
++            quote! {
++                if __is_index_seg && !__matched {
++                    #support_mod::byte_skip_value(input, p)?;
++                } else {
++                    #(#all)*
++                }
++            }
++        }
+     };
+ 
+     let cursor_p = cursor_param();
+@@ -463,15 +555,7 @@ fn emit_parse_array_struct_direct_list(
+                     (),
+                     crate::runtime::DtaError,
+                 > = (|| {
+-                    #intra_iter_ws
+-                    if __is_index_seg && !__matched {
+-                        // Mismatched index: byte-skip element bytes
+-                        // without builder push.
+-                        #support_mod::byte_skip_value(input, p)?;
+-                    } else {
+-                        #value_call
+-                    }
+-                    #intra_iter_ws
++                    #iteration
+                     Ok(())
+                 })();
+                 match __iter_result {
+diff --git a/crates/core/src/backend/rust/emitter/shapes/dispatcher/cross_shape.rs b/crates/core/src/backend/rust/emitter/shapes/dispatcher/cross_shape.rs
+index 77e027b62..a1541e7ff 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/dispatcher/cross_shape.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/dispatcher/cross_shape.rs
+@@ -76,62 +76,103 @@ pub fn emit_dispatcher(
+     // dispatch over the Alt branches. If the root is itself a shape
+     // (e.g. a top-level Object), we emit a delegator to that shape fn.
+     let root_tag = ir.shape_assignments.get(entry);
+-
+-    let dispatch_body =
+-        if matches!(&entry_rule.body, bbnf_ir::IrNode::Alt(_, _)) && has_shape_dispatch(ir) {
+-            // Root body is an Alt — enumerate branches and emit per-branch
+-            // byte-dispatch arms targeting each Ref's shape fn. Both an
+-            // unclassified root (pre-W4) and a Wrap-classified root (W4+)
+-            // take this path when the body is Alt-shaped.
+-            emit_alt_dispatch_body(grammar_suffix, entry_rule, ir)
+-        } else if root_tag.is_classified() {
+-            // AW-V.W4-activation — root is itself a W3 or W4 shape. The
+-            // dispatcher delegates directly to `parse_<shape>_<grammar>_<root>`.
+-            // Shape-fn arg shapes:
+-            //   - Number / Keyword take `first_byte` — the dispatcher peeks
+-            //     first non-ws byte, passes it in.
+-            //   - Object / Array / String / Scalar / Pratt / Unordered /
+-            //     ArgList / Flat / Wrap / HRegex take `(input, p, state,
+-            //     builder, cursor)` — the dispatcher skips leading ws and delegates.
+-            let shape_name = shape_tag_name(root_tag);
+-            let target_ident = shape_fn_ident(shape_name, grammar_suffix, &root_name);
+-            match root_tag {
+-                // AX.W0a.2.g — Keyword signature extended with `state`.
+-                // Number stays at `(input, p, first, builder)`; Keyword now
+-                // takes `(input, p, first, state, builder)`. The split
+-                // mirrors the Ref-call emitter's per-shape switch.
+-                ShapeTag::Number => quote! {
+-                    let first = #support_mod::skip_space(input, p, state)
+-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+-                    let _ = cursor.decide(#entry_rule_id_lit);
+-                    #target_ident(input, p, first, builder)
+-                },
+-                ShapeTag::Keyword => quote! {
+-                    let first = #support_mod::skip_space(input, p, state)
+-                        .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+-                    let _ = cursor.decide(#entry_rule_id_lit);
+-                    #target_ident(input, p, first, state, builder, cursor)
+-                },
+-                _ => quote! {
+-                    let _ = #support_mod::skip_space(input, p, state);
+-                    let _ = cursor.decide(#entry_rule_id_lit);
+-                    #target_ident(input, p, state, builder, cursor)
+-                },
+-            }
+-        } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
+-            // Root unclassified but grammar has classified rules — use the
+-            // legacy Alt-dispatch body (pre-W4 pattern preserved for
+-            // transitional grammars where the root is a transparent alias).
+-            emit_alt_dispatch_body(grammar_suffix, entry_rule, ir)
+-        } else {
+-            // No shape coverage — shouldn't reach here (caller gates
+-            // dispatcher emission); emit a stub for safety.
++    // sk-v27 LW3.ORC2-WS-C: the dispatcher reads whitespace only where
++    // the grammar writes it: the alias class of a whitespace-alias entry
++    // before the dispatched rule (its trailing copy is read by `parse()`
++    // before the end-of-input check), and the `?w` of a root rule whose
++    // body is `x ?w` around it. No other whitespace is read here.
++    let alias_pre = match super::super::ws_alias_entry(ir) {
++        Some((_, class)) => super::super::emit_class_skip(&class, quote! { input }, quote! { *p }),
++        None => quote! {},
++    };
++    let root_ow = super::super::ws_read::root_reads_ow(&entry_rule.body);
++    let (root_pre, root_post) = if root_ow {
++        (
++            quote! { let _ = #support_mod::skip_space(input, p, state); },
+             quote! {
+-                Err(crate::runtime::DtaError::InvalidState {
+-                    state: 0,
+-                })
++                if __r.is_ok() {
++                    let _ = #support_mod::skip_space(input, p, state);
++                }
++            },
++        )
++    } else {
++        (quote! {}, quote! {})
++    };
++
++    let dispatch_body = if matches!(&entry_rule.body, bbnf_ir::IrNode::Alt(_, _))
++        && has_shape_dispatch(ir)
++    {
++        // Root body is an Alt — enumerate branches and emit per-branch
++        // byte-dispatch arms targeting each Ref's shape fn. Both an
++        // unclassified root (pre-W4) and a Wrap-classified root (W4+)
++        // take this path when the body is Alt-shaped.
++        emit_alt_dispatch_body(grammar_suffix, entry_rule, ir)
++    } else if root_tag.is_classified() {
++        // AW-V.W4-activation — root is itself a W3 or W4 shape. The
++        // dispatcher delegates directly to `parse_<shape>_<grammar>_<root>`.
++        // Shape-fn arg shapes:
++        //   - Number / Keyword take `first_byte` — the dispatcher peeks
++        //     the first byte, passes it in.
++        //   - Object / Array / String / Scalar / Pratt / Unordered /
++        //     ArgList / Flat / Wrap / HRegex take `(input, p, state,
++        //     builder, cursor)` — the dispatcher delegates. Whitespace
++        //     is read only as the root's own `?w` (LW3.ORC2-WS-C).
++        let shape_name = shape_tag_name(root_tag);
++        let target_ident = shape_fn_ident(shape_name, grammar_suffix, &root_name);
++        let root_wrap = |call: TokenStream| {
++            if root_ow {
++                quote! {
++                    let __r = #call;
++                    #root_post
++                    __r
++                }
++            } else {
++                call
+             }
+         };
++        let root_wrap_number = root_wrap(quote! { #target_ident(input, p, first, builder) });
++        let root_wrap_keyword =
++            root_wrap(quote! { #target_ident(input, p, first, state, builder, cursor) });
++        let root_wrap_other = root_wrap(quote! { #target_ident(input, p, state, builder, cursor) });
++        match root_tag {
++            // AX.W0a.2.g — Keyword signature extended with `state`.
++            // Number stays at `(input, p, first, builder)`; Keyword now
++            // takes `(input, p, first, state, builder)`. The split
++            // mirrors the Ref-call emitter's per-shape switch.
++            ShapeTag::Number => quote! {
++                #root_pre
++                let first = input.get(*p).copied()
++                    .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
++                let _ = cursor.decide(#entry_rule_id_lit);
++                #root_wrap_number
++            },
++            ShapeTag::Keyword => quote! {
++                #root_pre
++                let first = input.get(*p).copied()
++                    .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
++                let _ = cursor.decide(#entry_rule_id_lit);
++                #root_wrap_keyword
++            },
++            _ => quote! {
++                #root_pre
++                let _ = cursor.decide(#entry_rule_id_lit);
++                #root_wrap_other
++            },
++        }
++    } else if matches!(root_tag, ShapeTag::None) && has_shape_dispatch(ir) {
++        // Root unclassified but grammar has classified rules — use the
++        // legacy Alt-dispatch body (pre-W4 pattern preserved for
++        // transitional grammars where the root is a transparent alias).
++        emit_alt_dispatch_body(grammar_suffix, entry_rule, ir)
++    } else {
++        // No shape coverage — shouldn't reach here (caller gates
++        // dispatcher emission); emit a stub for safety.
++        quote! {
++            Err(crate::runtime::DtaError::InvalidState {
++                state: 0,
++            })
++        }
++    };
+ 
+     // Dispatcher — for JSON's `value = object | array | string | number |
+     // bool | null` Alt-dispatch pattern, this maps to a ByteDispatch
+@@ -157,8 +198,9 @@ pub fn emit_dispatcher(
+     quote! {
+         /// AW-V.W3.2 — top-level shape dispatcher.
+         ///
+-        /// Mirrors the walker's `value` rule ByteDispatch: skip leading
+-        /// whitespace, dispatch on the first byte to the chosen branch
++        /// Mirrors the walker's `value` rule ByteDispatch: dispatch on
++        /// the first byte (no whitespace skipped but what the grammar
++        /// writes, sk-v27 LW3.ORC2-WS-C) to the chosen branch
+         /// shape fn, return unit after the chosen shape succeeds. No outer Rule /
+         /// Alt compound is pushed — the DTA's ByteDispatch state for
+         /// `value` emits no compound either, and the target rule's Ref
+@@ -179,6 +221,7 @@ pub fn emit_dispatcher(
+         where
+             #cursor_where,
+         {
++            #alias_pre
+             #nonroot_ident(input, p, state, builder, cursor)
+         }
+ 
+@@ -213,8 +256,6 @@ pub(super) fn emit_alt_dispatch_body(
+ ) -> TokenStream {
+     use bbnf_ir::IrNode;
+ 
+-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+-
+     // Walk the Alt branches (or single body) and collect per-branch
+     // (first-byte(s), shape-fn-ident) pairs.
+     let branches = match &root_rule.body {
+@@ -306,7 +347,7 @@ pub(super) fn emit_alt_dispatch_body(
+         .unwrap_or_else(|| quote! {});
+ 
+     quote! {
+-        let first = #support_mod::skip_space(input, p, state)
++        let first = input.get(*p).copied()
+             .ok_or(crate::runtime::DtaError::UnexpectedEnd { offset: *p as u32 })?;
+         let __result = match first {
+             #object_arm
+diff --git a/crates/core/src/backend/rust/emitter/shapes/dispatcher/ref_call.rs b/crates/core/src/backend/rust/emitter/shapes/dispatcher/ref_call.rs
+index 7d59d37ab..aad6e723e 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/dispatcher/ref_call.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/dispatcher/ref_call.rs
+@@ -61,23 +61,31 @@ pub fn emit_ref_call_shape(
+     };
+     let target_fn = shape_fn_ident(shape_name, grammar_suffix, ir.get_string(target.name));
+     let support_mod = support_mod_ident(grammar_suffix);
+-    // AX.W0a.2.s — Rules whose body admits whitespace as a leading
+-    // byte (CSS `combinator = /\s*>\s*/ | /\s*\+\s*/ | /\s*~\s*/ |
+-    // /\s+/`) handle whitespace internally. Pre-skipping at the Ref
+-    // call site erases the significant whitespace the rule needs —
+-    // `/\s+/` loses its match input and the descendant combinator
+-    // silently fails (bootstrap.css offset 8163, tailwind.css deep
+-    // selector sites). Suppress pre-skip when the target's leading
+-    // byte set includes any ASCII whitespace byte.
+-    let pre_skip_needed = !target_rule_accepts_leading_ws(&target.body, ir);
++    // sk-v27 LW3.ORC2-WS-C (RULINGS 2026-11-14f PERF1D-B2 (c); the rule
++    // in the LEDGER): a Ref reads no whitespace of its own. The call
++    // site skips only where the grammar's text reads `?w`: around a
++    // target whose body is `x ?w` (through `->`), which every shape fn
++    // may have unwrapped. Every other `?w` is read where it is written.
++    let (pre, post) = if super::super::ws_read::root_reads_ow(&target.body) {
++        (
++            quote! { let _ = #support_mod::skip_space(input, p, state); },
++            quote! {
++                if __r.is_ok() {
++                    let _ = #support_mod::skip_space(input, p, state);
++                }
++            },
++        )
++    } else {
++        (quote! {}, quote! {})
++    };
+     // AX.W0a.2.g — Keyword's signature gained a `state` parameter so
+     // Ref-led Alt branches can delegate via this helper. Number keeps
+     // the `(input, p, first, builder)` shape since its body never
+     // recurses.
+-    let expr = match tag {
++    let call = match tag {
+         ShapeTag::Number => quote! {
+             {
+-                let __first = #support_mod::skip_space(input, p, state)
++                let __first = input.get(*p).copied()
+                     .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                         offset: *p as u32,
+                     })?;
+@@ -86,99 +94,30 @@ pub fn emit_ref_call_shape(
+         },
+         ShapeTag::Keyword => quote! {
+             {
+-                let __first = #support_mod::skip_space(input, p, state)
++                let __first = input.get(*p).copied()
+                     .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                         offset: *p as u32,
+                     })?;
+                 #target_fn(input, p, __first, state, builder, cursor)
+             }
+         },
+-        _ if pre_skip_needed => quote! {
+-            {
+-                let _ = #support_mod::skip_space(input, p, state);
+-                #target_fn(input, p, state, builder, cursor)
+-            }
+-        },
+         _ => quote! {
+-            {
+-                #target_fn(input, p, state, builder, cursor)
+-            }
++            #target_fn(input, p, state, builder, cursor)
+         },
+     };
+-    Some(expr)
+-}
+-
+-/// Returns `true` if `body` can match an ASCII-whitespace byte as its
+-/// first input byte. Used by [`emit_ref_call_shape`] to suppress the
+-/// pre-skip ws step when the rule itself handles whitespace (CSS
+-/// `combinator`, where `/\s+/` IS a combinator branch).
+-///
+-/// Walks `Alt`, `OptionalWhitespace`, `Map`, and transparent `Seq` /
+-/// `Next` / `Skip` / `Repeat` structures to find the leading node in
+-/// each path. `Regex` nodes consult `ir.regex_info[sid].first_chars`;
+-/// `Literal` nodes check the first byte; `Ref` nodes recurse once
+-/// into the referenced rule.
+-fn target_rule_accepts_leading_ws(body: &bbnf_ir::IrNode, ir: &GrammarIR) -> bool {
+-    // Conservative recursion bound: `Ref` cycles are possible through
+-    // mutual recursion. One-level follow is sufficient for the CSS
+-    // `combinator`-shaped case; deeper chains fall back to the
+-    // existing pre-skip behaviour.
+-    target_rule_accepts_leading_ws_bounded(body, ir, 3)
+-}
+-
+-fn target_rule_accepts_leading_ws_bounded(
+-    body: &bbnf_ir::IrNode,
+-    ir: &GrammarIR,
+-    budget: usize,
+-) -> bool {
+-    use bbnf_ir::IrNode;
+-    if budget == 0 {
+-        return false;
+-    }
+-    match body {
+-        IrNode::Literal(sid) => {
+-            let bytes = ir.strings[*sid as usize].as_bytes();
+-            bytes
+-                .first()
+-                .map(|&b| matches!(b, b' ' | b'\t' | b'\n' | b'\r' | 0x0C))
+-                .unwrap_or(false)
+-        }
+-        IrNode::Regex(sid) => {
+-            if let Some(info) = ir.regex_info.get(sid) {
+-                // Check whether any whitespace byte is in the
+-                // first-byte set of the pattern.
+-                info.first_chars.has(b' ')
+-                    || info.first_chars.has(b'\t')
+-                    || info.first_chars.has(b'\n')
+-                    || info.first_chars.has(b'\r')
+-            } else {
+-                false
++    let expr = if super::super::ws_read::root_reads_ow(&target.body) {
++        quote! {
++            {
++                #pre
++                let __r = #call;
++                #post
++                __r
+             }
+         }
+-        IrNode::Alt(branches, _) => branches
+-            .iter()
+-            .any(|b| target_rule_accepts_leading_ws_bounded(&b.node, ir, budget)),
+-        IrNode::Seq(children) => children
+-            .first()
+-            .map(|c| target_rule_accepts_leading_ws_bounded(c, ir, budget))
+-            .unwrap_or(false),
+-        IrNode::Next(a, _) | IrNode::Skip(a, _) => {
+-            target_rule_accepts_leading_ws_bounded(a, ir, budget)
+-        }
+-        IrNode::Map { inner, .. } | IrNode::OptionalWhitespace(inner) => {
+-            target_rule_accepts_leading_ws_bounded(inner, ir, budget)
+-        }
+-        IrNode::Repeat { inner, lo, .. } if *lo > 0 => {
+-            target_rule_accepts_leading_ws_bounded(inner, ir, budget)
+-        }
+-        IrNode::Ref(rid) => {
+-            let Some(target) = ir.rules.iter().find(|r| r.id == *rid) else {
+-                return false;
+-            };
+-            target_rule_accepts_leading_ws_bounded(&target.body, ir, budget - 1)
+-        }
+-        _ => false,
+-    }
++    } else {
++        quote! { { #call } }
++    };
++    Some(expr)
+ }
+ 
+ /// Walk `node` and collect the target `RuleId` of every `Ref(rid)` at a
+diff --git a/crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs b/crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs
+index 99a606d51..4f702f184 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/dispatcher/support.rs
+@@ -74,7 +74,7 @@ fn ctns_probe_admits(ir: &GrammarIR) -> bool {
+     }
+     if alphabet
+         .iter()
+-        .any(|&b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r')
++        .any(|&b| b == b' ' || b.wrapping_sub(b'\t') < 5)
+     {
+         return false;
+     }
+@@ -119,9 +119,7 @@ fn ctns_probe_tokens() -> TokenStream {
+                 };
+                 let mut __all_ws = true;
+                 for &__b in __slice {
+-                    if __b != b' ' && __b != b'\t'
+-                        && __b != b'\n' && __b != b'\r'
+-                    {
++                    if __b != b' ' && __b.wrapping_sub(b'\t') > 4 {
+                         __all_ws = false;
+                         break;
+                     }
+@@ -145,9 +143,11 @@ fn ctns_probe_tokens() -> TokenStream {
+ /// decision to keep the plain path probe-free).
+ fn emit_skip_space_plain_inner(ctns_probe: TokenStream) -> TokenStream {
+     quote! {
+-        /// Skip JSON whitespace at `*p`, returning the first
+-        /// non-whitespace byte (or `None` on EOF). Hot-path fast-
+-        /// exit when the next byte is non-whitespace.
++        /// Read `?w` whitespace at `*p` (the six bytes space, `\t`,
++        /// `\n`, U+000B, U+000C, `\r`; sk-v27 LW3.ORC2-WS-C), returning
++        /// the first other byte (or `None` on EOF). Emitted only where
++        /// the grammar writes `?w`. Hot-path fast-exit when the next
++        /// byte is not whitespace.
+         #[inline(always)]
+         pub fn skip_space(
+             input: &[u8],
+@@ -160,7 +160,7 @@ fn emit_skip_space_plain_inner(ctns_probe: TokenStream) -> TokenStream {
+             // attribute on an expression (unstable, E0658) —
+             // surfaced by the bootstrap's `cargo expand` step.
+             match input.get(*p) {
+-                Some(&b) if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' => Some(b),
++                Some(&b) if b != b' ' && b.wrapping_sub(b'\t') > 4 => Some(b),
+                 None => None,
+                 _ => {
+                     skip_space_slow(input, p, state);
+@@ -198,7 +198,7 @@ fn emit_skip_space_plain_inner(ctns_probe: TokenStream) -> TokenStream {
+                 if *p + 64 > input.len() {
+                     while let Some(&b) = input.get(*p) {
+                         // Direct boolean form (see `skip_space`).
+-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
++                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
+                             return;
+                         }
+                         *p += 1;
+@@ -260,11 +260,7 @@ fn emit_skip_space_comment_aware_inner(ctns_probe: TokenStream) -> TokenStream {
+         ) -> Option<u8> {
+             match input.get(*p) {
+                 Some(&b)
+-                    if b != b' '
+-                        && b != b'\t'
+-                        && b != b'\n'
+-                        && b != b'\r'
+-                        && b != b'/' =>
++                    if b != b' ' && b.wrapping_sub(b'\t') > 4 && b != b'/' =>
+                 {
+                     Some(b)
+                 }
+@@ -321,7 +317,7 @@ fn emit_skip_space_comment_aware_inner(ctns_probe: TokenStream) -> TokenStream {
+                 if *p + 64 > input.len() {
+                     // Tail — direct byte loop.
+                     while let Some(&b) = input.get(*p) {
+-                        if b != b' ' && b != b'\t' && b != b'\n' && b != b'\r' {
++                        if b != b' ' && b.wrapping_sub(b'\t') > 4 {
+                             break;
+                         }
+                         *p += 1;
+@@ -531,13 +527,14 @@ pub fn emit_support_module(grammar_suffix: &str, ir: &GrammarIR) -> TokenStream
+             #skip_space_body
+ 
+             /// Compute the 64-bit "non-whitespace" bitmap for a 64-byte
+-            /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT in
+-            /// `{b' ', b'\t', b'\n', b'\r'}`. The kernel is parse-that's
++            /// stripe. Bit `i` is `1` iff `stripe[i]` is NOT one of the six
++            /// `?w` bytes (space, `\t`, `\n`, U+000B, U+000C, `\r`;
++            /// sk-v27 LW3.ORC2-WS-C). The kernel is parse-that's
+             /// (NEON under the runtime tier on aarch64, the scalar oracle
+             /// elsewhere); no ISA intrinsic is emitted (X-3).
+             #[inline(always)]
+             pub(crate) fn nospace_bitmap_64(stripe: &[u8; 64]) -> u64 {
+-                !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\r")
++                !::parse_that::scan::byte_class_from_eq_set_64(stripe, b" \t\n\x0B\x0C\r")
+             }
+ 
+             /// Find the first `b'"'` or `b'\\'` byte in `bytes`, through
+diff --git a/crates/core/src/backend/rust/emitter/shapes/flat/mod.rs b/crates/core/src/backend/rust/emitter/shapes/flat/mod.rs
+index 31a49de64..bd465e9f7 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/flat/mod.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/flat/mod.rs
+@@ -55,6 +55,7 @@ use proc_macro2::TokenStream;
+ use bbnf_ir::registry::EmitStrategy;
+ 
+ mod struct_direct;
++pub(crate) use struct_direct::emit_position_struct_direct;
+ 
+ /// Emit `pub fn parse_flat_<grammar>_<rule>(input, p, state,
+ /// builder) -> Result<(), DtaError>`.
+@@ -83,14 +84,14 @@ pub fn emit_parse_flat(
+ /// A single flattened position in the rule body with leading/trailing
+ /// ws-trim markers inherited from enclosing `OptionalWhitespace`s.
+ #[derive(Clone)]
+-pub(super) struct PositionedNode<'a> {
+-    pub(super) node: &'a IrNode,
+-    pub(super) leading_ws: bool,
+-    pub(super) trailing_ws: bool,
++pub(crate) struct PositionedNode<'a> {
++    pub(crate) node: &'a IrNode,
++    pub(crate) leading_ws: bool,
++    pub(crate) trailing_ws: bool,
+ }
+ 
+ /// Flatten a rule body into a list of positional nodes.
+-fn collect_positions<'a>(node: &'a IrNode) -> Vec<PositionedNode<'a>> {
++pub(crate) fn collect_positions<'a>(node: &'a IrNode) -> Vec<PositionedNode<'a>> {
+     let mut out = Vec::new();
+     walk_positions(node, false, false, &mut out);
+     out
+@@ -118,15 +119,27 @@ fn walk_positions<'a>(
+             });
+         }
+         IrNode::Map { inner, .. } => walk_positions(inner, leading, trailing, out),
++        // sk-v27 LW3.ORC2-WS-C: `x ?w` reads whitespace before and after
++        // `x`, not between `x`'s own items: the leading mark goes to the
++        // first position and the trailing mark to the last.
+         IrNode::OptionalWhitespace(inner) => walk_positions(inner, true, true, out),
+         IrNode::Seq(children) => {
+-            for child in children {
+-                walk_positions(child, leading, trailing, out);
++            let kept: Vec<&IrNode> = children
++                .iter()
++                .filter(|c| !matches!(c, IrNode::Epsilon))
++                .collect();
++            let last = kept.len().saturating_sub(1);
++            for (i, child) in kept.into_iter().enumerate() {
++                walk_positions(child, leading && i == 0, trailing && i == last, out);
+             }
+         }
+         IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
+-            walk_positions(lhs, leading, trailing, out);
+-            walk_positions(rhs, leading, trailing, out);
++            let (l_empty, r_empty) = (
++                matches!(lhs.as_ref(), IrNode::Epsilon),
++                matches!(rhs.as_ref(), IrNode::Epsilon),
++            );
++            walk_positions(lhs, leading, trailing && r_empty, out);
++            walk_positions(rhs, leading && l_empty, trailing, out);
+         }
+         IrNode::Epsilon => {}
+         _ => out.push(PositionedNode {
+diff --git a/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs b/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
+index eb21d518a..ad4da3c0f 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/flat/struct_direct.rs
+@@ -465,7 +465,7 @@ pub(super) fn emit_parse_flat_struct_direct(
+ 
+ /// Emit one position's struct-direct body. Threads ws-skip around the
+ /// position's record-producing core.
+-fn emit_position_struct_direct(
++pub(crate) fn emit_position_struct_direct(
+     pos: &PositionedNode,
+     support_mod: &proc_macro2::Ident,
+     dispatcher_ident: &proc_macro2::Ident,
+diff --git a/crates/core/src/backend/rust/emitter/shapes/mod.rs b/crates/core/src/backend/rust/emitter/shapes/mod.rs
+index b79ad5644..485d8747f 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/mod.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/mod.rs
+@@ -85,6 +85,7 @@ pub mod string;
+ pub mod substrate;
+ pub mod unordered;
+ pub mod wrap;
++pub(crate) mod ws_read;
+ 
+ use bbnf_ir::passes::recognizers::shape_dispatch::ShapeTag;
+ use bbnf_ir::{GrammarIR, IrNode, IrRule};
+@@ -304,15 +305,22 @@ pub(super) fn has_shape_dispatch(ir: &GrammarIR) -> bool {
+ /// whitespace alias `ws >> r << ws` (RFC 8259's `JSON-text = ws value
+ /// ws`, root `grammar/json/json.bbnf`).
+ ///
+-/// The struct-direct `parse()` entry skips the support module's
+-/// whitespace set (`' '`, `\t`, `\n`, `\r`) before the dispatcher
+-/// and again before its end-of-input check, and the dispatcher skips
+-/// it before the first byte. An entry whose only kept child is one
+-/// `Ref` between two copies of exactly that set therefore parses the
+-/// same language as dispatching the referenced rule at the root; the
++/// An entry whose only kept child is one `Ref` between two copies of
++/// the same whitespace class `/[...]*/` (its members ASCII whitespace
++/// written as ` `, `\t`, `\n`, `\r`, `\f`, `\v`) parses the same
++/// language as dispatching the referenced rule at the root with that
++/// class read before it and again before the end-of-input check; the
+ /// entry rule adds no compound frame (its registry layout stays, so
+-/// `path!` roots at it). Anything else returns `None`.
++/// `path!` roots at it). sk-v27 LW3.ORC2-WS-C: the class is read by
++/// its own bytes ([`ws_alias_entry`], [`emit_class_skip`]), never by the
++/// `?w` skip, whose set differs. Anything else returns `None`.
+ pub(crate) fn ws_alias_entry_target(ir: &GrammarIR) -> Option<&IrRule> {
++    ws_alias_entry(ir).map(|(rule, _)| rule)
++}
++
++/// [`ws_alias_entry_target`] with the alias's whitespace class (its
++/// bytes, ascending).
++pub(crate) fn ws_alias_entry(ir: &GrammarIR) -> Option<(&IrRule, Vec<u8>)> {
+     let entry = ir.rules.iter().find(|r| r.id == ir.entry)?;
+     let (pre, kept, post) = match &entry.body {
+         IrNode::Skip(lhs, post) => match lhs.as_ref() {
+@@ -328,35 +336,54 @@ pub(crate) fn ws_alias_entry_target(ir: &GrammarIR) -> Option<&IrRule> {
+     let IrNode::Ref(target) = kept else {
+         return None;
+     };
+-    let is_json_ws = |n: &IrNode| match n {
+-        IrNode::Regex(sid) => {
+-            let pat = ir.get_string(*sid);
+-            let Some(class) = pat.strip_prefix('[').and_then(|r| r.strip_suffix("]*")) else {
+-                return false;
++    let ws_class = |n: &IrNode| -> Option<std::collections::BTreeSet<u8>> {
++        let IrNode::Regex(sid) = n else {
++            return None;
++        };
++        let class = ir.get_string(*sid).strip_prefix('[')?.strip_suffix("]*")?;
++        let mut set = std::collections::BTreeSet::new();
++        let mut chars = class.chars();
++        while let Some(c) = chars.next() {
++            let b = match c {
++                '\\' => match chars.next()? {
++                    't' => b'\t',
++                    'n' => b'\n',
++                    'r' => b'\r',
++                    'f' => 0x0C,
++                    'v' => 0x0B,
++                    _ => return None,
++                },
++                ' ' => b' ',
++                _ => return None,
+             };
+-            let mut set = std::collections::BTreeSet::new();
+-            let mut chars = class.chars();
+-            while let Some(c) = chars.next() {
+-                let b = match c {
+-                    '\\' => match chars.next() {
+-                        Some('t') => '\t',
+-                        Some('n') => '\n',
+-                        Some('r') => '\r',
+-                        _ => return false,
+-                    },
+-                    ' ' => ' ',
+-                    _ => return false,
+-                };
+-                set.insert(b);
+-            }
+-            set == [' ', '\t', '\n', '\r'].into_iter().collect()
++            set.insert(b);
+         }
+-        _ => false,
++        (!set.is_empty()).then_some(set)
+     };
+-    if !is_json_ws(pre) || !is_json_ws(post) {
++    let (pre, post) = (ws_class(pre)?, ws_class(post)?);
++    if pre != post {
+         return None;
+     }
+-    ir.rules.iter().find(|r| r.id == *target)
++    let rule = ir.rules.iter().find(|r| r.id == *target)?;
++    Some((rule, pre.into_iter().collect()))
++}
++
++/// Read `bytes` (a whitespace class) at `*pos` of `input`, as many as
++/// stand there: the lowering of `/[...]*/` for a whitespace-alias entry
++/// ([`ws_alias_entry`]).
++pub(crate) fn emit_class_skip(bytes: &[u8], input: TokenStream, pos: TokenStream) -> TokenStream {
++    // Direct boolean form, not `matches!` (see the support module's
++    // `skip_space`: the nightly expansion of `matches!` is refused by the
++    // bootstrap's `cargo expand` step).
++    let lits = bytes.iter().map(|b| proc_macro2::Literal::u8_suffixed(*b));
++    quote! {
++        while let Some(&__b) = #input.get(#pos) {
++            if #(__b != #lits)&&* {
++                break;
++            }
++            #pos += 1;
++        }
++    }
+ }
+ 
+ /// Resolve the grammar's root rule per [`GrammarIR::entry`]. Returns
+diff --git a/crates/core/src/backend/rust/emitter/shapes/object.rs b/crates/core/src/backend/rust/emitter/shapes/object.rs
+index c4e0c566a..d2fce7f99 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/object.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/object.rs
+@@ -117,6 +117,37 @@ fn emit_parse_object_struct_direct(
+     let cursor_p = cursor_param();
+     let cursor_where = cursor_where_clause();
+ 
++    // sk-v27 LW3.ORC2-WS-C: each gap reads whitespace only where the
++    // grammar writes `?w` there (after `{` / before `}` when the middle
++    // is `x ?w`; around the separator and the pair's colon when they or
++    // their neighbours lead or trail with `?w`).
++    let gaps = object_ws_gaps(rule, ir);
++    let skip = quote! { let _ = #support_mod::skip_space(input, p, state); };
++    let none = quote! {};
++    let pick = |on: bool| if on { skip.clone() } else { none.clone() };
++    let skip_open = pick(gaps.open);
++    let skip_pre_colon = pick(gaps.pre_colon);
++    let skip_post_colon = pick(gaps.post_colon);
++    let skip_pre_sep = pick(gaps.pre_sep || gaps.close);
++    let skip_post_sep = pick(gaps.post_sep);
++    let (ws_pre_sep, ws_close) = (gaps.pre_sep, gaps.close);
++    // A single skip serves the separator and the close; when only one of
++    // them is preceded by `?w`, the other is admitted only where no
++    // whitespace was read.
++    let guard = |ws: bool| {
++        if ws || !(ws_pre_sep || ws_close) {
++            quote! {}
++        } else {
++            quote! { if *p == __gap }
++        }
++    };
++    let (guard_sep, guard_close) = (guard(ws_pre_sep), guard(ws_close));
++    let gap_decl = if ws_pre_sep == ws_close {
++        quote! {}
++    } else {
++        quote! { let __gap = *p; }
++    };
++
+     quote! {
+         /// AZ-I.W2.RB — per-grammar Object-shape parse function,
+         /// **struct-direct body**. Targets [`JsonStructBuilder`].
+@@ -167,7 +198,7 @@ fn emit_parse_object_struct_direct(
+             let __handle = builder.begin_compound(&__layout);
+ 
+             *p += 1;
+-            let _ = #support_mod::skip_space(input, p, state);
++            #skip_open
+ 
+             if input.get(*p).copied() == Some(b'}') {
+                 *p += 1;
+@@ -212,14 +243,14 @@ fn emit_parse_object_struct_direct(
+                 #string_fn(input, p, state, builder, cursor)?;
+ 
+                 // Colon.
+-                let _ = #support_mod::skip_space(input, p, state);
++                #skip_pre_colon
+                 if input.get(*p).copied() != Some(b':') {
+                     return Err(crate::runtime::DtaError::Syntax {
+                         offset: *p as u32,
+                     });
+                 }
+                 *p += 1;
+-                let _ = #support_mod::skip_space(input, p, state);
++                #skip_post_colon
+ 
+                 // AZ-IV.W3-DYNAMIC — per-iteration field match. The
+                 // parsed key bytes live at
+@@ -277,13 +308,14 @@ fn emit_parse_object_struct_direct(
+                 }
+ 
+                 // Comma / close.
+-                let _ = #support_mod::skip_space(input, p, state);
++                #gap_decl
++                #skip_pre_sep
+                 match input.get(*p).copied() {
+-                    Some(b',') => {
++                    Some(b',') #guard_sep => {
+                         *p += 1;
+-                        let _ = #support_mod::skip_space(input, p, state);
++                        #skip_post_sep
+                     }
+-                    Some(b'}') => {
++                    Some(b'}') #guard_close => {
+                         *p += 1;
+                         builder.end_compound(__handle);
+                         return Ok(());
+@@ -433,3 +465,59 @@ fn extract_value_ref_from_pair_body(
+     }
+     walk(node, string_rid, ir)
+ }
++
++/// sk-v27 LW3.ORC2-WS-C: where the object's grammar writes `?w` at the
++/// gaps the shape reads.
++struct ObjectWsGaps {
++    open: bool,
++    close: bool,
++    pre_sep: bool,
++    post_sep: bool,
++    pre_colon: bool,
++    post_colon: bool,
++}
++
++fn object_ws_gaps(rule: &IrRule, ir: &GrammarIR) -> ObjectWsGaps {
++    use super::ws_read::{leads_ow, trails_ow};
++    use bbnf_ir::IrNode;
++    use bbnf_ir::passes::inspect::{sep_list, unwrap_map_ow, unwrap_wrap};
++    let middle = unwrap_wrap(unwrap_map_ow(&rule.body)).map(|(_, m, _)| m);
++    let list = middle.and_then(|m| sep_list(unwrap_map_ow(m)));
++    // Before the close, whitespace is read by the middle's trailing `?w`
++    // or by the last pair's own.
++    let (open, close) = middle.map_or((false, false), |m| {
++        (
++            leads_ow(m, ir),
++            trails_ow(m, ir) || list.as_ref().is_some_and(|l| trails_ow(l.element, ir)),
++        )
++    });
++    let (pre_sep, post_sep) = list.as_ref().map_or((false, false), |l| {
++        (
++            trails_ow(l.element, ir) || leads_ow(l.separator, ir),
++            trails_ow(l.separator, ir) || leads_ow(l.element, ir),
++        )
++    });
++    // The pair: `key , colon >> value` (through one rule reference).
++    let pair_body = list.as_ref().and_then(|l| match unwrap_map_ow(l.element) {
++        IrNode::Ref(rid) => ir.rules.iter().find(|r| r.id == *rid).map(|r| &r.body),
++        other => Some(other),
++    });
++    let (pre_colon, post_colon) = match pair_body.map(unwrap_map_ow) {
++        Some(IrNode::Seq(children)) => match children.as_slice() {
++            [key, IrNode::Next(colon, value)] => (
++                trails_ow(key, ir) || leads_ow(colon, ir),
++                trails_ow(colon, ir) || leads_ow(value, ir),
++            ),
++            _ => (false, false),
++        },
++        _ => (false, false),
++    };
++    ObjectWsGaps {
++        open,
++        close,
++        pre_sep,
++        post_sep,
++        pre_colon,
++        post_colon,
++    }
++}
+diff --git a/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs b/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs
+index 4ae78f412..a868171da 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/pratt/struct_direct.rs
+@@ -76,7 +76,7 @@
+ //! confirms it.
+ 
+ use bbnf_ir::registry::{EmitStrategy, LayoutKind};
+-use bbnf_ir::{GrammarIR, IrRule};
++use bbnf_ir::{GrammarIR, IrNode, IrRule};
+ use proc_macro2::TokenStream;
+ use quote::{format_ident, quote};
+ 
+@@ -195,6 +195,28 @@ pub(super) fn emit_parse_pratt_struct_direct(
+             }
+         });
+ 
++    // sk-v27 LW3.ORC2-WS-C: whitespace around an operator is read only
++    // where the grammar writes `?w` there (the operand trailing or the
++    // operator leading with it before; the operator trailing or the
++    // operand leading with it after). The chain reads none before its
++    // first operand: a `?w` there is the operand's own.
++    let ws = pratt_op_ws(rule, ir);
++    let skip_if = |on: bool| {
++        if on {
++            quote! { let _ = #support_mod::skip_space(input, p, state); }
++        } else {
++            quote! {}
++        }
++    };
++    // The operands' own `?w` is read unconditionally around each
++    // operand; only the operator's leading `?w` is tentative (given back
++    // when no operator follows).
++    let skip_head_lead = skip_if(ws.head_lead);
++    let skip_head_trail = skip_if(ws.head_trail);
++    let skip_rhs_trail = skip_if(ws.rhs_trail);
++    let skip_post_op = skip_if(ws.post_op);
++    let ws_pre_op = ws.pre_op;
++
+     // AZ-I.W2-act.B3 — substrate-binding splice: the function
+     // signature carries the grammar's concrete builder type rather
+     // than the JSON-specific path.
+@@ -240,7 +262,6 @@ pub(super) fn emit_parse_pratt_struct_direct(
+             __P: for<'__c> crate::path::schema::PathSchema<'__c>,
+         {
+             let _ = cursor;
+-            let _ = #support_mod::skip_space(input, p, state);
+ 
+             // ── Open the rule compound ──────────────────────────────
+             let #layout_var: ::bbnf_ir::registry::StructLayout = #layout_literal;
+@@ -262,7 +283,9 @@ pub(super) fn emit_parse_pratt_struct_direct(
+             // Recurses through the operand's per-shape parse fn,
+             // which deposits its own value (scalar or compound) onto
+             // this rule's open frame as the first child.
++            #skip_head_lead
+             #operand_call
++            #skip_head_trail
+ 
+             // ── Operator + RHS loop ─────────────────────────────────
+             //
+@@ -275,14 +298,18 @@ pub(super) fn emit_parse_pratt_struct_direct(
+             // Lower-precedence / EOF operators terminate the loop,
+             // closing the rule compound below.
+             loop {
++                let __gap = *p;
+                 let mut op_byte: u8 = input.get(*p).copied().unwrap_or(0);
+                 let mut lut_byte: u8 = #rule_lut_ident[op_byte as usize];
+-                if lut_byte == 0 {
++                if lut_byte == 0 && #ws_pre_op {
+                     let _ = #support_mod::skip_space(input, p, state);
+                     op_byte = input.get(*p).copied().unwrap_or(0);
+                     lut_byte = #rule_lut_ident[op_byte as usize];
+                 }
+                 if lut_byte == 0 {
++                    // sk-v27 LW3.ORC2-WS-C: no operator follows, so the
++                    // whitespace read looking for one is given back.
++                    *p = __gap;
+                     break;
+                 }
+ 
+@@ -346,8 +373,9 @@ pub(super) fn emit_parse_pratt_struct_direct(
+                 *p = (*p).saturating_add(op_width as usize);
+ 
+                 // ── RHS operand ─────────────────────────────────
+-                let _ = #support_mod::skip_space(input, p, state);
++                #skip_post_op
+                 #rhs_call
++                #skip_rhs_trail
+             }
+             ::core::result::Result::Ok(())
+             })();
+@@ -362,3 +390,51 @@ pub(super) fn emit_parse_pratt_struct_direct(
+         }
+     }
+ }
++
++/// sk-v27 LW3.ORC2-WS-C: where the grammar writes `?w` in
++/// `operand (op operand)*`.
++struct PrattWs {
++    /// `?w` before the head operand (its own leading `?w`).
++    head_lead: bool,
++    /// `?w` after the head operand (its own trailing `?w`).
++    head_trail: bool,
++    /// `?w` after each right operand (its own trailing `?w`).
++    rhs_trail: bool,
++    /// The operator leads with `?w` (read only when an operator follows).
++    pre_op: bool,
++    /// `?w` between the operator and the right operand.
++    post_op: bool,
++}
++
++fn pratt_op_ws(rule: &IrRule, ir: &GrammarIR) -> PrattWs {
++    use super::super::ws_read::{leads_ow, trails_ow};
++    use bbnf_ir::passes::inspect::unwrap_map_ow;
++    let none = PrattWs {
++        head_lead: false,
++        head_trail: false,
++        rhs_trail: false,
++        pre_op: false,
++        post_op: false,
++    };
++    let IrNode::Seq(children) = unwrap_map_ow(&rule.body) else {
++        return none;
++    };
++    let [operand, IrNode::Repeat { inner, .. }] = children.as_slice() else {
++        return none;
++    };
++    let (op, rhs) = match unwrap_map_ow(inner) {
++        IrNode::Seq(items) => match items.as_slice() {
++            [op, rhs] => (op, rhs),
++            _ => return none,
++        },
++        IrNode::Next(op, rhs) => (op.as_ref(), rhs.as_ref()),
++        _ => return none,
++    };
++    PrattWs {
++        head_lead: leads_ow(operand, ir),
++        head_trail: trails_ow(operand, ir),
++        rhs_trail: trails_ow(rhs, ir),
++        pre_op: leads_ow(op, ir),
++        post_op: trails_ow(op, ir) || leads_ow(rhs, ir),
++    }
++}
+diff --git a/crates/core/src/backend/rust/emitter/shapes/string.rs b/crates/core/src/backend/rust/emitter/shapes/string.rs
+index 642db037d..a7cc60a45 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/string.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/string.rs
+@@ -96,7 +96,11 @@ fn refused_plain_bytes(rule: &IrRule, ir: &GrammarIR, quote: u8) -> Vec<u8> {
+             one => vec![one],
+         };
+         for b in branches {
+-            if let Hir::Class(CharClass::Bytes { ranges, negated: true }) = b {
++            if let Hir::Class(CharClass::Bytes {
++                ranges,
++                negated: true,
++            }) = b
++            {
+                 for r in ranges {
+                     for byte in r.start..=r.end {
+                         if byte != quote && byte != b'\\' && !refused.contains(&byte) {
+@@ -113,7 +117,9 @@ fn refused_plain_bytes(rule: &IrRule, ir: &GrammarIR, quote: u8) -> Vec<u8> {
+     // decoder can consume would make the raw-body test wrong.
+     let escape_bytes = b"\"\\/bfnrtu0123456789abcdefABCDEF";
+     assert!(
+-        refused.iter().all(|b| !escape_bytes.contains(b) && *b < 0x80),
++        refused
++            .iter()
++            .all(|b| !escape_bytes.contains(b) && *b < 0x80),
+         "String shape on rule `{}`: its class refuses a byte an escape or a UTF-8 sequence holds ({:?}); the raw-body test cannot read it",
+         ir.get_string(rule.name),
+         refused
+diff --git a/crates/core/src/backend/rust/emitter/shapes/unordered.rs b/crates/core/src/backend/rust/emitter/shapes/unordered.rs
+index 3d98f5a52..93bfc7945 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/unordered.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/unordered.rs
+@@ -284,6 +284,34 @@ fn emit_parse_unordered_struct_direct(
+         None => return quote! {},
+     };
+ 
++    // sk-v27 LW3.ORC2-WS-C: the repetition reads whitespace only where
++    // its item writes `?w`: before the first item when the item leads
++    // with it, between items when it leads or trails with it, after the
++    // last only when it trails with it (a skip no next item follows is
++    // given back otherwise).
++    let (ws_lead, ws_trail) = match unwrap_map_ow(&rule.body) {
++        IrNode::Repeat { inner, .. } => (
++            super::ws_read::leads_ow(inner, ir),
++            super::ws_read::trails_ow(inner, ir),
++        ),
++        _ => (false, false),
++    };
++    let skip_lead = if ws_lead {
++        quote! { let _ = #support_mod::skip_space(input, p, state); }
++    } else {
++        quote! {}
++    };
++    let skip_between = if ws_lead || ws_trail {
++        quote! { let _ = #support_mod::skip_space(input, p, state); }
++    } else {
++        quote! {}
++    };
++    let restore_gap = if ws_trail {
++        quote! { let _ = __gap; }
++    } else {
++        quote! { *p = __gap; }
++    };
++
+     let Some(body_info) = introspect_unordered(rule, ir) else {
+         // Defensive fallback: a malformed Unordered rule under
+         // StructDirect emits a stub that delegates to the dispatcher.
+@@ -368,9 +396,10 @@ fn emit_parse_unordered_struct_direct(
+                 (),
+                 crate::runtime::DtaError,
+             > = (|| {
+-                let _ = #support_mod::skip_space(input, p, state);
++                #skip_lead
+ 
+                 let mut __iters: u32 = 0;
++                let mut __gap = *p;
+                 'unordered: loop {
+                     let __byte = match input.get(*p).copied() {
+                         Some(b) => b,
+@@ -380,8 +409,10 @@ fn emit_parse_unordered_struct_direct(
+                         #(#branch_arms)*
+                         _ => break 'unordered,
+                     }
+-                    let _ = #support_mod::skip_space(input, p, state);
++                    __gap = *p;
++                    #skip_between
+                 }
++                #restore_gap
+ 
+                 if __iters < #iters_lo_lit {
+                     return Err(crate::runtime::DtaError::Syntax {
+diff --git a/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs b/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs
+index 760267c64..0f5c389ea 100644
+--- a/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs
++++ b/crates/core/src/backend/rust/emitter/shapes/wrap/struct_direct.rs
+@@ -508,7 +508,6 @@ fn emit_alt_struct_dispatch(
+     rule: &IrRule,
+     strategy: &EmitStrategy,
+ ) -> TokenStream {
+-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+     let layout_literal = quote_layout_literal(rule, ir);
+     let builder_ty_e = builder_ty_elided(strategy);
+ 
+@@ -540,7 +539,7 @@ fn emit_alt_struct_dispatch(
+             (),
+             crate::runtime::DtaError,
+         > = (|| {
+-            let first = #support_mod::skip_space(input, p, state)
++            let first = input.get(*p).copied()
+                 .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                     offset: *p as u32,
+                 })?;
+@@ -594,7 +593,6 @@ fn emit_alt_struct_dispatch_transparent(
+     ir: &GrammarIR,
+     strategy: &EmitStrategy,
+ ) -> TokenStream {
+-    let support_mod = format_ident!("__shape_support_{}", grammar_suffix);
+     let _ = strategy;
+ 
+     let DispatchPartition {
+@@ -609,7 +607,7 @@ fn emit_alt_struct_dispatch_transparent(
+         // AZ-II.cutover.H Phase 1 — transparent-rule passthrough.
+         // No outer compound. Dispatch to the chosen branch; the
+         // branch's per-shape fn carries its own record emission.
+-        let first = #support_mod::skip_space(input, p, state)
++        let first = input.get(*p).copied()
+             .ok_or(crate::runtime::DtaError::UnexpectedEnd {
+                 offset: *p as u32,
+             })?;
+diff --git a/crates/core/src/backend/rust/emitter/shapes/ws_read.rs b/crates/core/src/backend/rust/emitter/shapes/ws_read.rs
+new file mode 100644
+index 000000000..811d5010c
+--- /dev/null
++++ b/crates/core/src/backend/rust/emitter/shapes/ws_read.rs
+@@ -0,0 +1,81 @@
++//! sk-v27 LW3.ORC2-WS-C (RULINGS 2026-11-14f PERF1D-B2 (c)): where the
++//! grammar's text reads whitespace.
++//!
++//! Root reads whitespace only where the grammar writes it (the rule is
++//! written in the sk-v27 LEDGER, row "LW3.ORC2-WS-C: the rule the cure
++//! implements"): `x ?w` reads `ws* x ws*` at exactly that place, and no
++//! rule, sequence, repetition or entry reads any other. The shape
++//! emitters lower each `?w` they meet; these helpers answer, for the
++//! structures a shape recognises, whether a `?w` stands at a given
++//! boundary.
++
++use bbnf_ir::{GrammarIR, IrNode};
++
++/// Whether `node`, seen through `->` mappings, is `x ?w`: the grammar
++/// reads `?w` whitespace immediately before and after it.
++pub(crate) fn root_reads_ow(node: &IrNode) -> bool {
++    match node {
++        IrNode::Map { inner, .. } => root_reads_ow(inner),
++        IrNode::OptionalWhitespace(_) => true,
++        _ => false,
++    }
++}
++
++/// Whether every match of `node` begins by reading `?w` whitespace: the
++/// grammar reads whitespace at the boundary before `node`. Looks through
++/// `->`, the first item of a sequence, `>>` / `<<`, a repetition of at
++/// least one, an alternation all of whose branches lead with `?w`, and
++/// (a few hops of) rule references.
++pub(crate) fn leads_ow(node: &IrNode, ir: &GrammarIR) -> bool {
++    edge_ow(node, ir, Edge::Lead, 4)
++}
++
++/// Whether every match of `node` ends by reading `?w` whitespace: the
++/// grammar reads whitespace at the boundary after `node`. The mirror of
++/// [`leads_ow`].
++pub(crate) fn trails_ow(node: &IrNode, ir: &GrammarIR) -> bool {
++    edge_ow(node, ir, Edge::Trail, 4)
++}
++
++#[derive(Clone, Copy, PartialEq, Eq)]
++enum Edge {
++    Lead,
++    Trail,
++}
++
++fn edge_ow(node: &IrNode, ir: &GrammarIR, edge: Edge, budget: u32) -> bool {
++    let next = |n: &IrNode| edge_ow(n, ir, edge, budget);
++    match node {
++        IrNode::OptionalWhitespace(_) => true,
++        IrNode::Map { inner, .. } => next(inner),
++        IrNode::Seq(children) => {
++            let mut kept = children.iter().filter(|c| !matches!(c, IrNode::Epsilon));
++            let end = if edge == Edge::Lead {
++                kept.next()
++            } else {
++                kept.next_back()
++            };
++            end.is_some_and(next)
++        }
++        IrNode::Next(lhs, rhs) | IrNode::Skip(lhs, rhs) => {
++            let (near, far) = if edge == Edge::Lead {
++                (lhs, rhs)
++            } else {
++                (rhs, lhs)
++            };
++            if matches!(near.as_ref(), IrNode::Epsilon) {
++                next(far)
++            } else {
++                next(near)
++            }
++        }
++        IrNode::Alt(branches, _) => !branches.is_empty() && branches.iter().all(|b| next(&b.node)),
++        IrNode::Repeat { inner, lo, .. } if *lo > 0 => next(inner),
++        IrNode::Ref(rid) if budget > 0 => ir
++            .rules
++            .iter()
++            .find(|r| r.id == *rid)
++            .is_some_and(|r| edge_ow(&r.body, ir, edge, budget - 1)),
++        _ => false,
++    }
++}
+diff --git a/crates/core/src/generate/regex/emit/dfa/accel.rs b/crates/core/src/generate/regex/emit/dfa/accel.rs
+index 0dbd1f4c2..f26b53c70 100644
+--- a/crates/core/src/generate/regex/emit/dfa/accel.rs
++++ b/crates/core/src/generate/regex/emit/dfa/accel.rs
+@@ -103,7 +103,7 @@ pub(super) fn detect_shorthand(bytes: &[u8]) -> Option<TokenStream> {
+         .copied()
+         .collect();
+     if set == ws {
+-        return Some(quote! { __b.is_ascii_whitespace() });
++        return Some(quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) });
+     }
+ 
+     // [0-9a-fA-F]
+diff --git a/crates/core/src/generate/regex/emit/generalized/class_segments.rs b/crates/core/src/generate/regex/emit/generalized/class_segments.rs
+index f201104ae..8e5b2f915 100644
+--- a/crates/core/src/generate/regex/emit/generalized/class_segments.rs
++++ b/crates/core/src/generate/regex/emit/generalized/class_segments.rs
+@@ -358,7 +358,7 @@ fn try_shorthand_predicate(chars: &CharSet128, ranges: &[(u8, u8)]) -> Option<To
+     ws_chars.add_range(0x09, 0x0D);
+     ws_chars.add(b' ');
+     if *chars == ws_chars {
+-        return Some(quote! { __b.is_ascii_whitespace() });
++        return Some(quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) });
+     }
+ 
+     None
+diff --git a/crates/core/src/generate/regex/emit/generalized/mod.rs b/crates/core/src/generate/regex/emit/generalized/mod.rs
+index 74dc7bbc9..962b1c158 100644
+--- a/crates/core/src/generate/regex/emit/generalized/mod.rs
++++ b/crates/core/src/generate/regex/emit/generalized/mod.rs
+@@ -56,12 +56,12 @@ pub fn emit_generalized_regex_direct(pattern: &str, opts: &EmitOpts) -> Option<T
+                 let __start = state.offset;
+                 let mut __pos = __start;
+                 while __pos < state.src_bytes.len()
+-                    && unsafe { *state.src_bytes.get_unchecked(__pos) }.is_ascii_whitespace()
++                    && { let __c: u8 = unsafe { *state.src_bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
+                 { __pos += 1; }
+                 if #check {
+                     __pos += #inner_len;
+                     while __pos < state.src_bytes.len()
+-                        && unsafe { *state.src_bytes.get_unchecked(__pos) }.is_ascii_whitespace()
++                        && { let __c: u8 = unsafe { *state.src_bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
+                     { __pos += 1; }
+                     state.offset = __pos;
+                     Some(::parse_that::Span::new(__start, __pos, state.src))
+@@ -134,7 +134,7 @@ pub(crate) fn emit_shorthand_class_loop(pattern: &str) -> Option<TokenStream> {
+ 
+     // Must be exactly a shorthand: \s, \d, \w
+     let predicate = match shorthand {
+-        r"\s" => quote! { __b.is_ascii_whitespace() },
++        r"\s" => quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) },
+         r"\d" => quote! { __b.is_ascii_digit() },
+         r"\w" => quote! { (__b.is_ascii_alphanumeric() || __b == b'_') },
+         _ => return None,
+diff --git a/crates/core/src/generate/regex/emit/hir/leaf.rs b/crates/core/src/generate/regex/emit/hir/leaf.rs
+index 97a701e1f..f08bf50cc 100644
+--- a/crates/core/src/generate/regex/emit/hir/leaf.rs
++++ b/crates/core/src/generate/regex/emit/hir/leaf.rs
+@@ -148,7 +148,7 @@ fn detect_shorthand_bytes(ranges: &[ByteRange]) -> Option<TokenStream> {
+         && ranges[0] == ByteRange::new(0x09, 0x0D)
+         && ranges[1] == ByteRange::new(0x20, 0x20)
+     {
+-        return Some(quote! { __b.is_ascii_whitespace() });
++        return Some(quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) });
+     }
+ 
+     // [a-zA-Z] -- 2 ranges for alpha
+diff --git a/crates/core/src/generate/regex/emit/mod.rs b/crates/core/src/generate/regex/emit/mod.rs
+index 518ed7d40..d28372379 100644
+--- a/crates/core/src/generate/regex/emit/mod.rs
++++ b/crates/core/src/generate/regex/emit/mod.rs
+@@ -110,7 +110,7 @@ fn emit_regex_fast_path(pattern: &str, opts: &EmitOpts) -> Option<TokenStream> {
+                     } else {
+                         let mut __pos = __start;
+                         while __pos < state.src_bytes.len()
+-                            && unsafe { *state.src_bytes.get_unchecked(__pos) }.is_ascii_whitespace()
++                            && { let __c: u8 = unsafe { *state.src_bytes.get_unchecked(__pos) }; __c == b' ' || __c.wrapping_sub(b'\t') < 5 }
+                         {
+                             __pos += 1;
+                         }
+diff --git a/crates/core/src/generate/regex/patterns/shorthand.rs b/crates/core/src/generate/regex/patterns/shorthand.rs
+index 5b05bb350..1da87fff1 100644
+--- a/crates/core/src/generate/regex/patterns/shorthand.rs
++++ b/crates/core/src/generate/regex/patterns/shorthand.rs
+@@ -77,7 +77,7 @@ pub fn emit_predicate(class: ShorthandClass) -> TokenStream {
+     match class {
+         ShorthandClass::Digit => quote! { __b.is_ascii_digit() },
+         ShorthandClass::Word => quote! { (__b.is_ascii_alphanumeric() || __b == b'_') },
+-        ShorthandClass::Whitespace => quote! { __b.is_ascii_whitespace() },
++        ShorthandClass::Whitespace => quote! { (__b == b' ' || __b.wrapping_sub(b'\t') < 5) },
+         ShorthandClass::Alpha => quote! { __b.is_ascii_alphabetic() },
+         ShorthandClass::Alphanumeric => quote! { __b.is_ascii_alphanumeric() },
+         ShorthandClass::Hex => quote! { __b.is_ascii_hexdigit() },

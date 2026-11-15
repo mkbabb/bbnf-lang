@@ -1,0 +1,11 @@
+manifest=grammar/MANIFEST sha256=358f4bf18c6aa3f7dbc42691475c53ab1fc5ce7047bf06462b6d3ba0773be598
+grammar=ebnf arm=root oracles=2 inputs=617 accept=435 reject=182 refused=0 crash=0 divergences=374 unruled=0 self-check=ok
+  oracle=peggy judged=617 agree=617 diverge=0 ruled=0
+  oracle=ts-package judged=617 agree=243 diverge=374 ruled=374
+grammar=bnf arm=root oracles=2 inputs=616 accept=233 reject=383 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=peggy judged=616 agree=616 diverge=0 ruled=0
+  oracle=ts-package judged=616 agree=616 diverge=0 ruled=0
+grammar=math arm=root oracles=2 inputs=623 accept=453 reject=170 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=peggy judged=623 agree=623 diverge=0 ruled=0
+  oracle=ts-package judged=623 agree=623 diverge=0 ruled=0
+rc=0

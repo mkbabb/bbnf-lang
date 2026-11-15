@@ -1,0 +1,137 @@
+head=f5e8eab01a32dc3c6d12d1e7a8c5f528795fedb1 mutant=M2 ref-call pre-skip restored files=       1
+     Removed 0 files
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.24s
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.76s
+[xtask::regen] bbnf: compile_paths_request started (1 paths, structural=true, prettify=true)
+Note: sub-variant type collision between `term::term_2` and `value_atom::value_atom_3` (Tuple([Span, BoxedEnum, Span])). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] bbnf: compile_paths_request done in 11.588416ms
+[xtask::regen] bbnf: generate_all done in 52.734167ms
+[xtask::regen] bbnf: prettyplease done in 190.034ms
+regen bbnf: wrote 1104684 bytes to crates/core/src/grammar/generated/bbnf.rs
+[xtask::regen] json: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] json: compile_paths_request done in 2.03ms
+[xtask::regen] json: generate_all done in 7.477667ms
+[xtask::regen] json: prettyplease done in 32.48325ms
+regen json: wrote 184640 bytes to crates/core/src/grammar/generated/json.rs
+[xtask::regen] css_l4: compile_paths_request started (1 paths, structural=false, prettify=true)
+Note: sub-variant type collision between `__pattern_90b9f441ae92fa6c::__pattern_90b9f441ae92fa6c_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `valueUnit::valueUnit_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+Note: sub-variant type collision between `mathValue::mathValue_0` and `value::value_1` (F64). Codegen will resolve by rule-scoped lookup.
+[xtask::regen] css_l4: compile_paths_request done in 86.046584ms
+[xtask::regen] css_l4: generate_all done in 164.486833ms
+[xtask::regen] css_l4: prettyplease done in 816.027209ms
+regen css_l4: wrote 6057337 bytes to crates/core/src/grammar/generated/css_l4.rs
+[xtask::regen] css_pretty: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] css_pretty: compile_paths_request done in 5.282ms
+[xtask::regen] css_pretty: generate_all done in 30.984583ms
+[xtask::regen] css_pretty: prettyplease done in 77.115ms
+regen css_pretty: wrote 563671 bytes to crates/core/src/grammar/generated/css_pretty.rs
+[xtask::regen] google_sheets: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] google_sheets: compile_paths_request done in 10.385667ms
+[xtask::regen] google_sheets: generate_all done in 20.606959ms
+[xtask::regen] google_sheets: prettyplease done in 98.16225ms
+regen google_sheets: wrote 694573 bytes to crates/core/src/grammar/generated/google_sheets.rs
+[xtask::regen] ebnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] ebnf: compile_paths_request done in 3.633208ms
+[xtask::regen] ebnf: generate_all done in 7.390042ms
+[xtask::regen] ebnf: prettyplease done in 56.342875ms
+regen ebnf: wrote 367030 bytes to crates/core/src/grammar/generated/ebnf.rs
+[xtask::regen] bnf: compile_paths_request started (1 paths, structural=false, prettify=true)
+[xtask::regen] bnf: compile_paths_request done in 1.662042ms
+[xtask::regen] bnf: generate_all done in 6.457875ms
+[xtask::regen] bnf: prettyplease done in 24.143958ms
+regen bnf: wrote 153784 bytes to crates/core/src/grammar/generated/bnf.rs
+[xtask::regen] csv: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] csv: compile_paths_request done in 1.218ms
+[xtask::regen] csv: generate_all done in 4.859625ms
+[xtask::regen] csv: prettyplease done in 12.607792ms
+regen csv: wrote 72006 bytes to crates/core/src/grammar/generated/csv.rs
+[xtask::regen] math: compile_paths_request started (1 paths, structural=false, prettify=false)
+[xtask::regen] math: compile_paths_request done in 989.125µs
+[xtask::regen] math: generate_all done in 1.408708ms
+[xtask::regen] math: prettyplease done in 4.977916ms
+regen math: wrote 30008 bytes to crates/core/src/grammar/generated/math.rs
+regen rc=0
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.64s
+────────────
+ Nextest run ID 2529ac86-5622-4da2-aa5a-74cc87e7136b with nextest profile: default
+    Starting 3 tests across 1 binary
+        PASS [   0.009s] (1/3) bbnf::rb_root_whitespace json_reads_its_question_w_and_its_ws_rule_each_by_its_own_set
+        PASS [   0.009s] (2/3) bbnf::rb_root_whitespace the_cases_the_class_does_not_touch_are_read
+  TRY 1 FAIL [   0.011s] (───) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  stdout ───
+
+    running 1 test
+    test root_reads_only_the_whitespace_the_grammar_reads ... FAILED
+
+    failures:
+
+    failures:
+        root_reads_only_the_whitespace_the_grammar_reads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'root_reads_only_the_whitespace_the_grammar_reads' (11111215) panicked at crates/core/tests/rb_root_whitespace.rs:63:5:
+    5 verdicts differ from the grammar's text:
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    ebnf refused "a = '\t' ;"
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+   DELAY 2/2 by   1.000s (───) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  TRY 2 FAIL [   0.011s] (3/3) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  stdout ───
+
+    running 1 test
+    test root_reads_only_the_whitespace_the_grammar_reads ... FAILED
+
+    failures:
+
+    failures:
+        root_reads_only_the_whitespace_the_grammar_reads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'root_reads_only_the_whitespace_the_grammar_reads' (11111573) panicked at crates/core/tests/rb_root_whitespace.rs:63:5:
+    5 verdicts differ from the grammar's text:
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    ebnf refused "a = '\t' ;"
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+────────────
+     Summary [   1.026s] 3 tests run: 2 passed, 1 failed, 0 skipped
+  TRY 2 FAIL [   0.011s] (3/3) bbnf::rb_root_whitespace root_reads_only_the_whitespace_the_grammar_reads
+  stdout ───
+
+    running 1 test
+    test root_reads_only_the_whitespace_the_grammar_reads ... FAILED
+
+    failures:
+
+    failures:
+        root_reads_only_the_whitespace_the_grammar_reads
+
+    test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+  stderr ───
+
+    thread 'root_reads_only_the_whitespace_the_grammar_reads' (11111573) panicked at crates/core/tests/rb_root_whitespace.rs:63:5:
+    5 verdicts differ from the grammar's text:
+    ebnf refused "a = \" \" ;"
+    ebnf refused "a = \"\r\" ;"
+    ebnf refused "a = '\t' ;"
+    bnf refused "<a> ::= \"x\"\u{b}<b> ::= \"y\""
+    bnf refused "<a> ::= \"x\"\u{c}\n<b> ::= \"y\""
+    note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+error: test run failed
+rc=100

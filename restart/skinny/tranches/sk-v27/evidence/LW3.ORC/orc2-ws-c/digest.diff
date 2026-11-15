@@ -1,0 +1,16 @@
+113,115c113,115
+< grammar/misc/emoji.bbnf	ts	err 8bae5b58c60116fe
+< grammar/misc/emoji.bbnf	wasm	err 8bae5b58c60116fe
+< grammar/misc/emoji.bbnf	rust	err 8bae5b58c60116fe
+---
+> grammar/misc/emoji.bbnf	ts	err b611c7a4bdf051b5
+> grammar/misc/emoji.bbnf	wasm	err b611c7a4bdf051b5
+> grammar/misc/emoji.bbnf	rust	err b611c7a4bdf051b5
+167,169c167,169
+< typescript/test/fixtures/grammar/lang/emoji.bbnf	ts	err 2130a2a5c1403e8c
+< typescript/test/fixtures/grammar/lang/emoji.bbnf	wasm	err 2130a2a5c1403e8c
+< typescript/test/fixtures/grammar/lang/emoji.bbnf	rust	err 2130a2a5c1403e8c
+---
+> typescript/test/fixtures/grammar/lang/emoji.bbnf	ts	err 88e4b4292efa3c7b
+> typescript/test/fixtures/grammar/lang/emoji.bbnf	wasm	err 88e4b4292efa3c7b
+> typescript/test/fixtures/grammar/lang/emoji.bbnf	rust	err 88e4b4292efa3c7b

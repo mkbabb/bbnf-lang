@@ -1,0 +1,34 @@
+head=80672a9885b04370320d5bae0a3aa6b6e57a5b7b dirty=0
+$ g1 --all --arms root --manifest grammar/MANIFEST
+manifest=grammar/MANIFEST sha256=358f4bf18c6aa3f7dbc42691475c53ab1fc5ce7047bf06462b6d3ba0773be598
+grammar=bbnf arm=root oracles=1 inputs=70 accept=68 reject=2 refused=0 crash=0 divergences=23 unruled=1 self-check=ok
+  oracle=ts-frontend judged=70 agree=47 diverge=23 ruled=22
+    in-tree:crates/gorgeous/tests/corpus/g3/bbnf/comments-in-rule.bbnf [ts-frontend]: expected reject, arm accepted
+grammar=json arm=root oracles=3 inputs=323 accept=111 reject=210 refused=0 crash=2 divergences=16 unruled=4 self-check=ok
+  oracle=jsontestsuite judged=283 agree=281 diverge=2 ruled=0
+  oracle=serde_json judged=104 agree=104 diverge=0 ruled=0
+  oracle=ts-package judged=323 agree=309 diverge=14 ruled=12
+    jsontestsuite/test_parsing/n_structure_100000_opening_arrays.json [jsontestsuite]: arm reported crash
+    jsontestsuite/test_parsing/n_structure_open_array_object.json [jsontestsuite]: arm reported crash
+    jsontestsuite/test_parsing/n_structure_100000_opening_arrays.json [ts-package]: arm reported crash
+    jsontestsuite/test_parsing/n_structure_open_array_object.json [ts-package]: arm reported crash
+grammar=css_l4 arm=root oracles=1 inputs=3 accept=3 reject=0 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=valuejs-leaves judged=0 agree=0 diverge=0 ruled=0
+grammar=css_l4 arm=root oracle=valuejs-leaves leaves=115 cases=14386 refused-leaves=38 diverging-leaves=39 diverging-cases=4578 ruled-leaves=39 unruled=0
+grammar=css_pretty arm=root oracles=1 inputs=3 accept=3 reject=0 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=valuejs-leaves judged=0 agree=0 diverge=0 ruled=0
+grammar=css_pretty arm=root oracle=valuejs-leaves leaves=115 cases=14386 refused-leaves=38 diverging-leaves=39 diverging-cases=4578 ruled-leaves=39 unruled=0
+grammar=google_sheets arm=root oracles=1 inputs=3 accept=3 reject=0 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=ts-package judged=3 agree=3 diverge=0 ruled=0
+grammar=ebnf arm=root oracles=2 inputs=617 accept=90 reject=527 refused=0 crash=0 divergences=384 unruled=0 self-check=ok
+  oracle=peggy judged=617 agree=264 diverge=353 ruled=353
+  oracle=ts-package judged=617 agree=586 diverge=31 ruled=31
+grammar=bnf arm=root oracles=2 inputs=616 accept=139 reject=477 refused=0 crash=0 divergences=280 unruled=0 self-check=ok
+  oracle=peggy judged=616 agree=476 diverge=140 ruled=140
+  oracle=ts-package judged=616 agree=476 diverge=140 ruled=140
+grammar=csv arm=root oracles=1 inputs=2 accept=0 reject=2 refused=0 crash=0 divergences=0 unruled=0 self-check=ok
+  oracle=ts-package judged=2 agree=2 diverge=0 ruled=0
+grammar=math arm=root oracles=2 inputs=623 accept=459 reject=164 refused=0 crash=0 divergences=12 unruled=0 self-check=ok
+  oracle=peggy judged=623 agree=617 diverge=6 ruled=6
+  oracle=ts-package judged=623 agree=617 diverge=6 ruled=6
+rc=1

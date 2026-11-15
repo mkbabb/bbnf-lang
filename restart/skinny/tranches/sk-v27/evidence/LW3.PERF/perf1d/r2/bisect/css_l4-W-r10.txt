@@ -1,0 +1,6 @@
+Timer precision: 41 ns
+css_l4        fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ bootstrap  10.04 ms      │ 14.49 ms      │ 12.48 ms      │ 12.32 ms      │ 100     │ 100
+├─ normalize  101.9 µs      │ 176.7 µs      │ 105.3 µs      │ 113 µs        │ 100     │ 100
+╰─ tailwind   89.34 ms      │ 128.3 ms      │ 111.5 ms      │ 110 ms        │ 100     │ 100
+

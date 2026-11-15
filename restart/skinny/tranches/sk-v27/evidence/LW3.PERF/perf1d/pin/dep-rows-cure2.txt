@@ -1,0 +1,47 @@
+bbnf-corpus	*	dev	true		false		path
+bbnf-ir	^0.2.0	normal	true		false		path
+bbnf-path	^0.1	dev	true		false		path
+bbnf-ser	^0.1	normal	true		false		path
+blake3	^1.8	normal	false	std	false		registry+https://github.com/rust-lang/crates.io-index
+cssparser	^0.34	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+dhat	^0.3	normal	true		true		registry+https://github.com/rust-lang/crates.io-index
+divan	^0.1	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+fast-float2	^0.2	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+iai-callgrind	^0.12	dev	true		false	cfg(target_os = "linux")	registry+https://github.com/rust-lang/crates.io-index
+indexmap	^2	normal	true		false		registry+https://github.com/rust-lang/crates.io-index
+jiter	^0.8	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+jsonschema	^0.49.2	dev	false		false		registry+https://github.com/rust-lang/crates.io-index
+lightningcss	^1.0.0-alpha.71	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+mimalloc	^0.1	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+nom	^7	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+parse-that-egraph	^0.1.0	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387
+parse-that-regex	^0.1.0	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387
+parse_that	^0.4	dev	true		false		git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387
+parse_that	^0.4	normal	true		false		git+https://github.com/mkbabb/parse-that?rev=bacc888a46e6c397bf119adecd69e0f0beb7c387
+pest	^2.5	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+pest_grammars	^2.5	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+pprint	^0.5.0-alpha.0	dev	true		false		git+https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9
+pprint	^0.5.0-alpha.0	normal	true		false		git+https://github.com/mkbabb/pprint?rev=69d1fe9fa522f18e129fbedea0288a9c19b5bbf9
+prettyplease	^0.2	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+proc-macro2	^1	normal	true		false		registry+https://github.com/rust-lang/crates.io-index
+quote	^1	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+quote	^1	normal	true		false		registry+https://github.com/rust-lang/crates.io-index
+regex	^1	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+rustc-hash	^2	normal	true		false		registry+https://github.com/rust-lang/crates.io-index
+serde	^1	dev	true	derive	false		registry+https://github.com/rust-lang/crates.io-index
+serde	^1	normal	false	derive,std	false		registry+https://github.com/rust-lang/crates.io-index
+serde_json	^1	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+serde_json	^1	normal	false	std	false		registry+https://github.com/rust-lang/crates.io-index
+serde_json_borrow	^0.9	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+sha2	^0.10	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+simd-json	^0.14	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+sonic-rs	^0.5	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+syn	^2	dev	true	full,visit	false		registry+https://github.com/rust-lang/crates.io-index
+syn	^2	normal	true	full	false		registry+https://github.com/rust-lang/crates.io-index
+tempfile	^3	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+toml	^1.1.4	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+tree-sitter	^0.25	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+tree-sitter-json	^0.24	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+trybuild	^1	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+wasmtime	^29	dev	true		false		registry+https://github.com/rust-lang/crates.io-index
+winnow	^0.7	dev	true		false		registry+https://github.com/rust-lang/crates.io-index

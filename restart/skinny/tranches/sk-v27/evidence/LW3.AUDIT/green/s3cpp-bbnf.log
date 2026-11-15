@@ -1,0 +1,31 @@
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/gorgeous)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.44s
+     Running tests/bbnf.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/bbnf-00d839627e264694)
+
+running 12 tests
+test test_prettify_simple_rule ... ok
+test bbnf_prettify_refuses_unconsumed_input ... ok
+test test_prettify_bbnf_multi_rule ... ok
+test test_prettify_bbnf_alternation ... ok
+test test_prettify_parse_that_regex ... ok
+test test_prettify_bbnf_idempotent ... ok
+test bbnf_line_comment_beginning_a_line_inside_a_rule_keeps_the_next_token ... ok
+test bbnf_five_mixed_comments_in_a_row_inside_a_rule_keep_the_next_token ... ok
+test bbnf_three_line_comments_in_a_row_inside_a_rule_keep_the_next_token ... ok
+test bbnf_top_level_line_comment_output_is_unchanged ... ok
+test bbnf_line_comment_before_the_rule_terminator_keeps_the_terminator ... ok
+test bbnf_line_comment_inside_a_rule_is_read_and_kept ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Compiling gorgeous v0.2.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-audit/crates/gorgeous)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.52s
+     Running tests/g3_trivia.rs (/Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang/debug/deps/g3_trivia-a41eac59beefd8de)
+
+running 2 tests
+test g3_corpus_bears_comments_where_the_grammar_has_them ... ok
+test g3_token_and_comment_stream_is_kept_and_formatting_is_idempotent ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+bbnf=0 g3=0

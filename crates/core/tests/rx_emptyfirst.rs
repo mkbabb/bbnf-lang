@@ -167,3 +167,43 @@ fn google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq() {
         .collect();
     assert!(refused.is_empty(), "google_sheets refused {refused:?}");
 }
+
+/// RULINGS 2026-11-15a RXEFB-D (a): an ArgList head is recorded (its matched
+/// text deposited on the call's compound) only when the call's `(` is its own
+/// next position. A head written as a regex or a literal and followed by a
+/// separate `"("` is the callee's name; a head whose match takes the `(` itself
+/// is the call's opening token, which the rule already names, and deposits
+/// nothing.
+const HEADS: &str = r#"
+number = /[0-9]+/ ;
+args = number , ("," >> number) * ;
+opened = /[oO][pP][eE][nN]\(/ , args ?w , ")" ;
+named = /[a-z]+/ , "(" , args ?w , ")" ;
+value = opened | named | number ;
+cell = /=?/ , value ;
+"#;
+
+#[test]
+fn arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position() {
+    let source = emitted(HEADS);
+    let marker = "pub fn parse_arglist_EmptyFirstParser_";
+    let body = |rule: &str| -> String {
+        let at = source
+            .find(&format!("{marker}{rule} <"))
+            .unwrap_or_else(|| panic!("`{rule}` is not emitted as an ArgList shape"));
+        let after = &source[at + marker.len()..];
+        let end = after.find("pub fn ").unwrap_or(after.len());
+        after[..end].to_string()
+    };
+    let deposit = "__head_text";
+    assert!(
+        body("named").contains(deposit),
+        "`named = /[a-z]+/ , \"(\" , …`: the head is followed by its own `(` position, so its \
+         text is the call's name and must be deposited on the call's compound"
+    );
+    assert!(
+        !body("opened").contains(deposit),
+        "`opened = /[oO][pP][eE][nN]\\(/ , …`: the head takes the `(` itself; it is the call's \
+         opening token and must deposit nothing"
+    );
+}

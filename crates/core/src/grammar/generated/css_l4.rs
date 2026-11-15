@@ -39942,6 +39942,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 55u32 as ::bbnf_ir::RuleId,
@@ -39973,13 +39974,85 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
-            let _ = parse_CssL4Parser_stylesheet__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            'try_branches: loop {
+                {
+                    let __alt_save_p = *p;
+                    let __alt_builder_checkpoint = builder.checkpoint();
+                    let __alt_result: ::core::result::Result<
+                        (),
+                        crate::runtime::DtaError,
+                    > = (|| {
+                        let _ = ({
+                            parse_wrap_CssL4Parser_string(
+                                input,
+                                p,
+                                state,
+                                builder,
+                                cursor,
+                            )
+                        })?;
+                        Ok(())
+                    })();
+                    match __alt_result {
+                        Ok(()) => {
+                            builder.commit(__alt_builder_checkpoint);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = __alt_save_p;
+                            builder.rollback(__alt_builder_checkpoint);
+                        }
+                    }
+                }
+                {
+                    let __alt_save_p = *p;
+                    let __alt_builder_checkpoint = builder.checkpoint();
+                    let __alt_result: ::core::result::Result<
+                        (),
+                        crate::runtime::DtaError,
+                    > = (|| {
+                        let __alt_span_lo: usize = *p;
+                        {
+                            let __scan_start = *p;
+                            let Some(match_len) = __regex_scan_CssL4Parser(
+                                "[^)\"'\\s]+",
+                                input,
+                                *p,
+                            ) else {
+                                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                                    offset: __scan_start as u32,
+                                });
+                            };
+                            *p += match_len as usize;
+                        }
+                        {
+                            let __alt_span_hi: usize = *p;
+                            let __alt_span_slice: &str = ::core::str::from_utf8(
+                                    &input[__alt_span_lo..__alt_span_hi],
+                                )
+                                .unwrap_or("");
+                            <_ as crate::runtime::StructBuilder>::push_leaf_with_str(
+                                builder,
+                                __alt_span_slice,
+                            );
+                        }
+                        Ok(())
+                    })();
+                    match __alt_result {
+                        Ok(()) => {
+                            builder.commit(__alt_builder_checkpoint);
+                            break 'try_branches;
+                        }
+                        Err(_) => {
+                            *p = __alt_save_p;
+                            builder.rollback(__alt_builder_checkpoint);
+                        }
+                    }
+                }
+                return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                    offset: *p as u32,
+                });
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [41u8] {
@@ -41928,6 +42001,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 67u32 as ::bbnf_ir::RuleId,
@@ -42045,6 +42119,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 68u32 as ::bbnf_ir::RuleId,
@@ -42247,6 +42322,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 70u32 as ::bbnf_ir::RuleId,
@@ -42475,6 +42551,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 72u32 as ::bbnf_ir::RuleId,
@@ -42731,6 +42808,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 74u32 as ::bbnf_ir::RuleId,
@@ -42746,13 +42824,19 @@ mod __cssl4parser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_CssL4Parser_stylesheet__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            {
+                let __scan_start = *p;
+                let Some(match_len) = __regex_scan_CssL4Parser(
+                    "[a-zA-Z][\\w-]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                    });
+                };
+                *p += match_len as usize;
+            }
             let at = *p;
             let end = at + 1usize;
             if input.len() < end || input[at..end] != [40u8] {
@@ -44434,6 +44518,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 82u32 as ::bbnf_ir::RuleId,
@@ -44465,13 +44550,16 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
-            let _ = parse_CssL4Parser_stylesheet__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            {
+                let __scan_start = *p;
+                let Some(match_len) = __regex_scan_CssL4Parser("--[\\w-]+", input, *p)
+                else {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                    });
+                };
+                *p += match_len as usize;
+            }
             let mut __reps: u32 = 0;
             while __reps < 1u32 {
                 let __save = *p;
@@ -44547,6 +44635,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 83u32 as ::bbnf_ir::RuleId,
@@ -44578,13 +44667,19 @@ mod __cssl4parser_emit_impl {
                 });
             }
             *p = end;
-            let _ = parse_CssL4Parser_stylesheet__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            {
+                let __scan_start = *p;
+                let Some(match_len) = __regex_scan_CssL4Parser(
+                    "[a-zA-Z_][\\w-]*",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                    });
+                };
+                *p += match_len as usize;
+            }
             let mut __reps: u32 = 0;
             while __reps < 1u32 {
                 let __save = *p;
@@ -45256,6 +45351,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 87u32 as ::bbnf_ir::RuleId,
@@ -47703,6 +47799,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 89u32 as ::bbnf_ir::RuleId,
@@ -47786,6 +47883,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 90u32 as ::bbnf_ir::RuleId,
@@ -47871,6 +47969,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 91u32 as ::bbnf_ir::RuleId,
@@ -47954,6 +48053,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 92u32 as ::bbnf_ir::RuleId,
@@ -48841,6 +48941,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 98u32 as ::bbnf_ir::RuleId,
@@ -49943,6 +50044,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 105u32 as ::bbnf_ir::RuleId,
@@ -50026,6 +50128,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 106u32 as ::bbnf_ir::RuleId,
@@ -50146,6 +50249,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 107u32 as ::bbnf_ir::RuleId,
@@ -50266,6 +50370,7 @@ mod __cssl4parser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 108u32 as ::bbnf_ir::RuleId,

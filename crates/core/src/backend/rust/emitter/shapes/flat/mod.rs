@@ -55,7 +55,7 @@ use proc_macro2::TokenStream;
 use bbnf_ir::registry::EmitStrategy;
 
 mod struct_direct;
-pub(crate) use struct_direct::emit_position_struct_direct;
+pub(crate) use struct_direct::{emit_position_core_struct_direct, emit_position_struct_direct};
 
 /// Emit `pub fn parse_flat_<grammar>_<rule>(input, p, state,
 /// builder) -> Result<(), DtaError>`.

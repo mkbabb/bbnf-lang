@@ -4,9 +4,10 @@
 //!
 //! Emits per-grammar ArgList-shape parse functions for
 //! `name(arg, arg, …)` positional function calls. The emitted body
-//! matches the function-name head, consumes the `(`, runs the
-//! positional-arg body via the grammar's value-position dispatcher,
-//! matches the `)`, and emits a `Rule` outer compound covering the
+//! matches the function-name head, consumes the `(`, parses each
+//! position by the rule or terminal the grammar's text names there
+//! (never by the root rule's dispatcher; LW3.RX-EMPTYFIRST-B), matches
+//! the `)`, and emits a `Rule` outer compound covering the
 //! whole call site.
 //!
 //! # Head variants
@@ -35,7 +36,7 @@
 //!   span_lo = *p
 //!   <head match — Literal byte-seq / dispatcher call for Ref / Regex>
 //!   [ "(" Literal leaf — when head doesn't consume the paren ]
-//!   <arg body — each inter-paren position via dispatcher>
+//!   <arg body — each inter-paren position by its own rule or terminal>
 //!   ")" Literal leaf
 //!   span_hi = *p
 //! }
@@ -196,6 +197,9 @@ fn emit_parse_arglist_struct_direct(
         where
             __P: for<'__c> crate::path::schema::PathSchema<'__c>,
         {
+            // The inline positions (LW3.RX-EMPTYFIRST-B) checkpoint and
+            // roll back through the builder's trait methods.
+            use crate::runtime::builder::StructBuilder as _;
             let _ = cursor;
             let __layout: ::bbnf_ir::registry::StructLayout =
                 ::bbnf_ir::registry::StructLayout {
@@ -407,17 +411,23 @@ fn emit_struct_direct_position_core(
                 #floor
             }
         }
-        // Alt / Regex / Negate / Minus / TokenDispatch — fall through
-        // to the dispatcher; the dispatcher's body under StructDirect
-        // takes the same builder argument.
+        // sk-v27 LW3.RX-EMPTYFIRST-B (RULINGS 2026-11-14j RXEF-A (a), QX-1
+        // clause 7): Alt / Regex / Negate / Minus / TokenDispatch are
+        // parsed as the grammar's text writes them at this position (the
+        // regex scanned, each alternative tried), by the Flat emitter's
+        // inline walker. These positions once called the root rule's value
+        // dispatcher, which parsed an argument (or a regex head such as
+        // Sheets' `/[lL][eE][tT]\(/`) as a whole entry-rule match.
         IrNode::Alt(_, _)
         | IrNode::Regex(_)
         | IrNode::Negate(_)
         | IrNode::Minus(_, _)
-        | IrNode::TokenDispatch { .. } => {
-            quote! {
-                let _ = #dispatcher_ident(input, p, state, builder, cursor)?;
-            }
-        }
+        | IrNode::TokenDispatch { .. } => super::flat::emit_position_core_struct_direct(
+            node,
+            support_mod,
+            dispatcher_ident,
+            grammar_suffix,
+            ir,
+        ),
     }
 }

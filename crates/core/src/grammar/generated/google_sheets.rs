@@ -7955,6 +7955,7 @@ mod __googlesheetsparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 29u32 as ::bbnf_ir::RuleId,
@@ -7970,13 +7971,19 @@ mod __googlesheetsparser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_GoogleSheetsParser_formula__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            {
+                let __scan_start = *p;
+                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                    "[lL][aA][mM][bB][dD][aA]\\(",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                    });
+                };
+                *p += match_len as usize;
+            }
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
                 parse_flat_GoogleSheetsParser_lambda_params(
@@ -8065,6 +8072,7 @@ mod __googlesheetsparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 31u32 as ::bbnf_ir::RuleId,
@@ -8321,6 +8329,7 @@ mod __googlesheetsparser_emit_impl {
     where
         __P: for<'__c> crate::path::schema::PathSchema<'__c>,
     {
+        use crate::runtime::builder::StructBuilder as _;
         let _ = cursor;
         let __layout: ::bbnf_ir::registry::StructLayout = ::bbnf_ir::registry::StructLayout {
             rule_id: 33u32 as ::bbnf_ir::RuleId,
@@ -8336,13 +8345,19 @@ mod __googlesheetsparser_emit_impl {
             'p,
         > as crate::runtime::StructBuilder>::begin_compound(builder, &__layout);
         let __body_result: ::core::result::Result<(), crate::runtime::DtaError> = (|| {
-            let _ = parse_GoogleSheetsParser_formula__value(
-                input,
-                p,
-                state,
-                builder,
-                cursor,
-            )?;
+            {
+                let __scan_start = *p;
+                let Some(match_len) = __regex_scan_GoogleSheetsParser(
+                    "[lL][eE][tT]\\(",
+                    input,
+                    *p,
+                ) else {
+                    return ::core::result::Result::Err(crate::runtime::DtaError::Syntax {
+                        offset: __scan_start as u32,
+                    });
+                };
+                *p += match_len as usize;
+            }
             let _ = __shape_support_GoogleSheetsParser::skip_space(input, p, state);
             let _ = ({
                 parse_flat_GoogleSheetsParser_let_args(input, p, state, builder, cursor)

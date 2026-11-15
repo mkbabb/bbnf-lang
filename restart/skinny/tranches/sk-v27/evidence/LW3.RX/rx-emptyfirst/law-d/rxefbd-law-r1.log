@@ -1,0 +1,12 @@
+clean ax-iter bbnf removed=1613 left=0
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/core)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 9.31s
+────────────
+ Nextest run ID 753f4854-2855-4b50-8e03-b1a291fe0af8 with nextest profile: default
+    Starting 4 tests across 1 binary
+        PASS [   0.013s] (1/4) bbnf::rx_emptyfirst google_sheets_reads_a_formula_with_or_without_its_optional_leading_eq
+        PASS [   0.022s] (2/4) bbnf::rx_emptyfirst arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher
+        PASS [   0.023s] (3/4) bbnf::rx_emptyfirst arglist_head_is_recorded_only_when_its_paren_is_its_own_next_position
+        PASS [   0.025s] (4/4) bbnf::rx_emptyfirst nullable_regex_is_not_refused_by_first_byte_check
+────────────
+     Summary [   0.026s] 4 tests run: 4 passed, 0 skipped

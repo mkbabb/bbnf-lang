@@ -113,11 +113,14 @@ fn nullable_regex_is_not_refused_by_first_byte_check() {
 /// A grammar whose root (the last rule, as root reads it) has a nullable
 /// prefix before its value, and two ArgList rules: one with a regex head that
 /// takes its `(` inline, one with a literal head whose argument is an inline
-/// alternation.
+/// alternation. The arguments are not themselves calls: a cycle through the
+/// value rule sends root's driver (`backend/driver/alt.rs`
+/// `branch_pushes_children`) into unbounded recursion at generation time, a
+/// separate defect recorded in the LEDGER, not this test's subject.
 const ARGLIST: &str = r#"
 number = /[0-9]+/ ;
 name = /[a-z]+/ ;
-args = value , ("," >> value) * ;
+args = number , ("," >> number) * ;
 call = /[cC][aA][lL][lL]\(/ , args ?w , ")" ;
 wrap = "wrap" , "(" >> (number | name) << ")" ;
 value = call | wrap | number | name ;

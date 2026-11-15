@@ -5,5 +5,5 @@ k=$1; n=$2; L=$HOME/.dev-logs/bbnf-lockstep/lw3/rx-emptyfirst; W=${3:-$HOME/Prog
 export CARGO_INCREMENTAL=0 CARGO_TARGET_DIR=$HOME/.dev-logs/bbnf-lockstep/lw3/target-bbnf-lang
 cd $W || exit 2
 echo "head=$(git rev-parse HEAD) dirty=$(git status --short | grep -vc '^??')" > $L/$k-r$n.log
-cargo clean -p bbnf >> $L/$k-r$n.log 2>&1
+cargo clean -p bbnf --profile ax-iter >> $L/$k-r$n.log 2>&1
 cargo nextest run --cargo-profile ax-iter -p bbnf --test rx_emptyfirst --no-fail-fast >> $L/$k-r$n.log 2>&1; echo "rc=$?" >> $L/$k-r$n.log

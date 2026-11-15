@@ -1,0 +1,4 @@
+     Summary [  56.359s] 1686 tests run: 1685 passed (1 slow), 1 failed, 27 skipped
+  TRY 1 FAIL [   0.240s] (─────────) bbnf::w3_semantic_pratt_contract analysis_surface_adds_no_first_or_exact_language_difference_carrier
+  TRY 2 FAIL [   0.240s] (1473/1686) bbnf::w3_semantic_pratt_contract analysis_surface_adds_no_first_or_exact_language_difference_carrier
+rc=100

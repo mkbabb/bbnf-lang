@@ -1,0 +1,10 @@
+cure head=e6bed1f6d77a3d14fad2d302361fdadaffca473a dirty=0
+base head=785027c44 (copied from /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/bench/bins-base.txt)
+cfdb31fd46c32acca857047caa03e2b644c9063830e49eac97a9b35569a6a8c3  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/r3/bins/css_l4-base
+59ec8f348c31901237886315847436c4da2df0554c906f81ae94d1d197c66082  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/r3/bins/json_monolithic-base
+239ad3a8e4c6d79da02f906669dfac37606a6b16c490202aaa661767eaef7b52  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/r3/bins/css_l4-cure
+66b50116189e1573facbacf2d75e1c52865f70390a8cdbad664aa9fcb02598ad  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/r3/bins/json_monolithic-cure
+datas10x-base head=785027c44624d54a768349ecbfcb2efcfc022716 3e0391d9205017e82a38945a7b80487239e396a695a840d8b38994afcdba62c8  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/r3/bins/datas10x-base
+datas10x-cure head=e6bed1f6d77a3d14fad2d302361fdadaffca473a a4bc25085f1bf4fc77c928ad53baaf1960aae19b5f1d7232bb2c9d32e8206e53  /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/r3/bins/datas10x-cure
+read A start 2026-11-14 20:54:36 load { 15.26 15.43 14.43 }
+read A end 2026-11-14 20:59:58 load { 10.00 12.85 13.62 }

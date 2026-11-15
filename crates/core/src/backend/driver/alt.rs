@@ -41,18 +41,43 @@ use crate::backend::{AltBranchInfo, CallStrategy, Emitter, KeyDispatchBranch, Va
 /// the branch's children are the inlined body — check that body
 /// recursively, not the Ref target's function.
 pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode, dstate: &DriverState) -> bool {
+    pushes_children_on_path(ir, node, dstate, &mut Vec::new())
+}
+
+/// [`branch_pushes_children`] with `visited`, the rule ids inlined on the
+/// way to `node`.
+///
+/// sk-v27 LW3.GEN-RECURSE (RULINGS 2026-11-15a GENREC-Q (a), QX-1 clause 8):
+/// a `Ref` already in `visited` closes a reference cycle through inlined
+/// rules (`value -> call -> args -> value`); it answers `true`, the answer a
+/// called (non-inlined) rule gives, so the analysis terminates. Without the
+/// set the walk recursed until the stack overflowed at generation time
+/// (`grammar/css/l4/keyframes.bbnf`). A grammar with no such cycle never
+/// meets a visited `Ref`, so its classification is unchanged.
+fn pushes_children_on_path(
+    ir: &GrammarIR,
+    node: &IrNode,
+    dstate: &DriverState,
+    visited: &mut Vec<bbnf_ir::RuleId>,
+) -> bool {
     match node {
         IrNode::Literal(_) | IrNode::Regex(_) | IrNode::Epsilon => false,
-        IrNode::Map { inner, .. } => branch_pushes_children(ir, inner, dstate),
-        IrNode::OptionalWhitespace(inner) => branch_pushes_children(ir, inner, dstate),
+        IrNode::Map { inner, .. } => pushes_children_on_path(ir, inner, dstate, visited),
+        IrNode::OptionalWhitespace(inner) => pushes_children_on_path(ir, inner, dstate, visited),
         IrNode::Negate(_) => false,
 
         IrNode::Ref(target) => {
+            if visited.contains(target) {
+                return true;
+            }
             if let Some(rule) = ir.rules.iter().find(|r| r.id == *target) {
                 let inlined = matches!(dstate.call_strategy(*target), CallStrategy::InlineBody)
                     || rule.meta.is_transparent;
                 if inlined {
-                    return branch_pushes_children(ir, &rule.body, dstate);
+                    visited.push(*target);
+                    let pushes = pushes_children_on_path(ir, &rule.body, dstate, visited);
+                    visited.pop();
+                    return pushes;
                 }
             }
             true
@@ -60,7 +85,7 @@ pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode, dstate: &DriverStat
 
         IrNode::Alt(branches, _) => branches
             .iter()
-            .any(|b| branch_pushes_children(ir, &b.node, dstate)),
+            .any(|b| pushes_children_on_path(ir, &b.node, dstate, visited)),
         // AU.1.1 (second half): Seq branches whose children are all
         // leaves (literals, regex, pure maps) do not themselves push
         // child records — the Seq is an aggregate-shape producer, not
@@ -71,10 +96,10 @@ pub fn branch_pushes_children(ir: &GrammarIR, node: &IrNode, dstate: &DriverStat
         // `length = number, lengthUnit`.
         IrNode::Seq(children) => children
             .iter()
-            .any(|c| branch_pushes_children(ir, c, dstate)),
-        IrNode::Skip(kept, _) => branch_pushes_children(ir, kept, dstate),
-        IrNode::Next(_, kept) => branch_pushes_children(ir, kept, dstate),
-        IrNode::Minus(lhs, _) => branch_pushes_children(ir, lhs, dstate),
+            .any(|c| pushes_children_on_path(ir, c, dstate, visited)),
+        IrNode::Skip(kept, _) => pushes_children_on_path(ir, kept, dstate, visited),
+        IrNode::Next(_, kept) => pushes_children_on_path(ir, kept, dstate, visited),
+        IrNode::Minus(lhs, _) => pushes_children_on_path(ir, lhs, dstate, visited),
 
         _ => true,
     }

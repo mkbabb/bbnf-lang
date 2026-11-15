@@ -1,0 +1,4 @@
+Timer precision: 41 ns
+perf1d_datas10x  fastest       │ slowest       │ median        │ mean          │ samples │ iters
+╰─ data_s        23.94 µs      │ 43.61 µs      │ 27.04 µs      │ 27.77 µs      │ 100     │ 1000
+

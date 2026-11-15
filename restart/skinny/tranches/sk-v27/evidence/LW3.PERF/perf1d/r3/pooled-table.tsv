@@ -1,0 +1,10 @@
+bench	case	read-A_rounds	read-A_base_min_us	read-A_cure_min_us	read-A_cure/base	read-B_rounds	read-B_base_min_us	read-B_cure_min_us	read-B_cure/base	pooled
+css_l4	bootstrap	12	8850.00	8950.00	1.011	12	8712.00	8714.00	1.000	1.000
+css_l4	normalize	12	98.37	98.58	1.002	12	95.70	95.12	0.994	0.994
+css_l4	tailwind	12	88530.00	88140.00	0.996	12	87280.00	85520.00	0.980	0.980
+datas10x	data_s	12	22.36	22.72	1.016	12	22.19	22.23	1.002	1.002
+json_monolithic	canada	12	2860.00	2984.00	1.043	12	2766.00	2877.00	1.040	1.040
+json_monolithic	citm	12	855.40	928.20	1.085	12	846.90	883.40	1.043	1.043
+json_monolithic	data_s	12	21.87	23.62	1.080	12	21.83	23.08	1.057	1.057
+json_monolithic	twitter	12	384.70	413.90	1.076	12	382.20	394.80	1.033	1.033
+# worst pooled 1.057

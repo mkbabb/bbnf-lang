@@ -1,0 +1,15 @@
+   Compiling bbnf v0.3.0 (/Users/mkbabb/Programming/bbnf-lang-wt/lw3-rx-emptyfirst/crates/core)
+    Finished `ax-iter` profile [unoptimized + debuginfo] target(s) in 0.61s
+────────────
+ Nextest run ID 9de2b79c-2dc4-4dd0-b61a-a38bbbe90956 with nextest profile: default
+    Starting 7 tests across 2 binaries
+        PASS [   0.012s] (1/7) bbnf::projection_totality struct_direct_documents_expose_projection_values
+        PASS [   0.015s] (2/7) bbnf::named_type_preservation named_runtime_documents_preserve_concrete_values
+        PASS [   0.015s] (3/7) bbnf::projection_totality struct_direct_documents_have_concrete_roots
+        PASS [   0.015s] (4/7) bbnf::named_type_preservation json_named_types
+        PASS [   0.103s] (5/7) bbnf::named_type_preservation css_l4_named_types
+        PASS [   0.127s] (6/7) bbnf::named_type_preservation no_spurious_named_entries
+        PASS [   0.127s] (7/7) bbnf::named_type_preservation admitted_projection_surfaces
+────────────
+     Summary [   0.128s] 7 tests run: 7 passed, 0 skipped
+rc=0

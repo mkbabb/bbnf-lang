@@ -13,6 +13,14 @@
 //! adapter patterns (the LUT is emitted at four or more), reading the
 //! emitted adapter: the nullable pattern's branch must admit every byte.
 //! The second pins google_sheets reading its text as written.
+//!
+//! LW3.RX-EMPTYFIRST-B (RULINGS 2026-11-14j RXEF-A (a), QX-1 clause 7): the
+//! cure above unmasked a second defect. The ArgList emitter
+//! (`shapes/arglist.rs`) parsed every position it had no direct call for (a
+//! regex head, an inline alternation, a rule with no shape of its own) with
+//! the root rule's value dispatcher, so an argument was parsed as a whole
+//! entry-rule match. The third test reads every emitted ArgList body of a
+//! minimal grammar (not google_sheets) for a call into the root dispatcher.
 
 use bbnf::ParserAttributes;
 use bbnf::generate::generate_all;
@@ -99,6 +107,51 @@ fn nullable_regex_is_not_refused_by_first_byte_check() {
          e.g. {:?}; it matches the empty string at every one of them",
         refused.len(),
         refused.iter().take(8).map(|&b| b as u8 as char).collect::<Vec<_>>()
+    );
+}
+
+/// A grammar whose root (the last rule, as root reads it) has a nullable
+/// prefix before its value, and two ArgList rules: one with a regex head that
+/// takes its `(` inline, one with a literal head whose argument is an inline
+/// alternation.
+const ARGLIST: &str = r#"
+number = /[0-9]+/ ;
+name = /[a-z]+/ ;
+args = value , ("," >> value) * ;
+call = /[cC][aA][lL][lL]\(/ , args ?w , ")" ;
+wrap = "wrap" , "(" >> (number | name) << ")" ;
+value = call | wrap | number | name ;
+cell = /=?/ , value ;
+"#;
+
+#[test]
+fn arglist_argument_is_parsed_by_its_own_rule_not_the_root_dispatcher() {
+    let source = emitted(ARGLIST);
+    let root_dispatcher = "parse_EmptyFirstParser_cell__value (";
+    let marker = "pub fn parse_arglist_EmptyFirstParser_";
+    let mut bodies = Vec::new();
+    let mut rest = source.as_str();
+    while let Some(at) = rest.find(marker) {
+        let after = &rest[at + marker.len()..];
+        let name: String = after.chars().take_while(|c| c.is_alphanumeric() || *c == '_').collect();
+        let end = after.find("pub fn ").unwrap_or(after.len());
+        bodies.push((name, &after[..end]));
+        rest = &after[end..];
+    }
+    let names: Vec<&str> = bodies.iter().map(|(n, _)| n.as_str()).collect();
+    assert!(
+        names.contains(&"call") && names.contains(&"wrap"),
+        "the fixture's two ArgList rules are emitted as ArgList shapes, got {names:?}"
+    );
+    let offending: Vec<&str> = bodies
+        .iter()
+        .filter(|(_, body)| body.contains(root_dispatcher))
+        .map(|(n, _)| n.as_str())
+        .collect();
+    assert!(
+        offending.is_empty(),
+        "ArgList bodies {offending:?} parse a position with the root rule's dispatcher \
+         (`{root_dispatcher}`), not the rule or terminal the grammar names there"
     );
 }
 

@@ -29,8 +29,8 @@
       "path_in_vcs": "rust/egraph-derive",
       "registry_verify": "resolved and built from the local registry by this law",
       "repository": "parse-that",
-      "rev": "bacc888a46e6c397bf119adecd69e0f0beb7c387",
-      "sha256": "3295c47cc644c80c42d866ae585e8b704f4b20621a371ac64e0468051dabb6a7",
+      "rev": "d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae",
+      "sha256": "ea7d23cbf729a23c1f84f4fec7650577fb8df7a9eccb7342cd943ef24fefde24",
       "successive_archives_byte_identical": true,
       "version": "0.1.0"
     },
@@ -40,8 +40,8 @@
       "path_in_vcs": "rust/egraph",
       "registry_verify": "resolved and built from the local registry by this law",
       "repository": "parse-that",
-      "rev": "bacc888a46e6c397bf119adecd69e0f0beb7c387",
-      "sha256": "82278406218605f42c5e7fdcaaa716fe4eeaf6e5547205060feaa39bbee039d5",
+      "rev": "d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae",
+      "sha256": "097f2cc04f50ac13c926577f68917c8c36b5138bfdbb40863202e21984f68d94",
       "successive_archives_byte_identical": true,
       "version": "0.1.0"
     },
@@ -51,8 +51,8 @@
       "path_in_vcs": "rust/simd",
       "registry_verify": "resolved and built from the local registry by this law",
       "repository": "parse-that",
-      "rev": "bacc888a46e6c397bf119adecd69e0f0beb7c387",
-      "sha256": "8501ce39edefc40517bc228581636c244f3b6bbff7ac45e248fada82ed9d9fda",
+      "rev": "d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae",
+      "sha256": "1f057e2697a48f28eda9631c0784e57424bb3b05c1ab84a1d88bc85d971bb50e",
       "successive_archives_byte_identical": true,
       "version": "0.1.0"
     },
@@ -62,8 +62,8 @@
       "path_in_vcs": "rust/regex",
       "registry_verify": "resolved and built from the local registry by this law",
       "repository": "parse-that",
-      "rev": "bacc888a46e6c397bf119adecd69e0f0beb7c387",
-      "sha256": "865f220b193b25029301f31c3efddf161f966da23ece25abdc1ecf7274f84dd8",
+      "rev": "d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae",
+      "sha256": "82f729e2b33bdda4a4951f7c5f8c2bb2bd2c57848478cf1dbebb74e935395ffa",
       "successive_archives_byte_identical": true,
       "version": "0.1.0"
     },
@@ -73,13 +73,13 @@
       "path_in_vcs": "rust/parse_that",
       "registry_verify": "resolved and built from the local registry by this law",
       "repository": "parse-that",
-      "rev": "bacc888a46e6c397bf119adecd69e0f0beb7c387",
-      "sha256": "e249e684fed312206ca984c280e7576e01915c4300dab936d2af5a28a0ce79c2",
+      "rev": "d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae",
+      "sha256": "58184da7b8a8ffdc52e7d51b3bb5de07b4c7ac857cce36f2525c8518051553b3",
       "successive_archives_byte_identical": true,
       "version": "0.4.0"
     }
   ],
-  "parse_that_rev": "bacc888a46e6c397bf119adecd69e0f0beb7c387",
+  "parse_that_rev": "d5a6baee58b7336b03f0bea88ecd33ea5d0c62ae",
   "pprint_rev": "69d1fe9fa522f18e129fbedea0288a9c19b5bbf9",
   "schema": "bbnf.sk-v27.parse-that-abi4-receipt.v1"
 }

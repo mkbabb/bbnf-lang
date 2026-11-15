@@ -6005,7 +6005,7 @@ fn local_registry_record(package: &Value, checksum: &str) -> String {
 const PARSE_THAT_ABI4_RECEIPT: &str =
     "restart/skinny/tranches/sk-v27/evidence/LW3.COMP/comp1b-t/LW3-PARSE-THAT-ABI4.json";
 const PARSE_THAT_ABI4_RECEIPT_SHA256: &str =
-    "5133385fed07ff9cddfd971185407781f99716c74d4d3636b11e1578f2ac528d";
+    "0cb3a17a347ac5fc9a3dccaeafe3919051ece3356b005f6c3263b3d282a23c75";
 const PARSE_THAT_ABI4_RECEIPT_SCHEMA: &str = "bbnf.sk-v27.parse-that-abi4-receipt.v1";
 
 /// The upstream packages in publish (dependency) order, and the repository
@@ -9127,9 +9127,11 @@ const SK_V27_BBNF_TARGETS_SHA256: &str =
 /// (RULINGS 2026-11-14d PERF1D-PT); the four parse-that `source` rows
 /// (`parse_that` normal and dev, `parse-that-regex`, `parse-that-egraph`)
 /// are the sole difference. Re-taken again at LW3.PERF-1d (RULINGS
-/// 2026-11-14e PERF1D-B): pin 3642613 -> bacc888, the same four rows.
+/// 2026-11-14e PERF1D-B): pin 3642613 -> bacc888, the same four rows. And
+/// again (RULINGS 2026-11-14f PERF1D-B2): pin bacc888 -> d5a6bae, the same
+/// four rows, nothing else.
 const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
-    "2aacf3d06391aeb1dbc29f842c4da232c7863057ed979a007c53eb72d90a0b81";
+    "eeeb5e4c705cb800701691d4df5ce3dedd214884ac327281996cc72f1ad1612b";
 /// sha256 over the complete resolved package/feature/target identity rows.
 /// Re-taken at LW3.STALE-0: LW3.PERF-1c deleted the `bbnf-ir` test target
 /// `kernel_shape` (`crates/ir/tests/kernel_shape.rs`), the sole row difference.
@@ -9141,14 +9143,17 @@ const SK_V27_BBNF_DEPENDENCY_ROWS_SHA256: &str =
 /// Re-taken again at LW3.PERF-1d (RULINGS 2026-11-14e PERF1D-B): pin
 /// 3642613 -> bacc888, the five sources, and `parse_that`'s new test target
 /// `quote_or_backslash_test` (the relocated kernel's equivalence tests).
+/// Re-taken again (RULINGS 2026-11-14f PERF1D-B2): pin bacc888 -> d5a6bae,
+/// the five sources only (no target added or removed).
 const SK_V27_METADATA_IDENTITY_SHA256: &str =
-    "1d99c4e97cd2c7890e549000e7508e0f335d5e06976f0d3ccbd5833a4e03d361";
+    "1ccac8f4905e11c81f6c7b58715c43046397b058ba16ddcb2d1f08f4aff513cb";
 /// sha256 of the complete Cargo.lock. Re-taken at LW3.COMP-5a: `bbnf-ir`
 /// lost its `toml 0.8.23` build dependency with the strategy-table build
 /// script, the sole lockfile line that moved. Re-taken at LW3.PERF-1d: the
 /// five parse-that `source` lines moved 6889b29 -> 3642613, nothing else;
-/// again 3642613 -> bacc888 (RULINGS 2026-11-14e PERF1D-B), nothing else.
-const SK_V27_LOCK_SHA256: &str = "b2159dfc6148bb8f06d96009070d6b01c13da8a9de7ce26d4b5ef4dcfb645e1d";
+/// again 3642613 -> bacc888 (RULINGS 2026-11-14e PERF1D-B), nothing else;
+/// again bacc888 -> d5a6bae (RULINGS 2026-11-14f PERF1D-B2), nothing else.
+const SK_V27_LOCK_SHA256: &str = "a8c71352803bf5fd3f6dc1627a7efc1213eb9d358a4e0fd676ee3cd0fc70e4f9";
 
 fn toml_keys(value: &toml::Value) -> BTreeSet<String> {
     value

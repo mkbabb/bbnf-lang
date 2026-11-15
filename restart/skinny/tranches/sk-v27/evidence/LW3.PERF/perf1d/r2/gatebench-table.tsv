@@ -1,0 +1,8 @@
+bench	case	rounds	base_min_us	cure_min/base	cure_medmed/base
+css_l4	bootstrap	12	8892.0	1.029	1.041
+css_l4	normalize	12	97.3	1.015	0.942
+css_l4	tailwind	12	87960.0	0.986	0.968
+json_monolithic	canada	12	2840.0	1.046	1.077
+json_monolithic	citm	12	867.9	1.030	1.010
+json_monolithic	data_s	12	22.3	1.093	1.021
+json_monolithic	twitter	12	383.8	1.054	0.984

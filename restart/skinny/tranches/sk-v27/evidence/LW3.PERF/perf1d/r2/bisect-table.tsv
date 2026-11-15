@@ -1,0 +1,8 @@
+bench	case	rounds	base_min_us	Q_min/base	W_min/base	Q_medmed/base	W_medmed/base
+css_l4	bootstrap	10	8803.0	0.983	1.002	0.951	1.041
+css_l4	normalize	10	96.2	0.995	1.006	0.864	0.865
+css_l4	tailwind	10	87310.0	0.990	1.002	1.007	1.062
+json_monolithic	canada	10	2820.0	1.029	0.984	1.002	0.915
+json_monolithic	citm	10	854.0	1.023	1.005	0.910	0.950
+json_monolithic	data_s	10	22.5	1.022	1.013	0.988	0.992
+json_monolithic	twitter	10	383.2	1.035	1.049	0.881	0.976

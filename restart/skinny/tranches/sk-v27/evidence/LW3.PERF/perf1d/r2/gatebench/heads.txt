@@ -1,0 +1,2 @@
+cure head=ae09447190d300738580d0e3e3cd58973e939cbe dirty=0
+base head=785027c44 (binaries /Users/mkbabb/.dev-logs/bbnf-lockstep/lw3/perf-1d/bench/bins-base.txt)
